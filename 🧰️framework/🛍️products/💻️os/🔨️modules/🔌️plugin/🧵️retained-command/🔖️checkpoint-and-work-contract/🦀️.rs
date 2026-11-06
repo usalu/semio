@@ -5,26 +5,26 @@ use super::*;
 //#region 🔖️Work
 pub const ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES: usize = 512;
 
-pub(super) const ARTIFACT_COMMAND_CHECKPOINT_HEADER_BYTES: usize = 48;
+pub const ARTIFACT_COMMAND_CHECKPOINT_HEADER_BYTES: usize = 48;
 
 /// 🧯️ The longest reducer fault detail one job fault carries — the app's own code and message, clipped
 /// to a single fault page so a runaway message narrows the report instead of losing it.
-pub(super) const ARTIFACT_COMMAND_FAULT_DETAIL_MAXIMUM_BYTES: usize = 480;
+pub const ARTIFACT_COMMAND_FAULT_DETAIL_MAXIMUM_BYTES: usize = 480;
 
 const ARTIFACT_COMMAND_CHECKPOINT_MAGIC: [u8; 4] = *b"ARC1";
 
 #[derive(Clone, Copy)]
-pub(super) struct ArtifactCommandCheckpoint<'a> {
-    pub(super) work_phase: bool,
-    pub(super) raw_page_cursor: u64,
+pub struct ArtifactCommandCheckpoint<'a> {
+    pub work_phase: bool,
+    pub raw_page_cursor: u64,
     pub raw_bytes: u64,
-    pub(super) work_progress: u64,
-    pub(super) context_digest: u64,
-    pub(super) workspace_identity: u64,
+    pub work_progress: u64,
+    pub context_digest: u64,
+    pub workspace_identity: u64,
     pub work: &'a [u8],
 }
 
-pub(super) fn encode_artifact_command_checkpoint(checkpoint: ArtifactCommandCheckpoint<'_>, target: &mut [u8]) -> Result<usize, Fault> {
+pub fn encode_artifact_command_checkpoint(checkpoint: ArtifactCommandCheckpoint<'_>, target: &mut [u8]) -> Result<usize, Fault> {
     let length = ARTIFACT_COMMAND_CHECKPOINT_HEADER_BYTES.checked_add(checkpoint.work.len()).ok_or_else(|| Fault::from("retained-command-checkpoint-length-overflow"))?;
     if length > target.len() {
         return Err(Fault::from("retained-command-checkpoint-capacity"));
@@ -42,7 +42,7 @@ pub(super) fn encode_artifact_command_checkpoint(checkpoint: ArtifactCommandChec
     Ok(length)
 }
 
-pub(super) fn decode_artifact_command_checkpoint(bytes: &[u8], maximum_raw_bytes: usize, input_pages: usize, input_bytes: usize, current_context_digest: u64, current_workspace_identity: u64) -> Result<ArtifactCommandCheckpoint<'_>, Fault> {
+pub fn decode_artifact_command_checkpoint(bytes: &[u8], maximum_raw_bytes: usize, input_pages: usize, input_bytes: usize, current_context_digest: u64, current_workspace_identity: u64) -> Result<ArtifactCommandCheckpoint<'_>, Fault> {
     if bytes.len() < ARTIFACT_COMMAND_CHECKPOINT_HEADER_BYTES || bytes[..4] != ARTIFACT_COMMAND_CHECKPOINT_MAGIC || bytes[4] != 3 || bytes[6] != 0 || bytes[7] != 0 {
         return Err(Fault::from("retained-command-checkpoint-invalid"));
     }
@@ -118,7 +118,7 @@ pub struct ArtifactCommandInputs<'a, A: ArtifactApp> {
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ArtifactRetainedWorkCapacity {
-    pub(super) invertible_items: usize,
+    pub invertible_items: usize,
 }
 
 impl ArtifactRetainedWorkCapacity {

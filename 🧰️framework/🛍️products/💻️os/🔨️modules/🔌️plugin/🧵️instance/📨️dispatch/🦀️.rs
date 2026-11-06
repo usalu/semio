@@ -26,3 +26,6 @@ pub mod dispatch_bundle;
 
 #[path="📥️staging/📤️emit/🎟️original/🦀️.rs"]
 pub mod original_emission;
+
+#[path = "📥️staging/📣️host-event-routing/🦀️.rs"]
+pub mod host_event_routing;

@@ -21,6 +21,10 @@ workspace = true
 [lib]
 path = "🦀️.rs"
 
+[[test]]
+name = "original-diagnostic"
+path = "../../⚠️diagnostic/🧪️tests/owning.rs"
+
 [dependencies]
 semio-framework-value-factory = { path = "../../../../../🌱️value/♻️retirement/🏭️factory/📦️packages/🦀️rust" }
 semio-framework-mutation-diff = { path = "../../../🔺️diff/📦️packages/🦀️rust" }

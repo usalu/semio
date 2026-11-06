@@ -1,0 +1,7 @@
+{
+  "unit": "é語",
+  "repeat": 26215,
+  "utf8Bytes": 131075,
+  "cancelAfterBytes": 65533,
+  "cases": ["cancellation", "receiptRefusal"]
+}

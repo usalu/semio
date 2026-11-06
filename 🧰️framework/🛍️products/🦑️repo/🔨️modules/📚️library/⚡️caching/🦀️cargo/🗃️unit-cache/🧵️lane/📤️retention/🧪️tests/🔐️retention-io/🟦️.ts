@@ -7,6 +7,7 @@ import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 import {requireTestToolV1} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
+import {bindCargoTargetStoreV1} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🎯️target/🟦️.ts";
 import {UNIT_CACHE_POLICY_V1} from "../../../../🔏️key/🟦️.ts";
 import {acquirePooledLaneV1,readPoolV1,trimPoolV1} from "../../../🏊️pool/🟦️.ts";
 import {retainLaneOutputsV1,withLaneRetentionV1} from "../../🟦️.ts";
@@ -15,12 +16,12 @@ const rules=UNIT_CACHE_POLICY_V1.retention,here=fileURLToPath(new URL(".",import
 mkdirSync(base,{recursive:true});
 const scratch=()=>mkdtempSync(join(base,"rt-")),R="cargo-unit-provenance-";
 const sha=(path:string):string=>{const run=spawnSync(python,["-I","-c","import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest())",path],{encoding:"utf8"});expect(run.status,run.stderr).toBe(0);return run.stdout.trim();};
-const layout=(root:string)=>({lane:join(root,"lane"),shared:join(root,"shared"),laneLedger:join(root,"lane",rules.ledger),sharedLedger:join(root,"shared",rules.ledger)});
+const layout=(root:string)=>({lane:join(root,"u","l","ab12"),shared:join(root,"b","p"),laneLedger:join(root,"u","l","ab12",rules.ledger),sharedLedger:join(root,"b","p",rules.ledger)});
 const seed=(directory:string,files:Record<string,string>)=>{mkdirSync(directory,{recursive:true});for(const [name,text] of Object.entries(files))writeFileSync(join(directory,name),text);};
 const input=(root:string,lines?:string[])=>({lane:layout(root).lane,shared:layout(root).shared,laneId:"ab12",language:"en" as const,...lines?{report:(line:string)=>{lines.push(line);}}:{}});
 
 test("the retention policy is complete: every field the module reads is authored, so no path is ever built from an undefined name",()=>{
- expect(Object.keys(rules).sort()).toEqual(["chunkBytes","ledger","ledgerPattern","maximumFileBytes","maximumFiles"]);
+ expect(Object.keys(rules).sort()).toEqual(["bindingPrefix","chunkBytes","destinationPrefix","ledger","ledgerPattern","maximumFileBytes","maximumFiles","scanMaximumEntries"]);
  for(const [name,value] of Object.entries(rules))expect(value,name).not.toBeUndefined();
  expect(typeof rules.ledger).toBe("string");expect(new RegExp(rules.ledgerPattern,"u").test("cargo-unit-provenance-x.json")).toBe(true);
 });
@@ -34,9 +35,9 @@ test("a lane that wrote no provenance at all (a test or lint run, an empty lane)
   mkdirSync(dir.laneLedger,{recursive:true});
   expect(await retainLaneOutputsV1(input(root))).toMatchObject({published:0,conflicts:[]});
   expect(existsSync(dir.sharedLedger)).toBe(false);
-  expect(await retainLaneOutputsV1({...input(root),lane:join(root,"never-created")})).toMatchObject({published:0});
-  let released=0;
-  expect(await withLaneRetentionV1({lane:{paths:{id:"ab12",base:join(root,"never-created"),build:join(root,"never-created")},release(){released++;}},shared:join(root,"also-never"),language:"en"},async()=>"ok")).toBe("ok");expect(released).toBe(1);
+  expect(await retainLaneOutputsV1({...input(root),lane:join(root,"u","l","never")})).toMatchObject({published:0});
+  let released=0;mkdirSync(join(root,"u","l","never","target"),{recursive:true});
+  expect(await withLaneRetentionV1({lane:{paths:{id:"ab12",base:join(root,"u","l","never"),build:join(root,"u","l","never"),target:join(root,"u","l","never","target")},release(){released++;}},shared:join(root,"b","p"),language:"en"},async()=>"ok")).toBe("ok");expect(released).toBe(1);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
@@ -96,7 +97,7 @@ test("unrelated names, symbolic links, directories and oversize files are never 
 test("the lane is released only after its outputs are published, a failing body is still retained, and a failing retention after a good body is the error",async()=>{
  const root=scratch(),dir=layout(root);
  try{
-  const events:string[]=[],lane={paths:{id:"ab12",base:dir.lane,build:dir.lane},release(){events.push("release:"+existsSync(join(dir.sharedLedger,R+"a.json")));}};
+  mkdirSync(join(dir.lane,"target"),{recursive:true});writeFileSync(join(dir.lane,"target",UNIT_CACHE_POLICY_V1.layout.destination),JSON.stringify({version:1,targetDirectory:join(dir.lane,"target").replaceAll("\\","/").normalize("NFC"),sharedBuild:dir.shared})+"\n");const events:string[]=[],lane={paths:{id:"ab12",base:dir.lane,build:dir.lane,target:join(dir.lane,"target")},release(){events.push("release:"+existsSync(join(dir.sharedLedger,R+"a.json")));}};
   seed(dir.laneLedger,{[R+"a.json"]:"a"});
   expect(await withLaneRetentionV1({lane,shared:dir.shared,language:"en"},async()=>{events.push("body");return 7;})).toBe(7);
   expect(events).toEqual(["body","release:true"]);
@@ -106,7 +107,7 @@ test("the lane is released only after its outputs are published, a failing body 
   seed(dir.laneLedger,{[R+"c.json"]:"c"});rmSync(dir.shared,{recursive:true,force:true});writeFileSync(dir.shared,"a file where the shared directory should be");events.length=0;
   await expect(withLaneRetentionV1({lane,shared:dir.shared,language:"en"},async()=>1)).rejects.toThrow();
   expect(events.length).toBe(1);
-  await expect(withLaneRetentionV1({lane,shared:dir.shared,language:"en"},async()=>{throw Error("body");})).rejects.toBeInstanceOf(AggregateError);
+  let invoked=false;await expect(withLaneRetentionV1({lane,shared:dir.shared,language:"en"},async()=>{invoked=true;throw Error("body");})).rejects.toThrow();expect(invoked).toBe(false);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
@@ -114,8 +115,8 @@ test("a pooled lane keeps its provenance through trimming: once released the tri
  const root=scratch(),dir=layout(root),cache=join(root,"u");
  try{
   const lane=await acquirePooledLaneV1(cache,{crates:["x"],quotaBytes:Number.MAX_SAFE_INTEGER});
-  seed(join(lane.paths.build,rules.ledger),{[R+"x.json"]:"kept"});
-  await withLaneRetentionV1({lane,shared:dir.shared,language:"en"},async()=>{expect(trimPoolV1(cache,{maximumLanes:0,maximumLiveLanes:32,quotaBytes:0},Date.now()).removed).toBe(0);});
+  await bindCargoTargetStoreV1({directory:join(root,"locks"),buildDirectory:lane.paths.build,targetDirectory:lane.paths.target,signal:new AbortController().signal});
+  await withLaneRetentionV1({lane,shared:dir.shared,language:"en"},async()=>{seed(join(lane.paths.build,rules.ledger),{[R+"x.json"]:"kept"});expect(trimPoolV1(cache,{maximumLanes:0,maximumLiveLanes:32,quotaBytes:0},Date.now()).removed).toBe(0);});
   expect(trimPoolV1(cache,{maximumLanes:0,maximumLiveLanes:32,quotaBytes:0},Date.now()).removed).toBe(1);
   expect(readPoolV1(cache,Date.now())).toEqual([]);
   expect(readFileSync(join(dir.sharedLedger,R+"x.json"),"utf8")).toBe("kept");
@@ -128,7 +129,7 @@ test("six processes release into one shared ledger beside a trimmer: every recei
   mkdirSync(dir.shared,{recursive:true});
   const run=(args:string[])=>new Promise<{code:number|null;out:string}>(done=>{const child=spawn(process.execPath,[worker,...args],{stdio:["ignore","pipe","inherit"]});let out="";child.stdout.on("data",chunk=>{out+=chunk;});child.once("close",code=>done({code,out}));});
   const results=await Promise.all([...Array.from({length:workers},(_,index)=>run(["lane",root,dir.shared,String(index),String(count)])),run(["trim",root,"80"])]);
-  expect(results.every(result=>result.code===0),JSON.stringify(results)).toBe(true);
+  expect(results.every(result=>result.code===0),JSON.stringify(results)).toBe(true);const statuses=results.slice(0,workers).map(result=>JSON.parse(result.out) as {conflict:boolean});expect(statuses.filter(row=>!row.conflict)).toHaveLength(1);expect(statuses.filter(row=>row.conflict)).toHaveLength(workers-1);
   const names=readdirSync(dir.sharedLedger).sort(),expected=[...Array.from({length:workers},(_,index)=>Array.from({length:count},(_,item)=>`${R}w${index}-${item}.json`)).flat(),R+"common.json",R+"race.json"].sort();
   expect(names).toEqual(expected);
   for(let index=0;index<workers;index++)for(let item=0;item<count;item++)expect(JSON.parse(readFileSync(join(dir.sharedLedger,`${R}w${index}-${item}.json`),"utf8"))).toMatchObject({worker:index,item});
@@ -140,3 +141,5 @@ test("six processes release into one shared ledger beside a trimmer: every recei
   expect(readdirSync(dir.sharedLedger).filter(name=>name.startsWith(".")||name.endsWith(".tmp"))).toEqual([]);
  }finally{rmSync(root,{recursive:true,force:true});}
 },120000);
+
+test("destination recording failure refuses the body and releases the real lane",async()=>{const root=scratch(),cache=join(root,"u"),lane=await acquirePooledLaneV1(cache,{crates:["x"],quotaBytes:Number.MAX_SAFE_INTEGER});let ran=false,released=false;try{rmSync(lane.paths.base,{recursive:true});await expect(withLaneRetentionV1({lane:{paths:lane.paths,release(){released=true;lane.release();}},shared:join(root,"b","p"),language:"en"},async()=>{ran=true;})).rejects.toThrow();expect(ran).toBe(false);expect(released).toBe(true);}finally{if(!released)lane.release();rmSync(root,{recursive:true,force:true});}});

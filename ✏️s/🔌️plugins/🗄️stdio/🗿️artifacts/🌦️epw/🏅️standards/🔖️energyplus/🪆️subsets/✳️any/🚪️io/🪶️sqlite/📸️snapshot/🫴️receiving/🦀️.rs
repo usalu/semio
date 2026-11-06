@@ -47,9 +47,9 @@ pub fn read(database:&SqliteDatabase,frame:&mut Frame,source:Option<&EpwSnapshot
 }
 
 impl semio_os_kernel::sqlite_snapshot::receiving::NativeSqliteReceivingFrame for Frame{fn receiving_status(&mut self)->&mut Option<Result<()>>{&mut self.status}}
-pub(super)fn project_receiving(source:&EpwSnapshot,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<SqliteDatabase>{owner.receive_sqlite_snapshot(control,Frame::new,|frame,port|project(source,frame,port),|frame|Ok(std::mem::replace(&mut frame.projection.database,SqliteDatabase{tables:Vec::new()})))}
-pub(super)fn reconstruct_receiving(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotEncodeOwner<'_,'_>)->Result<EpwSnapshot>{owner.receive_sqlite_snapshot(control,Frame::new,|frame,port|read(database,frame,None,port),|frame|Ok(std::mem::replace(&mut frame.snapshot,empty())))}
-pub(super)fn validate_decoding(source:&EpwSnapshot,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<()>{owner.receive_sqlite_snapshot(control,Frame::new,|frame,port|read(database,frame,Some(source),port),|_|Ok(()))}
-pub(super)fn validate_encoding(source:&EpwSnapshot,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotEncodeOwner<'_,'_>)->Result<()>{owner.receive_sqlite_snapshot(control,Frame::new,|frame,port|read(database,frame,Some(source),port),|_|Ok(()))}
+pub(super)fn project_receiving(source:&EpwSnapshot,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<SqliteDatabase>{owner.receive_sqlite_snapshot(control,&mut Frame::new,&mut |frame,port|project(source,frame,port),&mut |frame|Ok(std::mem::replace(&mut frame.projection.database,SqliteDatabase{tables:Vec::new()})))}
+pub(super)fn reconstruct_receiving(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotEncodeOwner<'_,'_>)->Result<EpwSnapshot>{owner.receive_sqlite_snapshot(control,&mut Frame::new,&mut |frame,port|read(database,frame,None,port),&mut |frame|Ok(std::mem::replace(&mut frame.snapshot,empty())))}
+pub(super)fn validate_decoding(source:&EpwSnapshot,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<()>{owner.receive_sqlite_snapshot(control,&mut Frame::new,&mut |frame,port|read(database,frame,Some(source),port),&mut |_|Ok(()))}
+pub(super)fn validate_encoding(source:&EpwSnapshot,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotEncodeOwner<'_,'_>)->Result<()>{owner.receive_sqlite_snapshot(control,&mut Frame::new,&mut |frame,port|read(database,frame,Some(source),port),&mut |_|Ok(()))}
 
 

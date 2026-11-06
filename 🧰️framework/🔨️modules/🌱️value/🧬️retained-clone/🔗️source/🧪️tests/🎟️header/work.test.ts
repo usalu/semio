@@ -1,0 +1,2 @@
+import {test,expect} from "bun:test";import Ajv from "ajv";import {Database} from "bun:sqlite";import law from "../🧫️fixtures/🎟️header.json";import schema from "../../🧬️schema/🎟️header.json";
+test("empty projection has no close action",()=>{expect(new Ajv({strict:true}).validate(schema,law)).toBe(true);const db=new Database(":memory:");try{expect(db.query("select case when ? then 1 else 0 end work").get(0)).toEqual({work:law.emptyProjectionCloseWork})}finally{db.close()}});

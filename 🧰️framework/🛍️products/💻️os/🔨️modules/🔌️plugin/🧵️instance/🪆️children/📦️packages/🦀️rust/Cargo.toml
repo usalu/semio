@@ -29,7 +29,7 @@ semio-plugin-child = { path = "../../../../🪆️child/📦️packages/🦀️r
 semio-plugin-command = { path = "../../../../🎮️command/📦️packages/🦀️rust" }
 semio-plugin-publication-mounted = { path = "../../../../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️packages/🦀️rust" }
 semio-plugin-tool-run = { path = "../../../../⏯️tool-run/📦️packages/🦀️rust" }
-semio-plugin-instance-stores = { path = "../../../🏪️stores/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-stores = { path = "../../../🏪️stores/📦️packages/🦀️rust", package = "semio-plugin-instance-stores"}
 semio-framework-composition-admission = { path = "../../../../../../../../🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
 semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }

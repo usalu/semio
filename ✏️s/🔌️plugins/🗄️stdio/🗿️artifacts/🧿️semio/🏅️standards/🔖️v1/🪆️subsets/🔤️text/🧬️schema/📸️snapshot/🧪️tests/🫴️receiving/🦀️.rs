@@ -32,7 +32,7 @@ fn receiving(cx:&mut StepContext<'_>,identity:&Identity,run:impl FnOnce(&mut Nat
  });
  let progress=match &result{Ok(progress)=>*progress,Err(error)=>error.retained_progress()};
  let receipt=cx.consume_receiving_retained(grant,progress);let fuel=cx.fuel_remaining();cx.consume_fuel(work);assert_eq!(fuel-cx.fuel_remaining(),work);
- match result{Ok(progress)=>{receipt?;Ok(progress)},Err(primary)=>Err(OriginalTurnFailure{effects:progress,primary:OriginalTurnPrimary::Receiving(primary),receipt_refusal:receipt.err(),context_refusal:None})}
+ match result{Ok(progress)=>{receipt?;Ok(progress)},Err(primary)=>Err(OriginalTurnFailure{effects:progress,primary:OriginalTurnPrimary::Receiving(primary),receipt_refusal:receipt.err(),context_refusal:None,work_refusal:None})}
 }
 fn measured<R>(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,grant:RetainedCloneGrant,run:impl FnOnce(&mut StepContext<'_>)->Result<R,OriginalTurnFailure>)->R{
  let(original,result)= (caller.stock(),semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn_with_decoder(grant,decoder,run)));

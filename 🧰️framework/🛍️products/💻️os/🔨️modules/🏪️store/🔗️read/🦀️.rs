@@ -30,7 +30,7 @@ use std::collections::VecDeque;
 use std::marker::PhantomData;
 use std::sync::Arc;
 use semio_framework_value_snapshot_read::SnapshotReadRegistryHandle;
-use semio_framework_value_snapshot_read::{SnapshotReadRegistryAliasRetirement,snapshot_registry_alias_demands,snapshot_registry_alias_close_step};
+pub use semio_framework_value_snapshot_read::{SnapshotReadRegistryAliasRetirement,snapshot_registry_alias_demands,snapshot_registry_alias_close_step,snapshot_registry_alias_work_demand};
 use semio_os_spr::conflict::ProtocolConflictRetirement as ArtifactStoreConflictRetirement;
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
 use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
@@ -90,7 +90,7 @@ pub use semio_framework_value_snapshot_read::*;
 
 /// 🔗️ Admits a shared root as a lease without losing the exact original alias on refusal.
 
-pub use semio_framework_value_retirement_owner::{retirement_owner_demands,retirement_owner_close};
+pub use semio_framework_value_retirement_owner::{retirement_owner_demands,retirement_owner_close,retirement_owner_close_controlled,retirement_owner_close_original,retirement_owner_work_demand,retirement_owner_requires_original_control};
 pub use semio_os_store_replay::lifted_snapshot_read::{ARTIFACT_STORE_UNSCHEDULED_CLOSE_STEPS, ArtifactStoreStringVectorRetirement, ArtifactStoreSupersessionRetirement};
 pub use semio_os_store_ledger::lifted_snapshot_read::{ArtifactStoreDisplacedOwnerReservation, ArtifactStoreEditMetadata, ArtifactStoreEditRetirement, ArtifactStoreEditRetirementState, ArtifactStoreHistoryMetadataRetirement, ArtifactStoreHistoryMetadataRetirementState, ArtifactStoreOperationRowOwners, ArtifactStoreStringRetirement};
 

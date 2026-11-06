@@ -3,11 +3,12 @@ use super::UiText;
 use semio_framework_value::{NativeDecodeControl,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,ValueError};
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementStep};
 use semio_framework_value::retained_clone::{RetainedCloneBinding,RetainedCloneClose,RetainedCloneRef,retained_clone_grant_admits};
-use semio_framework_value_native_owned::{NativeReceive,NativeReceiver,OriginalReceivingPrimary,owned::{NativeDefault,NativeDefaultValue,NativeDefaultValueCursor,tree::{NativeValueSource,fixed,receipt,invalid}}};
+use semio_framework_value::native_decoding::{NativeReceive,NativeReceiver,OriginalReceivingPrimary,owned::{NativeDefault,NativeDefaultValue,NativeDefaultValueCursor,tree::{NativeValueSource,fixed,receipt,invalid}}};
 use std::mem::ManuallyDrop;
 
-struct TextRetirement(Option<UiText>);
+pub(crate) struct TextRetirement(pub(crate) Option<UiText>);
 impl RetirementCursor for TextRetirement{
+ fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(u64::from(self.0.is_some()))}
  fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{Ok(fixed(size_of::<UiText>()))}
  fn close_step(&mut self,g:RetainedCloneGrant)->RetirementStep{if !retained_clone_grant_admits(g,fixed(size_of::<UiText>())){return RetirementStep::BudgetExhausted}let work=u64::from(self.0.take().is_some());RetirementStep::Complete(work)}
  fn terminal_is_empty(&self)->bool{self.0.is_none()}

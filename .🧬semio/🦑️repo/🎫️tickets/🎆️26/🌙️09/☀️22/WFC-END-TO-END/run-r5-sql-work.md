@@ -1,0 +1,7 @@
+# SQLite Stage Work Ownership
+
+The SQL control now lends the original work recipient together with an explicit caller-owned pending failure slot. Nested controls lend the same slot and cumulative ledger. The stage records a raw committed-effect marker before calling the original work post, so a post refusal or unwind retains its before/actual amounts and original refusal without allocating a replacement. A completed stage transfers the marker into a typed work settlement; a panic leaves it in the caller's slot.
+
+Stage settlement preserves the operation result, declared and actual work counters, and independent allocation refusal. Its returned work is the actual SQL ledger delta. Native stages take independently counted producer work and raw counter observations and return optional measured work, retaining a counter regression without inventing a number. The work fixture has a schema and an independent SQLite/Ajv check; owning Rust tests cover shared stock, refusal, unwind, overflow, simultaneous allocation refusal, declared-work mismatch, and native counter regression.
+
+The initial model gate failed before compilation on an intermediate IO syntax error. The next gate reached dependencies but failed in concurrently changing value-read, ordered, original-slot and persistent owners, before model tests ran. Their subsequent owner check is currently blocked earlier by two `NativeEncodeControl::charge` allocation-event type errors. The current model changes remain unverified and native-stage and ordinary-stage callers are being migrated by the other lanes.

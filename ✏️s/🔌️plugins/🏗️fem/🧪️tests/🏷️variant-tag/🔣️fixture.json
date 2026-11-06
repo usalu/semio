@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "dimension": 2,
+      "family": "element",
+      "variant": "bar",
+      "ordinal": 0,
+      "tag": 0
+    },
+    {
+      "dimension": 2,
+      "family": "element",
+      "variant": "beam",
+      "ordinal": 1,
+      "tag": 1
+    },
+    {
+      "dimension": 2,
+      "family": "load",
+      "variant": "nodal",
+      "ordinal": 0,
+      "tag": 0
+    },
+    {
+      "dimension": 2,
+      "family": "load",
+      "variant": "memberUdl",
+      "ordinal": 1,
+      "tag": 1
+    },
+    {
+      "dimension": 2,
+      "family": "load",
+      "variant": "area",
+      "ordinal": 2,
+      "tag": 2
+    },
+    {
+      "dimension": 3,
+      "family": "element",
+      "variant": "bar",
+      "ordinal": 0,
+      "tag": 0
+    },
+    {
+      "dimension": 3,
+      "family": "element",
+      "variant": "frame",
+      "ordinal": 1,
+      "tag": 1
+    },
+    {
+      "dimension": 3,
+      "family": "load",
+      "variant": "nodal",
+      "ordinal": 0,
+      "tag": 0
+    },
+    {
+      "dimension": 3,
+      "family": "load",
+      "variant": "memberUdl",
+      "ordinal": 1,
+      "tag": 1
+    },
+    {
+      "dimension": 3,
+      "family": "load",
+      "variant": "area",
+      "ordinal": 2,
+      "tag": 2
+    },
+    {
+      "dimension": 2,
+      "family": "dof",
+      "variant": "Tx",
+      "ordinal": 0,
+      "tag": 0
+    },
+    {
+      "dimension": 2,
+      "family": "dof",
+      "variant": "Ty",
+      "ordinal": 1,
+      "tag": 1
+    },
+    {
+      "dimension": 2,
+      "family": "dof",
+      "variant": "Tz",
+      "ordinal": 2,
+      "tag": 2
+    },
+    {
+      "dimension": 2,
+      "family": "dof",
+      "variant": "Rx",
+      "ordinal": 3,
+      "tag": 3
+    },
+    {
+      "dimension": 2,
+      "family": "dof",
+      "variant": "Ry",
+      "ordinal": 4,
+      "tag": 4
+    },
+    {
+      "dimension": 2,
+      "family": "dof",
+      "variant": "Rz",
+      "ordinal": 5,
+      "tag": 5
+    },
+    {
+      "dimension": 3,
+      "family": "dof",
+      "variant": "Tx",
+      "ordinal": 0,
+      "tag": 0
+    },
+    {
+      "dimension": 3,
+      "family": "dof",
+      "variant": "Ty",
+      "ordinal": 1,
+      "tag": 1
+    },
+    {
+      "dimension": 3,
+      "family": "dof",
+      "variant": "Tz",
+      "ordinal": 2,
+      "tag": 2
+    },
+    {
+      "dimension": 3,
+      "family": "dof",
+      "variant": "Rx",
+      "ordinal": 3,
+      "tag": 3
+    },
+    {
+      "dimension": 3,
+      "family": "dof",
+      "variant": "Ry",
+      "ordinal": 4,
+      "tag": 4
+    },
+    {
+      "dimension": 3,
+      "family": "dof",
+      "variant": "Rz",
+      "ordinal": 5,
+      "tag": 5
+    }
+  ]
+}

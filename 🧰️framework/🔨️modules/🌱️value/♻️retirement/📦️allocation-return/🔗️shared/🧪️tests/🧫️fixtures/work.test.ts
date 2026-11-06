@@ -1,0 +1,2 @@
+import {test,expect} from "bun:test";import Ajv from "ajv";import {Database} from "bun:sqlite";import law from "./🔣️.json";import schema from "./schema.json";
+test("shared allocation distinguishes denied from attempted null",()=>{expect(new Ajv({strict:true}).validate(schema,law)).toBe(true);const db=new Database(":memory:");try{expect(db.query("select null deniedActual, 0 failedActual, 0 deniedWork, 1 attemptWork").get()).toEqual({deniedActual:law.deniedActual,failedActual:law.failedActual,deniedWork:law.deniedWork,attemptWork:law.attemptWork})}finally{db.close()}});

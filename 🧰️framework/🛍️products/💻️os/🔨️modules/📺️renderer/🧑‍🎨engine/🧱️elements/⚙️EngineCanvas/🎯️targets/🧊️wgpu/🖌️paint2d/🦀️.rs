@@ -254,7 +254,7 @@ struct Paint2dMarquee {
 /// 🧮️ Marquee gestures are per SURFACE and never outlive one press/release pair, so a plain map
 /// keyed by surface id is the whole bound — the same shape `scenes`' own `map_marquee_points` uses.
 static PAINT2D_MARQUEES: WorkerCell<HashMap<String, Paint2dMarquee>> = WorkerCell::new(Default::default);
-struct Paint2dPixelCandidate {utility:String,intent:semio_framework_surface::paint::RasterSelectionIntent,method:String,mode:String,path:String,cursor:usize,submitted:Option<semio_framework_ui_wgpu_input::RetainedInputActionHandle>,progress:(u64,u64)}
+struct Paint2dPixelCandidate {utility:String,intent:semio_framework_surface::paint::RasterSelectionIntent,method:String,mode:String,path:String,cursor:usize,submitted:Option<semio_ui_wgpu_input::RetainedInputActionHandle>,progress:(u64,u64)}
 static PAINT2D_PIXEL_CANDIDATES: WorkerCell<HashMap<String, Paint2dPixelCandidate>> = WorkerCell::new(Default::default);
 
 pub fn paint2d_pixel_selection_work_pending()->bool{PAINT2D_PIXEL_CANDIDATES.with(|cell|{let mut candidates=cell.borrow_mut();candidates.retain(|id,entry|{let valid=ENGINE_SURFACES.with(|surfaces|surfaces.borrow().get(id).and_then(|surface|surface.raster_host.as_ref()).is_some_and(|host|entry.intent.matches(host)));if !valid{if let Some(handle)=&entry.submitted{handle.cancel();}}valid});!candidates.is_empty()})}
@@ -268,7 +268,7 @@ pub fn cancel_paint2d_pixel_selection(surface_id:&str)->bool{
 }
 
 /// ⏳️ Encodes a bounded path grant; the config owner computes and publishes selection coverage.
-pub fn advance_paint2d_pixel_selection_into(scene:&UiComponentSceneNode,window_id:&str,input:&mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>)->Result<(u64,u64,bool),semio_framework_ui_action::BoundedActionFault>{
+pub fn advance_paint2d_pixel_selection_into(scene:&UiComponentSceneNode,window_id:&str,input:&mut semio_ui_wgpu_input::InputState<ActionDescriptor>)->Result<(u64,u64,bool),semio_ui_action::BoundedActionFault>{
     PAINT2D_PIXEL_CANDIDATES.with(|cell|{
         let mut candidates=cell.borrow_mut();
         let Some(entry)=candidates.get_mut(&scene.host_id)else{return Ok((0,0,true));};
@@ -288,7 +288,7 @@ pub fn advance_paint2d_pixel_selection_into(scene:&UiComponentSceneNode,window_i
         use semio_framework_value::{DslValue,Number};
         let intent=&entry.intent;
         let args=DslValue::Object(vec![("layerId".into(),DslValue::String(intent.layer_id.clone())),("target".into(),DslValue::String(intent.target.into())),("expectedImageKey".into(),intent.image_key.clone().map_or(DslValue::Null,DslValue::String)),("width".into(),DslValue::Number(Number::UInt(u64::from(intent.width)))),("height".into(),DslValue::Number(Number::UInt(u64::from(intent.height)))),("method".into(),DslValue::String(entry.method.clone())),("mode".into(),DslValue::String(entry.mode.clone()))]);
-        let mut args=args;let DslValue::Object(fields)=&mut args else{return Err(semio_framework_ui_action::BoundedActionFault::Structure);};fields.push(("windowId".into(),DslValue::String(window_id.into())));
+        let mut args=args;let DslValue::Object(fields)=&mut args else{return Err(semio_ui_action::BoundedActionFault::Structure);};fields.push(("windowId".into(),DslValue::String(window_id.into())));
         input.begin_retained_string_action_owned(ActionDescriptor {controller_id:scene.controller_id.clone(),action:"selectPixels".into(),args:Some(args)},"path".into(),std::mem::take(&mut entry.path))?;
         entry.submitted=input.retained_action_handle();Ok((entry.progress.0,entry.progress.1,false))
     })

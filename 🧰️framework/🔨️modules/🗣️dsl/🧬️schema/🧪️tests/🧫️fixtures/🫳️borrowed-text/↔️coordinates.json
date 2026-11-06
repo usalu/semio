@@ -1,0 +1,12 @@
+{
+  "point": [
+    1.5,
+    -2
+  ],
+  "direction": [
+    0,
+    1,
+    0
+  ],
+  "document": "point=@1.5,-2 direction=^0,1,0\n"
+}

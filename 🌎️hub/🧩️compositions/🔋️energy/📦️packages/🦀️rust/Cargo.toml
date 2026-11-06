@@ -49,7 +49,7 @@ pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦
 #    file's own docstring for the full rationale.
 serde = { workspace = true }
 serde_json = { workspace = true }
-semio-plugin-instance-construction = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧱️construction/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-construction = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧱️construction/📦️packages/🦀️rust", package = "semio-plugin-instance-construction"}
 
 [dev-dependencies]
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }

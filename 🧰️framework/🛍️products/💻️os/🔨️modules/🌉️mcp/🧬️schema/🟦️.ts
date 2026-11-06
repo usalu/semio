@@ -6,7 +6,7 @@
  * external validator: a `🔨️modules/*` component file must not take a runtime dependency on a
  * package (CLAUDE.md, "no runtime dependencies on external libraries"). The third-party
  * cross-check lives in `📦️packages/🟦️typescript`, which validates the SAME document with AJV. */
-import { readFileSync } from "node:fs";
+import schemaDocument from "./🔣️.json" with { type: "json" };
 
 //#region 🔖️Document
 export type JsonValue = null | boolean | number | string | readonly JsonValue[] | { readonly [key: string]: JsonValue };
@@ -14,7 +14,7 @@ export type JsonValue = null | boolean | number | string | readonly JsonValue[] 
 type SchemaNode = boolean | { readonly [keyword: string]: JsonValue };
 
 /** 📄️ The committed draft-07 document, read once. */
-export const OS_MCP_SCHEMA_DOCUMENT = JSON.parse(readFileSync(new URL("./🔣️.json", import.meta.url), "utf8")) as { readonly $id: string; readonly $defs: Record<string, SchemaNode> };
+export const OS_MCP_SCHEMA_DOCUMENT = schemaDocument as unknown as { readonly $id: string; readonly $defs: Record<string, SchemaNode> };
 
 /** 🆔️ `$id` of the document above — the base every `#/$defs/<ExportId>` pointer resolves against. */
 export const OS_MCP_SCHEMA_ID = OS_MCP_SCHEMA_DOCUMENT.$id;

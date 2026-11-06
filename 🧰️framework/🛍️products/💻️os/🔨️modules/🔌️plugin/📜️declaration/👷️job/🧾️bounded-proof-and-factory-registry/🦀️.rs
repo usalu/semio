@@ -186,3 +186,61 @@ impl semio_framework_value::retirement::RetireOwned for ArtifactToolPublicContra
  fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes::<String>();3])}
  fn controlled_retirement_supported()->bool{true}
 }
+
+/// 📣️ Constructs the bounded first-step catalog at its proof and factory type owner.
+#[macro_export]
+macro_rules! bounded_first_step_tool_proofs {
+    (
+        owner: $owner:ty,
+        owner_file: $owner_file:literal,
+        controller: $controller:literal,
+        artifact_schema: $artifact_schema:literal,
+        factory: $factory:literal,
+        $(factory_type: $factory_type:ty,)?
+        contract: $contract:expr,
+        tools: [$($tool:literal),+ $(,)?]
+    ) => {
+        fn bounded_first_step_tool_proofs() -> Vec<$crate::tool_contract::ArtifactBoundedFirstStepProof> {
+            let qualify = |proof: $crate::tool_contract::ArtifactBoundedFirstStepProof| {
+                $(let proof = proof.with_factory_type::<$owner, $factory_type>();)?
+                proof
+            };
+            vec![$(
+                qualify($crate::tool_contract::ArtifactBoundedFirstStepProof::new::<$owner>(
+                    $owner_file,
+                    $controller,
+                    $factory,
+                    $tool,
+                    $artifact_schema,
+                    $contract,
+                ))
+            ),+]
+        }
+    };
+    (
+        owner: $owner:ty,
+        owner_file: $owner_file:literal,
+        controller: $controller:literal,
+        artifact_schema: $artifact_schema:literal,
+        factory: $factory:literal,
+        $(factory_type: $factory_type:ty,)?
+        tools: { $($tool:literal => $contract:expr),+ $(,)? }
+    ) => {
+        fn bounded_first_step_tool_proofs() -> Vec<$crate::tool_contract::ArtifactBoundedFirstStepProof> {
+            let qualify = |proof: $crate::tool_contract::ArtifactBoundedFirstStepProof| {
+                $(let proof = proof.with_factory_type::<$owner, $factory_type>();)?
+                proof
+            };
+            vec![$(
+                qualify($crate::tool_contract::ArtifactBoundedFirstStepProof::new::<$owner>(
+                    $owner_file,
+                    $controller,
+                    $factory,
+                    $tool,
+                    $artifact_schema,
+                    $contract,
+                ))
+            ),+]
+        }
+    };
+}

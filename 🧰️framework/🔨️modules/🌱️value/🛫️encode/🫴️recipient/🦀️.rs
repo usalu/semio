@@ -8,17 +8,20 @@ pub struct NativeEncodeRetirementRecipient{pub(super) owner:ManuallyDrop<Option<
 impl NativeEncodeRetirementRecipient{
     /// 🈳️ Creates the single empty caller-owned return slot without heap allocation.
     pub fn new()->Self{let identity=RECIPIENT_IDS.try_update(std::sync::atomic::Ordering::Relaxed,std::sync::atomic::Ordering::Relaxed,|identity|identity.checked_add(1)).expect("native recipient identity space exhausted");Self{owner:ManuallyDrop::new(None),reserved:false,identity}}
+    /// 🪪️ Identifies the exact caller-owned retirement port.
+    pub fn identity(&self)->u64{self.identity}
     /// 👓️ Reports retained ownership without borrowing or transferring the actual owner.
     pub fn has_owner(&self)->bool{self.owner.is_some()}
 }
 impl ErasedSnapshotRetirement for NativeEncodeRetirementRecipient{
+ fn visit_original(&mut self,identity:std::any::TypeId,visitor:&mut dyn FnMut(&mut dyn std::any::Any))->bool{self.owner.as_mut().is_some_and(|owner|owner.visit_original(identity,visitor))}
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{
   if self.reserved{Ok(crate::RetirementDemand{depth:1,..Default::default()})}else{self.owner.as_ref().map_or(Ok(Default::default()),|owner|crate::factory_ticket_demands(owner,body))}
  }
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
+ fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value_retirement::OriginalRetirementOutcome{
   if !self.reserved{return crate::close_factory_ticket(&mut self.owner,grant)}
   if grant.maximum_items==0{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
-  if grant.maximum_depth==0{return RetainedWorkOutcome{result:Err(ValueError::literal(crate::ValueRefusalKind::DepthLimit,"native return slot close requires admitted depth")),work:0}}
+  if grant.maximum_depth==0{return RetainedWorkOutcome{result:Err(ValueError::literal(crate::ValueRefusalKind::DepthLimit,"native return slot close requires admitted depth").into()),work:0}}
   self.reserved=false;
   RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}
  }

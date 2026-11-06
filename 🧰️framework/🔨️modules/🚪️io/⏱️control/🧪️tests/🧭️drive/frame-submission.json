@@ -1,0 +1,7 @@
+{
+  "contract": "semio.snapshot.original-frame-submission.v1",
+  "expectedWork": 1,
+  "callbackCalls": 1,
+  "copiedItems": 1,
+  "expectedKind": "invalidValue"
+}

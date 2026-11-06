@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["unit", "repeat", "utf8Bytes", "cancelAfterBytes", "cases"],
+  "additionalProperties": false,
+  "properties": {
+    "unit": {"type": "string", "minLength": 1},
+    "repeat": {"type": "integer", "minimum": 1},
+    "utf8Bytes": {"type": "integer", "minimum": 1},
+    "cancelAfterBytes": {"type": "integer", "minimum": 1},
+    "cases": {"type": "array", "minItems": 2, "items": {"enum": ["cancellation", "receiptRefusal"]}, "uniqueItems": true}
+  }
+}

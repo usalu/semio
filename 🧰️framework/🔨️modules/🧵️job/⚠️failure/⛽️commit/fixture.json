@@ -1,0 +1,11 @@
+{
+  "primary": "native body 源",
+  "quote": "native quote 源",
+  "allocation": "native allocation 源",
+  "receipt": "original receipt 源",
+  "context": "original context 源",
+  "work": "actual work commit 源",
+  "secondWork": "second refused owner 源",
+  "effectItems": 3,
+  "expectedAdoptions": 1
+}

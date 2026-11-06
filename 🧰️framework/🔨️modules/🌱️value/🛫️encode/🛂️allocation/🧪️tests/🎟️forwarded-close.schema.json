@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "minItems": 2,
+  "maxItems": 2,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "grantItems",
+      "grantDepth",
+      "closed"
+    ],
+    "properties": {
+      "grantItems": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "grantDepth": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "closed": {
+        "type": "boolean"
+      }
+    }
+  }
+}

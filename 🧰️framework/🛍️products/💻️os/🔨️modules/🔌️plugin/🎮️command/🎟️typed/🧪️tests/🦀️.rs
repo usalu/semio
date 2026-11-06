@@ -1,7 +1,7 @@
 //! 🧪️ Pending command metadata preserves its two original map roots and original strong caller through denial and token cancellation.
 use super::*;
-use semio_framework_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource as Source;
-use semio_framework_plugin_decl_emission::ActionMeta;
+use semio_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource as Source;
+use semio_plugin_decl_emission::ActionMeta;
 use std::mem::size_of;
 type App=fixture::NativeWindowApp;
 #[track_caller]
@@ -10,7 +10,7 @@ fn action<T>(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecode
 fn original_typed_command_source_retains_metadata_caller_and_selected_close(){
  let law:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:16<<20,maximum_release_bytes:16<<20,maximum_depth:4096};
  for cut in law["cancelAfter"].as_array().unwrap().iter().map(|value|Some(value.as_u64().unwrap()as usize)).chain([None]){
-  let mut caller=caller();let mut decoder=OriginalJobDecodeOwner::empty();let mut source=Source::<App>::default();let mut view=semio_framework::ViewModel::new(semio_framework_ui_locale::Locale::En,semio_framework_ui_locale::Terminology::Native);view.active_mode_id=Some("v".repeat(law["wideTextBytes"].as_u64().unwrap()as usize));view.active_utility_by_window_id.insert("window".into(),"original utility".into());view.tool_run_trace_cursor_by_window_id.insert("window".into(),semio_framework_tool_run::ToolRunTraceCursor{generation:13,page:17,run:23});let text=view.active_mode_id.as_ref().unwrap().as_ptr();let utility=view.active_utility_by_window_id.get("window").unwrap().as_ptr();let mut metadata=Some(ActionMeta{ expected_document_revision:None,actor:"original pending actor".into(),instance_id:71,view_state:Some(view)});
+  let mut caller=caller();let mut decoder=OriginalJobDecodeOwner::empty();let mut source=Source::<App>::default();let mut view=semio_framework::ViewModel::new(semio_ui_locale::Locale::En,semio_ui_locale::Terminology::Native);view.active_mode_id=Some("v".repeat(law["wideTextBytes"].as_u64().unwrap()as usize));view.active_utility_by_window_id.insert("window".into(),"original utility".into());view.tool_run_trace_cursor_by_window_id.insert("window".into(),semio_framework_tool_run::ToolRunTraceCursor{generation:13,page:17,run:23});let text=view.active_mode_id.as_ref().unwrap().as_ptr();let utility=view.active_utility_by_window_id.get("window").unwrap().as_ptr();let mut metadata=Some(ActionMeta{ expected_document_revision:None,actor:"original pending actor".into(),instance_id:71,view_state:Some(view)});
   for denied in [RetainedCloneGrant{maximum_items:0,..g},RetainedCloneGrant{maximum_copy_bytes:size_of::<Source<App>>()-1,..g},RetainedCloneGrant{maximum_depth:0,..g}]{action(&mut caller,&mut decoder,denied,|cx|{assert!(!source.admit(cx)?);Ok(())});assert!(!source.pending());}
   for index in 0..16{if cut==Some(index){caller.cancel().cancel_now();break}let ready=action(&mut caller,&mut decoder,g,|cx|{if !source.admit(cx)?{return Ok(false)}source.capture_metadata(&mut metadata,cx)});if ready{break}assert!(index<15)}
   if cut.is_none(){assert!(metadata.is_none());let view=source.metadata().unwrap().view_state.as_deref().unwrap();assert_eq!(view.active_mode_id.as_ref().unwrap().as_ptr(),text);assert_eq!(view.active_utility_by_window_id.get("window").unwrap().as_ptr(),utility);let mut foreign=OriginalJobDecodeOwner::empty();action(&mut caller,&mut foreign,g,|cx|{assert!(source.close_step(cx).is_err());Ok(())});assert!(foreign.terminal_is_empty());}

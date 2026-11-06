@@ -1,0 +1,7 @@
+{
+  "names": [
+    "hello",
+    "é😀"
+  ],
+  "document": "names=[ hello \"é😀\" ]\n"
+}

@@ -1,0 +1,51 @@
+{
+  "type": "array",
+  "minItems": 3,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "bytes",
+      "grant",
+      "items",
+      "work",
+      "born",
+      "copied",
+      "performed"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "bytes": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "grant": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "work": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "born": {
+        "type": "boolean"
+      },
+      "copied": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "performed": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 1
+      }
+    }
+  }
+}

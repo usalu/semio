@@ -1,0 +1,12 @@
+import {readFileSync,writeFileSync} from "node:fs";
+const path=process.argv[2]!;let source=readFileSync(path,"utf8");
+const begin=source.indexOf('    pub fn prepare_child_preview_one('),end=source.indexOf('    /// ✏️ A document-operation emission',begin);
+if(begin<0||end<0)throw new Error('Missing child method boundary');
+let body=source.slice(begin,end);
+const failure='semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure';
+body=body.replaceAll('ChildEmitPreparationStep,Fault','ChildEmitPreparationStep,'+failure).replaceAll('PluginLifecycleStep>,Fault','PluginLifecycleStep>,'+failure).replaceAll('PluginLifecycleStep>, Fault','PluginLifecycleStep>, '+failure);
+body=body.replace(/(?:\|error\|\s*)(?:crate::child_emit_preparation::retirement_refusal_fault\(&error\))/g,failure+'::from');
+body=body.replaceAll('Err(crate::child_emit_preparation::retirement_refusal_fault(&error))','Err(error.into())');
+body=body.replace(/Err\(plugin_sdk_fault\(("[^"\n]+")\)\)/g,'Err(plugin_sdk_fault($1).into())');
+body=body.replace('let refused = |error: ValueError| Fault::from(error.into_message());','let refused = '+failure+'::from;');
+source=source.slice(0,begin)+body+source.slice(end);writeFileSync(path,source);

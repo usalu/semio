@@ -1,0 +1,1 @@
+{"unit": "x", "length": 70000, "cancelAt": 65536, "retainedLength": 65536, "receipt": "workLimit", "workGrant": 2, "actualWork": 2, "deniedWork": 0, "allocationPostRefusal": "workLimit", "wrongDirection": "invariantViolated", "occupied": {"first": "first allocation failure", "second": "second allocation failure", "extent": 3, "existingExpected": 7}}

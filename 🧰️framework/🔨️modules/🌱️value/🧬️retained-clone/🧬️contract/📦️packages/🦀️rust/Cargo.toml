@@ -41,5 +41,13 @@ name = "take"
 path = "../../📜️clone-and-cursor-traits/🧪️tests/take.rs"
 
 [[test]]
+name = "original-string-work"
+path = "../../🔤️string-cursor/🧪️tests/original-work.rs"
+
+[[test]]
 name = "bulk-logical-body"
 path = "../../../🚚️bulk-vec/🧪️tests/logical-body.rs"
+
+[[test]]
+name = "alias-work"
+path = "../../🔗️alias/🧪️tests/work.rs"

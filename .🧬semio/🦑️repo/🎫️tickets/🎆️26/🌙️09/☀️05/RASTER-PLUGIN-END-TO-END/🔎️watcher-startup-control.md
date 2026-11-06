@@ -1,0 +1,5 @@
+# Resident Watcher Startup Control
+
+build/🏡️resident/🔭️watch/🟨️.mjs launchNative already accepts options.startupControl with signal and remainingMilliseconds; absent control falls back to fenceTimeoutMilliseconds times four. Its startup tests at 🏡️resident/🧪️tests/🔭️watch/🟦️.ts use finite remaining time and cancellation. ResourceLeaseControl in framework/🔨️modules/🏃️process/🔒️leases/🎛️control/🟦️.ts already supplies both fields.
+
+The production path loses this control: utility's withRepositoryResidentWatcherV1 callback receives residentControl but passes only its signal to createForegroundRunnerV1; composition then creates the resident service and service creates the watcher without startupControl. Thread the same admitted residentControl through utility, composition and service into createWatchSupervisorV1. Its existing native launch validates finite positive remaining authority and aborts via the original signal. Ensure child process cleanup on failed or cancelled startup. Do not raise the fence timeout or synthesize a deadline. No production changes or native tests were performed.

@@ -1,7 +1,7 @@
 //! 🔖️ Scalar choice views borrow decoded declaration strings and the already-selected page directly.
 use super::{page::{NormInspectorPreparedPage,Control},original::NormInspectorPageOriginal,walk::{self,Kind}};
 use semio_framework::ArgSchema;
-use semio_framework_plugin_decl_staged_form::{StagedScalarChoice,StagedScalarChoiceSource};
+use semio_plugin_decl_staged_form::{StagedScalarChoice,StagedScalarChoiceSource};
 use semio_ui_locale::{Locale,Terminology};
 use semio_framework_value::{DslValue,ValueError,ValueRefusalKind};
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"norm.inspector.choice-source")}

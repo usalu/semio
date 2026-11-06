@@ -11,7 +11,7 @@ use crate::editor::grid2d::modes::edit::windows::{grid, preview};
 /// 🎚️ ONE exact pane's persisted-local options. `WindowConfigOwner::State` requires
 /// `dsl::DslField`, which `#[derive(dsl::DslArtifact)]` emits alongside the `__dsl_*` helpers the
 /// record-backed `ArtifactDsl`/`ArtifactPack` below are written against.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.wfc.grid2d.windowconfig", extension = "wfcgrid2dwindowcfg")]
@@ -208,7 +208,7 @@ pub enum Grid2dWindowConfigMutation {
     SetSolveJson(Grid2dWindowConfigSetSolveJson),
 }
 
-impl semio_framework_plugin::WindowConfigApplyMutation<Grid2dWindowConfig> for Grid2dWindowConfigMutation {
+impl semio_plugin::WindowConfigApplyMutation<Grid2dWindowConfig> for Grid2dWindowConfigMutation {
     fn exchange(self, post: &mut Grid2dWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
         Ok(match self {
             Self::SetActiveTile(Grid2dWindowConfigSetActiveTile { mut tile_id }) => {
@@ -427,8 +427,8 @@ impl pack::snapshot::ArtifactPack for Grid2dWindowConfig {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Grid2dWindowConfig {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Grid2dWindowConfig {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -463,7 +463,7 @@ mutation_wire!(Grid2dWindowConfigMutation);
 macro_rules! owners {
     ($config:ident, $transient:ident, $kind:expr) => {
         pub struct $config;
-        impl semio_framework_plugin::WindowConfigOwner for $config {
+        impl semio_plugin::WindowConfigOwner for $config {
     fn initial_state_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:2*std::mem::size_of::<Self::State>(),depth:1,..Default::default()})}
     fn initial_state(grant:semio_framework_value::RetainedCloneGrant)->Result<(Self::State,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>{let d=Self::initial_state_demands()?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original window config birth is not funded"))}Ok((Self::State::default(),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
     fn initial_state_pack_source(state:&Self::State)->Result<(&dyn semio_framework_dsl_record::native_encoding::FieldProjectionSource,semio_framework_dsl_record::BorrowedRecordSpec),semio_framework_value::ValueError>{Ok((state,<Self::State as semio_framework_dsl_record::BorrowedDslRecord>::RECORD))}
@@ -472,31 +472,31 @@ macro_rules! owners {
             const MAXIMUM_PUBLICATION_BYTES: usize = 65_536;
             type State = Grid2dWindowConfig;
             type Mutation = Grid2dWindowConfigMutation;
-            type Edit = semio_framework_plugin::WindowConfigApplyEdit<Grid2dWindowConfig, Grid2dWindowConfigMutation>;
+            type Edit = semio_plugin::WindowConfigApplyEdit<Grid2dWindowConfig, Grid2dWindowConfigMutation>;
             const MAXIMUM_PREPARATION_DEPTH: usize = 64;
             fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
-                std::sync::Arc::new(semio_framework_plugin::WindowConfigApplyEdit::new())
+                std::sync::Arc::new(semio_plugin::WindowConfigApplyEdit::new())
             }
-            fn preparation_source_birth() -> semio_framework_value::retained_clone::RetainedCloneBirthDemand { semio_framework_plugin::bounded_window_config_preparation_source_birth::<Self>() }
-            fn build_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_store_owners::<Self>(grant) }
+            fn preparation_source_birth() -> semio_framework_value::retained_clone::RetainedCloneBirthDemand { semio_plugin::bounded_window_config_preparation_source_birth::<Self>() }
+            fn build_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State, Self::Mutation>> { semio_plugin::bounded_window_config_store_owners::<Self>(grant) }
             fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {
-                semio_framework_plugin::bounded_window_config_preparation_factory::<Self>()
+                semio_plugin::bounded_window_config_preparation_factory::<Self>()
             }
-            fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> {
-                semio_framework_plugin::bounded_window_config_store_disposer::<Self>()
+            fn build_store_disposer() -> Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> {
+                semio_plugin::bounded_window_config_store_disposer::<Self>()
             }
         }
         pub struct $transient;
-        impl semio_framework_plugin::WindowTransientOwner for $transient {
+        impl semio_plugin::WindowTransientOwner for $transient {
             const WINDOW_KIND_ID: &'static str = $kind;
             type State = Grid2dWindowTransient;
             type Mutation = Grid2dWindowTransientMutation;
-    fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_framework_plugin::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
-    fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
+    fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_plugin::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
+    fn build_owners() -> semio_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
                 let state = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::State>::default());
                 let mutation = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::Mutation>::default());
                 let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(Grid2dWindowTransientMutation::footprint, Grid2dWindowTransientMutation::into_state, state.clone(), mutation.clone()));
-                semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
+                semio_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
             }
         }
     };
@@ -505,53 +505,53 @@ macro_rules! owners {
 owners!(Grid2dGridWindowConfigOwner, Grid2dGridWindowTransientOwner, grid::WINDOW_KIND_ID);
 owners!(Grid2dPreviewWindowConfigOwner, Grid2dPreviewWindowTransientOwner, preview::WINDOW_KIND_ID);
 
-pub fn register_config(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), semio_framework_plugin::Fault> {
+pub fn register_config(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), semio_plugin::Fault> {
     registry.register::<Grid2dGridWindowConfigOwner>()?;
     registry.register::<Grid2dPreviewWindowConfigOwner>()
 }
 
-pub fn register_transient(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), semio_framework_plugin::Fault> {
+pub fn register_transient(registry: &mut semio_plugin::WindowTransientOwnerRegistry) -> Result<(), semio_plugin::Fault> {
     registry.register::<Grid2dGridWindowTransientOwner>()?;
     registry.register::<Grid2dPreviewWindowTransientOwner>()
 }
 
 /// 🎚️ The config of the pane being rendered or dispatched — grid first, preview second, default
 /// last, mirroring the per-window-instance lookup every sibling multi-pane editor uses.
-pub fn config_from_view(view: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>) -> Grid2dWindowConfig {
+pub fn config_from_view(view: &semio_plugin::ConfigView<'_, semio_plugin::NoConfig>) -> Grid2dWindowConfig {
     view.window::<Grid2dGridWindowConfigOwner>().or_else(|| view.window::<Grid2dPreviewWindowConfigOwner>()).cloned().unwrap_or_default()
 }
 
-pub fn config_from_snapshot(snapshot: Option<&semio_framework_plugin::WindowConfigSnapshot>) -> Grid2dWindowConfig {
+pub fn config_from_snapshot(snapshot: Option<&semio_plugin::WindowConfigSnapshot>) -> Grid2dWindowConfig {
     snapshot.and_then(|snapshot| snapshot.get::<Grid2dGridWindowConfigOwner>().or_else(|| snapshot.get::<Grid2dPreviewWindowConfigOwner>())).cloned().unwrap_or_default()
 }
 
-pub fn transient_from_view(view: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>) -> Grid2dWindowTransient {
+pub fn transient_from_view(view: &semio_plugin::TransientView<'_, semio_plugin::NoTransient>) -> Grid2dWindowTransient {
     view.window::<Grid2dGridWindowTransientOwner>().or_else(|| view.window::<Grid2dPreviewWindowTransientOwner>()).cloned().unwrap_or_default()
 }
 
-fn window_kind(view: &semio_framework_plugin::ViewModel) -> Option<(&str, &str)> {
+fn window_kind(view: &semio_plugin::ViewModel) -> Option<(&str, &str)> {
     let id = view.window_id.as_deref()?;
     let kind = view.window_instances.iter().find(|window| window.id == id)?.window_kind_id.as_str();
     Some((id, kind))
 }
 
 /// 🪟️ Which pane kind is being rendered or dispatched right now.
-pub fn kind_for_view(view: &semio_framework_plugin::ViewModel) -> Option<&str> {
+pub fn kind_for_view(view: &semio_plugin::ViewModel) -> Option<&str> {
     window_kind(view).map(|(_, kind)| kind)
 }
 
 /// 📮️ Addresses a config write at the EXACT window instance the command was dispatched in — a
 /// config write that names the wrong pane silently lands in the other pane's store.
-pub fn addressed_config(view: &semio_framework_plugin::ViewModel, mutation: Grid2dWindowConfigMutation) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
-    let (id, kind) = window_kind(view).ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid2d.window.required"), "wfc.grid2d.window.required"))?;
+pub fn addressed_config(view: &semio_plugin::ViewModel, mutation: Grid2dWindowConfigMutation) -> Result<semio_plugin::WindowConfigMutation, semio_plugin::Fault> {
+    let (id, kind) = window_kind(view).ok_or_else(|| semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("wfc.grid2d.window.required"), "wfc.grid2d.window.required"))?;
     match kind {
-        grid::WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowConfigMutation::of::<Grid2dGridWindowConfigOwner>(id, mutation)),
-        preview::WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowConfigMutation::of::<Grid2dPreviewWindowConfigOwner>(id, mutation)),
-        _ => Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid2d.window.kind-required"), "wfc.grid2d.window.kind-required")),
+        grid::WINDOW_KIND_ID => Ok(semio_plugin::WindowConfigMutation::of::<Grid2dGridWindowConfigOwner>(id, mutation)),
+        preview::WINDOW_KIND_ID => Ok(semio_plugin::WindowConfigMutation::of::<Grid2dPreviewWindowConfigOwner>(id, mutation)),
+        _ => Err(semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("wfc.grid2d.window.kind-required"), "wfc.grid2d.window.kind-required")),
     }
 }
 
-semio_framework_plugin::transient_root! {
+semio_plugin::transient_root! {
     state: Grid2dWindowTransient,
     mutation: Grid2dWindowTransientMutation,
     diff: Grid2dWindowTransientDiff,
@@ -564,7 +564,7 @@ semio_framework_plugin::transient_root! {
     fields: { hovered_cell: String },
 }
 
-semio_framework_plugin::window_transient_transfer! {
+semio_plugin::window_transient_transfer! {
     state: Grid2dWindowTransient,
     mutation: Grid2dWindowTransientMutation,
 }

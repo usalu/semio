@@ -1,3 +1,4 @@
+import{withLaneRetentionV1}from"../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🟦️.ts";
 import {readNativeCallerAuthorityV1} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import {withRepositoryCompilerRuntimeEntriesV1} from "../../../🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🟦️.ts";
 import {prepareRepositoryCargoSchedulerV1} from "../🧰️native-helpers/🟦️.ts";
@@ -92,7 +93,7 @@ export async function withRepositoryCargoIsolatedStoreV1<T>(options:Readonly<{st
 
 /** 🛤️ One private lane of the pool inside the issued compiler store: a target and build directory held by one process at a time, so no two Cargo processes ever share a build directory and Cargo's unit locks can never form a cycle between processes. The lane of the same crate set is preferred (its incremental state is still warm), a new lane starts empty and fills from the shared content-addressed unit cache, and the idle lanes are trimmed to the pool bounds. */
 export type RepositoryCargoAgentLaneV1=Readonly<{target:string;build:string;lane:Readonly<{id:string;root:string}>}>;
-type AgentLaneOptionsV1=Readonly<{storage:NativeStorageReservationV1;cacheRoot:string;workspace:string;capacityBytes:number;crates:readonly string[];classes?:readonly string[];environment:Readonly<Record<string,string|undefined>>;control:ResourceLeaseControl}>;
+type AgentLaneOptionsV1=Readonly<{storage:NativeStorageReservationV1;sharedBuild:string;cacheRoot:string;workspace:string;capacityBytes:number;crates:readonly string[];classes?:readonly string[];environment:Readonly<Record<string,string|undefined>>;control:ResourceLeaseControl}>;
 
 /** 💽️ The free bytes of the image that holds a cache root; `null` when it cannot be measured. */
 function imageFreeBytesV1(root:string):number|null{try{const row=statfsSync(root);return row.bavail*row.bsize;}catch{return null;}}
@@ -113,12 +114,13 @@ async function withAgentLaneV1<T>(options:AgentLaneOptionsV1,body:(lane:Reposito
  const headroom=await admitImageHeadroomV1({root:options.cacheRoot,capacityBytes:options.capacityBytes,classes,temperature:warm?"warm":"cold",label:classes[classes.length-1]!,language,report:line=>{process.stderr.write(line+"\n");},signal:options.control.signal});
  try{
   const lane=await acquirePooledLaneV1(options.cacheRoot,{crates:options.crates,quotaBytes,owner:{session:agentSessionAddressV1(session),agent:session.agent.id}},{signal:options.control.signal,report:(kind,parameters)=>{process.stderr.write(laneMessageV1(kind,parameters,language)+"\n");}});
-  let grown:(()=>number)|undefined,completed=false;
+  return await withLaneRetentionV1({lane,shared:options.sharedBuild,language,report:line=>{process.stderr.write(line+"\n");}},async()=>{let grown:(()=>number)|undefined,completed=false;
   try{
    for(const path of[lane.paths.target,lane.paths.build])requireNativeStoragePathV1(root,path);
    const before=measureLaneBytesV1(options.cacheRoot,lane.paths.id),freeBefore=imageFreeBytesV1(options.cacheRoot),aloneAtStart=otherCommandsV1(options.cacheRoot,headroom.id)===0;grown=()=>commandWriteBytesV1(measureLaneBytesV1(options.cacheRoot,lane.paths.id)-before,freeBefore,imageFreeBytesV1(options.cacheRoot),aloneAtStart&&otherCommandsV1(options.cacheRoot,headroom.id)===0);
    const result=await body(Object.freeze({target:lane.paths.target,build:lane.paths.build,lane:Object.freeze({id:lane.paths.id,root:lane.paths.base})}));completed=true;return result;
-  }finally{const failedGrowth=!completed&&grown?grown():0;await headroom.release(completed?grown:failedGrowth>headroom.reservedBytes?()=>failedGrowth:undefined,lane.choice==="warm"?"warm":"cold");lane.release();}
+  }finally{const failedGrowth=!completed&&grown?grown():0;await headroom.release(completed?grown:failedGrowth>headroom.reservedBytes?()=>failedGrowth:undefined,lane.choice==="warm"?"warm":"cold");}
+  });
  }finally{await headroom.release();}
 }
 
@@ -128,7 +130,7 @@ export function repositoryCargoPlanningPortV1(store:Readonly<{root:string}>){ret
 export function repositoryCargoSourceMemoV1(store:Readonly<{root:string;toolchain:Readonly<{digest:string}>}>){return unitAdmissionMemoV1(unitCacheRootV1(store.root),store.toolchain.digest);}
 
 /** 🧵️ One Cargo command's lane (see {@link RepositoryCargoAgentLaneV1}). Cleanup of idle lanes and cold cache objects is a niced, single-flight background collector that starts when the image passes its high-water mark (or every ten minutes of use), and a command that finds less free space than one compile needs collects before it starts. */
-export async function withRepositoryCargoLaneV1<T>(options:Readonly<{storage:NativeStorageReservationV1;cacheRoot:string;workspace:string;crates:readonly string[];classes?:readonly string[];capacityBytes:number;emergencyBytes:number;environment:Readonly<Record<string,string|undefined>>;temporary:string;control:ResourceLeaseControl}>,body:(store:Readonly<{target:string;build:string;temporary:string;lane:Readonly<{id:string;root:string}>}>)=>Promise<T>):Promise<T>{
+export async function withRepositoryCargoLaneV1<T>(options:Readonly<{storage:NativeStorageReservationV1;sharedBuild:string;cacheRoot:string;workspace:string;crates:readonly string[];classes?:readonly string[];capacityBytes:number;emergencyBytes:number;environment:Readonly<Record<string,string|undefined>>;temporary:string;control:ResourceLeaseControl}>,body:(store:Readonly<{target:string;build:string;temporary:string;lane:Readonly<{id:string;root:string}>}>)=>Promise<T>):Promise<T>{
  const language=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],options.environment).language,report=(line:string)=>{process.stderr.write(line+"\n");},relieve=()=>relieveUnitCachePressureV1({root:options.cacheRoot,capacityBytes:options.capacityBytes,emergencyBytes:options.emergencyBytes,environment:options.environment,language,report});
  try{return await withAgentLaneV1(options,async lane=>{await relieve();return withUnitPressureRecheckV1(relieve,()=>body(Object.freeze({...lane,temporary:options.temporary})));});}
  finally{await relieveUnitCachePressureV1({root:options.cacheRoot,capacityBytes:options.capacityBytes,emergencyBytes:0,environment:options.environment,language,report});}
@@ -136,8 +138,8 @@ export async function withRepositoryCargoLaneV1<T>(options:Readonly<{storage:Nat
 
 /** 🧱️ Runs one component build driver in a private lane of the pool inside the issued compiler store, the same lane discipline as `repo cargo`: two drivers never wait for each other's build directory, and a fresh lane fills from the unit cache.
  * @see ../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🟦️.ts */
-export function withRepositoryComponentLaneV1<T>(options:Readonly<{storage:NativeStorageReservationV1;root:string;workspace:string;crates?:readonly string[];classes?:readonly string[];environment:Readonly<Record<string,string|undefined>>;control:ResourceLeaseControl;policyControl?:ResourceLeaseControl}>,body:(lane:RepositoryCargoAgentLaneV1)=>Promise<T>):Promise<T>{
- return withAgentLaneV1({storage:options.storage,cacheRoot:unitCacheRootV1(options.root),workspace:options.workspace,capacityBytes:unitCacheCapacityBytesV1(readNativeStorageReservationPolicyV1(options.storage,options.policyControl??options.control)),crates:options.crates??[],classes:options.classes??componentHeadroomClassesV1(options.crates??[]),environment:options.environment,control:options.control},body);
+export function withRepositoryComponentLaneV1<T>(options:Readonly<{storage:NativeStorageReservationV1;root:string;sharedBuild:string;workspace:string;crates?:readonly string[];classes?:readonly string[];environment:Readonly<Record<string,string|undefined>>;control:ResourceLeaseControl;policyControl?:ResourceLeaseControl}>,body:(lane:RepositoryCargoAgentLaneV1)=>Promise<T>):Promise<T>{
+ return withAgentLaneV1({storage:options.storage,sharedBuild:options.sharedBuild,cacheRoot:unitCacheRootV1(options.root),workspace:options.workspace,capacityBytes:unitCacheCapacityBytesV1(readNativeStorageReservationPolicyV1(options.storage,options.policyControl??options.control)),crates:options.crates??[],classes:options.classes??componentHeadroomClassesV1(options.crates??[]),environment:options.environment,control:options.control},body);
 }
 
 /** 📍️ Selects the manifest Cargo itself would read: `--manifest-path` or the working directory's `Cargo.toml`. */
@@ -238,7 +240,7 @@ export async function launchRepositoryCargoV1<T>(invocation:ScriptInvocation,pha
     try{return await admitted(compilerArgs,compilerEnvironment,selected,control,generated&&!generatedPolicy?()=>copyFileSync(generated,env.SEMIO_TYPEGEN_OUT!):undefined,generated);}finally{if(generated)rmSync(generated,{force:true});}
    });
   };
-  return request.store==="shared"?withRepositoryCargoLaneV1({storage:store.storage,cacheRoot:unitCacheRootV1(store.root),workspace,crates:focusFromCargoArgumentsV1(request.cargo),classes:cargoHeadroomClassesV1(request.cargo),capacityBytes:spaceBudget,emergencyBytes:space.maximumWorkspaceBytes,environment,temporary:store.environment.TMPDIR!,control},run):withRepositoryCargoIsolatedStoreV1({storage:store.storage,base:dirname(store.buildDirectory),control},run);
+  return request.store==="shared"?withRepositoryCargoLaneV1({storage:store.storage,sharedBuild:store.buildDirectory,cacheRoot:unitCacheRootV1(store.root),workspace,crates:focusFromCargoArgumentsV1(request.cargo),classes:cargoHeadroomClassesV1(request.cargo),capacityBytes:spaceBudget,emergencyBytes:space.maximumWorkspaceBytes,environment,temporary:store.environment.TMPDIR!,control},run):withRepositoryCargoIsolatedStoreV1({storage:store.storage,base:dirname(store.buildDirectory),control},run);
  }));
  }));
 }

@@ -1,7 +1,7 @@
 //! 🧮️ Real EN 1990 public replay preparation pays nested owners under its original caller.
 use semio_framework_job::{Generation,OperationId,OriginalJobDecodeOwner,OriginalJobFixtureCaller};
 use semio_framework_os_store_one_item_batch::paged_one_item::ColdMutationApplyFactory;
-use semio_framework_os_store_replay_operation::{ArtifactMutationSource,ArtifactReplayPreparationContext,ArtifactReplayPreparationFactory,ArtifactReplayPreparationMode,ArtifactReplayPreparationRequest,ArtifactReplayPreparationStep};
+use semio_os_store_replay_operation::{ArtifactMutationSource,ArtifactReplayPreparationContext,ArtifactReplayPreparationFactory,ArtifactReplayPreparationMode,ArtifactReplayPreparationRequest,ArtifactReplayPreparationStep};
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory,ErasedSnapshotRetirement,FromValue,RetirementDemand,ValueError,retirement::RetireOwned,retained_clone::{RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use semio_framework_value_snapshot_read::{SnapshotRead,SnapshotReadRegistryHandle};
 use semio_s_artifact_norm_en1990_model::En1990Snapshot;
@@ -29,7 +29,7 @@ impl Probe{
   let result=self.caller.turn_with_decoder(g,&mut self.decoder,|cx|cx.with_original_work_loan(4096,cx.deadline_us(),|cx|{
    let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_native_receiving(run));
    let p=result.as_ref().map_or_else(ValueError::retained_progress,Receipt::receipt);measured=Some(((heap.requested_bytes,heap.released_bytes),p));
-   cx.consume_receiving_retained(g,p)?;result.map_err(Into::into)
+   let issued=cx.receiving_issued_grant().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original EN 1990 receiver omitted its issued grant"))?;cx.consume_receiving_retained(issued,p)?;result.map_err(Into::into)
   }));
   self.turn+=1;let(actual,p)=measured.expect("original operation entered its physical observation");
   if actual!=(p.retained_capacity_bytes,p.released_bytes)&&self.unpaid.is_none(){self.unpaid=Some(Unpaid{turn:self.turn,actual,reported:p});}

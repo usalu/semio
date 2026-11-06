@@ -12,7 +12,7 @@ use semio_framework::kernel::{ClipboardFragment, Effect, FRAMEWORK_RESERVED_JOB_
 use crate::command_bundle::CommandCtx;
 use semio_framework_value::DslValue;
 use semio_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY;
-use semio_plugin_retained_command::reserved_route_capacity_lift::FRAMEWORK_RESERVED_ROUTE_CAPACITY;
+use semio_framework_plugin_retained_command::reserved_route_capacity_lift::FRAMEWORK_RESERVED_ROUTE_CAPACITY;
 use std::future::Future;
 use std::collections::HashSet;
 use semio_plugin_decl_views::history_view::{HistoryCommandFilter, InverseAction, ShellHistoryReplay};
@@ -27,14 +27,14 @@ use semio_plugin_reactor_app::PluginApp;
 use semio_framework::onboarding::RECORD_TUTORIAL_ACTION_ID;
 use semio_plugin_instance_jobs::jobs_components::ToolOperations;
 use semio_plugin_job::TypedOperationCompletionWitness;
-use semio_plugin_retained_command::typed_operation::bounded_json_items;
+use semio_framework_plugin_retained_command::typed_operation::bounded_json_items;
 use semio_plugin_instance_dispatch::dispatch_emit;
 use semio_plugin_instance_render::render_history_view::history_command;
 use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_ui_contract::*;
 use crate::commands_instance_root::catalogue_snapshot_from_document;
 use crate::commands_instance_root::note_shell_command_label;
-use semio_plugin_instance_docs::docs_plugin_app_impl::history_changed_event;
+use semio_framework_plugin_instance_docs::docs_plugin_app_impl::history_changed_event;
 
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> CommandCtx<'ctx, A, M, X> {
     /// 🧮️ One reserved gesture's work, in the STAGED EDIT ROWS every other capacity in the

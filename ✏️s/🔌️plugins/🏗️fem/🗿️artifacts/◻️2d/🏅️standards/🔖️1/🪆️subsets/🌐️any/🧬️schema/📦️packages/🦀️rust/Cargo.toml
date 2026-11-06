@@ -37,10 +37,23 @@ semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-fem-model = { workspace = true }
 semio-s-fem-sqlite = { workspace = true }
+semio-s-fem-receiving = { path = "../../../../../../../../../🧩️receiving/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-testing-allocator = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-trace = { workspace = true }
+serde_json = { workspace = true }
 semio-framework-dsl = { workspace = true }
 
 [[test]]
 name = "structure_laws"
 path = "../../🏗️structure/🎟️fixed-dofs/🧪️tests/🔬️model-2d/🦀️.rs"
+
+[[test]]
+name = "cold_reference_graph"
+path = "../../📸️snapshot/cold-tests.rs"
+
+[[test]]
+name = "original_fem_receiving"
+path = "../../📸️snapshot/original-receiving-tests.rs"

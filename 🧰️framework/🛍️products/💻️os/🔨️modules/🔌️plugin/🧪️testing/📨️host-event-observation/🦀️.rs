@@ -1,5 +1,5 @@
 //! 📨️ Fixed inline test instrumentation records delivery without allocating inside a host callback.
-use semio_framework_plugin_decl_emission::HostEvent;
+use semio_plugin_decl_emission::HostEvent;
 const TEXT:usize=128;
 const EVENTS:usize=64;
 #[derive(Clone,Copy)]

@@ -7,7 +7,7 @@ use semio_framework_io_schema::IoPayload;
 use pack::snapshot::{ArtifactNativeSnapshot,NativeSnapshotInput,NativeSnapshotEncoding};
 /// 🫴️ Requires original native receiving custody instead of a stateless whole-pack decoder.
 pub trait ArtifactPackReceiving:pack::snapshot::ArtifactPack+semio_framework_value::retirement::RetireOwned {
- fn receive_pack(bytes:&[u8],owner:&mut semio_framework_io_control::NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<Self,semio_framework_io_control::NativeSnapshotFailure>;
+ fn receive_pack(bytes:&[u8],output:&mut Option<Self>,owner:&mut semio_framework_io_control::NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<(),semio_framework_io_control::NativeSnapshotFailure>;
 }
 
 /// 🛬️ Borrows the envelope and binds every parsed field through the same decoder.

@@ -1,0 +1,5 @@
+{
+  "id": "A",
+  "name": "hello",
+  "document": "rows [id:TEXT meta:REC] {\n  A {name=hello}\n}\n"
+}

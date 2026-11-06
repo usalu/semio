@@ -38,13 +38,13 @@ export function createForegroundRunnerV1(dependencies){
   const exclude=sourcePolicy?{rooted:sourcePolicy.roots,names:sourcePolicy.names}:{rooted:[...RESIDENT_EXCLUDES_V1.rooted],names:[...RESIDENT_EXCLUDES_V1.names]};
   if(sourcePolicy&&(!binary||!createFilterV1({...exclude,opaqueBasenames}).excluded(RESIDENT_FENCE_DIRECTORY_V1)))throw Error("Owned native watcher and excluded private resident fence required");
   preparePrivateDirectoryV1(dirname(runtime.directory));preparePrivateDirectoryV1(runtime.directory);
-  const preload=writeWarmPreloadV1(runtime.directory);
-  const pool=createWarmPoolV1({command:[execPath,"--preload",preload,script],environment:{...environment,SEMIO_WARM_MODULES:JSON.stringify(warmModules),SEMIO_BUILD_SERVICE:"off"},cwd:root,size:warmSize,idleMilliseconds:POLICY_V1.idleShutdownMilliseconds,log});
+  const warmCapture=dependencies.warmCapture,preload=warmCapture?undefined:writeWarmPreloadV1(runtime.directory);
+  const pool=createWarmPoolV1({command:warmCapture?[execPath,"--eval",warmCapture.loader,"--",warmCapture.digest]:[execPath,"--preload",preload,script],...(warmCapture?{snapshot:warmCapture.text}:{}),environment:{...environment,SEMIO_WARM_MODULES:JSON.stringify(warmModules),SEMIO_BUILD_SERVICE:"off"},cwd:root,size:warmSize,idleMilliseconds:POLICY_V1.idleShutdownMilliseconds,log});
   const filterHolder={excluded:()=>false};
   const graph=createBuildGraphPortV1({loadGraph,salt,generation:generationOf,environmentPaths,environmentPrefixes,listing:async({root:r,exclude,filter})=>{Object.assign(filterHolder,filter);return scanListingV1({root:r,binary,exclude,filter,opaqueBasenames});}});
   const executors=executorSize>0&&process.platform!=="win32"?createExecutorPoolV1({command:[execPath,script,"repo","service","executor"],environment:{...environment,SEMIO_BUILD_SERVICE:"off"},cwd:root,size:executorSize,log}):undefined;
   const execution=createDelegatedExecutionPortV1({pool,executors,coldCommand:[execPath,script],argvFor:id=>["repo","run",id,"--service=off"],environment:{...environment,SEMIO_BUILD_SERVICE:"off"},cwd:root});
-  const service=createResidentServiceV1({root,runtime,implementation,implementationPaths,backend:sourcePolicy?"native":binary?"auto":"portable",watcherBinary:binary,opaqueBasenames,privateFence:Boolean(sourcePolicy),failureMode:sourcePolicy?"terminal":"recover",exclude,fenceDirectory:RESIDENT_FENCE_DIRECTORY_V1,ports:{graph,execution,custody,capacity},log});
+  const service=createResidentServiceV1({root,runtime,implementation,implementationPaths,backend:sourcePolicy?"native":binary?"auto":"portable",watcherBinary:binary,opaqueBasenames,privateFence:Boolean(sourcePolicy),failureMode:sourcePolicy?"terminal":"recover",exclude,fenceDirectory:RESIDENT_FENCE_DIRECTORY_V1,ports:{graph,execution,custody,capacity},withWatcherStartup:dependencies.withWatcherStartup,log});
   let stopping;const stop=reason=>{stopping??=Promise.resolve().then(()=>service.stop(reason));void stopping.catch(()=>{});},terminate=()=>stop("SIGTERM"),interrupt=()=>stop("SIGINT"),abort=()=>stop("cancelled");
   process.once("SIGTERM",terminate);process.once("SIGINT",interrupt);signal?.addEventListener("abort",abort,{once:true});
   let result,failed=false,primary;

@@ -10,7 +10,7 @@ fn shared_semantic_assembly_preserves_original_slots_and_exact_funded_custody(){
  for cut in 0..maximum{
   let mut owner=OriginalPublicationAssembly::<bool,bool>::default();
   let mut forward=Some(true);let mut post=Some(false);let mut inverse=Some(vec![false,true,false]);
-  let mut authority=Some(Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(921),semio_framework_job::Generation(0),[0;32],3,4,semio_framework_os_spr::HybridLogicalTimestamp{actor:1,physical_ms:42,logical:2},"semantic:α".into(),None,None,None)));
+  let mut authority=Some(Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(921),semio_framework_job::Generation(0),[0;32],3,4,semio_os_spr::HybridLogicalTimestamp{actor:1,physical_ms:42,logical:2},"semantic:α".into(),None,None,None)));
   let mut mutations:Option<Arc<dyn ArtifactOwnedValueRetirementFactory<bool>>>=Some(Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<bool>::default()));
   let mut snapshots:Option<Arc<dyn SnapshotRetirementFactory<bool>>>=Some(Arc::new(semio_framework_value::factory::SharedValueRetirementFactory::<bool>::default()));
   for _ in 0..cut{

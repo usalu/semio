@@ -1,0 +1,5 @@
+import{readFileSync}from"node:fs";import{join,resolve}from"node:path";
+const root=Bun.TOML.parse(readFileSync("Cargo.toml","utf8"))as any,keys=new Set(["host-test-component","host","interpreter","interpreter-runtime","guest-contract"].map(n=>"semio-framework-plugin-"+n));
+let inspected=0;const found:any[]=[];
+for(const member of root.workspace.members??[]){if(member.includes("*"))throw Error("exact workspace members required");const path=join(member,"Cargo.toml"),doc=Bun.TOML.parse(readFileSync(path,"utf8"))as any;inspected++;const walk=(node:any)=>{if(!node||typeof node!=="object")return;for(const[k,v]of Object.entries(node)){if(["dependencies","dev-dependencies","build-dependencies"].includes(k)&&v&&typeof v==="object"){for(const[name,value]of Object.entries(v))if(keys.has(name)&&(value as any).workspace)found.push({path,key:name,entry:doc.lib?.path?resolve(member,doc.lib.path):null});}else if(k==="target")for(const scope of Object.values(v as any))walk(scope);}};walk(doc);}
+console.log(JSON.stringify({inspected,found}));

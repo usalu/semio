@@ -17,8 +17,8 @@ pub struct ChangeBeamTransverseAsTop {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeBeamTransverseAsTop where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_beam_transverse_as_top::ChangeBeamTransverseAsTop> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "beam-transverse-as-top", kind: "change-beam-transverse-as-top", record: "ChangedBeamTransverseAsTop" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change top layer transverse reinforcement of the deck slab per metre of girder", "Obere Querbewehrung je Meter Brücke ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change top layer transverse reinforcement of the deck slab per metre of girder", "Obere Querbewehrung je Meter Brücke ändern")
     }
 }
 

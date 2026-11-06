@@ -1,6 +1,6 @@
 use semio_framework_value::ErasedSnapshotRetirement;
-use semio_os_store_member_open::history::{MemberHistoryInputStep, MemberHistoryVerification, VerifiedMemberHistoryInput};
-use semio_os_store_member_open::{MemberOpenDiagnostic, MemberOpenRequest};
+use semio_framework_os_store_member_open::history::{MemberHistoryInputStep, MemberHistoryVerification, VerifiedMemberHistoryInput};
+use semio_framework_os_store_member_open::{MemberOpenDiagnostic, MemberOpenRequest};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_os_spr::format::retained::{RetainedSprLimits, RetainedSprVerification};
 use semio_framework_job::StepContext;

@@ -1,0 +1,9 @@
+{
+  "contract": "semio.dsl-native-character-work.v1",
+  "text": "雪a",
+  "allowance": 1,
+  "first": "雪",
+  "position": 3,
+  "work": 1,
+  "deniedKind": "workLimit"
+}

@@ -3,10 +3,10 @@
 //#region 🎯️RetargetAndSettings
 /// ⚖️ LAW: the run's trace key allocator hands out keys above every key its ticks upserted and every key allocated
 /// before, the request carries the entity marks, and the request names the window the run was started from.
-use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 #[semio_framework_async_macros::async_test]
 async fn tool_run_requests_carry_trace_key_allocation_entity_marks_and_the_starting_window() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
@@ -43,7 +43,7 @@ async fn tool_run_requests_carry_trace_key_allocation_entity_marks_and_the_start
 /// the lane with its byte length and hash, and the carrier holds the whole trace delta of the run.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_board_scene_render_carries_the_trace_lane() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
@@ -64,7 +64,7 @@ async fn tool_run_board_scene_render_carries_the_trace_lane() {
     });
     let lane = scene.tool_run_trace.as_deref().expect("a board rendered during a run carries the toolRunTrace lane");
     let reference = scene.lanes.iter().find(|reference| reference.lane == text(&expected["laneName"])).expect("the spine names the injected lane");
-    assert_eq!((reference.bytes as usize, reference.hash.as_str()), (lane.len(), semio_framework_ui_scene::scene_lane_hash(lane).as_str()));
+    assert_eq!((reference.bytes as usize, reference.hash.as_str()), (lane.len(), semio_ui_scene::scene_lane_hash(lane).as_str()));
     let delta = ToolRunTraceDelta::decode(&base64_codec::base64_url_decode(lane).expect("base64url")).expect("one ToolRunTraceDelta");
     assert!(delta.clear, "a renderer without a cursor gets clear plus the whole log");
     assert_eq!(delta.pages.iter().map(|page| page.ops.len()).sum::<usize>() as u64, number(&expected["units"]));
@@ -91,7 +91,7 @@ async fn publish_window_selection(app: &mut ToyApp, window_id: &str, selected: u
 /// same kind or of an unchanged value never reconfigures, and a changed value on the starting window does.
 #[semio_framework_async_macros::async_test]
 async fn tool_run_window_settings_reads_follow_the_starting_window_only() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
@@ -134,7 +134,7 @@ async fn tool_run_window_settings_reads_follow_the_starting_window_only() {
 /// reaches the exact terminal-empty witness instead of answering `Pending { 0, 0 }` against an ordinary-page grant for ever.
 #[semio_framework_async_macros::async_test]
 async fn a_published_window_config_closes_through_its_own_published_physical_demand() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
@@ -157,7 +157,7 @@ async fn a_published_window_config_closes_through_its_own_published_physical_dem
 /// retained receipt — it never advances the already published store again ("awaits an ACK without its retained host page").
 #[semio_framework_async_macros::async_test]
 async fn a_mounted_window_config_publication_resumes_its_refresh_and_queues_the_retained_receipt() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
     let mut observer=|_|true;
@@ -172,7 +172,7 @@ async fn a_mounted_window_config_publication_resumes_its_refresh_and_queues_the_
     let generation_before = authority.snapshot.generation();
     let revision = app.stores.store.content_revision_now();
     let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())), semio_framework_job::Generation(app.stores.store.generation_now()), 17);
-    semio_framework_plugin_testing_laws::artifact_app_laws::ensure_fixture_cancellation_issuer(&mut app,caller.context).unwrap();
+    semio_plugin_testing_laws::artifact_app_laws::ensure_fixture_cancellation_issuer(&mut app,caller.context).unwrap();
     let key=ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation };
     let mut lease=None;
     for _ in 0..4096 {lease=app.tools.tool_cancellations.begin(&key,caller.context).unwrap();if lease.is_some(){break}}
@@ -181,7 +181,7 @@ async fn a_mounted_window_config_publication_resumes_its_refresh_and_queues_the_
     let mut mounted = test_blank_mounted_operation::<ToyRunApp>();
     mounted.source_identity=semio_framework_job::OriginalSourceBinding::borrow(caller.context);
     mounted.verb = "setWorldSelection".into();
-    mounted.meta = ActionMeta { expected_document_revision:None, actor: text(&fixture["actor"]).into(), instance_id: 7, view_state: Some(semio_framework_plugin_testing_laws::receive_view_fixture(view, semio_framework_plugin_testing_laws::OriginalWorkFixture::stock())) };
+    mounted.meta = ActionMeta { expected_document_revision:None, actor: text(&fixture["actor"]).into(), instance_id: 7, view_state: Some(semio_plugin_testing_laws::receive_view_fixture(view, semio_plugin_testing_laws::OriginalWorkFixture::stock())) };
     mounted.operation = operation;
     mounted.canonical_revision = revision;
     mounted.artifact_generation = operation.generation.0;
@@ -198,7 +198,7 @@ async fn a_mounted_window_config_publication_resumes_its_refresh_and_queues_the_
         if mounted.pending_window_config_receipt.is_some() {
             yielded_with_retained_receipt += 1;
         }
-        if let Some(found) = semio_framework_plugin_testing_laws::artifact_app_laws::present_fixture_mounted_page(&mut mounted,grant,caller.context).unwrap() {
+        if let Some(found) = semio_plugin_testing_laws::artifact_app_laws::present_fixture_mounted_page(&mut mounted,grant,caller.context).unwrap() {
             page = Some(found);
             break;
         }
@@ -209,19 +209,19 @@ async fn a_mounted_window_config_publication_resumes_its_refresh_and_queues_the_
     assert!(mounted.pending_window_config_receipt.is_none() && mounted.published_window_config);
     assert!(mounted.window_config_authority.as_ref().is_some_and(|authority| authority.snapshot.generation() > generation_before), "the captured authority was refreshed to the published generation");
     assert!(mounted.acknowledge_result_page(crate::app_testing::artifact_app_laws::close_fixture_result_page(&mut page,crate::app_testing::artifact_app_laws::fixture_mounted_policy().close)).expect("exact ACK"));
-assert!(semio_framework_plugin_testing_laws::artifact_app_laws::retire_fixture_acknowledged_mounted_page(&mut mounted,mounted_policy.close,caller.context).unwrap());
+assert!(semio_plugin_testing_laws::artifact_app_laws::retire_fixture_acknowledged_mounted_page(&mut mounted,mounted_policy.close,caller.context).unwrap());
     let mut terminal = false;
     for _ in 0..4096 {
         publish_window_config_fixture_unit(&mut app,&mut mounted,grant,caller.context).unwrap_or_else(|fault| panic!("every unit after the window config ACK resumes: {fault:?}"));
         if mounted.granted_retirement_ready() && mounted.granted_retirement_pending() {
             let _demand = mounted.granted_retirement_demands(grant.maximum_copy_bytes).expect("quoted granted retirement");
             let quoted = grant;
-            caller.context.with_retained_loan(quoted,|cx|{let before=cx.retained_progress();let step=mounted.granted_retirement_step(cx,quoted)?;let unposted=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_unposted(step.progress(),before,cx.retained_progress())?;cx.consume_retained(unposted)?;Ok::<_,semio_framework_job::OriginalTurnFailure>(())}).expect("granted retirement of the acknowledged publication");
+            caller.context.with_retained_loan(quoted,|cx|{let before=cx.retained_progress();let step=mounted.granted_retirement_step(cx,quoted)?;let unposted=semio_plugin_ownership::bounded_ownership::original_lifecycle_unposted(step.progress(),before,cx.retained_progress())?;cx.consume_retained(unposted)?;Ok::<_,semio_framework_job::OriginalTurnFailure>(())}).expect("granted retirement of the acknowledged publication");
         }
-        if let Some(mut page) = semio_framework_plugin_testing_laws::artifact_app_laws::present_fixture_mounted_page(&mut mounted,grant,caller.context).unwrap() {
+        if let Some(mut page) = semio_plugin_testing_laws::artifact_app_laws::present_fixture_mounted_page(&mut mounted,grant,caller.context).unwrap() {
             terminal = page.lane == TypedOperationResultLane::Terminal;
             assert!(mounted.acknowledge_result_page(crate::app_testing::artifact_app_laws::close_fixture_result_page(&mut page,crate::app_testing::artifact_app_laws::fixture_mounted_policy().close)).expect("exact ACK"));
-assert!(semio_framework_plugin_testing_laws::artifact_app_laws::retire_fixture_acknowledged_mounted_page(&mut mounted,mounted_policy.close,caller.context).unwrap());
+assert!(semio_plugin_testing_laws::artifact_app_laws::retire_fixture_acknowledged_mounted_page(&mut mounted,mounted_policy.close,caller.context).unwrap());
             break;
         }
     }
@@ -257,7 +257,7 @@ fn publish_window_config_fixture_unit(app:&mut ToyApp,mounted:&mut semio_framewo
   app.typed_ctx().publish_mounted_typed_operation_unit(mounted,grant,same)?;
   if let Some((issued,progress))=mounted.publication_ownership_progress.take(){
    assert!(progress.fits(issued)&&progress.fits(grant));
-   let unposted=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_unposted(progress,before,same.retained_progress())?;
+   let unposted=semio_plugin_ownership::bounded_ownership::original_lifecycle_unposted(progress,before,same.retained_progress())?;
    same.consume_retained(unposted)?;
   }
   Ok(())

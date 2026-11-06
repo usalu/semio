@@ -1,0 +1,23 @@
+{
+  "schema": {
+    "layout": "inline",
+    "fields": [
+      {
+        "id": 0,
+        "key": "items",
+        "shape": "list<int>"
+      },
+      {
+        "id": 1,
+        "key": "label",
+        "shape": "text"
+      }
+    ]
+  },
+  "items": [
+    7,
+    9
+  ],
+  "label": "nodes",
+  "document": "label=nodes items=[ 7 9 ]\n"
+}

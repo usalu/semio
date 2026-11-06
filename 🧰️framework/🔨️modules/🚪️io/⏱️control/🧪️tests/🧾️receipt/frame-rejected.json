@@ -1,0 +1,7 @@
+{
+  "contract": "semio.snapshot.frame-submission-refusal.v1",
+  "expectedWork": 1,
+  "callbackCalls": 0,
+  "copiedItems": 1,
+  "receiptKind": "workLimit"
+}

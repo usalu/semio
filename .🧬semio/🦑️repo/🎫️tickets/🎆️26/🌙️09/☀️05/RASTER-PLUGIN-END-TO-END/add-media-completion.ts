@@ -1,0 +1,2 @@
+import {readFileSync,writeFileSync} from "node:fs";
+const path="🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🎞️command/📥️custody/🛂️manifest/🦀️.rs";let source=readFileSync(path,"utf8");for(const [old,next] of [["media_donated:bool,media_descriptor:","media_donated:bool,media_complete:bool,media_descriptor:"],["media_donated:false,media_descriptor:","media_donated:false,media_complete:false,media_descriptor:"]]){if(source.split(old).length!==2)throw new Error(`missing unique ${old}`);source=source.replace(old,next)}writeFileSync(path,source);

@@ -4,6 +4,103 @@ use super::*;
 use semio_framework_test_fixtures::fixture_text;
 use serde::{Deserialize, Serialize};
 
+#[test]
+fn original_history_directory_cursor_pins_and_returns_the_actual_ledger() {
+    let mut ledger=ArtifactHistoryLedger::new();
+    for value in 0u32..3 { ledger.try_push(value).unwrap(); }
+    let grant=semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:ArtifactHistoryDirectoryCursor::<u32>::copy_bytes(),maximum_depth:1,..Default::default()};
+    {let mut denied_cursor=None;let denied=ArtifactHistoryDirectoryCursor::admit_tail(&mut ledger,7,semio_framework_value::RetainedCloneGrant{maximum_items:0,..grant},&mut denied_cursor);assert_eq!(denied.work,0);assert!(!denied.result.unwrap().0);assert!(denied_cursor.is_none());}
+    let mut slot=None;let born=ArtifactHistoryDirectoryCursor::admit_tail(&mut ledger,7,grant,&mut slot);assert_eq!(born.work,1);assert!(born.result.unwrap().0);let mut cursor=slot.take().unwrap();drop(slot);
+    assert!(cursor.advance(8,grant,1).result.is_err());
+    let turn=cursor.advance(7,grant,1);assert_eq!(turn.work,1);let(_,value,previous)=turn.result.unwrap().0.unwrap();assert_eq!(*value,2);assert!(previous.is_some());
+    let rearmed=cursor.rearm_following(7,grant);assert_eq!(rearmed.work,1);assert!(rearmed.result.unwrap().0);
+    let turn=cursor.advance(7,grant,1);assert_eq!(turn.work,1);assert_eq!(*turn.result.unwrap().0.unwrap().1,1);
+    let denied=cursor.close(semio_framework_value::RetainedCloneGrant{maximum_items:0,..grant});assert_eq!(denied.work,0);assert!(!denied.result.unwrap().0);
+    let returned=cursor.close(grant);assert_eq!(returned.work,1);assert!(returned.result.unwrap().0);drop(cursor);while ledger.pop().is_some() {}assert!(ledger.terminal_is_empty());
+}
+
+#[test]
+fn original_history_directory_cursor_handles_empty_and_refuses_staged_sources() {
+    let mut first=ArtifactHistoryLedger::<u32>::empty();let mut second=ArtifactHistoryLedger::new();second.try_push(1).unwrap();
+    let grant=semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:ArtifactHistoryDirectoryCursor::<u32>::copy_bytes(),maximum_depth:1,..Default::default()};
+    assert_ne!(second.retained_issuance(),first.retained_issuance());
+    let mut a=None;let mut b=None;assert!(ArtifactHistoryDirectoryCursor::admit_tail(&mut first,1,grant,&mut a).result.unwrap().0);assert!(ArtifactHistoryDirectoryCursor::admit_tail(&mut second,1,grant,&mut b).result.unwrap().0);
+    assert!(a.as_mut().unwrap().close(grant).result.unwrap().0);assert!(b.as_mut().unwrap().close(grant).result.unwrap().0);drop(a);drop(b);while second.pop().is_some() {}
+    let mut staged=ArtifactHistoryLedger::<u32>::new();let reservation=staged.reserve_one().unwrap();let mut cursor=None;assert!(ArtifactHistoryDirectoryCursor::admit_tail(&mut staged,1,grant,&mut cursor).result.is_err());assert!(cursor.is_none());drop(cursor);staged.cancel_reservation(reservation).unwrap();
+}
+
+#[test]
+fn original_history_directory_cursor_pages_across_real_directory_chunks() {
+    let mut ledger=ArtifactHistoryLedger::new();let count=ArtifactHistoryLedger::<u32>::page_slot_count()*ARTIFACT_HISTORY_DIRECTORY_PAGES+1;
+    for value in 0..count { ledger.try_push(value as u32).unwrap(); }
+    let grant=semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:ArtifactHistoryDirectoryCursor::<u32>::copy_bytes(),maximum_depth:1,..Default::default()};let mut cursor=None;
+    assert!(ArtifactHistoryDirectoryCursor::admit_tail(&mut ledger,1,grant,&mut cursor).result.unwrap().0);let mut owned=cursor.take().unwrap();drop(cursor);
+    let first=owned.advance(1,grant,1);assert_eq!(first.work,1);assert!(first.result.unwrap().0.is_none());
+    let second=owned.advance(1,grant,1);assert_eq!(second.work,1);assert_eq!(*second.result.unwrap().0.unwrap().1,(count-1) as u32);
+    assert!(owned.close(grant).result.unwrap().0);drop(owned);
+    let mut forward=None;assert!(ArtifactHistoryDirectoryCursor::admit_head(&mut ledger,1,grant,&mut forward).result.unwrap().0);let mut owned=forward.take().unwrap();drop(forward);
+    for expected in 0..count{
+        loop{let turn=owned.advance(1,grant,1);assert_eq!(turn.work,1);if let Some((_,value,_))=turn.result.unwrap().0{assert_eq!(*value,expected as u32);break}}
+        let current=owned.current(1,grant,1);assert_eq!(current.work,1);assert_eq!(*current.result.unwrap().unwrap().1,expected as u32);
+        if expected+1<count{let turn=owned.rearm_following(1,grant);assert_eq!(turn.work,1);assert!(turn.result.unwrap().0);}
+    }
+    assert!(!owned.has_following());assert!(owned.close(grant).result.unwrap().0);drop(owned);while ledger.pop().is_some() {}
+}
+
+#[test]
+fn original_history_directory_unwind_recovers_only_under_funded_ledger_authority() {
+    let mut ledger=ArtifactHistoryLedger::new();ledger.try_push(7u32).unwrap();
+    let grant=semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:ArtifactHistoryDirectoryCursor::<u32>::copy_bytes(),maximum_depth:1,..Default::default()};
+    let caught=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||{let mut cursor=None;assert!(ArtifactHistoryDirectoryCursor::admit_tail(&mut ledger,1,grant,&mut cursor).result.unwrap().0);panic!("cancel original directory turn")}));assert!(caught.is_err());
+    let demand=ledger.abandoned_directory_demand().unwrap();let denied=ledger.recover_abandoned_directory(semio_framework_value::RetainedCloneGrant{maximum_items:0,..grant});assert_eq!(denied.work,0);assert_eq!(denied.result.unwrap().progress(),Default::default());assert!(ledger.abandoned_directory_demand().is_some());
+    let funded=semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_depth:demand.depth,..Default::default()};let recovered=ledger.recover_abandoned_directory(funded);assert_eq!(recovered.work,1);assert!(recovered.result.unwrap().progress().fits(funded));assert!(ledger.abandoned_directory_demand().is_none());assert_eq!(ledger.pop(),Some(7));assert!(ledger.terminal_is_empty());
+}
+
+#[test]
+fn original_history_reverse_cursor_keeps_issuer_and_generation_on_denial() {
+    let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: ArtifactHistoryReverseCursor::copy_bytes(), maximum_depth: 1, ..Default::default() };
+    for (input, expected) in [(&[][..], &[][..]), (&[3u32][..], &[3u32][..]), (&[3u32,7,11,19][..], &[19u32,11,7,3][..])] {
+        let mut source = ArtifactHistoryLedger::new();
+        for value in input { source.try_push(*value).unwrap(); }
+        let mut cursor = ArtifactHistoryReverseCursor::new();
+        let mut actual = Vec::new();
+        while !cursor.complete() { if let Some((_, value)) = cursor.advance(&source, 1, grant, u64::MAX).result.unwrap().0 { actual.push(*value); } }
+        assert_eq!(actual, expected);
+        while source.pop().is_some() {}
+    }
+    let mut ledger = ArtifactHistoryLedger::new();
+    for value in [3u32,7,11,19] { ledger.try_push(value).unwrap(); }
+    let mut foreign = ArtifactHistoryLedger::new();
+    for value in [3u32,7,11,19] { foreign.try_push(value).unwrap(); }
+    let mut cursor = ArtifactHistoryReverseCursor::new();
+    let denied = cursor.advance(&ledger, 7, grant, 0);
+    assert_eq!(denied.work, 0);
+    assert!(denied.result.unwrap().0.is_none());
+    let saved = cursor;
+    let short = cursor.advance(&ledger, 7, grant, 6);
+    assert_eq!(short.work, 0);
+    assert!(short.result.unwrap().0.is_none());
+    assert_eq!(cursor, saved);
+    let first = cursor.advance(&ledger, 7, grant, u64::MAX);
+    assert!(first.work > 1);
+    let (entry, progress) = first.result.unwrap();
+    assert!(progress.fits(grant));
+    assert_eq!(*entry.unwrap().1, 19);
+    let saved = cursor;
+    assert!(cursor.advance(&foreign, 7, grant, 1).result.is_err());
+    assert!(cursor.advance(&ledger, 8, grant, 1).result.is_err());
+    assert_eq!(cursor, saved);
+    ledger.try_push(23).unwrap();
+    assert!(cursor.advance(&ledger, 7, grant, 1).result.is_err());
+    assert_eq!(cursor, saved);
+    assert_eq!(ledger.pop(), Some(23));
+    let mut values = vec![19];
+    while let Some((_, value)) = cursor.advance(&ledger, 7, grant, u64::MAX).result.unwrap().0 { values.push(*value); }
+    assert_eq!(values, [19,11,7,3]);
+    while ledger.pop().is_some() {}
+    while foreign.pop().is_some() {}
+}
+
 //#region 🔖️ContentAddressedCheckpointAndMergeBase
 #[semio_framework_async_macros::async_test]
 async fn fixed_history_ledger_preserves_order_capacity_and_aba_rejection() {
@@ -65,12 +162,12 @@ async fn fixed_history_ledger_vacancies_count_every_admissible_insert() {
 /// 🐍 The live order after the fixture's pushes, logical removal, and tail replacement equals a Python list.
 #[semio_framework_async_macros::async_test]
 async fn paged_history_ledger_matches_the_python_list_oracle() {
-    let fixture = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧬️schema/📸️paged-history-ledger/🔣️.json");
+    let fixture = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧬️schema/📸️paged-history-ledger/🔣️.json");
     let law: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(fixture).expect("paged ledger fixture")).expect("paged ledger fixture json");
     let pushes = law["pushes"].as_u64().expect("pushes") as usize;
     let remove_logical = law["removeLogical"].as_u64().expect("removeLogical") as usize;
     let replacement = law["replacement"].as_str().expect("replacement").to_string();
-    let script = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🔬️paged-ledger/📜️oracle.py");
+    let script = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🔬️paged-ledger/📜️oracle.py");
     let output = std::process::Command::new("python3").arg(script).output().expect("python3 list oracle");
     assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
     let expected: Vec<String> = serde_json::from_slice(&output.stdout).expect("python list oracle json");

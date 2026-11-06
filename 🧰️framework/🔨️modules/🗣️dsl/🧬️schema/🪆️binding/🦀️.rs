@@ -4,62 +4,10 @@ use semio_framework_dsl::{UnitSpec,unit_by_symbol};
 #[path="📦️bytes/🦀️.rs"]
 mod paged_byte_fields;
 
-/// ⛓️ Constructs the declared native sequence directly from semantic field owners.
-pub trait DslSequence<T>: Default + IntoIterator<Item = T> {
-    fn from_decoded<I: IntoIterator<Item = Result<T, TextError>>>(values: I) -> Result<Self, TextError>;
-    fn begin_controlled(length: usize, control: &mut NativeDecodeControl<'_>) -> Result<Self, ValueError>;
-    fn ensure_controlled_slot(&mut self, control: &mut NativeDecodeControl<'_>) -> Result<(), ValueError>;
-    fn push_controlled(&mut self, value: T) -> Result<(), ValueError>;
-}
-
-impl<T> DslSequence<T> for Vec<T> {
-    fn from_decoded<I: IntoIterator<Item = Result<T, TextError>>>(values: I) -> Result<Self, TextError> { values.into_iter().collect() }
-    fn begin_controlled(length: usize, control: &mut NativeDecodeControl<'_>) -> Result<Self, ValueError> { control.allocate_vec(length) }
-    fn ensure_controlled_slot(&mut self, _control: &mut NativeDecodeControl<'_>) -> Result<(), ValueError> { Ok(()) }
-    fn push_controlled(&mut self, value: T) -> Result<(), ValueError> { self.push(value); Ok(()) }
-}
-
-impl<T, const N: usize> DslSequence<T> for semio_framework_value_persistent::list::PagedList<T, N> {
-    fn from_decoded<I: IntoIterator<Item = Result<T, TextError>>>(values: I) -> Result<Self, TextError> {
-        let mut output = Self::default();
-        for value in values { output.try_push(value?).map_err(|error| TextError::new(ValueRefusalKind::OwnershipLimit, error.to_string(), TextSpan::at(1, 1)))?; }
-        Ok(output)
-    }
-    fn begin_controlled(_length: usize, control: &mut NativeDecodeControl<'_>) -> Result<Self, ValueError> { control.checkpoint()?; Ok(Self::default()) }
-    fn ensure_controlled_slot(&mut self, control: &mut NativeDecodeControl<'_>) -> Result<(), ValueError> {
-        while !self.has_reserved_slot() {
-            let bytes = self.next_allocation_bytes().map_err(ValueError::from)?;
-            control.charge(bytes)?;
-            self.reserve_one(bytes).map_err(|error| ValueError::from(error.refusal()))?;
-        }
-        Ok(())
-    }
-    fn push_controlled(&mut self, value: T) -> Result<(), ValueError> { self.push_reserved(value).map_err(|_| ValueError::new(ValueRefusalKind::InvariantViolated, "paged DSL sequence rejected an admitted slot")) }
-}
-
-/// 🧭️ Projects semantic sequences through their actual borrowed native owners.
-pub trait DslSequenceView<T> {
-    type Iter<'a>: ExactSizeIterator<Item = &'a T> where Self: 'a, T: 'a;
-    fn field_items(&self) -> Self::Iter<'_>;
-}
-
-impl<T> DslSequenceView<T> for [T] {
-    type Iter<'a> = std::slice::Iter<'a, T> where T: 'a;
-    fn field_items(&self) -> Self::Iter<'_> { self.iter() }
-}
-impl<T> DslSequenceView<T> for Vec<T> {
-    type Iter<'a> = std::slice::Iter<'a, T> where T: 'a;
-    fn field_items(&self) -> Self::Iter<'_> { self.iter() }
-}
-impl<T, const N: usize> DslSequenceView<T> for semio_framework_value_persistent::list::PagedList<T, N> {
-    type Iter<'a> = semio_framework_value_persistent::list::PagedIter<'a, T, N> where T: 'a;
-    fn field_items(&self) -> Self::Iter<'_> { self.iter() }
-}
+pub use semio_framework_dsl_record_ownership::{DslSequence,DslSequenceView};
+use semio_framework_dsl_record_ownership::clone_expression;
 //#region 🔖️Field
-/// 🔗️ Bridges a concrete Rust field type to the engine's `Shape`/`FieldValue` — every
-/// primitive implements it directly; `#[derive(DslRecord)]`/`#[derive(DslScalar)]` implement it
-/// for technology-declared nested types, so composition (a record field whose type is another
-/// derived record or enum) works transparently through the same trait.
+/// 🔗️ Binds primitive or derived record and enum fields to their declared shape and value.
 pub trait DslField: Sized {
     /// 🪪️ Identifies the retained original payload when the field owner moves its inline header but keeps shared original custody.
     fn projection_identity(&self)->usize{self as *const Self as *const () as usize}
@@ -116,15 +64,7 @@ impl<T: DslField> DslField for Box<T> {
     fn from_record_controlled(record:&RecordValue,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{control.charge(size_of::<T>())?;control.scoped_stage(|control|T::from_record_controlled(record,control)).map(Box::new)}
 }
 
-trait ExpressionCloneControl{fn checkpoint(&mut self)->Result<(),ValueError>;fn charge(&mut self,bytes:usize)->Result<(),ValueError>;fn step(&mut self)->Result<(),ValueError>;}
-macro_rules! expression_clone_control{($control:ident)=>{impl ExpressionCloneControl for $control<'_>{fn checkpoint(&mut self)->Result<(),ValueError>{$control::checkpoint(self)}fn charge(&mut self,bytes:usize)->Result<(),ValueError>{$control::charge(self,bytes)}fn step(&mut self)->Result<(),ValueError>{$control::step(self)}}};}
-expression_clone_control!(NativeEncodeControl);
-expression_clone_control!(NativeDecodeControl);
-fn clone_expression_name(name:&str,control:&mut impl ExpressionCloneControl)->Result<String,ValueError>{control.charge(name.len())?;let mut output=String::new();output.try_reserve_exact(name.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"expression name allocation failed"))?;let mut start=0;while start<name.len(){let mut end=(start+256).min(name.len());while !name.is_char_boundary(end){end-=1;}control.checkpoint()?;output.push_str(&name[start..end]);start=end;control.step()?;}Ok(output)}
-fn clone_expression(value:&ExprValue,depth:usize,control:&mut impl ExpressionCloneControl)->Result<ExprValue,ValueError>{
- control.checkpoint()?;if depth>=64{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"expression construction exceeds native depth"));}
- let output=match value{ExprValue::Num(value)=>ExprValue::Num(*value),ExprValue::Var(name)=>ExprValue::Var(clone_expression_name(name,control)?),ExprValue::Neg(child)=>{control.charge(size_of::<ExprValue>())?;ExprValue::Neg(Box::new(clone_expression(child,depth+1,control)?))},ExprValue::Binary(op,left,right)=>{control.charge(2*size_of::<ExprValue>())?;ExprValue::Binary(*op,Box::new(clone_expression(left,depth+1,control)?),Box::new(clone_expression(right,depth+1,control)?))},ExprValue::Call(name,children)=>{let name=clone_expression_name(name,control)?;control.charge(children.len().checked_mul(size_of::<ExprValue>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"expression argument capacity overflow"))?)?;let mut arguments=Vec::new();arguments.try_reserve_exact(children.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"expression argument allocation failed"))?;for child in children{arguments.push(clone_expression(child,depth+1,control)?);}ExprValue::Call(name,arguments)}};control.step()?;Ok(output)
-}
+
 impl DslField for ExprValue{
  fn projection_view(&self,path:&[usize])->Result<native_encoding::FieldProjectionView<'_>,ValueError>{if path.is_empty(){Ok(native_encoding::FieldProjectionView::Expr(self))}else{Err(native_encoding::projection_path_error())}}
  fn shape()->Shape{Shape::Expr}
@@ -232,10 +172,7 @@ impl DslField for f64 {
     fn from_value_controlled(value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self,ValueError> { control.step()?;match value{FieldValue::Float(value)=>Ok(*value),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"expected Float"))} }
 }
 
-/// 🔤️ `String` binds as `Shape::Text` — the one string shape. The parser accepts either a
-/// bare `Ident` token or a quoted `Text` token wherever `Text` is expected; the printer emits bare
-/// (unquoted) whenever `crate::os_dsl::is_bare_ident` holds for the value, quoted+escaped otherwise —
-/// so bare-vs-quoted is entirely a printing decision now, not a separate shape a field opts into.
+/// 🔤️ Text accepts bare identifiers or quoted tokens; printing chooses bare or escaped form.
 impl DslField for String {
     fn projection_view(&self,path:&[usize])->Result<native_encoding::FieldProjectionView<'_>,ValueError>{if !path.is_empty(){return Err(native_encoding::projection_path_error())}Ok(native_encoding::FieldProjectionView::Text(self))}
     fn shape() -> Shape {
@@ -315,9 +252,7 @@ impl<T: DslField, const N: usize> DslField for semio_framework_value::paged::Pag
     fn retire_decoded(self) { for (_, value) in self.into_retained_entries() { T::retire_decoded(value); } }
 }
 
-/// 🔌️ A wire literal as a plain struct field (or inside a `#[dsl(table)]` `Vec` as a
-/// `WIRE`-typed column) — thin `DslField` wrapper around `crate::WireValue` so adopter
-/// technologies never need to hand-roll their own `Shape::Wire` binding.
+/// 🔌️ Wire fields and table columns bind directly to the declared wire shape.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct Wire(pub WireValue);
 
@@ -349,11 +284,7 @@ impl DslField for Wire {
         }
     }
 }
-/// 📚️ General recursion seam: `#[derive(DslRecord)]`/`#[derive(DslScalar)]` fields classify
-/// `Vec<T>`/`[T; N]` directly (so their own printed shape stays field-specific), but a NESTED
-/// collection — `Vec<Vec<T>>`, a fixed-size array field, ... — needs its inner element type to
-/// satisfy `DslField` itself. These two blanket impls close that gap generically instead of adding
-/// a special-cased `FieldKind` for every depth of nesting.
+/// 📚️ Blanket sequence bindings allow nested vectors and arrays to retain their element shapes.
 impl<T: DslField> DslField for Vec<T> {
     fn projection_view(&self,path:&[usize])->Result<native_encoding::FieldProjectionView<'_>,ValueError>{if path.is_empty(){return Ok(native_encoding::FieldProjectionView::List(self.len()))}self.get(path[0]).ok_or_else(native_encoding::projection_path_error)?.projection_view(&path[1..])}
     fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{let child=*path.first().ok_or_else(native_encoding::projection_path_error)?;self.get(child).ok_or_else(native_encoding::projection_path_error)?.projection_key(&path[1..],index)}
@@ -392,10 +323,7 @@ impl<T: DslField> DslField for Vec<T> {
     }
 }
 
-/// 🗺️ Same recursion seam as `Vec<T>`, for a `BTreeMap<String, T>` that's itself nested
-/// (e.g. `Option<BTreeMap<String, T>>`) rather than a bare top-level field — `#[derive(DslRecord)]`
-/// classifies a *bare* `BTreeMap<String, T>` field directly via its own dedicated `FieldKind`
-/// (same `Shape::Map` this produces), so the two never conflict.
+/// 🗺️ Nested ordered maps use the same map shape as directly derived map fields.
 impl<T: DslField> DslField for std::collections::BTreeMap<String, T> {
     fn projection_view(&self,path:&[usize])->Result<native_encoding::FieldProjectionView<'_>,ValueError>{if path.is_empty(){return Ok(native_encoding::FieldProjectionView::Map(self.len()))}self.iter().nth(path[0]).map(|(_,value)|value).ok_or_else(native_encoding::projection_path_error)?.projection_view(&path[1..])}
     fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{if path.is_empty(){return self.keys().nth(index).map(String::as_str).ok_or_else(native_encoding::projection_path_error)}self.iter().nth(path[0]).map(|(_,value)|value).ok_or_else(native_encoding::projection_path_error)?.projection_key(&path[1..],index)}
@@ -538,9 +466,7 @@ fn intrinsic_projection_node<'a>(mut value:&'a DslValue,path:&[usize])->Result<&
 //#endregion 🔖️Field
 
 //#region 🔖️Variants
-/// 🌿️ Bridges an enum whose variants are each their own keyword-tagged record — the type
-/// bound for `#[dsl(statements)] Vec<T>` collection fields and for `#[derive(DslOps)]` operation
-/// enums. `#[derive(DslEnum)]`-with-struct-variants and `#[derive(DslOps)]` both implement this.
+/// 🌿️ Binds keyword-tagged record variants for statements and derived operations.
 pub trait DslVariants: Sized {
     /// 🏷️ Reads the current authored variant and its literal ordinal without allocating labels.
     fn projected_variant_identity(&self)->(&'static str,usize,RecordSpecProducer);
@@ -549,19 +475,14 @@ pub trait DslVariants: Sized {
     /// 🔑️ Borrows a key from the original variant's ranked field source.
     fn projected_variant_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>;
 
-    /// 🐌️ Lazy: each entry is a zero-capture `fn` pointer, not an eagerly-built `RecordSpec`
-    /// — a self-referential grammar's own `variants()` would otherwise need to recurse infinitely
-    /// just to construct this list. See [`Shape::Statements`]'s doc comment for the full rationale.
+    /// 🐌️ Lazy function pointers prevent recursive grammars from eagerly rebuilding themselves.
     fn variants() -> Vec<(String, RecordSpecProducer)>;
     /// 🔖️ Owns literal variant labels and their lazy controlled schema producers.
     fn variants_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Vec<(String,RecordSpecProducer)>,ValueError>{control.checkpoint()?;Err(ValueError::new(ValueRefusalKind::UnsupportedOwner,"variant owner has no controlled native schema implementation"))}
     fn to_named_record(&self) -> (String, RecordValue);
     /// ⏺️ Projects a declared tagged variant under the same cumulative output control.
     fn to_named_record_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<(String,RecordValue),ValueError>{control.checkpoint()?;Err(ValueError::new(ValueRefusalKind::UnsupportedOwner,"variant owner has no controlled native projection implementation"))}
-    /// ⚠️ Returns `TextError` (not `String`, unlike [`DslField::from_value`]) so
-    /// generated bodies can `?`-propagate it directly — this is the same error type
-    /// `crate::os_spr::OpText::parse_op`/`pack::snapshot::ArtifactDsl::parse_dsl` already return, and the derive's
-    /// `#[dsl(statements)]` field codegen composes it without any conversion at every nesting depth.
+    /// ⚠️ Returns TextError so generated nested statement parsers propagate the original error.
     fn from_named_record(keyword: &str, record: &RecordValue) -> Result<Self, TextError>;
     /// 🌲️ Retires a completed tagged value through its domain owner.
     fn retire_decoded_variant(self) { drop(self); }
@@ -599,21 +520,12 @@ pub mod __rt {
         control.scoped_stage(|control|{control.begin_stage(items.len())?;let mut output=DecodedFieldOwner::new(C::begin_controlled(items.len(),control)?,|values:C|{for value in values{T::retire_decoded_variant(value);}});for(keyword,record)in items{output.as_mut().ensure_controlled_slot(control)?;let value=control.scoped_stage(|control|{control.begin_stage(0)?;T::from_named_record_controlled(keyword,record,control)})?;output.as_mut().push_controlled(value)?;control.step()?;}Ok(output.take())})
     }
 
-    /// 📐️ Resolves a `#[dsl(unit = "...")]`/`#[dsl(angle = "...")]` symbol at spec-build
-    /// time. An unknown symbol is a derive-time misuse (a typo'd unit string, caught the first time
-    /// the generated `__dsl_spec` runs — every RecordSpec-law test exercises this), so it panics
-    /// rather than threading a `Result` through the whole spec-building call chain, matching
-    /// `newtype_variant_spec`'s convention above.
+    /// 📐️ Resolves a declared unit or angle; an unknown symbol panics during spec construction.
     pub fn unit_for_derive(symbol: &'static str) -> &'static UnitSpec {
         unit_by_symbol(symbol).unwrap_or_else(|| panic!("dsl: unknown unit symbol '{symbol}' in #[dsl(unit = ...)]/#[dsl(angle = ...)]"))
     }
 
-    /// 📕️ Single-field tuple ("newtype") enum variant support — `Variant(Body)` delegates its
-    /// whole `RecordSpec`/value to `Body`'s own `DslField` impl rather than wrapping it in one
-    /// positional field, so `Body` prints/parses identically whether reached through the enum or on
-    /// its own. `Body` must have `Shape::Record` (i.e. itself come from `#[derive(DslRecord)]` or
-    /// `#[derive(DslArtifact)]`) — anything else is a derive-time misuse, hence the panic rather than
-    /// a `Result` (there is no sensible recoverable path for a grammar that's wrong at compile time).
+    /// 📕️ A newtype variant delegates its record shape and value to its body; non-record bodies panic.
     // 🚫️async: E4 — this fn's VALUE is cast `as fn() -> RecordSpec` at every newtype-variant call
     // site (`✨️derive/🦀️.rs`'s `dsl_variants_codegen`), and it calls the now-sync `DslField::shape`.
     pub fn newtype_variant_spec<T: DslField>() -> RecordSpec {

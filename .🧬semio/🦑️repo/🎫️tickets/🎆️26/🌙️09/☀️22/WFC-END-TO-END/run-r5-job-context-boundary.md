@@ -1,0 +1,7 @@
+# Job Context Source Boundary
+
+The original adaptive `ClockStride` now belongs to the existing `semio-framework-job-clock` component; the job context reexports the same type and its protocol still consumes it. Sampling, deadline behavior, and state are unchanged. The context's source boundary remains 262144 bytes, 32 files, and 4000 active lines. Before extraction, admission refused its final owner source at 3702 bytes with 3089 bytes remaining.
+
+The language-neutral clock-stride fixture law now runs as a unit test in its `semio-framework-job-clock` owner. The previous job test registration was removed. The initial run could not test `semio-framework-job` because it was not a workspace member. A subsequent attempt to add the clock owner to the root workspace failed because the clock owner already belongs to the framework workspace; that erroneous root entry was removed. Its `--lib` test is queued with the framework manifest in session 41795. Original native source admission is being rerun by the native verification lane.
+
+The core native gate 9616 passed job-context source admission after extraction; IO gate 93872 also advanced to compilation and execution. The framework-manifest clock test passed source admission but stopped compiling `semio-framework-value-retirement`: its retirement cursor expected `ValueError` and received the concurrently introduced `OriginalRetirementFailure`. The shared retirement owner was notified. The clock fixture test has not run.

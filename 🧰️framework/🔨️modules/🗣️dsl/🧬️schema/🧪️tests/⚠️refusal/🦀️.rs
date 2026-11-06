@@ -6,6 +6,7 @@ use semio_framework_value::{ValueError,ValueRefusalKind};
 struct RefusingControl { kind:ValueRefusalKind, message:String }
 impl RefusingControl { fn refusal(&self)->ValueError { ValueError::new(self.kind,self.message.clone()) } }
 impl NativeSchemaControl for RefusingControl {
+    fn select_schema(&mut self)->Result<(),ValueError>{Ok(())}
     fn checkpoint(&mut self)->Result<(),ValueError>{Ok(())}
     fn begin_stage(&mut self,_total:usize)->Result<(),ValueError>{Ok(())}
     fn step(&mut self)->Result<(),ValueError>{Ok(())}

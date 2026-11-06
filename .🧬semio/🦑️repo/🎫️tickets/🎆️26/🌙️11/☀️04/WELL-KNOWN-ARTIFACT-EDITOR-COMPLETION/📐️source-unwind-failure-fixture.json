@@ -1,0 +1,34 @@
+[
+  {
+    "name": "no refusal",
+    "receipt": false,
+    "provenance": false,
+    "capacity": true,
+    "expectedRetained": 0,
+    "expectedTransferred": 0
+  },
+  {
+    "name": "both retained when transfer denied",
+    "receipt": true,
+    "provenance": true,
+    "capacity": false,
+    "expectedRetained": 2,
+    "expectedTransferred": 0
+  },
+  {
+    "name": "both moved with original metadata grant",
+    "receipt": true,
+    "provenance": true,
+    "capacity": true,
+    "expectedRetained": 0,
+    "expectedTransferred": 2
+  },
+  {
+    "name": "single refusal preserved",
+    "receipt": true,
+    "provenance": false,
+    "capacity": false,
+    "expectedRetained": 1,
+    "expectedTransferred": 0
+  }
+]

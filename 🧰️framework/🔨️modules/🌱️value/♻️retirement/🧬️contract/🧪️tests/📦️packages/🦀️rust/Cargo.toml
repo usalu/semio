@@ -1,0 +1,22 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-value-failure-tests"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "test"
+id = "value-failure-tests"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../parts.rs"
+doctest = false
+
+[dependencies]
+semio-framework-value-retirement = { path = "../../../../📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

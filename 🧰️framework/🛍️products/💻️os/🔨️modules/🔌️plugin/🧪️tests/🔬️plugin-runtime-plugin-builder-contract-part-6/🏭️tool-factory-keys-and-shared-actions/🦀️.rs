@@ -3,8 +3,8 @@
     struct OtherTestRetainedCommandFactory(TestRetainedCommandFactory);
 
     impl ToolJobFactory for OtherTestRetainedCommandFactory {
-        type Payload = semio_plugin_retained_command::ArtifactRetainedCommandPayload<TestApp>;
-        type Job = semio_plugin_retained_command::ArtifactRetainedCommandJob<TestApp>;
+        type Payload = semio_framework_plugin_retained_command::ArtifactRetainedCommandPayload<TestApp>;
+        type Job = semio_framework_plugin_retained_command::ArtifactRetainedCommandJob<TestApp>;
         fn keys(&self) -> &[ToolFactoryKey] {
             &self.0.keys
         }
@@ -267,7 +267,7 @@ pub fn instance_source() -> String {
                 else { definition.modes[0].commands.push(command); }
             } else { definition.actions.retain(|candidate| candidate.id != id); definition.actions.push(action); }
             match case["proof"].as_str().unwrap() {
-                "wrong-owner" => rows[0].owner = semio_framework_plugin_decl_app::tool_contract::ToolOwnerWitness::of::<CopyDrawApp>(),
+                "wrong-owner" => rows[0].owner = semio_plugin_decl_app::tool_contract::ToolOwnerWitness::of::<CopyDrawApp>(),
                 "wrong-schema" => rows[0].artifact_schema = "wrong.schema",
                 "wrong-controller" => rows[0].controller_id = "foreign.controller",
                 "wrong-registry-controller" => definition.controller_id = "foreign.controller".into(),

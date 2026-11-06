@@ -13,7 +13,7 @@ fn the_window_kind_is_the_read_only_view_surface() {
 #[test]
 fn every_example_renders_a_non_empty_surface() {
     for document in [crate::examples::two_room_corridor::snapshot(), crate::examples::wall_roof_facade_strip::snapshot(), crate::examples::tower_stack::snapshot()] {
-        let built = render(&document, &Default::default(), None, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("the viewer surface assembles");
+        let built = render(&document, &Default::default(), None, semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native).expect("the viewer surface assembles");
         assert!(!format!("{built:?}").is_empty());
     }
 }

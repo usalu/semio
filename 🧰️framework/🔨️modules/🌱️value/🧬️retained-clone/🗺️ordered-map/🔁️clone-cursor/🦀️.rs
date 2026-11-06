@@ -85,12 +85,12 @@ impl<K: RetainedClone, V: RetainedClone> RetainedCloneCursor<RetainedOrderedMap<
         }
         Ok(demand)
     }
-    fn advance(&mut self, source: RetainedCloneRef<'_, RetainedOrderedMap<K, V>>, body: usize, grant: RetainedCloneGrant) -> crate::RetainedWorkOutcome<RetainedCloneStep, ValueError> {let mut work=0;let result=(||{
+    fn advance(&mut self, source: RetainedCloneRef<'_, RetainedOrderedMap<K, V>>, body: usize, grant: RetainedCloneGrant) -> crate::OriginalRetirementOutcome {let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
         if self.closing {
-            return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map clone cursor is closing"));
+            return Err((ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map clone cursor is closing")).into());
         }
         if self.spent {
-            return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map clone cursor is spent"));
+            return Err((ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map clone cursor is spent")).into());
         }
         let demand=self.advance_demands(source,body)?;
         if !retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
@@ -110,7 +110,7 @@ impl<K: RetainedClone, V: RetainedClone> RetainedCloneCursor<RetainedOrderedMap<
                 work+=1;self.pages.try_reserve_exact(planned_pages).map_err(|_| ValueError::literal(crate::ValueRefusalKind::AllocationFailed, "retained ordered-map directory allocation failed"))?;
                 let actual = self.pages.capacity().checked_mul(size_of::<Vec<(K, V)>>()).ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::OwnershipLimit, "retained ordered-map directory actual capacity overflow"))?;
                 if actual > grant.maximum_capacity_bytes {
-                    return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map directory allocator exceeded its admitted capacity").with_retained_progress(RetainedCloneProgress{retained_capacity_bytes:actual,..progress}));
+                    return Err((ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map directory allocator exceeded its admitted capacity").with_retained_progress(RetainedCloneProgress{retained_capacity_bytes:actual,..progress})).into());
                 }
                 self.phase = 1;
                 Ok(RetainedCloneStep::Progress(RetainedCloneProgress { retained_capacity_bytes: actual, ..progress }))
@@ -135,7 +135,7 @@ impl<K: RetainedClone, V: RetainedClone> RetainedCloneCursor<RetainedOrderedMap<
                 }
                 let source_page = source_value.pages.get(self.page).ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map source page is missing"))?;
                 if source_page.is_empty() || source_page.len() > RETAINED_ORDERED_MAP_PAGE_CAPACITY {
-                    return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map source page violates its fixed capacity"));
+                    return Err((ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map source page violates its fixed capacity")).into());
                 }
                 let planned = RETAINED_ORDERED_MAP_PAGE_CAPACITY.checked_mul(size_of::<(K, V)>()).ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::OwnershipLimit, "retained ordered-map page capacity overflow"))?;
                 let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: planned, released_bytes: 0 };
@@ -146,7 +146,7 @@ impl<K: RetainedClone, V: RetainedClone> RetainedCloneCursor<RetainedOrderedMap<
                 work+=1;page.try_reserve_exact(RETAINED_ORDERED_MAP_PAGE_CAPACITY).map_err(|_| ValueError::literal(crate::ValueRefusalKind::AllocationFailed, "retained ordered-map page allocation failed"))?;
                 let actual = page.capacity().checked_mul(size_of::<(K, V)>()).ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::OwnershipLimit, "retained ordered-map page actual capacity overflow"))?;
                 if actual > grant.maximum_capacity_bytes {
-                    self.page_output=Some(page);return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"retained ordered-map page allocator exceeded its admitted capacity").with_retained_progress(RetainedCloneProgress{retained_capacity_bytes:actual,..progress}));
+                    self.page_output=Some(page);return Err((ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"retained ordered-map page allocator exceeded its admitted capacity").with_retained_progress(RetainedCloneProgress{retained_capacity_bytes:actual,..progress})).into());
                 }
                 self.source_page_len = source_page.len();
                 self.page_output = Some(page);
@@ -212,7 +212,7 @@ impl<K: RetainedClone, V: RetainedClone> RetainedCloneCursor<RetainedOrderedMap<
                 Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes:size_of::<(K,V)>(), ..Default::default() }))
             }
             7 => Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())),
-            _ => Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map clone state is invalid")),
+            _ => Err((ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map clone state is invalid")).into()),
         }
     })();crate::RetainedWorkOutcome{result,work}}
 

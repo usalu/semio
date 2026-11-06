@@ -7,8 +7,11 @@
     "cause",
     "receiptRefusal",
     "contextRefusal",
+    "workRefusal",
     "progress",
-    "settlementRefusal"
+    "settlementRefusal",
+    "allocation",
+    "encodeEffect"
   ],
   "properties": {
     "cause": {
@@ -33,7 +36,8 @@
                   "type": "object",
                   "required": [
                     "kind",
-                    "message"
+                    "message",
+                    "retainedProgress"
                   ],
                   "properties": {
                     "kind": {
@@ -41,8 +45,37 @@
                     },
                     "message": {
                       "type": "string"
+                    },
+                    "retainedProgress": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "copiedItems",
+                        "copiedBytes",
+                        "retainedCapacityBytes",
+                        "releasedBytes"
+                      ],
+                      "properties": {
+                        "copiedItems": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "copiedBytes": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "retainedCapacityBytes": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "releasedBytes": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      }
                     }
-                  }
+                  },
+                  "additionalProperties": false
                 }
               }
             },
@@ -54,7 +87,11 @@
                 "primary",
                 "quoteRefusal",
                 "allocationRefusal",
-                "progress"
+                "progress",
+                "nativeAllocation",
+                "allocationFailure",
+                "receiptRefusal",
+                "workRefusal"
               ],
               "properties": {
                 "type": {
@@ -69,7 +106,8 @@
                       "type": "object",
                       "required": [
                         "kind",
-                        "message"
+                        "message",
+                        "retainedProgress"
                       ],
                       "properties": {
                         "kind": {
@@ -77,8 +115,37 @@
                         },
                         "message": {
                           "type": "string"
+                        },
+                        "retainedProgress": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "copiedItems",
+                            "copiedBytes",
+                            "retainedCapacityBytes",
+                            "releasedBytes"
+                          ],
+                          "properties": {
+                            "copiedItems": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "copiedBytes": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "retainedCapacityBytes": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "releasedBytes": {
+                              "type": "integer",
+                              "minimum": 0
+                            }
+                          }
                         }
-                      }
+                      },
+                      "additionalProperties": false
                     }
                   ]
                 },
@@ -91,7 +158,8 @@
                       "type": "object",
                       "required": [
                         "kind",
-                        "message"
+                        "message",
+                        "retainedProgress"
                       ],
                       "properties": {
                         "kind": {
@@ -99,8 +167,37 @@
                         },
                         "message": {
                           "type": "string"
+                        },
+                        "retainedProgress": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "copiedItems",
+                            "copiedBytes",
+                            "retainedCapacityBytes",
+                            "releasedBytes"
+                          ],
+                          "properties": {
+                            "copiedItems": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "copiedBytes": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "retainedCapacityBytes": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "releasedBytes": {
+                              "type": "integer",
+                              "minimum": 0
+                            }
+                          }
                         }
-                      }
+                      },
+                      "additionalProperties": false
                     }
                   ]
                 },
@@ -113,7 +210,8 @@
                       "type": "object",
                       "required": [
                         "kind",
-                        "message"
+                        "message",
+                        "retainedProgress"
                       ],
                       "properties": {
                         "kind": {
@@ -121,8 +219,37 @@
                         },
                         "message": {
                           "type": "string"
+                        },
+                        "retainedProgress": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "copiedItems",
+                            "copiedBytes",
+                            "retainedCapacityBytes",
+                            "releasedBytes"
+                          ],
+                          "properties": {
+                            "copiedItems": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "copiedBytes": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "retainedCapacityBytes": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "releasedBytes": {
+                              "type": "integer",
+                              "minimum": 0
+                            }
+                          }
                         }
-                      }
+                      },
+                      "additionalProperties": false
                     }
                   ]
                 },
@@ -153,6 +280,320 @@
                       "minimum": 0
                     }
                   }
+                },
+                "nativeAllocation": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "type",
+                        "request",
+                        "primary",
+                        "extentRefusal",
+                        "settlementRefusal",
+                        "actual",
+                        "admitted",
+                        "quoteRefusal"
+                      ],
+                      "properties": {
+                        "type": {
+                          "const": "decode"
+                        },
+                        "actual": {
+                          "anyOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "type": "integer",
+                              "minimum": 0
+                            }
+                          ]
+                        },
+                        "primary": {
+                          "$ref": "#/properties/receiptRefusal"
+                        },
+                        "extentRefusal": {
+                          "$ref": "#/properties/receiptRefusal"
+                        },
+                        "settlementRefusal": {
+                          "$ref": "#/properties/receiptRefusal"
+                        },
+                        "request": {
+                          "anyOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "bytes",
+                                "ownedBytes",
+                                "nextOwnedBytes",
+                                "maximumBytes"
+                              ],
+                              "properties": {
+                                "bytes": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "ownedBytes": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "nextOwnedBytes": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "maximumBytes": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        "admitted": {
+                          "type": "boolean"
+                        },
+                        "quoteRefusal": {
+                          "$ref": "#/properties/receiptRefusal"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "allocationFailure": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "primary",
+                        "admission",
+                        "forwardedAdmission",
+                        "scopedAdmission",
+                        "forwardedQuote",
+                        "scopedQuote",
+                        "forwardedPost",
+                        "scopedPost",
+                        "forwardedCancel",
+                        "scopedCancel",
+                        "receipt",
+                        "extent",
+                        "progress"
+                      ],
+                      "properties": {
+                        "primary": {
+                          "$ref": "#/properties/receiptRefusal"
+                        },
+                        "admission": {
+                          "$ref": "#/properties/receiptRefusal"
+                        },
+                        "forwardedAdmission": {
+                          "$ref": "#/properties/receiptRefusal"
+                        },
+                        "scopedAdmission": {
+                          "$ref": "#/properties/receiptRefusal"
+                        },
+                        "forwardedQuote": {
+                          "$ref": "#/properties/receiptRefusal"
+                        },
+                        "scopedQuote": {
+                          "$ref": "#/properties/receiptRefusal"
+                        },
+                        "forwardedPost": {
+                          "$ref": "#/properties/receiptRefusal"
+                        },
+                        "scopedPost": {
+                          "$ref": "#/properties/receiptRefusal"
+                        },
+                        "forwardedCancel": {
+                          "$ref": "#/properties/receiptRefusal"
+                        },
+                        "scopedCancel": {
+                          "$ref": "#/properties/receiptRefusal"
+                        },
+                        "receipt": {
+                          "$ref": "#/properties/receiptRefusal"
+                        },
+                        "extent": {
+                          "$ref": "#/properties/receiptRefusal"
+                        },
+                        "progress": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "admittedBytes",
+                            "actualCapacityBytes",
+                            "priorAdmittedBytes",
+                            "requestedBytes",
+                            "maximumBytes"
+                          ],
+                          "properties": {
+                            "admittedBytes": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "actualCapacityBytes": {
+                              "anyOf": [
+                                {
+                                  "type": "null"
+                                },
+                                {
+                                  "type": "integer",
+                                  "minimum": 0
+                                }
+                              ]
+                            },
+                            "priorAdmittedBytes": {
+                              "anyOf": [
+                                {
+                                  "type": "null"
+                                },
+                                {
+                                  "type": "integer",
+                                  "minimum": 0
+                                }
+                              ]
+                            },
+                            "requestedBytes": {
+                              "anyOf": [
+                                {
+                                  "type": "null"
+                                },
+                                {
+                                  "type": "integer",
+                                  "minimum": 0
+                                }
+                              ]
+                            },
+                            "maximumBytes": {
+                              "anyOf": [
+                                {
+                                  "type": "null"
+                                },
+                                {
+                                  "type": "integer",
+                                  "minimum": 0
+                                }
+                              ]
+                            }
+                          },
+                          "oneOf": [
+                            {
+                              "properties": {
+                                "priorAdmittedBytes": {
+                                  "type": "null"
+                                },
+                                "requestedBytes": {
+                                  "type": "null"
+                                },
+                                "maximumBytes": {
+                                  "type": "null"
+                                }
+                              }
+                            },
+                            {
+                              "properties": {
+                                "priorAdmittedBytes": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "requestedBytes": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                },
+                                "maximumBytes": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                },
+                "receiptRefusal": {
+                  "$ref": "#/properties/receiptRefusal"
+                },
+                "workRefusal": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "kind",
+                        "message",
+                        "retainedProgress"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "retainedProgress": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "copiedItems",
+                            "copiedBytes",
+                            "retainedCapacityBytes",
+                            "releasedBytes"
+                          ],
+                          "properties": {
+                            "copiedItems": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "copiedBytes": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "retainedCapacityBytes": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "releasedBytes": {
+                              "type": "integer",
+                              "minimum": 0
+                            }
+                          }
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "type",
+                "value"
+              ],
+              "properties": {
+                "type": {
+                  "const": "retirement"
+                },
+                "value": {
+                  "$ref": "#/$defs/OriginalRetirementFailure"
                 }
               }
             }
@@ -169,7 +610,8 @@
           "type": "object",
           "required": [
             "kind",
-            "message"
+            "message",
+            "retainedProgress"
           ],
           "properties": {
             "kind": {
@@ -177,8 +619,37 @@
             },
             "message": {
               "type": "string"
+            },
+            "retainedProgress": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "copiedItems",
+                "copiedBytes",
+                "retainedCapacityBytes",
+                "releasedBytes"
+              ],
+              "properties": {
+                "copiedItems": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "copiedBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "retainedCapacityBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "releasedBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
             }
-          }
+          },
+          "additionalProperties": false
         }
       ]
     },
@@ -219,7 +690,8 @@
           "type": "object",
           "required": [
             "kind",
-            "message"
+            "message",
+            "retainedProgress"
           ],
           "properties": {
             "kind": {
@@ -227,8 +699,89 @@
             },
             "message": {
               "type": "string"
+            },
+            "retainedProgress": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "copiedItems",
+                "copiedBytes",
+                "retainedCapacityBytes",
+                "releasedBytes"
+              ],
+              "properties": {
+                "copiedItems": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "copiedBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "retainedCapacityBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "releasedBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
             }
-          }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "workRefusal": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "message",
+            "retainedProgress"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            },
+            "retainedProgress": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "copiedItems",
+                "copiedBytes",
+                "retainedCapacityBytes",
+                "releasedBytes"
+              ],
+              "properties": {
+                "copiedItems": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "copiedBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "retainedCapacityBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "releasedBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "additionalProperties": false
         }
       ]
     },
@@ -241,7 +794,8 @@
           "type": "object",
           "required": [
             "kind",
-            "message"
+            "message",
+            "retainedProgress"
           ],
           "properties": {
             "kind": {
@@ -249,10 +803,574 @@
             },
             "message": {
               "type": "string"
+            },
+            "retainedProgress": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "copiedItems",
+                "copiedBytes",
+                "retainedCapacityBytes",
+                "releasedBytes"
+              ],
+              "properties": {
+                "copiedItems": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "copiedBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "retainedCapacityBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "releasedBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "allocation": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "type",
+                "request",
+                "primary",
+                "extentRefusal",
+                "forwardedRefusal",
+                "scopedRefusal",
+                "actual",
+                "admitted",
+                "forwardedQuote",
+                "scopedQuote"
+              ],
+              "properties": {
+                "type": {
+                  "const": "encode"
+                },
+                "actual": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  ]
+                },
+                "primary": {
+                  "$ref": "#/properties/receiptRefusal"
+                },
+                "extentRefusal": {
+                  "$ref": "#/properties/receiptRefusal"
+                },
+                "forwardedRefusal": {
+                  "$ref": "#/properties/receiptRefusal"
+                },
+                "scopedRefusal": {
+                  "$ref": "#/properties/receiptRefusal"
+                },
+                "request": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "bytes",
+                        "ownedBytes",
+                        "nextOwnedBytes",
+                        "maximumBytes"
+                      ],
+                      "properties": {
+                        "bytes": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "ownedBytes": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "nextOwnedBytes": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "maximumBytes": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      }
+                    }
+                  ]
+                },
+                "admitted": {
+                  "type": "boolean"
+                },
+                "forwardedQuote": {
+                  "$ref": "#/properties/receiptRefusal"
+                },
+                "scopedQuote": {
+                  "$ref": "#/properties/receiptRefusal"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "type",
+                "request",
+                "primary",
+                "extentRefusal",
+                "settlementRefusal",
+                "actual",
+                "admitted",
+                "quoteRefusal"
+              ],
+              "properties": {
+                "type": {
+                  "const": "decode"
+                },
+                "actual": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  ]
+                },
+                "primary": {
+                  "$ref": "#/properties/receiptRefusal"
+                },
+                "extentRefusal": {
+                  "$ref": "#/properties/receiptRefusal"
+                },
+                "settlementRefusal": {
+                  "$ref": "#/properties/receiptRefusal"
+                },
+                "request": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "bytes",
+                        "ownedBytes",
+                        "nextOwnedBytes",
+                        "maximumBytes"
+                      ],
+                      "properties": {
+                        "bytes": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "ownedBytes": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "nextOwnedBytes": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "maximumBytes": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      }
+                    }
+                  ]
+                },
+                "admitted": {
+                  "type": "boolean"
+                },
+                "quoteRefusal": {
+                  "$ref": "#/properties/receiptRefusal"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "encodeEffect": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "primary",
+            "invariant",
+            "physicalInvariant",
+            "capacityInvariant",
+            "work",
+            "local",
+            "physical",
+            "allocation"
+          ],
+          "properties": {
+            "primary": {
+              "$ref": "#/properties/receiptRefusal"
+            },
+            "invariant": {
+              "$ref": "#/properties/receiptRefusal"
+            },
+            "physicalInvariant": {
+              "$ref": "#/properties/receiptRefusal"
+            },
+            "capacityInvariant": {
+              "$ref": "#/properties/receiptRefusal"
+            },
+            "work": {
+              "$ref": "#/properties/receiptRefusal"
+            },
+            "local": {
+              "$ref": "#/properties/receiptRefusal"
+            },
+            "physical": {
+              "$ref": "#/properties/receiptRefusal"
+            },
+            "allocation": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "type",
+                    "request",
+                    "primary",
+                    "extentRefusal",
+                    "forwardedRefusal",
+                    "scopedRefusal",
+                    "actual",
+                    "admitted",
+                    "forwardedQuote",
+                    "scopedQuote"
+                  ],
+                  "properties": {
+                    "type": {
+                      "const": "encode"
+                    },
+                    "actual": {
+                      "anyOf": [
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      ]
+                    },
+                    "primary": {
+                      "$ref": "#/properties/receiptRefusal"
+                    },
+                    "extentRefusal": {
+                      "$ref": "#/properties/receiptRefusal"
+                    },
+                    "forwardedRefusal": {
+                      "$ref": "#/properties/receiptRefusal"
+                    },
+                    "scopedRefusal": {
+                      "$ref": "#/properties/receiptRefusal"
+                    },
+                    "request": {
+                      "anyOf": [
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "bytes",
+                            "ownedBytes",
+                            "nextOwnedBytes",
+                            "maximumBytes"
+                          ],
+                          "properties": {
+                            "bytes": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "ownedBytes": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "nextOwnedBytes": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "maximumBytes": {
+                              "type": "integer",
+                              "minimum": 0
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "admitted": {
+                      "type": "boolean"
+                    },
+                    "forwardedQuote": {
+                      "$ref": "#/properties/receiptRefusal"
+                    },
+                    "scopedQuote": {
+                      "$ref": "#/properties/receiptRefusal"
+                    }
+                  }
+                }
+              ]
             }
           }
         }
       ]
+    }
+  },
+  "$defs": {
+    "OriginalRetirementFailure": {
+      "title": "Original Retirement Failure",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "primary",
+        "workRefusal",
+        "receiptRefusal",
+        "progressOverride",
+        "child"
+      ],
+      "properties": {
+        "primary": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "message",
+                "retainedProgress"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "retainedProgress": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "copiedItems",
+                    "copiedBytes",
+                    "retainedCapacityBytes",
+                    "releasedBytes"
+                  ],
+                  "properties": {
+                    "copiedItems": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "copiedBytes": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "retainedCapacityBytes": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "releasedBytes": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "workRefusal": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "message",
+                "retainedProgress"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "retainedProgress": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "copiedItems",
+                    "copiedBytes",
+                    "retainedCapacityBytes",
+                    "releasedBytes"
+                  ],
+                  "properties": {
+                    "copiedItems": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "copiedBytes": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "retainedCapacityBytes": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "releasedBytes": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "receiptRefusal": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "message",
+                "retainedProgress"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "retainedProgress": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "copiedItems",
+                    "copiedBytes",
+                    "retainedCapacityBytes",
+                    "releasedBytes"
+                  ],
+                  "properties": {
+                    "copiedItems": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "copiedBytes": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "retainedCapacityBytes": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "releasedBytes": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "child": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/OriginalRetirementFailure"
+            }
+          ]
+        },
+        "progressOverride": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "copiedItems",
+                "copiedBytes",
+                "retainedCapacityBytes",
+                "releasedBytes"
+              ],
+              "properties": {
+                "copiedItems": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "copiedBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "retainedCapacityBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "releasedBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          ]
+        }
+      }
     }
   }
 }

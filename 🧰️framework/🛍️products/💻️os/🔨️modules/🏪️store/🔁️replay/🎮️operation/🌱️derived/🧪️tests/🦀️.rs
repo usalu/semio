@@ -4,9 +4,10 @@ use semio_framework_value::ErasedSnapshotRetirement;
 use crate::{ArtifactReplayPreparation, ArtifactReplayPreparationStep};
 struct CurrencyPreparation{bytes:ManuallyDrop<Option<Vec<u8>>>,closing:bool,copy:usize,capacity:usize,ledger:u64,last_work:u64}
 impl ArtifactReplayPreparation<u64,u64> for CurrencyPreparation{
+ fn close_work_demand(&self,_:usize)->Result<u64,ValueError>{Ok(u64::from(self.bytes.is_some()))}
  fn last_turn_work(&self)->u64{self.last_work}
  fn advance_demands(&self,_:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:self.copy,capacity_bytes:self.capacity,depth:1,..Default::default()})}
- fn advance(&mut self,body:usize,g:ArtifactStoreOneItemGrant,c:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<ArtifactReplayPreparationStep,ValueError>{self.last_work=0;assert_eq!(c.ledger_identity(),self.ledger);let d=self.advance_demands(4096).unwrap();assert!(funded(g.retained_grant(),d));assert!(self.bytes.is_none());c.admit_turn_capacity(g.maximum_capacity_bytes)?;c.charge(self.capacity)?;self.last_work=1;let mut bytes=Vec::new();bytes.try_reserve_exact(self.capacity).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original currency fixture allocation"))?;*self.bytes=Some(bytes);Ok(ArtifactReplayPreparationStep::Pending(RetainedCloneProgress{copied_items:1,copied_bytes:self.copy,retained_capacity_bytes:self.capacity,..Default::default()}))}
+ fn advance(&mut self,body:usize,g:ArtifactStoreOneItemGrant,c:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<ArtifactReplayPreparationStep,semio_framework_value::OriginalRetirementFailure>{self.last_work=0;assert_eq!(c.ledger_identity(),self.ledger);let d=self.advance_demands(4096).unwrap();assert!(funded(g.retained_grant(),d));assert!(self.bytes.is_none());c.admit_turn_capacity(g.maximum_capacity_bytes)?;c.charge(self.capacity)?;self.last_work=1;let mut bytes=Vec::new();bytes.try_reserve_exact(self.capacity).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original currency fixture allocation"))?;*self.bytes=Some(bytes);Ok(ArtifactReplayPreparationStep::Pending(RetainedCloneProgress{copied_items:1,copied_bytes:self.copy,retained_capacity_bytes:self.capacity,..Default::default()}))}
  fn take_prepared(&mut self)->Option<ArtifactReplayPrepared<u64,u64>>{None}
  fn cancel(&mut self){self.closing=true;}
  fn begin_close(&mut self){self.closing=true;}
@@ -15,7 +16,7 @@ impl ArtifactReplayPreparation<u64,u64> for CurrencyPreparation{
  fn next_close_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Ok(0)}
  fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(4096)?.release_bytes)}
  fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(1)}
- fn close_step(&mut self,g:RetainedCloneGrant,c:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<RetainedCloneStep,ValueError>{self.last_work=0;assert!(self.closing);assert_eq!(c.ledger_identity(),self.ledger);let d=self.close_demands(4096)?;if !funded(g,d){return Ok(RetainedCloneStep::Progress(Default::default()));}self.last_work=1;drop(self.bytes.take());Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))}
+ fn close_step(&mut self,g:RetainedCloneGrant,c:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>{self.last_work=0;assert!(self.closing);assert_eq!(c.ledger_identity(),self.ledger);let d=self.close_demands(4096)?;if !funded(g,d){return Ok(RetainedCloneStep::Progress(Default::default()));}self.last_work=1;drop(self.bytes.take());Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))}
  fn terminal_is_empty(&self)->bool{self.closing&&self.bytes.is_none()}
 }
 #[test]

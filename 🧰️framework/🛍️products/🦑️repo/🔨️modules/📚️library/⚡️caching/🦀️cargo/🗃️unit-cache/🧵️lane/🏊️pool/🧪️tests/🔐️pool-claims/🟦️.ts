@@ -1,13 +1,14 @@
+import{bindCargoTargetStoreV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🎯️target/🟦️.ts";
 /** 🔐️ Contract: separate OS processes share one pool without ever sharing a lane. The newest free lane of the same crate set is taken again (warm), a different crate set gets a lane of its own, the idle lanes are trimmed to the bound, a trimmer running next to the workers removes no lane a worker holds, and a killed holder frees its lane.
  * @see ../../🟦️.ts */
 import {expect,test} from "bun:test";
 import {spawn} from "node:child_process";
-import {existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync} from "node:fs";
+import {existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 import {UNIT_CACHE_POLICY_V1} from "../../../../🔏️key/🟦️.ts";
-import {crateKeyV1,enterLaneV1,laneIdsV1,readLaneV1,recordLaneSizeV1} from "../../../🟦️.ts";
+import {laneTargetNamespaceV1,crateKeyV1,enterLaneV1,laneIdsV1,readLaneV1,recordLaneSizeV1} from "../../../🟦️.ts";
 import {acquirePooledLaneV1,readPoolV1,trimPoolV1,type PoolReportV1} from "../../🟦️.ts";
 
 const here=fileURLToPath(new URL(".",import.meta.url)),worker=resolve(here,"📥️worker/🟦️.ts"),base=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir());mkdirSync(base,{recursive:true});
@@ -100,3 +101,5 @@ test("a killed holder frees its lane for the next process",async()=>{
   expect([first.choice,second.choice]).toEqual(["warm","warm"]);first.release();second.release();
  }finally{rmSync(root,{recursive:true,force:true});}
 },60000);
+
+test("a layout-derived target preserves its predecessor and reuses the current binding",async()=>{const root=scratch();try{const old=enterLaneV1(root,"old",undefined,["a"]),target=join(old.paths.base,UNIT_CACHE_POLICY_V1.layout.target),prior=JSON.stringify({version:1,buildDirectory:join(old.paths.base,"b"),targetDirectory:target})+"\n",receipt=join(target,".cargo-store.json");mkdirSync(target,{recursive:true});writeFileSync(receipt,prior);old.release();const lane=await acquirePooledLaneV1(root,{crates:["a"],quotaBytes:big});const current=lane.paths.target;try{expect(lane.choice).toBe("warm");expect(lane.paths.id).toBe("old");expect(current).not.toBe(target);expect(join(current,".cargo-store.json").length).toBeLessThanOrEqual(256);await bindCargoTargetStoreV1({directory:join(root,"locks"),buildDirectory:lane.paths.build,targetDirectory:current,signal:new AbortController().signal});expect(JSON.parse(readFileSync(join(current,".cargo-store.json"),"utf8"))).toEqual({version:1,buildDirectory:lane.paths.build,targetDirectory:current});const changed=join(lane.paths.base,laneTargetNamespaceV1({version:UNIT_CACHE_POLICY_V1.layout.targetIdentityVersion,build:"b",target:UNIT_CACHE_POLICY_V1.layout.target}));expect(changed).not.toBe(current);await bindCargoTargetStoreV1({directory:join(root,"locks"),buildDirectory:join(lane.paths.base,"b"),targetDirectory:changed,signal:new AbortController().signal});expect(JSON.parse(readFileSync(join(changed,".cargo-store.json"),"utf8"))).toEqual({version:1,buildDirectory:join(lane.paths.base,"b"),targetDirectory:changed});expect(readFileSync(receipt,"utf8")).toBe(prior);}finally{lane.release();}const again=await acquirePooledLaneV1(root,{crates:["a"],quotaBytes:big});try{expect(again.paths.target).toBe(current);await bindCargoTargetStoreV1({directory:join(root,"locks"),buildDirectory:again.paths.build,targetDirectory:again.paths.target,signal:new AbortController().signal});expect(readFileSync(receipt,"utf8")).toBe(prior);}finally{again.release();}}finally{rmSync(root,{recursive:true,force:true});}});

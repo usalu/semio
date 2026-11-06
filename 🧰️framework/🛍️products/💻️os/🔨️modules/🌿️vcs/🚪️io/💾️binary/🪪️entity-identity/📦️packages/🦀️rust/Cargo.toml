@@ -1,0 +1,26 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-os-vcs-entity-identity"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Controlled canonical version-graph identity commitments"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-vcs-entity-identity"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 65536
+maxSourceFiles = 8
+maxActiveLines = 2000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-hash = { path = "../../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }

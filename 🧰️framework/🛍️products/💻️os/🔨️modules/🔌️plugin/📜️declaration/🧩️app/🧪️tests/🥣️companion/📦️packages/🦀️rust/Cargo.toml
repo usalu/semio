@@ -1,0 +1,31 @@
+[package]
+workspace = "../../../../../../../../../../.."
+name = "semio-plugin-decl-app-tests"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+publish = false
+description = "Companion laws for original completion diagnostics and media source identity"
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-decl-app-tests"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dev-dependencies]
+semio-plugin-decl-app = { path = "../../../../📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-trace = { path = "../../../../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

@@ -16,5 +16,9 @@
     0,
     1
   ],
-  "underreportRefusal": "original native producer omitted observed native work"
+  "underreportRefusal": "original native producer omitted observed native work",
+  "rebindWork": 1,
+  "pendingCloseRefusal": "original native decoder still owns unresolved original work",
+  "foreignSourceRefused": true,
+  "unwindPaidWork": 1
 }

@@ -55,6 +55,8 @@ pub(super) trait MaterializationAdmission {
     fn schema(&self,producer:&RecordSpecProducer)->Result<RecordSpec,PackRefusal>{Ok((producer.ordinary)())}
     fn charge(&self,bytes:u64)->Result<(),PackRefusal>;
     fn step(&self)->Result<(),PackRefusal>{Ok(())}
+    fn begin_tag(&self)->Result<(),PackRefusal>{Ok(())}
+    fn finish_tag(&self,_performed:bool)->Result<(),PackRefusal>{Ok(())}
     fn controlled(&self)->bool{false}
     fn copy_text(&self,text:&str)->Result<String,PackRefusal>{self.charge(text.len() as u64)?;let mut output=String::new();output.try_reserve_exact(text.len()).map_err(|_|PackRefusal::LimitExceeded { kind: ValueRefusalKind::AllocationFailed, limit: "decoded string allocation" })?;output.push_str(text);Ok(output)}
     fn copy_bytes(&self,bytes:&[u8])->Result<Vec<u8>,PackRefusal>{self.charge(bytes.len() as u64)?;let mut output=Vec::new();output.try_reserve_exact(bytes.len()).map_err(|_|PackRefusal::LimitExceeded { kind: ValueRefusalKind::AllocationFailed, limit: "decoded octet allocation" })?;output.extend_from_slice(bytes);Ok(output)}
@@ -99,6 +101,8 @@ impl MaterializationAdmission for ControlledMaterialization<'_,'_>{
     fn schema(&self,producer:&RecordSpecProducer)->Result<RecordSpec,PackRefusal>{let maximum=usize::try_from(self.maximum).unwrap_or(usize::MAX);self.control.borrow_mut().scoped_maximum(maximum,|control|producer.decode(control)).map_err(PackRefusal::from)}
     fn charge(&self,bytes:u64)->Result<(),PackRefusal>{self.check(bytes)?;self.control.borrow_mut().charge(usize::try_from(bytes).map_err(|_|PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "native allocation exceeds address space" })?).map_err(PackRefusal::from)}
     fn step(&self)->Result<(),PackRefusal>{self.control.borrow_mut().step().map_err(PackRefusal::from)}
+    fn begin_tag(&self)->Result<(),PackRefusal>{let mut control=self.control.borrow_mut();if control.has_work_recipient()&&!control.prepare_work(1).map_err(PackRefusal::from)?{return Err(PackRefusal::from(ValueError::literal(ValueRefusalKind::WorkLimit,"record tag exceeds original work loan")))}Ok(())}
+    fn finish_tag(&self,performed:bool)->Result<(),PackRefusal>{let mut control=self.control.borrow_mut();if control.has_work_recipient(){if performed{control.commit_work(1)}else{control.cancel_work()}.map_err(PackRefusal::from)?}Ok(())}
     fn controlled(&self)->bool{true}
     fn copy_text(&self,text:&str)->Result<String,PackRefusal>{self.check(text.len() as u64)?;self.control.borrow_mut().copy_text(text).map_err(PackRefusal::from)}
     fn copy_bytes(&self,bytes:&[u8])->Result<Vec<u8>,PackRefusal>{self.check(bytes.len() as u64)?;self.control.borrow_mut().copy_bytes(bytes).map_err(PackRefusal::from)}
@@ -202,7 +206,7 @@ fn read_chunked_bytes(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<V
 /// `Map`/object keys and `DslValue::String`, where the tag itself (not any external shape) is
 /// what disambiguates interned vs inline.
 fn decode_string(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<String, PackRefusal> {
-    let tag = reader.read_u8()?;
+    let tag=read_tag(reader,ctx.materialization)?;
     match tag {
         TAG_STR => {
             let idx = reader.read_varint_u64()?;
@@ -253,6 +257,10 @@ pub(super) fn decode_record_fields(reader: &mut ByteReader<'_>, spec: Option<&Re
         }
     }
     Ok(record)
+}
+
+fn read_tag(reader:&mut ByteReader<'_>,materialization:&dyn MaterializationAdmission)->Result<u8,PackRefusal>{
+ materialization.begin_tag()?;let before=reader.position();let tag=reader.read_u8();materialization.finish_tag(reader.position()!=before)?;tag
 }
 
 /// 🔖️ Decodes one tag-prefixed value. `shape`, when known, disambiguates `Tuple` vs
@@ -466,3 +474,28 @@ fn decode_wire_node(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>) -> Result
     Ok(WireNode { id, kind, port })
 }
 //#endregion 🔖️Decode
+
+#[cfg(test)]
+mod tag_work_tests{
+ use super::*;
+ use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,NativeDecodeWorkRecipient};
+ struct Loan(u64);
+ impl NativeDecodeWorkRecipient for Loan{fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=self.0))}}
+ #[test]
+ fn original_record_tag_work_follows_the_actual_reader_position(){
+  let f:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🎟️work.json")).unwrap();
+  for case in f["cases"].as_array().unwrap(){
+   let bytes=case["bytes"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as u8).collect::<Vec<_>>();
+   let mut observer=|_|true;let mut native=NativeDecodeControl::new(0,&mut observer);let mut loan=Loan(case["allowance"].as_u64().unwrap());
+   native.with_work_recipient(&mut loan,|native|{
+    let mut reader=ByteReader::new(&bytes);
+    let materialization=ControlledMaterialization{control:std::cell::RefCell::new(native),maximum:0};
+    let result=read_tag(&mut reader,&materialization);let actual=materialization.control.borrow().actual_work();
+    let kind=match result{Ok(_)=>"success",Err(error)=>{let kind=error.kind().as_str();let grant=serde_json::from_value(f["close"].clone()).unwrap();let mut owner=semio_framework_value::retirement::controlled::ControlledRetirement::new(error).ok().unwrap();for _ in 0..4096{if owner.terminal_is_empty(){break}owner.step(grant).unwrap();}assert!(owner.terminal_is_empty());kind}};
+    assert_eq!(serde_json::json!({"bytes":case["bytes"],"allowance":case["allowance"],"position":reader.position(),"work":actual,"kind":kind}),*case);
+    if bytes.is_empty(){let retry=[7u8];let mut reader=ByteReader::new(&retry);assert_eq!(read_tag(&mut reader,&materialization).unwrap(),7);assert_eq!(materialization.control.borrow().actual_work(),1);}
+    Ok::<(),ValueError>(())
+   }).unwrap();
+  }
+ }
+}

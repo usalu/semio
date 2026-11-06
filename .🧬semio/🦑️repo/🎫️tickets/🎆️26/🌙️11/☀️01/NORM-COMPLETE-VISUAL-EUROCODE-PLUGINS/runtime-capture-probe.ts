@@ -1,0 +1,4 @@
+import {relative} from "node:path";
+import {repositoryCommandKernelV1} from "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/🧭️selection/🟦️.ts";
+import {captureNxAuthorizerSourcesV1} from "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts";
+const root=process.cwd(),selected=repositoryCommandKernelV1(["run","workspace:test-workspace-build"],process.env),entry=relative(root,selected.entry).replaceAll("\\","/");try{const result=await captureNxAuthorizerSourcesV1(root,entry,new AbortController().signal,{installed:true});console.log(JSON.stringify({kind:selected.kind,entry,files:result.manifest.sources.length,bytes:result.manifest.sources.reduce((n,row)=>n+row.bytes,0)}));}catch(error){console.log(JSON.stringify({kind:selected.kind,entry,message:error.message,diagnostic:error.diagnostic??null}));process.exitCode=1;}

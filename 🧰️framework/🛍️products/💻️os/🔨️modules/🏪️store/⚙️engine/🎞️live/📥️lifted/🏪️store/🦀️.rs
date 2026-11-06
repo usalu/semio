@@ -38,7 +38,7 @@ use semio_os_store_ledger::{edit_from_operation_envelope_cold, fold_envelope_his
 use semio_os_store_ledger::{ARTIFACT_EDIT_MESSAGE_ID_BYTES, ArtifactStoreHistoryCommitReservation, ArtifactStorePendingReportRetirement, CursorRevisionAccumulator, PendingCommandReport, StackMirrorDirt, edit_timestamp, envelope_viewer_head, retire_scratch_edits, retire_scratch_operations, retire_supersede_inputs, stamp_edit_semantics};
 #[cfg(test)]
 use semio_os_store_ledger::hot_path_census;
-use semio_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication;
+use semio_framework_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication;
 use semio_os_store_one_item_publication::ArtifactStoreOneItemPublicationPhase;
 use semio_os_store_operation_wire::{ArtifactPreparedOperationCursor, ArtifactPreparedOperationProgress, ArtifactPreparedOperationError};
 use semio_os_store_replay::{DRAFT_SUPERSESSION_ID, EditReplay, EditReplayResult, EffectiveSupersessions, ReplayEdits, ReplayMode, ReplayProgress, ReplayStep, admit_replacement, draft_supersessions, effective_operation, fold_operation};

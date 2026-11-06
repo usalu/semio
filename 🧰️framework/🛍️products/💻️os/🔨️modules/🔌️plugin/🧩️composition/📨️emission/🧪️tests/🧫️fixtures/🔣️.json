@@ -60,8 +60,21 @@
     "retirementRefusal": {
       "kind": "UnsupportedOwner",
       "message": "actual accepted mutation retirement refusal",
+      "workKind": "WorkLimit",
+      "workMessage": "actual accepted mutation work settlement refusal",
+      "ownedCauseBytes": 91,
       "retainsAcceptedPrefix": true,
       "providerReturnedToCaller": true
     }
+  },
+  "providerHandback": {"headers":2,"pointerWords":2,"work":1,"deniedAxes":["items","copy","depth"]},
+  "factoryAdmissionRefusal": {
+    "attemptsBeforeRefusal": 1,
+    "attemptsAfterRetry": 2,
+    "attemptWork": 94,
+    "ownedCauseBytes": 91,
+    "sameSource": true,
+    "sameProvider": true,
+    "retiredOperations": 1
   }
 }

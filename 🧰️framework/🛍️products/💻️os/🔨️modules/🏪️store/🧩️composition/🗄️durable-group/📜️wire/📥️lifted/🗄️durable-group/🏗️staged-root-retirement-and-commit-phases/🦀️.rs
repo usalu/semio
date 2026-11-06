@@ -279,7 +279,7 @@ Blocked,
     Terminal,
 }
 
-pub fn close_assembly_publication<P: Send + Sync + 'static, Mutation: Send + 'static>(publication: &mut Option<semio_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication<P, Mutation>>, grant: semio_os_store_one_item::ArtifactStoreOneItemGrant) -> Result<bool, DurableOwnedGroupDecisionError> {
+pub fn close_assembly_publication<P: Send + Sync + 'static, Mutation: Send + 'static>(publication: &mut Option<semio_framework_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication<P, Mutation>>, grant: semio_os_store_one_item::ArtifactStoreOneItemGrant) -> Result<bool, DurableOwnedGroupDecisionError> {
     use semio_framework_value::retained_clone::{RetainedCloneStep, admit_retained_clone_close};
     let Some(owner) = publication.as_mut() else { return Ok(true) };
     let grant = grant.retained_grant();
@@ -294,7 +294,7 @@ pub fn close_assembly_publication<P: Send + Sync + 'static, Mutation: Send + 'st
     }
 }
 
-pub fn take_assembly_prepared<P, Mutation>(publication: &mut Option<semio_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication<P, Mutation>>, grant: semio_os_store_one_item::ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<(Option<ArtifactStoreOneItemPrepared<P, Mutation>>,semio_framework_value::retained_clone::RetainedCloneProgress), DurableOwnedGroupDecisionError> {
+pub fn take_assembly_prepared<P, Mutation>(publication: &mut Option<semio_framework_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication<P, Mutation>>, grant: semio_os_store_one_item::ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<(Option<ArtifactStoreOneItemPrepared<P, Mutation>>,semio_framework_value::retained_clone::RetainedCloneProgress), DurableOwnedGroupDecisionError> {
     let publication = publication.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
     if publication.phase() != semio_os_store_one_item_publication::ArtifactStoreOneItemPublicationPhase::Publishing { return Err(DurableOwnedGroupDecisionError::InvalidOutcome); }
     publication.take_staged_prepared(grant.retained_grant(),receiving).map_err(DurableOwnedGroupDecisionError::Retirement)

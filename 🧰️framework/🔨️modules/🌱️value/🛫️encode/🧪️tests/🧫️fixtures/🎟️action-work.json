@@ -1,0 +1,60 @@
+{
+  "contract": "semio.native-encode.actual-action-work.v1",
+  "cases": [
+    {
+      "id": "denied",
+      "allowance": 0,
+      "source": "snow",
+      "allocationAccepted": true,
+      "observerAccepted": true,
+      "expected": {
+        "output": "",
+        "work": 0,
+        "kind": "workLimit"
+      }
+    },
+    {
+      "id": "observer-refusal",
+      "allowance": 1,
+      "source": "雪",
+      "allocationAccepted": true,
+      "observerAccepted": false,
+      "expected": {
+        "output": "雪",
+        "work": 1,
+        "kind": "canceled"
+      }
+    },
+    {
+      "id": "allocation-refusal",
+      "allowance": 1,
+      "source": "snow",
+      "allocationAccepted": false,
+      "observerAccepted": true,
+      "expected": {
+        "output": "",
+        "work": 0,
+        "kind": "allocationFailed"
+      }
+    },
+    {
+      "id": "accepted",
+      "allowance": 1,
+      "source": "snow",
+      "allocationAccepted": true,
+      "observerAccepted": true,
+      "expected": {
+        "output": "snow",
+        "work": 1,
+        "kind": "success"
+      }
+    }
+  ],
+  "close": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 65536,
+    "maximumDepth": 4096
+  }
+}

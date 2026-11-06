@@ -315,9 +315,10 @@ impl<T: Send> store::ErasedSnapshotRetirement for HashOwnedRetirement<T> {
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct HashOwnedRetirementFactory;
 
-impl<T: Send + 'static> store::ArtifactOwnedValueRetirementFactory<T> for HashOwnedRetirementFactory {
-    fn retire_owned(&self, value: T) -> Box<dyn store::ErasedSnapshotRetirement> {
-        Box::new(HashOwnedRetirement(Some(value)))
+impl<T: Send + 'static> store::ArtifactOwnedValueRetirementFactory<T> for HashOwnedRetirementFactory {fn retire_owned_work_demand(&self,_:&T)->Result<u64,semio_framework_value::ValueError>{Ok(1)}
+    fn retirement_birth_bytes(&self, _: &T) -> usize { std::mem::size_of::<HashOwnedRetirement<T>>() }
+    fn retire_owned(&self, value: T, grant: semio_framework_value::RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>,semio_framework_value::RetainedCloneProgress),(semio_framework_value::OriginalRetirementFailure,T)> {
+        let result=semio_framework_value::retirement::frame::admit_retirement_frame(value,grant,|value|HashOwnedRetirement(Some(value)));let work=u64::from(result.is_ok());semio_framework_value::RetainedWorkOutcome{result:result.map_err(|(e,v)|(e.into(),v)),work}
     }
 }
 

@@ -31,5 +31,11 @@
       "copiedItems": 0,
       "reserved": false
     }
-  ]
+  ],
+  "spareWork": {
+    "birth": 1,
+    "release": 1,
+    "total": 2,
+    "denied": 0
+  }
 }

@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeLocalFireFireDiame
         record: "ChangedLocalFireFireDiameter",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change diameter of the localised fire", "Durchmesser des lokalen Brandes ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change diameter of the localised fire", "Durchmesser des lokalen Brandes ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

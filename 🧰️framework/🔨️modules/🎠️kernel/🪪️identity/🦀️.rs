@@ -78,7 +78,7 @@ impl semio_framework_value::FromValue for CapabilityToken{fn from_value(value:Ds
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
-#[value(transparent)]
+#[value(crate = "::semio_framework_value", transparent)]
 #[derive(semio_framework_value::RetireOwned)]
 #[derive(semio_framework_value::NativeReceive)]
 pub struct PluginInstanceId(pub String);
@@ -117,7 +117,7 @@ pub struct SchemaVersion(pub String);
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
-#[value(transparent)]
+#[value(crate = "::semio_framework_value", transparent)]
 #[derive(semio_framework_value::RetireOwned)]
 #[derive(semio_framework_value::NativeReceive)]
 pub struct WindowKindId(pub String);
@@ -247,7 +247,7 @@ pub struct CommandInvocation {
 /// (`📓️design-abi.md` §4) parks a future on it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
-#[value(transparent)]
+#[value(crate = "::semio_framework_value", transparent)]
 #[derive(semio_framework_value::RetireOwned)]
 #[derive(semio_framework_value::NativeReceive)]
 pub struct RequestId(pub u64);
@@ -370,7 +370,7 @@ pub struct WindowInput {
 /// fault the SDK decodes by originating request kind — the host never interprets it.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 #[derive(semio_framework_value::RetireOwned)]
 #[derive(semio_framework_value::NativeReceive)]
 pub enum RequestOutcome {
@@ -465,7 +465,7 @@ pub struct Usage {
 /// 🔑️ A capability's identity — dotted/colon-scoped strings (`storage.read`, `http:<origin>`, [Design notes](README.md#source-notes-491).
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
-#[value(transparent)]
+#[value(crate = "::semio_framework_value", transparent)]
 #[derive(semio_framework_value::RetireOwned)]
 #[derive(semio_framework_value::NativeReceive)]
 pub struct CapabilityId(pub String);
@@ -477,7 +477,7 @@ pub struct CapabilityId(pub String);
 /// `🔌️plugin/🦀️.rs`) — see this packet's report for the full consumer list.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 #[derive(semio_framework_value::RetireOwned)]
 #[derive(semio_framework_value::NativeReceive)]
 pub struct CapabilityRequest {

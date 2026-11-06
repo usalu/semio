@@ -22,6 +22,15 @@ mod original_ledger_tests;
 #[path = "../../../🛂️allocation/🧪️tests/🦀️.rs"]
 mod allocation_tests;
 
+#[path = "../../../🛂️allocation/📦️slot/🧪️tests/🦀️.rs"]
+mod allocation_slot_tests;
+
+#[path = "../../../🫴️recipient/🎟️work/🧪️tests/🦀️.rs"]
+mod recipient_work_tests;
+
+#[path = "../../../🎟️work/🧪️tests/🦀️.rs"]
+mod work_tests;
+
 #[path = "../../../🏭️construction/🧪️tests/🦀️.rs"]
 mod construction_tests;
 

@@ -7,6 +7,12 @@ import grant from "../../🧪️tests/🧫️fixtures/🫴️grant/🔣️.json"
 import { retainedCloneWireSchemaUrl } from "@semio-tech/value-ts/testing/fixtures";
 const read=(path:string)=>readFileSync(new URL(path,import.meta.url),"utf8");
 const contract=fixture.directionalValidation;
+test("validation dual failure has a portable authored and settlement receipt",()=>{
+ const law=JSON.parse(read("🧫️fixtures/🪢️dual-failure/🔣️.json"));const schema=JSON.parse(read("../🧬️schema/🪢️dual-failure/🔣️.json"));expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);expect(law.nativeCharge).toBeGreaterThan(law.sqlMaximum);expect(JSON.parse(JSON.stringify({authored:law.authoredMessage,settlementKind:"OwnershipLimit"}))).toEqual(law.expected);
+});
+test("partial native projection fixture has the same Unicode and JSON serialization as the independent runtime",()=>{
+ const law=JSON.parse(read("../../🚦️native/🧪️tests/🧫️fixtures/🪢️partial-projection/🔣️.json"));const schema=JSON.parse(read("../../🚦️native/🧬️schema/🪢️partial-projection/🔣️.json"));expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);const value=law.unit.repeat(law.repeat);expect(Buffer.byteLength(value,"utf8")).toBe(law.utf8Bytes);expect(law.cancelAfterBytes).toBeLessThan(law.utf8Bytes);expect(JSON.parse(JSON.stringify({value}))).toEqual({value});
+});
 test("borrowed History validation contract covers all seven exact tables and legal signed surrogates against SQLite",()=>{
  expect(contract.directions).toEqual(["decoding","encoding"]);expect(contract.indexCounts).toEqual({ids:7,ordered:5});expect(contract.textChunkBytes).toBe(256);expect(contract.tables.length).toBe(7);
  const root=new URL("../../../../../../../../../../../",import.meta.url);const canonical=JSON.parse(readFileSync(retainedCloneWireSchemaUrl,"utf8"));expect(new Ajv({strict:true}).compile(canonical)(grant)).toBe(true);

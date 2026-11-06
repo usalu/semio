@@ -1,0 +1,39 @@
+{
+  "cases": [
+    {
+      "id": "empty",
+      "aliases": 0,
+      "partial": true,
+      "allocationDenied": true,
+      "released": true
+    },
+    {
+      "id": "unique",
+      "aliases": 0,
+      "partial": false,
+      "allocationDenied": true,
+      "released": true
+    },
+    {
+      "id": "partial",
+      "aliases": 0,
+      "partial": true,
+      "allocationDenied": true,
+      "released": true
+    },
+    {
+      "id": "row-alias",
+      "aliases": 1,
+      "partial": true,
+      "allocationDenied": true,
+      "released": false
+    },
+    {
+      "id": "page-alias",
+      "aliases": 1,
+      "partial": false,
+      "allocationDenied": true,
+      "released": false
+    }
+  ]
+}

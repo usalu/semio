@@ -77,3 +77,11 @@ fn original_snapshot_issuer_preserves_typed_refusal_and_exact_owner_without_heap
  let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||registry.try_issue_original(owner.clone()));
  let(reason,original)=result.err().expect("same original generation is exhausted");assert!(matches!(reason,SnapshotReadLeaseRefusal::Admission(_)));assert!(Arc::ptr_eq(&owner,&original));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(registry.terminal_is_empty());
 }
+
+#[test]
+fn snapshot_registry_backing_reports_the_actual_selected_work(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("⛽️work/fixture.json")).unwrap();let mut registry=SnapshotReadLeaseRegistry::new();let denied=RetainedCloneGrant{maximum_items:0,maximum_release_bytes:usize::MAX,maximum_depth:1,..Default::default()};
+ assert_eq!(registry.owned_backing_work_demand().unwrap(),law["release"].as_u64().unwrap());let(turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||registry.close_owned_backing_step(denied));assert_eq!(turn.work,law["denied"].as_u64().unwrap());assert_eq!(heap,(0,0));assert_eq!(turn.result.unwrap().progress(),Default::default());
+ let mut fuel=(SNAPSHOT_READ_LEASE_CAPACITY/SNAPSHOT_READ_SLOT_PAGE+SNAPSHOT_READ_LEASE_CAPACITY/SNAPSHOT_READ_GENERATION_PAGE) as u64;while registry.owned_backing_work_demand().unwrap()!=0{let demand=registry.owned_backing_demands().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth,..Default::default()};let(turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||registry.close_owned_backing_step(grant));assert_eq!(turn.work,law["release"].as_u64().unwrap());fuel=fuel.checked_sub(turn.work).unwrap();let progress=turn.result.unwrap().progress();assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));}
+ assert_eq!(fuel,0);assert_eq!(registry.owned_backing_work_demand().unwrap(),law["empty"].as_u64().unwrap());
+}

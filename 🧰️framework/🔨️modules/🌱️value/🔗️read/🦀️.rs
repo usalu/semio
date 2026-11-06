@@ -101,7 +101,7 @@ impl<T:RetireOwned+Sync> RetirementCursor for RegistryRetirement<T> {
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.terminal_is_empty(){return Ok(Default::default())}if let Some(owner)=self.active.as_ref(){if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{owner.next_demand(body)}}else{Ok(RetirementDemand{release_bytes:if unsafe{&*self.owner.state.state.get()}.free_len==READ_LEASE_CAPACITY&&!self.terminal_is_empty(){size_of::<[Option<Slot<T>>;READ_LEASE_CAPACITY]>()}else{0},depth:1,..Default::default()})}}
     fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {
         if self.terminal_is_empty(){return RetirementStep::Complete(0);}
-        if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}let demand=match RetirementCursor::next_demand(self,grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetirementStep::Failure(error,0)};if grant.maximum_depth<demand.depth||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return RetirementStep::BudgetExhausted;}
+        if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}let demand=match RetirementCursor::next_demand(self,grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetirementStep::Failure(error.into(),0)};if grant.maximum_depth<demand.depth||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return RetirementStep::BudgetExhausted;}
         if let Some(active)=self.active.as_mut(){
             if active.terminal_is_empty(){self.active=None;return RetirementStep::Advanced;}
             let result=active.step(grant);let work=active.last_turn_work();return match result{Ok(step)=>RetirementStep::Progress(step.progress(),work),Err(error)=>RetirementStep::Failure(error,work)};
@@ -136,7 +136,11 @@ impl<T:RetireOwned+Sync> crate::FactoryPayloadRetirement for ReadOwnershipRegist
     fn prepare_close_state(&self)->Self::CloseState {None}
     fn transfer_payload(value:Self,state:&mut Self::CloseState) {*state=Some(crate::retirement::controlled::ControlledRetirement::retain(value));}
     fn close_state_demands(state:&Self::CloseState,copy:usize)->Result<RetirementDemand,ValueError> {state.as_ref().map_or(Ok(Default::default()),|owner|if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{owner.next_demand(copy)})}
-    fn close_state_step(state:&mut Self::CloseState,grant:RetainedCloneGrant)->RetainedWorkOutcome {
+    fn close_state_requires_original_control(state:&Self::CloseState)->bool{state.as_ref().is_some_and(|owner|!owner.terminal_is_empty()&&crate::ErasedSnapshotRetirement::requires_original_control(owner))}
+    fn close_state_work_demand(state:&Self::CloseState,body:usize)->Result<u64,ValueError>{match state.as_ref(){Some(owner)if owner.terminal_is_empty()=>Ok(1),Some(owner)=>owner.next_computational_work(body),None=>Ok(0)}}
+    fn close_state_step_controlled(state:&mut Self::CloseState,grant:RetainedCloneGrant,control:&mut dyn semio_framework_value_retirement::OriginalRetirementControl)->semio_framework_value_retirement::OriginalRetirementOutcome{match state.as_mut(){Some(owner)if !owner.terminal_is_empty()=>{let turn=crate::ErasedSnapshotRetirement::close_step_controlled(owner,grant,control);RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work}},_=>RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"read registry has no selected original child").into()),work:0}}}
+    fn close_state_original_step(state:&mut Self::CloseState,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->semio_framework_value_retirement::OriginalRetirementOutcome{match state.as_mut(){Some(owner)if !owner.terminal_is_empty()=>{let turn=crate::ErasedSnapshotRetirement::close_original_step(owner,original,grant);RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work}},_=>RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"read registry has no selected original child").into()),work:0}}}
+    fn close_state_step(state:&mut Self::CloseState,grant:RetainedCloneGrant)->semio_framework_value_retirement::OriginalRetirementOutcome {
         let Some(owner)=state.as_mut()else{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}};
         if owner.terminal_is_empty(){if grant.maximum_items==0||grant.maximum_depth==0{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}state.take();return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
         let result=owner.step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));RetainedWorkOutcome{result,work:owner.last_turn_work()}
@@ -171,14 +175,14 @@ impl<T:RetireOwned+Sync> ReadLease<T> {
 }
 impl<T:RetireOwned+Sync> ErasedSnapshotRetirement for ReadLease<T> {
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.demands(body)}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome {
+    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value_retirement::OriginalRetirementOutcome {
         if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
         if grant.maximum_items==0{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
-        let demand=match self.demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
-        if grant.maximum_depth<demand.depth{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::DepthLimit,"read closure exceeds admitted depth")),work:0}}
+        let demand=match self.demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0}};
+        if grant.maximum_depth<demand.depth{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::DepthLimit,"read closure exceeds admitted depth").into()),work:0}}
         if self.owner.is_some(){
-            let registry=match self.registry.as_ref(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("registry absent").into()),work:0}};let mut state=match registry.state.try_lock(){Ok(state)=>state,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
-            if !state.contains(self.id){return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"read generation lost original registered root")),work:0}}
+            let registry=match self.registry.as_ref(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("registry absent").into()),work:0}};let mut state=match registry.state.try_lock(){Ok(state)=>state,Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0}};
+            if !state.contains(self.id){return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"read generation lost original registered root").into()),work:0}}
             let slot=match state.slots.as_mut(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("slots absent").into()),work:0}}[self.id.index as usize].as_mut().unwrap();assert!(Arc::ptr_eq(&slot.owner,match self.owner.as_ref(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("owner absent").into()),work:0}}));drop(self.owner.take());slot.returned=true;registry.returned.fetch_add(1,Ordering::AcqRel);
             return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}
         }

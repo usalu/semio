@@ -25,6 +25,7 @@ path = "../../🦀️.rs"
 testkit = ["dep:serde"]
 
 [dependencies]
+semio-os-vcs-entity-identity = { path = "../../🚪️io/💾️binary/🪪️entity-identity/📦️packages/🦀️rust" }
 semio-framework-value-original-slot = { workspace = true }
 serde = { version = "1.0.219", features = ["derive"], optional = true }
 pack = { path = "../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }

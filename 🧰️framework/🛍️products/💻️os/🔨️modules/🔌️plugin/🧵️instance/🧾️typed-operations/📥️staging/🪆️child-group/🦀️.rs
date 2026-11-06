@@ -22,7 +22,7 @@ use semio_plugin_publication_mounted::mounted_child_group_receipt_group::command
 use semio_plugin_composition_publication::ComposedGestureResult;
 use std::future::Future;
 use semio_plugin_instance_extension::InstanceExtension;
-use semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
+use semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
 use store::Mutation;
 use protocol::OpText;
 use semio_plugin_composition_publication::group::private_publication_group::owner::PRIVATE_CHILD_GROUP_MAXIMUM_CHILDREN;
@@ -38,7 +38,7 @@ use semio_os_kernel as store;
 use semio_plugin_publication_mounted::mounted_child_group_receipt_group::receipt_members::MountedGroupMemberReceipts;
 use semio_plugin_publication_mounted::mounted_child_group_receipt_group::command::entry::MountedCommandEntry;
 use semio_plugin_publication_mounted::mounted_child_group_receipt_group::command::entry::MountedCommandEntrySource;
-use semio_plugin_instance_docs::docs_instance_root::typed_operation_document_is_fresh;
+use semio_framework_plugin_instance_docs::docs_instance_root::typed_operation_document_is_fresh;
 
 impl<'ctx, A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
     fn advance_private_child_group(&mut self,mounted:&mut MountedTypedCommandFullOperation<A>,cx:&mut semio_framework_job::StepContext<'_>,loan:RetainedCloneGrant)->Result<RetainedCloneStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{

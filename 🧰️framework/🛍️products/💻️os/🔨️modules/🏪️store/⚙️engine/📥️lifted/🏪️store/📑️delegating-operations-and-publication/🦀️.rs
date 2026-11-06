@@ -86,7 +86,7 @@ where
                 retire_optional!(revision,ArtifactStoreRevisionAccumulatorRetirement,ArtifactStoreRevisionAccumulatorRetirement::new);retire_optional!(checkpoint,ArtifactStoreStringRetirement,ArtifactStoreStringRetirement::new);
                 let d=semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_os_store_read::ArtifactStoreDisplacedOwnerReservation>>(),depth:1,..Default::default()};if !admits(grant,d){return Ok(Some(Default::default()))}self.owners.displaced_retirements.release_owner_slots(metadata.displaced.take().unwrap()).map_err(|_|error("original metadata abort lost its reserved disposer slots"))?;return Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))
             }
-            let d=semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_os_store_one_item_batch::lifted_member_group::BatchCommitMetadata>>(),depth:1,..Default::default()};if !admits(grant,d){return Ok(Some(Default::default()))}stage.commit_metadata=None;return Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))
+            let d=semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_framework_os_store_one_item_batch::lifted_member_group::BatchCommitMetadata>>(),depth:1,..Default::default()};if !admits(grant,d){return Ok(Some(Default::default()))}stage.commit_metadata=None;return Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))
         }
         Ok(None)
     }

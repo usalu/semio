@@ -28,11 +28,11 @@ semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", pack
 semio-plugin-decl-app = { path = "../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
 semio-plugin-decl-views = { path = "../../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
 semio-plugin-instance-children = { path = "../../../🪆️children/📦️packages/🦀️rust" }
-semio-plugin-instance-docs = { path = "../../../📄️docs/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-docs = { path = "../../../📄️docs/📦️packages/🦀️rust", package = "semio-plugin-instance-docs"}
 semio-plugin-instance-history = { path = "../../../📜️history/📦️packages/🦀️rust" }
 semio-plugin-instance-jobs = { path = "../../../👷️jobs/📦️packages/🦀️rust" }
 semio-plugin-instance-ladders = { path = "../../../../🪜️maintenance-ladder/📦️packages/🦀️rust" }
-semio-plugin-instance-stores = { path = "../../../🏪️stores/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-stores = { path = "../../../🏪️stores/📦️packages/🦀️rust", package = "semio-plugin-instance-stores"}
 semio-plugin-interaction = { path = "../../../../🕹️interaction/📦️packages/🦀️rust" }
 semio-plugin-mounted-owner = { path = "../../../../🏇️mounted-owner/📦️packages/🦀️rust" }
 semio-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }

@@ -1,10 +1,10 @@
 //! 🪪️ A real documentless app answers the binary identity command without a document revision read.
 use semio_framework_os_kernel as protocol;
 use semio_framework_plugin_reactor_app::{PluginApp, PluginAppDelegate};
-use semio_framework_plugin_instance_app::VcsArtifactApp;
-use semio_framework_plugin_plugin_program::AppInstance;
-use semio_framework_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::{contract_app_raw, TestApp};
-use semio_framework_plugin_testing_laws::artifact_app_laws;
+use semio_plugin_instance_app::VcsArtifactApp;
+use semio_plugin_plugin_program::AppInstance;
+use semio_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::{contract_app_raw, TestApp};
+use semio_plugin_testing_laws::artifact_app_laws;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 struct DocumentlessApp {
@@ -31,15 +31,15 @@ async fn documentless_app_identity_abi_returns_authoritative_null_without_revisi
     let seq = row["seq"].as_str().unwrap().parse::<u64>().unwrap();
     let policy = artifact_app_laws::fixture_mounted_policy();
     let mut identity = artifact_app_laws::fixture_identity();
-    let mut caller = semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().unwrap();
+    let mut caller = semio_plugin_testing_caller::OriginalFixtureCaller::admit().unwrap();
     let mut context = caller.context();
     let mut inner = contract_app_raw(policy, &mut identity).await;
     inner.bind_instance_id(instance_id).await;
     let app = DocumentlessApp { inner, revision_reads: AtomicUsize::new(0) };
-    let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::new(policy).unwrap();
+    let runtime = semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::new(policy).unwrap();
     assert!(runtime.instances.borrow_mut().can_insert(instance_id));
     runtime.instances.borrow_mut().insert_admitted(instance_id, std::sync::Arc::new(
-        semio_framework_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell::new(
+        semio_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell::new(
             AppInstance { id: instance_id, app, surface_contexts: Default::default() }, policy)));
     let encoded = protocol::encode_app_command(&protocol::AppCommand::ReadDocumentIdentity { seq }).await.unwrap();
     let expected_command: Vec<u8> = serde_json::from_value(row["commandBytes"].clone()).unwrap();
@@ -47,7 +47,7 @@ async fn documentless_app_identity_abi_returns_authoritative_null_without_revisi
     let mut command = Some((seq, semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Encoded(encoded)));
     let mut frames = Vec::new();
     for turn in 0..128 {
-        let mut output = semio_framework_plugin_runtime_exchange::exch_plugin_exchange::plugin_exchange(
+        let mut output = semio_plugin_runtime_exchange::exch_plugin_exchange::plugin_exchange(
             &runtime, instance_id, command.take(), &mut identity, &mut context).await.unwrap();
         frames.append(&mut output.frames);
         command = output.retry_command.take();

@@ -1,0 +1,21 @@
+{
+  "grant": 3,
+  "stages": [
+    2,
+    1,
+    1
+  ],
+  "accepted": [
+    true,
+    true,
+    false
+  ],
+  "actual": 3,
+  "mismatchDeclared": 2,
+  "postRefusal": "original SQL work post refused",
+  "output": [
+    11,
+    23,
+    47
+  ]
+}

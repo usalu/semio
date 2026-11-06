@@ -1,0 +1,7 @@
+# Authenticated Resident Warm Worker
+
+Current build/🏡️resident/🏊️delegate/🟨️.mjs WARM_PRELOAD_SOURCE imports SEMIO_WARM_MODULES before fd3 ready and before the main script, so it warms live module URLs. build/📥️source/🔏️closure/🍞️bun/🟦️.ts sourceClosureLoaderV1 authenticates the snapshot, installs a closed semio-source resolver and loads only captured bytes, with the entry invoked in the same process. The current top-level resolver admits the entry but does not provide an authorized arbitrary warm-root list.
+
+A feasible retained design starts a worker with an independently pinned authenticated snapshot, verifies the snapshot and installs the captured loader before any warm import, then imports an explicitly bounded list of declared captured roots through the semio-source namespace. Signal ready only after imports, receive the request and execute the captured entry in the same process so module cache is genuinely reused. Every warm target must be present and authorized in that snapshot, with no live fallback; bind the list to the authenticated contract and pin identity. Since an idle worker may not know the future kernel, warm only the common door/selection closure or maintain separate pools for selected kernel identities. The existing pinned group handoff must protect worker lifetime. Preloading live modules then spawning another authenticated process does not reuse the module cache or preserve source authenticity.
+
+No production files were edited or native builds run.

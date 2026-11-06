@@ -16,8 +16,7 @@ use semio_plugin_runtime_instances::inst_wire_frames::with_instances_mut;
 /// and dispatches to `PluginApp::consume_media`. A whole document is admitted as a stepped archive load under `operation`
 /// (the host sequence of the import, `📓️api-stepped-document-load.md` §4) and answers its pending status for the host to
 /// poll; an applied import answers `None`.
-pub async fn plugin_consume_media<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, operation: u64, port_id: &str, descriptor_json: &str, data: Vec<u8>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<protocol::DocumentArchiveLoadStatus>, Fault> {
-    let descriptor: MediaArtifactDescriptor = semio_framework_pack_json::from_json_str(descriptor_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| plugin_internal_fault(error.to_string()))?;
+pub async fn plugin_consume_media<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, operation: u64, port_id: &str, descriptor: MediaArtifactDescriptor, data: Vec<u8>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<protocol::DocumentArchiveLoadStatus>, Fault> {
     let artifact = MediaArtifact { descriptor, data };
     with_instances_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;

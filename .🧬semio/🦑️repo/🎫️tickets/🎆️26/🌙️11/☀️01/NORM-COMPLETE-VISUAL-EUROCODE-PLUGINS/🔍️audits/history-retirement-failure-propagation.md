@@ -1,0 +1,7 @@
+# History Retirement Failure Propagation
+
+RetainedHistoryOpMetaFault now owns the inline OriginalRetirementFailure as a distinct Retirement variant, with explicit From. Existing native and Value/JSON causes are preserved. Member receiving and original artifact codec pair retain the complete new cause and report its actual retained_progress; no conversion collapses it into ValueError. Core type and genuine RetireOwned are native-worker-owned.
+
+Public History driver specialized error signatures, Member recipient caller changes and store replay/factory propagation remain pending core signature readiness and real native red26322. Descriptor owns the archive public close caller. No native passing claim is made.
+
+The public RetainedHistoryDecode step/close outcomes and internal result functions now use OriginalRetirementFailure. Ordinary ValueError paths convert explicitly to primary-only rich failures; controlled child results remain rich rather than narrowing. Driver decoder/source faults retain the Retirement variant. Native specialized child signatures remain pending real red, and the archive caller requires descriptor-owned propagation before current compilation can pass. The pre-existing receive_failure grant-disagreement primary replacement has not been accepted as a complete multi-cause receive envelope; that separate ordinary-receive limitation remains outside these two-cause retirement assertions.

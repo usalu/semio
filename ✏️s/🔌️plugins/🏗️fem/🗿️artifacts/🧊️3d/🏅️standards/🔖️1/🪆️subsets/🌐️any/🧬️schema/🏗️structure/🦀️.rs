@@ -15,6 +15,7 @@ pub const FEM_3D_SCHEMA: &str = "fem.3d";
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
+#[repr(u8)]
 pub enum FemElement {
     #[value(rename_all = "camelCase")]
     Bar { id: String, start: String, end: String, material_id: String, section_id: String },
@@ -63,6 +64,7 @@ pub struct FemSupport {
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
+#[repr(u8)]
 pub enum FemLoad {
     #[value(rename_all = "camelCase")]
     Nodal { id: String, node_id: String, dof: FemDof, value: f64 },

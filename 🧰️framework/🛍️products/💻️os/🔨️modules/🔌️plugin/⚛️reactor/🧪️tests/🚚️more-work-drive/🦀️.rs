@@ -1,13 +1,13 @@
 use semio_plugin_reactor_lifecycle::with_state as with_pending;
-use semio_plugin_reactor_turn::{drive_reconcile_within, more_work_drive_budget_ms, more_work_drive_steps, reconcile_arms_turn};
+use semio_framework_plugin_reactor_turn::{drive_reconcile_within, more_work_drive_budget_ms, more_work_drive_steps, reconcile_arms_turn};
 use semio_plugin_reactor_turn_limits::{MEASURED_GUEST_TURN_COST_MS, PATCH_CLOSE_UNITS_PER_TURN, PATCH_RETIREMENT_BYTES_PER_UNIT, PATCH_RETIREMENT_ITEMS_PER_UNIT, REACTOR_TURN_EXECUTOR_HOLD_MS};
 use std::cell::RefCell;
-use semio_plugin_reactor_turn::TurnMoreWorkSources;
+use semio_framework_plugin_reactor_turn::TurnMoreWorkSources;
 use semio_framework::kernel::UiPatch;
 use semio_plugin_reactor_lifecycle::instance_lifetime;
 use semio_plugin_reactor_patches as patches;
 use semio_plugin_reactor_lifecycle as pending;
-use semio_plugin_reactor_turn as turn;
+use semio_framework_plugin_reactor_turn as turn;
 use semio_ui_contract as ui_contract;
 use semio_framework::kernel::{ActorInstanceLifetime, ActorUiPatchReceipt};
 use semio_ui_runtime::{ComponentTree, TreeNode};
@@ -36,7 +36,7 @@ fn late_ui_owners_arm_turns_until_their_credits_return_without_waiting_for_live_
     let limit = fixture["maximumTurns"].as_u64().unwrap() as usize;
     for case in fixture["cases"].as_array().unwrap() {
         for _ in 0..limit {
-            if !semio_plugin_reactor_turn::close_late_ui_retirement().unwrap() {
+            if !semio_framework_plugin_reactor_turn::close_late_ui_retirement().unwrap() {
                 break;
             }
         }
@@ -70,11 +70,11 @@ fn late_ui_owners_arm_turns_until_their_credits_return_without_waiting_for_live_
         } else {
             drop(args);
         }
-        assert!(semio_plugin_reactor_turn::close_late_ui_retirement().unwrap(), "{} must keep queued ownership runnable", case["name"]);
+        assert!(semio_framework_plugin_reactor_turn::close_late_ui_retirement().unwrap(), "{} must keep queued ownership runnable", case["name"]);
         let mut settled = false;
         for _ in 0..limit {
-            let pending = semio_plugin_reactor_turn::close_late_ui_retirement().unwrap();
-            let sources = semio_plugin_reactor_turn::TurnMoreWorkSources { ui_retirement: pending, ..Default::default() };
+            let pending = semio_framework_plugin_reactor_turn::close_late_ui_retirement().unwrap();
+            let sources = semio_framework_plugin_reactor_turn::TurnMoreWorkSources { ui_retirement: pending, ..Default::default() };
             assert_eq!(sources.any(), pending);
             if !pending {
                 settled = true;
@@ -90,7 +90,7 @@ fn late_ui_owners_arm_turns_until_their_credits_return_without_waiting_for_live_
         }
     }
     for _ in 0..limit {
-        if !semio_plugin_reactor_turn::close_late_ui_retirement().unwrap() {
+        if !semio_framework_plugin_reactor_turn::close_late_ui_retirement().unwrap() {
             return;
         }
     }
@@ -565,7 +565,7 @@ fn a_page_cut_by_its_byte_budget_stages_exactly_what_it_delivered_and_loses_noth
 /// 🧾️ One turn's page under a byte budget that admits its first entry and at most one more — the
 /// production ladder (`take_turn_patch_page`) with the budget dialled down to a measured patch unit.
 fn turn_patch_page_of_two(unit_bytes: usize) -> Vec<ui_contract::UiPatch> {
-    let page = semio_plugin_reactor_turn::take_turn_patch_page(unit_bytes.saturating_add(unit_bytes / 2)).expect("turn patch page");
+    let page = semio_framework_plugin_reactor_turn::take_turn_patch_page(unit_bytes.saturating_add(unit_bytes / 2)).expect("turn patch page");
     page.into_iter().collect()
 }
 

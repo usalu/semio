@@ -253,8 +253,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// the window's run; nothing publishes while the run is open, and a run the edit ended (idle lapse, caret jump, another
     /// buffer) publishes in this emit as ONE edit stamped with its own `TransactionRef`. An emit that carries no transaction
     /// logs no history row; every other lane of the emit (effects, events, UI scope) publishes as usual.
-    pub fn settle_tool_operation(&mut self,operation:u64,base:&[u8;32],actor:&str,publication:&mut ArtifactToolCompletionValue<A>,stage:&mut semio_plugin_retained_command::typed_operation::OriginalToolSettlementStage,result:&mut Option<bool>,command_logged:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        use semio_plugin_retained_command::typed_operation::OriginalToolSettlementStage as Stage;
+    pub fn settle_tool_operation(&mut self,operation:u64,base:&[u8;32],actor:&str,publication:&mut ArtifactToolCompletionValue<A>,stage:&mut semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage,result:&mut Option<bool>,command_logged:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage as Stage;
         if *stage==Stage::Complete{return Ok(true)}
         if *stage==Stage::Capture{
             let mut done=None;let bytes=std::mem::size_of::<GestureOperation<A::Mutation>>()+std::mem::size_of::<Stage>()+2*std::mem::size_of::<bool>()+std::mem::size_of::<u64>();

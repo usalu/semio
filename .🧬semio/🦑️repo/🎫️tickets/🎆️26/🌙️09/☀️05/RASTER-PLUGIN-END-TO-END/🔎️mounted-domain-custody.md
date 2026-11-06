@@ -1,0 +1,7 @@
+# Mounted Domain Publication Custody
+
+In the inspected mounted Config/Draft publication path, the producing turn retains the exact VcsError and its receipt refusal in OriginalPublicationFailure before returning. A later prepaid domain frame moves the original into its payload, and the projection exposes the nested receipt refusal. Publication failure custody participates in the mounted retirement frontier, including an unused reservation. A source scan of plugin Rust files containing pending_artifact_publication initializers found none lacking publication_failure; this is not a compiler check.
+
+The reviewed initial revision returned the domain primary's historical effects as the outer OriginalTurnFailure effects: OriginalTurnFailure::from copied primary.retained_progress, while OriginalMemberPublicationFailure returned already debited producing-turn effects. A later caller reconciling that outer failure could debit those effects again. This was reported to controls. Controls subsequently reported changing the outer effects to zero after the domain helper directly posts its separate one-item publication move; the original effects and receipt refusal remain inside the projected domain payload. Zero outer effects is consistent with the helper's no-repost contract when that move has already been posted.
+
+No native build or executed mounted law was run as part of this review. The later correction is reported by the author and still requires native verification.

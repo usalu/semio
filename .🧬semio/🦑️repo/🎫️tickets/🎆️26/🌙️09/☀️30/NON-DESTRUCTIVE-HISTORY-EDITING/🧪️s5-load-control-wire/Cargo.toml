@@ -11,7 +11,7 @@ publish = false
 [workspace]
 
 [dependencies]
-semio-framework-plugin = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
+semio-framework-plugin = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-plugin"}
 serde_json = "1.0.140"
 
 [[test]]

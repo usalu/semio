@@ -1,0 +1,13 @@
+{
+  "nodes": [
+    {
+      "id": "A",
+      "x": 1.5
+    },
+    {
+      "id": "B",
+      "x": 2
+    }
+  ],
+  "document": "nodes [id:TEXT x:NUM] {\n  A 1.5\n  B 2\n}\n"
+}

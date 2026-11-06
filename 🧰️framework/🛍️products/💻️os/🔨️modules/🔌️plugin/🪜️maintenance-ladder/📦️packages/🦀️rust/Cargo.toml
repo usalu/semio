@@ -35,11 +35,11 @@ semio-plugin-document-media = { path = "../../../🗃️document/📦️packages
 semio-plugin-peer = { path = "../../../👥️peer/📦️packages/🦀️rust" }
 semio-plugin-publication-mounted = { path = "../../../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️packages/🦀️rust" }
 semio-plugin-time-travel = { path = "../../../⏪️time-travel/📦️packages/🦀️rust" }
-semio-plugin-instance-stores = { path = "../../../🧵️instance/🏪️stores/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-stores = { path = "../../../🧵️instance/🏪️stores/📦️packages/🦀️rust", package = "semio-plugin-instance-stores"}
 semio-plugin-instance-history = { path = "../../../🧵️instance/📜️history/📦️packages/🦀️rust" }
 semio-plugin-instance-children = { path = "../../../🧵️instance/🪆️children/📦️packages/🦀️rust" }
 semio-plugin-instance-jobs = { path = "../../../🧵️instance/👷️jobs/📦️packages/🦀️rust" }
-semio-plugin-instance-docs = { path = "../../../🧵️instance/📄️docs/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-docs = { path = "../../../🧵️instance/📄️docs/📦️packages/🦀️rust", package = "semio-plugin-instance-docs"}
 semio-plugin-instance-extension = { path = "../../../🧵️instance/🧩️extensions/📦️packages/🦀️rust" }
 semio-framework-async = { path = "../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async" }
 semio-framework-job = { path = "../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }

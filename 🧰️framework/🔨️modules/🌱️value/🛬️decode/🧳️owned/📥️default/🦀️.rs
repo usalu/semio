@@ -24,7 +24,7 @@ pub trait NativeDefaultCursor<T:RetireOwned>:Send+'static{
  fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(T,RetainedCloneProgress)>>;
  fn begin_close(&mut self);
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome;
+ fn close_step(&mut self,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome;
  fn terminal_is_empty(&self)->bool;
 }
 /// 🥡️ First-party scalar and empty-owner definitions report their own genuine body effect.
@@ -39,7 +39,7 @@ impl<T:NativeDefaultValue> NativeDefaultCursor<T> for NativeDefaultValueCursor<T
  fn take(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome<Option<(T,RetainedCloneProgress)>>{if !self.output_ready()||!retained_clone_grant_admits(g,fixed(0)){return RetainedWorkOutcome{result:Ok(None),work:0}}RetainedWorkOutcome{result:Ok(Some((match self.output.take(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("output absent").into()),work:0}},receipt(fixed(0))))),work:1}}
  fn begin_close(&mut self){self.closing=true;}
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Err(invalid())}self.retirement.next_owner_demands::<T>(self.output.is_some(),&None,body)}
- fn close_step(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}let d=match self.close_demands(g.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}if !self.retirement.is_empty(){return self.retirement.step_granted(g)}let turn=self.retirement.begin_granted(&mut self.output,g);RetainedWorkOutcome{result:turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}}
+ fn close_step(&mut self,g:RetainedCloneGrant)->crate::OriginalRetirementOutcome{if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}let d=match self.close_demands(g.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0}};if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}if !self.retirement.is_empty(){return self.retirement.step_granted(g)}let turn=self.retirement.begin_granted(&mut self.output,g);RetainedWorkOutcome{result:turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into),work:turn.work}}
  fn terminal_is_empty(&self)->bool{self.output.is_none()&&self.retirement.is_empty()}
 }
 impl<T:NativeDefaultValue> Drop for NativeDefaultValueCursor<T>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"native default leaf requires funded closure");if empty{unsafe{ManuallyDrop::drop(&mut self.output);}}}}

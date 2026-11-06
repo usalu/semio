@@ -15,7 +15,7 @@ use semio_plugin_decl_emission::Emit;
 use crate::docs_components::{EnvelopeJobs, MediaTransfers};
 use semio_framework::{Fault, FaultFrom};
 use std::future::Future;
-use semio_plugin_instance_stores::stores_components::InstanceStores;
+use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
 use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_plugin_reactor_app::PluginApp;
@@ -42,22 +42,26 @@ impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipi
 }
 
 /// 🧾️ Retains a producer's original failure beside any independent caller receiving refusal.
-fn receive_archive<T>(cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,fuel:u64,turn:semio_framework_value::RetainedWorkOutcome<T>,progress:RetainedCloneProgress,observed:u64)->Result<T,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
-    use semio_framework_job_native_decode::{OriginalNativeDecodeSource,OriginalNativeDecodeIssued};
-    let outcome=OriginalNativeDecodeSource::receive_observed_work(cx,grant,fuel,OriginalNativeDecodeIssued{value:turn.result,grant,progress,work:turn.work},observed);
-    match (outcome.value,outcome.receiving_refusal) {
-        (Ok(value),None)=>Ok(value),
-        (Ok(_),Some(failure))=>{let mut failure:semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure=failure.into();failure.effects=progress;Err(failure)},
-        (Err(error),receiving)=>{
-            let Some(receiving)=receiving else{let mut failure:semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure=error.into();failure.effects=progress;return Err(failure)};
-            let semio_framework_job::OriginalTurnPrimary::Value(quote_refusal)=receiving.primary else{unreachable!("native work reconciliation authors only value refusals")};
-            Err(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure{
-                effects:progress,
-                primary:semio_framework_plugin_ownership::bounded_ownership::PluginLifecyclePrimary::Receiving(semio_framework_job::OriginalReceivingPrimary{primary:Some(error),quote_refusal:Some(quote_refusal),allocation_refusal:None,progress}),
-                receipt_refusal:receiving.receipt_refusal,context_refusal:receiving.context_refusal
-            })
-        }
-    }
+fn archive_retirement_failure(error:semio_framework_value::OriginalRetirementFailure,receiving:Option<semio_framework_job::OriginalTurnFailure>,progress:RetainedCloneProgress)->semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure{
+ use semio_plugin_ownership::bounded_ownership::{PluginLifecycleFailure,PluginLifecyclePrimary};
+ let primary=match receiving{
+  None=>PluginLifecyclePrimary::Retirement(error),
+  Some(receiving)=>{
+   let semio_framework_job::OriginalTurnFailure{effects,primary,receipt_refusal,context_refusal,work_refusal}=receiving;
+   let semio_framework_job::OriginalTurnPrimary::Value(receiving_primary)=primary else{unreachable!("native work reconciliation authors value refusals")};
+   PluginLifecyclePrimary::RetirementReceiving(semio_framework_job::OriginalRetirementReceivingPrimary{retirement:error,receiving_primary,receiving_effects:effects,receiving_receipt_refusal:receipt_refusal,receiving_context_refusal:context_refusal,receiving_work_refusal:work_refusal})
+  }
+ };
+ PluginLifecycleFailure{effects:progress,primary,receipt_refusal:None,context_refusal:None,work_refusal:None}
+}
+fn receive_archive<T>(cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,fuel:u64,turn:semio_framework_value::RetainedWorkOutcome<T,semio_framework_value::OriginalRetirementFailure>,progress:RetainedCloneProgress,observed:u64)->Result<T,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+ use semio_framework_job_native_decode::{OriginalNativeDecodeSource,OriginalNativeDecodeIssued};
+ let outcome=OriginalNativeDecodeSource::receive_observed_work(cx,grant,fuel,OriginalNativeDecodeIssued{value:turn.result,grant,progress,work:turn.work},observed);
+ match (outcome.value,outcome.receiving_refusal) {
+  (Ok(value),None)=>Ok(value),
+  (Ok(_),Some(failure))=>{let mut failure:semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure=failure.into();failure.effects=progress;Err(failure)},
+  (Err(error),receiving)=>Err(archive_retirement_failure(error,receiving,progress)),
+ }
 }
 
 #[doc(hidden)]
@@ -163,7 +167,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
         })
     }
 
-    pub(crate) fn drive_document_archive_terminal(&mut self, active: &mut ActiveDocumentArchiveLoad<A::Snapshot, A::Mutation>, grant: RetainedCloneGrant, cx:&mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    pub(crate) fn drive_document_archive_terminal(&mut self, active: &mut ActiveDocumentArchiveLoad<A::Snapshot, A::Mutation>, grant: RetainedCloneGrant, cx:&mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let target = active.terminal_target.ok_or_else(|| document_load_fault(DOCUMENT_LOAD_FAILED_CODE, "recursive document archive terminal cleanup has no target"))?;
         if let Some(handle) = active.replacement {
             if self.store_replacement_jobs.get(handle.operation.0).is_some() {
@@ -445,4 +449,23 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
             ActiveDocumentArchiveLoadPhase::Terminal => Ok(PluginLifecycleStep::Complete(empty)),
         }
     }
+}
+
+#[cfg(test)]
+mod archive_retirement_cause_tests {
+ use super::*;
+ use semio_framework_value::{OriginalRetirementFailure,ValueRefusalKind};
+ use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation};
+ use semio_plugin_ownership::bounded_ownership::PluginLifecyclePrimary;
+ fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:256}}
+ #[test]fn original_archive_failures_preserve_every_cause_and_retire_through_the_caller(){
+  let child=ValueError::new(ValueRefusalKind::InvalidValue,"archive child owns its prose");let child_ptr=child.message.as_ptr();let work=ValueError::new(ValueRefusalKind::WorkLimit,"archive work owns its prose");let work_ptr=work.message.as_ptr();let mut outer:semio_framework_job::OriginalTurnFailure=ValueError::literal(ValueRefusalKind::InvariantViolated,"outer quote").into();outer.receipt_refusal=Some(ValueError::literal(ValueRefusalKind::OwnershipLimit,"receipt"));outer.context_refusal=Some(ValueError::literal(ValueRefusalKind::DepthLimit,"context"));outer.work_refusal=Some(ValueError::literal(ValueRefusalKind::WorkLimit,"outer work"));outer.effects=RetainedCloneProgress{copied_items:1,copied_bytes:5,..Default::default()};
+  let mut caller=OriginalJobFixtureCaller::admit(OperationId(1771),Generation(1),grant(),||Some(1),u64::MAX,100_000);let mut failure=None;let mut probe=None;
+  caller.turn(grant(),|cx|cx.with_original_work_loan(4096,cx.deadline_us(),|cx|{let (bytes,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||Vec::<u8>::with_capacity(73));assert_eq!(heap.requested_bytes,73);let progress=RetainedCloneProgress{copied_items:1,retained_capacity_bytes:heap.requested_bytes,..Default::default()};cx.consume_retained(progress)?;cx.consume_fuel(1);let (out,fold)=semio_framework_trace::observe_heap_allocations_on_this_thread(||archive_retirement_failure(OriginalRetirementFailure::from_primary_and_work(child,work),Some(outer),progress));assert_eq!((fold.requested_bytes,fold.released_bytes),(0,0));failure=Some(out);probe=Some(bytes);Ok(())})).unwrap();
+  let owned=failure.as_ref().unwrap();assert_eq!(owned.effects.retained_capacity_bytes,73);match &owned.primary{PluginLifecyclePrimary::RetirementReceiving(value)=>{assert_eq!(value.retirement.primary().unwrap().message.as_ptr(),child_ptr);assert_eq!(value.retirement.work_refusal().unwrap().message.as_ptr(),work_ptr);assert_eq!(value.receiving_primary.message,"outer quote");assert!(value.receiving_receipt_refusal.is_some());assert!(value.receiving_context_refusal.is_some());assert!(value.receiving_work_refusal.is_some());assert_eq!(value.receiving_effects.copied_bytes,5);},_=>panic!("original combined owner required")};
+  let mut owner=None;caller.turn(grant(),|cx|cx.with_original_retirement(|cx|{let (turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_value::retirement::admit_owned_retirement(failure.take().unwrap(),grant()));let (value,progress)=turn.result.unwrap();assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));cx.consume_retained(progress)?;cx.consume_fuel(turn.work);owner=Some(value);Ok(())})).unwrap();
+  for _ in 0..100_000{if owner.is_none(){break}caller.turn(grant(),|cx|cx.with_original_retirement(|cx|{let (turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut owner,grant()));let progress=turn.result.as_ref().map(|step|step.progress()).unwrap_or_else(|error|error.retained_progress());assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));cx.consume_retained(progress)?;cx.consume_fuel(turn.work);turn.result?;Ok(())})).unwrap();}assert!(owner.is_none());
+  caller.turn(grant(),|cx|cx.with_original_retirement(|cx|{let (_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(probe.take().unwrap()));assert_eq!(heap.released_bytes,73);cx.consume_retained(RetainedCloneProgress{copied_items:1,released_bytes:heap.released_bytes,..Default::default()})?;cx.consume_fuel(1);Ok(())})).unwrap();caller.retire(grant());
+  let work_only=archive_retirement_failure(OriginalRetirementFailure::from_work_refusal(ValueError::literal(ValueRefusalKind::WorkLimit,"work only")),None,Default::default());assert!(matches!(work_only.primary,PluginLifecyclePrimary::Retirement(_)));
+ }
 }

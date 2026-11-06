@@ -31,5 +31,10 @@
   ],
   "waiterGate": "original-inline-atomic-guard",
   "gateContended": "blocked-original-retained",
-  "metadataCopyCurrency": 0
+  "metadataCopyCurrency": 0,
+  "ownedWaiterQuote": {
+    "capacity": 8,
+    "releaseElements": 8,
+    "requiresLock": false
+  }
 }

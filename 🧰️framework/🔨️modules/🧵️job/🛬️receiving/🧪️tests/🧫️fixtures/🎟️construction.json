@@ -1,0 +1,17 @@
+{
+  "grant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 64,
+    "maximumCapacityBytes": 0,
+    "maximumReleaseBytes": 4096,
+    "maximumDepth": 16
+  },
+  "expectedWork": 1,
+  "receipt": {
+    "copiedItems": 1,
+    "copiedBytes": 1,
+    "retainedCapacityBytes": 0,
+    "releasedBytes": 0
+  },
+  "identityPreservedAfterUnwind": true
+}

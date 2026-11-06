@@ -52,7 +52,7 @@ fn refusal_preserves_entered_values_and_complete_draft_uses_native_authority() {
 
 #[test]
 fn native_form_controls_create_a_draft_and_switch_the_complete_variant_boundary() {
-    use semio_framework_plugin_decl_staged_form::*;
+    use semio_plugin_decl_staged_form::*;
     let fixture = fixture();
     let plan = NormInspectorFormPlan::variant(boundary(), &fixture_value(&fixture["variant"]["before"]), "kind", "tube", "shape".into()).unwrap();
     for locale in [Locale::En, Locale::De] {
@@ -90,7 +90,7 @@ fn native_form_controls_create_a_draft_and_switch_the_complete_variant_boundary(
 
 #[test]
 fn native_long_choice_pages_keep_the_selected_value_and_exact_binding_options() {
-    use semio_framework_plugin_decl_staged_form::*;
+    use semio_plugin_decl_staged_form::*;
     let input = ActionArgDef::with_schema("/choice", LocalizedLabel::native("Choice", "Auswahl"), ArgSchema::String {
         options: (0..50).map(|index| ActionArgOption { value: format!("v{index}"), label: LocalizedLabel::native(&format!("Value {index}"), &format!("Wert {index}")) }).collect(), option_source: None, min_len: None, max_len: None, pattern: None, format: None,
     }).required();

@@ -18,8 +18,8 @@ impl SharedUtf8 {
     pub fn from_funded_arc(original:Arc<String>)->Self {Self(Some(original))}
     pub fn admission_demand()->crate::RetirementDemand{crate::RetirementDemand{copy_bytes:0,capacity_bytes:shared_retirement_allocation_bytes::<String>(),depth:1,..Default::default()}}
     pub fn lease_demand()->crate::RetirementDemand{crate::RetirementDemand{copy_bytes:0,depth:1,..Default::default()}}
-    pub fn admit(original:String,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Self,RetainedCloneProgress),(ValueError,String)> {
-        let turn=crate::retirement::arc_custody::admit_shared_allocation(original,grant);
+    pub fn admit(original:String,grant:RetainedCloneGrant,actual:&mut Option<usize>)->crate::RetainedWorkOutcome<(Self,RetainedCloneProgress),(ValueError,String)> {
+        let turn=crate::retirement::arc_custody::admit_shared_allocation(original,grant,actual);
         crate::RetainedWorkOutcome{result:turn.result.map(|(owner,progress)|(Self(Some(owner)),progress)),work:turn.work}
     }
     pub fn admit_clone(&self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Self,RetainedCloneProgress),ValueError> {let mut work=0;let result=(||{

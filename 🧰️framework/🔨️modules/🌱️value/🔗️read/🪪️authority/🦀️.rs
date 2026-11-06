@@ -53,10 +53,10 @@ impl ReadAuthority {
     pub fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError> {if self.view.is_some(){Ok(RetirementDemand {depth:1,..Default::default()})}else{self.owner.demands(copy)}}
 }
 impl ErasedSnapshotRetirement for ReadAuthority {
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome {
+    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value_retirement::OriginalRetirementOutcome {
         if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
         if grant.maximum_items==0{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
-        if self.view.is_some(){if grant.maximum_depth==0{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::DepthLimit,"read view closure requires admitted depth")),work:0}}drop(self.view.take());return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
+        if self.view.is_some(){if grant.maximum_depth==0{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::DepthLimit,"read view closure requires admitted depth").into()),work:0}}drop(self.view.take());return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
         self.owner.step(grant)
     }
     fn terminal_is_empty(&self)->bool {Self::terminal_is_empty(self)}

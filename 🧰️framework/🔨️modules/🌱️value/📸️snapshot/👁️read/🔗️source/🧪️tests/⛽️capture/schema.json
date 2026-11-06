@@ -1,0 +1,1 @@
+{"type":"object","additionalProperties":false,"required":["transferRead","cloneFactory","denied","success"],"properties":{"transferRead":{"const":1},"cloneFactory":{"const":1},"denied":{"const":0},"success":{"const":2}}}

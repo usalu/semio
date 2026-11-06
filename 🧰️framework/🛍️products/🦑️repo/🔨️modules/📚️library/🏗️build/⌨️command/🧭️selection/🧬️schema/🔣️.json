@@ -15,8 +15,11 @@
         "preflight": "🩺️preflight/🟦️.ts",
         "dependencies": "📦️dependencies/🟦️.ts",
         "runtime": "⚙️runtime/🟦️.ts",
+        "utility": "🧰️utility/🟦️.ts",
         "cache": "💾️cache/🟦️.ts",
-        "cache-ledger": "💾️cache/📋️ledger/🟦️.ts"
+        "cache-ledger": "💾️cache/📋️ledger/🟦️.ts",
+        "cargo": "🦀️cargo/🟦️.ts",
+        "task": "🏃️task/🟦️.ts"
       }
     },
     "cases": {
@@ -40,8 +43,11 @@
               "preflight",
               "dependencies",
               "runtime",
+              "utility",
               "cache",
-              "cache-ledger"
+              "cache-ledger",
+              "cargo",
+              "task"
             ]
           }
         }

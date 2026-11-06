@@ -11,7 +11,8 @@
     "faultWire",
     "contextWire",
     "receivingWire",
-    "effectSpan"
+    "effectSpan",
+    "receivingComposite"
   ],
   "properties": {
     "cases": {
@@ -192,6 +193,9 @@
         },
         "contextRefusal": {
           "$ref": "#/$defs/ValueError"
+        },
+        "workRefusal": {
+          "$ref": "#/$defs/ValueError"
         }
       }
     },
@@ -219,6 +223,9 @@
         "receipt": "Distinct original receipt refusal",
         "context": "Distinct original context refusal"
       }
+    },
+    "receivingComposite": {
+      "$ref": "#/$defs/ReceivingPrimary"
     }
   },
   "$defs": {
@@ -632,7 +639,7 @@
         "offset": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 18446744073709551615
+          "maximum": 18446744073709552000
         },
         "byte": {
           "type": "integer",
@@ -642,10 +649,23 @@
         "depth": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 18446744073709551615
+          "maximum": 18446744073709552000
         }
       },
       "required": []
+    },
+    "ReceivingRetirementFailure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["progressOverride", "retainedProgress"],
+      "properties": {
+        "primary": {"$ref": "#/$defs/ValueError"},
+        "workRefusal": {"$ref": "#/$defs/ValueError"},
+        "receiptRefusal": {"$ref": "#/$defs/ValueError"},
+        "child": {"$ref": "#/$defs/ReceivingRetirementFailure"},
+        "progressOverride": {"anyOf": [{"$ref": "#/$defs/RetainedProgress"}, {"type": "null"}]},
+        "retainedProgress": {"$ref": "#/$defs/RetainedProgress"}
+      }
     },
     "ReceivingPrimary": {
       "type": "object",
@@ -663,8 +683,20 @@
         "allocationRefusal": {
           "$ref": "#/$defs/ValueError"
         },
+        "workRefusal": {
+          "$ref": "#/$defs/ValueError"
+        },
+        "retirementFailure": {
+          "$ref": "#/$defs/ReceivingRetirementFailure"
+        },
         "retainedProgress": {
           "$ref": "#/$defs/RetainedProgress"
+        },
+        "allocationFailure": {
+          "$ref": "https://semio.tech/schema/value/control/allocation/failure#/$defs/allocationFailure"
+        },
+        "receiptRefusal": {
+          "$ref": "#/$defs/ValueError"
         }
       }
     }

@@ -1,0 +1,38 @@
+{
+  "cases": [
+    {
+      "name": "rgba-with-ordered-duplicate-text",
+      "base64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC3RFWHRUaXRsZQBmaXJzdKhvpxoAAAAKdEVYdFRpdGxlAGNhZukAqzN6AAAADUlEQVR4nGPgEpH7DwABpAE8k4sOtwAAAABJRU5ErkJggg==",
+      "width": 1,
+      "height": 1,
+      "colorspace": "rgba",
+      "bitDepth": 8,
+      "rgba": [
+        10,
+        20,
+        30,
+        255
+      ],
+      "metadata": [
+        [
+          "Title",
+          "first"
+        ],
+        [
+          "Title",
+          "café"
+        ]
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "name": "invalid base64 byte",
+      "text": "AAAA?AAA",
+      "codec": "base64",
+      "kind": "invalidByte",
+      "index": 4,
+      "byte": 63
+    }
+  ]
+}

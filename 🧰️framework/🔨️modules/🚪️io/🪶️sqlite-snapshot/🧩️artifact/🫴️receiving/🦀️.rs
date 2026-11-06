@@ -60,6 +60,19 @@ impl<B:ReceivingWallet> Port<'_,'_,'_,B>{
   };self.receipt(before)?;result.map_err(|error|cause.unwrap_or(error))
  }
 }
+impl Port<'_,'_,'_,semio_framework_io_control::NativeSnapshotBodyWallet>{
+ /// 🧾️ Quotes one bounded effect whose borrowed callback records every actual action and physical prefix.
+ pub fn effect(&mut self,demand:RetainedCloneGrant,progress:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind_failure:&mut Option<semio_framework_io_control::NativeSnapshotFailure>,effect:&mut impl FnMut(&mut bool,&mut RetainedCloneProgress)->Result<()>)->semio_framework_value::RetainedWorkOutcome<(),semio_framework_io_control::NativeSnapshotFailure>{
+  use semio_framework_io_control::{NativeSnapshotDecodeEffectQuote,NativeSnapshotEncodeEffectQuote};
+  use semio_framework_value::RetainedWorkOutcome;
+  if progress.performed||progress.physical!=RetainedCloneProgress::default()||unwind_failure.is_some(){return RetainedWorkOutcome{work:0,result:Err(error(ValueRefusalKind::InvariantViolated,"SQLite effect requires empty retained progress and failure slots").into())}}
+  let phase=self.phase();if let Err(cause)=self.control.checkpoint(phase,0,0){return RetainedWorkOutcome{work:0,result:Err(cause.into())}}
+  match &mut self.native{
+   Direction::Decode(native)=>match NativeSnapshotDecodeEffectQuote::decode(self.body,native,demand){Ok(quote)=>quote.run(progress,unwind_failure,effect),Err(error)=>RetainedWorkOutcome{work:0,result:Err(error)}},
+   Direction::Encode(native)=>match NativeSnapshotEncodeEffectQuote::encode(self.body,native,demand){Ok(quote)=>quote.run(progress,unwind_failure,effect),Err(error)=>RetainedWorkOutcome{work:0,result:Err(error)}}
+  }
+ }
+}
 /// 🧪️ Moves an original collection through two retained fields without dropping refused growth.
 pub fn relocate_vector<T,B:ReceivingWallet>(original:&mut Vec<T>,replacement:&mut Vec<T>,capacity:usize,depth:usize,port:&mut Port<'_,'_,'_,B>)->Result<()>{
  if capacity<original.len(){return Err(error(ValueRefusalKind::OwnershipLimit,"SQLite replacement cannot retain its original elements"))}port.vector(capacity,replacement,depth)?;while !original.is_empty(){port.work(depth,size_of::<T>())?;replacement.push(original.pop().unwrap());}let count=replacement.len();for index in 0..count/2{port.work(depth,2*size_of::<T>())?;replacement.swap(index,count-1-index);}port.work(depth,3*size_of::<Vec<T>>())?;std::mem::swap(original,replacement);Ok(())

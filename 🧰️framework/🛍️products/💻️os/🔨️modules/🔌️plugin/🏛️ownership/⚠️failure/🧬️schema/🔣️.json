@@ -10,6 +10,7 @@
     "denials",
     "wholePrimary",
     "separateReceiptRefusal",
+    "independentRefusals",
     "sameSourcePointers",
     "noClone",
     "noFormat",
@@ -21,7 +22,8 @@
     "fault",
     "value",
     "normalContextRequired",
-    "publicationReceiving"
+    "publicationReceiving",
+    "typedOwnerWork"
   ],
   "properties": {
     "version": {
@@ -55,6 +57,29 @@
     },
     "separateReceiptRefusal": {
       "const": true
+    },
+    "independentRefusals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receipt",
+        "context",
+        "work"
+      ],
+      "properties": {
+        "receipt": {
+          "type": "string",
+          "minLength": 1
+        },
+        "context": {
+          "type": "string",
+          "minLength": 1
+        },
+        "work": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
     },
     "sameSourcePointers": {
       "const": true
@@ -152,6 +177,40 @@
             "receipt": "original recipient refusal"
           }
         ]
+      }
+    },
+    "typedOwnerWork": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "admitted",
+          "actual",
+          "fuelDebit",
+          "originalRetained"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "admitted": {
+            "type": "boolean"
+          },
+          "actual": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "fuelDebit": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "originalRetained": {
+            "type": "boolean"
+          }
+        }
       }
     }
   }

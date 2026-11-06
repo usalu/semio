@@ -22,7 +22,7 @@ use semio_framework_plugin::DraftView;
 use semio_framework_plugin::Editor;
 use semio_framework_plugin::Emit;
 use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
 use semio_framework_plugin::NoDraft;

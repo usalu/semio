@@ -376,7 +376,7 @@ pub async fn reactor_native_lifecycle_poll(runtime: &semio_plugin_reactor_lifecy
     assert!(events.len() <= 1, "a reactor turn admits at most one event");
     for attempt in 0..64 {
         let mut event = events.first().cloned();
-        match semio_plugin_reactor_turn::poll_kernel(runtime, &mut event, None, None, reactor_native_lifecycle_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await {
+        match semio_framework_plugin_reactor_turn::poll_kernel(runtime, &mut event, None, None, reactor_native_lifecycle_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await {
             Ok(result) => return result,
             Err(failure) if failure.primary_fault().is_some_and(|fault| fault.code.0 == "plugin.reactor-turn-deadline" && fault.retryable) => {
                 eprintln!("retained lifecycle exact-event deadline retry={} events={:?}", attempt + 1, events);

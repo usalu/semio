@@ -88,11 +88,11 @@ fn empty_history() -> semio_framework_plugin::HistoryView {
     semio_framework_plugin::HistoryView::empty()
 }
 
-fn home_view(user_id: &str, locale: semio_framework_ui_locale::Locale) -> semio_framework_plugin::ViewModel {
+fn home_view(user_id: &str, locale: semio_ui_locale::Locale) -> semio_framework_plugin::ViewModel {
     semio_framework_plugin::ViewModel {
         locale,
         session_identity: Some(semio_framework_plugin::ViewSessionIdentity { user_id: user_id.into(), display_name: "Ada".into() }),
-        ..semio_framework_plugin::ViewModel::new(locale, semio_framework_ui_locale::Terminology::Native)
+        ..semio_framework_plugin::ViewModel::new(locale, semio_ui_locale::Terminology::Native)
     }
 }
 
@@ -166,7 +166,7 @@ async fn directory_with_one_folded_space() -> HomeTransient {
 #[semio_framework_async_macros::async_test]
 async fn home_labels_resolve_native_english_by_default() {
     let transient = directory_with_one_folded_space().await;
-    let view_state = home_view("u1", semio_framework_ui_locale::Locale::En);
+    let view_state = home_view("u1", semio_ui_locale::Locale::En);
     let home_node = render_body(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &HomeConfig::default(), transient.directory(), &view_state).expect("English Home assembly");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(home_node).expect("English Home tree projection");
     assert!(json.contains("Updated"), "English column header must resolve: {json}");
@@ -176,7 +176,7 @@ async fn home_labels_resolve_native_english_by_default() {
 #[semio_framework_async_macros::async_test]
 async fn home_labels_resolve_native_german_locale() {
     let transient = directory_with_one_folded_space().await;
-    let view_state = home_view("u1", semio_framework_ui_locale::Locale::De);
+    let view_state = home_view("u1", semio_ui_locale::Locale::De);
     let home_node = render_body(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &HomeConfig::default(), transient.directory(), &view_state).expect("German Home assembly");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(home_node).expect("German Home tree projection");
     assert!(json.contains("Aktualisiert"), "German column header must resolve: {json}");
@@ -193,13 +193,13 @@ async fn home_render_publishes_signed_out_and_changes_roles_with_the_identity() 
     let transient = directory_with_one_folded_space().await;
     let config = HomeConfig::default();
     let render = |view: &semio_framework_plugin::ViewModel| render_body(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &config, transient.directory(), view);
-    let anonymous = render(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("signed-out render");
+    let anonymous = render(&semio_framework_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("signed-out render");
     let anonymous_json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(anonymous).expect("signed-out projection");
     assert!(anonymous_json.contains("s-home-create-space"), "the signed-out landing window still publishes its own body: {anonymous_json}");
     assert!(!anonymous_json.contains("manageSpace"), "a signed-out visitor owns no space and gets no administration affordance: {anonymous_json}");
-    let author = render(&home_view("u1", semio_framework_ui_locale::Locale::En)).expect("author render");
+    let author = render(&home_view("u1", semio_ui_locale::Locale::En)).expect("author render");
     let author_json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(author).expect("author projection");
-    let foreign = render(&home_view("u2", semio_framework_ui_locale::Locale::En)).expect("foreign render");
+    let foreign = render(&home_view("u2", semio_ui_locale::Locale::En)).expect("foreign render");
     let foreign_json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(foreign).expect("foreign projection");
     assert!(author_json.contains("manageSpace"));
     assert!(!foreign_json.contains("manageSpace"));
@@ -217,7 +217,7 @@ async fn a_dispatched_page_publishes_one_transient_item_and_no_history_row() {
     let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<HomeApp>, _>(async { semio_framework_plugin::App { definition: create_home_app().await, examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     app.bind_instance_id(1).await;
-    let view = home_view("u1", semio_framework_ui_locale::Locale::En);
+    let view = home_view("u1", semio_ui_locale::Locale::En);
     let meta = semio_framework_plugin::ActionMeta { expected_document_revision:None, actor: "local".into(), instance_id: 1, view_state: Some(view.clone()) };
     let page_json = semio_framework_pack_json::to_json_string(&{
         let events = [

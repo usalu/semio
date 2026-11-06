@@ -1,6 +1,6 @@
 use semio_framework_value::{ErasedSnapshotRetirement, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use protocol::codec::{HistoryReadLimits, RetainedWireByteSource};
-use semio_os_store_member_open::receiving::MemberHistoryReceiving;
+use semio_framework_os_store_member_open::receiving::MemberHistoryReceiving;
 use semio_framework_value_native_owned::native_decoding::allocation::NativeForwardedDecodeReceipt;
 use semio_os_spr::history::RetainedHistorySourceStep;
 use semio_os_store_testing_doubles::OriginalMemberCaller;
@@ -46,13 +46,20 @@ fn original_member_history_receiving_reborrows_actual_caller_retains_pages_and_p
   }
   if cut==65536{assert!(receiving.terminal_is_empty());let decoded=history.as_ref().unwrap();assert_eq!(decoded.doc_id,law["expected"]["docId"].as_str().unwrap());assert_eq!(decoded.schema,law["expected"]["schema"].as_str().unwrap());assert_eq!(decoded.edits.len(),2);assert_eq!(decoded.viewer_line.as_deref(),law["expected"]["viewerLine"].as_str());assert_eq!(decoded.viewer_checkpoint.as_deref(),law["expected"]["viewerCheckpoint"].as_str());}
   else{let(((),receipt),born,released)=measure(||caller.run(grant,|_,cx|cx.original_cancel_token().cancel_now()));exact(grant,receipt,born,released);assert_eq!((born,released),(0,0));}
+  if !receiving.terminal_is_empty(){
+   let owned=receiving.receipt.as_ref().map_or(0,NativeForwardedDecodeReceipt::owned_bytes);
+   let((step,receipt),born,released)=measure(||caller.run(grant,|_,cx|{loan.validate_context(cx).unwrap();let deadline=cx.deadline_us();cx.with_original_work_loan(0,deadline,|cx|receiving.close_step(&source,cx,grant)).unwrap()}));
+   assert_eq!(step,RetainedCloneStep::Progress(Default::default()));exact(grant,receipt,born,released);assert_eq!(receipt,RetainedCloneProgress::default());assert_eq!((born,released),(0,0));assert_eq!(receiving.receipt.as_ref().map_or(0,NativeForwardedDecodeReceipt::owned_bytes),owned);assert!(!receiving.terminal_is_empty());assert_eq!(source.original_source_identity(),original);
+  }
   for _ in 0..caller.maximum_turns(){if receiving.terminal_is_empty(){break}let((step,receipt),born,released)=measure(||caller.run(grant,|_,cx|{loan.validate_context(cx).unwrap();receiving.close_step(&source,cx,grant).unwrap()}));exact(grant,receipt,born,released);assert_eq!(step.progress(),receipt);assert!(receipt.copied_items>0||matches!(step,RetainedCloneStep::Complete(_)));births+=born;releases+=released;assert_eq!(source.original_source_identity(),original);}
-  assert!(receiving.terminal_is_empty());let(_,born,released)=measure(||drop(receiving));assert_eq!((born,released),(0,0));
+  assert!(receiving.terminal_is_empty());
+  for _ in 0..2{let((step,receipt),born,released)=measure(||caller.run(grant,|_,cx|{loan.validate_context(cx).unwrap();let before=cx.fuel_remaining();let step=receiving.close_step(&source,cx,grant).unwrap();assert_eq!(before,cx.fuel_remaining());step}));assert_eq!(step,RetainedCloneStep::Complete(Default::default()));exact(grant,receipt,born,released);assert_eq!(receipt,RetainedCloneProgress::default());assert_eq!((born,released),(0,0));assert_eq!(source.original_source_identity(),original);}
+  let(_,born,released)=measure(||drop(receiving));assert_eq!((born,released),(0,0));
   let mut active:Option<Box<dyn ErasedSnapshotRetirement>>=None;
-  for _ in 0..caller.maximum_turns(){if history.is_none()&&active.is_none(){break}let((step,receipt),born,released)=measure(||caller.run(grant,|_,cx|{loan.validate_context(cx).unwrap();let raw=if active.is_some(){semio_os_store_read::artifact_retirement_box_close_step(&mut active,grant).result}else{semio_os_store_read::artifact_retirement_admit_owned(&mut history,&mut active,grant).result};semio_os_store_member_open::receive_member_close(cx,raw).unwrap()}));exact(grant,receipt,born,released);assert_eq!(step.progress(),receipt);births+=born;releases+=released;}
+  for _ in 0..caller.maximum_turns(){if history.is_none()&&active.is_none(){break}let((step,receipt),born,released)=measure(||caller.run(grant,|_,cx|{loan.validate_context(cx).unwrap();let raw=if active.is_some(){semio_os_store_read::artifact_retirement_box_close_step(&mut active,grant).result}else{semio_os_store_read::artifact_retirement_admit_owned(&mut history,&mut active,grant).result};semio_framework_os_store_member_open::receive_member_close(cx,raw).unwrap()}));exact(grant,receipt,born,released);assert_eq!(step.progress(),receipt);births+=born;releases+=released;}
   assert!(history.is_none()&&active.is_none());assert_eq!(births,releases,"actual Member receiving custody cut{cut}");
   let((step,receipt),born,released)=measure(||caller.run(grant,|parent,cx|loan.close_step(parent,cx).unwrap()));exact(grant,receipt,born,released);assert_eq!(step.progress(),receipt);assert!(loan.terminal_is_empty());assert_eq!((born,released),(0,0));drop(loan);
-  let mut input_releases=0;for _ in 0..caller.maximum_turns(){if pages.terminal_is_empty(){break}let((step,receipt),born,released)=measure(||caller.run(grant,|_,cx|{let raw=if pages.close_take_page().is_some(){Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}else{pages.close_backing_step(grant)};semio_os_store_member_open::receive_member_close(cx,raw).unwrap()}));exact(grant,receipt,born,released);assert_eq!(born,0);assert_eq!(step.progress(),receipt);input_releases+=released;}
+  let mut input_releases=0;for _ in 0..caller.maximum_turns(){if pages.terminal_is_empty(){break}let((step,receipt),born,released)=measure(||caller.run(grant,|_,cx|{let raw=if pages.close_take_page().is_some(){Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}else{pages.close_backing_step(grant)};semio_framework_os_store_member_open::receive_member_close(cx,raw).unwrap()}));exact(grant,receipt,born,released);assert_eq!(born,0);assert_eq!(step.progress(),receipt);input_releases+=released;}
   assert!(pages.terminal_is_empty());assert_eq!(input_born,input_releases);caller.close();
  }
 }

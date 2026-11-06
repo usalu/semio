@@ -8,6 +8,9 @@ const cases = JSON.parse(readFileSync(new URL("./wfc-browser-cases.json", import
 const schema = JSON.parse(readFileSync(new URL("./wfc-browser-schema.json", import.meta.url), "utf8"));
 const validate = new Ajv().compile(schema);
 if (!validate(cases)) throw new Error(JSON.stringify(validate.errors));
+const missingSeed = structuredClone(cases);
+missingSeed.variants[0].forms[0].args = {};
+if (validate(missingSeed)) throw new Error("revision journey must require an authored seed form");
 if (new Set(cases.variants.map((row: { variant: string }) => row.variant)).size !== 5) throw new Error("five distinct variants");
 if (new Set(cases.variants.map((row: { port: number }) => row.port)).size !== 5) throw new Error("five distinct ports");
 const { controlWorkloadForms } = await import("./wfc-browser-scenario.ts");

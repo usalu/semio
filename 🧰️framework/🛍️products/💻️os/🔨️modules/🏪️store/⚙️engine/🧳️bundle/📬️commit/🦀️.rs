@@ -1,6 +1,6 @@
 //! 📬️ Original publication donates its prepared history, causal suffix and transport intent together.
 use super::*;
-use semio_os_store_one_item_batch::lifted_member_group::BatchCommitMetadata;
+use semio_framework_os_store_one_item_batch::lifted_member_group::BatchCommitMetadata;
 
 pub(super) fn advance_original_commit<P,M>(store:&mut StoreParts<'_,P,M>,publication:&mut ArtifactStoreBatchPublication<P,M>,body:usize,grant:ArtifactStoreOneItemGrant)->Result<ArtifactStoreOneItemAdvance,VcsError>
 where P: semio_os_spr::StoreState,M: semio_os_spr::StoreMutationFor<P>{

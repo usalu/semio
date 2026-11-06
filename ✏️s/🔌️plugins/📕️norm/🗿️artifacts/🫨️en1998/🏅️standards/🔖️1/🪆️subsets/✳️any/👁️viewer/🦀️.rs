@@ -18,7 +18,7 @@ use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 use semio_s_artifact_norm_en1998_model::{EN1998_DIALECT, EN1998_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, ViewEmit, Viewer};
 use semio_framework_plugin::app::{Dialect, InteractionView};
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
@@ -47,7 +47,7 @@ impl En1998Viewer {
 
 impl ArtifactViewer for En1998Viewer {
     /// 📢️ Localized notices of the refusal and warning codes this norm app raises.
-    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+    fn fault_notices() -> &'static [(&'static str, semio_ui_locale::LocalizedLabel)] {
         semio_s_plugin_norm_app_surface::norm_fault_notices()
     }
     type Snapshot = En1998Snapshot;
@@ -161,14 +161,14 @@ pub fn create_en1998_viewer() -> semio_framework_plugin::AppDefinition {
         .named_layout(semio_s_plugin_norm_app_surface::view_named_layout("en1998", "mobile"))
         .named_layout(semio_s_plugin_norm_app_surface::view_named_layout("en1998", "tablet"))
         .action_with(
-            semio_framework_plugin::ActionDefinition::new_catalog("viewportAct", semio_framework_ui_locale::LocalizedLabel::native("Viewport Action", "Viewport-Aktion"), semio_framework_plugin::ActionKind::View).with_args(vec![
-                semio_framework_plugin::ActionArgDef::text("action", semio_framework_ui_locale::LocalizedLabel::native("Action", "Aktion")),
-                semio_framework_plugin::ActionArgDef::text("text", semio_framework_ui_locale::LocalizedLabel::native("Text", "Text")),
-                semio_framework_plugin::ActionArgDef::any("number", semio_framework_ui_locale::LocalizedLabel::native("Number", "Zahl")),
+            semio_framework_plugin::ActionDefinition::new_catalog("viewportAct", semio_ui_locale::LocalizedLabel::native("Viewport Action", "Viewport-Aktion"), semio_framework_plugin::ActionKind::View).with_args(vec![
+                semio_framework_plugin::ActionArgDef::text("action", semio_ui_locale::LocalizedLabel::native("Action", "Aktion")),
+                semio_framework_plugin::ActionArgDef::text("text", semio_ui_locale::LocalizedLabel::native("Text", "Text")),
+                semio_framework_plugin::ActionArgDef::any("number", semio_ui_locale::LocalizedLabel::native("Number", "Zahl")),
             ]),
         )
         .action_interactive_job("viewportAct", semio_framework_plugin::InteractiveJobClassification::Migrated)
-        .action_describe("viewportAct", semio_framework_ui_locale::LocalizedLabel::native("Steps the checks and combinations or changes the colour field, track and playback of the viewport; only this client's ephemeral view changes, never the document.", "Schaltet Nachweise und Kombinationen weiter oder ändert Farbfeld, Verlauf und Wiedergabe des Viewports; nur die flüchtige Ansicht dieses Clients ändert sich, nie das Dokument."))
+        .action_describe("viewportAct", semio_ui_locale::LocalizedLabel::native("Steps the checks and combinations or changes the colour field, track and playback of the viewport; only this client's ephemeral view changes, never the document.", "Schaltet Nachweise und Kombinationen weiter oder ändert Farbfeld, Verlauf und Wiedergabe des Viewports; nur die flüchtige Ansicht dieses Clients ändert sich, nie das Dokument."))
         .build_definition()
 }
 //#endregion 🔖️Manifest

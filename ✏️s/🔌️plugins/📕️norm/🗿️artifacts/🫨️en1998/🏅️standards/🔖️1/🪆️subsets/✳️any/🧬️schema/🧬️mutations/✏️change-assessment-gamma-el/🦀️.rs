@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeAssessmentGammaEl 
         record: "ChangeAssessmentGammaEl",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change structural assessment factor γel", "Tragwerksbewertungsbeiwert γel ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change structural assessment factor γel", "Tragwerksbewertungsbeiwert γel ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-assessment-gamma-el".into()]

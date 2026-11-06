@@ -4,6 +4,26 @@ use std::mem::{ManuallyDrop,size_of};
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
 fn page(source:&str,start:usize,body:usize)->Result<usize,ValueError>{if start>source.len()||!source.is_char_boundary(start){return Err(invalid("UTF8 original source boundary changed"));}let mut end=start+body.min(source.len()-start);while end>start&&!source.is_char_boundary(end){end-=1;}Ok(end)}
 
+/// 🔤️ Validates the actual retained byte source one funded page at a time without copying it.
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+pub struct RetainedUtf8BytesCursor{source:Option<(usize,usize)>,offset:usize,remaining:u8,minimum:u8,maximum:u8,complete:bool,failed:bool}
+/// 🧾️ One byte-validation turn reports its exact fixed state and inspected byte receipt.
+#[derive(Clone,Copy,Debug)]
+pub struct RetainedUtf8BytesStep{pub progress:RetainedCloneProgress,pub complete:bool}
+impl RetainedUtf8BytesCursor{
+ pub fn new()->Self{Self{source:None,offset:0,remaining:0,minimum:0x80,maximum:0xbf,complete:false,failed:false}}
+ pub fn complete(&self)->bool{self.complete}
+ pub fn matches_source(&self,source:&[u8])->bool{self.source==Some((source.as_ptr()as usize,source.len()))}
+ pub fn fixed_copy_bytes()->usize{2*size_of::<Self>()}
+ /// 🪜️ Advances only through the caller-funded original byte span and records a refusal without losing the source.
+ pub fn advance(&mut self,source:&[u8],grant:RetainedCloneGrant,maximum_work:u64)->crate::RetainedWorkOutcome<RetainedUtf8BytesStep>{
+  let empty=RetainedUtf8BytesStep{progress:Default::default(),complete:self.complete};let identity=(source.as_ptr()as usize,source.len());if self.source.is_some_and(|old|old!=identity){return crate::RetainedWorkOutcome{result:Err(invalid("UTF8 byte source changed during validation")),work:0}}if self.failed{return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original media text is not UTF8")),work:0}}if self.complete{return crate::RetainedWorkOutcome{result:Ok(empty),work:0}}let fixed=Self::fixed_copy_bytes();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<fixed||maximum_work==0{return crate::RetainedWorkOutcome{result:Ok(empty),work:0}}
+  let available=(source.len()-self.offset).min(grant.maximum_copy_bytes-fixed).min(4096).min(usize::try_from(maximum_work).unwrap_or(usize::MAX));if available==0&&self.offset<source.len(){return crate::RetainedWorkOutcome{result:Ok(empty),work:0}}self.source=Some(identity);let mut inspected=0usize;
+  for &byte in &source[self.offset..self.offset+available]{inspected+=1;if self.remaining>0{if byte<self.minimum||byte>self.maximum{self.failed=true;break}self.remaining-=1;self.minimum=0x80;self.maximum=0xbf;}else{match byte{0x00..=0x7f=>{},0xc2..=0xdf=>self.remaining=1,0xe0=>{self.remaining=2;self.minimum=0xa0},0xe1..=0xec|0xee..=0xef=>self.remaining=2,0xed=>{self.remaining=2;self.maximum=0x9f},0xf0=>{self.remaining=3;self.minimum=0x90},0xf1..=0xf3=>self.remaining=3,0xf4=>{self.remaining=3;self.maximum=0x8f},_=>{self.failed=true;break}}}}
+  self.offset+=inspected;if self.offset==source.len(){if self.remaining!=0{self.failed=true}else{self.complete=true}}let progress=RetainedCloneProgress{copied_items:1,copied_bytes:fixed+inspected,..Default::default()};let work=inspected.max(1) as u64;if self.failed{return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original media text is not UTF8").with_retained_progress(progress)),work}}crate::RetainedWorkOutcome{result:Ok(RetainedUtf8BytesStep{progress,complete:self.complete}),work}
+ }
+}
+
 /// 🧭️ The caller retains immutable source/revision custody; this zero-heap cursor lends funded ranges.
 #[derive(Clone,Copy,Debug,Default,PartialEq,Eq)]
 pub struct RetainedUtf8Cursor{byte:usize,scalar:usize,ready:bool}

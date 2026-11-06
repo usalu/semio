@@ -11,7 +11,10 @@
     "deniedCurrencies",
     "wideText",
     "outputHandoff",
-    "postCustody"
+    "postCustody",
+    "workCases",
+    "diagnosticText",
+    "diagnosticSlots"
   ],
   "additionalProperties": false,
   "properties": {
@@ -184,6 +187,63 @@
         "mutable-handback",
         "original-intermediate"
       ]
+    },
+    "diagnosticSlots": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["targets", "turns", "workPerTurn"],
+      "properties": {"targets": {"const": 8}, "turns": {"const": 24}, "workPerTurn": {"const": 1}}
+    },
+    "diagnosticText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pattern", "repetitions", "bytes", "chunkBytes"],
+      "properties": {
+        "pattern": {"const": "a🧱"},
+        "repetitions": {"const": 819},
+        "bytes": {"const": 4095},
+        "chunkBytes": {"const": 2048}
+      }
+    },
+    "workCases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "budget",
+          "child",
+          "parent",
+          "actual",
+          "admitted"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "budget": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "child": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "parent": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "actual": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "admitted": {
+            "type": "boolean"
+          }
+        }
+      }
     }
   }
 }

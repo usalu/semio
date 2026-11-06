@@ -1,0 +1,79 @@
+{
+  "schema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "array",
+    "items": {
+      "type": "object",
+      "required": [
+        "wordBytes",
+        "headerWords",
+        "admitted",
+        "expectedWork",
+        "expectedCopy",
+        "expectedTotal",
+        "expectedCancelled"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "wordBytes": {
+          "enum": [
+            4,
+            8
+          ]
+        },
+        "headerWords": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "admitted": {
+          "type": "boolean"
+        },
+        "expectedWork": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expectedCopy": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expectedTotal": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expectedCancelled": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "data": [
+    {
+      "wordBytes": 4,
+      "headerWords": 3,
+      "admitted": false,
+      "expectedWork": 0,
+      "expectedCopy": 0,
+      "expectedTotal": 0,
+      "expectedCancelled": 0
+    },
+    {
+      "wordBytes": 4,
+      "headerWords": 3,
+      "admitted": true,
+      "expectedWork": 1,
+      "expectedCopy": 12,
+      "expectedTotal": 39,
+      "expectedCancelled": 15
+    },
+    {
+      "wordBytes": 8,
+      "headerWords": 3,
+      "admitted": true,
+      "expectedWork": 1,
+      "expectedCopy": 24,
+      "expectedTotal": 75,
+      "expectedCancelled": 27
+    }
+  ]
+}

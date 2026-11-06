@@ -137,8 +137,8 @@ pub fn stamp_fault_notices<A: ArtifactApp>(def: &mut AppDefinition) {
 
 
 /// 🪞️ Projects typed proof cancellation into public action data without admitting any factory or job.
-pub fn project_tool_cancellation<A: ArtifactApp>(def: &mut AppDefinition, rows: &[semio_framework_plugin_decl_app::tool_contract::ArtifactBoundedFirstStepProof]) -> Result<(), PluginAssemblyError> {
-    use semio_framework_plugin_decl_app::tool_contract::ToolOwnerWitness;
+pub fn project_tool_cancellation<A: ArtifactApp>(def: &mut AppDefinition, rows: &[semio_plugin_decl_app::tool_contract::ArtifactBoundedFirstStepProof]) -> Result<(), PluginAssemblyError> {
+    use semio_plugin_decl_app::tool_contract::ToolOwnerWitness;
     use std::collections::BTreeSet;
     let registry = AppActionRegistry::from_definition(def);
     if registry.is_registry_less() { return Ok(()); }

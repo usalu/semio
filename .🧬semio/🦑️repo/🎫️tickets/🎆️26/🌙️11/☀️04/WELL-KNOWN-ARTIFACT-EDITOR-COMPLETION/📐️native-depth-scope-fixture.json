@@ -1,0 +1,16 @@
+[
+  {
+    "name": "normal exit",
+    "start": 0,
+    "maximum": 1,
+    "panic": false,
+    "after": 0
+  },
+  {
+    "name": "unwind restores original depth",
+    "start": 0,
+    "maximum": 1,
+    "panic": true,
+    "after": 0
+  }
+]

@@ -215,7 +215,7 @@
             .expect("peer fixture fits fixed root");
         let previous = app.roster.peer_presence.replace(std::sync::Arc::new(peer_presence)).expect("live fixture peer root");
         assert!(previous.is_empty());
-        app.roster.peer_presence_retirements.insert_admitted(0,semio_framework_plugin_decl_views::PeerPresenceRootRetirement::new(previous));
+        app.roster.peer_presence_retirements.insert_admitted(0,semio_plugin_decl_views::PeerPresenceRootRetirement::new(previous));
 
         let item = TreeNode::try_new(
             "item-1",

@@ -70,29 +70,29 @@ impl store::ArtifactNativeSnapshot for Fem2dSnapshot {
 
 impl store::ArtifactPackReceiving for Fem2dSnapshot {
  /// 🎁️ Retains original Pack parsing, authoring and persistent output in the caller's funded frames.
- fn receive_pack(bytes:&[u8],owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<Self,store::NativeSnapshotFailure>{
+ fn receive_pack(bytes:&[u8],output:&mut Option<Self>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<(),store::NativeSnapshotFailure>{
   use semio_framework_value::{RetainedWorkOutcome,ValueError,ValueRefusalKind};
   use semio_framework_dsl_record::{BorrowedDslRecord,RecordValue};
   use pack::record::RetainedRecordReceiving;
-  owner.receive_nested::<RecordValue,Self,store::NativeSnapshotFailure>(|slot,original|store::native_snapshot_turn(|work|{
+  owner.receive_nested::<RecordValue,Self,store::NativeSnapshotFailure>(output,&mut |slot,output,birth,birth_unwind,original|store::native_snapshot_turn(|work|{
    let native=original.native();let before=native.actual_work();
    let result=store::semio_format::unwrap_binary_controlled(bytes,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1,native);
    let body=work.take(RetainedWorkOutcome{work:native.actual_work().saturating_sub(before),result})?;
-   *slot=Some(work.take(original.receive_nested::<RetainedRecordReceiving,RecordValue,store::NativeSnapshotFailure>(|cursor,original|store::native_snapshot_turn(|work|{
+   work.take(original.receive_nested::<RetainedRecordReceiving,RecordValue,store::NativeSnapshotFailure>(slot,&mut |cursor,record,_birth,_birth_unwind,original|store::native_snapshot_turn(|work|{
     let grant=original.remaining_grant();
     let Some((receiving,progress))=work.take(RetainedRecordReceiving::admit_document(body,(0,body.len()),<Fem2dSnapshotValue as BorrowedDslRecord>::RECORD,protocol::PackLimits::default(),grant))? else{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original FEM pack grant cannot admit its receiving parser").into())};
     *cursor=Some(receiving);original.record_progress(progress)?;
-    work.take(original.drive_cursor(cursor,|cursor,native,grant|{
+    work.take(original.drive_cursor(cursor,record,&mut |cursor,output,native,grant|{
      if cursor.is_ready(){
-      let mut out=None;let turn=cursor.take_into(&mut out,grant);
-      RetainedWorkOutcome{work:turn.work,result:turn.result.map(|p|(out,p)).map_err(store::NativeSnapshotFailure::from)}
+      let turn=cursor.take_into(output,grant);
+      RetainedWorkOutcome{work:turn.work,result:turn.result.map_err(store::NativeSnapshotFailure::from)}
      }else{
       let turn=cursor.step(body,native,grant);
-      RetainedWorkOutcome{work:turn.work,result:turn.result.map(|p|(None,p)).map_err(store::NativeSnapshotFailure::from)}
+      RetainedWorkOutcome{work:turn.work,result:turn.result.map_err(store::NativeSnapshotFailure::from)}
      }
     }))
-   })))?);
-   work.take(Self::receive_exchange_record(slot.as_ref().unwrap(),original))
+   })))?;
+   work.take(Self::receive_exchange_record(slot.as_ref().unwrap(),output,original))
   }))
  }
 }

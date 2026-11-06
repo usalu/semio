@@ -1,0 +1,14 @@
+{
+  "deniedCapacity": 0,
+  "childCallsOnDenial": 0,
+  "childPrimary": "child owner",
+  "childSettlement": "child settlement",
+  "outerSettlement": "outer settlement",
+  "actualWork": 3,
+  "allocationFailure": "allocation refused",
+  "receiptFailure": "receipt refused",
+  "genericResult": true,
+  "genericItems": 7,
+  "overrunWork": 4,
+  "unwindReservationHeld": true
+}

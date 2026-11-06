@@ -3,8 +3,8 @@
 use semio_plugin_decl_emission::ActionMeta;
 use semio_plugin_decl_app::{ArtifactApp, EphemeralSnapshot};
 use semio_plugin_decl_media::ArtifactMediaExportPoll;
-use semio_plugin_runtime_ops::ops_ingress::{COMMAND_INGRESS_MOVES_PER_TURN, PluginCommandIngress, PluginCommandIngressStep, PluginExchangeOutput, encode_exchange_frames, push_invocation_side_frames, relay_clear_default_app, relay_open_artifact, relay_set_default_app, transaction_proposal_frame};
-use semio_plugin_runtime_ops::ops_surface_render::ContextMenuWireRequest;
+use semio_framework_plugin_runtime_ops::ops_ingress::{COMMAND_INGRESS_MOVES_PER_TURN, PluginCommandIngress, PluginCommandIngressStep, PluginExchangeOutput, encode_exchange_frames, push_invocation_side_frames, relay_clear_default_app, relay_open_artifact, relay_set_default_app, transaction_proposal_frame};
+use semio_framework_plugin_runtime_ops::ops_surface_render::ContextMenuWireRequest;
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_plugin_job::EmitWire;
 use semio_plugin_extension::extension_runtime_lift::extension_retirement::ExtensionResourceOwner;
@@ -12,13 +12,13 @@ use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin};
 use semio_plugin_plugin_program::{Plugin, PluginProgram, decode_wire_serialized, encode_wire_serialized};
 use semio_plugin_reactor_app::PluginApp;
 use semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
-use semio_plugin_runtime_ops::ops_typed_operations::{TYPED_OPERATION_REPLY_LEFTOVER_PUMPS, advance_typed_operation_output, advance_typed_operation_output_with_leftover, drive_self_waking_ready, media_export_handle_from_wire, media_export_handle_into_wire, merge_typed_operation_leftover_into_reply};
+use semio_framework_plugin_runtime_ops::ops_typed_operations::{TYPED_OPERATION_REPLY_LEFTOVER_PUMPS, advance_typed_operation_output, advance_typed_operation_output_with_leftover, drive_self_waking_ready, media_export_handle_from_wire, media_export_handle_into_wire, merge_typed_operation_leftover_into_reply};
 use semio_plugin_window_config::WindowConfigPack;
 use semio_plugin_reactor_app::app_runtime_helpers::{debug_runtime_line, plugin_internal_fault};
 use semio_plugin_runtime_instances::inst_wire_frames::{decode_wire_serialized_or, instance_actor, push_app_fault, push_dispatch_fault, push_os_fault, read_conflicts_frames, resolve_conflict_frames, set_merge_policy_frames, with_instances_mut, with_instances_original_mut};
-use semio_plugin_runtime_ops::ops_wire_limits::find_instance;
-use semio_plugin_runtime_ops::ops_media::{plugin_cancel_media_export, plugin_consume_media, plugin_poll_media_export, plugin_produce_media, plugin_retain_media_export_result, plugin_submit_media_export, plugin_take_media_export_chunk};
-use semio_plugin_runtime_ops::ops_document::{plugin_document_pack, plugin_ingest_operations};
+use semio_framework_plugin_runtime_ops::ops_wire_limits::find_instance;
+use semio_framework_plugin_runtime_ops::ops_media::{plugin_cancel_media_export, plugin_consume_media, plugin_poll_media_export, plugin_produce_media, plugin_retain_media_export_result, plugin_submit_media_export, plugin_take_media_export_chunk};
+use semio_framework_plugin_runtime_ops::ops_document::{plugin_document_pack, plugin_ingest_operations};
 
 #[path = "🎯️document-and-child-commands/🦀️.rs"]
 mod document_and_child_commands;
@@ -262,12 +262,21 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut original_media_failure:Option<semio_framework_job::OriginalTurnFailure>=None;
         let mut original_media_domain=None;
         let mut original_media_artifact=None;
+        let mut original_media_in=None;
         let mut original_preview=None;
         let mut original_configuration=None;
         let media_pending=match owner.original_command(){
             Some(protocol::AppCommand::MediaIn{..})=>{
-                let result=with_instances_original_mut(runtime,|list|{let mut instance=find_instance(list,instance_id)?;::semio_framework_async::poll::resolve_ready(instance.app.prepare_media_import(cx)).map_err(Into::into)}).await;
-                match result{Ok(ready)=>!ready,Err(failure)=>{original_media_failure=Some(failure.into());true}}
+                if owner.original_media_finished(){match owner.settle_original_media_import(cx){Ok(ready)=>!ready,Err(failure)=>{original_media_failure=Some(failure);true}}}else{match owner.prepare_media_descriptor(cx){
+                    Ok(false)=>true,
+                    Err(failure)=>{original_media_failure=Some(failure);true},
+                    Ok(true)=>{
+                        let accepted=if let Some((port,schema,media_type))=owner.structured_media_binding(){match with_instances_original_mut(runtime,|list|{let instance=find_instance(list,instance_id)?;Ok(instance.app.accepts_original_structured_media(port,schema,media_type))}).await{Ok(value)=>value,Err(failure)=>{original_media_failure=Some(failure.into());false}}}else{false};
+                        if original_media_failure.is_some(){true}else if owner.media_is_intrinsic()||owner.media_original_started()||accepted{match owner.prepare_media_payload(accepted,cx){Ok(false)=>true,Err(failure)=>{original_media_failure=Some(failure);true},Ok(true)=>match owner.prepare_media_metadata(runtime,instance_id,cx){Ok(false)=>true,Err(failure)=>{original_media_failure=Some(failure);true},Ok(true)=>{match owner.media_import_parts(){Err(failure)=>{original_media_failure=Some(failure);true},Ok((port,media,meta,completed))=>{let result=with_instances_original_mut(runtime,|list|{let mut instance=find_instance(list,instance_id)?;::semio_framework_async::poll::resolve_ready(instance.app.advance_original_media_import(port,media,meta,completed,cx)).map_err(Into::into)}).await;match result{Ok(_)=>true,Err(failure)=>{original_media_failure=Some(failure.into());true}}}}}}}}else{let result=with_instances_original_mut(runtime,|list|{let mut instance=find_instance(list,instance_id)?;::semio_framework_async::poll::resolve_ready(instance.app.prepare_media_import(cx)).map_err(Into::into)}).await;
+                            match result{Ok(false)=>true,Err(failure)=>{original_media_failure=Some(failure.into());true},Ok(true)=>match owner.take_media_in(cx,&mut original_media_in){Ok(ready)=>!ready,Err(failure)=>{original_media_failure=Some(failure);true}}}
+                        }
+                    }
+                }}
             },
             Some(protocol::AppCommand::SubmitMediaExport{..})=>{
                 let(port,parent,revision,checkpoint,receiver)=owner.media_submission_parts()?;
@@ -321,7 +330,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let ingress=match original_media_failure{Some(failure)=>PluginCommandIngress::FailedDecoded{owner,failure:Some(failure),identity:(cx.operation(),cx.generation()),close_failure:None,compound:None,raw_media:original_media_domain},None=>if original_media_domain.is_some(){PluginCommandIngress::FailedDecoded{owner,failure:None,identity:(cx.operation(),cx.generation()),close_failure:None,compound:None,raw_media:original_media_domain}}else{PluginCommandIngress::Decoded(owner)}};
             return Ok(PluginExchangeOutput{frames:encode_exchange_frames(&frames).await,effects:effect_bytes,events:event_bytes,retry_command:Some((envelope_seq,ingress)),command_terminal_fault,presence_pending,presence_terminal,presence_terminal_fault,..Default::default()});
         }
-        let command = owner.take_for_dispatch().ok_or_else(|| plugin_internal_fault("decoded command owner is terminal before dispatch"))?;
+        let original_media_applied=owner.original_media_finished();let mut original_media_descriptor=None;
+        let command = if let Some((command,descriptor))=original_media_in.take(){original_media_descriptor=Some(descriptor);command}else{owner.take_for_dispatch().ok_or_else(|| plugin_internal_fault("decoded command owner is terminal before dispatch"))?};
         match command {
             protocol::AppCommand::Presence { .. } => unreachable!("Presence commands are admitted from their fixed header before whole-command decoding"),
             protocol::AppCommand::LocalInteractionQuery { .. } => arm_local_interaction_query(runtime, instance_id, &mut frames, command).await?,
@@ -354,7 +364,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             protocol::AppCommand::ReadConfig { .. } => arm_read_config(runtime, instance_id, &mut frames, command).await?,
             protocol::AppCommand::LoadWindowConfig { .. } => arm_load_window_config(runtime, instance_id, &mut frames, command).await?,
             protocol::AppCommand::ReadWindowConfigs { .. } => arm_read_window_configs(runtime, instance_id, &mut frames, command).await?,
-            protocol::AppCommand::MediaIn { .. } => arm_media_in(runtime, instance_id, cx, &mut frames, &mut flags, command).await?,
+            protocol::AppCommand::MediaIn { seq,ref descriptor,ref data,.. } if original_media_applied=>{assert!(descriptor.is_empty()&&data.is_empty(),"original media source must be donated before completion");flags.mutated=true;frames.push(protocol::AppFrame::Done{in_reply_to:seq});},
+            protocol::AppCommand::MediaIn { .. } => arm_media_in(runtime, instance_id, cx, &mut frames, &mut flags, command,original_media_descriptor.take().expect("original media descriptor was donated with its command")).await?,
             protocol::AppCommand::MediaOut{seq,port,..}=>{let artifact=original_media_artifact.take().expect("original media encoding completes before command donation");frames.push(protocol::AppFrame::Media{in_reply_to:seq,port,descriptor:encode_wire_serialized(&artifact.descriptor),data:artifact.data});},
             protocol::AppCommand::SubmitMediaExport { .. } => arm_submit_media_export(&mut frames, &mut owner, command).await?,
             protocol::AppCommand::PollMediaExport { .. } => arm_poll_media_export(&mut frames, &mut owner, command).await?,

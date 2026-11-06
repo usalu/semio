@@ -1,0 +1,15 @@
+# Guest Mounted Owner Policy
+
+Independent source audit found that the guest component passes INTERACTIVE_COMPONENT directly to plugin_exports!, while WFC_MOUNTED_OWNER_POLICY is otherwise used only by its definition and two existing law tests. The macro forwards the selected value into its persistent PluginRuntime constructor; all five playground variants select this component. The enlarged release budget therefore was not used by the production guest.
+
+Added a native component regression that observes the actual macro-created persistent runtime through its existing mounted_owner_policy getter. It compares all three phase grants with the existing portable JSON fixture using both native wire fields and serde_json serialization. This exercises actual selection, rather than reading source text or comparing the constant with itself. Its package adds serde_json only as a dev dependency.
+
+The regression is authored before changing the guest selection. The current default policy is expected to fail its release-byte assertion; the first actual component test result remains required. A focused registered Cargo gate is launched with the guest_runtime_uses_the_portable_wfc_policy filter, and all output stays under generated. No guest-policy success is claimed from static inspection.
+
+First component regression83383 terminated exit1 before compilation: hub workspace lock preparation loaded the unrelated Lowpoly editor manifest, which inherited three nonexistent old plugin/kernel keys beside its already-correct new entries. Root removed only those invalid duplicate dependency entries; existing current dependencies and exact test feature lists remain. A fresh TOML validation confirms no missing inherited keys in that manifest. This is a required workspace resolution repair; no Lowpoly runtime implementation was changed. The intended guest-policy assertion has not executed yet, so no behavioral red result is claimed. A new captured focused component run follows the terminal result.
+
+Second component attempt5787 terminated exit1 before compilation at the Raster editor missing inherited base64_codec key. Root repaired the identified hub dependency facts and their current owned crate names; the retained read-only preflight now traverses3690 local manifests with zero unresolved inherited keys or local paths. No behavior assertion has executed yet. Third focused component run captures current inputs, with default guest policy still intentionally selected for the regression red phase.
+
+## Production Selection Completed
+
+The actual runtime regression was authored before implementation, but its native attempts could not reach the assertion because of independent workspace/shared compiler blockers. Root now completed the one production selection change: plugin_exports! receives semio_hub_wfc::WFC_MOUNTED_OWNER_POLICY. All five variants use this component. No behavioral red or green assertion is claimed; the existing actual-runtime regression remains a required gate once shared source is coherent. Keeping the known production defect solely while waiting for unrelated compile work would not advance the objective.

@@ -6,10 +6,10 @@ fn retired(cx:&mut semio_framework_job::StepContext<'_>,d:RetirementDemand,close
 struct FixtureOwner;
 impl WindowTransientOwner for FixtureOwner{
  const WINDOW_KIND_ID:&'static str="original-transient-fixture";
- type State=semio_framework_plugin_testing_fixtures_publication::publication_fixture::transient::PublicationTransient;
- type Mutation=semio_framework_plugin_testing_fixtures_publication::publication_fixture::transient::mutations::PublicationTransientMutation;
+ type State=semio_plugin_testing_fixtures_publication::publication_fixture::transient::PublicationTransient;
+ type Mutation=semio_plugin_testing_fixtures_publication::publication_fixture::transient::mutations::PublicationTransientMutation;
  fn owners_birth_demands()->RetirementDemand{transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
- fn build_owners()->WindowTransientOwnerBundle<Self::State,Self::Mutation>{semio_framework_plugin_testing_fixtures_publication::window_transient_owners::owners()}
+ fn build_owners()->WindowTransientOwnerBundle<Self::State,Self::Mutation>{semio_plugin_testing_fixtures_publication::window_transient_owners::owners()}
 }
 fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:128}}
 fn stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1<<20,maximum_copy_bytes:1<<28,maximum_capacity_bytes:1<<28,maximum_release_bytes:1<<28,maximum_depth:4096}}

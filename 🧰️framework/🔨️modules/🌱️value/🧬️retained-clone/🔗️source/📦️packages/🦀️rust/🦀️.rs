@@ -1,7 +1,7 @@
 //! 🔗️ Immutable original source/ref/binding/projection custody owns every native alias.
 pub use semio_framework_value_control_contract::*;
 pub use semio_framework_value_control_contract as retained_clone;
-pub use semio_framework_value_retirement::{RetainedWorkOutcome,ErasedSnapshotRetirement,retirement,factory_ticket_demands,close_factory_ticket,RetirementSelection,select_factory_ticket,owned_retirement_birth_bytes,admit_owned_retirement};
+pub use semio_framework_value_retirement::{OriginalRetirementOutcome,RetainedWorkOutcome,ErasedSnapshotRetirement,retirement,factory_ticket_demands,close_factory_ticket,RetirementSelection,select_factory_ticket,owned_retirement_birth_bytes,admit_owned_retirement};
 pub use semio_framework_value_shared_issuance as shared_issuance;
 use semio_framework_value_retirement::{RetireOwned,retirement::controlled::RetainedOwnerGate};
 use std::{mem::ManuallyDrop,sync::atomic::AtomicU64};
@@ -53,11 +53,13 @@ pub struct RetainedCloneBinding{lease:ManuallyDrop<Option<shared_issuance::Seale
 impl RetainedCloneBinding{
  pub fn alias_copy_bytes()->usize{0}
  fn new(lease:shared_issuance::SealedShared<RetainedCloneLeaseOwner>,projection:RetainedCloneProjection)->Self{Self{lease:ManuallyDrop::new(Some(lease)),close:ManuallyDrop::new(None),projection}}
- pub fn close_one(binding:&mut Option<Self>,grant:RetainedCloneGrant)->RetainedWorkOutcome{
+ pub fn close_one(binding:&mut Option<Self>,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome{
   let Some(owner)=binding.as_mut()else{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}};if grant.maximum_items==0||grant.maximum_depth==0{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
   if owner.close.is_none(){if let Some(lease)=owner.lease.take(){*owner.close=Some(RetainedOwnerGate::new(retirement::controlled::ControlledRetirement::new(lease).unwrap_or_else(|_|unreachable!("sealed projection retains its typed issuer"))));return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}}
   let close=match owner.close.as_mut(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("close absent").into()),work:0}}.get_mut();if close.terminal_is_empty(){*owner.close=None;*binding=None;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}let result=close.step(grant);RetainedWorkOutcome{result,work:close.last_turn_work()}
  }
+ /// ⛽️ Quotes the actual original binding closure action.
+ pub fn close_work_demand(binding:&Option<Self>,body:usize)->Result<u64,ValueError>{binding.as_ref().map_or(Ok(0),|owner|owner.close.as_ref().map_or(Ok(1),|gate|{let owner=gate.try_lock().map_err(|_|close_query_busy())?;if owner.terminal_is_empty(){Ok(1)}else{owner.next_computational_work(body)}}))}
  pub fn copy_demand(binding:&Option<Self>)->Result<usize,ValueError>{binding.as_ref().and_then(|owner|owner.close.as_ref()).map_or(Ok(0),|owner|owner.try_lock().map_err(|_|close_query_busy())?.next_copy_byte_demand())}
  pub fn capacity_demand(binding:&Option<Self>,body:usize)->Result<usize,ValueError>{binding.as_ref().and_then(|owner|owner.close.as_ref()).map_or(Ok(0),|owner|owner.try_lock().map_err(|_|close_query_busy())?.next_capacity_byte_demand(body))}
  pub fn release_demand(binding:&Option<Self>)->Result<usize,ValueError>{binding.as_ref().and_then(|owner|owner.close.as_ref()).map_or(Ok(0),|owner|owner.try_lock().map_err(|_|close_query_busy())?.next_release_byte_demand())}
@@ -79,14 +81,14 @@ impl<A:RetireOwned+Sync> RetainedCloneBorrowAuthority<A>{
  pub fn next_close_capacity_byte_demand(&self,work:usize)->Result<usize,ValueError>{self.source.next_close_capacity_byte_demand(work)}
  pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{self.source.next_close_release_byte_demand()}
  pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{self.source.next_close_depth_demand()}
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{self.source.close_step(grant)}
+ pub fn close_step(&mut self,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome{self.source.close_step(grant)}
  pub fn next_take_copy_byte_demand(&self)->Result<usize,ValueError>{self.source.next_take_copy_byte_demand()}
  pub fn next_take_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{self.source.next_take_capacity_byte_demand(body)}
  pub fn next_take_release_byte_demand(&self)->Result<usize,ValueError>{self.source.next_take_release_byte_demand()}
  pub fn next_take_depth_demand(&self)->Result<usize,ValueError>{self.source.next_take_depth_demand()}
  /// 🎯️ Quotes the one actual original-authority return with every independent physical currency.
  pub fn next_take_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.source.next_take_demand(body)}
- pub fn take_authority(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneSourceTake<A>>{self.source.take_authority(grant)}
+ pub fn take_authority(&mut self,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome<RetainedCloneSourceTake<A>>{self.source.take_authority(grant)}
  pub fn try_authority(&self)->Result<&A,ValueError>{self.source.try_authority()}
  pub fn terminal_is_empty(&self)->bool{self.source.terminal_is_empty()}
 }
@@ -121,7 +123,8 @@ pub struct RetainedCloneBorrowAuthorityAdmission<A:RetireOwned+Sync>{source:Reta
 impl<A:RetireOwned+Sync> RetainedCloneBorrowAuthorityAdmission<A>{
  pub fn next_demand(&self)->Result<RetirementDemand,ValueError>{self.source.next_demand()}
  pub fn next_return_demand(&self)->Result<RetirementDemand,ValueError>{self.source.next_return_demand()}
- pub fn advance(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{self.source.advance(g)}
+ /// 🪙️ Writes actual allocator extent into the caller's retained marker before publishing the outcome.
+ pub fn advance(&mut self,g:RetainedCloneGrant,actual:&mut Option<usize>)->RetainedWorkOutcome{self.source.advance(g,actual)}
  pub fn take_output(&mut self,output:&mut Option<RetainedCloneBorrowAuthority<A>>,g:RetainedCloneGrant)->RetainedWorkOutcome{if output.is_some(){return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original authority output place is occupied")),work:0}}let mut source=None;let turn=self.source.take_output(&mut source,g);if let Some(source)=source{*output=Some(RetainedCloneBorrowAuthority{source});}turn}
  pub fn return_inputs(&mut self,output:&mut Option<(A,())>,g:RetainedCloneGrant)->RetainedWorkOutcome{self.source.return_inputs(output,g)}
  pub fn terminal_is_empty(&self)->bool{self.source.terminal_is_empty()}

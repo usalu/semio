@@ -5,7 +5,7 @@ use semio_framework::kernel::Event;
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 use semio_framework::kernel::RequestOutcome;
 use semio_plugin_actor_host::requests;
-use semio_plugin_reactor_turn as turn;
+use semio_framework_plugin_reactor_turn as turn;
 
 #[doc(hidden)]
 #[cfg(test)]

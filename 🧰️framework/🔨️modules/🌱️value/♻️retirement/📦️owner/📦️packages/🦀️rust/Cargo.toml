@@ -22,3 +22,6 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-value = { path = "../../../../📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json.workspace = true

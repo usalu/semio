@@ -15,6 +15,6 @@
         "retainedProgress": {"type": "object", "additionalProperties": false, "required": ["copiedItems", "copiedBytes", "retainedCapacityBytes", "releasedBytes"], "properties": {"copiedItems": {"const": 1}, "copiedBytes": {"const": 3}, "retainedCapacityBytes": {"const": 7}, "releasedBytes": {"const": 11}}}
       }
     },
-    "cases": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"type": "object", "additionalProperties": false, "required": ["name", "items", "capacity", "depth", "transfer"], "properties": {"name": {"enum": ["itemsDenied", "capacityDenied", "depthDenied", "admitted"]}, "items": {"type": "integer", "minimum": 0, "maximum": 1}, "capacity": {"enum": [0, 262144]}, "depth": {"enum": [0, 128]}, "transfer": {"type": "boolean"}}}}
+    "cases": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"type": "object", "additionalProperties": false, "required": ["name", "items", "capacity", "depth", "prepare"], "properties": {"name": {"enum": ["itemsDenied", "capacityDenied", "depthDenied", "admitted"]}, "items": {"type": "integer", "minimum": 0, "maximum": 1}, "capacity": {"enum": [0, 262144]}, "depth": {"enum": [0, 128]}, "prepare": {"type": "boolean"}}}}
   }
 }

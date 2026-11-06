@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBuildingSetbackRat
         record: "ChangeBuildingSetbackRatio",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change largest building setback as a share of the plan dimension below", "Größten Gebäuderücksprung als Anteil der darunterliegenden Grundrissabmessung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change largest building setback as a share of the plan dimension below", "Größten Gebäuderücksprung als Anteil der darunterliegenden Grundrissabmessung ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-building-setback-ratio".into()]

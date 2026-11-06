@@ -1,23 +1,23 @@
 //! 🏀️ Staged `host-events` members of the `instance-dispatch` use cases, as methods of the borrowed bundle (WP7 of the instance family).
 //!
 //! 📣️ Host events: the window facts delivered to the app as ordinary typed operations.
-use semio_framework_plugin_decl_emission::{ActionMeta, Emit, HostEvent};
-use semio_framework_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource;
+use semio_plugin_decl_emission::{ActionMeta, Emit, HostEvent};
+use semio_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource;
 use semio_framework_value::{ValueError, ValueRefusalKind};
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use crate::dispatch_bundle::DispatchCtx;
 use semio_framework_value::DslValue;
 use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin, ViewModel};
 use std::future::Future;
-use semio_framework_plugin_instance_extension::InstanceExtension;
+use semio_plugin_instance_extension::InstanceExtension;
 use semio_framework::kernel::{InvocationResult, UiDirtyScope};
 use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_instance_jobs::jobs_components::ToolOperations;
-use semio_framework_ui_contract::*;
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_instance_jobs::jobs_components::ToolOperations;
+use semio_ui_contract::*;
 #[path="background.rs"]
 mod background;
 use crate::dispatch_runtime_command::close_original_typed_source;
@@ -112,7 +112,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
 
     /// 🏃️ One funded turn of window-fact delivery for the action being dispatched: queues the utility switches its view shows and the
     /// `hostEvent` action's own fact, then drives the queue front through the shared original typed source until it has drained.
-    pub async fn host_event_turn(&mut self, source: &mut OriginalTypedCommandSource<A>, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<HostEventTurn, semio_framework_job::OriginalTurnFailure> {
+    pub async fn host_event_turn(&mut self, source: &mut OriginalTypedCommandSource<A>, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<HostEventTurn, semio_framework_job::OriginalTurnFailure> {
         let is_action = action == semio_framework::HOST_EVENT_ACTION_ID;
         if !self.host_events.delivering {
             self.queue_utility_host_events(meta);
@@ -128,7 +128,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     }
 
     /// 📬️ Delivers the queue front: its typed answer is produced, admitted and mounted by the runtime-command lane; `true` once the queue is empty and the source idle.
-    async fn drive_host_event_delivery(&mut self,source:&mut OriginalTypedCommandSource<A>,meta:&ActionMeta,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    async fn drive_host_event_delivery(&mut self,source:&mut OriginalTypedCommandSource<A>,meta:&ActionMeta,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if cx.is_cancelled()||self.host_events.action_event_complete||self.host_events.action_delivery.outcome.is_some(){
             if source.pending(){cx.with_original_retirement(|cx|source.close_step(cx))?;return Ok(false)}
             if !self.host_events.action_event_removed&&!self.host_events.queue.is_empty(){let bytes=2*std::mem::size_of::<Option<HostEvent>>()+2*std::mem::size_of::<bool>();cx.with_original_retirement(|cx|{semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()},|_|{*self.host_events.action_delivery.event=self.host_events.queue.pop_front();self.host_events.action_event_removed=true;self.host_events.action_event_complete=true;semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}})?;Ok(())})?;return Ok(false)}

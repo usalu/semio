@@ -1,0 +1,37 @@
+{
+  "type": "array",
+  "minItems": 4,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "present",
+      "admitted",
+      "refusal",
+      "status"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "present": {
+        "type": "boolean"
+      },
+      "admitted": {
+        "type": "boolean"
+      },
+      "refusal": {
+        "type": "boolean"
+      },
+      "status": {
+        "enum": [
+          "absent",
+          "canceled",
+          "accepted",
+          "refused"
+        ]
+      }
+    }
+  }
+}

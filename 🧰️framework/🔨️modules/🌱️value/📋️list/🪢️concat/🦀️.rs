@@ -18,7 +18,7 @@ impl<T:RetireOwned> OriginalVectorConcat<T>{
  fn moved()->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,..Default::default()}}
  /// 📏️ Quotes the actual page reservation, input handoff or new retained cursor row.
  pub fn push_demand(&self)->Result<RetirementDemand,ValueError>{
-  if self.closing||self.phase!=0{return Err(invalid())}
+  if self.closing||self.phase!=0{return Err(invalid().into())}
   if self.pending.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<OriginalVectorCursor<T>>(),depth:mapped(self.chunks.next_push_depth_demand())?.max(1),..Default::default()})}
   if !self.chunks.has_reserved_slot(){return Ok(RetirementDemand{copy_bytes:mapped(self.chunks.next_reserve_copy_byte_demand())?,capacity_bytes:mapped(self.chunks.next_allocation_bytes())?,depth:mapped(self.chunks.next_reserve_depth_demand())?.max(1),..Default::default()})}
   Self::nested(OriginalVectorCursor::<T>::constructor_demand())
@@ -35,22 +35,22 @@ impl<T:RetireOwned> OriginalVectorConcat<T>{
   })();RetainedWorkOutcome{result,work}
  }
  /// 🌱️ Quotes one actual output backing after all original cardinalities are retained.
- pub fn finish_demand(&self)->Result<RetirementDemand,ValueError>{if self.closing||self.phase!=0||self.pending.is_some(){return Err(invalid())}Ok(RetirementDemand{capacity_bytes:self.total.checked_mul(size_of::<T>()).ok_or_else(invalid)?,..Self::scalar()})}
+ pub fn finish_demand(&self)->Result<RetirementDemand,ValueError>{if self.closing||self.phase!=0||self.pending.is_some(){return Err(invalid().into())}Ok(RetirementDemand{capacity_bytes:self.total.checked_mul(size_of::<T>()).ok_or_else(invalid)?,..Self::scalar()})}
  pub fn finish(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
   let mut work=0;let result=(||{let d=self.finish_demand()?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}let mut output=Vec::new();work=1;output.try_reserve_exact(self.total).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original concatenated output reservation refused"))?;let bytes=output.capacity().checked_mul(size_of::<T>()).ok_or_else(invalid)?;*self.output=Some(output);self.phase=4;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{retained_capacity_bytes:bytes,..Self::moved()}))})();RetainedWorkOutcome{result,work}
  }
  /// 🎒️ Quotes original row return separately from its new output-directory slot.
  pub fn demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
-  if self.closing||!matches!(self.phase,1|4){return Err(invalid())}if self.phase==4{return Ok(Self::scalar())}
+  if self.closing||!matches!(self.phase,1|4){return Err(invalid().into())}if self.phase==4{return Ok(Self::scalar())}
   if self.returned.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<T>(),..Self::scalar()})}
   let Some(chunk)=self.chunks.get(self.index)else{return Ok(Self::scalar())};
   let mut d=if !chunk.remaining().is_empty(){Self::nested(chunk.next_take_demand())?}else if chunk.terminal_is_empty()||!chunk.close_started(){Self::scalar()}else{Self::nested(chunk.next_demand(body)?)?};d.depth=d.depth.max(mapped(self.chunks.next_get_depth_demand(self.index))?);Ok(d)
  }
- pub fn advance(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
+ pub fn advance(&mut self,grant:RetainedCloneGrant)->semio_framework_value_retirement::OriginalRetirementOutcome{
   let mut work=0;let result=(||{
    let d=self.demand(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
    if self.phase==4{self.phase=1;work=1;return Ok(RetainedCloneStep::Progress(Self::moved()))}
-   if self.returned.is_some(){let output=self.output.as_mut().ok_or_else(invalid)?;if output.len()==output.capacity(){return Err(invalid())}output.push(self.returned.take().ok_or_else(||ValueError::invariant("returned absent"))?);work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_bytes:size_of::<T>(),..Self::moved()}))}
+   if self.returned.is_some(){let output=self.output.as_mut().ok_or_else(invalid)?;if output.len()==output.capacity(){return Err(invalid().into())}output.push(self.returned.take().ok_or_else(||ValueError::invariant("returned absent"))?);work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_bytes:size_of::<T>(),..Self::moved()}))}
    let Some(chunk)=self.chunks.get_mut(self.index)else{self.phase=2;work=1;return Ok(RetainedCloneStep::Complete(Self::moved()))};
    if !chunk.remaining().is_empty(){let turn=chunk.take_front(Self::child(grant));work=turn.work;let(value,p)=turn.result?.ok_or_else(invalid)?;*self.returned=Some(value);return Ok(RetainedCloneStep::Progress(p))}
    if !chunk.terminal_is_empty(){if !chunk.close_started(){chunk.begin_close();work=1;return Ok(RetainedCloneStep::Progress(Self::moved()))}let turn=chunk.step(Self::child(grant));work=turn.work;return turn.result.map(|s|RetainedCloneStep::Progress(s.progress()))}
@@ -59,12 +59,12 @@ impl<T:RetireOwned> OriginalVectorConcat<T>{
  }
  pub fn ready(&self)->bool{!self.closing&&self.phase==2&&self.output.is_some()}
  /// 📤️ Quotes the fixed output header handoff with no payload copy.
- pub fn take_demand(&self)->Result<RetirementDemand,ValueError>{if !self.ready(){return Err(invalid())}Ok(Self::scalar())}
+ pub fn take_demand(&self)->Result<RetirementDemand,ValueError>{if !self.ready(){return Err(invalid().into())}Ok(Self::scalar())}
  pub fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(Vec<T>,RetainedCloneProgress)>>{let mut work=0;let result=(||{let d=self.take_demand()?;if !retained_clone_grant_admits(grant,d){return Ok(None)}let output=self.output.take().ok_or_else(invalid)?;self.phase=3;work=1;Ok(Some((output,Self::moved())))})();RetainedWorkOutcome{result,work}}
  pub fn begin_close(&mut self){self.closing=true;}
  /// ♻️ Quotes the live pending owner before scaffolds and unpublished output.
  pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
-  if !self.closing{return Err(invalid())}
+  if !self.closing{return Err(invalid().into())}
   if !self.retirement.is_empty(){return Self::nested(self.retirement.demands(body)?)}
   if let Some(chunk)=self.pending.as_ref(){return if chunk.terminal_is_empty()||!chunk.close_started(){Ok(Self::scalar())}else{Self::nested(chunk.next_demand(body)?)}}
   if self.returned.is_some(){return Self::nested(self.retirement.next_owner_demands::<T>(true,&None,body)?)}
@@ -73,9 +73,9 @@ impl<T:RetireOwned> OriginalVectorConcat<T>{
   if self.output.is_some(){return Self::nested(self.retirement.next_owner_demands::<Vec<T>>(true,&None,body)?)}
   Ok(Default::default())
  }
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
+ pub fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value_retirement::OriginalRetirementOutcome{
   let mut work=0;let result=(||{
-   if !self.closing{return Err(invalid())}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let d=self.close_demand(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
+   if !self.closing{return Err(invalid().into())}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let d=self.close_demand(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
    if !self.retirement.is_empty(){let turn=self.retirement.step_granted(Self::child(grant));work=turn.work;return turn.result.map(|s|RetainedCloneStep::Progress(s.progress()))}
    if let Some(chunk)=self.pending.as_mut(){if chunk.terminal_is_empty(){*self.pending=None;work=1;return Ok(RetainedCloneStep::Progress(Self::moved()))}if !chunk.close_started(){chunk.begin_close();work=1;return Ok(RetainedCloneStep::Progress(Self::moved()))}let turn=chunk.step(Self::child(grant));work=turn.work;return turn.result.map(|s|RetainedCloneStep::Progress(s.progress()))}
    if self.returned.is_some(){let turn=self.retirement.begin_granted(&mut self.returned,Self::child(grant));work=turn.work;return turn.result?.ok_or_else(invalid).map(|s|RetainedCloneStep::Progress(s.progress()))}

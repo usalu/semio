@@ -24,7 +24,7 @@ pub struct OriginalArtifactDocumentReceiving {
 
 impl OriginalArtifactDocumentReceiving {
     fn refusal_value(&self) -> ValueError {
-        let kind = match self.fault.as_ref() { Some(Base64ControlError::Cancelled) => ValueRefusalKind::Canceled, Some(Base64ControlError::OutputLimit) => ValueRefusalKind::OwnershipLimit, _ => ValueRefusalKind::InvalidValue };
+        let kind = match self.fault() { Some(Base64ControlError::Cancelled) => ValueRefusalKind::Canceled, Some(Base64ControlError::OutputLimit) => ValueRefusalKind::OwnershipLimit, _ => ValueRefusalKind::InvalidValue };
         ValueError::literal(kind, "artifact document retains its original base64 refusal")
     }
 
@@ -49,10 +49,11 @@ impl OriginalArtifactDocumentReceiving {
     }
 
     /// 📐️ Quotes a single existing codec transition without decoding, cloning or allocating.
-    pub fn next_demands(&self) -> Result<RetirementDemand, ValueError> {
-        if self.closing || self.phase >= 2 || self.fault.is_some() { return Ok(RetirementDemand::default()); }
+    pub fn next_demands(&self,maximum_work_units:usize) -> Result<RetirementDemand, ValueError> {
+        if self.closing || self.phase >= 2 || self.fault().is_some() { return Ok(RetirementDemand::default()); }
         let cursor = self.cursors[self.phase].as_ref().expect("original document cursor remains resident");
-        Ok(RetirementDemand { copy_bytes: size_of::<Base64DecodeCursor<'static>>() + cursor.next_work_demand(), capacity_bytes: cursor.next_capacity_byte_demand(), release_bytes: 0, depth: 2 })
+        if cursor.next_work_demand(maximum_work_units)==0{return Ok(RetirementDemand::default())}
+        Ok(RetirementDemand { copy_bytes: size_of::<Base64DecodeCursor<'static>>() + cursor.next_copy_byte_demand(maximum_work_units), capacity_bytes: cursor.next_capacity_byte_demand(), release_bytes: 0, depth: 2 })
     }
 
     /// 🪜️ Advances one strict validation, output birth or reconstruction chunk under the same caller and receipt.
@@ -60,37 +61,37 @@ impl OriginalArtifactDocumentReceiving {
         self.validate_source(cx)?;
         if self.closing { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "artifact document receiving is closing").into()); }
         if cx.is_cancelled() { return Err(ValueError::literal(ValueRefusalKind::Canceled, "original artifact document receiving was cancelled").into()); }
-        if self.fault.is_some() { return Err(self.refusal_value().into()); }
+        if self.fault().is_some() { return Err(self.refusal_value().into()); }
         if self.phase >= 2 { return Ok(self.phase == 2); }
         let total = self.cursors.iter().flatten().try_fold(0usize, |sum, cursor| sum.checked_add(cursor.expected_output_bytes())).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "artifact document decoded extent overflow"))?;
         if total > self.maximum_decoded_bytes { return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "artifact document decoded pair exceeds its original contract").into()); }
-        let demand = self.next_demands()?;
+        let maximum_work=usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX);let demand = self.next_demands(maximum_work)?;
+        if demand.depth==0{return Ok(false)}
+        let selected_work=self.cursors[self.phase].as_ref().expect("original document cursor remains resident").next_work_demand(maximum_work);
         let cancel = cx.borrowed_original_cancel_token()?;
         let now = cx.clock_source();
         let deadline = cx.deadline_us();
         let mut output = None;
         let mut progress = RetainedCloneProgress::default();
-        admit_original_tool_construction_scoped(cx, &mut output, ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: 0, depth: demand.depth }, |scope| {
-            scope.admit_owner(demand)?;
+        semio_framework_job::admit_original_construction(cx, &mut output, semio_framework_job::OriginalConstructionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: 0, depth: demand.depth }, |_| {
             let cursor = self.cursors[self.phase].as_mut().expect("original document cursor remains resident");
-            let before = cursor.output_capacity();
             let mut observe = |_| !cancel.is_cancelled_now() && now().is_some_and(|instant| instant < deadline);
             let mut control = Base64Control { maximum_output_bytes: self.maximum_decoded_bytes, progress: &mut observe };
-            let result = cursor.step(cursor.next_work_demand().max(1), &mut control);
-            progress = RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, retained_capacity_bytes: cursor.output_capacity().saturating_sub(before), released_bytes: 0 };
+            let result = cursor.step(selected_work, &mut control);let actual=cursor.last_turn_receipt();
+            progress = RetainedCloneProgress { copied_items: 1, copied_bytes: actual.copied_bytes, retained_capacity_bytes: actual.allocated_capacity_bytes, released_bytes: 0 };
             match result {
-                Ok(_) if cursor.is_complete() => { self.decoded[self.phase] = cursor.take_output(); self.phase += 1; }
+                Ok(_) if cursor.is_complete() => { self.decoded[self.phase] = cursor.take_output(); self.phase += 1;progress.copied_bytes+=size_of::<Option<Vec<u8>>>(); }
                 Ok(_) => {}
                 Err(error) => self.fault = Some(error),
             }
-            Ok(((), progress))
+            let result=if self.fault.is_some(){Err(self.refusal_value().with_retained_progress(progress))}else{Ok(((),progress))};
+            RetainedWorkOutcome{result,work:actual.work_units as u64}
         })?;
-        if self.fault.is_some() { return Err(self.refusal_value().with_retained_progress(progress).into()); }
         Ok(self.phase == 2)
     }
 
     /// 🔎️ Borrows the exact codec cause while its original input and partial output remain owned.
-    pub fn fault(&self) -> Option<&Base64ControlError> { self.fault.as_ref() }
+    pub fn fault(&self) -> Option<&Base64ControlError> { self.fault.as_ref().or_else(||self.cursors.get(self.phase).and_then(Option::as_ref).and_then(Base64DecodeCursor::refusal)) }
 
     /// 📦️ Moves the actual decoded pair once; it never substitutes a current editor or drops supplied history.
     pub fn take_pair(&mut self, output: &mut Option<(Vec<u8>, Vec<u8>)>, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {

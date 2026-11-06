@@ -19,17 +19,21 @@ impl SnapshotProjection for Snapshot{
  type Output=Self;
  type Projection=Projection;
  fn projection_birth_demand()->RetirementDemand{OwnedFieldProjection::<Self>::birth_demand()}
- fn begin_projection(g:RetainedCloneGrant)->Result<(Self::Projection,RetainedCloneProgress),ValueError>{OwnedFieldProjection::<Self>::begin(g).map(|(cursor,p)|(Projection(cursor),p))}
+ fn projection_birth_work_demand()->Result<u64,ValueError>{Ok(1)}
+ fn begin_projection(g:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Self::Projection,RetainedCloneProgress),ValueError>{let turn=OwnedFieldProjection::<Self>::begin(g);semio_framework_value::RetainedWorkOutcome{result:turn.result.map(|(cursor,p)|(Projection(cursor),p)),work:turn.work}}
 }
 impl SnapshotProjectionCursor<Snapshot> for Projection{
  fn demands(&self,s:RetainedCloneRef<'_,Snapshot>,body:usize)->Result<RetirementDemand,ValueError>{self.0.demands(s,body)}
- fn advance(&mut self,s:RetainedCloneRef<'_,Snapshot>,body:usize,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{PROJECTIONS.fetch_add(1,Ordering::Relaxed);self.0.advance(s,body,g)}
+ fn advance_work_demand(&self,s:RetainedCloneRef<'_,Snapshot>,body:usize)->Result<u64,ValueError>{self.0.advance_work_demand(s,body)}
+ fn advance(&mut self,s:RetainedCloneRef<'_,Snapshot>,body:usize,g:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{PROJECTIONS.fetch_add(1,Ordering::Relaxed);self.0.advance(s,body,g)}
  fn ready(&self)->bool{self.0.ready()}
  fn take_demand(&self)->Result<RetirementDemand,ValueError>{self.0.take_demand()}
- fn take(&mut self,g:RetainedCloneGrant)->Result<Option<(Snapshot,RetainedCloneProgress)>,ValueError>{self.0.take(g)}
+ fn take_work_demand(&self)->Result<u64,ValueError>{self.0.take_work_demand()}
+ fn take(&mut self,g:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<(Snapshot,RetainedCloneProgress)>,ValueError>{self.0.take(g)}
  fn begin_close(&mut self){self.0.begin_close();}
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.0.close_demands(body)}
- fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.0.close_step(g)}
+ fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{self.0.close_work_demand(body)}
+ fn close_step(&mut self,g:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{self.0.close_step(g)}
  fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
 }
 #[derive(Clone,Default,Debug,PartialEq,semio_framework_value::ToValue,semio_framework_value::FromValue,semio_framework_value::RetireOwned)]

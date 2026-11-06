@@ -1,6 +1,6 @@
 //! 📥️ Explicit interface faults traverse real pair/window erasure under one original caller, independently of natural codec faults.
-use semio_framework_plugin_window_config::WindowConfigNativePairReceiving;
-use semio_framework_os_store_codec_registry::native_snapshot::{OriginalArtifactPackReceiving,OriginalArtifactSnapshotReceiving,OriginalArtifactPairReceiving,OriginalArtifactPairFailure,OriginalArtifactPairCause,OriginalArtifactHistoryReadLimits};
+use semio_plugin_window_config::WindowConfigNativePairReceiving;
+use semio_os_store_codec_registry::native_snapshot::{OriginalArtifactPackReceiving,OriginalArtifactSnapshotReceiving,OriginalArtifactPairReceiving,OriginalArtifactPairFailure,OriginalArtifactPairCause,OriginalArtifactHistoryReadLimits};
 use semio_framework_os_kernel::PackLimits;
 use semio_framework_value::{RetainedWorkOutcome,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,NativeDecodeCloseControl,OriginalReceivingPrimary};
@@ -32,10 +32,10 @@ impl OriginalArtifactSnapshotReceiving<Probe> for Receiving{
   if self.phase==0{
    let mut work=0;let turn=n.receive_construction_step(d,|n,_|{
     if !n.prepare_work(1).unwrap(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}n.commit_work(1).unwrap();work=1;
-    *self.failure.value=Some(OriginalReceivingPrimary{primary:Some(ValueError::new(ValueRefusalKind::InvalidValue,"semantic")),quote_refusal:Some(ValueError::new(ValueRefusalKind::WorkLimit,"quote")),allocation_refusal:Some(ValueError::new(ValueRefusalKind::AllocationFailed,"allocation")),progress:Default::default()});self.phase=1;let mut p=progress(d);p.retained_capacity_bytes=MESSAGE_BYTES;
+    *self.failure.value=Some(OriginalReceivingPrimary{retirement_failure:None,work_refusal:None,primary:Some(ValueError::new(ValueRefusalKind::InvalidValue,"semantic")),quote_refusal:Some(ValueError::new(ValueRefusalKind::WorkLimit,"quote")),allocation_refusal:Some(ValueError::new(ValueRefusalKind::AllocationFailed,"allocation")),allocation_failure:None,native_allocation:None,receipt_refusal:None,progress:Default::default()});self.phase=1;let mut p=progress(d);p.retained_capacity_bytes=MESSAGE_BYTES;
     RetainedWorkOutcome{result:n.record_constructed_allocation(MESSAGE_BYTES).map(|()|RetainedCloneStep::Progress(p)).map_err(|e|e.with_retained_progress(p)),work}
    });
-   return RetainedWorkOutcome{result:turn.result.map(|s|s.progress()).map_err(|e|OriginalReceivingPrimary{primary:e.primary,quote_refusal:e.receipt_refusal,allocation_refusal:None,progress:e.progress}),work:turn.work}
+   return RetainedWorkOutcome{result:turn.result.map(|s|s.progress()).map_err(|e|OriginalReceivingPrimary{retirement_failure:None,work_refusal:None,primary:e.primary,quote_refusal:None,allocation_refusal:None,allocation_failure:None,native_allocation:None,receipt_refusal:e.receipt_refusal,progress:e.progress}),work:turn.work}
   }
   if !n.prepare_work(1).unwrap(){return RetainedWorkOutcome{result:Ok(Default::default()),work:0}}
   let mut failure=self.failure.value.take().unwrap();let p=progress(d);failure.progress=p;n.commit_work(1).unwrap();
@@ -59,7 +59,7 @@ fn history_limits()->OriginalArtifactHistoryReadLimits{OriginalArtifactHistoryRe
 fn measured<T>(c:&mut OriginalJobFixtureCaller,d:&mut OriginalJobDecodeOwner,run:impl FnOnce(&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->T{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||c.turn_with_decoder(quantum(),d,run));let p=c.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));assert_eq!(c.stock(),stock());result.unwrap()}
 fn post(cx:&mut StepContext<'_>,run:impl FnOnce(&mut NativeDecodeControl<'_>,RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>)->Result<RetainedCloneProgress,OriginalTurnFailure>{
  let g=cx.retained_grant();let mut work=0;let result=cx.with_native_receiving::<_,OriginalReceivingPrimary>(|n|{let turn=run(n,g);work=turn.work;turn.result});let p=match &result{Ok(p)=>*p,Err(e)=>e.retained_progress()};let receipt=cx.consume_receiving_retained(cx.receiving_issued_grant().unwrap(),p);cx.consume_fuel(work);
- match result{Ok(p)=>{receipt?;Ok(p)},Err(e)=>Err(semio_framework_job::OriginalTurnFailure{effects:p,primary:semio_framework_job::OriginalTurnPrimary::Receiving(e),receipt_refusal:receipt.err(),context_refusal:None})}
+ match result{Ok(p)=>{receipt?;Ok(p)},Err(e)=>Err(semio_framework_job::OriginalTurnFailure{effects:p,primary:semio_framework_job::OriginalTurnPrimary::Receiving(e),receipt_refusal:receipt.err(),context_refusal:None,work_refusal:None})}
 }
 fn pair(c:&mut OriginalJobFixtureCaller,d:&mut OriginalJobDecodeOwner,source:&[u8])->OriginalArtifactPairReceiving<Probe>{
  let mut out=None;measured(c,d,|cx|post(cx,|n,g|{let result=Ok(OriginalArtifactPairReceiving::admit(source,b"spr",PackLimits::default(),history_limits(),n,g).expect("valid fixture pair source and policy").map(|(owner,p)|{out=Some(owner);RetainedCloneStep::Progress(p)}).unwrap());let turn=n.receive_retained_work(g,RetainedWorkOutcome{result,work:1});RetainedWorkOutcome{result:turn.result.map(|s|s.progress()),work:turn.work}}));out.unwrap()

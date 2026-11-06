@@ -4,6 +4,10 @@
 mod stride;
 pub use stride::ClockStride;
 
+#[cfg(test)]
+#[path="../🧪️tests/🔬️clock-stride/🦀️.rs"]
+mod clock_stride_tests;
+
 use std::future::Future;
 use std::task::{Context,Poll,Waker};
 use semio_framework_async::CancelToken;

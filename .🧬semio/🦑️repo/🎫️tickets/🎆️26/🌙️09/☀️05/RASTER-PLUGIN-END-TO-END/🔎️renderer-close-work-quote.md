@@ -1,0 +1,5 @@
+# Renderer Close Work Quote
+
+RetainedCloneClose::next_owner_work returns one work unit for a typed retirement birth or terminal ticket removal, the active ticket's own next_computational_work(body) for a nonterminal ticket, and the actual binding-close work when neither is present. begin_granted can return zero work for denial or absent input, so the quote is an upper bound. Select the decoder or image type matching the pending owner; an active ticket supplies its own quote. The binding-only phase costs one when present and zero when absent. close_original_quoted_retained_step checks the real available work before entering and reports excess actual work.
+
+The asset-decode crate mounts a cfg(test) global semio_framework_trace::HeapWitness and the new law first verifies a real 173-byte allocation and release. Its physical helper compares actual heap birth/release with the caller's retained receipt. The denial law covers decoded, private image and retired decoder stages, appropriate independent denial axes, same-source pointer custody and cancellation close. This is source review, not a native verdict.

@@ -17,8 +17,8 @@ pub struct ChangeSlabKFactor {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeSlabKFactor where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_slab_k_factor::ChangeSlabKFactor> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "slab-k-factor", kind: "change-slab-k-factor", record: "ChangedSlabKFactor" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change slab coefficient k of the m-k method", "Deckenbeiwert k des m-k-Verfahrens ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change slab coefficient k of the m-k method", "Deckenbeiwert k des m-k-Verfahrens ändern")
     }
 }
 

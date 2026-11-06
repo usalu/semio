@@ -43,7 +43,7 @@ pub fn composited_image_view(document: &RasterSnapshot) -> ImageView {
 fn composite_document_to_png(document: &RasterSnapshot) -> Option<ImageView> {
     let image=semio_s_artifact_raster_raster_io::raster_composite_image(document).ok()?;
     let bytes=semio_s_artifact_raster_raster_io::png_bytes_from_semio_image(&image).ok()?;
-    Some(ImageView { width:image.width, height:image.height, mime:"image/png".into(), base64:base64_codec::base64_standard_encode(bytes) })
+    Some(ImageView { width:image.width, height:image.height, mime:"image/png".into(), base64:semio_framework_io_base64::base64_standard_encode(bytes) })
 }
 //#endregion 🔖️Render
 

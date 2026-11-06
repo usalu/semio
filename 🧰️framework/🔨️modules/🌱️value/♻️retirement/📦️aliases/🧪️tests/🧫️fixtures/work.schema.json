@@ -1,0 +1,1 @@
+{"type":"object","required":["localAction","admissionAssignment","denied"],"additionalProperties":false,"properties":{"localAction":{"const":1},"admissionAssignment":{"const":1},"denied":{"const":0}}}

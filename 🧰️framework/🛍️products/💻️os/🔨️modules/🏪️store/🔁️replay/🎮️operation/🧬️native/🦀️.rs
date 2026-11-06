@@ -25,18 +25,22 @@ pub struct ArtifactReplayPreparationRequest<P,M:Sync>{
 }
 /// 📽️ Delegates projection to the installed snapshot or retained clone cursor.
 pub trait SemanticProjection<P>:Send+'static{
- fn birth_work_demand(&self)->u64;
- fn take_work_demand(&self)->u64;
+ fn birth_work_demand(&self)->Result<u64,ValueError>;
+ fn take_work_demand(&self)->Result<u64,ValueError>;
  fn last_turn_work(&self)->u64;
  fn birth_demand(&self)->RetirementDemand;
  fn begin(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>;
  fn demands(&self,source:RetainedCloneRef<'_,P>,body:usize)->Result<RetirementDemand,ValueError>;
- fn advance(&mut self,source:RetainedCloneRef<'_,P>,body:usize,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
+ /// ⛽️ Quotes selected original work when the projection has a native work contract.
+ fn advance_work_demand(&self,_source:RetainedCloneRef<'_,P>,_body:usize)->Result<Option<u64>,ValueError>{Ok(None)}
+ fn advance(&mut self,source:RetainedCloneRef<'_,P>,body:usize,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>;
  fn take_demand(&self)->Result<RetirementDemand,ValueError>;
  fn take(&mut self,grant:RetainedCloneGrant)->Result<Option<(P,RetainedCloneProgress)>,ValueError>;
  fn begin_close(&mut self);
  fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>;
- fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
+ /// ⛽️ Quotes selected cleanup work before the original owner moves.
+ fn close_work_demand(&self,_body:usize)->Result<Option<u64>,ValueError>{Ok(None)}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>;
  fn terminal_is_empty(&self)->bool;
 }
 /// ✏️ Delegates all semantic stages to the same native edit issuer used by publication.
@@ -50,20 +54,29 @@ pub trait SemanticEdit<P,M>:Send+'static{
  fn advance(&mut self,before:RetainedCloneRef<'_,P>,input:RetainedCloneRef<'_,M>,post:PagedOneItemPost<'_,P>,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<SemanticEditStep<M>,ValueError>;
  fn begin_close(&mut self);
  fn close_demand(&self,factory:&dyn ArtifactOwnedValueRetirementFactory<M>,body:usize)->Result<RetirementDemand,ValueError>;
- fn close_step(&mut self,factory:&dyn ArtifactOwnedValueRetirementFactory<M>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
+ fn close_work_demand(&self,factory:&dyn ArtifactOwnedValueRetirementFactory<M>,body:usize)->Result<u64,ValueError>;
+ fn close_step(&mut self,factory:&dyn ArtifactOwnedValueRetirementFactory<M>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>;
  fn terminal_is_empty(&self)->bool;
 }
 /// 📤️ Preserves original inverse and diagnostic owners before independent output admission.
-pub enum SemanticEditStep<M>{CompleteSingle(RetainedCloneProgress,M),Progress(RetainedCloneProgress),Complete(RetainedCloneProgress,Vec<M>,Vec<semio_framework_os_spr::MutationMessage>,bool),Refused(RetainedCloneProgress,Vec<semio_framework_os_spr::MutationMessage>)}
+pub enum SemanticEditStep<M>{CompleteSingle(RetainedCloneProgress,M),Progress(RetainedCloneProgress),Complete(RetainedCloneProgress,Vec<M>,Vec<semio_os_spr::MutationMessage>,bool),Refused(RetainedCloneProgress,Vec<semio_os_spr::MutationMessage>)}
 #[derive(Clone,Copy,PartialEq,Eq)]
 enum Stage{RefusalRows,RefusalCode,RefusalTextBirth,RefusalText,SourceCapture,Source,ProjectionBirth,Projection,TakeProjection,CloseProjection,EditBirth,Edit,CloseEdit,InverseBirth,Inverse,CloseInverse,Share,Ready}
 /// 🧳️ One retained producer owns every original lease and candidate through cancellation.
 pub struct NativeSemanticPreparation<P:RetireOwned+Sync,M:RetireOwned+Sync,C:SemanticProjection<P>,E:SemanticEdit<P,M>>{
  base:ManuallyDrop<Option<SnapshotRead<P>>>,source:ManuallyDrop<Option<RetainedCloneSource<P,CapturedSnapshotSource<P>>>>,source_authority:ManuallyDrop<Option<CapturedSnapshotSource<P>>>,source_admission:ManuallyDrop<Option<RetainedCloneSourceAdmission<P,CapturedSnapshotSource<P>>>>,input:ManuallyDrop<Option<RetainedOwnedProjection<M>>>,
- projection:C,edit:E,post:ManuallyDrop<Option<P>>,post_read:OriginalPostRead<P>,inverse:ManuallyDrop<Option<Vec<M>>>,rows:ManuallyDrop<Option<OriginalVectorCursor<M>>>,pages:ManuallyDrop<Option<PagedList<M,{usize::MAX}>>>,pending:ManuallyDrop<Option<M>>,messages:ManuallyDrop<Option<Vec<semio_framework_os_spr::MutationMessage>>>,next:ManuallyDrop<Option<Arc<P>>>,
+ projection:C,edit:E,post:ManuallyDrop<Option<P>>,post_read:OriginalPostRead<P>,inverse:ManuallyDrop<Option<Vec<M>>>,rows:ManuallyDrop<Option<OriginalVectorCursor<M>>>,pages:ManuallyDrop<Option<PagedList<M,{usize::MAX}>>>,pending:ManuallyDrop<Option<M>>,messages:ManuallyDrop<Option<Vec<semio_os_spr::MutationMessage>>>,next:ManuallyDrop<Option<Arc<P>>>,
  snapshots:ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<P>>>>,mutations:ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>>,factory_close:[Option<semio_framework_value::FactoryAuthority>;2],active:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,retirement:RetainedCloneClose,stage:Stage,foreign:bool,refused:bool,closing:bool,refusal:Option<&'static str>,last_work:u64,original_control:Option<(u64,Option<u64>)>,
 }
+enum SemanticReceivingTurn<'a,'control>{Prepared(&'a mut dyn semio_framework_value_native_owned::native_decoding::NativePreparedDecodeControl),Receiving(&'a mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'control>)}
+impl SemanticReceivingTurn<'_,'_>{
+ fn action(&mut self)->&mut dyn semio_framework_value_native_owned::native_decoding::NativePreparedDecodeControl{match self{Self::Prepared(control)=>*control,Self::Receiving(control)=>*control}}
+}
 fn observed<T,E>(work:&mut u64,turn:semio_framework_value::RetainedWorkOutcome<T,E>)->Result<T,E>{*work=work.saturating_add(turn.work);turn.result}
+fn original_metadata_close(receiving:&mut dyn semio_framework_value::OriginalRetirementControl,run:impl FnOnce()->RetainedCloneStep)->semio_framework_value::OriginalRetirementOutcome{
+ match receiving.prepare_work(1){Ok(true)=>{},Ok(false)=>return semio_framework_value::OriginalRetirementOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0},Err(error)=>return semio_framework_value::OriginalRetirementOutcome{result:Err(semio_framework_value::OriginalRetirementFailure::from_work_refusal(error)),work:0}}
+ let turn=semio_framework_value::RetainedWorkOutcome{result:Ok(run()),work:1};semio_framework_value::settle_original_retirement_work(turn,receiving.commit_work(1))
+}
 fn project_captured<P:Send+Sync+'static>(source:&CapturedSnapshotSource<P>)->&P{source.get()}
 fn invalid(reason:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,reason)}
 fn header<T>()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<T>(),depth:1,..Default::default()}}
@@ -76,7 +89,7 @@ impl<P:RetireOwned+Sync,M:RetireOwned+Sync,C:SemanticProjection<P>,E:SemanticEdi
  pub fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if self.closing{return self.close_demand(body);}
   Ok(match self.stage{
-   Stage::RefusalRows=>RetirementDemand{copy_bytes:size_of::<Vec<semio_framework_os_spr::MutationMessage>>()+size_of::<semio_framework_os_spr::MutationMessage>(),capacity_bytes:size_of::<semio_framework_os_spr::MutationMessage>(),depth:1,..Default::default()},
+   Stage::RefusalRows=>RetirementDemand{copy_bytes:size_of::<Vec<semio_os_spr::MutationMessage>>()+size_of::<semio_os_spr::MutationMessage>(),capacity_bytes:size_of::<semio_os_spr::MutationMessage>(),depth:1,..Default::default()},
    Stage::RefusalCode=>RetirementDemand{copy_bytes:size_of::<String>()+"mutation.invariant".len(),capacity_bytes:"mutation.invariant".len(),depth:1,..Default::default()},
    Stage::RefusalTextBirth=>RetirementDemand{copy_bytes:size_of::<String>(),capacity_bytes:self.refusal.ok_or_else(||invalid("semantic preflight refusal absent"))?.len(),depth:1,..Default::default()},
    Stage::RefusalText=>{let fragment=self.refusal_fragment(body)?;if fragment.is_empty(){header::<Stage>()}else{RetirementDemand{copy_bytes:fragment.len(),depth:1,..Default::default()}}},
@@ -97,46 +110,48 @@ impl<P:RetireOwned+Sync,M:RetireOwned+Sync,C:SemanticProjection<P>,E:SemanticEdi
   })
  }
  pub fn last_turn_work(&self)->u64{self.last_work}
- pub fn advance(&mut self,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<ArtifactReplayPreparationStep,ValueError>{
-  self.last_work=0;let identity=(receiving.ledger_identity(),receiving.retirement_recipient_identity());if self.original_control.is_some_and(|original|original!=identity){return Err(invalid("native semantic preparation changed its original decoder or recipient"))}
+ pub fn advance(&mut self,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<ArtifactReplayPreparationStep,semio_framework_value::OriginalRetirementFailure>{
+  self.last_work=0;let identity=(receiving.ledger_identity(),receiving.retirement_recipient_identity());if self.original_control.is_some_and(|original|original!=identity){return Err((invalid("native semantic preparation changed its original decoder or recipient")).into())}
   if self.closing||!retained_clone_grant_admits(grant,self.demands(body)?){return Ok(ArtifactReplayPreparationStep::Blocked)}
   let local=matches!(self.stage,Stage::RefusalRows|Stage::RefusalCode|Stage::RefusalTextBirth|Stage::RefusalText|Stage::SourceCapture|Stage::Share)
    ||self.stage==Stage::CloseProjection&&self.projection.terminal_is_empty()
    ||self.stage==Stage::CloseEdit&&self.edit.terminal_is_empty()&&self.post_read.terminal_is_empty()
    ||self.stage==Stage::InverseBirth&&self.inverse.is_none()
    ||self.stage==Stage::CloseInverse&&self.rows.as_ref().is_none_or(|rows|rows.terminal_is_empty());
-  let work_demand=match self.stage{Stage::ProjectionBirth=>Some(self.projection.birth_work_demand()),Stage::TakeProjection=>Some(self.projection.take_work_demand()),Stage::EditBirth=>Some(self.edit.birth_work_demand()),_=>local.then_some(1)};
-  if let Some(work)=work_demand{if !receiving.prepare_work(work)?{return Ok(ArtifactReplayPreparationStep::Blocked)}}
-  self.original_control=Some(identity);let result=self.advance_original(body,grant,receiving);
-  if work_demand.is_some(){let receipt=result.as_ref().map(|step|step.progress()).unwrap_or_else(|error|error.retained_progress());receiving.commit_work(self.last_work).map_err(|error|error.with_retained_progress(receipt))?;}
-  result
+  let work_demand=match self.stage{Stage::SourceCapture=>Some(CapturedSnapshotSource::<P>::constructor_work_demand(&self.base).checked_add(1).ok_or_else(||invalid("source capture work overflow"))?),Stage::ProjectionBirth=>Some(self.projection.birth_work_demand()?.checked_add(1).ok_or_else(||invalid("projection birth work overflow"))?),Stage::TakeProjection=>Some(self.projection.take_work_demand()?.checked_add(1).ok_or_else(||invalid("projection handoff work overflow"))?),Stage::EditBirth=>Some(self.edit.birth_work_demand().checked_add(1).ok_or_else(||invalid("edit birth work overflow"))?),Stage::Projection=>self.projection.advance_work_demand(self.source.as_ref().ok_or_else(||invalid("semantic source absent"))?.try_borrow()?,body)?.map(|work|work.checked_add(1).ok_or_else(||invalid("projection transition work overflow"))).transpose()?,Stage::CloseProjection if !self.projection.terminal_is_empty()=>self.projection.close_work_demand(body)?,Stage::Edit if self.post_read.demand(&self.post,self.edit.post_mode(),body)?.is_some()=>Some(self.post_read.work_demand(&self.post,self.edit.post_mode(),body)?),Stage::CloseEdit if self.edit.terminal_is_empty()&&!self.post_read.terminal_is_empty()=>Some(self.post_read.work_demand(&self.post,PagedOneItemPostMode::Mutable,body)?),Stage::CloseEdit if !self.edit.terminal_is_empty()=>Some(self.edit.close_work_demand(self.mutations.as_ref().ok_or_else(||invalid("semantic mutation issuer absent"))?.as_ref(),body)?),_=>local.then_some(1)};
+  if let Some(work)=work_demand{
+   if !receiving.has_retirement_failure_storage(){let turn=receiving.prepare_failure_storage(grant);self.last_work=turn.work;return turn.result.map(|step|ArtifactReplayPreparationStep::Pending(step.progress()))}
+   let turn=receiving.run_prepared_work(work,|original|{self.original_control=Some(identity);let result=self.advance_original(body,grant,&mut SemanticReceivingTurn::Prepared(original));semio_framework_value::RetainedWorkOutcome{result,work:self.last_work}},|step|step.progress());
+   return match turn{Some(turn)=>{self.last_work=turn.work;turn.result},None=>Ok(ArtifactReplayPreparationStep::Blocked)}
+  }
+  self.original_control=Some(identity);self.advance_original(body,grant,&mut SemanticReceivingTurn::Receiving(receiving))
  }
- fn advance_original(&mut self,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<ArtifactReplayPreparationStep,ValueError>{
+ fn advance_original(&mut self,body:usize,grant:RetainedCloneGrant,receiving:&mut SemanticReceivingTurn<'_,'_>)->Result<ArtifactReplayPreparationStep,semio_framework_value::OriginalRetirementFailure>{
   let d=self.demands(body)?;if !retained_clone_grant_admits(grant,d){return Ok(ArtifactReplayPreparationStep::Blocked);}
-  if self.closing{return Ok(ArtifactReplayPreparationStep::Blocked);}receiving.checkpoint()?;if self.stage!=Stage::Edit||self.post_read.demand(&self.post,self.edit.post_mode(),body)?.is_some(){receiving.admit_turn_capacity(grant.maximum_capacity_bytes)?;if d.capacity_bytes!=0{receiving.charge(d.capacity_bytes)?;}}
+  if self.closing{return Ok(ArtifactReplayPreparationStep::Blocked);}receiving.action().checkpoint()?;if self.stage!=Stage::Edit||self.post_read.demand(&self.post,self.edit.post_mode(),body)?.is_some(){receiving.action().admit_turn_capacity(grant.maximum_capacity_bytes)?;if d.capacity_bytes!=0{receiving.action().charge(d.capacity_bytes)?;}}
   let unit=||RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes};
   if matches!(self.stage,Stage::RefusalRows|Stage::RefusalCode|Stage::RefusalTextBirth|Stage::RefusalText|Stage::SourceCapture|Stage::Share){self.last_work=1;}
   let p=match self.stage{
-   Stage::RefusalRows=>{*self.messages=Some(Vec::new());let rows=self.messages.as_mut().unwrap();rows.try_reserve_exact(1).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"semantic refusal row allocation failed"))?;rows.push(semio_framework_os_spr::MutationMessage{level:semio_framework_diagnostic::Severity::Fatal,code:semio_framework_diagnostic::FaultCode(String::new()),message:String::new(),target:Vec::new(),op_index:None});self.stage=Stage::RefusalCode;unit()},
+   Stage::RefusalRows=>{*self.messages=Some(Vec::new());let rows=self.messages.as_mut().unwrap();rows.try_reserve_exact(1).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"semantic refusal row allocation failed"))?;rows.push(semio_os_spr::MutationMessage{level:semio_framework_diagnostic::Severity::Fatal,code:semio_framework_diagnostic::FaultCode(String::new()),message:String::new(),target:Vec::new(),op_index:None});self.stage=Stage::RefusalCode;unit()},
    Stage::RefusalCode=>{let code=&mut self.messages.as_mut().unwrap()[0].code.0;code.try_reserve_exact(d.capacity_bytes).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"semantic refusal code allocation failed"))?;code.push_str("mutation.invariant");self.stage=Stage::RefusalTextBirth;unit()},
    Stage::RefusalTextBirth=>{let text=&mut self.messages.as_mut().unwrap()[0].message;text.try_reserve_exact(d.capacity_bytes).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"semantic refusal text allocation failed"))?;self.stage=Stage::RefusalText;unit()},
    Stage::RefusalText=>{let fragment=self.refusal_fragment(body)?;if fragment.is_empty()&&self.messages.as_ref().unwrap()[0].message.len()!=self.refusal.unwrap().len(){return Ok(ArtifactReplayPreparationStep::Blocked);}self.messages.as_mut().unwrap()[0].message.push_str(fragment);if self.messages.as_ref().unwrap()[0].message.len()==self.refusal.unwrap().len(){self.stage=Stage::CloseEdit;}unit()},
-   Stage::SourceCapture=>{let Some((source,p))=CapturedSnapshotSource::admit(&mut self.base,self.snapshots.as_ref().ok_or_else(||semio_framework_value::ValueError::invariant("replay snapshot issuer is absent"))?,grant)?else{return Ok(ArtifactReplayPreparationStep::Blocked);};*self.source_admission=Some(RetainedCloneSource::admission_borrowed(source,project_captured::<P>));self.stage=Stage::Source;p},
+   Stage::SourceCapture=>{self.last_work=0;let Some((source,p))=observed(&mut self.last_work,CapturedSnapshotSource::admit(&mut self.base,self.snapshots.as_ref().ok_or_else(||semio_framework_value::ValueError::invariant("replay snapshot issuer is absent"))?,grant))?else{return Ok(ArtifactReplayPreparationStep::Blocked);};*self.source_admission=Some(RetainedCloneSource::admission_borrowed(source,project_captured::<P>));self.last_work+=1;self.stage=Stage::Source;p},
    Stage::Source=>self.admit_source(grant)?,
-   Stage::ProjectionBirth=>{let result=self.projection.begin(grant);self.last_work=self.projection.last_turn_work();let p=result?;self.stage=Stage::Projection;p},
-   Stage::Projection=>{let result=self.projection.advance(self.source.as_ref().unwrap().try_borrow()?,body,grant);self.last_work=self.projection.last_turn_work();let step=result?;if matches!(step,RetainedCloneStep::Complete(_)){self.stage=Stage::TakeProjection;}step.progress()},
-   Stage::TakeProjection=>{let result=self.projection.take(grant);self.last_work=self.projection.last_turn_work();let Some((post,p))=result?else{return Err(invalid("funded semantic projection omitted owner"));};*self.post=Some(post);self.projection.begin_close();self.stage=Stage::CloseProjection;p},
+   Stage::ProjectionBirth=>{let result=self.projection.begin(grant);self.last_work=self.projection.last_turn_work();let p=result?;self.last_work=self.last_work.checked_add(1).ok_or_else(||invalid("projection birth work overflow").with_retained_progress(p))?;self.stage=Stage::Projection;p},
+   Stage::Projection=>{let result=self.projection.advance(self.source.as_ref().unwrap().try_borrow()?,body,grant);self.last_work=self.projection.last_turn_work();let step=result?;if matches!(step,RetainedCloneStep::Complete(_)){self.last_work=self.last_work.checked_add(1).ok_or_else(||invalid("projection transition work overflow").with_retained_progress(step.progress()))?;self.stage=Stage::TakeProjection;}step.progress()},
+   Stage::TakeProjection=>{let result=self.projection.take(grant);self.last_work=self.projection.last_turn_work();let Some((post,p))=result?else{return Err((invalid("funded semantic projection omitted owner")).into());};*self.post=Some(post);self.last_work=self.last_work.checked_add(1).ok_or_else(||invalid("projection handoff work overflow").with_retained_progress(p))?;self.projection.begin_close();self.stage=Stage::CloseProjection;p},
    Stage::CloseProjection=>if self.projection.terminal_is_empty(){self.last_work=1;self.stage=Stage::EditBirth;unit()}else{{let result=self.projection.close_step(grant);self.last_work=self.projection.last_turn_work();result?.progress()}},
-   Stage::EditBirth=>{let result=self.edit.begin(grant);self.last_work=self.edit.last_turn_work();let p=result?;self.stage=Stage::Edit;p},
-   Stage::Edit=>{let mode=self.edit.post_mode();if let Some(p)=observed(&mut self.last_work,self.post_read.prepare(&mut self.post,mode,body,grant))?{return Ok(ArtifactReplayPreparationStep::Pending(p));}let before=self.source.as_ref().unwrap().try_borrow()?;let input=self.input.as_ref().unwrap().borrow()?;let result=self.edit.advance(before,input,self.post_read.access(&mut self.post,mode)?,body,grant,receiving);self.last_work=self.edit.last_turn_work();match result?{
+   Stage::EditBirth=>{let result=self.edit.begin(grant);self.last_work=self.edit.last_turn_work();let p=result?;self.last_work=self.last_work.checked_add(1).ok_or_else(||invalid("edit birth work overflow").with_retained_progress(p))?;self.stage=Stage::Edit;p},
+   Stage::Edit=>{let mode=self.edit.post_mode();if let Some(p)=observed(&mut self.last_work,self.post_read.prepare(&mut self.post,mode,body,grant))?{return Ok(ArtifactReplayPreparationStep::Pending(p));}let SemanticReceivingTurn::Receiving(receiving)=receiving else{return Err(invalid("prepared post return cannot invoke semantic receiving").into())};let before=self.source.as_ref().unwrap().try_borrow()?;let input=self.input.as_ref().unwrap().borrow()?;let result=self.edit.advance(before,input,self.post_read.access(&mut self.post,mode)?,body,grant,receiving);self.last_work=self.edit.last_turn_work();match result?{
     SemanticEditStep::Progress(p)=>p,
     SemanticEditStep::CompleteSingle(p,row)=>{*self.pending=Some(row);*self.messages=Some(Vec::new());self.edit.begin_close();self.stage=Stage::CloseEdit;p},
     SemanticEditStep::Complete(p,inverse,messages,foreign)=>{*self.inverse=Some(inverse);*self.messages=Some(messages);self.foreign=foreign;self.edit.begin_close();self.stage=Stage::CloseEdit;p},
     SemanticEditStep::Refused(p,messages)=>{*self.inverse=Some(Vec::new());*self.messages=Some(messages);self.refused=true;self.edit.begin_close();self.stage=Stage::CloseEdit;p},
    }},
    Stage::CloseEdit=>if self.edit.terminal_is_empty(){if !self.post_read.terminal_is_empty(){observed(&mut self.last_work,self.post_read.prepare(&mut self.post,PagedOneItemPostMode::Mutable,body,grant))?.ok_or_else(||invalid("completed semantic post return absent"))?}else{self.last_work=1;self.stage=Stage::InverseBirth;unit()}}else{{let result=self.edit.close_step(self.mutations.as_ref().unwrap().as_ref(),grant);self.last_work=self.edit.last_turn_work();result?.progress()}},
-   Stage::InverseBirth=>{let Some(inverse)=self.inverse.take()else{self.last_work=1;self.stage=Stage::Inverse;return Ok(ArtifactReplayPreparationStep::Pending(unit()));};match observed(&mut self.last_work,OriginalVectorCursor::admit(inverse,grant)){Ok((rows,p))=>{*self.rows=Some(rows);self.stage=Stage::Inverse;p},Err((error,inverse))=>{*self.inverse=Some(inverse);return Err(error);}}},
-   Stage::Inverse=>{self.last_work=1;let pages=self.pages.as_mut().ok_or_else(||semio_framework_value::ValueError::invariant("replay inverse pages are absent"))?;if self.pending.is_some()&&!pages.has_reserved_slot(){pages.reserve_one_funded(grant).map_err(|error|ValueError::from(error.refusal()))?}else if self.pending.is_some(){let original=self.pending.take().ok_or_else(||semio_framework_value::ValueError::invariant("replay pending inverse is absent"))?;if let Err(original)=pages.push_reserved(original){*self.pending=Some(original);return Err(invalid("semantic reserved inverse slot absent"));}unit()}else if self.rows.as_ref().is_none_or(|rows|rows.remaining().is_empty()){if let Some(rows)=self.rows.as_mut(){rows.begin_close();}self.stage=Stage::CloseInverse;unit()}else if !pages.has_reserved_slot(){pages.reserve_one_funded(grant).map_err(|error|ValueError::from(error.refusal()))?}else{let turn=self.rows.as_mut().ok_or_else(||semio_framework_value::ValueError::invariant("replay inverse rows are absent"))?.take_front(grant);self.last_work=turn.work;let Some((row,p))=turn.result?else{return Err(invalid("funded semantic inverse transfer omitted row"));};*self.pending=Some(row);p}},
+   Stage::InverseBirth=>{let Some(inverse)=self.inverse.take()else{self.last_work=1;self.stage=Stage::Inverse;return Ok(ArtifactReplayPreparationStep::Pending(unit()));};match observed(&mut self.last_work,OriginalVectorCursor::admit(inverse,grant)){Ok((rows,p))=>{*self.rows=Some(rows);self.stage=Stage::Inverse;p},Err((error,inverse))=>{*self.inverse=Some(inverse);return Err((error).into());}}},
+   Stage::Inverse=>{self.last_work=1;let pages=self.pages.as_mut().ok_or_else(||semio_framework_value::ValueError::invariant("replay inverse pages are absent"))?;if self.pending.is_some()&&!pages.has_reserved_slot(){pages.reserve_one_funded(grant).map_err(|error|ValueError::from(error.refusal()))?}else if self.pending.is_some(){let original=self.pending.take().ok_or_else(||semio_framework_value::ValueError::invariant("replay pending inverse is absent"))?;if let Err(original)=pages.push_reserved(original){*self.pending=Some(original);return Err((invalid("semantic reserved inverse slot absent")).into());}unit()}else if self.rows.as_ref().is_none_or(|rows|rows.remaining().is_empty()){if let Some(rows)=self.rows.as_mut(){rows.begin_close();}self.stage=Stage::CloseInverse;unit()}else if !pages.has_reserved_slot(){pages.reserve_one_funded(grant).map_err(|error|ValueError::from(error.refusal()))?}else{let turn=self.rows.as_mut().ok_or_else(||semio_framework_value::ValueError::invariant("replay inverse rows are absent"))?.take_front(grant);self.last_work=turn.work;let Some((row,p))=turn.result?else{return Err((invalid("funded semantic inverse transfer omitted row")).into());};*self.pending=Some(row);p}},
    Stage::CloseInverse=>if self.rows.as_ref().is_some_and(|rows|!rows.terminal_is_empty()){observed(&mut self.last_work,self.rows.as_mut().ok_or_else(||semio_framework_value::ValueError::invariant("replay inverse rows are absent"))?.step(grant))?.progress()}else{self.last_work=1;self.rows.take();self.stage=Stage::Share;unit()},
    Stage::Share=>{if !self.refused{*self.next=Some(Arc::new(self.post.take().ok_or_else(||invalid("semantic candidate absent"))?));}self.stage=Stage::Ready;unit()},
    Stage::Ready=>return Ok(ArtifactReplayPreparationStep::Prepared(Default::default())),
@@ -145,7 +160,7 @@ impl<P:RetireOwned+Sync,M:RetireOwned+Sync,C:SemanticProjection<P>,E:SemanticEdi
   Ok(if self.stage==Stage::Ready{ArtifactReplayPreparationStep::Prepared(p)}else{ArtifactReplayPreparationStep::Pending(p)})
  }
  fn admit_source(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{let admission=self.source_admission.as_mut().ok_or_else(||invalid("semantic original source admission absent"))?;if admission.phase()!="ready"{return Ok(observed(&mut self.last_work,admission.advance(grant))?.progress());}let mut output=None;let step=observed(&mut self.last_work,admission.take_output(&mut output,grant))?;if let Some(source)=output{*self.source=Some(source);self.source_admission.take();self.stage=Stage::ProjectionBirth;}Ok(step.progress())}
- fn close_admission(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{let admission=self.source_admission.as_mut().ok_or_else(||invalid("semantic original source admission absent"))?;if admission.phase()=="ready"{let mut output=None;let step=observed(&mut self.last_work,admission.take_output(&mut output,grant))?;if let Some(source)=output{*self.source=Some(source);self.source_admission.take();}return Ok(step.progress());}let mut inputs=None;let step=observed(&mut self.last_work,admission.return_inputs(&mut inputs,grant))?;if let Some((authority,()))=inputs{*self.source_authority=Some(authority);self.source_admission.take();}Ok(step.progress())}
+ fn close_admission(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{let admission=self.source_admission.as_mut().ok_or_else(||invalid("semantic original source admission absent"))?;if admission.phase()=="ready"{let mut output=None;let step=observed(&mut self.last_work,admission.take_output(&mut output,grant))?;if let Some(source)=output{*self.source=Some(source);self.source_admission.take();self.last_work+=1;}return Ok(step.progress());}let mut inputs=None;let step=observed(&mut self.last_work,admission.return_inputs(&mut inputs,grant))?;if let Some((authority,()))=inputs{*self.source_authority=Some(authority);self.source_admission.take();self.last_work+=1;}Ok(step.progress())}
  pub fn take(&mut self)->Option<ArtifactReplayPrepared<P,M>>{if self.closing||self.stage!=Stage::Ready{return None;}self.closing=true;Some(ArtifactReplayPrepared{next:self.next.take(),inverse:Ok(self.pages.take()?),messages:self.messages.take().unwrap_or_default(),apply_refusal:None,input_refusal:None,foreign_steps:self.foreign})}
  pub fn begin_close(&mut self){self.closing=true;self.projection.begin_close();self.edit.begin_close();if let Some(rows)=self.rows.as_mut(){rows.begin_close();}}
  pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
@@ -164,39 +179,75 @@ impl<P:RetireOwned+Sync,M:RetireOwned+Sync,C:SemanticProjection<P>,E:SemanticEdi
   if self.post.is_some(){return Ok(RetirementDemand{capacity_bytes:semio_framework_value::FactoryOwnedRetirement::<P>::constructor_capacity_bytes(),depth:1,..Default::default()});}
   pending!(inverse,Vec<M>);pending!(pages,PagedList<M,{usize::MAX}>);
   if self.pending.is_some(){return Ok(RetirementDemand{capacity_bytes:semio_framework_value::FactoryOwnedRetirement::<M>::constructor_capacity_bytes(),depth:1,..Default::default()});}
-  pending!(messages,Vec<semio_framework_os_spr::MutationMessage>);
+  pending!(messages,Vec<semio_os_spr::MutationMessage>);
   if self.next.is_some(){return Ok(RetirementDemand{capacity_bytes:semio_framework_value::factory::shared::FactorySharedRetirement::<P>::constructor_capacity_bytes(),depth:1,..Default::default()});}
   if self.snapshots.is_some()||self.mutations.is_some(){return Ok(header::<Arc<dyn semio_framework_value::FactoryRetirement>>());}
-  if let Some(factory)=self.factory_close.iter().find_map(Option::as_ref){return factory.demands(body);}
+  if let Some(factory)=self.factory_close.iter().find_map(Option::as_ref){return if factory.terminal_is_empty(){Ok(header::<Option<semio_framework_value::FactoryAuthority>>())}else{factory.demands(body)};}
   Ok(Default::default())
  }
- pub fn close_step(&mut self,grant:RetainedCloneGrant,receiving:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<RetainedCloneStep,ValueError>{
-  self.last_work=0;let identity=(receiving.ledger_identity(),receiving.retirement_recipient_identity());if self.original_control.is_some_and(|original|original!=identity){return Err(invalid("native semantic retirement changed its original decoder or recipient"))}self.close_original(grant,receiving)
+ pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{
+  if !self.closing||self.terminal_is_empty(){return Ok(0)}
+  if !self.projection.terminal_is_empty(){return self.projection.close_work_demand(body)?.ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"semantic projection has no original close work quote"))}
+  if !self.edit.terminal_is_empty(){return self.edit.close_work_demand(self.mutations.as_ref().ok_or_else(||invalid("semantic mutation issuer absent"))?.as_ref(),body)}
+  if !self.post_read.terminal_is_empty(){return self.post_read.work_demand(&self.post,PagedOneItemPostMode::Mutable,body)}
+  if let Some(active)=self.active.as_ref(){return if active.terminal_is_empty(){Ok(1)}else{active.next_computational_work(body)}}
+  if !self.retirement.is_empty(){return self.retirement.next_owner_work::<P>(false,&None,body)}
+  if let Some(rows)=self.rows.as_ref(){return if rows.terminal_is_empty(){Ok(1)}else{rows.next_computational_work(body)}}
+  if let Some(admission)=self.source_admission.as_ref(){return if admission.phase()=="ready"{Ok(2)}else{admission.return_work_demand()?.checked_add(1).ok_or_else(||invalid("semantic source return work overflow"))}}
+  if let Some(source)=self.source.as_ref(){return if source.terminal_is_empty(){Ok(1)}else{source.next_close_work_demand(body)}}
+  if let Some(input)=self.input.as_ref(){return if input.terminal_is_empty(){Ok(1)}else{input.close_work_demand(body)}}
+  if self.base.is_some(){return CapturedSnapshotSource::<P>::constructor_work_demand(&self.base).checked_add(1).ok_or_else(||invalid("semantic source capture work overflow"))}
+  macro_rules! pending{($field:ident,$kind:ty)=>{if self.$field.is_some(){return self.retirement.next_owner_work::<$kind>(true,&None,body)}};}
+  pending!(source_authority,CapturedSnapshotSource<P>);
+  if self.post.is_some(){return Ok(semio_framework_value::FactoryOwnedRetirement::<P>::admit_original_source_work_demand(&self.post))}
+  pending!(inverse,Vec<M>);pending!(pages,PagedList<M,{usize::MAX}>);
+  if self.pending.is_some(){return Ok(semio_framework_value::FactoryOwnedRetirement::<M>::admit_original_source_work_demand(&self.pending))}
+  pending!(messages,Vec<semio_os_spr::MutationMessage>);
+  if self.next.is_some(){return Ok(semio_framework_value::factory::shared::FactorySharedRetirement::<P>::admit_original_source_work_demand(&self.next))}
+  if self.snapshots.is_some()||self.mutations.is_some(){return Ok(1)}
+  self.factory_close.iter().find_map(Option::as_ref).map_or(Ok(0),|factory|if factory.terminal_is_empty(){Ok(1)}else{factory.next_computational_work(body)})
  }
- fn close_original(&mut self,grant:RetainedCloneGrant,receiving:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<RetainedCloneStep,ValueError>{
+ fn delegates_original_close(&self)->bool{
+  if !self.projection.terminal_is_empty()||!self.edit.terminal_is_empty()||!self.post_read.terminal_is_empty(){return false}
+  if self.active.is_some()||!self.retirement.is_empty(){return true}
+  if let Some(rows)=self.rows.as_ref(){return !rows.terminal_is_empty()&&semio_framework_value::retirement::RetirementCursor::requires_original_control(rows)}
+  if self.source_admission.is_some()||self.source.is_some()||self.input.is_some()||self.base.is_some()||self.source_authority.is_some()||self.post.is_some()||self.inverse.is_some()||self.pages.is_some()||self.pending.is_some()||self.messages.is_some()||self.next.is_some()||self.snapshots.is_some()||self.mutations.is_some(){return false}
+  self.factory_close.iter().any(Option::is_some)
+ }
+ pub fn close_step(&mut self,grant:RetainedCloneGrant,receiving:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>{
+  self.last_work=0;let identity=(receiving.ledger_identity(),receiving.retirement_recipient_identity());if self.original_control.is_some_and(|original|original!=identity){return Err(invalid("native semantic retirement changed its original decoder or recipient").into())}
+  if self.closing&&!self.terminal_is_empty()&&receiving.failure_storage_pool().is_empty(){let turn=semio_framework_value::refill_original_failure_storage(receiving,grant);self.last_work=turn.work;return turn.result}
+  if !self.closing||self.terminal_is_empty()||!retained_clone_grant_admits(grant,self.close_demand(grant.maximum_copy_bytes)?){return self.close_original(grant,receiving)}
+  if self.delegates_original_close(){return self.close_original(grant,receiving)}
+  let work=self.close_work_demand(grant.maximum_copy_bytes)?;
+  semio_framework_value::run_original_retirement_work(receiving,work,|same|{let demand=match self.close_demand(grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:0}};if let Err(error)=same.charge(demand.capacity_bytes){return semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:0}}semio_framework_value::OriginalRetirementOutcome{result:self.close_original(grant,same),work:self.last_work}}).result
+ }
+ fn close_original(&mut self,grant:RetainedCloneGrant,receiving:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>{
   if !self.closing{return Ok(RetainedCloneStep::Progress(Default::default()));}let d=self.close_demand(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()));}
-  if d.capacity_bytes!=0&&self.active.is_none(){receiving.charge(d.capacity_bytes)?;}
   let unit=||RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()});
-  if !self.projection.terminal_is_empty(){let result=self.projection.close_step(grant);self.last_work=self.projection.last_turn_work();return result.map(|step|RetainedCloneStep::Progress(step.progress()));}
-  if !self.edit.terminal_is_empty(){let result=self.edit.close_step(self.mutations.as_ref().unwrap().as_ref(),grant);self.last_work=self.edit.last_turn_work();return result.map(|step|RetainedCloneStep::Progress(step.progress()));}
+  if !self.projection.terminal_is_empty(){let result=self.projection.close_step(grant);self.last_work=self.projection.last_turn_work();return result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(Into::into);}
+  if !self.edit.terminal_is_empty(){let result=self.edit.close_step(self.mutations.as_ref().unwrap().as_ref(),grant);self.last_work=self.edit.last_turn_work();return result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(Into::into);}
   if !self.post_read.terminal_is_empty(){return Ok(RetainedCloneStep::Progress(observed(&mut self.last_work,self.post_read.prepare(&mut self.post,PagedOneItemPostMode::Mutable,grant.maximum_copy_bytes,grant))?.ok_or_else(||invalid("semantic original post return absent"))?));}
   if self.active.is_some(){return observed(&mut self.last_work,semio_framework_value::close_factory_ticket_controlled(&mut self.active,grant,receiving));}
-  if !self.retirement.is_empty(){return observed(&mut self.last_work,self.retirement.step_granted(grant)).map(|step|RetainedCloneStep::Progress(step.progress()));}
-  if let Some(rows)=self.rows.as_mut(){if rows.terminal_is_empty(){self.rows.take();self.last_work=1;return Ok(unit());}return observed(&mut self.last_work,rows.step(grant)).map(|step|RetainedCloneStep::Progress(step.progress()));}
-  if self.source_admission.is_some(){return self.close_admission(grant).map(RetainedCloneStep::Progress);}
-  if let Some(source)=self.source.as_mut(){if source.terminal_is_empty(){self.source.take();self.last_work=1;return Ok(unit());}return observed(&mut self.last_work,source.close_step(grant)).map(|step|RetainedCloneStep::Progress(step.progress()));}
-  if let Some(input)=self.input.as_mut(){if input.terminal_is_empty(){self.input.take();self.last_work=1;return Ok(unit());}return observed(&mut self.last_work,input.close_step(grant)).map(|step|RetainedCloneStep::Progress(step.progress()));}
+  if !self.retirement.is_empty(){let selected=self.retirement.select(grant.maximum_copy_bytes)?;return observed(&mut self.last_work,selected.step_controlled(grant,receiving)).map(|step|RetainedCloneStep::Progress(step.progress()));}
+  if let Some(rows)=self.rows.as_mut(){if rows.terminal_is_empty(){self.rows.take();self.last_work=1;return Ok(unit());}let turn=if semio_framework_value::retirement::RetirementCursor::requires_original_control(rows){rows.step_controlled(grant,receiving)}else{rows.step(grant)};return observed(&mut self.last_work,turn).map(|step|RetainedCloneStep::Progress(step.progress()));}
+  if self.source_admission.is_some(){return self.close_admission(grant).map(RetainedCloneStep::Progress).map_err(Into::into);}
+  if let Some(source)=self.source.as_mut(){if source.terminal_is_empty(){self.source.take();self.last_work=1;return Ok(unit());}return observed(&mut self.last_work,source.close_step(grant)).map(|step|RetainedCloneStep::Progress(step.progress())).map_err(Into::into);}
+  if let Some(input)=self.input.as_mut(){if input.terminal_is_empty(){self.input.take();self.last_work=1;return Ok(unit());}return observed(&mut self.last_work,input.close_step(grant)).map(|step|RetainedCloneStep::Progress(step.progress())).map_err(Into::into);}
   macro_rules! close{($field:ident)=>{if let Some(step)=observed(&mut self.last_work,self.retirement.begin_granted(&mut self.$field,grant))?{return Ok(RetainedCloneStep::Progress(step.progress()));}};}
-  if self.base.is_some(){self.last_work=1;let Some((authority,p))=CapturedSnapshotSource::admit(&mut self.base,self.snapshots.as_ref().ok_or_else(||semio_framework_value::ValueError::invariant("replay snapshot issuer is absent"))?,grant)?else{return Ok(RetainedCloneStep::Progress(Default::default()));};*self.source_authority=Some(authority);return Ok(RetainedCloneStep::Progress(p));}
+  if self.base.is_some(){let Some((authority,p))=observed(&mut self.last_work,CapturedSnapshotSource::admit(&mut self.base,self.snapshots.as_ref().ok_or_else(||semio_framework_value::ValueError::invariant("replay snapshot issuer is absent"))?,grant))?else{return Ok(RetainedCloneStep::Progress(Default::default()));};*self.source_authority=Some(authority);self.last_work+=1;return Ok(RetainedCloneStep::Progress(p));}
   close!(source_authority);
   if self.post.is_some(){let Some((frame,p))=observed(&mut self.last_work,semio_framework_value::FactoryOwnedRetirement::<P>::admit_original(&mut self.post,self.snapshots.as_ref().ok_or_else(||semio_framework_value::ValueError::invariant("replay snapshot issuer is absent"))?,grant))?else{return Ok(RetainedCloneStep::Progress(Default::default()));};*self.active=Some(frame);return Ok(RetainedCloneStep::Progress(p));}
   close!(inverse);close!(pages);
   if self.pending.is_some(){let Some((frame,p))=observed(&mut self.last_work,semio_framework_value::FactoryOwnedRetirement::<M>::admit_original(&mut self.pending,self.mutations.as_ref().unwrap(),grant))?else{return Ok(RetainedCloneStep::Progress(Default::default()));};*self.active=Some(frame);return Ok(RetainedCloneStep::Progress(p));}
   close!(messages);
-  if self.next.is_some(){self.last_work=1;let Some((frame,p))=semio_framework_value::factory::shared::FactorySharedRetirement::<P>::admit_original(&mut self.next,self.snapshots.as_ref().unwrap(),grant)?else{return Ok(RetainedCloneStep::Progress(Default::default()));};*self.active=Some(frame);return Ok(RetainedCloneStep::Progress(p));}
-  if let Some(factory)=self.snapshots.take(){self.factory_close[0]=Some(semio_framework_value::FactoryAuthority::new(factory));self.last_work=1;return Ok(unit());}
-  if let Some(factory)=self.mutations.take(){self.factory_close[1]=Some(semio_framework_value::FactoryAuthority::new(factory));self.last_work=1;return Ok(unit());}
-  if let Some(index)=self.factory_close.iter().position(Option::is_some){let Some(owner)=self.factory_close[index].as_mut() else { return Err(semio_framework_value::ValueError::invariant("replay factory close slot is absent"))};let step=observed(&mut self.last_work,owner.step(grant))?;if owner.terminal_is_empty(){self.factory_close[index]=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+  if self.next.is_some(){let Some((frame,p))=observed(&mut self.last_work,semio_framework_value::factory::shared::FactorySharedRetirement::<P>::admit_original(&mut self.next,self.snapshots.as_ref().unwrap(),grant))?else{return Ok(RetainedCloneStep::Progress(Default::default()));};*self.active=Some(frame);return Ok(RetainedCloneStep::Progress(p));}
+  if self.snapshots.is_some(){let factory=self.snapshots.take().expect("quoted original factory alias");self.factory_close[0]=Some(semio_framework_value::FactoryAuthority::new(factory));self.last_work=1;return Ok(unit())}
+  if self.mutations.is_some(){let factory=self.mutations.take().expect("quoted original factory alias");self.factory_close[1]=Some(semio_framework_value::FactoryAuthority::new(factory));self.last_work=1;return Ok(unit())}
+  if let Some(index)=self.factory_close.iter().position(Option::is_some){
+   if self.factory_close[index].as_ref().unwrap().terminal_is_empty(){let turn=original_metadata_close(receiving,||{self.factory_close[index]=None;unit()});return observed(&mut self.last_work,turn)}
+   let owner=self.factory_close[index].as_mut().unwrap();let turn=if owner.requires_original_control(){owner.step_controlled(grant,receiving)}else{let work=owner.next_computational_work(grant.maximum_copy_bytes).map_err(semio_framework_value::OriginalRetirementFailure::from_work_refusal)?;semio_framework_value::run_original_retirement_work(receiving,work,|same|{if let Err(error)=same.charge(d.capacity_bytes){return semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:0}}owner.step(grant)})};return observed(&mut self.last_work,turn).map(|step|RetainedCloneStep::Progress(step.progress()));
+  }
   Ok(RetainedCloneStep::Complete(Default::default()))
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.projection.terminal_is_empty()&&self.edit.terminal_is_empty()&&self.retirement.is_empty()&&self.active.is_none()&&self.base.is_none()&&self.source.is_none()&&self.source_authority.is_none()&&self.source_admission.is_none()&&self.input.is_none()&&self.post.is_none()&&self.post_read.terminal_is_empty()&&self.inverse.is_none()&&self.rows.is_none()&&self.pages.is_none()&&self.pending.is_none()&&self.messages.is_none()&&self.next.is_none()&&self.snapshots.is_none()&&self.mutations.is_none()&&self.factory_close.iter().all(Option::is_none)}
@@ -206,16 +257,17 @@ impl<P:RetireOwned+Sync,M:RetireOwned+Sync,C:SemanticProjection<P>,E:SemanticEdi
 impl<P:RetireOwned+Sync,M:RetireOwned+Sync,C:SemanticProjection<P>,E:SemanticEdit<P,M>> super::ArtifactReplayPreparation<P,M> for NativeSemanticPreparation<P,M,C,E>{
  fn last_turn_work(&self)->u64{self.last_work}
  fn advance_demands(&self,b:usize)->Result<RetirementDemand,ValueError>{self.demands(b)}
- fn advance(&mut self,body:usize,g:semio_framework_os_store_one_item::ArtifactStoreOneItemGrant,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<ArtifactReplayPreparationStep,ValueError>{NativeSemanticPreparation::advance(self,body,g.retained_grant(),control)}
+ fn advance(&mut self,body:usize,g:semio_os_store_one_item::ArtifactStoreOneItemGrant,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<ArtifactReplayPreparationStep,semio_framework_value::OriginalRetirementFailure>{NativeSemanticPreparation::advance(self,body,g.retained_grant(),control)}
  fn take_prepared(&mut self)->Option<ArtifactReplayPrepared<P,M>>{self.take()}
  fn cancel(&mut self){NativeSemanticPreparation::begin_close(self);}
  fn begin_close(&mut self){NativeSemanticPreparation::begin_close(self);}
  fn close_demands(&self,b:usize)->Result<RetirementDemand,ValueError>{self.close_demand(b)}
+ fn close_work_demand(&self,b:usize)->Result<u64,ValueError>{NativeSemanticPreparation::close_work_demand(self,b)}
  fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demand(4096)?.copy_bytes)}
  fn next_close_capacity_byte_demand(&self,b:usize)->Result<usize,ValueError>{Ok(self.close_demand(b)?.capacity_bytes)}
  fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demand(4096)?.release_bytes)}
  fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demand(4096)?.depth)}
- fn close_step(&mut self,g:RetainedCloneGrant,receiving:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<RetainedCloneStep,ValueError>{NativeSemanticPreparation::close_step(self,g,receiving)}
+ fn close_step(&mut self,g:RetainedCloneGrant,receiving:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>{NativeSemanticPreparation::close_step(self,g,receiving)}
  fn terminal_is_empty(&self)->bool{NativeSemanticPreparation::terminal_is_empty(self)}
 }
 

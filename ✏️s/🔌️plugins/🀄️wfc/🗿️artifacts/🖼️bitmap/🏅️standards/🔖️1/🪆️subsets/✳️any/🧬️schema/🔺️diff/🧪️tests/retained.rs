@@ -13,7 +13,9 @@ fn source<T:RetireOwned+Sync+'static>(value:T)->RetainedCloneSource<T,T>{
 }
 fn close_source<T:RetireOwned+Sync+'static>(source:&mut RetainedCloneSource<T,T>){for _ in 0..100000{if source.terminal_is_empty(){return;}let d=source.next_close_demand(4096).unwrap();let g=grant(d);let p=source.close_step(g).result.unwrap().progress();assert!(p.fits(g));}panic!("source close stalled");}
 fn pins(value:&serde_json::Value)->Vec<BitmapPinnedPixel>{value.as_array().unwrap().iter().map(|v|BitmapPinnedPixel{x:v[0].as_u64().unwrap() as u32,y:v[1].as_u64().unwrap() as u32,color:v[2].as_u64().unwrap() as u32}).collect()}
-fn close_plan(plan:&mut BitmapApply){plan.begin_close();for _ in 0..100000{if plan.terminal_is_empty(){return;}let g=grant(plan.close_demand(4096).unwrap());assert_eq!(plan.close_step(RetainedCloneGrant{maximum_items:0,..g}).unwrap().progress(),Default::default());let p=plan.close_step(g).unwrap().progress();assert!(p.fits(g));}panic!("plan close stalled");}
+#[test]
+fn original_bitmap_key_scan_refuses_oversized_text_before_search(){assert_eq!(key_coordinates("999:999"),Some((999,999)));assert_eq!(key_coordinates("000:1"),None);let oversized="9".repeat(100_000);assert_eq!(key_coordinates(&oversized),None);}
+fn close_plan(plan:&mut BitmapApply){plan.begin_close();for _ in 0..100000{if plan.terminal_is_empty(){return;}let g=grant(plan.close_demand(4096).unwrap());let denied=plan.close_step(RetainedCloneGrant{maximum_items:0,..g});assert_eq!(denied.work,0);assert_eq!(denied.result.unwrap().progress(),Default::default());let quote=plan.close_work_demand(4096).unwrap();let turn=plan.close_step(g);assert!(turn.work<=quote);let p=turn.result.unwrap().progress();assert!(p.fits(g));}panic!("plan close stalled");}
 
 #[test]
 fn retained_bitmap_preflight_is_atomic_cancellable_and_original_bound(){
@@ -27,8 +29,8 @@ fn retained_bitmap_preflight_is_atomic_cancellable_and_original_bound(){
         let (mut plan,_)=protocol::begin_retained_diff::<BitmapSnapshot,BitmapDiff>(generous()).unwrap();let mut admitted=None;
         for _ in 0..law["maximumTurns"].as_u64().unwrap(){
             let d=plan.preflight_demand(diff_source.borrow(),original.borrow(),post.borrow(),4096).unwrap();let g=grant(d);
-            let denied=protocol::preflight_retained_diff(&mut plan,diff_source.borrow(),original.borrow(),post.borrow(),4096,RetainedCloneGrant{maximum_items:0,..g},&mut receiving).unwrap();assert_eq!(denied.progress(),Default::default());
-            let step=protocol::preflight_retained_diff(&mut plan,diff_source.borrow(),original.borrow(),post.borrow(),4096,g,&mut receiving).unwrap();assert!(step.progress().fits(g));assert_eq!(post.borrow().get(),&base);
+            let denied=protocol::preflight_retained_diff(&mut plan,diff_source.borrow(),original.borrow(),post.borrow(),4096,RetainedCloneGrant{maximum_items:0,..g},&mut receiving);assert_eq!(denied.work,0);assert_eq!(denied.result.unwrap().progress(),Default::default());
+            let quote=plan.preflight_work_demand(diff_source.borrow(),original.borrow(),post.borrow(),4096).unwrap();let turn=protocol::preflight_retained_diff(&mut plan,diff_source.borrow(),original.borrow(),post.borrow(),4096,g,&mut receiving);assert!(turn.work<=quote);let step=turn.result.unwrap();assert!(step.progress().fits(g));assert_eq!(post.borrow().get(),&base);
             match step{protocol::RetainedDiffPreflightStep::Admitted(_,_)=>{admitted=Some(true);break;},protocol::RetainedDiffPreflightStep::Refused(_,_)=>{admitted=Some(false);break;},_=>{}}
         }
         assert_eq!(admitted,case["admitted"].as_bool());
@@ -36,12 +38,12 @@ fn retained_bitmap_preflight_is_atomic_cancellable_and_original_bound(){
             let mut actual=None;for _ in 0..1000{match post.take_authority(generous()).result.unwrap(){RetainedCloneSourceTake::Pending(_)=>{},RetainedCloneSourceTake::Ready(value,_)=>{actual=Some(value);break;}}}
             let mut actual=actual.expect("original post alias is closed before mutable handback");
             let g=grant(plan.commit_demand(diff_source.borrow(),original.borrow(),&actual,4096).unwrap());
-            assert_eq!(protocol::commit_retained_diff(&mut plan,diff_source.borrow(),original.borrow(),&mut actual,RetainedCloneGrant{maximum_items:0,..g}).unwrap().progress(),Default::default());
-            assert!(matches!(protocol::commit_retained_diff(&mut plan,diff_source.borrow(),original.borrow(),&mut actual,g).unwrap(),RetainedCloneStep::Complete(_)));
+            let denied=protocol::commit_retained_diff(&mut plan,diff_source.borrow(),original.borrow(),&mut actual,RetainedCloneGrant{maximum_items:0,..g});assert_eq!(denied.work,0);assert_eq!(denied.result.unwrap().progress(),Default::default());
+            let quote=plan.commit_work_demand(diff_source.borrow(),original.borrow(),&actual,4096).unwrap();let turn=protocol::commit_retained_diff(&mut plan,diff_source.borrow(),original.borrow(),&mut actual,g);assert!(turn.work<=quote);assert!(matches!(turn.result.unwrap(),RetainedCloneStep::Complete(_)));
             assert_eq!(actual.pinned,target);
             assert_eq!(serde_json::json!(actual.input.pixels),case["expectedPixels"]);
         }
-        plan.begin_close();for _ in 0..100000{if plan.terminal_is_empty(){break;}let g=grant(plan.close_demand(4096).unwrap());assert!(plan.close_step(g).unwrap().progress().fits(g));}assert!(plan.terminal_is_empty());close_source(&mut diff_source);close_source(&mut original);close_source(&mut post);
+        plan.begin_close();for _ in 0..100000{if plan.terminal_is_empty(){break;}let g=grant(plan.close_demand(4096).unwrap());let quote=plan.close_work_demand(4096).unwrap();let turn=plan.close_step(g);assert!(turn.work<=quote);assert!(turn.result.unwrap().progress().fits(g));}assert!(plan.terminal_is_empty());close_source(&mut diff_source);close_source(&mut original);close_source(&mut post);
     }
 }
 
@@ -64,8 +66,8 @@ fn cancellation_returns_every_staged_frontier_without_changing_original_post(){
         let mut plan=BitmapApply::new();
         for _ in 0..stop{
             let d=plan.preflight_demand(diff.borrow(),original.borrow(),post.borrow(),4096).unwrap();let g=grant(d);
-            for denied in [(d.copy_bytes>0).then_some(RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes.saturating_sub(1),..g}),(d.capacity_bytes>0).then_some(RetainedCloneGrant{maximum_capacity_bytes:d.capacity_bytes.saturating_sub(1),..g}),(d.release_bytes>0).then_some(RetainedCloneGrant{maximum_release_bytes:d.release_bytes.saturating_sub(1),..g}),(d.depth>0).then_some(RetainedCloneGrant{maximum_depth:d.depth.saturating_sub(1),..g})].into_iter().flatten(){assert_eq!(plan.preflight(diff.borrow(),original.borrow(),post.borrow(),4096,denied,&mut receiving).unwrap().progress(),Default::default());assert_eq!(plan.preflight_demand(diff.borrow(),original.borrow(),post.borrow(),4096).unwrap(),d);}
-            let step=plan.preflight(diff.borrow(),original.borrow(),post.borrow(),4096,g,&mut receiving).unwrap();assert!(step.progress().fits(g));
+            for denied in [(d.copy_bytes>0).then_some(RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes.saturating_sub(1),..g}),(d.capacity_bytes>0).then_some(RetainedCloneGrant{maximum_capacity_bytes:d.capacity_bytes.saturating_sub(1),..g}),(d.release_bytes>0).then_some(RetainedCloneGrant{maximum_release_bytes:d.release_bytes.saturating_sub(1),..g}),(d.depth>0).then_some(RetainedCloneGrant{maximum_depth:d.depth.saturating_sub(1),..g})].into_iter().flatten(){let turn=plan.preflight(diff.borrow(),original.borrow(),post.borrow(),4096,denied,&mut receiving);assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap().progress(),Default::default());assert_eq!(plan.preflight_demand(diff.borrow(),original.borrow(),post.borrow(),4096).unwrap(),d);}
+            let quote=plan.preflight_work_demand(diff.borrow(),original.borrow(),post.borrow(),4096).unwrap();let turn=plan.preflight(diff.borrow(),original.borrow(),post.borrow(),4096,g,&mut receiving);assert!(turn.work<=quote);let step=turn.result.unwrap();assert!(step.progress().fits(g));
             if matches!(step,RetainedDiffPreflightAdvance::Ready(_,true)){completed=true;break;}
         }
         assert_eq!(post.borrow().get(),&base);close_plan(&mut plan);if completed{break;}
@@ -75,9 +77,9 @@ fn cancellation_returns_every_staged_frontier_without_changing_original_post(){
 
 fn observed_copy_capacity(post:RetainedCloneRef<'_,BitmapSnapshot>)->usize{
     let mut field=RetainedFieldPreparation::<BitmapSnapshot>::default();let mut allocated=0;
-    for _ in 0..100000{if field.value().is_some(){break;}let g=grant(field.demand(post,4096).unwrap());let (step,heap)=observe_retirement_allocations(||field.advance(post,4096,g));let p=step.unwrap().progress();assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));allocated+=heap.0;}
+    for _ in 0..100000{if field.value().is_some(){break;}let g=grant(field.demand(post,4096).unwrap());let (step,heap)=observe_retirement_allocations(||field.advance(post,4096,g));let p=step.result.unwrap().progress();assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));allocated+=heap.0;}
     let g=grant(field.exchange_demand().unwrap());let (step,heap)=observe_retirement_allocations(||field.take(g));let(value,p)=step.unwrap();assert!(value.is_some());assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));allocated+=heap.0;
-    field.begin_close();for _ in 0..100000{if field.terminal_is_empty(){break;}let g=grant(field.close_demand(4096).unwrap());let(step,heap)=observe_retirement_allocations(||field.close_step(g));let p=step.unwrap().progress();assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));allocated+=heap.0;}assert!(field.terminal_is_empty());allocated
+    field.begin_close();for _ in 0..100000{if field.terminal_is_empty(){break;}let g=grant(field.close_demand(4096).unwrap());let(step,heap)=observe_retirement_allocations(||field.close_step(g));let p=step.result.unwrap().progress();assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));allocated+=heap.0;}assert!(field.terminal_is_empty());allocated
 }
 
 #[test]
@@ -91,9 +93,9 @@ fn unchanged_owned_fields_preserve_the_original_projection_allocation_budget(){
         let mut accept=|_|true;let mut receiving=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1<<28,&mut accept);
         for _ in 0..100000{
             let g=grant(plan.preflight_demand(diff.borrow(),original.borrow(),post.borrow(),4096).unwrap());
-            let(denied,heap)=observe_retirement_allocations(||plan.preflight(diff.borrow(),original.borrow(),post.borrow(),4096,RetainedCloneGrant{maximum_items:0,..g},&mut receiving));assert_eq!(denied.unwrap().progress(),Default::default());assert_eq!(heap,(0,0));
-            if g.maximum_capacity_bytes>0{let(denied,heap)=observe_retirement_allocations(||plan.preflight(diff.borrow(),original.borrow(),post.borrow(),4096,RetainedCloneGrant{maximum_capacity_bytes:g.maximum_capacity_bytes-1,..g},&mut receiving));assert_eq!(denied.unwrap().progress(),Default::default());assert_eq!(heap,(0,0));}
-            let(step,heap)=observe_retirement_allocations(||plan.preflight(diff.borrow(),original.borrow(),post.borrow(),4096,g,&mut receiving));let step=step.unwrap();let p=step.progress();assert!(p.fits(g));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));allocated+=heap.0;
+            let(denied,heap)=observe_retirement_allocations(||plan.preflight(diff.borrow(),original.borrow(),post.borrow(),4096,RetainedCloneGrant{maximum_items:0,..g},&mut receiving));assert_eq!(denied.work,0);assert_eq!(denied.result.unwrap().progress(),Default::default());assert_eq!(heap,(0,0));
+            if g.maximum_capacity_bytes>0{let(denied,heap)=observe_retirement_allocations(||plan.preflight(diff.borrow(),original.borrow(),post.borrow(),4096,RetainedCloneGrant{maximum_capacity_bytes:g.maximum_capacity_bytes-1,..g},&mut receiving));assert_eq!(denied.work,0);assert_eq!(denied.result.unwrap().progress(),Default::default());assert_eq!(heap,(0,0));}
+            let quote=plan.preflight_work_demand(diff.borrow(),original.borrow(),post.borrow(),4096).unwrap();let(turn,heap)=observe_retirement_allocations(||plan.preflight(diff.borrow(),original.borrow(),post.borrow(),4096,g,&mut receiving));assert!(turn.work<=quote);let step=turn.result.unwrap();let p=step.progress();assert!(p.fits(g));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));allocated+=heap.0;
             if matches!(step,RetainedDiffPreflightAdvance::Ready(_,true)){completed=true;break;}
         }
         assert!(completed);assert_eq!(allocated,baseline+case["extraCapacityBytes"].as_u64().unwrap() as usize,"{}",case["id"]);
@@ -109,6 +111,6 @@ fn malformed_original_extent_is_refused_before_platform_sized_multiplication(){
     let base=BitmapSnapshot{input:BitmapInput{width:law["malformedInputSize"][0].as_u64().unwrap() as u32,height:law["malformedInputSize"][1].as_u64().unwrap() as u32,..Default::default()},..Default::default()};
     let mut original=source(base.clone());let mut post=source(base.clone());let mut diff=source(BitmapDiff{input:BitmapInputPatch{size:Some(BitmapSize{width:1,height:1}),writes:Vec::new()},..Default::default()});let mut plan=BitmapApply::new();let mut refused=false;
     let mut accept=|_|true;let mut receiving=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1<<28,&mut accept);
-    for _ in 0..100000{let g=grant(plan.preflight_demand(diff.borrow(),original.borrow(),post.borrow(),4096).unwrap());let step=plan.preflight(diff.borrow(),original.borrow(),post.borrow(),4096,g,&mut receiving).unwrap();assert!(step.progress().fits(g));if matches!(step,RetainedDiffPreflightAdvance::Ready(_,false)){refused=true;break;}}
+    for _ in 0..100000{let g=grant(plan.preflight_demand(diff.borrow(),original.borrow(),post.borrow(),4096).unwrap());let turn=plan.preflight(diff.borrow(),original.borrow(),post.borrow(),4096,g,&mut receiving);let step=turn.result.unwrap();assert!(step.progress().fits(g));if matches!(step,RetainedDiffPreflightAdvance::Ready(_,false)){refused=true;break;}}
     assert!(refused);assert_eq!(post.borrow().get(),&base);close_plan(&mut plan);close_source(&mut diff);close_source(&mut original);close_source(&mut post);
 }

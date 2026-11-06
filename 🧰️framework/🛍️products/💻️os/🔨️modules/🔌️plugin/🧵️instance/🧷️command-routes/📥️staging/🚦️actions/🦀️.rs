@@ -1,53 +1,53 @@
 //! 🏏️ Staged `actions` members of the `instance-commands` use cases, as methods of the borrowed bundle (WP7 of the instance family).
 //!
 //! 🚦️ Action and command dispatch, the addressed action preview and the agent lane preview.
-use semio_framework_plugin_decl_emission::{ActionMeta, ChildEmit, Emit};
-use semio_framework_plugin_command::command_admission::AdmittedToolCommand;
-use semio_framework_plugin_job::{AgentLaneCarriage, AgentLanePublication, EmitWire, agent_lane_carriage, agent_lane_no_effect_fault, agent_lane_uncarried_fault, artifact_owned_tool_birth_grant};
+use semio_plugin_decl_emission::{ActionMeta, ChildEmit, Emit};
+use semio_plugin_command::command_admission::AdmittedToolCommand;
+use semio_plugin_job::{AgentLaneCarriage, AgentLanePublication, EmitWire, agent_lane_carriage, agent_lane_no_effect_fault, agent_lane_uncarried_fault, artifact_owned_tool_birth_grant};
 use semio_framework::{AppRole, Fault, FaultCode, FaultFrom, FaultOrigin, REVERT_TO_COMMAND_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use std::sync::Arc;
-use semio_framework_plugin_decl_app::{ArtifactApp, ArtifactOwnedContextHandle, viewer_rejects_action};
-use semio_framework_plugin_operation::{ArtifactDocumentAuthority, CANCEL_TYPED_OPERATION_ACTION_ID, ToolOperationKey};
-use semio_framework_plugin_decl_media::ArtifactOutputChunks;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
-use semio_framework_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobContext, ArtifactOwnedToolJobRequest, ArtifactOwnedToolJobSnapshots, ArtifactToolCompletion, ArtifactToolRawInput};
+use semio_plugin_decl_app::{ArtifactApp, ArtifactOwnedContextHandle, viewer_rejects_action};
+use semio_plugin_operation::{ArtifactDocumentAuthority, CANCEL_TYPED_OPERATION_ACTION_ID, ToolOperationKey};
+use semio_plugin_decl_media::ArtifactOutputChunks;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobContext, ArtifactOwnedToolJobRequest, ArtifactOwnedToolJobSnapshots, ArtifactToolCompletion, ArtifactToolRawInput};
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_decl_views::ArtifactView;
+use semio_plugin_decl_views::ArtifactView;
 use std::collections::BTreeMap;
-use semio_framework_plugin_command::{CATALOGUE_EXAMPLE_ACTION_ID, PURE_HISTORY_UNAVAILABLE_CODE};
-use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use semio_plugin_command::{CATALOGUE_EXAMPLE_ACTION_ID, PURE_HISTORY_UNAVAILABLE_CODE};
+use semio_plugin_decl_views::child_view::ChildContentView;
 use crate::command_bundle::CommandCtx;
 use semio_framework_value::DslValue;
 use std::future::Future;
-use semio_framework_plugin_job::reserved_jobs::{HISTORY_ACTION_IDS, is_framework_reserved_action_id};
-use semio_framework_plugin_instance_extension::InstanceExtension;
+use semio_plugin_job::reserved_jobs::{HISTORY_ACTION_IDS, is_framework_reserved_action_id};
+use semio_plugin_instance_extension::InstanceExtension;
 use semio_framework::kernel::{InvocationResult, UiDirtyScope};
 use semio_framework::manifest::{ActionInvocation as ManifestActionInvocation, CommandAddress as ManifestCommandAddress, CommandOwnerAddress as ManifestCommandOwnerAddress};
 use std::mem::ManuallyDrop;
 use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::PluginApp;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::RetainedWorkOutcome;
-use semio_framework_plugin_tool_run::tool_jobs_tool_machine::ToolTag;
-use semio_framework_plugin_instance_jobs::jobs_components::ToolOperations;
-use semio_framework_plugin_instance_dispatch::dispatch_emit;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_framework_plugin_window_kits::validate_ui_dispatch_classification;
-use semio_framework_ui_contract::*;
+use semio_plugin_tool_run::tool_jobs_tool_machine::ToolTag;
+use semio_plugin_instance_jobs::jobs_components::ToolOperations;
+use semio_plugin_instance_dispatch::dispatch_emit;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_plugin_window_kits::validate_ui_dispatch_classification;
+use semio_ui_contract::*;
 use crate::commands_instance_root::framework_reserved_action_kind;
 use semio_framework_plugin_instance_docs::docs_instance_root::artifact_handle_of;
 use semio_framework_plugin_instance_docs::docs_instance_root::viewer_read_only_fault;
 
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> CommandCtx<'ctx, A, M, X> {
-    async fn drive_original_host_configuration(&mut self,action:&str,source:&mut semio_framework_plugin_instance_stores::action_ingress::ActionIngressSource,metadata:&mut Option<ActionMeta>,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>{
+    async fn drive_original_host_configuration(&mut self,action:&str,source:&mut semio_framework_plugin_instance_stores::action_ingress::ActionIngressSource,metadata:&mut Option<ActionMeta>,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>{
         let declaration=A::original_host_configuration(action).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"host action has no original producer declaration"))?;
         let args=if source.assembled.is_some(){&mut source.assembled}else if source.prepared.is_some(){&mut source.prepared}else{&mut source.args};
         if !self.original_emission.admit_host(declaration,action,args,self.stores.store.content_revision_now(),cx)?{return Ok(None)}
         if let Some(meta)=metadata.as_ref(){if !self.original_emission.pin_host_metadata(meta,cx)?{return Ok(None)}}
         if source.original_tool_dispatch.is_none(){
-            let mut typed: semio_framework_plugin_instance_typed_ops::typed_bundle::TypedCtx<'_,A,M,X> = semio_framework_plugin_instance_typed_ops::typed_bundle::TypedCtx {app:&mut *self.app,mounted_policy:self.mounted_policy,stores:&mut *self.stores,roster:&mut *self.roster,interaction:&mut *self.interaction,history:&mut *self.history,host_events:&mut *self.host_events,txn:&mut *self.txn,child_composition:&mut *self.child_composition,pending:&mut *self.pending,tools:&mut *self.tools,media:&mut *self.media,ingest:&mut *self.ingest,tool_runs:&mut *self.tool_runs,time_travel:&mut *self.time_travel,tool_machines:&mut *self.tool_machines,extension:std::marker::PhantomData};
+            let mut typed: semio_plugin_instance_typed_ops::typed_bundle::TypedCtx<'_,A,M,X> = semio_plugin_instance_typed_ops::typed_bundle::TypedCtx {app:&mut *self.app,mounted_policy:self.mounted_policy,stores:&mut *self.stores,roster:&mut *self.roster,interaction:&mut *self.interaction,history:&mut *self.history,host_events:&mut *self.host_events,txn:&mut *self.txn,child_composition:&mut *self.child_composition,pending:&mut *self.pending,tools:&mut *self.tools,media:&mut *self.media,ingest:&mut *self.ingest,tool_runs:&mut *self.tool_runs,time_travel:&mut *self.time_travel,tool_machines:&mut *self.tool_machines,extension:std::marker::PhantomData};
             if typed.prepare_original_tool_dispatch(action,self.original_emission.host_args(),metadata,&mut *self.original_typing,&mut source.original_typing_control_ready,&mut source.original_tool_tag,&mut source.original_tool_tag_ready,&mut source.original_tool_dispatch,identity,cx).await?.is_none(){return Ok(None)}
         }
         if source.original_tool_dispatch==Some(true){if !self.original_emission.finish_empty_host(action,metadata,cx)?{return Ok(None)}return self.drive_original_emission(cx).await}
@@ -56,12 +56,12 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         if !self.original_emission.advance_host(cx)?{return Ok(None)}
         if matches!(source.original_tool_tag,Some(ToolTag::Scrub(_))){
             use semio_framework_job::{OriginalConstructionDemand,admit_original_construction};
-            let bytes=std::mem::size_of::<(ToolTag,Option<ToolTag>,Option<semio_framework_plugin_tool_run::tool_jobs_tool_machine::ScrubTag>)>();
+            let bytes=std::mem::size_of::<(ToolTag,Option<ToolTag>,Option<semio_plugin_tool_run::tool_jobs_tool_machine::ScrubTag>)>();
             admit_original_construction(cx,&mut source.original_press_tag,OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},|_|{let Some(ToolTag::Scrub(tag))=source.original_tool_tag.take()else{unreachable!()};RetainedWorkOutcome{result:Ok((tag,RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}})?;
             return Ok(None)
         }
         if source.original_press_result.is_none(){
-            let mut render=semio_framework_plugin_instance_render::render_bundle::RenderCtx::<A,M,X>{app:&mut *self.app,mounted_policy:self.mounted_policy,stores:&mut *self.stores,roster:&mut *self.roster,interaction:&mut *self.interaction,history:&mut *self.history,child_composition:&mut *self.child_composition,pending:&mut *self.pending,tools:&mut *self.tools,ingest:&mut *self.ingest,tool_runs:&mut *self.tool_runs,time_travel:&mut *self.time_travel,tool_machines:&mut *self.tool_machines,extension:std::marker::PhantomData};
+            let mut render=semio_plugin_instance_render::render_bundle::RenderCtx::<A,M,X>{app:&mut *self.app,mounted_policy:self.mounted_policy,stores:&mut *self.stores,roster:&mut *self.roster,interaction:&mut *self.interaction,history:&mut *self.history,child_composition:&mut *self.child_composition,pending:&mut *self.pending,tools:&mut *self.tools,ingest:&mut *self.ingest,tool_runs:&mut *self.tool_runs,time_travel:&mut *self.time_travel,tool_machines:&mut *self.tool_machines,extension:std::marker::PhantomData};
             if !render.settle_press(&mut source.original_press_tag,self.original_emission.host_base.as_ref().unwrap(),&meta.actor,self.original_emission.host_emit.as_mut().unwrap(),cx,&mut source.original_press_result)?{return Ok(None)}
         }
         if !self.original_emission.finish_host(source.original_press_result,metadata,cx)?{return Ok(None)}
@@ -74,39 +74,39 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
 
     pub async fn drive_original_emission(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>{
         if self.original_emission.input.is_none()&&self.original_emission.pending(){cx.with_original_retirement(|cx|self.original_emission.close_step(cx))?;return Ok(None)}
-        let mut dispatch: semio_framework_plugin_instance_dispatch::dispatch_bundle::DispatchCtx<'_,A,M,X> = semio_framework_plugin_instance_dispatch::dispatch_bundle::DispatchCtx { app: &mut *self.app, mounted_policy: self.mounted_policy, stores: &mut *self.stores, roster: &mut *self.roster, interaction: &mut *self.interaction, history: &mut *self.history, host_events: &mut *self.host_events, txn: &mut *self.txn, child_composition: &mut *self.child_composition, pending: &mut *self.pending, tools: &mut *self.tools, media: &mut *self.media, ingest: &mut *self.ingest, tool_runs: &mut *self.tool_runs, time_travel: &mut *self.time_travel, tool_machines: &mut *self.tool_machines, extension: std::marker::PhantomData };
+        let mut dispatch: semio_plugin_instance_dispatch::dispatch_bundle::DispatchCtx<'_,A,M,X> = semio_plugin_instance_dispatch::dispatch_bundle::DispatchCtx { app: &mut *self.app, mounted_policy: self.mounted_policy, stores: &mut *self.stores, roster: &mut *self.roster, interaction: &mut *self.interaction, history: &mut *self.history, host_events: &mut *self.host_events, txn: &mut *self.txn, child_composition: &mut *self.child_composition, pending: &mut *self.pending, tools: &mut *self.tools, media: &mut *self.media, ingest: &mut *self.ingest, tool_runs: &mut *self.tool_runs, time_travel: &mut *self.time_travel, tool_machines: &mut *self.tool_machines, extension: std::marker::PhantomData };
         let mut output=None;dispatch.dispatch_original_emission(&mut self.original_emission.input,&mut output,cx).await?;Ok(output)
     }
 
     /// 🏷️ A direct receiving intent keeps its actual continuous tag before its arguments enter the command producer.
-    pub async fn capture_original_direct_tool_tag(&mut self,action:&str,args:Option<&DslValue>,metadata:&mut Option<ActionMeta>,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<bool>,semio_framework_job::OriginalTurnFailure>{
+    pub async fn capture_original_direct_tool_tag(&mut self,action:&str,args:Option<&DslValue>,metadata:&mut Option<ActionMeta>,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<bool>,semio_framework_job::OriginalTurnFailure>{
         if !self.original_typed_command.admit(cx)?{return Ok(None)}
-        let catalog=self.tools.declared_tools.as_ref().and_then(semio_framework_plugin_job::original_declared_tools::DeclaredToolCatalogAlias::source).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"direct action requires its original committed tool catalog"))?;
+        let catalog=self.tools.declared_tools.as_ref().and_then(semio_plugin_job::original_declared_tools::DeclaredToolCatalogAlias::source).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"direct action requires its original committed tool catalog"))?;
         if !self.original_typed_command.qualify_action(catalog,action,cx)?{return Ok(None)}
-        let mut typed: semio_framework_plugin_instance_typed_ops::typed_bundle::TypedCtx<'_,A,M,X> = semio_framework_plugin_instance_typed_ops::typed_bundle::TypedCtx {app:&mut *self.app,mounted_policy:self.mounted_policy,stores:&mut *self.stores,roster:&mut *self.roster,interaction:&mut *self.interaction,history:&mut *self.history,host_events:&mut *self.host_events,txn:&mut *self.txn,child_composition:&mut *self.child_composition,pending:&mut *self.pending,tools:&mut *self.tools,media:&mut *self.media,ingest:&mut *self.ingest,tool_runs:&mut *self.tool_runs,time_travel:&mut *self.time_travel,tool_machines:&mut *self.tool_machines,extension:std::marker::PhantomData};
+        let mut typed: semio_plugin_instance_typed_ops::typed_bundle::TypedCtx<'_,A,M,X> = semio_plugin_instance_typed_ops::typed_bundle::TypedCtx {app:&mut *self.app,mounted_policy:self.mounted_policy,stores:&mut *self.stores,roster:&mut *self.roster,interaction:&mut *self.interaction,history:&mut *self.history,host_events:&mut *self.host_events,txn:&mut *self.txn,child_composition:&mut *self.child_composition,pending:&mut *self.pending,tools:&mut *self.tools,media:&mut *self.media,ingest:&mut *self.ingest,tool_runs:&mut *self.tool_runs,time_travel:&mut *self.time_travel,tool_machines:&mut *self.tool_machines,extension:std::marker::PhantomData};
         typed.prepare_original_tool_dispatch(action,args,metadata,&mut *self.original_typing,&mut self.original_typed_command.original_typing_ready,self.original_typed_tag,&mut self.original_typed_command.tool_tag_ready,&mut self.original_typed_command.tool_tag_dispatch,identity,cx).await
     }
 
     /// 🫴️ The direct receiving frame lends its retained tag into the same atomic mounted-operation handoff.
-    pub async fn drive_original_direct_typed_command(&mut self,metadata:&mut Option<ActionMeta>,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>{
-        let mut dispatch: semio_framework_plugin_instance_dispatch::dispatch_bundle::DispatchCtx<'_,A,M,X> = semio_framework_plugin_instance_dispatch::dispatch_bundle::DispatchCtx {app:&mut *self.app,mounted_policy:self.mounted_policy,stores:&mut *self.stores,roster:&mut *self.roster,interaction:&mut *self.interaction,history:&mut *self.history,host_events:&mut *self.host_events,txn:&mut *self.txn,child_composition:&mut *self.child_composition,pending:&mut *self.pending,tools:&mut *self.tools,media:&mut *self.media,ingest:&mut *self.ingest,tool_runs:&mut *self.tool_runs,time_travel:&mut *self.time_travel,tool_machines:&mut *self.tool_machines,extension:std::marker::PhantomData};
+    pub async fn drive_original_direct_typed_command(&mut self,metadata:&mut Option<ActionMeta>,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>{
+        let mut dispatch: semio_plugin_instance_dispatch::dispatch_bundle::DispatchCtx<'_,A,M,X> = semio_plugin_instance_dispatch::dispatch_bundle::DispatchCtx {app:&mut *self.app,mounted_policy:self.mounted_policy,stores:&mut *self.stores,roster:&mut *self.roster,interaction:&mut *self.interaction,history:&mut *self.history,host_events:&mut *self.host_events,txn:&mut *self.txn,child_composition:&mut *self.child_composition,pending:&mut *self.pending,tools:&mut *self.tools,media:&mut *self.media,ingest:&mut *self.ingest,tool_runs:&mut *self.tool_runs,time_travel:&mut *self.time_travel,tool_machines:&mut *self.tool_machines,extension:std::marker::PhantomData};
         dispatch.dispatch_typed_command_inner(self.original_typed_command,self.original_typed_tag,metadata,identity,cx).await
     }
 
     /// 📨️ Window facts queued by this dispatch (utility switches, the `hostEvent` action's own fact) reach the app through the shared original typed source before the action runs.
-    async fn drive_host_events(&mut self,action:&str,source:&semio_framework_plugin_instance_stores::action_ingress::ActionIngressSource,source_meta:&Option<ActionMeta>,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Option<InvocationResult>>,semio_framework_job::OriginalTurnFailure>{
+    async fn drive_host_events(&mut self,action:&str,source:&semio_framework_plugin_instance_stores::action_ingress::ActionIngressSource,source_meta:&Option<ActionMeta>,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Option<InvocationResult>>,semio_framework_job::OriginalTurnFailure>{
         let meta=source_meta.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original action metadata source is absent"))?;
         let args=source.assembled.as_ref().or(source.prepared.as_ref()).or(source.args.as_ref());
-        let mut dispatch: semio_framework_plugin_instance_dispatch::dispatch_bundle::DispatchCtx<'_,A,M,X> = semio_framework_plugin_instance_dispatch::dispatch_bundle::DispatchCtx {app:&mut *self.app,mounted_policy:self.mounted_policy,stores:&mut *self.stores,roster:&mut *self.roster,interaction:&mut *self.interaction,history:&mut *self.history,host_events:&mut *self.host_events,txn:&mut *self.txn,child_composition:&mut *self.child_composition,pending:&mut *self.pending,tools:&mut *self.tools,media:&mut *self.media,ingest:&mut *self.ingest,tool_runs:&mut *self.tool_runs,time_travel:&mut *self.time_travel,tool_machines:&mut *self.tool_machines,extension:std::marker::PhantomData};
+        let mut dispatch: semio_plugin_instance_dispatch::dispatch_bundle::DispatchCtx<'_,A,M,X> = semio_plugin_instance_dispatch::dispatch_bundle::DispatchCtx {app:&mut *self.app,mounted_policy:self.mounted_policy,stores:&mut *self.stores,roster:&mut *self.roster,interaction:&mut *self.interaction,history:&mut *self.history,host_events:&mut *self.host_events,txn:&mut *self.txn,child_composition:&mut *self.child_composition,pending:&mut *self.pending,tools:&mut *self.tools,media:&mut *self.media,ingest:&mut *self.ingest,tool_runs:&mut *self.tool_runs,time_travel:&mut *self.time_travel,tool_machines:&mut *self.tool_machines,extension:std::marker::PhantomData};
         Ok(match Box::pin(dispatch.host_event_turn(self.original_typed_command,action,args,meta,identity,cx)).await?{
-            semio_framework_plugin_instance_dispatch::dispatch_host_events::HostEventTurn::Idle=>None,
-            semio_framework_plugin_instance_dispatch::dispatch_host_events::HostEventTurn::Pending=>Some(None),
-            semio_framework_plugin_instance_dispatch::dispatch_host_events::HostEventTurn::Reply(result)=>Some(Some(result)),
+            semio_plugin_instance_dispatch::dispatch_host_events::HostEventTurn::Idle=>None,
+            semio_plugin_instance_dispatch::dispatch_host_events::HostEventTurn::Pending=>Some(None),
+            semio_plugin_instance_dispatch::dispatch_host_events::HostEventTurn::Reply(result)=>Some(Some(result)),
         })
     }
 
-    pub async fn drive_original_typed_command(&mut self,tool_tag:&mut Option<ToolTag>,metadata:&mut Option<ActionMeta>,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>{
-        let mut dispatch: semio_framework_plugin_instance_dispatch::dispatch_bundle::DispatchCtx<'_,A,M,X> = semio_framework_plugin_instance_dispatch::dispatch_bundle::DispatchCtx {app:&mut *self.app,mounted_policy:self.mounted_policy,stores:&mut *self.stores,roster:&mut *self.roster,interaction:&mut *self.interaction,history:&mut *self.history,host_events:&mut *self.host_events,txn:&mut *self.txn,child_composition:&mut *self.child_composition,pending:&mut *self.pending,tools:&mut *self.tools,media:&mut *self.media,ingest:&mut *self.ingest,tool_runs:&mut *self.tool_runs,time_travel:&mut *self.time_travel,tool_machines:&mut *self.tool_machines,extension:std::marker::PhantomData};
+    pub async fn drive_original_typed_command(&mut self,tool_tag:&mut Option<ToolTag>,metadata:&mut Option<ActionMeta>,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>{
+        let mut dispatch: semio_plugin_instance_dispatch::dispatch_bundle::DispatchCtx<'_,A,M,X> = semio_plugin_instance_dispatch::dispatch_bundle::DispatchCtx {app:&mut *self.app,mounted_policy:self.mounted_policy,stores:&mut *self.stores,roster:&mut *self.roster,interaction:&mut *self.interaction,history:&mut *self.history,host_events:&mut *self.host_events,txn:&mut *self.txn,child_composition:&mut *self.child_composition,pending:&mut *self.pending,tools:&mut *self.tools,media:&mut *self.media,ingest:&mut *self.ingest,tool_runs:&mut *self.tool_runs,time_travel:&mut *self.time_travel,tool_machines:&mut *self.tool_machines,extension:std::marker::PhantomData};
         dispatch.dispatch_typed_command_inner(self.original_typed_command,tool_tag,metadata,identity,cx).await
     }
 
@@ -119,7 +119,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
 
     pub async fn prepare_original_typed_admission(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         let verb=A::command_id(self.original_typed_command.command.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original command admission requires its typed receiver output"))?).await;
-        let catalog=self.tools.declared_tools.as_ref().and_then(semio_framework_plugin_job::original_declared_tools::DeclaredToolCatalogAlias::source).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native command requires its original committed tool catalog"))?;
+        let catalog=self.tools.declared_tools.as_ref().and_then(semio_plugin_job::original_declared_tools::DeclaredToolCatalogAlias::source).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native command requires its original committed tool catalog"))?;
         self.original_typed_command.admit_wire(catalog,verb,cx)
     }
 
@@ -130,7 +130,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         self.prepare_original_typed_action(action,match kind{0=>assembled,1=>prepared,2=>args,_=>return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original action argument selection changed").into())},fault,cx).await
     }
 
-    pub async fn dispatch_action(&mut self, action: &str, source_args: &mut Option<DslValue>, original_fault: &mut Option<Fault>, meta: &mut Option<ActionMeta>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>, semio_framework_job::OriginalTurnFailure> {
+    pub async fn dispatch_action(&mut self, action: &str, source_args: &mut Option<DslValue>, original_fault: &mut Option<Fault>, meta: &mut Option<ActionMeta>, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>, semio_framework_job::OriginalTurnFailure> {
         let Some(slot)=self.ingress.stage_action_source(action, source_args, original_fault, cx)?else{return Ok(None)};
         let Some(mut source)=self.ingress.action_ingress_sources.get_mut(slot).unwrap().loan_source(cx)?else{return Ok(None)};
         let result=self.dispatch_action_received(action,&mut source,meta,identity,cx).await;
@@ -140,22 +140,22 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         result
     }
 
-    fn typed_with_original_typing(&mut self)->(semio_framework_plugin_instance_typed_ops::typed_bundle::TypedCtx<'_,A,M,X>,&mut semio_framework_plugin_instance_typed_ops::original_typing::OriginalTypingDispatch<A>){
-        (semio_framework_plugin_instance_typed_ops::typed_bundle::TypedCtx{app:&mut *self.app,mounted_policy:self.mounted_policy,stores:&mut *self.stores,roster:&mut *self.roster,interaction:&mut *self.interaction,history:&mut *self.history,host_events:&mut *self.host_events,txn:&mut *self.txn,child_composition:&mut *self.child_composition,pending:&mut *self.pending,tools:&mut *self.tools,media:&mut *self.media,ingest:&mut *self.ingest,tool_runs:&mut *self.tool_runs,time_travel:&mut *self.time_travel,tool_machines:&mut *self.tool_machines,extension:std::marker::PhantomData::<fn()->X>},&mut *self.original_typing)
+    fn typed_with_original_typing(&mut self)->(semio_plugin_instance_typed_ops::typed_bundle::TypedCtx<'_,A,M,X>,&mut semio_plugin_instance_typed_ops::original_typing::OriginalTypingDispatch<A>){
+        (semio_plugin_instance_typed_ops::typed_bundle::TypedCtx{app:&mut *self.app,mounted_policy:self.mounted_policy,stores:&mut *self.stores,roster:&mut *self.roster,interaction:&mut *self.interaction,history:&mut *self.history,host_events:&mut *self.host_events,txn:&mut *self.txn,child_composition:&mut *self.child_composition,pending:&mut *self.pending,tools:&mut *self.tools,media:&mut *self.media,ingest:&mut *self.ingest,tool_runs:&mut *self.tool_runs,time_travel:&mut *self.time_travel,tool_machines:&mut *self.tool_machines,extension:std::marker::PhantomData::<fn()->X>},&mut *self.original_typing)
     }
 
-    pub async fn prepare_action_typing_before(&mut self,action:&str,source:&mut semio_framework_plugin_instance_stores::action_ingress::ActionIngressSource,metadata:&mut Option<ActionMeta>,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    pub async fn prepare_action_typing_before(&mut self,action:&str,source:&mut semio_framework_plugin_instance_stores::action_ingress::ActionIngressSource,metadata:&mut Option<ActionMeta>,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if source.original_typing_ready{return Ok(true)}let args=source.assembled.as_ref().or(source.prepared.as_ref()).or(source.args.as_ref());let(mut typed,typing)=self.typed_with_original_typing();
         if !Box::pin(typed.advance_original_typing_before(action,args,metadata,typing,identity,cx)).await?{return Ok(false)}
         typing.finish_into(&mut source.original_typing_ready,&mut source.original_tool_dispatch,metadata,cx)
     }
 
-    pub async fn prepare_action_tool_dispatch(&mut self,action:&str,source:&mut semio_framework_plugin_instance_stores::action_ingress::ActionIngressSource,metadata:&mut Option<ActionMeta>,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<bool>,semio_framework_job::OriginalTurnFailure>{
+    pub async fn prepare_action_tool_dispatch(&mut self,action:&str,source:&mut semio_framework_plugin_instance_stores::action_ingress::ActionIngressSource,metadata:&mut Option<ActionMeta>,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<bool>,semio_framework_job::OriginalTurnFailure>{
         let args=source.assembled.as_ref().or(source.prepared.as_ref()).or(source.args.as_ref());let(mut typed,typing)=self.typed_with_original_typing();
         Box::pin(typed.prepare_original_tool_dispatch(action,args,metadata,typing,&mut source.original_typing_control_ready,&mut source.original_tool_tag,&mut source.original_tool_tag_ready,&mut source.original_tool_dispatch,identity,cx)).await
     }
 
-    async fn dispatch_action_received(&mut self,action:&str,source:&mut semio_framework_plugin_instance_stores::action_ingress::ActionIngressSource,source_meta:&mut Option<ActionMeta>,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>{
+    async fn dispatch_action_received(&mut self,action:&str,source:&mut semio_framework_plugin_instance_stores::action_ingress::ActionIngressSource,source_meta:&mut Option<ActionMeta>,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>{
         if self.host_events.resumes.in_flight(){return Ok(None)}
         if let Some(meta)=source_meta.as_ref(){meta.admit_document_revision(&self.stores.store.content_revision_now(),self.tools.live_runtime_instance_id)?;}
         if self.host_events.delivering{if let Some(turn)=self.drive_host_events(action,source,source_meta,identity,cx).await?{return Ok(turn)}}
@@ -223,7 +223,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
 
     /// 🎯️ Validates manifest structural app/mode ownership, converts the addressed
     /// invocation arguments once into the app's typed command, and enters the typed dispatch channel.
-    pub async fn dispatch_command(&mut self, address: &ManifestCommandAddress, source_args: &mut Option<DslValue>, original_fault: &mut Option<Fault>, active_mode_id: Option<&str>, source_meta: &mut Option<ActionMeta>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure> {
+    pub async fn dispatch_command(&mut self, address: &ManifestCommandAddress, source_args: &mut Option<DslValue>, original_fault: &mut Option<Fault>, active_mode_id: Option<&str>, source_meta: &mut Option<ActionMeta>, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure> {
         if self.host_events.resumes.in_flight(){return Ok(None)}
         let command_id=address.command_id.as_str();
         let Some(slot)=self.ingress.stage_action_source(command_id, source_args, original_fault, cx)?else{return Ok(None)};
@@ -365,7 +365,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             return Err((plugin_sdk_fault(format!("window kind {} does not own action {}", address.window_kind_id, address.action_id))).into());
         }
         let context = meta.view_state.as_deref().ok_or_else(|| plugin_sdk_fault("addressed action requires the caller's explicit language and terminology context"))?;
-        semio_framework_plugin_reactor_app::admit_addressed_action_view(context, &invocation.address)?;
+        semio_plugin_reactor_app::admit_addressed_action_view(context, &invocation.address)?;
         let definition = self
             .tools.registry
             .get(&address.action_id)
@@ -511,13 +511,13 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// transaction cannot carry, see [`agent_lane_uncarried_lanes`]) and how many of the job's own steps ran.
     fn admit_agent_lane_preview_key(&mut self,meta:&ActionMeta,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if self.tools.agent_lane_preview.is_none(){
-            let grant=cx.retained_grant();let bytes=size_of::<semio_framework_plugin_job::AgentLanePreview<A>>();if cx.should_yield()||grant.maximum_items<2||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}
+            let grant=cx.retained_grant();let bytes=size_of::<semio_plugin_job::AgentLanePreview<A>>();if cx.should_yield()||grant.maximum_items<2||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}
             let Some(operation_id)=self.media.admit_typed_operation_slot(&*self.pending, &*self.tools)else{return Ok(false)};
             let revision=self.stores.store.content_revision_now();let key=ToolOperationKey{app_instance_id:meta.instance_id,document:ArtifactDocumentAuthority(meta.instance_id),operation_id,base_revision:semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().expect("revision lane width"))),generation:semio_framework_job::Generation(self.stores.store.generation_now())};
             let mut loan=None;cx.original_source_parent()?.admit_loan(&mut loan,cx)?;let Some(caller)=loan else{return Ok(false)};
             cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;
             let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:grant,site:"plugin_agent_lane_preview",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:0,step_budget_us:0};
-            self.tools.agent_lane_preview=Some(semio_framework_plugin_job::AgentLanePreview{key:Some(key),caller:std::mem::ManuallyDrop::new(Some(caller)),starting:true,producer_request:None,producer_request_retirement:None,producer:None,children:None,completion:None,completion_close:None,lease:None,lease_close:None,config,maximum_bytes:0,steps:0,publication:None,complete:false,closing:false,publication_close:None});
+            self.tools.agent_lane_preview=Some(semio_plugin_job::AgentLanePreview{key:Some(key),caller:std::mem::ManuallyDrop::new(Some(caller)),starting:true,producer_request:None,producer_request_retirement:None,producer:None,children:None,completion:None,completion_close:None,lease:None,lease_close:None,config,maximum_bytes:0,steps:0,publication:None,complete:false,closing:false,publication_close:None});
         }
         let state=self.tools.agent_lane_preview.as_mut().unwrap();
         if state.closing{return Ok(false)}
@@ -565,7 +565,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let request = ArtifactOwnedToolJobRequest {
             source_binding: semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx),
                 retained:self.mounted_policy.maintenance,
-            command: semio_framework_plugin_decl_app::tool_contract::ArtifactOriginalToolCommand::from_admitted_op_binary(command,&admission.raw_wire,semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx)),
+            command: semio_plugin_decl_app::tool_contract::ArtifactOriginalToolCommand::from_admitted_op_binary(command,&admission.raw_wire,semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx)),
             input: Some(admission.raw_wire),
             checkpoint: None,
             operation,
@@ -596,8 +596,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     }
 
     /// 📨️ Both declared invocation types preview their genuine producer without applying its operations.
-    pub async fn dispatch_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta, _identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure> {
-        let request: semio_framework::kernel::PureCommandRequest = semio_framework_plugin_plugin_program::decode_wire_serialized::<semio_framework::kernel::PureCommandRequest>(command_bytes).await.map_err(|_| {
+    pub async fn dispatch_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta, _identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure> {
+        let request: semio_framework::kernel::PureCommandRequest = semio_plugin_plugin_program::decode_wire_serialized::<semio_framework::kernel::PureCommandRequest>(command_bytes).await.map_err(|_| {
             Fault::new(
                 FaultOrigin::Framework,
                 FaultCode::new("interactive-job.missing-exact-key"),

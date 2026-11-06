@@ -6,7 +6,8 @@
   "required": [
     "contracts",
     "cases",
-    "independentAxes"
+    "independentAxes",
+    "retirementCustody"
   ],
   "properties": {
     "contracts": {
@@ -82,6 +83,30 @@
       ],
       "type": "object",
       "additionalProperties": false
+    },
+    "retirementCustody": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "unfunded",
+        "missingControl",
+        "foreignControl",
+        "preservesProgress"
+      ],
+      "properties": {
+        "unfunded": {
+          "const": "Progress"
+        },
+        "missingControl": {
+          "const": "UnsupportedOwner"
+        },
+        "foreignControl": {
+          "const": "OwnershipLimit"
+        },
+        "preservesProgress": {
+          "const": true
+        }
+      }
     }
   }
 }

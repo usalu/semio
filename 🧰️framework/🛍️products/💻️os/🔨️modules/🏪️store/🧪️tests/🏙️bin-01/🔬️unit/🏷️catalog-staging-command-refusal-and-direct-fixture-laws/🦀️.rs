@@ -31,7 +31,7 @@ async fn original_member_group_stage_and_adoption_preserve_physical_receipts_and
 publication.stage=Some(Box::new(stage));publication.phase=ArtifactStoreOneItemPublicationPhase::Publishing;
  let original_stage=std::ptr::from_ref(publication.stage.as_ref().unwrap().as_ref());let original_flags=publication.stage.as_ref().unwrap().unit_flags.as_ptr();
  let mut publisher=semio_os_vcs::ArtifactGroupVisibilityOwner::new();let visibility=publisher.view();
- publication.group_preparation=Some(semio_os_store_one_item_batch::lifted_member_group::MemberGroupPreparation::new(&visibility,None,None));
+ publication.group_preparation=Some(semio_framework_os_store_one_item_batch::lifted_member_group::MemberGroupPreparation::new(&visibility,None,None));
  let mut prepared=false;let mut births=0;let mut releases=0;
  for _ in 0..fixture["maximumTurns"].as_u64().unwrap(){
   let(step,heap)=original_heap(||store.parts().stage_apply_batch_group(&mut publication,&visibility,ArtifactStoreOneItemGrant{maximum_items:0,..grant}).unwrap());assert_eq!(step,ArtifactStoreOneItemPreparationStep::Blocked);assert_eq!((heap.0,heap.1),(0,0));

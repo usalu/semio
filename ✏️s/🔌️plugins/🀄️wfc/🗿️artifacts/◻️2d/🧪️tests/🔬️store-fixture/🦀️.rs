@@ -83,7 +83,7 @@ async fn authored_seed_pins_and_geometry_survive_actual_pack_spr_replay() {
     store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Wfc2dSnapshot, Wfc2dMutation>().expect("funded replay owners")).unwrap_or_else(|(error, _)| panic!("replay owners refused: {error}"));
     let edits: Vec<Wfc2dMutation> = vec![change_seed(99), crate::mutations::move_slot("room-a".into(), 7.0, 9.0), pin_slot("room-a".into(), "room".into())];
     for mutation in edits {
-        store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("authored edit applies");
+        store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("authored edit applies");
     }
     let observed = store.snapshot().expect("edited replay projection");
     let projection = {

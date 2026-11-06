@@ -32,7 +32,7 @@ semio-framework-job-receiving = { workspace = true }
 semio-framework-job-clock = { workspace = true }
 semio-framework-trace = { workspace = true }
 semio-framework-job-payload = { workspace = true }
-semio-framework-job-return-escrow-publication = { workspace = true }
+semio-framework-job-outcome = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-value-retained-clone = { path = "../../../../🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { workspace = true }
@@ -60,9 +60,6 @@ name = "original-payload-authority-work"
 required-features = ["testkit"]
 path = "../../../📬️outcome/📦️builder/🎟️work/🧪️tests/🦀️.rs"
 
-[[test]]
-name = "original-empty-outcome-work"
-path = "../../../♻️retirement/📄️payload/🎟️work/🧪️tests/🦀️.rs"
 
 [[test]]
 name = "original-receiver-acknowledgement"
@@ -94,7 +91,3 @@ name = "original-native-parent-retirement"
 required-features = ["testkit"]
 path = "../../🎟️source/🏠️native/🧪️tests/🦀️.rs"
 
-[[test]]
-name = "original-source-native-encoding"
-required-features = ["testkit"]
-path = "../../🛫️encoding/🧪️tests/🦀️.rs"

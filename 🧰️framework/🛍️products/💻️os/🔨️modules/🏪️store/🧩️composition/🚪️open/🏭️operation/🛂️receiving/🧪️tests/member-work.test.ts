@@ -12,3 +12,11 @@ test("original native work uses independent actual effects and preserves its sem
   expect(row.effects).toBe(Number(row.request<=law.budget));
  }}finally{db.close()}
 });
+
+test("original retirement admits its actual frame birth before owner transfer",()=>{
+ const db=new Database(":memory:");
+ try{for(const row of law.retirement.cases){
+  const result=db.query("SELECT CASE WHEN ?1>=?2 THEN ?2 ELSE 0 END AS work, ?1<?2 AS owner, ?1>=?2 AS active").get(row.budget,law.retirement.quote);
+  expect(result).toEqual({work:row.work,owner:Number(row.owner),active:Number(row.active)});
+ }}finally{db.close()}
+});

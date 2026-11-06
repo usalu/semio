@@ -189,11 +189,16 @@ impl GlbMaterializeCursor {
         self.phase = GlbMaterializePhase::Closing;
     }
 
-    pub fn close_step(&mut self) -> bool {
+    pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
+        self.begin_close();
+        if self.texture_png.pending(){self.texture_png.close(cx)?;return Ok(false)}
+        Ok(self.close_remaining_step())
+    }
+
+    fn close_remaining_step(&mut self) -> bool {
         self.begin_close();
         if self.texture_submission.take().is_some(){self.texture_worker=None;return false}
         if let Some(worker)=self.texture_worker.as_ref(){let Ok(mut output)=worker.try_lock()else{return false};let Some(image)=output.take()else{return false};self.decoded_texture=image.map(|image|DecodedReferenceImage{width:image.width,height:image.height,pixels:image.pixels,source_digest:self.texture_digest});drop(output);self.texture_worker=None;return false}
-        if let Some(mut job)=self.texture_png.take(){job.cancel();return false}
         if let Some(image)=self.decoded_texture.as_mut(){if !image.pixels.is_empty(){image.pixels.truncate(image.pixels.len().saturating_sub(4096));return false}self.decoded_texture=None;return false}
         if !self.texture_bytes.is_empty(){self.texture_bytes.truncate(self.texture_bytes.len().saturating_sub(4096));return false}
         if let Some(appearance)=self.appearance.as_mut(){if !appearance.close_step(){return false}self.appearance=None;return false}

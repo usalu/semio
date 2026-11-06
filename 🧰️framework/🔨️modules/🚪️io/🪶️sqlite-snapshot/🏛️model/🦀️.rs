@@ -3,6 +3,32 @@
 use std::collections::BTreeSet;
 pub use semio_framework_value::{ValueError, ValueRefusalKind};
 
+/// 🧾️ Keeps reported ownership, checked SQL-ledger delta, raw ledger counters and the original remaining ceiling.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
+pub struct SqliteStageReceipt { pub declared: usize, pub actual: Option<usize>, pub before: usize, pub after: usize, pub remaining: usize }
+
+/// 🧳️ Retains operation custody and independent settlement refusal.
+#[derive(semio_framework_value::RetireOwned)]
+pub enum SqliteStageFailure<T,E> {
+    WorkSettlement { operation: std::result::Result<T,E>, failure: Option<SqliteStageWorkFailure>, work: SqliteStageWorkReceipt, allocation: Option<(ValueError,SqliteStageReceipt)> },
+    NotStarted(ValueError),
+    Operation(E),
+    Settlement { operation: std::result::Result<T,E>, refusal: ValueError, receipt: Option<SqliteStageReceipt> },
+}
+
+/// 🧮️ Retains raw work debt and an independent original post refusal after counter overflow.
+#[derive(semio_framework_value::RetireOwned)]
+pub struct SqliteStageWorkFailure { pub before:u64, pub actual:u64, pub post_completed:bool, pub post_refusal:Option<ValueError> }
+/// 🧾️ Retains declared work beside the actual original SQL ledger transition.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
+pub struct SqliteStageWorkReceipt { pub declared:u64, pub before:u64, pub after:u64, pub actual:Option<u64> }
+/// 🪙️ A native stage reports unknown work explicitly if its original counter regresses.
+#[derive(semio_framework_value::RetireOwned)]
+pub struct SqliteNativeStageOutcome<T,E>{pub result:std::result::Result<T,SqliteStageFailure<T,E>>,pub work:Option<u64>}
+#[path="🎟️work/🦀️.rs"]
+mod work;
+pub use work::{SqliteSnapshotWorkRecipient,SqliteSnapshotStageWork};
+
 pub const SQLITE_SNAPSHOT_APPLICATION_ID: u32 = 0x534d534e;
 pub const SQLITE_SNAPSHOT_USER_VERSION: u32 = 1;
 pub const PAGE_SIZE: usize = 4096;
@@ -128,7 +154,7 @@ pub type SqliteSnapshotStageAllocation<'a>=dyn FnMut(usize)->std::result::Result
 #[cfg(target_arch="wasm32")]
 pub type SqliteSnapshotStageAllocation<'a>=dyn FnMut(usize)->std::result::Result<(),ValueError>+'a;
 /// 🛑️ One progress and cancellation authority spanning typed projection and physical I/O.
-pub struct SqliteSnapshotControl<'a> { required_allocation:bool, forwarded_bytes:usize, allocation:Option<&'a mut semio_framework_value::native_encoding::NativeEncodeAllocationPort<'a>>, native_retirement:Option<&'a mut semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient>, callback: &'a mut dyn FnMut(SqliteSnapshotProgress) -> bool, limits: SqliteDatabaseLimits, ledger: SqliteSnapshotLedgerSlot<'a> }
+pub struct SqliteSnapshotControl<'a> { work:Option<&'a mut dyn SqliteSnapshotWorkRecipient>, work_failure:Option<&'a mut Option<SqliteStageWorkFailure>>, required_allocation:bool, forwarded_bytes:usize, allocation:Option<&'a mut semio_framework_value::native_encoding::NativeEncodeAllocationPort<'a>>, native_retirement:Option<&'a mut semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient>, callback: &'a mut dyn FnMut(SqliteSnapshotProgress) -> bool, limits: SqliteDatabaseLimits, ledger: SqliteSnapshotLedgerSlot<'a> }
 
 /// 🔐️ Borrows one original control and restores its preceding allocation requirement on lexical close.
 pub struct SqliteSnapshotReceivingControl<'scope,'caller>{control:&'scope mut SqliteSnapshotControl<'caller>,previous:bool}
@@ -143,7 +169,7 @@ impl std::ops::DerefMut for SqliteSnapshotLedgerSlot<'_> { fn deref_mut(&mut sel
 
 /// 🧾️ Cumulative physical and native admission shared by every stage of one transfer.
 #[derive(Default)]
-pub(crate) struct SqliteSnapshotLedger { pub(crate) performed_work:u64, pub(crate) reconstruction_bytes: usize, pub(crate) reconstruction_units: usize, pub(crate) reconstruction_scalar_bytes: usize, pub(crate) allocation_bytes: usize, pub(crate) physical_read_progress: Option<SqliteSnapshotProgress> }
+pub(crate) struct SqliteSnapshotLedger { pub(crate) work_baseline:u64, pub(crate) performed_work:u64, pub(crate) reconstruction_bytes: usize, pub(crate) reconstruction_units: usize, pub(crate) reconstruction_scalar_bytes: usize, pub(crate) allocation_bytes: usize, pub(crate) physical_read_progress: Option<SqliteSnapshotProgress> }
 
 impl<'a> SqliteSnapshotControl<'a> {
     /// 🧮️ Reports explicitly performed SQL producer actions independently of receipt items.
@@ -152,11 +178,17 @@ impl<'a> SqliteSnapshotControl<'a> {
     pub fn record_performed_work(&mut self,units:u64)->std::result::Result<(),ValueError>{self.ledger.performed_work=self.ledger.performed_work.checked_add(units).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"SQLite producer work counter overflow"))?;Ok(())}
 
 
-    pub fn new(callback: &'a mut dyn FnMut(SqliteSnapshotProgress) -> bool, limits: SqliteDatabaseLimits) -> Self { Self { required_allocation:false, forwarded_bytes:0, allocation:None, native_retirement:None, callback, limits, ledger: SqliteSnapshotLedgerSlot::Owned(SqliteSnapshotLedger::default()) } }
+    pub fn new(callback: &'a mut dyn FnMut(SqliteSnapshotProgress) -> bool, limits: SqliteDatabaseLimits) -> Self { Self { work:None, work_failure:None, required_allocation:false, forwarded_bytes:0, allocation:None, native_retirement:None, callback, limits, ledger: SqliteSnapshotLedgerSlot::Owned(SqliteSnapshotLedger::default()) } }
     /// 📩️ Requires an actual original allocation port for each new nonzero cold backing while this loan remains open.
     pub fn receiving_scope(&mut self)->SqliteSnapshotReceivingControl<'_,'a>{let previous=self.required_allocation;self.required_allocation=true;SqliteSnapshotReceivingControl{control:self,previous}}
     /// 🛂️ Binds physical SQLite reservations to the original receiving allocation port.
     pub fn new_forwarded(callback:&'a mut dyn FnMut(SqliteSnapshotProgress)->bool,limits:SqliteDatabaseLimits,allocation:&'a mut semio_framework_value::native_encoding::NativeEncodeAllocationPort<'a>)->Self{let mut control=Self::new(callback,limits);control.allocation=Some(allocation);control}
+    /// 🫴️ Installs the initiating caller's original work loan before any dependent stage runs.
+    pub fn install_work_recipient(&mut self,work:&'a mut dyn SqliteSnapshotWorkRecipient,failure:&'a mut Option<SqliteStageWorkFailure>)->std::result::Result<(),ValueError>{
+        if self.work.is_some()||self.work_failure.is_some()||failure.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"SQLite requires a vacant original work recipient and failure slot"))}
+        if self.ledger.performed_work!=0{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"SQLite cannot install original work after earlier effects"))}
+        self.work=Some(work);self.work_failure=Some(failure);Ok(())
+    }
     /// 📖️ Observes the same admitted physical page prefix across nested receivers.
     pub fn physical_read_progress(&self)->Option<SqliteSnapshotProgress>{self.ledger.physical_read_progress}
     /// 🫴️ Retains or restores the original physical producer's page observation.
@@ -196,7 +228,7 @@ impl<'a> SqliteSnapshotControl<'a> {
     pub fn with_retirement_child<T,E:From<ValueError>>(&mut self,recipient:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient,operation:impl FnOnce(&mut SqliteSnapshotControl<'_>)->std::result::Result<T,E>)->std::result::Result<T,E>{
         if !self.native_retirement.as_ref().is_some_and(|parent|parent.is_reserved())||!semio_framework_value::ErasedSnapshotRetirement::terminal_is_empty(recipient){return Err(E::from(ownership_limit("SQLite snapshot child needs an active parent slot and an empty original recipient")));}
         let(forwarded,limits)=(self.forwarded_bytes,self.limits);
-        let mut child=SqliteSnapshotControl{required_allocation:self.required_allocation,forwarded_bytes:forwarded,allocation:match self.allocation.as_mut(){Some(port)=>Some(&mut**port),None=>None},native_retirement:Some(recipient),callback:&mut*self.callback,limits,ledger:SqliteSnapshotLedgerSlot::Lent(&mut*self.ledger)};
+        let mut child=SqliteSnapshotControl{work:self.work.as_mut().map(|work|&mut **work as &mut dyn SqliteSnapshotWorkRecipient),work_failure:self.work_failure.as_deref_mut(),required_allocation:self.required_allocation,forwarded_bytes:forwarded,allocation:match self.allocation.as_mut(){Some(port)=>Some(&mut**port),None=>None},native_retirement:Some(recipient),callback:&mut*self.callback,limits,ledger:SqliteSnapshotLedgerSlot::Lent(&mut*self.ledger)};
         let result=operation(&mut child);
         let(forwarded,limits)=(child.forwarded_bytes,child.limits);drop(child);
         self.forwarded_bytes=forwarded;self.limits=limits;
@@ -206,7 +238,7 @@ impl<'a> SqliteSnapshotControl<'a> {
     pub fn with_workspace_recipient<T,E:From<ValueError>>(&mut self,recipient:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient,operation:impl FnOnce(&mut SqliteSnapshotControl<'_>)->std::result::Result<T,E>)->std::result::Result<T,E>{
         if !semio_framework_value::ErasedSnapshotRetirement::terminal_is_empty(recipient){return Err(E::from(ownership_limit("SQLite snapshot workspace needs an empty original recipient")));}
         let(forwarded,limits)=(self.forwarded_bytes,self.limits);
-        let mut child=SqliteSnapshotControl{required_allocation:self.required_allocation,forwarded_bytes:forwarded,allocation:match self.allocation.as_mut(){Some(port)=>Some(&mut**port),None=>None},native_retirement:Some(recipient),callback:&mut*self.callback,limits,ledger:SqliteSnapshotLedgerSlot::Lent(&mut*self.ledger)};
+        let mut child=SqliteSnapshotControl{work:self.work.as_mut().map(|work|&mut **work as &mut dyn SqliteSnapshotWorkRecipient),work_failure:self.work_failure.as_deref_mut(),required_allocation:self.required_allocation,forwarded_bytes:forwarded,allocation:match self.allocation.as_mut(){Some(port)=>Some(&mut**port),None=>None},native_retirement:Some(recipient),callback:&mut*self.callback,limits,ledger:SqliteSnapshotLedgerSlot::Lent(&mut*self.ledger)};
         let result=operation(&mut child);
         let(forwarded,limits)=(child.forwarded_bytes,child.limits);drop(child);
         self.forwarded_bytes=forwarded;self.limits=limits;
@@ -215,7 +247,7 @@ impl<'a> SqliteSnapshotControl<'a> {
     /// 🪆️ Lends the same ledger, callback and recipient to a handwritten producer whose every allocation is charged through the original receiving port, never beyond `maximum` bytes.
     pub fn with_original_allocation<T,E:From<ValueError>>(&mut self,maximum:usize,allocation:&mut semio_framework_value::native_encoding::NativeEncodeAllocationPort<'_>,operation:impl FnOnce(&mut SqliteSnapshotControl<'_>)->std::result::Result<T,E>)->std::result::Result<T,E>{
         let limits=SqliteDatabaseLimits{max_allocation_bytes:self.limits.max_allocation_bytes.min(self.ledger.allocation_bytes.saturating_add(maximum)),..self.limits};
-        let mut child=SqliteSnapshotControl{required_allocation:self.required_allocation,forwarded_bytes:0,allocation:Some(allocation),native_retirement:match self.native_retirement.as_mut(){Some(recipient)=>Some(&mut**recipient),None=>None},callback:&mut*self.callback,limits,ledger:SqliteSnapshotLedgerSlot::Lent(&mut*self.ledger)};
+        let mut child=SqliteSnapshotControl{work:self.work.as_mut().map(|work|&mut **work as &mut dyn SqliteSnapshotWorkRecipient),work_failure:self.work_failure.as_deref_mut(),required_allocation:self.required_allocation,forwarded_bytes:0,allocation:Some(allocation),native_retirement:match self.native_retirement.as_mut(){Some(recipient)=>Some(&mut**recipient),None=>None},callback:&mut*self.callback,limits,ledger:SqliteSnapshotLedgerSlot::Lent(&mut*self.ledger)};
         operation(&mut child)
     }
     /// ▶️ Runs `operation` as the original caller: it owns the empty retirement recipient and funds its physical close from the allocation ceiling of `limits` before returning.
@@ -246,18 +278,36 @@ impl<'a> SqliteSnapshotControl<'a> {
         self.ledger.allocation_bytes = next;
         Ok(())
     }
-    /// ⬅️ Settles a child producer's admitted backing even when its typed construction refuses or cancels.
-    pub fn allocation_stage<T,E>(&mut self,phase:SqliteSnapshotPhase,operation:impl FnOnce(usize,&mut dyn FnMut(usize,usize)->bool,&mut SqliteSnapshotStageAllocation<'_>)->(std::result::Result<T,E>,usize))->std::result::Result<std::result::Result<T,E>,ValueError>{
-        self.checkpoint(phase,0,0)?;
-        let remaining=self.allocation_remaining_bytes();let before=self.ledger.allocation_bytes;let maximum=self.limits.max_allocation_bytes;let physical=self.ledger.physical_read_progress;let required=self.required_allocation;
-        let callback=&mut self.callback;let owned=&mut self.ledger.allocation_bytes;let forwarded=&mut self.forwarded_bytes;let original=&mut self.allocation;
-        let mut progress=|completed,total|callback(if phase==SqliteSnapshotPhase::ReadPages{physical.unwrap_or(SqliteSnapshotProgress{phase,completed,total})}else{SqliteSnapshotProgress{phase,completed,total}});
-        let mut allocation=|bytes:usize|{let next=owned.checked_add(bytes).filter(|next|*next<=maximum).ok_or_else(||ownership_limit("relational SQLite resource limit: allocation bytes"))?;if bytes!=0&&required&&original.is_none(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"SQLite backing requires the original receiving allocation port"));}if let Some(port)=original{port(semio_framework_value::native_encoding::NativeEncodeAllocation{bytes,owned_bytes:*forwarded,next_owned_bytes:forwarded.checked_add(bytes).ok_or_else(||ownership_limit("relational SQLite resource limit: forwarded allocation bytes"))?,maximum_bytes:forwarded.checked_add(maximum-*owned).ok_or_else(||ownership_limit("relational SQLite resource limit: forwarded allocation ceiling"))?})?;}*forwarded=forwarded.checked_add(bytes).ok_or_else(||ownership_limit("relational SQLite resource limit: forwarded allocation bytes"))?;*owned=next;Ok(())};
-        let(result,declared)=operation(remaining,&mut progress,&mut allocation);
-        if self.ledger.allocation_bytes.checked_sub(before)!=Some(declared){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"SQLite stage reservation ledger differs from actual admitted allocations"));}Ok(result)
+    /// ⬅️ Settles a child producer's admitted backing and original work; partial owners stay in the caller's frame through unwind.
+    pub fn allocation_stage<T,E>(&mut self,phase:SqliteSnapshotPhase,operation:impl FnOnce(usize,&mut dyn FnMut(usize,usize)->bool,&mut SqliteSnapshotStageAllocation<'_>,&mut dyn SqliteSnapshotWorkRecipient)->(semio_framework_value::RetainedWorkOutcome<T,E>,usize))->semio_framework_value::RetainedWorkOutcome<T,SqliteStageFailure<T,E>>{
+        if let Err(error)=self.checkpoint(phase,0,0){return semio_framework_value::RetainedWorkOutcome{result:Err(SqliteStageFailure::NotStarted(error)),work:0};}
+        let remaining=self.allocation_remaining_bytes();let before=self.ledger.allocation_bytes;let work_before=self.ledger.performed_work;let maximum=self.limits.max_allocation_bytes;let physical=self.ledger.physical_read_progress;let required=self.required_allocation;
+        if self.work_failure.as_deref().is_some_and(Option::is_some){return semio_framework_value::RetainedWorkOutcome{result:Err(SqliteStageFailure::NotStarted(ValueError::literal(ValueRefusalKind::InvariantViolated,"SQLite original work failure is unsettled"))),work:0}}
+        let(turn,declared)={
+            let callback=&mut self.callback;let forwarded=&mut self.forwarded_bytes;let original=&mut self.allocation;
+            let ledger=&mut *self.ledger;
+            let SqliteSnapshotLedger{allocation_bytes:owned,performed_work,work_baseline,..}=ledger;
+            
+            let mut work=SqliteSnapshotStageWork{original:self.work.as_mut().map(|work|&mut **work as &mut dyn SqliteSnapshotWorkRecipient),actual:performed_work,baseline:*work_baseline,failure:self.work_failure.as_deref_mut()};
+            let mut progress=|completed,total|callback(if phase==SqliteSnapshotPhase::ReadPages{physical.unwrap_or(SqliteSnapshotProgress{phase,completed,total})}else{SqliteSnapshotProgress{phase,completed,total}});
+            let mut allocation=|bytes:usize|{let next=owned.checked_add(bytes).filter(|next|*next<=maximum).ok_or_else(||ownership_limit("relational SQLite resource limit: allocation bytes"))?;if bytes!=0&&required&&original.is_none(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"SQLite backing requires the original receiving allocation port"));}if let Some(port)=original{port(semio_framework_value::native_encoding::NativeEncodeAllocation{bytes,owned_bytes:*forwarded,next_owned_bytes:forwarded.checked_add(bytes).ok_or_else(||ownership_limit("relational SQLite resource limit: forwarded allocation bytes"))?,maximum_bytes:forwarded.checked_add(maximum-*owned).ok_or_else(||ownership_limit("relational SQLite resource limit: forwarded allocation ceiling"))?})?;}*forwarded=forwarded.checked_add(bytes).ok_or_else(||ownership_limit("relational SQLite resource limit: forwarded allocation bytes"))?;*owned=next;Ok(())};
+            operation(remaining,&mut progress,&mut allocation,&mut work)
+        };
+        let allocation=if self.ledger.allocation_bytes.checked_sub(before)!=Some(declared){Some((ValueError::literal(ValueRefusalKind::InvariantViolated,"SQLite stage reservation ledger differs from actual admitted allocations"),SqliteStageReceipt{declared,actual:self.ledger.allocation_bytes.checked_sub(before),before,after:self.ledger.allocation_bytes,remaining}))}else{None};
+        let work_failure=self.work_failure.as_deref_mut().and_then(Option::take);
+        let work_after=self.ledger.performed_work;let actual=work_after.checked_sub(work_before);let work=SqliteStageWorkReceipt{declared:turn.work,before:work_before,after:work_after,actual};
+        let result=match(work_failure,allocation){
+            (failure,allocation) if failure.is_some()||actual!=Some(turn.work)=>Err(SqliteStageFailure::WorkSettlement{operation:turn.result,failure,work,allocation}),
+            (None,Some((refusal,receipt)))=>Err(SqliteStageFailure::Settlement{operation:turn.result,refusal,receipt:Some(receipt)}),
+            (None,None)=>turn.result.map_err(SqliteStageFailure::Operation),
+            (Some(_),_)=>unreachable!("unsettled original work is retained above"),
+        };
+        semio_framework_value::RetainedWorkOutcome{result,work:actual.expect("lent SQLite work ledger cannot regress")}
     }
     /// 🎭️ Settles the secondary SQL ceiling after an original native controller admitted every allocation.
-    pub fn allocation_stage_native<T,E>(&mut self,phase:SqliteSnapshotPhase,operation:impl FnOnce(usize,&mut dyn FnMut(usize,usize)->bool)->(std::result::Result<T,E>,usize))->std::result::Result<std::result::Result<T,E>,ValueError>{self.checkpoint(phase,0,0)?;let remaining=self.allocation_remaining_bytes();let(result,owned)={let mut progress=|completed,total|self.accept_progress(phase,completed,total);operation(remaining,&mut progress)};let next=self.ledger.allocation_bytes.checked_add(owned).filter(|next|*next<=self.limits.max_allocation_bytes).ok_or_else(||ownership_limit("relational SQLite resource limit: allocation bytes"))?;self.ledger.allocation_bytes=next;Ok(result)}
+    pub fn allocation_stage_native<T,E>(&mut self,phase:SqliteSnapshotPhase,operation:impl FnOnce(usize,&mut dyn FnMut(usize,usize)->bool)->(semio_framework_value::RetainedWorkOutcome<T,E>,usize,SqliteStageWorkReceipt))->SqliteNativeStageOutcome<T,E>{
+        if let Err(error)=self.checkpoint(phase,0,0){return SqliteNativeStageOutcome{result:Err(SqliteStageFailure::NotStarted(error)),work:Some(0)}}let remaining=self.allocation_remaining_bytes();let(turn,owned,work)={let mut progress=|completed,total|self.accept_progress(phase,completed,total);operation(remaining,&mut progress)};let allocation=match self.ledger.allocation_bytes.checked_add(owned).filter(|next|*next<=self.limits.max_allocation_bytes){Some(next)=>{self.ledger.allocation_bytes=next;None},None=>Some((ownership_limit("relational SQLite resource limit: allocation bytes"),SqliteStageReceipt{declared:owned,actual:Some(0),before:self.ledger.allocation_bytes,after:self.ledger.allocation_bytes,remaining}))};let actual=work.after.checked_sub(work.before);let result=if actual.is_none()||actual!=work.actual||actual!=Some(work.declared)||work.declared!=turn.work{Err(SqliteStageFailure::WorkSettlement{operation:turn.result,failure:None,work,allocation})}else{match allocation{Some((refusal,receipt))=>Err(SqliteStageFailure::Settlement{operation:turn.result,refusal,receipt:Some(receipt)}),None=>turn.result.map_err(SqliteStageFailure::Operation)}};SqliteNativeStageOutcome{result,work:actual}
+    }
     pub fn check_rows(&self, count: usize) -> std::result::Result<(), ValueError> { limit(count, self.limits.max_rows, ValueRefusalKind::WorkLimit, "relational SQLite resource limit: rows") }
     pub fn check_value_bytes(&self, count: usize) -> std::result::Result<(), ValueError> { limit(count, self.limits.max_value_bytes, ValueRefusalKind::OwnershipLimit, "relational SQLite resource limit: value bytes") }
     /// 🧲️ Exposes remaining reconstruction ownership before a native allocator starts.
@@ -420,3 +470,11 @@ pub fn parse_table(sql: &str) -> Result<Definition> {
 
 pub fn value_size(value: &SqliteValue) -> usize { match value { SqliteValue::Null => 0, SqliteValue::Integer(_) | SqliteValue::Real(_) => 8, SqliteValue::Text(value) => value.len(), SqliteValue::Blob(value) => value.len() } }
 
+#[cfg(test)]
+#[path="🧪️tests/stage.rs"]
+mod stage_tests;
+
+
+#[cfg(test)]
+#[path="🧪️tests/work.rs"]
+mod work_tests;

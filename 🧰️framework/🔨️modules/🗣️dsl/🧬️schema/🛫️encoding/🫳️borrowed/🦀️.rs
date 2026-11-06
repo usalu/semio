@@ -138,3 +138,12 @@ impl Emitter{
    _=>Err(ValueError::new(ValueRefusalKind::InvariantViolated,"borrowed Text intrinsic projection changed"))
   }})
  }}
+
+#[path="token.rs"]
+mod token;
+#[path="record.rs"]
+mod record;
+#[path="text-source.rs"]
+mod text_source;
+#[path="tree.rs"]
+mod tree;

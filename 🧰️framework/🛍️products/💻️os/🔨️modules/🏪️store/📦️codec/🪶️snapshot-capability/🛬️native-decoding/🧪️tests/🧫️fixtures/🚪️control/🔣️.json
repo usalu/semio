@@ -16,13 +16,32 @@
     {
       "id": "admitted",
       "release": 16777216,
-      "accepted": true
+      "accepted": true,
+      "pending": false
     },
     {
       "id": "zeroRelease",
       "release": 0,
+      "accepted": false,
+      "pending": true
+    },
+    {
+      "id": "noWork",
+      "release": 16777216,
+      "work": 0,
+      "expectedWork": 0,
+      "pending": false,
+      "accepted": false
+    },
+    {
+      "id": "frameOnly",
+      "release": 16777216,
+      "work": 1,
+      "expectedWork": 1,
+      "pending": true,
       "accepted": false
     }
   ],
-  "nativeLiteral": "semio fixture.receiving.dsl v1\nvalue=\"snow 雪\"\n"
+  "nativeLiteral": "semio fixture.receiving.dsl v1\nvalue=\"snow 雪\"\n",
+  "workLimit": 65536
 }

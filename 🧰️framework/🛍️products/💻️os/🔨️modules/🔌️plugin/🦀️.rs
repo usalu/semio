@@ -3,7 +3,7 @@
 pub use semio_framework_os_kernel::io;
 
 #[cfg(any(test, feature = "artifact-app-testing"))]
-pub use semio_framework_plugin_testing_laws::with_authoring_identity;
+pub use semio_plugin_testing_laws::with_authoring_identity;
 //#region 📣️FacadeMacroMounts
 #[macro_use]
 #[path = "📣️macros/🌱️wp1-window/🦀️.rs"]
@@ -15,12 +15,12 @@ mod macros_wp2_declaration;
 #[path = "📣️macros/⚛️wp4-reactor/🦀️.rs"]
 mod macros_wp4_reactor;
 //#endregion 📣️FacadeMacroMounts
-pub use semio_framework_plugin_mounted_owner::{MountedOwnerIdentityV1, MountedOwnerJobReceiptV1, MountedOwnerPhaseV1, MountedOwnerPolicyV1, MountedOwnerTurnV1};
-pub use semio_framework_plugin_instance_initialization::registration as original_instance_registration;
-pub use semio_framework_plugin_instance_initialization::ephemeral as original_ephemeral;
-pub use semio_framework_plugin_window_config::OriginalWindowOwnerRegistration;
+pub use semio_plugin_mounted_owner::{MountedOwnerIdentityV1, MountedOwnerJobReceiptV1, MountedOwnerPhaseV1, MountedOwnerPolicyV1, MountedOwnerTurnV1};
+pub use semio_plugin_instance_initialization::registration as original_instance_registration;
+pub use semio_plugin_instance_initialization::ephemeral as original_ephemeral;
+pub use semio_plugin_window_config::OriginalWindowOwnerRegistration;
 
-#[cfg(test)] use semio_framework_ui_locale::{Label, LabelText};
+#[cfg(test)] use semio_ui_locale::{Label, LabelText};
 
 /// 🗣️ `#[derive(dsl::DslRecord)]` expands to `::dsl::…` paths, so the crate root must bind that name
 /// — the same `extern crate semio_framework_os_kernel as dsl;` every technology crate declares.
@@ -49,17 +49,17 @@ static PLUGIN_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework
 mod generated_test_contracts;
 
 #[doc(hidden)]
-pub use semio_framework_plugin_abi::component_persistent_local;
+pub use semio_plugin_abi::component_persistent_local;
 
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 #[doc(hidden)]
 pub mod owned_abi {
-    pub use semio_framework_plugin_abi::owned_abi::*;
+    pub use semio_plugin_abi::owned_abi::*;
 
     /// 📬️ Releases one guest allocation after the reactor-context receipt registries had their chance to claim it; the plain release is abi's.
     pub unsafe fn deallocate(pointer: u32, length: u32) {
         if crate::reactor::original_actor_context::exports::fixed_receipt_pointer(pointer,length)||crate::reactor::original_actor_context::exports::release_owned_job_receipt(pointer,length) { return; }
-        unsafe { semio_framework_plugin_abi::owned_abi::deallocate(pointer, length) }
+        unsafe { semio_plugin_abi::owned_abi::deallocate(pointer, length) }
     }
 }
 
@@ -69,7 +69,7 @@ pub use wasip2::component_export_anchor;
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub fn component_export_anchor() {}
 
-pub use semio_framework_plugin_ownership::bounded_ownership::{PluginLifecycleFailure,PluginLifecyclePrimary};
+pub use semio_plugin_ownership::bounded_ownership::{PluginLifecycleFailure,PluginLifecyclePrimary};
 //#region 🏛️OwnershipFacet
 pub use semio_framework_job::StepContext;
 // 🧭️ Mount hubs: the module mounts that used to follow live in one file per work package of PLAN-PLUGIN-CRATES.md,
@@ -83,15 +83,15 @@ include!("🪝️mounts/🧱️wp6-instance-tier1/🦀️.rs");
 include!("🪝️mounts/🧵️wp7-instance-tier2/🦀️.rs");
 //#region 🏛️OwnershipFacet
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-pub use semio_framework_plugin_abi::wasip2;
+pub use semio_plugin_abi::wasip2;
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 #[doc(hidden)]
-pub use semio_framework_plugin_abi::__semio_export_component_guest;
+pub use semio_plugin_abi::__semio_export_component_guest;
 //#endregion 🏛️OwnershipFacet
 //#region 🪟️WindowFacet
-pub(crate) use semio_framework_plugin_window_transient::window_transient;
+pub(crate) use semio_plugin_window_transient::window_transient;
 #[doc(hidden)]
-pub use semio_framework_plugin_window_transient::window_transient_transfer;
+pub use semio_plugin_window_transient::window_transient_transfer;
 //#endregion 🪟️WindowFacet
 //#region 📜️DeclarationFacet
 //#endregion 📜️DeclarationFacet
@@ -108,16 +108,16 @@ pub use tool_contract::original_reserved_producer_laws;
 //#region 🧵️InstanceFacet
 //#endregion 🧵️InstanceFacet
 
-pub use semio_framework_plugin_decl_emission::{OriginalHostConfigurationDeclaration,OriginalHostConfigurationProjection,OriginalContributionProjection};
+pub use semio_plugin_decl_emission::{OriginalHostConfigurationDeclaration,OriginalHostConfigurationProjection,OriginalContributionProjection};
 pub mod app {
-    pub use semio_framework_plugin_time_travel as time_travel;
+    pub use semio_plugin_time_travel as time_travel;
     //! 🧩️ The crate's public app vocabulary: declarative app builder, plugin traits and runtime types, composed from the facet modules that own them.
-    pub use semio_framework_plugin_decl_emission::{OriginalHostConfigurationDeclaration,OriginalHostConfigurationProjection,OriginalContributionProjection};
-    pub use semio_framework_plugin_decl_surface::{OriginalArtifactEditorBirth,OriginalArtifactViewerBirth};
-    pub use semio_framework_plugin_decl_views::{NoConfigGenesisOwner,NoDraftGenesisOwner};
+    pub use semio_plugin_decl_emission::{OriginalHostConfigurationDeclaration,OriginalHostConfigurationProjection,OriginalContributionProjection};
+    pub use semio_plugin_decl_surface::{OriginalArtifactEditorBirth,OriginalArtifactViewerBirth};
+    pub use semio_plugin_decl_views::{NoConfigGenesisOwner,NoDraftGenesisOwner};
     pub use crate::{MountedOwnerPhaseV1, MountedOwnerTurnV1};
     pub use super::child_emit_preparation::{ChildEmitPreparation,ChildEmitPreparationStep,OwnedChildEmit};
-    pub use semio_framework_plugin_ownership::transient_publication::{bounded_transient_preparation_factory, bounded_transient_root_retirement_factory, bounded_transient_store_disposer, transient_store_disposer};
+    pub use semio_plugin_ownership::transient_publication::{bounded_transient_preparation_factory, bounded_transient_root_retirement_factory, bounded_transient_store_disposer, transient_store_disposer};
     pub use super::window_config::{
         WindowConfigNativePairReceiving,window_config_native_pair_demands,admit_window_config_native_pair,bounded_window_config_preparation_source_birth, bounded_window_config_preparation_factory, bounded_window_config_store_disposer,bounded_window_config_store_disposer_birth, bounded_window_config_store_owners, RejectedWindowConfigEmission, WindowConfigAuthorityIdentity, WindowConfigBorrow, WindowConfigMutation, WindowConfigOwner, WindowConfigOwnerRegistry, WindowConfigPack,
         WindowConfigPackLoad, WindowConfigPackLoadDiagnostic, WindowConfigPackLoadPhase, WindowConfigPackLoadProgress, WindowConfigPackLoadStep, WindowConfigApplyCursor, WindowConfigApplyEdit, WindowConfigApplyMutation, WindowConfigReplaceCursor, WindowConfigReplaceEdit, WindowConfigReplaceMutation, WindowConfigSnapshot,
@@ -125,8 +125,8 @@ pub mod app {
     pub use super::window_transient::{owners_factory_birth_demands, transfer_owners_birth_demands, OriginalWindowTransientOwnerRegistration, TransientView, WindowTransientMutation, WindowTransientOwner, WindowTransientOwnerBundle, WindowTransientOwnerRegistry, WindowTransientSnapshot};
     /// 🪪️ Declarative app manifest shared by plugin builders and surface registrations.
     pub use semio_framework::AppDefinition;
-    pub use semio_framework_ui_contract::BuiltNode;
-    pub use semio_framework_ui_runtime::{ComponentTree, TreeNode};
+    pub use semio_ui_contract::BuiltNode;
+    pub use semio_ui_runtime::{ComponentTree, TreeNode};
     /// 🗂️ `OsMediaCapability`/`ArtifactKindSpec` now live in `semio-framework-core` (both this crate and
     /// `semio-framework-os` already depend on it) the same way the legacy format enum used to — re-exported
     /// here verbatim instead of duplicated, so `AppBuilder::artifact_kind(...)` and
@@ -157,9 +157,9 @@ pub mod app {
     /// 🧾️ The body-wide node budget and its fixed-node reserve live ONCE, in the UI contract, because
     /// the React host spends the same number from the other side of the wire
     /// (`🌳️Tree/🟦️.tsx`'s `capTreeWindowRequests`). See
-    /// [`semio_framework_ui_contract::TREE_WINDOW_BODY_NODE_BUDGET`] for the cost model both sides
+    /// [`semio_ui_contract::TREE_WINDOW_BODY_NODE_BUDGET`] for the cost model both sides
     /// implement; [`TreeWindows`] is this side of it.
-    pub use semio_framework_ui_contract::{TREE_WINDOW_BODY_NODE_BUDGET, TREE_WINDOW_FIXED_NODE_HEADROOM, TREE_WINDOW_PATH_SEPARATOR};
+    pub use semio_ui_contract::{TREE_WINDOW_BODY_NODE_BUDGET, TREE_WINDOW_FIXED_NODE_HEADROOM, TREE_WINDOW_PATH_SEPARATOR};
     pub use semio_framework_value::{RetirementDemand,ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
     pub use crate::local_interaction::mutations::{InteractionConfigMutation, SetInteractionState};
     /// 🙋️ Explicit actor identity for standalone local births and fixtures.
@@ -170,8 +170,8 @@ pub mod app {
     pub use store::ArtifactStoreInitializationAuthority;
     pub use semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND;
     pub use super::builder::{NeedsLabel, NeedsVersion, PluginBuilder, Ready};
-    pub use semio_framework_plugin_ownership::bounded_ownership::*;
-    pub use semio_framework_plugin_ownership::sdk_fault::*;
+    pub use semio_plugin_ownership::bounded_ownership::*;
+    pub use semio_plugin_ownership::sdk_fault::*;
     pub use super::document_kit::*;
     pub use super::image_kit::*;
     pub use super::media_kit::*;
@@ -202,7 +202,7 @@ pub mod app {
     pub use super::child_content::*;
     pub use super::document_ingress::*;
     pub use super::peer_roster::*;
-    pub use semio_framework_plugin_ownership::store_lifecycle::*;
+    pub use semio_plugin_ownership::store_lifecycle::*;
     pub use super::store_publication::*;
     pub use super::command_history::*;
     pub use super::reserved_jobs::*;
@@ -226,18 +226,18 @@ pub mod plugin_app_close_prelude {
     pub use semio_framework::*;
     pub use semio_framework_os_kernel as protocol;
     pub use semio_framework_os_kernel as store;
-    pub use semio_framework_plugin_decl_app;
-    pub use semio_framework_plugin_decl_media;
-    pub use semio_framework_plugin_decl_views;
-    pub use semio_framework_plugin_ownership;
-    pub use semio_framework_plugin_window_config;
+    pub use semio_plugin_decl_app;
+    pub use semio_plugin_decl_media;
+    pub use semio_plugin_decl_views;
+    pub use semio_plugin_ownership;
+    pub use semio_plugin_window_config;
     pub use semio_framework_tool_run::ToolRunTraceCursor;
-    pub use semio_framework_ui_contract::tree_item as tree_item_builder;
-    pub use semio_framework_ui_contract::*;
-    pub use semio_framework_ui_runtime::{ComponentTree, TreeNode};
+    pub use semio_ui_contract::tree_item as tree_item_builder;
+    pub use semio_ui_contract::*;
+    pub use semio_ui_runtime::{ComponentTree, TreeNode};
     pub use serde_json::Value;
     pub use std::collections::HashMap;
-    pub use semio_framework_ui_layout::layout::{ContextMenuItemSpec, ContextMenuRequest, WindowEngagement, WindowMeasure};
+    pub use semio_ui_layout::layout::{ContextMenuItemSpec, ContextMenuRequest, WindowEngagement, WindowMeasure};
 }
 
 #[cfg(any(test, feature = "artifact-app-testing"))]
@@ -248,7 +248,7 @@ pub use app::time_travel::{history_mutation_entry, HistoryMutationPage, HistoryM
 pub use app::tool_run::{is_tool_run_action_id, ToolRunActionOutcome, ToolRunDriver, ToolRunLedger, ToolRunTickReceipt};
 pub use app::ActionFactory;
 pub use semio_framework::{ErasedToolJob, IconName, Locale, Terminology};
-pub use semio_framework_ui_locale::LocalizedLabel;
+pub use semio_ui_locale::LocalizedLabel;
 /// 🔀️ `dyn_enum_close!` for `PluginApp` resolves its captured dispatch macro through this root export.
 #[doc(hidden)]
 pub use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
@@ -560,7 +560,7 @@ pub use plugin_runtime::{
 };
 pub use semio_framework::*;
 pub use semio_framework::{MediaForm, MediaPortDirection, MediaPortSpec};
-pub use semio_framework_ui_contract::{
+pub use semio_ui_contract::{
     ActionBinding, ActionId, Buildable, Component, HasBase, HasChildren, Label as UiLabel, RowAction, RowActionPlacement, RowActionRefusal, RowTarget, Trigger, UiFixedList, UiFixedMap, UiListBuilder, UiMapBuilder, UiPublicationRevision, UiText, UiValue,
 };
 pub use world3d_host::{
@@ -570,26 +570,26 @@ pub use world3d_host::{
     World3dAngle, World3dAnnotation, World3dAnnotationLayer, World3dColorRamp, World3dDimension, World3dHighlight, World3dLeader, World3dLegendTick, World3dMarker, World3dMarkerShape, World3dModellingOptions, World3dPickGranularity, World3dPickTargets, World3dScalarDomain, World3dScalarField, World3dScalarLegend, World3dScalarRange, World3dSection, World3dSectionCap, World3dSubElementStyle, World3dText, World3dTone, WORLD3D_ANNOTATIONS_MAX, WorldSunConfig, WORLD3D_SCENE_LANE_BODY_KEYS, WORLD3D_SCENE_LANE_FIELDS, WORLD3D_SCENE_LANE_KEY_PREFIX, WORLD3D_SCENE_LANE_NAMES, WORLD3D_SCENE_LANE_OPTIONAL,
 };
 /// 📐️ The renderer-neutral window, engagement, measure, context-menu and panel-tab vocabulary plugins name through this
-/// crate, re-exported from its owner `semio-framework-ui-layout`.
-pub use semio_framework_ui_layout::layout::{
+/// crate, re-exported from its owner `semio-ui-layout`.
+pub use semio_ui_layout::layout::{
     create_default_layout, create_named_layout, create_stack_layout, create_tab_stack_layout, create_window_layout, ActionDescriptor, ContextMenuHit, ContextMenuItemSpec, ContextMenuRequest, ContextMenuSelectionGroup,
     ContextMenuSurfaceTarget, ContextMenuTextContext, MeasureSelectItem, NamedLayout, UiMenuRef, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible,
     WindowEngagementSlot, WindowEngagementStatus, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, WindowOptions,
     FRAMEWORK_HISTORY_BODY_KEY, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
 };
-/// 🧰️ The utility-rail category plugins declare utilities under, from `semio-framework-ui-layout`.
-pub use semio_framework_ui_layout::utilities::UtilityCategory;
+/// 🧰️ The utility-rail category plugins declare utilities under, from `semio-ui-layout`.
+pub use semio_ui_layout::utilities::UtilityCategory;
 /// 📜️ The renderer-neutral surface kinds, table cells, tree actions, inspector helpers and world3d scene JSON helpers plugins
-/// name through this crate, re-exported from their owner `semio-framework-ui-declaration`.
-pub use semio_framework_ui_declaration::ui::{
+/// name through this crate, re-exported from their owner `semio-ui-declaration`.
+pub use semio_ui_declaration::ui::{
     text_identifier_occurrences_json, ui_inspector_all_equal, ui_inspector_mixed_number, ui_inspector_mixed_text, world3d_camera_json, world3d_chunking_json, world3d_fit_json, BlockPaletteEntry, SurfaceKind, TableCell,
     UiTreeActionPlacement, UiTreeItemAction, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 /// 🎬️ The scene records plugins publish through this crate (the world3d family is re-exported by `world3d_host` above),
-/// from their owner `semio-framework-ui-scene`.
-pub use semio_framework_plugin_operation::ArtifactOperationProgress;
-pub use semio_framework_ui_scene::{
+/// from their owner `semio-ui-scene`.
+pub use semio_plugin_operation::ArtifactOperationProgress;
+pub use semio_ui_scene::{
     BlockListBlock, BlockListPaletteEntry, BlockListScene, BlockListSelectionTarget, BlockListStep, Board2dScene, Canvas2dFraming, Canvas2dScene, IconRenderScene, InkCanvasInteractionDomain, InkCanvasScene,
     NodeGraphEdgeRecord, NodeGraphHover, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, Paint2dScene, Paint2dSelectionCancellation, Paint2dEditingOptions, Paint2dImageGrid, TableScene, TextEditorScene, TextSplice, TextSpliceComposition, TiledMapScene, TEXT_SPLICE_CONTEXT_SCALARS,
 };

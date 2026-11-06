@@ -138,7 +138,7 @@ pub enum RowActionRefusal {
 /// 🎯️ The ONE action target of a row: the controller `scope` at its contract `version` that every [Design notes](README.md#source-notes-146).
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 #[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct RowTarget {
     pub scope: crate::UiText,

@@ -1,6 +1,6 @@
 //! 🧷️ Actual paged owners retain genuine source bindings and the exact original issuer pair.
 use super::*;
-use semio_os_store_one_item_batch::paged_one_item::{PagedOneItemEdit,PagedOneItemEditStep,PagedOneItemPreparationFactory};
+use semio_framework_os_store_one_item_batch::paged_one_item::{PagedOneItemEdit,PagedOneItemEditStep,PagedOneItemPreparationFactory};
 use semio_framework_value_snapshot_projection::snapshot_projection::post::{PagedOneItemPostMode,PagedOneItemPostRead,PagedOneItemPost};
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory,SnapshotRetirementFactory,RetirementDemand,ErasedSnapshotRetirement};
 use semio_framework_value::retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
@@ -21,16 +21,16 @@ thread_local! {
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct ExactMutationIssuer;
-impl ArtifactOwnedValueRetirementFactory<DocumentMutation> for ExactMutationIssuer{
+impl ArtifactOwnedValueRetirementFactory<DocumentMutation> for ExactMutationIssuer{fn retire_owned_work_demand(&self,_:&DocumentMutation)->Result<u64,semio_framework_value::ValueError>{Ok(1)}
     fn retirement_birth_bytes(&self,value:&DocumentMutation)->usize{OwnedValueRetirementFactory::<DocumentMutation>::default().retirement_birth_bytes(value)}
-    fn retire_owned(&self,value:DocumentMutation,grant:RetainedCloneGrant)-> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,DocumentMutation)> {
+    fn retire_owned(&self,value:DocumentMutation,grant:RetainedCloneGrant)-> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(semio_framework_value::OriginalRetirementFailure,DocumentMutation)> {let turn=(||{
         CALLS.set(CALLS.get()+1);
         assert_eq!(std::ptr::from_ref(self) as usize,ISSUER.get());
         let DocumentMutation::SetText{text,..}=&value else{panic!("original mutation changed")};
         assert_eq!(text.as_ptr() as usize,PAYLOAD.get());
-        if REFUSE_ISSUER.replace(false){return semio_framework_value::RetainedWorkOutcome{work:1,result:Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"exact original issuer refuses once"),value))};}
+        if REFUSE_ISSUER.replace(false){return semio_framework_value::RetainedWorkOutcome{work:1,result:Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"exact original issuer refuses once").into(),value))};}
         OwnedValueRetirementFactory::<DocumentMutation>::default().retire_owned(value,grant)
-    }
+    })();semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(|(error,value)|(error.into(),value)),work:turn.work}}
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
@@ -77,9 +77,12 @@ impl PagedOneItemEdit<Document,DocumentMutation> for SourceProbeEdit{
         let binding=if self.before.is_some(){&self.before}else if self.mutation.is_some(){&self.mutation}else{&self.post};
         Ok(RetirementDemand{copy_bytes:RetainedCloneBinding::copy_demand(binding)?,capacity_bytes:RetainedCloneBinding::capacity_demand(binding,body)?,release_bytes:RetainedCloneBinding::release_demand(binding)?,depth:RetainedCloneBinding::depth_demand(binding)?})
     }
-    fn close_step(&mut self,factory:&dyn ArtifactOwnedValueRetirementFactory<DocumentMutation>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+    fn close_work_demand(&self,factory:&dyn ArtifactOwnedValueRetirementFactory<DocumentMutation>,body:usize)->Result<u64,ValueError>{
+        self.close_demands(factory,body)?;let binding=if self.before.is_some(){&self.before}else if self.mutation.is_some(){&self.mutation}else{&self.post};RetainedCloneBinding::close_work_demand(binding,body)
+    }
+    fn close_step(&mut self,factory:&dyn ArtifactOwnedValueRetirementFactory<DocumentMutation>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>{
         assert!(self.closing);self.close_demands(factory,grant.maximum_copy_bytes)?;
-        let step=semio_framework_value::retained_clone::close_retained_binding(if self.before.is_some(){&mut self.before}else if self.mutation.is_some(){&mut self.mutation}else{&mut self.post},grant).result?;
+        let turn=semio_framework_value::retained_clone::close_retained_binding(if self.before.is_some(){&mut self.before}else if self.mutation.is_some(){&mut self.mutation}else{&mut self.post},grant);self.last_work=turn.work;let step=turn.result?;
         Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
     }
     fn terminal_is_empty(&self)->bool{self.closing&&self.before.is_none()&&self.mutation.is_none()&&self.post.is_none()}
@@ -118,7 +121,7 @@ where S:Clone+semio_framework_value::retirement::RetireOwned+Send+Sync+'static,D
     let mutations:Arc<dyn ArtifactOwnedValueRetirementFactory<DocumentMutation>>=Arc::new(OwnedValueRetirementFactory::<DocumentMutation>::default());
     let snapshots:Arc<dyn SnapshotRetirementFactory<S>>=Arc::new(SharedValueRetirementFactory::<S>::default());
     let registry=SnapshotReadRegistryHandle::new();let lease=registry.try_issue(Arc::clone(root)).unwrap_or_else(|_|panic!("cold original source lease"));
-    let authority=Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(1),semio_framework_job::Generation(1),[0;32],0,1,semio_framework_os_spr::HybridLogicalTimestamp::new(1,0),"actor".into(),None,None,None));
+    let authority=Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(1),semio_framework_job::Generation(1),[0;32],0,1,semio_os_spr::HybridLogicalTimestamp::new(1,0),"actor".into(),None,None,None));
     let request=ArtifactStoreOneItemPreparationRequest{operation:semio_framework_job::OperationId(1),generation:semio_framework_job::Generation(1),base_revision:[0;32],lane:HistoryLane::Document,authority,base:SnapshotRead::new(Arc::clone(root),lease),mutation,mutation_retirement:Arc::clone(&mutations),snapshot_retirement:Arc::clone(&snapshots)};
     let factory=paged::ColdMutationApplyFactory::<S,DocumentMutation>::default();
     let(owner,_)=ArtifactStoreOneItemPreparationFactory::begin(&factory,request,grant).unwrap_or_else(|_|panic!("cold original owner birth"));
@@ -218,7 +221,7 @@ fn paged_original_mutation_sources_keep_genuine_refs_and_exact_issuer_through_al
 }      
 #[test]
 fn paged_failed_seal_keeps_actual_returned_edit_post_and_exact_issuer_pair_until_funded_close(){
-    use semio_os_store_one_item_batch::paged_one_item::test_support::{retain_seal_returns,returned_edit_demands,close_returned_edit,returned_post_demands,close_returned_post};
+    use semio_framework_os_store_one_item_batch::paged_one_item::test_support::{retain_seal_returns,returned_edit_demands,close_returned_edit,returned_post_demands,close_returned_post};
     let law=law();let maximum=law["maximumTurns"].as_u64().unwrap() as usize;
     CALLS.set(0);SNAPSHOT_CALLS.set(0);REFUSE_ISSUER.set(false);
     let authority=Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(1),semio_framework_job::Generation(1),[0;32],0,1,semio_os_spr::HybridLogicalTimestamp::new(1,0),"actor".into(),None,None,None));

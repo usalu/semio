@@ -8,7 +8,7 @@ pub mod snapshot_read_registry_handle;
 pub use snapshot_read_registry_handle::SnapshotReadRegistryHandle;
 #[path = "../../../../🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🔒️registry/♻️retirement/🦀️.rs"]
 pub mod snapshot_read_registry_retirement;
-pub use snapshot_read_registry_retirement::{SnapshotReadRegistryAliasRetirement, snapshot_registry_alias_demands, snapshot_registry_alias_close_step};
+pub use snapshot_read_registry_retirement::{SnapshotReadRegistryAliasRetirement, snapshot_registry_alias_demands, snapshot_registry_alias_work_demand, snapshot_registry_alias_close_step};
 pub const SNAPSHOT_READ_LEASE_CAPACITY: usize = 1_024;
 const ORIGINAL_FREE_SLOTS:[u16;SNAPSHOT_READ_LEASE_CAPACITY]={let mut slots=[0;SNAPSHOT_READ_LEASE_CAPACITY];let mut index=0;while index<SNAPSHOT_READ_LEASE_CAPACITY{slots[index]=index as u16;index+=1}slots};
 /// 📏️ The largest physical release one snapshot registry close step performs: the registry frame or one backing page.
@@ -28,11 +28,14 @@ pub fn bounded_outcome(result: Result<RetainedCloneStep, ValueError>) -> Retaine
 pub fn outcome_retirement_step(turn: RetainedWorkOutcome) -> semio_framework_value::retirement::RetirementStep {
     use semio_framework_value::retirement::RetirementStep;
     match turn.result {
-        Err(error) => RetirementStep::Failure(error, turn.work),
+        Err(error) => RetirementStep::Failure(error.into(), turn.work),
         Ok(RetainedCloneStep::Complete(progress)) if progress == RetainedCloneProgress::default() => RetirementStep::Complete(turn.work),
         Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => RetirementStep::Progress(progress, turn.work),
     }
 }
+
+/// 🪜️ Carries a rich original retirement turn into the cursor frontier.
+pub fn original_outcome_retirement_step(turn:semio_framework_value::OriginalRetirementOutcome)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep;match turn.result{Err(error)=>RetirementStep::Failure(error,turn.work),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete(turn.work),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,turn.work)}}
 
 pub struct SnapshotReadLeaseSlot {
     pub(crate) generation: u64,
@@ -294,34 +297,23 @@ impl SnapshotReadLeaseRegistry {
         Ok(semio_framework_value::RetirementDemand { release_bytes, depth: usize::from(release_bytes != 0), ..Default::default() })
     }
     /// ♻️ Releases one slot page of an empty shared registry; the last page completes the shared backing.
-    pub fn close_empty_backing_step(&self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        use semio_framework_value::retained_clone::{RetainedCloneStep, RetainedCloneProgress};
-        let mut state = match self.state.try_lock() { Ok(state) => state, Err(std::sync::TryLockError::WouldBlock) => return Ok(RetainedCloneStep::Progress(Default::default())), Err(std::sync::TryLockError::Poisoned(_)) => return Err(SnapshotReadLeaseRefusal::Poisoned.into_value_error()) };
-        if state.free_len != SNAPSHOT_READ_LEASE_CAPACITY || self.returned.load(std::sync::atomic::Ordering::Acquire) != 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        let bytes = state.slots.next_release_bytes();
-        if bytes == 0 { return Ok(RetainedCloneStep::Complete(Default::default())); }
-        if grant.maximum_items == 0 || grant.maximum_release_bytes < bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "registry backing requires admitted depth")); }
-        let progress = RetainedCloneProgress { copied_items: 1, released_bytes: state.slots.release_page(), ..Default::default() };
-        Ok(if state.slots.next_release_bytes() == 0 { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
+    pub fn close_empty_backing_step(&self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
+        let mut work=0;let result=(||{
+            let mut state=match self.state.try_lock(){Ok(state)=>state,Err(std::sync::TryLockError::WouldBlock)=>return Ok(RetainedCloneStep::Progress(Default::default())),Err(std::sync::TryLockError::Poisoned(_))=>return Err(SnapshotReadLeaseRefusal::Poisoned.into_value_error())};
+            if state.free_len!=SNAPSHOT_READ_LEASE_CAPACITY||self.returned.load(std::sync::atomic::Ordering::Acquire)!=0{return Ok(RetainedCloneStep::Progress(Default::default()))}
+            let bytes=state.slots.next_release_bytes();if bytes==0{return Ok(RetainedCloneStep::Complete(Default::default()))}if grant.maximum_items==0||grant.maximum_release_bytes<bytes{return Ok(RetainedCloneStep::Progress(Default::default()))}if grant.maximum_depth==0{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"registry backing requires admitted depth"))}
+            work=1;let progress=RetainedCloneProgress{copied_items:1,released_bytes:state.slots.release_page(),..Default::default()};Ok(if state.slots.next_release_bytes()==0{RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
+        })();RetainedWorkOutcome{result,work}
     }
     /// ⏪️ Quotes the next page an exclusively owned empty registry releases: slot pages, then generation pages.
-    pub fn owned_backing_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
-        let shared = self.empty_backing_demands()?;
-        if shared.release_bytes != 0 { return Ok(shared); }
-        let release_bytes = self.lease_generations.next_release_bytes();
-        Ok(semio_framework_value::RetirementDemand { release_bytes, depth: usize::from(release_bytes != 0), ..Default::default() })
-    }
-    /// 📪️ Releases one page of an exclusively owned empty registry; the last generation page completes its backing.
-    pub fn close_owned_backing_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        use semio_framework_value::retained_clone::{RetainedCloneStep, RetainedCloneProgress};
-        if self.empty_backing_demands()?.release_bytes != 0 { return self.close_empty_backing_step(grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
-        let bytes = self.lease_generations.next_release_bytes();
-        if bytes == 0 { return Ok(RetainedCloneStep::Complete(Default::default())); }
-        if grant.maximum_items == 0 || grant.maximum_release_bytes < bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "registry backing requires admitted depth")); }
-        let progress = RetainedCloneProgress { copied_items: 1, released_bytes: self.lease_generations.release_page(), ..Default::default() };
-        Ok(if self.lease_generations.next_release_bytes() == 0 { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
+    pub fn owned_backing_demands(&self)->Result<semio_framework_value::RetirementDemand,ValueError>{let shared=self.empty_backing_demands()?;if shared.release_bytes!=0{return Ok(shared)}let release_bytes=self.lease_generations.next_release_bytes();Ok(semio_framework_value::RetirementDemand{release_bytes,depth:usize::from(release_bytes!=0),..Default::default()})}
+    /// ⛽️ Quotes the selected resident slot or generation page release before any effect.
+    pub fn owned_backing_work_demand(&self)->Result<u64,ValueError>{let state=self.state.try_lock().map_err(|reason|match reason{std::sync::TryLockError::WouldBlock=>SnapshotReadLeaseRefusal::Busy.into_value_error(),std::sync::TryLockError::Poisoned(_)=>SnapshotReadLeaseRefusal::Poisoned.into_value_error()})?;Ok(u64::from(state.slots.pages.iter().any(Option::is_some)||self.lease_generations.pages.iter().any(Option::is_some)))}
+    /// 📪️ Releases one selected original registry page and reports its actual work.
+    pub fn close_owned_backing_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
+        let shared=match self.empty_backing_demands(){Ok(d)=>d,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};if shared.release_bytes!=0{let turn=self.close_empty_backing_step(grant);return RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work}}
+        let bytes=self.lease_generations.next_release_bytes();if bytes==0{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}if grant.maximum_items==0||grant.maximum_release_bytes<bytes{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}if grant.maximum_depth==0{return RetainedWorkOutcome{result:Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"registry backing requires admitted depth")),work:0}}
+        let progress=RetainedCloneProgress{copied_items:1,released_bytes:self.lease_generations.release_page(),..Default::default()};RetainedWorkOutcome{result:Ok(if self.lease_generations.next_release_bytes()==0{RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)}),work:1}
     }
 
     pub fn occupied_count(&self) -> usize {
@@ -445,7 +437,7 @@ impl SnapshotReadLeaseRegistryOwner {
     pub fn closed(&self) -> bool { self.0.is_none() }
     pub fn occupied_count(&self) -> usize { self.0.as_ref().map_or(0, |owner| owner.occupied_count()) }
     pub fn empty_backing_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> { self.0.as_ref().map_or(Ok(Default::default()), |owner| owner.empty_backing_demands()) }
-    pub fn close_empty_backing_step(&self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { self.0.as_ref().map_or(Ok(RetainedCloneStep::Complete(Default::default())), |owner| owner.close_empty_backing_step(grant)) }
+    pub fn close_empty_backing_step(&self,grant:RetainedCloneGrant)->RetainedWorkOutcome{self.0.as_ref().map_or(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0},|owner|owner.close_empty_backing_step(grant))}
     /// 📚️ Quotes the next release of the registry's own custody: its Arc frame, then, once sole, each generation page.
     pub fn custody_byte_demand(&self) -> Result<usize, ValueError> { self.0.as_ref().map_or(Ok(0), |owner| owner.custody_byte_demand()) }
     /// 🪜️ Releases the registry's own custody one frame or page at a time once it is the sole terminal owner.
@@ -751,10 +743,10 @@ pub fn artifact_retirement_box_depth(owner: &Box<dyn ErasedSnapshotRetirement>) 
     owner.next_depth_demand()?.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "boxed retirement depth overflow"))
 }
 
-pub fn artifact_retirement_box_close_step(slot: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
+pub fn artifact_retirement_box_close_step(slot: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: RetainedCloneGrant) -> semio_framework_value::OriginalRetirementOutcome {
     use semio_framework_value::retained_clone::admit_retained_clone_close;
     let empty = RetainedCloneProgress::default();
-    let refuse = |error: ValueError, work: u64| RetainedWorkOutcome { result: Err(error), work };
+    let refuse = |error: ValueError, work: u64| RetainedWorkOutcome { result: Err(error.into()), work };
     let Some(owner) = slot.as_mut() else { return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(empty)), work: 0 }; };
     if grant.maximum_items == 0 { return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(empty)), work: 0 }; }
     let depth = match artifact_retirement_box_depth(owner) { Ok(depth) => depth, Err(error) => return refuse(error, 0) };
@@ -767,7 +759,7 @@ pub fn artifact_retirement_box_close_step(slot: &mut Option<Box<dyn ErasedSnapsh
     }
     let child_grant = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
     let RetainedWorkOutcome { result, work } = owner.close_step(child_grant);
-    let step = match result { Ok(step) => step, Err(error) => return refuse(error, work) };
+    let step = match result { Ok(step) => step, Err(error) => return RetainedWorkOutcome { result: Err(error), work } };
     match admit_retained_clone_close(child_grant, step, owner.terminal_is_empty(), "boxed retirement child") {
         Ok(step) => RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(step.progress())), work },
         Err(error) => refuse(error, work),
@@ -849,14 +841,12 @@ pub fn advance_returned_snapshot_read<P: Send + Sync + 'static>(
     active: &mut Option<Box<dyn ErasedSnapshotRetirement>>,
     factory: &Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,
     grant: RetainedCloneGrant,
-) -> RetainedWorkOutcome {
+) -> semio_framework_value::OriginalRetirementOutcome {
     if grant.maximum_items == 0 { return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 }; }
     if active.is_some() { return artifact_retirement_box_close_step(active, grant); }
     if !registry.has_returned() { return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(Default::default())), work: 0 }; }
-    admit_returned_root::<P>(registry, active, grant, |root, grant| match ReturnedSnapshotReadRetirement::admit(root, factory.clone(), grant) {
-        Ok(admitted) => RetainedWorkOutcome { result: Ok(admitted), work: 1 },
-        Err((error, root, alias)) => { drop(alias); RetainedWorkOutcome { result: Err((error, root)), work: 0 } }
-    })
+    let turn=admit_returned_root::<P>(registry, active, grant, |root, grant| {let alias=Arc::clone(factory);let turn=ReturnedSnapshotReadRetirement::admit(root,alias,grant);let mut work=1+turn.work;let result=match turn.result{Ok(admitted)=>Ok(admitted),Err((error,root,alias))=>{drop(alias);work+=1;Err((error,root))}};RetainedWorkOutcome{result,work}});
+    RetainedWorkOutcome{result:turn.result.map_err(Into::into),work:turn.work}
 }
 
 pub fn advance_returned_snapshot_read_root<P: Send + Sync + 'static>(
@@ -864,11 +854,12 @@ pub fn advance_returned_snapshot_read_root<P: Send + Sync + 'static>(
     active: &mut Option<Box<dyn ErasedSnapshotRetirement>>,
     factory: &dyn SnapshotRetirementFactory<P>,
     grant: RetainedCloneGrant,
-) -> RetainedWorkOutcome {
+) -> semio_framework_value::OriginalRetirementOutcome {
     if grant.maximum_items == 0 { return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 }; }
     if active.is_some() { return artifact_retirement_box_close_step(active, grant); }
     if !registry.has_returned() { return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(Default::default())), work: 0 }; }
-    admit_returned_root::<P>(registry, active, grant, |root, grant| factory.retire(root, grant))
+    let turn=admit_returned_root::<P>(registry, active, grant, |root, grant| factory.retire(root, grant));
+    RetainedWorkOutcome{result:turn.result.map_err(Into::into),work:turn.work}
 }
 
 #[path = "../../../../🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/♻️retirement/🦀️.rs"]

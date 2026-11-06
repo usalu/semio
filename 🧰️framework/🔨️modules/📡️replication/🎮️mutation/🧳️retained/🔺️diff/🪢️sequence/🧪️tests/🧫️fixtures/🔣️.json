@@ -163,5 +163,81 @@
     "original-read",
     "mutable-handback",
     "original-intermediate"
+  ],
+  "diagnosticText": {"pattern":"a🧱","repetitions":819,"bytes":4095,"chunkBytes":2048},
+  "diagnosticSlots": {"targets":8,"turns":24,"workPerTurn":1},
+  "workCases": [
+    {
+      "name": "zero work denial",
+      "budget": 0,
+      "child": 0,
+      "parent": 0,
+      "actual": 0,
+      "admitted": false
+    },
+    {
+      "name": "child work retained",
+      "budget": 5,
+      "child": 3,
+      "parent": 1,
+      "actual": 4,
+      "admitted": true
+    },
+    {
+      "name": "refusing child retains performed work",
+      "budget": 5,
+      "child": 4,
+      "parent": 1,
+      "actual": 5,
+      "admitted": true
+    },
+    {
+      "name": "five field callback and retained handoff",
+      "budget": 6,
+      "child": 5,
+      "parent": 1,
+      "actual": 6,
+      "admitted": true
+    },
+    {
+      "name": "five diagnostic text bytes and metadata",
+      "budget": 6,
+      "child": 5,
+      "parent": 1,
+      "actual": 6,
+      "admitted": true
+    },
+    {
+      "name": "one funded diagnostic slot",
+      "budget": 1,
+      "child": 0,
+      "parent": 1,
+      "actual": 1,
+      "admitted": true
+    },
+    {
+      "name": "original issuer capture before child close",
+      "budget": 1,
+      "child": 0,
+      "parent": 1,
+      "actual": 1,
+      "admitted": true
+    },
+    {
+      "name": "string byte copy and parent metadata",
+      "budget": 4096,
+      "child": 2048,
+      "parent": 1,
+      "actual": 2049,
+      "admitted": true
+    },
+    {
+      "name": "one UTF-8 source byte retained",
+      "budget": 1,
+      "child": 1,
+      "parent": 0,
+      "actual": 1,
+      "admitted": true
+    }
   ]
 }

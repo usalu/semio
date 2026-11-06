@@ -1,7 +1,7 @@
     /// 📌️ Document cancellation and latest-wins keys: the retained document cancellation, exact keys against the serde oracle, producer child claims, contended finish, rebase and full registry reclaim.
 
-use semio_framework_plugin_command::command_admission::ToolLatestWinsRegistry;
-use semio_framework_os_store_command::HistoryLane;
+use semio_plugin_command::command_admission::ToolLatestWinsRegistry;
+use semio_os_store_command::HistoryLane;
 pub(super) async fn retained_document_cancellation<A: ArtifactApp + Default>(factory: std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<A::Snapshot, A::Mutation>>, mutation: fn() -> A::Mutation, observe: fn(&A::Snapshot) -> i32) {
         let mut original_scope = artifact_app_laws::OriginalFixtureScope::admit();
         let cx = original_scope.cx();
@@ -12,7 +12,7 @@ pub(super) async fn retained_document_cancellation<A: ArtifactApp + Default>(fac
                 if ack_phase == 2 && case["cancelAt"] != "awaitingAck" { continue; }
                 let boundary = case["cancelAt"].as_str().unwrap();
                 let mounted_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
-        let mounted_policy=semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
+        let mounted_policy=semio_plugin_mounted_owner::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
         let identity_started=std::time::Instant::now();
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
         let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("original typed fixture supplied identity authority");
@@ -50,7 +50,7 @@ pub(super) async fn retained_document_cancellation<A: ArtifactApp + Default>(fac
                     terminal_seen: true,
                 worker_resume_pending: false,
                     publication: Some(ArtifactToolCompletionValue::Emit(Ok(Emit::default()), EphemeralEmit::default())),
-                    tool_stage:semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None, pending_stream_abort:None, stream_abort_completed:false, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
+                    tool_stage:semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None,publication_failure:Default::default(), pending_stream_abort:None, stream_abort_completed:false, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
                     pending_child_publication: None,
                     owned_child_group: None,
                     owned_child_committed: false,
@@ -61,7 +61,7 @@ pub(super) async fn retained_document_cancellation<A: ArtifactApp + Default>(fac
                     result_page_presented: false,
                     result_sequence: 0,
                     publication_progress: 0,
-                    publication_checkpoint: None, publication_ownership_progress: None, original_retirement_receipt: None, actor_capture: None,actor_capture_pending:semio_framework_plugin_mounted_owner::actor_capture::ActorCapture::new(),
+                    publication_checkpoint: None, publication_ownership_progress: None, original_retirement_receipt: None, actor_capture: None,actor_capture_pending:semio_plugin_mounted_owner::actor_capture::ActorCapture::new(),
                     publication_attempt: 0,
                     ui_pending: true,
                     progress: None,
@@ -123,32 +123,32 @@ pub(super) async fn retained_document_cancellation<A: ArtifactApp + Default>(fac
                     assert!(!mounted.reject_cancelled_publication().unwrap());
                     assert_eq!(mounted.result_page.as_ref().unwrap().bytes(), receipt.1.as_slice());
                     if delayed_ack {
-                        let mut presented = present_mounted_page(&mut mounted, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation, cx).unwrap();
+                        let mut presented = present_mounted_page(&mut mounted, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation, cx).unwrap();
                         assert_eq!(presented.token.attempt, fixture["resultAck"]["attempt"].as_u64().unwrap() as u8);
                         assert_eq!(mounted.stage, MountedTypedCommandFullOperationStage::AwaitingAck);
                         for _ in 0..fixture["resultAck"]["preAckPolls"].as_u64().unwrap() {
                             assert!(present_mounted_page(&mut mounted, crate::app_testing::artifact_app_laws::fixture_mounted_policy().preparation, cx).is_none());
                         }
                         assert!(mounted.acknowledge_result_page(crate::app_testing::artifact_app_laws::close_fixture_result_page(&mut presented,crate::app_testing::artifact_app_laws::fixture_mounted_policy().close)).unwrap());
-                retire_acknowledged_mounted_page(&mut mounted, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close, cx);
+                retire_acknowledged_mounted_page(&mut mounted, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close, cx);
                     } else {
                         assert!(mounted.acknowledge_result_page(receipt.0).unwrap());
-                retire_acknowledged_mounted_page(&mut mounted, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close, cx);
+                retire_acknowledged_mounted_page(&mut mounted, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close, cx);
                     }
                 }
                 publish_mounted_fixture_unit(&mut app, &mut mounted, mounted_policy.maintenance, cx);
                 let mut final_page = if delayed_ack {
-                    let mut presented = present_mounted_page(&mut mounted, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation, cx).unwrap();
+                    let mut presented = present_mounted_page(&mut mounted, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation, cx).unwrap();
                     let mut deliveries = 1;
                     for _ in 0..fixture["resultAck"]["preAckPolls"].as_u64().unwrap() {
-                        deliveries += usize::from(present_mounted_page(&mut mounted, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation, cx).is_some());
+                        deliveries += usize::from(present_mounted_page(&mut mounted, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation, cx).is_some());
                     }
                     assert_eq!(deliveries, fixture["resultAck"]["deliveries"].as_u64().unwrap() as usize);
                     assert_eq!(presented.token.attempt, fixture["resultAck"]["attempt"].as_u64().unwrap() as u8);
                     assert_eq!(mounted.stage, MountedTypedCommandFullOperationStage::AwaitingAck);
                     presented
                 } else {
-                    present_mounted_page(&mut mounted, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation, cx).unwrap()
+                    present_mounted_page(&mut mounted, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation, cx).unwrap()
                 };
                 assert_eq!(final_page.lane, TypedOperationResultLane::Fault);
                 let committed = case["committed"].as_bool().unwrap();
@@ -168,12 +168,12 @@ pub(super) async fn retained_document_cancellation<A: ArtifactApp + Default>(fac
     }
 
 struct KeyedCancellationFixture {
-    scope: semio_framework_plugin_testing_laws::artifact_app_laws::OriginalFixtureScope,
-    issuer: semio_framework_plugin_operation::ToolCancellationIssuer,
+    scope: semio_plugin_testing_laws::artifact_app_laws::OriginalFixtureScope,
+    issuer: semio_plugin_operation::ToolCancellationIssuer,
 }
 impl KeyedCancellationFixture {
     fn open() -> Self {
-        let mut value = Self { scope: semio_framework_plugin_testing_laws::artifact_app_laws::OriginalFixtureScope::admit(), issuer: semio_framework_plugin_operation::ToolCancellationIssuer::empty() };
+        let mut value = Self { scope: semio_plugin_testing_laws::artifact_app_laws::OriginalFixtureScope::admit(), issuer: semio_plugin_operation::ToolCancellationIssuer::empty() };
         for _ in 0..100_000 {
             if value.issuer.ready() { return value; }
             let cx = value.scope.cx();
@@ -182,32 +182,32 @@ impl KeyedCancellationFixture {
         }
         panic!("original keyed fixture issuer admission stalled")
     }
-    fn begin(&mut self, key: ToolOperationKey) -> semio_framework_plugin_operation::ToolCancellationLease {
+    fn begin(&mut self, key: ToolOperationKey) -> semio_plugin_operation::ToolCancellationLease {
         for _ in 0..100_000 {
             if let Some(lease) = self.issuer.begin(&key, self.scope.cx()).unwrap() { return lease; }
         }
         panic!("original fixture lease admission stalled")
     }
-    fn begin_keyed(&mut self, key: ToolOperationKey) -> semio_framework_plugin_operation::ToolCancellationLease {
+    fn begin_keyed(&mut self, key: ToolOperationKey) -> semio_plugin_operation::ToolCancellationLease {
         for _ in 0..100_000 {
             if let Some(lease) = self.issuer.begin_keyed(&key, self.scope.cx()).unwrap() { return lease; }
         }
         panic!("original keyed fixture lease admission stalled")
     }
-    fn handle(&self) -> &semio_framework_plugin_operation::ToolCancellationHandle { self.issuer.handle().unwrap() }
+    fn handle(&self) -> &semio_plugin_operation::ToolCancellationHandle { self.issuer.handle().unwrap() }
     fn cleanup(&mut self, index: usize, finished_only: bool) -> bool {
         for _ in 0..100_000 {
             if self.issuer.cleanup_slot(index, self.scope.cx(), finished_only).unwrap() { return true; }
         }
         panic!("original keyed cancellation slot cleanup stalled")
     }
-    fn close_lease(&mut self, lease: semio_framework_plugin_operation::ToolCancellationLease) {
+    fn close_lease(&mut self, lease: semio_plugin_operation::ToolCancellationLease) {
         let mut original = Some(lease);
         let mut cursor = None;
         for _ in 0..100_000 {
             if original.is_none() { break; }
             let cx = self.scope.cx();
-            let (owner, progress) = semio_framework_plugin_operation::original_lease_cursor_admit(&mut original, cx.retained_grant()).unwrap();
+            let (owner, progress) = semio_plugin_operation::original_lease_cursor_admit(&mut original, cx.retained_grant()).unwrap();
             cursor = owner;
             cx.consume_retained(progress).unwrap();
             if progress.copied_items > 0 { cx.consume_fuel(1); }
@@ -217,7 +217,7 @@ impl KeyedCancellationFixture {
         for _ in 0..100_000 {
             let cx = self.scope.cx();
             let progress = if cursor.as_ref().unwrap().terminal_is_empty() {
-                semio_framework_plugin_operation::original_lease_cursor_release(&mut cursor, cx.retained_grant()).unwrap()
+                semio_plugin_operation::original_lease_cursor_release(&mut cursor, cx.retained_grant()).unwrap()
             } else {
                 cursor.as_mut().unwrap().close_step(self.issuer.handle().unwrap(), cx.retained_grant()).unwrap().progress()
             };

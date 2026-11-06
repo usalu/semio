@@ -1,11 +1,11 @@
-use semio_framework_plugin_job::original_emission::OriginalEmissionInput;
-use semio_framework_plugin_testing_laws::artifact_app_laws;
-use semio_framework_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::{contract_app_raw,meta,TestApp};
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_job::original_emission::OriginalEmissionInput;
+use semio_plugin_testing_laws::artifact_app_laws;
+use semio_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::{contract_app_raw,meta,TestApp};
+use semio_plugin_decl_emission::Emit;
 use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_decl_app::tool_contract::TypedOperationResultLane;
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::{TestMutation,set_count::SetCount};
-use semio_framework_plugin_operation::ArtifactDocumentAuthority;
+use semio_plugin_decl_app::tool_contract::TypedOperationResultLane;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::{TestMutation,set_count::SetCount};
+use semio_plugin_operation::ArtifactDocumentAuthority;
 use semio_framework_job::{OriginalTurnFailure,StepContext};
 use semio_framework_value::DslValue;
 
@@ -14,7 +14,7 @@ fn original_emission_turn<T>(scope:&mut artifact_app_laws::OriginalFixtureScope,
     let cx=scope.cx();
     let before=cx.retained_progress();
     let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||run(cx));
-    let paid=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress()).unwrap();
+    let paid=semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress()).unwrap();
     assert_eq!((heap.requested_bytes,heap.released_bytes),(paid.retained_capacity_bytes,paid.released_bytes),"actual intake/publication allocations require the same caller receipt");
     result.unwrap()
 }
@@ -118,7 +118,7 @@ async fn genuine_original_emission_intake_publishes_with_borrowed_caller_and_ret
             if app.close_terminal_is_empty(){break}
             original_emission_turn(&mut scope,|cx|{
                 let demand=app.close_retirement_demands(policy.close.maximum_copy_bytes)?;
-                semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,policy.close,demand,|same,grant|Ok((PluginApp::close_step(&mut app,same,grant)?,app.close_terminal_is_empty()))).map(|_|()).map_err(Into::into)
+                semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,policy.close,demand,|same,grant|Ok((PluginApp::close_step(&mut app,same,grant)?,app.close_terminal_is_empty()))).map(|_|()).map_err(Into::into)
             });
         }
         assert!(app.close_terminal_is_empty(),"all original source, mounted and cancellation owners physically close");

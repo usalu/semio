@@ -128,7 +128,7 @@
         let alice = sample_presence_peer("user:alice#s1", Some(3), true);
         let bob = sample_presence_peer("user:bob#s1", Some(5), false);
         assert!(publish_presence_roster(&mut app, 1, Some(9), &[alice.clone(), bob], 1000,cx).await.fault.is_none());
-        for _ in 0..semio_framework_plugin_testing_laws::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
+        for _ in 0..semio_plugin_testing_laws::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
             if app.roster.peer_presence_retirements.is_empty(){break}
             app.maintenance.maintenance_stage=5;app_maintenance_turn(&mut app,cx).expect("original empty root physically retires before held-root law");
         }

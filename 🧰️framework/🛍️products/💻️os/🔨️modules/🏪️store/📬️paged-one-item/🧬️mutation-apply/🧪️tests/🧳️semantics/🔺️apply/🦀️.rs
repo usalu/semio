@@ -1,6 +1,6 @@
 //! 🔺️ Central fixture plans preflight every index and stage shared roots before capability-authorized exchange.
 use super::*;
-use semio_framework_os_spr::{RetainedDiff,RetainedDiffApply,RetainedDiffPreflightAdvance};
+use semio_os_spr::{RetainedDiff,RetainedDiffApply,RetainedDiffPreflightAdvance};
 use semio_framework_value::{shared_issuance::{SealedShared, SharedIssuer}, retained_clone::{RetainedCloneSource, RetainedCloneSourceTake,RetainedCloneSourceAdmission}};
 use semio_framework_value_persistent::{list::persistent::PersistentList, list::persistent::PersistentSet, list::persistent::PersistentSplice, list::persistent::PersistentSpliceKind};
 impl RetainedDiff<Document> for Diff{type Apply=Plan;}
@@ -72,7 +72,7 @@ impl RetainedDiffApply<Document,Diff> for Plan{
   16=>{let fixed=Self::fixed();match self.list_source.as_mut().unwrap().take_authority(child(g,fixed)).result?{RetainedCloneSourceTake::Pending(receipt)=>r=add(receipt,fixed),RetainedCloneSourceTake::Ready(value,receipt)=>{*self.prepared=Some(value);drop(self.list_source.take());self.phase=17;r=add(receipt,fixed);}}},
   _=>return Ok(RetainedDiffPreflightAdvance::Ready(Default::default(),self.valid)),
  }if !r.fits(g){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"central immutable fixture exceeded its physical quote").with_retained_progress(r));}Ok(if self.phase==17{RetainedDiffPreflightAdvance::Ready(r,self.valid)}else{RetainedDiffPreflightAdvance::Progress(r)})}
- fn take_messages(&mut self)->Vec<semio_framework_os_spr::MutationMessage>{Vec::new()}
+ fn take_messages(&mut self)->Vec<semio_os_spr::MutationMessage>{Vec::new()}
  fn commit_demand(&self,_:RetainedCloneRef<'_,Diff>,_:RetainedCloneRef<'_,Document>,_:&Document,_:usize)->Result<RetirementDemand,ValueError>{Ok(demand(2*size_of::<PersistentList<Node>>()+size_of::<bool>(),0))}
  fn commit(&mut self,d:RetainedCloneRef<'_,Diff>,p:RetainedCloneRef<'_,Document>,post:&mut Document,g:RetainedCloneGrant,_:ApplyCapability)->Result<RetainedCloneStep,ValueError>{let q=self.commit_demand(d,p,post,0)?;if !fits(q,g){return Ok(RetainedCloneStep::Progress(Default::default()));}assert!(!self.committed&&self.valid);let candidate=self.prepared.take().unwrap();*self.prepared=Some(std::mem::replace(&mut post.nodes,candidate));self.committed=true;APPLY_CALLS.set(APPLY_CALLS.get()+1);Ok(RetainedCloneStep::Complete(progress(q)))}
  fn begin_close(&mut self){self.closing=true;self.begin_operation_close();}

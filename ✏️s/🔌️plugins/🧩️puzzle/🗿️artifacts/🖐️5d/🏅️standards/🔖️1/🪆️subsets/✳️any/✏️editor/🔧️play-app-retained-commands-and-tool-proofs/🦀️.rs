@@ -69,7 +69,7 @@ impl ToolJobFactory for Puzzle5dRetainedCommandJobFactory {
         self.contract
     }
 
-    semio_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: |payload| payload.maximum_raw_bytes, checkpoint_resume: true);
+    semio_framework_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: |payload| payload.maximum_raw_bytes, checkpoint_resume: true);
 
     
 }

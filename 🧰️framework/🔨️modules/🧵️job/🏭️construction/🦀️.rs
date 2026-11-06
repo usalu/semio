@@ -29,7 +29,7 @@ pub fn admit_original_construction<O>(context:&mut StepContext<'_>,output:&mut O
         };
         let quote_refusal=(!progress.fits(grant)||progress.copied_items>demand.items||progress.copied_bytes>demand.copy_bytes||progress.retained_capacity_bytes>demand.capacity_bytes||progress.released_bytes>demand.release_bytes).then(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original native construction exceeded its physical quote").with_retained_progress(progress));
         let allocation_refusal=control.record_constructed_allocation(progress.retained_capacity_bytes).err().map(|error|error.with_retained_progress(progress));
-        let result=if primary.is_some()||quote_refusal.is_some()||allocation_refusal.is_some(){Err(OriginalReceivingPrimary { primary,quote_refusal,allocation_refusal,progress })}else{Ok(RetainedCloneStep::Complete(progress))};
+        let result=if primary.is_some()||quote_refusal.is_some()||allocation_refusal.is_some(){Err(OriginalReceivingPrimary {retirement_failure:None,work_refusal:None, primary,quote_refusal,allocation_refusal,allocation_failure:None,native_allocation:None,receipt_refusal:None,progress })}else{Ok(RetainedCloneStep::Complete(progress))};
         NativeConstructionStepResult { result,progress,work:actual.work }
     }).into_step_outcome();actual_work=turn.work;turn.result});
     let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};

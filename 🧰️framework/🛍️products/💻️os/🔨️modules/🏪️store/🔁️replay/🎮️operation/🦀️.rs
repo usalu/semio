@@ -14,31 +14,38 @@ pub struct OperationMessageSettlement {
     pub pending: Option<semio_os_spr::command::MutationMessageRetirement>,
     pub retiring: Option<semio_os_spr::command::MutationMessageLedgerRetirement>,
     pub closing: bool,
+    last_work:u64,
 }
 impl OperationMessageSettlement {
-    pub fn new(outcome: semio_os_spr::MutationReplayOutcome) -> Self { Self { drain: Some(semio_os_spr::command::OperationMessageDrain::new(outcome)), pending: None, retiring: None, closing: false } }
+    pub fn new(outcome: semio_os_spr::MutationReplayOutcome) -> Self { Self { drain: Some(semio_os_spr::command::OperationMessageDrain::new(outcome)), pending: None, retiring: None, closing: false, last_work:0 } }
     pub fn step(&mut self, ledger: &mut semio_os_spr::command::ReplayMessageAccumulator, grant: RetainedCloneGrant) -> Result<(bool,RetainedCloneProgress), ValueError> {
         let drain = self.drain.as_mut().expect("operation retains its original row drain");
         let progress=drain.step(ledger, grant)?;
         Ok((drain.is_finished(),progress))
     }
     pub fn take(&mut self) -> semio_os_spr::MutationReplayOutcome { let result = self.drain.as_mut().and_then(semio_os_spr::command::OperationMessageDrain::take).expect("completed original operation drain"); self.drain = None; result }
-    pub fn begin_close(&mut self) { self.closing = true; }
-    pub fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(if self.drain.is_some() { size_of::<semio_os_spr::MutationReplayOutcome>() + size_of::<Option<MutationMessage>>() } else if let Some(pending) = self.pending.as_ref() { pending.next_copy_byte_demand() } else { self.retiring.as_ref().map_or(0, semio_os_spr::command::MutationMessageLedgerRetirement::next_copy_byte_demand) }) }
+    pub fn last_turn_work(&self)->u64{self.last_work}
+    pub fn next_computational_work(&self)->u64{u64::from(!self.terminal_is_empty())}
+    pub fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(if !self.closing&&!self.terminal_is_empty(){size_of::<bool>()}else if self.drain.is_none()&&self.pending.as_ref().is_some_and(semio_os_spr::command::MutationMessageRetirement::terminal_is_empty){size_of::<Option<semio_os_spr::command::MutationMessageRetirement>>()}else if self.retiring.as_ref().is_some_and(semio_os_spr::command::MutationMessageLedgerRetirement::terminal_is_empty)&&self.pending.is_none()&&self.drain.is_none(){size_of::<Option<semio_os_spr::command::MutationMessageLedgerRetirement>>()}else if self.drain.is_some() { size_of::<semio_os_spr::MutationReplayOutcome>() + size_of::<Option<MutationMessage>>() } else if let Some(pending) = self.pending.as_ref() { pending.next_copy_byte_demand() } else { self.retiring.as_ref().map_or(0, semio_os_spr::command::MutationMessageLedgerRetirement::next_copy_byte_demand) }) }
     pub fn next_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(0) }
-    pub fn next_release_byte_demand(&self) -> Result<usize, ValueError> { if self.drain.is_some() { return Ok(0); } if let Some(pending) = self.pending.as_ref() { return Ok(pending.next_release_byte_demand()); } self.retiring.as_ref().map_or(Ok(0), semio_os_spr::command::MutationMessageLedgerRetirement::next_release_byte_demand) }
-    pub fn next_depth_demand(&self) -> Result<usize, ValueError> { if self.drain.is_some() { return Ok(1); } if let Some(pending) = self.pending.as_ref() { return pending.next_depth_demand().map(|depth| depth + 1); } self.retiring.as_ref().map_or(Ok(0), |owner| owner.next_depth_demand().map(|depth| depth + 1)) }
+    pub fn next_release_byte_demand(&self) -> Result<usize, ValueError> { if !self.closing&&!self.terminal_is_empty(){return Ok(0)} if self.drain.is_none()&&self.pending.as_ref().is_some_and(semio_os_spr::command::MutationMessageRetirement::terminal_is_empty)||self.drain.is_none()&&self.pending.is_none()&&self.retiring.as_ref().is_some_and(semio_os_spr::command::MutationMessageLedgerRetirement::terminal_is_empty){return Ok(0)} if self.drain.is_some() { return Ok(0); } if let Some(pending) = self.pending.as_ref() { return Ok(pending.next_release_byte_demand()); } self.retiring.as_ref().map_or(Ok(0), semio_os_spr::command::MutationMessageLedgerRetirement::next_release_byte_demand) }
+    pub fn next_depth_demand(&self) -> Result<usize, ValueError> { if !self.closing&&!self.terminal_is_empty()||self.drain.is_none()&&self.pending.as_ref().is_some_and(semio_os_spr::command::MutationMessageRetirement::terminal_is_empty)||self.drain.is_none()&&self.pending.is_none()&&self.retiring.as_ref().is_some_and(semio_os_spr::command::MutationMessageLedgerRetirement::terminal_is_empty){return Ok(1)} if self.drain.is_some() { return Ok(1); } if let Some(pending) = self.pending.as_ref() { return pending.next_depth_demand().map(|depth| depth + 1); } self.retiring.as_ref().map_or(Ok(0), |owner| owner.next_depth_demand().map(|depth| depth + 1)) }
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
+        self.last_work=0;
         let idle = RetainedCloneProgress::default();
-        if !self.closing || grant.maximum_items == 0 || grant.maximum_copy_bytes < self.next_copy_byte_demand()? || grant.maximum_release_bytes < self.next_release_byte_demand()? || grant.maximum_depth < self.next_depth_demand()? { return Ok(RetainedCloneStep::Progress(idle)); }
-        if let Some(drain) = self.drain.take() { let (outcome, pending) = drain.into_parts(); self.pending = pending.map(semio_os_spr::command::MutationMessageRetirement::new); self.retiring = Some(semio_os_spr::command::MutationMessageLedgerRetirement::from_replay_outcome(outcome)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<semio_os_spr::MutationReplayOutcome>() + size_of::<Option<MutationMessage>>(), ..idle })); }
-        if let Some(pending) = self.pending.as_mut() { let progress = pending.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }); if pending.terminal_is_empty() { self.pending = None; } return Ok(RetainedCloneStep::Progress(progress)); }
-        if let Some(retiring) = self.retiring.as_mut() { let step = retiring.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })?; if retiring.terminal_is_empty() { self.retiring = None; } return Ok(step); }
+        if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(idle))}
+        if grant.maximum_items == 0 || grant.maximum_copy_bytes < self.next_copy_byte_demand()? || grant.maximum_release_bytes < self.next_release_byte_demand()? || grant.maximum_depth < self.next_depth_demand()? { return Ok(RetainedCloneStep::Progress(idle)); }
+        if !self.closing{self.closing=true;self.last_work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<bool>(),..idle}))}
+        if let Some(drain) = self.drain.take() { self.last_work=1; let (outcome, pending) = drain.into_parts(); self.pending = pending.map(semio_os_spr::command::MutationMessageRetirement::new); self.retiring = Some(semio_os_spr::command::MutationMessageLedgerRetirement::from_replay_outcome(outcome)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<semio_os_spr::MutationReplayOutcome>() + size_of::<Option<MutationMessage>>(), ..idle })); }
+        if self.drain.is_none()&&self.pending.as_ref().is_some_and(semio_os_spr::command::MutationMessageRetirement::terminal_is_empty){self.pending.take();self.last_work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<semio_os_spr::command::MutationMessageRetirement>>(),..idle}))}
+        if let Some(pending) = self.pending.as_mut() { let progress = pending.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant });self.last_work=pending.last_turn_work();return Ok(RetainedCloneStep::Progress(progress)); }
+        if self.retiring.as_ref().is_some_and(semio_os_spr::command::MutationMessageLedgerRetirement::terminal_is_empty){self.retiring.take();self.last_work=1;return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<semio_os_spr::command::MutationMessageLedgerRetirement>>(),..idle}))}
+        if let Some(retiring) = self.retiring.as_mut() { let turn = retiring.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant });self.last_work=retiring.last_turn_work();return turn.map(|step|RetainedCloneStep::Progress(step.progress())); }
         Ok(RetainedCloneStep::Complete(idle))
     }
     pub fn terminal_is_empty(&self) -> bool { self.drain.is_none() && self.pending.is_none() && self.retiring.is_none() }
-    pub fn close_cold(&mut self) { self.begin_close(); while !self.terminal_is_empty() { self.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX }).expect("cold original operation message retirement"); } }
+    pub fn close_cold(&mut self) { while !self.terminal_is_empty() { self.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX }).expect("cold original operation message retirement"); } }
 }
 impl Drop for OperationMessageSettlement { fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "original operation messages must transfer or physically close"); } }
 
@@ -94,16 +101,17 @@ pub trait ArtifactReplayPreparation<P, M>: Send {
     /// ⛽️ The entire latest advance or close work survives CPU-only progress and partial failure.
     fn last_turn_work(&self)->u64;
     fn advance_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>;
-    fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactReplayPreparationStep, ValueError>;
+    fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactReplayPreparationStep, semio_framework_value::OriginalRetirementFailure>;
     fn take_prepared(&mut self) -> Option<ArtifactReplayPrepared<P, M>>;
     fn cancel(&mut self);
     fn begin_close(&mut self);
     fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>;
+    fn close_work_demand(&self, body:usize)->Result<u64,ValueError>;
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError>;
     fn next_close_capacity_byte_demand(&self, maximum_body_bytes: usize) -> Result<usize, ValueError>;
     fn next_close_release_byte_demand(&self) -> Result<usize, ValueError>;
     fn next_close_depth_demand(&self) -> Result<usize, ValueError>;
-    fn close_step(&mut self, grant: RetainedCloneGrant, receiving: &mut dyn semio_framework_value::OriginalRetirementControl) -> Result<RetainedCloneStep, ValueError>;
+    fn close_step(&mut self, grant: RetainedCloneGrant, receiving: &mut dyn semio_framework_value::OriginalRetirementControl) -> Result<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -129,17 +137,17 @@ impl<P, M> ArtifactReplayPreparationTask<P, M> {
         Self { context, cursor, completed: ArtifactReplayPreparationProgress::default(), cancelled: false, ready: false, original_control: None,last_work:0 }
     }
 
-    pub fn step(&mut self, generation: u64, revision: [u8; 32], body:usize, grant: ArtifactStoreOneItemGrant, control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>, deadline: &mut dyn FnMut() -> bool) -> Result<ArtifactReplayPreparationStep, ValueError> {
+    pub fn step(&mut self, generation: u64, revision: [u8; 32], body:usize, grant: ArtifactStoreOneItemGrant, control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>, deadline: &mut dyn FnMut() -> bool) -> Result<ArtifactReplayPreparationStep, semio_framework_value::OriginalRetirementFailure> {
         self.last_work=0;
         if generation != self.context.generation || revision != self.context.base_revision {
-            return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"history.operation.stale-preparation"));
+            return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"history.operation.stale-preparation").into());
         }
         if self.cancelled || !grant.permits_one() || deadline() {
             return Ok(ArtifactReplayPreparationStep::Blocked);
         }
         if self.ready { return Ok(ArtifactReplayPreparationStep::Prepared(RetainedCloneProgress::default())); }
         let identity=(control.ledger_identity(),control.retirement_recipient_identity());
-        if self.original_control.is_some_and(|original|original!=identity){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"semantic preparation requires its original decoder and recipient"));}
+        if self.original_control.is_some_and(|original|original!=identity){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"semantic preparation requires its original decoder and recipient").into());}
         self.original_control=Some(identity);
         let result=self.cursor.advance(body,grant,control);self.last_work=self.cursor.last_turn_work();
         let step = admit_replay_preparation_step(result?, grant)?;
@@ -201,25 +209,28 @@ impl<P, M> ArtifactReplayPreparationRetirement<P, M> {
 
 impl<P, M> ArtifactReplayPreparationRetirement<P, M> {
     pub fn last_turn_work(&self)->u64{self.last_work}
+    pub fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.cursor.as_ref().map_or(Ok(0),|cursor|if cursor.terminal_is_empty(){Ok(1)}else{cursor.close_work_demand(body)})}
     pub fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{let Some(cursor)=self.cursor.as_ref()else{return Ok(Default::default())};if cursor.terminal_is_empty(){return Ok(semio_framework_value::RetirementDemand{release_bytes:size_of_val(cursor.as_ref()),depth:1,..Default::default()});}let mut demand=cursor.close_demands(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"operation preparation cleanup depth overflow"))?;Ok(demand)}
-    pub fn close_step(&mut self, grant: RetainedCloneGrant, receiving: &mut dyn semio_framework_value::OriginalRetirementControl) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_step(&mut self, grant: RetainedCloneGrant, receiving: &mut dyn semio_framework_value::OriginalRetirementControl) -> Result<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
         self.last_work=0;
         let empty = RetainedCloneProgress::default();
         let Some(cursor) = self.cursor.as_ref() else { return Ok(RetainedCloneStep::Complete(empty)) };
         let demand=self.next_demand(grant.maximum_copy_bytes)?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(empty));}
         let identity=(receiving.ledger_identity(),receiving.retirement_recipient_identity());
-        if self.original_control.is_some_and(|original|original!=identity){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"semantic retirement requires its original decoder and recipient"));}
+        if self.original_control.is_some_and(|original|original!=identity){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"semantic retirement requires its original decoder and recipient").into());}
         self.original_control=Some(identity);
         if cursor.terminal_is_empty() {
             let bytes = size_of_val(cursor.as_ref());
+            if !receiving.prepare_work(1).map_err(semio_framework_value::OriginalRetirementFailure::from_work_refusal)? { return Ok(RetainedCloneStep::Progress(empty)); }
             self.last_work=1;drop(self.cursor.take());
-            return Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..empty }));
+            let turn=semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..empty })),work:1};
+            return semio_framework_value::settle_original_retirement_work(turn,receiving.commit_work(1)).result;
         }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         let cursor = self.cursor.as_mut().unwrap();
         let result=cursor.close_step(child, receiving);self.last_work=cursor.last_turn_work();let step=result?;
-        semio_framework_value::retained_clone::admit_retained_clone_close(child, step, cursor.terminal_is_empty(), "operation preparation payload").map(|step| RetainedCloneStep::Progress(step.progress()))
+        semio_framework_value::retained_clone::admit_retained_clone_close(child, step, cursor.terminal_is_empty(), "operation preparation payload").map(|step| RetainedCloneStep::Progress(step.progress())).map_err(Into::into)
     }
     pub fn terminal_is_empty(&self) -> bool { self.cursor.is_none() }
     pub fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.cursor.as_ref().map_or(Ok(0), |cursor| if cursor.terminal_is_empty() { Ok(0) } else { cursor.next_close_copy_byte_demand() }) }

@@ -168,7 +168,7 @@ impl SnapshotRejection {
     /// 🚨️ Restores the provider cause and its packed diagnostics without classifying prose.
     pub fn into_io_error(self) -> Result<semio_framework::io_schema::IoError, semio_framework_value::ValueError> {
         Ok(semio_framework::io_schema::IoError {
-            cause: semio_framework_value::ValueError::new(self.kind, self.message),
+            cause: semio_framework_value::ValueError::new(self.kind, self.message).into(),
             diagnostics: decode_diagnostics(&self.diagnostics)?,
         })
     }

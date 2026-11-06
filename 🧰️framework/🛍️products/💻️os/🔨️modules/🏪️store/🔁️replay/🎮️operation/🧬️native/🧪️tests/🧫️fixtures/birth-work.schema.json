@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "projectionBirth",
+    "projectionTake",
+    "editBirth",
+    "deniedWork",
+    "deniedItems",
+    "deniedCapacity",
+    "projectionAdvanceDenials",
+    "preparationShellWork"
+  ],
+  "properties": {
+    "projectionBirth": {
+      "type": "integer",
+      "const": 1
+    },
+    "projectionTake": {
+      "type": "integer",
+      "const": 1
+    },
+    "editBirth": {
+      "type": "integer",
+      "const": 1
+    },
+    "deniedWork": {
+      "type": "integer",
+      "const": 0
+    },
+    "deniedItems": {
+      "type": "integer",
+      "const": 0
+    },
+    "deniedCapacity": {
+      "type": "integer",
+      "const": 0
+    },
+    "projectionAdvanceDenials": {
+      "type": "integer",
+      "const": 1
+    },
+    "preparationShellWork": {
+      "type": "integer",
+      "const": 1
+    }
+  }
+}

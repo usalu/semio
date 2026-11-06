@@ -1,0 +1,15 @@
+{
+  "initial": [
+    1,
+    2
+  ],
+  "limits": [
+    0,
+    1
+  ],
+  "expectedZero": {
+    "work": 0,
+    "items": 0
+  },
+  "maximum": 1
+}

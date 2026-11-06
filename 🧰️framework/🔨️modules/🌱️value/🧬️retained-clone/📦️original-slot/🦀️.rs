@@ -11,7 +11,7 @@ pub trait RetainedOriginalReadOwner<T>:Send+Sync {
  fn birth_demands(&self)->Result<RetirementDemand,ValueError>;
  fn advance(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedCloneStep,ValueError>;
  fn return_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
- fn return_original(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedOriginalReadReturn<T>,ValueError>;
+ fn return_original(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedOriginalReadReturn<T>,semio_framework_value_control_contract::OriginalRetirementFailure>;
  fn terminal_is_empty(&self)->bool;
 }
 pub enum RetainedOriginalReadReturn<T> {Pending(RetainedCloneProgress),Ready(T,Arc<dyn ArtifactOwnedValueRetirementFactory<T>>,RetainedCloneProgress)}
@@ -46,13 +46,13 @@ impl<T:Send+Sync+'static> RetainedOriginalReadOwner<T> for RetainedOriginalRead<
   if self.staged.is_some(){return Ok(RetirementDemand{copy_bytes:FactoryOwnedSourceAuthority::<T>::transfer_copy_byte_demand(),release_bytes:size_of::<Self>(),depth:1,..Default::default()});}
   self.source.as_ref().ok_or_else(||fault("slot return lost its exact source"))?.next_take_demand(body)
  }
- fn return_original(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedOriginalReadReturn<T>,ValueError> {let mut work=0;let result=(||{
+ fn return_original(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedOriginalReadReturn<T>,semio_framework_value_control_contract::OriginalRetirementFailure> {let mut work=0;let result=(||{
   let demand=self.return_demands(grant.maximum_copy_bytes)?;
   if !retained_clone_grant_admits(grant,demand){return Ok(RetainedOriginalReadReturn::Pending(Default::default()));}
   if !self.returning{self.returning=true;work=1;return Ok(RetainedOriginalReadReturn::Pending(RetainedCloneProgress{copied_items:1,..Default::default()}));}
   if let Some(admission)=self.admission.as_mut(){if admission.phase()=="ready"{let turn=admission.take_output(&mut self.source,grant);if admission.terminal_is_empty(){self.admission.take();}work=turn.work;return turn.result.map(|step|RetainedOriginalReadReturn::Pending(step.progress()));}let mut returned=None;let turn=admission.return_inputs(&mut returned,grant);if let Some((staged,()))=returned{*self.staged=Some(staged);}if admission.terminal_is_empty(){self.admission.take();}work=turn.work;return turn.result.map(|step|RetainedOriginalReadReturn::Pending(step.progress()));}
 
-  if let Some(staged)=self.staged.take(){work=1;return match staged.take_original(grant){Ok((original,factory,mut receipt))=>{receipt.released_bytes=size_of::<Self>();Ok(RetainedOriginalReadReturn::Ready(original,factory,receipt))},Err((error,staged))=>{*self.staged=Some(staged);Err(error)}};}
+  if let Some(staged)=self.staged.take(){work=1;return match staged.take_original(grant){Ok((original,factory,mut receipt))=>{receipt.released_bytes=size_of::<Self>();Ok(RetainedOriginalReadReturn::Ready(original,factory,receipt))},Err((error,staged))=>{*self.staged=Some(staged);Err(error.into())}};}
   let source=self.source.as_mut().ok_or_else(||fault("slot return source disappeared"))?;
   match {let turn=source.take_authority(grant);work=turn.work;turn.result}?{
    RetainedCloneSourceTake::Pending(receipt)=>Ok(RetainedOriginalReadReturn::Pending(receipt)),

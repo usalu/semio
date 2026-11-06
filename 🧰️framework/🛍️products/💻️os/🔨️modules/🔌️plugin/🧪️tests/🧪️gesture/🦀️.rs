@@ -132,7 +132,7 @@ fn two_panes() -> Vec<ViewWindowInstance> {
 
 fn in_window(actor: &str, window: &str) -> ActionMeta {
     let view = ViewModel { window_id: Some(window.to_string()), window_instances: two_panes(), ..ViewModel::new(Locale::En, Terminology::Native) };
-    ActionMeta { view_state: Some(semio_framework_plugin_testing_laws::receive_view_fixture(view, semio_framework_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(actor) }
+    ActionMeta { view_state: Some(semio_plugin_testing_laws::receive_view_fixture(view, semio_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(actor) }
 }
 
 /// 🚃️ One stream tick of `window` setting the count to `value`, as the dispatch `operation` that publishes: admitted on the

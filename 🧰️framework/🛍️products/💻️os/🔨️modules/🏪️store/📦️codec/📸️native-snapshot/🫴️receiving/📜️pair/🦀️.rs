@@ -17,7 +17,7 @@ pub enum OriginalArtifactPairCause { Value(ValueError),History(RetainedHistoryOp
 pub struct OriginalArtifactPairFailure { pub cause:OriginalArtifactPairCause,pub progress:RetainedCloneProgress,pub receipt_refusal:Option<ValueError> }
 impl OriginalArtifactPairFailure { pub fn retained_progress(&self)->RetainedCloneProgress { self.progress } }
 impl From<ValueError> for OriginalArtifactPairFailure { fn from(error:ValueError)->Self { let progress=error.retained_progress();Self { cause:OriginalArtifactPairCause::Value(error),progress,receipt_refusal:None } } }
-impl From<RetainedHistoryOpMetaFault> for OriginalArtifactPairFailure { fn from(error:RetainedHistoryOpMetaFault)->Self { let progress=match &error { RetainedHistoryOpMetaFault::Value(error)=>error.retained_progress(),RetainedHistoryOpMetaFault::Json(_)=>Default::default(),RetainedHistoryOpMetaFault::Native(error)=>error.retained_progress() };Self { cause:OriginalArtifactPairCause::History(error),progress,receipt_refusal:None } } }
+impl From<RetainedHistoryOpMetaFault> for OriginalArtifactPairFailure { fn from(error:RetainedHistoryOpMetaFault)->Self { let progress=match &error { RetainedHistoryOpMetaFault::Value(error)=>error.retained_progress(),RetainedHistoryOpMetaFault::Json(_)=>Default::default(),RetainedHistoryOpMetaFault::Native(error)=>error.retained_progress(),RetainedHistoryOpMetaFault::Retirement(error)=>error.retained_progress() };Self { cause:OriginalArtifactPairCause::History(error),progress,receipt_refusal:None } } }
 
 impl From<OriginalReceivingPrimary> for OriginalArtifactPairFailure { fn from(error:OriginalReceivingPrimary)->Self { let progress=error.retained_progress();Self { cause:OriginalArtifactPairCause::Native(error),progress,receipt_refusal:None } } }
 

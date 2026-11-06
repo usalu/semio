@@ -1,0 +1,17 @@
+# Source Admission Allocation Markers
+
+The supported native factory library request 71481 stopped at compilation on two clone-source wrappers still calling an allocation-bearing admission without the caller-retained `Option<usize>` marker. No factory test ran in this request. It reached the defining dependency independently of the broader decoder construction errors.
+
+Fresh source already changed the staged source wrapper to require and forward the marker, rejecting a nonempty marker even on an output-only or empty phase. Root updated the borrowed authority wrapper to forward the same actual marker. These signatures do not create a local marker or clear a caller's earlier unposted effect.
+
+Framework consumer census identifies actor diagnostic/page presentation, mesh translation, ToolRun source/version/provenance/presentation, payload stream and ordered-map lease owners. Authored consumers also exist in Energy, FEM and IFC. Their receiving owners must retain the actual frame/marker and propagate it through the selected effect; an ephemeral local marker is not an acceptable compilation repair. These downstream contracts are still in progress.
+
+The existing source admission test bank now retains its marker across effect and post, and compares marked bytes with the real requested-allocation observer before clearing it. A new law exercises both public wrappers with empty, multibyte and nonempty original strings; successful allocating phases report actual measured bytes, nonallocating phases report no allocation, and a second staged advance before posting the first allocation refuses without overwriting the real marker or mutating its selected state. Existing allocator-null and denied-axis laws now pass the bank's persistent marker. These are authored native laws and are not yet compiler-verified.
+
+The shared source fixture specifies allocated extent, allocator-null zero and no-effect absence. Its Ajv 2020 plus SQLite phase/marker oracle passed one test with three assertions. This is fixture evidence, not native or original Job context acceptance.
+
+The clone-source native fixture birth helper, shared-query law, source work law and common law bank now also carry their allocator marker outside the effect callback and compare it with the real allocation observer after receipt settlement. No progress-derived extent is substituted. All edited Rust source and laws parse. The source-reader census before these small helper updates was 68,845 bytes/6 production inputs and 142,630 bytes/24 unit inputs, under unchanged limits; native verification is still pending.
+
+Factory library retry 98926 is terminal: it compiled the source wrapper corrections and ran nineteen tests, with eighteen passes and one original vector issuer rejection. Root corrected the unstable trait-object vtable comparison; subsequent full factory request 9856 passed all nineteen tests. Details and source attribution are in `🔑️factory-issuer-identity.md`. These factory tests do not run the clone-source unit laws; that native suite and all receiving consumers remain required work.
+
+Source library request 5894 reached compilation and rejected the new wrapper law's attempt to use generic `RetireOwned` for `RetainedCloneBorrowAuthority`, which intentionally exposes its explicit paid close API instead. The law now drives that existing public close port under each real selected demand. A fresh full source-library native retry is pending; no source unit native pass has yet been claimed.

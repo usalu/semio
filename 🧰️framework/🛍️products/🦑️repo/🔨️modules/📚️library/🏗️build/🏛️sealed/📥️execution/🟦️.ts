@@ -8,15 +8,17 @@ import{requireIssuedResourceControlInvocationV1,requireIssuedScriptInvocationV1,
 import type{ResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{relative}from"node:path";
 import{fileURLToPath}from"node:url";
-import{implementationModeV1,readSealedLoaderV1,readSealedPointerV1,readSealedSnapshotV1,sealedEntryOfV1,sealedLanguagesV1,sealedPolicyV1,sealedTextV1}from"../🟦️.ts";
+import{implementationModeV1,readSealedLoaderV1,readSealedPointerV1,readSealedReceiptV1,readSealedSnapshotV1,sealedEntryOfV1,sealedLanguagesV1,sealedPolicyV1,sealedTextV1}from"../🟦️.ts";
+import{readPartitionPinV1}from"../🔀️partition/📌️retention/🟦️.ts";
 
 /** 🚦️ Runs one command of the build tool from the implementation its mode selects: `live` captures the live tree for this command exactly as before (the opt-in of the agent that edits the tool), anything else runs the stored snapshot the front-door trampoline promoted (the same snapshot, digest and loader the front door itself runs from). A store without a readable snapshot says so in both languages and runs the live tree, so the sealed layer is never the reason a command does not run.
  * @see ../🚦️trampoline/🟦️.ts who promotes, ../🟦️.ts the policy and the store */
 async function executeImplementationOnceV1(workspace:string,entry:string,args:readonly string[],original:ScriptInvocation,control:ResourceLeaseControl,environment:Readonly<Record<string,string|undefined>>=process.env):Promise<void>{
  requireIssuedScriptInvocationV1(original);requireIssuedResourceControlInvocationV1(control,original);
  if(implementationModeV1(environment)==="live")return executeCapturedBuildSourceV1(workspace,entry,args,original,control,environment);
- const store=sealedEntryOfV1(workspace,relative(workspace,fileURLToPath(new URL("../🚪️entry/🟦️.ts",import.meta.url))).split("\\").join("/")),pointer=readSealedPointerV1(store),text=pointer&&readSealedSnapshotV1(store,pointer),loader=pointer&&readSealedLoaderV1(store,pointer);
- if(!pointer||text===undefined||loader===undefined){void writeOwnedCommandOutputV1(process.stderr,sealedTextV1(sealedLanguagesV1(environment),"fallback",{reason:"no readable sealed snapshot"})+"\n",control);return executeCapturedBuildSourceV1(workspace,entry,args,original,control,environment);}
+ const pin=environment.SEMIO_SEALED_PARTITION_PIN,group=pin&&readPartitionPinV1(workspace,pin),store=sealedEntryOfV1(workspace,entry),pointer=group?.kernels.find(value=>value.entry===entry),text=pointer&&readSealedSnapshotV1(store,pointer),loader=pointer&&readSealedLoaderV1(store,pointer);
+ if(!pointer||text===undefined||loader===undefined)throw Error("Authenticated command partition is unavailable");
+ if(!group||group.door.digest!==environment.SEMIO_SEALED_DOOR_DIGEST)throw Error("Authenticated door and command pin disagree");
  profileMarkV1("source.served","sealed:"+pointer.digest.slice(0,12));
  const argv=[...prepareRepoCpuProfileArgumentsV1(environment),"--eval",loader,"--",pointer.digest,...args],quote=(value:string)=>'"'+value.replace(/(\\*)"/gu,'$1$1\\"').replace(/(\\+)$/u,'$1$1')+'"';
  if(Buffer.byteLength(text)>closureSchema.definitions.Policy.const.maximumSnapshotBytes||[process.execPath,...argv].map(quote).join(" ").length+1>sealedPolicyV1.maximumCommandLineCharacters)throw Error(sealedTextV1(sealedLanguagesV1(environment),"commandPublicationBounded"));

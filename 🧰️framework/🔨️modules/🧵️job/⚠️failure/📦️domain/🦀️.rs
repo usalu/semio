@@ -19,11 +19,11 @@ trait DomainOwner:Send+Sync{
 #[derive(Debug,semio_framework_value_derive::RetireOwned)]
 #[value(crate="::semio_framework_value_retained_clone")]
 #[value(send_only)]
-struct DomainPayload<T:OriginalDomainFailure>{original:Option<T>,callback_refusal:Option<OriginalTurnFailure>,publication_refusal:Option<OriginalTurnFailure>}
+struct DomainPayload<T:OriginalDomainFailure>{original:Option<T>,callback_refusal:Option<OriginalTurnFailure>,capture_refusal:Option<OriginalTurnFailure>,publication_refusal:Option<OriginalTurnFailure>}
 impl<T:OriginalDomainFailure> DomainPayload<T>{
- fn expanded(&self)->bool{self.callback_refusal.is_some()||self.publication_refusal.is_some()}
- fn count(&self)->usize{usize::from(self.original.is_some())+usize::from(self.callback_refusal.is_some())+usize::from(self.publication_refusal.is_some())}
- fn field(&self,index:usize)->Result<&str,ValueError>{[self.original.as_ref().map(|_|"original"),self.callback_refusal.as_ref().map(|_|"callbackRefusal"),self.publication_refusal.as_ref().map(|_|"publicationRefusal")].into_iter().flatten().nth(index).ok_or_else(projection_refused)}
+ fn expanded(&self)->bool{self.callback_refusal.is_some()||self.capture_refusal.is_some()||self.publication_refusal.is_some()}
+ fn count(&self)->usize{usize::from(self.original.is_some())+usize::from(self.callback_refusal.is_some())+usize::from(self.capture_refusal.is_some())+usize::from(self.publication_refusal.is_some())}
+ fn field(&self,index:usize)->Result<&str,ValueError>{[self.original.as_ref().map(|_|"original"),self.callback_refusal.as_ref().map(|_|"callbackRefusal"),self.capture_refusal.as_ref().map(|_|"captureRefusal"),self.publication_refusal.as_ref().map(|_|"publicationRefusal")].into_iter().flatten().nth(index).ok_or_else(projection_refused)}
  fn pending(&self)->bool{self.count()!=0}
 }
 fn projection_refused()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original domain reservation projection ordinal changed")}
@@ -32,12 +32,12 @@ impl<T:OriginalDomainFailure> OriginalDomainProjection for DomainPayload<T>{
  fn projection_view(&self,path:&[usize])->Result<OriginalDomainView<'_>,ValueError>{
   if !self.expanded(){return self.original.as_ref().ok_or_else(projection_refused)?.projection_view(path)}
   let Some((&field,rest))=path.split_first()else{return Ok(OriginalDomainView::IntrinsicObject(self.count()))};
-  match self.field(field)?{"original"=>self.original.as_ref().ok_or_else(projection_refused)?.projection_view(rest),"callbackRefusal"=>super::project_original_turn_failure(self.callback_refusal.as_ref().ok_or_else(projection_refused)?,rest),"publicationRefusal"=>super::project_original_turn_failure(self.publication_refusal.as_ref().ok_or_else(projection_refused)?,rest),_=>Err(projection_refused())}
+  match self.field(field)?{"original"=>self.original.as_ref().ok_or_else(projection_refused)?.projection_view(rest),"callbackRefusal"=>super::project_original_turn_failure(self.callback_refusal.as_ref().ok_or_else(projection_refused)?,rest),"captureRefusal"=>super::project_original_turn_failure(self.capture_refusal.as_ref().ok_or_else(projection_refused)?,rest),"publicationRefusal"=>super::project_original_turn_failure(self.publication_refusal.as_ref().ok_or_else(projection_refused)?,rest),_=>Err(projection_refused())}
  }
  fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{
   if !self.expanded(){return self.original.as_ref().ok_or_else(projection_refused)?.projection_key(path,index)}
   let Some((&field,rest))=path.split_first()else{return self.field(index)};
-  match self.field(field)?{"original"=>self.original.as_ref().ok_or_else(projection_refused)?.projection_key(rest,index),"callbackRefusal"=>super::key_original_turn_failure(self.callback_refusal.as_ref().ok_or_else(projection_refused)?,rest,index),"publicationRefusal"=>super::key_original_turn_failure(self.publication_refusal.as_ref().ok_or_else(projection_refused)?,rest,index),_=>Err(projection_refused())}
+  match self.field(field)?{"original"=>self.original.as_ref().ok_or_else(projection_refused)?.projection_key(rest,index),"callbackRefusal"=>super::key_original_turn_failure(self.callback_refusal.as_ref().ok_or_else(projection_refused)?,rest,index),"captureRefusal"=>super::key_original_turn_failure(self.capture_refusal.as_ref().ok_or_else(projection_refused)?,rest),"publicationRefusal"=>super::key_original_turn_failure(self.publication_refusal.as_ref().ok_or_else(projection_refused)?,rest,index),_=>Err(projection_refused())}
  }
 }
 struct DomainFrame<T:OriginalDomainFailure>{owner:ControlledRetirement<DomainPayload<T>>}
@@ -46,7 +46,7 @@ unsafe impl<T:OriginalDomainFailure> Sync for DomainFrame<T>{}
 impl<T:OriginalDomainFailure> DomainOwner for DomainFrame<T>{
  fn original(&self)->&dyn OriginalDomainProjection{self.owner.original().expect("original domain projection precedes retirement")}
  fn code(&self)->&str{self.owner.original().and_then(|payload|payload.original.as_ref()).map_or("original.callback",OriginalDomainFailure::domain_code)}
- fn message(&self)->&str{let Some(payload)=self.owner.original()else{return "original domain failure payload was retired"};if let Some(original)=&payload.original{original.domain_message()}else{payload.callback_refusal.as_ref().or(payload.publication_refusal.as_ref()).map_or("original domain failure retains no cause",|refusal|refusal.primary.message())}}
+ fn message(&self)->&str{let Some(payload)=self.owner.original()else{return "original domain failure payload was retired"};if let Some(original)=&payload.original{original.domain_message()}else{payload.callback_refusal.as_ref().or(payload.capture_refusal.as_ref()).or(payload.publication_refusal.as_ref()).map_or("original domain failure retains no cause",|refusal|refusal.primary.message())}}
  fn progress(&self)->RetainedCloneProgress{self.owner.original().and_then(|payload|payload.original.as_ref()).map_or(Default::default(),OriginalDomainFailure::domain_retained_progress)}
  fn into_retirement(self:Box<Self>)->Box<dyn RetirementCursor>{self}
 }
@@ -104,7 +104,7 @@ impl<T:OriginalDomainFailure> OriginalDomainReservation<T>{
   let d=original_domain_failure_demand::<T>();if cx.should_yield()||!cx.retained_work_can_enter(d){return Ok(false)}
   let layout=std::alloc::Layout::new::<DomainFrame<T>>();let pointer=std::ptr::NonNull::new(unsafe{std::alloc::alloc(layout)}.cast::<DomainFrame<T>>());cx.consume_fuel(1);
   let Some(pointer)=pointer else{return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"original domain frame allocation refused").into())};
-  let frame=DomainFrame{owner:ControlledRetirement::retain(DomainPayload{original:None,callback_refusal:None,publication_refusal:None})};
+  let frame=DomainFrame{owner:ControlledRetirement::retain(DomainPayload{original:None,callback_refusal:None,capture_refusal:None,publication_refusal:None})};
   self.frame=Some(unsafe{pointer.as_ptr().write(frame);Box::from_raw(pointer.as_ptr())});self.source=Some(identity);
   cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:layout.size(),..Default::default()})?;Ok(true)
  }
@@ -116,8 +116,17 @@ impl<T:OriginalDomainFailure> OriginalDomainReservation<T>{
   let result=cx.with_retained_loan(grant,|same|same.with_original_work_loan(issued,deadline,|body|run(body,&mut payload.original)));
   match result{Ok(value)=>Ok(Some(value)),Err(failure)=>{payload.callback_refusal=Some(failure);Ok(None)}}
  }
+ /// \u{1faf4}\uFE0F Captures a retained typed cause even after its callback refusal, only after the original source funds the header move.
+ pub fn capture_original(&mut self,cx:&mut impl OriginalFailureContext,take:impl FnOnce()->T)->Result<bool,OriginalTurnFailure>{
+  if !self.ready()||!self.matches(cx)?||cx.should_yield()||cx.is_cancelled(){return Ok(false)}
+  let demand=RetirementDemand{copy_bytes:size_of::<T>()+size_of::<Option<T>>(),depth:1,..Default::default()};if cx.original_total_retained_grant().maximum_items<=1||cx.original_total_fuel_remaining()<=1||!cx.retained_work_can_enter(demand){return Ok(false)}
+  let payload=self.frame.as_mut().ok_or_else(||ValueError::invariant("ready domain frame"))?.owner.original_mut().ok_or_else(||ValueError::invariant("unretired domain payload"))?;if payload.original.is_some(){return Err(ValueError::invariant("original domain cause is already occupied").into())}
+  payload.original=Some(take());let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};cx.consume_fuel(1);if let Err(error)=cx.consume_retained(progress){if payload.capture_refusal.is_none(){payload.capture_refusal=Some(error.into())}}Ok(true)
+ }
  pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{let Some(frame)=&self.frame else{return Ok(Default::default())};if !self.closing{return Ok(RetirementDemand{depth:1,..Default::default()})}if frame.owner.terminal_is_empty(){Ok(RetirementDemand{release_bytes:size_of::<DomainFrame<T>>(),depth:1,..Default::default()})}else{frame.owner.next_demand(body)}}
- pub fn close_step(&mut self,grant:semio_framework_value_retained_clone::RetainedCloneGrant)->RetainedWorkOutcome{
+ /// ⛽️ Quotes the actual selected frame, child retirement, or final release work.
+ pub fn retirement_work(&self,body:usize)->Result<u64,ValueError>{let Some(frame)=&self.frame else{return Ok(0)};if !self.closing||frame.owner.terminal_is_empty(){Ok(1)}else{frame.owner.next_computational_work(body)}}
+ pub fn close_step(&mut self,grant:semio_framework_value_retained_clone::RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,semio_framework_value_retained_clone::OriginalRetirementFailure>{
   let Some(frame)=self.frame.as_mut()else{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}};
   if !self.closing{if grant.maximum_items==0||grant.maximum_depth==0{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.closing=true;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
   if !frame.owner.terminal_is_empty(){let result=frame.owner.step(grant);return RetainedWorkOutcome{result,work:frame.owner.last_turn_work()}}
@@ -128,6 +137,7 @@ impl<T:OriginalDomainFailure> OriginalDomainReservation<T>{
 
 struct DomainReservationRetirement<T:OriginalDomainFailure>{reservation:OriginalDomainReservation<T>}
 impl<T:OriginalDomainFailure> RetirementCursor for DomainReservationRetirement<T>{
+ fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.reservation.retirement_work(body)}
  fn close_step(&mut self,grant:semio_framework_value_retained_clone::RetainedCloneGrant)->RetirementStep{let turn=self.reservation.close_step(grant);match turn.result{Ok(step)=>if step.progress()==Default::default()&&self.terminal_is_empty(){RetirementStep::Complete(turn.work)}else{RetirementStep::Progress(step.progress(),turn.work)},Err(error)=>RetirementStep::Failure(error,turn.work)}}
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.reservation.retirement_demands(body)}
  fn terminal_is_empty(&self)->bool{self.reservation.terminal_is_empty()}

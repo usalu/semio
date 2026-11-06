@@ -1,7 +1,7 @@
 //! 🧪️ Ready status traverses the resident nested commit source with the same exact neutral edit carriers.
 use crate::{StagedStatusPayload,StagedPayloadCursor};
 use semio_framework::action_staging::{StagedFormStatus,StagedFormToken};
-use semio_framework_ui_contract::{UiMapBuilder,UiValue,UiValueRetirement};
+use semio_ui_contract::{UiMapBuilder,UiValue,UiValueRetirement};
 use semio_framework_value::{DslValue,RetainedCloneGrant,RetainedCloneStep};
 fn retire(value:UiValue){let mut owner=UiValueRetirement::new(value);for _ in 0..16384{if owner.terminal_is_empty(){return}owner.close_step(1,32768).unwrap();}panic!("status payload did not retire")}
 #[test]

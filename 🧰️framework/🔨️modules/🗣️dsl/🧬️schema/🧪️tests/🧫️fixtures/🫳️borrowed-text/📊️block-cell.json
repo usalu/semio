@@ -1,0 +1,6 @@
+{
+  "caseId": "C",
+  "loadId": "L",
+  "enabled": true,
+  "document": "cases [id:TEXT loads:BLOCK enabled:BOOL] {\n  C {\n    truss id=L\n  }\n  true\n}\n"
+}

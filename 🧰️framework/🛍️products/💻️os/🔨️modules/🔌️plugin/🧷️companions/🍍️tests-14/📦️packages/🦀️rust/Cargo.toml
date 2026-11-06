@@ -39,9 +39,9 @@ semio-plugin-reactor-app = { path = "../../../../⚛️reactor/🔌️app/📦�
 semio-plugin-reactor-core = { path = "../../../../⚛️reactor/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-plugin-reactor-lifecycle = { path = "../../../../⚛️reactor/📨️pending/📦️packages/🦀️rust", features = ["artifact-app-testing", "original-actor-context-testing"] }
 semio-plugin-reactor-tasks = { path = "../../../../⚛️reactor/⏲️tasks/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
-semio-plugin-retained-command = { path = "../../../../🧵️retained-command/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-plugin-retained-command = { path = "../../../../🧵️retained-command/📦️packages/🦀️rust", features = ["artifact-app-testing"], package = "semio-plugin-retained-command"}
 semio-plugin-runtime-instances = { path = "../../../../⚛️reactor/🏃️runtime/📦️instances/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
-semio-plugin-runtime-ops = { path = "../../../../⚛️reactor/🏃️runtime/🧰️ops/📦️packages/🦀️rust", features = ["artifact-app-testing", "original-actor-context-testing"] }
+semio-framework-plugin-runtime-ops = { path = "../../../../⚛️reactor/🏃️runtime/🧰️ops/📦️packages/🦀️rust", features = ["artifact-app-testing", "original-actor-context-testing"], package = "semio-plugin-runtime-ops"}
 semio-plugin-testing-caller = { path = "../../../../🧪️testing/🎟️caller/📦️packages/🦀️rust" }
 semio-plugin-testing-fixtures = { path = "../../../../🧪️testing/🧰️fixtures/📦️packages/🦀️rust" }
 semio-plugin-testing-fixtures-publication = { path = "../../../../🧪️testing/🧰️fixtures-publication/📦️packages/🦀️rust" }

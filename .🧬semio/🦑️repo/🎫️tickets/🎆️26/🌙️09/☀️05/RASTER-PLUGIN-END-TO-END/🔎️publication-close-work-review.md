@@ -1,0 +1,7 @@
+# Publication Close Work Review
+
+Reviewed the current `retirement_work` implementations in `🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/🦀️.rs:65`, `📬️outcome/📦️builder/🦀️.rs:122`, and `♻️retirement/📄️payload/🧱️payload-owner/🦀️.rs:16`. The branch ordering matches the actual close tree: empty quotes zero; publication close admission and final reset quote one; nested builder selects its incoming, reservation, staged, payload, or metadata action; payload selects one page or ledger action. These acting branches report one, while grant denial and pre-effect errors report zero. The checked demand runs before quote selection and preserves demand failures. No missed normal terminal branch or work-losing wrapper was found.
+
+The native publication frontier law at `📬️outcome/📤️publication/🧪️tests/🦀️.rs:27` exercises zero original work loan, no heap and no physical receipt, then exact quote loan and actual fuel debit, across cancellation cut points and publication kinds. It checks both initial and final empty quotes and existing retained-currency denials. The test was inspected only; no native build was run. Refusal paths report zero actual work even though the valid selected action quote is one, as intended for admission.
+
+The supplied source census states publication 9,560 bytes / 2 files and payload 63,003 bytes / 8 production files, 65,877 bytes / 9 test files. These are source-census observations, not native compiler results.

@@ -1,0 +1,7 @@
+# Replay Digest Work and PNG Text Limit
+
+The canonical record, native edit digest and replay metadata expose retained-work outcomes. Authored edit identity hashing streams one framing or identity byte per admitted turn and finalizes in a separate admitted turn. Initializer digest handling records actual child work and preserves the original semantic failure alongside any receipt refusal. Three neutral identity vectors passed the independent Node SHA-256 oracle. The changed Rust owners parsed with the pinned nightly rustfmt; native type checking and execution remain outstanding.
+
+Effective supersession lookup and metadata insertion still synthesize or hash variable operation identities in individual turns, and metadata copies an entire edit identity into its cursor in one turn. Preparation identity comparisons are separately owned by the runtime lane. These are open CPU-accounting seams, not evidence of bounded complete replay.
+
+PNG text measurement now checks normalized key and value extent against the original maximum on every measured output byte while excluding transient inflater backing from the eventual permanent extent. Refusal retains the inflater under decoder ownership for funded retirement. A native law uses an independently generated 121-byte zlib stream expanding to 100,000 bytes and requires early refusal and funded drain. The Node zlib oracle confirmed the expansion length. The native law is authored and parsed but unrun.

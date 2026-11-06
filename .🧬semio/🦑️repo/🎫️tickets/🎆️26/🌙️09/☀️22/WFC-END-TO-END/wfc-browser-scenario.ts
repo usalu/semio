@@ -15,7 +15,7 @@ type Form = { action: string; args: Record<string, string>; window?: string };
 type Workload = { forms: Form[]; slots?: { count: number; idPrefix: string; columns: number; spacing: number } };
 type ReloadSurface = { window: string; surface: string; meaning: string };
 type SurfaceWitness = { pixels: string; accessibility: string };
-type Variant = { reloadSurfaces: ReloadSurface[]; variant: string; port: number; authorWindow: string; preview: string; forms: Form[]; workload: Workload; keep?: string; keepWindow?: string };
+type Variant = { reloadSurfaces: ReloadSurface[]; variant: string; port: number; authorWindow: string; previewWindow: string; projection: "canvas" | "grid3d" | "wfc3d"; preview: string; forms: Form[]; workload: Workload; keep?: string; keepWindow?: string };
 type Cases = { schema: string; timeoutMs: number; setupTimeoutMs: number; pauseHoldMs: number; variants: Variant[]; controlCoverage: { pause: string; abort: string; terminalRace: string } };
 type Run = { scope: string; status: string; progress: string };
 type Context = { folder: string; ledger: string[]; controlsPrepared: boolean };
@@ -48,11 +48,67 @@ async function runPanel(): Promise<boolean> {
 
 async function previewDigest(variant: Variant): Promise<string | null> {
   await closePanels();
+  if (!(await activateWindow(variant.previewWindow))) return null;
   await page.mouse.move(0, 0);
   const surface = page.locator('[data-surface-id="' + variant.preview + '"]').first();
   if (!(await surface.count())) return null;
-  const pixels = await surface.screenshot({ timeout: 8000 });
-  return createHash("sha256").update(pixels).digest("hex");
+  return surfaceDigest(variant.preview);
+}
+
+async function surfaceDigest(id: string): Promise<string | null> {
+  const surface = page.locator('[data-surface-id="' + id + '"]').first();
+  if (!(await surface.count())) return null;
+  let previous: string | null = null;
+  const stable = await waitUntil(async () => {
+    const current = createHash("sha256").update(await surface.screenshot({ timeout: 8000 })).digest("hex");
+    const matches = current === previous;
+    previous = current;
+    return matches ? current : null;
+  }, digest => digest !== null, 8000, 250);
+  return stable.ok ? stable.value : null;
+}
+
+async function worldProjection(variant: Variant): Promise<{ solved: number; total: number } | null> {
+  await closePanels();
+  if (!(await activateWindow(variant.previewWindow))) return null;
+  const surface = page.locator('[data-surface-id="' + variant.preview + '"]').first();
+  if (!(await surface.count())) return null;
+  const status = JSON.parse(await surface.getAttribute("data-status-json") ?? "null");
+  if (variant.projection === "grid3d") return status && Number.isInteger(status.solved) && Number.isInteger(status.cells) ? { solved: status.solved, total: status.cells } : null;
+  const counts = typeof status?.message === "string" ? /^Solved (\d+) of (\d+) slots\.$/u.exec(status.message) : null;
+  if (counts) return { solved: Number(counts[1]), total: Number(counts[2]) };
+  return status?.message === "Not solved yet." ? { solved: 0, total: 0 } : null;
+}
+
+async function projection(variant: Variant, empty: string | null, solved: boolean): Promise<boolean> {
+  if (variant.projection === "canvas") {
+    const pixels = await previewDigest(variant);
+    return pixels !== null && empty !== null && (solved ? pixels !== empty : pixels === empty);
+  }
+  const state = await worldProjection(variant);
+  return state !== null && (solved ? state.solved > 0 && state.solved === state.total : state.solved === 0);
+}
+
+async function refreshAfterEdit(variant: Variant, empty: string | null): Promise<void> {
+  const seed = variant.forms.find(form => Object.keys(form.args).includes("seed"));
+  if (!verdict(variant.variant + ".revision.seed-form-available", seed !== undefined) || seed === undefined) return;
+  if (!(await forms(variant, [{ ...seed, args: { seed: "4002" } }], "same-extent-revision"))) return;
+  const staleHidden = await waitUntil(() => projection(variant, empty, false), value => value, 10000, 250);
+  verdict(variant.variant + ".revision.hides-prior-solution", staleHidden.ok);
+  const scope = await start(variant);
+  if (!verdict(variant.variant + ".revision.refill-starts", scope !== null) || scope === null) return;
+  const deadline = Date.now() + cases.timeoutMs;
+  let run: Run | null = null;
+  while (Date.now() < deadline && !cancelled.aborted) {
+    await runPanel();
+    run = await readRun();
+    if (!run || run.scope !== scope || terminal.test(run.status)) break;
+    if (ready.test(run.status)) await control("toolRunFinalize", scope);
+    await sleep(25);
+  }
+  verdict(variant.variant + ".revision.refill-completes", run?.scope === scope && finalized.test(run.status), { run });
+  const restored = await waitUntil(() => projection(variant, empty, true), value => value, 10000, 250);
+  verdict(variant.variant + ".revision.refill-renders-solution", restored.ok);
 }
 
 
@@ -132,6 +188,8 @@ async function start(variant: Variant): Promise<string | null> {
 }
 
 async function solve(variant: Variant): Promise<void> {
+  const empty = await previewDigest(variant);
+  verdict(variant.variant + ".preview.visible-before-solve", empty !== null);
   await openHistory();
   const before = witness(await readShell(page));
   const startedAt = Date.now();
@@ -183,6 +241,8 @@ async function solve(variant: Variant): Promise<void> {
   verdict(variant.variant + ".fill.progress-advances", observations.size > 1, { observations: [...observations].slice(0, 12) });
   verdict(variant.variant + ".fill.pause-resume-observed", pauseObserved && resumed, { pauseRequested, pauseObserved, resumed });
   if (!pauseObserved || !resumed) note(variant.variant + ".fill.pause-coverage-gap", { reason: "positive paused hold and resume were not both observed on the configured workload; completion is separate coverage" });
+  const rendered = await waitUntil(() => projection(variant, empty, true), value => value, 10000, 250);
+  verdict(variant.variant + ".fill.renders-solution", rendered.ok);
   const digest = await previewDigest(variant);
   await runPanel();
   const dismissed = await control("toolRunDismiss", scope);
@@ -218,14 +278,17 @@ async function solve(variant: Variant): Promise<void> {
   await openHistory();
   const afterControls = witness(await readShell(page));
   verdict(variant.variant + ".fill.control-runs-read-only", afterControls.edits === after.edits && afterControls.applied === after.applied, { before: after, after: afterControls });
+  await refreshAfterEdit(variant, empty);
+  await openHistory();
+  const afterRevision = witness(await readShell(page));
   if (variant.keep) {
     await closePanels();
     const focused = await activateWindow(variant.keepWindow!);
     await unfoldActionsRail(page);
     const kept = await clickUncovered(page, '[data-slot="window-action-pane"] [id="action.' + variant.keep + '"]');
     await openHistory();
-    const pinned = await waitUntil(async () => witness(await readShell(page)), read => read.edits === afterControls.edits + 1 || read.applied === afterControls.applied + 1, 30000);
-    verdict(variant.variant + ".keep-preview-authors-pins", focused && kept === "ok" && pinned.ok, { before: afterControls, after: pinned.value });
+    const pinned = await waitUntil(async () => witness(await readShell(page)), read => read.edits === afterRevision.edits + 1 || read.applied === afterRevision.applied + 1, 30000);
+    verdict(variant.variant + ".keep-preview-authors-pins", focused && kept === "ok" && pinned.ok, { before: afterRevision, after: pinned.value });
   }
   note(variant.variant + ".solve-persistence", { authored: "model, seed and pins", preview: "ephemeral/derived", bitmapPinSolution: variant.keep ?? "not applicable" });
 }
@@ -243,7 +306,8 @@ async function surfaceWitness(target: ReloadSurface): Promise<SurfaceWitness | n
     value: node.getAttribute("aria-valuetext"),
     text: node.children.length === 0 ? (node.textContent ?? "").trim() : "",
   }))));
-  const pixels = createHash("sha256").update(await surface.screenshot({ timeout: 8000 })).digest("hex");
+  const pixels = await surfaceDigest(target.surface);
+  if (pixels === null) return null;
   return { pixels, accessibility };
 }
 

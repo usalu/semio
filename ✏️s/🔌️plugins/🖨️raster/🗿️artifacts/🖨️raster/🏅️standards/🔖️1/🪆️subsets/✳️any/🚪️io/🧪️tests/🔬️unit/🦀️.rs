@@ -5,7 +5,7 @@ async fn raster_image_layer_and_asset_builds_a_pixel_layer_and_matching_asset() 
     let pixels = [10,20,30,255];
     let image = semio_s_artifact_raster_raster_model::semio_image_from_rgba8(1,1,pixels.to_vec());
     let bytes = png_bytes_from_semio_image(&image).unwrap();
-    let source = base64_codec::base64_standard_encode(&bytes);
+    let source = semio_framework_io_base64::base64_standard_encode(&bytes);
     let (asset_id, asset, layer) = raster_image_layer_and_asset(&source).unwrap();
     assert_eq!(asset.frames[0].rgba8, pixels);
     assert!(raster_image_layer_and_asset("aGVsbG8=").is_err());
@@ -115,7 +115,7 @@ async fn composite_svg_matches_adjusted_pixel_export() {
     retire(document);
     let (svg,width,height)=svg.unwrap();
     let encoded=semio_os::rasterize_svg_to_png_base64(&svg,width,height).unwrap();
-    let png=base64_codec::base64_standard_decode(encoded.as_bytes()).unwrap();
+    let png=semio_framework_io_base64::base64_standard_decode(encoded.as_bytes()).unwrap();
     let image=semio_framework_pixels::decode_png(&png).unwrap();
     assert_eq!((image.width,image.height),(2,2));
     assert_eq!(image.pixels,[115,115,115,255].repeat(4));

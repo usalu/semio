@@ -7,13 +7,13 @@
 static ORIGINAL_EMISSION_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 
 #[cfg(test)]
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 #[cfg(test)]
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 #[cfg(test)]
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as vcs;
 #[cfg(test)]
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as pack;
 
 #[cfg(test)]
 #[path = "../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs"]

@@ -9,9 +9,10 @@
     "maximumReleaseBytes": 33554432,
     "maximumDepth": 256
   },
+  "birthActions": {"issuanceAttempts":3,"allocationAttempts":3,"aliasActions":1,"publicationActions":1,"handoffActions":1},
   "expected": {
     "deniedCpu": 0,
-    "birthCpu": 6,
+    "birthCpu": 9,
     "cachedCloseCpu": 0,
     "liveCloseMinimumDepth": 1
   }

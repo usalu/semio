@@ -7,7 +7,7 @@ use super::pending_result_page::{PendingPublicationPage,PublicationPagePlan,Publ
 use semio_framework_value::RetainedWorkOutcome;
 /// 🧷️ Page framing may pause without replaying its accepted Store or outbox action.
 pub struct MountedPagePublication{
- pub ui_copy:MountedUiCopy,pub interaction_close:Option<ControlledRetirement<Vec<semio_framework_plugin_decl_emission::InteractionWrite>>>,
+ pub ui_copy:MountedUiCopy,pub interaction_close:Option<ControlledRetirement<Vec<semio_plugin_decl_emission::InteractionWrite>>>,
  pub plan:Option<PublicationPagePlan>,pub owner:Option<PendingPublicationPage>,
  failure:Option<PublicationPageWriteFailure>,failure_close:Option<ControlledRetirement<PublicationPageWriteFailure>>,
 }
@@ -55,7 +55,7 @@ impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
  pub fn reserve_cancelled_result(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
   let d=RetirementDemand{copy_bytes:size_of::<Option<PublicationPagePlan>>()+size_of::<bool>(),depth:1,..Default::default()};
   cx.with_original_retirement(|cx|{semio_framework_job::close_original_retained_step(cx,d,|_|{
-   let lane=if self.terminal_fault.is_some(){TypedOperationResultLane::Fault}else{semio_framework_plugin_decl_app::cancellation_result_lane(self.user_cancel_requested,false)};
+   let lane=if self.terminal_fault.is_some(){TypedOperationResultLane::Fault}else{semio_plugin_decl_app::cancellation_result_lane(self.user_cancel_requested,false)};
    let reason=if self.terminal_fault.is_some(){PublicationRawReason::Fault}else if lane==TypedOperationResultLane::Terminal{PublicationRawReason::Empty}else{PublicationRawReason::Cancelled};
    self.page_publication.plan=Some(PublicationPagePlan{token:self.next_token(),intent:PublicationPageIntent::Raw{lane,reason}});self.ui_pending=false;RetainedWorkOutcome{work:1,result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
   })?;Ok(())})

@@ -220,6 +220,14 @@ where
         }
     }
 
+    fn receive_digest_turn(&mut self,cx:&mut StepContext<'_>,turn:semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress>)->Turn{
+        cx.consume_fuel(turn.work);
+        match turn.result{
+            Ok(progress)=>{if let Err(receipt)=cx.consume_retained(progress){self.original_failure=Some(receipt.into());self.phase=Phase::RetireFault}Turn::Yield},
+            Err(primary)=>{let receipt=cx.consume_retained(primary.retained_progress());let mut failure=semio_framework_job::OriginalTurnFailure::from(primary);failure.receipt_refusal=receipt.err();failure.effects=Default::default();self.original_failure=Some(failure);self.phase=Phase::RetireFault;Turn::Yield}
+        }
+    }
+
     pub fn refuse(&mut self, cx: &mut StepContext<'_>, error: ValueError) -> Turn {
         let _ = cx.consume_retained(error.retained_progress());
         self.fail(error.into_message());
@@ -472,8 +480,8 @@ where
     fn commit(&mut self,cx:&mut StepContext<'_>,position:usize,edit:usize,redo:bool)->Turn{
         if self.commit_ready{let demand=RetirementDemand{copy_bytes:size_of::<native_digest::NativeEditDigest>()+size_of::<native_digest::NativeEffectiveDigest>()+size_of::<bool>(),depth:1,..Default::default()};if !permits(cx.retained_grant(),demand){return Turn::Yield}self.digest=Default::default();self.effective_digest=Default::default();self.commit_ready=false;self.phase=if redo{Phase::FindRedo{position:position+1}}else{Phase::FindApplied{position:position+1}};self.spend(cx,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()});return Turn::Yield}
         let envelope=self.envelope.as_ref().expect("original commit envelope");let entry=envelope.vcs.edits.get(edit).expect("original commit edit");
-        let Some(digest)=self.digest.digest()else{let result=self.digest.advance(entry,cx.retained_grant());return match result{Ok(progress)=>{self.spend(cx,progress);Turn::Yield},Err(error)=>self.refuse(cx,error)}};
-        let Some(digest)=self.effective_digest.digest()else{let result=self.effective_digest.advance::<P,M>(entry,&self.runtime.as_ref().expect("original effective commit runtime").supersessions,digest,cx.retained_grant());return match result{Ok(progress)=>{self.spend(cx,progress);Turn::Yield},Err(error)=>self.refuse(cx,error)}};
+        let Some(digest)=self.digest.digest()else{if cx.fuel_remaining()==0{return Turn::Yield}let turn=self.digest.advance(entry,cx.retained_grant());return self.receive_digest_turn(cx,turn)};
+        let Some(digest)=self.effective_digest.digest()else{if cx.fuel_remaining()==0{return Turn::Yield}let turn=self.effective_digest.advance::<P,M>(entry,&self.runtime.as_ref().expect("original effective commit runtime").supersessions,digest,cx.retained_grant());return self.receive_digest_turn(cx,turn)};
         let key=envelope.vcs.edits.key_at(edit).expect("original commit ledger key");let runtime=self.runtime.as_mut().expect("original commit runtime");
         let demand=match runtime.commit_metadata_demands(entry,key,digest,redo){Ok(value)=>value,Err(error)=>return self.refuse(cx,error)};
         let grant=cx.retained_grant();let mut complete=None;let result=built(cx,&mut complete,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:demand.release_bytes,depth:demand.depth},||runtime.advance_commit_metadata(entry,key,digest,redo,grant));

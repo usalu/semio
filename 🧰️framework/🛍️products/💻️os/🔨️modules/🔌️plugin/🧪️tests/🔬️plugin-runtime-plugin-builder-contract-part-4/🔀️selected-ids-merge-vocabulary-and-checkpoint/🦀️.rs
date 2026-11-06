@@ -8,9 +8,9 @@
     /// Fails-before: one plain pick published the id twice, once per mirroring domain.
     #[semio_framework_async_macros::async_test]
     async fn leftover_interaction_view_selected_ids_are_a_set_for_every_merge() {
-        let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+        let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
         let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
-        let mounted_policy = semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let mounted_policy = semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
@@ -61,9 +61,9 @@
     /// 'add'` and only the unmodified `replace` pick worked.
     #[semio_framework_async_macros::async_test]
     async fn interaction_select_speaks_exactly_the_schema_merge_vocabulary() {
-        let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+        let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
         let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
-        let mounted_policy = semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let mounted_policy = semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
@@ -84,7 +84,7 @@
         for word in &deleted {
             let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
             let admitted = app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(interaction_targets_args(json!({ "domainId": "items", "merge": word, "method": "pick" }), "item", &["item-1".to_string()])), &meta(), &mut identity).await.expect("the reserved job is admitted before its args are decoded");
-            let fault = semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(&mut app, admitted, cx).await.expect_err("a merge word outside the schema vocabulary must fault the reserved job, never fall back to a replace");
+            let fault = semio_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(&mut app, admitted, cx).await.expect_err("a merge word outside the schema vocabulary must fault the reserved job, never fall back to a replace");
             assert!(format!("{fault:?}").contains(&format!("unknown merge '{word}'")), "the deleted word '{word}' must be rejected outright — no adapter, no silent replace; got {fault:?}");
             close_reserved_app(&mut app, mounted_policy,cx);
         }
@@ -108,9 +108,9 @@
     #[semio_framework_async_macros::async_test]
     async fn checkpoint_then_restore_requeues_a_restartable_tasks_command_as_a_resume() {
         let completion: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/⏳️completion/🔣️.json"))).unwrap();
-        let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let runtime = semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         let instance = 507;
-        semio_framework_plugin_runtime_instances::inst_wire_frames::test_admit_instance_actor(&runtime, instance, "local");
+        semio_plugin_runtime_instances::inst_wire_frames::test_admit_instance_actor(&runtime, instance, "local");
         let meta = ActionMeta { expected_document_revision:None, actor: "local".into(), instance_id: instance, view_state: None };
         let restart_command = <TestCommand as ::protocol::OpBinary>::encode_op(&TestCommand::ApplyCountFromTask { value: 7 }).expect("must encode");
         let observed_completion = std::sync::Arc::new(std::sync::Mutex::new(None));
@@ -124,16 +124,16 @@
             }
         })
         .restartable(restart_command.clone());
-        semio_framework_plugin_reactor_tasks::tasks_task_lane::spawn_task(instance, &meta, task).expect("must spawn");
+        semio_plugin_reactor_tasks::tasks_task_lane::spawn_task(instance, &meta, task).expect("must spawn");
         assert!(crate::reactor_driver::run_until_idle(8).await);
         let observed_parked_requests = crate::reactor_driver::pending_request_count().await;
 
-        let packed = semio_framework_plugin_reactor_core::checkpoint_now(&runtime).await.expect("checkpoint must succeed while the task is in flight");
+        let packed = semio_plugin_reactor_core::checkpoint_now(&runtime).await.expect("checkpoint must succeed while the task is in flight");
 
         assert!(completion["execution"].as_array().unwrap().iter().any(|row| row == "await-request-retirement-before-observation"), "the completion oracle declares this exact order");
         crate::reactor_driver::cancel_instance_registry_requests(instance).await;
         assert_eq!(crate::reactor_driver::poll_instance_tasks_once(instance).await, 1, "the live task observes its retired request on its next poll and finishes");
-        semio_framework_plugin_reactor_tasks::tasks_task_lane::cancel_instance_tasks(instance);
+        semio_plugin_reactor_tasks::tasks_task_lane::cancel_instance_tasks(instance);
         assert_eq!(crate::reactor_driver::task_count_for_instance(instance).await as u64, completion["checkpoint"]["tasksAfterCancel"].as_u64().unwrap());
         assert_eq!(observed_parked_requests as u64, completion["checkpoint"]["parkedRequests"].as_u64().unwrap(), "checkpoint must observe an actually polled and parked task");
         assert_eq!(crate::reactor_driver::pending_request_count().await as u64, completion["checkpoint"]["requestsAfterCancel"].as_u64().unwrap());
@@ -141,7 +141,7 @@
         assert_eq!(fault.code.0, completion["checkpoint"]["completionFaultCode"].as_str().unwrap());
         assert_eq!(fault.message, completion["checkpoint"]["completionFaultMessage"].as_str().unwrap());
 
-        semio_framework_plugin_reactor_core::restore_now(&runtime, &packed).await.expect("restore must succeed");
+        semio_plugin_reactor_core::restore_now(&runtime, &packed).await.expect("restore must succeed");
         let (resumed_instance, resumed_meta, resumed_input) = crate::reactor_driver::pop_task_resume().await.expect("restore must have queued exactly one resume for the restartable task");
         assert_eq!(resumed_instance, instance);
         assert_eq!(resumed_meta.instance_id, instance);

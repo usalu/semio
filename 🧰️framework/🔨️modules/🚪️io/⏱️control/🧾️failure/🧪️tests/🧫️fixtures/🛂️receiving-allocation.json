@@ -1,0 +1,26 @@
+{
+  "channels": [
+    "primary",
+    "admission",
+    "forwardedAdmission",
+    "scopedAdmission",
+    "forwardedQuote",
+    "scopedQuote",
+    "forwardedPost",
+    "scopedPost",
+    "forwardedCancel",
+    "scopedCancel",
+    "receipt",
+    "extent"
+  ],
+  "admittedBytes": 73,
+  "actualCapacityCases": [
+    null,
+    0,
+    73
+  ],
+  "receipt": "outer receipt",
+  "priorAdmittedBytes": 5,
+  "requestedBytes": 73,
+  "maximumBytes": 1024
+}

@@ -26,17 +26,18 @@ impl<T: RetainedClone, const N: usize> RetainedCloneCursor<[T; N]> for ArrayCurs
     fn output_ready(&self) -> bool { !self.closing && !self.spent && self.output.is_some() }
     fn close_started(&self) -> bool { self.closing }
 
-    fn advance_demands(&self, source: RetainedCloneRef<'_, [T; N]>, body: usize) -> Result<RetirementDemand, ValueError> {
+    fn advance_demands(&self, source: RetainedCloneRef<'_, [T; N]>, body: usize, maximum_work_units:u64) -> Result<RetirementDemand, ValueError> {
         if self.closing || self.spent { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"array clone cannot quote a closing or spent owner")); }
         if !source.check_binding(&self.source)? { return Ok(RetirementDemand { copy_bytes: source.binding_copy_bytes(), depth: 1, ..Default::default() }); }
         if self.output_ready() { return Ok(Default::default()); }
         if T::BITWISE && self.index==0 && N<=RETAINED_CLONE_BULK_PAGE_ITEMS && size_of::<[T;N]>()<=RETAINED_CLONE_BULK_PAGE_BYTES && size_of::<[T;N]>()<=body { return Ok(RetirementDemand {copy_bytes:size_of::<[T;N]>(),depth:1,..Default::default()}); }
         if let Some(child) = self.child.as_ref() {
             if self.child_value.is_some() {
+                if !child.close_started(){return Ok(RetirementDemand{depth:1,..Default::default()})}
                 return if child.terminal_is_empty() { Ok(RetirementDemand { copy_bytes: size_of::<T>(), depth: 1, ..Default::default() }) } else { nested_retained_clone_close_demands::<T>(child,body) };
             }
             if child.output_ready(){let mut d=child.take_demand()?;d.depth=d.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"array child output depth overflow"))?;return Ok(d)}
-            return nested_retained_clone_demands::<T>(child,source.project(self.index + 1, |values| &values[self.index]),body);
+            return nested_retained_clone_demands::<T>(child,source.project(self.index + 1, |values| &values[self.index]),body,maximum_work_units);
         }
         if T::BITWISE && self.index<N && size_of::<T>()<=RETAINED_CLONE_BULK_PAGE_BYTES {
             let count=(N-self.index).min(bulk_run_elements(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:body,..Default::default()},size_of::<T>()).max(1));
@@ -45,8 +46,12 @@ impl<T: RetainedClone, const N: usize> RetainedCloneCursor<[T; N]> for ArrayCurs
         Ok(RetirementDemand { copy_bytes: 0, depth: 1, ..Default::default() })
     }
 
-    fn advance(&mut self, source: RetainedCloneRef<'_, [T; N]>, body: usize, grant: RetainedCloneGrant) ->RetainedWorkOutcome{let mut work=0;let result=(||{
-        let demand = self.advance_demands(source,body)?;
+    fn advance_work_demand(&self,source:RetainedCloneRef<'_,[T;N]>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{
+        if self.closing||self.spent{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"array clone cannot quote a closing or spent owner"))}
+        let selected=if !source.check_binding(&self.source)?{1}else if self.output_ready(){0}else if let Some(child)=self.child.as_ref(){if self.child_value.is_some(){if !child.close_started(){child.begin_close_work_demand()?}else if child.terminal_is_empty(){1}else{child.close_work_demand(body)?}}else if child.output_ready(){child.take_work_demand()?}else{child.advance_work_demand(source.project(self.index+1,|values|&values[self.index]),body,maximum_work_units)?}}else{1};Ok(if selected<=maximum_work_units{selected}else{0})
+    }
+    fn advance(&mut self, source: RetainedCloneRef<'_, [T; N]>, body: usize, maximum_work_units:u64, grant: RetainedCloneGrant) ->crate::OriginalRetirementOutcome{let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
+        let needed=self.advance_work_demand(source,body,maximum_work_units)?;if needed==0&&!self.output_ready(){return Ok(RetainedCloneStep::Progress(Default::default()))}let demand = self.advance_demands(source,body,maximum_work_units)?;
         if self.output_ready() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if !retained_clone_grant_admits(grant,demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if let Some(progress) = {let turn=source.bind(&mut self.source,grant);work+=turn.work;turn.result}? { return Ok(RetainedCloneStep::Progress(progress)); }
@@ -56,6 +61,7 @@ impl<T: RetainedClone, const N: usize> RetainedCloneCursor<[T; N]> for ArrayCurs
         }
         if let Some(child) = self.child.as_mut() {
             if self.child_value.is_some() {
+                if !child.close_started(){let turn=child.begin_close_paid();work+=turn.work;self.child_closing=child.close_started();turn.result?;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
                 if !child.terminal_is_empty() {
                     let nested = nested_retained_clone_grant(grant)?;
                     let step = {let turn=child.close_step(nested);work+=turn.work;turn.result}?;
@@ -67,9 +73,9 @@ impl<T: RetainedClone, const N: usize> RetainedCloneCursor<[T; N]> for ArrayCurs
                 self.index += 1;
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
             }
-            if child.output_ready(){let nested=nested_retained_clone_grant(grant)?;let turn=child.take(nested);work+=turn.work;let Some((value,p))=turn.result?else{return Ok(RetainedCloneStep::Progress(Default::default()))};*self.child_value=Some(value);child.begin_close();self.child_closing=true;return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested,p,"array child output handoff")?))}
+            if child.output_ready(){let nested=nested_retained_clone_grant(grant)?;let turn=child.take(nested);work+=turn.work;let Some((value,p))=turn.result?else{return Ok(RetainedCloneStep::Progress(Default::default()))};*self.child_value=Some(value);self.child_closing=false;return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested,p,"array child output handoff")?))}
             let nested = nested_retained_clone_grant(grant)?;
-            let step = {let turn=child.advance(source.project(self.index + 1, |values| &values[self.index]),body,nested);work+=turn.work;turn.result}?;
+            let step = {let turn=child.advance(source.project(self.index + 1, |values| &values[self.index]),body,maximum_work_units.checked_sub(work).ok_or_else(||ValueError::invariant("array consumed more than original work quote"))?,nested);work+=turn.work;turn.result}?;
             return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested,step.progress(),"array original row clone")?));
         }
         if self.index == N {
@@ -82,7 +88,7 @@ impl<T: RetainedClone, const N: usize> RetainedCloneCursor<[T; N]> for ArrayCurs
             let first=self.index;work+=1;
             for _ in 0..count {
                 let row:&[T;1]=source.get()[self.index..self.index+1].try_into().expect("one original array element");
-                let Some([value])=T::bitwise_array(row) else { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"bitwise array row refused original copy").with_retained_progress(bulk_run_progress(self.index-first,size_of::<T>()))); };
+                let Some([value])=T::bitwise_array(row) else { return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"bitwise array row refused original copy").with_retained_progress(bulk_run_progress(self.index-first,size_of::<T>()))).into()); };
                 self.slots[self.index].write(value);
                 self.index+=1;
             }
@@ -92,6 +98,9 @@ impl<T: RetainedClone, const N: usize> RetainedCloneCursor<[T; N]> for ArrayCurs
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
     })();RetainedWorkOutcome{result,work}}
 
+    fn take_work_demand(&self)->Result<u64,ValueError>{Ok(u64::from(self.output_ready()))}
+    fn begin_close_work_demand(&self)->Result<u64,ValueError>{Ok(u64::from(!self.closing))}
+    fn begin_close_paid(&mut self)->RetainedWorkOutcome<(),ValueError>{let changed=self.begin_close();RetainedWorkOutcome{result:Ok(()),work:u64::from(changed)}}
     fn take_demand(&self)->Result<RetirementDemand,ValueError>{Ok(retained_clone_take_demand())}
     fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<([T; N],RetainedCloneProgress)>>{if !self.output_ready(){return RetainedWorkOutcome{result:Ok(None),work:0}}let turn=take_retained_clone_output(&mut *self.output,grant);if matches!(&turn.result,Ok(Some(_))){self.spent = true;}turn}
 
@@ -101,12 +110,12 @@ impl<T: RetainedClone, const N: usize> RetainedCloneCursor<[T; N]> for ArrayCurs
         true
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) ->RetainedWorkOutcome{let mut work=0;let result=(||{
+    fn close_step(&mut self, grant: RetainedCloneGrant) ->crate::OriginalRetirementOutcome{let mut work=0;let result=(||{
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if !self.closing { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"array clone must begin close before granted retirement")); }
+        if !self.closing { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"array clone must begin close before granted retirement").into()); }
         if !retained_clone_grant_admits(grant,retained_clone_close_demands::<[T; N]>(self,grant.maximum_copy_bytes)?) { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if let Some(child) = self.child.as_mut() {
-            if !self.child_closing { child.begin_close(); self.child_closing=true;work+=1; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
+            if !self.child_closing { let turn=child.begin_close_paid();work+=turn.work;self.child_closing=child.close_started();turn.result?; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
             if !child.terminal_is_empty() { let nested = nested_retained_clone_grant(grant)?; let turn=child.close_step(nested);work+=turn.work;let step=turn.result?; return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(nested,step,child.terminal_is_empty(),"array child close")?.progress())); }
             *self.child = None;
             self.child_closing = false;work+=1;
@@ -125,6 +134,7 @@ impl<T: RetainedClone, const N: usize> RetainedCloneCursor<[T; N]> for ArrayCurs
         {let turn=close_retained_binding(&mut self.source,grant);work+=turn.work;turn.result}
     })();RetainedWorkOutcome{result,work}}
 
+    fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.closing{return Ok(0)}if let Some(child)=self.child.as_ref(){if !self.child_closing{return child.begin_close_work_demand()}return if child.terminal_is_empty(){Ok(1)}else{child.close_work_demand(body)}}if !self.close.is_empty(){return self.close.next_owner_work::<[T;N]>(false,&self.source,body)}if self.child_value.is_some(){return self.close.next_owner_work::<T>(true,&self.source,body)}if self.index>0{return Ok(1)}self.close.next_owner_work::<[T;N]>(self.output.is_some(),&self.source,body)}
     fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Ok(Default::default());}
         if let Some(child)=self.child.as_ref(){if !self.child_closing{return Ok(RetirementDemand{depth:1,..Default::default()});}return if child.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<T::Cursor>(),depth:1,..Default::default()})}else{nested_retained_clone_close_demands::<T>(child,body)};}
         if !self.close.is_empty(){return self.close.next_owner_demands::<[T;N]>(false,&self.source,body);}

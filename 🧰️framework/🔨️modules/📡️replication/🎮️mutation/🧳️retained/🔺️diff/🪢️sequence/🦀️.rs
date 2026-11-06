@@ -48,35 +48,36 @@ impl<P:SnapshotProjection+Send+'static,D:RetainedDiffFragment<P>> RetainedDiffSe
    _=>return Err(invalid()),
   };Self::nested(demand)
  }
- pub fn preflight(&mut self,diffs:RetainedCloneRef<'_,Vec<D>>,original:RetainedCloneRef<'_,P>,post:RetainedCloneRef<'_,P>,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<RetainedDiffPreflightAdvance,ValueError>{
+ pub fn preflight(&mut self,diffs:RetainedCloneRef<'_,Vec<D>>,original:RetainedCloneRef<'_,P>,post:RetainedCloneRef<'_,P>,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->semio_framework_value::RetainedWorkOutcome<RetainedDiffPreflightAdvance,semio_framework_value::OriginalRetirementFailure>{let mut work=0;let result:Result<_,semio_framework_value::OriginalRetirementFailure>=(||{
+  macro_rules! turn {($value:expr)=>{{let turn=$value;work+=turn.work;turn.result.map_err(|error|{let error:semio_framework_value::OriginalRetirementFailure=error.into();if turn.work==0{error}else{let progress=Self::receipt(error.retained_progress());error.with_retained_progress(progress)}})?}};}
   let demand=self.preflight_demand(diffs,original,post,body)?;if !retained_mutation_demand_fits(demand,grant){return Ok(RetainedDiffPreflightAdvance::Progress(Default::default()));}
   let child_grant=Self::child_grant(grant);let mut progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
-  if !self.single&&matches!(self.phase,6|8){if let Some(receipt)=self.candidate_read.prepare(&mut self.candidate,if self.phase==6{PagedOneItemPostMode::Original}else{PagedOneItemPostMode::Mutable},body,child_grant).result?{return Ok(RetainedDiffPreflightAdvance::Progress(Self::receipt(receipt)));}}
+  if !self.single&&matches!(self.phase,6|8){if let Some(receipt)=turn!(self.candidate_read.prepare(&mut self.candidate,if self.phase==6{PagedOneItemPostMode::Original}else{PagedOneItemPostMode::Mutable},body,child_grant)){return Ok(RetainedDiffPreflightAdvance::Progress(Self::receipt(receipt)));}}
   match self.phase{
-   0=>{progress=Self::receipt(diffs.bind(&mut self.diff,child_grant).result?.ok_or_else(invalid)?);self.phase=1;},
-   1=>{progress=Self::receipt(original.bind(&mut self.original,child_grant).result?.ok_or_else(invalid)?);self.phase=2;},
-   2=>{self.single=diffs.get().len()==1;self.phase=if diffs.get().is_empty(){14}else if self.single{5}else{3};},
-   3=>{let step=self.projection.advance(Self::current(&self.intermediate,original),body,child_grant).result?;progress=Self::receipt(step.progress());if self.projection.ready(){self.phase=4;}},
-   4=>{let(candidate,receipt)=self.projection.take_output(child_grant).result?.ok_or_else(invalid)?;*self.candidate=Some(candidate);self.projection.begin_close();progress=Self::receipt(receipt);self.phase=5;},
-   5=>{let(child,receipt)=begin_retained_diff::<P,D>(child_grant).ok_or_else(invalid)?;*self.child=Some(child);progress=Self::receipt(receipt);self.phase=6;},
+   0=>{progress=Self::receipt(turn!(diffs.bind(&mut self.diff,child_grant)).ok_or_else(invalid)?);self.phase=1;},
+   1=>{progress=Self::receipt(turn!(original.bind(&mut self.original,child_grant)).ok_or_else(invalid)?);self.phase=2;},
+   2=>{work+=1;self.single=diffs.get().len()==1;self.phase=if diffs.get().is_empty(){14}else if self.single{5}else{3};},
+   3=>{let step=turn!(self.projection.advance(Self::current(&self.intermediate,original),body,child_grant));progress=Self::receipt(step.progress());if self.projection.ready(){self.phase=4;}},
+   4=>{let(candidate,receipt)=turn!(self.projection.take_output(child_grant)).ok_or_else(invalid)?;*self.candidate=Some(candidate);self.projection.begin_close();progress=Self::receipt(receipt);self.phase=5;},
+   5=>{let(child,receipt)=begin_retained_diff::<P,D>(child_grant).ok_or_else(invalid)?;work+=1;*self.child=Some(child);progress=Self::receipt(receipt);self.phase=6;},
    6=>{
     let source=Self::current(&self.intermediate,original);let candidate=if self.single{post}else{self.candidate_read.read(&self.candidate,PagedOneItemPostMode::Original)?.original()?.project(0,ProjectionOutput::projected_value)};
-    let step=preflight_retained_diff(self.child.as_mut().ok_or_else(invalid)?,diffs.project(self.ordinal,|rows|&rows[self.ordinal]),source,candidate,body,child_grant,receiving).map_err(|error|{let receipt=error.retained_progress();error.with_retained_progress(if receipt==RetainedCloneProgress::default(){receipt}else{Self::receipt(receipt)})})?;progress=Self::receipt(step.progress());
+    let turn=preflight_retained_diff(self.child.as_mut().ok_or_else(invalid)?,diffs.project(self.ordinal,|rows|&rows[self.ordinal]),source,candidate,body,child_grant,receiving);work+=turn.work;let step=turn.result.map_err(|error|{let receipt=error.retained_progress();error.with_retained_progress(if turn.work==0{receipt}else{Self::receipt(receipt)})})?;progress=Self::receipt(step.progress());
     match step{RetainedDiffPreflightStep::Admitted(_,messages)=>{*self.pending_messages=Some(messages);self.phase=7;},RetainedDiffPreflightStep::Refused(_,messages)=>{*self.pending_messages=Some(messages);self.admitted=false;self.phase=7;},RetainedDiffPreflightStep::Progress(_)=>{}}
    },
-   7=>{let(pushed,receipt)=self.messages.push(self.pending_messages.as_mut().ok_or_else(invalid)?,child_grant).result?;progress=Self::receipt(receipt);if pushed{self.pending_messages.take();self.phase=if !self.admitted||self.single{14}else{8};}},
-   8=>{let source=Self::current(&self.intermediate,original);let step=commit_retained_diff(self.child.as_mut().ok_or_else(invalid)?,diffs.project(self.ordinal,|rows|&rows[self.ordinal]),source,self.candidate.as_mut().ok_or_else(invalid)?.projected_value_mut(),child_grant)?;progress=Self::receipt(step.progress());if matches!(step,RetainedCloneStep::Complete(_)){self.child.as_mut().unwrap().begin_close();self.phase=9;}},
-   9=>{let child=self.child.as_mut().ok_or_else(invalid)?;if !child.terminal_is_empty(){progress=Self::receipt(child.close_step(child_grant)?.progress());}else{self.child.take();self.phase=if self.ordinal+1==diffs.get().len(){14}else{10};}},
-   10=>{if let Some(source)=self.intermediate.as_mut(){if !source.terminal_is_empty(){progress=Self::receipt(source.close_step(child_grant).result?.progress());}else{self.intermediate.take();self.phase=11;}}else{self.phase=11;}},
-   11=>{match self.admission.as_mut(){None=>{let candidate=self.candidate.take().ok_or_else(invalid)?;self.admission=Some(RetainedCloneSource::<P,P::Output>::admission_borrowed(candidate,|owner|owner.projected_value()));progress.copied_items=1;progress.copied_bytes=demand.copy_bytes;},Some(admission)=>{let step=if admission.phase()=="ready"{admission.take_output(&mut *self.intermediate,child_grant).result?}else{admission.advance(child_grant).result?};progress=Self::receipt(step.progress());if self.intermediate.is_some()&&admission.terminal_is_empty(){self.admission=None;self.phase=12;}}}},
-   12=>{self.ordinal+=1;self.projection=Default::default();self.phase=3;},
-   14=>{progress=Self::receipt(self.messages.finish(child_grant).result?.progress());self.phase=15;},
-   15=>{let step=self.messages.advance(child_grant).result?;progress=Self::receipt(step.progress());if self.messages.ready(){self.phase=16;}},
-   16=>{let(messages,receipt)=self.messages.take(child_grant).result?.ok_or_else(invalid)?;*self.output_messages=Some(messages);progress=Self::receipt(receipt);self.phase=17;return Ok(RetainedDiffPreflightAdvance::Ready(progress,self.admitted));},
-   17=>return Ok(RetainedDiffPreflightAdvance::Ready(progress,self.admitted)),
-   _=>return Err(invalid()),
+   7=>{let(pushed,receipt)=turn!(self.messages.push(self.pending_messages.as_mut().ok_or_else(invalid)?,child_grant));progress=Self::receipt(receipt);if pushed{self.pending_messages.take();self.phase=if !self.admitted||self.single{14}else{8};}},
+   8=>{let source=Self::current(&self.intermediate,original);let step=turn!(commit_retained_diff(self.child.as_mut().ok_or_else(invalid)?,diffs.project(self.ordinal,|rows|&rows[self.ordinal]),source,self.candidate.as_mut().ok_or_else(invalid)?.projected_value_mut(),child_grant));progress=Self::receipt(step.progress());if matches!(step,RetainedCloneStep::Complete(_)){self.child.as_mut().unwrap().begin_close();self.phase=9;}},
+   9=>{let child=self.child.as_mut().ok_or_else(invalid)?;if !child.terminal_is_empty(){progress=Self::receipt(turn!(child.close_step(child_grant)).progress());}else{work+=1;self.child.take();self.phase=if self.ordinal+1==diffs.get().len(){14}else{10};}},
+   10=>{if let Some(source)=self.intermediate.as_mut(){if !source.terminal_is_empty(){progress=Self::receipt(turn!(source.close_step(child_grant)).progress());}else{work+=1;self.intermediate.take();self.phase=11;}}else{work+=1;self.phase=11;}},
+   11=>{match self.admission.as_mut(){None=>{let candidate=self.candidate.take().ok_or_else(invalid)?;work+=1;self.admission=Some(RetainedCloneSource::<P,P::Output>::admission_borrowed(candidate,|owner|owner.projected_value()));progress.copied_items=1;progress.copied_bytes=demand.copy_bytes;},Some(admission)=>{let step=if admission.phase()=="ready"{turn!(admission.take_output(&mut *self.intermediate,child_grant))}else{turn!(admission.advance(child_grant))};progress=Self::receipt(step.progress());if self.intermediate.is_some()&&admission.terminal_is_empty(){self.admission=None;self.phase=12;}}}},
+   12=>{work+=1;self.ordinal+=1;self.projection=Default::default();self.phase=3;},
+   14=>{progress=Self::receipt(turn!(self.messages.finish(child_grant)).progress());self.phase=15;},
+   15=>{let step=turn!(self.messages.advance(child_grant));progress=Self::receipt(step.progress());if self.messages.ready(){self.phase=16;}},
+   16=>{let(messages,receipt)=turn!(self.messages.take(child_grant)).ok_or_else(invalid)?;*self.output_messages=Some(messages);progress=Self::receipt(receipt);self.phase=17;return Ok(RetainedDiffPreflightAdvance::Ready(progress,self.admitted));},
+   17=>return Ok(RetainedDiffPreflightAdvance::Ready(Default::default(),self.admitted)),
+   _=>return Err(invalid().into()),
   }Ok(RetainedDiffPreflightAdvance::Progress(progress))
- }
+ })();semio_framework_value::RetainedWorkOutcome{result,work}}
  /// 📨️ The already funded joined original diagnostics transfer without copying payloads.
  pub fn take_messages(&mut self)->Vec<MutationMessage>{assert!(self.phase==17,"ordered original diagnostics require settled preflight");self.output_messages.take().expect("ordered original diagnostic transfer occurs once")}
  pub fn commit_demand(&self,diffs:RetainedCloneRef<'_,Vec<D>>,original:RetainedCloneRef<'_,P>,post:&P,body:usize)->Result<RetirementDemand,ValueError>{
@@ -85,11 +86,13 @@ impl<P:SnapshotProjection+Send+'static,D:RetainedDiffFragment<P>> RetainedDiffSe
   Ok(RetirementDemand{copy_bytes:Self::fixed()+if self.candidate.is_some(){size_of::<P>()*3}else{0},depth:1,..Default::default()})
  }
  /// 🔑️ Publication uses only the outer central capability after complete ordered preflight.
- pub fn commit(&mut self,diffs:RetainedCloneRef<'_,Vec<D>>,original:RetainedCloneRef<'_,P>,post:&mut P,grant:RetainedCloneGrant,_capability:ApplyCapability)->Result<RetainedCloneStep,ValueError>{
+ /// ⛽️ Quotes the selected central child or the original candidate exchange.
+ pub fn commit_work_demand(&self,diffs:RetainedCloneRef<'_,Vec<D>>,original:RetainedCloneRef<'_,P>,post:&P,body:usize)->Result<u64,ValueError>{self.commit_demand(diffs,original,post,body)?;if self.single{self.child.as_ref().ok_or_else(invalid)?.commit_work_demand(diffs.project(0,|rows|&rows[0]),original,post,body.saturating_sub(Self::fixed()))}else{Ok(1)}}
+ pub fn commit(&mut self,diffs:RetainedCloneRef<'_,Vec<D>>,original:RetainedCloneRef<'_,P>,post:&mut P,grant:RetainedCloneGrant,_capability:ApplyCapability)->semio_framework_value::OriginalRetirementOutcome{let mut work=0;let result:Result<_,semio_framework_value::OriginalRetirementFailure>=(||{
   let demand=self.commit_demand(diffs,original,post,grant.maximum_copy_bytes)?;if !retained_mutation_demand_fits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
-  if self.single{let step=commit_retained_diff(self.child.as_mut().ok_or_else(invalid)?,diffs.project(0,|rows|&rows[0]),original,post,Self::child_grant(grant))?;if matches!(step,RetainedCloneStep::Complete(_)){self.phase=18;}return Ok(match step{RetainedCloneStep::Progress(p)=>RetainedCloneStep::Progress(Self::receipt(p)),RetainedCloneStep::Complete(p)=>RetainedCloneStep::Complete(Self::receipt(p))});}
-  if let Some(candidate)=self.candidate.as_mut(){std::mem::swap(candidate.projected_value_mut(),post);}self.phase=18;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))
- }
+  if self.single{let turn=commit_retained_diff(self.child.as_mut().ok_or_else(invalid)?,diffs.project(0,|rows|&rows[0]),original,post,Self::child_grant(grant));work+=turn.work;let step=turn.result.map_err(|error|if turn.work==0{error}else{let progress=Self::receipt(error.retained_progress());error.with_retained_progress(progress)})?;if matches!(step,RetainedCloneStep::Complete(_)){self.phase=18;}return Ok(match step{RetainedCloneStep::Progress(p)=>RetainedCloneStep::Progress(Self::receipt(p)),RetainedCloneStep::Complete(p)=>RetainedCloneStep::Complete(Self::receipt(p))});}
+  work+=1;if let Some(candidate)=self.candidate.as_mut(){std::mem::swap(candidate.projected_value_mut(),post);}self.phase=18;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))
+ })();semio_framework_value::RetainedWorkOutcome{result,work}}
  pub fn begin_close(&mut self){self.closing=true;if let Some(child)=self.child.as_mut(){child.begin_close();}self.projection.begin_close();self.messages.begin_close();}
  pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if !self.closing{return Err(invalid());}let body=body.saturating_sub(Self::fixed());
@@ -106,24 +109,25 @@ impl<P:SnapshotProjection+Send+'static,D:RetainedDiffFragment<P>> RetainedDiffSe
   else if self.diff.is_some(){binding_demand(&self.diff,body)?}
   else{return Ok(Default::default());};Self::nested(demand)
  }
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  if !self.closing{return Err(invalid());}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
+ pub fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{let mut work=0;let result:Result<_,semio_framework_value::OriginalRetirementFailure>=(||{
+  macro_rules! turn {($value:expr)=>{{let turn=$value;work+=turn.work;turn.result.map_err(|error|{let error:semio_framework_value::OriginalRetirementFailure=error.into();if turn.work==0{error}else{let progress=Self::receipt(error.retained_progress());error.with_retained_progress(progress)}})?}};}
+  if !self.closing{return Err(invalid().into());}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
   let demand=self.close_demand(grant.maximum_copy_bytes)?;if !retained_mutation_demand_fits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}let child_grant=Self::child_grant(grant);
-  if let Some(child)=self.child.as_mut(){if !child.terminal_is_empty(){return child.close_step(child_grant).map(|step|RetainedCloneStep::Progress(Self::receipt(step.progress())));}self.child.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
-  let step=if !self.projection.terminal_is_empty(){self.projection.close_step(child_grant).result?}
-  else if !self.messages.terminal_is_empty(){self.messages.close_step(child_grant).result?}
-  else if !self.message_retirement.is_empty(){self.message_retirement.step_granted(child_grant).result?}
-  else if let Some(step)=self.message_retirement.begin_granted(&mut self.pending_messages,child_grant).result?{step}
-  else if let Some(step)=self.message_retirement.begin_granted(&mut self.output_messages,child_grant).result?{step}
-  else if self.admission.is_some(){let admission=self.admission.as_mut().ok_or_else(||ValueError::invariant("admission absent"))?;let step=if admission.phase()=="ready"{admission.take_output(&mut *self.intermediate,child_grant).result?}else{let mut returned=None;let step=admission.return_inputs(&mut returned,child_grant).result?;if let Some((candidate,()))=returned{*self.candidate=Some(candidate);}step};if admission.terminal_is_empty(){self.admission=None;}step}
-  else if let Some(source)=self.intermediate.as_mut(){if !source.terminal_is_empty(){source.close_step(child_grant).result?}else{self.intermediate.take();RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<RetainedCloneSource<P,P::Output>>(),..Default::default()})}}
-  else if !self.candidate_read.terminal_is_empty(){RetainedCloneStep::Progress(self.candidate_read.prepare(&mut self.candidate,PagedOneItemPostMode::Mutable,grant.maximum_copy_bytes.saturating_sub(Self::fixed()),child_grant).result?.ok_or_else(invalid)?)}
-  else if !self.candidate_retirement.is_empty(){self.candidate_retirement.step_granted(child_grant).result?}
-  else if let Some(step)=self.candidate_retirement.begin_granted(&mut self.candidate,child_grant).result?{step}
-  else if self.original.is_some(){RetainedCloneBinding::close_one(&mut self.original,child_grant).result?}
-  else{RetainedCloneBinding::close_one(&mut self.diff,child_grant).result?};
+  if let Some(child)=self.child.as_mut(){if !child.terminal_is_empty(){return Ok(RetainedCloneStep::Progress(Self::receipt(turn!(child.close_step(child_grant)).progress())));}work+=1;self.child.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
+  let step=if !self.projection.terminal_is_empty(){turn!(self.projection.close_step(child_grant))}
+  else if !self.messages.terminal_is_empty(){turn!(self.messages.close_step(child_grant))}
+  else if !self.message_retirement.is_empty(){turn!(self.message_retirement.step_granted(child_grant))}
+  else if let Some(step)=turn!(self.message_retirement.begin_granted(&mut self.pending_messages,child_grant)){step}
+  else if let Some(step)=turn!(self.message_retirement.begin_granted(&mut self.output_messages,child_grant)){step}
+  else if self.admission.is_some(){let admission=self.admission.as_mut().ok_or_else(||ValueError::invariant("admission absent"))?;let step=if admission.phase()=="ready"{turn!(admission.take_output(&mut *self.intermediate,child_grant))}else{let mut returned=None;let step=turn!(admission.return_inputs(&mut returned,child_grant));if let Some((candidate,()))=returned{*self.candidate=Some(candidate);}step};if admission.terminal_is_empty(){self.admission=None;}step}
+  else if let Some(source)=self.intermediate.as_mut(){if !source.terminal_is_empty(){turn!(source.close_step(child_grant))}else{work+=1;self.intermediate.take();RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<RetainedCloneSource<P,P::Output>>(),..Default::default()})}}
+  else if !self.candidate_read.terminal_is_empty(){RetainedCloneStep::Progress(turn!(self.candidate_read.prepare(&mut self.candidate,PagedOneItemPostMode::Mutable,grant.maximum_copy_bytes.saturating_sub(Self::fixed()),child_grant)).ok_or_else(invalid)?)}
+  else if !self.candidate_retirement.is_empty(){turn!(self.candidate_retirement.step_granted(child_grant))}
+  else if let Some(step)=turn!(self.candidate_retirement.begin_granted(&mut self.candidate,child_grant)){step}
+  else if self.original.is_some(){turn!(RetainedCloneBinding::close_one(&mut self.original,child_grant))}
+  else{turn!(RetainedCloneBinding::close_one(&mut self.diff,child_grant))};
   Ok(RetainedCloneStep::Progress(Self::receipt(step.progress())))
- }
+ })();semio_framework_value::RetainedWorkOutcome{result,work}}
  fn empty(&self)->bool{self.child.is_none()&&self.candidate_read.terminal_is_empty()&&self.candidate.is_none()&&self.intermediate.is_none()&&self.admission.is_none()&&self.pending_messages.is_none()&&self.output_messages.is_none()&&self.projection.owners_empty()&&self.messages.terminal_is_empty()&&self.message_retirement.is_empty()&&self.candidate_retirement.is_empty()&&self.original.is_none()&&self.diff.is_none()}
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.empty()}
 }

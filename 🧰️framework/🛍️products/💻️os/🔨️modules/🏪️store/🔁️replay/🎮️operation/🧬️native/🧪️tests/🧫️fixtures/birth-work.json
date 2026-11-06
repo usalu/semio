@@ -1,1 +1,10 @@
-{"projectionBirth":1,"projectionTake":1,"editBirth":1,"deniedWork":0,"deniedItems":0,"deniedCapacity":0}
+{
+  "projectionBirth": 1,
+  "projectionTake": 1,
+  "editBirth": 1,
+  "deniedWork": 0,
+  "deniedItems": 0,
+  "deniedCapacity": 0,
+  "projectionAdvanceDenials": 1,
+  "preparationShellWork": 1
+}

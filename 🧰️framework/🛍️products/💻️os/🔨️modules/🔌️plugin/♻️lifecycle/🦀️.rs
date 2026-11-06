@@ -38,11 +38,12 @@ impl<T> BoundedConfigRetirementFactory<T> {
 }
 
 impl<T: semio_framework_value::retirement::RetireOwned> store::ArtifactOwnedValueRetirementFactory<T> for BoundedConfigRetirementFactory<T> {
+    fn retire_owned_work_demand(&self, _: &T) -> Result<u64, ValueError> { Ok(u64::from(T::controlled_retirement_supported())) }
     fn retirement_birth_bytes(&self, _: &T) -> usize { semio_framework_value::retirement::owned_retirement_birth_bytes::<T>() }
 
-    fn retire_owned(&self, value: T, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, T)> {
+    fn retire_owned(&self, value: T, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (semio_framework_value::OriginalRetirementFailure, T)> {let turn=(||{
         semio_framework_value::retirement::admit_owned_retirement(value, grant)
-    }
+    })();semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(|(error,value)|(error.into(),value)),work:turn.work}}
 }
 
 impl<T: semio_framework_value::retirement::RetireOwned + Sync> store::SnapshotRetirementFactory<T> for BoundedConfigRetirementFactory<T> {

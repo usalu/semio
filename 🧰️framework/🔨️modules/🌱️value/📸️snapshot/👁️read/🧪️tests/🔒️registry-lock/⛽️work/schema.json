@@ -1,0 +1,1 @@
+{"type":"object","required":["denied","release","empty"],"additionalProperties":false,"properties":{"denied":{"const":0},"release":{"const":1},"empty":{"const":0}}}

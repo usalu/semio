@@ -487,6 +487,6 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
 
     pub async fn stamp_pending_render_interaction_ui(&mut self, state: &protocol::InteractionState, body_key: &str) -> UiAssemblyResult<()> {
         let tree = self.pending.pending_render_tree.as_ref().ok_or_else(||ui_assembly_error("render.source-absent"))?;
-        OriginalRenderInteractionStamp { registry: &self.tools.registry, interaction_hover: &self.interaction.interaction_hover, peer_presence: self.roster.peer_presence.as_deref().unwrap_or(&semio_framework_plugin_decl_views::PeerPresenceRoot::EMPTY), own_color: self.roster.own_color, local_interaction_authority: &mut self.interaction.local_interaction_authority, interaction_ui_topology: &mut self.interaction.interaction_ui_topology, pending_presence: &mut self.roster.pending_presence, presence_marked_keys: &mut self.roster.presence_marked_keys }.stamp_and_cache_interaction_ui(tree,state,body_key).await
+        OriginalRenderInteractionStamp { registry: &self.tools.registry, interaction_hover: &self.interaction.interaction_hover, peer_presence: self.roster.peer_presence.as_deref().unwrap_or(&semio_plugin_decl_views::PeerPresenceRoot::EMPTY), own_color: self.roster.own_color, local_interaction_authority: &mut self.interaction.local_interaction_authority, interaction_ui_topology: &mut self.interaction.interaction_ui_topology, pending_presence: &mut self.roster.pending_presence, presence_marked_keys: &mut self.roster.presence_marked_keys }.stamp_and_cache_interaction_ui(tree,state,body_key).await
     }
 }

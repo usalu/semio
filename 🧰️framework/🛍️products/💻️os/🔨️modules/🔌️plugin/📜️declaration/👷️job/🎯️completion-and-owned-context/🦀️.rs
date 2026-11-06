@@ -61,6 +61,28 @@ impl<A: ArtifactApp> ArtifactToolCompletion<A> {
         Ok(())
     }
 
+    /// 📮️ Moves an original emission only after its caller funds both concrete headers and the publication flag.
+    pub fn complete_emit_original(&self,source:&mut Option<(ArtifactMutationOutcome<A::Mutation,A::ConfigMutation,A::DraftMutation>,EphemeralEmit<A>)>,published:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};
+        cx.original_source_parent()?.validate_borrowed_context(cx)?;
+        if *published{
+            if source.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"published original emission cannot be overwritten").into())}
+            return Ok(true)
+        }
+        if source.is_none(){return Ok(false)}
+        let copied=std::mem::size_of::<Option<ArtifactToolEmission<A>>>()+std::mem::size_of::<Option<ArtifactToolCompletionValue<A>>>()+std::mem::size_of::<bool>();
+        let grant=cx.retained_grant();
+        if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copied{return Ok(false)}
+        let locked=self.inner.try_lock();cx.consume_fuel(1);
+        let Ok(mut value)=locked else{return Ok(false)};
+        if value.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original emission completion receiver is occupied").into())}
+        let(emit,ephemeral)=source.take().unwrap();
+        *value=Some(ArtifactToolCompletionValue::Emit(emit.map_err(ArtifactCompletionFault::new),ephemeral));*published=true;
+        let turn:semio_framework_value::RetainedWorkOutcome=semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copied,..Default::default()})),work:0};
+        semio_framework_job::receive_original_retained_work(cx,turn)?;
+        Ok(true)
+    }
+
     #[doc(hidden)]
     pub fn with_busy_test_lock<R>(&self, test: impl FnOnce() -> R) -> R {
         let _guard = self.inner.lock().expect("completion test lock");
@@ -73,7 +95,7 @@ impl<A: ArtifactApp> ArtifactToolCompletion<A> {
         cx.original_source_parent()?;
         if *published{if source.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original published download cannot overwrite its completion").into())}return Ok(true)}
         let Some(download)=source.as_ref()else{return Ok(false)};let metadata=download.filename.len().checked_add(download.mime_type.len()).and_then(|n|n.checked_add(download.encoding.as_ref().map_or(0,String::len))).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original download metadata extent overflow"))?;
-        if metadata>semio_framework_plugin_decl_media::ARTIFACT_OUTPUT_METADATA_BYTES||download.mime_type.is_empty()||!download.chunks.is_sealed(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original download metadata or sealed output is invalid").into())}
+        if metadata>semio_plugin_decl_media::ARTIFACT_OUTPUT_METADATA_BYTES||download.mime_type.is_empty()||!download.chunks.is_sealed(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original download metadata or sealed output is invalid").into())}
         let copied=std::mem::size_of::<ArtifactDownloadOutput>()+std::mem::size_of::<EphemeralEmit<A>>()+std::mem::size_of::<bool>();let grant=cx.retained_grant();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copied{return Ok(false)}
         let Ok(mut value)=self.inner.try_lock()else{return Ok(false)};if value.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original download completion receiver is occupied").into())}
         *value=Some(ArtifactToolCompletionValue::Download(Ok(source.take().unwrap()),EphemeralEmit::default()));*published=true;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:copied,..Default::default()})?;cx.consume_fuel(1);Ok(true)

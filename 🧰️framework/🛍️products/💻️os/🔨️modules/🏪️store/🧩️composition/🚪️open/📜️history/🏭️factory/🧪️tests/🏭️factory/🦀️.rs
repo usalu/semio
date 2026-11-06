@@ -1,17 +1,17 @@
 //! 🧪️ Static fixture factories retain the actual paged request without calling open/create.
 
 use semio_framework_value::ErasedSnapshotRetirement as _;
-use semio_os_store_member_open::history::{MemberHistoryInputStep, MemberHistoryVerification};
+use semio_framework_os_store_member_open::history::{MemberHistoryInputStep, MemberHistoryVerification};
 use semio_os_store_space_member::lifted_store::MemberFactory;
 use semio_os_store_space_member::factory::{MemberFactorySelection, MemberFactorySelectionStep, MemberOpenDeclaration, Phase, SelectedMemberHistoryDictionary, SelectedMemberHistoryInput, SelectedVerifiedMemberHistory};
-use semio_os_store_member_open::history::dictionary::{MemberHistoryDictionaryLimits, MemberHistoryDictionaryStep};
-use semio_os_store_member_open::MemberOpenDiagnostic;
+use semio_framework_os_store_member_open::history::dictionary::{MemberHistoryDictionaryLimits, MemberHistoryDictionaryStep};
+use semio_framework_os_store_member_open::MemberOpenDiagnostic;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
 use semio_framework_job::StepContext;
-use semio_os_store_member_open::history::VerifiedMemberHistoryInput;
+use semio_framework_os_store_member_open::history::VerifiedMemberHistoryInput;
 use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_artifact_reference::ArtifactRef};
 use semio_os_spr::format::retained::RetainedSprLimits;
-use semio_os_store_member_open::MemberOpenRequest;
+use semio_framework_os_store_member_open::MemberOpenRequest;
 use semio_os_store_owned_schema_decode::{OWNED_SCHEMA_DECODE_PAGE_BYTES, OwnedSchemaDecodeCredits, OwnedSchemaDecodePage, OwnedSchemaDecodePages};
 use semio_os_store_envelope::owner::OwnerRef;
 use semio_os_vcs::VcsError;
@@ -122,9 +122,9 @@ macro_rules! factory {
         impl MemberFactory for $name {
             const OPEN_DECLARATIONS: &'static [MemberOpenDeclaration] = &$rows;
             type Open = semio_os_store_space_member::lifted_operation::UnsupportedMemberFactoryOpen<Self>;
-            fn open_birth_demand(request: &semio_os_store_member_open::MemberOpenRequest) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_os_store_member_open::MemberOpenDiagnostic> { request.admitted_expected().map(|_| semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 }) }
+            fn open_birth_demand(request: &semio_framework_os_store_member_open::MemberOpenRequest) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_os_store_member_open::MemberOpenDiagnostic> { request.admitted_expected().map(|_| semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 }) }
             fn member_frame_bytes(&self) -> usize { match *self {} }
-            fn begin_open(admission:&mut semio_os_store_member_open::source_admission::MemberOpenSourceAdmission,opened:&mut Option<Self::Open>,cx:&mut semio_framework_job::StepContext<'_>,parent:&semio_framework_job::OriginalCallerSourceParent)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+            fn begin_open(admission:&mut semio_framework_os_store_member_open::source_admission::MemberOpenSourceAdmission,opened:&mut Option<Self::Open>,cx:&mut semio_framework_job::StepContext<'_>,parent:&semio_framework_job::OriginalCallerSourceParent)->Result<bool,semio_framework_job::OriginalTurnFailure>{
                 semio_os_store_space_member::lifted_operation::UnsupportedMemberFactoryOpen::begin(admission,opened,cx,parent)
             }
             async fn create(_: &str, _: &ArtifactDialect, _: &[u8], _: semio_os_spr::ActorId) -> Result<Self, VcsError> {

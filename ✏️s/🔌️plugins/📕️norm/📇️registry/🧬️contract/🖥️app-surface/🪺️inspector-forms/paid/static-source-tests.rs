@@ -202,7 +202,7 @@ fn page(cancel:Option<usize>,locale:semio_ui_locale::Locale,compiled:&'static Co
   if std::ptr::eq(compiled,&CHOICE){
    let choice=page.controls[0].unwrap().choice.unwrap();assert_eq!(choice.len(),32);assert_eq!(choice.resident,Some(64));assert_eq!(choice.index(0),Some(64));
    let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{
-    use semio_framework_plugin_decl_staged_form::StagedScalarChoiceSource;
+    use semio_plugin_decl_staged_form::StagedScalarChoiceSource;
     let choices=page.scalar_choices(0).unwrap().unwrap();let current=choices.choice(0).unwrap();
     (choices.len(),current.key=="64",current.label=="Wert 64",page.scalar_selection(0).unwrap()==Some("64"),choices.choice(32).is_none())
    });

@@ -17,7 +17,8 @@
     "zeroSizedSampleCount",
     "largeZeroSizedArrayCount",
     "grantCases",
-    "logicalCases"
+    "logicalCases",
+    "workCases"
   ],
   "properties": {
     "version": {
@@ -121,6 +122,12 @@
           }
         }
       }
+    },
+    "workCases": {
+      "type": "array", "minItems": 4,
+      "items": {"type": "object", "additionalProperties": false, "required": ["body", "width", "remaining", "work", "elements"], "properties": {
+        "body": {"type": "integer", "minimum": 0}, "width": {"type": "integer", "minimum": 0}, "remaining": {"type": "integer", "minimum": 0}, "work": {"type": "integer", "minimum": 0}, "elements": {"type": "integer", "minimum": 0}
+      }}
     },
     "logicalCases": {
       "type": "array",

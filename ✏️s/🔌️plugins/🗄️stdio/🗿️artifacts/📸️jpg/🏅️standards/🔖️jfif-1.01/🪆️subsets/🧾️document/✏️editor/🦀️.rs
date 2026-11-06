@@ -41,7 +41,7 @@ use semio_framework_plugin::ToolFactoryKey;
 use semio_framework_plugin::ToolJobFactory;
 use semio_framework_plugin::ToolJobFactoryError;
 use semio_framework_plugin::ToolOperationSpec;
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 use semio_s_artifact_stdio_contract::editing;
 
 #[path = "🎭️modes/✏️edit/🎮️commands/🎨️paint-region/🦀️.rs"]
@@ -338,7 +338,7 @@ pub fn create_jpg_any_editor() -> semio_framework_plugin::AppDefinition {
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
         .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated);
     let builder = builder.action_with(main::paint_region_action())
-        .action_describe(paint_region::ACTION_ID, semio_framework_ui_locale::LocalizedLabel::native("Paints a checked solid color or palette index into a rectangular region and records exact undo history.", "Malt eine geprüfte Volltonfarbe oder einen Palettenindex in einen rechteckigen Bereich und speichert einen exakten Rückgängig-Verlauf."))
+        .action_describe(paint_region::ACTION_ID, semio_ui_locale::LocalizedLabel::native("Paints a checked solid color or palette index into a rectangular region and records exact undo history.", "Malt eine geprüfte Volltonfarbe oder einen Palettenindex in einen rechteckigen Bereich und speichert einen exakten Rückgängig-Verlauf."))
         .action_interactive_job(paint_region::ACTION_ID, InteractiveJobClassification::Migrated);
     editing::snapshot_edit_actions_with(builder).build_definition()
 }

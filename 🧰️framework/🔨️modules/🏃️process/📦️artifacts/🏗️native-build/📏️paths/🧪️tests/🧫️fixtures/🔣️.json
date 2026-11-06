@@ -2425,326 +2425,326 @@
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-contract",
-      "crateName": "semio_framework_ui_contract",
+      "packageName": "semio-ui-contract",
+      "crateName": "semio_ui_contract",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-contract-actions",
-      "crateName": "semio_framework_ui_contract_actions",
+      "packageName": "semio-ui-contract-actions",
+      "crateName": "semio_ui_contract_actions",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-contract-budget",
-      "crateName": "semio_framework_ui_contract_budget",
+      "packageName": "semio-ui-contract-budget",
+      "crateName": "semio_ui_contract_budget",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-contract-builder",
-      "crateName": "semio_framework_ui_contract_builder",
+      "packageName": "semio-ui-contract-builder",
+      "crateName": "semio_ui_contract_builder",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-contract-components",
-      "crateName": "semio_framework_ui_contract_components",
+      "packageName": "semio-ui-contract-components",
+      "crateName": "semio_ui_contract_components",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-contract-identity",
-      "crateName": "semio_framework_ui_contract_identity",
+      "packageName": "semio-ui-contract-identity",
+      "crateName": "semio_ui_contract_identity",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-contract-operations",
-      "crateName": "semio_framework_ui_contract_operations",
+      "packageName": "semio-ui-contract-operations",
+      "crateName": "semio_ui_contract_operations",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-contract-presentation",
-      "crateName": "semio_framework_ui_contract_presentation",
+      "packageName": "semio-ui-contract-presentation",
+      "crateName": "semio_ui_contract_presentation",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-contract-text",
-      "crateName": "semio_framework_ui_contract_text",
+      "packageName": "semio-ui-contract-text",
+      "crateName": "semio_ui_contract_text",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-contract-text-edit",
-      "crateName": "semio_framework_ui_contract_text_edit",
+      "packageName": "semio-ui-contract-text-edit",
+      "crateName": "semio_ui_contract_text_edit",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-contract-validation",
-      "crateName": "semio_framework_ui_contract_validation",
+      "packageName": "semio-ui-contract-validation",
+      "crateName": "semio_ui_contract_validation",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-contract-values",
-      "crateName": "semio_framework_ui_contract_values",
+      "packageName": "semio-ui-contract-values",
+      "crateName": "semio_ui_contract_values",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-declaration",
-      "crateName": "semio_framework_ui_declaration",
+      "packageName": "semio-ui-declaration",
+      "crateName": "semio_ui_declaration",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-draw-contract",
-      "crateName": "semio_framework_ui_draw_contract",
+      "packageName": "semio-ui-draw-contract",
+      "crateName": "semio_ui_draw_contract",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-layout",
-      "crateName": "semio_framework_ui_layout",
+      "packageName": "semio-ui-layout",
+      "crateName": "semio_ui_layout",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-locale",
-      "crateName": "semio_framework_ui_locale",
+      "packageName": "semio-ui-locale",
+      "crateName": "semio_ui_locale",
       "platform": null,
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-locale",
-      "crateName": "semio_framework_ui_locale",
+      "packageName": "semio-ui-locale",
+      "crateName": "semio_ui_locale",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-prepared",
-      "crateName": "semio_framework_ui_prepared",
+      "packageName": "semio-ui-prepared",
+      "crateName": "semio_ui_prepared",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-prepared-staging",
-      "crateName": "semio_framework_ui_prepared_staging",
+      "packageName": "semio-ui-prepared-staging",
+      "crateName": "semio_ui_prepared_staging",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-raster-owner",
-      "crateName": "semio_framework_ui_raster_owner",
+      "packageName": "semio-ui-raster-owner",
+      "crateName": "semio_ui_raster_owner",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-render-device",
-      "crateName": "semio_framework_ui_render_device",
+      "packageName": "semio-ui-render-device",
+      "crateName": "semio_ui_render_device",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-render-prepared-shaders",
-      "crateName": "semio_framework_ui_render_prepared_shaders",
+      "packageName": "semio-ui-render-prepared-shaders",
+      "crateName": "semio_ui_render_prepared_shaders",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-render-shader-contract",
-      "crateName": "semio_framework_ui_render_shader_contract",
+      "packageName": "semio-ui-render-shader-contract",
+      "crateName": "semio_ui_render_shader_contract",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-runtime",
-      "crateName": "semio_framework_ui_runtime",
+      "packageName": "semio-ui-runtime",
+      "crateName": "semio_ui_runtime",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-runtime-exchange",
-      "crateName": "semio_framework_ui_runtime_exchange",
+      "packageName": "semio-ui-runtime-exchange",
+      "crateName": "semio_ui_runtime_exchange",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-runtime-presentation",
-      "crateName": "semio_framework_ui_runtime_presentation",
+      "packageName": "semio-ui-runtime-presentation",
+      "crateName": "semio_ui_runtime_presentation",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-runtime-reconcile",
-      "crateName": "semio_framework_ui_runtime_reconcile",
+      "packageName": "semio-ui-runtime-reconcile",
+      "crateName": "semio_ui_runtime_reconcile",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-runtime-reconcile-cursor",
-      "crateName": "semio_framework_ui_runtime_reconcile_cursor",
+      "packageName": "semio-ui-runtime-reconcile-cursor",
+      "crateName": "semio_ui_runtime_reconcile_cursor",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-runtime-reconcile-primitives",
-      "crateName": "semio_framework_ui_runtime_reconcile_primitives",
+      "packageName": "semio-ui-runtime-reconcile-primitives",
+      "crateName": "semio_ui_runtime_reconcile_primitives",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-scene",
-      "crateName": "semio_framework_ui_scene",
+      "packageName": "semio-ui-scene",
+      "crateName": "semio_ui_scene",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-scene-algebra",
-      "crateName": "semio_framework_ui_scene_algebra",
+      "packageName": "semio-ui-scene-algebra",
+      "crateName": "semio_ui_scene_algebra",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-scene-camera",
-      "crateName": "semio_framework_ui_scene_camera",
+      "packageName": "semio-ui-scene-camera",
+      "crateName": "semio_ui_scene_camera",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-scene-doc",
-      "crateName": "semio_framework_ui_scene_doc",
+      "packageName": "semio-ui-scene-doc",
+      "crateName": "semio_ui_scene_doc",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-scene-mesh",
-      "crateName": "semio_framework_ui_scene_mesh",
+      "packageName": "semio-ui-scene-mesh",
+      "crateName": "semio_ui_scene_mesh",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-scene-modelling",
-      "crateName": "semio_framework_ui_scene_modelling",
+      "packageName": "semio-ui-scene-modelling",
+      "crateName": "semio_ui_scene_modelling",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-scene-node-graph",
-      "crateName": "semio_framework_ui_scene_node_graph",
+      "packageName": "semio-ui-scene-node-graph",
+      "crateName": "semio_ui_scene_node_graph",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-scene-pack",
-      "crateName": "semio_framework_ui_scene_pack",
+      "packageName": "semio-ui-scene-pack",
+      "crateName": "semio_ui_scene_pack",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-scene-pass",
-      "crateName": "semio_framework_ui_scene_pass",
+      "packageName": "semio-ui-scene-pass",
+      "crateName": "semio_ui_scene_pass",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-scene-picking",
-      "crateName": "semio_framework_ui_scene_picking",
+      "packageName": "semio-ui-scene-picking",
+      "crateName": "semio_ui_scene_picking",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-scene-plane",
-      "crateName": "semio_framework_ui_scene_plane",
+      "packageName": "semio-ui-scene-plane",
+      "crateName": "semio_ui_scene_plane",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-scene-surface",
-      "crateName": "semio_framework_ui_scene_surface",
+      "packageName": "semio-ui-scene-surface",
+      "crateName": "semio_ui_scene_surface",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-scene-views",
-      "crateName": "semio_framework_ui_scene_views",
+      "packageName": "semio-ui-scene-views",
+      "crateName": "semio_ui_scene_views",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-scene-world3d",
-      "crateName": "semio_framework_ui_scene_world3d",
+      "packageName": "semio-ui-scene-world3d",
+      "crateName": "semio_ui_scene_world3d",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-styling",
-      "crateName": "semio_framework_ui_styling",
+      "packageName": "semio-ui-styling",
+      "crateName": "semio_ui_styling",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-text",
-      "crateName": "semio_framework_ui_text",
+      "packageName": "semio-ui-text",
+      "crateName": "semio_ui_text",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-theme",
-      "crateName": "semio_framework_ui_theme",
+      "packageName": "semio-ui-theme",
+      "crateName": "semio_ui_theme",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-viewport",
-      "crateName": "semio_framework_ui_viewport",
+      "packageName": "semio-ui-viewport",
+      "crateName": "semio_ui_viewport",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-wgpu-device",
-      "crateName": "semio_framework_ui_wgpu_device",
+      "packageName": "semio-ui-wgpu-device",
+      "crateName": "semio_ui_wgpu_device",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-wgpu-draw-execution",
-      "crateName": "semio_framework_ui_wgpu_draw_execution",
+      "packageName": "semio-ui-wgpu-draw-execution",
+      "crateName": "semio_ui_wgpu_draw_execution",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-wgpu-light",
-      "crateName": "semio_framework_ui_wgpu_light",
+      "packageName": "semio-ui-wgpu-light",
+      "crateName": "semio_ui_wgpu_light",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-wgpu-mesh",
-      "crateName": "semio_framework_ui_wgpu_mesh",
+      "packageName": "semio-ui-wgpu-mesh",
+      "crateName": "semio_ui_wgpu_mesh",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-wgpu-pipelines",
-      "crateName": "semio_framework_ui_wgpu_pipelines",
+      "packageName": "semio-ui-wgpu-pipelines",
+      "crateName": "semio_ui_wgpu_pipelines",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-wgpu-raster",
-      "crateName": "semio_framework_ui_wgpu_raster",
+      "packageName": "semio-ui-wgpu-raster",
+      "crateName": "semio_ui_wgpu_raster",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-ui-wgpu-render",
-      "crateName": "semio_framework_ui_wgpu_render",
+      "packageName": "semio-ui-wgpu-render",
+      "crateName": "semio_ui_wgpu_render",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },

@@ -95,7 +95,7 @@ pub struct TreeSectionProps {
 /// 🌿️ Props for `Component::TreeItem` — a single row. `items`/`control` are gone: nested items and [Design notes](README.md#source-notes-115).
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 #[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct TreeItemProps {
     pub label: Label,

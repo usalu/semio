@@ -36,7 +36,9 @@
         "bindingCpu": 1,
         "copyCpu": 1,
         "takeCpu": 1,
-        "cachedCpu": 0
+        "cachedCpu": 0,
+        "closeStartCpu": 1,
+        "repeatedCloseStartCpu": 0
       }
     }
   }

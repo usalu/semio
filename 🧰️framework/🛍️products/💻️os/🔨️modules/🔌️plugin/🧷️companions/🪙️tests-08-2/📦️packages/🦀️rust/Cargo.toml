@@ -40,7 +40,7 @@ semio-plugin-interaction = { path = "../../../../🕹️interaction/📦️packa
 semio-plugin-plugin-program = { path = "../../../../🏗️builder/🔌️program/📦️packages/🦀️rust" }
 semio-plugin-reactor-app = { path = "../../../../⚛️reactor/🔌️app/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-plugin-reactor-lifecycle = { path = "../../../../⚛️reactor/📨️pending/📦️packages/🦀️rust", features = ["artifact-app-testing", "original-actor-context-testing"] }
-semio-plugin-runtime-ops = { path = "../../../../⚛️reactor/🏃️runtime/🧰️ops/📦️packages/🦀️rust", features = ["artifact-app-testing", "original-actor-context-testing"] }
+semio-framework-plugin-runtime-ops = { path = "../../../../⚛️reactor/🏃️runtime/🧰️ops/📦️packages/🦀️rust", features = ["artifact-app-testing", "original-actor-context-testing"], package = "semio-plugin-runtime-ops"}
 semio-plugin-test-support = { path = "../../../🧯️test-support/📦️packages/🦀️rust" }
 semio-plugin-testing-caller = { path = "../../../../🧪️testing/🎟️caller/📦️packages/🦀️rust" }
 semio-plugin-testing-fixtures = { path = "../../../../🧪️testing/🧰️fixtures/📦️packages/🦀️rust" }

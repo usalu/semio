@@ -10,7 +10,7 @@ const SHARED_REFERENCE_SCHEMA: &str = r#"{"type":"object","additionalProperties"
 /// as one input and the draft editor renders its control.
 #[semio_framework_async_macros::async_test]
 async fn an_input_that_references_a_shared_framework_schema_resolves_on_any_instance() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
@@ -44,7 +44,7 @@ async fn an_input_that_references_a_shared_framework_schema_resolves_on_any_inst
 /// is refused instead of silently showing every row.
 #[semio_framework_async_macros::async_test]
 async fn every_declared_history_filter_option_is_dispatched_and_echoed() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
@@ -58,11 +58,11 @@ async fn every_declared_history_filter_option_is_dispatched_and_echoed() {
         other => panic!("the filter is a choice: {other:?}"),
     };
     assert_eq!(declared, HistoryCommandFilter::ALL.map(|filter| filter.value().to_string()), "the declared options are the runtime's filters, in order");
-    let meta = ActionMeta { view_state: Some(semio_framework_plugin_testing_laws::receive_view_fixture(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), semio_framework_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(&actor) };
+    let meta = ActionMeta { view_state: Some(semio_plugin_testing_laws::receive_view_fixture(ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), semio_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(&actor) };
     for value in &declared {
         let args = DslValue::Object(vec![("value".into(), DslValue::String(value.clone()))]);
         let admitted = app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&args), &meta, &mut identity).await.unwrap_or_else(|fault| panic!("{value}: {fault:?}"));
-        semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(&mut app, admitted, cx).await.unwrap_or_else(|fault| panic!("{value}: {fault:?}"));
+        semio_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(&mut app, admitted, cx).await.unwrap_or_else(|fault| panic!("{value}: {fault:?}"));
         assert_eq!(&app.render_ctx().history_patch(true).await.expect("history patch").command_filter, value, "the wire echoes the declared option");
         let body = render_history(&mut app, Locale::En).await;
         let select = find_node(&body, "framework.history.filter.control").expect("the filter select");
@@ -72,7 +72,7 @@ async fn every_declared_history_filter_option_is_dispatched_and_echoed() {
     }
     let undeclared = DslValue::Object(vec![("value".into(), DslValue::String("withoutOperations".into()))]);
     let refused = match app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&undeclared), &meta, &mut identity).await {
-        Ok(admitted) => semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(&mut app, admitted, cx).await.err(),
+        Ok(admitted) => semio_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(&mut app, admitted, cx).await.err(),
         Err(fault) => Some(fault),
     };
     assert!(refused.is_some(), "an undeclared filter value is refused");
@@ -100,7 +100,7 @@ fn long_option_rows_state_their_choice_as_selected() {
     let panel = TimeTravelPanel { status: Default::default(), store: None, stage: TimeTravelStage::Editing, pending_after: None, finalize_refusal: None, review: None, rerun_refusal: None, begin_refusal: None, next_problem: None, editor: Some(editor.clone()), outcomes: Default::default(), edited: Default::default(), accepted: Default::default() };
     let sections = time_travel::time_travel_editor_sections(&panel, &editor, &TreeWindows::unhosted(), "toy", Locale::En).expect("the editor builds");
     fn option_rows(node: &BuiltNode, rows: &mut Vec<(String, Option<bool>)>) {
-        if let semio_framework_ui_contract::Component::TreeItem(props) = &node.component {
+        if let semio_ui_contract::Component::TreeItem(props) = &node.component {
             if node.key.as_str().contains(".option.") && node.key.as_str().ends_with(".row") {
                 rows.push((node.key.as_str().to_string(), props.selected));
             }
@@ -121,7 +121,7 @@ fn long_option_rows_state_their_choice_as_selected() {
 /// were — and an input stamped with the generation from before is accepted, not stale.
 #[semio_framework_async_macros::async_test]
 async fn a_backbone_attach_and_detach_while_editing_is_no_base_move() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
@@ -161,7 +161,7 @@ async fn a_backbone_attach_and_detach_while_editing_is_no_base_move() {
 /// `timeTravel.stale`, the session closes with its commit.
 #[semio_framework_async_macros::async_test]
 async fn a_replay_finished_before_a_backbone_attach_and_detach_still_commits() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
@@ -224,7 +224,7 @@ fn a_mutation_row_names_why_edit_or_withdraw_is_refused() {
     };
     let row = |entry: &semio_framework::kernel::HistoryMutationEntry, locale: Locale, read_only: bool, refusals: time_travel::MutationRowRefusals| {
         let row = history_panel_mutation_row(entry, "toy", locale, read_only, refusals).expect("the row builds");
-        let semio_framework_ui_contract::Component::TreeItem(props) = &row.component else { panic!("a mutation row is a tree row") };
+        let semio_ui_contract::Component::TreeItem(props) = &row.component else { panic!("a mutation row is a tree row") };
         let actions: Vec<(String, Option<String>)> = props.row_actions.iter().map(|action| (action.verb.as_str().to_string(), action.reason.as_ref().map(|reason| reason.0.as_str().to_string()))).collect();
         assert!(props.row_actions.iter().all(|action| action.disabled == action.reason.is_some()), "a disabled action names why: {actions:?}");
         (actions, props.target.as_ref().and_then(|target| target.activation.as_ref().map(|verb| verb.as_str().to_string())))

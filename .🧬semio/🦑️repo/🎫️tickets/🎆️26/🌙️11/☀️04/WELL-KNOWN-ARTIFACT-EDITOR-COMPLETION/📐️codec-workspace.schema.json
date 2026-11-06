@@ -1,0 +1,68 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "stages",
+          "expectedWork",
+          "retained",
+          "lateTransfers"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "stages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "work",
+                "retained",
+                "status"
+              ],
+              "properties": {
+                "work": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "retained": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "status": {
+                  "enum": [
+                    "success",
+                    "refusal",
+                    "unwind"
+                  ]
+                }
+              }
+            }
+          },
+          "expectedWork": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "retained": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "lateTransfers": {
+            "const": 0
+          }
+        }
+      }
+    }
+  }
+}

@@ -4,10 +4,16 @@
     "preflight": "🩺️preflight/🟦️.ts",
     "dependencies": "📦️dependencies/🟦️.ts",
     "runtime": "⚙️runtime/🟦️.ts",
+    "utility": "🧰️utility/🟦️.ts",
     "cache": "💾️cache/🟦️.ts",
-    "cache-ledger": "💾️cache/📋️ledger/🟦️.ts"
+    "cache-ledger": "💾️cache/📋️ledger/🟦️.ts",
+    "cargo": "🦀️cargo/🟦️.ts",
+    "task": "🏃️task/🟦️.ts"
   },
   "cases": [
+    {"args": ["incremental", "list"], "kind": "utility"},
+    {"args": ["service", "status"], "kind": "utility"},
+    {"args": ["units", "plan", "--for=go"], "kind": "utility"},
     {
       "args": [
         "preflight"
@@ -38,7 +44,7 @@
         "run",
         "workspace:test-workspace-build"
       ],
-      "kind": "runtime"
+      "kind": "task"
     },
     {
       "args": [
@@ -46,7 +52,7 @@
         "--",
         "preflight"
       ],
-      "kind": "runtime"
+      "kind": "task"
     },
     {
       "args": [
@@ -60,7 +66,7 @@
         "--",
         "--help"
       ],
-      "kind": "runtime"
+      "kind": "task"
     },
     {
       "args": [
@@ -113,7 +119,7 @@
         "cache",
         "status"
       ],
-      "kind": "runtime"
+      "kind": "task"
     },
     {
       "args": [
@@ -175,6 +181,61 @@
         "gc"
       ],
       "kind": "cache"
+    },
+    {
+      "args": [
+        "cargo",
+        "--store=shared",
+        "--configuration=prototype",
+        "--",
+        "check"
+      ],
+      "kind": "cargo"
+    },
+    {
+      "args": [
+        "--tool=bazel",
+        "cargo",
+        "--store=shared",
+        "--configuration=prototype",
+        "--",
+        "test"
+      ],
+      "kind": "cargo"
+    },
+    {
+      "args": [
+        "exec",
+        "--",
+        "cargo",
+        "check"
+      ],
+      "kind": "task"
+    },
+    {
+      "args": [
+        "cargo",
+        "--help"
+      ],
+      "kind": "preflight"
+    },
+    {
+      "args": [
+        "--tool=bazel",
+        "run",
+        "example:test"
+      ],
+      "kind": "task"
+    },
+    {
+      "args": [
+        "--tool=nx",
+        "exec",
+        "--",
+        "cargo",
+        "check"
+      ],
+      "kind": "task"
     }
   ]
 }

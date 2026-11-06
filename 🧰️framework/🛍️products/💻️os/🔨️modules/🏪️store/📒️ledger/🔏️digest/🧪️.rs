@@ -4,7 +4,7 @@ use super::*;
 fn native_edit_digest_preserves_single_and_chained_contracts(){
  let cases:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();
  for case in cases.as_array().unwrap(){let wire=serde_json::to_string(&case["edit"]).unwrap();let value=semio_framework_pack_json::from_json_str(&wire,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let edit=Edit::<bool>::from_value(value).unwrap();let mut cursor=NativeEditDigest::default();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:65536,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:64};
- for _ in 0..100000{cursor.advance(&edit,grant).unwrap();if cursor.digest().is_some(){break}}
+ for _ in 0..100000{let turn=cursor.advance(&edit,grant);assert!(turn.work<=1);turn.result.unwrap();if cursor.digest().is_some(){break}}
  let expected:Vec<u8>=case["digest"].as_array().unwrap().iter().map(|byte|byte.as_u64().unwrap()as u8).collect();assert_eq!(cursor.digest().unwrap().as_slice(),expected);assert_eq!(cursor.digest().unwrap(),CursorRevisionAccumulator::edit_digest(&edit));
  }
 }

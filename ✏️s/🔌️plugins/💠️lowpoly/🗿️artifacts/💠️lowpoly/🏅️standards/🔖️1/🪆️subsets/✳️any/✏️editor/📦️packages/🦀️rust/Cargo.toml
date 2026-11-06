@@ -139,8 +139,6 @@ semio-s-artifact-lowpoly-lowpoly-view = { workspace = true }
 
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
-semio-ui-contract = { workspace = true }
-semio-s-artifact-lowpoly-lowpoly-kit = { workspace = true }
 base64_codec = { workspace = true }
 semio-s-artifact-lowpoly-lowpoly-io = { workspace = true }
 semio-s-artifact-lowpoly-lowpoly-mut-geometry = { workspace = true }

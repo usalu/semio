@@ -29,6 +29,13 @@ fn finish(caller: OriginalJobFixtureCaller, mut decoder: OriginalJobDecodeOwner)
 }
 
 #[test]
+fn original_document_base64_advances_under_4096_actual_work_units(){
+    let mut caller=caller();let mut decoder=OriginalJobDecodeOwner::empty();let mut source=Some(ArtifactDocumentPayload{pack:"AAAA".repeat(2048),spr:String::new()});let mut output=None;assert!(caller.turn_with_decoder(stock(),&mut decoder,|cx|OriginalArtifactDocumentReceiving::admit_original(&mut source,&mut output,8192,cx)).unwrap());let mut owner=output.unwrap();let mut done=false;
+    for _ in 0..100_000{let(result,work)=caller.turn_with_decoder(stock(),&mut decoder,|cx|{let deadline=cx.deadline_us();cx.with_original_work_loan(4096,deadline,|same|{let before=same.original_work_units_spent();let index=owner.phase;let result=owner.step(same)?;let work=same.original_work_units_spent()-before;let codec=owner.cursors[index].as_ref().unwrap().last_turn_receipt().work_units;assert_eq!(work,codec as u64);assert!(work<=4096);Ok((result,work))})}).unwrap();if result{done=true;break}assert!(work>0)}
+    assert!(done);let mut pair=None;assert!(caller.turn_with_decoder(stock(),&mut decoder,|cx|owner.take_pair(&mut pair,cx)).unwrap());let pair=pair.unwrap();assert_eq!(pair.0.len(),6144);assert!(pair.0.iter().all(|byte|*byte==0));assert!(pair.1.is_empty());close(&mut owner,&mut caller,&mut decoder);drop(owner);close_value(pair,&mut caller,&mut decoder);finish(caller,decoder);
+}
+
+#[test]
 fn artifact_document_original_pair_receiving_preserves_exact_sources_and_physical_receipts() {
     let law = fixture();
     for row in law["valid"].as_array().unwrap() {
@@ -38,7 +45,7 @@ fn artifact_document_original_pair_receiving_preserves_exact_sources_and_physica
         let mut owner = receive(&mut source, &mut caller, &mut decoder);
         let mut done = false;
         for _ in 0..100_000 {
-            let demand = owner.next_demands().unwrap();
+            let demand = owner.next_demands(8192).unwrap();
             for axis in law["deniedAxes"].as_array().unwrap() {
                 let mut denied = stock();
                 match axis.as_str().unwrap() { "items" => denied.maximum_items = 0, "copy" => denied.maximum_copy_bytes = demand.copy_bytes.saturating_sub(1), "capacity" if demand.capacity_bytes != 0 => denied.maximum_capacity_bytes = demand.capacity_bytes - 1, "capacity" => continue, "depth" => denied.maximum_depth = demand.depth.saturating_sub(1), _ => unreachable!() }

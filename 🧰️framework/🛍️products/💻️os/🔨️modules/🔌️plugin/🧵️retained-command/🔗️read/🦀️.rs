@@ -6,7 +6,7 @@ use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use store::os_store::snapshot_read::SnapshotRead;
 /// 🎒️ Borrows original command read custody without duplicating the captured snapshot or issuer lease.
-pub struct ArtifactCommandSnapshotRead<'a,T:?Sized>{pub original:Option<&'a RefCell<Option<SnapshotRead<T>>>>,pub operation:&'a AppOperationContext,pub(super) source:Option<semio_framework::action_bus::OriginalToolSourceBinding>}
+pub struct ArtifactCommandSnapshotRead<'a,T:?Sized>{pub original:Option<&'a RefCell<Option<SnapshotRead<T>>>>,pub operation:&'a AppOperationContext,pub source:Option<semio_framework::action_bus::OriginalToolSourceBinding>}
 impl<'a,T:?Sized> ArtifactCommandSnapshotRead<'a,T>{
  /// 🕳️ Pure work inputs declare the absence of captured Store read custody explicitly.
  pub fn unavailable(operation:&'a AppOperationContext)->Self{Self{original:None,operation,source:None}}

@@ -68,9 +68,9 @@ impl<const N: usize> RetainedCloneCursor<PagedBytes<N>> for PagedBytesCursor<N> 
         let length = source.get().len();
         Ok(if self.bytes.capacity() < length { crate::RetirementDemand { capacity_bytes: self.bytes.next_capacity_allocation_bytes(length)?.ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "paged bytes capacity action absent"))?, depth: 1, ..Default::default() } } else { crate::RetirementDemand { copy_bytes: if self.bytes.len() < length { (length-self.bytes.len()).min(body.max(1)).min(PAGED_BYTES_CHUNK_BYTES) } else { size_of::<PagedBytes<N>>() }, depth: 1, ..Default::default() } })
     }
-    fn advance(&mut self, source: RetainedCloneRef<'_, PagedBytes<N>>, body: usize, grant: RetainedCloneGrant) -> crate::RetainedWorkOutcome<RetainedCloneStep, ValueError> {let mut work=0;let result=(||{
+    fn advance(&mut self, source: RetainedCloneRef<'_, PagedBytes<N>>, body: usize, grant: RetainedCloneGrant) -> crate::OriginalRetirementOutcome {let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
         if self.closing {
-            return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "paged octet retained clone cursor is closing"));
+            return Err((ValueError::literal(ValueRefusalKind::InvariantViolated, "paged octet retained clone cursor is closing")).into());
         }
         let demand = self.advance_demands(source,body)?;
         if self.output_ready() { return Ok(RetainedCloneStep::Complete(Default::default())); }
@@ -87,7 +87,7 @@ impl<const N: usize> RetainedCloneCursor<PagedBytes<N>> for PagedBytesCursor<N> 
                     if required > grant.maximum_capacity_bytes {
                         return Ok(RetainedCloneStep::Progress(Default::default()));
                     }
-                    let progress=match self.bytes.reserve_capacity_one(source.len(),grant.maximum_capacity_bytes){Ok(p)=>{work+=p.work;p},Err(error)=>{work+=error.work;return Err(ValueError::from(error.refusal()).with_retained_progress(RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes!=0),retained_capacity_bytes:error.allocated_bytes,..Default::default()}))}};
+                    let progress=match self.bytes.reserve_capacity_one(source.len(),grant.maximum_capacity_bytes){Ok(p)=>{work+=p.work;p},Err(error)=>{work+=error.work;return Err((ValueError::from(error.refusal()).with_retained_progress(RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes!=0),retained_capacity_bytes:error.allocated_bytes,..Default::default()})).into())}};
                     if !progress.progressed {
                         return Ok(RetainedCloneStep::Progress(Default::default()));
                     }
@@ -112,7 +112,7 @@ impl<const N: usize> RetainedCloneCursor<PagedBytes<N>> for PagedBytesCursor<N> 
                 Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
             }
             1 => Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())),
-            _ => Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "paged octet retained clone cursor is spent")),
+            _ => Err((ValueError::literal(ValueRefusalKind::InvariantViolated, "paged octet retained clone cursor is spent")).into()),
         }
     })();crate::RetainedWorkOutcome{result,work}}
 
@@ -205,9 +205,9 @@ impl<const N: usize> RetainedCloneCursor<PagedUtf8<N>> for PagedUtf8Cursor<N> {
             _ => Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"paged text clone phase invalid")),
         }
     }
-    fn advance(&mut self, source: RetainedCloneRef<'_, PagedUtf8<N>>, body: usize, grant: RetainedCloneGrant) -> crate::RetainedWorkOutcome<RetainedCloneStep, ValueError> {let mut work=0;let result=(||{
+    fn advance(&mut self, source: RetainedCloneRef<'_, PagedUtf8<N>>, body: usize, grant: RetainedCloneGrant) -> crate::OriginalRetirementOutcome {let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
         if self.closing {
-            return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "paged UTF-8 retained clone cursor is closing"));
+            return Err((ValueError::literal(ValueRefusalKind::InvariantViolated, "paged UTF-8 retained clone cursor is closing")).into());
         }
         let demand = self.advance_demands(source,body)?;
         if self.output_ready() { return Ok(RetainedCloneStep::Complete(Default::default())); }
@@ -247,7 +247,7 @@ impl<const N: usize> RetainedCloneCursor<PagedUtf8<N>> for PagedUtf8Cursor<N> {
                 Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, retained_capacity_bytes: 0, released_bytes: 0 }))
             }
             3 => Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())),
-            _ => Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "paged UTF-8 retained clone cursor is spent")),
+            _ => Err((ValueError::literal(ValueRefusalKind::InvariantViolated, "paged UTF-8 retained clone cursor is spent")).into()),
         }
     })();crate::RetainedWorkOutcome{result,work}}
 
@@ -429,9 +429,9 @@ impl<V: RetainedClone, const N: usize> RetainedCloneCursor<PagedMap<V, N>> for P
             _ => Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"paged map clone phase invalid")),
         }
     }
-    fn advance(&mut self, source: RetainedCloneRef<'_, PagedMap<V, N>>, body: usize, grant: RetainedCloneGrant) -> crate::RetainedWorkOutcome<RetainedCloneStep, ValueError> {let mut work=0;let result=(||{
+    fn advance(&mut self, source: RetainedCloneRef<'_, PagedMap<V, N>>, body: usize, grant: RetainedCloneGrant) -> crate::OriginalRetirementOutcome {let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
         if self.closing {
-            return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "paged map retained clone cursor is closing"));
+            return Err((ValueError::literal(ValueRefusalKind::InvariantViolated, "paged map retained clone cursor is closing")).into());
         }
         let demand = self.advance_demands(source,body)?;
         if self.output_ready() { return Ok(RetainedCloneStep::Complete(Default::default())); }
@@ -471,7 +471,7 @@ impl<V: RetainedClone, const N: usize> RetainedCloneCursor<PagedMap<V, N>> for P
                 Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
             }
             3 => Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())),
-            _ => Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "paged map retained clone cursor is spent")),
+            _ => Err((ValueError::literal(ValueRefusalKind::InvariantViolated, "paged map retained clone cursor is spent")).into()),
         }
     })();crate::RetainedWorkOutcome{result,work}}
 

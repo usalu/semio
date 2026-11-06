@@ -1,0 +1,70 @@
+{
+  "primary": "child primary",
+  "work": "child work",
+  "retirementWork": "inner retirement work",
+  "childWork": 3,
+  "workRecovery": {
+    "child": 3,
+    "interrupted": 3,
+    "settled": 0
+  },
+  "slotCustody": [
+    {
+      "owner": "original",
+      "candidate": "original",
+      "relocated": true,
+      "accepted": true
+    },
+    {
+      "owner": "original",
+      "candidate": "replacement",
+      "relocated": false,
+      "accepted": false
+    }
+  ],
+  "allocationPostRefused": true,
+  "receiptRefused": true,
+  "sharedAdmission": [
+    {
+      "id": "quote-refused",
+      "events": [
+        "quote"
+      ],
+      "born": false,
+      "output": false,
+      "input": true,
+      "receipt": false
+    },
+    {
+      "id": "post-refused",
+      "events": [
+        "quote",
+        "post"
+      ],
+      "born": true,
+      "output": false,
+      "input": true,
+      "receipt": true
+    }
+  ],
+  "rejectReplacement": true,
+  "outerWork": "outer work refusal",
+  "knownActualMismatch": {
+    "actual": 4,
+    "reported": 5,
+    "work": 1
+  },
+  "issuerRebind": true,
+  "arcBirth": {
+    "nullAttempts": 1,
+    "published": 7,
+    "receipts": 3
+  },
+  "multiActions": {
+    "initial": 2,
+    "afterFirst": 1,
+    "afterSecond": 0,
+    "wrongTakeRejected": true
+  },
+  "issuerOutstandingDuring": 1
+}

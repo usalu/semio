@@ -8,7 +8,7 @@ use semio_framework_job_publication::RetainedJobPublication;
 use semio_framework_dsl_record::{BorrowedDslRecord,native_encoding::FieldProjectionSource};
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use semio_plugin_ownership::bounded_ownership::{plugin_typed_owner_demand,plugin_typed_owner_step,plugin_grant_funds};
+use semio_plugin_ownership::bounded_ownership::{plugin_typed_owner_demand,plugin_typed_owner_original,plugin_grant_funds};
 use pack::record::BorrowedPackDocumentCursor;
 use std::{sync::Arc,mem::ManuallyDrop};
 pub const SNAPSHOT_PACK_PORT:&str="semio.snapshot.pack";
@@ -75,10 +75,10 @@ impl<A:ArtifactApp> NativeSnapshotPackExportJob<A> where A::Snapshot:BorrowedDsl
   if !self.publication.terminal_is_empty(){let turn=self.publication.close_step(grant);*work+=turn.work;return turn.result}if self.delivered{self.delivered=false;return Ok(RetainedCloneStep::Progress(item))}
   if let Some(cursor)=self.cursor.as_mut(){if !cursor.terminal_is_empty(){return cursor.close(grant).map(|step|RetainedCloneStep::Progress(step.progress)).map_err(|failure|failure.reason)}self.cursor.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{released_bytes:d.release_bytes,..item}))}
   if self.page.is_some(){self.page.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{released_bytes:d.release_bytes,..item}))}
-  if self.pending.is_some()||self.pending_close.is_some(){return plugin_typed_owner_step(&mut self.pending,&mut self.pending_close,grant)}if self.outputs.is_some()||self.outputs_close.is_some(){return plugin_typed_owner_step(&mut self.outputs,&mut self.outputs_close,grant)}
+  if self.pending.is_some()||self.pending_close.is_some(){return plugin_typed_owner_original(&mut self.pending,&mut self.pending_close,grant)}if self.outputs.is_some()||self.outputs_close.is_some(){return plugin_typed_owner_original(&mut self.outputs,&mut self.outputs_close,grant)}
   if let Some(snapshot)=self.snapshot.as_ref(){if !self.lease.as_ref().is_some_and(|lease|lease.can_release(snapshot)){return Err(invalid("native Pack writer lost its original snapshot close supplier"))}self.snapshot.take();return Ok(RetainedCloneStep::Progress(item))}
   if let Some(lease)=self.lease.as_mut(){if lease.terminal_is_empty(){self.lease.take();return Ok(RetainedCloneStep::Progress(item))}return lease.close_step(grant)}
-  if self.metadata.is_some()||self.metadata_close.is_some(){return plugin_typed_owner_step(&mut self.metadata,&mut self.metadata_close,grant)}Ok(RetainedCloneStep::Complete(Default::default()))
+  if self.metadata.is_some()||self.metadata_close.is_some(){return plugin_typed_owner_original(&mut self.metadata,&mut self.metadata_close,grant)}Ok(RetainedCloneStep::Complete(Default::default()))
  }
 }
 impl<A:ArtifactApp> InteractiveJob for NativeSnapshotPackExportJob<A> where A::Snapshot:BorrowedDslRecord+FieldProjectionSource{

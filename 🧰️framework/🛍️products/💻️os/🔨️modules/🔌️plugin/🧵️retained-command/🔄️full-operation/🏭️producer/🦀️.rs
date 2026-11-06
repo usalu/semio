@@ -13,7 +13,7 @@ impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
  fn retire_original_producer(&mut self,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
   let reserved=self.original_reserved_producer_pending();self.user_cancel_requested=true;self.terminal_seen=true;
   if reserved{self.stage=MountedTypedCommandFullOperationStage::Publishing;if let Some(lease)=self.cancellation_lease.as_ref(){lease.cancel();}return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
-  let step=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut self.producer_request,&mut self.producer_request_retirement,grant)?;
+  let step=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original(&mut self.producer_request,&mut self.producer_request_retirement,grant)?;
   if !self.original_producer_pending(){self.stage=MountedTypedCommandFullOperationStage::Publishing;if let Some(lease)=self.cancellation_lease.as_ref(){lease.cancel();}}
   Ok(PluginLifecycleStep::Progress(step.progress()))
  }

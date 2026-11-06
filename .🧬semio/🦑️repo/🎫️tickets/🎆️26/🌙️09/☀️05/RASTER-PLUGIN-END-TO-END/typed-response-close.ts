@@ -1,0 +1,6 @@
+import {readFileSync,writeFileSync} from 'node:fs';
+const file='🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🧰️ops/🧾️typed-operations/response.rs';let text=readFileSync(file,'utf8');
+const changes:[string,string][]=[
+ ['pub fn close_demands(&self,registry:&semio_plugin_plugin_program::surface_context::SurfaceContexts)->Result<RetirementDemand,ValueError>{if let Some(capture)','pub fn close_demands(&self,registry:&semio_plugin_plugin_program::surface_context::SurfaceContexts)->Result<RetirementDemand,ValueError>{if !self.allocation.terminal_is_empty(){return self.allocation.close_demand()}if let Some(capture)'],
+ ['if self.allocation.phase()!=semio_framework_value::native_decoding::NativeReceivingEffectPhase::Empty{return Err(invalid().into())}if !self.retirement.is_empty()','if self.allocation.phase()!=semio_framework_value::native_decoding::NativeReceivingEffectPhase::Empty{return Err(invalid().into())}if self.allocation.has_birth(){let d=self.allocation.close_demand()?;semio_framework_job::close_original_retained_step(cx,d,|grant|self.allocation.close_step(grant))?;return Ok(false)}if !self.retirement.is_empty()'],
+];for(const [before,after] of changes){if(!text.includes(before))throw new Error(`response close changed: ${before}`);text=text.replace(before,after)}writeFileSync(file,text);

@@ -1,0 +1,82 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 11,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "word",
+          "prefix",
+          "repeat",
+          "cancel",
+          "limit",
+          "valid",
+          "work",
+          "read",
+          "copy",
+          "capacity",
+          "output"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "word": {
+            "type": "string"
+          },
+          "prefix": {
+            "type": "string"
+          },
+          "repeat": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "cancel": {
+            "enum": [
+              "none",
+              "validate-start",
+              "decode-start",
+              "decode-end"
+            ]
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "valid": {
+            "type": "boolean"
+          },
+          "work": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "read": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "copy": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "capacity": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "output": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

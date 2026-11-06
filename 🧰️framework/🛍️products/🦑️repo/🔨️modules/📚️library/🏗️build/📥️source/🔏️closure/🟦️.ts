@@ -80,5 +80,8 @@ export const buildSourceClosureLoaderV1=sourceClosureLoaderV1(false,{prefixes:bu
 /** 🚰️ Executes bounded owned auxiliary DATA without consuming ordinary stdin or mutable source aliases. */
 export const buildSourceClosureStreamLoaderV1=sourceClosureLoaderV1(true);
 
+/** 🔥️ Verifies the pinned door before warming its declared captured images in the receiving process. */
+export const buildSourceClosureWarmLoaderV1=sourceClosureLoaderV1(true,undefined,4,{manifest:"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🔣️.json",retention:"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🔀️partition/📌️retention/🟦️.ts",maximumModules:64});
+
 /** 📥️ Uses the closed Native helper stdin for the same authenticated immutable loader. */
 export const buildSourceClosureStdinLoaderV1=sourceClosureLoaderV1(true,undefined,0);

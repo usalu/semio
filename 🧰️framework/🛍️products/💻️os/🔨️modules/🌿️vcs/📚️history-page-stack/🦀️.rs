@@ -204,6 +204,9 @@ impl<T> HistoryPageStack<T> {
         (index < self.len).then(|| self.value_page(index / ARTIFACT_HISTORY_PAGE_SLOTS).slots[index % ARTIFACT_HISTORY_PAGE_SLOTS].as_ref().expect("occupied history catalog slot"))
     }
 
+    /// 📏️ Counts the linked directory chunks needed for this actual occupied index.
+    pub fn retained_lookup_work(&self,index:usize)->Option<u64>{(index<self.len).then(||1u64+(index/ARTIFACT_HISTORY_PAGE_SLOTS/ARTIFACT_HISTORY_DIRECTORY_PAGES)as u64)}
+
     pub fn last(&self) -> Option<&T> {
         self.len.checked_sub(1).and_then(|index| self.get(index))
     }

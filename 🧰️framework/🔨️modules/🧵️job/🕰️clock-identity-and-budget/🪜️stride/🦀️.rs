@@ -1,10 +1,18 @@
-//! 🪜️ Clock sampling retains its calibrated stride independently of any job Source.
+//! 🪜️ Adaptive monotonic clock sampling for bounded interactive turns.
+
 //#region 🪜️ClockStride
-/// 🪜️ See `README.md`.
+/// 🪜️ A step's clock, read for real only every `stride` calls. A job that checks its deadline after
+/// every unit of work used to read the host clock just as often; inside a Wasm guest that read is a
+/// component-model host call, and measured 2026-09-24 (ticket 26/09/23 slice G6) the `🀄️wfc` genesis
+/// solve made 6.7 million of them in one `inference_run`. The stride is recalibrated at every real
+/// read so reads land about [`ClockStride::TARGET_READ_INTERVAL_US`] apart, which is also the most a
+/// deadline is overshot by. Every [`StepContext`] a driver builds carries one: the step begins at the
+/// driver's own entry reading ([`ClockStride::begin`]), so a new step costs no read of its own, and the
+/// calibrated stride carries from step to step. Law: `🧫️fixtures/🪜️clock-stride-law.json`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ClockStride {
-    pub(super) stride: u32,
-    pub(super) remaining: u32,
+    stride: u32,
+    remaining: u32,
     last_read_us: Option<u64>,
 }
 
@@ -16,7 +24,8 @@ impl ClockStride {
         Self { stride: 1, remaining: 0, last_read_us: None }
     }
 
-    /// 🏁️ See `README.md`.
+    /// 🏁️ Begins a step at `start_us`, the reading its driver made at entry: the step's first
+    /// `stride - 1` reads answer it, and the calibrated stride is kept.
     pub fn begin(&mut self, start_us: Option<u64>) {
         if start_us.is_none() || matches!((start_us,self.last_read_us),(Some(now),Some(last)) if now<last) {
             self.remaining=0;
@@ -26,7 +35,7 @@ impl ClockStride {
         self.remaining = if start_us.is_some() { self.stride - 1 } else { 0 };
     }
 
-    /// ⏱️ See `README.md`.
+    /// ⏱️ The clock as of the last real read of `clock`, which is at most one stride of calls old.
     pub fn read(&mut self, clock: fn() -> Option<u64>) -> Option<u64> {
         if self.remaining > 0 {
             self.remaining -= 1;
@@ -44,12 +53,12 @@ impl ClockStride {
         Some(now)
     }
 
-    /// 🕰️ See `README.md`.
+    /// 🕰️ The last reading, without reading the clock.
     pub fn latest_us(&self) -> Option<u64> {
         self.last_read_us
     }
 
-    /// 📖️ See `README.md`.
+    /// 📖️ How many calls the next real read is apart — the law's observable.
     pub fn stride(&self) -> u32 {
         self.stride
     }

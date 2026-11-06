@@ -5,46 +5,46 @@
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as pack;
-use semio_framework_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, ArtifactFixedRegistry, PluginLifecycleStep, plugin_retirement_fault, plugin_turn_admitted};
+use semio_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, ArtifactFixedRegistry, PluginLifecycleStep, plugin_retirement_fault, plugin_turn_admitted};
 use semio_framework_plugin_instance_stores::stores_components::{ActionIngress, InstanceStores, LocalInteraction, PeerRoster};
-use semio_framework_plugin_document_media::{ActiveArtifactEnvelopeIngress, ActiveArtifactStoreReplacement, ActiveArtifactStoreReplacementState, ActiveDocumentArchiveLoadState, ArtifactStoreReplacementPublicationGuard, ArtifactStoreReplacementRefusal, CompositionPinsRetirement, publish_boxed_document_store_candidate_if_authoritative};
-use semio_framework_plugin_decl_app::{ArtifactApp, DOCUMENT_LOAD_FAILED_CODE, document_load_fault};
-use semio_framework_plugin_ownership::store_lifecycle::{ArtifactDisposal, ArtifactDocumentStoreDisposer, ArtifactOwnedDisposer, ArtifactSnapshotCloseRetention};
+use semio_plugin_document_media::{ActiveArtifactEnvelopeIngress, ActiveArtifactStoreReplacement, ActiveArtifactStoreReplacementState, ActiveDocumentArchiveLoadState, ArtifactStoreReplacementPublicationGuard, ArtifactStoreReplacementRefusal, CompositionPinsRetirement, publish_boxed_document_store_candidate_if_authoritative};
+use semio_plugin_decl_app::{ArtifactApp, DOCUMENT_LOAD_FAILED_CODE, document_load_fault};
+use semio_plugin_ownership::store_lifecycle::{ArtifactDisposal, ArtifactDocumentStoreDisposer, ArtifactOwnedDisposer, ArtifactSnapshotCloseRetention};
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStore, ConfigStore, MemberFactory, Mutation, ReferenceSpaceMember};
-use semio_framework_plugin_instance_children::children_components::ChildComposition;
-use semio_framework_plugin_child::{ChildContentRetirement, ChildMemberRegistry, ChildMemberRetirement};
-use semio_framework_plugin_decl_views::child_view::{ChildContentView, child_content_arc_bytes};
+use semio_plugin_instance_children::children_components::ChildComposition;
+use semio_plugin_child::{ChildContentRetirement, ChildMemberRegistry, ChildMemberRetirement};
+use semio_plugin_decl_views::child_view::{ChildContentView, child_content_arc_bytes};
 use crate::ladders_components::{CloseCursors, MaintenanceCursors};
 use semio_framework_plugin_instance_history::history_components::{CommandHistory, HostEvents, Transactions};
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework_plugin_instance_docs::docs_components::{EnvelopeJobs, MediaTransfers};
 use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin};
 use std::future::Future;
-use semio_framework_plugin_instance_extension::InstanceExtension;
-use semio_framework_plugin_interaction::mutations::InteractionConfigMutation;
+use semio_plugin_instance_extension::InstanceExtension;
+use semio_plugin_interaction::mutations::InteractionConfigMutation;
 use crate::ladder_bundle::{LadderCtx, LadderRef};
 use std::mem::ManuallyDrop;
-use semio_framework_plugin_composition_publication::MountedTypedCommandFullOperationStage;
+use semio_plugin_composition_publication::MountedTypedCommandFullOperationStage;
 use protocol::OpText;
-use semio_framework_plugin_decl_views::PeerPresenceRoot;
-use semio_framework_plugin_peer::{PeerPresenceRootRetirement, PeerRosterPublication, PeerRosterPublicationStage, PresenceRosterOutcome};
-use semio_framework_plugin_instance_jobs::jobs_components::{PendingReserved, ToolOperations};
+use semio_plugin_decl_views::PeerPresenceRoot;
+use semio_plugin_peer::{PeerPresenceRootRetirement, PeerRosterPublication, PeerRosterPublicationStage, PresenceRosterOutcome};
+use semio_plugin_instance_jobs::jobs_components::{PendingReserved, ToolOperations};
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_plugin_instance_render::render_bundle::{RenderCtx, RenderRef};
-use semio_framework_plugin_operation::TOOL_CANCELLATION_SLOTS;
+use semio_plugin_operation::TOOL_CANCELLATION_SLOTS;
 use semio_framework_plugin_time_travel_turns::time_travel_bundle::{TimeTravelCtx, TimeTravelRef};
-use semio_framework_plugin_time_travel::TimeTravelLedger;
-use semio_framework_plugin_tool_run::tool_jobs_tool_machine::ToolMachineRuntime;
+use semio_plugin_time_travel::TimeTravelLedger;
+use semio_plugin_tool_run::tool_jobs_tool_machine::ToolMachineRuntime;
 use semio_framework_plugin_tool_run_turns::tool_run_bundle::{ToolRunCtx, ToolRunRef};
-use semio_framework_plugin_tool_run::ToolRunLedger;
+use semio_plugin_tool_run::ToolRunLedger;
 use semio_framework_plugin_instance_typed_ops::typed_bundle::TypedCtx;
-use semio_framework_plugin_window_transient::window_transient::WindowTransientOwnerRegistry;
+use semio_plugin_window_transient::window_transient::WindowTransientOwnerRegistry;
 use semio_framework_plugin_composition_emission::root::{advance_original_child_root_retirement, original_child_root_retirement_demands};
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use crate::ladders_document_replacement::{retire_document_window_registry_demands, retire_document_window_registry_step};
-use semio_framework_ui_contract::*;
-use semio_framework_plugin_time_travel as time_travel;
+use semio_ui_contract::*;
+use semio_plugin_time_travel as time_travel;
 use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 
@@ -107,7 +107,7 @@ impl MaintenanceUnit {
 }
 
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
-    pub fn maintenance_unit_step(&mut self,unit:MaintenanceUnit,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+    pub fn maintenance_unit_step(&mut self,unit:MaintenanceUnit,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         match unit{
             MaintenanceUnit::AgentPreview=>self.tools.close_agent_lane_preview(cx, grant),
             MaintenanceUnit::MediaRefusal=>self.media.close_media_submission_refusal(&mut *self.stores,&mut *self.tools, cx, grant),
@@ -123,17 +123,17 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         }
     }
 
-    fn maintenance_stage_step(&mut self,stage:u8,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+    fn maintenance_stage_step(&mut self,stage:u8,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         if stage==26{return self.pending.close_document_window_admission(cx, false)}
         if stage==18{
             let before=cx.retained_progress();let complete=self.tools.tool_cancellations.cleanup_slot(self.maintenance.maintenance_cancellation_cursor,cx,true)?;
-            let progress=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;
+            let progress=semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;
             if complete&&progress==RetainedCloneProgress::default(){
                 let bytes=std::mem::size_of::<usize>();if cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_copy_bytes<bytes||cx.retained_grant().maximum_depth==0{return Ok(idle())}
                 cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);
                 self.maintenance.maintenance_cancellation_cursor=(self.maintenance.maintenance_cancellation_cursor+1)%(TOOL_CANCELLATION_SLOTS+ARTIFACT_LIVE_OUTPUT_SLOTS);
             }
-            return Ok(PluginLifecycleStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))
+            return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))
         }
         if stage==13{return self.drive_envelope_completed_record_returns(grant,false)}
         if stage==12{return self.drive_envelope_field_decoder_returns(grant,false)}
@@ -159,7 +159,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
                 let Some((index,operation_id))=self.media.segmented_closures.next_id_from(self.maintenance.maintenance_segment_cursor)else{return Ok(idle())};self.maintenance.maintenance_segment_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;
                 if let Some(source)=self.media.snapshot_retirements.get(operation_id){source.validate_retirement(cx)?}
                 let original=self.media.segmented_closures.get_mut(operation_id).ok_or_else(||maintenance_fault("interactive-job.segment-close","original segmented close owner changed"))?;
-                if original.terminal_is_empty(){self.media.segmented_closures.remove(operation_id);return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<semio_framework_plugin_document_media::media_export::MediaDownloadRetirement>(),..Default::default()}))}return original.close_step(cx,grant)
+                if original.terminal_is_empty(){self.media.segmented_closures.remove(operation_id);return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<semio_plugin_document_media::media_export::MediaDownloadRetirement>(),..Default::default()}))}return original.close_step(cx,grant)
         }
         if stage==3{
                 let Some((index, operation_id)) = self.media.snapshot_retirements.next_id_from(self.maintenance.maintenance_snapshot_cursor) else { return Ok(idle()) };
@@ -370,9 +370,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
     }
 
     /// 🎁️ One granted turn of the next store replacement; a closing app cancels it first and removes it once terminal.
-    pub fn drive_store_replacement_jobs(&mut self,cx:&mut semio_framework_job::StepContext<'_>,loan:RetainedCloneGrant,closing:bool)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+    pub fn drive_store_replacement_jobs(&mut self,cx:&mut semio_framework_job::StepContext<'_>,loan:RetainedCloneGrant,closing:bool)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let demand=self.shared().store_replacement_demands(closing,loan.maximum_copy_bytes)?;
-        semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,|same,grant|{
+        semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,|same,grant|{
             let step=self.drive_store_replacement_original(same,grant,closing)?;
             let terminal=self.ingest.store_replacement_jobs.is_empty();
             let step=if !terminal{match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),step=>step}}else{step};
@@ -380,7 +380,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         })
     }
 
-    fn drive_store_replacement_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    fn drive_store_replacement_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         use ActiveArtifactStoreReplacementState as State;
         let empty = RetainedCloneProgress::default();
         let item = item();
@@ -481,7 +481,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
             active.refuse(ArtifactStoreReplacementRefusal::PublicationGuard(guard));
             return Ok(PluginLifecycleStep::Progress(item));
         }
-        if A::validate_document_store_publication(&active.publication_token, semio_framework_plugin_ownership::store_lifecycle::DocumentStoreLivePublication::new(semio_framework_job::OperationId(operation_id), live_generation, self.child_composition.child_content_generation)).is_err() {
+        if A::validate_document_store_publication(&active.publication_token, semio_plugin_ownership::store_lifecycle::DocumentStoreLivePublication::new(semio_framework_job::OperationId(operation_id), live_generation, self.child_composition.child_content_generation)).is_err() {
             *active.retained_disposer = Some(disposer);
             active.refuse(ArtifactStoreReplacementRefusal::PublicationAuthorityRejected);
             return Ok(PluginLifecycleStep::Progress(item));
@@ -531,24 +531,23 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
     }
 
     /// 🔁️ One granted turn of the next archive load; a closing app cancels every load and drops it once terminal-empty.
-    pub fn drive_document_archive_load_retirements(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,closing:bool)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    pub fn drive_document_archive_load_retirements(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,closing:bool)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let demand=match self.shared().document_archive_target(closing) {
             Some((_,operation))=>self.ingest.document_archive_load_demands(self.ingest.document_archive_loads.get(operation).ok_or_else(||maintenance_fault("archive-load.owner","archive load original source changed before its quote"))?,closing,grant.maximum_copy_bytes)?,
             None=>self.ingest.document_archive_loads.empty_backing_byte_demand().map_or(Default::default(),|bytes|RetirementDemand{release_bytes:bytes,depth:1,..Default::default()})
         };
-        semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|{
+        if self.shared().document_archive_target(closing).is_none()&&(!closing||self.ingest.document_archive_loads.empty_backing_byte_demand().is_none_or(|bytes|bytes==0)){return Ok(PluginLifecycleStep::Complete(Default::default()))}
+        if closing&&self.shared().document_archive_target(closing).is_none()&&self.ingest.document_archive_loads.empty_backing_byte_demand().is_some_and(|bytes|bytes!=0){let grant=semio_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,grant);if cx.retirement_should_yield()||!semio_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){return Ok(PluginLifecycleStep::Progress(Default::default()))}let turn=self.ingest.document_archive_loads.close_empty_backing_step(grant);cx.consume_fuel(turn.work);let step=match turn.result{Ok(step)=>step,Err(error)=>return Err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(error).debit_original(cx))};let progress=step.progress();cx.consume_retained(progress).map_err(|error|semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(error.with_retained_progress(progress)))?;return Ok(PluginLifecycleStep::Progress(progress))}
+        semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|{
             let step=self.drive_document_archive_original(same,grant,closing)?;
             let terminal=self.shared().document_archive_target(closing).is_none()&&(!closing||self.ingest.document_archive_loads.empty_backing_byte_demand().is_none_or(|bytes|bytes==0));
             Ok((step,terminal))
         })
     }
 
-    fn drive_document_archive_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,closing:bool)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    fn drive_document_archive_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,closing:bool)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let empty = RetainedCloneProgress::default();
         let Some((index, operation)) = self.shared().document_archive_target(closing) else {
-            if closing && self.ingest.document_archive_loads.empty_backing_byte_demand().is_some_and(|bytes| bytes != 0) {
-                return self.ingest.document_archive_loads.close_empty_backing_step(grant).map(|step| PluginLifecycleStep::Progress(step.progress())).map_err(Into::into);
-            }
             return Ok(PluginLifecycleStep::Complete(empty));
         };
         if grant.maximum_items == 0 {
@@ -703,7 +702,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
                 if self.media.media_closures.get(operation_id).is_some_and(|active|active.download_pending){return Ok(Some(RetirementDemand::default()))}
                 self.media.media_closures.get(operation_id).map(|active| active.retirement_demands(body,&self.tools.tool_cancellations)).transpose()?
             }
-            2=>{let Some((_,operation_id))=self.media.segmented_closures.next_id_from(self.maintenance.maintenance_segment_cursor)else{return Ok(None)};Some({let original=self.media.segmented_closures.get(operation_id).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original segmented close owner is missing"))?;if original.terminal_is_empty(){RetirementDemand{copy_bytes:size_of::<semio_framework_plugin_document_media::media_export::MediaDownloadRetirement>(),depth:1,..Default::default()}}else{original.retirement_demands(body)?}})},
+            2=>{let Some((_,operation_id))=self.media.segmented_closures.next_id_from(self.maintenance.maintenance_segment_cursor)else{return Ok(None)};Some({let original=self.media.segmented_closures.get(operation_id).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original segmented close owner is missing"))?;if original.terminal_is_empty(){RetirementDemand{copy_bytes:size_of::<semio_plugin_document_media::media_export::MediaDownloadRetirement>(),depth:1,..Default::default()}}else{original.retirement_demands(body)?}})},
             3 => {
                 let Some((_, operation_id)) = self.media.snapshot_retirements.next_id_from(self.maintenance.maintenance_snapshot_cursor) else { return Ok(None) };
                 if self.media.media_exports.get(operation_id).is_some() || self.media.media_closures.get(operation_id).is_some() || self.media.segmented_downloads.get(operation_id).is_some() || self.media.segmented_closures.get(operation_id).is_some() || self.media.media_download_preparation.as_ref().is_some_and(|pending|pending.operation_id==operation_id) {

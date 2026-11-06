@@ -1,26 +1,29 @@
-//! ♻️ Original inline child retirement under explicit caller grants.
-use semio_framework_value::{ErasedSnapshotRetirement,ValueError,RetainedCloneGrant,RetainedWorkOutcome};
-/// 🪆️ Observes an inline retained child's fallible demands with its logical parent depth.
-pub fn retirement_owner_demands<O: ErasedSnapshotRetirement>(owner: &Option<O>, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
-    let Some(owner) = owner.as_ref() else { return Ok(Default::default()); };
-    let mut demand = owner.next_demand(body)?;
-    demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "inline retirement depth overflow"))?;
-    Ok(demand)
-}
+//! 🪆️ Inline original owners close their child and terminal metadata in separate funded turns.
+use semio_framework_value::{ErasedSnapshotRetirement,OriginalRetirementOutcome,OriginalRetirementControl,ValueError,RetainedCloneGrant,RetainedWorkOutcome,RetirementDemand,RetainedCloneStep,RetainedCloneProgress};
+/// 🪆️ Quotes the selected original child or its distinct terminal inline slot.
+pub fn retirement_owner_demands<O:ErasedSnapshotRetirement>(slot:&Option<O>,body:usize)->Result<RetirementDemand,ValueError>{let Some(owner)=slot.as_ref()else{return Ok(Default::default())};if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<O>>(),depth:1,..Default::default()})}let mut demand=owner.next_demand(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"inline retirement depth overflow"))?;Ok(demand)}
+/// ⛽️ Quotes the selected child work or the separate terminal slot action.
+pub fn retirement_owner_work_demand<O:ErasedSnapshotRetirement>(slot:&Option<O>,body:usize)->Result<u64,ValueError>{match slot.as_ref(){None=>Ok(0),Some(owner)if owner.terminal_is_empty()=>Ok(1),Some(owner)=>owner.next_computational_work(body)}}
+/// 🪪️ Observes whether the selected child owns its original retirement loan.
+pub fn retirement_owner_requires_original_control<O:ErasedSnapshotRetirement>(slot:&Option<O>)->bool{slot.as_ref().is_some_and(|owner|!owner.terminal_is_empty()&&owner.requires_original_control())}
+fn admitted<O:ErasedSnapshotRetirement>(slot:&Option<O>,grant:RetainedCloneGrant)->Result<Option<RetirementDemand>,ValueError>{let d=retirement_owner_demands(slot,grant.maximum_copy_bytes)?;if grant.maximum_items==0{return Ok(None)}if grant.maximum_depth<d.depth{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"inline retirement exceeds admitted depth"))}if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(None)}Ok(Some(d))}
+fn empty()->OriginalRetirementOutcome{RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
+fn shell<O>(slot:&mut Option<O>,d:RetirementDemand)->OriginalRetirementOutcome{slot.take();RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:1}}
+fn child_result(turn:OriginalRetirementOutcome)->OriginalRetirementOutcome{RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work}}
+/// 🧷️ Closes one original child action or its separately admitted terminal slot.
+pub fn retirement_owner_close<O:ErasedSnapshotRetirement>(slot:&mut Option<O>,grant:RetainedCloneGrant)->OriginalRetirementOutcome{if slot.is_none(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}let d=match admitted(slot,grant){Ok(Some(d))=>d,Ok(None)=>return empty(),Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0}};let Some(owner)=slot.as_mut()else{return empty()};if owner.terminal_is_empty(){return shell(slot,d)}let selected=match semio_framework_value::select_retirement_cursor(owner,grant.maximum_copy_bytes){Ok(selected)=>selected,Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0}};child_result(selected.step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}))}
+/// 🪙️ Closes one inline action through the same original controlled work and physical recipient.
+pub fn retirement_owner_close_controlled<O:ErasedSnapshotRetirement>(slot:&mut Option<O>,grant:RetainedCloneGrant,control:&mut dyn OriginalRetirementControl)->OriginalRetirementOutcome{if slot.is_none(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}if control.failure_storage_pool().is_empty(){return semio_framework_value::refill_original_failure_storage(control,grant)}let d=match admitted(slot,grant){Ok(Some(d))=>d,Ok(None)=>return empty(),Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0}};let Some(owner)=slot.as_mut()else{return empty()};if owner.terminal_is_empty(){return semio_framework_value::run_original_retirement_work(control,1,|_|shell(slot,d))}let selected=match semio_framework_value::select_retirement_cursor(owner,grant.maximum_copy_bytes){Ok(selected)=>selected,Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0}};child_result(selected.step_controlled(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant},control))}
+/// 🧵️ Closes one inline action through the same original decoder loan.
+pub fn retirement_owner_close_original<O:ErasedSnapshotRetirement>(slot:&mut Option<O>,grant:RetainedCloneGrant,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>)->OriginalRetirementOutcome{if slot.is_none(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}if original.failure_storage_pool().is_empty(){return semio_framework_value::refill_original_failure_storage(original,grant)}let d=match admitted(slot,grant){Ok(Some(d))=>d,Ok(None)=>return empty(),Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0}};let Some(owner)=slot.as_mut()else{return empty()};if owner.terminal_is_empty(){return semio_framework_value::run_original_retirement_loan(original,1,|_|shell(slot,d))}let selected=match semio_framework_value::select_retirement_cursor(owner,grant.maximum_copy_bytes){Ok(selected)=>selected,Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0}};child_result(selected.step_original(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant},original))}
 
-/// 🧷️ Closes an inline owner under the original grant and removes it only after its exact terminal witness.
-pub fn retirement_owner_close<O: ErasedSnapshotRetirement>(slot: &mut Option<O>, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
-    use semio_framework_value::retained_clone::{RetainedCloneStep, admit_retained_clone_close};
-    let refuse = |error: ValueError, work: u64| RetainedWorkOutcome { result: Err(error), work };
-    if slot.is_none() { return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(Default::default())), work: 0 }; }
-    if grant.maximum_items == 0 { return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 }; }
-    let depth = match retirement_owner_demands(slot, grant.maximum_copy_bytes) { Ok(demand) => demand.depth, Err(error) => return refuse(error, 0) };
-    if grant.maximum_depth < depth { return refuse(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "inline retirement exceeds admitted depth"), 0); }
-    let Some(owner) = slot.as_mut() else { return refuse(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "inline retirement owner vanished"), 0); };
-    let child_grant = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-    let RetainedWorkOutcome { result, work } = owner.close_step(child_grant);
-    let step = match result { Ok(step) => step, Err(error) => return refuse(error, work) };
-    let step = match admit_retained_clone_close(child_grant, step, owner.terminal_is_empty(), "inline retirement child") { Ok(step) => step, Err(error) => return refuse(error, work) };
-    if matches!(step, RetainedCloneStep::Complete(_)) { drop(slot.take()); }
-    RetainedWorkOutcome { result: Ok(step), work }
+#[cfg(test)]
+mod tests{
+ use super::*;use semio_framework_value::{OriginalRetirementOutcome,RetirementDemand,RetainedCloneStep,RetainedCloneProgress};
+ struct Leaf(bool);
+ impl ErasedSnapshotRetirement for Leaf{
+  fn close_step(&mut self,g:RetainedCloneGrant)->OriginalRetirementOutcome{if g.maximum_items==0{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.0=false;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
+  fn terminal_is_empty(&self)->bool{!self.0}fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}fn next_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Ok(0)}fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(usize::from(self.0))}
+ }
+ #[test]fn inline_terminal_shell_is_a_separate_original_turn(){let law:serde_json::Value=serde_json::from_str(include_str!("🧪️work/fixture.json")).unwrap();let mut slot=Some(Leaf(true));let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:usize::MAX,maximum_depth:2,..Default::default()};let child=retirement_owner_close(&mut slot,grant);assert_eq!(child.work,law["childWork"].as_u64().unwrap());assert!(slot.as_ref().unwrap().terminal_is_empty());assert!(matches!(child.result.unwrap(),RetainedCloneStep::Progress(_)));let demand=retirement_owner_demands(&slot,0).unwrap();assert_eq!(demand,RetirementDemand{copy_bytes:size_of::<Option<Leaf>>(),depth:1,..Default::default()});let denied=retirement_owner_close(&mut slot,RetainedCloneGrant{maximum_copy_bytes:0,..grant});assert_eq!(denied.work,law["deniedWork"].as_u64().unwrap());assert!(slot.is_some());let shell=retirement_owner_close(&mut slot,grant);assert_eq!(shell.work,law["terminalShellWork"].as_u64().unwrap());assert!(slot.is_none());}
 }

@@ -325,8 +325,8 @@ pub fn grid3d_command_emit(
         }
         Grid3dEditorCommand::SetHover { .. } | Grid3dEditorCommand::WorldPick { .. } => return Ok(Emit::default()),
         Grid3dEditorCommand::CommitFill {payload_json}=>{
-            let payload=fill_tool::Grid3dFillPayload::decode(payload_json.as_bytes()).filter(|payload|payload.done).ok_or_else(||Fault::new(semio_framework_plugin::FaultOrigin::App,semio_framework_plugin::FaultCode::new("wfc.grid3d.fill.invalid"),"wfc.grid3d.fill.invalid"))?;
-            if !preview::source_matches(&payload.source_revision,doc.operation_optional().map(|operation|&operation.canonical_base_revision)){return Err(Fault::new(semio_framework_plugin::FaultOrigin::App,semio_framework_plugin::FaultCode::new("wfc.grid3d.fill.stale"),"wfc.grid3d.fill.stale"));}
+            let payload=fill_tool::Grid3dFillPayload::decode(payload_json.as_bytes()).filter(|payload|payload.done).ok_or_else(||Fault::new(semio_plugin::FaultOrigin::App,semio_plugin::FaultCode::new("wfc.grid3d.fill.invalid"),"wfc.grid3d.fill.invalid"))?;
+            if !preview::source_matches(&payload.source_revision,doc.operation_optional().map(|operation|&operation.canonical_base_revision)){return Err(Fault::new(semio_plugin::FaultOrigin::App,semio_plugin::FaultCode::new("wfc.grid3d.fill.stale"),"wfc.grid3d.fill.stale"));}
             return Ok(Emit::default());
         },
         Grid3dEditorCommand::Solve => {

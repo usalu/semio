@@ -81,24 +81,24 @@ impl<V:RetireOwned+Sync,R:RootOwner<V>> RetirementCursor for TypedOwner<V,R> {
     fn close_step(&mut self,grant:RetainedCloneGrant)->TypedStep{
         if self.terminal_is_empty(){return TypedStep::Complete(0)}
         if grant.maximum_items==0{return TypedStep::BudgetExhausted}
-        match self.next_depth_demand(){Err(error)=>return TypedStep::Failure(error,0),Ok(depth)if depth>grant.maximum_depth=>return TypedStep::Failure(ValueError::literal(crate::ValueRefusalKind::DepthLimit,"ordered typed retirement exceeds admitted depth"),0),_=>{}}
+        match self.next_depth_demand(){Err(error)=>return TypedStep::Failure(error.into(),0),Ok(depth)if depth>grant.maximum_depth=>return TypedStep::Failure(ValueError::literal(crate::ValueRefusalKind::DepthLimit,"ordered typed retirement exceeds admitted depth").into(),0),_=>{}}
         let retained_depth=self.root.retained_depth();
         if let Some(payload)=self.payload.as_mut(){
             if payload.terminal_is_empty(){self.payload.take();return TypedStep::Advanced}
             let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-retained_depth,..grant};
             let result=payload.step(child);let work=payload.last_turn_work();
-            let result=result.and_then(|step|admit_retained_clone_close(child,step,payload.terminal_is_empty(),"ordered typed payload retirement"));
+            let result=result.and_then(|step|admit_retained_clone_close(child,step,payload.terminal_is_empty(),"ordered typed payload retirement").map_err(Into::into));
             return match result{Err(error)=>TypedStep::Failure(error,work),Ok(step)=>TypedStep::Progress(step.progress(),work)}
         }
         let step=self.root.step(grant);let work=self.root.last_turn_work();
         match step{
             RetirementStep::Blocked=>TypedStep::BudgetExhausted,
-            RetirementStep::Failure(error)=>TypedStep::Failure(error,work),
+            RetirementStep::Failure(error)=>TypedStep::Failure(error.into(),work),
             RetirementStep::Progress{released_items,released_bytes}=>TypedStep::Progress(RetainedCloneProgress{copied_items:released_items,released_bytes,..Default::default()},work),
             RetirementStep::ProcessedBytes(_)=>TypedStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},work),
             RetirementStep::OwnedValue(value)=>match ControlledRetirement::new(value){
                 Ok(owner)=>{*self.payload=Some(owner);TypedStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},work)},
-                Err((error,value))=>{self.root.restore_value(value);TypedStep::Failure(error,work)}
+                Err((error,value))=>{self.root.restore_value(value);TypedStep::Failure(error.into(),work)}
             },
             RetirementStep::Complete=>TypedStep::Complete(work)
         }

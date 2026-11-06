@@ -6,16 +6,15 @@
   "originalError": "IoResultInReceivingOutput",
   "finalPublication": "afterIntermediateTerminal",
   "terminalChild": {
-    "slotNativeWords": 2,
     "requiredDepth": 2,
     "requiredItems": 1,
     "capacityBytes": 0,
     "denials": [
       "maximumItems",
-      "maximumCopyBytes",
       "maximumReleaseBytes",
       "maximumDepth"
-    ]
+    ],
+    "copyBytes": 0
   },
   "error": {
     "cause": "original λ🙂",

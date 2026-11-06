@@ -321,7 +321,7 @@ enum FillSettled {
 pub struct Grid3dFillRunJob {
     identity: ToolRunIdentity,
     writer: ToolRunTickWriter,
-    port:semio_framework_plugin::ToolRunJobPort,
+    port:semio_plugin::ToolRunJobPort,
     snapshot: Arc<Grid3dSnapshot>,
     operation: Option<Operation>,
     prep: PrepStage,
@@ -349,7 +349,7 @@ pub struct Grid3dFillRunJob {
 }
 
 impl Grid3dFillRunJob {
-    pub fn new(identity: ToolRunIdentity, snapshot: Arc<Grid3dSnapshot>, port:semio_framework_plugin::ToolRunJobPort) -> Self {
+    pub fn new(identity: ToolRunIdentity, snapshot: Arc<Grid3dSnapshot>, port:semio_plugin::ToolRunJobPort) -> Self {
         Self {
             identity,
             writer: ToolRunTickWriter::new(identity),
@@ -619,7 +619,7 @@ impl Grid3dFillRunJob {
         let run=self.publish_tick(ToolRunState::Complete, Some((reason, &[decided])), Some(FillSettled::Complete));
         if !self.committed && matches!(self.settled,Some(FillSettled::Complete)) {
             let args=semio_framework::dsl_value!({"payloadJson":String::from_utf8(self.last_payload.encode()).unwrap_or_default()});
-            self.port.dispatch(semio_framework::kernel::Effect::DispatchAction{req:semio_framework_plugin::RequestId(semio_framework_job::allocate_operation_id().0),action:"commit-fill".into(),args:Some(args),delay_ms:0});
+            self.port.dispatch(semio_framework::kernel::Effect::DispatchAction{req:semio_plugin::RequestId(semio_framework_job::allocate_operation_id().0),action:"commit-fill".into(),args:Some(args),delay_ms:0});
             self.committed=true;
         }
         run
@@ -909,7 +909,7 @@ mod publication_laws {
     #[test]
     fn an_oversized_terminal_tick_never_dispatches_a_completed_result() {
         let identity=ToolRunIdentity::new(semio_framework_tool_run::ToolRunId{app_instance_id:1,run:1},[7;32]);
-        let port=semio_framework_plugin::ToolRunJobPort::default();
+        let port=semio_plugin::ToolRunJobPort::default();
         let mut job=Grid3dFillRunJob::new(identity,Arc::new(crate::examples::blocks::snapshot()),port.clone());
         let payload=Grid3dFillPayload{source_revision:vec![7;32],assignments:vec![Grid3dFillCell{x:0,y:0,z:0,tile_id:Some("x".repeat(semio_framework_tool_run::TOOL_RUN_TICK_BYTES_MAX))}],done:true,..Default::default()};
         job.finish_success(false,Some(payload));

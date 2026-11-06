@@ -4,10 +4,10 @@ use semio_framework::kernel::Event;
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 use semio_framework::kernel::RequestOutcome;
 use semio_plugin_actor_host::requests;
-use semio_plugin_reactor_turn as turn;
+use semio_framework_plugin_reactor_turn as turn;
 use semio_framework_value::ToValue;
-use semio_plugin_reactor_turn::original_receiving::completed::CompletedInput;
-use semio_plugin_reactor_turn::original_receiving::completed::CompletedResult;
+use semio_framework_plugin_reactor_turn::original_receiving::completed::CompletedInput;
+use semio_framework_plugin_reactor_turn::original_receiving::completed::CompletedResult;
 #[test]
 fn original_completed_full_fault_same_input_zero_work_and_paid_close(){
  let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();

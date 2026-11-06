@@ -1,0 +1,5 @@
+{
+  "value": "x",
+  "document": "outer=inner=value=x\n",
+  "requiredFrames": 3
+}

@@ -106,10 +106,10 @@ pub async fn poll_kernel_output<PA: semio_plugin_reactor_app::PluginApp, T, Prep
 pub(super) fn plugin_exchange_boxed<'a, 'b, 'context, PA: semio_plugin_reactor_app::PluginApp>(
     runtime: &'a semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>,
     instance_id: u32,
-    command: Option<(u64, semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress)>,
+    command: Option<(u64, semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress)>,
     identity: &'a mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>,
     cx:&'a mut semio_framework_job::StepContext<'context>,
-) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<semio_plugin_runtime_ops::ops_ingress::PluginExchangeOutput, semio_framework_job::OriginalTurnFailure>> + 'a>> {
+) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<semio_framework_plugin_runtime_ops::ops_ingress::PluginExchangeOutput, semio_framework_job::OriginalTurnFailure>> + 'a>> {
     Box::pin(async move{
         let mut output=semio_plugin_runtime_exchange::exch_plugin_exchange::plugin_exchange(runtime,instance_id,command,identity,cx).await?;
         if let Err(refusal)=collect_original_publication_receipts(&mut output,cx){return Err(retain_refused_publication(instance_id,output,refusal,cx));}

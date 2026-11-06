@@ -5099,6 +5099,7 @@ dependencies = [
  "semio-framework-dsl",
  "semio-framework-dsl-notation",
  "semio-framework-dsl-record-model",
+ "semio-framework-io-control",
  "semio-framework-value",
  "serde_json",
 ]
@@ -5134,6 +5135,8 @@ dependencies = [
  "semio-framework-dsl",
  "semio-framework-value",
  "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
+ "serde_json",
 ]
 
 [[package]]
@@ -5425,6 +5428,7 @@ dependencies = [
  "semio-framework-trace",
  "semio-framework-trace-memory-testing",
  "semio-framework-value",
+ "semio-framework-value-control-contract",
  "semio-framework-value-native-owned",
  "serde_json",
 ]
@@ -5435,6 +5439,22 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-trace",
  "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-io-control-tests"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-diagnostic",
+ "semio-framework-io-control",
+ "semio-framework-io-schema",
+ "semio-framework-job",
+ "semio-framework-trace",
+ "semio-framework-trace-memory-testing",
+ "semio-framework-value",
+ "semio-framework-value-control-contract",
  "semio-framework-value-native-owned",
  "serde_json",
 ]
@@ -5469,8 +5489,10 @@ dependencies = [
 name = "semio-framework-io-sqlite-model"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-io-control",
  "semio-framework-value",
  "semio-framework-value-native-owned",
+ "serde_json",
 ]
 
 [[package]]
@@ -5482,6 +5504,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-framework-value-persistent",
+ "serde_json",
 ]
 
 [[package]]
@@ -5507,6 +5530,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-dsl-record",
  "semio-framework-job-context",
+ "semio-framework-job-native-encoding",
  "semio-framework-job-payload",
  "semio-framework-job-testing-caller",
  "semio-framework-test-fixtures",
@@ -5526,6 +5550,7 @@ dependencies = [
  "semio-framework-async",
  "semio-framework-trace",
  "semio-framework-value-retained-clone",
+ "serde_json",
 ]
 
 [[package]]
@@ -5547,9 +5572,9 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-job-clock",
  "semio-framework-job-failure",
+ "semio-framework-job-outcome",
  "semio-framework-job-payload",
  "semio-framework-job-receiving",
- "semio-framework-job-return-escrow-publication",
  "semio-framework-job-testing-caller",
  "semio-framework-test-fixtures",
  "semio-framework-trace",
@@ -5615,6 +5640,28 @@ dependencies = [
  "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-native-owned",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-job-native-encoding"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job-context",
+ "semio-framework-job-receiving",
+ "semio-framework-job-testing-caller",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-job-outcome"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job-payload",
+ "semio-framework-value-derive",
+ "semio-framework-value-retained-clone",
  "serde_json",
 ]
 
@@ -6624,6 +6671,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-pixels-compositing-tests"
+version = "0.1.0"
+dependencies = [
+ "png 0.17.16",
+ "semio-framework-2d",
+ "semio-framework-pixels",
+ "semio-framework-test-fixtures",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-framework-pixels-tests"
 version = "0.1.0"
 dependencies = [
@@ -7451,6 +7511,7 @@ version = "0.1.0"
 name = "semio-framework-value"
 version = "0.1.0"
 dependencies = [
+ "encoding_rs",
  "semio-framework-io-base64",
  "semio-framework-test-fixtures",
  "semio-framework-value-control-contract",
@@ -7628,6 +7689,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-value-failure-tests"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-retirement",
+ "semio-framework-value-testing-allocator",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-framework-value-intrinsic"
 version = "0.1.0"
 dependencies = [
@@ -7692,6 +7762,15 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-value-control-contract",
  "semio-framework-value-retirement",
+ "semio-framework-value-testing-allocator",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-value-native-encoding-action-tests"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-native-encoding",
  "semio-framework-value-testing-allocator",
  "serde_json",
 ]
@@ -7922,6 +8001,7 @@ name = "semio-framework-value-retirement-owner"
 version = "0.1.0"
 dependencies = [
  "semio-framework-value",
+ "serde_json",
 ]
 
 [[package]]
@@ -8829,6 +8909,15 @@ dependencies = [
  "semio-framework-value-factory",
  "semio-framework-value-native-owned",
  "semio-framework-value-original-slot",
+ "semio-os-vcs-entity-identity",
+]
+
+[[package]]
+name = "semio-os-vcs-entity-identity"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-hash",
+ "semio-framework-value",
 ]
 
 [[package]]

@@ -120,7 +120,7 @@ pub fn mount_natural_file_actions(definition: &mut AppDefinition, codec: Natural
 /// caller); `media_type` is the declared `MediaType` the wire claims to satisfy; `wire` is the actual
 /// encoding; `blob_hash` is set instead of inline `data` when the payload already lives in the host's
 /// blob store.
-#[derive(Clone, Debug, ToValue, FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive)]
 #[value(rename_all = "camelCase")]
 pub struct MediaArtifactDescriptor {
     #[value(default, skip_serializing_if = "Option::is_none")]

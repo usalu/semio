@@ -12,3 +12,5 @@ fn required_flags(source:&str)->String{let input:syn::DeriveInput=syn::parse_str
  assert_eq!(required_flags("struct S { #[value(default=\"crate::f\")] a:Option<u8> }"),"true");
  assert_eq!(required_flags("#[value(default)] struct S { #[value(default=\"crate::f\")] a:u8, b:u8 }"),"true,false");
 }
+
+#[test]fn generated_receivers_use_the_canonical_nested_primary_for_every_authored_root(){let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();for row in corpus["primaryPathCases"].as_array().unwrap(){let input:syn::DeriveInput=syn::parse_str(row["source"].as_str().unwrap()).unwrap();let output=expand(&input).unwrap();let _:syn::File=syn::parse2(output.clone()).unwrap();let text=output.to_string().replace(" ","");let root=row["root"].as_str().unwrap();assert!(text.contains(&format!("::{root}::native_decoding::OriginalReceivingPrimary")),"{text}");assert!(!text.contains(&format!("::{root}::OriginalReceivingPrimary")));}}

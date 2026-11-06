@@ -61,18 +61,19 @@
     "cursorRetirementCopy": {
       "payloadBytes": 3,
       "cancelledBytes": 3,
-      "intermediateHeaderCount": 1,
+      "cancelledHeaderCount": 1,
+      "intermediateHeaderCount": 2,
       "publicationHeaderCount": 1,
       "headers": [
         {
           "nativeWordBytes": 4,
           "headerBytes": 12,
-          "aggregateBytes": 27
+          "aggregateBytes": 39
         },
         {
           "nativeWordBytes": 8,
           "headerBytes": 24,
-          "aggregateBytes": 51
+          "aggregateBytes": 75
         }
       ]
     }

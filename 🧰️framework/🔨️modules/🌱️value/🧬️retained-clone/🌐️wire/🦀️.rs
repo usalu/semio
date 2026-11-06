@@ -16,7 +16,7 @@ impl crate::ToValue for RetainedCloneGrant {
 }
 impl crate::FromValue for RetainedCloneGrant {
     fn from_value(value:crate::DslValue)->Result<Self,crate::ValueError>{
-        let mut accepted=|_|true;Self::from_value_controlled(&value,&mut crate::NativeDecodeControl::new(0,&mut accepted))
+        let mut accepted=|_|true;let result=Self::from_value_controlled(&value,&mut crate::NativeDecodeControl::new(0,&mut accepted));result
     }
     fn from_value_controlled(value:&crate::DslValue,control:&mut crate::NativeDecodeControl<'_>)->Result<Self,crate::ValueError>{
         control.scoped_stage(|control|{control.begin_stage(5)?;
@@ -61,7 +61,7 @@ impl crate::ToValue for RetainedCloneProgress {
 }
 impl crate::FromValue for RetainedCloneProgress {
     fn from_value(value:crate::DslValue)->Result<Self,crate::ValueError>{
-        let mut accepted=|_|true;Self::from_value_controlled(&value,&mut crate::NativeDecodeControl::new(0,&mut accepted))
+        let mut accepted=|_|true;let result=Self::from_value_controlled(&value,&mut crate::NativeDecodeControl::new(0,&mut accepted));result
     }
     fn from_value_controlled(value:&crate::DslValue,control:&mut crate::NativeDecodeControl<'_>)->Result<Self,crate::ValueError>{
         control.scoped_stage(|control|{control.begin_stage(4)?;

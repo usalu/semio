@@ -43,8 +43,25 @@ fn reconstruct(database:&SqliteDatabase,frame:&mut Frame,port:&mut Paid<'_,'_,'_
 }
 macro_rules! receive{
  ($name:ident,$owner:ident,$progress:path,$direction:ident,$phase:ident,$output:ty,$operation:expr,$publish:expr)=>{
- pub(super)fn $name(source:Option<&SpaceHistorySnapshot>,database:Option<&SqliteDatabase>,control:&mut SqliteSnapshotControl<'_>,owner:&mut $owner<'_,'_>)->Result<$output>{
-  let result=(||{owner.native().checkpoint()?;let before=owner.native().owned_bytes();let maximum=add(before,control.allocation_remaining_bytes())?;let settlement=TypedFileSettlement::new(control,before,SqliteSnapshotPhase::$phase);let mut observer=|event:$progress|settlement.observe(event.owned_bytes,event.completed,event.total);let result=owner.scoped_native(maximum,&mut observer,|owner|owner.receive::<Frame,$output>(|slot,native,body|{let mut control=settlement.control.borrow_mut();let mut port=Paid{control:&mut **control,native:Direction::$direction(native),body};port.work(1,size_of::<Frame>())?;*slot=Some(Frame::new());let frame=slot.as_mut().unwrap();port.work(1,size_of::<$output>())?;frame.result=Some(($operation)(source,database,frame,&mut port));let owned=port.owned();drop(port);drop(control);settlement.finish_body(owned)?;frame.result.take().unwrap()?;($publish)(frame)}));match result{Ok(output)=>Ok(output),Err(error)=>Err(settlement.refused(owner.native().owned_bytes(),error))}})();result.map_err(|error|error.with_retained_progress(owner.progress()))
+ pub(super)fn $name(source:Option<&SpaceHistorySnapshot>,database:Option<&SqliteDatabase>,control:&mut SqliteSnapshotControl<'_>,owner:&mut $owner<'_,'_>,output:&mut Option<crate::lifted_serialization::SnapshotReceivingOutput<$output>>)->crate::lifted_serialization::SnapshotReceivingOutcome{
+  use semio_framework_io_control::NativeSnapshotFailure;
+  use semio_framework_io_sqlite_snapshot::SqliteStageFailure as Stage;
+  use semio_framework_value::RetainedWorkOutcome;
+  type Inner=Stage<$output,NativeSnapshotFailure>;
+  let before=owner.native().owned_bytes();let Some(maximum)=before.checked_add(control.allocation_remaining_bytes())else{return RetainedWorkOutcome{result:Err(Stage::NotStarted(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"space history receiving original SQL ceiling overflow"))),work:0}};
+  let settlement=TypedFileSettlement::new(control,before,SqliteSnapshotPhase::$phase);let mut observer=|event:$progress|settlement.observe(event.owned_bytes,event.completed,event.total);
+  let turn=owner.scoped_native(maximum,&mut observer,|owner|owner.receive::<Frame,std::result::Result<$output,Inner>,NativeSnapshotFailure>(output,&mut |slot,published,native,body|{
+   let before_work=settlement.control.borrow().performed_work();
+   let result=(||->std::result::Result<(),NativeSnapshotFailure>{
+    let mut control=settlement.control.borrow_mut();let mut port=Paid{control:&mut **control,native:Direction::$direction(native),body};port.work(1,size_of::<Frame>())?;*slot=Some(Frame::new());let frame=slot.as_mut().unwrap();port.work(1,size_of::<$output>())?;frame.result=Some(($operation)(source,database,frame,&mut port));let owned=port.owned();drop(port);drop(control);
+    let operation=frame.result.take().unwrap().and_then(|()|($publish)(frame)).map_err(|error|Stage::Operation(NativeSnapshotFailure::from(error)));
+    *published=Some(match settlement.finish_body(owned){Ok(())=>operation,Err(refusal)=>Err(Stage::Settlement{operation,refusal,receipt:None})});
+    Ok(())
+   })();
+   RetainedWorkOutcome{result,work:settlement.control.borrow().performed_work().checked_sub(before_work).expect("original SQL producer work is monotone")}
+  }));
+  let result=match settlement.cause.borrow_mut().take(){Some(refusal)=>Err(Stage::Settlement{operation:turn.result,refusal,receipt:None}),None=>turn.result.map_err(Stage::Operation)};
+  RetainedWorkOutcome{result,work:turn.work}
  }
  };
 }

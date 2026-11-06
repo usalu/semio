@@ -659,13 +659,13 @@ impl ArtifactEditor for Generation3dPlayApp {
     }
 
     fn window_engagements_with_request_context(_doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, view_state: &semio_framework_plugin::ViewModel, _transient: &semio_framework_plugin::TransientView<'_, Generation3dTransient>, interaction: &InteractionView<'_>) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
-        let engagement = semio_s_artifact_procedural_3d_editor_selection::engagement(&semio_s_artifact_procedural_3d_editor_selection::ComponentSelection::from_interaction(interaction), view_state.locale == semio_framework_ui_locale::Locale::De);
+        let engagement = semio_s_artifact_procedural_3d_editor_selection::engagement(&semio_s_artifact_procedural_3d_editor_selection::ComponentSelection::from_interaction(interaction), view_state.locale == semio_ui_locale::Locale::De);
         HashMap::from([(edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), engagement)])
     }
 
     fn window_measures(_doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
-        let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
+        let is_de = view_state.locale == semio_ui_locale::Locale::De;
         let measures = edit_preview::preview_window_measures(config, is_de, generation3d_action);
         HashMap::from([
             (flow_window::GENERATION_3D_PLAY_WINDOW_MAIN.to_string(), flow_window::window_measures(&config.lod_mode, is_de, generation3d_action)),

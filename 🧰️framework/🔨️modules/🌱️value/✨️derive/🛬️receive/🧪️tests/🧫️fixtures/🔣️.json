@@ -73,5 +73,23 @@
       ],
       "expectedCycles": []
     }
+  ],
+  "primaryPathCases": [
+    {
+      "source": "#[value(crate=\"::semio_framework_value\")] struct Record { value:u64 }",
+      "root": "semio_framework_value"
+    },
+    {
+      "source": "#[value(crate=\"::semio_framework_value\",tag=\"kind\")] enum Choice { Item { value:u64 }, Empty }",
+      "root": "semio_framework_value"
+    },
+    {
+      "source": "struct Owned { value:u64 }",
+      "root": "semio_framework_value_native_owned"
+    },
+    {
+      "source": "#[value(crate=\"::semio_framework_value\",native_owned=\"::semio_framework_value_native_owned\")] struct Explicit { value:u64 }",
+      "root": "semio_framework_value_native_owned"
+    }
   ]
 }

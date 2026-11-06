@@ -1,0 +1,19 @@
+//! 📦️ Caller-retained encoder allocation slot.
+use crate::{NativeAllocationFailure,ValueError,ValueRefusalKind};
+use super::NativeEncodeControl;
+impl NativeEncodeControl<'_>{
+ /// 🫴️ Reserves into the original vector while caller-owned progress retains callback phases.
+ pub fn allocate_vec_into<T>(&mut self,count:usize,output:&mut Vec<T>,progress:&mut Option<super::NativeEncodeAllocationProgress>)->Result<(),NativeAllocationFailure>{
+  let prior=self.owned_bytes;if !output.is_empty()||(std::mem::size_of::<T>()!=0&&output.capacity()!=0)||progress.is_some(){let mut failure=NativeAllocationFailure::from(ValueError::literal(ValueRefusalKind::InvariantViolated,"native allocation requires empty owner and progress slots"));failure.progress.admitted_bytes=prior;return Err(failure)}let Some(bytes)=count.checked_mul(std::mem::size_of::<T>()).filter(|bytes|*bytes<=isize::MAX as usize)else{let mut failure=NativeAllocationFailure::default();failure.admission=Some(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native collection size overflow"));failure.progress.admitted_bytes=prior;return Err(failure)};if bytes==0{return Ok(())}let layout=match std::alloc::Layout::array::<T>(count){Ok(layout)=>layout,Err(_)=>{let mut failure=NativeAllocationFailure::default();failure.admission=Some(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native collection layout overflow"));failure.progress.admitted_bytes=prior;return Err(failure)}};let mut actual=None;let outcome=self.allocate_effect(bytes,&mut actual,progress,&mut |actual|{let pointer=unsafe{std::alloc::alloc(layout)}.cast::<T>();if pointer.is_null(){return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"native collection allocation failed"))}*output=unsafe{Vec::from_raw_parts(pointer,0,count)};*actual=Some(bytes);Ok(())});match outcome.into_allocation_failure(prior){Some(failure)=>Err(failure),None=>Ok(())}
+ }
+ /// 🔤️ Reserves text backing in the original slot under the same callback authority.
+ pub fn reserve_text_into(&mut self,bytes:usize,output:&mut String,progress:&mut Option<super::NativeEncodeAllocationProgress>)->Result<(),NativeAllocationFailure>{
+  let prior=self.owned_bytes;if !output.is_empty()||output.capacity()!=0||progress.is_some(){let mut failure=NativeAllocationFailure::from(ValueError::literal(ValueRefusalKind::InvariantViolated,"native allocation requires empty owner and progress slots"));failure.progress.admitted_bytes=prior;return Err(failure)}if bytes>isize::MAX as usize{let mut failure=NativeAllocationFailure::default();failure.admission=Some(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native text size overflow"));failure.progress.admitted_bytes=prior;return Err(failure)}if bytes==0{return Ok(())}let layout=match std::alloc::Layout::array::<u8>(bytes){Ok(layout)=>layout,Err(_)=>{let mut failure=NativeAllocationFailure::default();failure.admission=Some(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native text layout overflow"));failure.progress.admitted_bytes=prior;return Err(failure)}};let mut actual=None;let outcome=self.allocate_effect(bytes,&mut actual,progress,&mut |actual|{let pointer=unsafe{std::alloc::alloc(layout)};if pointer.is_null(){return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"native text allocation failed"))}*output=unsafe{String::from_utf8_unchecked(Vec::from_raw_parts(pointer,0,bytes))};*actual=Some(bytes);Ok(())});match outcome.into_allocation_failure(prior){Some(failure)=>Err(failure),None=>Ok(())}
+ }
+
+
+}
+
+#[cfg(test)]
+#[path="🧪️tests/🦀️.rs"]
+mod tests;

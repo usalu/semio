@@ -1,0 +1,140 @@
+{
+  "cases": [
+    {
+      "dimension": 2,
+      "nodes": [
+        "a",
+        "b"
+      ],
+      "material": "m",
+      "section": "s",
+      "element": {
+        "start": "a",
+        "end": "b",
+        "material": "m",
+        "section": "s"
+      },
+      "load": 1,
+      "valid": true
+    },
+    {
+      "dimension": 2,
+      "nodes": [
+        "a",
+        "b"
+      ],
+      "material": "m",
+      "section": "s",
+      "element": {
+        "start": "c",
+        "end": "b",
+        "material": "m",
+        "section": "s"
+      },
+      "load": 1,
+      "valid": false
+    },
+    {
+      "dimension": 2,
+      "nodes": [
+        "a",
+        "b"
+      ],
+      "material": "m",
+      "section": "s",
+      "element": {
+        "start": "a",
+        "end": "b",
+        "material": "x",
+        "section": "s"
+      },
+      "load": 1,
+      "valid": false
+    },
+    {
+      "dimension": 2,
+      "nodes": [
+        "a",
+        "a"
+      ],
+      "material": "m",
+      "section": "s",
+      "element": {
+        "start": "a",
+        "end": "b",
+        "material": "m",
+        "section": "s"
+      },
+      "load": 1,
+      "valid": false
+    },
+    {
+      "dimension": 3,
+      "nodes": [
+        "a",
+        "b"
+      ],
+      "material": "m",
+      "section": "s",
+      "element": {
+        "start": "a",
+        "end": "b",
+        "material": "m",
+        "section": "s"
+      },
+      "load": 1,
+      "valid": true
+    },
+    {
+      "dimension": 3,
+      "nodes": [
+        "a",
+        "b"
+      ],
+      "material": "m",
+      "section": "s",
+      "element": {
+        "start": "c",
+        "end": "b",
+        "material": "m",
+        "section": "s"
+      },
+      "load": 1,
+      "valid": false
+    },
+    {
+      "dimension": 3,
+      "nodes": [
+        "a",
+        "b"
+      ],
+      "material": "m",
+      "section": "s",
+      "element": {
+        "start": "a",
+        "end": "b",
+        "material": "x",
+        "section": "s"
+      },
+      "load": 1,
+      "valid": false
+    },
+    {
+      "dimension": 3,
+      "nodes": [
+        "a",
+        "a"
+      ],
+      "material": "m",
+      "section": "s",
+      "element": {
+        "start": "a",
+        "end": "b",
+        "material": "m",
+        "section": "s"
+      },
+      "load": 1,
+      "valid": false
+    }
+  ]
+}

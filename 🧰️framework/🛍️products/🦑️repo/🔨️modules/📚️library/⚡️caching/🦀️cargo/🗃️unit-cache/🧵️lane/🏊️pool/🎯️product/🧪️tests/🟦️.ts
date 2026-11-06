@@ -58,3 +58,4 @@ test("ordinary acquisition cannot repurpose product paths and idle product bytes
   const recreated=await acquireProductLaneV1(root,request(key),{signal});expect(recreated.paths).toEqual(product.paths);recreated.release();
  }finally{rmSync(root,{recursive:true,force:true});}
 });
+

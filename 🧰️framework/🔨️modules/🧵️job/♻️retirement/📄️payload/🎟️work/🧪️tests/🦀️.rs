@@ -1,5 +1,6 @@
 //! 📬️ Public empty outcome and payload slots preserve independent exact work witnesses.
-use semio_framework_job_context::{JobOutcomeSlot,JobPayloadSlot,StepOutcome,RetainedJobPayload,JobPayloadStream,RetainedCloneGrant,close_step_outcome_slot};
+use semio_framework_job_outcome::{JobOutcomeSlot,JobPayloadSlot,StepOutcome,close_step_outcome_slot};
+use semio_framework_job_payload::{RetainedJobPayload,JobPayloadStream,RetainedCloneGrant};
 #[test]
 fn real_empty_outcome_and_payload_slots_keep_final_metadata_work_independent(){
  let row:serde_json::Value=serde_json::from_str(include_str!("../📐️.json")).unwrap();

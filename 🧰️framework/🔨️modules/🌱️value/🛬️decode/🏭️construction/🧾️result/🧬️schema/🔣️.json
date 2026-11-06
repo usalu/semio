@@ -4,7 +4,8 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "cases"
+    "cases",
+    "composite"
   ],
   "properties": {
     "cases": {
@@ -47,6 +48,29 @@
           "receipt": {
             "type": "boolean"
           }
+        }
+      }
+    },
+    "composite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "quote",
+        "allocation",
+        "receipt"
+      ],
+      "properties": {
+        "quote": {
+          "type": "string",
+          "minLength": 1
+        },
+        "allocation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "receipt": {
+          "type": "string",
+          "minLength": 1
         }
       }
     }

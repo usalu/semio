@@ -44,7 +44,10 @@ impl NativeTextDecode {
                 self.phase=5;return Ok(self.output.take());
             };
             control.advance(character.len_utf8()).map_err(|error|TextError::from_value_error(error,token.span))?;
+            let metered=control.has_work_recipient();
+            if metered&&!control.prepare_work(1).map_err(|error|TextError::from_value_error(error,token.span))?{return Err(TextError::new(ValueRefusalKind::WorkLimit,"native text character exceeds original work loan",token.span))}
             self.position+=character.len_utf8();
+            if metered{control.commit_work(1).map_err(|error|TextError::from_value_error(error,token.span))?;}
             match self.phase{
                 1=>if character=='\\'{self.phase=2}else{self.output.as_mut().unwrap().push(character)},
                 2=>{
@@ -76,7 +79,15 @@ impl<'s,'c,'p> Reader<'s,'c,'p>{
     fn charge(&mut self,bytes:usize)->Result<(),TextError>{self.control.charge(bytes).map_err(|error|self.refusal(error))}
     fn copy(&mut self,text:&str)->Result<String,TextError>{self.control.copy_text(text).map_err(|error|self.refusal(error))}
     fn character(&self)->Option<char>{self.source[self.position..].chars().next()}
-    fn consume(&mut self)->Result<char,TextError>{let c=self.character().ok_or_else(||self.error(ValueRefusalKind::InvalidValue,"unexpected native text end"))?;self.position+=c.len_utf8();if c=='\n'{self.line=self.line.checked_add(1).ok_or_else(||self.error(ValueRefusalKind::WorkLimit,"native line count overflow"))?;self.column=1;}else{self.column=self.column.checked_add(1).ok_or_else(||self.error(ValueRefusalKind::WorkLimit,"native column count overflow"))?;}self.control.advance(c.len_utf8()).map_err(|error|self.refusal(error))?;Ok(c)}
+    fn consume(&mut self)->Result<char,TextError>{
+        let c=self.character().ok_or_else(||self.error(ValueRefusalKind::InvalidValue,"unexpected native text end"))?;
+        let (line,column)=if c=='\n'{(self.line.checked_add(1).ok_or_else(||self.error(ValueRefusalKind::WorkLimit,"native line count overflow"))?,1)}else{(self.line,self.column.checked_add(1).ok_or_else(||self.error(ValueRefusalKind::WorkLimit,"native column count overflow"))?)};
+        let metered=self.control.has_work_recipient();
+        if metered&&!self.control.prepare_work(1).map_err(|error|self.refusal(error))?{return Err(self.error(ValueRefusalKind::WorkLimit,"native character scan exceeds original work loan"))}
+        self.position+=c.len_utf8();self.line=line;self.column=column;
+        if metered{self.control.commit_work(1).map_err(|error|self.refusal(error))?;}
+        self.control.advance(c.len_utf8()).map_err(|error|self.refusal(error))?;Ok(c)
+    }
     fn scan(&mut self)->Result<Token<'s>,TextError>{
         loop{while self.character().is_some_and(char::is_whitespace){self.consume()?;}if self.character()!=Some('#'){break;}while self.character().is_some_and(|c|c!='\n'){self.consume()?;}}
         let start=self.position;let span=TextSpan::at(self.line,self.column);let mut content_start=start;let content_end;
@@ -404,3 +415,22 @@ mod continuation_tests {
 trait NativeOctets:Sized{fn admit(length:usize,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>;fn push_octet(&mut self,byte:u8,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>;}
 impl NativeOctets for super::RecordBytes{fn admit(_:usize,_:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{Ok(Self::default())}fn push_octet(&mut self,byte:u8,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{self.push_decoded(byte,control)}}
 impl NativeOctets for Vec<u8>{fn admit(length:usize,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{control.allocate_vec(length)}fn push_octet(&mut self,byte:u8,_:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{if self.len()==self.capacity(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"decoded byte destination exceeded its admission"))}self.push(byte);Ok(())}}
+
+#[cfg(test)]
+mod work_tests{
+ use super::*;
+ use semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient;
+ struct Loan(u64);
+ impl NativeDecodeWorkRecipient for Loan{fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=self.0))}}
+ #[test]
+ fn original_character_scan_stops_before_denied_effect(){
+  let f:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🧵️continuation/🎟️work.json")).unwrap();
+  let mut callback=|_|true;let mut native=NativeDecodeControl::new(0,&mut callback);let mut loan=Loan(f["allowance"].as_u64().unwrap());
+  native.with_work_recipient(&mut loan,|native|{
+   let mut reader=Reader{source:f["text"].as_str().unwrap(),position:0,line:1,column:1,lookahead:[None,None],limits:Limits::default(),tokens:0,nodes:0,control:native};
+   let first=reader.consume().unwrap();let refusal=reader.consume().unwrap_err();
+   assert_eq!(serde_json::json!({"first":first.to_string(),"position":reader.position,"work":reader.control.actual_work(),"deniedKind":refusal.kind.as_str()}),serde_json::json!({"first":f["first"],"position":f["position"],"work":f["work"],"deniedKind":f["deniedKind"]}));
+   Ok::<(),ValueError>(())
+  }).unwrap();
+ }
+}

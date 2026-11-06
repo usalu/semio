@@ -1,0 +1,53 @@
+{
+  "schema": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "properties": {
+        "firstAccepted": {
+          "type": "boolean"
+        },
+        "secondAccepted": {
+          "type": "boolean"
+        },
+        "effects": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "firstCanceled": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "firstAccepted",
+        "secondAccepted",
+        "effects",
+        "firstCanceled"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "data": [
+    {
+      "firstAccepted": true,
+      "secondAccepted": false,
+      "effects": 0,
+      "firstCanceled": 1
+    },
+    {
+      "firstAccepted": true,
+      "secondAccepted": true,
+      "effects": 1,
+      "firstCanceled": 0
+    },
+    {
+      "firstAccepted": false,
+      "secondAccepted": false,
+      "effects": 0,
+      "firstCanceled": 0
+    }
+  ]
+}

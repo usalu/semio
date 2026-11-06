@@ -1,0 +1,1 @@
+{"version":1,"cases":[{"door":{"a":"1","b":"2"},"kernel":{"b":"2","c":"3"},"coherent":true},{"door":{"a":"1","b":"2"},"kernel":{"b":"4"},"coherent":false},{"door":{},"kernel":{"a":"1"},"coherent":true}]}

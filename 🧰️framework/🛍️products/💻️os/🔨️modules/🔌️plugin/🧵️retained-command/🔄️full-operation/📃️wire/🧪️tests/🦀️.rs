@@ -29,7 +29,7 @@ fn borrowed_publication_wire_matches_neutral_corpus_and_two_existing_json_oracle
             "laneReceipt"=>{
                 let before=value["generationBefore"].as_u64().unwrap();let after=value["generationAfter"].as_u64().unwrap();
                 encode(&PublicationWire::LaneReceipt{generation_before:before,generation_after:after},expected);
-                let receipt=semio_framework_os_store_one_item::LaneItemReceipt{generation_before:before,generation_after:after};
+                let receipt=semio_os_store_one_item::LaneItemReceipt{generation_before:before,generation_after:after};
                 assert_eq!(semio_framework_pack_json::to_json_string(&receipt),expected);
                 assert_eq!(serde_json::to_string(&receipt).unwrap(),expected);
             },

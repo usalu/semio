@@ -37,7 +37,7 @@ static RETIRED_POINTER:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicU
 #[derive(semio_framework_value_factory::FactoryPayloadRetirement)]
 #[value(crate="semio_framework_value_factory")]
 struct OriginalIssuer;
-impl ArtifactOwnedValueRetirementFactory<String> for OriginalIssuer{fn retirement_birth_bytes(&self,_:&String)->usize{semio_framework_value_retirement::owned_retirement_birth_bytes::<String>()}fn retire_owned(&self,value:String,g:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Box<dyn crate::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,String)>{RETIRED_POINTER.store(value.as_ptr()as usize,std::sync::atomic::Ordering::Relaxed);semio_framework_value_retirement::admit_owned_retirement(value,g)}}
+impl ArtifactOwnedValueRetirementFactory<String> for OriginalIssuer{fn retire_owned_work_demand(&self,_:&String)->Result<u64,crate::ValueError>{Ok(1)}fn retirement_birth_bytes(&self,_:&String)->usize{semio_framework_value_retirement::owned_retirement_birth_bytes::<String>()}fn retire_owned(&self,value:String,g:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Box<dyn crate::ErasedSnapshotRetirement>,RetainedCloneProgress),(crate::OriginalRetirementFailure,String)>{let turn=(||{RETIRED_POINTER.store(value.as_ptr()as usize,std::sync::atomic::Ordering::Relaxed);semio_framework_value_retirement::admit_owned_retirement(value,g)})();crate::RetainedWorkOutcome{result:turn.result.map_err(|(error,value)|(error.into(),value)),work:turn.work}}}
 #[test]
 fn original_slot_retirement_returns_all_readers_then_uses_same_captured_payload_issuer(){
  let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();for state in law["policy"]["readBirthStates"].as_array().unwrap(){let prefix=state["prefix"].as_u64().unwrap();RETIRED_POINTER.store(0,std::sync::atomic::Ordering::Relaxed);let factory:Arc<dyn ArtifactOwnedValueRetirementFactory<String>>=Arc::new(OriginalIssuer);let mut slot=RetainedOriginalSlot::new("original cancelled α\0😀".repeat(8192));let mut remaining=work(slot.get().len());let pointer=slot.get().as_ptr()as usize;let key=slot.key();if state["state"]=="published"{assert_eq!(prefix,2);while slot.borrow(key).is_err(){tick(&mut remaining);let d=slot.demands(key).unwrap();let(turn,heap)=crate::observe_retirement_allocations(||slot.advance_read(key,&factory,grant(d)));let p=turn.result.unwrap().progress();assert!(turn.work<=1);assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));}}else{for _ in 0..prefix{let d=slot.demands(key).unwrap();slot.advance_read(key,&factory,grant(d)).result.unwrap();}}
@@ -92,9 +92,9 @@ static PARTIAL_RETIRED_POINTER:std::sync::atomic::AtomicUsize=std::sync::atomic:
 #[derive(semio_framework_value_factory::FactoryPayloadRetirement)]
 #[value(crate="semio_framework_value_factory")]
 struct PartialIssuer;
-impl ArtifactOwnedValueRetirementFactory<String> for PartialIssuer{
+impl ArtifactOwnedValueRetirementFactory<String> for PartialIssuer{fn retire_owned_work_demand(&self,_:&String)->Result<u64,crate::ValueError>{Ok(1)}
  fn retirement_birth_bytes(&self,_:&String)->usize{semio_framework_value_retirement::owned_retirement_birth_bytes::<String>()}
- fn retire_owned(&self,value:String,g:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Box<dyn crate::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,String)>{PARTIAL_RETIRED_POINTER.store(value.as_ptr()as usize,std::sync::atomic::Ordering::Relaxed);semio_framework_value_retirement::admit_owned_retirement(value,g)}
+ fn retire_owned(&self,value:String,g:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Box<dyn crate::ErasedSnapshotRetirement>,RetainedCloneProgress),(crate::OriginalRetirementFailure,String)>{let turn=(||{PARTIAL_RETIRED_POINTER.store(value.as_ptr()as usize,std::sync::atomic::Ordering::Relaxed);semio_framework_value_retirement::admit_owned_retirement(value,g)})();crate::RetainedWorkOutcome{result:turn.result.map_err(|(error,value)|(error.into(),value)),work:turn.work}}
 }
 #[test]
 fn every_partial_source_admission_returns_the_same_slot_payload_through_its_captured_issuer(){

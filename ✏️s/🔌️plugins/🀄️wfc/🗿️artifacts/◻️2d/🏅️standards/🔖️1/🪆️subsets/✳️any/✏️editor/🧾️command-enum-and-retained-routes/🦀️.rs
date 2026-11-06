@@ -295,7 +295,7 @@ impl semio_plugin::ArtifactOwnedToolJobFactory for Wfc2dRetainedCommandJobFactor
 #[cfg(test)]
 mod completion_source_tests {
     use super::*;
-    use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandSnapshotRead, ArtifactCommandWork, ArtifactCommandWorkStep};
+    use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandSnapshotRead, ArtifactCommandWork, ArtifactCommandWorkStep};
     use crate::editor::wfc2d::transient::{Wfc2dAssignment, Wfc2dTransient};
 
     /// 📨️ Real retained completion work preserves an existing complete cache when a late callback is stale.
@@ -304,22 +304,22 @@ mod completion_source_tests {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🧪️tests/🧫️preview-revisions/🔣️.json")).unwrap();
         let snapshot = crate::examples::two_room_corridor::document();
         let config = crate::editor::wfc2d::config::Wfc2dConfig::default();
-        let history = semio_framework_plugin::HistoryView::empty();
+        let history = semio_plugin::HistoryView::empty();
         let interaction = protocol::InteractionState::default();
         let hover = Default::default();
-        let grant = semio_framework_plugin::artifact_app_laws::fixture_retained_turn().grant;
+        let grant = semio_plugin::artifact_app_laws::fixture_retained_turn().grant;
         for case in fixture["cases"].as_array().unwrap() {
             let source_revision: Vec<u8> = serde_json::from_value(case["sourceRevision"].clone()).unwrap();
             let current: Option<[u8;32]> = serde_json::from_value(case["currentRevision"].clone()).unwrap();
             let payload = fill::Wfc2dFillTickPayload { source_revision, done: true, assignments: [(snapshot.slots[0].id.clone(), Some(snapshot.tiles.last().unwrap().id.clone()))].into_iter().collect(), ..Default::default() };
             let Some(revision) = current else { assert!(!payload.completed_for(None)); continue; };
-            let operation = semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "wfc2d".into(), operation_id: 1, generation: 1, canonical_base_revision: revision, retained: grant, authoring_seed: "completion".into() };
+            let operation = semio_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "wfc2d".into(), operation_id: 1, generation: 1, canonical_base_revision: revision, retained: grant, authoring_seed: "completion".into() };
             let command = Wfc2dEditorCommand::CommitFill { payload_json: String::from_utf8(fill::encode_fill_payload(&payload)).unwrap() };
-            let input = ArtifactCommandInputs::<semio_framework_plugin::EditorApp<Wfc2dEditor>> { command: &command, snapshot: &snapshot, snapshot_owner: None, snapshot_read: ArtifactCommandSnapshotRead::unavailable(&operation), config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
+            let input = ArtifactCommandInputs::<semio_plugin::EditorApp<Wfc2dEditor>> { command: &command, snapshot: &snapshot, snapshot_owner: None, snapshot_read: ArtifactCommandSnapshotRead::unavailable(&operation), config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
             let mut cache = Wfc2dTransient { source_revision: revision.to_vec(), assignments: vec![Wfc2dAssignment { slot_id: snapshot.slots[0].id.clone(), tile_id: snapshot.tiles[0].id.clone() }], contradiction: false };
             let before = cache.clone();
             let mut work = Wfc2dCommandWork::new(fill::COMMIT_FILL_ACTION_ID);
-            let mut caller = semio_framework_plugin::artifact_app_laws::OriginalWorkFixture::new();
+            let mut caller = semio_plugin::artifact_app_laws::OriginalWorkFixture::new();
             let step = caller.work_turn(grant, 1, |cx| { cx.consume_fuel(1); work.step(&input, cx) }).unwrap();
             let rows = match step { ArtifactCommandWorkStep::CompleteWithEphemeral { ephemeral, .. } => ephemeral.transient, ArtifactCommandWorkStep::Complete(_) => Vec::new(), _ => panic!("completion must settle") };
             let visible = case["visible"].as_bool().unwrap();

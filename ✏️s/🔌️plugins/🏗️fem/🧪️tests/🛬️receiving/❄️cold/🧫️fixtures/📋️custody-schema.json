@@ -1,0 +1,42 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "aliases",
+          "partial",
+          "allocationDenied",
+          "released"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "aliases": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "partial": {
+            "type": "boolean"
+          },
+          "allocationDenied": {
+            "type": "boolean"
+          },
+          "released": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

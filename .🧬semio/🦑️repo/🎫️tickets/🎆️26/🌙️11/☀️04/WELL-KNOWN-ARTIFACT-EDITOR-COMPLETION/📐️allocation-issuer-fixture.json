@@ -1,0 +1,32 @@
+[
+  {
+    "name": "denied bytes",
+    "bytes": 8,
+    "grant": 7,
+    "items": 1,
+    "work": 1,
+    "born": false,
+    "copied": 0,
+    "performed": 0
+  },
+  {
+    "name": "denied work",
+    "bytes": 8,
+    "grant": 8,
+    "items": 1,
+    "work": 0,
+    "born": false,
+    "copied": 0,
+    "performed": 0
+  },
+  {
+    "name": "original exact issuer",
+    "bytes": 8,
+    "grant": 8,
+    "items": 1,
+    "work": 1,
+    "born": true,
+    "copied": 8,
+    "performed": 1
+  }
+]

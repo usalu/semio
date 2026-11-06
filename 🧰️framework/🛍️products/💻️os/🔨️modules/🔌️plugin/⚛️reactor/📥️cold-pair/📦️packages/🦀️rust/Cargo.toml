@@ -26,7 +26,7 @@ semio-plugin-reactor-app = { path = "../../../🔌️app/📦️packages/🦀️
 semio-plugin-reactor-tasks = { path = "../../../⏲️tasks/📦️packages/🦀️rust" }
 semio-plugin-reactor-lifecycle = { path = "../../../📨️pending/📦️packages/🦀️rust" }
 semio-plugin-runtime-instances = { path = "../../../🏃️runtime/📦️instances/📦️packages/🦀️rust" }
-semio-plugin-runtime-ops = { path = "../../../🏃️runtime/🧰️ops/📦️packages/🦀️rust" }
+semio-framework-plugin-runtime-ops = { path = "../../../🏃️runtime/🧰️ops/📦️packages/🦀️rust", package = "semio-plugin-runtime-ops"}
 semio-plugin-plugin-program = { path = "../../../../🏗️builder/🔌️program/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }

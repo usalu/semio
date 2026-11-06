@@ -537,7 +537,7 @@ struct TypedSnapshotImportFrame<P:semio_framework_value::retirement::RetireOwned
 impl<P:semio_framework_value::retirement::RetireOwned> TypedSnapshotImportFrame<P>{fn new()->Self{Self{metadata:SnapshotMetadataFrame::new(),physical:semio_framework_io_sqlite_snapshot::PhysicalImportFrame::new(),snapshot:None,validation:None,result:None}}}
 
 fn typed_file_validation(slot:&mut Option<IoResult<()>>)->Result<(),IoError>{
-    match slot.as_ref().unwrap(){Err(_)=>Err(slot.take().unwrap().unwrap_err()),Ok(outcome)if outcome.diagnostics.iter().any(|diagnostic|matches!(diagnostic.severity,semio_framework_diagnostic::Severity::Error|semio_framework_diagnostic::Severity::Fatal))=>Err(IoError{cause:ValueError::literal(ValueRefusalKind::InvalidValue,"owned snapshot violates its requested subset"),diagnostics:slot.take().unwrap().unwrap().diagnostics}),Ok(_)=>Ok(())}
+    match slot.as_ref().unwrap(){Err(_)=>Err(slot.take().unwrap().unwrap_err()),Ok(outcome)if outcome.diagnostics.iter().any(|diagnostic|matches!(diagnostic.severity,semio_framework_diagnostic::Severity::Error|semio_framework_diagnostic::Severity::Fatal))=>Err(IoError{cause:ValueError::literal(ValueRefusalKind::InvalidValue,"owned snapshot violates its requested subset").into(),diagnostics:slot.take().unwrap().unwrap().diagnostics}),Ok(_)=>Ok(())}
 }
 macro_rules! typed_file_work{
     ($native:ident,$control:ident,$direction:ident,$bytes:expr)=>{{
@@ -777,7 +777,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let key = (hop.from.clone(), hop.into.clone());
         let entry = registry.get(&key).ok_or_else(|| IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner, format!("io_run: no entry registered for hop {} -> {}", hop.from.to_coordinate(), hop.into.to_coordinate()))))?;
         control.checkpoint().map_err(IoError::from_value_error)?;
-        let outcome = (entry.run)(&current, control).map_err(|error| IoError { cause: ValueError::new(error.cause.kind, format!("io_run: hop {} -> {} failed: {}", hop.from.to_coordinate(), hop.into.to_coordinate(), error.cause.message)), diagnostics: error.diagnostics })?;
+        let outcome = (entry.run)(&current, control)?;
         control.checkpoint().map_err(IoError::from_value_error)?;
         current = outcome.value;
         diagnostics.extend(outcome.diagnostics);

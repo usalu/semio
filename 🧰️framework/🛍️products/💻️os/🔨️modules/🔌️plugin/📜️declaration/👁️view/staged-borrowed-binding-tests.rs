@@ -1,7 +1,7 @@
 //! 🧪️ Borrowed staged bindings reproduce neutral wire while paid payload cursors own all construction.
 use super::*;
 use semio_framework::action_staging::*;
-use semio_framework_plugin_decl_staged_form::*;
+use semio_plugin_decl_staged_form::*;
 
 struct Borrowed<'a> { binding: &'a StagedFormBinding }
 impl Borrowed<'_> {

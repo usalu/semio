@@ -11,7 +11,7 @@ mod host_event_birth_tests;
 impl ArtifactEditor for RemodelingPlayApp {
     /// 📢️ The localized notices of this editor's user-reachable refusals (design §20.12).
     fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
-        use semio_framework_ui_locale::LocalizedLabel;
+        use semio_ui_locale::LocalizedLabel;
         static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 5]> = std::sync::LazyLock::new(|| {
             [
             ("remodeling.import.open", LocalizedLabel::native("An import is still running in this window.", "In diesem Fenster läuft noch ein Import.")),

@@ -1,7 +1,7 @@
 //! 🌱️ Native surface declarations commit real shared definition and registration producers before mounted admission.
 use super::*;
 use semio_plugin_decl_surface::{ArtifactEditor,ArtifactViewer,OriginalArtifactEditorBirth,OriginalArtifactViewerBirth,EditorApp,ViewerApp};
-use semio_plugin_instance_construction::{OriginalVcsApp,factory::original_instance_factory};
+use semio_framework_plugin_instance_construction::{OriginalVcsApp,factory::original_instance_factory};
 use semio_plugin_instance_initialization::services::OriginalInstanceRegistration;
 
 impl<PA:PluginApp> PluginBuilder<Ready,PA>{

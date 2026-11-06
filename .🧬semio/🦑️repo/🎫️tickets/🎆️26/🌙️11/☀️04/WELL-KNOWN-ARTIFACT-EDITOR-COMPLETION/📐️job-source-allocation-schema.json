@@ -1,0 +1,96 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "events",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "events": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "request",
+                "bytes",
+                "actual",
+                "allow"
+              ],
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "quote",
+                    "post",
+                    "cancel"
+                  ]
+                },
+                "request": {
+                  "type": "string"
+                },
+                "bytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "actual": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "allow": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "pending",
+                "actual",
+                "accepted"
+              ],
+              "properties": {
+                "pending": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "actual": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "accepted": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,1 @@
+{"type":"object","additionalProperties":false,"required":["text","deniedWork","attemptWork","stock","deniedActual","failedActual","occupiedMarker"],"properties":{"text":{"type":"string"},"deniedWork":{"const":0},"attemptWork":{"const":1},"stock":{"const":2},"deniedActual":{"type":"null"},"failedActual":{"const":0},"occupiedMarker":{"const":73}}}

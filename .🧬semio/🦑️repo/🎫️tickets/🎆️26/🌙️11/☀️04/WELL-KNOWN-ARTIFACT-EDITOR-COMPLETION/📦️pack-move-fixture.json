@@ -1,0 +1,61 @@
+{
+  "schema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "array",
+    "items": {
+      "type": "object",
+      "required": [
+        "items",
+        "depth",
+        "moved",
+        "work",
+        "copyBytes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "moved": {
+          "type": "boolean"
+        },
+        "work": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "copyBytes": {
+          "const": 0
+        }
+      }
+    }
+  },
+  "data": [
+    {
+      "items": 0,
+      "depth": 1,
+      "moved": false,
+      "work": 0,
+      "copyBytes": 0
+    },
+    {
+      "items": 1,
+      "depth": 0,
+      "moved": false,
+      "work": 0,
+      "copyBytes": 0
+    },
+    {
+      "items": 1,
+      "depth": 1,
+      "moved": true,
+      "work": 1,
+      "copyBytes": 0
+    }
+  ]
+}

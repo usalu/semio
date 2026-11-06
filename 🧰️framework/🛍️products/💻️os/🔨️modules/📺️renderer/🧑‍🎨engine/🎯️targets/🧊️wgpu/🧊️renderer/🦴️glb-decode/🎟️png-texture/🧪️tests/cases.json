@@ -1,0 +1,44 @@
+{
+  "data": "iVBORw0KGgoAAAANSUhEUgAAAAMAAAACAQAAAAC1D1u3AAAAD0lEQVR4AQEEAPv/AEAAwAGEAQGIxRNmAAAAAElFTkSuQmCC",
+  "width": 3,
+  "height": 2,
+  "rgba": [
+    0,
+    0,
+    0,
+    255,
+    255,
+    255,
+    255,
+    255,
+    0,
+    0,
+    0,
+    255,
+    255,
+    255,
+    255,
+    255,
+    255,
+    255,
+    255,
+    255,
+    0,
+    0,
+    0,
+    255
+  ],
+  "denials": [
+    "items",
+    "copy",
+    "depth",
+    "work"
+  ],
+  "custodyStages": [
+    {"name": "decoded", "denials": ["items", "copy", "depth", "work"]},
+    {"name": "privateImage", "denials": ["items", "capacity", "depth", "work"]},
+    {"name": "retiredDecoder", "denials": ["items", "copy", "depth", "work"]}
+  ],
+  "preserveSource": true,
+  "fundClose": true
+}

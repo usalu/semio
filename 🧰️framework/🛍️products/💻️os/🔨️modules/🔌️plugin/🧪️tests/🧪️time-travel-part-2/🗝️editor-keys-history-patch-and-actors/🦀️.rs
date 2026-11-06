@@ -9,14 +9,14 @@ const TIME_TRAVEL_BAND_CORPUS_JSON: &str = include_str!("../../../../📺️rend
 /// focus lands on the first input, else on Accept, whichever shell renders the body.
 #[semio_framework_async_macros::async_test]
 async fn the_draft_editor_keys_are_the_shared_corpus_keys_every_shell_focuses() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let corpus: Value = serde_json::from_str(TIME_TRAVEL_BAND_CORPUS_JSON).expect("band corpus parses");
     let keys = &corpus["editorKeys"];
-    assert_eq!(text(&keys["panel"]), semio_framework_ui_layout::layout::FRAMEWORK_PANEL_TAB_HISTORY_ID, "the body mounts in the History panel tab");
+    assert_eq!(text(&keys["panel"]), semio_ui_layout::layout::FRAMEWORK_PANEL_TAB_HISTORY_ID, "the body mounts in the History panel tab");
     let rows = keys["inputs"].as_array().expect("editor input keys");
     let fixture = fixture();
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
@@ -47,7 +47,7 @@ async fn the_draft_editor_keys_are_the_shared_corpus_keys_every_shell_focuses() 
 
 //#region 🩹️HistoryViewPatch
 /// ✏️ Applies one toy edit straight on the document store — a row the command log backfills, like a seeded or ingested edit.
-async fn apply_toy_edit(app: &mut ToyApp, value: i32, mounted_policy:semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+async fn apply_toy_edit(app: &mut ToyApp, value: i32, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
     app.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value }.into()], transaction: None }, identity).await.expect("toy edit applies");
 }
 
@@ -66,7 +66,7 @@ async fn refreshed_rows(app: &mut ToyApp) -> usize {
 /// patched view always equals a full rebuild; a history edit (a supersede transition) rebuilds the whole view.
 #[semio_framework_async_macros::async_test]
 async fn the_history_view_patches_only_the_rows_a_change_touched() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
@@ -119,12 +119,12 @@ fn the_projected_rows_carry_the_worst_severity_of_the_whole_edit() {
 /// route with one (the plain emit route) authors as its separately admitted user instance.
 #[semio_framework_async_macros::async_test]
 async fn every_route_authors_as_its_acting_actor() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
-    let acting = |actor: &str| ActionMeta { view_state: Some(semio_framework_plugin_testing_laws::receive_view_fixture(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), semio_framework_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(actor) };
+    let acting = |actor: &str| ActionMeta { view_state: Some(semio_plugin_testing_laws::receive_view_fixture(ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), semio_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(actor) };
     let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId("ada".into()), mounted_policy, &mut identity).await;
     PluginApp::bind_actor(&mut app, "ada").await;
     let first: TestMutation = SetCount { value: 1 }.into();
@@ -133,7 +133,7 @@ async fn every_route_authors_as_its_acting_actor() {
     let pack = app.document_pack().await.expect("Ada's authoritative document");
     let mut grace = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId("grace".into()), mounted_policy, &mut identity).await;
     artifact_app_laws::load_document(&mut grace, &pack, &mut identity).await.expect("Grace opens Ada's shared history");
-    grace.dispatch_emit("setCount", Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::mutations(vec![SetCount { value: 2 }.into()]), &acting("grace"), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the emit publishes");
+    grace.dispatch_emit("setCount", Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::mutations(vec![SetCount { value: 2 }.into()]), &acting("grace"), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the emit publishes");
     let emitted = edit_authors(&grace);
     close(&mut app,cx);
     close(&mut grace,cx);

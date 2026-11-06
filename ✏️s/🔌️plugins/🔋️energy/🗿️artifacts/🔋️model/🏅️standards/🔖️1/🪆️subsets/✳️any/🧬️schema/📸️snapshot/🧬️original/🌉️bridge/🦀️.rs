@@ -25,15 +25,17 @@ impl NativeDecodeWorkRecipient for StepWork{
 }
 
 /// 🏗️ One funded step wallet that admits each construction demand once against the bounded step grant.
-struct StepRecipient{grant:RetainedCloneGrant,progress:RetainedCloneProgress}
+struct StepRecipient{grant:RetainedCloneGrant,submitted:RetainedCloneProgress}
 impl NativeDecodeConstructionRecipient for StepRecipient{
+ fn submitted(&self)->RetainedCloneProgress{self.submitted}
  fn grant(&mut self,demand:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{
-  let left=RetainedCloneGrant{maximum_items:self.grant.maximum_items.saturating_sub(self.progress.copied_items),maximum_copy_bytes:self.grant.maximum_copy_bytes.saturating_sub(self.progress.copied_bytes),maximum_capacity_bytes:self.grant.maximum_capacity_bytes.saturating_sub(self.progress.retained_capacity_bytes),maximum_release_bytes:self.grant.maximum_release_bytes.saturating_sub(self.progress.released_bytes),..self.grant};
+  let left=RetainedCloneGrant{maximum_items:self.grant.maximum_items.saturating_sub(self.submitted.copied_items),maximum_copy_bytes:self.grant.maximum_copy_bytes.saturating_sub(self.submitted.copied_bytes),maximum_capacity_bytes:self.grant.maximum_capacity_bytes.saturating_sub(self.submitted.retained_capacity_bytes),maximum_release_bytes:self.grant.maximum_release_bytes.saturating_sub(self.submitted.released_bytes),..self.grant};
   if retained_clone_grant_admits(left,demand){Ok(left)}else{Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"the energy snapshot bridge step grant does not admit a construction"))}
  }
  fn accept(&mut self,grant:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),ValueError>{
+  self.submitted=self.submitted.checked_add(progress)?;
   if !progress.fits(grant){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"a bridge construction receipt exceeds its grant").with_retained_progress(progress))}
-  self.progress=self.progress.checked_add(progress)?;Ok(())
+  Ok(())
  }
 }
 
@@ -60,7 +62,7 @@ pub fn receive_stepped<T:NativeReceive<DslValue>+RetireOwned>(value:DslValue)->R
    native.checkpoint()?;
    if receiver.output_ready(){return Ok(receiver.take(wallet).result?.ok_or_else(bridge_invalid)?.0)}
    let original=source.as_ref().ok_or_else(bridge_invalid)?.borrow();
-   let mut recipient=StepRecipient{grant:wallet,progress:Default::default()};let mut work=StepWork{quantum:1<<30};native.with_work_recipient(&mut work,|native|native.with_construction_recipient(&mut recipient,|native|receiver.advance(original,native,wallet.maximum_copy_bytes,wallet).result.map_err(bridge_primary)))?;
+   let mut recipient=StepRecipient{grant:wallet,submitted:Default::default()};let mut work=StepWork{quantum:1<<30};native.with_work_recipient(&mut work,|native|native.with_construction_recipient(&mut recipient,|native|receiver.advance(original,native,wallet.maximum_copy_bytes,wallet).result.map_err(bridge_primary)))?;
   }
   Err(bridge_exhausted())
  })();

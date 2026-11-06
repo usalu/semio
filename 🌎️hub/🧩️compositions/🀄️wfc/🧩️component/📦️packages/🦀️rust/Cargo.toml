@@ -67,3 +67,4 @@ semio-plugin = { workspace = true }
 [dev-dependencies]
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-async = { workspace = true }
+serde_json = { workspace = true }

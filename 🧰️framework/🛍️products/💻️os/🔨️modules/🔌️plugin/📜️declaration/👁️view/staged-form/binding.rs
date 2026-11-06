@@ -51,7 +51,7 @@ impl<'a> View<'a> {
             Self::Path(path) => { let part = path.segment(index).ok_or_else(invalid)?; if part.is_empty() || matches!(part, "__proto__" | "prototype" | "constructor") { return Err(invalid()); } (None, Self::Text(part)) },
             Self::Options(options) => {
                 let option = options.option(index).ok_or_else(invalid)?;
-                if option.key.len() > semio_framework_ui_contract::UiText::default().capacity() { return Err(resource()); }
+                if option.key.len() > semio_ui_contract::UiText::default().capacity() { return Err(resource()); }
                 if option.key.is_empty() { return Err(invalid()); }
                 for previous in 0..index { if options.option(previous).ok_or_else(invalid)?.key == option.key { return Err(invalid()); } }
                 (None, Self::Option(option))

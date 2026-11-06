@@ -212,11 +212,11 @@ fn close_step(&mut self, _: RetainedCloneGrant) -> semio_framework_value::Retain
     }
     #[derive(semio_framework_value::FactoryPayloadRetirement)]
     struct TerminalSnapshotFactory<const N: usize>;
-    impl<const N: usize> ArtifactOwnedValueRetirementFactory<DemoSnapshot> for TerminalSnapshotFactory<N> {
+    impl<const N: usize> ArtifactOwnedValueRetirementFactory<DemoSnapshot> for TerminalSnapshotFactory<N> {fn retire_owned_work_demand(&self,_:&DemoSnapshot)->Result<u64,semio_framework_value::ValueError>{Ok(1)}
         fn retirement_birth_bytes(&self,_:&DemoSnapshot)->usize { std::mem::size_of::<TerminalCursor<N>>() }
-        fn retire_owned(&self,original:DemoSnapshot,grant:RetainedCloneGrant)-> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,DemoSnapshot)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,DemoSnapshot)> {
+        fn retire_owned(&self,original:DemoSnapshot,grant:RetainedCloneGrant)-> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(semio_framework_value::OriginalRetirementFailure,DemoSnapshot)> {let turn=(||{ let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,DemoSnapshot)> {
             admit_artifact_retirement(original,grant,|_|TerminalCursor::<N>([0;N]))
-        })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
+        })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } })();semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(|(error,value)|(error.into(),value)),work:turn.work}}
     }
     fn check<const N: usize>(row: &serde_json::Value, admission: usize, failures: &mut Vec<(String, usize, usize, usize)>) {
         let grant=RetainedCloneGrant {maximum_capacity_bytes:admission,maximum_release_bytes:admission,..physical_test_close_grant()};

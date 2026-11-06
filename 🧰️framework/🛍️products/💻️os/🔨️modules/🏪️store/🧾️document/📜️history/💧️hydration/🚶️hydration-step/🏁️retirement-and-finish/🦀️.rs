@@ -62,7 +62,7 @@ where
                 self.terminal = true;
                 return PersistedDocumentHydrationStep::Ready(PersistedDocumentHydrationOutput::Envelope(envelope));
             }
-            RetainedCloneStep::Progress(progress) => if let Err(diagnostic) = semio_os_store_member_open::record_member_step(cx, progress) { return self.reject(diagnostic); },
+            RetainedCloneStep::Progress(progress) => if let Err(diagnostic) = semio_framework_os_store_member_open::record_member_step(cx, progress) { return self.reject(diagnostic); },
         }
         PersistedDocumentHydrationStep::Pending(self.progress())
     }

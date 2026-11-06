@@ -45,8 +45,10 @@ fn successful_scratch_drains_after_complete_changes_to_closing() {
         writer.advance(&source, Source::RECORD, &mut native, grant()).unwrap();
     }
     assert!(turns > 1 && denied_release && writer.ready());
-    let (wire, _) = writer.take(grant()).unwrap().unwrap();
-    writer.close(grant()).unwrap();
-    assert!(writer.empty());
-    drop(wire);
+    for denied in [RetainedCloneGrant{maximum_items:0,..grant()},RetainedCloneGrant{maximum_depth:0,..grant()}]{assert!(writer.take(denied).unwrap().is_none());assert_eq!(writer.last_turn_work(),0);assert_eq!(writer.wire.as_ptr(),pointer);}
+    let (wire, progress) = writer.take(RetainedCloneGrant{maximum_copy_bytes:0,..grant()}).unwrap().unwrap();
+    assert_eq!(wire.as_ptr(),pointer);assert_eq!(progress.copied_items,1);assert_eq!(progress.copied_bytes,0);assert_eq!(writer.last_turn_work(),1);
+    writer.close(grant()).unwrap();assert!(writer.empty());
+    let mut retained=semio_framework_value::retirement::controlled::ControlledRetirement::new(wire).ok().unwrap();while !retained.terminal_is_empty(){retained.step(grant()).unwrap();}
+
 }

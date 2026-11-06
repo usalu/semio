@@ -1,0 +1,7 @@
+# Preparation close-start custody
+
+ArtifactReplayPreparationTask::into_retirement currently consumes its cursor while calling both cancel and begin_close. NativeSemanticPreparation implements both callbacks by calling the same begin_close, which sets its own flag and calls projection, edit and optional row close starts. Several concrete drivers then mutate their own close flag and invoke nested cursor cancel/begin. A single task-handoff work unit therefore does not quote those producer actions.
+
+A correct conversion separates the original cursor handoff from each actual close-start action. Its selected action and metadata copies must be quoted before the same original work loan authorizes the effect. The native and fixture implementations need explicit close-start demand and outcome ports all the way through the projection/edit drivers; a completed cursor must still skip directly to the already-tested one-work boxed shell release. The current code is uncompiled during the shared native continuation migration.
+
+The Store PagedOneItemEdit production implementation delegates start to RetainedMutationOwner, RetainedDiffOwner, and MutationMessageConcat. The first two owners each delegate again to an abstract preparation/apply trait, including generated implementations; a measured parent flag alone does not account for those child calls. The concatenation owner now has an authored explicit paid close-start port and separate terminal-row shell; its native and neutral laws have not run.

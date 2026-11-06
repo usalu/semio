@@ -2,5 +2,8 @@
   "text": "original shared input",
   "deniedWork": 0,
   "attemptWork": 1,
-  "stock": 2
+  "stock": 2,
+  "deniedActual": null,
+  "failedActual": 0,
+  "occupiedMarker": 73
 }

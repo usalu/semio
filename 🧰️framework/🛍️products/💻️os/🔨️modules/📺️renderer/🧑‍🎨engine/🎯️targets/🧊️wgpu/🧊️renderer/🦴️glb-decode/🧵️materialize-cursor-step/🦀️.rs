@@ -38,7 +38,7 @@ pub struct GlbMaterializeCursor {
     pub(super) decoded_texture: Option<DecodedReferenceImage>,
     texture_hash:semio_framework_hash::Sha256,
     pub(super) texture_digest:[u64;2],
-    pub(super) texture_png:Option<semio_framework_pixels::png_decoding::PngDecodeJob>,
+    pub(super) texture_png:OriginalPngTexture,
     pub(super) texture_submission:Option<semio_framework_async::Job>,
     pub(super) texture_worker:Option<Arc<Mutex<Option<Option<semio_framework_pixels::RasterImage>>>>>,
     pub(super) texture_cancelled:Arc<AtomicBool>,
@@ -58,12 +58,39 @@ pub struct GlbMaterializeCursor {
 }
 
 impl GlbMaterializeCursor {
+    pub fn original_png_pending(&self)->bool{self.texture_png.pending()}
+    pub fn original_png_source(&self)->Option<&[u8]>{self.texture_png.source()}
+    pub fn close_original_png(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{self.texture_png.close(cx)}
+    pub fn original_png_close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.texture_png.close_demands(body)}
     pub fn new(schema: GlbSchemaOutput) -> Self {
         let plan = GlbInstancePlanCursor::new(&schema);
-        Self { schema, plan, write: None, lease: None, appearance: None, textures: Vec::new(), texture_bytes: Vec::new(), decoded_texture: None,texture_hash:Default::default(),texture_digest:[0;2],texture_png:None,texture_submission:None,texture_worker:None,texture_cancelled:Arc::new(AtomicBool::new(false)), texture: 0, uv_role:0, texture_role: 0, outline: None, phase: GlbMaterializePhase::Plan, bin_start: 0, bin_bytes: 0, instance: 0, item: 0, normal_substep: 0, normal_indices: [0; 3], normal_positions: [[0.0; 3]; 3], normal_face: [0.0; 3] }
+        Self { schema, plan, write: None, lease: None, appearance: None, textures: Vec::new(), texture_bytes: Vec::new(), decoded_texture: None,texture_hash:Default::default(),texture_digest:[0;2],texture_png:Default::default(),texture_submission:None,texture_worker:None,texture_cancelled:Arc::new(AtomicBool::new(false)), texture: 0, uv_role:0, texture_role: 0, outline: None, phase: GlbMaterializePhase::Plan, bin_start: 0, bin_bytes: 0, instance: 0, item: 0, normal_substep: 0, normal_indices: [0; 3], normal_positions: [[0.0; 3]; 3], normal_face: [0.0; 3] }
     }
 
-    pub fn step(&mut self, owner: &RendererAssetFetchOwner, pages: &RendererAssetPageIndex) -> Result<bool, &'static str> {
+    pub fn step(&mut self, owner: &RendererAssetFetchOwner, pages: &RendererAssetPageIndex,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        let invalid=|message|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,message);
+        if matches!(self.phase,GlbMaterializePhase::TextureBytes)&&self.png_source_ready().map_err(invalid)?{
+            if !self.texture_png.admit(&mut self.texture_bytes,cx)?{return Ok(false)}
+            let digest=std::mem::take(&mut self.texture_hash).finalize();self.texture_digest=[u64::from_be_bytes(digest[..8].try_into().unwrap()),u64::from_be_bytes(digest[8..16].try_into().unwrap())];self.phase=GlbMaterializePhase::TextureDecode;self.item=0;return Ok(false)
+        }
+        if matches!(self.phase,GlbMaterializePhase::TextureDecode)&&self.texture_png.pending(){
+            if self.decoded_texture.is_some(){self.texture_png.close(cx)?;return Ok(false)}
+            if self.texture_png.advance(cx)?{self.texture_png.take_image(&mut self.decoded_texture,self.texture_digest,cx)?;}return Ok(false)
+        }
+        self.step_value(owner,pages).map_err(|message|invalid(message).into())
+    }
+
+    fn png_source_ready(&self)->Result<bool,&'static str>{
+        if self.texture==self.schema.texture_len{return Ok(false)}
+        let required=self.schema.materials[..usize::from(self.schema.material_len)].iter().flatten().any(|material|if self.texture_role==0{material.base_color_texture==Some(self.texture)||material.additional_textures[3]==Some(self.texture)}else{material.additional_textures[..3].contains(&Some(self.texture))});
+        if !required{return Ok(false)}
+        let texture=self.schema.textures.get(usize::from(self.texture)).and_then(Option::as_ref).ok_or("GLB materializer lost a texture schema")?;
+        let image=self.schema.images.get(usize::from(texture.source.ok_or("GLB texture lost its image source")?)).and_then(Option::as_ref).ok_or("GLB materializer lost an image schema")?;
+        let view=self.schema.views.get(usize::from(image.view.ok_or("GLB image lost its embedded bufferView")?)).and_then(Option::as_ref).ok_or("GLB materializer lost an image bufferView")?;
+        Ok(image.mime==1&&self.item==view.byte_length)
+    }
+
+    fn step_value(&mut self, owner: &RendererAssetFetchOwner, pages: &RendererAssetPageIndex) -> Result<bool, &'static str> {
         match self.phase {
             GlbMaterializePhase::Plan => {
                 if self.plan.step(&self.schema)? {
@@ -122,10 +149,10 @@ impl GlbMaterializeCursor {
                 }
                 let cursor = usize::try_from(self.item).map_err(|_| "GLB image cursor exceeded address credits")?;
                 if cursor == expected {
+                    if image.mime==1{return Err("GLB PNG source escaped its original decoder admission")}
                     let digest=std::mem::take(&mut self.texture_hash).finalize();self.texture_digest=[u64::from_be_bytes(digest[..8].try_into().unwrap()),u64::from_be_bytes(digest[8..16].try_into().unwrap())];
                     let bytes=std::mem::take(&mut self.texture_bytes);
-                    if image.mime==1 {self.texture_png=Some(semio_framework_pixels::png_decoding::PngDecodeJob::new(semio_framework_pixels::png_decoding::PngDecodeInput{data:Arc::new(bytes),max_pixels:16_777_216,max_bytes:16_000_000,max_chunks:65_536}).map_err(|_|"GLB owned PNG texture decoder refused its input")?);}
-                    else {let worker=Arc::new(Mutex::new(None));let output=worker.clone();let canceled=self.texture_cancelled.clone();self.texture_submission=Some(Box::new(move||{let image=if canceled.load(Ordering::Acquire){None}else{infinite_world::world::decode_mesh_surface_image_bytes(&bytes)};*output.lock().unwrap_or_else(|poisoned|poisoned.into_inner())=Some(image);}));self.texture_worker=Some(worker);}
+                    let worker=Arc::new(Mutex::new(None));let output=worker.clone();let canceled=self.texture_cancelled.clone();self.texture_submission=Some(Box::new(move||{let image=if canceled.load(Ordering::Acquire){None}else{infinite_world::world::decode_mesh_surface_image_bytes(&bytes)};*output.lock().unwrap_or_else(|poisoned|poisoned.into_inner())=Some(image);}));self.texture_worker=Some(worker);
                     self.phase = GlbMaterializePhase::TextureDecode;
                     self.item = 0;
                     return Ok(false);
@@ -146,8 +173,7 @@ impl GlbMaterializeCursor {
             GlbMaterializePhase::TextureDecode => {
                 if self.decoded_texture.is_none(){
                     if let Some(submission)=self.texture_submission.take(){if let Err(refusal)=renderer_worker_pool().try_submit(semio_framework_async::Lane::Maintenance,submission){self.texture_submission=Some(refusal.into_job());}return Ok(false)}
-                    let image=if let Some(job)=self.texture_png.as_mut(){if !job.advance(4096).map_err(|_|"GLB owned PNG decode failed")?.done{return Ok(false)}self.texture_png.take().unwrap().into_result().map_err(|_|"GLB owned PNG decode failed")?}
-                    else {let worker=self.texture_worker.as_ref().ok_or("GLB texture decoder owner was lost")?;let image=worker.lock().map_err(|_|"GLB texture decoder lock failed")?.take();let Some(image)=image else{return Ok(false)};self.texture_worker=None;image.ok_or("GLB owned JPEG decode failed")?};
+                    let worker=self.texture_worker.as_ref().ok_or("GLB texture decoder owner was lost")?;let image=worker.lock().map_err(|_|"GLB texture decoder lock failed")?.take();let Some(image)=image else{return Ok(false)};self.texture_worker=None;let image=image.ok_or("GLB owned JPEG decode failed")?;
                     self.decoded_texture=Some(DecodedReferenceImage{width:image.width,height:image.height,source_digest:self.texture_digest,pixels:image.pixels});return Ok(false)
                 }
                 let decoded = self.decoded_texture.take().ok_or("GLB materializer lost its decoded texture")?;

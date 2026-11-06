@@ -97,7 +97,7 @@ impl RasterImageContentEquality {
 
 /// 🧵️ Incremental SHA-256 of the same decoded fields used by Raster asset identities.
 pub struct RasterImageContentHash {
-    hash: framework_hash::Sha256,
+    hash: semio_framework_hash::Sha256,
     field: usize,
     offset: usize,
     binding: Option<usize>,
@@ -107,7 +107,7 @@ pub struct RasterImageContentHash {
 impl Default for RasterImageContentHash { fn default() -> Self { Self::new() } }
 
 impl RasterImageContentHash {
-    pub fn new() -> Self { Self { hash: framework_hash::Sha256::new(), field: 0, offset: 0, binding: None, done: false } }
+    pub fn new() -> Self { Self { hash: semio_framework_hash::Sha256::new(), field: 0, offset: 0, binding: None, done: false } }
 
     pub fn advance(&mut self, image: &SemioImageSnapshot, budget: usize) -> Result<RasterImageHashProgress,&'static str> {
         if budget == 0 || budget > 32_768 { return Err("invalid image hash byte grant"); }

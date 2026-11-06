@@ -1,0 +1,2 @@
+import {readFileSync,writeFileSync} from "node:fs";
+const path="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🍞️bun/🟦️.ts",source=readFileSync(path,"utf8"),before="!group||group.door.digest!==expected",after="!group||group.door.entry!==value.entry||group.door.digest!==expected";if(!source.includes(before))throw Error("Warm identity seam changed");writeFileSync(path,source.replace(before,after));

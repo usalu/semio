@@ -302,7 +302,7 @@ fn close_ephemeral_publication(publication: &mut ArtifactEphemeralOneItemPublica
     for _ in 0..64 {
         let grant = ephemeral_test_close_grant();
         publication.retirement_demands(grant.maximum_copy_bytes).expect("actual cleanup frontier is fallible, not grant authority");
-        let step = publication.close_step(grant).expect("ephemeral publication closes");
+        let step = publication.close_step(grant).result.expect("ephemeral publication closes");
         assert!(step.progress().fits(grant.retained_grant()));
         if matches!(step, RetainedCloneStep::Complete(_)) {
             assert!(publication.terminal_is_empty());

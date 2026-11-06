@@ -1,0 +1,45 @@
+{
+  "bytes": [
+    1,
+    2,
+    3,
+    255
+  ],
+  "document": "data=\"AQID/w==\"\n",
+  "cases": [
+    {
+      "bytes": [],
+      "document": "data=\"\"\n"
+    },
+    {
+      "bytes": [
+        1
+      ],
+      "document": "data=\"AQ==\"\n"
+    },
+    {
+      "bytes": [
+        1,
+        2
+      ],
+      "document": "data=\"AQI=\"\n"
+    },
+    {
+      "bytes": [
+        1,
+        2,
+        3
+      ],
+      "document": "data=\"AQID\"\n"
+    },
+    {
+      "bytes": [
+        1,
+        2,
+        3,
+        255
+      ],
+      "document": "data=\"AQID/w==\"\n"
+    }
+  ]
+}

@@ -78,7 +78,7 @@ impl crate::retirement::RetireOwned for OriginalValueEquality{
 }
 impl crate::retirement::RetirementCursor for EqualityRetirement{
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.0.next_close_demands(body)}
- fn close_step(&mut self,g:RetainedCloneGrant)->crate::retirement::RetirementStep{use crate::retirement::RetirementStep;let turn=self.0.close_step(g);match turn.result{Err(error)=>RetirementStep::Failure(error,turn.work),Ok(RetainedCloneStep::Complete(p))if p==RetainedCloneProgress::default()=>RetirementStep::Complete(turn.work),Ok(step)if step.progress()!=RetainedCloneProgress::default()||turn.work!=0=>RetirementStep::Progress(step.progress(),turn.work),Ok(_)=>RetirementStep::BudgetExhausted}}
+ fn close_step(&mut self,g:RetainedCloneGrant)->crate::retirement::RetirementStep{use crate::retirement::RetirementStep;let turn=self.0.close_step(g);match turn.result{Err(error)=>RetirementStep::Failure(error.into(),turn.work),Ok(RetainedCloneStep::Complete(p))if p==RetainedCloneProgress::default()=>RetirementStep::Complete(turn.work),Ok(step)if step.progress()!=RetainedCloneProgress::default()||turn.work!=0=>RetirementStep::Progress(step.progress(),turn.work),Ok(_)=>RetirementStep::BudgetExhausted}}
  fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.next_close_demands(0)?.copy_bytes)}
  fn allows_admitted_narrow_work(&self)->bool{true}

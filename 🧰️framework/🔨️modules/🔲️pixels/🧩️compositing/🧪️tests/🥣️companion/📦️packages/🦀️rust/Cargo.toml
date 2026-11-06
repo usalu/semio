@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-pixels-compositing-tests"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Compositing, frame, layer and shared physical retirement laws"
+publish = false
+
+[package.metadata.semio]
+role = "framework"
+id = "pixels-compositing-tests"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-pixels = { path = "../../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-test-fixtures = { path = "../../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-value = { path = "../../../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-2d = { path = "../../../../../../◻️2d/📦️packages/🦀️rust" }
+semio-framework-trace = { path = "../../../../../../⏱️trace/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+png = "0.17.16"

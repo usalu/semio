@@ -13,7 +13,8 @@ pub struct RetainedHistoryOpMetaPartial{
  pub op_id:Option<String>,pub dependencies:Option<Vec<String>>,pub pending_dependency:Option<String>,pub base_version:Option<u64>,pub author_text:Option<String>,pub author_id:Option<SharedUtf8>,pub hlt:Option<(u64,i64,u64)>,pub undo_policy:Option<u8>,pub payload_hash:Option<[u8;32]>,pub group_id:Option<String>,pub origin:Option<MutationOrigin>,pub messages:Option<Vec<HistoryMessage>>,pub pending_message:Option<HistoryMessage>,pub transaction_id:Option<String>,pub transaction_tool:Option<String>,
 }
 #[derive(Debug,semio_framework_value::RetireOwned)]
-pub enum RetainedHistoryOpMetaFault{Value(ValueError),Json(JsonError),Native(semio_framework_value_native_owned::OriginalReceivingPrimary)}
+pub enum RetainedHistoryOpMetaFault{Value(ValueError),Json(JsonError),Native(semio_framework_value_native_owned::OriginalReceivingPrimary),Retirement(semio_framework_value::OriginalRetirementFailure)}
+impl From<semio_framework_value::OriginalRetirementFailure> for RetainedHistoryOpMetaFault{fn from(error:semio_framework_value::OriginalRetirementFailure)->Self{Self::Retirement(error)}}
 impl From<ValueError> for RetainedHistoryOpMetaFault{fn from(error:ValueError)->Self{Self::Value(error)}}
 impl From<JsonError> for RetainedHistoryOpMetaFault{fn from(error:JsonError)->Self{Self::Json(error)}}
 impl From<semio_framework_value_native_owned::OriginalReceivingPrimary> for RetainedHistoryOpMetaFault{fn from(error:semio_framework_value_native_owned::OriginalReceivingPrimary)->Self{Self::Native(error)}}

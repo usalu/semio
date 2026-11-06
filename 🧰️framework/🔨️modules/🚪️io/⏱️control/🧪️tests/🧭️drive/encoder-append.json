@@ -1,0 +1,7 @@
+{
+  "contract": "semio.snapshot.original-encoder-append.v1",
+  "text": "雪",
+  "expectedWork": 1,
+  "expectedCopiedBytes": 3,
+  "expectedKind": "canceled"
+}

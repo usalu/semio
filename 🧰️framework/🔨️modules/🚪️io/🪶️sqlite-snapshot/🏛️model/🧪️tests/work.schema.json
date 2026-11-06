@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["grant", "stages", "accepted", "actual", "mismatchDeclared", "postRefusal", "output"],
+  "additionalProperties": false,
+  "properties": {
+    "grant": {"type": "integer", "minimum": 0},
+    "stages": {"type": "array", "items": {"type": "integer", "minimum": 0}},
+    "accepted": {"type": "array", "items": {"type": "boolean"}},
+    "actual": {"type": "integer", "minimum": 0},
+    "mismatchDeclared": {"type": "integer", "minimum": 1},
+    "postRefusal": {"type": "string"},
+    "output": {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": 255}}
+  }
+}

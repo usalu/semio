@@ -283,7 +283,7 @@ impl ToolJobFactory for Fem3dRetainedCommandJobFactory {
         fem3d_retained_contract()
     }
 
-    semio_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: FEM3D_RETAINED_RAW_BYTES, checkpoint_resume: true);
+    semio_framework_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: FEM3D_RETAINED_RAW_BYTES, checkpoint_resume: true);
 
     
 }

@@ -1,0 +1,2 @@
+import {readFileSync,writeFileSync} from "node:fs";
+const path="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🧪️tests/🔥️warm/🟦️.ts",source=readFileSync(path,"utf8"),before='door:{digest:process.env.TEST_EXPECTED}',after='door:{entry:"fixture/entry.ts",digest:process.env.TEST_EXPECTED}';if(!source.includes(before))throw Error("Fixture changed");writeFileSync(path,source.replace(before,after));

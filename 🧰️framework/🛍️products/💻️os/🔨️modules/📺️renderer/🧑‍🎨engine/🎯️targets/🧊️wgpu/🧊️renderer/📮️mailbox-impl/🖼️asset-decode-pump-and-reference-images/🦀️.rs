@@ -4,26 +4,26 @@ use super::*;
 
 //#region 📮️RuntimeMailbox
 impl<R: MailboxRuntime> RuntimeMailbox<R> {
-    pub(super) fn pump_renderer_asset_decode_step(&self) -> RendererAssetDecodeTurnKind {
-        let Ok(mut probe_slot) = self.0.asset_probe.try_lock() else { return RendererAssetDecodeTurnKind::Pending };
+    pub(super) fn pump_renderer_asset_decode_step(&self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<RendererAssetDecodeTurnKind, semio_framework_job::OriginalTurnFailure> {
+        let Ok(mut probe_slot) = self.0.asset_probe.try_lock() else { return Ok(RendererAssetDecodeTurnKind::Pending)};
         if probe_slot.is_none() {
-            let Some(owner) = self.take_completed_renderer_asset_step() else { return RendererAssetDecodeTurnKind::Idle };
+            let Some(owner) = self.take_completed_renderer_asset_step() else { return Ok(RendererAssetDecodeTurnKind::Idle)};
             *probe_slot = Some(RendererAssetProbe::new(owner));
-            return RendererAssetDecodeTurnKind::Pending;
+            return Ok(RendererAssetDecodeTurnKind::Pending);
         }
         let probe = probe_slot.as_mut().expect("asset probe initialized above");
         if matches!(probe.phase, RendererAssetProbePhase::Ready) {
             match self.renderer_asset_current(probe.owner()) {
-                None => return RendererAssetDecodeTurnKind::Pending,
+                None => return Ok(RendererAssetDecodeTurnKind::Pending),
                 Some(false) => {
                     probe.begin_close();
-                    return RendererAssetDecodeTurnKind::Cancelled;
+                    return Ok(RendererAssetDecodeTurnKind::Cancelled);
                 }
                 Some(true) => {}
             }
             log_debug_diagnostic(&format!("[TRACE] asset ready kind={:?} url={} bytes={}", probe.owner().kind(), probe.owner().url(), probe.owner().received_bytes()));
             if matches!(probe.owner(), RendererAssetFetchOwner::Shared(_)) && matches!(probe.owner().kind(), WorldAssetRequestKind::Glb) {
-                let Some(asset) = probe.take_ready_mesh_asset() else { return RendererAssetDecodeTurnKind::Pending };
+                let Some(asset) = probe.take_ready_mesh_asset() else { return Ok(RendererAssetDecodeTurnKind::Pending)};
                 match semio_renderer_wgpu_icon_host::icon_export::asset::publish(probe.owner().owner().token(), asset) {
                     Ok(()) => probe.finish_ready_mesh(),
                     Err(asset) => {
@@ -31,7 +31,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
                         probe.begin_close();
                     }
                 }
-                return RendererAssetDecodeTurnKind::Published;
+                return Ok(RendererAssetDecodeTurnKind::Published);
             }
             if let Some(bytes) = Self::take_shared_asset_bytes(probe) {
                 match probe.owner().kind() {
@@ -40,20 +40,20 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
                     _ => {}
                 }
                 probe.begin_close();
-                return RendererAssetDecodeTurnKind::Published;
+                return Ok(RendererAssetDecodeTurnKind::Published);
             }
             let surface_token = match probe.owner() {
                 RendererAssetFetchOwner::World { surface_token, .. } => *surface_token,
-                RendererAssetFetchOwner::Shared(_) => return RendererAssetDecodeTurnKind::Pending,
+                RendererAssetFetchOwner::Shared(_) => return Ok(RendererAssetDecodeTurnKind::Pending),
             };
             let generation_is_live = {
-                let Ok(runtime) = self.try_lock() else { return RendererAssetDecodeTurnKind::Pending };
-                let Some(interaction) = runtime.interaction() else { return RendererAssetDecodeTurnKind::Pending };
+                let Ok(runtime) = self.try_lock() else { return Ok(RendererAssetDecodeTurnKind::Pending)};
+                let Some(interaction) = runtime.interaction() else { return Ok(RendererAssetDecodeTurnKind::Pending)};
                 interaction.shell.surfaces.world3d_states.get_token(surface_token).is_some()
             };
             if !generation_is_live {
                 probe.begin_close();
-                return RendererAssetDecodeTurnKind::Pending;
+                return Ok(RendererAssetDecodeTurnKind::Pending);
             }
             if let WorldAssetRequestKind::Terrain { z, x, y } = probe.owner().kind() {
                 let bytes = match collect_world3d_asset_bytes(match probe.owner_mut() {
@@ -62,26 +62,26 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
                     Ok(bytes) => bytes,
                     Err(_) => {
                         probe.begin_close();
-                        return RendererAssetDecodeTurnKind::Pending;
+                        return Ok(RendererAssetDecodeTurnKind::Pending);
                     }
                 };
                 let Ok(mut runtime) = self.try_lock() else {
-                    return RendererAssetDecodeTurnKind::Pending;
+                    return Ok(RendererAssetDecodeTurnKind::Pending);
                 };
                 let Some(interaction) = runtime.interaction_mut() else {
-                    return RendererAssetDecodeTurnKind::Pending;
+                    return Ok(RendererAssetDecodeTurnKind::Pending);
                 };
                 let Some(state) = interaction.shell.surfaces.world3d_states.get_token_mut(surface_token) else {
                     probe.begin_close();
-                    return RendererAssetDecodeTurnKind::Pending;
+                    return Ok(RendererAssetDecodeTurnKind::Pending);
                 };
                 if world3d_asset_cancellation_requested(&state.assets, probe.owner().owner().token()) {
                     probe.begin_close();
-                    return RendererAssetDecodeTurnKind::Cancelled;
+                    return Ok(RendererAssetDecodeTurnKind::Cancelled);
                 }
                 apply_world3d_terrain_tile_bytes(&mut state.terrain, z, x, y, &bytes);
                 probe.begin_close();
-                return RendererAssetDecodeTurnKind::Published;
+                return Ok(RendererAssetDecodeTurnKind::Published);
             }
             #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
             if matches!(probe.owner().kind(), WorldAssetRequestKind::ReferenceImage) {
@@ -91,69 +91,69 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
                 if let Some(lease) = staged {
                     let Ok(mut runtime) = self.try_lock() else {
                         self.restore_staged_reference_image(token, url, lease);
-                        return RendererAssetDecodeTurnKind::Pending;
+                        return Ok(RendererAssetDecodeTurnKind::Pending);
                     };
                     let Some(interaction) = runtime.interaction_mut() else {
                         self.restore_staged_reference_image(token, url, lease);
-                        return RendererAssetDecodeTurnKind::Pending;
+                        return Ok(RendererAssetDecodeTurnKind::Pending);
                     };
                     let Some(state) = interaction.shell.surfaces.world3d_states.get_token_mut(surface_token) else {
                         probe.begin_close();
-                        return RendererAssetDecodeTurnKind::Pending;
+                        return Ok(RendererAssetDecodeTurnKind::Pending);
                     };
                     if world3d_asset_cancellation_requested(&state.assets, probe.owner().owner().token()) {
                         probe.begin_close();
-                        return RendererAssetDecodeTurnKind::Cancelled;
+                        return Ok(RendererAssetDecodeTurnKind::Cancelled);
                     }
                     let _ = apply_decoded_reference_raster(&mut state.session, &mut state.authority, &mut state.scene, &mut state.assets, &url, lease);
                     probe.begin_close();
-                    return RendererAssetDecodeTurnKind::Published;
+                    return Ok(RendererAssetDecodeTurnKind::Published);
                 }
                 #[cfg(target_arch = "wasm32")]
                 {
-                    let Ok(mut runtime) = self.try_lock() else { return RendererAssetDecodeTurnKind::Pending };
-                    let Some(interaction) = runtime.interaction_mut() else { return RendererAssetDecodeTurnKind::Pending };
+                    let Ok(mut runtime) = self.try_lock() else { return Ok(RendererAssetDecodeTurnKind::Pending)};
+                    let Some(interaction) = runtime.interaction_mut() else { return Ok(RendererAssetDecodeTurnKind::Pending)};
                     let Some(state) = interaction.shell.surfaces.world3d_states.get_token_mut(surface_token) else {
                         probe.begin_close();
-                        return RendererAssetDecodeTurnKind::Pending;
+                        return Ok(RendererAssetDecodeTurnKind::Pending);
                     };
                     if world3d_asset_cancellation_requested(&state.assets, probe.owner().owner().token()) {
                         probe.begin_close();
-                        return RendererAssetDecodeTurnKind::Cancelled;
+                        return Ok(RendererAssetDecodeTurnKind::Cancelled);
                     }
                     mark_world3d_asset_miss(&mut state.assets, &url);
                     probe.begin_close();
-                    return RendererAssetDecodeTurnKind::Published;
+                    return Ok(RendererAssetDecodeTurnKind::Published);
                 }
                 #[cfg(not(target_arch = "wasm32"))]
                 {
-                    return self.pump_native_reference_decode(probe, surface_token, token, url);
+                    return Ok(self.pump_native_reference_decode(probe, surface_token, token, url));
                 }
             }
-            let Some(asset) = probe.take_ready_mesh_asset() else { return RendererAssetDecodeTurnKind::Pending };
+            let Some(asset) = probe.take_ready_mesh_asset() else { return Ok(RendererAssetDecodeTurnKind::Pending)};
             let Ok(mut runtime) = self.try_lock() else {
                 probe.restore_ready_mesh_asset(asset);
-                return RendererAssetDecodeTurnKind::Pending;
+                return Ok(RendererAssetDecodeTurnKind::Pending);
             };
             let Some(interaction) = runtime.interaction_mut() else {
                 probe.restore_ready_mesh_asset(asset);
-                return RendererAssetDecodeTurnKind::Pending;
+                return Ok(RendererAssetDecodeTurnKind::Pending);
             };
             let Some(state) = interaction.shell.surfaces.world3d_states.get_token_mut(surface_token) else {
                 probe.restore_ready_mesh_asset(asset);
                 probe.begin_close();
-                return RendererAssetDecodeTurnKind::Pending;
+                return Ok(RendererAssetDecodeTurnKind::Pending);
             };
             if world3d_asset_cancellation_requested(&state.assets, probe.owner().owner().token()) {
                 probe.restore_ready_mesh_asset(asset);
                 probe.begin_close();
-                return RendererAssetDecodeTurnKind::Cancelled;
+                return Ok(RendererAssetDecodeTurnKind::Cancelled);
             }
             match publish_world3d_asset_mesh(&mut state.session, &mut state.interaction, &mut state.scene, &mut state.assets, probe.owner().url(), asset) {
                 Ok(()) => {
                     log_debug_diagnostic(&format!("[TRACE] asset mesh published url={}", probe.owner().url()));
                     probe.finish_ready_mesh();
-                    return RendererAssetDecodeTurnKind::Published;
+                    return Ok(RendererAssetDecodeTurnKind::Published);
                 }
                 Err(rejected) => {
                     let stale = rejected.fault == WorldDynamicFault::StaleToken;
@@ -163,43 +163,43 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
                         drop(runtime);
                         drop(probe_slot);
                         self.record_frame_fault("asset mesh publication generation/revision witness was stale");
-                        return RendererAssetDecodeTurnKind::Fault;
+                        return Ok(RendererAssetDecodeTurnKind::Fault);
                     }
-                    return RendererAssetDecodeTurnKind::Pending;
+                    return Ok(RendererAssetDecodeTurnKind::Pending);
                 }
             }
         }
         if matches!(probe.phase, RendererAssetProbePhase::Closing) {
-            if !probe.close_step() {
-                return RendererAssetDecodeTurnKind::Pending;
+            if !probe.close_step(cx)? {
+                return Ok(RendererAssetDecodeTurnKind::Pending);
             }
-            let Some(owner) = probe.take_terminal_owner() else { return RendererAssetDecodeTurnKind::Pending };
+            let Some(owner) = probe.take_terminal_owner() else { return Ok(RendererAssetDecodeTurnKind::Pending)};
             match self.finish_renderer_asset_owner(owner, probe.rejection.clone()) {
                 Ok(()) => {
                     *probe_slot = None;
-                    return RendererAssetDecodeTurnKind::Cancelled;
+                    return Ok(RendererAssetDecodeTurnKind::Cancelled);
                 }
                 Err(owner) => {
                     probe.owner = Some(owner);
-                    return RendererAssetDecodeTurnKind::Pending;
+                    return Ok(RendererAssetDecodeTurnKind::Pending);
                 }
             }
         }
-        RendererAssetDecodeTurnKind::Pending
+        Ok(RendererAssetDecodeTurnKind::Pending)
     }
 
-    fn close_renderer_asset_probe_step(&self) -> bool {
-        let Ok(mut probe_slot) = self.0.asset_probe.try_lock() else { return false };
-        let Some(probe) = probe_slot.as_mut() else { return true };
-        if !probe.close_step() {
-            return false;
+    fn close_renderer_asset_probe_step(&self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        let Ok(mut probe_slot) = self.0.asset_probe.try_lock() else { return Ok(false)};
+        let Some(probe) = probe_slot.as_mut() else { return Ok(true)};
+        if !probe.close_step(cx)? {
+            return Ok(false);
         }
-        let Some(owner) = probe.take_terminal_owner() else { return false };
+        let Some(owner) = probe.take_terminal_owner() else { return Ok(false)};
         match self.finish_renderer_asset_owner(owner, probe.rejection.clone()) {
             Ok(()) => *probe_slot = None,
             Err(owner) => probe.owner = Some(owner),
         }
-        false
+        Ok(false)
     }
 
     pub fn return_renderer_asset_owner(&self, fetch: RendererAssetFetchOwner) -> Result<(), RendererAssetFetchOwner> {
@@ -263,57 +263,57 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     }
 
     /// 🧹️ Keeps one closing component's asset authority reachable until its exact borrowers return.
-    pub fn close_component_asset_step(&self, target: &semio_renderer_wgpu_contracts::ScenePointerTarget) -> bool {
+    pub fn close_component_asset_step(&self, target: &semio_renderer_wgpu_contracts::ScenePointerTarget, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         if !matches!(target.kind, semio_ui_declaration::ui::SurfaceKind::World3d | semio_ui_declaration::ui::SurfaceKind::IconRender) {
-            return true;
+            return Ok(true);
         }
         let surface_token = {
-            let Ok(mut runtime) = self.try_lock() else { return false };
-            let Some(interaction) = runtime.interaction_mut() else { return false };
-            let Some(token) = interaction.shell.surfaces.world3d_states.token(&target.host_id) else { return true };
-            let Some(state) = interaction.shell.surfaces.world3d_states.get_token_mut(token) else { return false };
+            let Ok(mut runtime) = self.try_lock() else { return Ok(false)};
+            let Some(interaction) = runtime.interaction_mut() else { return Ok(false)};
+            let Some(token) = interaction.shell.surfaces.world3d_states.token(&target.host_id) else { return Ok(true)};
+            let Some(state) = interaction.shell.surfaces.world3d_states.get_token_mut(token) else { return Ok(false)};
             infinite_world::world::begin_world3d_asset_close(&mut state.assets);
             token
         };
         #[cfg(not(target_arch = "wasm32"))]
         if !matches!(self.cancel_native_asset_transport_step(Some(surface_token), None), NativeAssetTransportCloseStep::Terminal) {
-            return false;
+            return Ok(false);
         }
         {
-            let Ok(session) = self.0.asset_decode_session.try_lock() else { return false };
+            let Ok(session) = self.0.asset_decode_session.try_lock() else { return Ok(false)};
             if let Some(session) = session.as_ref().filter(|session| session.surface_token == Some(surface_token)) {
                 session.cancel();
-                return false;
+                return Ok(false);
             }
         }
-        let Ok(mut probe_slot) = self.0.asset_probe.try_lock() else { return false };
+        let Ok(mut probe_slot) = self.0.asset_probe.try_lock() else { return Ok(false)};
         if let Some(probe) = probe_slot.as_mut().filter(|probe| matches!(probe.owner(), RendererAssetFetchOwner::World { surface_token: token, .. } if *token == surface_token)) {
             #[cfg(not(target_arch = "wasm32"))]
             {
                 if !self.close_native_reference_decode_step(Some(probe.owner().owner().token())) {
-                    return false;
+                    return Ok(false);
                 }
             }
             #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
             self.discard_staged_reference_image(probe.owner().owner().token());
-            if !probe.close_step() {
-                return false;
+            if !probe.close_step(cx)? {
+                return Ok(false);
             }
-            let Some(owner) = probe.take_terminal_owner() else { return false };
+            let Some(owner) = probe.take_terminal_owner() else { return Ok(false)};
             match self.finish_renderer_asset_owner(owner, probe.rejection.clone()) {
                 Ok(()) => *probe_slot = None,
                 Err(owner) => {
                     probe.owner = Some(owner);
-                    return false;
+                    return Ok(false);
                 }
             }
-            return false;
+            return Ok(false);
         }
         drop(probe_slot);
-        let Ok(mut runtime) = self.try_lock() else { return false };
-        let Some(interaction) = runtime.interaction_mut() else { return false };
-        let Some(state) = interaction.shell.surfaces.world3d_states.get_token_mut(surface_token) else { return false };
-        infinite_world::world::close_world3d_asset_step(&mut state.assets)
+        let Ok(mut runtime) = self.try_lock() else { return Ok(false)};
+        let Some(interaction) = runtime.interaction_mut() else { return Ok(false)};
+        let Some(state) = interaction.shell.surfaces.world3d_states.get_token_mut(surface_token) else { return Ok(false)};
+        Ok(infinite_world::world::close_world3d_asset_step(&mut state.assets))
     }
 
     pub fn close_renderer_asset_step(&self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
@@ -330,7 +330,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         if !self.close_native_reference_decode_step(None) {
             return Ok(false);
         }
-        if !self.close_renderer_asset_probe_step() {
+        if !self.close_renderer_asset_probe_step(cx)? {
             return Ok(false);
         }
         if self.0.native_asset_fetching.load(Ordering::Acquire) {

@@ -7,11 +7,13 @@ import {UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
 const policy=UNIT_CACHE_POLICY_V1,layout=policy.layout,idPattern=/^[a-z0-9]{1,12}$/u;
 /** 🪪️ Who a lane belongs to: the agent session address and the agent, recorded in the lane's metadata so caches and cleanup can be attributed. */
 export type LaneOwnerV1=Readonly<{session:string;agent:string}>;
+/** 🪪️ Names a target namespace by its complete authored physical layout. */
+export function laneTargetNamespaceV1(input:Readonly<{version:number;build:string;target:string}>):string{return input.target+"-"+createHash("sha256").update(JSON.stringify({version:input.version,build:input.build,target:input.target})).digest("hex").slice(0,8)}
 /** 🗺️ The directories of one lane inside a cache root; compact on purpose so Windows paths stay short. */
 export function lanePathsV1(root:string,id:string){
  if(!idPattern.test(id))throw Error("Invalid Cargo lane identifier");
  const base=join(root,layout.lanes,id);
- return Object.freeze({id,base,target:join(base,layout.target),build:base,live:join(base,layout.live),stamps:join(base,layout.stamps),metadata:join(base,layout.metadata),size:join(base,layout.size)});
+ return Object.freeze({id,base,target:join(base,laneTargetNamespaceV1({version:layout.targetIdentityVersion,build:".",target:layout.target})),build:base,live:join(base,layout.live),stamps:join(base,layout.stamps),metadata:join(base,layout.metadata),size:join(base,layout.size)});
 }
 
 /** 🔑️ The affinity key of a crate set: the same sorted, de-duplicated names always give the same key, an empty set (a whole-workspace command) gives `*`. */
@@ -70,7 +72,7 @@ function treeBytes(path:string,limit:{files:number}):number{
 /** 📁️ The incremental-compilation directories of a lane's build directory (`<profile>/incremental` and `<triple>/<profile>/incremental`). */
 export function incrementalDirectoriesV1(build:string):string[]{
  const found:string[]=[];
- const walk=(directory:string,depth:number)=>{let entries;try{entries=readdirSync(directory,{withFileTypes:true});}catch{return;}for(const entry of entries){if(!entry.isDirectory()||depth===0&&[layout.target,layout.live,layout.stamps].includes(entry.name))continue;const path=join(directory,entry.name);if(entry.name==="incremental")found.push(path);else if(depth<2)walk(path,depth+1);}};
+ const walk=(directory:string,depth:number)=>{let entries;try{entries=readdirSync(directory,{withFileTypes:true});}catch{return;}for(const entry of entries){if(!entry.isDirectory()||depth===0&&[layout.target,laneTargetNamespaceV1({version:layout.targetIdentityVersion,build:".",target:layout.target}),layout.live,layout.stamps].includes(entry.name))continue;const path=join(directory,entry.name);if(entry.name==="incremental")found.push(path);else if(depth<2)walk(path,depth+1);}};
  walk(build,0);return found;
 }
 
@@ -89,11 +91,11 @@ export function listLanesV1(root:string,nowMs:number):{id:string;bytes:number;in
 export function measureLaneBytesV1(root:string,id:string):number{return treeBytes(lanePathsV1(root,id).base,{files:2_000_000});}
 
 /** 🗑️ Removes a whole lane or only its incremental directories. It takes the lane's own claim first, so it can never race an acquirer, and refuses while the claim is held or a live marker exists; `beforeRemoval` runs for a whole lane under that claim, once the lane is known to be idle and before anything is deleted (the retention of what a holder that is gone left behind). */
-export function removeLaneV1(root:string,id:string,scope:"lane"|"incremental",nowMs:number,beforeRemoval?:(paths:ReturnType<typeof lanePathsV1>)=>void):boolean{
+export function removeLaneV1(root:string,id:string,scope:"lane"|"incremental",nowMs:number,beforeRemoval?:(paths:ReturnType<typeof lanePathsV1>)=>boolean|void):boolean{
  const paths=lanePathsV1(root,id),claim=tryClaimV1(join(root,layout.locks),"lane-"+id);if(!claim)return false;
  try{
   if(laneLiveV1(paths,nowMs))return false;
-  if(scope==="lane"){beforeRemoval?.(paths);rmSync(paths.base,{recursive:true,force:true});}else for(const directory of incrementalDirectoriesV1(paths.build))rmSync(directory,{recursive:true,force:true});
+  if(scope==="lane"){if(beforeRemoval?.(paths)===false)return false;rmSync(paths.base,{recursive:true,force:true});}else for(const directory of incrementalDirectoriesV1(paths.build))rmSync(directory,{recursive:true,force:true});
   return true;
  }finally{claim.release();}
 }

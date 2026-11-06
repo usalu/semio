@@ -1,0 +1,3 @@
+import {readFileSync,writeFileSync} from "node:fs";
+const test="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🧪️tests/🔥️warm/🟦️.ts",oracle=".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/RASTER-PLUGIN-END-TO-END/🔬️warm-oracle.ts";
+for(const [path,before,after] of [[test,"TEST_EXPECTED:hash(text)",'TEST_EXPECTED:row.pinMatches?hash(text):"0".repeat(64)'],[oracle,'SELECT CASE WHEN ? THEN 1 ELSE 0 END AS ready','SELECT CASE WHEN ?1 AND ?2 THEN 1 ELSE 0 END AS ready'],[oracle,'.get(row.includeWarm?1:0)', '.get(row.includeWarm?1:0,row.pinMatches?1:0)']] as const){const source=readFileSync(path,"utf8");if(!source.includes(before))throw Error("Warm law seam changed");writeFileSync(path,source.replace(before,after));}

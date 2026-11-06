@@ -1,0 +1,78 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "maximum",
+          "bytes",
+          "action",
+          "actual",
+          "quoteRefused",
+          "settlementRefused",
+          "spent",
+          "pending"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "maximum": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "action": {
+            "enum": [
+              "post",
+              "cancel",
+              "foreign",
+              "duplicate"
+            ]
+          },
+          "actual": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "quoteRefused": {
+            "type": "boolean"
+          },
+          "settlementRefused": {
+            "type": "boolean"
+          },
+          "spent": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "pending": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

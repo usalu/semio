@@ -1,0 +1,7 @@
+# Raster Original Image Source Census
+
+The actual editor package semio-s-artifact-raster-raster-editor source closure contains 191,038 bytes, 17 files and 2,124 active lines in production; feature artifact-app-testing alone gives the same result; artifact-app-testing plus test contains 206,726 bytes, 30 files and 2,262 active lines. The manifest declares no local rust-source-boundary. This is a source-reader census, not compiler admission.
+
+The new reserved-import Rust path is 125 Unicode scalar characters and 182 UTF-8 bytes including /home/deck/semio. Its structured-wire fixture is 148 characters and 205 bytes including that prefix. Both are below 256 on either measure.
+
+Payload birth uses one copied item and quotes the two fixed headers plus the actual shared allocation capacity. The first-party shared allocator computes the aligned Arc backing layout, attempts Arc::try_new_uninit, returns the original snapshot on refusal, and reports one copied item and its actual backing capacity after success. Original construction records reported retained capacity in the native decoder and reconciles physical progress. Mutation construction quotes two RasterMutation slots and one RasterLayerNode box, reports that capacity, and retains its output before reconciliation. No concrete additional accounting defect was established from the inspected source; synchronous decode remains its separately known open boundary. No native test was run.

@@ -1,0 +1,7 @@
+# Pixels Test Source Partition
+
+The full semio-framework-pixels-tests cfg(test) closure is 170,804 bytes / 37 files / 1,564 active lines, against 262,144 / 32 / 4,000. The frame wrapper and frame law are two source inputs, so moving them alone leaves 35 files and still refuses Source admission.
+
+A five-input partition is frames wrapper plus law and compositing wrapper plus law plus its directly included 🎟️work/📐️.json fixture. Frame laws use public pixels compositing frames, CompositeAffine and multiply, serde_json, and two JSON fixtures loaded at runtime by crate::text. Compositing tests need their existing RasterLease, RasterImage, PixelEditError, and retirement test witnesses Wallet, physical_wallet, funded_turn, funded_close_owned and observed; their independent librsvg expected blend fixture must remain accessible. A real shared test support owner or a deliberate independently executed retirement witness mount is needed. An affine-sampling split likewise references the retirement tests and testkit fields; relocating its wrapper and law alone does not carry its dependencies.
+
+The original companion manifest at 🔲️pixels/🧪️tests/🥣️companion/📦️packages/🦀️rust/Cargo.toml declares pixels with testkit, fixture-reader, serde_json, image and its other test owners. A separate registered companion must reproduce the relevant real dependencies and fixture reader, and its laws must still execute. No cap increase, production edit or native test was performed.

@@ -59,7 +59,7 @@ pub(super) async fn dispatch_turn_event<PA: PluginApp>(runtime: &PluginRuntime<P
             Event::SurfaceVisible { surface, body_key, view_state } => {
                 if let Some(instance) = parse_surface_instance(&surface) {
                     native_close_key(runtime, instance)?;
-                    semio_plugin_runtime_ops::ops_surface_render::plugin_mount_surface(runtime, instance, surface.clone(), body_key, &view_state).await?;
+                    semio_framework_plugin_runtime_ops::ops_surface_render::plugin_mount_surface(runtime, instance, surface.clone(), body_key, &view_state).await?;
                     let surface =
                         ui_contract::SurfaceId::try_from(surface).map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-capacity"), "surface id exceeds fixed text capacity"))?;
                     dirty.try_surface(instance, surface).map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.dirty-surface-capacity"), "fixed dirty surface authority is saturated"))?;
@@ -69,7 +69,7 @@ pub(super) async fn dispatch_turn_event<PA: PluginApp>(runtime: &PluginRuntime<P
                 if let Some(instance) = parse_surface_instance(&surface) {
                     original_receiving::forms::cancel_surface(instance,&surface);
                     if native_close_key(runtime, instance).is_ok() {
-                        semio_plugin_runtime_ops::ops_surface_render::plugin_hide_surface(runtime, instance, &surface).await?;
+                        semio_framework_plugin_runtime_ops::ops_surface_render::plugin_hide_surface(runtime, instance, &surface).await?;
                     }
                 }
             }
@@ -106,14 +106,14 @@ pub(super) async fn dispatch_turn_event<PA: PluginApp>(runtime: &PluginRuntime<P
             Event::Message { source: MessageEndpoint::Shell { instance }, payload } => {
                 if let Some(token) = semio_plugin_job::TypedOperationResultPage::renderer_ack_token(&payload) {
                     if instance.0.parse::<u32>().ok() == Some(token.receiver) {
-                        let _ = semio_plugin_runtime_ops::ops_typed_operations::plugin_acknowledge_typed_operation_result(runtime, token).await?;
+                        let _ = semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_acknowledge_typed_operation_result(runtime, token).await?;
                     }
-                } else if let Some(effects) = semio_plugin_runtime_ops::ops_document::plugin_handle_document_backbone_binding(runtime, &instance.0, &payload).await? {
+                } else if let Some(effects) = semio_framework_plugin_runtime_ops::ops_document::plugin_handle_document_backbone_binding(runtime, &instance.0, &payload).await? {
                     document_backbone_effects.extend(effects);
                 }
             }
             Event::Message { source: MessageEndpoint::Backbone { uri }, payload } => {
-                let output = semio_plugin_runtime_ops::ops_document::plugin_receive_document_backbone(runtime, &uri, &payload, identity, cx).await?;
+                let output = semio_framework_plugin_runtime_ops::ops_document::plugin_receive_document_backbone(runtime, &uri, &payload, identity, cx).await?;
                 if output.document_changed {
                     dirty_document_surfaces(runtime, output.instance_id, &mut *dirty).await?;
                 } else {
@@ -197,7 +197,7 @@ async fn job_completed_event<PA: PluginApp>(runtime: &PluginRuntime<PA>, job: u6
                 Ok(bytes) => Ok(bytes.clone()),
                 Err(fault) => Err(fault.clone()),
             };
-            let output = semio_plugin_runtime_ops::ops_typed_operations::plugin_complete_reserved_spawned_job(runtime, instance, job, reserved_output, identity,cx).await?;
+            let output = semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_complete_reserved_spawned_job(runtime, instance, job, reserved_output, identity,cx).await?;
             route_exchange_output(instance, output, &mut *document_backbone_effects,cx)?;
         }
     }

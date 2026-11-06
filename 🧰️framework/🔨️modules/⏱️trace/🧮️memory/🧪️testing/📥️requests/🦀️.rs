@@ -7,7 +7,7 @@ use std::{alloc::{GlobalAlloc, Layout}, cell::Cell, ptr::null_mut};
 use semio_framework_trace::HeapWitness;
 
 struct Scope { parent: *mut Scope, requested: usize, released: usize, overflow: bool }
-std::thread_local! { static ACTIVE: Cell<*mut Scope> = const { Cell::new(null_mut()) }; }
+std::thread_local! { static ACTIVE: Cell<*mut Scope> = const { Cell::new(null_mut()) }; static REFUSAL: Cell<Option<usize>> = const { Cell::new(None) }; }
 struct Restore(*mut Scope);
 impl Drop for Restore {
     fn drop(&mut self) { let _ = ACTIVE.try_with(|active| active.set(self.0)); }
@@ -35,12 +35,19 @@ fn release(bytes: usize) {
     });
 }
 
+fn refuse_selected()->bool{REFUSAL.try_with(|state|match state.get(){Some(0)=>{state.set(Some(1));true},_=>false}).unwrap_or(false)}
+/// 🚫️ Refuses the next allocation request on this thread and restores the scope on unwind.
+pub fn refuse_one_allocation_on_this_thread<T>(operation:impl FnOnce()->T)->(T,usize){
+ struct Guard;impl Drop for Guard{fn drop(&mut self){let _=REFUSAL.try_with(|state|state.set(None));}}
+ REFUSAL.with(|state|{assert!(state.get().is_none(),"allocation refusal scope already active");state.set(Some(0));});let guard=Guard;let result=operation();let refused=REFUSAL.with(|state|state.replace(None).unwrap());drop(guard);(result,refused)
+}
+
 /// 🧮️ Preserves cumulative requested-byte measurement while reusing the first-party [`HeapWitness`].
 pub struct RequestedAllocator;
 unsafe impl GlobalAlloc for RequestedAllocator {
-    unsafe fn alloc(&self, layout: Layout) -> *mut u8 { record(layout.size()); unsafe { HeapWitness.alloc(layout) } }
-    unsafe fn alloc_zeroed(&self, layout: Layout) -> *mut u8 { record(layout.size()); unsafe { HeapWitness.alloc_zeroed(layout) } }
-    unsafe fn realloc(&self, pointer: *mut u8, layout: Layout, size: usize) -> *mut u8 { record(size); let result = unsafe { HeapWitness.realloc(pointer, layout, size) }; if !result.is_null() { release(layout.size()); } result }
+    unsafe fn alloc(&self, layout: Layout) -> *mut u8 { record(layout.size()); if refuse_selected(){return null_mut()} unsafe { HeapWitness.alloc(layout) } }
+    unsafe fn alloc_zeroed(&self, layout: Layout) -> *mut u8 { record(layout.size()); if refuse_selected(){return null_mut()} unsafe { HeapWitness.alloc_zeroed(layout) } }
+    unsafe fn realloc(&self, pointer: *mut u8, layout: Layout, size: usize) -> *mut u8 { record(size); if refuse_selected(){return null_mut()} let result = unsafe { HeapWitness.realloc(pointer, layout, size) }; if !result.is_null() { release(layout.size()); } result }
     unsafe fn dealloc(&self, pointer: *mut u8, layout: Layout) { release(layout.size()); unsafe { HeapWitness.dealloc(pointer, layout) } }
 }
 

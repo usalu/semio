@@ -283,7 +283,7 @@ fn ephemeral_member_original_preparation_frame_requires_exact_granted_release() 
         fn take_prepared(&mut self) -> Option<ArtifactEphemeralOneItemPrepared<DemoSnapshot>> { None }
         fn cancel(&mut self) {}
         fn begin_close(&mut self) {}
-        fn close_step(&mut self, _: ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
+        fn close_step(&mut self, _: ArtifactStoreOneItemGrant) -> semio_framework_value::OriginalRetirementOutcome { semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0} }
         fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
         fn next_close_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(0) }
         fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
@@ -298,19 +298,19 @@ fn ephemeral_member_original_preparation_frame_requires_exact_granted_release() 
         for denied in [authority(0,N,1),authority(1,N-1,1),authority(1,N,0)] {
             let (step,allocated,released) = semio_framework_trace_memory_testing::observe_backing(||publication.close_step(denied));
             assert_eq!((allocated,released),(0,0));
-            if denied.maximum_depth==0 { assert_eq!(step.unwrap_err().kind,semio_framework_value::ValueRefusalKind::DepthLimit); }
-            else { assert_eq!(step.unwrap().progress(),RetainedCloneProgress::default()); }
+            if denied.maximum_depth==0 { assert_eq!(step.result.unwrap_err().primary().unwrap().kind,semio_framework_value::ValueRefusalKind::DepthLimit); }
+            else { assert_eq!(step.result.unwrap().progress(),RetainedCloneProgress::default()); }
             assert_eq!(publication.original_preparation().unwrap() as *const dyn ArtifactEphemeralOneItemPreparation<DemoSnapshot, DemoMutation> as *const (),pointer);
         }
         let caller=row["callerBytes"].as_u64().unwrap() as usize;let expected=row["releasedBytes"].as_u64().unwrap() as usize;
-        let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||publication.close_step(authority(1,caller,1)).unwrap());
+        let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||publication.close_step(authority(1,caller,1)).result.unwrap());
         assert_eq!((allocated,released),(0,expected));assert_eq!(step.progress(),RetainedCloneProgress { copied_items: usize::from(expected!=0),released_bytes: expected,..Default::default() });
         if expected==0 {
             assert_eq!(publication.original_preparation().unwrap() as *const dyn ArtifactEphemeralOneItemPreparation<DemoSnapshot, DemoMutation> as *const (),pointer);
-            let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||publication.close_step(authority(1,N,1)).unwrap());assert_eq!((allocated,released),(0,N));assert_eq!(step.progress().released_bytes,N);
+            let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||publication.close_step(authority(1,N,1)).result.unwrap());assert_eq!((allocated,released),(0,N));assert_eq!(step.progress().released_bytes,N);
         }
         assert!(publication.original_preparation().is_none());assert!(!publication.terminal_is_empty());
-        let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||publication.close_step(authority(1,0,1)).unwrap());assert_eq!((allocated,released),(0,0));assert_eq!(step,RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1,..Default::default() }));assert!(publication.terminal_is_empty());
+        let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||publication.close_step(authority(1,0,1)).result.unwrap());assert_eq!((allocated,released),(0,0));assert_eq!(step,RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1,..Default::default() }));assert!(publication.terminal_is_empty());
     }
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap(){match row["physicalBytes"].as_u64().unwrap(){1=>check::<1>(row),16384=>check::<16384>(row),65536=>check::<65536>(row),262144=>check::<262144>(row),_=>panic!("authored neutral original frame extent")}}

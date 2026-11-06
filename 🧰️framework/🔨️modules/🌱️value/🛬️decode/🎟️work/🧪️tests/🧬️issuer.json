@@ -1,0 +1,38 @@
+[
+  {
+    "name": "decodeAllocation",
+    "identityBytes": 8,
+    "flagBytes": 0,
+    "birthBytes": 8
+  },
+  {
+    "name": "encodeAllocation",
+    "identityBytes": 8,
+    "flagBytes": 0,
+    "birthBytes": 8
+  },
+  {
+    "name": "decodeWork",
+    "identityBytes": 8,
+    "flagBytes": 1,
+    "birthBytes": 9
+  },
+  {
+    "name": "encodeWork",
+    "identityBytes": 8,
+    "flagBytes": 0,
+    "birthBytes": 8
+  },
+  {
+    "name": "decodeConstruction",
+    "identityBytes": 8,
+    "flagBytes": 0,
+    "birthBytes": 8
+  },
+  {
+    "name": "encodeConstruction",
+    "identityBytes": 8,
+    "flagBytes": 0,
+    "birthBytes": 8
+  }
+]

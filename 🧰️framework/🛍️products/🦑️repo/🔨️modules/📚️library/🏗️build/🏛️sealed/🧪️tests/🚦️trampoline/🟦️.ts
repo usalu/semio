@@ -6,10 +6,12 @@ import{fileURLToPath}from"node:url";
 import{findBuildDoorRootV1}from"../../../🚪️door/🟦️.ts";
 import doorPolicy from"../../../🚪️door/🔣️.json";
 import{findSealedRootV1,implementationModeV1,type ImplementationModeV1,sealedLightCommandV1,readSealedPointerV1,sealedEntryOfV1}from"../../🟦️.ts";
-import{sealedDoorRoleV1,sealedKernelsV1}from"../../🚪️entry/🟦️.ts";
+import{sealedDoorRoleV1}from"../../🚪️entry/🟦️.ts";
 import{resolveSealedImplementationV1}from"../../📤️promotion/🟦️.ts";
 import policyData from"../../🔣️.json";
 import kernelSchema from"../../../⌨️command/🧭️selection/🧬️schema/🔣️.json";
+import kernelFixture from"../../../⌨️command/🧭️selection/🔣️.json";
+import{repositoryCommandKernelV1}from"../../../⌨️command/🧭️selection/🟦️.ts";
 import{fixtureCaptureV1,fixtureEntryV1,fixtureLoaderV1,makeFixtureWorkspaceV1,setFixtureTreeV1,testPolicyV1}from"../🧫️fixtures/🟦️.ts";
 
 const script=fileURLToPath(new URL("../🧫️fixtures/📜️trampoline.ts",import.meta.url)),roots:string[]=[];
@@ -74,9 +76,9 @@ test("a snapshot that no longer loads is reported in both languages and the live
 
 test("the entry's role, kernel table and root rule are the ones the trampoline and the front door use",async()=>{
  expect(sealedDoorRoleV1).toBe("--semio-role=door");
- expect(Object.keys(sealedKernelsV1).sort()).toEqual(Object.keys(kernelSchema.properties.kernels.const).sort());
- const source=await Bun.file(fileURLToPath(new URL("../../🚪️entry/🟦️.ts",import.meta.url))).text();
- for(const[kind,path] of Object.entries(kernelSchema.properties.kernels.const))expect(source.includes(`"../../⌨️command/${path}"`),kind).toBe(true);
+ expect(Object.keys(kernelFixture.kernels).sort()).toEqual(Object.keys(kernelSchema.properties.kernels.const).sort());
+ for(const[kind,path]of Object.entries(kernelSchema.properties.kernels.const)){const row=kernelFixture.cases.find(value=>value.kind===kind);expect(row,kind).toBeDefined();const selected=repositoryCommandKernelV1(row!.args,{});expect(selected.kind).toBe(kind);expect(selected.entry.replaceAll("\\","/").endsWith(path)).toBe(true);expect(await Bun.file(selected.entry).exists()).toBe(true);}
+ const source=await Bun.file(fileURLToPath(new URL("../../🚪️entry/🟦️.ts",import.meta.url))).text();expect(source).toContain("Captured door requires its declared role");
  const trampoline=await Bun.file(fileURLToPath(new URL("../../🚦️trampoline/🟦️.ts",import.meta.url))).text();
  expect(trampoline.includes(`doorRoleV1="${sealedDoorRoleV1}"`)).toBe(true);
  const here=fileURLToPath(new URL(".",import.meta.url));

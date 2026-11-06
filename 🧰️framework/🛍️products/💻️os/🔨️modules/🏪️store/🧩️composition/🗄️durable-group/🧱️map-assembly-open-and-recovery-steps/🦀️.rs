@@ -263,7 +263,7 @@ drop(self.prepared.take());
     /// never reaches `Terminal` reports the same `Progress(<phase>)` every turn with no way to say
     /// WHICH owner refuses to retire. This names it.
     pub fn closing_witness(&self) -> String {
-        fn owner<P, Mutation>(publication: &Option<semio_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication<P, Mutation>>) -> String {
+        fn owner<P, Mutation>(publication: &Option<semio_framework_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication<P, Mutation>>) -> String {
             publication.as_ref().map_or_else(
                 || "retired".to_string(),
                 |publication| {

@@ -1,5 +1,5 @@
 //! 🧪️ Actual auxiliary context admission keeps denied and canceled original turns allocation-free.
-use semio_plugin_runtime_ops::ops_surface_render::staged_context;
+use semio_framework_plugin_runtime_ops::ops_surface_render::staged_context;
 use semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
 use semio_plugin_reactor_app::NoPluginApp;
 use semio_framework_value::RetainedCloneGrant;

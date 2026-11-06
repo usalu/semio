@@ -19,7 +19,7 @@ impl Choices {
         self.rows.as_mut().expect("original choice backing").push(StagedScalarChoice { key, label });
     }
 }
-impl semio_framework_plugin_decl_staged_form::StagedScalarChoiceSource for Choices {
+impl semio_plugin_decl_staged_form::StagedScalarChoiceSource for Choices {
     fn len(&self)->usize{self.rows().len()}
     fn choice(&self,index:usize)->Option<StagedScalarChoice<'_>>{self.rows().get(index).copied()}
 }

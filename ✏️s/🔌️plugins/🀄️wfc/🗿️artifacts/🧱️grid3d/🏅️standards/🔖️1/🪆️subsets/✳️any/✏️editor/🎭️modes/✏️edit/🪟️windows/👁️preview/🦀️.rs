@@ -40,7 +40,7 @@ pub fn definition() -> WindowKindDefinition {
         surface_kind: semio_plugin::SurfaceKind::World3d,
         icon_id: "preview".into(),
         options: WindowOptions::default(),
-        actions: vec![semio_framework_plugin::ActionDefinition{in_palette:false,..semio_framework_plugin::ActionDefinition::bounded_catalog("commit-fill",LocalizedLabel::native("Commit Fill","Füllen übernehmen"),semio_framework_plugin::ActionKind::Mutation)}],
+        actions: vec![semio_plugin::ActionDefinition{in_palette:false,..semio_plugin::ActionDefinition::bounded_catalog("commit-fill",LocalizedLabel::native("Commit Fill","Füllen übernehmen"),semio_plugin::ActionKind::Mutation)}],
         utilities: Vec::new(),
         interactions: Vec::new(),
         params_schema: None,

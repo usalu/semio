@@ -4,7 +4,7 @@ use semio_framework::action_staging::StagedFormRequest;
 use semio_framework_job::{OriginalTurnFailure,StepContext};
 use semio_plugin_reactor_app::PluginApp;
 use semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
-use semio_plugin_runtime_ops::ops_surface_render::staged_context::{self,StagedWindowContextCapture,StagedWindowContextLease};
+use semio_framework_plugin_runtime_ops::ops_surface_render::staged_context::{self,StagedWindowContextCapture,StagedWindowContextLease};
 use semio_ui_runtime::ComponentTree;
 use semio_framework_value::{RetainedCloneProgress,RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::RetainedCloneClose;

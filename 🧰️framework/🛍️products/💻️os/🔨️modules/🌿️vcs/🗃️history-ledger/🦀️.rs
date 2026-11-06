@@ -10,6 +10,100 @@ pub struct ArtifactHistoryKey {
     pub generation: u32,
 }
 
+/// 🧷️ A unique original ledger loan pins directory chunks until explicit funded return.
+pub struct ArtifactHistoryDirectoryCursor<'a,T>{ledger:&'a mut ArtifactHistoryLedger<T>,revision:u64,current:*const ArtifactHistoryPageChunk<T>,directory:usize,target:Option<u32>,following:Option<u32>,forward:bool,ready:bool,active:bool}
+/// 🚚️ The retained ledger loan prevents directory deallocation while the cursor moves between turns.
+unsafe impl<T:Send+Sync> Send for ArtifactHistoryDirectoryCursor<'_,T> where ArtifactHistoryLedger<T>:Send{}
+impl<'a,T> ArtifactHistoryDirectoryCursor<'a,T>{
+    pub fn copy_bytes()->usize{2*size_of::<Self>()+2*size_of::<usize>()}
+    fn progress()->semio_framework_value::RetainedCloneProgress{semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:Self::copy_bytes(),..Default::default()}}
+    fn invalid()->semio_framework_value::ValueError{semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original history directory source changed")}
+    fn fits(grant:semio_framework_value::RetainedCloneGrant)->bool{grant.maximum_items>0&&grant.maximum_depth>0&&grant.maximum_copy_bytes>=Self::copy_bytes()}
+    fn matches(&self)->bool{self.active&&self.ledger.directory_reads>0&&self.ledger.read_count>0}
+    /// 🎟️ Pins the genuine directory before its first pointer can survive a caller turn.
+    pub fn admit_tail(ledger:&'a mut ArtifactHistoryLedger<T>,revision:u64,grant:semio_framework_value::RetainedCloneGrant,output:&mut Option<Self>)->semio_framework_value::RetainedWorkOutcome<(bool,semio_framework_value::RetainedCloneProgress)>{Self::admit(ledger,revision,grant,output,false)}
+    /// 🎬️ Pins the same original directory for chronological traversal.
+    pub fn admit_head(ledger:&'a mut ArtifactHistoryLedger<T>,revision:u64,grant:semio_framework_value::RetainedCloneGrant,output:&mut Option<Self>)->semio_framework_value::RetainedWorkOutcome<(bool,semio_framework_value::RetainedCloneProgress)>{Self::admit(ledger,revision,grant,output,true)}
+    fn admit(ledger:&'a mut ArtifactHistoryLedger<T>,revision:u64,grant:semio_framework_value::RetainedCloneGrant,output:&mut Option<Self>,forward:bool)->semio_framework_value::RetainedWorkOutcome<(bool,semio_framework_value::RetainedCloneProgress)>{
+        use semio_framework_value::{RetainedCloneProgress,RetainedWorkOutcome};
+        if output.is_some(){return RetainedWorkOutcome{result:Err(Self::invalid()),work:0}}if ledger.directory_reads!=0||ledger.directory_abandoned||ledger.reservation.is_some()||ledger.group.is_some()||ledger.replacement_count!=0{return RetainedWorkOutcome{result:Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"history directory awaits outstanding publication or loan")),work:0}}if !Self::fits(grant){return RetainedWorkOutcome{result:Ok((false,RetainedCloneProgress::default())),work:0}}let Some(count)=ledger.read_count.checked_add(1)else{return RetainedWorkOutcome{result:Err(Self::invalid()),work:0}};let Some(directories)=ledger.directory_reads.checked_add(1)else{return RetainedWorkOutcome{result:Err(Self::invalid()),work:0}};let bounds=ledger.visible_bounds();let target=if forward{bounds.0}else{bounds.1};let current=ledger.pages.as_ref().map_or(std::ptr::null(),|chunk|&**chunk as *const _);if target.is_some()&&current.is_null(){return RetainedWorkOutcome{result:Err(Self::invalid()),work:0}}ledger.read_count=count;ledger.directory_reads=directories;*output=Some(Self{ledger,revision,current,directory:0,target,following:None,forward,ready:target.is_none(),active:true});RetainedWorkOutcome{result:Ok((true,Self::progress())),work:1}
+    }
+    /// 📍️ One turn follows one pinned chunk or lends the exact visible slot and its following coordinate.
+    pub fn advance<'s>(&'s mut self,revision:u64,grant:semio_framework_value::RetainedCloneGrant,fuel:u64)->semio_framework_value::RetainedWorkOutcome<(Option<(ArtifactHistoryKey,&'s T,Option<u32>)>,semio_framework_value::RetainedCloneProgress)>{
+        use semio_framework_value::{RetainedCloneProgress,RetainedWorkOutcome};
+        if !self.matches()||self.revision!=revision{return RetainedWorkOutcome{result:Err(Self::invalid()),work:0}}if self.ready||fuel==0||!Self::fits(grant){return RetainedWorkOutcome{result:Ok((None,RetainedCloneProgress::default())),work:0}}let Some(target)=self.target else{return RetainedWorkOutcome{result:Err(Self::invalid()),work:0}};let page=target as usize/artifact_history_page_slots::<T>();let wanted=page/ARTIFACT_HISTORY_DIRECTORY_PAGES;if self.current.is_null()||self.directory>wanted{return RetainedWorkOutcome{result:Err(Self::invalid()),work:0}}let chunk:&'s ArtifactHistoryPageChunk<T>=unsafe{&*self.current};if self.directory<wanted{let Some(next)=chunk.next.as_ref()else{return RetainedWorkOutcome{result:Err(Self::invalid()),work:1}};self.current=&**next;self.directory+=1;return RetainedWorkOutcome{result:Ok((None,Self::progress())),work:1}}if target>=self.ledger.initialized{return RetainedWorkOutcome{result:Err(Self::invalid()),work:1}}let Some(page)=chunk.pages[page%ARTIFACT_HISTORY_DIRECTORY_PAGES].as_ref()else{return RetainedWorkOutcome{result:Err(Self::invalid()),work:1}};let slot=unsafe{page.slots[target as usize%artifact_history_page_slots::<T>()].assume_init_ref()};if slot.visibility.as_ref().is_some_and(|visibility|!visibility.committed()){return RetainedWorkOutcome{result:Err(Self::invalid()),work:1}}let Some(value)=slot.get()else{return RetainedWorkOutcome{result:Err(Self::invalid()),work:1}};let key=ArtifactHistoryKey{index:target,generation:slot.generation};self.following=if self.forward{slot.next}else{slot.previous};self.ready=true;RetainedWorkOutcome{result:Ok((Some((key,value,self.following)),Self::progress())),work:1}
+    }
+    /// 📖️ Lends the already located original row for one bounded inspection.
+    pub fn current<'s>(&'s mut self,revision:u64,grant:semio_framework_value::RetainedCloneGrant,fuel:u64)->semio_framework_value::RetainedWorkOutcome<Option<(ArtifactHistoryKey,&'s T)>>{
+        use semio_framework_value::RetainedWorkOutcome;
+        if !self.matches()||self.revision!=revision||!self.ready{return RetainedWorkOutcome{result:Err(Self::invalid()),work:0}}
+        if fuel==0||!Self::fits(grant){return RetainedWorkOutcome{result:Ok(None),work:0}}
+        let Some(target)=self.target else{return RetainedWorkOutcome{result:Ok(None),work:1}};
+        let page=target as usize/artifact_history_page_slots::<T>();
+        if self.current.is_null()||page/ARTIFACT_HISTORY_DIRECTORY_PAGES!=self.directory||target>=self.ledger.initialized{return RetainedWorkOutcome{result:Err(Self::invalid()),work:0}}
+        let chunk:&'s ArtifactHistoryPageChunk<T>=unsafe{&*self.current};
+        let Some(page)=chunk.pages[page%ARTIFACT_HISTORY_DIRECTORY_PAGES].as_ref()else{return RetainedWorkOutcome{result:Err(Self::invalid()),work:1}};
+        let slot=unsafe{page.slots[target as usize%artifact_history_page_slots::<T>()].assume_init_ref()};
+        let Some(value)=slot.get()else{return RetainedWorkOutcome{result:Err(Self::invalid()),work:1}};
+        RetainedWorkOutcome{result:Ok(Some((ArtifactHistoryKey{index:target,generation:slot.generation},value))),work:1}
+    }
+    /// ➡️ Reports the pinned traversal direction.
+    pub fn is_forward(&self)->bool{self.forward}
+    /// 🧭️ Reports whether the pinned traversal has no current row or remaining following row.
+    pub fn exhausted(&self)->bool{self.ready&&self.target.is_none()}
+    /// 🪢️ Reports whether the current original row has a following row in this direction.
+    pub fn has_following(&self)->bool{self.ready&&self.following.is_some()}
+    /// 🪜️ Selects the following slot while preserving the same pinned directory loan.
+    pub fn rearm_following(&mut self,revision:u64,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(bool,semio_framework_value::RetainedCloneProgress)>{
+        use semio_framework_value::{RetainedCloneProgress,RetainedWorkOutcome};if !self.matches()||self.revision!=revision||!self.ready{return RetainedWorkOutcome{result:Err(Self::invalid()),work:0}}if !Self::fits(grant){return RetainedWorkOutcome{result:Ok((false,RetainedCloneProgress::default())),work:0}}let Some(target)=self.following else{return RetainedWorkOutcome{result:Ok((false,RetainedCloneProgress::default())),work:0}};let wanted=target as usize/artifact_history_page_slots::<T>()/ARTIFACT_HISTORY_DIRECTORY_PAGES;if wanted!=self.directory{self.current=self.ledger.pages.as_ref().map_or(std::ptr::null(),|chunk|&**chunk as *const _);self.directory=0;}self.target=Some(target);self.following=None;self.ready=false;RetainedWorkOutcome{result:Ok((true,Self::progress())),work:1}
+    }
+    /// ↩️ Returns the exact directory pin to its issuer, even after a revision changed.
+    pub fn close(&mut self,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(bool,semio_framework_value::RetainedCloneProgress)>{
+        use semio_framework_value::{RetainedCloneProgress,RetainedWorkOutcome};if !self.matches(){return RetainedWorkOutcome{result:Err(Self::invalid()),work:0}}if !Self::fits(grant){return RetainedWorkOutcome{result:Ok((false,RetainedCloneProgress::default())),work:0}}self.ledger.read_count-=1;self.ledger.directory_reads-=1;self.active=false;self.current=std::ptr::null();RetainedWorkOutcome{result:Ok((true,Self::progress())),work:1}
+    }
+}
+impl<T> Drop for ArtifactHistoryDirectoryCursor<'_,T>{fn drop(&mut self){if self.active{self.ledger.directory_abandoned=true;assert!(std::thread::panicking(),"original history directory requires its funded source return")}}}
+
+/// 🧭️ Pages the original ledger backwards using its live generation keys and caller revision.
+#[derive(Clone,Copy,Debug,Default,PartialEq,Eq)]
+pub struct ArtifactHistoryReverseCursor {
+    source: Option<(u64,usize,u64,usize,Option<u32>)>,
+    next: Option<ArtifactHistoryKey>,
+    remaining: usize,
+    complete: bool,
+}
+
+impl ArtifactHistoryReverseCursor {
+    pub fn new() -> Self { Self::default() }
+    pub fn copy_bytes() -> usize { 2 * size_of::<Self>() + 2 * size_of::<ArtifactHistoryKey>() }
+    pub fn complete(&self) -> bool { self.complete }
+    /// 🪪️ Refuses another original ledger or revision before a pending turn can be retried.
+    pub fn validate_source<T>(&self, ledger: &ArtifactHistoryLedger<T>, revision: u64) -> Result<(),semio_framework_value::ValueError> {
+        let identity = (ledger.retained_issuance(),ledger.authority(),revision,ledger.len(),ledger.visible_bounds().1);
+        if self.source.is_some_and(|source| source != identity) { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original history traversal source changed")); }
+        Ok(())
+    }
+    /// 🤲️ Lends one actual entry only after the caller grants its fixed traversal and one work unit.
+    pub fn advance<'a,T>(&mut self, ledger: &'a ArtifactHistoryLedger<T>, revision: u64, grant: semio_framework_value::RetainedCloneGrant, fuel: u64) -> semio_framework_value::RetainedWorkOutcome<(Option<(ArtifactHistoryKey,&'a T)>,semio_framework_value::RetainedCloneProgress)> {
+        use semio_framework_value::{RetainedCloneProgress,RetainedWorkOutcome,ValueError,ValueRefusalKind};
+        let identity = (ledger.retained_issuance(),ledger.authority(),revision,ledger.len(),ledger.visible_bounds().1);
+        let invalid = || ValueError::literal(ValueRefusalKind::InvariantViolated,"original history traversal source changed");
+        if let Err(error) = self.validate_source(ledger,revision) { return RetainedWorkOutcome { result: Err(error), work: 0 }; }
+        let max_chunks=usize::try_from(ledger.page_count).unwrap_or(usize::MAX).saturating_sub(1)/ARTIFACT_HISTORY_DIRECTORY_PAGES+1;let quote=1u64.saturating_add((max_chunks as u64).saturating_mul(6));
+        if self.complete || fuel < quote || grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_copy_bytes < Self::copy_bytes() { return RetainedWorkOutcome { result: Ok((None,RetainedCloneProgress::default())), work: 0 }; }
+        let key = if self.source.is_none() { ledger.last_key() } else { self.next };
+        let remaining = if self.source.is_none() { identity.3 } else { self.remaining };
+        let initial=1u64.saturating_add(if self.source.is_none(){key.map_or(0,|key|ledger.retained_key_lookup_work(key))}else{0});
+        let entry = match key { Some(key) => match ledger.get_key(key) { Some(value) => Some((key,value)), None => return RetainedWorkOutcome { result: Err(invalid()), work: initial.saturating_add(ledger.retained_key_lookup_work(key)) } }, None if remaining == 0 => None, None => return RetainedWorkOutcome { result: Err(invalid()), work: initial } };
+        let next = key.and_then(|key| ledger.previous_key(key));
+        let after = remaining.saturating_sub(usize::from(entry.is_some()));
+        let chunks=|key:ArtifactHistoryKey|1u64+(key.index as usize/artifact_history_page_slots::<T>()/ARTIFACT_HISTORY_DIRECTORY_PAGES)as u64;let actual=1u64.saturating_add(if self.source.is_none(){key.map_or(0,chunks)}else{0}).saturating_add(key.map_or(0,|key|chunks(key).saturating_mul(3))).saturating_add(next.map_or(0,|key|chunks(key).saturating_mul(2)));
+        if (after == 0) != next.is_none() { return RetainedWorkOutcome { result: Err(invalid()), work: actual }; }
+        self.source = Some(identity); self.next = next; self.remaining = after; self.complete = after == 0;
+        RetainedWorkOutcome { result: Ok((entry,RetainedCloneProgress { copied_items: 1, copied_bytes: Self::copy_bytes(), ..Default::default() })), work: actual }
+    }
+}
+
 #[derive(Debug, PartialEq, Eq)]
 pub struct ArtifactHistoryReservation {
     authority: usize,
@@ -90,8 +184,10 @@ static NEXT_HISTORY_READ_ISSUANCE:std::sync::atomic::AtomicU64=std::sync::atomic
 pub struct ArtifactHistoryLedger<T> {
     pub(super) pages: std::mem::ManuallyDrop<Option<Box<ArtifactHistoryPageChunk<T>>>>,
     page_count: u32,
-    pub read_issuance:u64,
+    read_issuance:u64,
     read_count:usize,
+    directory_reads:usize,
+    directory_abandoned:bool,
     replacement_count:usize,
     replacement_decision:Option<usize>,
     read_head:Option<u32>,
@@ -123,11 +219,19 @@ impl<T> Default for ArtifactHistoryLedger<T> {
 }
 
 impl<T> ArtifactHistoryLedger<T> {
+    /// 📏️ Quotes the ledger-owned pin return left by an unwound directory cursor.
+    pub fn abandoned_directory_demand(&self)->Option<semio_framework_value::RetirementDemand>{self.directory_abandoned.then_some(semio_framework_value::RetirementDemand{copy_bytes:2*size_of::<(bool,usize,usize)>(),depth:1,..Default::default()})}
+    /// ↩️ Returns an abandoned pin only under the original ledger and admitted currencies.
+    pub fn recover_abandoned_directory(&mut self,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome};let Some(demand)=self.abandoned_directory_demand()else{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}};if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}if self.directory_reads!=1||self.read_count==0{return RetainedWorkOutcome{result:Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"abandoned directory pin lost its original ledger count")),work:0}}self.directory_reads-=1;self.read_count-=1;self.directory_abandoned=false;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}}
+    /// 📏️ Counts linked directory chunks touched by one exact indexed slot lookup.
+    pub fn retained_key_lookup_work(&self,key:ArtifactHistoryKey)->u64{1u64+(key.index as usize/artifact_history_page_slots::<T>()/ARTIFACT_HISTORY_DIRECTORY_PAGES)as u64}
+    /// 📐️ Quotes an indexed lookup from the cached page count without walking the directory.
+    pub fn retained_lookup_ceiling(&self)->u64{1u64+u64::from(self.page_count.saturating_sub(1))/(ARTIFACT_HISTORY_DIRECTORY_PAGES as u64)}
     /// 📐️ Computes actual fixed page cardinality from the typed slot footprint and native physical page policy.
     pub fn page_slot_count()->usize{artifact_history_page_slots::<T>()}
 
     /// 🪹️ Creates an inline ledger frame without native slot or directory backing.
-    pub fn empty() -> Self { Self { pages: std::mem::ManuallyDrop::new(None), page_count: 0, read_count:0, replacement_count:0, replacement_decision:None, read_head:None, read_issuance:NEXT_HISTORY_READ_ISSUANCE.try_update(std::sync::atomic::Ordering::Relaxed,std::sync::atomic::Ordering::Relaxed,|value|value.checked_add(1)).expect("original history read issuance exhausted"), initialized: 0, head: None, tail: None, free_head: None, reservation: None, group: None, len: 0, seek: std::sync::atomic::AtomicU64::new(ARTIFACT_HISTORY_NO_SEEK) } }
+    pub fn empty() -> Self { Self { pages: std::mem::ManuallyDrop::new(None), page_count: 0, read_count:0, directory_reads:0, directory_abandoned:false, replacement_count:0, replacement_decision:None, read_head:None, read_issuance:NEXT_HISTORY_READ_ISSUANCE.try_update(std::sync::atomic::Ordering::Relaxed,std::sync::atomic::Ordering::Relaxed,|value|value.checked_add(1)).expect("original history read issuance exhausted"), initialized: 0, head: None, tail: None, free_head: None, reservation: None, group: None, len: 0, seek: std::sync::atomic::AtomicU64::new(ARTIFACT_HISTORY_NO_SEEK) } }
 
     /// 🧮 Quotes the exact slot backing, original page and directory before birth.
     pub fn initial_page_birth_demand(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
@@ -142,6 +246,7 @@ impl<T> ArtifactHistoryLedger<T> {
     pub fn initial_page_is_admitted(&self) -> bool { self.page_count != 0 }
     /// 🎟️ Installs one genuine history page under the supplied independent currencies.
     pub fn admit_initial_page(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneProgress, ValueError> {
+        if self.directory_reads!=0{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"history directory is borrowed"));}
         if self.page_count != 0 { return Ok(Default::default()); }
         let demand = self.initial_page_birth_demand()?;
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "history ledger birth requires original depth")); }
@@ -216,10 +321,10 @@ impl<T> ArtifactHistoryLedger<T> {
     /// 📏️ Prices exactly one original row header and the native backing needed by its real next slot.
     pub fn owned_row_admission_demands(&self)->semio_framework_value::RetirementDemand{semio_framework_value::RetirementDemand{copy_bytes:size_of::<T>()*2+size_of::<ArtifactHistoryReservation>()*2,capacity_bytes:self.next_reservation_allocation_bytes(),depth:1,..Default::default()}}
     /// 📥️ Moves one original deque row into this ledger without cloning payloads or reallocating its source backing.
-    pub fn admit_deque_front(&mut self,source:&mut std::collections::VecDeque<T>,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneProgress,ValueError>{if self.group.is_some()||self.reservation.is_some(){return Err(ValueError::literal(protocol::value::ValueRefusalKind::InvariantViolated,"native row admission requires its exact unreserved original ledger"))}if source.is_empty(){return Ok(Default::default())}let d=self.owned_row_admission_demands();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(Default::default())}let row=source.pop_front().unwrap();if let Err(row)=self.try_push(row){source.push_front(row);return Err(ValueError::literal(protocol::value::ValueRefusalKind::OwnershipLimit,"native original row admission exhausted its ledger"))}Ok(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()})}
+    pub fn admit_deque_front(&mut self,source:&mut std::collections::VecDeque<T>,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneProgress,ValueError>{if self.directory_reads!=0||self.group.is_some()||self.reservation.is_some(){return Err(ValueError::literal(protocol::value::ValueRefusalKind::InvariantViolated,"native row admission requires its exact unreserved original ledger"))}if source.is_empty(){return Ok(Default::default())}let d=self.owned_row_admission_demands();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(Default::default())}let row=source.pop_front().unwrap();if let Err(row)=self.try_push(row){source.push_front(row);return Err(ValueError::literal(protocol::value::ValueRefusalKind::OwnershipLimit,"native original row admission exhausted its ledger"))}Ok(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()})}
 
     pub fn reserve_one(&mut self) -> Result<ArtifactHistoryReservation, ArtifactHistoryReservationFault> {
-        if self.group.is_some() || self.replacement_count!=0 {
+        if self.directory_reads!=0 || self.group.is_some() || self.replacement_count!=0 {
             return Err(ArtifactHistoryReservationFault::GroupUnavailable);
         }
         self.reserve_slot()
@@ -244,7 +349,7 @@ impl<T> ArtifactHistoryLedger<T> {
     }
 
     pub fn cancel_reservation(&mut self, reservation: ArtifactHistoryReservation) -> Result<(), ArtifactHistoryReservation> {
-        if self.reservation.as_ref() != Some(&reservation) {
+        if self.directory_reads!=0 || self.reservation.as_ref() != Some(&reservation) {
             return Err(reservation);
         }
         self.reservation = None;
@@ -252,7 +357,7 @@ impl<T> ArtifactHistoryLedger<T> {
     }
 
     pub fn insert_reserved(&mut self, reservation: ArtifactHistoryReservation, value: T) -> Result<ArtifactHistoryKey, (ArtifactHistoryReservation, T)> {
-        if self.group.is_some() {
+        if self.directory_reads!=0 || self.group.is_some() {
             return Err((reservation, value));
         }
         let key = self.insert_owned_slot(reservation, value, self.tail)?;
@@ -297,7 +402,7 @@ impl<T> ArtifactHistoryLedger<T> {
 
     /// 🪢️ Binds an already reserved slot to its exact still-private visibility owner.
     pub fn bind_group_reservation(&mut self, reservation: &ArtifactHistoryReservation, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<(), ()> {
-        if self.reservation.as_ref() != Some(reservation) || !visibility.pending() || self.group.as_ref().is_some_and(|group| !std::sync::Arc::ptr_eq(&group.visibility, visibility)) { return Err(()); }
+        if self.directory_reads!=0 || self.reservation.as_ref() != Some(reservation) || !visibility.pending() || self.group.as_ref().is_some_and(|group| !std::sync::Arc::ptr_eq(&group.visibility, visibility)) { return Err(()); }
         if self.group.is_none() { self.group = Some(ArtifactHistoryGroupSuffix { visibility: std::sync::Arc::clone(visibility), head: None, tail: None, len: 0 }); }
         Ok(())
     }
@@ -308,7 +413,7 @@ impl<T> ArtifactHistoryLedger<T> {
     pub fn reserve_group_controlled(&mut self,visibility:&std::sync::Arc<ArtifactGroupVisibility>,slot:&mut Option<ArtifactHistoryReservation>,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneProgress,ValueError>{if slot.is_some()||!visibility.pending()||self.group.as_ref().is_some_and(|group|!std::sync::Arc::ptr_eq(&group.visibility,visibility)){return Err(ValueError::literal(protocol::value::ValueRefusalKind::InvariantViolated,"original group reservation changed its source or recipient"))}let d=self.group_reservation_demands();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(Default::default())}*slot=Some(self.reserve_group_one(visibility).map_err(|_|ValueError::literal(protocol::value::ValueRefusalKind::OwnershipLimit,"original group history reservation refused"))?);Ok(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()})}
 
     pub fn reserve_group_one(&mut self, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<ArtifactHistoryReservation, ArtifactHistoryReservationFault> {
-        if !visibility.pending() || self.group.as_ref().is_some_and(|group| !std::sync::Arc::ptr_eq(&group.visibility, visibility)) {
+        if self.directory_reads!=0 || !visibility.pending() || self.group.as_ref().is_some_and(|group| !std::sync::Arc::ptr_eq(&group.visibility, visibility)) {
             return Err(ArtifactHistoryReservationFault::GroupUnavailable);
         }
         let reservation = self.reserve_slot()?;
@@ -319,6 +424,7 @@ impl<T> ArtifactHistoryLedger<T> {
     }
 
     pub fn stage_group_reserved(&mut self, reservation: ArtifactHistoryReservation, value: T, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<ArtifactHistoryKey, (ArtifactHistoryReservation, T)> {
+        if self.directory_reads!=0{return Err((reservation,value));}
         let Some(group) = self.group.as_ref().filter(|group| std::sync::Arc::ptr_eq(&group.visibility, visibility) && visibility.pending()) else {
             return Err((reservation, value));
         };
@@ -335,7 +441,7 @@ impl<T> ArtifactHistoryLedger<T> {
     }
 
     pub fn adopt_group(&mut self, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<(), ()> {
-        if self.reservation.is_some() || !visibility.committed() || !self.group.as_ref().is_some_and(|group| std::sync::Arc::ptr_eq(&group.visibility, visibility)) {
+        if self.directory_reads!=0 || self.reservation.is_some() || !visibility.committed() || !self.group.as_ref().is_some_and(|group| std::sync::Arc::ptr_eq(&group.visibility, visibility)) {
             return Err(());
         }
         let group = self.group.take().expect("validated group suffix remains owned");
@@ -347,7 +453,7 @@ impl<T> ArtifactHistoryLedger<T> {
     }
 
     pub fn abort_group_one(&mut self, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<Option<T>, ()> {
-        if self.reservation.is_some() || visibility.pending() || visibility.committed() {
+        if self.directory_reads!=0 || self.reservation.is_some() || visibility.pending() || visibility.committed() {
             return Err(());
         }
         let group = self.group.as_ref().filter(|group| std::sync::Arc::ptr_eq(&group.visibility, visibility)).ok_or(())?;
@@ -406,7 +512,7 @@ impl<T> ArtifactHistoryLedger<T> {
     }
 
     /// 📎️ Inserts before an exact generation key without moving any existing payload or changing its identity.
-    pub fn try_insert_before(&mut self,next:ArtifactHistoryKey,value:T)->Result<ArtifactHistoryKey,T>{if self.group.is_some()||self.get_key(next).is_none(){return Err(value)}let previous=self.slot(next.index).previous;let reservation=match self.reserve_one(){Ok(reservation)=>reservation,Err(_)=>return Err(value)};let key=match self.insert_owned_slot(reservation,value,previous){Ok(key)=>key,Err((reservation,value))=>{self.cancel_reservation(reservation).ok();return Err(value)}};self.slot_mut(key.index).next=Some(next.index);self.slot_mut(next.index).previous=Some(key.index);if previous.is_none(){self.head=Some(key.index)}self.len+=1;self.forget_seek();Ok(key)}
+    pub fn try_insert_before(&mut self,next:ArtifactHistoryKey,value:T)->Result<ArtifactHistoryKey,T>{if self.directory_reads!=0||self.group.is_some()||self.get_key(next).is_none(){return Err(value)}let previous=self.slot(next.index).previous;let reservation=match self.reserve_one(){Ok(reservation)=>reservation,Err(_)=>return Err(value)};let key=match self.insert_owned_slot(reservation,value,previous){Ok(key)=>key,Err((reservation,value))=>{self.cancel_reservation(reservation).ok();return Err(value)}};self.slot_mut(key.index).next=Some(next.index);self.slot_mut(next.index).previous=Some(key.index);if previous.is_none(){self.head=Some(key.index)}self.len+=1;self.forget_seek();Ok(key)}
 
     pub fn try_from_preflighted(values: Vec<T>) -> Result<Self, Vec<T>> {
         let mut ledger = Self::new();
@@ -427,10 +533,10 @@ impl<T> ArtifactHistoryLedger<T> {
     }
 
     /// 🪃️ Quotes one exact original unlink before a publisher changes any companion roots.
-    pub fn removal_demands(&self,key:ArtifactHistoryKey)->Result<semio_framework_value::RetirementDemand,ValueError>{if self.reservation.is_some()||self.group.is_some()||self.replacement_count!=0||key.index>=self.initialized{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"history removal requires its settled original generation"))}let slot=self.slot(key.index);if slot.generation!=key.generation||slot.value.is_none()||slot.read.is_some(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"history removal requires its unborrowed original row"))}Ok(semio_framework_value::RetirementDemand{copy_bytes:2*size_of::<T>()+12*size_of::<usize>(),depth:1,..Default::default()})}
+    pub fn removal_demands(&self,key:ArtifactHistoryKey)->Result<semio_framework_value::RetirementDemand,ValueError>{if self.directory_reads!=0||self.reservation.is_some()||self.group.is_some()||self.replacement_count!=0||key.index>=self.initialized{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"history removal requires its settled original generation"))}let slot=self.slot(key.index);if slot.generation!=key.generation||slot.value.is_none()||slot.read.is_some(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"history removal requires its unborrowed original row"))}Ok(semio_framework_value::RetirementDemand{copy_bytes:2*size_of::<T>()+12*size_of::<usize>(),depth:1,..Default::default()})}
 
     pub fn remove_key(&mut self, key: ArtifactHistoryKey) -> Result<T, ArtifactHistoryKey> {
-        if self.reservation.is_some() || self.group.is_some() || self.replacement_count!=0 {
+        if self.directory_reads!=0 || self.reservation.is_some() || self.group.is_some() || self.replacement_count!=0 {
             return Err(key);
         }
         if key.index >= self.initialized {
@@ -469,7 +575,7 @@ impl<T> ArtifactHistoryLedger<T> {
     /// ✂️ Removes and answers every entry `remove` selects, in ledger order — how a ledger follows a fold whose facts shrank
     /// (a retracted transition). Refused, removing nothing, while a reservation or a group decision is open.
     pub fn extract_if(&mut self, mut remove: impl FnMut(&T) -> bool) -> Result<Vec<T>, ArtifactHistoryReservationFault> {
-        if self.group.is_some() {
+        if self.directory_reads!=0 || self.group.is_some() {
             return Err(ArtifactHistoryReservationFault::GroupUnavailable);
         }
         if self.reservation.is_some() {
@@ -503,7 +609,7 @@ impl<T> ArtifactHistoryLedger<T> {
     }
 
     pub fn last_mut(&mut self) -> Option<&mut T> {
-        if self.group.is_some() || self.replacement_count!=0 {
+        if self.directory_reads!=0 || self.group.is_some() || self.replacement_count!=0 {
             return None;
         }
         let index = self.tail?;
@@ -535,7 +641,7 @@ impl<T> ArtifactHistoryLedger<T> {
 
     /// 🤲️ Mutably borrows one exact original generation only after every loan and staged history group has returned.
     pub fn get_key_mut(&mut self, key: ArtifactHistoryKey) -> Option<&mut T> {
-        if self.group.is_some() || self.replacement_count!=0 || key.index >= self.initialized { return None; }
+        if self.directory_reads!=0 || self.group.is_some() || self.replacement_count!=0 || key.index >= self.initialized { return None; }
         let slot = self.slot_mut(key.index);
         if slot.generation != key.generation || slot.visibility.as_ref().is_some_and(|visibility| !visibility.committed()) || slot.read.is_some() { return None; }
         slot.value.as_mut()
@@ -549,7 +655,7 @@ impl<T> ArtifactHistoryLedger<T> {
 
     pub fn get_mut(&mut self, position: usize) -> Option<&mut T> {
         assert!(self.group.is_none(), "mutable history access requires its staged group to be adopted or aborted");
-        if self.replacement_count!=0{return None}
+        if self.directory_reads!=0||self.replacement_count!=0{return None}
         let index = self.seek_slot(position)?;
         self.slot_mut(index).value.as_mut()
     }

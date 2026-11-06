@@ -1,7 +1,7 @@
 //! 🧶️ Original typing rows move once into retained transaction publication before a verb may proceed.
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_decl_emission::{ActionMeta,Emit};
-use semio_framework_plugin_job::original_emission::OriginalEmissionInput;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_emission::{ActionMeta,Emit};
+use semio_plugin_job::original_emission::OriginalEmissionInput;
 use semio_framework_job::{StepContext,OriginalSourceBinding,OriginalTurnFailure,OriginalConstructionDemand,admit_original_construction,close_original_retained_step};
 use semio_framework_value::{SharedUtf8,RetirementDemand,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind,retirement::RetireOwned,retained_clone::RetainedCloneClose};
 use semio_framework_tool_machine::{TypingLedger,TypingState,TypingCommit,OriginalToolLedgerSource};

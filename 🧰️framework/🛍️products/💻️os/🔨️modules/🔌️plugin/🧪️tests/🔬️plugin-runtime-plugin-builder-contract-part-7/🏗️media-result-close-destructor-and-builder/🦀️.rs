@@ -126,7 +126,7 @@
         let mut sibling = bundle.create_app(TestApp::<false>::APP_ID, actor.clone(), mounted_policy, &mut identity).expect("second registered app factory births").expect("second registered app");
         assert_eq!(sibling.app_id().await, TestApp::<false>::APP_ID);
         let TestRuntimeApps::Test(sibling_owner) = &mut sibling;
-        semio_framework_plugin_testing_laws::artifact_app_laws::settle_store_constructor(sibling_owner, mounted_policy);
+        semio_plugin_testing_laws::artifact_app_laws::settle_store_constructor(sibling_owner, mounted_policy);
         let sibling_id = sibling_owner.store.envelope().id.clone();
         let identity_law: serde_json::Value = serde_json::from_str(include_str!("🔣️identity.json")).expect("neutral parent identity law");
         assert_eq!(parent_id != sibling_id, identity_law["expectation"]["distinctParents"].as_bool().unwrap());

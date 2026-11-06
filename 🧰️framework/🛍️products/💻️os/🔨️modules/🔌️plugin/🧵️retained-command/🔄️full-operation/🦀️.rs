@@ -3,7 +3,7 @@ pub use semio_framework_plugin_result_page::{result_page_wire,pending_result_pag
 #[path="📃️mounted/🦀️.rs"]
 mod mounted_page;
 pub use mounted_page::{MountedPagePublication,MountedUiCopy};
-use semio_framework_plugin_operation::{ToolCancellationLeaseRetirement, original_lease_cursor_admit, original_lease_cursor_release};
+use semio_plugin_operation::{ToolCancellationLeaseRetirement, original_lease_cursor_admit, original_lease_cursor_release};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 pub(crate) use semio_framework_actor::typed_operation_diagnostics as diagnostic_publication;
 use semio_framework_value::DslValue;
@@ -19,38 +19,38 @@ fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:RetirementDemand,
 fn built<O>(cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce()->Result<(O,RetainedCloneProgress),ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{semio_framework_job::admit_original_construction(cx,output,demand,|_|semio_framework_value::RetainedWorkOutcome{result:construct(),work:1})}
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_composition_publication::ChildPublicationResultV1;
+use semio_plugin_composition_publication::ChildPublicationResultV1;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_emission::ChildEmit;
-use semio_framework_plugin_ownership::bounded_ownership::{plugin_grant_funds, plugin_retirement_fault, plugin_turn_admitted};
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_decl_emission::ActionMeta;
-use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
-use semio_framework_plugin_decl_views::child_view::ChildContentView;
-use semio_framework_plugin_decl_media::ArtifactOutputChunks;
-use semio_framework_plugin_decl_app::tool_contract::ArtifactReservedToolJob;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_framework_plugin_composition_publication::MountedTypedCommandFullOperationStage;
-use semio_framework_plugin_composition_publication::MountedWorkerFaultCapture;
-use semio_framework_plugin_composition_publication::PendingArtifactStorePublication;
-use semio_framework_plugin_composition_publication::PendingChildGroupPublication;
-use semio_framework_plugin_composition_publication::PendingChildGroupPublicationPhase;
-use semio_framework_plugin_composition_publication::advance_original_fault_capture;
-use semio_framework_plugin_composition_publication::original_fault_capture_demands;
-use semio_framework_plugin_composition_publication::original_reserved_arc_frame_bytes;
-use semio_framework_plugin_operation::ToolCancellationHandle;
-use semio_framework_plugin_operation::ToolCancellationLease;
-use semio_framework_plugin_decl_app::tool_contract::ArtifactBoundedToolFault;
-use semio_framework_plugin_decl_app::tool_contract::ArtifactToolCompletion;
-use semio_framework_plugin_decl_app::tool_contract::ArtifactToolCompletionValue;
-use semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicationLane;
-use semio_framework_plugin_decl_app::tool_contract::ArtifactToolRawInput;
-use semio_framework_plugin_decl_app::tool_contract::TYPED_OPERATION_FAULT_PAGE_BYTES;
-use semio_framework_plugin_decl_app::tool_contract::TypedOperationResultLane;
-use semio_framework_plugin_job::TypedOperationResultPage;
-use semio_framework_plugin_job::TypedOperationResultToken;
+use semio_plugin_decl_emission::ChildEmit;
+use semio_plugin_ownership::bounded_ownership::{plugin_grant_funds, plugin_retirement_fault, plugin_turn_admitted};
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_emission::ActionMeta;
+use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_plugin_decl_views::child_view::ChildContentView;
+use semio_plugin_decl_media::ArtifactOutputChunks;
+use semio_plugin_decl_app::tool_contract::ArtifactReservedToolJob;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_plugin_composition_publication::MountedTypedCommandFullOperationStage;
+use semio_plugin_composition_publication::MountedWorkerFaultCapture;
+use semio_plugin_composition_publication::PendingArtifactStorePublication;
+use semio_plugin_composition_publication::PendingChildGroupPublication;
+use semio_plugin_composition_publication::PendingChildGroupPublicationPhase;
+use semio_plugin_composition_publication::advance_original_fault_capture;
+use semio_plugin_composition_publication::original_fault_capture_demands;
+use semio_plugin_composition_publication::original_reserved_arc_frame_bytes;
+use semio_plugin_operation::ToolCancellationHandle;
+use semio_plugin_operation::ToolCancellationLease;
+use semio_plugin_decl_app::tool_contract::ArtifactBoundedToolFault;
+use semio_plugin_decl_app::tool_contract::ArtifactToolCompletion;
+use semio_plugin_decl_app::tool_contract::ArtifactToolCompletionValue;
+use semio_plugin_decl_app::tool_contract::ArtifactToolPublicationLane;
+use semio_plugin_decl_app::tool_contract::ArtifactToolRawInput;
+use semio_plugin_decl_app::tool_contract::TYPED_OPERATION_FAULT_PAGE_BYTES;
+use semio_plugin_decl_app::tool_contract::TypedOperationResultLane;
+use semio_plugin_job::TypedOperationResultPage;
+use semio_plugin_job::TypedOperationResultToken;
 #[cfg(test)]
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 
 
 
@@ -58,6 +58,51 @@ use semio_framework_plugin_decl_emission::Emit;
 /// 🧭️ The original tool publication advances one retained semantic stage at a time.
 #[derive(Clone,Copy,PartialEq,Eq)]
 pub enum OriginalToolSettlementStage{Capture,Plain,Scrub,Typing,Complete}
+
+#[derive(Debug,semio_framework_value::RetireOwned)]
+pub struct OriginalPublicationFailure{pub inner:semio_plugin_composition_publication::group::member_publication_failure::OriginalMemberPublicationFailure}
+impl OriginalPublicationFailure{pub fn new(source:store::VcsError,effects:RetainedCloneProgress,receipt_refusal:Option<ValueError>)->Self{Self{inner:semio_plugin_composition_publication::group::member_publication_failure::OriginalMemberPublicationFailure{source,effects,receipt_refusal}}}}
+impl semio_framework_job::OriginalDomainFailure for OriginalPublicationFailure{
+    fn domain_code(&self)->&str{match &self.inner.source{store::VcsError::TransactionOpen{..}=>"toolTransaction.open",store::VcsError::UnknownTransaction(_)=>"toolTransaction.unknown",store::VcsError::HistoryFull{..}=>"history.full",store::VcsError::TooLarge{..}=>"mutation.too-large",_=>"member.publication"}}
+    fn domain_message(&self)->&str{semio_framework_job::OriginalDomainFailure::domain_message(&self.inner)}
+    fn domain_retained_progress(&self)->RetainedCloneProgress{self.inner.effects}
+}
+impl semio_framework_job::OriginalDomainProjection for OriginalPublicationFailure{
+    fn projection_identity(&self)->usize{semio_framework_job::OriginalDomainProjection::projection_identity(&self.inner)}
+    fn projection_view(&self,path:&[usize])->Result<semio_framework_job::OriginalDomainView<'_>,ValueError>{semio_framework_job::OriginalDomainProjection::projection_view(&self.inner,path)}
+    fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{semio_framework_job::OriginalDomainProjection::projection_key(&self.inner,path,index)}
+}
+
+#[derive(Default)]
+pub struct PublicationFailureCustody{
+    pub original:Option<OriginalPublicationFailure>,
+    pub reservation:Option<semio_framework_job::OriginalDomainReservation<OriginalPublicationFailure>>,
+    pub retirement:Option<semio_framework_value::retirement::controlled::ControlledRetirement<OriginalPublicationFailure>>,
+}
+impl PublicationFailureCustody{
+    pub fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.reservation.is_none()&&self.retirement.is_none()}
+    pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if let Some(place)=self.reservation.as_ref(){return place.retirement_demands(body)}semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.original,&self.retirement,body)}
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{if let Some(place)=self.reservation.as_mut(){let turn=place.close_step(grant);if place.terminal_is_empty(){self.reservation=None}return turn}semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original(&mut self.original,&mut self.retirement,grant)}
+}
+
+#[cfg(test)]
+mod publication_failure_tests{
+    use super::*;
+    #[test]
+    fn publication_failure_preserves_specific_store_codes(){
+        use semio_framework_job::OriginalDomainFailure;
+        for (source,code) in [(store::VcsError::TransactionOpen{transaction_id:"t".into()},"toolTransaction.open"),(store::VcsError::UnknownTransaction("t".into()),"toolTransaction.unknown"),(store::VcsError::HistoryFull{capacity:2},"history.full"),(store::VcsError::TooLarge{rows:3,capacity:2},"mutation.too-large")]{let owner=OriginalPublicationFailure::new(source,Default::default(),None);assert_eq!(owner.domain_code(),code);let mut custody=PublicationFailureCustody{original:Some(owner),..Default::default()};let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:128};for _ in 0..10000{custody.close_step(grant).result.unwrap();if custody.terminal_is_empty(){break}}assert!(custody.terminal_is_empty());}
+    }
+    #[test]
+    fn retained_publication_failure_drains_under_original_grants(){
+        let effects=RetainedCloneProgress{copied_items:1,copied_bytes:7,..Default::default()};
+        let mut owner=PublicationFailureCustody{original:Some(OriginalPublicationFailure{inner:semio_plugin_composition_publication::group::member_publication_failure::OriginalMemberPublicationFailure{source:store::VcsError::NativeEncoding(ValueError::invariant("original value refusal").with_retained_progress(effects)),effects,receipt_refusal:Some(ValueError::invariant("original receipt refusal"))}}),..Default::default()};
+        let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:128};
+        let denied=owner.close_step(RetainedCloneGrant{maximum_items:0,..grant});assert_eq!(denied.work,0);assert!(!owner.terminal_is_empty());
+        for _ in 0..10000{let demand=owner.close_demands(grant.maximum_copy_bytes).unwrap();assert!(semio_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant));let turn=owner.close_step(grant);turn.result.unwrap();if owner.terminal_is_empty(){return}}
+        panic!("publication failure did not reach its terminal-empty witness")
+    }
+}
 
 pub struct MountedTypedCommandFullOperation<A: ArtifactApp> {
     pub verb: String,
@@ -73,16 +118,16 @@ pub struct MountedTypedCommandFullOperation<A: ArtifactApp> {
     pub draft_generation: u64,
     pub presence_generation: u64,
     pub transient_generation: u64,
-    pub window_config_authority: Option<semio_framework_plugin_window_config::WindowConfigAuthority>,
-    pub window_transient_authority: Option<semio_framework_plugin_window_transient::window_transient::WindowTransientAuthority>,
+    pub window_config_authority: Option<semio_plugin_window_config::WindowConfigAuthority>,
+    pub window_transient_authority: Option<semio_plugin_window_transient::window_transient::WindowTransientAuthority>,
     pub publication_lanes: &'static [ArtifactToolPublicationLane],
     /// 🔒️ The admitted tool's exact execution contract, which bounds each worker step to `max_work_units_per_step` work units and `max_step_micros` microseconds; a completed-output mount never runs a worker and retains none.
     pub contract: Option<semio_framework::ToolExecutionContract>,
     pub session: Option<semio_framework_job_worker::MountedWorkerJobSession<semio_framework::ErasedToolJob>>,
-    pub session_rejected: Option<semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource<semio_framework::ErasedToolJob>>,
+    pub session_rejected: Option<semio_plugin_ownership::reserved_job_session::RefusedWorkerSource<semio_framework::ErasedToolJob>>,
     pub producer_source: Option<semio_framework::action_bus::OriginalToolSourceBinding>,
-    pub producer_request: Option<semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobRequest<A>>,
-    pub producer_request_retirement: Option<ControlledRetirement<semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobRequest<A>>>,
+    pub producer_request: Option<semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobRequest<A>>,
+    pub producer_request_retirement: Option<ControlledRetirement<semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobRequest<A>>>,
     pub reserved_producer: Option<ArtifactReservedToolJob>,
     pub completion: Option<ArtifactToolCompletion<A>>,
     pub completion_retirement:Option<ControlledRetirement<ArtifactToolCompletion<A>>>,
@@ -102,7 +147,8 @@ pub struct MountedTypedCommandFullOperation<A: ArtifactApp> {
     pub tool_stage:OriginalToolSettlementStage,
     pub tool_press_result:Option<bool>,
     pub pending_artifact_publication: Option<PendingArtifactStorePublication<A>>,
-    pub pending_stream_abort:Option<Box<semio_framework_os_store_engine_replay::abort::OriginalStreamAbort<A::Snapshot,A::Mutation>>>,
+    pub publication_failure: PublicationFailureCustody,
+    pub pending_stream_abort:Option<Box<semio_os_store_engine_replay::abort::OriginalStreamAbort<A::Snapshot,A::Mutation>>>,
     pub stream_abort_completed:bool,
     pub pending_publication_outcome:PendingPublicationOutcome,
     pub pending_window_config_receipt:Option<store::os_store::presence::LaneItemReceipt>,
@@ -130,7 +176,7 @@ pub struct MountedTypedCommandFullOperation<A: ArtifactApp> {
     pub publication_ownership_progress: Option<(RetainedCloneGrant,RetainedCloneProgress)>,
     pub original_retirement_receipt: Option<(RetainedCloneGrant,RetainedCloneProgress)>,
     pub actor_capture: Option<ControlledRetirement<semio_framework_value::SharedUtf8>>,
-    pub actor_capture_pending:semio_framework_plugin_mounted_owner::actor_capture::ActorCapture,
+    pub actor_capture_pending:semio_plugin_mounted_owner::actor_capture::ActorCapture,
     pub publication_attempt: u8,
     pub ui_pending: bool,
     pub progress: Option<u64>,
@@ -153,19 +199,23 @@ pub struct MountedTypedCommandFullOperation<A: ArtifactApp> {
 
 impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
  /// 🪃️ Original streamed aborts need their real Store while returning retained replay reads.
- pub fn stream_abort_close_demands(&self,store:&store::ConfigStore<A::Snapshot,A::Mutation>,body:usize)->Result<RetirementDemand,ValueError>{let Some(owner)=self.pending_stream_abort.as_ref()else{return Ok(Default::default())};if owner.terminal_is_empty(){Ok(semio_framework_os_store_engine_replay::abort::OriginalStreamAbort::<A::Snapshot,A::Mutation>::boxed_release_demands())}else{owner.close_demands(store,body)}}
+ pub fn stream_abort_close_demands(&self,store:&store::ConfigStore<A::Snapshot,A::Mutation>,body:usize)->Result<RetirementDemand,ValueError>{let Some(owner)=self.pending_stream_abort.as_ref()else{return Ok(Default::default())};if owner.terminal_is_empty(){Ok(semio_os_store_engine_replay::abort::OriginalStreamAbort::<A::Snapshot,A::Mutation>::boxed_release_demands())}else{owner.close_demands(store,body)}}
  /// ♻️ Contextual retirement drains the actual abort before the mounted generic frame can close.
- pub fn close_stream_abort(&mut self,store:&mut store::ConfigStore<A::Snapshot,A::Mutation>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let Some(owner)=self.pending_stream_abort.as_mut()else{return Ok(true)};if !owner.terminal_is_empty(){owner.close_step(store,cx)?;return Ok(false)}let d=semio_framework_os_store_engine_replay::abort::OriginalStreamAbort::<A::Snapshot,A::Mutation>::boxed_release_demands();retired(cx,d,|_|{self.pending_stream_abort=None;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))})?;Ok(self.pending_stream_abort.is_none())}
+ pub fn close_stream_abort(&mut self,store:&mut store::ConfigStore<A::Snapshot,A::Mutation>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let Some(owner)=self.pending_stream_abort.as_mut()else{return Ok(true)};if !owner.terminal_is_empty(){owner.close_step(store,cx)?;return Ok(false)}let d=semio_os_store_engine_replay::abort::OriginalStreamAbort::<A::Snapshot,A::Mutation>::boxed_release_demands();retired(cx,d,|_|{self.pending_stream_abort=None;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))})?;Ok(self.pending_stream_abort.is_none())}
  /// 📏️ Quotes the actual fixed mounted header and original input transfers before admission.
  pub fn original_frame_release_demands(&self)->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Box<Self>>(),release_bytes:size_of::<Self>(),depth:1,..Default::default()}}
  /// 📐️ Fresh boxed placement writes the fixed header once and moves original field headers.
- pub fn original_emission_birth_demands()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Self>()+2*size_of::<semio_framework_plugin_job::original_emission::OriginalEmissionInput<A>>()+size_of::<semio_framework_job::OriginalCallerSourceLoan>()+size_of::<semio_framework_job::OriginalSourceBinding>()+2*size_of::<Box<Self>>()+size_of::<ToolCancellationLease>(),capacity_bytes:size_of::<Self>(),depth:1,..Default::default()}}
- pub fn lease_retirement_ready(&self)->bool{self.stage==MountedTypedCommandFullOperationStage::Retiring&&self.session.is_none()&&self.producer_request.is_none()&&self.producer_request_retirement.is_none()&&self.session_rejected.is_none()&&!self.worker_semantic_pending&&!self.worker_outcome_pending&&self.worker_fault_capture.is_none()&&self.publication.is_none()&&self.publication_retirement.is_none()&&self.pending_artifact_publication.is_none()&&self.pending_stream_abort.is_none()&&!self.pending_publication_outcome.pending()&&self.pending_child_publication.is_none()&&self.owned_child_group.is_none()&&self.captured_child_content.is_none()&&self.result_page.is_none()&&self.page_publication.terminal_is_empty()&&self.pending_window_config_receipt.is_none()&&self.raw_input.is_none()&&self.output_chunks.is_none()&&self.output_retirement.is_none()&&self.reserved_producer.is_none()&&self.completion.is_none()&&self.completion_retirement.is_none()&&self.meta.view_state.is_none()&&self.original_emission_caller.is_none()&&self.window_config_authority.is_none()&&self.window_transient_authority.is_none()&&self.actor_capture.is_none()&&self.actor_capture_pending.terminal_is_empty()&&self.verb.capacity()==0&&!self.meta.actor.has_owner()&&self.retained_close_fault.is_none()&&(self.cancellation_lease.is_some()||self.cancellation_retirement.is_some())}
+ pub fn original_emission_birth_demands()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Self>()+2*size_of::<semio_plugin_job::original_emission::OriginalEmissionInput<A>>()+size_of::<semio_framework_job::OriginalCallerSourceLoan>()+size_of::<semio_framework_job::OriginalSourceBinding>()+2*size_of::<Box<Self>>()+size_of::<ToolCancellationLease>(),capacity_bytes:size_of::<Self>(),depth:1,..Default::default()}}
+ pub fn lease_retirement_ready(&self)->bool{self.stage==MountedTypedCommandFullOperationStage::Retiring&&self.session.is_none()&&self.producer_request.is_none()&&self.producer_request_retirement.is_none()&&self.session_rejected.is_none()&&!self.worker_semantic_pending&&!self.worker_outcome_pending&&self.worker_fault_capture.is_none()&&self.publication.is_none()&&self.publication_retirement.is_none()&&self.pending_artifact_publication.is_none()&&self.publication_failure.terminal_is_empty()&&self.pending_stream_abort.is_none()&&!self.pending_publication_outcome.pending()&&self.pending_child_publication.is_none()&&self.owned_child_group.is_none()&&self.captured_child_content.is_none()&&self.result_page.is_none()&&self.page_publication.terminal_is_empty()&&self.pending_window_config_receipt.is_none()&&self.raw_input.is_none()&&self.output_chunks.is_none()&&self.output_retirement.is_none()&&self.reserved_producer.is_none()&&self.completion.is_none()&&self.completion_retirement.is_none()&&self.meta.view_state.is_none()&&self.original_emission_caller.is_none()&&self.window_config_authority.is_none()&&self.window_transient_authority.is_none()&&self.actor_capture.is_none()&&self.actor_capture_pending.terminal_is_empty()&&self.verb.capacity()==0&&!self.meta.actor.has_owner()&&self.retained_close_fault.is_none()&&(self.cancellation_lease.is_some()||self.cancellation_retirement.is_some())}
  pub fn lease_retirement_demands(&self,canonical:&ToolCancellationHandle,body:usize)->Result<RetirementDemand,ValueError>{if let Some(owner)=self.cancellation_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{release_bytes:size_of::<ToolCancellationLeaseRetirement>(),depth:1,..Default::default()})}else{owner.retirement_demands(canonical,body)};}Ok(RetirementDemand{copy_bytes:size_of::<ToolCancellationLease>(),capacity_bytes:size_of::<ToolCancellationLeaseRetirement>(),depth:1,..Default::default()})}
- pub fn lease_retirement_step(&mut self,canonical:&ToolCancellationHandle,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  let demand=self.lease_retirement_demands(canonical,grant.maximum_copy_bytes)?;if !plugin_grant_funds(demand,grant)||grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
-  if let Some(owner)=self.cancellation_retirement.as_mut(){if owner.terminal_is_empty(){return original_lease_cursor_release(&mut self.cancellation_retirement,grant).map(RetainedCloneStep::Progress);}return owner.close_step(canonical,grant);}
-  let(owner,progress)=original_lease_cursor_admit(&mut self.cancellation_lease,grant)?;self.cancellation_retirement=owner;Ok(RetainedCloneStep::Progress(progress))
+ pub fn lease_retirement_work_demand(&self,body:usize)->Result<u64,ValueError>{if let Some(owner)=self.cancellation_retirement.as_ref(){if !owner.terminal_is_empty(){return owner.retirement_work_demand(body)}}Ok(u64::from(self.cancellation_lease.is_some()||self.cancellation_retirement.is_some()))}
+ pub fn lease_retirement_step(&mut self,canonical:&ToolCancellationHandle,grant:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{
+  let mut work=0;let result=(||{
+   if self.cancellation_lease.is_none()&&self.cancellation_retirement.is_none(){return Ok(RetainedCloneStep::Complete(Default::default()))}
+   let demand=self.lease_retirement_demands(canonical,grant.maximum_copy_bytes)?;if !plugin_grant_funds(demand,grant)||grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
+   if let Some(owner)=self.cancellation_retirement.as_mut(){if owner.terminal_is_empty(){work=1;return Ok(RetainedCloneStep::Progress(original_lease_cursor_release(&mut self.cancellation_retirement,grant)?))}let turn=owner.close_step(canonical,grant);work=turn.work;return turn.result}
+   work=1;let(owner,progress)=original_lease_cursor_admit(&mut self.cancellation_lease,grant)?;self.cancellation_retirement=owner;Ok(RetainedCloneStep::Progress(progress))
+  })();semio_framework_value::RetainedWorkOutcome{result,work}
  }
 }
 
@@ -221,14 +271,14 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
         if !self.source_identity.matches(cx){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"mounted worker requires its original source identity independently of its registry record").into())}
         if (self.producer_request.is_some()||self.original_reserved_producer_pending())&&!self.user_cancel_requested&&!self.terminal_seen&&!cx.is_cancelled(){return self.drive_original_producer(cx);}
         let grant=cx.retained_grant();let demand=if cx.is_cancelled()&&(self.original_producer_pending()||self.session_rejected.as_ref().is_some_and(|source|source.admission_pending())){self.worker_retirement_demands(grant.maximum_copy_bytes)?}else{self.worker_step_demands(grant.maximum_copy_bytes)?};
-        semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
+        semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
             let step=(||->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
         if self.stage != MountedTypedCommandFullOperationStage::Worker {return Ok(PluginLifecycleStep::Blocked{reason:"typed command awaits its bounded revision-validated publication or ACK turn"});}
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(PluginLifecycleStep::Progress(Default::default()));}
         let contract=self.contract.ok_or_else(||plugin_sdk_fault("typed operation worker requires its admitted execution contract"))?;
         if self.original_producer_pending(){return self.retire_original_producer(grant);}
         if let Some(rejected)=self.session_rejected.as_mut(){
-            if rejected.terminal_is_empty()&&self.session.is_some(){let before=cx.retained_progress();semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::retire_empty(&mut self.session_rejected,cx)?;return Ok(PluginLifecycleStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?));}
+            if rejected.terminal_is_empty()&&self.session.is_some(){let before=cx.retained_progress();semio_plugin_ownership::reserved_job_session::RefusedWorkerSource::retire_empty(&mut self.session_rejected,cx)?;return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?));}
             if rejected.admission_pending()&&!cx.is_cancelled()&&!self.user_cancel_requested&&!self.terminal_seen{
                 let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:grant,site:"plugin_framework_reserved_route",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:contract.max_work_units_per_step,step_budget_us:u64::from(contract.max_step_micros)};
                 let before=cx.retained_progress();
@@ -245,7 +295,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
                 return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}));
             }
             let demand=rejected.retirement_demands(grant.maximum_copy_bytes)?;
-            return semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{let step=rejected.close_step(cx)?.admit(grant,rejected.terminal_is_empty())?;Ok((match step{
+            return semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{let step=rejected.close_step(cx)?.admit(grant,rejected.terminal_is_empty())?;Ok((match step{
                 semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>PluginLifecycleStep::Progress(progress),
                 semio_framework_job::InteractiveJobCloseStep::Blocked=>PluginLifecycleStep::AwaitingInput{reason:"typed operation rejected-session close awaits its worker handback"},
 
@@ -264,8 +314,8 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
         if self.worker_outcome_pending{
             let before=cx.retained_progress();let reserved=cx.reserved_return_progress();
             if session.acknowledge_checked_out_outcome(cx)?{self.worker_outcome_pending=false;self.worker_resume_pending=true;}
-            let after=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_net_after(cx.retained_progress(),reserved,cx.reserved_return_progress());
-            return Ok(PluginLifecycleStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,after)?));
+            let after=semio_plugin_ownership::bounded_ownership::original_lifecycle_net_after(cx.retained_progress(),reserved,cx.reserved_return_progress());
+            return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,after)?));
         }
         if self.worker_resume_pending{
             if self.terminal_seen{session.begin_close();}else if session.resume().is_err(){return Ok(PluginLifecycleStep::AwaitingInput{reason:"typed operation outcome handback awaits its original worker session"});}
@@ -283,7 +333,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
                 Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>return Ok(PluginLifecycleStep::AwaitingInput{reason:"typed operation original worker close quote awaits its handback"}),
                 Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error))=>return Err(error.into())
             };
-            return semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{let step=session.close_step(cx)?;Ok((match step{
+            return semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{let step=session.close_step(cx)?;Ok((match step{
                 semio_framework_job_worker_authority::WorkerJobCloseStep::Pending{progress}if progress.fits(grant)=>PluginLifecycleStep::Progress(progress),
                 semio_framework_job_worker_authority::WorkerJobCloseStep::Complete{progress}if progress.fits(grant)&&session.terminal_is_empty()=>PluginLifecycleStep::Progress(progress),
                 semio_framework_job_worker_authority::WorkerJobCloseStep::Blocked=>PluginLifecycleStep::AwaitingInput{reason:"typed operation mounted session close awaits its worker handback"},
@@ -383,7 +433,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
         self.validate_original_producer_source(cx)?;
         let grant = cx.retained_grant();
         let demand = self.result_page_retirement_demands(grant.maximum_copy_bytes)?;
-        semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx, grant, demand, |_, grant| {
+        semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx, grant, demand, |_, grant| {
             let progress = self.result_page_retirement_step(grant)?;
             let complete = !self.result_page_retirement_pending();
             Ok((if complete { PluginLifecycleStep::Complete(progress) } else { PluginLifecycleStep::Progress(progress) }, complete))
@@ -479,7 +529,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
     fn retire_worker_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure> {
         self.validate_original_producer_source(cx)?;
         let grant=cx.retained_grant();let demand=self.worker_retirement_demands(grant.maximum_copy_bytes)?;
-        semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
+        semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
             let step=(||->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
         let item = RetainedCloneProgress { copied_items: 1, ..Default::default() };
         if self.original_producer_pending(){return self.retire_original_producer(grant);}
@@ -490,7 +540,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
                 return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_bytes: bytes, ..item }));
             }
             let demand = rejected.retirement_demands(grant.maximum_copy_bytes)?;
-            return semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant| {
+            return semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant| {
                 let step = rejected.close_step(cx)?.admit(grant, rejected.terminal_is_empty())?;
                 Ok((match step {
                     semio_framework_job::InteractiveJobCloseStep::Pending { progress } | semio_framework_job::InteractiveJobCloseStep::Complete { progress } => PluginLifecycleStep::Progress(progress),
@@ -512,7 +562,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
                 Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_)) => return Ok(PluginLifecycleStep::AwaitingInput { reason: "typed operation original worker close quote awaits its handback" }),
                 Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error)) => return Err(error.into()),
             };
-            return semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant| {
+            return semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant| {
                 let step = session.close_step(cx)?;
                 Ok((match step {
                     semio_framework_job_worker_authority::WorkerJobCloseStep::Pending { progress } if progress.fits(grant) => PluginLifecycleStep::Progress(progress),
@@ -559,7 +609,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
     pub fn retirement_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure> {
         self.validate_original_producer_source(cx)?;
         let grant=cx.retained_grant();let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
-        semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
+        semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
             let step=(||->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
         let empty = RetainedCloneProgress::default();
         let item = RetainedCloneProgress { copied_items: 1, ..empty };
@@ -617,7 +667,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
     /// 🎟️ Withdraws inline result custody before closing retained originals.
     pub fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure> {
         let grant=cx.retained_grant();let demand=self.close_demands(grant.maximum_copy_bytes)?;
-        semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
+        semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
             let step=(||->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
         let demand = self.close_demands(grant.maximum_copy_bytes)?;
         if !plugin_grant_funds(demand, grant) { return Ok(PluginLifecycleStep::Progress(Default::default())); }
@@ -645,6 +695,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
             && self.worker_fault_capture.is_none()
             && self.publication.is_none()
             && self.pending_artifact_publication.is_none()
+            && self.publication_failure.terminal_is_empty()
             && self.pending_stream_abort.is_none()
             && !self.pending_publication_outcome.pending() && self.pending_publication_outcome.report.is_none()
             && self.pending_child_publication.is_none()
@@ -721,7 +772,7 @@ pub fn bounded_json_items(value: Option<&DslValue>, maximum: usize) -> Result<us
 
 
 
-pub use semio_framework_plugin_job::lifted_full_operation_job::*;
+pub use semio_plugin_job::lifted_full_operation_job::*;
 
 include!("🏭️producer/🦀️.rs");
 

@@ -1,29 +1,24 @@
-//! 📨️ Native FEM Pack publication shares the canonical original writer and borrows the persistent source.
-use super::{Fem3dSnapshot, Fem3dSnapshotValue};
-use semio_framework_dsl_record::BorrowedDslRecord;
-use semio_framework_value::{RetainedCloneProgress,RetainedWorkOutcome,ValueError,ValueRefusalKind};
+//! 📨️ Native FEM Pack publication retains the writer, wire and caller output independently.
+use super::{Fem3dSnapshot,Fem3dSnapshotValue};
+use semio_framework_dsl_record::{BorrowedDslRecord,receiving::NativeSnapshotEffectProgress};
+use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedWorkOutcome,ValueError,ValueRefusalKind};
 use std::mem::size_of;
 use store::{OriginalPackWriting,NativeSnapshotFailure,native_snapshot_turn};
+#[derive(semio_framework_value::RetireOwned)]
+struct PackFrame{writer:Option<OriginalPackWriting>,wire:Option<Vec<u8>>,progress:NativeSnapshotEffectProgress,unwind:Option<NativeSnapshotFailure>}
 impl Fem3dSnapshot {
-    /// 📦️ Streams actual native fields under original scratch, output and cancellation custody.
-    pub fn encode_exchange_pack(&self,owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->RetainedWorkOutcome<store::io_schema::IoPayload,NativeSnapshotFailure>{
-        owner.receive_nested::<OriginalPackWriting,store::io_schema::IoPayload,store::NativeSnapshotFailure>(|slot,original|native_snapshot_turn(|work|{
-            let grant=original.remaining_grant();
-            let bytes=size_of::<OriginalPackWriting>();
-            if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original FEM Pack grant cannot capture its writer header").into())}
-            original.native().checkpoint()?;
-            original.native().begin_stage(0)?;
-            *slot=Some(OriginalPackWriting::new("fem.fem3d",original.native().maximum_bytes())?);
-            work.performed();
-            original.record_progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;
-            work.take(original.drive_cursor(slot,|writer,native,grant|{
-                let result=if writer.ready(){
-                    let bytes=size_of::<store::io_schema::IoPayload>();
-                    if grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return RetainedWorkOutcome{work:0,result:Ok((None,Default::default()))}}
-                    writer.take(grant).map(|r|r.map_or((None,Default::default()),|(wire,mut p)|{p.copied_bytes=bytes;(Some(store::io_schema::IoPayload::Binary(wire)),p)}))
-                }else{writer.advance(self,Fem3dSnapshotValue::RECORD,native,grant).map(|p|(None,p))};
-                RetainedWorkOutcome{work:writer.last_turn_work(),result}
-            }))
-        }))
-    }
+ /// 📦️ Streams native fields and retains each owner through final payload publication.
+ pub fn encode_exchange_pack(&self,output:&mut Option<store::io_schema::IoPayload>,owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->RetainedWorkOutcome<(),NativeSnapshotFailure>{
+  owner.receive_nested::<PackFrame,store::io_schema::IoPayload,NativeSnapshotFailure>(output,&mut |slot,output,birth,birth_unwind,original|native_snapshot_turn(|work|{
+   let bytes=size_of::<PackFrame>();let grant=original.remaining_grant();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original FEM Pack grant cannot capture its writer frame").into())}
+   original.native().begin_stage(0)?;let maximum=original.native().maximum_bytes();let demand=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:bytes,maximum_depth:1,..Default::default()};
+   let turn=original.effect(demand,birth,birth_unwind,&mut |performed,physical|{let writer=OriginalPackWriting::new("fem.fem3d",maximum)?;*slot=Some(PackFrame{writer:Some(writer),wire:None,progress:Default::default(),unwind:None});*performed=true;*physical=RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};Ok(())});work.take(turn)?;birth.reset_completed()?;
+   let frame=slot.as_mut().unwrap();work.take(original.drive_cursor(&mut frame.writer,&mut frame.wire,&mut |writer,wire,native,grant|{
+    let result=if writer.ready(){writer.take(grant).map(|result|result.map_or(Default::default(),|(value,progress)|{*wire=Some(value);progress}))}else{writer.advance(self,Fem3dSnapshotValue::RECORD,native,grant)};RetainedWorkOutcome{work:writer.last_turn_work(),result}
+   }))?;
+   if frame.wire.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"FEM Pack wire was not retained").into())}
+   let bytes=size_of::<store::io_schema::IoPayload>();let demand=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:bytes,maximum_depth:1,..Default::default()};
+   let turn=original.effect(demand,&mut frame.progress,&mut frame.unwind,&mut |performed,physical|{*output=Some(store::io_schema::IoPayload::Binary(frame.wire.take().unwrap()));*performed=true;*physical=RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};Ok(())});work.take(turn)?;frame.progress.reset_completed()?;Ok(())
+  }))
+ }
 }

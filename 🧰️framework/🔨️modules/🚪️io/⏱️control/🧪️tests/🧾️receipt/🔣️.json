@@ -1,0 +1,50 @@
+{
+  "contract": "semio.snapshot.body-receipt-failure.v1",
+  "text": "snow 雪",
+  "copiedBytes": 8,
+  "copiedItems": 1,
+  "primaryKind": "canceled",
+  "receiptKind": "workLimit",
+  "constructionCases": [
+    {
+      "acceptQuote": true,
+      "recipientCopy": 16,
+      "localCopy": 7,
+      "expectedEffects": 0,
+      "expectedReceipts": 0,
+      "expectedQuotes": 0
+    },
+    {
+      "acceptQuote": false,
+      "recipientCopy": 16,
+      "localCopy": 8,
+      "expectedEffects": 0,
+      "expectedReceipts": 0,
+      "expectedQuotes": 1
+    },
+    {
+      "acceptQuote": true,
+      "recipientCopy": 7,
+      "localCopy": 8,
+      "expectedEffects": 0,
+      "expectedReceipts": 0,
+      "expectedQuotes": 1
+    },
+    {
+      "acceptQuote": true,
+      "recipientCopy": 16,
+      "localCopy": 8,
+      "expectedEffects": 1,
+      "expectedReceipts": 1,
+      "expectedQuotes": 1
+    },
+    {
+      "acceptQuote": true,
+      "recipientCopy": 8,
+      "localCopy": 16,
+      "expectedEffects": 1,
+      "expectedReceipts": 1,
+      "expectedQuotes": 1
+    }
+  ]
+}

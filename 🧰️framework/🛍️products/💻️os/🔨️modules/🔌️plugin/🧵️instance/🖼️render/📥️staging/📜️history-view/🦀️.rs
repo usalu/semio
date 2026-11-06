@@ -69,6 +69,12 @@ pub(crate) fn verb_dirties_history_panel<A: ArtifactApp>(kind: Option<ActionKind
 }
 
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> RenderCtx<'ctx, A, M, X> {
+    /// 🧊️ Borrows only a projection for the exact current store, command log and history filter.
+    pub fn current_reserved_cache(&self) -> Option<(&Arc<A::Snapshot>, &Arc<A::Config>, &Arc<HistoryView>)> {
+        if self.history.command_prune_requested() || self.history.pending_command_prune.is_some() { return None; }
+        let key = (self.stores.store.generation(), self.stores.config_store.generation(), self.history.log_generation, self.history.history_filter);
+        self.history.cache.as_ref().and_then(|(cached, snapshot, config, history)| (*cached == key).then_some((snapshot, config, history)))
+    }
     /// 🧪️ Refreshes (backfilling the command log) and returns the current `HistoryView` —
     /// the merged command+operation timeline test harness accessor.
     #[cfg(test)]

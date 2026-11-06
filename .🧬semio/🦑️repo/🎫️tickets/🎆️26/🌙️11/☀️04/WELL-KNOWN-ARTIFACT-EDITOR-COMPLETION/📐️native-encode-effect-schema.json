@@ -1,0 +1,52 @@
+{
+  "type": "array",
+  "minItems": 4,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "granted",
+      "performed",
+      "operation",
+      "workRefusal",
+      "physicalRefusal",
+      "allocationRefusal",
+      "expectedWork",
+      "expectedCauses"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "granted": {
+        "type": "boolean"
+      },
+      "performed": {
+        "type": "boolean"
+      },
+      "operation": {
+        "type": "boolean"
+      },
+      "workRefusal": {
+        "type": "boolean"
+      },
+      "physicalRefusal": {
+        "type": "boolean"
+      },
+      "allocationRefusal": {
+        "type": "boolean"
+      },
+      "expectedWork": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "expectedCauses": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 4
+      }
+    }
+  }
+}

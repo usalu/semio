@@ -27,18 +27,20 @@ pub enum SharedOriginalRelease<T:Send+Sync+'static>{Alias,Original(SharedOrigina
 pub struct SharedOriginal<T:Send+Sync+'static>{source:ManuallyDrop<Option<Arc<Allocation<T>>>>,initialized:bool}
 
 impl<T:Send+Sync+'static> SharedOriginalStorage<T>{
- pub fn admit(value:T,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Self,RetainedCloneProgress),(ValueError,T)>{
-  let turn=super::admit_shared_allocation(Allocation{aliases:AtomicUsize::new(1),value:UnsafeCell::new(MaybeUninit::new(value))},grant);
+ pub fn admit(value:T,grant:RetainedCloneGrant,actual:&mut Option<usize>)->crate::RetainedWorkOutcome<(Self,RetainedCloneProgress),(ValueError,T)>{
+  let turn=super::admit_shared_allocation(Allocation{aliases:AtomicUsize::new(1),value:UnsafeCell::new(MaybeUninit::new(value))},grant,actual);
   let result=match turn.result{Ok((source,progress))=>Ok((Self{source:ManuallyDrop::new(Some(source))},progress)),Err((error,allocation))=>Err((error,unsafe{allocation.value.into_inner().assume_init()}))};
   crate::RetainedWorkOutcome{result,work:turn.work}
  }
  /// 🧾️ Admits actual empty shared storage without taking a future payload.
- pub fn prepare_birth(grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<(SharedOriginalBirth<T>,RetainedCloneProgress)>{let turn=super::admit_shared_allocation(Allocation{aliases:AtomicUsize::new(0),value:UnsafeCell::new(MaybeUninit::uninit())},grant);crate::RetainedWorkOutcome{result:turn.result.map(|(source,p)|(SharedOriginalBirth{source:ManuallyDrop::new(Some(source))},p)).map_err(|(error,_)|error),work:turn.work}}
+ pub fn prepare_birth(grant:RetainedCloneGrant,actual:&mut Option<usize>)->crate::RetainedWorkOutcome<(SharedOriginalBirth<T>,RetainedCloneProgress)>{let turn=super::admit_shared_allocation(Allocation{aliases:AtomicUsize::new(0),value:UnsafeCell::new(MaybeUninit::uninit())},grant,actual);crate::RetainedWorkOutcome{result:turn.result.map(|(source,p)|(SharedOriginalBirth{source:ManuallyDrop::new(Some(source))},p)).map_err(|(error,_)|error),work:turn.work}}
 
  pub fn allocation_bytes()->usize{arc_bytes::<Allocation<T>>()}
  pub fn get(&self)->&T{let source=self.source.as_ref().expect("live original alias");assert!(source.aliases.load(Ordering::Acquire)>0);unsafe{(&*source.value.get()).assume_init_ref()}}
  pub fn identity(&self)->usize{self.source.as_ref().expect("live original alias").value.get().cast::<T>()as usize}
  pub fn aliases(&self)->usize{self.source.as_ref().expect("live original alias").aliases.load(Ordering::Acquire)}
+ /// 🔍️ A unique original requires both logical and physical strong counts to be one.
+ pub fn physically_unique(&self)->bool{self.source.as_ref().is_some_and(|source|source.aliases.load(Ordering::Acquire)==1&&Arc::strong_count(source)==1)}
  pub fn duplicate(&self)->crate::RetainedWorkOutcome<Self>{
   let source=match self.source.as_ref(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("live original alias").into()),work:0}};
   let result=source.aliases.try_update(Ordering::AcqRel,Ordering::Acquire,|count|(count>0).then(||count.checked_add(1)).flatten()).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original alias space exhausted")).map(|_|Self{source:ManuallyDrop::new(Some(Arc::clone(source)))});

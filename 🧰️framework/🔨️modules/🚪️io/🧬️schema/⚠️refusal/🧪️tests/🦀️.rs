@@ -22,9 +22,9 @@ fn io_owned_cause_retains_kind_and_text_diagnostics() {
         let retained=original.retained_progress();
         let pointer=original.message.as_ptr();
         let error=if operation=="text" {IoError::from_text_error_controlled(TextError::expected(kind,message.clone(),TextSpan{line:7,column:11,length:4},"required"),&mut control).unwrap()}else{IoError::from_value_error(original)};
-        if operation=="value" {assert_eq!(error.cause.message.as_ptr(),pointer);assert_eq!(error.cause.retained_progress(),retained);}
-        assert_eq!(error.cause.kind,kind);
-        assert_eq!(error.cause.message,message);
+        if operation=="value" {assert_eq!(error.cause.message().as_ptr(),pointer);assert_eq!(error.cause.retained_progress(),retained);}
+        assert_eq!(error.cause.kind(),kind);
+        assert_eq!(error.cause.message(),message);
         if row["operation"]=="text" {
             assert_eq!(error.diagnostics.len(),1);
             assert_eq!(error.diagnostics[0].span,TextSpan{line:7,column:11,length:4});
@@ -40,7 +40,7 @@ fn io_owned_cause_retains_kind_and_text_diagnostics() {
         let mut progress=|event:semio_framework_value::native_encoding::NativeEncodeProgress|{observed.push(event);threshold==0||event.total<=1||event.completed<threshold};
         let mut control=NativeEncodeControl::new(row["maximumBytes"].as_u64().unwrap() as usize,&mut progress);
         let result=IoError::from_text_error_controlled(TextError::expected(ValueRefusalKind::InvariantViolated,message.clone(),TextSpan{line:7,column:11,length:4},"required"),&mut control);
-        if row["expectedKind"]=="success" {let output=result.unwrap();assert_eq!(output.cause.kind,ValueRefusalKind::InvariantViolated);assert_eq!(output.cause.message,message);assert_eq!(output.diagnostics[0].message,message);assert_eq!(output.diagnostics[0].span,TextSpan{line:7,column:11,length:4});}
+        if row["expectedKind"]=="success" {let output=result.unwrap();assert_eq!(output.cause.kind(),ValueRefusalKind::InvariantViolated);assert_eq!(output.cause.message(),message);assert_eq!(output.diagnostics[0].message,message);assert_eq!(output.diagnostics[0].span,TextSpan{line:7,column:11,length:4});}
         else {assert_eq!(result.unwrap_err().kind.as_str(),row["expectedKind"].as_str().unwrap());}
         drop(control);
         if threshold!=0 {assert!(observed.iter().any(|event|event.total>1&&event.completed>=threshold));}
@@ -75,8 +75,8 @@ fn io_cause_controlled_wire_retains_all_authorities_and_source_data() {
         let expected=fixture_value(expected);
         let mut accept=|_|true;
         let decoded=IoError::from_value_controlled(&expected,&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1048576,&mut accept)).unwrap();
-        assert_eq!(decoded.cause.kind.as_str(),row["kind"].as_str().unwrap());
-        assert_eq!(decoded.cause.message,row["message"].as_str().unwrap());
+        assert_eq!(decoded.cause.kind().as_str(),row["kind"].as_str().unwrap());
+        assert_eq!(decoded.cause.message(),row["message"].as_str().unwrap());
         let mut accept=|_|true;
         let encoded=decoded.to_value_controlled(&mut NativeEncodeControl::new(1048576,&mut accept)).unwrap();
         let mut accept=|_|true;

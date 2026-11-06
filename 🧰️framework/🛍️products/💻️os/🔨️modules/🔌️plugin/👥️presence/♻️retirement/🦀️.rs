@@ -127,7 +127,7 @@ impl<P> BoundedPresenceRootRetirement<P> {
 impl<P: Send + Sync + 'static> store::ErasedSnapshotRetirement for BoundedPresenceRootRetirement<P> {
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;Ok(self.demand())}
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneStep, ValueError> { let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::OriginalRetirementOutcome { let mut work = 0; let result = (|| -> Result<RetainedCloneStep, ValueError> {
         if self.terminal_is_empty() {
             return Ok(RetainedCloneStep::Complete(Default::default()));
         }
@@ -136,14 +136,14 @@ impl<P: Send + Sync + 'static> store::ErasedSnapshotRetirement for BoundedPresen
         if yields(grant, demand) {
             return Ok(RetainedCloneStep::Progress(Default::default()));
         }
-        let copied_bytes = self.retained_bytes.min(grant.maximum_copy_bytes);
+        work = 1; let copied_bytes = self.retained_bytes.min(grant.maximum_copy_bytes);
         if copied_bytes != 0 {
             self.retained_bytes -= copied_bytes;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes, ..Default::default() }));
         }
         drop(self.root.take());
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
-    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
+    })(); semio_framework_value::RetainedWorkOutcome { result: result.map_err(Into::into), work } }
 
     fn terminal_is_empty(&self) -> bool {
         BoundedPresenceRootRetirement::terminal_is_empty(self)

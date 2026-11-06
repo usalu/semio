@@ -529,6 +529,10 @@ pub trait PluginApp: Send + 'static {
     /// `ArtifactStore` as `handle_action`, so a headless import is an ordinary, undoable edit.
     /// 🎟️ Phases original cancellation admission while the receiving command still owns its media source.
     async fn prepare_media_import(&mut self,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Err(plugin_sdk_fault(MediaError::NotImplemented.to_string()).into())}
+    /// 🧷️ Borrows the app's exact declared text-wire binding without coercing a document port.
+    fn accepts_original_structured_media(&self,_port:&str,_schema:&str,_media_type:&semio_framework::MediaType)->bool{false}
+    /// 🎞️ Advances one original intrinsic media input until its actual producer is mounted.
+    async fn advance_original_media_import(&mut self,_port:&str,_media:&mut Option<Media>,_meta:&ActionMeta,_completed:&mut bool,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original media import is not implemented").into())}
     async fn import_media(&mut self, _port: &str, _media: Media, _meta: &ActionMeta, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
         Err(plugin_sdk_fault(MediaError::NotImplemented.to_string()))
     }

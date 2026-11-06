@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "bytes",
+    "cases",
+    "partial"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "bytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "port",
+          "event",
+          "expectedState",
+          "actual"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "port": {
+            "enum": [
+              "forwarded",
+              "scoped"
+            ]
+          },
+          "event": {
+            "enum": [
+              "quote",
+              "post",
+              "cancel"
+            ]
+          },
+          "expectedState": {
+            "enum": [
+              "quoteStarted",
+              "settlementStarted"
+            ]
+          },
+          "actual": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "integer",
+                "minimum": 0
+              }
+            ]
+          }
+        }
+      }
+    },
+    "partial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestBytes",
+        "actualBytes"
+      ],
+      "properties": {
+        "requestBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "actualBytes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

@@ -24,6 +24,25 @@ impl<T:RetireOwned+Sync> SharedIssuer<T>{
 fn native_payload_demand<T:RetireOwned>(value:&T)->Result<RetirementDemand,ValueError>{if !T::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"sealed original has no native owned issuer"));}let capacity_bytes=value.retirement_birth_bytes().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"sealed original has no native cursor birth"))?;Ok(RetirementDemand{capacity_bytes,depth:1,..Default::default()})}
 
 
+/// ❄️ An exclusive cold payload can release its entire original custody without allocation.
+///
+/// Implementations must make the exclusivity check pure and release unique payloads without allocation, refusal or panic.
+pub trait ColdRetire:RetireOwned+Sync{
+ fn cold_exclusive(&self)->bool;
+ fn cold_release(self);
+}
+
+impl ColdRetire for u64{fn cold_exclusive(&self)->bool{true}fn cold_release(self){}}
+
+/// 📤️ Releases one already verified exclusive original under its exact handback grant.
+///
+/// The caller must keep the original initialized and physically exclusive until this function returns.
+pub fn cold_take_exclusive<T:RetireOwned+Sync>(value:SealedShared<T>)->T{
+ let demand=match value.original_transfer_demand(){Ok(demand)=>demand,Err(_)=>unreachable!("verified original remains initialized")};
+ let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
+ match value.try_unwrap(grant).result{Ok((value,_))=>value,Err(_)=>unreachable!("verified original remains physically exclusive")}
+}
+
 /// 🔐️ The private Arc has no raw, Weak, mutable or consuming escape hatch.
 pub struct SealedShared<T:Send+Sync+'static>{source:ManuallyDrop<Option<SharedOriginalStorage<T>>>,issuer:SharedIssuer<T>,issuance:u64}
 impl<T:std::fmt::Debug+Send+Sync+'static> std::fmt::Debug for SealedShared<T>{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{self.get().fmt(f)}}
@@ -58,17 +77,21 @@ impl<T:Send+Sync+'static> SharedAliasReturn<T>{
 impl<T:Send+Sync+'static> Drop for SharedAliasReturn<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"issuer slot retains an original returned alias");}}
 impl<T:Send+Sync+'static> SealedShared<T>{
  pub fn birth_bytes()->usize{SharedOriginalStorage::<T>::allocation_bytes()}
- pub fn prepare_birth(grant:RetainedCloneGrant)->RetainedWorkOutcome<(SealedSharedBirth<T>,RetainedCloneProgress)>{
+ /// ⛽️ Quotes the issuance attempt and the subsequent allocation attempt.
+ pub const fn birth_work_demand()->u64{2}
+ pub fn prepare_birth(grant:RetainedCloneGrant,actual:&mut Option<usize>)->RetainedWorkOutcome<(SealedSharedBirth<T>,RetainedCloneProgress)>{
+  if actual.is_some(){return RetainedWorkOutcome{result:Err(ValueError::invariant("sealed birth requires an empty actual marker")),work:0}}
   if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<Self::birth_bytes(){return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"sealed issuance requires genuine header birth authority")),work:0}}
-  let issuance=match NEXT_ISSUANCE.try_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)){Ok(issuance)=>issuance,Err(_)=>return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"sealed original issuance space exhausted")),work:0}};
-  let turn=SharedOriginalStorage::prepare_birth(grant);RetainedWorkOutcome{result:turn.result.map(|(storage,p)|(SealedSharedBirth{issuance,storage},p)),work:turn.work}
+  let issuance=match NEXT_ISSUANCE.try_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)){Ok(issuance)=>issuance,Err(_)=>return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"sealed original issuance space exhausted")),work:1}};
+  let turn=SharedOriginalStorage::prepare_birth(grant,actual);RetainedWorkOutcome{result:turn.result.map(|(storage,p)|(SealedSharedBirth{issuance,storage},p)),work:1+turn.work}
  }
- pub fn admit(value:T,issuer:SharedIssuer<T>,grant:RetainedCloneGrant)->RetainedWorkOutcome<(Self,RetainedCloneProgress),(ValueError,T)>{
+ pub fn admit(value:T,issuer:SharedIssuer<T>,grant:RetainedCloneGrant,actual:&mut Option<usize>)->RetainedWorkOutcome<(Self,RetainedCloneProgress),(ValueError,T)>{
+  if actual.is_some(){return RetainedWorkOutcome{result:Err((ValueError::invariant("sealed admission requires an empty actual marker"),value)),work:0}}
   let refusal=if grant.maximum_items==0{Some(ValueRefusalKind::WorkLimit)}else if grant.maximum_depth==0{Some(ValueRefusalKind::DepthLimit)}else if grant.maximum_capacity_bytes<Self::birth_bytes(){Some(ValueRefusalKind::OwnershipLimit)}else{None};
   if let Some(kind)=refusal{return RetainedWorkOutcome{result:Err((ValueError::literal(kind,"sealed shared source birth is not funded"),value)),work:0}}
-  let issuance=match NEXT_ISSUANCE.try_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)){Ok(issuance)=>issuance,Err(_)=>return RetainedWorkOutcome{result:Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"sealed original issuance space exhausted"),value)),work:0}};
-  let turn=SharedOriginalStorage::admit(value,grant);
-  RetainedWorkOutcome{result:turn.result.map(|(source,progress)|(Self{source:ManuallyDrop::new(Some(source)),issuer,issuance},progress)),work:turn.work}
+  let issuance=match NEXT_ISSUANCE.try_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)){Ok(issuance)=>issuance,Err(_)=>return RetainedWorkOutcome{result:Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"sealed original issuance space exhausted"),value)),work:1}};
+  let turn=SharedOriginalStorage::admit(value,grant,actual);
+  RetainedWorkOutcome{result:turn.result.map(|(source,progress)|(Self{source:ManuallyDrop::new(Some(source)),issuer,issuance},progress)),work:1+turn.work}
  }
 
  pub fn try_duplicate(&self,grant:RetainedCloneGrant)->RetainedWorkOutcome<(Self,RetainedCloneProgress)>{
@@ -89,6 +112,8 @@ impl<T:Send+Sync+'static> SealedShared<T>{
  pub fn terminal_is_empty(&self)->bool{self.source.is_none()}
  /// 🕊️ Observes the genuine strong source after all issued aliases have returned.
  pub fn original_aliases_are_returned(&self)->bool{self.source.as_ref().is_none_or(|source|source.aliases()==1)}
+ /// 🔍️ A live original is exclusive only when logical and physical strong counts both equal one.
+ pub fn original_is_exclusive(&self)->bool{self.source.as_ref().is_some_and(|source|source.physically_unique())}
  pub fn return_slot(&self,grant:RetainedCloneGrant)->Result<(SharedAliasReturn<T>,RetainedCloneProgress),ValueError>{
   if self.source.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"transferred alias cannot issue a return slot"));}
   if grant.maximum_items==0||grant.maximum_copy_bytes<size_of::<SharedAliasReturn<T>>()||grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"fixed original return slot is not funded"));}
@@ -127,7 +152,7 @@ impl<T:Send+Sync+'static> Cursor<T>{
   let _=body;Ok(Default::default())
  }
  fn step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
-  let d=match self.demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(e)=>return RetirementStep::Failure(e,0)};
+  let d=match self.demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(e)=>return RetirementStep::Failure(e.into(),0)};
   self.step_selected(grant,d)
  }
  fn step_selected(&mut self,grant:RetainedCloneGrant,demand:RetirementDemand)->RetirementStep{
@@ -137,7 +162,7 @@ impl<T:Send+Sync+'static> Cursor<T>{
    return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},1)
   }
   if let Some(original)=self.original.as_ref(){
-   let specialized=match(self.handle.issuer.demand)(original.get(),OriginalDemand::Shared){Ok(d)=>d.is_some(),Err(e)=>return RetirementStep::Failure(e,0)};
+   let specialized=match(self.handle.issuer.demand)(original.get(),OriginalDemand::Shared){Ok(d)=>d.is_some(),Err(e)=>return RetirementStep::Failure(e.into(),0)};
    if specialized{return self.admit_cursor(grant,true)}
    let Some(value)=self.original.as_mut().unwrap().take_value()else{return RetirementStep::Progress(Default::default(),1)};
    self.original=None;*self.pending=Some(value);
@@ -150,8 +175,8 @@ impl<T:Send+Sync+'static> Cursor<T>{
   let slot=if shared{OriginalSlot::Shared(&mut self.original)}else{OriginalSlot::Native(&mut self.pending)};
   let turn=(self.handle.issuer.admit)(slot,grant);
   match turn.result{
-   Err(error)=>RetirementStep::Failure(error,turn.work),
-   Ok(None)=>RetirementStep::Failure(ValueError::literal(ValueRefusalKind::InvariantViolated,"original issuer omitted its owned cursor"),turn.work),
+   Err(error)=>RetirementStep::Failure(error.into(),turn.work),
+   Ok(None)=>RetirementStep::Failure(ValueError::literal(ValueRefusalKind::InvariantViolated,"original issuer omitted its owned cursor").into(),turn.work),
    Ok(Some((owner,p)))=>RetirementStep::ChildProgress(owner,p,turn.work)
   }
  }
@@ -159,6 +184,7 @@ impl<T:Send+Sync+'static> Cursor<T>{
 
 impl<T:Send+Sync+'static> RetireOwned for SealedShared<T>{fn retirement(self)->Box<dyn RetirementCursor>{Box::new(Cursor{handle:self,pending:ManuallyDrop::new(None),original:None})}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Cursor<T>>())}fn controlled_retirement_supported()->bool{true}}
 impl<T:Send+Sync+'static> RetirementCursor for Cursor<T>{
+ fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.demands(body)?;if self.handle.source.is_some(){return Ok(1)}if self.original.is_none()&&self.pending.is_none(){return Ok(0)}Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"sealed original issuer lacks a work quote"))}
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.demands(body)}
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete(0)}self.step(grant)}
  fn terminal_is_empty(&self)->bool{self.handle.source.is_none()&&self.original.is_none()&&self.pending.is_none()}

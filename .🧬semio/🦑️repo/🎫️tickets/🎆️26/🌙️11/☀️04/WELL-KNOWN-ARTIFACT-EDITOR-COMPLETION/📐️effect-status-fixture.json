@@ -1,0 +1,38 @@
+[
+  {
+    "name": "empty slot",
+    "present": false,
+    "progress": false,
+    "workDone": false,
+    "physicalDone": false,
+    "refused": false,
+    "status": "absent"
+  },
+  {
+    "name": "callback started",
+    "present": true,
+    "progress": true,
+    "workDone": false,
+    "physicalDone": false,
+    "refused": false,
+    "status": "pending"
+  },
+  {
+    "name": "all original posts accepted",
+    "present": true,
+    "progress": true,
+    "workDone": true,
+    "physicalDone": true,
+    "refused": false,
+    "status": "accepted"
+  },
+  {
+    "name": "original post refused",
+    "present": true,
+    "progress": true,
+    "workDone": true,
+    "physicalDone": true,
+    "refused": true,
+    "status": "refused"
+  }
+]

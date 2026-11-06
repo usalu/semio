@@ -33,6 +33,10 @@ macro_rules! native_node{
    fn record_key(&self,index:usize)->Result<semio_framework_value_native_owned::native_decoding::owned::NativeRecordKey<'_>,semio_framework_value::ValueError>{if index<=$count{Ok(semio_framework_value_native_owned::native_decoding::owned::NativeRecordKey::Ordinal(index as u16))}else{Err($crate::invalid())}}
    fn record_child(&self,index:usize)->Result<&dyn semio_framework_value_native_owned::native_decoding::owned::tree::NativeValueSource,semio_framework_value::ValueError>{match index{0=>Ok(&self.id),$($ordinal=>Ok($crate::scalar(&self.$field)),)+_=>Err($crate::invalid())}}
   }
+  impl semio_framework_value::shared_issuance::ColdRetire for FemNode{
+   fn cold_exclusive(&self)->bool{self.id.original_is_exclusive()}
+   fn cold_release(self){drop(semio_framework_value::shared_issuance::cold_take_exclusive(self.id))}
+  }
   impl FemNode{
    /// 🛡️ A received row is usable only after its scoped identity and finite coordinates were validated by a separate funded turn.
    pub fn validate(&self)->Result<(),semio_framework_value::ValueError>{$crate::validate(self.id.as_str(),[$(semio_framework_value::Number::Float(self.$field)),+])}

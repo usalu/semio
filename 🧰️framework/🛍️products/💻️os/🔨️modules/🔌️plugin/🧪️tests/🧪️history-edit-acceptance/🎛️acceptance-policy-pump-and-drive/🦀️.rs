@@ -10,7 +10,7 @@ pub(super) fn acceptance_policy() -> semio_plugin_mounted_owner::MountedOwnerPol
 
 /// 🪪️ The acceptance actor's action meta on the registered instance.
 pub(super) fn acceptance_meta() -> ActionMeta {
-    ActionMeta { view_state: Some(semio_framework_plugin_testing_laws::receive_view_fixture(ViewModel::new(Locale::En, Terminology::Native), semio_framework_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(ACCEPTANCE_ACTOR) }
+    ActionMeta { view_state: Some(semio_plugin_testing_laws::receive_view_fixture(ViewModel::new(Locale::En, Terminology::Native), semio_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(ACCEPTANCE_ACTOR) }
 }
 
 /// ⏯️ Retains one framework history-edit input across its original supplied turns.

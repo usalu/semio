@@ -1,0 +1,22 @@
+{
+  "contract": "semio.pack.decode-report-retirement.v1",
+  "unknownFieldIds": [
+    3,
+    8,
+    21
+  ],
+  "unknownSegments": [
+    2,
+    7
+  ],
+  "schemaDrift": true,
+  "verification": "standard",
+  "maximumTurns": 4096,
+  "grant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 65536,
+    "maximumDepth": 4096
+  }
+}

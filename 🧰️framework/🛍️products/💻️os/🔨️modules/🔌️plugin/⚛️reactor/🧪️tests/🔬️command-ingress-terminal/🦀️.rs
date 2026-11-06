@@ -57,10 +57,10 @@ fn a_turn_that_still_owns_an_ingress_never_answers_idle() {
     let contract = drain_contract();
     assert_eq!(contract["reactorStatuses"]["ownedTurnNeverIdle"], serde_json::Value::Bool(true));
 
-    let owned = semio_plugin_reactor_turn::command_ingress_while_owned(semio_framework::kernel::CommandIngressStatus::Idle, Some(cursor(2, 5)));
+    let owned = semio_framework_plugin_reactor_turn::command_ingress_while_owned(semio_framework::kernel::CommandIngressStatus::Idle, Some(cursor(2, 5)));
     assert!(matches!(&owned, semio_framework::kernel::CommandIngressStatus::CommandPending(pending) if pending.page_index == 2 && pending.seq == 17), "an owner that advanced nothing this turn is still an owner: {owned:?}");
 
-    let unowned = semio_plugin_reactor_turn::command_ingress_while_owned(semio_framework::kernel::CommandIngressStatus::Idle, None);
+    let unowned = semio_framework_plugin_reactor_turn::command_ingress_while_owned(semio_framework::kernel::CommandIngressStatus::Idle, None);
     assert!(matches!(unowned, semio_framework::kernel::CommandIngressStatus::Idle), "and with no owner, idle stays the honest answer");
 
     for already in [
@@ -69,7 +69,7 @@ fn a_turn_that_still_owns_an_ingress_never_answers_idle() {
         semio_framework::kernel::CommandIngressStatus::Backpressure(cursor(0, 1)),
         semio_framework::kernel::CommandIngressStatus::Fault { cursor: cursor(0, 1), fault: b"named".to_vec() },
     ] {
-        let kept = semio_plugin_reactor_turn::command_ingress_while_owned(already.clone(), Some(cursor(0, 1)));
+        let kept = semio_framework_plugin_reactor_turn::command_ingress_while_owned(already.clone(), Some(cursor(0, 1)));
         assert_eq!(format!("{kept:?}"), format!("{already:?}"), "a turn that already said something keeps saying it");
     }
 }

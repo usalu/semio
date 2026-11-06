@@ -1,5 +1,192 @@
 [
   {
+    "label": "io-allocation-issuer-current-check",
+    "store": "isolated",
+    "cwd": "🧰️framework",
+    "args": [
+      "check",
+      "-p",
+      "semio-framework-io-control",
+      "-p",
+      "semio-framework-io-schema"
+    ],
+    "stop_on_failure": true
+  },
+  {
+    "label": "job-source-allocation-original-native",
+    "store": "isolated",
+    "cwd": "🧰️framework",
+    "args": [
+      "test",
+      "-p",
+      "semio-framework-job-context",
+      "--features",
+      "testkit",
+      "--test",
+      "original-source-native-encoding"
+    ],
+    "requires_success": [
+      "io-allocation-issuer-current-check"
+    ],
+    "stop_on_failure": true
+  },
+  {
+    "label": "job-decode-allocation-original-native",
+    "store": "isolated",
+    "cwd": "🧰️framework",
+    "args": [
+      "test",
+      "-p",
+      "semio-framework-job-native-decode",
+      "--lib",
+      "allocation"
+    ],
+    "requires_success": [
+      "io-allocation-issuer-current-check"
+    ],
+    "stop_on_failure": true
+  },
+  {
+    "label": "original-failure-storage-parts-companion",
+    "store": "isolated",
+    "cwd": "🧰️framework",
+    "args": [
+      "test",
+      "-p",
+      "semio-framework-value-failure-tests",
+      "--lib"
+    ],
+    "stop_on_failure": true
+  },
+  {
+    "label": "original-failure-storage-parts-settlement-native",
+    "store": "isolated",
+    "cwd": "🧰️framework",
+    "args": [
+      "test",
+      "-p",
+      "semio-framework-value-retirement",
+      "--test",
+      "original_failure_storage_parts"
+    ],
+    "stop_on_failure": true
+  },
+  {
+    "label": "original-failure-storage-parts-native",
+    "store": "isolated",
+    "cwd": "🧰️framework",
+    "args": [
+      "test",
+      "-p",
+      "semio-framework-value-retirement",
+      "--test",
+      "original_failure_storage_parts"
+    ],
+    "stop_on_failure": true
+  },
+  {
+    "label": "io-rich-retirement-parts-current-check",
+    "store": "isolated",
+    "cwd": "🧰️framework",
+    "args": [
+      "check",
+      "-p",
+      "semio-framework-io-control",
+      "-p",
+      "semio-framework-io-schema"
+    ],
+    "stop_on_failure": true
+  },
+  {
+    "label": "io-rich-output-slot-continuation-check",
+    "store": "isolated",
+    "cwd": "🧰️framework",
+    "args": [
+      "check",
+      "-p",
+      "semio-framework-io-control",
+      "-p",
+      "semio-framework-io-schema"
+    ],
+    "stop_on_failure": true
+  },
+  {
+    "label": "io-rich-output-slot-current-check",
+    "store": "isolated",
+    "cwd": "🧰️framework",
+    "args": [
+      "check",
+      "-p",
+      "semio-framework-io-control",
+      "-p",
+      "semio-framework-io-schema"
+    ],
+    "stop_on_failure": true
+  },
+  {
+    "label": "value-retirement-rich-current-check",
+    "store": "isolated",
+    "cwd": "🧰️framework",
+    "args": [
+      "check",
+      "-p",
+      "semio-framework-value-retirement"
+    ],
+    "stop_on_failure": true
+  },
+  {
+    "label": "fem2-cold-owned-workspace-fresh",
+    "store": "isolated",
+    "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d",
+    "args": [
+      "test",
+      "-p",
+      "semio-s-artifact-fem-2d-model",
+      "--test",
+      "cold_reference_graph"
+    ],
+    "requires_success": [
+      "io-native-rich-submitted-check"
+    ],
+    "stop_on_failure": true
+  },
+  {
+    "label": "borrowed-emission-native-token_",
+    "store": "isolated",
+    "cwd": ".",
+    "args": [
+      "test",
+      "--manifest-path",
+      "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🖨️printing/📦️packages/🦀️rust/Cargo.toml",
+      "-p",
+      "semio-framework-dsl-record-emission",
+      "--lib",
+      "token_"
+    ],
+    "requires_success": [
+      "io-allocation-issuer-current-check"
+    ],
+    "stop_on_failure": true
+  },
+  {
+    "label": "borrowed-emission-native-scalars",
+    "store": "isolated",
+    "cwd": ".",
+    "args": [
+      "test",
+      "--manifest-path",
+      "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🖨️printing/📦️packages/🦀️rust/Cargo.toml",
+      "-p",
+      "semio-framework-dsl-record-emission",
+      "--lib",
+      "scalar_"
+    ],
+    "requires_success": [
+      "io-allocation-issuer-current-check"
+    ],
+    "stop_on_failure": true
+  },
+  {
     "label": "cold-projection-metadata-red",
     "cwd": ".",
     "args": [
@@ -382,6 +569,148 @@
       "semio-framework-replication-history-tests",
       "--test",
       "fold_work"
+    ],
+    "stop_on_failure": true
+  },
+  {
+    "label": "io-native-rich-core-check",
+    "cwd": "🧰️framework",
+    "args": [
+      "check",
+      "-p",
+      "semio-framework-io-control",
+      "-p",
+      "semio-framework-io-schema"
+    ],
+    "stop_on_failure": true
+  },
+  {
+    "label": "io-native-rich-cargo-kernel-check",
+    "cwd": "🧰️framework",
+    "args": [
+      "check",
+      "-p",
+      "semio-framework-io-control",
+      "-p",
+      "semio-framework-io-schema"
+    ],
+    "stop_on_failure": true
+  },
+  {
+    "label": "io-native-rich-ui-coherent-check",
+    "cwd": "🧰️framework",
+    "args": [
+      "check",
+      "-p",
+      "semio-framework-io-control",
+      "-p",
+      "semio-framework-io-schema"
+    ],
+    "stop_on_failure": true
+  },
+  {
+    "label": "fem2-cold-exclusive",
+    "cwd": "✏️s",
+    "args": [
+      "test",
+      "-p",
+      "semio-s-artifact-fem-2d-model",
+      "--test",
+      "cold_reference_graph"
+    ],
+    "requires_success": [
+      "io-native-rich-submitted-check"
+    ],
+    "stop_on_failure": true,
+    "store": "isolated"
+  },
+  {
+    "label": "io-native-rich-ui-family-check",
+    "cwd": "🧰️framework",
+    "args": [
+      "check",
+      "-p",
+      "semio-framework-io-control",
+      "-p",
+      "semio-framework-io-schema"
+    ],
+    "stop_on_failure": true
+  },
+  {
+    "label": "fem2-cold-owned-workspace",
+    "store": "isolated",
+    "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d",
+    "args": [
+      "test",
+      "-p",
+      "semio-s-artifact-fem-2d-model",
+      "--test",
+      "cold_reference_graph"
+    ],
+    "requires_success": [
+      "io-native-rich-submitted-check"
+    ],
+    "stop_on_failure": true
+  },
+  {
+    "label": "original-native-progress",
+    "cwd": "🧰️framework",
+    "args": [
+      "test",
+      "-p",
+      "semio-framework-job",
+      "--features",
+      "testkit",
+      "--test",
+      "original-native-progress"
+    ],
+    "requires_success": [
+      "io-native-rich-submitted-check"
+    ],
+    "stop_on_failure": true,
+    "store": "isolated"
+  },
+  {
+    "label": "io-native-rich-packages-coherent-check",
+    "cwd": "🧰️framework",
+    "args": [
+      "check",
+      "-p",
+      "semio-framework-io-control",
+      "-p",
+      "semio-framework-io-schema",
+      "-p",
+      "semio-framework-value-native-encoding"
+    ],
+    "stop_on_failure": true
+  },
+  {
+    "label": "io-native-rich-isolated-check",
+    "store": "isolated",
+    "cwd": "🧰️framework",
+    "args": [
+      "check",
+      "-p",
+      "semio-framework-io-control",
+      "-p",
+      "semio-framework-io-schema",
+      "-p",
+      "semio-framework-value-native-encoding"
+    ],
+    "stop_on_failure": true
+  },
+  {
+    "label": "io-native-rich-submitted-check",
+    "store": "isolated",
+    "cwd": "🧰️framework",
+    "args": [
+      "check",
+      "-p",
+      "semio-framework-io-control",
+      "-p",
+      "semio-framework-io-schema",
+      "-p",
+      "semio-framework-value-native-encoding"
     ],
     "stop_on_failure": true
   }

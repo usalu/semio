@@ -23,7 +23,9 @@ use semio_ui_contract::*;
 
 /// 🩺️ Media transfers: the media exports, downloads, closures and snapshot retirements of the instance.
 pub struct MediaTransfers<A: ArtifactApp> {
-    pub pending_media_import_permit:ManuallyDrop<Option<(FrameworkReservedCommitPermit,(semio_framework_job::OperationId,semio_framework_job::Generation,usize))>>,
+    pub pending_reserved_producer_permit:ManuallyDrop<Option<(FrameworkReservedCommitPermit,(semio_framework_job::OperationId,semio_framework_job::Generation,usize))>>,
+    pub reserved_mount:ManuallyDrop<Option<Box<semio_framework_plugin_retained_command::typed_operation::original_emission::OriginalEmissionAdmission<A>>>>,
+    pub reserved_receipt:Option<semio_plugin_job::original_emission::OriginalEmissionReceipt>,
     pub media_exports: ArtifactFixedRegistry<ActiveMediaExport>,
     pub media_export_preparation:ManuallyDrop<Option<MediaExportPreparation<A>>>,
     pub media_download_preparation:ManuallyDrop<Option<semio_plugin_document_media::media_export::MediaDownloadPreparation>>,
@@ -47,7 +49,9 @@ impl<A: ArtifactApp> MediaTransfers<A> {
     /// 🪹️ Empty cleanup custody retains no unneeded transfer backing.
     pub fn with_backing(backing:bool)->Self{
         Self {
-            pending_media_import_permit: ManuallyDrop::new(None),
+            pending_reserved_producer_permit: ManuallyDrop::new(None),
+            reserved_mount:ManuallyDrop::new(None),
+            reserved_receipt:None,
             media_exports: if backing{ArtifactFixedRegistry::new()}else{ArtifactFixedRegistry::unallocated(64)},
             media_export_preparation: ManuallyDrop::new(None),
             media_download_preparation: ManuallyDrop::new(None),

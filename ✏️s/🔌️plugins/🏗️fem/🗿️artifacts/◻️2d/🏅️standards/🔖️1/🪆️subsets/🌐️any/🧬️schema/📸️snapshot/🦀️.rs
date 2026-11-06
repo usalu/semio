@@ -7,6 +7,7 @@ use semio_framework_value_derive::ToValue;
 #[path="❄️reference/🦀️.rs"]mod reference;
 pub use reference::Fem2dSnapshotValue;
 #[path="native.rs"]mod native;
+#[path="cold.rs"]pub mod cold;
 pub use native::Fem2dReceiving;
 #[path="record.rs"]mod record;
 #[path="receive-record.rs"]mod receive_record;

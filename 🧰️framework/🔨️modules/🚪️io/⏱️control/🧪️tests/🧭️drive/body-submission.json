@@ -1,0 +1,8 @@
+{
+  "contract": "semio.snapshot.original-body-submission.v1",
+  "text": "snow 雪",
+  "textBytes": 8,
+  "copiedItems": 3,
+  "work": 3,
+  "expectedKind": "invalidValue"
+}

@@ -80,15 +80,17 @@ impl RetirementQueue {
     }
     /// 🧾️ Borrows the original queue turn receipt, including genuine failed-child effects.
     pub fn step_progress(&self)->RetainedCloneProgress{self.step_progress}
-    pub fn step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,ValueError> {let mut work=0;let result=(||{
-        self.step_progress=empty_progress();match {let turn=self.step_original(grant);work=turn.work;turn.result}{Ok(step)=>{self.step_progress=step.progress();Ok(step)},Err(error)=>{if error.retained_progress()!=empty_progress(){self.step_progress=error.retained_progress();}Err(error.with_retained_progress(self.step_progress))}}
+    pub fn step(&mut self,grant:RetainedCloneGrant)->semio_framework_value_retirement::OriginalRetirementOutcome{self.step_with(grant,|owner,grant|owner.close_step(grant))}
+    fn requires_original_control(&self)->bool{self.frames.get(self.frames.len().saturating_sub(1)).is_some_and(|owner|!owner.terminal_is_empty()&&owner.requires_original_control())}
+    fn step_with(&mut self,grant:RetainedCloneGrant,invoke:impl FnOnce(&mut dyn ErasedSnapshotRetirement,RetainedCloneGrant)->semio_framework_value_retirement::OriginalRetirementOutcome)->semio_framework_value_retirement::OriginalRetirementOutcome {let mut work=0;let result=(||{
+        self.step_progress=empty_progress();match {let turn=self.step_original(grant,invoke);work=turn.work;turn.result}{Ok(step)=>{self.step_progress=step.progress();Ok(step)},Err(error)=>{if error.retained_progress()!=empty_progress(){self.step_progress=error.retained_progress();}Err(error.with_retained_progress(self.step_progress))}}
     })();RetainedWorkOutcome{result,work}}
-    fn step_original(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,ValueError> {let mut work=0;let result=(||{
+    fn step_original(&mut self,grant:RetainedCloneGrant,invoke:impl FnOnce(&mut dyn ErasedSnapshotRetirement,RetainedCloneGrant)->semio_framework_value_retirement::OriginalRetirementOutcome)->semio_framework_value_retirement::OriginalRetirementOutcome {let mut work=0;let result=(||{
         let empty=empty_progress();
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
         let demand=self.next_demand(grant.maximum_copy_bytes)?;
-        if demand.depth>grant.maximum_depth{return Err(refusal(ValueRefusalKind::DepthLimit,"retirement queue exceeds admitted depth"));}
+        if demand.depth>grant.maximum_depth{return Err(refusal(ValueRefusalKind::DepthLimit,"retirement queue exceeds admitted depth").into());}
         if demand.copy_bytes>grant.maximum_copy_bytes||demand.capacity_bytes>grant.maximum_capacity_bytes||demand.release_bytes>grant.maximum_release_bytes{return Ok(RetainedCloneStep::Progress(empty));}
         if self.frames.is_empty() {
             let step=self.frames.release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;work=step.work;
@@ -105,7 +107,7 @@ impl RetirementQueue {
         let retained=self.frames.len();
         let child_grant=RetainedCloneGrant {maximum_depth:grant.maximum_depth-retained,..grant};
         let owner=self.frames.get_mut(index).unwrap();
-        let turn=owner.close_step(child_grant);work=turn.work;let step=turn.result?;
+        let turn=invoke(owner.as_mut(),child_grant);work=turn.work;let step=turn.result?;
         self.step_progress=step.progress();
         let progress=admit_retained_clone_close(child_grant,step,owner.terminal_is_empty(),"retirement queue original frame")?.progress();
         Ok(RetainedCloneStep::Progress(progress))
@@ -119,7 +121,11 @@ impl RetireOwned for RetirementQueue {
     fn retirement_birth_bytes(&self)->Option<usize> {Some(size_of::<Self>())}
     fn controlled_retirement_supported()->bool {true}
 }
+fn cursor_turn(turn:semio_framework_value_retirement::OriginalRetirementOutcome)->RetirementStep{match turn.result{Err(error)=>RetirementStep::Failure(error,turn.work),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete(turn.work),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,turn.work)}}
 impl RetirementCursor for RetirementQueue {
+ fn requires_original_control(&self)->bool{RetirementQueue::requires_original_control(self)}
+ fn close_step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn semio_framework_value_retirement::OriginalRetirementControl)->RetirementStep{if !self.requires_original_control(){return RetirementStep::Failure(refusal(ValueRefusalKind::UnsupportedOwner,"retirement queue has no selected original child").into(),0)}cursor_turn(self.step_with(grant,|owner,grant|owner.close_step_controlled(grant,control)))}
+ fn close_original_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->RetirementStep{if !self.requires_original_control(){return RetirementStep::Failure(refusal(ValueRefusalKind::UnsupportedOwner,"retirement queue has no selected original child").into(),0)}cursor_turn(self.step_with(grant,|owner,grant|owner.close_original_step(original,grant)))}
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{RetirementQueue::next_demand(self,body)}
     fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {
         let turn=self.step(grant);match turn.result {

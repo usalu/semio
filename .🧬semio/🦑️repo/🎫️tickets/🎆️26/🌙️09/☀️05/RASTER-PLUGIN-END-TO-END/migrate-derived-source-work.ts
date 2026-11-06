@@ -1,0 +1,9 @@
+import {readFileSync,writeFileSync} from "node:fs";
+const path="🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs";
+let text=readFileSync(path,"utf8");
+for(const [before,after] of [
+ ["preview.preparation_receipt=source.close_step(&mut self.log.envelope.vcs.edits,grant)?.progress();", "let turn=source.close_step(&mut self.log.envelope.vcs.edits,grant);preview.preparation_work=Some(turn.work);preview.preparation_receipt=turn.result?.progress();"],
+ ["replay.preparation_receipt=source.close_step(&mut self.log.envelope.vcs.edits,grant)?.progress();", "let turn=source.close_step(&mut self.log.envelope.vcs.edits,grant);replay.preparation_work=Some(turn.work);replay.preparation_receipt=turn.result?.progress();"],
+ ["let step=source.close_step(&mut self.log.envelope.vcs.edits,retirement_grant).map_err(VcsError::InverseRefused)?;preview.preparation_receipt=step.progress();", "let turn=source.close_step(&mut self.log.envelope.vcs.edits,retirement_grant);preview.preparation_work=Some(turn.work);let step=turn.result.map_err(VcsError::InverseRefused)?;preview.preparation_receipt=step.progress();"],
+ ["let step=preview.history_source.as_mut().unwrap().advance(&mut self.log.envelope.vcs.edits,&mut preview.history_input,index+1,|edit|&edit.forwards[index],retirement_grant).map_err(VcsError::InverseRefused)?;preview.preparation_receipt=step.progress();", "let turn=preview.history_source.as_mut().unwrap().advance(&mut self.log.envelope.vcs.edits,&mut preview.history_input,index+1,|edit|&edit.forwards[index],retirement_grant);preview.preparation_work=Some(turn.work);let step=turn.result.map_err(VcsError::InverseRefused)?;preview.preparation_receipt=step.progress();"]
+]){if(!text.includes(before))throw new Error(`missing derived source call: ${before}`);text=text.replaceAll(before,after)}writeFileSync(path,text);

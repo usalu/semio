@@ -59,7 +59,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     let outcome = snapshot.validate_sqlite_snapshot_subset(dialect, database, control)?;
     if outcome.diagnostics.iter().any(|diagnostic| matches!(diagnostic.severity, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
-        return Err(semio_framework_io_schema::IoError { cause: ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("owned snapshot violates subset {}", dialect.to_coordinate())), diagnostics: outcome.diagnostics });
+        return Err(semio_framework_io_schema::IoError { cause: ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("owned snapshot violates subset {}", dialect.to_coordinate())).into(), diagnostics: outcome.diagnostics });
     }
     Ok(outcome)
 }

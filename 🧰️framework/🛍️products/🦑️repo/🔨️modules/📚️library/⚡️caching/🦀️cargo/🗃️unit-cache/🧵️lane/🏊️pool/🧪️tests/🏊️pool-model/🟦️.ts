@@ -1,3 +1,5 @@
+import{Database}from"bun:sqlite";
+import{laneTargetNamespaceV1}from"../../../🟦️.ts";
 /** 🏊️ Contract: the lane pool never gives a lane to two live processes, never removes a lane a process holds, always lets every process finish, and lets different crate sets compile at the same time. The pool rules (`planPoolAcquireV1`, `planPoolTrimV1`, the quota) are written twice, in the production module and in the independent Python oracle `./🐍️.py`, and both agree with the language-agnostic corpus `./🔣️.json`; the exhaustive interleaving model of acquirers and a trimmer is written twice as well (this reference drives the production rules) and reproduces the counts of the corpus: the claim-guarded trimmer has no violation, the unguarded one (negative control) removes lanes under live processes.
  * @see ../../🟦️.ts */
 import {expect,test} from "bun:test";
@@ -152,3 +154,5 @@ test("the exhaustive interleaving of acquirers and a trimmer reproduces the coun
  expect(unguarded.violations).toBeGreaterThan(0);
  expect(claim.overlaps).toBeGreaterThan(0);
 });
+
+test("layout identities follow the neutral namespace corpus and SQLite distinctness",()=>{const db=new Database(":memory:");try{db.exec("create table layouts(version integer, build text, target text, namespace text)");for(const row of corpus.layout){const salt=new Bun.CryptoHasher("sha256").update(JSON.stringify({version:row.version,build:row.build,target:row.target})).digest("hex");expect(row.expected).toBe(row.target+"-"+salt.slice(0,8));expect(laneTargetNamespaceV1(row)).toBe(row.expected);db.query("insert into layouts values(?,?,?,?)").run(row.version,row.build,row.target,row.expected);}expect((db.query("select count(distinct namespace) as count from layouts").get() as {count:number}).count).toBe(corpus.layout.length);}finally{db.close();}});

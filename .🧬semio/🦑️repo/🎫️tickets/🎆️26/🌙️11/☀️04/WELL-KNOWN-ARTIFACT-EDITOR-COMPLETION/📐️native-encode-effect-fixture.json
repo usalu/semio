@@ -1,0 +1,46 @@
+[
+  {
+    "name": "denied before effect",
+    "granted": false,
+    "performed": false,
+    "operation": false,
+    "workRefusal": false,
+    "physicalRefusal": false,
+    "allocationRefusal": false,
+    "expectedWork": 0,
+    "expectedCauses": 1
+  },
+  {
+    "name": "no effect cancellation",
+    "granted": true,
+    "performed": false,
+    "operation": false,
+    "workRefusal": false,
+    "physicalRefusal": false,
+    "allocationRefusal": false,
+    "expectedWork": 0,
+    "expectedCauses": 0
+  },
+  {
+    "name": "successful effect",
+    "granted": true,
+    "performed": true,
+    "operation": false,
+    "workRefusal": false,
+    "physicalRefusal": false,
+    "allocationRefusal": false,
+    "expectedWork": 1,
+    "expectedCauses": 0
+  },
+  {
+    "name": "independent refusals retained",
+    "granted": true,
+    "performed": true,
+    "operation": true,
+    "workRefusal": true,
+    "physicalRefusal": true,
+    "allocationRefusal": true,
+    "expectedWork": 1,
+    "expectedCauses": 4
+  }
+]

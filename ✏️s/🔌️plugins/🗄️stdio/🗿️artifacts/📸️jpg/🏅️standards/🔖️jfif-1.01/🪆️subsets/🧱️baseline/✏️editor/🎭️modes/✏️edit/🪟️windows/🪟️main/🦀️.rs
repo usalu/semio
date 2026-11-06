@@ -5,7 +5,7 @@ use crate::standards::v_jfif_1_01::subsets::baseline::schema::snapshot::JpgSnaps
 use semio_framework_plugin::app::{ImageView, ImageWindowKit};
 use semio_framework_plugin::{Buildable, BuiltNode, HasBase, WindowKindDefinition, WindowKit};
 use semio_framework_plugin::plugin_app_close_prelude::{self as ui, Label};
-use semio_framework_ui_locale::{Locale, LocalizedLabel};
+use semio_ui_locale::{Locale, LocalizedLabel};
 use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionKind, ArgSchema};
 
 pub const MAXIMUM_INTERACTIVE_ROWS: u32 = 65_536;

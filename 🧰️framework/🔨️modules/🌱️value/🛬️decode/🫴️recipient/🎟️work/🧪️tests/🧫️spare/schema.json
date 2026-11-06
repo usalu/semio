@@ -1,0 +1,1 @@
+{"type":"object","required":["birth","release","total","denied"],"additionalProperties":false,"properties":{"birth":{"const":1},"release":{"const":1},"total":{"const":2},"denied":{"const":0}}}

@@ -1,0 +1,32 @@
+[
+  {
+    "name": "overage survives no further capacity",
+    "quoted": 8,
+    "actual": 12,
+    "nextGrant": 0,
+    "probe": 1,
+    "retained": 12,
+    "nextMaximum": 12,
+    "admitted": false
+  },
+  {
+    "name": "overage with real subsequent grant",
+    "quoted": 8,
+    "actual": 12,
+    "nextGrant": 3,
+    "probe": 1,
+    "retained": 12,
+    "nextMaximum": 15,
+    "admitted": true
+  },
+  {
+    "name": "accepted exact backing",
+    "quoted": 8,
+    "actual": 8,
+    "nextGrant": 0,
+    "probe": 1,
+    "retained": 8,
+    "nextMaximum": 8,
+    "admitted": false
+  }
+]

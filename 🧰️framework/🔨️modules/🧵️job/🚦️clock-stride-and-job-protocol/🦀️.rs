@@ -6,10 +6,15 @@ pub use semio_framework_job_clock::ClockStride;
 
 pub use semio_framework_job_payload::{Checkpoint,CommitCandidate,JobFault,StepOutcome};
 
-//#region 🧩️InteractiveJob
+//#region 🧭️InteractiveJob
 pub use semio_framework_job_payload::InteractiveJobCloseStep;
 
-/// 🧵️ See `README.md`.
+/// 🧵️ Whether a job may be handed to another thread. Every threaded target elaborates this to
+/// `Send`, so `J: InteractiveJob` still proves `J: Send` for [`WorkerJobSessionInner`]'s
+/// `unsafe impl` and every pool submission. The browser build (`wasm32`, not `wasip2`) has no
+/// second thread to hand a job to at all — its jobs own `Rc<JsValue>` browser handles by design
+/// (`🎯️targets/🧊️wgpu/🧵️frame-job`'s frame worker is the single JS worker thread) — so requiring
+/// `Send` there would only forbid the one ownership model that target can have.
 #[cfg(not(all(target_arch = "wasm32", not(target_env = "p2"))))]
 pub trait JobThreadTransfer: Send {}
 

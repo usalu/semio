@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "cases"
+  ],
+  "properties": {
+    "contract": {
+      "const": "semio.ifc4.parsed-record-graph-receiving.v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "grant",
+          "childWork",
+          "outcome",
+          "work",
+          "frameRetained",
+          "sourceRetained",
+          "failureRetained"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "denied",
+              "capture",
+              "childProgress",
+              "childFailure"
+            ]
+          },
+          "grant": {
+            "type": "boolean"
+          },
+          "childWork": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "outcome": {
+            "enum": [
+              "pending",
+              "progress",
+              "failure"
+            ]
+          },
+          "work": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "frameRetained": {
+            "type": "boolean"
+          },
+          "sourceRetained": {
+            "const": true
+          },
+          "failureRetained": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

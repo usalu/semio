@@ -1,0 +1,7 @@
+# Member Source Boundary And Decoder Ledger
+
+Current explicit conservative Linux x86_64 collector snapshot (Member package declares no features): Member lib 10 files/140080 bytes/2364 active lines, lib-test 17/189209/2815; companion lib-test 20/205635/2097. Each is within its unchanged 32 files/262144 bytes/4000 active lines. `actual_work_laws` is inline under Member receiving and belongs to the Member lib-test; the public real-wire cancellation fixture is included by the separate `semio-os-store-member-open-tests` companion test crate. This source-capture approximation is not actual Cargo admission or a test pass. Input member-source-census.ts and generated/member-source-census.json retain the exact cfg and results.
+
+Forwarded NativeDecodeControl owned_bytes is a cumulative decoder allocation/charge ceiling, not live outstanding heap: normal retained backing increments it; NativeRetirementDecodeControl::charge checks and increases the same counter even for cleanup allocations; release receipts do not subtract from it. Forwarded receipt rebind retains the ledger. Terminal custody should be verified by the owner/recipient terminal predicates and independently observed balanced physical birth/release, not by asserting this cumulative counter returns to zero.
+
+Separately, snapshot read generation page is 4096/(2*size_of::<AtomicU64>()), hence 256 on the 8-byte native AtomicU64 target. Registry birth fixture 256 reflects current implementation while schema const 512 is stale; this was reported to native owner.

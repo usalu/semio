@@ -1,0 +1,9 @@
+import {readFileSync,writeFileSync} from "node:fs";
+const path="🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🔌️plugin-app-impl/🦀️.rs";
+let source=readFileSync(path,"utf8");
+function replace(old:string,next:string){if(source.split(old).length!==2)throw new Error(`expected one occurrence: ${old}`);source=source.replace(old,next)}
+replace("        if self.owns_original_host_event_source(cx){return self.original_host_event_close_demands(body)}","        if self.owns_original_reserved_permit(cx){return self.media.original_tool_lease_close_demands(&self.tools,body)}\n        if self.owns_original_host_event_source(cx){return self.original_host_event_close_demands(body)}");
+replace("}else if self.owns_original_host_event_source(same){self.close_original_host_event_source(same)?}","}else if self.owns_original_reserved_permit(same){self.media.close_original_tool_lease(&mut self.tools,same,actual)?}else if self.owns_original_host_event_source(same){self.close_original_host_event_source(same)?}");
+replace("&&!self.owns_original_host_event_source(cx)&&(!self.owns_original_command_scope(cx)","&&!self.owns_original_reserved_permit(cx)&&!self.owns_original_host_event_source(cx)&&(!self.owns_original_command_scope(cx)");
+replace("    fn selected_typed_result_page(&self, receiver: u32)","    fn owns_original_reserved_permit(&self,cx:&semio_framework_job::StepContext<'_>)->bool{let Some(identity)=cx.original_source_parent().ok().and_then(|parent|parent.source_identity().ok()).map(|source|(cx.operation(),cx.generation(),source))else{return false};self.media.pending_reserved_producer_permit.as_ref().is_some_and(|(_,original)|*original==identity)||self.tools.pending_tool_lease_admission.as_ref().is_some_and(|owner|owner.identity==identity)}\n    fn selected_typed_result_page(&self, receiver: u32)");
+writeFileSync(path,source);

@@ -180,15 +180,14 @@ pub(super) struct MapRetirementFactory;
 pub(super) fn quoted_close_grant(demand: semio_framework_value::RetirementDemand, _body: usize) -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
 }
-impl ArtifactOwnedValueRetirementFactory<MapMutation> for MapRetirementFactory {
+impl ArtifactOwnedValueRetirementFactory<MapMutation> for MapRetirementFactory {fn retire_owned_work_demand(&self,_:&MapMutation)->Result<u64,semio_framework_value::ValueError>{Ok(1)}
     fn retirement_birth_bytes(&self, _value: &MapMutation) -> usize {
         semio_framework_value::retirement::owned_retirement_birth_bytes::<MapMutation>()
     }
-    fn retire_owned(&self, value: MapMutation, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, MapMutation)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, MapMutation)> {
+    fn retire_owned(&self, value: MapMutation, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(semio_framework_value::OriginalRetirementFailure, MapMutation)> {
         let MapMutation::ReplaceMap(MapBody { lifetime, .. }) = &value;
         assert_eq!(lifetime.active_iterators.load(Ordering::SeqCst), 0);
-        semio_framework_value::retirement::admit_owned_retirement(value, grant).result
-    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
+        let turn=semio_framework_value::retirement::admit_owned_retirement(value, grant);semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(|(error,value)|(error.into(),value)),work:turn.work}}
 }
 impl semio_framework_value::retirement::RetireOwned for MapLifetime {
     fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {

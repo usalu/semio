@@ -84,6 +84,7 @@ pub struct Generation2dTransientPatch {
 }
 
 protocol::retained_row_patch!(pub retained_fields for Generation2dTransientPatch => Generation2dTransient { generation_preview_text: Option<String> });
+protocol::retained_empty_option_patch!(Generation2dTransientPatch { generation_preview_text });
 protocol::retained_patch_diff!(Generation2dTransientPatch => Generation2dTransient);
 
 impl protocol::MutationDiff<Generation2dTransient> for Generation2dTransientPatch {}

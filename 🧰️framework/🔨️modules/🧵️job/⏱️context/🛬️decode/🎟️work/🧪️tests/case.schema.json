@@ -11,7 +11,11 @@
     "heap",
     "scope",
     "reportedWork",
-    "underreportRefusal"
+    "underreportRefusal",
+    "rebindWork",
+    "pendingCloseRefusal",
+    "foreignSourceRefused",
+    "unwindPaidWork"
   ],
   "properties": {
     "version": {
@@ -51,6 +55,18 @@
     },
     "underreportRefusal": {
       "const": "original native producer omitted observed native work"
+    },
+    "rebindWork": {
+      "const": 1
+    },
+    "pendingCloseRefusal": {
+      "const": "original native decoder still owns unresolved original work"
+    },
+    "foreignSourceRefused": {
+      "const": true
+    },
+    "unwindPaidWork": {
+      "const": 1
     }
   }
 }

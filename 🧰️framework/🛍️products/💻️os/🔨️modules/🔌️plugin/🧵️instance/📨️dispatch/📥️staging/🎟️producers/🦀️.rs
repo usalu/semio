@@ -12,7 +12,7 @@ use semio_plugin_decl_emission::Emit;
 use semio_framework::Fault;
 use semio_framework::FaultCode;
 use semio_framework::FaultOrigin;
-use std::mem::ManuallyDrop;
+use std::mem::{ManuallyDrop,size_of};
 use store::MemberFactory;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
@@ -33,7 +33,7 @@ use semio_plugin_job::reserved_jobs::{FrameworkReservedCommitPermit, QualifiedTo
 use std::future::Future;
 use semio_plugin_instance_extension::InstanceExtension;
 use semio_framework::kernel::{InvocationResult, UiDirtyScope};
-use semio_plugin_retained_command::typed_operation::{MountedTypedCommandFullOperation, PendingPublicationOutcome};
+use semio_framework_plugin_retained_command::typed_operation::{MountedTypedCommandFullOperation, PendingPublicationOutcome};
 use semio_plugin_composition_publication::MountedTypedCommandFullOperationStage;
 use store::Mutation;
 use protocol::OpText;
@@ -46,6 +46,33 @@ use semio_plugin_decl_views::child_view::ChildContentRetainers;
 use semio_os_kernel as store;
 
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> DispatchCtx<'ctx, A, M, X> {
+    /// 🎞️ Retains the original media and issued producer through mounted publication and paid source return.
+    pub async fn advance_original_reserved_media(&mut self,port:&str,media:&mut Option<semio_framework::Media>,meta:&ActionMeta,completed:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_plugin_retained_command::typed_operation::original_emission::{OriginalEmissionAdmission,OriginalEmissionPublicationFrontier};
+        use semio_plugin_job::original_emission::OriginalEmissionReceipt;
+        use semio_framework_job::{OriginalConstructionDemand,admit_original_construction,close_original_retained_step};
+        use semio_framework_value::{RetirementDemand,RetainedCloneStep,RetainedWorkOutcome};
+        if *completed{return Ok(true)}
+        if self.media.reserved_mount.is_none(){
+            if let Some(receipt)=self.media.reserved_receipt{receipt.operation(cx)?;if self.pending.reserved_preparation.is_some(){cx.with_original_retirement(|cx|semio_plugin_instance_jobs::reserved_preparation::ReservedPreparation::<A>::close_slot(&mut self.pending.reserved_preparation,&*self.tools.tool_jobs,cx))?;return Ok(false)}let bytes=size_of::<Option<OriginalEmissionReceipt>>()+size_of::<bool>();let d=RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()};cx.with_original_retirement(|cx|close_original_retained_step(cx,d,|_|{self.media.reserved_receipt=None;*completed=true;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}}))?;return Ok(*completed)}
+            if !self.as_render().advance_reserved_media(port,media,meta,cx)?{return Ok(false)}
+            let source=(cx.operation(),cx.generation(),cx.original_source_parent()?.source_identity()?);
+            if let Some((_,original))=self.media.pending_reserved_producer_permit.as_ref(){if *original!=source{return Ok(false)}}else{let Some(permit)=self.admit_reserved_emit_producer("import-media",meta,cx)?else{return Ok(false)};*self.media.pending_reserved_producer_permit=Some((permit,source));return Ok(false)}
+            OriginalEmissionAdmission::<A>::admit(cx,&mut self.media.reserved_mount)?;return Ok(false)
+        }
+        if !self.media.reserved_mount.as_ref().unwrap().matches(cx){return Ok(false)}
+        let phase=self.media.reserved_mount.as_ref().unwrap().phase;
+        match phase{
+            0=>{self.media.reserved_mount.as_mut().unwrap().advance_phase(0,3,cx)?;},
+            3=>{if self.media.reserved_mount.as_ref().unwrap().mounted.is_some(){self.media.reserved_mount.as_mut().unwrap().advance_phase(3,4,cx)?;return Ok(false)}let proof=self.tools.qualified_tool_proof(&*self.stores,"import-media")?;let frontier=OriginalEmissionPublicationFrontier{canonical_revision:self.stores.store.content_revision_now(),artifact_generation:self.stores.store.generation_now(),config_generation:self.stores.config_store.generation_now(),draft_generation:self.stores.draft_store.generation_now(),presence_generation:self.stores.presence_store.generation().await,transient_generation:self.stores.transient_store.generation().await,publication_lanes:proof.publication_lanes()};let operation=self.media.pending_reserved_producer_permit.as_ref().ok_or_else(||ValueError::invariant("reserved mount lost its producer permit"))?.0.operation;let prepared=self.pending.reserved_preparation.as_mut().ok_or_else(||ValueError::invariant("reserved mount lost its preparation"))?;let verb=&mut prepared.headers.as_mut().ok_or_else(||ValueError::invariant("reserved mount lost its original verb"))?[8];let owner=self.media.reserved_mount.as_mut().unwrap();if MountedTypedCommandFullOperation::<A>::admit_original_reserved(verb,meta,frontier,&mut self.media.pending_reserved_producer_permit,&mut prepared.job,&mut prepared.completion,&self.tools.tool_cancellations,cx,&mut owner.mounted)?{owner.operation=Some(operation)}},
+            4=>{let owner=self.media.reserved_mount.as_mut().unwrap();if owner.window_config.as_ref().is_some_and(|capture|capture.handoff_complete()){owner.advance_phase(4,5,cx)?;}else{owner.capture_window_config(&mut self.stores.window_config_store,cx)?;}},
+            5=>{let owner=self.media.reserved_mount.as_mut().unwrap();if owner.window_transient.as_ref().is_some_and(|capture|capture.handoff_complete()){owner.advance_phase(5,6,cx)?;}else{owner.capture_window_transient(&mut self.stores.window_transient_store,cx)?;}},
+            6=>{let owner=self.media.reserved_mount.as_mut().unwrap();if owner.mounted.as_ref().unwrap().captured_child_content.is_some(){owner.advance_phase(6,7,cx)?;return Ok(false)}let mounted=owner.mounted.as_mut().unwrap();let capacity=semio_framework_value::retirement::arc_custody::arc_bytes::<ChildContentView>();let copy=size_of::<ChildContentView>()+2*size_of::<std::sync::Arc<ChildContentView>>();if admit_original_construction(cx,&mut mounted.captured_child_content,OriginalConstructionDemand{items:1,copy_bytes:copy,capacity_bytes:capacity,release_bytes:0,depth:1},|_|RetainedWorkOutcome{result:Ok((std::sync::Arc::new(ChildContentView::clone(&*self.child_composition.child_content_root)),RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:capacity,..Default::default()})),work:1})?{mounted.captured_child_content_generation=self.child_composition.child_content_generation;}},
+            7=>{let owner=self.media.reserved_mount.as_ref().unwrap();if owner.mounted.is_none(){self.media.reserved_mount.as_mut().unwrap().advance_phase(7,8,cx)?;return Ok(false)}let mounted=owner.mounted.as_ref().unwrap();let operation=owner.operation.ok_or_else(||ValueError::invariant("reserved mount lost its operation"))?;let id=operation.operation.0;if mounted.canonical_revision!=self.stores.store.content_revision_now()||mounted.artifact_generation!=self.stores.store.generation_now()||mounted.config_generation!=self.stores.config_store.generation_now()||mounted.draft_generation!=self.stores.draft_store.generation_now()||mounted.captured_child_content_generation!=self.child_composition.child_content_generation||!self.tools.tool_operations.can_insert(id)||self.tools.typed_operation_reservations[id as usize%semio_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS]!=Some(id){return Err(ValueError::invariant("reserved mount changed its original destination or frontier").into())}let receipt=OriginalEmissionReceipt::capture(operation,cx)?;let mut output=None;if self.media.reserved_mount.as_mut().unwrap().take_mounted_into(&mut output,cx)?{self.tools.tool_operations.insert_admitted(id,output.unwrap());self.tools.release_reserved_emit_slot(id);self.media.reserved_receipt=Some(receipt);}},
+            8=>{let owner=self.media.reserved_mount.as_mut().unwrap();if !owner.terminal_is_empty(){cx.with_original_retirement(|cx|owner.close_step(&self.tools.tool_cancellations,cx))?;return Ok(false)}let d=RetirementDemand{copy_bytes:size_of::<Option<Box<OriginalEmissionAdmission<A>>>>(),release_bytes:size_of::<OriginalEmissionAdmission<A>>(),depth:1,..Default::default()};cx.with_original_retirement(|cx|close_original_retained_step(cx,d,|_|{self.media.reserved_mount.take();RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()})),work:1}}))?;},
+            _=>return Err(ValueError::invariant("reserved mount has an invalid original phase").into())
+        }Ok(false)
+    }
     pub async fn admit_framework_reserved_spawn(&mut self, verb: &str, raw: &[u8], decoded_items: usize, meta: &ActionMeta,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<FrameworkReservedCommitPermit>, semio_framework_job::OriginalTurnFailure> {
         let proof = self.tools.qualified_tool_proof(&*self.stores, verb)?;
         if !matches!(proof, QualifiedToolView::FrameworkOwned(_) | QualifiedToolView::AppOwned(_)) {
@@ -240,7 +267,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             config_generation:self.stores.config_store.generation_now(),draft_generation:self.stores.draft_store.generation_now(),presence_generation:0,transient_generation:0,
             window_config_authority:None,window_transient_authority:None,publication_lanes:&[],contract:None,
             session:None,session_rejected:None,producer_source:None,producer_request:None,producer_request_retirement:None,reserved_producer,completion,completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input:None,output_chunks:None,cancellation_lease:lease,identity,identity_progress:semio_framework_value::native_encoding::NativeEncodeProgress{completed:0,total:0,owned_bytes:0},terminal_seen:true,worker_semantic_pending:false,worker_outcome_pending:false,worker_fault_capture:None,pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,original_retirement_receipt:None,
-            publication,publication_ownership_progress:None,actor_capture:None,actor_capture_pending:semio_plugin_mounted_owner::actor_capture::ActorCapture::new(),worker_resume_pending:false,tool_stage:semio_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None,pending_stream_abort:None,stream_abort_completed:false,pending_child_publication:None,
+            publication,publication_ownership_progress:None,actor_capture:None,actor_capture_pending:semio_plugin_mounted_owner::actor_capture::ActorCapture::new(),worker_resume_pending:false,tool_stage:semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None,publication_failure:Default::default(),pending_stream_abort:None,stream_abort_completed:false,pending_child_publication:None,
             owned_child_group:None,owned_child_committed:false,owned_child_result_pending:false,
             captured_child_content:Some(std::sync::Arc::new(ChildContentView::clone(&*self.child_composition.child_content_root))),captured_child_content_generation:self.child_composition.child_content_generation,
             page_publication:semio_framework_plugin_retained_command::typed_operation::MountedPagePublication::new(),result_page:None, diagnostics:None,result_page_presented:false,result_sequence:0,publication_progress:0,publication_checkpoint:None,publication_attempt:0,

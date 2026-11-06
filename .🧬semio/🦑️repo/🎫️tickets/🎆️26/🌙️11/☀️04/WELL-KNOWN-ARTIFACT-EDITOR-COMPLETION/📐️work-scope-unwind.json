@@ -1,0 +1,49 @@
+{
+  "schema": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "properties": {
+        "reservedBefore": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "performed": {
+          "type": "boolean"
+        },
+        "reservedAfter": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "actual": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "reservedBefore",
+        "performed",
+        "reservedAfter",
+        "actual"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "data": [
+    {
+      "reservedBefore": 1,
+      "performed": false,
+      "reservedAfter": 1,
+      "actual": 0
+    },
+    {
+      "reservedBefore": 1,
+      "performed": true,
+      "reservedAfter": 0,
+      "actual": 1
+    }
+  ]
+}

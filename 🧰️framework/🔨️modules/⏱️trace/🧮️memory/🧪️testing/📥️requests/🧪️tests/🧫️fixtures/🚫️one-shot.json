@@ -1,0 +1,24 @@
+{
+  "bytes": 73,
+  "nextBytes": 29,
+  "cases": [
+    {
+      "kind": "allocate",
+      "refused": 1,
+      "requested": 102,
+      "released": 29
+    },
+    {
+      "kind": "zeroed",
+      "refused": 1,
+      "requested": 102,
+      "released": 29
+    },
+    {
+      "kind": "reallocate",
+      "refused": 1,
+      "requested": 102,
+      "released": 29
+    }
+  ]
+}

@@ -90,7 +90,7 @@
         assert_eq!(resumed_instance, spawn_meta.instance_id);
         assert_eq!(resumed_meta.actor.as_str(), "alice", "the follow-up must carry the task's ORIGINATING actor, not whatever is 'current' at resume time");
         assert_eq!(resumed_meta.instance_id, spawn_meta.instance_id);
-        let semio_plugin_runtime_ops::ops_typed_operations::TaskResumeInput::Command(command_bytes) = resumed_input.expect("the task resolved Ok, not with a Fault") else {
+        let semio_framework_plugin_runtime_ops::ops_typed_operations::TaskResumeInput::Command(command_bytes) = resumed_input.expect("the task resolved Ok, not with a Fault") else {
             panic!("SpawnCountTask's task resolves TaskResolution::Command, not ::Emit");
         };
         let decoded_command = <TestCommand as ::protocol::OpBinary>::decode_op(&command_bytes).expect("must decode back to a TestCommand");
@@ -99,10 +99,10 @@
         let runtime = semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         semio_plugin_runtime_instances::inst_wire_frames::test_push_instance(&runtime, AppInstance { id: resumed_instance, app: TestRuntimeApps::from(app), surface_contexts: Default::default() }).await;
         semio_plugin_runtime_instances::inst_wire_frames::test_admit_instance_actor(&runtime, resumed_instance, "local");
-        let output = semio_plugin_runtime_ops::ops_typed_operations::plugin_resume_task(&runtime, resumed_instance, &resumed_meta, semio_plugin_runtime_ops::ops_typed_operations::TaskResumeInput::Command(command_bytes), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await;
+        let output = semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_resume_task(&runtime, resumed_instance, &resumed_meta, semio_framework_plugin_runtime_ops::ops_typed_operations::TaskResumeInput::Command(command_bytes), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await;
         assert!(output.frames.is_empty(), "queueing a resumed Command frames nothing: its receipt follows the instance's own delivery: {:?}", output.frames.len());
 
-        let cell = semio_plugin_runtime_ops::ops_wire_limits::runtime_instance_cell(&runtime, resumed_instance).expect("the resumed instance stays mounted");
+        let cell = semio_framework_plugin_runtime_ops::ops_wire_limits::runtime_instance_cell(&runtime, resumed_instance).expect("the resumed instance stays mounted");
         let mut active = cell.instance.try_lock().expect("no other owner holds the resumed instance");
         let receipt = artifact_app_laws::settle_registered_typed_operation(&mut active.app, resumed_instance, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(),cx).await.expect("the resumed follow-up publishes");
         assert!(receipt.lanes.contains(&TypedOperationResultLane::Artifact), "the follow-up must have published on the ARTIFACT lane — it applies, it does not preview: {:?}", receipt.lanes);

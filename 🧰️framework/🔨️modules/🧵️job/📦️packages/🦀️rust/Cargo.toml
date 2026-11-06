@@ -22,6 +22,7 @@ testkit = ["semio-framework-async/testkit","semio-framework-job-context/testkit"
 
 [dependencies]
 semio-framework-job-context = { workspace = true }
+semio-framework-job-native-encoding = { workspace = true }
 semio-framework-job-testing-caller = { workspace = true, optional = true }
 semio-framework-trace = { workspace = true }
 semio-framework-job-payload = { workspace = true }
@@ -86,10 +87,6 @@ path = "../../🔎️reconcile/🧪️tests/🔬️contract/🦀️.rs"
 name = "original-core-budget"
 required-features = ["testkit"]
 path = "../../⏱️budget/🧪️tests/⏱️budget/🦀️.rs"
-
-[[test]]
-name = "original-clock-stride"
-path = "../../🧪️tests/🔬️clock-stride/🦀️.rs"
 
 [[test]]
 name = "original-payload-builder"

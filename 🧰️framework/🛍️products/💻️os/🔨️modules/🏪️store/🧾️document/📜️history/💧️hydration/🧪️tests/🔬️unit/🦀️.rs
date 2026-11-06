@@ -4,7 +4,7 @@ use semio_os_store_engine_owners::DocumentStoreOwners;
 use semio_framework_value::{ErasedSnapshotRetirement, RetirementDemand, ValueError, ValueRefusalKind};
 use semio_framework_job::{Generation, OperationId, StepContext};
 use std::mem::ManuallyDrop;
-use semio_os_store_member_open::MemberOpenDiagnostic;
+use semio_framework_os_store_member_open::MemberOpenDiagnostic;
 use semio_os_spr::Mutation;
 use semio_os_store_document::persisted_document_hydration::{PersistedDocumentHydrationTarget, PersistedDocumentStoreHydrationStep, Phase, RetainedPersistedDocumentHydration, drive_hydration_retirement, drive_hydration_runtime, hydration_fold_byte_grant};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
@@ -129,11 +129,11 @@ struct AllocationProbe {
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct UnitFactory;
-impl semio_framework_value::ArtifactOwnedValueRetirementFactory<()> for UnitFactory {
+impl semio_framework_value::ArtifactOwnedValueRetirementFactory<()> for UnitFactory {fn retire_owned_work_demand(&self,_:&())->Result<u64,semio_framework_value::ValueError>{Ok(1)}
     fn retirement_birth_bytes(&self, _: &()) -> usize { std::mem::size_of::<WholeAllocation>() }
-    fn retire_owned(&self, value: (), grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, ())> {
+    fn retire_owned(&self, value: (), grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (semio_framework_value::OriginalRetirementFailure, ())> {
         let birth = std::mem::size_of::<WholeAllocation>();
-        if grant.maximum_items == 0 || grant.maximum_capacity_bytes < birth { return semio_framework_value::RetainedWorkOutcome { result: Err((ValueError::literal(ValueRefusalKind::OwnershipLimit, "unit retirement birth is unfunded"), value)), work: 0 }; }
+        if grant.maximum_items == 0 || grant.maximum_capacity_bytes < birth { return semio_framework_value::RetainedWorkOutcome { result: Err((ValueError::literal(ValueRefusalKind::OwnershipLimit, "unit retirement birth is unfunded").into(), value)), work: 0 }; }
         semio_framework_value::RetainedWorkOutcome { result: Ok((Box::new(WholeAllocation { owner: None }), RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: birth, ..Default::default() })), work: 1 }
     }
 }

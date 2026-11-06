@@ -150,7 +150,7 @@ fn cached_and_live_previews_obey_the_portable_source_revision_contract() {
         let visible = case["visible"].as_bool().expect("visibility");
         assert_eq!(cached_commit(&document, &config, current).is_some(), visible, "cache {}", case["id"]);
         if let Ok(source) = <[u8; 32]>::try_from(source_revision.as_slice()) {
-            let mut run = semio_framework_plugin::ToolRunView::new("fill", ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 9 }, source), ToolRunState::Running);
+            let mut run = semio_plugin::ToolRunView::new("fill", ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 9 }, source), ToolRunState::Running);
             run.payload = Some(Grid2dFillPayload { assignments: vec![Grid2dFillCell { x: 0, y: 0, tile_id: Some(document.tiles[0].id.clone()) }], ..Default::default() }.encode().into());
             assert_eq!(live_fill_payload(Some(&run), current).is_some(), visible, "live {}", case["id"]);
         }
@@ -169,7 +169,7 @@ fn completed_assignments_override_trace_history_through_the_live_run_adapter() {
         let expected = case["expected"].as_u64().unwrap() as usize;
         let done = case["done"].as_bool().unwrap();
         let payload = Grid2dFillPayload { assignments: vec![Grid2dFillCell { x: 0, y: 0, tile_id: Some(document.tiles[assigned].id.clone()) }], done, trace: vec![Grid2dFillTraceEvent { x: 0, y: 0, tile_id: document.tiles[traced].id.clone(), discarded: case["discarded"].as_bool().unwrap() }], ..Default::default() };
-        let mut run = semio_framework_plugin::ToolRunView::new("fill", ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 1 }, [0; 32]), if done { ToolRunState::Complete } else { ToolRunState::Running });
+        let mut run = semio_plugin::ToolRunView::new("fill", ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 1 }, [0; 32]), if done { ToolRunState::Complete } else { ToolRunState::Running });
         run.payload = Some(payload.encode().into());
         let painted = paint_commit(&document, &Grid2dWindowConfig::default(), Some(&run), Some([0; 32])).expect("live assignment");
         assert_eq!(painted.assignments, vec![(0, 0, document.tiles[expected].id.clone())], "{}", case["id"]);

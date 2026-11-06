@@ -5,14 +5,14 @@ pub use crate::services::OriginalInstanceRegistration;
 pub mod windows;
 pub use windows::{OriginalWindowAdmission,OriginalWindowSet,OriginalWindowSequence,OriginalNoWindows};
 use crate::ephemeral::{OriginalEmptyEphemeralDeclaration,OriginalEphemeralDeclaration,OriginalEphemeralSource,OriginalEphemeralStores};
-use semio_framework_plugin_instance_jobs::jobs_components::{OriginalDeclaredEmptyOperationSource,OriginalDeclaredOperationTools,OriginalDeclaredTools,DeclaredToolCatalogAlias,OriginalToolOperationsSources};
-use semio_framework_plugin_decl_views::{NoPresence,NoPresenceMutation,NoTransient,NoTransientMutation,PeerPresenceRoot};
-use semio_framework_plugin_window_config::{WindowConfigOwner,OriginalWindowOwnerRegistration};
-use semio_framework_plugin_reactor_app::OriginalPluginAppRegistration;
-use semio_framework_plugin_window_kits::RegisteredDefinitionSource;
+use semio_plugin_instance_jobs::jobs_components::{OriginalDeclaredEmptyOperationSource,OriginalDeclaredOperationTools,OriginalDeclaredTools,DeclaredToolCatalogAlias,OriginalToolOperationsSources};
+use semio_plugin_decl_views::{NoPresence,NoPresenceMutation,NoTransient,NoTransientMutation,PeerPresenceRoot};
+use semio_plugin_window_config::{WindowConfigOwner,OriginalWindowOwnerRegistration};
+use semio_plugin_reactor_app::OriginalPluginAppRegistration;
+use semio_plugin_window_kits::RegisteredDefinitionSource;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use semio_framework_os_kernel::os_store::owned_schema_decode::{ArtifactEnvelopeFieldDecoderRegistry,ArtifactEnvelopeCompletedRecordRegistry,ArtifactEnvelopeRegistryOwner};
-use semio_framework_plugin_peer::PeerPresenceRootRetirement;
+use semio_os_kernel::os_store::owned_schema_decode::{ArtifactEnvelopeFieldDecoderRegistry,ArtifactEnvelopeCompletedRecordRegistry,ArtifactEnvelopeRegistryOwner};
+use semio_plugin_peer::PeerPresenceRootRetirement;
 use std::marker::PhantomData;
 type Fields<A>=ArtifactEnvelopeFieldDecoderRegistry<<A as ArtifactApp>::Snapshot,<A as ArtifactApp>::Mutation>;
 type Records<A>=ArtifactEnvelopeCompletedRecordRegistry<<A as ArtifactApp>::Snapshot,<A as ArtifactApp>::Mutation>;
@@ -36,7 +36,7 @@ pub type OriginalSingleWindowRegistration<A,M,O>=OriginalNativeRegistration<A,M,
 /// 🧺️ One original registrar retains every declared native owner through mounted admission.
 pub struct OriginalNativeRegistration<A,M,D>
 where A:OriginalArtifactAppBirth,M:ReferenceSpaceMember+MemberFactory+'static,D:OriginalInstanceDeclarations<A>{
- binding:OriginalSourceBinding,definition:(usize,usize),policy:semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1,
+ binding:OriginalSourceBinding,definition:(usize,usize),policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1,
  catalog:ManuallyDrop<Option<DeclaredToolCatalogAlias>>,tools_source:Option<Box<OriginalDeclaredEmptyOperationSource>>,tools:ManuallyDrop<Option<OriginalDeclaredOperationTools>>,
  ephemeral_source:Option<Box<OriginalEphemeralSource<A,D::Ephemeral>>>,ephemeral:ManuallyDrop<Option<OriginalEphemeralStores<A>>>,window:ManuallyDrop<Option<WindowConfigOwnerRegistry>>,config_windows:Option<Box<D::ConfigWindows>>,window_transient:ManuallyDrop<Option<WindowTransientOwnerRegistry>>,transient_windows:Option<Box<D::TransientWindows>>,
  peer:ManuallyDrop<Option<Arc<PeerPresenceRoot>>>,peer_close:Option<PeerPresenceRootRetirement>,scope:ManuallyDrop<Option<Lifetime>>,scope_close:Option<ControlledRetirement<Lifetime>>,
@@ -54,7 +54,7 @@ where A:OriginalArtifactAppBirth,M:ReferenceSpaceMember+MemberFactory+'static,D:
 }
 impl<A,M,D> OriginalInstanceRegistration<A,M> for OriginalNativeRegistration<A,M,D>
 where A:OriginalArtifactAppBirth,M:ReferenceSpaceMember+MemberFactory+'static,D:OriginalInstanceDeclarations<A>{
- fn admit(source:RegisteredDefinitionSource<'_>,registration:&dyn OriginalPluginAppRegistration,actor:&protocol::ActorId,policy:semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1,cx:&mut StepContext<'_>,output:&mut Option<Box<Self>>)->Result<bool,OriginalTurnFailure>{
+ fn admit(source:RegisteredDefinitionSource<'_>,registration:&dyn OriginalPluginAppRegistration,actor:&protocol::ActorId,policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1,cx:&mut StepContext<'_>,output:&mut Option<Box<Self>>)->Result<bool,OriginalTurnFailure>{
   if output.is_some(){return Err(invalid("original Window registration recipient is occupied").into())}
   let catalog=registration.as_any().downcast_ref::<OriginalDeclaredTools>().and_then(OriginalDeclaredTools::source).ok_or_else(||invalid("native Window registration requires its actual committed declared tool producer"))?;
   if source.id!=catalog.controller_id{return Err(invalid("original Window registration changed its declared controller").into())}

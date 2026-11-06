@@ -1,0 +1,50 @@
+{
+  "type": "array",
+  "minItems": 3,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "quoted",
+      "actual",
+      "nextGrant",
+      "probe",
+      "retained",
+      "nextMaximum",
+      "admitted"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "quoted": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "actual": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "nextGrant": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "probe": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "retained": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "nextMaximum": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "admitted": {
+        "type": "boolean"
+      }
+    }
+  }
+}

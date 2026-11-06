@@ -163,5 +163,3 @@ pub use viewer_actions_and_transaction_outcomes::*;
 
 //#endregion 🔖️Limits
 
-#[path="📣️proofs/🦀️.rs"]
-mod bounded_first_step_proof_catalog;

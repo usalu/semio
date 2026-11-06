@@ -118,6 +118,13 @@ impl RetainedPayloadBuilder{
   self.sealed=true;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}
  }
  pub fn retirement_demands(&self)->Result<RetirementDemand,ValueError>{if let Some(source)=self.incoming.as_ref(){return Ok(RetirementDemand{release_bytes:source.allocated_capacity_bytes(),depth:1,..Default::default()})}if let Some(reservation)=self.reservation.as_ref(){return Ok(if reservation.held{RetirementDemand{depth:1,..Default::default()}}else if reservation.ledger.is_some(){ledger_demands(&reservation.ledger)}else{RetirementDemand{depth:1,..Default::default()}})}if self.staged.is_some(){return self.staged_retirement_demands()}if let Some(payload)=self.original(){if !payload.terminal_is_empty(){let mut demand=payload.retirement_demands()?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original payload builder depth overflow"))?;return Ok(demand)}}Ok(RetirementDemand{depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
+ /// ⛽️ Quotes the selected original backing return or separate builder metadata removal.
+ pub fn retirement_work(&self)->Result<u64,ValueError>{
+  self.retirement_demands()?;
+  if self.incoming.is_some()||self.reservation.is_some()||self.staged.is_some(){return Ok(1)}
+  if let Some(payload)=self.original(){if !payload.terminal_is_empty(){return payload.retirement_work()}}
+  Ok(u64::from(!self.terminal_is_empty()))
+ }
  /// ♻️ Original pages and ledger close before a separate in-place metadata removal turn.
  /// ```compile_fail,E0599
  /// use semio_framework_job_payload::{RetainedPayloadBuilder,JobPayloadStep};

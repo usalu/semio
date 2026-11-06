@@ -1,0 +1,2 @@
+import {readdirSync,readFileSync} from "node:fs";
+if(process.platform==="linux")for(const id of readdirSync("/proc")){if(!/^\d+$/.test(id))continue;try{const args=readFileSync(`/proc/${id}/cmdline`,"utf8").split("\0");if(args.includes("service")&&args.includes("--foreground")){const stat=readFileSync(`/proc/${id}/stat`,"utf8"),fields=stat.slice(stat.lastIndexOf(")")+2).split(" ");console.log(JSON.stringify({pid:Number(id),parent:Number(fields[1]),state:fields[0],args:args.filter(value=>value==="repo"||value==="service"||value==="start"||value==="--foreground")}));}}catch{}}

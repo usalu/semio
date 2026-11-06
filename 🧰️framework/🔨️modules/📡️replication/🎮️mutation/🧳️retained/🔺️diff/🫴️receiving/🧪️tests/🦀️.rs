@@ -14,16 +14,18 @@ struct Diff{text:String}
 #[derive(semio_framework_value::RetireOwned)]
 struct Projection{text:Option<SealedShared<String>>}
 struct Apply{field:NativeIntrinsicSharedField<String>,staged:ManuallyDrop<Option<SealedShared<String>>>,retirement:RetainedCloneClose,ready:bool,closing:bool,ledger:Option<u64>}
-struct Recipient{calls:usize,bytes:usize,seen:[usize;64]}
-impl Default for Recipient{fn default()->Self{Self{calls:0,bytes:0,seen:[0;64]}}}
+struct Recipient{calls:usize,bytes:usize,seen:[usize;64],submitted:RetainedCloneProgress}
+impl Default for Recipient{fn default()->Self{Self{calls:0,bytes:0,seen:[0;64],submitted:Default::default()}}}
 struct RejectRecipient(Recipient,usize);
 impl semio_framework_value_native_owned::native_decoding::NativeDecodeConstructionRecipient for RejectRecipient{
+ fn submitted(&self)->RetainedCloneProgress{self.0.submitted}
  fn grant(&mut self,d:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{self.0.grant(d)}
  fn accept(&mut self,g:RetainedCloneGrant,p:RetainedCloneProgress)->Result<(),ValueError>{self.0.accept(g,p)?;if p.retained_capacity_bytes!=self.1{return Ok(())}Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture rejects its accepted construction receipt"))}
 }
 impl semio_framework_value_native_owned::native_decoding::NativeDecodeConstructionRecipient for Recipient{
+ fn submitted(&self)->RetainedCloneProgress{self.submitted}
  fn grant(&mut self,_:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{Ok(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64})}
- fn accept(&mut self,g:RetainedCloneGrant,p:RetainedCloneProgress)->Result<(),ValueError>{assert!(p.fits(g));self.seen[self.calls]=p.retained_capacity_bytes;self.calls+=1;self.bytes+=p.retained_capacity_bytes;Ok(())}
+ fn accept(&mut self,g:RetainedCloneGrant,p:RetainedCloneProgress)->Result<(),ValueError>{self.submitted=self.submitted.checked_add(p)?;assert!(p.fits(g));self.seen[self.calls]=p.retained_capacity_bytes;self.calls+=1;self.bytes+=p.retained_capacity_bytes;Ok(())}
 }
 impl RetainedDiffFragment<Projection> for Diff{type FragmentApply=Apply;}
 impl RetainedDiffApply<Projection,Diff> for Apply{

@@ -1,0 +1,2 @@
+import {readFileSync,writeFileSync} from "node:fs";
+const path="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🧪️tests/🔀️partition/📌️retention.ts",source=readFileSync(path,"utf8"),before='expect(existsSync(sealedEntryOfV1(root,"door",policy).loader(doorA.loader))).toBe(true);',after=before+'expect(existsSync(sealedEntryOfV1(root,"kernel",policy).snapshot(kernelA.digest))).toBe(true);';if(!source.includes(before))throw Error("Pair GC law changed");writeFileSync(path,source.replace(before,after));

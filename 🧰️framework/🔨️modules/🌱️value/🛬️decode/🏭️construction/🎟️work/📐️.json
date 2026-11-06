@@ -13,5 +13,6 @@
     "fuel": 100000,
     "maximumTurns": 100000
   },
-  "nullOwnedBytes": 0
+  "nullOwnedBytes": 0,
+  "publicationWork": 1
 }

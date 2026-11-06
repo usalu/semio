@@ -19,6 +19,6 @@ proc-macro = true
 path = "🦀️.rs"
 
 [dependencies]
-semio-os-kernel-dsl-derive-expand = { path = "../../🧩️expand/📦️packages/🦀️rust" }
+semio-framework-os-kernel-dsl-derive-expand = { path = "../../🧩️expand/📦️packages/🦀️rust", package = "semio-os-kernel-dsl-derive-expand"}
 semio-framework-native-build-compiler-resources = { path = "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️resources/🧮️compiler/📦️packages/🦀️rust" }
 

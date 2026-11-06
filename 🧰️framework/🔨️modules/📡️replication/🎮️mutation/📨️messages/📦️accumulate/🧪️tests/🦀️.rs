@@ -38,10 +38,10 @@ fn close(ledger: &mut ReplayMessageAccumulator) {
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: 0, maximum_release_bytes: release, maximum_depth: 64 };
         let paused = RetainedCloneGrant { maximum_depth: 0, ..grant };
-        assert_eq!(observed(|| ledger.close_step(paused), paused), RetainedCloneProgress::default());
-        assert_eq!(observed(|| ledger.close_step(RetainedCloneGrant::default()), RetainedCloneGrant::default()), RetainedCloneProgress::default());
+        assert_eq!(observed(|| ledger.close_step(paused), paused), RetainedCloneProgress::default());assert_eq!(ledger.last_close_work(),0);
+        assert_eq!(observed(|| ledger.close_step(RetainedCloneGrant::default()), RetainedCloneGrant::default()), RetainedCloneProgress::default());assert_eq!(ledger.last_close_work(),0);
         if release > 0 { let short = RetainedCloneGrant { maximum_release_bytes: release - 1, ..grant }; assert_eq!(observed(|| ledger.close_step(short), short), RetainedCloneProgress::default()); }
-        observed(|| ledger.close_step(grant), grant);
+        assert_eq!(ledger.next_close_work_demand(),1);observed(|| ledger.close_step(grant), grant);assert_eq!(ledger.last_close_work(),1);
     }
     panic!("original diagnostic owner did not reach terminal");
 }

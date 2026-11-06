@@ -1,7 +1,9 @@
 use super::*;
+fn witness<T>(turn:semio_framework_value::RetainedWorkOutcome<T>)->Result<T,semio_framework_value::ValueError>{TEST_WORK.fetch_add(turn.work,std::sync::atomic::Ordering::Relaxed);turn.result}
+static TEST_WORK:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(0);
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetirementDemand};
 fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
-fn close_authority(mut owner:semio_framework_value::FactoryAuthority){while !owner.terminal_is_empty(){let d=owner.demands(4096).unwrap();let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.step(grant(d)).unwrap());assert!(step.progress().fits(grant(d)));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));}}
+fn close_authority(mut owner:semio_framework_value::FactoryAuthority){while !owner.terminal_is_empty(){let d=owner.demands(4096).unwrap();let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||witness(owner.step(grant(d))).unwrap());assert!(step.progress().fits(grant(d)));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));}}
 #[test]
 fn original_history_replacements_share_one_decision_and_return_original_owners(){
  let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../🗃️history-ledger/replacements.json")).unwrap();

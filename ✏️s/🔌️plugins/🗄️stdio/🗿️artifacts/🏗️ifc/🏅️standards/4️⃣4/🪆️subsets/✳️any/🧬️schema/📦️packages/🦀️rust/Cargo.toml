@@ -19,6 +19,7 @@ path = "🦀️.rs"
 testkit = []
 
 [dependencies]
+semio-framework-io-control = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust" }
 semio-framework-value-paged-list = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }

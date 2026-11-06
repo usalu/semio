@@ -1,0 +1,7 @@
+# Sealed Partition Contract Audit
+
+Command selection is owned by 🏗️build/⌨️command/🧭️selection/🟦️.ts, its 🔣️.json neutral cases and 🧬️schema/🔣️.json. The command test 🏗️build/⌨️command/🧪️tests/🟦️.ts:29 checks those cases with Ajv and an independent SQLite selector oracle, including help precedence and opaque arguments after --. Its next test checks a real Cargo closure includes the launcher, excludes runtime and fits existing limits. Extend the neutral cases and independent oracle for new kernels rather than assuming selection from implementation.
+
+The sealed trampoline law 🏗️build/🏛️sealed/🧪️tests/🚦️trampoline/🟦️.ts:75 checks that the kernel table equals schema and every entry is a literal import. The broader trampoline, store, interleaving and process suites cover promotion, current pointer, failure fallback, synchronization and retained old snapshots. Source closure command tests under 🏗️build/📥️source/🔏️closure/🚪️command/🧪️tests/🏷️loader-identity own loader proof identity. Preserve authenticated selected source, loader identity, original invocation and promotion/fallback semantics when updating these laws.
+
+Two real runtime branches large enough to justify operation boundaries are the Bazel backend leading to scopes JSON, and tool setup leading to OS MCP. Both are executable dependencies of their operations: do not remove them from those operations or treat a dynamic import as closure exclusion. See authorizer census for measured paths and sizes. No production edits or tests were run in this audit.

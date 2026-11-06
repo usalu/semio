@@ -1,0 +1,16 @@
+[
+  {
+    "name": "within",
+    "owned": 1,
+    "maximum": 2,
+    "resume": true,
+    "newByte": true
+  },
+  {
+    "name": "actualOverrun",
+    "owned": 2,
+    "maximum": 1,
+    "resume": true,
+    "newByte": false
+  }
+]

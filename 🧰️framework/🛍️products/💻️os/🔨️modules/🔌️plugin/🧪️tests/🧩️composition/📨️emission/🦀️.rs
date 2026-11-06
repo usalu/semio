@@ -343,20 +343,25 @@ impl protocol::SemanticMutation<TestSnapshot> for TrackedChildOperation{
     fn label(&self)->LocalizedLabel{protocol::SemanticMutation::label(&self.inner)}
     fn target(&self)->Vec<String>{protocol::SemanticMutation::target(&self.inner)}
 }
+const REFUSAL_WORK:u64=94;
 struct TrackedChildRetirement{pub operation:Option<TrackedChildOperation>,refuse_once:bool}
 impl store::ErasedSnapshotRetirement for TrackedChildRetirement{
- fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;Ok(semio_framework_value::RetirementDemand{release_bytes:self.operation.as_ref().map_or(0,|operation|operation.payload.capacity()),depth:usize::from(self.operation.is_some()),..Default::default()})}
+    fn next_computational_work(&self,_:usize)->Result<u64,semio_framework_value::ValueError>{Ok(if self.refuse_once{REFUSAL_WORK}else{u64::from(self.operation.is_some())})}
+ fn next_demand(&self,_:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{capacity_bytes:if self.refuse_once{91}else{0},release_bytes:if self.refuse_once{0}else{self.operation.as_ref().map_or(0,|operation|operation.payload.capacity())},depth:usize::from(self.operation.is_some()),..Default::default()})}
 
-    fn close_step(&mut self,grant:store::RetainedCloneGrant)->Result<store::RetainedCloneStep,semio_framework_value::ValueError>{
+    fn close_step(&mut self,grant:store::RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{
+        let mut work=0;let result=(||{
         let empty=store::RetainedCloneProgress::default();
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(store::RetainedCloneStep::Progress(empty));}
-        if self.refuse_once{self.refuse_once=false;return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"actual accepted mutation retirement refusal"));}
+        if self.refuse_once{if grant.maximum_capacity_bytes<91{return Ok(store::RetainedCloneStep::Progress(empty))}self.refuse_once=false;work=REFUSAL_WORK;return Err(semio_framework_value::OriginalRetirementFailure::from_primary_and_work(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"actual accepted mutation retirement refusal"),semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"actual accepted mutation work settlement refusal")).with_retained_progress(store::RetainedCloneProgress{copied_items:1,retained_capacity_bytes:91,..empty}));}
         let Some(operation)=self.operation.as_mut()else{return Ok(store::RetainedCloneStep::Complete(empty))};
         let allocation=operation.payload.capacity();
         if allocation>grant.maximum_release_bytes{return Ok(store::RetainedCloneStep::Progress(empty));}
-        if allocation!=0{operation.payload=Vec::new();return Ok(store::RetainedCloneStep::Progress(store::RetainedCloneProgress{copied_items:1,released_bytes:allocation,..empty}));}
+        if allocation!=0{work=1;operation.payload=Vec::new();return Ok(store::RetainedCloneStep::Progress(store::RetainedCloneProgress{copied_items:1,released_bytes:allocation,..empty}));}
+        work=1;
         operation.retired=true;operation.returned.fetch_add(1,std::sync::atomic::Ordering::SeqCst);self.operation.take();
         Ok(store::RetainedCloneStep::Complete(store::RetainedCloneProgress{copied_items:1,..empty}))
+        })();semio_framework_value::RetainedWorkOutcome{result,work}
     }
     fn terminal_is_empty(&self)->bool{self.operation.is_none()}
     fn next_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
@@ -366,18 +371,18 @@ impl store::ErasedSnapshotRetirement for TrackedChildRetirement{
 }
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct TrackedChildRetirementFactory;
-impl store::ArtifactOwnedValueRetirementFactory<TrackedChildOperation> for TrackedChildRetirementFactory{
+impl store::ArtifactOwnedValueRetirementFactory<TrackedChildOperation> for TrackedChildRetirementFactory{fn retire_owned_work_demand(&self,_:&TrackedChildOperation)->Result<u64,semio_framework_value::ValueError>{Ok(1)}
     fn retirement_birth_bytes(&self,_:&TrackedChildOperation)->usize{std::mem::size_of::<TrackedChildRetirement>()}
-    fn retire_owned(&self,operation:TrackedChildOperation,grant:store::RetainedCloneGrant)->Result<(Box<dyn store::ErasedSnapshotRetirement>,store::RetainedCloneProgress),(semio_framework_value::ValueError,TrackedChildOperation)>{
-        semio_framework_value::retirement::frame::admit_retirement_frame(operation,grant,|operation|TrackedChildRetirement{operation:Some(operation),refuse_once:false})
+    fn retire_owned(&self,operation:TrackedChildOperation,grant:store::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>,store::RetainedCloneProgress),(semio_framework_value::OriginalRetirementFailure,TrackedChildOperation)>{
+        let work=u64::from(grant.maximum_items>0&&grant.maximum_depth>0&&grant.maximum_capacity_bytes>=std::mem::size_of::<TrackedChildRetirement>());let result=semio_framework_value::retirement::frame::admit_retirement_frame(operation,grant,|operation|TrackedChildRetirement{operation:Some(operation),refuse_once:false});semio_framework_value::RetainedWorkOutcome{result:result.map_err(|(e,v)|(e.into(),v)),work}
     }
 }
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct RefusingTrackedChildRetirementFactory;
-impl store::ArtifactOwnedValueRetirementFactory<TrackedChildOperation> for RefusingTrackedChildRetirementFactory{
+impl store::ArtifactOwnedValueRetirementFactory<TrackedChildOperation> for RefusingTrackedChildRetirementFactory{fn retire_owned_work_demand(&self,_:&TrackedChildOperation)->Result<u64,semio_framework_value::ValueError>{Ok(1)}
     fn retirement_birth_bytes(&self,_:&TrackedChildOperation)->usize{std::mem::size_of::<TrackedChildRetirement>()}
-    fn retire_owned(&self,operation:TrackedChildOperation,grant:store::RetainedCloneGrant)->Result<(Box<dyn store::ErasedSnapshotRetirement>,store::RetainedCloneProgress),(semio_framework_value::ValueError,TrackedChildOperation)>{
-        semio_framework_value::retirement::frame::admit_retirement_frame(operation,grant,|operation|TrackedChildRetirement{operation:Some(operation),refuse_once:true})
+    fn retire_owned(&self,operation:TrackedChildOperation,grant:store::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>,store::RetainedCloneProgress),(semio_framework_value::OriginalRetirementFailure,TrackedChildOperation)>{
+        let work=u64::from(grant.maximum_items>0&&grant.maximum_depth>0&&grant.maximum_capacity_bytes>=std::mem::size_of::<TrackedChildRetirement>());let result=semio_framework_value::retirement::frame::admit_retirement_frame(operation,grant,|operation|TrackedChildRetirement{operation:Some(operation),refuse_once:true});semio_framework_value::RetainedWorkOutcome{result:result.map_err(|(e,v)|(e.into(),v)),work}
     }
 }
 
@@ -427,19 +432,49 @@ fn child_emission_owned_refusal_keeps_prefix_rejected_and_remaining_until_actual
     let mut returned_provider=None;
     for _ in 0..demand["maximumCloseSteps"].as_u64().unwrap(){
         if preparation.terminal_is_empty(){break;}
+        if returned_provider.is_none(){take_tracked_provider(&mut preparation,&mut returned_provider,&factory,original_close_grant,&fixture["providerHandback"]);}
         let grant=original_close_grant;assert!(semio_plugin_ownership::bounded_ownership::plugin_grant_funds(preparation.retirement_demands(grant.maximum_copy_bytes).expect("quoted retained close"),grant));
         let step=preparation.close_step(grant).expect("actual retained owned close");
         if let PluginLifecycleStep::Progress(progress)=step{assert!(progress.fits(grant));}
-        else if let PluginLifecycleStep::AwaitingInput{reason}=step{
-            assert_eq!(reason,"custom child emission retirement provider awaits its owning caller handback");
-            assert!(returned_provider.is_none());
-            let provider=preparation.take_retirement_provider::<TrackedChildOperation>().expect("same typed provider owner returned");
-            assert!(std::sync::Arc::ptr_eq(&provider,&factory));returned_provider=Some(provider);
-        }else{assert!(matches!(step,PluginLifecycleStep::Complete(progress) if progress.fits(grant)));}
+        else{assert!(matches!(step,PluginLifecycleStep::Complete(progress) if progress.fits(grant)));}
     }
     assert!(preparation.terminal_is_empty());
     assert_eq!(returned_provider.is_some(),demand["expected"]["providerReturnedToCaller"].as_bool().unwrap());
     assert_eq!(returned.load(std::sync::atomic::Ordering::SeqCst),demand["expected"]["retiredAfterClose"].as_u64().unwrap() as usize);
+}
+
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
+struct AdmissionRefusalFactory{first:std::sync::atomic::AtomicBool,source:std::sync::atomic::AtomicUsize,attempts:std::sync::atomic::AtomicUsize}
+impl store::ArtifactOwnedValueRetirementFactory<TrackedChildOperation> for AdmissionRefusalFactory{
+ fn retirement_birth_bytes(&self,_:&TrackedChildOperation)->usize{if self.first.load(std::sync::atomic::Ordering::SeqCst){91}else{std::mem::size_of::<TrackedChildRetirement>()}}
+ fn retire_owned_work_demand(&self,_:&TrackedChildOperation)->Result<u64,ValueError>{Ok(if self.first.load(std::sync::atomic::Ordering::SeqCst){REFUSAL_WORK}else{1})}
+ fn retire_owned(&self,operation:TrackedChildOperation,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>,RetainedCloneProgress),(semio_framework_value::OriginalRetirementFailure,TrackedChildOperation)>{
+  use std::sync::atomic::Ordering;
+  if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<self.retirement_birth_bytes(&operation){return semio_framework_value::RetainedWorkOutcome{result:Err((ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"admission fixture requires its complete original grant").into(),operation)),work:0}}
+  self.attempts.fetch_add(1,Ordering::SeqCst);
+  if self.first.swap(false,Ordering::SeqCst){self.source.store(operation.payload.as_ptr()as usize,Ordering::SeqCst);let failure=semio_framework_value::OriginalRetirementFailure::from_primary_and_work(ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"actual accepted mutation retirement refusal"),ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"actual accepted mutation work settlement refusal")).with_retained_progress(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:91,..Default::default()});return semio_framework_value::RetainedWorkOutcome{result:Err((failure,operation)),work:REFUSAL_WORK}}
+  assert_eq!(operation.payload.as_ptr()as usize,self.source.load(Ordering::SeqCst));
+  store::ArtifactOwnedValueRetirementFactory::retire_owned(&TrackedChildRetirementFactory,operation,grant)
+ }
+}
+
+#[test]
+fn child_emission_factory_admission_refusal_restores_the_exact_input_for_the_same_provider(){
+ use semio_plugin_ownership::bounded_ownership::{PluginLifecyclePrimary,PluginLifecycleStep};
+ use std::sync::{Arc,atomic::{AtomicBool,AtomicUsize,Ordering}};
+ let fixture:Value=serde_json::from_str(include_str!("../../../🧩️composition/📨️emission/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["factoryAdmissionRefusal"];let close=&fixture["ownedPreparation"];
+ let returned=Arc::new(AtomicUsize::new(0));let operation=TrackedChildOperation{inner:RefusingChildOperation{inner:TestMutation::SetCount(SetCount{value:fixture["validValue"].as_i64().unwrap()as i32}),refuse:false},payload:close["operations"][0]["payload"].as_array().unwrap().iter().map(|byte|byte.as_u64().unwrap()as u8).collect(),retired:false,returned:returned.clone()};let pointer=operation.payload.as_ptr();
+ let factory=Arc::new(AdmissionRefusalFactory{first:AtomicBool::new(true),source:AtomicUsize::new(0),attempts:AtomicUsize::new(0)});let provider:Arc<dyn store::ArtifactOwnedValueRetirementFactory<TrackedChildOperation>>=factory.clone();let mut preparation=ChildEmitPreparation::with_factory::<TestSnapshot,_>(fixture["slot"].as_str().unwrap().into(),fixture["childId"].as_str().unwrap().into(),vec![operation],provider.clone());let grant=preparation_grant(1,close["maximumAllocationGrant"].as_u64().unwrap()as usize);
+ let mut refusal=None;
+ for _ in 0..close["maximumPumpSteps"].as_u64().unwrap(){let(turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||preparation.step(grant));match turn{Ok(ChildEmitPreparationStep::Pending(_))=>{},Err(failure)=>{assert_eq!(heap.requested_bytes,law["ownedCauseBytes"].as_u64().unwrap()as usize);assert_eq!(heap.released_bytes,0);refusal=Some(failure);break},_=>panic!("admission must refuse before preparation completes")}}
+ let failure=refusal.unwrap();let PluginLifecyclePrimary::Retirement(original)=&failure.primary else{panic!("full original factory refusal")};assert_eq!(original.primary().unwrap().message,close["retirementRefusal"]["message"].as_str().unwrap());assert_eq!(original.work_refusal().unwrap().message,close["retirementRefusal"]["workMessage"].as_str().unwrap());assert_eq!(preparation.last_turn_work(),law["attemptWork"].as_u64().unwrap());assert_eq!(factory.attempts.load(Ordering::SeqCst),law["attemptsBeforeRefusal"].as_u64().unwrap()as usize);assert_eq!(factory.source.load(Ordering::SeqCst),pointer as usize);assert_eq!(preparation.retained_operation_count(),1);assert_eq!(returned.load(Ordering::SeqCst),0);
+ let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||preparation.step(child_zero_grant()).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(preparation.last_turn_work(),0);assert_eq!(factory.attempts.load(Ordering::SeqCst),1);
+ let mut same_provider=None;
+ for _ in 0..close["maximumPumpSteps"].as_u64().unwrap(){preparation.step(grant).unwrap();if take_tracked_provider(&mut preparation,&mut same_provider,&provider,grant,&fixture["providerHandback"]){break}}
+ assert_eq!(factory.attempts.load(Ordering::SeqCst),law["attemptsAfterRetry"].as_u64().unwrap()as usize);assert_eq!(returned.load(Ordering::SeqCst),law["retiredOperations"].as_u64().unwrap()as usize);assert_eq!(Arc::ptr_eq(&same_provider.unwrap(),&provider),law["sameProvider"].as_bool().unwrap());assert_eq!(factory.source.load(Ordering::SeqCst)==pointer as usize,law["sameSource"].as_bool().unwrap());
+ let mut owner=semio_framework_value::retirement::controlled::ControlledRetirement::retain(failure);let(mut allocated,mut released)=(0,0);
+ for _ in 0..4096{if owner.terminal_is_empty(){break}let d=owner.next_demand(4096).unwrap();let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));allocated+=heap.requested_bytes;released+=heap.released_bytes;}assert!(owner.terminal_is_empty());assert_eq!(released,allocated+law["ownedCauseBytes"].as_u64().unwrap()as usize);
+ preparation.begin_close();for _ in 0..close["maximumCloseSteps"].as_u64().unwrap(){if preparation.terminal_is_empty(){break}assert!(matches!(preparation.close_step(grant).unwrap(),PluginLifecycleStep::Progress(_)|PluginLifecycleStep::Complete(_)))}assert!(preparation.terminal_is_empty());
 }
 
 #[test]
@@ -457,14 +492,18 @@ fn child_emission_accepted_owner_retirement_refusal_retains_exact_prefix_and_pro
     let factory:std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<TrackedChildOperation>>=std::sync::Arc::new(RefusingTrackedChildRetirementFactory);
     let mut preparation=ChildEmitPreparation::with_factory::<TestSnapshot,_>(fixture["slot"].as_str().unwrap().into(),fixture["childId"].as_str().unwrap().into(),vec![operation],std::sync::Arc::clone(&factory));
     let maximum=demand["maximumAllocationGrant"].as_u64().unwrap() as usize;
-    let mut refused=false;
+    let mut refused=None;
     for _ in 0..demand["maximumPumpSteps"].as_u64().unwrap(){
-        match preparation.step(preparation_grant(1, maximum)){Ok(ChildEmitPreparationStep::Pending(_))=>{},Err(fault)=>{assert_eq!(fault.code.0,"interactive-job.child-emission-retirement-refused");refused=true;break},_=>panic!("accepted owner retirement refusal cannot produce a complete group")}
+        let(turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||preparation.step(preparation_grant(1,maximum)));
+        match turn{Ok(ChildEmitPreparationStep::Pending(_))=>{},Err(failure)=>{assert_eq!(heap.requested_bytes,demand["retirementRefusal"]["ownedCauseBytes"].as_u64().unwrap()as usize);assert_eq!(heap.released_bytes,0);refused=Some(failure);break},_=>panic!("accepted owner retirement refusal cannot produce a complete group")}
     }
-    assert!(refused);
-    let error=preparation.retirement_refusal().expect("original typed retirement error");
-    assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::UnsupportedOwner);
-    assert_eq!(error.message,demand["retirementRefusal"]["message"].as_str().unwrap());
+    let failure=refused.expect("full original failure moved to the owning caller");
+    let semio_plugin_ownership::bounded_ownership::PluginLifecyclePrimary::Retirement(error)=&failure.primary else{panic!("original retirement carrier")};
+    assert_eq!(error.primary().unwrap().kind,semio_framework_value::ValueRefusalKind::UnsupportedOwner);
+    assert_eq!(error.primary().unwrap().message,demand["retirementRefusal"]["message"].as_str().unwrap());
+    assert_eq!(error.work_refusal().unwrap().kind,semio_framework_value::ValueRefusalKind::WorkLimit);
+    assert_eq!(error.work_refusal().unwrap().message,demand["retirementRefusal"]["workMessage"].as_str().unwrap());
+    assert_eq!(failure.effects.retained_capacity_bytes,demand["retirementRefusal"]["ownedCauseBytes"].as_u64().unwrap()as usize);
     assert_eq!(preparation.retained_operation_count(),1);
     let prefix=preparation.accepted_prefix().unwrap();
     assert_eq!(prefix.ops.len(),1);assert_eq!(prefix.labels.len(),1);
@@ -472,20 +511,23 @@ fn child_emission_accepted_owner_retirement_refusal_retains_exact_prefix_and_pro
     assert_eq!(returned.load(std::sync::atomic::Ordering::SeqCst),0);
     preparation.begin_close();
     assert_eq!(preparation.close_step(child_zero_grant()).unwrap(),PluginLifecycleStep::Progress(Default::default()));
-    assert!(preparation.retirement_refusal().is_some());
+    let mut failure=semio_framework_value::retirement::controlled::ControlledRetirement::retain(failure);let(mut allocated,mut released)=(0,0);
+    for _ in 0..4096{if failure.terminal_is_empty(){break}let d=failure.next_demand(4096).unwrap();let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||failure.step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));allocated+=heap.requested_bytes;released+=heap.released_bytes;}
+    assert!(failure.terminal_is_empty());
+    assert_eq!(released,allocated+demand["retirementRefusal"]["ownedCauseBytes"].as_u64().unwrap()as usize);
     let original_close_grant=preparation_grant(1,maximum);
-    let mut provider_returned=false;
+    let mut provider_returned=None;
     for _ in 0..demand["maximumCloseSteps"].as_u64().unwrap(){
         if preparation.terminal_is_empty(){break;}
+        if provider_returned.is_none(){take_tracked_provider(&mut preparation,&mut provider_returned,&factory,original_close_grant,&fixture["providerHandback"]);}
         let grant=original_close_grant;assert!(semio_plugin_ownership::bounded_ownership::plugin_grant_funds(preparation.retirement_demands(grant.maximum_copy_bytes).expect("quoted accepted owner close"),grant));
         match preparation.close_step(grant).expect("retained accepted owner close"){
-            PluginLifecycleStep::AwaitingInput{..}=>{let provider=preparation.take_retirement_provider::<TrackedChildOperation>().expect("original retained provider handback");assert!(std::sync::Arc::ptr_eq(&provider,&factory));provider_returned=true;},
             PluginLifecycleStep::Progress(progress)=>{assert!(progress.fits(grant));},
             PluginLifecycleStep::Complete(_)=>{},
             _=>panic!("genuine fixture provider closes after its one refusal"),
         }
     }
-    assert!(provider_returned&&preparation.terminal_is_empty());
+    assert!(provider_returned.is_some()&&preparation.terminal_is_empty());
     assert_eq!(returned.load(std::sync::atomic::Ordering::SeqCst),1);
 }
 
@@ -530,4 +572,11 @@ fn child_emit_original_full_grant_preserves_denied_pointers_and_system_release_r
         }
         assert!(child.terminal_is_empty());assert_eq!(released,birth.requested_bytes);let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(child));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     }
+}
+
+fn take_tracked_provider(preparation:&mut ChildEmitPreparation,output:&mut Option<std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<TrackedChildOperation>>>,provider:&std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<TrackedChildOperation>>,grant:RetainedCloneGrant,law:&Value)->bool{
+ let demand=preparation.retirement_provider_take_demand::<TrackedChildOperation>();if demand.depth==0{return false}
+ assert_eq!(demand.copy_bytes,law["headers"].as_u64().unwrap()as usize*std::mem::size_of::<Option<std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<TrackedChildOperation>>>>());assert_eq!(std::mem::size_of::<Option<std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<TrackedChildOperation>>>>(),law["pointerWords"].as_u64().unwrap()as usize*std::mem::size_of::<usize>());let aliases=std::sync::Arc::strong_count(provider);let quote=preparation.retirement_provider_take_work_demand::<TrackedChildOperation>();
+ for axis in law["deniedAxes"].as_array().unwrap(){let mut denied=grant;match axis.as_str().unwrap(){"items"=>denied.maximum_items=0,"copy"=>denied.maximum_copy_bytes=demand.copy_bytes-1,"depth"=>denied.maximum_depth=0,_=>panic!("closed original handback axis")};let(turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||preparation.take_retirement_provider(output,denied));assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap().progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(output.is_none());assert_eq!(std::sync::Arc::strong_count(provider),aliases);assert_eq!(preparation.retirement_provider_take_demand::<TrackedChildOperation>(),demand);}
+ let(turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||preparation.take_retirement_provider(output,grant));let progress=turn.result.unwrap().progress();assert_eq!(turn.work,quote);assert_eq!(turn.work,law["work"].as_u64().unwrap());assert_eq!(progress.copied_bytes,demand.copy_bytes);assert!(progress.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(std::sync::Arc::strong_count(provider),aliases);assert!(std::sync::Arc::ptr_eq(output.as_ref().unwrap(),provider));true
 }

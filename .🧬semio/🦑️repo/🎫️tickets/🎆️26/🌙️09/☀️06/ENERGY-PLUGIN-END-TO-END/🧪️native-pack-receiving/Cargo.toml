@@ -7,20 +7,20 @@ edition="2024"
 path="receiving.rs"
 [dependencies]
 serde_json="1.0.140"
-semio-framework-os-kernel={path="../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"}
+semio-framework-os-kernel = {path="../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel"}
 semio-framework-job={path="../../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",features=["testkit"]}
 semio-framework-value={path="../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"}
 semio-framework-value-native-owned={path="../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust"}
 semio-framework-trace={path="../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust"}
 semio-framework-pack-record={path="../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🦀️rust"}
-semio-framework-plugin-decl-emission={path="../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/📨️emission/📦️packages/🦀️rust"}
-semio-framework-ui-locale={path="../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust"}
+semio-framework-plugin-decl-emission = {path="../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/📨️emission/📦️packages/🦀️rust", package = "semio-plugin-decl-emission"}
+semio-framework-ui-locale = {path="../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust", package = "semio-ui-locale"}
 semio-framework-artifact-reference={path="../../../../../../../../🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust"}
 
 semio-s-artifact-energy-model-native-derive={path="../../../../../../../../✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✨️derive/📦️packages/🦀️rust"}
 semio-framework-pack-json={path="../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust"}
 semio-framework-action-bus={path="../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust"}
-semio-framework-plugin-decl-app={path="../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/📦️packages/🦀️rust"}
-semio-framework-plugin-command={path="../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎮️command/📦️packages/🦀️rust"}
+semio-framework-plugin-decl-app = {path="../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/📦️packages/🦀️rust", package = "semio-plugin-decl-app"}
+semio-framework-plugin-command = {path="../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎮️command/📦️packages/🦀️rust", package = "semio-plugin-command"}
 semio-framework-diagnostic={path="../../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust"}
 semio-framework-dsl-record={path="../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust"}

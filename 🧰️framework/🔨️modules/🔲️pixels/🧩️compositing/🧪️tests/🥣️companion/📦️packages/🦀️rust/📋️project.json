@@ -1,0 +1,4 @@
+{
+  "name": "semio-framework-pixels-compositing-tests",
+  "tags": ["scope:framework", "language:rust"]
+}

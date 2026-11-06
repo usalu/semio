@@ -1,0 +1,35 @@
+{
+  "type": "array",
+  "minItems": 2,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "start",
+      "maximum",
+      "panic",
+      "after"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "start": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "maximum": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "panic": {
+        "type": "boolean"
+      },
+      "after": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  }
+}

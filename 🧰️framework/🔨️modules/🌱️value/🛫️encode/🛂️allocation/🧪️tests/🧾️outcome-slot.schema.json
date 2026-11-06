@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "minItems": 3,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "occupied",
+      "called",
+      "retained"
+    ],
+    "properties": {
+      "name": {
+        "enum": [
+          "emptySuccess",
+          "emptyRefusal",
+          "occupied"
+        ]
+      },
+      "occupied": {
+        "type": "boolean"
+      },
+      "called": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "retained": {
+        "type": "boolean"
+      }
+    }
+  }
+}

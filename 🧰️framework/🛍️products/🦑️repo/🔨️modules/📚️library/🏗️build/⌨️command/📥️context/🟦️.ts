@@ -7,7 +7,7 @@ import {scriptInvocationEnvironment} from "../../../../../../../🔨️modules/�
 import {checkScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {profileMarkV1} from "../../⏱️profile/🟨️.mjs";
 import {profilePhaseV1} from "../../⏱️profile/🟨️.mjs";
-type RepositoryCommandContextV1=Readonly<{capabilities:ReturnType<typeof readOwnedBuildInvocationV1>;original:ReturnType<typeof readOwnedBuildInvocationV1>;selected:ReturnType<typeof parseBuildInvocationV1>;resolved:ReturnType<typeof resolveBuildInvocationV1>;ancestor:ReturnType<typeof readBuildGraphAncestorSelectionV1>;invocation:ScriptInvocation;previous:Record<string,string|undefined>}>;
+export type RepositoryCommandContextV1=Readonly<{capabilities:ReturnType<typeof readOwnedBuildInvocationV1>;original:ReturnType<typeof readOwnedBuildInvocationV1>;selected:ReturnType<typeof parseBuildInvocationV1>;resolved:ReturnType<typeof resolveBuildInvocationV1>;ancestor:ReturnType<typeof readBuildGraphAncestorSelectionV1>;invocation:ScriptInvocation;previous:Record<string,string|undefined>}>;
 /** 🎛️ Refines and restores the exact command environment around one owned verb body. */
 export async function withRepositoryCommandEnvironmentV1(root:string,args:readonly string[],parent:ScriptInvocation,phaseControl:ResourceLeaseControl,body:(context:RepositoryCommandContextV1)=>Promise<void>):Promise<void>{requireIssuedResourceControlInvocationV1(phaseControl,parent);checkResourceLeaseControl(phaseControl);
 const {parseBuildInvocationV1,resolveBuildInvocationV1,readBuildDependencyInvocationV1,readBuildGraphAncestorSelectionV1}=await import("../../🧭️invocation/🟦️.ts");

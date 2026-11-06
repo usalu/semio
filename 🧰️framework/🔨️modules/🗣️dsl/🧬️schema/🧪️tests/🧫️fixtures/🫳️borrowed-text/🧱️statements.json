@@ -1,0 +1,13 @@
+{
+  "elements": [
+    {
+      "kind": "truss",
+      "id": "A"
+    },
+    {
+      "kind": "truss",
+      "id": "B"
+    }
+  ],
+  "document": "elements {\n  truss id=A\n  truss id=B\n}\n"
+}

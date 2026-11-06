@@ -18,56 +18,29 @@ pub enum VcsError {
     MutationApply(MutationApplyError),
     InverseRefused(ValueError),
     NativeEncoding(ValueError),
+    /// ♻️ The complete original retirement failure retains every independent cause and receipt.
+    OriginalRetirement(semio_framework_value::OriginalRetirementFailure),
     NothingToUndo,
     ForeignEdit(String),
     NothingToRedo,
     Serialize(String),
     Deserialize(String),
     Backbone(String),
-    /// 🧬️ A migration/replay/merge was attempted across two envelopes/mutations whose
-    /// `dialect` coordinates don't match (see `crate::os_store::store_schema::ArtifactEnvelope::dialect`, `26/08/10` D4
-    /// evolution slice). Not yet raised by any call site in this pass — additive only.
+    /// 🧬️ Envelope or mutation dialect coordinates differ.
     DialectMismatch(String),
-    /// 🧬️ An operation needs a dialect migration to run first (see `crate::os_store::codec_registry::migrate_document`)
-    /// before it can proceed. Not yet raised by any call site in this pass — additive only.
+    /// 🪜️ The operation requires a dialect migration first.
     MigrationRequired(String),
-    /// 🧬️ A registered dialect migration ran but failed. Not yet raised by any call site in
-    /// this pass — additive only.
+    /// 🛠️ A registered dialect migration failed.
     MigrationFailed(String),
-    /// 🔁️ A composition-pin graph traversal (parent → child → …) found a cycle back to an
-    /// ancestor — an owned-child forest must stay acyclic. Raised by `crate::os_store::composition_coordinator::CompositionGraph::
-    /// would_cycle_owns`/`would_cycle_links` via `crate::os_store::composition_coordinator::CompositionCoordinator::dispatch_group`'s
-    /// phase-1 validation (`UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` `🔖️CompositionCoordinator`, wave B2).
+    /// 🔁️ The composition edge would create an ancestor cycle; owned-child forests must remain acyclic.
     CompositionCycle(String),
-    /// 🚫️ An operation would violate composition's single-ownership invariant (e.g.
-    /// adopting a child that already has a different owner, or dispatching to a child a group's
-    /// stated parent does not actually own). Raised by `crate::os_store::composition_coordinator::CompositionGraph::insert_owns` and
-    /// `crate::os_store::composition_coordinator::CompositionCoordinator::dispatch_group`'s phase-1 ownership check.
+    /// 🚫️ A child has another owner or is outside the group's stated parent.
     OwnershipViolation(String),
-    /// 🛂️ A structural failure rejected an operation during
-    /// `crate::os_store::composition_coordinator::CompositionCoordinator::dispatch_group`'s phase-1 pass (or the object-safe
-    /// `store::SpaceMember::preview_wire`/`dispatch_wire` bridge that pass uses) — the group is
-    /// aborted with zero side effects anywhere. Reserved for structural failures only (ticket
-    /// `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6): an ordinary
-    /// mutation-level rejection now travels as a `MutationMessage` on the op's own
-    /// `MutationOutcome`, never through this variant. Additive; not raised anywhere else in this
-    /// crate (every other command path reports its own more specific `VcsError` variant).
+    /// 🛂️ Structural validation rejects the whole group before effects. Ordinary mutation refusals use `Rejected`.
     ValidationFailed(String),
-    /// 🧯️ A `CompositionCoordinator::dispatch_group` call failed AFTER some members were
-    /// already applied, and the reverse-order `Undo` compensation pass (see that method's doc
-    /// comment) itself failed on at least one member — i.e. the group could not be fully rolled
-    /// back. The message embeds a human-readable rollback report (which members compensated
-    /// cleanly, which did not, and why) so a caller can surface/log the exact partial state rather
-    /// than silently losing it. This is the one path in this crate where a command's Result can
-    /// legitimately leave a multi-member gesture inconsistent — every other `VcsError` variant is
-    /// raised BEFORE any mutation lands.
+    /// 🧯️ Group application and reverse compensation failed; the message identifies restored and remaining members.
     CompensationFailed(String),
-    /// 🛑️ A command was rejected WHOLESALE by the authority's own `protocol::MergePolicy`
-    /// — nothing in the command was applied (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-
-    /// CLASS-CONFLICTS` §C6). Carries the policy that rejected it and every message the rejected
-    /// replay produced, so a caller can explain the rejection without re-running anything.
-    /// `ValidationFailed` survives ONLY for structural failures now — an ordinary mutation-level
-    /// rejection travels through this variant instead.
+    /// 🛑️ Merge policy rejects the whole command before application, retaining its policy and all replay messages.
     Rejected {
         policy: protocol::MergePolicy,
         messages: Vec<protocol::MutationMessage>,
@@ -75,28 +48,21 @@ pub enum VcsError {
     /// ❓️ `store::ArtifactStore::resolve_conflict` was called with an id that names no
     /// currently-`Open` conflict on this store.
     UnknownConflict(String),
-    /// ⌛️ A result computed against store generation `expected_generation` (a finished history replay) was offered
-    /// after the store moved on to `generation`; the caller computes it again against the live state.
+    /// ⌛️ The replay's expected generation is stale; recompute against the live generation.
     Stale { expected_generation: u64, generation: u64 },
-    /// 🗂️ A history transition of `kind` was authored on, or offered to, a store whose history `shape` does not hold it —
-    /// a config store's history holds undo and redo only. Refused before anything was recorded.
+    /// 🗂️ The history shape cannot hold this transition; refuse before recording it.
     HistoryShape { shape: protocol::HistoryShape, kind: protocol::HistoryTransitionKind },
-    /// 🎞️ The tool transaction `transaction_id` is open on this store: until its commit or abort only its own appends, a
-    /// remote ingest and a merge-policy change run — nothing else may interleave with its open edit.
+    /// 🎞️ Until commit or abort, only this transaction's appends, remote ingest and merge-policy changes may run.
     TransactionOpen { transaction_id: String },
     /// 🕳️ A commit, abort or append named a tool transaction that is not the one open on this store.
     UnknownTransaction(String),
     /// 🧱️ The document's edit history holds `capacity` edits and is full: the edit was refused before anything was recorded.
     HistoryFull { capacity: usize },
-    /// 🐢️ A local history step (undo, redo, checkout, alternative switch, checkpoint or supersession) still replays across
-    /// turns on this store: no other history step may be authored before it is adopted or discarded.
+    /// 🐢️ A history replay must finish or be discarded before another history step is authored.
     HistoryReplaying,
-    /// 🐘️ A gesture's edit needs `rows` staged rows (forwards plus inverses) where at most `capacity` are admitted — the one-item
-    /// ceiling, or the rows its leaves declare (`x-semio-inverse-rows`, design §20.5). Refused before anything was recorded.
+    /// 🐘️ Forward and inverse rows exceed the admitted capacity; refuse before recording them.
     TooLarge { rows: usize, capacity: usize },
-    /// 🧷️ The operation `mutation_id` belongs to the cross-artifact unit `unit`: it planned steps in other documents, or it is
-    /// such a step. A unit is superseded in all of its documents at once, which no replica can do yet, so the supersession
-    /// was refused before anything was recorded.
+    /// 🧷️ This unit spans documents; supersession requires changing all member documents together.
     UnitSpansDocuments { mutation_id: String, unit: String },
 }
 
@@ -111,6 +77,7 @@ impl std::fmt::Display for VcsError {
             Self::MutationApply(error) => write!(formatter, "mutation diff rejected: {error}"),
             Self::InverseRefused(error) => write!(formatter, "mutation inverse refused: {error}"),
             Self::NativeEncoding(error) => write!(formatter, "native encoding refused: {error}"),
+            Self::OriginalRetirement(error) => write!(formatter, "original retirement refused: {error}"),
             Self::NothingToUndo => formatter.write_str("nothing to undo"),
             Self::ForeignEdit(id) => write!(formatter, "cannot undo edit authored by another actor: {id}"),
             Self::NothingToRedo => formatter.write_str("nothing to redo"),
@@ -144,10 +111,13 @@ impl std::error::Error for VcsError {
             Self::MutationApply(error) => Some(error),
             Self::InverseRefused(error) => Some(error),
             Self::NativeEncoding(error) => Some(error),
+            Self::OriginalRetirement(error) => Some(error),
             _ => None,
         }
     }
 }
+
+impl From<semio_framework_value::OriginalRetirementFailure> for VcsError {fn from(error:semio_framework_value::OriginalRetirementFailure)->Self{Self::OriginalRetirement(error)}}
 
 impl From<ValueError> for VcsError {fn from(error:ValueError)->Self{Self::NativeEncoding(error)}}
 

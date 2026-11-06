@@ -1,6 +1,6 @@
 //! 📚️ Standalone and grouped publication prepare the same original Store metadata frontier.
 use super::*;
-use semio_os_store_one_item_batch::lifted_member_group::BatchCommitMetadata;
+use semio_framework_os_store_one_item_batch::lifted_member_group::BatchCommitMetadata;
 /// ⏳️ One exact metadata event completes before its prepared root can publish.
 pub enum BatchCommitMetadataStep{Blocked,Progress(RetainedCloneProgress),Ready}
 /// 🧮️ Clones only the selected original ledger/index entry into its admitted private destination.

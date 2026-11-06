@@ -10,7 +10,7 @@ use semio_plugin_reactor_tasks::tasks_task_lane::TaskResumeOutcome;
 use semio_plugin_actor_host::{executor, requests};
 use semio_plugin_reactor_patches as patches;
 use semio_plugin_reactor_lifecycle as pending;
-use semio_plugin_reactor_turn as turn;
+use semio_framework_plugin_reactor_turn as turn;
 use semio_ui_contract as ui_contract;
 use semio_plugin_reactor_lifecycle::life_reactor_close::reactor_close_fault;
 use semio_framework::kernel::ActorUiPatchReceipt;
@@ -77,12 +77,12 @@ pub async fn resolve_request(id: u64, result: Result<Vec<u8>, semio_framework::F
 /// the shell without ever reaching `plugin_runtime`, so a test asserting on it never needs
 /// `plugin_resume_task` at all).
 #[doc(hidden)]
-pub async fn pop_task_resume() -> Option<(u32, semio_plugin_decl_emission::ActionMeta, Result<semio_plugin_runtime_ops::ops_typed_operations::TaskResumeInput, semio_framework::Fault>)> {
+pub async fn pop_task_resume() -> Option<(u32, semio_plugin_decl_emission::ActionMeta, Result<semio_framework_plugin_runtime_ops::ops_typed_operations::TaskResumeInput, semio_framework::Fault>)> {
     TASK_RESUMES.with(|resumes| resumes.borrow_mut().pop()).map(|resume| {
         let input = match resume.outcome {
-            TaskResumeOutcome::Command(bytes) => Ok(semio_plugin_runtime_ops::ops_typed_operations::TaskResumeInput::Command(bytes)),
+            TaskResumeOutcome::Command(bytes) => Ok(semio_framework_plugin_runtime_ops::ops_typed_operations::TaskResumeInput::Command(bytes)),
             #[cfg(test)]
-            TaskResumeOutcome::Emit { artifact_ops, config_ops, draft_ops } => Ok(semio_plugin_runtime_ops::ops_typed_operations::TaskResumeInput::Emit { artifact_ops, config_ops, draft_ops }),
+            TaskResumeOutcome::Emit { artifact_ops, config_ops, draft_ops } => Ok(semio_framework_plugin_runtime_ops::ops_typed_operations::TaskResumeInput::Emit { artifact_ops, config_ops, draft_ops }),
             #[cfg(test)]
             TaskResumeOutcome::Fault(fault) => Err(fault),
         };

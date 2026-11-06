@@ -1,0 +1,7 @@
+# Renderer Original PNG Review
+
+The renderer now stages the PNG source and output through OriginalPngTexture, validates a captured OriginalSourceBinding, advances with the current retained grant and actual work, places the decoded image before construction receipt reconciliation, and closes the retained decoder through the actual StepContext. Probe step and close and the three production mailbox seams now accept and propagate the original context and OriginalTurnFailure. A sampled production caller scan found the updated component close caller; no native compilation was performed.
+
+The binding comparison includes operation, generation, payload authority identity, original clock identity and absolute deadline. The existing new PNG law exercises one OriginalJobFixtureCaller and does not demonstrate that the genuine worker step and subsequent parent boundary close carry matching complete identities. A worker-to-boundary-close law is needed before claiming that handoff works.
+
+Direct no-context probe test calls are listed in 🔎️renderer-png-original-context.md. Additional direct component close calls at renderer/🧑‍🎨engine/🧪️tests/🧊️wgpu-os-host-standalone/🦀️.rs:201,379,384,454,467,515,529,585,613 still use the old signature. The new PNG test calls base64_codec::base64_standard_decode; its owning test package must declare the direct codec crate alias. Source scans do not establish compilation.

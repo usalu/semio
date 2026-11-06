@@ -138,7 +138,7 @@ pub fn puzzle2d_labels(view_state: &semio_plugin::ViewModel) -> &'static Puzzle2
 }
 
 /// 🎛️ Resolves labels from the original caller's explicit presentation axes.
-pub fn puzzle2d_labels_for_axes(locale:Locale,terminology:semio_framework_ui_locale::Terminology)->&'static Puzzle2dLabels{
+pub fn puzzle2d_labels_for_axes(locale:Locale,terminology:semio_ui_locale::Terminology)->&'static Puzzle2dLabels{
     Puzzle2dLabels::labels(locale,terminology)
 }
 

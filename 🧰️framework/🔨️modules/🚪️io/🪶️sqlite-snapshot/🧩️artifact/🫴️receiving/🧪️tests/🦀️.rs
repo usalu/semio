@@ -29,8 +29,32 @@ fn sqlite_settlement_keeps_typed_primary_and_existing_native_context(){
  use semio_framework_value::retirement::controlled::ControlledRetirement;
  use semio_framework_value::ErasedSnapshotRetirement;
  let f:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::repo_text!("🧰️framework/🔨️modules/🚪️io/⏱️control/🧾️failure/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let p:RetainedCloneProgress=serde_json::from_value(f["progress"].clone()).unwrap();let value=|index:usize|ValueError::new(ValueRefusalKind::InvalidValue,f["messages"][index].as_str().unwrap().to_owned());
- let original=NativeSnapshotFailure::from(OriginalReceivingPrimary{primary:Some(value(0)),quote_refusal:Some(value(1)),allocation_refusal:Some(value(2)),progress:p}).with_context_refusal(value(3));let primary=original.receiving_primary().unwrap().primary.as_ref().unwrap().message.as_ptr();let context=original.context_refusal().unwrap().message.as_ptr();
+ let original=NativeSnapshotFailure::from(OriginalReceivingPrimary{retirement_failure:None,work_refusal:None,primary:Some(value(0)),quote_refusal:Some(value(1)),allocation_refusal:Some(value(2)),allocation_failure:None,native_allocation:None,receipt_refusal:None,progress:p}).with_context_refusal(value(3));let primary=original.receiving_primary().unwrap().primary.as_ref().unwrap().message.as_ptr();let context=original.context_refusal().unwrap().message.as_ptr();
  let calls=std::cell::Cell::new(0u64);let mut callback=|_|{calls.set(calls.get()+1);false};let mut control=SqliteSnapshotControl::new(&mut callback,Default::default());let settlement=super::ReceivingSettlement::new(&mut control,0,semio_framework_io_sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot);settlement.finish_body(0).unwrap();let completed=f["sqlite"]["completed"].as_u64().unwrap()as usize;let total=f["sqlite"]["total"].as_u64().unwrap()as usize;assert!(!settlement.observe(0,completed,total));assert!(!settlement.observe(0,completed,total));assert_eq!(calls.get(),f["sqlite"]["callbackCalls"].as_u64().unwrap());
  let(original,born,released)=semio_framework_trace_memory_testing::observe_backing(||settlement.refused_failure(0,original));assert_eq!((born,released),(0,0));assert_eq!(original.receiving_primary().unwrap().primary.as_ref().unwrap().message.as_ptr(),primary);assert_eq!(original.context_refusal().unwrap().message.as_ptr(),context);assert_eq!(original.settlement_refusal().unwrap().kind,ValueRefusalKind::Canceled);assert_eq!(original.settlement_refusal().unwrap().message.as_ref(),f["sqlite"]["settlementMessage"].as_str().unwrap());assert_eq!(original.receipt_refusal(),None);assert_eq!(original.retained_progress(),p);drop(settlement);
  let g=serde_json::from_value(f["closeGrant"].clone()).unwrap();let mut owner=ControlledRetirement::new(original).ok().unwrap();for _ in 0..f["maximumTurns"].as_u64().unwrap(){if owner.terminal_is_empty(){break}let(result,born,released)=semio_framework_trace_memory_testing::observe_backing(||owner.step(g));let p=result.unwrap().progress();assert_eq!((born,released),(p.retained_capacity_bytes,p.released_bytes));}assert!(owner.terminal_is_empty());
+}
+
+#[test]
+fn effect_unwind_posts_actual_progress_into_the_caller_failure_slot(){
+ use semio_framework_io_control::NativeSnapshotBodyWallet;
+ use semio_framework_value::{RetirementDemand,ValueError};
+ use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,NativeDecodeWorkRecipient};
+ struct Work;
+ impl NativeDecodeWorkRecipient for Work{fn admits(&mut self,_:u64,_:u64)->Result<bool>{Ok(true)}}
+ struct Physical{grant:RetainedCloneGrant,submitted:RetainedCloneProgress}
+ impl NativeDecodeConstructionRecipient for Physical{
+  fn submitted(&self)->RetainedCloneProgress{self.submitted}
+  fn grant(&mut self,_:RetirementDemand)->Result<RetainedCloneGrant>{Ok(self.grant)}
+  fn accept(&mut self,_:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<()>{self.submitted=self.submitted.checked_add(progress)?;Err(ValueError::literal(ValueRefusalKind::Canceled,"physical refusal"))}
+ }
+ let grant=RetainedCloneGrant{maximum_items:10,maximum_copy_bytes:10,maximum_capacity_bytes:10,maximum_release_bytes:10,maximum_depth:2};
+ let mut native_observer=|_|true;let mut sql_observer=|_|true;let mut native=NativeDecodeControl::new(10,&mut native_observer);let mut control=SqliteSnapshotControl::new(&mut sql_observer,Default::default());let mut work=Work;let mut physical=Physical{grant,submitted:Default::default()};let mut body=NativeSnapshotBodyWallet::new(grant);let mut progress=semio_framework_io_control::NativeSnapshotEffectProgress::default();let mut failure=None;let mut slot=0u8;
+ let panic=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||{
+  let _:Result<()>=native.with_work_recipient(&mut work,|native|native.with_construction_recipient(&mut physical,|native|{
+   let mut port=Port{control:&mut control,native:Direction::Decode(native),body:&mut body};
+   let _=port.effect(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1,maximum_depth:1,..Default::default()},&mut progress,&mut failure,&mut |performed,physical|{slot=7;*performed=true;*physical=RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()};panic!("effect unwind")});Ok(())
+  }));
+ }));
+ assert!(panic.is_err());assert_eq!(slot,7);assert_eq!(physical.submitted.copied_bytes,1);assert_eq!(body.progress().copied_bytes,1);assert_eq!(failure.unwrap().receipt_refusal().unwrap().message.as_ref(),"physical refusal");
 }

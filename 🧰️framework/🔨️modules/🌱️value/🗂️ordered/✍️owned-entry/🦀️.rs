@@ -2,7 +2,7 @@
 use super::{OrderedMap,UpdateCursor,SharedOwner};
 use crate::{ValueError,ValueRefusalKind,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome};
 use crate::retirement::{RetireOwned,RetirementCursor,RetirementStep};
-use semio_framework_value_retained_clone::{RetainedCloneClose,retained_clone_grant_admits};
+use semio_framework_value_retained_clone::{OriginalRetirementFailure,RetainedCloneClose,retained_clone_grant_admits};
 use std::mem::{ManuallyDrop,size_of};
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original owned map entry changed its retained frontier")}
 struct Fields<V>{base:Option<OrderedMap<V>>,key:Option<String>,value:Option<V>,shared_key:Option<SharedOwner<String>>,shared_value:Option<SharedOwner<V>>,update:Option<UpdateCursor<V>>}
@@ -32,24 +32,24 @@ impl<V:RetireOwned+Sync> OriginalOwnedEntry<V>{
   })
  }
  /// ⏱️ Returns the defining producer's actual work on success, denial and failure.
- pub fn advance(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<OrderedMap<V>>>{
+ pub fn advance(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<OrderedMap<V>>,OriginalRetirementFailure>{
   self.progress=Default::default();self.last_work=0;let result=self.advance_original(grant).map_err(|error|error.with_retained_progress(self.progress));RetainedWorkOutcome{result,work:self.last_work}
  }
- fn advance_original(&mut self,grant:RetainedCloneGrant)->Result<Option<OrderedMap<V>>,ValueError>{
-  if self.closing{return Err(ValueError::literal(ValueRefusalKind::Canceled,"original owned map entry is closing"))}
+ fn advance_original(&mut self,grant:RetainedCloneGrant)->Result<Option<OrderedMap<V>>,OriginalRetirementFailure>{
+  if self.closing{return Err(ValueError::literal(ValueRefusalKind::Canceled,"original owned map entry is closing").into())}
   if grant.maximum_items==0{return Ok(None)}
-  let d=self.next_demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<d.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original owned map entry exceeds admitted depth"))}if !retained_clone_grant_admits(grant,d){return Ok(None)}
-  if self.phase==5&&(!self.retirement.is_empty()||self.fields.update.is_some()){let outcome=if self.retirement.is_empty(){let turn=self.retirement.begin_granted(&mut self.fields.update,grant);RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}}else{self.retirement.step_granted(grant)};self.progress=outcome.result.as_ref().map_or_else(|e|e.retained_progress(),|step|step.progress());self.last_work=outcome.work;outcome.result?;return Ok(None)}
+  let d=self.next_demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<d.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original owned map entry exceeds admitted depth").into())}if !retained_clone_grant_admits(grant,d){return Ok(None)}
+  if self.phase==5&&(!self.retirement.is_empty()||self.fields.update.is_some()){let outcome=if self.retirement.is_empty(){let turn=self.retirement.begin_granted(&mut self.fields.update,grant);RetainedWorkOutcome{result:turn.result.map_err(Into::into).map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}}else{self.retirement.step_granted(grant)};self.progress=outcome.result.as_ref().map_or_else(|e|e.retained_progress(),|step|step.progress());self.last_work=outcome.work;outcome.result?;return Ok(None)}
   self.progress.copied_items=1;self.last_work=1;
   match self.phase{
-   0=>{let outcome=SharedOwner::admit(self.fields.key.take().ok_or_else(invalid)?,grant);self.last_work=outcome.work;match outcome.result{Ok((key,p))=>{self.fields.shared_key=Some(key);self.progress=p;self.phase=1},Err((error,key))=>{self.fields.key=Some(key);self.progress=error.retained_progress();return Err(error)}}},
-   1=>{if self.fields.shared_value.is_some()||self.fields.value.is_none(){self.phase=2}else{let outcome=SharedOwner::admit(self.fields.value.take().ok_or_else(invalid)?,grant);self.last_work=outcome.work;match outcome.result{Ok((value,p))=>{self.fields.shared_value=Some(value);self.progress=p;self.phase=2},Err((error,value))=>{self.fields.value=Some(value);self.progress=error.retained_progress();return Err(error)}}}},
+   0=>{let outcome=SharedOwner::admit(self.fields.key.take().ok_or_else(invalid)?,grant);self.last_work=outcome.work;match outcome.result{Ok((key,p))=>{self.fields.shared_key=Some(key);self.progress=p;self.phase=1},Err((error,key))=>{self.fields.key=Some(key);self.progress=error.retained_progress();return Err(error.into())}}},
+   1=>{if self.fields.shared_value.is_some()||self.fields.value.is_none(){self.phase=2}else{let outcome=SharedOwner::admit(self.fields.value.take().ok_or_else(invalid)?,grant);self.last_work=outcome.work;match outcome.result{Ok((value,p))=>{self.fields.shared_value=Some(value);self.progress=p;self.phase=2},Err((error,value))=>{self.fields.value=Some(value);self.progress=error.retained_progress();return Err(error.into())}}}},
    2=>{let fields=&mut*self.fields;fields.update=Some(UpdateCursor::new(fields.base.take().ok_or_else(invalid)?,fields.shared_key.take().ok_or_else(invalid)?,fields.shared_value.take()));self.phase=3},
    3=>{let update=self.fields.update.as_mut().ok_or_else(invalid)?;let outcome=update.advance(grant);self.last_work=outcome.work;self.progress=outcome.result.as_ref().map_or_else(|e|e.retained_progress(),|step|step.progress());outcome.result?;if update.is_complete(){self.phase=4}},
-   4=>{self.fields.base=self.fields.update.as_mut().ok_or_else(invalid)?.take_result();if self.fields.base.is_none(){return Err(invalid())}self.phase=5},
+   4=>{self.fields.base=self.fields.update.as_mut().ok_or_else(invalid)?.take_result();if self.fields.base.is_none(){return Err(invalid().into())}self.phase=5},
    5=>{self.phase=6},
    6=>{self.phase=7;return Ok(self.fields.base.take())},
-   _=>{self.progress=Default::default();self.last_work=0;return Err(invalid())},
+   _=>{self.progress=Default::default();self.last_work=0;return Err(invalid().into())},
   }Ok(None)
  }
  /// 🛑️ Retains every original input and partial child until explicit closure.
@@ -60,13 +60,13 @@ impl<V:RetireOwned+Sync> OriginalOwnedEntry<V>{
   owner!(base,OrderedMap<V>);owner!(key,String);owner!(value,V);owner!(shared_key,SharedOwner<String>);owner!(shared_value,SharedOwner<V>);owner!(update,UpdateCursor<V>);Ok(Default::default())
  }
  /// 🧹️ Preserves the complete original close outcome, including work performed before refusal.
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
+ pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,OriginalRetirementFailure>{
   self.progress=Default::default();self.last_work=0;let outcome=self.close_original(grant);self.last_work=outcome.work;self.progress=outcome.result.as_ref().map_or_else(|e|e.retained_progress(),|step|step.progress());outcome
  }
- fn close_original(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
-  if !self.closing{return RetainedWorkOutcome{result:Err(invalid()),work:0}}
+ fn close_original(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,OriginalRetirementFailure>{
+  if !self.closing{return RetainedWorkOutcome{result:Err(invalid().into()),work:0}}
   if !self.retirement.is_empty(){return self.retirement.step_granted(grant)}
-  macro_rules! owner{($field:ident)=>{if self.fields.$field.is_some(){let turn=self.retirement.begin_granted(&mut self.fields.$field,grant);return RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}}}}
+  macro_rules! owner{($field:ident)=>{if self.fields.$field.is_some(){let turn=self.retirement.begin_granted(&mut self.fields.$field,grant);return RetainedWorkOutcome{result:turn.result.map_err(Into::into).map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}}}}
   owner!(base);owner!(key);owner!(value);owner!(shared_key);owner!(shared_value);owner!(update);RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.retirement.is_empty()&&self.fields.base.is_none()&&self.fields.key.is_none()&&self.fields.value.is_none()&&self.fields.shared_key.is_none()&&self.fields.shared_value.is_none()&&self.fields.update.is_none()}

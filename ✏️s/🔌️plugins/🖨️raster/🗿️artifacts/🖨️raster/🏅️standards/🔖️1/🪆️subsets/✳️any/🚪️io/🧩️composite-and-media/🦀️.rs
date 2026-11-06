@@ -227,7 +227,7 @@ pub fn raster_document_from_dwg_drawing(world: &SemioDrawingSnapshot) -> Result<
     let page = page_drawing_from_world(world);
     let svg = dispatch_drawing_to_svg(&page)?;
     let rendered = semio_os::rasterize_svg_to_png_base64(&svg, page.canvas.width.round().max(1.0) as u32, page.canvas.height.round().max(1.0) as u32)?;
-    let raw_bytes = base64_codec::base64_standard_decode(rendered.as_bytes()).map_err(|error| error.to_string())?;
+    let raw_bytes = semio_framework_io_base64::base64_standard_decode(rendered.as_bytes()).map_err(|error| error.to_string())?;
     let image = semio_image_from_png_bytes(&raw_bytes)?;
     let (data, width, height) = (png_bytes_from_semio_image(&image)?, image.width, image.height);
     let asset_key = semio_s_artifact_raster_raster_model::create_raster_id("dwg-asset");
@@ -252,7 +252,7 @@ pub fn raster_document_from_dwg_drawing(world: &SemioDrawingSnapshot) -> Result<
 /// recovers the real width/height instead of leaving them unset, and re-encodes through the real
 /// serializer instead of storing the caller's bytes verbatim.
 pub fn raster_image_layer_and_asset(png_base64: &str) -> Result<(String, SemioImageSnapshot, RasterLayerNode), String> {
-    let bytes = base64_codec::base64_standard_decode(png_base64.as_bytes()).map_err(|error| error.to_string())?;
+    let bytes = semio_framework_io_base64::base64_standard_decode(png_base64.as_bytes()).map_err(|error| error.to_string())?;
     let image = semio_image_from_png_bytes(&bytes)?;
     let asset_key = semio_s_artifact_raster_raster_model::create_raster_id("image-in-asset");
     let mut layer = semio_s_artifact_raster_raster_model::create_pixel_layer("Imported Image", image.width, image.height);

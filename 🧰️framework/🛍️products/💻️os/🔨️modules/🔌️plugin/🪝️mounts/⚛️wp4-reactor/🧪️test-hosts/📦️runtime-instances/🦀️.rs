@@ -10,7 +10,7 @@ pub(crate) mod runtime_instances_unit_1 {
     use semio_plugin_mounted_owner::MountedOwnerPolicyV1;
     use std::sync::atomic::Ordering;
     use semio_plugin_plugin_program::Plugin;
-    use semio_plugin_runtime_ops::ops_ingress::PluginExchangeOutput;
+    use semio_framework_plugin_runtime_ops::ops_ingress::PluginExchangeOutput;
     use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
     use semio_plugin_reactor_lifecycle::life_cleanup_vocabulary::RUNTIME_CLEANUP_FAULTS;
     use semio_plugin_reactor_lifecycle::life_cleanup_vocabulary::RUNTIME_CLEANUP_UNMEASURED_US;
@@ -23,7 +23,7 @@ pub(crate) mod runtime_instances_unit_1 {
     use semio_plugin_reactor_lifecycle::life_cleanup_vocabulary::RuntimeCleanupFault;
     use semio_plugin_reactor_lifecycle::life_cleanup_vocabulary::RuntimeCloseStatus;
     use semio_plugin_reactor_lifecycle::life_cleanup_vocabulary::RuntimeMaintenanceStatus;
-    use semio_plugin_runtime_ops::ops_typed_operations::TypedOperationGrant;
+    use semio_framework_plugin_runtime_ops::ops_typed_operations::TypedOperationGrant;
     use serde_json::Value;
     use semio_plugin_reactor_lifecycle::life_cleanup_vocabulary::runtime_cleanup_fault;
     use semio_plugin_reactor_lifecycle::life_cleanup_vocabulary::runtime_cleanup_fault_is_instance_scoped;

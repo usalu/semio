@@ -20,6 +20,10 @@ workspace = true
 [lib]
 path = "🦀️.rs"
 
+[[test]]
+name = "original-selected-retirement"
+path = "../../🧪️tests/🎯️selected/owning.rs"
+
 [dependencies]
 semio-framework-value-control-contract = { path="../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-allocation-return = { path="../../📦️allocation-return/📦️packages/🦀️rust" }

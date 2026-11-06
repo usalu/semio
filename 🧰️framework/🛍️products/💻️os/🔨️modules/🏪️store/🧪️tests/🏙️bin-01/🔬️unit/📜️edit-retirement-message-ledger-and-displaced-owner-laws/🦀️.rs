@@ -216,11 +216,11 @@ fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::Re
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct UnitOwnedRetirementFactory;
 
-impl ArtifactOwnedValueRetirementFactory<()> for UnitOwnedRetirementFactory {
+impl ArtifactOwnedValueRetirementFactory<()> for UnitOwnedRetirementFactory {fn retire_owned_work_demand(&self,_:&())->Result<u64,semio_framework_value::ValueError>{Ok(1)}
     fn retirement_birth_bytes(&self,_:&())->usize { std::mem::size_of::<UnitOwnedRetirement>() }
-    fn retire_owned(&self, value: (), grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,())> {
+    fn retire_owned(&self, value: (), grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(semio_framework_value::OriginalRetirementFailure,())> {
         let result = admit_artifact_retirement(value,grant,|original|UnitOwnedRetirement { value: Some(original) });
-        semio_framework_value::RetainedWorkOutcome { result, work: 1 }
+        semio_framework_value::RetainedWorkOutcome { result: result.map_err(|(error,value)|(error.into(),value)), work: 1 }
     }
 }
 

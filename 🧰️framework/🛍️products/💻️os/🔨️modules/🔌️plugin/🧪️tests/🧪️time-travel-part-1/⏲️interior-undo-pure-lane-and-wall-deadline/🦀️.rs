@@ -2,10 +2,10 @@
 
 //#region 🧭️AcceptanceLaws
 /// 🔁️ A history verb as `actor`, admitted and settled, answering the fault code of a refusal (`None`: applied).
-async fn history_verb_refusal(app: &mut ToyApp, actor: &str, action: &str, mounted_policy:semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Option<String> {
-    let meta = ActionMeta { view_state: Some(semio_framework_plugin_testing_laws::receive_view_fixture(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), semio_framework_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(actor) };
+async fn history_verb_refusal(app: &mut ToyApp, actor: &str, action: &str, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Option<String> {
+    let meta = ActionMeta { view_state: Some(semio_plugin_testing_laws::receive_view_fixture(ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), semio_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(actor) };
     let settled = match app.handle_action(action, None, &meta, identity).await {
-        Ok(admitted) => semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(app, admitted, cx).await,
+        Ok(admitted) => semio_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(app, admitted, cx).await,
         Err(fault) => Err(fault),
     };
     settled.err().map(|fault| fault.code.0)
@@ -53,7 +53,7 @@ async fn bury_edit_of(app: &mut ToyApp, author: &str, count: i32) {
 /// Cancel replay instead drops the step with zero trace: head, revision, edits, transitions and history rows as before.
 #[semio_framework_async_macros::async_test]
 async fn an_interior_undo_over_a_long_history_replays_over_turns_and_cancel_leaves_zero_trace() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
@@ -122,7 +122,7 @@ async fn an_interior_undo_over_a_long_history_replays_over_turns_and_cancel_leav
 /// only load path) lifts it over real polls, landing the source head and all 240 edits.
 #[semio_framework_async_macros::async_test]
 async fn a_pure_lane_hydrates_the_head_without_history_and_history_verbs_refuse() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
@@ -141,7 +141,7 @@ async fn a_pure_lane_hydrates_the_head_without_history_and_history_verbs_refuse(
     assert_eq!(pure.stores.store.snapshot().expect("the pure head"), head, "the pure document is the source head");
     assert!(pure.stores.store.envelope().vcs.edits.is_empty() && pure.time_travel.history_unavailable(), "no history was folded or kept");
     assert_eq!(history_verb_refusal(&mut pure, &actor, "undo", mounted_policy, &mut identity).await.as_deref(), Some(PURE_HISTORY_UNAVAILABLE_CODE));
-    let meta = ActionMeta { view_state: Some(semio_framework_plugin_testing_laws::receive_view_fixture(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), semio_framework_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(&actor) };
+    let meta = ActionMeta { view_state: Some(semio_plugin_testing_laws::receive_view_fixture(ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), semio_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(&actor) };
     let begin = pure.handle_action("historyEditBegin", Some(&DslValue::object([("mutationId".to_string(), DslValue::String("any".into()))])), &meta, &mut identity).await;
     assert_eq!(begin.err().map(code).as_deref(), Some(PURE_HISTORY_UNAVAILABLE_CODE), "a history edit needs the history");
     assert_eq!(pure.history_snapshot().await.err().map(code).as_deref(), Some(PURE_HISTORY_UNAVAILABLE_CODE), "so does the history query");
@@ -152,7 +152,7 @@ async fn a_pure_lane_hydrates_the_head_without_history_and_history_verbs_refuse(
     PluginApp::begin_document_archive_load(&mut pure, operation, protocol::DocumentArchivePack { parent_pack: files.pack.clone(), parent_spr, members: Vec::new() }).expect("the archive load is admitted");
     let mut polls = 0;
     let status = loop {
-        let status = PluginApp::poll_document_archive_load(&mut pure, operation, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the archive load status");
+        let status = PluginApp::poll_document_archive_load(&mut pure, operation, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the archive load status");
         if !matches!(status.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running) {
             break status;
         }
@@ -189,7 +189,7 @@ fn counted_clock() -> Option<u64> {
 /// them per 4 ms turn (well under the 256-operation cap), over many turns, and still lands.
 #[semio_framework_async_macros::async_test]
 async fn a_deferred_history_step_ends_its_turn_at_the_wall_deadline_not_an_operation_count() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;

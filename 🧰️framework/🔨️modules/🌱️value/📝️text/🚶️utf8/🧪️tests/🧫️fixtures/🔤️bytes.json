@@ -1,0 +1,1 @@
+{"cases":[{"bytes":[],"valid":true},{"bytes":[65,206,187,240,159,153,130],"valid":true},{"bytes":[192,128],"valid":false},{"bytes":[237,160,128],"valid":false},{"bytes":[240,159,153],"valid":false},{"bytes":[244,144,128,128],"valid":false}]}

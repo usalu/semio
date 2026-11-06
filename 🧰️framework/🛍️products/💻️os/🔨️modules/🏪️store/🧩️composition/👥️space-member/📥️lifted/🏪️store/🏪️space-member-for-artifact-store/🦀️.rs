@@ -72,11 +72,11 @@ where
 
     fn original_batch_receiving_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if self.log.operation_wire.as_ref().is_none_or(|wire|wire.original_receiving.is_none()) || self.owners.mutation_retirement_factory.is_none() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "member requires its installed original operation receiver and retirement issuer")); }
-        Ok(semio_os_store_one_item_batch::member_owned_batch::OriginalMemberBatchReceiving::<Mutation>::admission_demands())
+        Ok(semio_framework_os_store_one_item_batch::member_owned_batch::OriginalMemberBatchReceiving::<Mutation>::admission_demands())
     }
-    fn admit_original_batch_receiving(&self, wires: &mut Option<Vec<Vec<u8>>>, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>, grant: RetainedCloneGrant) -> Result<Option<(Box<dyn semio_os_store_one_item_batch::member_owned_batch::original_receiving::MemberOriginalBatchReceiving>, RetainedCloneProgress)>, ValueError> {
+    fn admit_original_batch_receiving(&self, wires: &mut Option<Vec<Vec<u8>>>, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>, grant: RetainedCloneGrant) -> Result<Option<(Box<dyn semio_framework_os_store_one_item_batch::member_owned_batch::original_receiving::MemberOriginalBatchReceiving>, RetainedCloneProgress)>, ValueError> {
         self.original_batch_receiving_demands()?;
-        semio_os_store_one_item_batch::member_owned_batch::OriginalMemberBatchReceiving::<Mutation>::admit(wires, self.log.operation_wire.ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"member has no installed operation wire"))?, self.owners.mutation_retirement_factory.as_ref().unwrap(), control, grant)
+        semio_framework_os_store_one_item_batch::member_owned_batch::OriginalMemberBatchReceiving::<Mutation>::admit(wires, self.log.operation_wire.ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"member has no installed operation wire"))?, self.owners.mutation_retirement_factory.as_ref().unwrap(), control, grant)
     }
     fn owned_publication_birth_bytes(&self, request: &MemberStoreOwnedBatchRequest) -> Result<usize, String> {
         if request.mutations.mutations::<Mutation>().is_none() { return Err("member batch mutation type does not match its exact store".into()); }
@@ -170,9 +170,9 @@ where
         if !publication.member.as_ref().is_some_and(|member| member.ptr_eq(&self.owners.snapshot_read_leases)) { return Err("member group stage belongs to a different exact store authority".into()); }
         if !grant.permits_one() { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
         if publication.publication.group_preparation.is_none() {
-            let copy=size_of::<semio_os_store_one_item_batch::lifted_member_group::MemberGroupPreparation>();
+            let copy=size_of::<semio_framework_os_store_one_item_batch::lifted_member_group::MemberGroupPreparation>();
             if grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
-            publication.publication.group_preparation=Some(semio_os_store_one_item_batch::lifted_member_group::MemberGroupPreparation::new(visibility,publication.group_history.take(),publication.group_displaced.take()));
+            publication.publication.group_preparation=Some(semio_framework_os_store_one_item_batch::lifted_member_group::MemberGroupPreparation::new(visibility,publication.group_history.take(),publication.group_displaced.take()));
             return Ok(ArtifactStoreOneItemPreparationStep::Progress(publication.publication.progress(),RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}));
         }
         self.parts().stage_apply_batch_group(&mut publication.publication, visibility, grant)

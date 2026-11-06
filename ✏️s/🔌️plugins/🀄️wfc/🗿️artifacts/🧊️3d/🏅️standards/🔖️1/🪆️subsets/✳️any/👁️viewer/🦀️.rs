@@ -130,7 +130,7 @@ impl ArtifactViewer for Wfc3dViewer {
 
 /// 🖼️ The read-only render, as a PURE function of the document — `render`'s `ArtifactView` adapter
 /// cannot be built outside the framework, so the body lives here where a test can reach it.
-pub fn render_body(body_key: &str, document: &Wfc3dSnapshot, transient: &crate::editor::wfc3d::transient::Wfc3dTransient, revision: Option<&[u8;32]>, locale: semio_framework_ui_locale::Locale, terminology: semio_framework_ui_locale::Terminology) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
+pub fn render_body(body_key: &str, document: &Wfc3dSnapshot, transient: &crate::editor::wfc3d::transient::Wfc3dTransient, revision: Option<&[u8;32]>, locale: semio_ui_locale::Locale, terminology: semio_ui_locale::Terminology) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
     match body_key {
         preview::WFC_3D_VIEW_BODY => preview::render(document, transient, revision, locale, terminology).map(semio_plugin::built_to_component_tree),
         _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
@@ -158,4 +158,4 @@ mod tests;
 //#endregion 🧪️Tests
 
 /// 🪪️ The mounted read-only adapter binds cached output to its actual render authority.
-pub fn render_with_transient(body_key: &str, doc: &ArtifactView<'_, Wfc3dSnapshot>, transient: &crate::editor::wfc3d::transient::Wfc3dTransient, locale: semio_framework_ui_locale::Locale, terminology: semio_framework_ui_locale::Terminology) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> { render_body(body_key, doc.snapshot, transient, doc.render_operation_ref().map(|operation| &operation.canonical_base_revision), locale, terminology) }
+pub fn render_with_transient(body_key: &str, doc: &ArtifactView<'_, Wfc3dSnapshot>, transient: &crate::editor::wfc3d::transient::Wfc3dTransient, locale: semio_ui_locale::Locale, terminology: semio_ui_locale::Terminology) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> { render_body(body_key, doc.snapshot, transient, doc.render_operation_ref().map(|operation| &operation.canonical_base_revision), locale, terminology) }

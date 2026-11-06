@@ -132,7 +132,7 @@ fn a_live_preview_cannot_cross_run_or_document_revisions() {
     use crate::editor::grid3d::{transient::Grid3dTransient,modes::edit::tools::fill::{Grid3dFillPayload,Grid3dFillCell}};
     use semio_framework_tool_run::{ToolRunIdentity,ToolRunId,ToolRunState};
     let identity=ToolRunIdentity::new(ToolRunId{app_instance_id:1,run:1},[7;32]);
-    let mut run=semio_framework_plugin::ToolRunView::new("fill",identity,ToolRunState::Running);
+    let mut run=semio_plugin::ToolRunView::new("fill",identity,ToolRunState::Running);
     let payload=Grid3dFillPayload{source_revision:vec![7;32],assignments:vec![Grid3dFillCell{x:0,y:0,z:0,tile_id:Some("air".into())}],..Default::default()};
     run.payload=Some(std::sync::Arc::new(payload.encode()));
     let empty=Grid3dTransient::default();

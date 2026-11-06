@@ -1,0 +1,30 @@
+{
+  "payloadBytes": 131073,
+  "pattern": [
+    0,
+    17,
+    255,
+    83
+  ],
+  "chunkBytes": 65536,
+  "cases": [
+    {
+      "name": "complete",
+      "work": 4,
+      "retained": 131073,
+      "refused": false
+    },
+    {
+      "name": "first-copy-receipt",
+      "work": 2,
+      "retained": 65536,
+      "refused": true
+    },
+    {
+      "name": "before-allocation",
+      "work": 0,
+      "retained": 0,
+      "refused": true
+    }
+  ]
+}

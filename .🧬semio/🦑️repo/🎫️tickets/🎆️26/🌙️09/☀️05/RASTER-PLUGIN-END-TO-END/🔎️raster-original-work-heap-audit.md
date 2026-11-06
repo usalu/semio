@@ -1,0 +1,7 @@
+# Raster Original Work and Heap Audit
+
+The wired pipeline advances Base64 with the caller's available fuel, one PNG transition per admitted construction, and one metadata row per builder turn. It preserves the existing source colorspace, bit depth, ordered text pairs, one RGBA frame and None ICC; the test compares the resulting snapshot with the original pure converter. IDs use the same image-in-asset and layer prefixes and preallocated fixed-width helper, with a separately funded asset-key copy.
+
+Builder strings, frame backing and metadata backing are each admitted before allocation; the actual backing is installed in the owner before construction receipt reconciliation. A successful reserve whose physical capacity exceeds its quote remains retained for closure after refusal. Cursor and PNG failures keep their source/partial owners. Current close dispatch uses close_original_retained_step without a selected CPU quote; active RetainedCloneClose tickets can require multiple actual work units. Controls and root were notified to use actual next_owner_work and the quoted close helper.
+
+PngIngress phase 4 quotes both the metadata vector and raster image headers but reports only the child take receipt while storing a destination Option; controls was asked to verify whether the destination header copy must be added under the existing physical-copy convention. This is a source-level concern, not a compiler or heap verdict. No native build ran.

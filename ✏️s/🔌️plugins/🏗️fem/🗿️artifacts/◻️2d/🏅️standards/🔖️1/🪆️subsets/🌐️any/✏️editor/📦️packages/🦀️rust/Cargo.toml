@@ -31,7 +31,7 @@ path = "../../🧪️tests/🔬️app-2/🦀️.rs"
 [dependencies]
 semio-framework-diagnostic = { workspace = true }
 semio-framework-dsl-record = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
-semio-plugin-retained-command = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/📦️packages/🦀️rust" }
+semio-framework-plugin-retained-command = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/📦️packages/🦀️rust", package = "semio-plugin-retained-command"}
 semio-s-artifact-fem-2d-mesh-regions = { workspace = true }
 semio-s-artifact-fem-2d-mesh-sections = { workspace = true }
 semio-s-artifact-fem-2d-results-state = { path = "../../🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config/📦️packages/🦀️rust" }

@@ -37,14 +37,24 @@ pub trait RetainedCloneCursor<T: RetainedClone>: Send {
     fn close_started(&self)->bool{false}
     /// 🎟️ Quotes one close action from the actual paid currencies.
     fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
-/// ⏩️ Quotes the actual next immutable-source turn before any work or allocation.
-    fn advance_demands(&self, _source: RetainedCloneRef<'_, T>, _maximum_body_bytes: usize) -> Result<RetirementDemand, ValueError> {
+    /// ⏩️ Quotes the next immutable-source turn under the same original work limit used by advance.
+    fn advance_demands(&self, _source: RetainedCloneRef<'_, T>, _maximum_body_bytes: usize, _maximum_work_units:u64) -> Result<RetirementDemand, ValueError> {
         Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "clone cursor lacks an original-source advance quote"))
     }
-    fn advance(&mut self,source:RetainedCloneRef<'_,T>,body:usize,grant:RetainedCloneGrant)->RetainedWorkOutcome;
+    /// ⛽️ Quotes actual selected work without exceeding the supplied original limit.
+    fn advance_work_demand(&self,_source:RetainedCloneRef<'_,T>,_body:usize,_maximum_work_units:u64)->Result<u64,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"clone cursor lacks an original work quote"))}
+    fn advance(&mut self,source:RetainedCloneRef<'_,T>,body:usize,maximum_work_units:u64,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome;
+    /// 📤️ Quotes the original ready-owner transfer work before handoff.
+    fn take_work_demand(&self)->Result<u64,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"clone cursor lacks an original take work quote"))}
+    /// ♻️ Quotes the selected child retirement work before closure.
+    fn close_work_demand(&self,_body:usize)->Result<u64,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"clone cursor lacks an original close work quote"))}
     fn take_demand(&self)->Result<RetirementDemand,ValueError>;
     fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(T,RetainedCloneProgress)>>;
     fn begin_close(&mut self) -> bool;
+    /// ⛽️ Quotes the selected original close-start action before effects.
+    fn begin_close_work_demand(&self)->Result<u64,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"clone cursor lacks an original close-start work quote"))}
+    /// 🚦️ Performs the admitted close-start action and reports actual work.
+    fn begin_close_paid(&mut self)->RetainedWorkOutcome<(),ValueError>{RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"clone cursor lacks an original close-start action")),work:0}}
     
     fn terminal_is_empty(&self) -> bool;
     /// 🪜️ Observes the depth of the next controlled close transition without changing ownership.
@@ -62,13 +72,13 @@ pub trait RetainedCloneCursor<T: RetainedClone>: Send {
         Err(ValueError::new(ValueRefusalKind::UnsupportedOwner, "clone cursor has no controlled close release demand"))
     }
     /// 🎯️ Executes the same body-selected close only after every granted axis admits its fixed quote.
-    fn close_selected(&mut self,body:usize,grant:RetainedCloneGrant)->RetainedWorkOutcome{
+    fn close_selected(&mut self,body:usize,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome{
         if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
         let selected=(||{let demand=self.close_demands(body)?;if !retained_clone_grant_admits(grant,demand){return Ok(None)}if self.close_demands(demand.copy_bytes)?!=demand{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"selected retirement quote changes under its exact admitted copy frontier"))}Ok(Some(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}))})();
-        match selected{Ok(Some(grant))=>self.close_step(grant),Ok(None)=>RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0},Err(error)=>RetainedWorkOutcome{result:Err(error),work:0}}
+        match selected{Ok(Some(grant))=>self.close_step(grant),Ok(None)=>RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0},Err(error)=>RetainedWorkOutcome{result:Err(error.into()),work:0}}
     }
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
-        RetainedWorkOutcome{result:if grant.maximum_items==0{Ok(RetainedCloneStep::Progress(Default::default()))}else{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"clone cursor has no capacity-bearing close authority"))},work:0}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome{
+        RetainedWorkOutcome{result:if grant.maximum_items==0{Ok(RetainedCloneStep::Progress(Default::default()))}else{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"clone cursor has no capacity-bearing close authority").into())},work:0}
     }
 }
 

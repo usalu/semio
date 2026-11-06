@@ -1,6 +1,6 @@
 //! 📥️ Items of `operation` that belong to `os-store-engine-owners` (PLAN-OS-KERNEL-CRATES.md, Appendix C): lifted out of `🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs`.
 use semio_framework_value::ErasedSnapshotRetirement;
-use semio_os_store_member_open::{MemberOpenAdmissionError, MemberOpenDiagnostic, MemberOpenProgress, MemberOpenRequest};
+use semio_framework_os_store_member_open::{MemberOpenAdmissionError, MemberOpenDiagnostic, MemberOpenProgress, MemberOpenRequest};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_job::{StepContext,OriginalTurnFailure};
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

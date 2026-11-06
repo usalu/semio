@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "quote denial",
+      "maximum": 4,
+      "bytes": 5,
+      "action": "post",
+      "actual": 5,
+      "quoteRefused": true,
+      "settlementRefused": false,
+      "spent": 0,
+      "pending": false
+    },
+    {
+      "name": "actual post",
+      "maximum": 5,
+      "bytes": 5,
+      "action": "post",
+      "actual": 5,
+      "quoteRefused": false,
+      "settlementRefused": false,
+      "spent": 5,
+      "pending": false
+    },
+    {
+      "name": "performed allocator failure",
+      "maximum": 5,
+      "bytes": 5,
+      "action": "post",
+      "actual": 0,
+      "quoteRefused": false,
+      "settlementRefused": false,
+      "spent": 0,
+      "pending": false
+    },
+    {
+      "name": "pre-effect cancellation",
+      "maximum": 5,
+      "bytes": 5,
+      "action": "cancel",
+      "actual": null,
+      "quoteRefused": false,
+      "settlementRefused": false,
+      "spent": 0,
+      "pending": false
+    },
+    {
+      "name": "physical excess",
+      "maximum": 5,
+      "bytes": 5,
+      "action": "post",
+      "actual": 8,
+      "quoteRefused": false,
+      "settlementRefused": true,
+      "spent": 8,
+      "pending": false
+    },
+    {
+      "name": "foreign settlement",
+      "maximum": 5,
+      "bytes": 5,
+      "action": "foreign",
+      "actual": 5,
+      "quoteRefused": false,
+      "settlementRefused": true,
+      "spent": 0,
+      "pending": true
+    },
+    {
+      "name": "duplicate quote",
+      "maximum": 5,
+      "bytes": 5,
+      "action": "duplicate",
+      "actual": null,
+      "quoteRefused": false,
+      "settlementRefused": true,
+      "spent": 0,
+      "pending": true
+    }
+  ]
+}

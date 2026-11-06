@@ -3,7 +3,7 @@
 mod post_fixture;
 use post_fixture::PostFixture;
 use semio_os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
-use semio_os_store_one_item_batch::paged_one_item as paged;
+use semio_framework_os_store_one_item_batch::paged_one_item as paged;
 use semio_os_spr as protocol;
 use paged::mutation_apply_preparation_factory;
 use paged::PagedOneItemEdit;
@@ -199,12 +199,12 @@ enum Outcome { Completed { post: PlainDocument, inverse: Vec<DocumentMutation>, 
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct OriginalMutationIssuer;
-impl semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation> for OriginalMutationIssuer {
+impl semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation> for OriginalMutationIssuer {fn retire_owned_work_demand(&self,_:&DocumentMutation)->Result<u64,semio_framework_value::ValueError>{Ok(1)}
     fn retirement_birth_bytes(&self, value: &DocumentMutation) -> usize { semio_framework_value::ArtifactOwnedValueRetirementFactory::retirement_birth_bytes(&OwnedValueRetirementFactory::<DocumentMutation>::default(), value) }
-    fn retire_owned(&self, value: DocumentMutation, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, DocumentMutation)> {
+    fn retire_owned(&self, value: DocumentMutation, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::OriginalRetirementFailure, DocumentMutation)> {let turn=(||{
         ORIGINAL_ISSUER_RETIRES.set(ORIGINAL_ISSUER_RETIRES.get() + 1);
         semio_framework_value::ArtifactOwnedValueRetirementFactory::retire_owned(&OwnedValueRetirementFactory::<DocumentMutation>::default(), value, grant)
-    }
+    })();semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(|(error,value)|(error.into(),value)),work:turn.work}}
 }
 
 const RECEIVER_TURNS:usize=1_100_032;
@@ -216,7 +216,7 @@ fn receiver_source(original:semio_framework_value::retained_clone::RetainedClone
 trait ReceiverReceipt{fn receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress;}
 impl ReceiverReceipt for ArtifactStoreOneItemPreparationStep{fn receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{self.ownership_progress()}}
 impl ReceiverReceipt for semio_framework_value::retained_clone::RetainedCloneStep{fn receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{self.progress()}}
-impl ReceiverReceipt for semio_framework_os_store_replay_operation::ArtifactReplayPreparationStep{fn receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{self.progress()}}
+impl ReceiverReceipt for semio_os_store_replay_operation::ArtifactReplayPreparationStep{fn receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{self.progress()}}
 impl ReceiverReceipt for paged::PagedOneItemEditStep<DocumentMutation>{fn receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{match self{Self::Progress(p)|Self::Complete(p,_)|Self::CompleteRows(p,_)|Self::CompleteOutcome(p,_,_)|Self::RefusedOutcome(p,_)=>*p}}}
 impl<T:ReceiverReceipt> ReceiverReceipt for Result<T,ValueError>{fn receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{self.as_ref().map_or_else(ValueError::retained_progress,ReceiverReceipt::receipt)}}
 impl<T:ReceiverReceipt,U> ReceiverReceipt for (T,U){fn receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{self.0.receipt()}}
@@ -548,7 +548,8 @@ fn paged_invalid_edit_receipt_retires_returned_inverse_with_original_issuer() {
         fn last_turn_work(&self)->u64{self.last_work}
         fn begin_close(&mut self){}
         fn close_demands(&self,_:&dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation>,_:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(Default::default())}
-        fn close_step(&mut self,_:&dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation>,_:RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,ValueError>{Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default()))}
+        fn close_work_demand(&self,_:&dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation>,_:usize)->Result<u64,ValueError>{Ok(0)}
+        fn close_step(&mut self,_:&dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation>,_:RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>{Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default()))}
         fn terminal_is_empty(&self)->bool{true}
     }
     let law:Value=serde_json::from_str(include_str!("./🧫️fixtures/♻️inverse-issuer/🔣️.json")).unwrap();
@@ -576,13 +577,13 @@ struct ZstEditOriginal;
 struct ZstEditOther;
 union EditIssuerSlot{original:ZstEditOriginal,other:ZstEditOther}
 thread_local!{static OTHER_EDIT_ISSUER_CALLS:std::cell::Cell<usize>=const{std::cell::Cell::new(0)};}
-impl semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation> for ZstEditOriginal{
+impl semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation> for ZstEditOriginal{fn retire_owned_work_demand(&self,_:&DocumentMutation)->Result<u64,semio_framework_value::ValueError>{Ok(1)}
  fn retirement_birth_bytes(&self,_:&DocumentMutation)->usize{semio_framework_value::owned_retirement_birth_bytes::<DocumentMutation>()}
- fn retire_owned(&self,row:DocumentMutation,g:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(ValueError,DocumentMutation)>{semio_framework_value::admit_owned_retirement(row,g)}
+ fn retire_owned(&self,row:DocumentMutation,g:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::OriginalRetirementFailure,DocumentMutation)>{let turn=(||{semio_framework_value::admit_owned_retirement(row,g)})();semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(|(error,value)|(error.into(),value)),work:turn.work}}
 }
-impl semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation> for ZstEditOther{
+impl semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation> for ZstEditOther{fn retire_owned_work_demand(&self,_:&DocumentMutation)->Result<u64,semio_framework_value::ValueError>{Ok(1)}
  fn retirement_birth_bytes(&self,_:&DocumentMutation)->usize{semio_framework_value::owned_retirement_birth_bytes::<DocumentMutation>()}
- fn retire_owned(&self,row:DocumentMutation,_:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(ValueError,DocumentMutation)>{OTHER_EDIT_ISSUER_CALLS.set(OTHER_EDIT_ISSUER_CALLS.get()+1);semio_framework_value::RetainedWorkOutcome{result:Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"foreign zero-sized editor issuer must not receive original inverse rows"),row)),work:1}}
+ fn retire_owned(&self,row:DocumentMutation,_:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::OriginalRetirementFailure,DocumentMutation)>{let turn=(||{OTHER_EDIT_ISSUER_CALLS.set(OTHER_EDIT_ISSUER_CALLS.get()+1);semio_framework_value::RetainedWorkOutcome{result:Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"foreign zero-sized editor issuer must not receive original inverse rows"),row)),work:1}})();semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(|(error,value)|(error.into(),value)),work:turn.work}}
 }
 /// 🔑️ Generic editor refusal preserves its original inverse vector before a differently typed same-address issuer can act.
 

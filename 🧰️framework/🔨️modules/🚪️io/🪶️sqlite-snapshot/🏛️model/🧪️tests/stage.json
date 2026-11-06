@@ -1,0 +1,33 @@
+{
+  "cases": [
+    {
+      "name": "before-body-denial",
+      "body": false,
+      "settlement": false,
+      "operation": "none"
+    },
+    {
+      "name": "owned-output-and-settlement",
+      "body": true,
+      "settlement": true,
+      "operation": "output"
+    },
+    {
+      "name": "domain-error-and-settlement",
+      "body": true,
+      "settlement": true,
+      "operation": "domain-error"
+    },
+    {
+      "name": "occupied-failure-and-settlement",
+      "body": true,
+      "settlement": true,
+      "operation": "occupied-failure"
+    }
+  ],
+  "boundedWork": {
+    "grant": 2,
+    "committed": 2,
+    "nextDenied": 1
+  }
+}

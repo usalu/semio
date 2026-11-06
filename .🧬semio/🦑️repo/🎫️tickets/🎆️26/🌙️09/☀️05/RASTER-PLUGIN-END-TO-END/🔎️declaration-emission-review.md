@@ -1,0 +1,13 @@
+# Declaration Emission Failure Review
+
+Read-only review of the current shared sources. No native compilation or native acceptance test was run.
+
+## Findings
+
+1. **The generic preparation retirement hides the actual failed effect receipt and cause.** `📜️declaration/📨️emission/🛬️lifted/📦️preparation/♻️retirement/🦀️.rs:45-48` retains a `PluginLifecycleFailure` but returns `RetirementStep::Progress(Default::default(), work)`. A refusal can carry real `effects`, including the 91-byte allocation in the new test; this reports zero physical effects to the caller and later retires the only original failure without exposing it. Preserve and report the full original failure and its receipt through a compatible retirement carrier; do not convert it into empty successful progress. Add an integration law that drives this generic cursor through the refusal, checks the initiating context's actual allocation debit, and observes both causes.
+
+2. **Retained-command cleanup converts a failure without debiting its effects.** `🧵️retained-command/🧵️retained-command-job/🦀️.rs:147` uses `outcome.result?` after consuming work, whereas its Publish branch at line 607 explicitly calls `failure.debit_original(cx)`. The `From<PluginLifecycleFailure> for OriginalTurnFailure` implementation only moves fields; it does not debit the context. An allocating close refusal consequently escapes with its physical receipt unposted. Apply the same original-context debit on the error branch, subject to the enclosing cleanup contract, and test a failure with nonzero effects and a receipt refusal.
+
+3. **The new refusal law does not exercise factory admission refusal or the real context.** `🧪️tests/🧩️composition/📨️emission/🦀️.rs:381-384` admits the factory frame successfully and sets `refuse_once` on the resulting cursor; the refusal occurs later in `TrackedChildRetirement::close_step` at lines 351-355. It therefore does not verify that `📜️declaration/📨️emission/🛬️lifted/📦️preparation/🦀️.rs:299-304` restores the exact typed input when `retire_owned` itself returns `(failure, operation)`. Add a distinct factory that returns a rich failure and the exact original operation, assert its identity and provider remain available, and drive the production `StepContext` path with actual allocation and work receipts. The existing heap-observation test is useful but is not that integration proof.
+
+The preview and Publish preparation paths explicitly debit the moved failure and retain its full retirement primary. The shared failure conversion preserves all carrier fields. Parsing and the language-neutral oracle do not establish Rust type coherence; the documented shared decoder migration currently blocks native acceptance.

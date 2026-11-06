@@ -1,7 +1,9 @@
 //! 🧫️ Native text receiving retains every cancelled prefix and matches the independent UTF8 corpus.
 use super::*;
+use crate::native_receiving::TextRetirement;
+use semio_framework_value::{ValueError,retirement::RetirementCursor};
 use semio_framework_value::{DslValue,NativeDecodeControl,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome};
-use semio_framework_value_native_owned::{NativeReceive,NativeReceiver};
+use semio_framework_value::native_decoding::{NativeReceive,NativeReceiver};
 use semio_framework_value_testing_allocator::observe_retirement_allocations as observe;
 fn run(text:&str,accepted:bool,cut:Option<usize>,profile:&serde_json::Value){
  let stock=&profile["stock"];let mut bank=RetainedCloneGrant{maximum_items:stock["items"].as_u64().unwrap()as usize,maximum_copy_bytes:stock["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:stock["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:stock["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:stock["depth"].as_u64().unwrap()as usize};let mut fuel=stock["fuel"].as_u64().unwrap();
@@ -16,3 +18,12 @@ fn run(text:&str,accepted:bool,cut:Option<usize>,profile:&serde_json::Value){
 }
 #[test]
 fn native_ui_text_receiving_preserves_denied_and_cancelled_prefixes(){let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧱️foundation/🔣️.json")).unwrap();let profile:serde_json::Value=serde_json::from_str(include_str!("../🔣️.json")).unwrap();for row in corpus["texts"].as_array().unwrap(){let text=row["unit"].as_str().unwrap().repeat(row["repeat"].as_u64().unwrap()as usize);let accepted=row["valid"].as_bool().unwrap();assert_eq!(serde_json::from_value::<UiText>(serde_json::json!(text)).is_ok(),accepted);run(&text,accepted,None,&profile);for cut in profile["cancelPrefixes"].as_array().unwrap(){run(&text,accepted,Some(cut.as_u64().unwrap()as usize),&profile);}}}
+
+struct OriginalTextWork(u64);
+impl semio_framework_value::native_decoding::NativeDecodeWorkRecipient for OriginalTextWork{fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=self.0))}}
+#[test]
+fn text_retirement_quotes_actual_work_before_original_caller_effects(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🔣️.json")).unwrap();
+ for limit in [0,1]{let mut cursor=TextRetirement(Some(UiText::default()));let mut allow=|_|true;let mut caller=NativeDecodeControl::new_retained(&mut allow);let mut original=OriginalTextWork(limit);let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:usize::MAX,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:1};
+ caller.with_work_recipient(&mut original,|same|->Result<(),ValueError>{let quote=cursor.next_computational_work(1)?;assert_eq!(quote,law["retirementWork"]["occupied"].as_u64().unwrap());let(admission,heap)=observe(||same.prepare_work(quote));assert_eq!(heap,(0,0));let admitted=admission?;if limit==0{assert!(!admitted);assert!(!cursor.terminal_is_empty());assert_eq!(same.actual_work(),0);return Ok(())}assert!(admitted);let(step,heap)=observe(||cursor.close_step(grant));let actual=step.work();same.commit_work(actual)?;assert_eq!(actual,quote);assert_eq!(heap,(0,0));assert!(cursor.terminal_is_empty());assert_eq!(cursor.next_computational_work(1)?,law["retirementWork"]["empty"].as_u64().unwrap());Ok(())}).unwrap();}
+}

@@ -27,7 +27,7 @@ fn close(preparation: &mut dyn ArtifactEphemeralOneItemPreparation<String, Strin
     preparation.begin_close();
     let grant = physical_grant();
     for _ in 0..32_768 {
-        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| preparation.close_step(grant).unwrap());
+        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| preparation.close_step(grant).result.unwrap());
         assert!(step.progress().fits(grant.retained_grant()));
         assert_eq!((allocated, released), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
         if preparation.terminal_is_empty() { return; }
@@ -135,7 +135,7 @@ fn ephemeral_transfer_preparation_obeys_neutral_grants_and_bounded_retirement() 
         }
         preparation.cancel();
         preparation.begin_close();
-        let denied = preparation.close_step(ArtifactStoreOneItemGrant { maximum_items: 0, ..physical_grant() }).unwrap();
+        let denied = preparation.close_step(ArtifactStoreOneItemGrant { maximum_items: 0, ..physical_grant() }).result.unwrap();
         assert_eq!(denied.progress(), semio_framework_value::RetainedCloneProgress::default());
         assert!(!preparation.terminal_is_empty());
         close(preparation.as_mut());

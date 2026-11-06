@@ -47,9 +47,9 @@ fn original_edit_cancellation_before_receiving_keeps_the_previous_original_run()
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct ReadFactory;
-impl semio_framework_value::ArtifactOwnedValueRetirementFactory<TypingState<String>> for ReadFactory{
+impl semio_framework_value::ArtifactOwnedValueRetirementFactory<TypingState<String>> for ReadFactory{fn retire_owned_work_demand(&self,_:&TypingState<String>)->Result<u64,semio_framework_value::ValueError>{Ok(1)}
  fn retirement_birth_bytes(&self,_:&TypingState<String>)->usize{semio_framework_value::retirement::controlled::controlled_retirement_birth_bytes::<TypingState<String>>()}
- fn retire_owned(&self,value:TypingState<String>,g:RetainedCloneGrant)->Result<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,TypingState<String>)>{semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(value,g).map(|(owner,p)|(owner as Box<dyn semio_framework_value::ErasedSnapshotRetirement>,p))}
+ fn retire_owned(&self,value:TypingState<String>,g:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress),(semio_framework_value::OriginalRetirementFailure,TypingState<String>)>{let turn=semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(value,g);semio_framework_value::RetainedWorkOutcome{result:turn.result.map(|(owner,p)|(owner as Box<dyn semio_framework_value::ErasedSnapshotRetirement>,p)).map_err(|(e,v)|(e.into(),v)),work:turn.work}}
 }
 fn read_step(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,d:RetirementDemand,run:impl FnOnce(RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,ValueError>){turn(caller,decoder,grant(),|cx|cx.with_original_retirement(|cx|{semio_framework_job::close_original_retained_step(cx,d,run)?;Ok(())}));}
 fn refused_grant(name:&str,d:RetirementDemand)->Option<RetainedCloneGrant>{let mut g=grant();match name{"items"=>g.maximum_items=0,"copy" if d.copy_bytes>0=>g.maximum_copy_bytes=d.copy_bytes-1,"capacity" if d.capacity_bytes>0=>g.maximum_capacity_bytes=d.capacity_bytes-1,"release" if d.release_bytes>0=>g.maximum_release_bytes=d.release_bytes-1,"depth" if d.depth>0=>g.maximum_depth=d.depth-1,_=>return None}Some(g)}

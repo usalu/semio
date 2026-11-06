@@ -58,9 +58,11 @@ impl<T: ?Sized + Sync> RetainedOwnedProjection<T> {
     }
 
     /// ♻️ Releases one alias while the source authority continues to retain the root lease.
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome {
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome {
         RetainedCloneBinding::close_one(&mut self.binding,grant)
     }
+    /// ⛽️ Quotes the selected original alias closure action before effects.
+    pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{RetainedCloneBinding::close_work_demand(&self.binding,body)}
     /// 🎟️ Quotes the original alias frontier once under its caller's complete body allowance.
     pub fn close_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{RetainedCloneBinding::close_demand(&self.binding,body)}
     pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{RetainedCloneBinding::copy_demand(&self.binding)}

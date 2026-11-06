@@ -47,7 +47,9 @@
           "surface": "wfc.bitmap.output",
           "meaning": "authored bitmap pins"
         }
-      ]
+      ],
+      "previewWindow": "wfc-bitmap-output",
+      "projection": "canvas"
     },
     {
       "variant": "grid2d",
@@ -86,7 +88,9 @@
           "surface": "wfc.grid2d.surface.grid",
           "meaning": "authored geometry and labels"
         }
-      ]
+      ],
+      "previewWindow": "wfc-grid2d-preview",
+      "projection": "canvas"
     },
     {
       "variant": "wfc2d",
@@ -124,7 +128,9 @@
           "surface": "wfc.graph",
           "meaning": "authored geometry and labels"
         }
-      ]
+      ],
+      "previewWindow": "wfc-2d-preview",
+      "projection": "canvas"
     },
     {
       "variant": "grid3d",
@@ -179,7 +185,9 @@
           "surface": "wfc.grid3d.grid",
           "meaning": "authored geometry and labels"
         }
-      ]
+      ],
+      "previewWindow": "wfc-grid3d-preview",
+      "projection": "grid3d"
     },
     {
       "variant": "wfc3d",
@@ -217,7 +225,9 @@
           "surface": "wfc.graph",
           "meaning": "authored geometry and labels"
         }
-      ]
+      ],
+      "previewWindow": "wfc-3d-preview",
+      "projection": "wfc3d"
     }
   ],
   "controlCoverage": {

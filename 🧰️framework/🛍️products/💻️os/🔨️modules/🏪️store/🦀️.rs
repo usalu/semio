@@ -19,8 +19,8 @@
 use semio_framework_composition_admission::{ChildRestoreProjection,ChildRestoreProjectionError,CHILD_RESTORE_MAXIMUM_FIELD_BYTES};
 use semio_os_store_text_io::ArtifactStoreSnapshot as _;
 use genesis_pack_admission::ArtifactGenesisPackCapture;
-use semio_framework_os_store_owned_schema_decode::genesis_pack_admission;
-use semio_framework_os_vcs::io::binary::genesis::{AdmittedArtifactGenesis, ArtifactGenesisProducer};
+use semio_os_store_owned_schema_decode::genesis_pack_admission;
+use semio_os_vcs::io::binary::genesis::{AdmittedArtifactGenesis, ArtifactGenesisProducer};
 
 mod retirement_integration {
     pub use semio_framework_os_store_retirement::*;
@@ -34,20 +34,20 @@ pub use protocol::codec::HistoryReadLimits;
 mod retained_codec_catalog;
 pub use retained_codec_catalog::{ArtifactCodecCatalogStep, RetainedArtifactCodecCatalog};
 
-pub use semio_framework_os_store_snapshot_clone as snapshot_clone_preparation;
+pub use semio_os_store_snapshot_clone as snapshot_clone_preparation;
 
-pub use semio_framework_os_store_replay_operation as replay_preparation;
+pub use semio_os_store_replay_operation as replay_preparation;
 pub use replay_preparation::{ArtifactMutationSource, ArtifactReplayPreparationRequest, ArtifactReplayPreparation, ArtifactReplayPreparationContext, ArtifactReplayPreparationFactory, ArtifactReplayPreparationMode, ArtifactReplayPreparationProgress, ArtifactReplayPreparationRetirement, ArtifactReplayPreparationStep, ArtifactReplayPreparationTask, ArtifactReplayPrepared, admit_replay_preparation_step};
 use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 pub use replay_preparation::{ArtifactDerivedOperation,ArtifactDerivedOperationMode};
 pub use semio_framework_os_store_engine_command::{ArtifactNativeVcsRequest,ArtifactNativeVcsKind,ArtifactNativeVcsSelection,ArtifactNativeVcsResult,ArtifactNativeVcsPhase,ArtifactNativeVcsAdvance,ArtifactNativeVcsCommand,ArtifactStoreNativeVcsTurn};
 use semio_framework_value_snapshot_read as snapshot_read_registry_handle;
 use semio_framework_value_snapshot_read as snapshot_read_registry_retirement;
-pub use semio_framework_os_spr::command::MessageCopyCursor;
+pub use semio_os_spr::command::MessageCopyCursor;
 
-use semio_framework_os_store_ledger::edit_message_clamp;
+use semio_os_store_ledger::edit_message_clamp;
 
-pub use semio_framework_os_spr::command::{ArtifactMessageComposeCursor, ArtifactMessageComposeRefusal, ArtifactMessageFragment, ArtifactMessageSource};
+pub use semio_os_spr::command::{ArtifactMessageComposeCursor, ArtifactMessageComposeRefusal, ArtifactMessageFragment, ArtifactMessageSource};
 
 use semio_framework_os_store_one_item_batch::ephemeral_transfer;
 pub use ephemeral_transfer::{ARTIFACT_EPHEMERAL_TRANSFER_MAXIMUM_INLINE_BYTES, ArtifactEphemeralTransferPreparationFactory};
@@ -102,9 +102,9 @@ pub use one_item_owners::OneItemOwners;
 
 pub use semio_framework_os_store_one_item_batch::paged_one_item;
 pub use paged_one_item::{bounded_cold_mutation_apply_preparation_factory, cold_mutation_apply_preparation_factory, ColdPreparationBounds, mutation_apply_preparation_factory, paged_one_item_factory_birth_bytes, ColdMutationApplyFactory, MutationApplyEdit, PagedOneItemPreparationFactory};
-pub use semio_framework_os_store_one_item::semantic::PagedOneItemEdit;
-pub use semio_framework_os_store_one_item::semantic::PagedOneItemEditStep;
-pub use semio_framework_os_store_one_item::semantic::{PagedOneItemPost,PagedOneItemPostMode,PagedOneItemPostRead};
+pub use semio_os_store_one_item::semantic::PagedOneItemEdit;
+pub use semio_os_store_one_item::semantic::PagedOneItemEditStep;
+pub use semio_os_store_one_item::semantic::{PagedOneItemPost,PagedOneItemPostMode,PagedOneItemPostRead};
 
 // The `crate::os_dsl::DslArtifact`/`crate::os_dsl::DslOps` derive macros emit `::pack::snapshot::ArtifactDsl`/`::crate::os_store::OpText`
 // paths (see `dsl/derive/rs/lib.rs`), which only resolve for crates that depend on `store` as an
@@ -121,17 +121,17 @@ use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
-use semio_framework_os_spr::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId, SchemaId, UndoPolicy};
-use semio_framework_os_spr::{DiffRegions, Edit, Mutation, MutationDiff, MutationMeta, OpBinary, OpText, TouchedPaths};
+use semio_os_spr::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId, SchemaId, UndoPolicy};
+use semio_os_spr::{DiffRegions, Edit, Mutation, MutationDiff, MutationMeta, OpBinary, OpText, TouchedPaths};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use std::marker::PhantomData;
 use std::sync::{Arc, Mutex};
 //#region 🧬️OpaqueSnapshotRead
 pub mod snapshot_read {
-    pub use semio_framework_os_store_read::*;
-    pub use semio_framework_os_store_ledger::lifted_snapshot_read::*;
-    pub use semio_framework_os_store_replay::lifted_snapshot_read::*;
+    pub use semio_os_store_read::*;
+    pub use semio_os_store_ledger::lifted_snapshot_read::*;
+    pub use semio_os_store_replay::lifted_snapshot_read::*;
 }
 pub use semio_framework_os_store_engine_owners as document_store_owners;
 use snapshot_read::{ARTIFACT_STORE_DISPLACED_PRESSURE_OCCUPANCY, ArtifactDerivedHistoryPreview, ArtifactDerivedReplay, ArtifactDerivedSnapshot, ArtifactStoreDisplacedSnapshotRetirement, ErasedSnapshotRead, SnapshotRead, SnapshotReadRef, SnapshotReadReturn, admit_original_snapshot_alias, artifact_retirement_admit_owned, artifact_retirement_admit_shared_lease, artifact_retirement_box_close_step, artifact_retirement_box_demands, artifact_retirement_owned_birth_demands, retirement_owner_close, retirement_owner_demands, artifact_retirement_shared_lease_birth_demands, retire_document_envelope, retire_document_envelope_birth_bytes};
@@ -140,9 +140,9 @@ use semio_framework_os_store_engine_owners::member_producer::MemberStoreProducer
 use snapshot_read::{ARTIFACT_STORE_DISPLACED_RESERVATION_CAPACITY, ARTIFACT_STORE_DISPLACED_RETIREMENT_CAPACITY, ARTIFACT_STORE_UNSCHEDULED_CLOSE_STEPS, ArtifactEnvelopeMetadata, ArtifactGenesisRetirement, ArtifactHistoryReadRetirement, ArtifactStoreAlternativeRetirementFactory, ArtifactStoreCheckpointRetirementFactory, ArtifactStoreCursorDisposerPhase, ArtifactStoreCursorRetirement, ArtifactStoreDisplacedOwnerReservation, ArtifactStoreDisplacedRetirements, ArtifactStoreEditMetadata, ArtifactStoreEditRetirement, ArtifactStoreEditRetirementState, ArtifactStoreEnvelopeRetirement, ArtifactStoreHistoryLedgerRetirement, ArtifactStoreHistoryMetadataRetirement, ArtifactStoreHistoryMetadataRetirementState, ArtifactStoreMutationDagRetirement, ArtifactStoreOperationRowOwners, ArtifactStoreRevisionAccumulatorRetirement, ArtifactStoreStringRetirement, ArtifactStoreStringVectorRetirement, ArtifactStoreSupersessionRetirement, ArtifactStoreVcsRetirement, ArtifactStoreVcsRetirementPhase, DISPLACED_RELIEF_STEPS, HistoryReadPlan, SNAPSHOT_READ_LEASE_CAPACITY, SnapshotReadLease, SnapshotReadLeaseRefusal, SnapshotReadLeaseRegistry, SnapshotReadLeaseRegistryOwner, SnapshotReadLeaseRegistryState, SnapshotReadLeaseSlot, SnapshotReadLeaseStateGuard, SnapshotReadLeaseStateLock, advance_returned_snapshot_read, advance_returned_snapshot_read_root, artifact_history_ledger_birth, artifact_history_ledger_handoff, artifact_retirement_box_depth, retain_completed_history_plan, return_snapshot_read, snapshot_registry_frame_bytes, try_return_original_snapshot_read};
 use semio_framework_os_store_engine_owners::{DocumentCatalogOwner, UNSCHEDULED_CATALOG_STEPS, UninstalledDocumentEnvelopeRetirement, close_unscheduled_catalog};
 
-use semio_framework_os_store_read::history_plan_retirement;
+use semio_os_store_read::history_plan_retirement;
 
-use semio_framework_os_store_read::history_read_admission;
+use semio_os_store_read::history_read_admission;
 pub use history_read_admission::PreparedHistoryReadRetirement;
 
 use semio_framework_os_store_retirement::resident_backing;
@@ -153,12 +153,12 @@ pub(crate) use semio_framework_value_snapshot_read::{SnapshotReadRegistryAliasRe
 pub use semio_framework_value_snapshot_read::snapshot_read_projection;
 pub use semio_framework_value_snapshot_read::{SnapshotReadProjection,CapturedSnapshotSource};
 
-pub(crate) use semio_framework_os_store_ledger::edit_retirement;
+pub(crate) use semio_os_store_ledger::edit_retirement;
 use edit_retirement::{ArtifactStoreChangeRetirementFactory, ArtifactStoreDecodedEditRetirement, ArtifactStoreDecodedEditRetirementFactory, ArtifactStoreOperationRowsRetirement};
 
-use semio_framework_os_spr::command::MutationMessageLedgerRetirement as ArtifactStoreMessageLedgerRetirement;
+use semio_os_spr::command::MutationMessageLedgerRetirement as ArtifactStoreMessageLedgerRetirement;
 
-use semio_framework_os_spr::conflict::ProtocolConflictRetirement as ArtifactStoreConflictRetirement;
+use semio_os_spr::conflict::ProtocolConflictRetirement as ArtifactStoreConflictRetirement;
 
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
 
@@ -166,15 +166,15 @@ use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotR
 
 //#endregion 🧬️OpaqueSnapshotRead
 use semio_os_store_text_io::operation_identity;
-use semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
-use semio_framework_os_vcs::io::binary::entity_identity::{content_addressed_entity_id, edit_scoped_id, mint_alternative_id, mint_change_id, mint_edit_id, mint_mutation_id, mint_child_id, mint_invocation_id, operation_list_fingerprint, mint_space_checkpoint_id, mint_space_alternative_id};
-use semio_framework_os_vcs::io::binary::checkpoint_identity::{content_addressed_checkpoint_id, content_addressed_checkpoint_id_with_pending_change};
-pub use semio_framework_os_vcs::{Author, VcsError};
-use semio_framework_os_vcs::{Alternative, ArtifactHistoryKey, ArtifactHistoryLedger, ArtifactHistoryReservation, ArtifactVcs, Change, Checkpoint, CollectionDiff, Identified, ItemPatch, Patchable, apply_mutation};
+use semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
+use semio_os_vcs::io::binary::entity_identity::{content_addressed_entity_id, edit_scoped_id, mint_alternative_id, mint_change_id, mint_edit_id, mint_mutation_id, mint_child_id, mint_invocation_id, operation_list_fingerprint, mint_space_checkpoint_id, mint_space_alternative_id};
+use semio_os_vcs::io::binary::checkpoint_identity::{content_addressed_checkpoint_id, content_addressed_checkpoint_id_with_pending_change};
+pub use semio_os_vcs::{Author, VcsError};
+use semio_os_vcs::{Alternative, ArtifactHistoryKey, ArtifactHistoryLedger, ArtifactHistoryReservation, ArtifactVcs, Change, Checkpoint, CollectionDiff, Identified, ItemPatch, Patchable, apply_mutation};
 //#region 🔖️Schemas
 pub mod store_schema {
     pub use semio_framework_os_store_space_schema::*;
-    pub use semio_framework_os_store_replay::ReplayTurnBudget;
+    pub use semio_os_store_replay::ReplayTurnBudget;
 }
 use store_schema::{AcceptedArtifactProjection, ArtifactBackboneRef, ArtifactCommand, ArtifactCursor, ArtifactCursorOwners, ArtifactEnvelope, ArtifactEnvelopeOwners, ArtifactEnvelopeRead, ArtifactProjectionCacheMode, ArtifactProjectionCause, ArtifactProjectionEvent, ArtifactProjectionInvalidation, ArtifactProjectionResult, ArtifactProjectionStamp, ArtifactRevision, HistoryLane, MigrationProvenance, OpenToolTransaction, ReplayTurnBudget, StaleArtifactProjection, SupersedeInput, document_backbone_ref};
 use replay::{PendingLocalStep,PendingReprojection,ReprojectionAdvance,TailStep};
@@ -189,7 +189,7 @@ use semio_framework_os_store_child::artifact_child_retained_clone;
 /// the parent's `ArtifactChild` handle), so ownership is queryable directly from the child side —
 /// e.g. "is this document embeddable standalone, or does deleting it require going through its
 /// owner". `child_id` matches the owning `ArtifactChild<S>.child_id`/`ChildRef.child_id` exactly.
-use semio_framework_os_store_envelope::owner as artifact_child_owner_schema;
+use semio_os_store_envelope::owner as artifact_child_owner_schema;
 pub use artifact_child_owner_schema::OwnerRef;
 
 pub use semio_framework_os_store_link_schema::{ArtifactLink,LinkPin};
@@ -213,7 +213,7 @@ use semio_framework_os_store_link_schema::{artifact_link_from_record, artifact_l
 
 //#region 🔖️EphemeralLanes
 
-pub use semio_framework_os_store_ephemeral::*;
+pub use semio_os_store_ephemeral::*;
 pub use semio_framework_os_store_presence::*;
 pub use semio_framework_os_store_presence as presence;
 
@@ -249,9 +249,9 @@ pub use semio_framework_os_semio as semio_format;
 /// a `Pack`-prefixed name (not a plain re-export — `dsl_derive`'s emitted `ArtifactPack` impl and
 /// every downstream caller spell them `crate::os_store::PackEncodeOptions`/`crate::os_store::PackDecodeOptions`/
 /// `crate::os_store::PackVerificationLevel`, so there is exactly one spelling repo-wide).
-pub use semio_framework_os_pack::{PackDecodeOptions, PackEncodeOptions, PackError, PackRefusal, VerificationLevel as PackVerificationLevel};
+pub use semio_os_pack::{PackDecodeOptions, PackEncodeOptions, PackError, PackRefusal, VerificationLevel as PackVerificationLevel};
 
-use semio_framework_os_pack::pack_rt;
+use semio_os_pack::pack_rt;
 
 /// 🧵️ Mounted canonical-pack capability surface. It intentionally exports only retained
 /// cursors and wire constants: batch `decode_document`, `decode_record_body`, `RecordValue`, and
@@ -260,7 +260,7 @@ pub mod mounted_pack_rt {
     pub use semio_framework_os_store_document::mounted_pack_session::{RetainedTypedPackCloseStep, RetainedTypedPackOwner, RetainedTypedPackSession};
     use semio_framework_dsl_record::{DslField,FieldValue,RecordLayout,RecordSpec,RecordSpecProducer,RecordValue,Shape};
 use semio_framework_value::DslValue;
-    pub use semio_framework_os_pack::PackLimits;
+    pub use semio_os_pack::PackLimits;
     pub use pack::record::{RetainedRecordBodyCursor, RetainedRecordBodyToken, RetainedValueContainer, RetainedValueCursor, RetainedValueRole, RetainedValueToken};
     pub use pack::{
         MAGIC, RETAINED_PACK_MAXIMUM_PAGES, RETAINED_PACK_PAGE_BYTES, RetainedPackAnchorCursor, RetainedPackCatalog, RetainedPackCatalogAllocationError, RetainedPackCatalogAllocationStep, RetainedPackCatalogCursor, RetainedPackCatalogEvent,
@@ -271,7 +271,7 @@ use semio_framework_value::DslValue;
 }
 //#region 🧬️OwnedSchemaDecode
 pub mod owned_schema_decode {
-    pub use semio_framework_os_store_owned_schema_decode::*;
+    pub use semio_os_store_owned_schema_decode::*;
     pub use semio_framework_os_store_owned_schema_fields::lifted_owned_schema_decode::*;
 }
 use owned_schema_decode::{ARTIFACT_ENVELOPE_ACTIVE_ALTERNATIVE_FIELD, ARTIFACT_ENVELOPE_BACKBONE_FIELD, ARTIFACT_ENVELOPE_COMPLETED_RECORD_CAPACITY, ARTIFACT_ENVELOPE_CONFLICTS_FIELD, ARTIFACT_ENVELOPE_CURSOR_FIELD, ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES, ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES, ARTIFACT_ENVELOPE_DECODE_MAXIMUM_PAGES, ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_FIELD_BYTES, ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES, ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, ARTIFACT_ENVELOPE_DIALECT_FIELD, ARTIFACT_ENVELOPE_EDIT_MESSAGES_FIELD, ARTIFACT_ENVELOPE_FIELD_DECODER_CAPACITY, ARTIFACT_ENVELOPE_HISTORY_ENTRY_BYTES, ARTIFACT_ENVELOPE_HISTORY_ITEMS, ARTIFACT_ENVELOPE_ID_FIELD, ARTIFACT_ENVELOPE_LANES_FIELD, ARTIFACT_ENVELOPE_MIGRATED_FROM_FIELD, ARTIFACT_ENVELOPE_OWNER_FIELD, ARTIFACT_ENVELOPE_SCHEMA_FIELD, ARTIFACT_ENVELOPE_VCS_FIELD, ArtifactEnvelopeCompletedRecord, ArtifactEnvelopeCompletedRecordFault, ArtifactEnvelopeCompletedRecordOwner, ArtifactEnvelopeCompletedRecordRegistry, ArtifactEnvelopeCompletedRecordTarget, ArtifactEnvelopeCompletedRecordTicket, ArtifactEnvelopeDecodeAuthority, ArtifactEnvelopeDecodeCompletion, ArtifactEnvelopeDecodeOwnerBundle, ArtifactEnvelopeDecodePage, ArtifactEnvelopeDecodeRejected, ArtifactEnvelopeDecodedRecordTarget, ArtifactEnvelopeFieldDecodeStep, ArtifactEnvelopeFieldDecoder, ArtifactEnvelopeFieldDecoderLease, ArtifactEnvelopeFieldDecoderRegistry, ArtifactEnvelopeFieldDecoderRegistryFault, ArtifactEnvelopeFieldDecoderTicket, ArtifactEnvelopeFieldReservation, ArtifactEnvelopeFreshFieldDecoder, ArtifactEnvelopeFreshVcsAuthority, ArtifactEnvelopeMutationFieldAuthority, ArtifactEnvelopeMutationFieldTarget, ArtifactEnvelopeOwnedFieldCatalog, ArtifactEnvelopeReturnedFieldDecoder, ArtifactEnvelopeSnapshotFieldAuthority, ArtifactEnvelopeSnapshotFieldTarget, ArtifactEnvelopeSprConflictAuthority, ArtifactEnvelopeUnadmittedDecodeRejected, ArtifactEnvelopeVcsFieldAuthority, ArtifactEnvelopeWholeBufferIngressError, ArtifactOwnedHistoryEntryAuthority, ArtifactOwnedHistoryEntryDecoder, OWNED_SCHEMA_DECODE_MAXIMUM_PAGES, OWNED_SCHEMA_DECODE_PAGE_BYTES, OwnedSchemaDecodeAdmissionFault, OwnedSchemaDecodeCredits, OwnedSchemaDecodeDiagnostic, OwnedSchemaDecodePage, OwnedSchemaDecodePageFault, OwnedSchemaDecodePages, OwnedSchemaEmptyArrayAuthority, OwnedSchemaFieldSpec, OwnedSchemaHexAuthority, OwnedSchemaHexStep, OwnedSchemaNestedRecordCursor, OwnedSchemaNestedRecordStep, OwnedSchemaPath, OwnedSchemaRecordCursor, OwnedSchemaRecordSpec, OwnedSchemaRecordStep, OwnedSchemaStringAuthority, OwnedSchemaStringStep, OwnedSchemaToken, OwnedSchemaTokenCursor, OwnedSchemaTokenKind, OwnedSchemaTokenStep, artifact_bounded_history_entry_decoder, artifact_envelope_decode_record, artifact_envelope_owned_schema, artifact_owned_spr_edit_history_decoder, reject_whole_buffer_artifact_envelope_ingress};
@@ -289,7 +289,7 @@ pub use serialization::ArtifactStoreSnapshot;
 //#endregion 🔖️OpRt
 //#region 🔖️CodecRegistry
 //#region 🔖️CodecRegistry
-pub use semio_framework_os_store_codec_registry as codec_registry;
+pub use semio_os_store_codec_registry as codec_registry;
 use codec_registry::{ArtifactAssemblyStoreRegistryError, ArtifactAssemblyStoreRegistryGuards, ComponentDocumentCodec, DialectMigration, DialectMigrationError, DialectMigrationRegistryError, DocumentCodecRegistryConflict, DocumentCodecRegistryError, DocumentKindCodec, acquire_artifact_assembly_store_registry_guards, canonical_check_in_line, commit_artifact_assembly_store_registry_guards, document_codec, document_kind_codec, lane_schema_from_spr, migrate_document, preflight_artifact_assembly_store_registry_guards, preflight_dialect_migrations, preflight_dialect_migrations_in_assembly, preflight_document_codecs, preflight_document_codecs_in_assembly, register_component_document_codec, register_dialect_migration, register_dialect_migrations, register_dialect_migrations_in_assembly, register_document_codec, register_document_codecs, register_document_codecs_in_assembly, validate_owned_sqlite_snapshot_subset};
 use semio_framework_os_store_engine_owners::{bounded_artifact_store_owners, bounded_artifact_store_owners_birth_bytes, bounded_artifact_store_owners_birth_demand, bounded_artifact_store_owners_source_demands, bounded_artifact_store_owners_with_one_item_preparation, fund_document_store_owners, funded_bounded_artifact_store_owners, funded_bounded_artifact_store_owners_with_one_item_preparation};
 #[cfg(not(target_arch = "wasm32"))]
@@ -299,25 +299,25 @@ use codec_registry::{ComponentDocumentCodecFuture};
 use codec_registry::{COMPONENT_DOCUMENT_CODEC_REGISTRY, DIALECT_MIGRATION_REGISTRY, DOCUMENT_CODEC_REGISTRY, component_document_codec_registry, dialect_migration_registry, document_codec_registry, same_dialect_migration, same_document_codec, validate_dialect_migrations, validate_document_codecs};
 use semio_framework_os_store_engine_owners::BoundedArtifactRetirementFactory;
 
-use semio_framework_os_store_codec_registry::native_snapshot;
+use semio_os_store_codec_registry::native_snapshot;
 pub use semio_framework_os_io::control::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner, NativeSnapshotBodyWallet, NativeSnapshotFailure, NativeSnapshotCause, NativeSnapshotWork, native_snapshot_turn};
 pub use native_snapshot::{ArtifactPackReceiving,OriginalArtifactPackReceiving,OriginalArtifactSnapshotReceiving,OriginalSnapshotRecordReceiving,OriginalPackWriting,decode_native_snapshot_record,encode_native_snapshot_record};
 pub use pack::snapshot::{ArtifactNativeSnapshot,NativeSnapshotEncoding,NativeSnapshotInput};
 
-use semio_framework_os_store_codec_registry::sqlite_snapshot_retirement;
+use semio_os_store_codec_registry::sqlite_snapshot_retirement;
 
 use semio_framework_os_io::sqlite_snapshot_operations;
 pub use sqlite_snapshot_operations::ArtifactSqliteSnapshotOperations;
 
 mod sqlite_snapshot_workspace {
     pub use semio_framework_os_store_space_history::sqlite_snapshot_workspace::*;
-    pub use semio_framework_os_store_codec_registry::lifted_sqlite_snapshot_workspace::*;
+    pub use semio_os_store_codec_registry::lifted_sqlite_snapshot_workspace::*;
 }
 
-use semio_framework_os_store_codec_registry::sqlite_snapshot_native_decoding;
+use semio_os_store_codec_registry::sqlite_snapshot_native_decoding;
 pub use sqlite_snapshot_native_decoding::decode_sqlite_snapshot_record_native;
 
-use semio_framework_os_store_codec_registry::sqlite_snapshot_native_encoding;
+use semio_os_store_codec_registry::sqlite_snapshot_native_encoding;
 pub use sqlite_snapshot_native_encoding::encode_sqlite_snapshot_record_native;
 
 //#region 🗃️BoundedArtifactStoreOwners
@@ -369,7 +369,7 @@ use text_format::{adopt_loaded_replay, apply_history_composition, canonical_conf
 
 //#region 🔖️CommandFormat
 
-pub use semio_framework_os_store_command as command_format;
+pub use semio_os_store_command as command_format;
 use command_format::{COMMAND_BINARY_FORMAT, CommandDecodeError, parse_command, print_command};
 use command_format::{CommandHeaderLine, OpsAuthor, OpsHeaderLine, OpsPin, OpsSupersededInput, SupersedeInputLine, conflict_resolution_from_ordinal, conflict_resolution_ordinal, conflict_resolution_to_token, dedent_command_lines, history_lane_from_ordinal, history_lane_ordinal, history_lane_to_token, merge_policy_to_token, ops_line_provenance, parse_conflict_resolution_token, parse_history_lane_token, parse_indented_ops, parse_merge_policy_token, parse_supersede_input_lines, parse_supersede_inputs, parse_undo_policy_token, print_indented_ops, print_supersede_inputs, read_command_op, read_command_ops, read_command_str, read_command_transaction, read_supersede_input, read_supersede_inputs, retire_command, retire_operations, transaction_from_text, transaction_text, undo_policy_from_ordinal, undo_policy_ordinal, undo_policy_to_token, write_command_ops, write_command_str, write_command_transaction, write_supersede_inputs};
 //#region 🔖️OpCodec
@@ -383,7 +383,7 @@ use command_format::{CommandHeaderLine, OpsAuthor, OpsHeaderLine, OpsPin, OpsSup
 //#endregion 🔖️History
 //#region 🔖️ArtifactStore
 //#region 🔖️ArtifactStore
-pub use semio_framework_os_store_ledger as ledger;
+pub use semio_os_store_ledger as ledger;
 use ledger::{ArtifactEditMessageLedger, ArtifactEditMessageLedgerIter, ArtifactEditMessageLedgerRejected, edit_from_operation_envelope_cold, fold_envelope_history, fold_event_log};
 use ledger::{ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES, ARTIFACT_EDIT_MESSAGE_ID_BYTES, ARTIFACT_EDIT_MESSAGE_INDEX_CAPACITY, ARTIFACT_EDIT_MESSAGE_INDEX_EMPTY, ARTIFACT_EDIT_MESSAGE_INDEX_TOMBSTONE, ARTIFACT_EDIT_MESSAGE_LEDGER_BYTES, ARTIFACT_EDIT_MESSAGE_LEDGER_SLOT_NONE, ARTIFACT_EDIT_MESSAGE_OWNER_BYTES, ARTIFACT_EDIT_MESSAGE_PAGE_SLOTS, ARTIFACT_EDIT_MESSAGE_SLOT_PAGES, ARTIFACT_EDIT_MESSAGE_TARGET_BYTES, ArtifactEditMessageLedgerRetirement, ArtifactEditMessageTicket, ArtifactStoreHistoryCommitReservation, ArtifactStorePendingReportRetirement, CursorRevisionAccumulator, CursorRevisionRecord, EditDigestChains, PendingCommandReport, ColdReplayProjection, StackMirrorDirt, edit_timestamp, envelope_viewer_head, operation_semantic_kind, retire_replayed_projection, retire_scratch_edits, retire_scratch_operations, retire_supersede_inputs, stamp_edit_semantics, validate_composition_pins};
 
@@ -401,19 +401,19 @@ pub use semio_framework_os_store_initialization_replay::{ArtifactStoreReplayInit
 
 //#region 📬️OneItemPublication
 pub mod one_item_publication {
-    pub use semio_framework_os_store_one_item_publication::*;
-    pub use semio_framework_os_store_one_item_publication::lifted_publication::*;
+    pub use semio_os_store_one_item_publication::*;
+    pub use semio_os_store_one_item_publication::lifted_publication::*;
     pub use semio_framework_os_store_one_item_batch::lifted_one_item_publication::*;
 }
 use one_item_publication::{ArtifactStoreBatchAdmissionRejected, ArtifactStoreBatchPublication, ArtifactStoreOneItemAdvance, ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOneItemPreparationRequest, ArtifactStoreOneItemPrepared, ArtifactStoreOneItemPublicationPhase, ErasedMemberStoreOneItemPublication, MemberStoreOneItemWire, MemberStoreOneItemWirePreparationFactory, MemberStoreOneItemWireRequest};
 use one_item_publication::{ArtifactStoreBatchItemAuthority, ArtifactStoreBatchItemRequest, ArtifactStoreBatchSource, ArtifactStoreBatchSourceOf, ArtifactStoreBatchStage, ArtifactStoreOneItemSeal, ArtifactStoreWireRetirement, ArtifactTypedBatchItemAuthority, MemberStoreOneItemPublication};
 mod canonical_edit {
     pub use semio_framework_os_store_canonical_json::*;
-    pub use semio_framework_os_store_one_item_publication::lifted_canonical_edit::*;
+    pub use semio_os_store_one_item_publication::lifted_canonical_edit::*;
 }
-use semio_framework_os_store_one_item_publication::prepared_retirement;
+use semio_os_store_one_item_publication::prepared_retirement;
 pub use prepared_retirement::ArtifactStorePreparedRetirement;
-use semio_framework_os_store_one_item_publication::batch_digest;
+use semio_os_store_one_item_publication::batch_digest;
 pub use batch_digest::{ArtifactStoreBatchDigest,admit_artifact_batch_digest,artifact_batch_digest_birth_demand};
 pub use canonical_edit::{
     ARTIFACT_CANONICAL_JSON_CHUNK_BYTES, ARTIFACT_CANONICAL_JSON_DEPTH, ArtifactCanonicalJson, ArtifactCanonicalJsonArray, ArtifactCanonicalJsonCursor, ArtifactCanonicalJsonEncodeError, ArtifactCanonicalJsonNode, ArtifactCanonicalJsonObject, ArtifactCanonicalJsonText, ArtifactCanonicalJsonTree, ArtifactCanonicalJsonTreeCursor, ArtifactCanonicalJsonTreeStep,
@@ -423,12 +423,12 @@ pub use canonical_edit::{
 };
 
 mod prepared_operation_wire {
-    pub use semio_framework_os_store_operation_wire::*;
-    pub use semio_framework_os_store_one_item_publication::lifted_prepared_operation_wire::*;
+    pub use semio_os_store_operation_wire::*;
+    pub use semio_os_store_one_item_publication::lifted_prepared_operation_wire::*;
 }
 pub use prepared_operation_wire::{ArtifactCanonicalTreeSource, ArtifactOperationWire, ArtifactOperationText, ArtifactOperationTextNode, ArtifactOperationTextCursor, ArtifactPreparedOperationSource, ArtifactPreparedOperationCursor, ArtifactPreparedOperationProgress, ArtifactPreparedOperationError, ArtifactPreparedOperationOutput, ArtifactPreparedOperations, ArtifactPreparedOperationsOwner, operation_wire_preparation_factory, operation_wire_preparation_factory_birth_bytes, operation_wire_preparation_factory_source_birth_demand};
 
-pub use semio_framework_os_store_one_item as one_item;
+pub use semio_os_store_one_item as one_item;
 use one_item::{ARTIFACT_STORE_ONE_ITEM_ID_BYTES, ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_RETRIES, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS, ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep, mutation_inverse_rows_declaration_failures, validate_original_preparation_step};
 
 //#region 🧺️BatchSource
@@ -437,7 +437,7 @@ use one_item::{ARTIFACT_STORE_ONE_ITEM_ID_BYTES, ARTIFACT_STORE_ONE_ITEM_INVERTI
 //#region 🧩️MemberOneItemPublication
 mod member_owned_batch {
     pub use semio_framework_os_store_one_item_batch::member_owned_batch::*;
-    pub use semio_framework_os_store_one_item_publication::lifted_member_owned_batch::*;
+    pub use semio_os_store_one_item_publication::lifted_member_owned_batch::*;
 }
 pub use member_owned_batch::{MemberStoreOwnedBatch, MemberStoreOwnedBatchRequest,MemberOriginalBatchReceiving};
 pub use semio_framework_value::{RetirementDemand as MemberRetirementDemand,ValueError as MemberValueError};
@@ -452,8 +452,8 @@ pub use semio_framework_os_store_initialization_runtime::native_publication_prod
 //#endregion 🔖️ArtifactStore
 //#region 🔖️PairMerge
 pub mod replay {
-    pub use semio_framework_os_store_replay::*;
-    pub use semio_framework_os_store_ledger::lifted_replay::*;
+    pub use semio_os_store_replay::*;
+    pub use semio_os_store_ledger::lifted_replay::*;
 }
 use replay::{DRAFT_SUPERSESSION_ID, EditReplay, EditReplayResult, EffectiveOperation, EffectiveSupersessions, PairMerge, ReplayEdits, ReplayMode, ReplayOwnedState, ReplayProgress, ReplayResultOwnedState, ReplayStep, admit_replacement, apply_operation, apply_outcome, draft_supersessions, effective_forwards, effective_operation, fold_operation};
 use replay::{ColdFoldProjection, IndexedAppliedReplayEdits, PREFIX_SNAPSHOT_RING_CAPACITY, PREFIX_SNAPSHOT_RING_FLOOR, PrefixSnapshot, REPROJECTION_OWNER_SLOTS, ReplayConvergence, edit_supersession_digest, effective_operation_with_supersession, fold_effective_edit, fold_recorded, forward_prefix_digests, forward_prefix_genesis, forward_prefix_step, mirror_id_suffix, order_ledger_as, retire_shared_projection, same_effective_inputs, shared_prefix_len, superseded_positions, supersession_digest};
@@ -462,7 +462,7 @@ use replay::{ColdFoldProjection, IndexedAppliedReplayEdits, PREFIX_SNAPSHOT_RING
 //#region 🔖️EffectiveForwards
 //#endregion 🔖️EffectiveForwards
 //#region 🔖️EditReplay
-use semio_framework_os_store_replay::raw_replay_retirement;
+use semio_os_store_replay::raw_replay_retirement;
 //#endregion 🔖️EditReplay
 //#region 🔖️Backbone
 //#region 🔖️Backbone

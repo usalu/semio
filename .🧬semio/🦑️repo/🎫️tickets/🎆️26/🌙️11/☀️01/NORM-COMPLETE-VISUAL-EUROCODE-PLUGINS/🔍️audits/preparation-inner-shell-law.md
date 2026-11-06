@@ -1,0 +1,9 @@
+# Preparation Inner Shell Work Law
+
+Extended the existing actual NativeSemanticPreparation scalar-source law, for its normal and projection-cancel cases. After the real producer finishes every owned child, the same actual boxed cursor transfers to ArtifactReplayPreparationRetirement in a funded metadata action. Its next terminal-shell drop receives a genuine zero-work original decoder loan: it must retain the box and demand and report zero progress/work. A one-work original loan must then release the actual Producer frame with exact measured physical receipts. This targets the wrapper's existing unfunded inner-shell action, without a fake cursor, a local work wallet, wider grants or loop bounds.
+
+The new preparationShellWork field is schema-first in the existing closed neutral birth-work corpus, with an independent SQLite admission model. Native execution and the fresh oracle remain pending; no behavioral red or green is claimed from authored code. Production wrapper is unchanged until that law runs.
+
+Native91675 reached the intended dual-failure API compile red on ValueError lacking primary/work_refusal. Its separate missing ArtifactReplayPreparation test trait import is corrected. The shell behavior has not run. Unified erased-error migration is now active by explicit owner cohort; no native runtime acceptance is claimed.
+
+Root migration now changes ArtifactReplayPreparation close and its boxed retirement wrapper to rich errors. The actual inner terminal shell preadmits work1 before dropping the Producer and settles actual1 into the typed outcome, preserving work-only refusal/physical progress. Native semantic close uses canonical prepared rich settlement instead of dropping commit refusal beside child failure. Root shell behavioral law still awaits execution; this source migration follows actual dual-cause target API red91675 and is not acceptance of its broader unquoted cleanup branches.

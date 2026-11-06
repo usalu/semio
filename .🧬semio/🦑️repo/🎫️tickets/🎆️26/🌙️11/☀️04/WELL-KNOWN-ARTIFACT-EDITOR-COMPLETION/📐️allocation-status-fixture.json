@@ -1,0 +1,30 @@
+[
+  {
+    "name": "empty",
+    "present": false,
+    "admitted": false,
+    "refusal": false,
+    "status": "absent"
+  },
+  {
+    "name": "unused quote canceled",
+    "present": true,
+    "admitted": false,
+    "refusal": false,
+    "status": "canceled"
+  },
+  {
+    "name": "actual effect accepted",
+    "present": true,
+    "admitted": true,
+    "refusal": false,
+    "status": "accepted"
+  },
+  {
+    "name": "original cause retained",
+    "present": true,
+    "admitted": true,
+    "refusal": true,
+    "status": "refused"
+  }
+]

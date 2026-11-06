@@ -1,0 +1,1 @@
+{"cases":[{"id":"accepted","refuse":"none","events":["quote","post"],"born":true},{"id":"quote-refused","refuse":"quote","events":["quote"],"born":false},{"id":"post-refused","refuse":"post","events":["quote","post"],"born":true}]}

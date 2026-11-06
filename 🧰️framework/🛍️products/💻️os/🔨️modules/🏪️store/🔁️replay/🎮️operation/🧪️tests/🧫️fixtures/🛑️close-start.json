@@ -1,0 +1,14 @@
+{
+  "steps": [
+    "originalCursorHandoff",
+    "projectionCloseStart",
+    "projectionChildCloseStart",
+    "editCloseStart",
+    "editChildCancel",
+    "editChildCloseStart",
+    "rowsCloseStart"
+  ],
+  "deniedWork": 0,
+  "selectedWork": 1,
+  "witnessBytes": 73
+}

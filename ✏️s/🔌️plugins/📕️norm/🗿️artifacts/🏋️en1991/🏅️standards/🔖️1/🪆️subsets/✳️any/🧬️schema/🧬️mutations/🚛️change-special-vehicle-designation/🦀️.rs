@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeSpecialVehicleDesi
         record: "ChangedSpecialVehicleDesignation",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change total and axle load designation of the special vehicle in kilonewtons", "Gesamtlast- und Achslastbezeichnung des Sonderfahrzeugs in Kilonewton ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change total and axle load designation of the special vehicle in kilonewtons", "Gesamtlast- und Achslastbezeichnung des Sonderfahrzeugs in Kilonewton ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

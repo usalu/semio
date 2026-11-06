@@ -304,9 +304,9 @@ impl<A: ArtifactApp> PendingArtifactStorePublication<A> {
 
     pub fn requires_original_control(&self)->bool{match self{Self::Presence(owner)=>owner.requires_original_control(),Self::Transient(owner)=>owner.requires_original_control(),_=>false}}
 
-    pub fn close_step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<RetainedCloneStep,ValueError>{
+    pub fn close_step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn semio_framework_value::OriginalRetirementControl)->semio_framework_value::OriginalRetirementOutcome{
         let grant=store::os_store::one_item::ArtifactStoreOneItemGrant::from_retained(grant);
-        match self{Self::Presence(owner)=>owner.close_step_controlled(grant,control),Self::Transient(owner)=>owner.close_step_controlled(grant,control),_=>Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"publication has no decoder-bound ephemeral owner"))}
+        match self{Self::Presence(owner)=>owner.close_step_controlled(grant,control),Self::Transient(owner)=>owner.close_step_controlled(grant,control),_=>semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"publication has no decoder-bound ephemeral owner").into()),work:0}}
     }
 
     pub fn close_step(&mut self, grant:RetainedCloneGrant)->Result<RetainedCloneStep,Fault>{

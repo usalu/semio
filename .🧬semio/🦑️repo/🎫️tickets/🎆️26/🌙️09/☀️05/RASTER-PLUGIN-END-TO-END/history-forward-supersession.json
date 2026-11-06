@@ -1,0 +1,1 @@
+{"cases":[{"events":[{"target":"x","value":"old"},{"target":"x","value":"new"}],"expected":{"x":"new"}},{"events":[{"target":"a","value":"one"},{"target":"b","value":"two"},{"target":"a","value":"three"}],"expected":{"a":"three","b":"two"}},{"events":[],"expected":{}}]}

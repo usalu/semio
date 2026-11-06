@@ -1,0 +1,112 @@
+{
+  "schema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": [
+      "cases"
+    ],
+    "properties": {
+      "cases": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "effect",
+            "operation",
+            "workReceipt",
+            "physicalReceipt",
+            "expectedWork",
+            "expectedFailures",
+            "unwind",
+            "retainedFailure"
+          ],
+          "properties": {
+            "effect": {
+              "type": "boolean"
+            },
+            "operation": {
+              "type": "boolean"
+            },
+            "workReceipt": {
+              "type": "boolean"
+            },
+            "physicalReceipt": {
+              "type": "boolean"
+            },
+            "expectedWork": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "expectedFailures": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            },
+            "unwind": {
+              "type": "boolean"
+            },
+            "retainedFailure": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "additionalProperties": false
+  },
+  "data": {
+    "cases": [
+      {
+        "effect": false,
+        "operation": true,
+        "workReceipt": true,
+        "physicalReceipt": true,
+        "expectedWork": 0,
+        "expectedFailures": 0,
+        "unwind": false,
+        "retainedFailure": false
+      },
+      {
+        "effect": true,
+        "operation": true,
+        "workReceipt": true,
+        "physicalReceipt": true,
+        "expectedWork": 1,
+        "expectedFailures": 0,
+        "unwind": false,
+        "retainedFailure": false
+      },
+      {
+        "effect": true,
+        "operation": false,
+        "workReceipt": false,
+        "physicalReceipt": false,
+        "expectedWork": 1,
+        "expectedFailures": 3,
+        "unwind": false,
+        "retainedFailure": false
+      },
+      {
+        "effect": true,
+        "operation": true,
+        "workReceipt": true,
+        "physicalReceipt": false,
+        "expectedWork": 1,
+        "expectedFailures": 1,
+        "unwind": true,
+        "retainedFailure": true
+      },
+      {
+        "effect": false,
+        "operation": true,
+        "workReceipt": true,
+        "physicalReceipt": true,
+        "expectedWork": 0,
+        "expectedFailures": 0,
+        "unwind": true,
+        "retainedFailure": false
+      }
+    ]
+  }
+}

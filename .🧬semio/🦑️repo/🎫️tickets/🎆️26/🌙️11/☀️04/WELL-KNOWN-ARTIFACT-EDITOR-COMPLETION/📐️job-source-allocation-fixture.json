@@ -1,0 +1,246 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "successful partial settlement",
+      "events": [
+        {
+          "kind": "quote",
+          "request": "a",
+          "bytes": 16,
+          "actual": 0,
+          "allow": true
+        },
+        {
+          "kind": "post",
+          "request": "a",
+          "bytes": 16,
+          "actual": 9,
+          "allow": true
+        }
+      ],
+      "expected": [
+        {
+          "pending": "a",
+          "actual": 0,
+          "accepted": true
+        },
+        {
+          "pending": null,
+          "actual": 9,
+          "accepted": true
+        }
+      ]
+    },
+    {
+      "name": "cancel unused quote",
+      "events": [
+        {
+          "kind": "quote",
+          "request": "a",
+          "bytes": 16,
+          "actual": 0,
+          "allow": true
+        },
+        {
+          "kind": "cancel",
+          "request": "a",
+          "bytes": 16,
+          "actual": 0,
+          "allow": true
+        }
+      ],
+      "expected": [
+        {
+          "pending": "a",
+          "actual": 0,
+          "accepted": true
+        },
+        {
+          "pending": null,
+          "actual": 0,
+          "accepted": true
+        }
+      ]
+    },
+    {
+      "name": "refused quote has no birth",
+      "events": [
+        {
+          "kind": "quote",
+          "request": "a",
+          "bytes": 16,
+          "actual": 0,
+          "allow": false
+        }
+      ],
+      "expected": [
+        {
+          "pending": null,
+          "actual": 0,
+          "accepted": false
+        }
+      ]
+    },
+    {
+      "name": "refused post retains actual",
+      "events": [
+        {
+          "kind": "quote",
+          "request": "a",
+          "bytes": 16,
+          "actual": 0,
+          "allow": true
+        },
+        {
+          "kind": "post",
+          "request": "a",
+          "bytes": 16,
+          "actual": 9,
+          "allow": false
+        }
+      ],
+      "expected": [
+        {
+          "pending": "a",
+          "actual": 0,
+          "accepted": true
+        },
+        {
+          "pending": null,
+          "actual": 9,
+          "accepted": false
+        }
+      ]
+    },
+    {
+      "name": "mismatched post preserves quote",
+      "events": [
+        {
+          "kind": "quote",
+          "request": "a",
+          "bytes": 16,
+          "actual": 0,
+          "allow": true
+        },
+        {
+          "kind": "post",
+          "request": "b",
+          "bytes": 16,
+          "actual": 3,
+          "allow": true
+        },
+        {
+          "kind": "cancel",
+          "request": "a",
+          "bytes": 16,
+          "actual": 0,
+          "allow": true
+        }
+      ],
+      "expected": [
+        {
+          "pending": "a",
+          "actual": 0,
+          "accepted": true
+        },
+        {
+          "pending": "a",
+          "actual": 3,
+          "accepted": false
+        },
+        {
+          "pending": null,
+          "actual": 3,
+          "accepted": true
+        }
+      ]
+    },
+    {
+      "name": "over-extent post retains actual",
+      "events": [
+        {
+          "kind": "quote",
+          "request": "a",
+          "bytes": 16,
+          "actual": 0,
+          "allow": true
+        },
+        {
+          "kind": "post",
+          "request": "a",
+          "bytes": 16,
+          "actual": 17,
+          "allow": true
+        }
+      ],
+      "expected": [
+        {
+          "pending": "a",
+          "actual": 0,
+          "accepted": true
+        },
+        {
+          "pending": null,
+          "actual": 17,
+          "accepted": false
+        }
+      ]
+    },
+    {
+      "name": "replacement and mismatched cancel preserve original",
+      "events": [
+        {
+          "kind": "quote",
+          "request": "a",
+          "bytes": 16,
+          "actual": 0,
+          "allow": true
+        },
+        {
+          "kind": "quote",
+          "request": "b",
+          "bytes": 8,
+          "actual": 0,
+          "allow": true
+        },
+        {
+          "kind": "cancel",
+          "request": "b",
+          "bytes": 8,
+          "actual": 0,
+          "allow": true
+        },
+        {
+          "kind": "cancel",
+          "request": "a",
+          "bytes": 16,
+          "actual": 0,
+          "allow": true
+        }
+      ],
+      "expected": [
+        {
+          "pending": "a",
+          "actual": 0,
+          "accepted": true
+        },
+        {
+          "pending": "a",
+          "actual": 0,
+          "accepted": false
+        },
+        {
+          "pending": "a",
+          "actual": 0,
+          "accepted": false
+        },
+        {
+          "pending": null,
+          "actual": 0,
+          "accepted": true
+        }
+      ]
+    }
+  ]
+}

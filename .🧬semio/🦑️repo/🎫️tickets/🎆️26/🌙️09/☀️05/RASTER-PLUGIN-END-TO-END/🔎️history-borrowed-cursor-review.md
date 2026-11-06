@@ -1,0 +1,5 @@
+# Borrowed History Cursor Review
+
+The revised cursor owns an exclusive lifetime-bound mutable borrow of the actual ledger. Safe Rust therefore prevents moving, replacing or erasing the issuer and prevents concurrent mutation until the cursor releases its borrow. Its returned row reference is tied to the shorter mutable cursor borrow. Admission rejects existing group/reservation/replacement states, and valid zero-grant or zero-fuel advancement leaves the cursor untouched. Normal advancement follows at most one chunk link and reports one work unit; funded close returns both counts on the exact borrowed issuer.
+
+One remaining lifecycle gap is the active cursor's Drop during a caught unwind: it skips its assertion while panicking but does not return either count, and the cursor disappears while a ledger held outside catch_unwind can survive with both counts permanently pinned. This was reported to runtime. A source owner that retains the cursor across caught failures or another explicit unwind-safe ownership protocol is needed without fabricating a funded return. This is source review; no compile or native test was run.

@@ -1,0 +1,6 @@
+import{readFileSync,readdirSync}from"node:fs";
+import{join,resolve}from"node:path";
+const keys=["host-test-component","host","interpreter","interpreter-runtime","guest-contract"].map(n=>"semio-framework-plugin-"+n),known=new Set(keys);
+const rows:{path:string;keys:string[];entry:string|null}[]=[];
+const visit=(dir:string)=>{for(const item of readdirSync(dir,{withFileTypes:true})){if(["node_modules",".git",".cache","target"].includes(item.name)||item.isSymbolicLink())continue;const path=join(dir,item.name);if(item.isDirectory())visit(path);else if(item.name==="Cargo.toml"){const doc=Bun.TOML.parse(readFileSync(path,"utf8"))as any;const found=new Set<string>();const tables=(node:any)=>{if(!node||typeof node!=="object")return;for(const[k,v]of Object.entries(node)){if(["dependencies","dev-dependencies","build-dependencies"].includes(k)&&v&&typeof v==="object"){for(const[name,definition]of Object.entries(v))if(known.has(name)&&(definition as any).workspace)found.add(name);}else if(k==="target")for(const scope of Object.values(v as any))tables(scope);}};tables(doc);if(found.size)rows.push({path,keys:[...found],entry:doc.lib?.path?resolve(dir,doc.lib.path):null});}}};
+visit("🧰️framework");console.log(JSON.stringify(rows,null,2));

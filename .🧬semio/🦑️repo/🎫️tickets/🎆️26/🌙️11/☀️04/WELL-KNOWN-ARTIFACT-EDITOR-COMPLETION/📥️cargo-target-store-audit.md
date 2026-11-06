@@ -1,0 +1,7 @@
+# Cargo Target Store Audit
+
+The terminal core check completed Source admission and failed in bindCargoTargetStoreV1 before Rust. The binding owner 🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🎯️target/🟦️.ts requires the exact canonical version, buildDirectory and targetDirectory in a no-follow immutable .cargo-store.json under the actual target, and refuses mismatch rather than rebinding. The error omits expected and current paths; 12 currently visible receipt files each name their containing target, so this inspection cannot attribute the specific failed binding or establish a local code defect.
+
+Registered repository launcher supports --store=isolated and creates a fresh nonce target, build and tmp under the issued native store, with unchanged admission, resource leases and original caller control. Candidate from 🧰️framework cwd: SEMIO_LANGUAGE=en repo cargo --store=isolated --configuration=prototype -- check -p semio-framework-io-control -p semio-framework-io-schema. No command was started by this audit.
+
+Important custody limitation: the isolated launcher first sweeps nonce stores whose owners are no longer live, while protecting live peers through leases. Because this task forbids deleting foreign caches, that automatic sweep must be considered before using this option; a read-only source review alone cannot promise no foreign settled store would be removed at launch. No receipts, caches, policies, quotas or files were changed.

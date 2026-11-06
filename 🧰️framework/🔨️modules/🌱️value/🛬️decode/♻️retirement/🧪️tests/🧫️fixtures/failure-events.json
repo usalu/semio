@@ -1,0 +1,22 @@
+{
+  "accepted": [
+    "quote",
+    "post"
+  ],
+  "postRefused": [
+    "quote",
+    "post"
+  ],
+  "quoteRefused": [
+    "quote"
+  ],
+  "postRefusal": "fixture post refused",
+  "workDenied": [
+    "quote",
+    "cancel"
+  ],
+  "allocationFailed": [
+    "quote",
+    "post"
+  ]
+}

@@ -1,0 +1,1 @@
+{"chunks": ["ab", "雪"], "expected": "ab雪", "bytes": 5, "refusedCopyBytes": 3, "refusedPrefix": "ab雪", "deniedWork": 0, "emptyChunks": 2, "emptyWork": 2, "unwindPrefix": "ab", "unwindWork": 2, "wrongDirectionWork": 0, "occupiedWork": 0}

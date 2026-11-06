@@ -1,1 +1,22 @@
-{"batches":[["decision-info","decision-warning"],["preflight-warning"]],"expected":["decision-info","decision-warning","preflight-warning"],"cancelFrontiers":12}
+{
+  "batches": [
+    [
+      "decision-info",
+      "decision-warning"
+    ],
+    [
+      "preflight-warning"
+    ]
+  ],
+  "expected": [
+    "decision-info",
+    "decision-warning",
+    "preflight-warning"
+  ],
+  "cancelFrontiers": 12,
+  "closeStart": {
+    "deniedWork": 0,
+    "selectedWork": 1,
+    "witnessBytes": 73
+  }
+}

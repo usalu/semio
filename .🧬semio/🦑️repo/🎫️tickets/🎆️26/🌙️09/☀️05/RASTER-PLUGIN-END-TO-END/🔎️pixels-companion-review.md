@@ -1,0 +1,5 @@
+# Pixels Companion Review
+
+Both original and new companion roots glob-import the pixels facade. The facade publicly exports coverage, affine_sampling and compositing, and reexports png_encoding. The shared retirement suite's cross-module imports therefore have facade targets even when the original test wrappers are absent. An initial concern about missing imports was retracted after checking these glob exports; compilation remains unverified.
+
+The fixture_path macro expands CARGO_MANIFEST_DIR at the caller. The old companion's ../../../.. and the new companion's ../../../../.. both resolve to the pixels product directory. All five local new-companion dependency paths resolve to Cargo manifests with matching package names; the workspace path resolves to the framework workspace and the package is explicitly listed in its members. The new project JSON has the schema's required name field. Both companions intentionally mount the same retirement law/witness, and the new package declares png 0.17.16 for its third-party decoder oracle. No native compilation was run.

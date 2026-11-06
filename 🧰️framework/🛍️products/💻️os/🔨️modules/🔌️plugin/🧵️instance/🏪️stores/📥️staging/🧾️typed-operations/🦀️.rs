@@ -9,7 +9,7 @@ use semio_framework::{Fault, FaultFrom};
 use std::future::Future;
 use crate::stores_components::InstanceStores;
 use store::{MemberFactory, Mutation, SpaceMember};
-use semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
+use semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
 use protocol::OpText;
 use semio_plugin_composition_publication::PendingArtifactStorePublication;
 use semio_plugin_reactor_app::PluginApp;

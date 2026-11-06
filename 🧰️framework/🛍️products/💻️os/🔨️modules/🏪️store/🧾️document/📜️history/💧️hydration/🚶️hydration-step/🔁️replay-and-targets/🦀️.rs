@@ -124,7 +124,7 @@ where
             *self.target_source = Some(std::sync::Arc::new(original));
             self.record_index = 0;
             let p=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()};
-            if let Err(d)=semio_os_store_member_open::record_member_step(cx,p){return self.reject(d)}
+            if let Err(d)=semio_framework_os_store_member_open::record_member_step(cx,p){return self.reject(d)}
             return PersistedDocumentHydrationStep::Pending(self.progress())
         }
         let source = self.target_source.as_ref().expect("immutable transition source remains retained");
@@ -154,13 +154,13 @@ where
         let job = self.target_decoder.as_mut().expect("transition target decoder remains retained");
         match job.step(decode_grant, decode_grant.maximum_copy_bytes, &mut || cx.should_yield()) {
             Ok(semio_os_spr::HistoryFoldJobStep::Pending { progress, .. }) if progress.fits(decode_grant) => {
-                if let Err(diagnostic) = semio_os_store_member_open::record_member_step(cx, progress) { return self.reject(diagnostic); }
+                if let Err(diagnostic) = semio_framework_os_store_member_open::record_member_step(cx, progress) { return self.reject(diagnostic); }
             }
             Ok(semio_os_spr::HistoryFoldJobStep::Ready { value: target, progress }) => {
                 *self.pending_target = Some(target);
                 if !progress.fits(decode_grant) || !self.target_decoder.as_ref().is_some_and(ErasedSnapshotRetirement::terminal_is_empty) { return self.reject(MemberOpenDiagnostic::Replay); }
                 if !matches!(self.pending_target.as_ref(), Some(semio_os_spr::HistoryTransition::Supersede(_))) { return self.reject(MemberOpenDiagnostic::Replay); }
-                if let Err(diagnostic) = semio_os_store_member_open::record_member_step(cx, progress) { return self.reject(diagnostic); }
+                if let Err(diagnostic) = semio_framework_os_store_member_open::record_member_step(cx, progress) { return self.reject(diagnostic); }
                 self.target_decoder.take();
                 self.operation_index = 0;
                 self.phase = Phase::TargetInputs;

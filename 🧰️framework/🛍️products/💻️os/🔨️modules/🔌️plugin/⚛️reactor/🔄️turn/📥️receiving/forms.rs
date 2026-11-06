@@ -3,8 +3,8 @@ use super::{ReceivingSource,staged::StagedRequestInput,auxiliary::{StagedAuxilia
 use semio_framework::kernel::Event;
 use semio_framework_job::{OriginalTurnFailure,StepContext};
 use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_reactor_lifecycle::{instance_lifetime::NativeCloseKey,life_instance_registry::PluginRuntime};
-use semio_framework_plugin_reactor_patches::PATCHES;
+use semio_plugin_reactor_lifecycle::{instance_lifetime::NativeCloseKey,life_instance_registry::PluginRuntime};
+use semio_plugin_reactor_patches::PATCHES;
 use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind,retained_clone::RetainedCloneClose};
 use std::{cell::RefCell,mem::{ManuallyDrop,size_of}};
 
@@ -30,8 +30,8 @@ impl StagedEvent {
             2=>{let body=match self.event.as_ref(){Some(Event::StagedFormRequested{body_key,..})=>body_key.as_str(),_=>return Err(invalid().into())};if let Some(owner)=StagedAuxiliaryInput::admit(&mut self.input,self.instance,body,cx)?{*self.auxiliary=Some(owner);self.phase=3;}},
             3=>{
                 let surface=match self.event.as_ref(){Some(Event::StagedFormRequested{surface,..})=>surface.as_str(),_=>return Err(invalid().into())};let key=self.key;
-                let mut receive=|tree:&mut Option<semio_framework_ui_runtime::ComponentTree>,cx:&mut StepContext<'_>|{
-                    let surface=semio_framework_ui_contract::SurfaceId::try_from(surface).map_err(|_|invalid())?;
+                let mut receive=|tree:&mut Option<semio_ui_runtime::ComponentTree>,cx:&mut StepContext<'_>|{
+                    let surface=semio_ui_contract::SurfaceId::try_from(surface).map_err(|_|invalid())?;
                     let Ok(mut grant)=PATCHES.with(|patches|patches.reserve_mounted(surface,key))else{return Ok(false)};
                     let result=grant.commit_source(tree,cx);
                     if !matches!(result,Ok(true)){grant.cancel();}
@@ -61,7 +61,7 @@ impl StagedEvent {
     fn terminal(&self)->bool{self.closing&&self.event.is_none()&&self.wire.is_none()&&self.input.is_none()&&self.auxiliary.is_none()&&self.retirement.is_empty()&&self.witness.source_is_returned()&&self.failure.is_none()}
 }
 impl Drop for StagedEvent{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal(),"staged event requires original controller, publication and input retirement");}}
-thread_local!{static STAGED_EVENTS:RefCell<[Option<StagedEvent>;semio_framework_plugin_actor_host::requests::REQUEST_SLOTS]>=const{RefCell::new([const{None};semio_framework_plugin_actor_host::requests::REQUEST_SLOTS])};}
+thread_local!{static STAGED_EVENTS:RefCell<[Option<StagedEvent>;semio_plugin_actor_host::requests::REQUEST_SLOTS]>=const{RefCell::new([const{None};semio_plugin_actor_host::requests::REQUEST_SLOTS])};}
 pub fn retain<PA:PluginApp>(runtime:&PluginRuntime<PA>,donor:&mut Option<Event>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
     let Some(Event::StagedFormRequested{instance,surface,body_key,request})=donor.as_ref()else{return Ok(false)};
     let instance=*instance;let key=runtime.live_instance_key(instance)?;

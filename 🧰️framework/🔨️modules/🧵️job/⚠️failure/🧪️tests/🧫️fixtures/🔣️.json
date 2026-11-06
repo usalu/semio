@@ -231,6 +231,21 @@
             "releasedBytes": 12
           }
         },
+        "workRefusal": {
+          "kind": "workLimit",
+          "message": "child work",
+          "retainedProgress": {
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
+        },
+        "retirementFailure": {
+          "workRefusal": {"kind":"workLimit","message":"inner retirement work","retainedProgress":{"copiedItems":0,"copiedBytes":0,"retainedCapacityBytes":0,"releasedBytes":0}},
+          "progressOverride": null,
+          "retainedProgress": {"copiedItems":0,"copiedBytes":0,"retainedCapacityBytes":0,"releasedBytes":0}
+        },
         "retainedProgress": {
           "copiedItems": 2,
           "copiedBytes": 3,
@@ -282,5 +297,53 @@
     "primary": "Last original semantic 源",
     "receipt": "Distinct original receipt refusal",
     "context": "Distinct original context refusal"
+  },
+  "receivingComposite": {
+    "allocationFailure": {
+      "primary": null,
+      "admission": null,
+      "forwardedAdmission": null,
+      "scopedAdmission": null,
+      "forwardedQuote": null,
+      "scopedQuote": null,
+      "forwardedPost": {
+        "kind": "ownershipLimit",
+        "message": "allocation 量",
+        "retainedProgress": {
+          "copiedItems": 9,
+          "copiedBytes": 10,
+          "retainedCapacityBytes": 11,
+          "releasedBytes": 12
+        }
+      },
+      "scopedPost": null,
+      "forwardedCancel": null,
+      "scopedCancel": null,
+      "receipt": null,
+      "extent": null,
+      "progress": {
+        "admittedBytes": 5,
+        "actualCapacityBytes": null,
+        "priorAdmittedBytes": null,
+        "requestedBytes": null,
+        "maximumBytes": null
+      }
+    },
+    "receiptRefusal": {
+      "kind": "invariantViolated",
+      "message": "quote 越",
+      "retainedProgress": {
+        "copiedItems": 5,
+        "copiedBytes": 6,
+        "retainedCapacityBytes": 7,
+        "releasedBytes": 8
+      }
+    },
+    "retainedProgress": {
+      "copiedItems": 2,
+      "copiedBytes": 3,
+      "retainedCapacityBytes": 5,
+      "releasedBytes": 7
+    }
   }
 }

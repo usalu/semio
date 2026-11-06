@@ -11,7 +11,7 @@ use store::{MemberFactory, ReferenceSpaceMember};
 /// 🛑️ The fault a refused delivery answers its task with, when the failure owes the turn nothing else: one that carries partial retained progress,
 /// a receipt refusal or a context refusal keeps travelling as the turn's own failure so its accounting is never dropped.
 fn delivery_fault(failure: &semio_framework_job::OriginalTurnFailure) -> Option<Fault> {
-    if failure.retained_progress() != RetainedCloneProgress::default() || failure.receipt_refusal.is_some() || failure.context_refusal.is_some() {
+    if failure.retained_progress() != RetainedCloneProgress::default() || failure.receipt_refusal.is_some() || failure.context_refusal.is_some() || failure.work_refusal().is_some() {
         return None;
     }
     Some(failure.primary_fault().cloned().unwrap_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.task-resume-delivery"), format!("a resolved task follow-up could not be delivered: {}", failure.primary.message()))))
@@ -47,4 +47,16 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
         Ok(())
     }
+}
+
+#[cfg(test)]
+mod work_refusal_tests{
+ use super::delivery_fault;
+ use semio_framework_value::{ValueError,ValueRefusalKind};
+ #[test]
+ fn task_resume_keeps_an_original_work_refusal_instead_of_converting_it(){
+  let failure=semio_framework_job::OriginalTurnFailure::from(ValueError::literal(ValueRefusalKind::InvalidValue,"original task refusal"));
+  let failure=failure.with_work_refusal(ValueError::literal(ValueRefusalKind::InvariantViolated,"original work refusal")).unwrap();
+  assert!(delivery_fault(&failure).is_none());assert_eq!(failure.work_refusal().unwrap().message,"original work refusal");
+ }
 }

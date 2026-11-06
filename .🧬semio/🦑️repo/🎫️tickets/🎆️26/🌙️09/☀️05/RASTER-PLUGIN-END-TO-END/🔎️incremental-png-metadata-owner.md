@@ -1,0 +1,11 @@
+# Incremental PNG Metadata Owner
+
+The existing metadata semantics, original parser path, ordering, Latin-1 and UTF-8 constraints, and relevant fixtures are recorded in 🔎️png-metadata-parity.md. In particular all text chunks retain order and duplicate keys, and iTXt language and translated keyword are validated even though the Semio projection discards them.
+
+The first-party raw inflater is 🧰️framework/🔨️modules/🗜️deflate/🚰️inflater/🦀️.rs. Inflater::try_new_retained takes the maximum history and allocation bytes; next_retained_allocation_bytes and reserve_retained_history expose history allocation, including actual allocated bytes on both progress and refusal. advance takes &mut Option<u8> and input_complete and returns NeedInput, Wrote(u8), or Done, with at most one input byte consumed and one output byte produced. The caller owns per-byte work and output accounting. retained_retirement_demands, close_retained_step, last_retained_close_work and retained_terminal_is_empty provide controlled close. The deflate API is raw RFC1951, not an RFC1950 wrapper.
+
+The existing budgeted PngDecodeJob in 🧰️framework/🔨️modules/🔲️pixels/📷️png/📥️decode/🦀️.rs owns the PNG source and lends source(); it exposes last_turn_progress and last_turn_work, but does not publish text metadata. It checks each chunk CRC incrementally, validates RFC1950 CMF/FLG and dictionary rejection, handles one-byte raw inflation, and checks exact end/trailing data and Adler-32. Its decode work cannot be assumed to include a separate metadata extraction pass. Compressed text requires its own bounded zlib framing, output limits, UTF-8 or Latin-1 conversion, and retained close.
+
+The existing stdio native decoder at ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/🔓️native-decode/🦀️.rs calls synchronous RFC1950 decompression for zTXt and compressed iTXt; it is a semantic reference, not a bounded cursor.
+
+The actual pixels-codecs source closure is 145,248 bytes / 14 files / 2,262 active lines production and 148,635 / 16 / 2,271 with unit tests, under its 262,144 / 32 / 4,000 source boundary. The deflate production closure is 86,214 / 10 / 1,624, and its manifest has no local boundary. These are source census observations, not compiler verdicts.

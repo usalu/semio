@@ -69,7 +69,11 @@ impl semio_framework_dsl_record::BorrowedDslVariants for SetLabelSource{
 impl semio_framework_value::ErasedSnapshotRetirement for SetLabelSource{
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.value.next_demand(maximum_body_bytes)}
 
-    fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{self.value.close_step(grant)}
+    fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{self.value.close_step(grant)}
+    fn next_computational_work(&self,body:usize)->Result<u64,semio_framework_value::ValueError>{self.value.next_computational_work(body)}
+    fn requires_original_control(&self)->bool{self.value.requires_original_control()}
+    fn close_step_controlled(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant,control:&mut dyn semio_framework_value::OriginalRetirementControl)->semio_framework_value::OriginalRetirementOutcome{self.value.close_step_controlled(grant,control)}
+    fn close_original_step(&mut self,control:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{self.value.close_original_step(control,grant)}
     fn terminal_is_empty(&self)->bool{self.value.terminal_is_empty()}
     fn next_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.value.next_copy_byte_demand()}
     fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,semio_framework_value::ValueError>{self.value.next_capacity_byte_demand(copy)}

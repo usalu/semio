@@ -12,6 +12,7 @@ pub struct MutationMessageConcat<const N:usize> {
  active:Option<MutationMessageRetirement>,
  total:usize,
  index:usize,
+ close_index:usize,
  allocated:bool,
  closing:bool,
  taken:bool,
@@ -26,7 +27,7 @@ impl<const N:usize> MutationMessageConcat<N>{
   let d=Self::constructor_demand();if N>16||!fits(d,grant){return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"original diagnostic batch capture requires its fixed grant"),batches));}
   let Some(total)=batches.iter().try_fold(0usize,|n,b|n.checked_add(b.len()))else{return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"joined diagnostic count overflow"),batches));};
   let capacities=std::array::from_fn(|i|batches[i].capacity()*size_of::<MutationMessage>());
-  Ok((Self{inputs:ManuallyDrop::new(batches.map(|b|Some(b.into_iter()))),capacities,output:ManuallyDrop::new(None),pending:ManuallyDrop::new(None),active:None,total,index:0,allocated:false,closing:false,taken:false},RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))
+  Ok((Self{inputs:ManuallyDrop::new(batches.map(|b|Some(b.into_iter()))),capacities,output:ManuallyDrop::new(None),pending:ManuallyDrop::new(None),active:None,total,index:0,close_index:0,allocated:false,closing:false,taken:false},RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))
  }
  /// 📏️ Each turn quotes one backing birth, original row transfer or empty backing release.
  pub fn demand(&self)->Result<RetirementDemand,ValueError>{
@@ -51,26 +52,35 @@ impl<const N:usize> MutationMessageConcat<N>{
  }
  /// 🛑️ Cancellation keeps all original batches and partial output under typed close.
  pub fn begin_close(&mut self){self.closing=true;}
+ pub fn close_started(&self)->bool{self.closing}
+ pub fn begin_close_demand(&self)->RetirementDemand{if self.closing{RetirementDemand::default()}else{scalar(size_of::<bool>())}}
+ pub fn begin_close_work_demand(&self)->u64{u64::from(!self.closing)}
+ pub fn begin_close_paid(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{let d=self.begin_close_demand();if self.closing{return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}if !fits(d,grant){return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.closing=true;semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:1}}
  /// ♻️ Quotes exactly one active row or its original empty backing.
  pub fn close_demand(&self)->Result<RetirementDemand,ValueError>{
-  if let Some(a)=self.active.as_ref(){return Ok(RetirementDemand{copy_bytes:a.next_copy_byte_demand(),capacity_bytes:a.next_capacity_byte_demand(0)?,release_bytes:a.next_release_byte_demand(),depth:a.next_depth_demand()?});}
+  if self.active.as_ref().is_some_and(MutationMessageRetirement::terminal_is_empty){return Ok(scalar(size_of::<Option<MutationMessageRetirement>>()))}if let Some(a)=self.active.as_ref(){return Ok(RetirementDemand{copy_bytes:a.next_copy_byte_demand(),capacity_bytes:a.next_capacity_byte_demand(0)?,release_bytes:a.next_release_byte_demand(),depth:a.next_depth_demand()?});}
   if self.pending.is_some()||self.output.as_ref().is_some_and(|v|!v.is_empty()){return Ok(scalar(size_of::<MutationMessage>()+size_of::<MutationMessageRetirement>()));}
   if let Some(v)=self.output.as_ref(){return Ok(RetirementDemand{release_bytes:v.capacity()*size_of::<MutationMessage>(),..scalar(size_of::<Option<Vec<MutationMessage>>>() )});}
-  for (i,input) in self.inputs.iter().enumerate(){if let Some(input)=input{return Ok(if input.len()>0{scalar(size_of::<MutationMessage>()+size_of::<MutationMessageRetirement>())}else{RetirementDemand{release_bytes:self.capacities[i],..scalar(size_of::<Option<std::vec::IntoIter<MutationMessage>>>() )}});}}
+  if self.close_index<N{return Ok(match self.inputs[self.close_index].as_ref(){Some(input)if input.len()!=0=>scalar(size_of::<MutationMessage>()+size_of::<MutationMessageRetirement>()),Some(_)=>RetirementDemand{release_bytes:self.capacities[self.close_index],..scalar(size_of::<Option<std::vec::IntoIter<MutationMessage>>>()+size_of::<usize>())},None=>scalar(size_of::<usize>())});}
   Ok(Default::default())
  }
- /// 🪦️ Typed row retirement precedes each paid original backing release.
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original diagnostic join closure not started"));}let d=self.close_demand()?;if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}if !fits(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
-  if let Some(a)=self.active.as_mut(){let p=a.close_step(grant);if a.terminal_is_empty(){self.active=None;}return Ok(RetainedCloneStep::Progress(p));}
-  let p=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()};
-  if let Some(row)=self.pending.take().or_else(||self.output.as_mut().and_then(Vec::pop)){self.active=Some(MutationMessageRetirement::new(row));return Ok(RetainedCloneStep::Progress(p));}
-  if self.output.is_some(){drop(self.output.take());return Ok(RetainedCloneStep::Progress(p));}
-  for input in self.inputs.iter_mut(){if let Some(rows)=input{if let Some(row)=rows.next(){self.active=Some(MutationMessageRetirement::new(row));}else{drop(input.take());}return Ok(RetainedCloneStep::Progress(p));}}
-  Ok(RetainedCloneStep::Complete(Default::default()))
+ /// ⛽️ Quotes the selected original close action without traversing other input slots.
+ pub fn close_work_demand(&self)->Result<u64,ValueError>{if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original diagnostic join closure not started"))}Ok(u64::from(!self.terminal_is_empty()))}
+ /// 🪦️ Typed row retirement and input-slot movement each consume one original turn.
+ pub fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{
+  let mut work=0;let result=(||{
+   if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original diagnostic join closure not started"));}let d=self.close_demand()?;if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}if !fits(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
+   if self.active.as_ref().is_some_and(MutationMessageRetirement::terminal_is_empty){self.active.take();work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}if let Some(a)=self.active.as_mut(){let p=a.close_step(grant);work=a.last_turn_work();return Ok(RetainedCloneStep::Progress(p));}
+   let p=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()};
+   if let Some(row)=self.pending.take().or_else(||self.output.as_mut().and_then(Vec::pop)){work=1;self.active=Some(MutationMessageRetirement::new(row));return Ok(RetainedCloneStep::Progress(p));}
+   if self.output.is_some(){work=1;drop(self.output.take());return Ok(RetainedCloneStep::Progress(p));}
+   if self.close_index<N{work=1;let input=&mut self.inputs[self.close_index];if let Some(rows)=input{if let Some(row)=rows.next(){self.active=Some(MutationMessageRetirement::new(row));}else{drop(input.take());self.close_index+=1;}}else{self.close_index+=1;}return Ok(RetainedCloneStep::Progress(p));}
+   Ok(RetainedCloneStep::Complete(Default::default()))
+  })();semio_framework_value::RetainedWorkOutcome{result,work}
  }
  /// 🫙️ No batch backing, joined vector, original row or retirement child remains.
- pub fn terminal_is_empty(&self)->bool{self.inputs.iter().all(Option::is_none)&&self.output.is_none()&&self.pending.is_none()&&self.active.is_none()}
+ pub fn terminal_is_empty(&self)->bool{(self.taken||self.close_index==N)&&self.output.is_none()&&self.pending.is_none()&&self.active.is_none()}
+
 }
 impl<const N:usize> Drop for MutationMessageConcat<N>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"original diagnostic join requires funded closure");if empty{unsafe{ManuallyDrop::drop(&mut self.inputs);ManuallyDrop::drop(&mut self.output);ManuallyDrop::drop(&mut self.pending);}}}}
 

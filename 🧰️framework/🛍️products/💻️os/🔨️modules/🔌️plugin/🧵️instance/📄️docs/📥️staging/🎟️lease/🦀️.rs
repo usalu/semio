@@ -22,7 +22,7 @@ use semio_plugin_instance_jobs::jobs_lease::OriginalToolLeaseAdmission;
 impl<A: ArtifactApp> MediaTransfers<A> {
     pub fn original_tool_lease_close_demands(&self, tools: &ToolOperations<A>,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{
         use semio_framework_value::RetirementDemand;
-        if tools.pending_tool_lease_admission.is_none()&&self.pending_media_import_permit.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<(FrameworkReservedCommitPermit,(semio_framework_job::OperationId,semio_framework_job::Generation,usize))>()+size_of::<OriginalToolLeaseAdmission>(),depth:1,..Default::default()})}
+        if tools.pending_tool_lease_admission.is_none()&&self.pending_reserved_producer_permit.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<(FrameworkReservedCommitPermit,(semio_framework_job::OperationId,semio_framework_job::Generation,usize))>()+size_of::<OriginalToolLeaseAdmission>(),depth:1,..Default::default()})}
         let Some(pending)=tools.pending_tool_lease_admission.as_ref()else{return Ok(Default::default())};
         if let Some(owner)=pending.retirement.as_ref(){return owner.retirement_demands(tools.tool_cancellations.handle().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original pending lease lost its issuer"))?,body)}
         if pending.lease.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<ToolCancellationLease>(),depth:1,..Default::default()})}
@@ -35,7 +35,7 @@ impl<A: ArtifactApp> MediaTransfers<A> {
     pub fn close_original_tool_lease(&mut self, tools: &mut ToolOperations<A>,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_job::OriginalTurnFailure>{
         let demand=self.original_tool_lease_close_demands(tools, grant.maximum_copy_bytes)?;
         if grant.maximum_items==0||!semio_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}
-        if tools.pending_tool_lease_admission.is_none(){if let Some((permit,identity))=self.pending_media_import_permit.take(){
+        if tools.pending_tool_lease_admission.is_none(){if let Some((permit,identity))=self.pending_reserved_producer_permit.take(){
             let FrameworkReservedCommitPermit{operation,lease,..}=permit;let instance=lease.key.app_instance_id;
             *tools.pending_tool_lease_admission=Some(OriginalToolLeaseAdmission{source:ManuallyDrop::new(None),verb:ManuallyDrop::new(None),operation:Some(operation),lease:ManuallyDrop::new(Some(lease)),retirement:ManuallyDrop::new(None),instance,identity,keyed:true,copied:true,returning:true});
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))

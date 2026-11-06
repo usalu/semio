@@ -1,0 +1,66 @@
+{
+  "schema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "array",
+    "items": {
+      "type": "object",
+      "required": [
+        "admitted",
+        "accepted",
+        "work",
+        "callerOutput",
+        "frameOutput",
+        "framePending"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "admitted": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "work": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "callerOutput": {
+          "type": "boolean"
+        },
+        "frameOutput": {
+          "type": "boolean"
+        },
+        "framePending": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "data": [
+    {
+      "admitted": false,
+      "accepted": false,
+      "work": 0,
+      "callerOutput": false,
+      "frameOutput": true,
+      "framePending": true
+    },
+    {
+      "admitted": true,
+      "accepted": false,
+      "work": 1,
+      "callerOutput": true,
+      "frameOutput": false,
+      "framePending": true
+    },
+    {
+      "admitted": true,
+      "accepted": true,
+      "work": 1,
+      "callerOutput": true,
+      "frameOutput": false,
+      "framePending": true
+    }
+  ]
+}

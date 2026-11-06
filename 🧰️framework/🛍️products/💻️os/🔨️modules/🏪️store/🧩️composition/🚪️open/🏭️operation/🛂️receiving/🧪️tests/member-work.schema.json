@@ -4,7 +4,8 @@
   "additionalProperties": false,
   "required": [
     "budget",
-    "cases"
+    "cases",
+    "retirement"
   ],
   "properties": {
     "budget": {
@@ -62,6 +63,55 @@
           },
           "refused": {
             "type": "boolean"
+          }
+        }
+      }
+    },
+    "retirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "quote",
+        "cases"
+      ],
+      "properties": {
+        "quote": {
+          "const": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "budget",
+              "work",
+              "owner",
+              "active"
+            ],
+            "properties": {
+              "budget": {
+                "enum": [
+                  0,
+                  1
+                ]
+              },
+              "work": {
+                "enum": [
+                  0,
+                  1
+                ]
+              },
+              "owner": {
+                "type": "boolean"
+              },
+              "active": {
+                "type": "boolean"
+              }
+            }
           }
         }
       }

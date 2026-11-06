@@ -1,8 +1,8 @@
 //! 📝️ The render owner admits and retains original staged requests beside its source work.
 use crate::render_bundle::RenderCtx;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_instance_jobs::jobs_instance_root::OriginalRenderTreeIdentity;
-use semio_framework_os_kernel::{ReferenceSpaceMember,MemberFactory};
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_instance_jobs::jobs_instance_root::OriginalRenderTreeIdentity;
+use semio_os_kernel::{ReferenceSpaceMember,MemberFactory};
 use semio_framework::ViewModel;
 
 impl<'ctx,A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+Send+'static,X> RenderCtx<'ctx,A,M,X>{
@@ -20,7 +20,7 @@ impl<'ctx,A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+Send+'static,X> Ren
         if self.pending.pending_render_work.is_none(){
             if !<A::RenderWork as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()||!<A::Snapshot as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"staged render requires controlled original source retirement").into());}
             let Some(work)=A::begin_render_work(body_key,cx)?else{return Ok(None)};
-            *self.pending.pending_render_work=Some(semio_framework_plugin_instance_jobs::jobs_render::work::OriginalRenderWork::retain(work));
+            *self.pending.pending_render_work=Some(semio_plugin_instance_jobs::jobs_render::work::OriginalRenderWork::retain(work));
             return Ok(None);
         }
         let identity=self.pending.pending_render_tree_identity.as_mut().ok_or_else(invalid)?;

@@ -98,7 +98,7 @@ pub fn validate_staged_binding_source(source: &dyn StagedFormBindingSource) -> R
                 if options.len() == 0 || options.len() > 32 { return Err(invalid()); }
                 for index in 0..options.len() {
                     let option = options.option(index).ok_or_else(invalid)?;
-                    if option.key.len() > semio_framework_ui_contract::UiText::default().capacity() { return Err(resource()); }
+                    if option.key.len() > semio_ui_contract::UiText::default().capacity() { return Err(resource()); }
                     if option.key.is_empty() { return Err(invalid()); }
                     for previous in 0..index { if options.option(previous).ok_or_else(invalid)?.key == option.key { return Err(invalid()); } }
                 }

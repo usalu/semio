@@ -9,6 +9,7 @@ pub struct FactoryRetirementAdmissionError {
 }
 impl std::fmt::Debug for FactoryRetirementAdmissionError{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{f.debug_struct("FactoryRetirementAdmissionError").field("error",&self.error).field("original_address",&self.original.as_ref().map(|source|Arc::as_ptr(source)as*const()as usize)).field("has_ticket",&self.ticket.is_some()).field("progress",&self.progress).finish()}}
 pub trait FactoryRetirementTicket:ErasedSnapshotRetirement {
+ fn preparation_work_demand(&self,body:usize)->Result<u64,ValueError>;
  fn preparation_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
  fn prepare_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome;
  fn preparation_is_complete(&self)->bool;
@@ -21,6 +22,7 @@ impl FactoryChildSlot {
  pub const fn empty()->Self{Self{original:ManuallyDrop::new(None),ticket:ManuallyDrop::new(None)}}
  pub fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.ticket.is_none()}
  pub fn preparation_is_complete(&self)->bool{self.original.is_none()&&self.ticket.as_ref().is_some_and(|ticket|ticket.preparation_is_complete())}
+ pub fn preparation_work_demand(&self,source:&dyn FactoryRetirement,body:usize)->Result<u64,ValueError>{if self.preparation_is_complete(){return Ok(0)}if let Some(ticket)=self.ticket.as_ref(){return ticket.preparation_work_demand(body)}if let Some(original)=self.original.as_ref(){return original.factory_retirement_work_demand()}let _=source;Ok(1)}
  pub fn preparation_demands(&self,source:&dyn FactoryRetirement,body:usize)->Result<RetirementDemand,ValueError>{
   if let Some(ticket)=self.ticket.as_ref(){return ticket.preparation_demands(body);}
   if let Some(original)=self.original.as_ref(){return Ok(RetirementDemand{copy_bytes:original.factory_retirement_copy_byte_demand(),capacity_bytes:original.factory_retirement_birth_bytes(),depth:original.factory_retirement_depth_demand(),..Default::default()});}
@@ -34,8 +36,14 @@ impl FactoryChildSlot {
   let turn=match self.original.take(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("original absent").into()),work:0}}.preborn_factory_retirement(grant);let result=match turn.result{Ok((ticket,progress))=>{*self.ticket=Some(ticket);Ok(RetainedCloneStep::Progress(progress))},Err(error)=>{*self.original=error.original;*self.ticket=error.ticket;Err(error.error.with_retained_progress(error.progress))}};RetainedWorkOutcome{result,work:turn.work}
  }
  pub fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if let Some(original)=self.original.as_ref(){return self.preparation_demands(original.as_ref(),body);}self.ticket.as_ref().map_or(Ok(Default::default()),|ticket|factory_ticket_demands(ticket,body))}
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
-  if self.original.is_some(){return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original child requires funded parent preparation before native close")),work:0}}
+ /// 🪪️ The selected ticket retains its own original work settlement.
+ pub fn requires_original_control(&self)->bool{self.original.is_none()&&self.ticket.is_some()}
+ /// ⛽️ Quotes only the selected ticket; an unprepared factory has no constructor quote.
+  pub fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{if let Some(original)=self.original.as_ref(){return original.factory_retirement_work_demand()}match self.ticket.as_ref(){Some(ticket)if ticket.terminal_is_empty()=>Ok(1),Some(ticket)=>ticket.next_computational_work(body),None=>Ok(0)}}
+ pub fn close_step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn semio_framework_value_retirement::OriginalRetirementControl)->crate::OriginalRetirementOutcome{if !self.requires_original_control(){return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"factory child has no selected original ticket").into()),work:0}}semio_framework_value_retirement::close_factory_ticket_controlled(&mut self.ticket,grant,control)}
+ pub fn close_original_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome{if !self.requires_original_control(){return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"factory child has no selected original ticket").into()),work:0}}semio_framework_value_retirement::close_factory_ticket_original(&mut self.ticket,original,grant)}
+ pub fn close_step(&mut self,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome{
+  if self.original.is_some(){return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original child requires funded parent preparation before native close").into()),work:0}}
   close_factory_ticket(&mut self.ticket,grant)
  }
 

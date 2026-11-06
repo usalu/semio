@@ -3,7 +3,7 @@ use semio_framework_job::{CancelToken,Generation,InteractiveJob,InteractiveJobCl
 use semio_framework_job_payload::RetainedJobPayload;
 use semio_framework_job_worker::{BatchJobSession,WorkerJobDemandError,WorkerJobPoll,WorkerJobSessionAdmission};
 use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams,WorkerJobCloseStep};
-use semio_framework_value::{RetainedWorkOutcome,ValueError,ValueRefusalKind,retirement::{RetireOwned,RetirementCursor,RetirementStep}};
+use semio_framework_value::{RetainedWorkOutcome,ValueError,ValueRefusalKind,retirement::controlled::ControlledRetirement};
 
 #[path="🎟️caller/🦀️.rs"]
 mod caller;
@@ -121,7 +121,7 @@ struct HeadlessState<J:InteractiveJob+Send+'static> {
     job_closing:bool,
     capture:PayloadCapture,
     failures:[Option<OriginalTurnFailure>;2],
-    failure_cursor:Option<Box<dyn RetirementCursor>>,
+    failure_cursor:Option<ControlledRetirement<OriginalTurnFailure>>,
 }
 
 impl<J:InteractiveJob+Send+'static> HeadlessState<J> {
@@ -299,23 +299,18 @@ impl<J:InteractiveJob+Send+'static> HeadlessState<J> {
         if grant.maximum_items==0||grant.maximum_depth==0||caller.fuel_remaining()==0 { return Ok(false); }
         if let Some(cursor)=self.failure_cursor.as_mut() {
             if cursor.terminal_is_empty() {
-                let Some(bytes)=cursor.terminal_release_bytes() else { return Ok(false); };
-                if grant.maximum_release_bytes<bytes { return Ok(false); }
                 self.failure_cursor=None;
-                caller.pay(RetainedCloneProgress {copied_items:1,released_bytes:bytes,..Default::default()},1)?;
+                caller.pay(RetainedCloneProgress {copied_items:1,..Default::default()},1)?;
                 return Ok(true);
             }
-            let step=cursor.close_step(grant);
-            match step {
-                RetirementStep::Progress(progress,work)=>{caller.pay(progress,work)?;Ok(progress!=RetainedCloneProgress::default()||work!=0)}
-                RetirementStep::Complete(work)=>{caller.pay(Default::default(),work)?;Ok(true)}
-                RetirementStep::Failure(error,work)=>{caller.pay(error.retained_progress(),work)?;Err(error)}
+            let result=cursor.step(grant);let work=cursor.last_turn_work();
+            match result {
+                Ok(step)=>{let progress=step.progress();caller.pay(progress,work)?;Ok(progress!=RetainedCloneProgress::default()||work!=0)}
+                Err(error)=>{caller.pay(error.retained_progress(),work)?;Err(error)}
             }
         } else if let Some(slot)=self.failures.iter_mut().find(|slot|slot.is_some()) {
-            let Some(bytes)=slot.as_ref().and_then(RetireOwned::retirement_birth_bytes) else { return Ok(false); };
-            if grant.maximum_capacity_bytes<bytes { return Ok(false); }
-            self.failure_cursor=Some(slot.take().expect("retained original failure").retirement());
-            caller.pay(RetainedCloneProgress {copied_items:1,retained_capacity_bytes:bytes,..Default::default()},1)?;
+            self.failure_cursor=Some(ControlledRetirement::retain(slot.take().expect("retained original failure")));
+            caller.pay(RetainedCloneProgress {copied_items:1,..Default::default()},1)?;
             Ok(true)
         } else { Ok(false) }
     }

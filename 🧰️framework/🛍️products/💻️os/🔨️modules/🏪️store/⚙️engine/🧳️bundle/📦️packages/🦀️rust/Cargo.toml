@@ -28,7 +28,7 @@ semio-os-store-engine-core = { path = "../../../🧱️store-components/📦️p
 semio-os-store-engine-live = { path = "../../../🎞️live/📦️packages/🦀️rust" }
 semio-os-store-ledger = { path = "../../../../📒️ledger/📦️packages/🦀️rust" }
 semio-os-store-one-item = { path = "../../../../🎮️one-item/📦️packages/🦀️rust" }
-semio-os-store-one-item-batch = { path = "../../../../📬️one-item-owners/📦️packages/🦀️rust" }
+semio-framework-os-store-one-item-batch = { path = "../../../../📬️one-item-owners/📦️packages/🦀️rust", package = "semio-os-store-one-item-batch"}
 semio-os-store-one-item-publication = { path = "../../../../🎮️one-item/📬️publication/📦️packages/🦀️rust" }
 semio-os-store-read = { path = "../../../../🔗️read/📦️packages/🦀️rust" }
 semio-os-store-replay = { path = "../../../../🔁️replay/📦️packages/🦀️rust" }

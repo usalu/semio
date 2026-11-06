@@ -108,6 +108,7 @@ pub struct Generation3dViewTransientPatch {
 }
 
 protocol::retained_row_patch!(pub retained_fields for Generation3dViewTransientPatch => Generation3dViewTransient { preview_eval_text: Option<String> });
+protocol::retained_empty_option_patch!(Generation3dViewTransientPatch { preview_eval_text });
 protocol::retained_patch_diff!(Generation3dViewTransientPatch => Generation3dViewTransient);
 
 impl protocol::MutationDiff<Generation3dViewTransient> for Generation3dViewTransientPatch {}

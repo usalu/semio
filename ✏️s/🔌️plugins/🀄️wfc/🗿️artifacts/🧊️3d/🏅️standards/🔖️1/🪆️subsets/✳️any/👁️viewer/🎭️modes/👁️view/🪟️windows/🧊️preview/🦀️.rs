@@ -42,8 +42,8 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &Wfc3dSnapshot, cache: &crate::editor::wfc3d::transient::Wfc3dTransient, revision: Option<&[u8;32]>, locale: semio_framework_ui_locale::Locale, terminology: semio_framework_ui_locale::Terminology) -> UiAssemblyResult<BuiltNode> {
-    use semio_framework_ui_contract::*;
+pub fn render(document: &Wfc3dSnapshot, cache: &crate::editor::wfc3d::transient::Wfc3dTransient, revision: Option<&[u8;32]>, locale: semio_ui_locale::Locale, terminology: semio_ui_locale::Terminology) -> UiAssemblyResult<BuiltNode> {
+    use semio_ui_contract::*;
     let empty = crate::editor::wfc3d::transient::Wfc3dTransient::default();
     let transient = if crate::editor::wfc3d::transient::source_matches(&cache.source_revision, revision) { cache } else { &empty };
     let scene = World3dScene {
@@ -57,13 +57,13 @@ pub fn render(document: &Wfc3dSnapshot, cache: &crate::editor::wfc3d::transient:
         else if document.slots.iter().any(|slot| slot.pinned_tile_id.is_some()) { LocalizedLabel::native("Showing authored pins. No current solve is available.", "Angelegte Fixierungen werden angezeigt. Kein aktuelles Ergebnis verfügbar.") }
         else { LocalizedLabel::native("No current result. Run Fill in the editor.", "Kein aktuelles Ergebnis. Füllen im Editor starten.") };
     let message = label.resolve(terminology, locale);
-    let caption = text(Label::try_from(message).map_err(|_| semio_framework_plugin::ui_assembly_error("wfc3d-view.status.label"))?)
-        .try_id("wfc.3d.view.status").map_err(|_| semio_framework_plugin::ui_assembly_error("wfc3d-view.status.id"))?
-        .try_label(message).map_err(|_| semio_framework_plugin::ui_assembly_error("wfc3d-view.status.aria"))?
-        .try_build().map_err(|_| semio_framework_plugin::ui_assembly_error("wfc3d-view.status.build"))?;
-    column().try_id("wfc.3d.view.body").map_err(|_| semio_framework_plugin::ui_assembly_error("wfc3d-view.body.id"))?
-        .try_children(vec![caption, scene]).map_err(|_| semio_framework_plugin::ui_assembly_error("wfc3d-view.body.children"))?
-        .try_build().map_err(|_| semio_framework_plugin::ui_assembly_error("wfc3d-view.body.build"))
+    let caption = text(Label::try_from(message).map_err(|_| semio_plugin::ui_assembly_error("wfc3d-view.status.label"))?)
+        .try_id("wfc.3d.view.status").map_err(|_| semio_plugin::ui_assembly_error("wfc3d-view.status.id"))?
+        .try_label(message).map_err(|_| semio_plugin::ui_assembly_error("wfc3d-view.status.aria"))?
+        .try_build().map_err(|_| semio_plugin::ui_assembly_error("wfc3d-view.status.build"))?;
+    column().try_id("wfc.3d.view.body").map_err(|_| semio_plugin::ui_assembly_error("wfc3d-view.body.id"))?
+        .try_children(vec![caption, scene]).map_err(|_| semio_plugin::ui_assembly_error("wfc3d-view.body.children"))?
+        .try_build().map_err(|_| semio_plugin::ui_assembly_error("wfc3d-view.body.build"))
 }
 
 //#endregion 🔖️Render

@@ -1,0 +1,5 @@
+# Preparation inner shell law review
+
+The existing native law constructs the actual boxed NativeSemanticPreparation using the original fixture caller and decoder, drains it and funds the header transfer to ArtifactReplayPreparationRetirement. It tests a zero-work loan before the one-work boxed-shell release, checking unchanged owner and demand, then exact Producer box release. The two actual paths cover successful output and projection cancellation; registry returns, source, root and caller are closed afterward. The neutral fixture closed schema includes preparationShellWork and the independent SQLite case covers zero and one.
+
+The current Cargo lib source collector finds production 6 files / 117157 bytes / 851 lines and test 17 / 203867 / 1395; test headroom is 15 files / 58277 bytes / 2605 lines. The embedded birth-work JSON is captured with SHA-256 af623aef98837ae4fbf47b6caadf4628af70f441bdda33349bc39cbe3be5078a. No concrete defect found in this source-only review; no runtime red or pass was established.

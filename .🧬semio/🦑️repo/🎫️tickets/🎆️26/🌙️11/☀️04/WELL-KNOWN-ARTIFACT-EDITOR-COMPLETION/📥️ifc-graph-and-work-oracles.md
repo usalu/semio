@@ -1,0 +1,5 @@
+# IFC Graph Contract and Work Oracles
+
+The schema-first 📐️ifc-graph-receiving.schema.json and corpus 📐️ifc-graph-receiving.json describe the parsed RecordValue to genuine GraphReceiving frame boundary: denial performs no work, selected frame capture costs one, and later child progress or owning failure retains exact child work and source custody. These rows are a proposed neutral contract, not evidence that Rust behavior passes. The schema and cases are ticket inputs retained for implementation.
+
+Ajv validates schema/fixture shapes. Independent SQLite rules pass 4/4 encoder action cases (work sum 2), 3/3 record tag cases, and 3/3 caller loan cases (work sum 2). The genuine append fixture also independently validates one Unicode scalar as three UTF-8 bytes and one work unit before cancellation. Executables 🧮️action-tag-graph-oracle.ts and 🧮️loan-oracle.ts are retained. The fixture oracle does not prove native same-recipient identity, real failure ownership, or paid closure; those remain native regression requirements.

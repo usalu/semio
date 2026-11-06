@@ -1,0 +1,2 @@
+import {readFileSync,writeFileSync} from 'node:fs';
+const file='🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧪️tests/🦀️.rs';const original=readFileSync(file,'utf8');const marker='fn native_construction_typed_result_preserves_original_owners_on_receipt_refusal';const cut=original.indexOf(marker);if(cut<0)throw new Error('test boundary changed');let head=original.slice(0,cut),tail=original.slice(cut);head=head.replaceAll('NativeReceivingEffect::<ValueError>::default()','NativeSharedAdmission::default()');writeFileSync(file,head+tail);

@@ -16,7 +16,7 @@ fn original_snapshot_decoder_body_receipt_is_debited_before_cleanup_and_preserve
  let demand=RetainedCloneGrant{maximum_items:policy["items"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:policy["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:policy["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:policy["depth"].as_u64().unwrap()as usize};
  for cancelled in [false,true]{
   let live=Cell::new(true);let mut callback=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|{if cancelled&&event.total==text.len()&&event.completed==text.len(){live.set(false)}live.get()};let mut recipient=NativeDecodeRetirementRecipient::new();let mut native=NativeDecodeControl::new(fixture["nativeMaximumBytes"].as_u64().unwrap()as usize,&mut callback);native.install_retirement_recipient(&mut recipient).unwrap();let grant=fixture_grant();let pointer=Cell::new(std::ptr::null::<u8>());let measured=Cell::new(RetainedCloneProgress::default());let mut owner=super::NativeSnapshotDecodeOwner::new(&mut native,grant);
-  let result=owner.receive::<String,String,_>(|destination,native,body|super::native_snapshot_turn(|work|{
+  let result=owner.receive::<String,String,_>(&mut |destination,native,body|super::native_snapshot_turn(|work|{
    let remaining=body.remaining_grant();assert_eq!(remaining.maximum_items,grant.maximum_items-1);assert!(remaining.maximum_capacity_bytes<grant.maximum_capacity_bytes);assert_eq!(remaining.maximum_depth,grant.maximum_depth-1);body.admit_frontier(demand)?;*destination=Some(String::new());
    work.performed();let copied=body.copy_text_into(native,text,destination.as_mut().unwrap(),demand.maximum_depth);let original=destination.as_ref().unwrap();measured.set(body.progress());copied?;pointer.set(original.as_ptr());Ok(destination.take().unwrap())
   }));
@@ -64,19 +64,19 @@ fn native_snapshot_decode_owner_preserves_every_original_grant_currency_and_pref
 fn original_snapshot_encoder_returns_refused_retirement_and_commits_only_after_terminal_drain(){
  use semio_framework_value::native_encoding::NativeEncodeRetirementRecipient;
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../🛫️snapshot/🧪️tests/🧫️fixtures/🎟️encode-owner/🔣️.json")).unwrap();let text=fixture["copy"].as_str().unwrap();
- for refused in [false,true]{let mut recipient=NativeEncodeRetirementRecipient::new();let mut progress=|_|true;let mut native=NativeEncodeControl::new(fixture["nativeMaximumBytes"].as_u64().unwrap()as usize,&mut progress);native.install_retirement_recipient(&mut recipient).unwrap();let mut grant=fixture_grant();if refused{grant.maximum_release_bytes=0;}let mut owner=super::NativeSnapshotEncodeOwner::new(&mut native,grant);let result=owner.receive::<Vec<String>,String,_>(|intermediate,native,_body|super::native_snapshot_turn(|work|{work.performed();*intermediate=Some(native.allocate_vec(1)?);work.performed();intermediate.as_mut().unwrap().push(native.copy_text(text)?);work.performed();Ok(native.copy_text(text)?)}));assert!(result.work>=3);drop(owner);if refused{assert!(result.result.is_err());assert!(native.has_retirement_owner());assert!(native.close_retirement_recipient(grant).result.is_err()||native.has_retirement_owner());assert!(native.has_retirement_owner());while native.has_retirement_owner(){native.close_retirement_recipient(fixture_grant()).result.unwrap();}}else{assert_eq!(serde_json::to_value(result.result.unwrap()).unwrap(),serde_json::to_value(text).unwrap());assert!(!native.has_retirement_owner());}drop(native);assert!(!recipient.has_owner());}
+ for refused in [false,true]{let mut recipient=NativeEncodeRetirementRecipient::new();let mut progress=|_|true;let mut native=NativeEncodeControl::new(fixture["nativeMaximumBytes"].as_u64().unwrap()as usize,&mut progress);native.install_retirement_recipient(&mut recipient).unwrap();let mut grant=fixture_grant();if refused{grant.maximum_release_bytes=0;}let mut owner=super::NativeSnapshotEncodeOwner::new(&mut native,grant);let result=owner.receive::<Vec<String>,String,_>(&mut |intermediate,native,_body|super::native_snapshot_turn(|work|{work.performed();*intermediate=Some(native.allocate_vec(1)?);work.performed();intermediate.as_mut().unwrap().push(native.copy_text(text)?);work.performed();Ok(native.copy_text(text)?)}));assert!(result.work>=3);drop(owner);if refused{assert!(result.result.is_err());assert!(native.has_retirement_owner());assert!(native.close_retirement_recipient(grant).result.is_err()||native.has_retirement_owner());assert!(native.has_retirement_owner());while native.has_retirement_owner(){native.close_retirement_recipient(fixture_grant()).result.unwrap();}}else{assert_eq!(serde_json::to_value(result.result.unwrap()).unwrap(),serde_json::to_value(text).unwrap());assert!(!native.has_retirement_owner());}drop(native);assert!(!recipient.has_owner());}
 }
 
 #[test]
 fn returned_snapshot_retirement_keeps_original_allocation_port_during_physical_drain(){
  use semio_framework_value::native_encoding::{NativeEncodeRetirementRecipient,NativeEncodeAllocation};
- let neutral:serde_json::Value=serde_json::from_str(include_str!("../🛫️snapshot/🧪️tests/🧫️fixtures/🎟️encode-owner/🔣️.json")).unwrap();let text=neutral["copy"].as_str().unwrap();let mut recipient=NativeEncodeRetirementRecipient::new();let ledger=std::sync::atomic::AtomicUsize::new(0);let allocations=std::sync::atomic::AtomicUsize::new(0);let mut allocation=|request:NativeEncodeAllocation|{assert_eq!(request.owned_bytes,ledger.load(std::sync::atomic::Ordering::Relaxed));ledger.store(request.next_owned_bytes,std::sync::atomic::Ordering::Relaxed);allocations.fetch_add(1,std::sync::atomic::Ordering::Relaxed);Ok(())};let mut progress=|_|true;let mut native=NativeEncodeControl::new_forwarded(neutral["nativeMaximumBytes"].as_u64().unwrap()as usize,&mut progress,&mut allocation);native.install_retirement_recipient(&mut recipient).unwrap();let mut grant=fixture_grant();grant.maximum_release_bytes=0;let mut owner=super::NativeSnapshotEncodeOwner::new(&mut native,grant);assert!(owner.receive::<Vec<String>,String,_>(|intermediate,native,_body|super::native_snapshot_turn(|work|{work.performed();*intermediate=Some(native.allocate_vec(1)?);work.performed();intermediate.as_mut().unwrap().push(native.copy_text(text)?);work.performed();Ok(native.copy_text(text)?)})).result.is_err());drop(owner);assert!(native.has_retirement_owner());let before=native.owned_bytes();let calls=allocations.load(std::sync::atomic::Ordering::Relaxed);while native.has_retirement_owner(){native.close_retirement_recipient(fixture_grant()).result.unwrap();assert_eq!(native.owned_bytes(),ledger.load(std::sync::atomic::Ordering::Relaxed));}assert!(native.owned_bytes()>before);assert!(allocations.load(std::sync::atomic::Ordering::Relaxed)>calls);drop(native);assert!(!recipient.has_owner());
+ let neutral:serde_json::Value=serde_json::from_str(include_str!("../🛫️snapshot/🧪️tests/🧫️fixtures/🎟️encode-owner/🔣️.json")).unwrap();let text=neutral["copy"].as_str().unwrap();let mut recipient=NativeEncodeRetirementRecipient::new();let ledger=std::sync::atomic::AtomicUsize::new(0);let allocations=std::sync::atomic::AtomicUsize::new(0);let mut allocation=|request:NativeEncodeAllocation|{assert_eq!(request.owned_bytes,ledger.load(std::sync::atomic::Ordering::Relaxed));ledger.store(request.next_owned_bytes,std::sync::atomic::Ordering::Relaxed);allocations.fetch_add(1,std::sync::atomic::Ordering::Relaxed);Ok(())};let mut progress=|_|true;let mut native=NativeEncodeControl::new_forwarded(neutral["nativeMaximumBytes"].as_u64().unwrap()as usize,&mut progress,&mut allocation);native.install_retirement_recipient(&mut recipient).unwrap();let mut grant=fixture_grant();grant.maximum_release_bytes=0;let mut owner=super::NativeSnapshotEncodeOwner::new(&mut native,grant);assert!(owner.receive::<Vec<String>,String,_>(&mut |intermediate,native,_body|super::native_snapshot_turn(|work|{work.performed();*intermediate=Some(native.allocate_vec(1)?);work.performed();intermediate.as_mut().unwrap().push(native.copy_text(text)?);work.performed();Ok(native.copy_text(text)?)})).result.is_err());drop(owner);assert!(native.has_retirement_owner());let before=native.owned_bytes();let calls=allocations.load(std::sync::atomic::Ordering::Relaxed);while native.has_retirement_owner(){native.close_retirement_recipient(fixture_grant()).result.unwrap();assert_eq!(native.owned_bytes(),ledger.load(std::sync::atomic::Ordering::Relaxed));}assert!(native.owned_bytes()>before);assert!(allocations.load(std::sync::atomic::Ordering::Relaxed)>calls);drop(native);assert!(!recipient.has_owner());
 }
 
 #[test]
 fn original_snapshot_decoder_returns_partial_owner_and_drains_with_its_same_physical_port(){
  use semio_framework_value_native_owned::{native_decoding::NativeDecodeRetirementRecipient, native_decoding::NativeDecodeAllocation};
- let neutral:serde_json::Value=serde_json::from_str(include_str!("../🛫️snapshot/🧪️tests/🧫️fixtures/🎟️encode-owner/🔣️.json")).unwrap();let text=neutral["copy"].as_str().unwrap();let mut recipient=NativeDecodeRetirementRecipient::new();let ledger=std::sync::atomic::AtomicUsize::new(0);let mut allocation=|request:NativeDecodeAllocation|{assert_eq!(request.owned_bytes,ledger.load(std::sync::atomic::Ordering::Relaxed));ledger.store(request.next_owned_bytes,std::sync::atomic::Ordering::Relaxed);Ok(())};let mut progress=|_|true;let mut native=NativeDecodeControl::new_forwarded(neutral["nativeMaximumBytes"].as_u64().unwrap()as usize,&mut progress,&mut allocation);native.install_retirement_recipient(&mut recipient).unwrap();let mut grant=fixture_grant();grant.maximum_release_bytes=0;let mut owner=super::NativeSnapshotDecodeOwner::new(&mut native,grant);assert!(owner.receive::<Vec<String>,String,_>(|intermediate,native,_body|super::native_snapshot_turn(|work|{work.performed();*intermediate=Some(native.allocate_vec(1)?);work.performed();intermediate.as_mut().unwrap().push(native.copy_text(text)?);work.performed();Ok(native.copy_text(text)?)})).result.is_err());drop(owner);assert!(native.has_retirement_owner());let before=native.owned_bytes();while native.has_retirement_owner(){native.close_retirement_recipient(fixture_grant()).result.unwrap();assert_eq!(native.owned_bytes(),ledger.load(std::sync::atomic::Ordering::Relaxed));}assert!(native.owned_bytes()>before);drop(native);assert!(!recipient.has_owner());
+ let neutral:serde_json::Value=serde_json::from_str(include_str!("../🛫️snapshot/🧪️tests/🧫️fixtures/🎟️encode-owner/🔣️.json")).unwrap();let text=neutral["copy"].as_str().unwrap();let mut recipient=NativeDecodeRetirementRecipient::new();let ledger=std::sync::atomic::AtomicUsize::new(0);let mut allocation=|request:NativeDecodeAllocation|{assert_eq!(request.owned_bytes,ledger.load(std::sync::atomic::Ordering::Relaxed));ledger.store(request.next_owned_bytes,std::sync::atomic::Ordering::Relaxed);Ok(())};let mut progress=|_|true;let mut native=NativeDecodeControl::new_forwarded(neutral["nativeMaximumBytes"].as_u64().unwrap()as usize,&mut progress,&mut allocation);native.install_retirement_recipient(&mut recipient).unwrap();let mut grant=fixture_grant();grant.maximum_release_bytes=0;let mut owner=super::NativeSnapshotDecodeOwner::new(&mut native,grant);assert!(owner.receive::<Vec<String>,String,_>(&mut |intermediate,native,_body|super::native_snapshot_turn(|work|{work.performed();*intermediate=Some(native.allocate_vec(1)?);work.performed();intermediate.as_mut().unwrap().push(native.copy_text(text)?);work.performed();Ok(native.copy_text(text)?)})).result.is_err());drop(owner);assert!(native.has_retirement_owner());let before=native.owned_bytes();while native.has_retirement_owner(){native.close_retirement_recipient(fixture_grant()).result.unwrap();assert_eq!(native.owned_bytes(),ledger.load(std::sync::atomic::Ordering::Relaxed));}assert!(native.owned_bytes()>before);drop(native);assert!(!recipient.has_owner());
 }
 
 #[test]
@@ -100,13 +100,13 @@ fn native_snapshot_cursor_retains_paid_original_on_cancellation_and_commits_same
  for cancelled in [false,true]{
   let live=Cell::new(true);let mut callback=|_|live.get();let mut recipient=NativeEncodeRetirementRecipient::new();let mut native=NativeEncodeControl::new(1<<30,&mut callback);native.install_retirement_recipient(&mut recipient).unwrap();
   let mut cursor=Some(Vec::<u8>::new());let grant=fixture_grant();let mut phase=false;let mut pointer=std::ptr::null();let mut owner=super::NativeSnapshotEncodeOwner::new(&mut native,grant);
-  let result=owner.drive_cursor(&mut cursor,|cursor,native,remaining|fixture_cursor_turn(|work|{
+  let result=owner.drive_cursor(&mut cursor,&mut |cursor,native,remaining|fixture_cursor_turn(|work|{
    if !phase{
     if remaining.maximum_copy_bytes<3||remaining.maximum_capacity_bytes<3{return(Err(semio_framework_value::ValueError::literal(ValueRefusalKind::OwnershipLimit,"test cursor physical frontier denied")),Default::default())}
     work.performed();match native.allocate_vec::<u8>(3){Ok(bytes)=>{*cursor=bytes;cursor.extend_from_slice("雪".as_bytes());pointer=cursor.as_ptr();phase=true;live.set(!cancelled);(Ok(None),RetainedCloneProgress{copied_items:1,copied_bytes:3,retained_capacity_bytes:cursor.capacity(),released_bytes:0})},Err(error)=>(Err(error),Default::default())}
    }else{work.performed();(Ok(Some(std::mem::take(cursor))),RetainedCloneProgress{copied_items:1,..Default::default()})}
   }));
-  assert!(result.work>=1);let progress=owner.progress();assert_eq!(owner.grant(),grant);assert!(progress.fits(grant));assert!(progress.retained_capacity_bytes>=3);let neutral:serde_json::Value=serde_json::from_str(include_str!("../🛫️snapshot/🧪️tests/🧫️fixtures/🎟️encode-owner/🔣️.json")).unwrap();let copied=&neutral["producer"]["cursorRetirementCopy"];let header=copied["headers"].as_array().unwrap().iter().find(|row|row["nativeWordBytes"].as_u64().unwrap()as usize==std::mem::size_of::<usize>()).unwrap();assert_eq!(std::mem::size_of::<Option<Vec<u8>>>(),header["headerBytes"].as_u64().unwrap()as usize);assert_eq!(copied["payloadBytes"].as_u64().unwrap()+(copied["intermediateHeaderCount"].as_u64().unwrap()+copied["publicationHeaderCount"].as_u64().unwrap())*header["headerBytes"].as_u64().unwrap(),header["aggregateBytes"].as_u64().unwrap());assert_eq!(progress.copied_bytes,if cancelled{copied["cancelledBytes"].as_u64().unwrap()}else{header["aggregateBytes"].as_u64().unwrap()}as usize);drop(owner);assert!(cursor.is_none());
+  assert!(result.work>=1);let progress=owner.progress();assert_eq!(owner.grant(),grant);assert!(progress.fits(grant));assert!(progress.retained_capacity_bytes>=3);let neutral:serde_json::Value=serde_json::from_str(include_str!("../🛫️snapshot/🧪️tests/🧫️fixtures/🎟️encode-owner/🔣️.json")).unwrap();let copied=&neutral["producer"]["cursorRetirementCopy"];let header=copied["headers"].as_array().unwrap().iter().find(|row|row["nativeWordBytes"].as_u64().unwrap()as usize==std::mem::size_of::<usize>()).unwrap();assert_eq!(std::mem::size_of::<Option<Vec<u8>>>(),header["headerBytes"].as_u64().unwrap()as usize);assert_eq!(copied["payloadBytes"].as_u64().unwrap()+(copied["intermediateHeaderCount"].as_u64().unwrap()+copied["publicationHeaderCount"].as_u64().unwrap())*header["headerBytes"].as_u64().unwrap(),header["aggregateBytes"].as_u64().unwrap());assert_eq!(progress.copied_bytes,if cancelled{copied["cancelledBytes"].as_u64().unwrap()+copied["cancelledHeaderCount"].as_u64().unwrap()*header["headerBytes"].as_u64().unwrap()}else{header["aggregateBytes"].as_u64().unwrap()}as usize);drop(owner);assert!(cursor.is_none());
   if cancelled{let error=result.result.unwrap_err();assert_eq!(error.kind(),ValueRefusalKind::Canceled);assert_eq!(error.retained_progress(),progress);assert!(native.has_retirement_owner());live.set(true);while native.has_retirement_owner(){native.close_retirement_recipient(grant).result.unwrap();}}
   else{let output=result.result.unwrap();assert_eq!(output.as_ptr(),pointer);assert_eq!(serde_json::to_value(&output).unwrap(),serde_json::to_value("雪".as_bytes()).unwrap());assert!(!native.has_retirement_owner());let mut retirement=semio_framework_value::retirement::controlled::ControlledRetirement::new(output).unwrap_or_else(|_|unreachable!());while !retirement.terminal_is_empty(){retirement.step(grant).unwrap();}}
   drop(native);assert!(!recipient.has_owner());
@@ -117,9 +117,9 @@ fn native_snapshot_cursor_retains_paid_original_on_cancellation_and_commits_same
 fn original_io_snapshot_receiving_wallet_survives_short_owner_reborrows(){
  use semio_framework_value::native_encoding::NativeEncodeRetirementRecipient;
  let neutral:serde_json::Value=serde_json::from_str(include_str!("../🛫️snapshot/🧪️tests/🧫️fixtures/🎟️encode-owner/🔣️.json")).unwrap();let grant=fixture_grant();let text=neutral["copy"].as_str().unwrap();let mut callback=|_|true;let mut recipient=NativeEncodeRetirementRecipient::new();let mut native=NativeEncodeControl::new(neutral["nativeMaximumBytes"].as_u64().unwrap()as usize,&mut callback);native.install_retirement_recipient(&mut recipient).unwrap();let mut io=IoRunControl::encoding(&mut native,grant);
- let first={let mut owner=io.snapshot_encode().unwrap();assert_eq!(serde_json::to_value(owner.receive::<Vec<String>,String,_>(|intermediate,native,_body|super::native_snapshot_turn(|work|{work.performed();*intermediate=Some(native.allocate_vec(1)?);work.performed();intermediate.as_mut().unwrap().push(native.copy_text(text)?);work.performed();Ok(native.copy_text(text)?)})).result.unwrap()).unwrap(),serde_json::to_value(text).unwrap());let progress=owner.progress();assert!(progress.copied_items>0);assert!(progress.retained_capacity_bytes>0);assert!(progress.released_bytes>0);progress};
+ let first={let mut owner=io.snapshot_encode().unwrap();assert_eq!(serde_json::to_value(owner.receive::<Vec<String>,String,_>(&mut |intermediate,native,_body|super::native_snapshot_turn(|work|{work.performed();*intermediate=Some(native.allocate_vec(1)?);work.performed();intermediate.as_mut().unwrap().push(native.copy_text(text)?);work.performed();Ok(native.copy_text(text)?)})).result.unwrap()).unwrap(),serde_json::to_value(text).unwrap());let progress=owner.progress();assert!(progress.copied_items>0);assert!(progress.retained_capacity_bytes>0);assert!(progress.released_bytes>0);progress};
  let mut owner=io.snapshot_encode().unwrap();assert_eq!(owner.progress(),first);assert_eq!(owner.grant(),grant);let remaining=owner.remaining_grant();assert_eq!(remaining.maximum_items,grant.maximum_items-first.copied_items);assert_eq!(remaining.maximum_capacity_bytes,grant.maximum_capacity_bytes-first.retained_capacity_bytes);assert_eq!(remaining.maximum_release_bytes,grant.maximum_release_bytes-first.released_bytes);
- assert_eq!(owner.receive::<Vec<String>,String,_>(|intermediate,native,_body|super::native_snapshot_turn(|work|{work.performed();*intermediate=Some(native.allocate_vec(1)?);work.performed();intermediate.as_mut().unwrap().push(native.copy_text(text)?);work.performed();Ok(native.copy_text(text)?)})).result.unwrap(),text);assert_eq!(owner.progress(),first.checked_add(first).unwrap());drop(owner);drop(io);assert!(!native.has_retirement_owner());drop(native);assert!(!recipient.has_owner());
+ assert_eq!(owner.receive::<Vec<String>,String,_>(&mut |intermediate,native,_body|super::native_snapshot_turn(|work|{work.performed();*intermediate=Some(native.allocate_vec(1)?);work.performed();intermediate.as_mut().unwrap().push(native.copy_text(text)?);work.performed();Ok(native.copy_text(text)?)})).result.unwrap(),text);assert_eq!(owner.progress(),first.checked_add(first).unwrap());drop(owner);drop(io);assert!(!native.has_retirement_owner());drop(native);assert!(!recipient.has_owner());
 }
 
 #[test]
@@ -136,8 +136,8 @@ fn original_nested_receiving_preserves_actual_child_in_one_original_recipient(){
  macro_rules! receiving{($control:path,$recipient:path,$request:path,$owner:path,$copy:expr)=>{{for case in neutral["cases"].as_array().unwrap(){
   let live=Cell::new(true);let ledger=AtomicUsize::new(0);let events=AtomicUsize::new(0);let mut allocation=|request:$request|{assert_eq!(request.owned_bytes,ledger.load(Ordering::Relaxed));ledger.store(request.next_owned_bytes,Ordering::Relaxed);events.fetch_add(1,Ordering::Relaxed);Ok(())};let mut callback=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|{if case["cancelChild"].as_bool().unwrap()&&event.total==text.len()&&event.completed==text.len(){live.set(false)}live.get()};
   let mut recipient=<$recipient>::new();let mut native=<$control>::new_forwarded(maximum,&mut callback,&mut allocation);native.install_retirement_recipient(&mut recipient).unwrap();let mut owner=<$owner>::new(&mut native,grant);let pointer=Cell::new(std::ptr::null::<u8>());
-  let(result,born,released)=semio_framework_trace_memory_testing::observe_backing(||owner.receive_nested::<String,String,_>(|parent,original|super::native_snapshot_turn(|work|{
-   let scoped_events=Cell::new(0usize);let mut scoped=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|{assert_eq!(event.owned_bytes,ledger.load(Ordering::Relaxed));scoped_events.set(scoped_events.get()+1);live.get()};let child=work.take(original.scoped_native(maximum,&mut scoped,|original|original.receive::<String,String,_>(|slot,native,body|super::native_snapshot_turn(|work|{body.admit_frontier(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:text.len(),maximum_capacity_bytes:text.len(),maximum_release_bytes:0,maximum_depth:1})?;*slot=Some(String::new());work.performed();let copied=($copy)(text,slot.as_mut().unwrap(),native);let actual=slot.as_ref().unwrap();body.record_progress(RetainedCloneProgress{copied_items:1,copied_bytes:actual.len(),retained_capacity_bytes:actual.capacity(),released_bytes:0})?;copied?;pointer.set(actual.as_ptr());Ok(slot.take().unwrap())}))))?;assert!(scoped_events.get()>0);
+  let(result,born,released)=semio_framework_trace_memory_testing::observe_backing(||owner.receive_nested::<String,String,_>(&mut |parent,original|super::native_snapshot_turn(|work|{
+   let scoped_events=Cell::new(0usize);let mut scoped=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|{assert_eq!(event.owned_bytes,ledger.load(Ordering::Relaxed));scoped_events.set(scoped_events.get()+1);live.get()};let child=work.take(original.scoped_native(maximum,&mut scoped,|original|original.receive::<String,String,_>(&mut |slot,native,body|super::native_snapshot_turn(|work|{body.admit_frontier(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:text.len(),maximum_capacity_bytes:text.len(),maximum_release_bytes:0,maximum_depth:1})?;*slot=Some(String::new());work.performed();let copied=($copy)(text,slot.as_mut().unwrap(),native);let actual=slot.as_ref().unwrap();body.record_progress(RetainedCloneProgress{copied_items:1,copied_bytes:actual.len(),retained_capacity_bytes:actual.capacity(),released_bytes:0})?;copied?;pointer.set(actual.as_ptr());Ok(slot.take().unwrap())}))))?;assert!(scoped_events.get()>0);
    *parent=Some(child);if case["cancelParent"].as_bool().unwrap(){live.set(false);{work.performed();original.native().checkpoint()}?;}Ok(parent.take().unwrap())
   })));assert!(result.work>=1);let progress=owner.progress();assert!(progress.fits(grant));assert_eq!(owner.grant(),grant);drop(owner);assert!(born>=text.len());assert_eq!(native.owned_bytes(),ledger.load(Ordering::Relaxed));
   if case["published"].as_bool().unwrap(){let output=result.result.unwrap();assert_eq!(output.as_ptr(),pointer.get());assert_eq!(serde_json::to_value(&output).unwrap(),serde_json::to_value(text).unwrap());assert!(!native.has_retirement_owner());let mut returned=semio_framework_value::retirement::controlled::ControlledRetirement::new(output).unwrap();while !returned.terminal_is_empty(){let capacity=returned.next_capacity_byte_demand(grant.maximum_copy_bytes).unwrap();native.checkpoint().unwrap();native.charge(capacity).unwrap();returned.step(grant).unwrap();}}
@@ -152,7 +152,7 @@ fn original_nested_cursor_receiving_keeps_materialized_child_and_original_port()
  use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,ValueError};use std::sync::atomic::{AtomicUsize,Ordering};
  let neutral:serde_json::Value=serde_json::from_str(include_str!("../🛫️snapshot/🧪️tests/🧫️fixtures/🪆️receiving/🔣️.json")).unwrap();let text=neutral["text"].as_str().unwrap();let grant:RetainedCloneGrant=serde_json::from_value(neutral["grant"].clone()).unwrap();let maximum=neutral["nativeMaximumBytes"].as_u64().unwrap()as usize;
  for case in neutral["cases"].as_array().unwrap(){let live=Cell::new(true);let ledger=AtomicUsize::new(0);let mut allocation=|request:semio_framework_value::native_encoding::NativeEncodeAllocation|{assert_eq!(request.owned_bytes,ledger.load(Ordering::Relaxed));ledger.store(request.next_owned_bytes,Ordering::Relaxed);Ok(())};let mut callback=|event:semio_framework_value::native_encoding::NativeEncodeProgress|{if case["cancelChild"].as_bool().unwrap()&&event.total==text.len()&&event.completed==text.len(){live.set(false)}live.get()};let mut recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut native=semio_framework_value::NativeEncodeControl::new_forwarded(maximum,&mut callback,&mut allocation);native.install_retirement_recipient(&mut recipient).unwrap();let mut owner=super::NativeSnapshotEncodeOwner::new(&mut native,grant);let pointer=Cell::new(std::ptr::null::<u8>());
- let(result,born,released)=semio_framework_trace_memory_testing::observe_backing(||owner.receive_nested::<String,String,_>(|parent,original|super::native_snapshot_turn(|work|{let mut cursor=Some(String::new());let output=work.take(original.drive_cursor(&mut cursor,|cursor,native,remaining|fixture_cursor_turn(|work|{let mut progress=RetainedCloneProgress::default();let result=native.scoped_stage(|native|{if remaining.maximum_items==0||remaining.maximum_copy_bytes<text.len()||remaining.maximum_capacity_bytes<text.len(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original cursor fixture producer admission"))}work.performed();native.begin_stage(text.len())?;work.performed();native.charge(text.len())?;work.performed();cursor.try_reserve_exact(text.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original cursor fixture allocation"))?;cursor.push_str(text);progress=RetainedCloneProgress{copied_items:1,copied_bytes:cursor.len(),retained_capacity_bytes:cursor.capacity(),released_bytes:0};work.performed();native.advance(text.len())?;pointer.set(cursor.as_ptr());Ok(Some(std::mem::take(cursor)))});(result,progress)})))?;assert!(cursor.is_none());*parent=Some(output);if case["cancelParent"].as_bool().unwrap(){live.set(false);{work.performed();original.native().checkpoint()}?}Ok(parent.take().unwrap())})));let progress=owner.progress();drop(owner);assert_eq!(native.owned_bytes(),ledger.load(Ordering::Relaxed));
+ let(result,born,released)=semio_framework_trace_memory_testing::observe_backing(||owner.receive_nested::<String,String,_>(&mut |parent,original|super::native_snapshot_turn(|work|{let mut cursor=Some(String::new());let output=work.take(original.drive_cursor(&mut cursor,&mut |cursor,native,remaining|fixture_cursor_turn(|work|{let mut progress=RetainedCloneProgress::default();let result=native.scoped_stage(|native|{if remaining.maximum_items==0||remaining.maximum_copy_bytes<text.len()||remaining.maximum_capacity_bytes<text.len(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original cursor fixture producer admission"))}work.performed();native.begin_stage(text.len())?;work.performed();native.charge(text.len())?;work.performed();cursor.try_reserve_exact(text.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original cursor fixture allocation"))?;cursor.push_str(text);progress=RetainedCloneProgress{copied_items:1,copied_bytes:cursor.len(),retained_capacity_bytes:cursor.capacity(),released_bytes:0};work.performed();native.advance(text.len())?;pointer.set(cursor.as_ptr());Ok(Some(std::mem::take(cursor)))});(result,progress)})))?;assert!(cursor.is_none());*parent=Some(output);if case["cancelParent"].as_bool().unwrap(){live.set(false);{work.performed();original.native().checkpoint()}?}Ok(parent.take().unwrap())})));let progress=owner.progress();drop(owner);assert_eq!(native.owned_bytes(),ledger.load(Ordering::Relaxed));
  if result.result.is_err(){assert_eq!(released,progress.released_bytes);live.set(true);while native.has_retirement_owner(){native.close_retirement_recipient(grant).result.unwrap();assert_eq!(native.owned_bytes(),ledger.load(Ordering::Relaxed));}}
  if case["published"].as_bool().unwrap(){let output=result.result.unwrap();assert_eq!(output.as_ptr(),pointer.get());assert_eq!(serde_json::to_value(&output).unwrap(),serde_json::to_value(text).unwrap());let mut returned=semio_framework_value::retirement::controlled::ControlledRetirement::new(output).unwrap();while !returned.terminal_is_empty(){let capacity=returned.next_capacity_byte_demand(grant.maximum_copy_bytes).unwrap();native.checkpoint().unwrap();native.charge(capacity).unwrap();returned.step(grant).unwrap();}}else{assert_eq!(result.result.unwrap_err().kind(),ValueRefusalKind::Canceled);assert!(born>=text.len());}
  drop(native);assert!(!recipient.has_owner());}
@@ -220,17 +220,17 @@ fn original_typed_decode_cursor_retains_canceled_backing_and_exact_supplied_rece
  let law:serde_json::Value=serde_json::from_str(include_str!("../🛫️snapshot/🧪️tests/🧫️fixtures/🛬️cursor.json")).unwrap();let payload=law["payload"].as_str().unwrap().as_bytes();let grant:RetainedCloneGrant=serde_json::from_value(law["grant"].clone()).unwrap();let maximum=law["nativeMaximumBytes"].as_u64().unwrap()as usize;
  for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_capacity_bytes:0,..grant},RetainedCloneGrant{maximum_depth:1,..grant}]{
   let mut cursor=Some(payload.to_vec());let original=(cursor.as_ref().unwrap().as_ptr(),cursor.as_ref().unwrap().len(),cursor.as_ref().unwrap().capacity());let calls=Cell::new(0);let mut callback=|_|{calls.set(calls.get()+1);true};let mut recipient=NativeDecodeRetirementRecipient::new();let mut native=NativeDecodeControl::new(maximum,&mut callback);native.install_retirement_recipient(&mut recipient).unwrap();let mut owner=super::NativeSnapshotDecodeOwner::new(&mut native,denied);
-  let(result,born,released)=semio_framework_trace_memory_testing::observe_backing(||owner.drive_cursor::<Vec<u8>,Vec<u8>,semio_framework_value::ValueError>(&mut cursor,|_,_,_|panic!("denied frame must not invoke producer")));assert_eq!(result.work,0);assert!(result.result.is_err());assert_eq!((born,released),(0,0));assert_eq!(owner.progress(),RetainedCloneProgress::default());drop(owner);assert_eq!((cursor.as_ref().unwrap().as_ptr(),cursor.as_ref().unwrap().len(),cursor.as_ref().unwrap().capacity()),original);assert_eq!((native.owned_bytes(),calls.get()),(0,0));assert!(!native.has_retirement_owner());
+  let(result,born,released)=semio_framework_trace_memory_testing::observe_backing(||owner.drive_cursor::<Vec<u8>,Vec<u8>,semio_framework_value::ValueError>(&mut cursor,&mut |_,_,_|panic!("denied frame must not invoke producer")));assert_eq!(result.work,0);assert!(result.result.is_err());assert_eq!((born,released),(0,0));assert_eq!(owner.progress(),RetainedCloneProgress::default());drop(owner);assert_eq!((cursor.as_ref().unwrap().as_ptr(),cursor.as_ref().unwrap().len(),cursor.as_ref().unwrap().capacity()),original);assert_eq!((native.owned_bytes(),calls.get()),(0,0));assert!(!native.has_retirement_owner());
  }
  for cut in law["cancelCuts"].as_array().unwrap().iter().map(|value|Some(value.as_u64().unwrap()as usize)).chain(std::iter::once(None)){
   let live=Cell::new(true);let calls=Cell::new(0usize);let mut callback=|_|{let turn=calls.get();calls.set(turn+1);if cut==Some(turn){live.set(false)}live.get()};let mut recipient=NativeDecodeRetirementRecipient::new();let mut native=NativeDecodeControl::new(maximum,&mut callback);native.install_retirement_recipient(&mut recipient).unwrap();let mut owner=super::NativeSnapshotDecodeOwner::new(&mut native,grant);let mut cursor=Some(Vec::<u8>::new());let mut phase=false;let pointer=Cell::new(std::ptr::null());
-  let(result,born,released)=semio_framework_trace_memory_testing::observe_backing(||owner.drive_cursor(&mut cursor,|cursor,native,remaining|fixture_cursor_turn(|work|{
+  let(result,born,released)=semio_framework_trace_memory_testing::observe_backing(||owner.drive_cursor(&mut cursor,&mut |cursor,native,remaining|fixture_cursor_turn(|work|{
    if phase{work.performed();return(Ok(Some(std::mem::take(cursor))),RetainedCloneProgress{copied_items:1,..Default::default()})}
    if remaining.maximum_items==0||remaining.maximum_depth==0||remaining.maximum_copy_bytes<payload.len()||remaining.maximum_capacity_bytes<payload.len(){return(Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original decoder cursor fixture admission")),Default::default())}
    work.performed();let result=native.copy_bytes_into(payload,cursor);let progress=RetainedCloneProgress{copied_items:usize::from(result.is_ok()||cursor.capacity()>0),copied_bytes:cursor.len(),retained_capacity_bytes:cursor.capacity(),released_bytes:0};pointer.set(cursor.as_ptr());phase=result.is_ok();(result.map(|_|None),progress)
   })));let progress=owner.progress();assert!(progress.fits(grant));assert_eq!((born,released),(progress.retained_capacity_bytes,progress.released_bytes));drop(owner);let mut allocated=born;let mut retired=released;
   match result.result{
-   Ok(output)=>{assert!(cut.is_none()||live.get());assert!(cursor.is_none());assert_eq!(output.as_ptr(),pointer.get());assert_eq!(serde_json::to_value(&output).unwrap(),serde_json::to_value(payload).unwrap());let transfers=&law["headerTransfers"];assert_eq!(transfers["originalPayloadCopies"].as_u64().unwrap(),1);let intermediate=transfers["intermediateNativeWords"].as_u64().unwrap()as usize*std::mem::size_of::<usize>();let publication=transfers["publicationNativeWords"].as_u64().unwrap()as usize*std::mem::size_of::<usize>();assert_eq!(intermediate,std::mem::size_of::<Option<Vec<u8>>>());assert_eq!(publication,std::mem::size_of::<Option<Vec<u8>>>());assert_eq!(progress.copied_bytes,payload.len()+intermediate+publication);assert!(!native.has_retirement_owner());let(owner,birth,release)=semio_framework_trace_memory_testing::observe_backing(||ControlledRetirement::new(output));assert_eq!(release,0);allocated+=birth;let mut output=owner.unwrap_or_else(|_|panic!("intrinsic output supports controlled retirement"));for _ in 0..grant.maximum_items{if output.terminal_is_empty(){break;}let(step,birth,release)=semio_framework_trace_memory_testing::observe_backing(||output.step(grant).unwrap());assert_eq!((birth,release),(step.progress().retained_capacity_bytes,step.progress().released_bytes));allocated+=birth;retired+=release;}assert!(output.terminal_is_empty());assert_eq!(semio_framework_trace_memory_testing::observe_backing(||drop(output)),((),0,0));}
+   Ok(output)=>{assert!(cut.is_none()||live.get());assert!(cursor.is_none());assert_eq!(output.as_ptr(),pointer.get());assert_eq!(serde_json::to_value(&output).unwrap(),serde_json::to_value(payload).unwrap());let transfers=&law["headerTransfers"];assert_eq!(transfers["originalPayloadCopies"].as_u64().unwrap(),1);let intermediate=transfers["intermediateNativeWords"].as_u64().unwrap()as usize*std::mem::size_of::<usize>();let publication=transfers["publicationNativeWords"].as_u64().unwrap()as usize*std::mem::size_of::<usize>();assert_eq!(intermediate,std::mem::size_of::<Option<Vec<u8>>>());assert_eq!(publication,std::mem::size_of::<Option<Vec<u8>>>());assert_eq!(progress.copied_bytes,payload.len()+2*intermediate+publication);assert!(!native.has_retirement_owner());let(owner,birth,release)=semio_framework_trace_memory_testing::observe_backing(||ControlledRetirement::new(output));assert_eq!(release,0);allocated+=birth;let mut output=owner.unwrap_or_else(|_|panic!("intrinsic output supports controlled retirement"));for _ in 0..grant.maximum_items{if output.terminal_is_empty(){break;}let(step,birth,release)=semio_framework_trace_memory_testing::observe_backing(||output.step(grant).unwrap());assert_eq!((birth,release),(step.progress().retained_capacity_bytes,step.progress().released_bytes));allocated+=birth;retired+=release;}assert!(output.terminal_is_empty());assert_eq!(semio_framework_trace_memory_testing::observe_backing(||drop(output)),((),0,0));}
    Err(error)=>{assert_eq!(error.kind(),ValueRefusalKind::Canceled);assert_eq!(error.retained_progress(),progress);if cursor.is_some(){assert_eq!(born,0);assert!(!native.has_retirement_owner());}else{assert!(native.has_retirement_owner());}live.set(true);for _ in 0..grant.maximum_items{if !native.has_retirement_owner(){break;}let(step,birth,release)=semio_framework_trace_memory_testing::observe_backing(||native.close_retirement_recipient(grant).result.unwrap());assert_eq!((birth,release),(step.progress().retained_capacity_bytes,step.progress().released_bytes));allocated+=birth;retired+=release;}assert!(!native.has_retirement_owner());}
   }
   assert_eq!(allocated,retired);drop(native);assert!(!recipient.has_owner());
@@ -241,3 +241,242 @@ fn original_typed_decode_cursor_retains_canceled_backing_and_exact_supplied_rece
 mod rich_drive_tests;
 
 fn fixture_cursor_turn<T>(operation:impl FnOnce(&mut super::NativeSnapshotWork)->(Result<T,semio_framework_value::ValueError>,semio_framework_value::RetainedCloneProgress))->semio_framework_value::RetainedWorkOutcome<(T,semio_framework_value::RetainedCloneProgress),super::NativeSnapshotFailure>{super::native_snapshot_turn(|work|{let(result,progress)=operation(work);result.map(|value|(value,progress)).map_err(|error|error.with_retained_progress(progress).into())})}
+
+#[path="🧾️receipt/🦀️.rs"]
+mod body_receipt_tests;
+
+
+#[test]
+fn encoder_effect_quote_posts_after_mutation_even_when_work_and_receipt_refuse(){
+ use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,native_encoding::{NativeEncodeWorkRecipient,NativeEncodeConstructionRecipient}};
+ struct Work(u64);
+ impl NativeEncodeWorkRecipient for Work{
+  fn admits(&mut self,_:u64,_:u64)->Result<bool,ValueError>{Ok(true)}
+  fn committed(&mut self,actual:u64)->Result<(),ValueError>{self.0+=actual;Err(ValueError::literal(ValueRefusalKind::Canceled,"work refused"))}
+ }
+ struct Physical{grant:RetainedCloneGrant,submitted:RetainedCloneProgress}
+ impl NativeEncodeConstructionRecipient for Physical{
+  fn submitted(&self)->RetainedCloneProgress{self.submitted}
+  fn grant(&mut self,_:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{Ok(self.grant)}
+  fn accept(&mut self,grant:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),ValueError>{assert_eq!(grant,self.grant);self.submitted=self.submitted.checked_add(progress)?;Err(ValueError::literal(ValueRefusalKind::Canceled,"receipt refused"))}
+ }
+ let grant=fixture_grant();let mut recipient_grant=grant;recipient_grant.maximum_copy_bytes+=1;let mut physical=Physical{grant:recipient_grant,submitted:Default::default()};let mut work=Work(0);let mut observe=|_|true;let mut native=NativeEncodeControl::new(64,&mut observe);let mut body=super::NativeSnapshotBodyWallet::new(grant);let mut slot=0u8;
+ let turn=native.with_work_recipient(&mut work,|native|native.with_construction_recipient(&mut physical,|native|{
+  let quote=super::NativeSnapshotEncodeEffectQuote::encode(&mut body,native,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1,maximum_depth:1,..Default::default()}).unwrap();slot=7;Ok::<_,ValueError>(quote.post_encode(RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()},Ok(())))
+ })).unwrap();
+ assert_eq!(work.0,native.actual_work());assert_eq!(slot,7);assert_eq!(turn.work,1);let failure=turn.result.unwrap_err();assert_eq!(failure.work_refusal().unwrap().message.as_ref(),"work refused");assert_eq!(failure.receipt_refusal().unwrap().message.as_ref(),"receipt refused");assert_eq!(physical.submitted.copied_bytes,1);assert_eq!(body.progress().copied_bytes,1);
+}
+
+#[test]
+fn decoder_effect_quote_denial_precedes_mutation_and_refusal_retains_effect(){
+ use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand};
+ use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,NativeDecodeWorkRecipient};
+ struct Work(bool);
+ impl NativeDecodeWorkRecipient for Work{fn admits(&mut self,_:u64,_:u64)->Result<bool,ValueError>{Ok(self.0)}}
+ struct Physical{grant:RetainedCloneGrant,submitted:RetainedCloneProgress}
+ impl NativeDecodeConstructionRecipient for Physical{
+  fn submitted(&self)->RetainedCloneProgress{self.submitted}
+  fn grant(&mut self,_:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{Ok(self.grant)}
+  fn accept(&mut self,_:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),ValueError>{self.submitted=self.submitted.checked_add(progress)?;Err(ValueError::literal(ValueRefusalKind::Canceled,"receipt refused"))}
+ }
+ for mode in 0..3{
+  let admitted=mode==2;let grant=fixture_grant();let mut recipient_grant=grant;if mode==0{recipient_grant.maximum_items=0}let mut physical=Physical{grant:recipient_grant,submitted:Default::default()};let mut work=Work(mode!=1);let mut observe=|_|true;let mut native=NativeDecodeControl::new(64,&mut observe);let mut body=super::NativeSnapshotBodyWallet::new(grant);let mut slot=0u8;
+  let turn=native.with_work_recipient(&mut work,|native|native.with_construction_recipient(&mut physical,|native|{
+   let quote=super::NativeSnapshotDecodeEffectQuote::decode(&mut body,native,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1,maximum_depth:1,..Default::default()});
+   match quote{Err(error)=>Ok::<_,ValueError>(semio_framework_value::RetainedWorkOutcome{work:0,result:Err(error)}),Ok(quote)=>{slot=7;Ok(quote.post_decode(RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()},Ok(())))}}
+  })).unwrap();
+  assert_eq!(turn.work,u64::from(admitted));assert_eq!(slot,if admitted{7}else{0});let failure=turn.result.unwrap_err();assert_eq!(physical.submitted.copied_bytes,usize::from(admitted));assert_eq!(body.progress().copied_bytes,usize::from(admitted));if admitted{assert_eq!(failure.receipt_refusal().unwrap().message.as_ref(),"receipt refused");}
+ }
+}
+
+#[test]
+fn cursor_handoff_quote_denial_keeps_the_original_cursor_with_its_caller(){
+ use semio_framework_value::{ValueError,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand};
+ use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,NativeDecodeWorkRecipient,NativeDecodeRetirementRecipient};
+ struct Work;
+ impl NativeDecodeWorkRecipient for Work{fn admits(&mut self,_:u64,_:u64)->Result<bool,ValueError>{Ok(true)}}
+ struct Physical{grant:RetainedCloneGrant,submitted:RetainedCloneProgress,quotes:usize}
+ impl NativeDecodeConstructionRecipient for Physical{
+  fn submitted(&self)->RetainedCloneProgress{self.submitted}
+  fn grant(&mut self,_:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{self.quotes+=1;let mut grant=self.grant;if self.quotes>1{grant.maximum_copy_bytes=0}Ok(grant)}
+  fn accept(&mut self,_:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),ValueError>{self.submitted=self.submitted.checked_add(progress)?;Ok(())}
+ }
+ let grant=fixture_grant();let mut retirement=NativeDecodeRetirementRecipient::new();let mut observe=|_|true;let mut native=NativeDecodeControl::new(grant.maximum_capacity_bytes,&mut observe);native.install_retirement_recipient(&mut retirement).unwrap();let mut work=Work;let mut physical=Physical{grant,submitted:Default::default(),quotes:0};let mut cursor=Some(vec![1u8,2,3]);let pointer=cursor.as_ref().unwrap().as_ptr();
+ native.with_work_recipient(&mut work,|native|native.with_construction_recipient(&mut physical,|native|{
+  let mut owner=super::NativeSnapshotDecodeOwner::new(native,grant);let mut output=None;let turn=owner.drive_cursor::<Vec<u8>,Vec<u8>,ValueError>(&mut cursor,&mut output,&mut |_,_,_,_|panic!("denied cursor handoff cannot call the cursor"));assert_eq!(turn.work,1);assert!(turn.result.is_err());drop(owner);assert_eq!(cursor.as_ref().unwrap().as_ptr(),pointer);assert!(native.has_retirement_owner());
+  while native.has_retirement_owner(){native.close_retirement_recipient(grant).result.unwrap();}Ok::<_,ValueError>(())
+ })).unwrap();assert_eq!(physical.quotes,2);assert_eq!(physical.submitted.copied_items,1);
+}
+
+#[test]
+fn cursor_handoff_receipt_refusal_keeps_the_moved_original_in_the_retained_frame(){
+ use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand};
+ use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,NativeDecodeWorkRecipient,NativeDecodeRetirementRecipient};
+ struct Work;
+ impl NativeDecodeWorkRecipient for Work{fn admits(&mut self,_:u64,_:u64)->Result<bool,ValueError>{Ok(true)}}
+ struct Physical{grant:RetainedCloneGrant,submitted:RetainedCloneProgress,receipts:usize}
+ impl NativeDecodeConstructionRecipient for Physical{
+  fn submitted(&self)->RetainedCloneProgress{self.submitted}
+  fn grant(&mut self,_:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{Ok(self.grant)}
+  fn accept(&mut self,_:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),ValueError>{self.submitted=self.submitted.checked_add(progress)?;self.receipts+=1;if self.receipts==2{Err(ValueError::literal(ValueRefusalKind::Canceled,"cursor receipt refused"))}else{Ok(())}}
+ }
+ let grant=fixture_grant();let mut retirement=NativeDecodeRetirementRecipient::new();let mut observe=|_|true;let mut native=NativeDecodeControl::new(grant.maximum_capacity_bytes,&mut observe);native.install_retirement_recipient(&mut retirement).unwrap();let mut work=Work;let mut physical=Physical{grant,submitted:Default::default(),receipts:0};let mut cursor=Some(vec![1u8,2,3]);
+ native.with_work_recipient(&mut work,|native|native.with_construction_recipient(&mut physical,|native|{
+  let mut owner=super::NativeSnapshotDecodeOwner::new(native,grant);let mut output=None;let turn=owner.drive_cursor::<Vec<u8>,Vec<u8>,ValueError>(&mut cursor,&mut output,&mut |_,_,_,_|panic!("refused cursor receipt cannot call the cursor"));assert_eq!(turn.work,2);let failure=turn.result.unwrap_err();assert_eq!(failure.receipt_refusal().unwrap().message.as_ref(),"cursor receipt refused");assert_eq!(owner.progress().copied_bytes,std::mem::size_of::<Option<Vec<u8>>>());drop(owner);assert!(cursor.is_none());assert!(native.has_retirement_owner());
+  while native.has_retirement_owner(){native.close_retirement_recipient(grant).result.unwrap();}Ok::<_,ValueError>(())
+ })).unwrap();assert_eq!(physical.receipts,2);assert_eq!(physical.submitted.copied_bytes,std::mem::size_of::<Option<Vec<u8>>>());
+}
+
+#[test]
+fn frame_work_denial_performs_no_allocation_or_callback(){
+ use semio_framework_value::{ValueError,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand};
+ use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,NativeDecodeWorkRecipient,NativeDecodeRetirementRecipient};
+ struct Work;
+ impl NativeDecodeWorkRecipient for Work{fn admits(&mut self,_:u64,_:u64)->Result<bool,ValueError>{Ok(false)}}
+ struct Physical{grant:RetainedCloneGrant,submitted:RetainedCloneProgress}
+ impl NativeDecodeConstructionRecipient for Physical{
+  fn submitted(&self)->RetainedCloneProgress{self.submitted}
+  fn grant(&mut self,_:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{Ok(self.grant)}
+  fn accept(&mut self,_:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),ValueError>{self.submitted=self.submitted.checked_add(progress)?;panic!("denied frame cannot submit physical progress")}
+ }
+ let grant=fixture_grant();let mut retirement=NativeDecodeRetirementRecipient::new();let mut observe=|_|true;let mut native=NativeDecodeControl::new(grant.maximum_capacity_bytes,&mut observe);native.install_retirement_recipient(&mut retirement).unwrap();let mut work=Work;let mut physical=Physical{grant,submitted:Default::default()};
+ native.with_work_recipient(&mut work,|native|native.with_construction_recipient(&mut physical,|native|{
+  let mut owner=super::NativeSnapshotDecodeOwner::new(native,grant);let mut output=None;let turn=owner.receive::<(),(),ValueError>(&mut output,&mut |_,_,_,_,_,_|panic!("denied frame cannot invoke callback"));assert_eq!(turn.work,0);assert!(turn.result.is_err());drop(owner);assert_eq!(native.owned_bytes(),0);assert!(!native.has_retirement_owner());Ok::<_,ValueError>(())
+ })).unwrap();
+}
+
+#[test]
+fn frame_work_post_refusal_still_publishes_its_actual_birth(){
+ use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,native_encoding::{NativeEncodeWorkRecipient,NativeEncodeConstructionRecipient,NativeEncodeRetirementRecipient}};
+ struct Work(u64);
+ impl NativeEncodeWorkRecipient for Work{
+  fn admits(&mut self,_:u64,_:u64)->Result<bool,ValueError>{Ok(true)}
+  fn committed(&mut self,actual:u64)->Result<(),ValueError>{self.0+=actual;Err(ValueError::literal(ValueRefusalKind::Canceled,"frame work refused"))}
+ }
+ struct Physical{grant:RetainedCloneGrant,submitted:RetainedCloneProgress}
+ impl NativeEncodeConstructionRecipient for Physical{
+  fn submitted(&self)->RetainedCloneProgress{self.submitted}
+  fn grant(&mut self,_:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{Ok(self.grant)}
+  fn accept(&mut self,_:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),ValueError>{self.submitted=self.submitted.checked_add(progress)?;Ok(())}
+ }
+ let grant=fixture_grant();let mut retirement=NativeEncodeRetirementRecipient::new();let mut observe=|_|true;let mut native=NativeEncodeControl::new(grant.maximum_capacity_bytes,&mut observe);native.install_retirement_recipient(&mut retirement).unwrap();let mut work=Work(0);let mut physical=Physical{grant,submitted:Default::default()};
+ native.with_work_recipient(&mut work,|native|native.with_construction_recipient(&mut physical,|native|{
+  let mut owner=super::NativeSnapshotEncodeOwner::new(native,grant);let mut output=None;let turn=owner.receive::<(),(),ValueError>(&mut output,&mut |_,_,_,_,_,_|panic!("refused frame work cannot invoke callback"));assert_eq!(turn.work,1);assert_eq!(turn.result.unwrap_err().message(),"frame work refused");assert!(owner.progress().retained_capacity_bytes>0);drop(owner);assert!(native.has_retirement_owner());while native.has_retirement_owner(){native.close_retirement_recipient(grant).result.unwrap();}Ok::<_,ValueError>(())
+ })).unwrap();assert_eq!(work.0,native.actual_work());assert_eq!(physical.submitted.copied_items,1);assert!(physical.submitted.retained_capacity_bytes>0);
+}
+
+#[test]
+fn frame_slot_cancellation_does_not_charge_an_unborn_frame(){
+ use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand};
+ use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,NativeDecodeWorkRecipient,NativeDecodeRetirementRecipient};
+ struct Work;
+ impl NativeDecodeWorkRecipient for Work{fn admits(&mut self,_:u64,_:u64)->Result<bool,ValueError>{Ok(true)}}
+ struct Physical{grant:RetainedCloneGrant,submitted:RetainedCloneProgress}
+ impl NativeDecodeConstructionRecipient for Physical{
+  fn submitted(&self)->RetainedCloneProgress{self.submitted}
+  fn grant(&mut self,_:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{Ok(self.grant)}
+  fn accept(&mut self,_:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),ValueError>{self.submitted=self.submitted.checked_add(progress)?;Ok(())}
+ }
+ let grant=fixture_grant();let mut retirement=NativeDecodeRetirementRecipient::new();let checks=Cell::new(0);let mut observe=|_|{checks.set(checks.get()+1);checks.get()<2};let mut native=NativeDecodeControl::new(grant.maximum_capacity_bytes,&mut observe);native.install_retirement_recipient(&mut retirement).unwrap();let mut work=Work;let mut physical=Physical{grant,submitted:Default::default()};
+ native.with_work_recipient(&mut work,|native|native.with_construction_recipient(&mut physical,|native|{
+  let mut owner=super::NativeSnapshotDecodeOwner::new(native,grant);let mut output=None;let turn=owner.receive::<(),(),ValueError>(&mut output,&mut |_,_,_,_,_,_|panic!("canceled frame cannot invoke callback"));assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap_err().kind(),ValueRefusalKind::Canceled);drop(owner);assert_eq!(native.owned_bytes(),0);assert_eq!(native.actual_work(),0);assert!(!native.has_retirement_owner());Ok::<_,ValueError>(())
+ })).unwrap();assert_eq!(physical.submitted,RetainedCloneProgress::default());
+}
+
+#[test]
+fn borrowed_producer_keeps_owned_input_in_caller_slot_on_preflight_refusal(){
+ use semio_framework_value::{ValueError,RetainedWorkOutcome,retirement::controlled::ControlledRetirement};
+ use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
+ let grant=fixture_grant();let mut denied=grant;denied.maximum_items=0;let mut original=Some(String::from("borrowed producer 雪"));let pointer=original.as_ref().unwrap().as_ptr();let mut retirement=NativeDecodeRetirementRecipient::new();let mut observe=|_|true;let mut native=NativeDecodeControl::new(grant.maximum_capacity_bytes,&mut observe);native.install_retirement_recipient(&mut retirement).unwrap();
+ {
+  let mut producer=|slot:&mut Option<String>,_:&mut Option<()>,_:&mut super::NativeSnapshotEffectProgress,_:&mut Option<super::NativeSnapshotFailure>,_:&mut NativeDecodeControl<'_>,_:&mut super::NativeSnapshotBodyWallet|{*slot=original.take();RetainedWorkOutcome{result:Ok::<_,ValueError>(()),work:0}};
+  let mut owner=super::NativeSnapshotDecodeOwner::new(&mut native,denied);let mut output=None;let turn=owner.receive::<String,(),ValueError>(&mut output,&mut producer);assert_eq!(turn.work,0);assert!(turn.result.is_err());
+ }
+ assert_eq!(original.as_ref().unwrap().as_ptr(),pointer);assert!(!native.has_retirement_owner());let mut close=ControlledRetirement::new(original.take().unwrap()).ok().unwrap();while !close.terminal_is_empty(){close.step(grant).unwrap();}
+}
+
+#[test]
+fn borrowed_snapshot_producer_unwind_parks_its_populated_frame_for_paid_close(){
+ use semio_framework_value::{ValueError,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand};
+ use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,NativeDecodeWorkRecipient,NativeDecodeRetirementRecipient};
+ struct Work;
+ impl NativeDecodeWorkRecipient for Work{fn admits(&mut self,_:u64,_:u64)->Result<bool,ValueError>{Ok(true)}}
+ struct Physical{grant:RetainedCloneGrant,submitted:RetainedCloneProgress}
+ impl NativeDecodeConstructionRecipient for Physical{
+  fn submitted(&self)->RetainedCloneProgress{self.submitted}
+  fn grant(&mut self,_:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{Ok(self.grant)}
+  fn accept(&mut self,grant:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),ValueError>{assert_eq!(grant,self.grant);self.submitted=self.submitted.checked_add(progress)?;Ok(())}
+ }
+ let grant=fixture_grant();let mut retirement=NativeDecodeRetirementRecipient::new();let mut observe=|_|true;let mut native=NativeDecodeControl::new(grant.maximum_capacity_bytes,&mut observe);native.install_retirement_recipient(&mut retirement).unwrap();let mut work=Work;let mut physical=Physical{grant,submitted:Default::default()};let pointer=Cell::new(std::ptr::null::<u8>());let text="雪";
+ native.with_work_recipient(&mut work,|native|native.with_construction_recipient(&mut physical,|native|{
+  let mut owner=super::NativeSnapshotDecodeOwner::new(native,grant);
+  let mut producer=|slot:&mut Option<String>,_:&mut Option<()>,_:&mut super::NativeSnapshotEffectProgress,_:&mut Option<super::NativeSnapshotFailure>,native:&mut NativeDecodeControl<'_>,body:&mut super::NativeSnapshotBodyWallet|{
+   let header=std::mem::size_of::<Option<String>>();let quote=super::NativeSnapshotDecodeEffectQuote::decode(body,native,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:header,maximum_depth:1,..Default::default()}).unwrap();*slot=Some(String::new());quote.post_decode(RetainedCloneProgress{copied_items:1,copied_bytes:header,..Default::default()},Ok(())).result.unwrap();
+   body.copy_text_receiving(native,text,slot.as_mut().unwrap(),1).unwrap();pointer.set(slot.as_ref().unwrap().as_ptr());panic!("original producer unwind")
+  };
+  let mut output=None;let panic=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||owner.receive::<String,(),ValueError>(&mut output,&mut producer)));assert!(panic.is_err());assert!(!pointer.get().is_null());assert!(owner.progress().copied_bytes>=std::mem::size_of::<Option<String>>()+text.len());drop(owner);assert!(native.has_retirement_owner());while native.has_retirement_owner(){native.close_retirement_recipient(grant).result.unwrap();}Ok::<_,ValueError>(())
+ })).unwrap();assert!(physical.submitted.copied_bytes>=std::mem::size_of::<Option<String>>()+text.len());
+}
+
+#[test]
+fn publication_slot_keeps_original_output_when_post_refuses(){
+ use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,retirement::controlled::ControlledRetirement};
+ use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,NativeDecodeWorkRecipient,NativeDecodeRetirementRecipient};
+ struct Work;
+ impl NativeDecodeWorkRecipient for Work{fn admits(&mut self,_:u64,_:u64)->Result<bool,ValueError>{Ok(true)}}
+ struct Physical{grant:RetainedCloneGrant,submitted:RetainedCloneProgress,quotes:usize,posts:usize,mode:u8}
+ impl NativeDecodeConstructionRecipient for Physical{
+  fn submitted(&self)->RetainedCloneProgress{self.submitted}
+  fn grant(&mut self,_:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{self.quotes+=1;let mut grant=self.grant;if self.mode==0&&self.quotes==3{grant.maximum_items=0}Ok(grant)}
+  fn accept(&mut self,grant:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),ValueError>{self.submitted=self.submitted.checked_add(progress)?;self.posts+=1;if self.mode==1&&self.posts==3{Err(ValueError::literal(ValueRefusalKind::Canceled,"publication receipt refused"))}else{assert_eq!(grant,self.grant);Ok(())}}
+ }
+ for mode in 0..3{
+  let grant=fixture_grant();let mut retirement=NativeDecodeRetirementRecipient::new();let mut observe=|_|true;let mut native=NativeDecodeControl::new(grant.maximum_capacity_bytes,&mut observe);native.install_retirement_recipient(&mut retirement).unwrap();let mut work=Work;let mut physical=Physical{grant,submitted:Default::default(),quotes:0,posts:0,mode};let mut source=Some(String::from("owned publication 雪"));let pointer=source.as_ref().unwrap().as_ptr();let mut output=None;
+  native.with_work_recipient(&mut work,|native|native.with_construction_recipient(&mut physical,|native|{
+   let mut owner=super::NativeSnapshotDecodeOwner::new(native,grant);let turn=owner.receive::<(),String,super::NativeSnapshotFailure>(&mut output,&mut |_,frame_output,_marker,_failure,native,body|{
+    let quote=super::NativeSnapshotDecodeEffectQuote::decode(body,native,RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()}).unwrap();*frame_output=source.take();quote.post_decode(RetainedCloneProgress{copied_items:1,..Default::default()},Ok(()))
+   });assert_eq!(turn.result.is_ok(),mode==2);if mode==1{assert_eq!(turn.result.unwrap_err().receipt_refusal().unwrap().message.as_ref(),"publication receipt refused");}drop(owner);assert!(source.is_none());assert!(native.has_retirement_owner());while native.has_retirement_owner(){native.close_retirement_recipient(grant).result.unwrap();}Ok::<_,ValueError>(())
+  })).unwrap();
+  if mode==0{assert!(output.is_none())}else{assert_eq!(output.as_ref().unwrap().as_ptr(),pointer);let mut owner=ControlledRetirement::new(output.take().unwrap()).ok().unwrap();while !owner.terminal_is_empty(){owner.step(grant).unwrap();}}
+ }
+}
+
+#[test]
+fn work_only_guard_preserves_actual_effect_and_post_refusal_on_unwind(){
+ use semio_framework_value::{ValueError,ValueRefusalKind,native_encoding::NativeEncodeWorkRecipient,retirement::controlled::ControlledRetirement};
+ struct Work(u64);
+ impl NativeEncodeWorkRecipient for Work{fn admits(&mut self,_:u64,_:u64)->Result<bool,ValueError>{Ok(true)}fn committed(&mut self,actual:u64)->Result<(),ValueError>{self.0+=actual;Err(ValueError::literal(ValueRefusalKind::Canceled,"work post refused"))}}
+ let grant=fixture_grant();
+ for mode in 0..3{
+  let mut observe=|_|true;let mut native=NativeEncodeControl::new(0,&mut observe);let mut bank=Work(0);let mut performed=false;let mut failure=None;
+  native.with_work_recipient(&mut bank,|native|{
+   let quote=super::NativeSnapshotEncodeWorkQuote::reserve(native).unwrap();
+   if mode==2{
+    let panic=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||quote.run(&mut performed,&mut failure,&mut |performed|{*performed=true;panic!("work effect unwind")})));assert!(panic.is_err());assert!(performed);assert_eq!(failure.as_ref().unwrap().work_refusal().unwrap().message.as_ref(),"work post refused");
+   }else{
+    let turn=quote.run(&mut performed,&mut failure,&mut |performed|{if mode==1{*performed=true;Err(ValueError::literal(ValueRefusalKind::InvalidValue,"operation refused"))}else{Ok(())}});assert_eq!(turn.work,u64::from(mode==1));if mode==1{let error=turn.result.unwrap_err();assert_eq!(error.message(),"operation refused");assert_eq!(error.work_refusal().unwrap().message.as_ref(),"work post refused");failure=Some(error)}else{turn.result.unwrap()}
+   }
+   assert_eq!(native.actual_work(),u64::from(mode!=0));Ok::<_,ValueError>(())
+  }).unwrap();assert_eq!(bank.0,native.actual_work());
+  if let Some(error)=failure.take(){let mut owner=ControlledRetirement::new(error).ok().unwrap();while !owner.terminal_is_empty(){owner.step(grant).unwrap();}}
+ }
+}
+
+#[test]
+fn original_owner_move_keeps_pointer_and_retains_post_refusal(){
+ use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,retirement::controlled::ControlledRetirement};
+ use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,NativeDecodeWorkRecipient};
+ struct Work;
+ impl NativeDecodeWorkRecipient for Work{fn admits(&mut self,_:u64,_:u64)->Result<bool,ValueError>{Ok(true)}}
+ struct Physical{grant:RetainedCloneGrant,submitted:RetainedCloneProgress,mode:u8}
+ impl NativeDecodeConstructionRecipient for Physical{
+  fn submitted(&self)->RetainedCloneProgress{self.submitted}
+  fn grant(&mut self,_:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{let mut grant=self.grant;if self.mode==0{grant.maximum_items=0}Ok(grant)}
+  fn accept(&mut self,grant:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),ValueError>{assert_eq!(grant,self.grant);self.submitted=self.submitted.checked_add(progress)?;if self.mode==1{Err(ValueError::literal(ValueRefusalKind::Canceled,"owner move receipt refused"))}else{Ok(())}}
+ }
+ let grant=fixture_grant();for mode in 0..3{
+  let mut observe=|_|true;let mut native=NativeDecodeControl::new(grant.maximum_capacity_bytes,&mut observe);let mut work=Work;let mut physical=Physical{grant,submitted:Default::default(),mode};let mut source=Some(String::from("original metadata 雪"));let pointer=source.as_ref().unwrap().as_ptr();let mut output=None;let mut marker=super::NativeSnapshotEffectProgress::default();let mut unwind=None;
+  native.with_work_recipient(&mut work,|native|native.with_construction_recipient(&mut physical,|native|{let mut owner=super::NativeSnapshotDecodeOwner::new(native,grant);let turn=owner.move_existing(&mut source,&mut output,&mut marker,&mut unwind);assert_eq!(turn.work,u64::from(mode!=0));assert_eq!(turn.result.is_ok(),mode==2);if mode==1{assert_eq!(turn.result.unwrap_err().receipt_refusal().unwrap().message.as_ref(),"owner move receipt refused");}Ok::<_,ValueError>(())})).unwrap();
+  assert!(unwind.is_none());let retained=if mode==0{assert!(output.is_none());source.take().unwrap()}else{assert!(source.is_none());output.take().unwrap()};assert_eq!(retained.as_ptr(),pointer);let mut close=ControlledRetirement::new(retained).ok().unwrap();while !close.terminal_is_empty(){close.step(grant).unwrap();}
+ }
+}

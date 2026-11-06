@@ -26,7 +26,8 @@
           "live": "v",
           "metadata": "lane.json",
           "size": "lane.size",
-          "destination": "lane.ledger"
+          "destination": "lane.ledger",
+          "targetIdentityVersion": 1
         },
         "lock": {
           "heartbeatMilliseconds": 2000,
@@ -184,7 +185,10 @@
           "ledgerPattern": "^cargo-unit-provenance-[A-Za-z0-9._-]{1,200}\\.json$",
           "maximumFiles": 4096,
           "maximumFileBytes": 134217728,
-          "chunkBytes": 1048576
+          "chunkBytes": 1048576,
+          "bindingPrefix": "cargo-target-binding-",
+          "scanMaximumEntries": 2000000,
+          "destinationPrefix": "cargo-target-destination-"
         }
       }
     },

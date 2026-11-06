@@ -1,0 +1,15 @@
+# Retained clone close-start admission
+
+The shared RetainedCloneCursor begin_close method has no pre-effect work demand or actual-work outcome. Derived record and enum cursors set their own closing flag; other cursors can also start children. Existing close-work quotes apply to subsequent retirement and do not quote this transition. A uniform fixed quote would therefore be unsound.
+
+Store NativeSemanticPreparation invokes projection and edit close-start within take and edit turns, from its refused constructor and its own begin_close. These paths need separately selected, admitted start turns; the refused constructor must preserve unstarted owners until such a turn. Store ClonedProjection owns an optional boxed retained clone cursor and must forward its exact cursor-owned start demand and outcome.
+
+A complete implementation needs a neutral schema and independent oracle, denial, retry, repeat and child delegation laws, cursor-specific quote and measured action implementations, and generated derive implementations. Unsupported cursor types must refuse before mutating owners. No native acceptance is claimed.
+
+A transitional owner-specific quote and measured start method is now authored for scalar immutable root projections and generated record/enum clone cursors, with UnsupportedOwner defaults for other cursors. Existing unmetered entries remain until all owners and callers migrate; this is not a completed contract. The scalar schema, fixture and native test assert first and repeated start work. The SQLite oracle is queued as session 83637. No native acceptance is claimed.
+
+ProjectionField and generated record projection sources now stage their selected child close-start after output transfer and during cancellation, with owned quote and measured work; OwnedFieldProjection likewise stages its retained field child. RetainedFieldCursor forwards its child quote and actual start work rather than assigning one to arbitrary children. These edits have not compiled or passed their native laws. Old unmetered methods are transitional and still require complete removal with all caller migrations.
+
+Scalar, string, vector and option clone cursors now quote and report their own initial closing flag. Vector and option source now stage child close-start as a separate turn after child output transfer and during cancellation, quote child work plus the parent marker, and forward the child result. No native or compiler acceptance exists for these changes; the actual nested funding, denial and partial-failure laws remain required.
+
+Generated record and enum retained clone child starts are now separately selected and forward the actual child work; record field-transfer and phase metadata are counted in their quote and action. Scalar, String, Vec, Option and field cursor local flag starts have explicit paid ports. Array, tuple and Box retain unmetered child-start paths and are not accepted. The paid start port currently models only an in-place flag, with no physical owner transfer; a separate physical receipt contract is required if flag writes themselves consume the physical copy currency.

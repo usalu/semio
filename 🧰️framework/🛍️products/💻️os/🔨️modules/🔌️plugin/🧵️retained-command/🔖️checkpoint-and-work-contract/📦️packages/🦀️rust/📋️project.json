@@ -1,0 +1,4 @@
+{
+  "name": "@semio-tech/plugin-retained-work-rs",
+  "tags": ["scope:framework", "language:rust"]
+}

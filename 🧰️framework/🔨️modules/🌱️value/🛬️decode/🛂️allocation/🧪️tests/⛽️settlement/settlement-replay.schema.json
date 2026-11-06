@@ -1,0 +1,24 @@
+{
+  "type": "array",
+  "minItems": 2,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "settled",
+      "allowed",
+      "otherwiseEligible"
+    ],
+    "properties": {
+      "settled": {
+        "type": "boolean"
+      },
+      "allowed": {
+        "type": "boolean"
+      },
+      "otherwiseEligible": {
+        "type": "boolean"
+      }
+    }
+  }
+}

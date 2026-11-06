@@ -1,0 +1,51 @@
+{
+  "schema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "array",
+    "items": {
+      "type": "object",
+      "required": [
+        "panicked",
+        "bodyBytes",
+        "postRefused",
+        "pendingFrame",
+        "retainedFailure"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "panicked": {
+          "type": "boolean"
+        },
+        "bodyBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "postRefused": {
+          "type": "boolean"
+        },
+        "pendingFrame": {
+          "type": "boolean"
+        },
+        "retainedFailure": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "data": [
+    {
+      "panicked": true,
+      "bodyBytes": 3,
+      "postRefused": false,
+      "pendingFrame": true,
+      "retainedFailure": false
+    },
+    {
+      "panicked": true,
+      "bodyBytes": 3,
+      "postRefused": true,
+      "pendingFrame": true,
+      "retainedFailure": true
+    }
+  ]
+}

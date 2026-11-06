@@ -1,0 +1,5 @@
+# Replication fold allocation custody
+
+The original fold birth and step each call record_constructed_allocation after their actual action. The old callback cannot produce a genuine pre-effect quote. Birth currently combines a fixed VecDeque backing, shared control block, pinned runner future and shared wake block inside Self::new; one estimated total is not a physical per-owner receipt. The step polls a future and delegates selected construction, retirement and output handoff actions, each of which may own a separate physical allocation.
+
+The allocation owner has specified caller-retained directional phase and actual markers for each effect, including interrupted callback identity. A stack-local progress slot or a summed demand used as actual capacity would lose custody or fabricate a receipt. Correct migration needs a staged original construction owner with each admitted owner retained as soon as born, exact actual capacity per birth, and a separately metered step action. The runner and all partially born owners must remain reachable during cancellation, quote/post refusal and unwind. This investigation does not claim an implementation or test pass.

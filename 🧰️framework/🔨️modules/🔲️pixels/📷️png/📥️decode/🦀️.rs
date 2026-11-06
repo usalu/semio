@@ -3,6 +3,7 @@ use super::{RasterImage,Ihdr,parse_ihdr,samples_per_pixel,packed_row_bytes,bpp_b
 use semio_framework_deflate::{Inflater,InflateOutcome};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value_persistent::list::PagedList;
+#[path="📝️text/🦀️.rs"] mod text;
 #[derive(Clone,Debug,semio_framework_value::RetireOwned)]
 pub struct PngDecodeInput{pub data:Vec<u8>,pub max_pixels:usize,pub max_bytes:usize,pub max_chunks:usize}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
@@ -38,17 +39,17 @@ impl semio_framework_value::retirement::RetirementCursor for PngInflaterRetireme
 /// 🧩️ Reconstruction consumes one chunk byte, inflated byte, or expanded pixel per work unit.
 #[derive(semio_framework_value::RetireOwned)]
 pub struct PngDecodeJob{
- #[doc(hidden)] pub source:Vec<u8>,#[doc(hidden)] pub max_pixels:usize,max_chunks:usize,total_bytes:usize,#[doc(hidden)] pub phase:&'static str,#[doc(hidden)] pub work:u64,#[doc(hidden)] pub bytes:usize,#[doc(hidden)] pub pixels:usize,total_pixels:usize,
- #[doc(hidden)] pub at:usize,chunks:usize,chunk:Option<Chunk>,header:Option<Ihdr>,palette:[[u8;3];256],palette_length:usize,alpha:[u8;256],alpha_length:usize,gray_trans:Option<u32>,rgb_trans:Option<(u32,u32,u32)>,had_palette:bool,had_transparency:bool,
- had_idat:bool,closed_idat:bool,ranges:PagedList<(usize,usize),65536>,z_length:usize,range:usize,range_at:usize,z_at:usize,z_header:[u8;2],z_header_length:usize,tail:[u8;4],tail_length:usize,inflater:Option<PngInflater>,pending:Option<u8>,#[doc(hidden)] pub output:RasterImage,allocation_at:u8,
+ source:Vec<u8>,max_pixels:usize,max_chunks:usize,maximum_bytes:usize,total_bytes:usize,phase:&'static str,work:u64,bytes:usize,pixels:usize,total_pixels:usize,
+ at:usize,chunks:usize,chunk:Option<Chunk>,header:Option<Ihdr>,palette:[[u8;3];256],palette_length:usize,alpha:[u8;256],alpha_length:usize,gray_trans:Option<u32>,rgb_trans:Option<(u32,u32,u32)>,had_palette:bool,had_transparency:bool,
+ had_idat:bool,closed_idat:bool,ranges:PagedList<(usize,usize),65536>,z_length:usize,range:usize,range_at:usize,z_at:usize,z_header:[u8;2],z_header_length:usize,tail:[u8;4],tail_length:usize,inflater:Option<PngInflater>,pending:Option<u8>,output:RasterImage,allocation_at:u8,
  pass:usize,pass_width:usize,pass_height:usize,sx:u32,sy:u32,dx:u32,dy:u32,row:usize,column:usize,row_at:Option<usize>,row_bytes:usize,stride:usize,bpp:usize,filter:u8,
- current:Vec<u8>,previous:Vec<u8>,raw_bytes:usize,expected_bytes:usize,adler_a:u32,adler_b:u32,stream_done:bool,cancelled:bool,#[doc(hidden)] pub failed:Option<PngDecodeError>,last_progress:RetainedCloneProgress,last_work:u64,partial_allocated:usize,
+ current:Vec<u8>,previous:Vec<u8>,raw_bytes:usize,expected_bytes:usize,adler_a:u32,adler_b:u32,stream_done:bool,cancelled:bool,failed:Option<PngDecodeError>,last_progress:RetainedCloneProgress,last_work:u64,partial_allocated:usize,text:Option<text::PngTextState>,
 }
 impl PngDecodeJob{
  pub fn new(input:PngDecodeInput)->Result<Self,(PngDecodeError,PngDecodeInput)>{
   if !(1..=16777216).contains(&input.max_pixels)||!(8..=67108864).contains(&input.max_bytes)||!(1..=65536).contains(&input.max_chunks)||input.data.len()<8||input.data.len()>input.max_bytes||input.data[..8]!=[137,80,78,71,13,10,26,10]{return Err((invalid("Invalid PNG input contract"),input));}
   let total_bytes=input.data.len();
-  Ok(Self{source:input.data,max_pixels:input.max_pixels,max_chunks:input.max_chunks,total_bytes,phase:"chunks",work:0,bytes:8,pixels:0,total_pixels:0,at:8,chunks:0,chunk:None,header:None,palette:[[0;3];256],palette_length:0,alpha:[0;256],alpha_length:0,gray_trans:None,rgb_trans:None,had_palette:false,had_transparency:false,had_idat:false,closed_idat:false,ranges:PagedList::empty(),z_length:0,range:0,range_at:0,z_at:0,z_header:[0;2],z_header_length:0,tail:[0;4],tail_length:0,inflater:None,pending:None,output:RasterImage::default(),allocation_at:0,pass:0,pass_width:0,pass_height:0,sx:0,sy:0,dx:1,dy:1,row:0,column:0,row_at:None,row_bytes:0,stride:0,bpp:0,filter:0,current:Vec::new(),previous:Vec::new(),raw_bytes:0,expected_bytes:0,adler_a:1,adler_b:0,stream_done:false,cancelled:false,failed:None,last_progress:Default::default(),last_work:0,partial_allocated:0})
+  Ok(Self{source:input.data,max_pixels:input.max_pixels,max_chunks:input.max_chunks,maximum_bytes:input.max_bytes,total_bytes,phase:"chunks",work:0,bytes:8,pixels:0,total_pixels:0,at:8,chunks:0,chunk:None,header:None,palette:[[0;3];256],palette_length:0,alpha:[0;256],alpha_length:0,gray_trans:None,rgb_trans:None,had_palette:false,had_transparency:false,had_idat:false,closed_idat:false,ranges:PagedList::empty(),z_length:0,range:0,range_at:0,z_at:0,z_header:[0;2],z_header_length:0,tail:[0;4],tail_length:0,inflater:None,pending:None,output:RasterImage::default(),allocation_at:0,pass:0,pass_width:0,pass_height:0,sx:0,sy:0,dx:1,dy:1,row:0,column:0,row_at:None,row_bytes:0,stride:0,bpp:0,filter:0,current:Vec::new(),previous:Vec::new(),raw_bytes:0,expected_bytes:0,adler_a:1,adler_b:0,stream_done:false,cancelled:false,failed:None,last_progress:Default::default(),last_work:0,partial_allocated:0,text:None})
  }
  fn parse_chunk(&mut self,c:Chunk)->Result<(),PngDecodeError>{
   let source=&self.source;let data=&source[c.start..c.end];
@@ -187,6 +188,20 @@ impl PngDecodeJob{
  }
  pub fn progress(&self)->PngDecodeProgress{PngDecodeProgress{phase:self.phase,bytes:self.bytes,total_bytes:self.total_bytes,pixels:self.pixels,total_pixels:self.total_pixels,work:self.work,done:self.phase=="complete"}}
  pub fn source(&self)->&[u8]{&self.source}
+ /// 📝️ Quotes the in-place text metadata cursor bound to this validated source.
+ pub fn text_metadata_birth_demands()->semio_framework_value::RetirementDemand{semio_framework_value::RetirementDemand{copy_bytes:2*size_of::<Option<text::PngTextState>>(),depth:1,..Default::default()}}
+ /// 🎟️ Starts metadata reconstruction only after this decoder validated its own immutable PNG source.
+ pub fn begin_text_metadata(&mut self,maximum_bytes:usize,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,PngDecodeError>{self.check()?;if self.phase!="complete"||self.text.is_some(){return Err(PngDecodeError::Incomplete)}if maximum_bytes>self.maximum_bytes{return Err(invalid("PNG text ownership exceeds original source authority"))}let d=Self::text_metadata_birth_demands();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(None)}self.text=Some(text::PngTextState::new(maximum_bytes));Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
+ /// 📏️ Quotes the next metadata turn under the same retained owner.
+ pub fn text_metadata_demands(&self)->Result<semio_framework_value::RetirementDemand,PngDecodeError>{self.text.as_ref().ok_or(PngDecodeError::Incomplete)?.demand()}
+ /// ⏭️ Advances bounded text validation, decompression, allocation or copying.
+ pub fn advance_text_metadata(&mut self,grant:RetainedCloneGrant)->Result<(bool,RetainedCloneProgress),PngDecodeError>{if let Some(text)=self.text.as_mut(){text.clear_turn()}self.check()?;self.text.as_mut().ok_or(PngDecodeError::Incomplete)?.advance(&self.source,grant)}
+ /// 🧾️ Reports the exact last metadata turn even when it refused.
+ pub fn text_metadata_last_progress(&self)->RetainedCloneProgress{self.text.as_ref().map_or(Default::default(),|text|text.last_progress())}
+ /// ⛽️ Reports the actual last metadata work, including a failed turn.
+ pub fn text_metadata_last_work(&self)->u64{self.text.as_ref().map_or(0,|text|text.last_work())}
+ /// 📤️ Moves ordered metadata pairs after their complete validation.
+ pub fn take_text_metadata(&mut self,grant:RetainedCloneGrant)->Result<Option<(Vec<(String,String)>,RetainedCloneProgress)>,PngDecodeError>{self.check()?;self.text.as_mut().ok_or(PngDecodeError::Incomplete)?.take(grant)}
  pub fn decoded_properties(&self)->Result<PngDecodedProperties,PngDecodeError>{self.result()?;let header=self.header.as_ref().ok_or(PngDecodeError::Incomplete)?;Ok(PngDecodedProperties{width:header.width,height:header.height,color_type:header.color_type,bit_depth:header.bit_depth})}
  pub fn last_turn_progress(&self)->RetainedCloneProgress{self.last_progress}
  pub fn last_turn_work(&self)->u64{self.last_work}
@@ -199,7 +214,7 @@ impl PngDecodeJob{
  }
  pub fn cancel(&mut self){self.cancelled=true;}
  pub fn result(&self)->Result<&RasterImage,PngDecodeError>{self.check()?;if self.phase!="complete"{return Err(PngDecodeError::Incomplete);}Ok(&self.output)}
- pub fn take_result(&mut self,grant:RetainedCloneGrant)->Result<Option<(RasterImage,RetainedCloneProgress)>,PngDecodeError>{self.check()?;if self.phase!="complete"{return Err(PngDecodeError::Incomplete);}if grant.maximum_items==0||grant.maximum_copy_bytes<size_of::<RasterImage>()||grant.maximum_depth==0{return Ok(None);}self.phase="transferred";Ok(Some((std::mem::take(&mut self.output),RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<RasterImage>(),..Default::default()})))}
+ pub fn take_result(&mut self,grant:RetainedCloneGrant)->Result<Option<(RasterImage,RetainedCloneProgress)>,PngDecodeError>{self.check()?;if self.phase!="complete"{return Err(PngDecodeError::Incomplete);}if self.text.as_ref().is_some_and(|text|!text.transferred())||grant.maximum_items==0||grant.maximum_copy_bytes<size_of::<RasterImage>()||grant.maximum_depth==0{return Ok(None);}self.phase="transferred";Ok(Some((std::mem::take(&mut self.output),RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<RasterImage>(),..Default::default()})))}
 }
 
 #[cfg(feature = "testkit")]

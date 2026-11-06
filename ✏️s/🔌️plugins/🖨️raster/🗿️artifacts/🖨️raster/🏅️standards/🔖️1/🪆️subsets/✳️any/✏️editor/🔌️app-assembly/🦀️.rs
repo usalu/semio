@@ -85,7 +85,7 @@ pub fn raster_image_out_port() -> semio_framework::MediaPortSpec {
 pub fn raster_composite_media(document: &RasterSnapshot) -> Result<Media, MediaError> {
     let image=semio_s_artifact_raster_raster_io::raster_composite_image(document).map_err(|error|MediaError::Payload("image:out".into(),error))?;
     let bytes=semio_s_artifact_raster_raster_io::png_bytes_from_semio_image(&image).map_err(|error|MediaError::Payload("image:out".into(),error))?;
-    let png_base64=base64_codec::base64_standard_encode(bytes);
+    let png_base64=semio_framework_io_base64::base64_standard_encode(bytes);
     Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: png_base64 } })
 }
 //#endregion 🔖️Io

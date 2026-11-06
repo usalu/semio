@@ -156,20 +156,22 @@ pub fn admit_history_edit_read_issuer<Mutation:Send+'static>(original:&Arc<dyn A
 }
 
 impl<Mutation: Send + 'static> ArtifactOwnedValueRetirementFactory<Edit<Mutation>> for ArtifactStoreDecodedEditRetirementFactory<Mutation> {
+    fn retire_owned_work_demand(&self, _: &Edit<Mutation>) -> Result<u64, ValueError> { Ok(1) }
     fn retirement_birth_bytes(&self, _value: &Edit<Mutation>) -> usize { size_of::<ArtifactStoreDecodedEditRetirement<Mutation>>() }
-    fn retire_owned(&self, value: Edit<Mutation>, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, Edit<Mutation>)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, Edit<Mutation>)> {
+    fn retire_owned(&self, value: Edit<Mutation>, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(semio_framework_value::OriginalRetirementFailure, Edit<Mutation>)> {let turn=(||{ let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, Edit<Mutation>)> {
         admit_artifact_retirement(value, grant, |value| ArtifactStoreDecodedEditRetirement::new(value, self.mutation_factory.clone()))
-    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
+    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } })();semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(|(error,value)|(error.into(),value)),work:turn.work}}
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct ArtifactStoreChangeRetirementFactory;
 
 impl ArtifactOwnedValueRetirementFactory<Change> for ArtifactStoreChangeRetirementFactory {
+    fn retire_owned_work_demand(&self, _: &Change) -> Result<u64, ValueError> { Ok(1) }
     fn retirement_birth_bytes(&self, _value: &Change) -> usize { size_of::<ArtifactStoreHistoryMetadataRetirement>() }
-    fn retire_owned(&self, value: Change, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, Change)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, Change)> {
+    fn retire_owned(&self, value: Change, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(semio_framework_value::OriginalRetirementFailure, Change)> {let turn=(||{ let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, Change)> {
         admit_artifact_retirement(value, grant, ArtifactStoreHistoryMetadataRetirement::change)
-    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
+    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } })();semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(|(error,value)|(error.into(),value)),work:turn.work}}
 }
 
 impl<Mutation> ArtifactStoreDecodedEditRetirement<Mutation> {

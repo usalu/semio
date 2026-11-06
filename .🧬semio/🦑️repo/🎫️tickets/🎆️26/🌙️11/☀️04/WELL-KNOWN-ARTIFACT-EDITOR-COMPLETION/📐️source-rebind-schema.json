@@ -1,0 +1,36 @@
+{
+  "type": "array",
+  "minItems": 4,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "pending",
+      "sameIssuer",
+      "sameRecipient",
+      "pause",
+      "resume"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "pending": {
+        "type": "boolean"
+      },
+      "sameIssuer": {
+        "type": "boolean"
+      },
+      "sameRecipient": {
+        "type": "boolean"
+      },
+      "pause": {
+        "type": "boolean"
+      },
+      "resume": {
+        "type": "boolean"
+      }
+    }
+  }
+}

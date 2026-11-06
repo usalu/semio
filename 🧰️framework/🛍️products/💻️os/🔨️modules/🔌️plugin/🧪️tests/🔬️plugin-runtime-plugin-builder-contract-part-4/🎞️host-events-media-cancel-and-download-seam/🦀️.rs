@@ -18,7 +18,7 @@ fn take_test_host_events() -> Vec<HostEvent> {
         pub emit: Option<Emit<TestMutation, TestConfigMutation, NoDraftMutation>>,
     }
 
-    impl semio_plugin_retained_command::ArtifactCommandWork<TestApp> for TestRetainedChildCommandWork {
+    impl semio_framework_plugin_retained_command::ArtifactCommandWork<TestApp> for TestRetainedChildCommandWork {
         fn tool_id(&self) -> &'static str {
             TEST_RETAINED_COMMAND_TOOL
         }
@@ -27,7 +27,7 @@ fn take_test_host_events() -> Vec<HostEvent> {
             Some(1)
         }
 
-        fn step(&mut self, input: &semio_plugin_retained_command::ArtifactCommandInputs<'_, TestApp>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_plugin_retained_command::ArtifactCommandWorkStep<TestApp>, semio_framework_job::OriginalTurnFailure> {
+        fn step(&mut self, input: &semio_framework_plugin_retained_command::ArtifactCommandInputs<'_, TestApp>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin_retained_command::ArtifactCommandWorkStep<TestApp>, semio_framework_job::OriginalTurnFailure> {
             let owner = input.snapshot_owner.expect("retained runtime supplies its immutable snapshot capability");
             assert!(std::ptr::eq(owner.as_ref(), input.snapshot));
             let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧵️retained-command/🧪️tests/🧫️fixtures/🔒️immutable-reader.json")).expect("neutral immutable reader fixture");
@@ -37,16 +37,16 @@ fn take_test_host_events() -> Vec<HostEvent> {
             *std::sync::Arc::make_mut(&mut replacement) = serde_json::from_value(fixture["replacement"].clone()).expect("independent replacement snapshot");
             assert_eq!(serde_json::to_value(owner.as_ref()).unwrap(), fixture["initial"]);
             assert_eq!(serde_json::to_value(replacement.as_ref()).unwrap(), fixture["replacement"]);
-            let semio_plugin_retained_command::ArtifactCommandInputs { snapshot_owner: _, command: _command, snapshot: _snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
-            self.emit.take().map(semio_plugin_retained_command::ArtifactCommandWorkStep::Complete).ok_or_else(|| Fault::from("test-retained-child-work-repeated").into())
+            let semio_framework_plugin_retained_command::ArtifactCommandInputs { snapshot_owner: _, command: _command, snapshot: _snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
+            self.emit.take().map(semio_framework_plugin_retained_command::ArtifactCommandWorkStep::Complete).ok_or_else(|| Fault::from("test-retained-child-work-repeated").into())
         }
     }
 
-    async fn test_retained_child_command_payload(completion: ArtifactToolCompletion<TestApp>, emit: Emit<TestMutation, TestConfigMutation, NoDraftMutation>) -> (semio_plugin_retained_command::ArtifactRetainedCommandPayload<TestApp>,crate::job_close_fixture::FixtureSnapshotOwner) {
+    async fn test_retained_child_command_payload(completion: ArtifactToolCompletion<TestApp>, emit: Emit<TestMutation, TestConfigMutation, NoDraftMutation>) -> (semio_framework_plugin_retained_command::ArtifactRetainedCommandPayload<TestApp>,crate::job_close_fixture::FixtureSnapshotOwner) {
         let snapshot=std::sync::Arc::new(TestSnapshot::default());
         let(snapshot_read,issuer)=crate::job_close_fixture::FixtureSnapshotOwner::new(snapshot.clone(),3,[5;32]);
-        let payload=semio_plugin_retained_command::ArtifactRetainedCommandPayload::new(
-            semio_plugin_retained_command::ArtifactRetainedCommandInputs {
+        let payload=semio_framework_plugin_retained_command::ArtifactRetainedCommandPayload::new(
+            semio_framework_plugin_retained_command::ArtifactRetainedCommandInputs {
                 command: TestCommand::SetLabel { value: "wire".into() },
                 snapshot,
                 snapshot_read,
@@ -142,7 +142,7 @@ fn take_test_host_events() -> Vec<HostEvent> {
     #[semio_framework_async_macros::async_test]
     async fn retained_command_download_seam_keeps_original_chunks_and_bounded_cancel_owner(){
         use semio_framework_job::{InteractiveJob,InteractiveJobCloseStep};
-        use semio_plugin_retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactCommandInputs, ArtifactRetainedCommandJob};
+        use semio_framework_plugin_retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactCommandInputs, ArtifactRetainedCommandJob};
         let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧵️retained-command/🔄️full-operation/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["download"];
         struct DownloadWork{output:Option<ArtifactDownloadOutput>,first:bool,closing:bool,retirement:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>}
         impl DownloadWork{fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if let Some(active)=self.retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(active,body)}store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.output)}}
@@ -236,7 +236,7 @@ fn take_test_host_events() -> Vec<HostEvent> {
 
             let mut receiver = contract_app(mounted_policy, &mut identity).await;
 
-            let under = ActionMeta { view_state: Some(semio_framework_plugin_testing_laws::receive_view_fixture(host_event_view("main-1", Some("select")), semio_framework_plugin_testing_laws::OriginalWorkFixture::stock())), ..meta() };
+            let under = ActionMeta { view_state: Some(semio_plugin_testing_laws::receive_view_fixture(host_event_view("main-1", Some("select")), semio_plugin_testing_laws::OriginalWorkFixture::stock())), ..meta() };
 
             receiver.dispatch_typed(TestCommand::ViewNoScope, &under, &mut identity,cx).await.expect("admitted window context");
 

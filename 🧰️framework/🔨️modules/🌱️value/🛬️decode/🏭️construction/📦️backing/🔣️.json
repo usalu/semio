@@ -8,12 +8,15 @@
     "deniedWork",
     "nullWork",
     "birthWork",
-    "copiedBytes",
     "nullOwnedBytes",
     "stock",
     "requireActualWorkRecipient",
     "unscopedWork",
-    "observedBirthWork"
+    "observedBirthWork",
+    "copiedHeader",
+    "layoutCases",
+    "workSettlement",
+    "outcomeCases"
   ],
   "properties": {
     "count": {
@@ -30,9 +33,6 @@
     },
     "birthWork": {
       "const": 1
-    },
-    "copiedBytes": {
-      "const": 0
     },
     "nullOwnedBytes": {
       "const": 0
@@ -56,6 +56,96 @@
     },
     "observedBirthWork": {
       "const": 3
+    },
+    "copiedHeader": {
+      "const": "target-header-size"
+    },
+    "layoutCases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "count",
+          "elementBytes",
+          "allocatedBytes",
+          "allocationEvent"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "empty",
+              "zeroSized",
+              "ordinary",
+              "text"
+            ]
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "elementBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "allocatedBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "allocationEvent": {
+            "enum": [
+              "none",
+              "quote-post"
+            ]
+          }
+        }
+      }
+    },
+    "workSettlement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actual",
+        "incorrect"
+      ],
+      "properties": {
+        "actual": {
+          "const": 1
+        },
+        "incorrect": {
+          "const": 0
+        }
+      }
+    },
+    "outcomeCases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "bytes",
+          "born",
+          "event"
+        ],
+        "properties": {
+          "bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "born": {
+            "type": "boolean"
+          },
+          "event": {
+            "enum": [
+              "none",
+              "cancel",
+              "post"
+            ]
+          }
+        }
+      }
     }
   }
 }

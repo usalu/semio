@@ -32,8 +32,8 @@ semio-os-store-engine-core = { path = "../../../../⚙️engine/🧱️store-com
 semio-os-store-engine-member-group = { path = "../../../📬️publication/🤝️group/📦️packages/🦀️rust" }
 semio-os-store-engine-owners = { path = "../../../../🏗️initialization/🏠️owners/📦️packages/🦀️rust" }
 semio-os-store-ledger = { path = "../../../../📒️ledger/📦️packages/🦀️rust" }
-semio-os-store-member-open = { path = "../../../🚪️open/📦️packages/🦀️rust" }
-semio-os-store-one-item-batch = { path = "../../../../📬️one-item-owners/📦️packages/🦀️rust" }
+semio-framework-os-store-member-open = { path = "../../../🚪️open/📦️packages/🦀️rust", package = "semio-os-store-member-open"}
+semio-framework-os-store-one-item-batch = { path = "../../../../📬️one-item-owners/📦️packages/🦀️rust", package = "semio-os-store-one-item-batch"}
 semio-os-store-one-item-publication = { path = "../../../../🎮️one-item/📬️publication/📦️packages/🦀️rust" }
 semio-os-store-read = { path = "../../../../🔗️read/📦️packages/🦀️rust" }
 semio-os-store-replay = { path = "../../../../🔁️replay/📦️packages/🦀️rust" }

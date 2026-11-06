@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Original retirement simultaneous failures",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "primary",
+    "workRefusal",
+    "actualWork",
+    "quotedWork",
+    "copiedItems"
+  ],
+  "properties": {
+    "primary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workRefusal": {
+      "type": "string",
+      "minLength": 1
+    },
+    "actualWork": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "quotedWork": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "copiedItems": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

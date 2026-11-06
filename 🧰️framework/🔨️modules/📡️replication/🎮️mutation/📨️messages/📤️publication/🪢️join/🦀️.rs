@@ -41,13 +41,15 @@ impl MutationMessagePublicationJoin {
         Ok(RetirementDemand { copy_bytes: size_of::<MutationMessage>(), ..base })
     }
 
-    pub fn advance(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    /// ⛽️ Quotes one selected row move or original source close.
+    pub fn advance_work_demand(&self)->Result<u64,ValueError>{if self.ready()||self.closing{return Ok(0)}if self.phase==8{return self.source.as_ref().ok_or_else(||fault("diagnostic join closing source is absent"))?.close_work_demand()?.checked_add(1).ok_or_else(||fault("diagnostic join work overflow"))}Ok(1)}
+    pub fn advance(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome {let mut work=0;let result=(|| -> Result<RetainedCloneStep,ValueError>{
         let idle = RetainedCloneProgress::default();
         if self.ready() { return Ok(RetainedCloneStep::Complete(idle)); }
         if self.closing { return Ok(RetainedCloneStep::Progress(idle)); }
         let demand = self.demands()?;
         if !fits(demand, grant) { return Ok(RetainedCloneStep::Progress(idle)); }
-        let mut receipt = RetainedCloneProgress { copied_items: 1, ..idle };
+        work=1;let mut receipt = RetainedCloneProgress { copied_items: 1, ..idle };
         match self.phase {
             0 | 1 => {
                 let target = if self.phase == 0 { &mut *self.original } else { &mut *self.copied };
@@ -87,13 +89,13 @@ impl MutationMessagePublicationJoin {
             }
             8 => {
                 let source = self.source.as_mut().ok_or_else(|| fault("diagnostic join closing source is absent"))?;
-                let step = source.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })?;
-                receipt = step.progress();
-                if source.terminal_is_empty() { self.source = None; self.phase = 9; }
+                let turn=source.close_step(RetainedCloneGrant { maximum_depth:grant.maximum_depth-1,..grant });work=turn.work;let step=turn.result?;
+                receipt=step.progress();if source.terminal_is_empty(){self.source=None;self.phase=9;work+=1;}
             }
             _ => return Err(fault("diagnostic join already completed")),
         }
         Ok(if self.ready() { RetainedCloneStep::Complete(receipt) } else { RetainedCloneStep::Progress(receipt) })
+    })();semio_framework_value::RetainedWorkOutcome{result,work}
     }
 
     /// 📤️ Transfers the already joined vectors as one ready publication owner.
@@ -120,27 +122,30 @@ impl MutationMessagePublicationJoin {
         Ok(Default::default())
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    /// ⛽️ Quotes selected original child work and any parent-owner return.
+    pub fn close_work_demand(&self)->Result<u64,ValueError>{if !self.closing||self.terminal_is_empty(){return Ok(0)}if self.retiring.is_some(){return Ok(2)}let input_owns=self.input.as_ref().is_some_and(|input|input.original.capacity()!=0||input.copied.capacity()!=0);if input_owns||self.original.capacity()!=0||self.copied.capacity()!=0||self.input.is_some(){return Ok(1)}match self.source.as_ref(){Some(source)=>source.close_work_demand()?.checked_add(1).ok_or_else(||fault("diagnostic join close work overflow")),None=>Ok(0)}}
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome {let mut work=0;let result=(|| -> Result<RetainedCloneStep,ValueError>{
         let idle = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(idle)); }
         if !self.closing { return Ok(RetainedCloneStep::Progress(idle)); }
         let demand = self.close_demands()?;
         if !fits(demand, grant) { return Ok(RetainedCloneStep::Progress(idle)); }
         if let Some(owner) = self.retiring.as_mut() {
-            let step = owner.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })?;
-            if owner.terminal_is_empty() { self.retiring = None; }
+            work=1;let step = owner.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })?;
+            if owner.terminal_is_empty() { self.retiring = None;work+=1; }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         let rows = if let Some(input) = self.input.as_mut().filter(|input| input.original.capacity() != 0 || input.copied.capacity() != 0) { Some(if input.original.capacity() != 0 { &mut *input.original } else { &mut *input.copied }) }
             else if self.original.capacity() != 0 { Some(&mut *self.original) } else if self.copied.capacity() != 0 { Some(&mut *self.copied) } else { None };
-        if let Some(rows) = rows { self.retiring = Some(MutationMessageLedgerRetirement::new(String::new(), std::mem::take(rows))); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..idle })); }
-        if self.input.is_some() { self.input = None; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..idle })); }
+        if let Some(rows) = rows { work=1;self.retiring = Some(MutationMessageLedgerRetirement::new(String::new(), std::mem::take(rows))); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..idle })); }
+        if self.input.is_some() { work=1;self.input = None; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..idle })); }
         if let Some(source) = self.source.as_mut() {
-            let step = source.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })?;
-            if source.terminal_is_empty() { self.source = None; }
+            let turn=source.close_step(RetainedCloneGrant { maximum_depth:grant.maximum_depth-1,..grant });work+=turn.work;let step=turn.result?;
+            if source.terminal_is_empty(){self.source=None;work+=1;}
             return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) });
         }
         Ok(RetainedCloneStep::Complete(idle))
+    })();semio_framework_value::RetainedWorkOutcome{result,work}
     }
 }
 
@@ -149,7 +154,8 @@ fn empty_row() -> MutationMessage { MutationMessage { level: semio_framework_dia
 
 impl ErasedSnapshotRetirement for MutationMessagePublicationJoin {
     fn next_demand(&self, _: usize) -> Result<RetirementDemand, ValueError> { self.close_demands() }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = Self::close_step(self, grant); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != semio_framework_value::RetainedCloneProgress::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+    fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{self.close_work_demand()}
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::OriginalRetirementOutcome {let turn=Self::close_step(self,grant);semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(Into::into),work:turn.work}}
     fn terminal_is_empty(&self) -> bool { Self::terminal_is_empty(self) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demands()?.copy_bytes) }
     fn next_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(self.close_demands()?.capacity_bytes) }

@@ -167,8 +167,8 @@ impl OriginalArtifactSnapshotReceiving<IfcSnapshot> for IfcOriginalPackReceiving
     }
 }
 impl ArtifactPackReceiving for IfcSnapshot {
-    fn receive_pack(source:&[u8],owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->RetainedWorkOutcome<Self,NativeSnapshotFailure>{
-        owner.receive_nested::<IfcOriginalPackReceiving,Self,NativeSnapshotFailure>(|slot,original|{
+    fn receive_pack(source:&[u8],output:&mut Option<Self>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->RetainedWorkOutcome<(),NativeSnapshotFailure>{
+        owner.receive_nested::<IfcOriginalPackReceiving,Self,NativeSnapshotFailure>(output,&mut |slot,produced,_marker,_unwind_failure,original|{
             let mut work=0;
             let result=(||{
                 let grant=original.remaining_grant();
@@ -176,13 +176,13 @@ impl ArtifactPackReceiving for IfcSnapshot {
                 work=1;
                 let Some((receiver,progress))=Self::admit_original_pack(source,store::mounted_pack_rt::PackLimits::default(),original.native(),grant)?else{return Err(NativeSnapshotFailure::from(ValueError::literal(ValueRefusalKind::InvariantViolated,"admitted original IFC receiver omitted its header")))};
                 *slot=Some(receiver);original.record_progress(progress)?;
-                let turn=original.drive_cursor::<IfcOriginalPackReceiving,Self,NativeSnapshotFailure>(slot,|receiver,native,grant|{
+                let turn=original.drive_cursor::<IfcOriginalPackReceiving,Self,NativeSnapshotFailure>(slot,produced,&mut |receiver,produced,native,grant|{
                     if receiver.is_ready(){
                         let demand=match receiver.take_demand(){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0}};
-                        if !funds(grant,demand){return RetainedWorkOutcome{result:Ok((None,Default::default())),work:0}}
-                        let mut output=None;let result=receiver.take_into(&mut output,grant).map(|progress|(output,progress)).map_err(Into::into);
+                        if !funds(grant,demand){return RetainedWorkOutcome{result:Ok(Default::default()),work:0}}
+                        let result=receiver.take_into(produced,grant).map_err(Into::into);
                         RetainedWorkOutcome{result,work:1}
-                    }else{let turn=receiver.step(source,native,grant.maximum_copy_bytes.min(4096),grant);RetainedWorkOutcome{result:turn.result.map(|progress|(None,progress)).map_err(Into::into),work:turn.work}}
+                    }else{let turn=receiver.step(source,native,grant.maximum_copy_bytes.min(4096),grant);RetainedWorkOutcome{result:turn.result.map_err(Into::into),work:turn.work}}
                 });
                 work=work.checked_add(turn.work).expect("finite IFC receiving work fits");turn.result
             })();

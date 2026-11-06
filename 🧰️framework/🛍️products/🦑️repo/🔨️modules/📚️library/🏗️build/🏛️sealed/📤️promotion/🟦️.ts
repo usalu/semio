@@ -1,4 +1,6 @@
 import{SqliteDatabaseV1}from"../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗃️sqlite/🟦️.ts";
+import{withPartitionRootsV1}from"../🔀️partition/📌️retention/🟦️.ts";
+import{sealedEntryOfV1}from"../🟦️.ts";
 import{TranspilerV1}from"../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🔬️source/🟦️.ts";
 import{spawn}from"node:child_process";
 import{appendFileSync,existsSync,mkdirSync,readFileSync,readdirSync,rmSync,statSync,writeFileSync}from"node:fs";
@@ -61,10 +63,10 @@ export async function loadCheckOfSnapshotV1(workspace:string,text:string,digest:
  for(let attempt=1;attempt<=2;attempt++){
   const ran=await runCanaryV1(workspace,text,digest,used,environment,policy,signal);
   if(!ran.ok)return{ok:false,rows:[rowOfLoadFailureV1(workspace,ran.output)]};
-  const answer=lastJsonV1(ran.output) as{check?:string;matches?:boolean;loaderSha256?:string;loader?:string}|undefined;
+  const answer=lastJsonV1(ran.output) as{check?:string;role?:string;matches?:boolean;loaderSha256?:string;loader?:string}|undefined;
   if(answer?.check!=="loaded")return{ok:false,rows:[rowOfLoadFailureV1(workspace,ran.output)]};
   if(answer.matches!==false){
-   const failed=(await Promise.all(policy.check.commands.map(command=>runSelfCheckV1(workspace,text,digest,used,command,environment,policy,signal)))).find(row=>row!==undefined);
+   const failed=answer.role==="kernel"?undefined:(await Promise.all(policy.check.commands.map(command=>runSelfCheckV1(workspace,text,digest,used,command,environment,policy,signal)))).find(row=>row!==undefined);
    return failed?{ok:false,rows:[failed]}:{ok:true,milliseconds:Date.now()-started,...(used!==loader?{loader:used}:{})};
   }
   if(attempt===2||typeof answer.loader!=="string"||sealedHashV1(answer.loader)!==answer.loaderSha256)return{ok:false,rows:[{path:"(load)",line:0,column:0,message:sealedTextV1(sealedLanguagesV1(environment,policy),"candidateLoader",{},policy)}]};
@@ -135,7 +137,8 @@ const holderPidV1=(entry:SealedEntryV1):number|undefined=>{try{const value=JSON.
 
 /** 🧹️ Removes what no pointer needs any more from one entry: every snapshot and receipt that is neither current nor one of the kept previous ones, once it has been quiet for the declared time; then, over the whole store, the oldest unprotected snapshots until the store fits its budget. */
 export function collectSealedStoreV1(workspace:string,entry:SealedEntryV1,pointer:SealedPointerV1,now:number,policy:SealedPolicyV1=sealedPolicyV1):Readonly<{removed:number;bytes:number}>{
- const keep=new Set([pointer.digest,...pointer.previous]);let removed=0,bytes=0;
+ try{return withPartitionRootsV1(workspace,policy,roots=>{
+ const keep=new Set([pointer.digest,...pointer.previous,...roots.filter(row=>row.entry===entry.entry).map(row=>row.digest)]);let removed=0,bytes=0;
  const sweep=(directory:string,protectedDigests:ReadonlySet<string>,age:number,budget?:{over:number})=>{
   let names:string[];try{names=readdirSync(directory);}catch{return;}
   const rows:{path:string;size:number;at:number}[]=[];
@@ -147,9 +150,9 @@ export function collectSealedStoreV1(workspace:string,entry:SealedEntryV1,pointe
  const loaders=new Set([...keep].flatMap(digest=>{const receipt=readSealedReceiptV1(entry,digest);return receipt?[receipt.loader]:[];}));
  try{for(const name of readdirSync(entry.directory)){const match=/^([0-9a-f]{64})\.loader\.js$/u.exec(name);if(!match||loaders.has(match[1]!))continue;const file=join(entry.directory,name);try{if(now-statSync(file).mtimeMs>=policy.quietMilliseconds){rmSync(file,{force:true});removed++;}}catch{}}}catch{}
  const store=join(resolve(workspace),...policy.cacheDirectory.split("/"));let total=0;const owners:{directory:string;keep:Set<string>}[]=[];
- try{for(const name of readdirSync(store)){const directory=join(store,name),current=readSealedPointerV1({entry:"",directory,pointer:join(directory,"current.json")} as SealedEntryV1);try{for(const file of readdirSync(directory))total+=statSync(join(directory,file)).size;}catch{continue;}owners.push({directory,keep:new Set(current?[current.digest,...current.previous]:[])});}}catch{}
+ try{for(const name of readdirSync(store)){const directory=join(store,name);let current:SealedPointerV1|undefined;try{current=sealedPointerOfV1(JSON.parse(readFileSync(join(directory,"current.json"),"utf8")));}catch{}try{for(const file of readdirSync(directory))total+=statSync(join(directory,file)).size;}catch{continue;}const protectedRoots=roots.filter(row=>sealedEntryOfV1(workspace,row.entry,policy).directory===directory).map(row=>row.digest);owners.push({directory,keep:new Set([...(current?[current.digest,...current.previous]:[]),...protectedRoots])});}}catch{}
  if(total>policy.maximumBytes){const budget={over:total-policy.maximumBytes};for(const owner of owners)if(budget.over>0)sweep(owner.directory,owner.keep,0,budget);}
- return Object.freeze({removed,bytes});
+ return Object.freeze({removed,bytes});});}catch(error){const code=(error as{code?:string;errcode?:number}).code,n=(error as{errcode?:number}).errcode;if(code==="SQLITE_BUSY"||code==="SQLITE_LOCKED"||n!==undefined&&[5,6].includes(n&255))return Object.freeze({removed:0,bytes:0});throw error;}
 }
 
 const eventLog=(entry:SealedEntryV1)=>join(entry.directory,"promotions.jsonl");

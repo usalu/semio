@@ -6,7 +6,7 @@ pub fn invariant()->ValueError{ValueError::literal(ValueRefusalKind::InvariantVi
 
 #[macro_export]
 macro_rules! scoped_encoding_receiver {
- ($original:ident,$operation:ident,$native_allocation:ident,$native_progress:ident)=>{{
+ ($original:ident,$operation:ident,$native_allocation:ident,$native_event:ident,$native_progress:ident)=>{{
   $original.checkpoint()?;
   let start=$original.owned_bytes;let ceiling=$original.maximum_bytes;let maximum=ceiling.checked_sub(start).ok_or_else($crate::native_receiving::invariant)?;
   let seen=std::sync::atomic::AtomicUsize::new(start);let refusal=std::sync::Mutex::new(None::<ValueError>);let mut work=None::<(usize,usize)>;
@@ -20,13 +20,14 @@ macro_rules! scoped_encoding_receiver {
    })();match result{Ok(())=>true,Err(error)=>{let mut first=refusal.lock().unwrap_or_else(std::sync::PoisonError::into_inner);if first.is_none(){*first=Some(error)}false}}
   };
   let original_owned=&mut $original.owned_bytes;let original_port=&mut $original.allocation;
-  let mut allocate=|request:$crate::native_encoding::NativeEncodeAllocation|{
-   if refusal.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some(){return Err($crate::native_receiving::invariant())}
-   let result=(||{let local=original_owned.checked_sub(start).ok_or_else($crate::native_receiving::invariant)?;if request.maximum_bytes>maximum||request.owned_bytes!=local||local.checked_add(request.bytes)!=Some(request.next_owned_bytes)||request.next_owned_bytes>request.maximum_bytes{return Err($crate::native_receiving::invariant())}
-    let next=original_owned.checked_add(request.bytes).filter(|next|*next<=ceiling).ok_or_else($crate::native_receiving::invariant)?;
-    if let allocation::Binding::Forwarded(port)=original_port{port($native_allocation{bytes:request.bytes,owned_bytes:*original_owned,next_owned_bytes:next,maximum_bytes:ceiling})?;}
-    *original_owned=next;seen.store(next,std::sync::atomic::Ordering::Relaxed);Ok(())
-   })();if let Err(error)=result{let mut first=refusal.lock().unwrap_or_else(std::sync::PoisonError::into_inner);if first.is_none(){*first=Some(error)}return Err($crate::native_receiving::invariant())}Ok(())
+  let mut pending=None;
+  let mut allocate=|event:$crate::native_encoding::NativeEncodeAllocationEvent|{
+   use $crate::native_encoding::NativeEncodeAllocationEvent as ChildEvent;
+   match event{
+    ChildEvent::Quote(request)=>{if pending.is_some(){return Err($crate::native_receiving::invariant())}let local=original_owned.checked_sub(start).ok_or_else($crate::native_receiving::invariant)?;if request.maximum_bytes>maximum||request.owned_bytes!=local||local.checked_add(request.bytes)!=Some(request.next_owned_bytes)||request.next_owned_bytes>request.maximum_bytes{return Err($crate::native_receiving::invariant())}let next=original_owned.checked_add(request.bytes).filter(|next|*next<=ceiling).ok_or_else($crate::native_receiving::invariant)?;let parent=$native_allocation{bytes:request.bytes,owned_bytes:*original_owned,next_owned_bytes:next,maximum_bytes:ceiling};if let allocation::Binding::Forwarded(port)=original_port{port($native_event::Quote(parent))?}pending=Some((request,parent));Ok(())},
+    ChildEvent::Post{request,actual}=>{let(child,parent)=pending.ok_or_else($crate::native_receiving::invariant)?;if child!=request{return Err($crate::native_receiving::invariant())}pending=None;let next=parent.next_owned_bytes;*original_owned=next;seen.store(next,std::sync::atomic::Ordering::Relaxed);if let allocation::Binding::Forwarded(port)=original_port{port($native_event::Post{request:parent,actual})?}Ok(())},
+    ChildEvent::Cancel(request)=>{let(child,parent)=pending.ok_or_else($crate::native_receiving::invariant)?;if child!=request{return Err($crate::native_receiving::invariant())}pending=None;if let allocation::Binding::Forwarded(port)=original_port{port($native_event::Cancel(parent))?}Ok(())}
+   }
   };
   let result=$operation(maximum,&mut observer,&mut allocate);if let Some(error)=refusal.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner){return Err(E::from(error))}result
  }};

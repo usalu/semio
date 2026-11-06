@@ -21,7 +21,7 @@ impl<T> SharedOwner<T> {
     }
 
     /// 🎟️ Admits one complete allocation before moving the original inline payload into it.
-    pub fn admit(value:T,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Self,RetainedCloneProgress),(ValueError,T)>{let turn=crate::retirement::arc_custody::admit_shared_allocation(value,grant);crate::RetainedWorkOutcome{result:turn.result.map(|(value,progress)|(Self{value:ManuallyDrop::new(Some(value))},progress)),work:turn.work}}
+    pub fn admit(value:T,grant:RetainedCloneGrant,actual:&mut Option<usize>)->crate::RetainedWorkOutcome<(Self,RetainedCloneProgress),(ValueError,T)>{let turn=crate::retirement::arc_custody::admit_shared_allocation(value,grant,actual);crate::RetainedWorkOutcome{result:turn.result.map(|(value,progress)|(Self{value:ManuallyDrop::new(Some(value))},progress)),work:turn.work}}
 
     /// 🧊️ Constructs one shared allocation at an explicitly synchronous boundary.
     pub fn from_cold(value: T) -> Self { Self {value:ManuallyDrop::new(Some(Arc::new(value)))} }

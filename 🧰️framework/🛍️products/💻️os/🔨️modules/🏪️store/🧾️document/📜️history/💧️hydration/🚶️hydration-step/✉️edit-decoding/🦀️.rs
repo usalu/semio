@@ -14,7 +14,7 @@ where
         let progress = match envelope.admit_document_next(child) { Ok(progress) => progress, Err(_) => return self.reject(MemberOpenDiagnostic::Initialization) };
         if !progress.fits(child) { return self.reject(MemberOpenDiagnostic::Initialization); }
         let ready = envelope.document_admission_is_complete();
-        if let Err(diagnostic) = semio_os_store_member_open::record_member_step(cx, progress) { return self.reject(diagnostic); }
+        if let Err(diagnostic) = semio_framework_os_store_member_open::record_member_step(cx, progress) { return self.reject(diagnostic); }
         if ready { self.phase = Phase::BuildAppliedCursor; }
         PersistedDocumentHydrationStep::Pending(self.progress())
     }

@@ -21,6 +21,11 @@ pub struct DecodeReport {
     pub schema_drift: bool,
     pub verified: semio_framework_pack_format::VerificationLevel,
 }
+impl semio_framework_value::retirement::RetireOwned for DecodeReport{
+ fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::{deferred,sequence};sequence(vec![deferred(self.unknown_field_ids),deferred(self.unknown_segments)])}
+ fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{deferred_birth_bytes_for,sequence_birth_bytes};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.unknown_field_ids),deferred_birth_bytes_for(&self.unknown_segments)])}
+ fn controlled_retirement_supported()->bool{true}
+}
 
 /// 📄️ The single entry point every other `pack_*`/`vcs`/`dsl_derive` crate encodes a
 /// `RecordValue` through. Pre-pass computes the deterministic symbol table, then writes
@@ -247,3 +252,21 @@ fn decode_record_body_inner(bytes: semio_framework_replication_codec::ByteSpan<'
     Ok((record, report))
 }
 //#endregion 🔖️Document
+
+#[cfg(test)]
+mod report_retirement_tests{
+ use super::*;
+ use semio_framework_value::retirement::controlled::ControlledRetirement;
+ #[test]
+ fn original_decode_report_retires_its_owned_unknowns(){
+  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/♻️report/🔣️.json")).unwrap();
+  let fields=fixture["unknownFieldIds"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as u16).collect::<Vec<_>>();
+  let segments=fixture["unknownSegments"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as u8).collect::<Vec<_>>();
+  let report=DecodeReport{unknown_field_ids:fields,unknown_segments:segments,schema_drift:fixture["schemaDrift"].as_bool().unwrap(),verified:Default::default()};
+  assert_eq!(serde_json::json!({"unknownFieldIds":report.unknown_field_ids,"unknownSegments":report.unknown_segments,"schemaDrift":report.schema_drift,"verification":"standard"}),serde_json::json!({"unknownFieldIds":fixture["unknownFieldIds"],"unknownSegments":fixture["unknownSegments"],"schemaDrift":fixture["schemaDrift"],"verification":fixture["verification"]}));
+  let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["grant"].clone()).unwrap();
+  let mut owner=ControlledRetirement::new(report).ok().unwrap();let mut released=0;
+  for _ in 0..fixture["maximumTurns"].as_u64().unwrap(){if owner.terminal_is_empty(){break}released+=owner.step(grant).unwrap().progress().released_bytes;}
+  assert!(owner.terminal_is_empty());assert!(released>0);
+ }
+}

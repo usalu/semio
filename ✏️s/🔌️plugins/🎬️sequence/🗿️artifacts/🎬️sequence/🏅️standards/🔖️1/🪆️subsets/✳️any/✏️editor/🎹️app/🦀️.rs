@@ -184,18 +184,13 @@ impl ArtifactEditor for SequencePlayApp {
     /// reserved factory but never a concrete importer, so every inbound `steps:in` delivery is routed
     /// exclusively through this builder (`dispatch_import_media` → `build_artifact_reserved_media_job`);
     /// `copy`/`cut`/`paste` stay on the framework's own reserved factories.
-    fn build_reserved_tool_job(request: semio_plugin::ArtifactReservedToolJobRequest<semio_plugin::EditorApp<Self>>) -> Result<Option<semio_plugin::ArtifactReservedToolJob>, Fault> {
-        if request.tool_id.as_str() != SEQUENCE_IMPORT_TOOL_ID {
-            return Ok(None);
-        }
-        if !request.raw_wire.is_empty() {
-            return Err(sequence_fault("sequence.import-media.undecoded", "sequence import-media admits a decoded media value, never a wire payload"));
-        }
-        let semio_plugin::ArtifactReservedToolInput::Media { port, media } = &request.input else {
-            return Err(sequence_fault("sequence.import-media.missing", "sequence import-media requires media input"));
-        };
-        let (port, media) = (port.clone(), media.clone());
-        Ok(Some(semio_plugin::ArtifactReservedToolJob::new(SequenceImportJob::new(request, port, media))))
+    fn build_reserved_tool_job(request:&mut Option<semio_plugin::ArtifactReservedToolJobRequest<semio_plugin::EditorApp<Self>>>,output:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if output.is_some(){return semio_plugin::tool_contract::admit_reserved_work::<semio_plugin::EditorApp<Self>,SequenceImportJob>(request,output,cx)}
+        let original=request.as_ref().ok_or_else(||semio_framework_value::ValueError::invariant("Sequence original reserved request is absent"))?;
+        if original.tool_id.as_str()!=SEQUENCE_IMPORT_TOOL_ID{return Ok(false)}
+        if !original.raw_wire.is_empty(){return Err(semio_framework_value::ValueError::invariant("Sequence reserved import requires decoded media").into())}
+        if !matches!(original.input.as_ref(),Some(semio_plugin::ArtifactReservedToolInput::Media{..})){return Err(semio_framework_value::ValueError::invariant("Sequence reserved import media is absent").into())}
+        semio_plugin::tool_contract::admit_reserved_work::<semio_plugin::EditorApp<Self>,SequenceImportJob>(request,output,cx)
     }
 
     fn build_tool_job(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {

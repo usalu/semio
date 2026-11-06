@@ -1,0 +1,67 @@
+{
+  "cases": [
+    {
+      "port": "image:in",
+      "schema": "2d.image",
+      "mediaClass": "twoD",
+      "form": "raster",
+      "accepted": true
+    },
+    {
+      "port": "artifact:in",
+      "schema": "2d.image",
+      "mediaClass": "twoD",
+      "form": "raster",
+      "accepted": false
+    },
+    {
+      "port": "natural-file:in",
+      "schema": "2d.image",
+      "mediaClass": "twoD",
+      "form": "raster",
+      "accepted": false
+    },
+    {
+      "port": "image:out",
+      "schema": "2d.image",
+      "mediaClass": "twoD",
+      "form": "raster",
+      "accepted": false
+    },
+    {
+      "port": "image:in",
+      "schema": "raster.document",
+      "mediaClass": "twoD",
+      "form": "raster",
+      "accepted": false
+    },
+    {
+      "port": "image:in",
+      "schema": "2d.image",
+      "mediaClass": "data",
+      "form": "raster",
+      "accepted": false
+    },
+    {
+      "port": "image:in",
+      "schema": "2d.image",
+      "mediaClass": "twoD",
+      "form": "value",
+      "accepted": false
+    },
+    {
+      "port": "image:in",
+      "schema": "2d.image",
+      "mediaClass": "twoD",
+      "form": "vector",
+      "accepted": false
+    },
+    {
+      "port": "image:in",
+      "schema": "2D.image",
+      "mediaClass": "twoD",
+      "form": "raster",
+      "accepted": false
+    }
+  ]
+}

@@ -28,7 +28,7 @@ semio-os-store-engine = { path = "../../../../../⚙️engine/📦️packages/�
 semio-os-store-engine-owners = { path = "../../../../../🏗️initialization/🏠️owners/📦️packages/🦀️rust" }
 semio-os-store-initialization-runtime = { path = "../../../../../🏗️initialization/🏃️runtime/📦️packages/🦀️rust" }
 semio-os-store-ledger = { path = "../../../../../📒️ledger/📦️packages/🦀️rust" }
-semio-os-store-member-open = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-os-store-member-open = { path = "../../../📦️packages/🦀️rust", package = "semio-os-store-member-open"}
 semio-os-store-owned-schema-decode = { path = "../../../../../📦️codec/🧬️owned-schema/📦️packages/🦀️rust" }
 semio-os-store-read = { path = "../../../../../🔗️read/📦️packages/🦀️rust" }
 semio-os-store-space-member = { path = "../../../../👥️space-member/📦️packages/🦀️rust" }

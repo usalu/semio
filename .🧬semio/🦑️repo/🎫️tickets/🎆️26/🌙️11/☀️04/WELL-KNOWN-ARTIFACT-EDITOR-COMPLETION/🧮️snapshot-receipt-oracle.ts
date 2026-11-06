@@ -1,0 +1,10 @@
+import {readFileSync} from "node:fs";
+import {Database} from "bun:sqlite";
+import Ajv from "ajv";
+const base="🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️tests/";
+const paths=["🧭️drive/frame-submission.json","🧭️drive/body-submission.json","🧾️receipt/🔣️.json","🧾️receipt/frame-rejected.json"];
+const values=paths.map(path=>JSON.parse(readFileSync(base+path,"utf8")));const ajv=new Ajv();
+for(const fixture of values)if(!ajv.validate({type:"object",required:["contract"],properties:{contract:{type:"string",minLength:1}}},fixture))throw Error(ajv.errorsText());
+const db=new Database(":memory:");const row=db.query("SELECT length(CAST(? AS BLOB)) AS body_bytes, length(CAST(? AS BLOB)) AS refusal_bytes").get(values[1].text,values[2].text) as {body_bytes:number;refusal_bytes:number};
+if(row.body_bytes!==values[1].textBytes||row.refusal_bytes!==values[2].copiedBytes||values[0].expectedWork!==1||values[0].callbackCalls!==1||values[0].copiedItems!==1||values[1].work!==3||values[1].copiedItems!==3||values[2].copiedItems!==1||values[2].primaryKind!=="canceled"||values[2].receiptKind!=="workLimit"||values[3].expectedWork!==1||values[3].callbackCalls!==0||values[3].copiedItems!==1||values[3].receiptKind!=="workLimit")throw Error(JSON.stringify(values));
+console.log(JSON.stringify({fixtures:values.length,...row}));db.close();

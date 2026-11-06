@@ -40,5 +40,10 @@
       "output": false,
       "receipt": true
     }
-  ]
+  ],
+  "composite": {
+    "quote": "original quote",
+    "allocation": "allocation post",
+    "receipt": "construction receipt"
+  }
 }

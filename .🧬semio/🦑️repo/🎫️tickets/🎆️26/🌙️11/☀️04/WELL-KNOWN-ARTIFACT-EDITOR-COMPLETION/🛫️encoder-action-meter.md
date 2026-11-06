@@ -1,0 +1,11 @@
+# Original Encoder Action Meter
+
+The existing scoped Source callback receives `advance(units, owned)` after stage progress and is not a general completed-action ledger: `append_bytes` advances before writing, while `copy_text` advances after writing. It must not be sampled as an actual-work receipt.
+
+The encoder needs its own caller-supplied work recipient and monotone performed-action counter, independent of decoder work, physical capacity and stage callbacks. A producer reserves one named bounded action against the original recipient before the effect; it commits the performed count immediately after the effect, before any fallible progress observer. A no-effect failure cancels its unused reservation. A child scope forwards the same recipient and the cumulative counter on success, refusal and unwind; an opaque continuation preserves the counter but cannot detach an active recipient. Nested borrowing cannot reset the baseline or replace the recipient. Work counts must come from actual concrete actions such as a selected cursor transition or an appended output chunk, never bytes/copy items or guessed loop length.
+
+The first neutral test must cover a denied reservation with unchanged destination and zero work, one actual append followed by observer cancellation with retained prefix and work one, a no-effect allocation refusal with canceled reservation, and nested scope forwarding to the same actual recipient. The test compares each real heap receipt and closes retained text/cursor/encoder owners with the original funded caller grant. A separate third-party oracle evaluates the authored cases. No synthetic decoder control or work authority is acceptable.
+
+The shared record encoder also needs retained receiving forms of schema creation, typed projection, text/pack emission and envelope wrapping. Its current Result-returning children can allocate partial locals and its observer collapses independent failures. A counter alone cannot repair those ownership boundaries.
+
+The Source integration now separates physical span permits from actual fuel debit and binds the original Job recipient. Direct advance while that recipient is installed reports progress without issuing a physical span or work credit. Fixture-backed actual append tests are staged; native validation remains pending.

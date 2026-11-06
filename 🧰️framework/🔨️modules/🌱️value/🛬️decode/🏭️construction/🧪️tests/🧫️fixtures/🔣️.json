@@ -1,1 +1,56 @@
-[{"id":"denied-items","admitted":false,"receiptAccepted":true,"keeper":"input","success":false},{"id":"denied-copy","admitted":false,"receiptAccepted":true,"keeper":"input","success":false},{"id":"denied-capacity","admitted":false,"receiptAccepted":true,"keeper":"input","success":false},{"id":"denied-depth","admitted":false,"receiptAccepted":true,"keeper":"input","success":false},{"id":"accepted","admitted":true,"receiptAccepted":true,"keeper":"output","success":true},{"id":"receipt-refused","admitted":true,"receiptAccepted":false,"keeper":"output","success":false}]
+[
+  {
+    "id": "denied-items",
+    "birth": false,
+    "publication": false,
+    "receiptAccepted": true,
+    "failure": false,
+    "calls": 1,
+    "receipts": 0
+  },
+  {
+    "id": "denied-copy",
+    "birth": true,
+    "publication": false,
+    "receiptAccepted": true,
+    "failure": false,
+    "calls": 2,
+    "receipts": 1
+  },
+  {
+    "id": "denied-capacity",
+    "birth": false,
+    "publication": false,
+    "receiptAccepted": true,
+    "failure": false,
+    "calls": 1,
+    "receipts": 0
+  },
+  {
+    "id": "denied-depth",
+    "birth": false,
+    "publication": false,
+    "receiptAccepted": true,
+    "failure": false,
+    "calls": 1,
+    "receipts": 0
+  },
+  {
+    "id": "accepted",
+    "birth": true,
+    "publication": true,
+    "receiptAccepted": true,
+    "failure": false,
+    "calls": 2,
+    "receipts": 2
+  },
+  {
+    "id": "receipt-refused",
+    "birth": true,
+    "publication": false,
+    "receiptAccepted": false,
+    "failure": true,
+    "calls": 1,
+    "receipts": 1
+  }
+]

@@ -1,0 +1,12 @@
+import {test,expect} from "bun:test";
+import {Database} from "bun:sqlite";
+import fixture from "../🧫️fixtures/🔭️startup-source.json" with {type:"json"};
+import {createResidentWatcherV1} from "../../🔭️watch/🎟️startup/🟨️.mjs";
+import {withResidentWatcherStartupV1} from "../../🔭️watch/🎟️startup/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
+import {createIssuedResourceControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {declareLibraryBuildTestEnvelopeV1} from "../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+declareLibraryBuildTestEnvelopeV1({suite:"resident-watcher-startup"});
+test("resident watcher receives its caller's original startup authority",()=>{const controller=new AbortController(),original={signal:controller.signal,remainingMilliseconds:()=>fixture.remainingMilliseconds},db=new Database(":memory:"),oracle=db.query("SELECT ?1<?2 AS accepted").get(fixture.readyAfterMilliseconds,fixture.remainingMilliseconds) as {accepted:number};expect(Boolean(oracle.accepted)).toBe(fixture.accepted);const result=createResidentWatcherV1({root:"root"},original,options=>{expect(options.startupControl).toBe(original);return options;});expect(result.startupControl.signal).toBe(controller.signal);expect(result.startupControl.remainingMilliseconds()).toBe(fixture.remainingMilliseconds);db.close();});
+test("startup requests the existing preparation budget without extending its parent",async()=>{const parent={} as never,db=new Database(":memory:"),row=db.query("SELECT min(?1,?2) AS remaining").get(fixture.remainingMilliseconds,fixture.requestedMilliseconds) as {remaining:number};expect(row.remaining).toBe(fixture.remainingMilliseconds);await withResidentWatcherStartupV1(parent,async control=>{expect(control).toBe(parent);},async(control,requested,body)=>{expect(control).toBe(parent);expect(requested).toBe(fixture.requestedMilliseconds);return body(control);});db.close();});
+test("the real startup loan is bounded by its issued parent",async()=>withBuildTestInvocationV1(async original=>{const parent=createIssuedResourceControlV1(original,"test:watcher-startup",fixture.remainingMilliseconds);await withResidentWatcherStartupV1(parent,async child=>{expect(child).not.toBe(parent);const remaining=child.remainingMilliseconds();expect(remaining).not.toBeNull();expect(remaining!).toBeLessThanOrEqual(fixture.remainingMilliseconds);expect(child.signal.aborted).toBe(false);});}));

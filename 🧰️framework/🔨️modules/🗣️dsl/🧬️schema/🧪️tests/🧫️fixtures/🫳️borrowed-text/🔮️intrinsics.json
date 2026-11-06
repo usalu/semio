@@ -1,0 +1,7 @@
+{
+  "text": "hello",
+  "positiveSigned": 7,
+  "floatWhole": 1,
+  "missing": null,
+  "document": "text=\"hello\" positive=int64(7) whole=1.0 missing=null\n"
+}

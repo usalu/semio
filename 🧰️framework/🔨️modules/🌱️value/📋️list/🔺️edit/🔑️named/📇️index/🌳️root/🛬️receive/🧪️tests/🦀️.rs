@@ -7,12 +7,12 @@ use crate::{DslValue,Number,NativeDecodeControl,NamedPersistentRoot,native_decod
 impl crate::NamedRecordKey for ReceivedRow{fn named_record_key(&self)->&str{self.key.as_str()}}
 impl Clone for ReceivedRow{fn clone(&self)->Self{panic!("original named receiving cannot clone typed rows")}}
 
-struct ConstructionTurn{original:RetainedCloneGrant,accepted:bool}
+struct ConstructionTurn{original:RetainedCloneGrant,accepted:bool,submitted:RetainedCloneProgress}
 impl NativeDecodeConstructionRecipient for ConstructionTurn{
- fn grant(&mut self,_:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"named receiver already holds its original explicit grant"))}
- fn accept(&mut self,g:RetainedCloneGrant,p:RetainedCloneProgress)->Result<(),ValueError>{assert!(!self.accepted);assert_eq!(g.maximum_items,self.original.maximum_items);assert!(g.maximum_copy_bytes<=self.original.maximum_copy_bytes&&g.maximum_capacity_bytes<=self.original.maximum_capacity_bytes&&g.maximum_release_bytes<=self.original.maximum_release_bytes&&g.maximum_depth<=self.original.maximum_depth);assert!(p.fits(g));self.accepted=true;Ok(())}
+ fn submitted(&self)->RetainedCloneProgress{self.submitted}fn grant(&mut self,_:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"named receiver already holds its original explicit grant"))}
+ fn accept(&mut self,g:RetainedCloneGrant,p:RetainedCloneProgress)->Result<(),ValueError>{self.submitted=self.submitted.checked_add(p)?;assert!(!self.accepted);assert_eq!(g.maximum_items,self.original.maximum_items);assert!(g.maximum_copy_bytes<=self.original.maximum_copy_bytes&&g.maximum_capacity_bytes<=self.original.maximum_capacity_bytes&&g.maximum_release_bytes<=self.original.maximum_release_bytes&&g.maximum_depth<=self.original.maximum_depth);assert!(p.fits(g));self.accepted=true;Ok(())}
 }
-fn receive<R>(control:&mut NativeDecodeControl<'_>,g:RetainedCloneGrant,f:impl FnOnce(&mut NativeDecodeControl<'_>)->crate::RetainedWorkOutcome<R,crate::OriginalReceivingPrimary>)->crate::RetainedWorkOutcome<R,crate::OriginalReceivingPrimary>{let mut recipient=ConstructionTurn{original:g,accepted:false};let mut work=0;let result=control.with_construction_recipient(&mut recipient,|control|{let turn=f(control);work=turn.work;turn.result});crate::RetainedWorkOutcome{result,work}}
+fn receive<R>(control:&mut NativeDecodeControl<'_>,g:RetainedCloneGrant,f:impl FnOnce(&mut NativeDecodeControl<'_>)->crate::RetainedWorkOutcome<R,crate::OriginalReceivingPrimary>)->crate::RetainedWorkOutcome<R,crate::OriginalReceivingPrimary>{let mut recipient=ConstructionTurn{original:g,accepted:false,submitted:Default::default()};let mut work=0;let result=control.with_construction_recipient(&mut recipient,|control|{let turn=f(control);work=turn.work;turn.result});crate::RetainedWorkOutcome{result,work}}
 
 fn fund(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:257,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 fn close_fund(d:RetirementDemand)->RetainedCloneGrant{assert!(d.copy_bytes<=4096,"selected close quote exceeds its authored body");RetainedCloneGrant{maximum_copy_bytes:4096,..fund(d)}}

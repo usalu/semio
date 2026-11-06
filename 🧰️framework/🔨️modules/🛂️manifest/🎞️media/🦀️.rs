@@ -159,6 +159,7 @@ semio_framework_value::artifact_retire_leaf!(MediaType);
 #[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase", tag = "kind")]
 #[value(rename_all = "camelCase", tag = "kind")]
+#[derive(semio_framework_value::NativeReceive)]
 pub enum MediaWireFormat {
     Binary { format_kind: String },
     Document { schema: String },

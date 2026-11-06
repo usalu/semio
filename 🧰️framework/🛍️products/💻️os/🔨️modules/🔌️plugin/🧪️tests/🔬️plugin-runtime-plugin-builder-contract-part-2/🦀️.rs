@@ -7,72 +7,72 @@
 //! `handle_command` — everything app-specific dispatches via `dispatch_typed`.
 
 
-use semio_framework_plugin_plugin_program::AppInstance;
+use semio_plugin_plugin_program::AppInstance;
 use semio_framework_artifact_reference::ArtifactDialect;
-use semio_framework_plugin_decl_emission::child_emit_preparation::ChildEmitPreparation;
-use semio_framework_plugin_decl_emission::child_emit_preparation::ChildEmitPreparationStep;
-use semio_framework_plugin_interaction::mutations::InteractionConfigMutation;
+use semio_plugin_decl_emission::child_emit_preparation::ChildEmitPreparation;
+use semio_plugin_decl_emission::child_emit_preparation::ChildEmitPreparationStep;
+use semio_plugin_interaction::mutations::InteractionConfigMutation;
 use protocol::LOCAL_ACTOR_ID;
-use semio_framework_plugin_decl_views::NoConfigMutation;
-use semio_framework_plugin_builder::Ready;
+use semio_plugin_decl_views::NoConfigMutation;
+use semio_plugin_builder::Ready;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::retained_clone::RetainedCloneStep;
-use semio_framework_plugin_decl_app::tool_contract::TypedOperationResultLane;
+use semio_plugin_decl_app::tool_contract::TypedOperationResultLane;
 use serde_json::Value;
 use semio_framework_value::ValueError;
-use semio_framework_plugin_testing_laws::artifact_app_laws;
-use semio_framework_plugin_plugin_program::decode_wire_serialized;
-use semio_framework_plugin_plugin_program::encode_wire_serialized;
-use semio_framework_plugin_job::reserved_jobs::plugin_job_yield_once;
-use semio_framework_plugin_plugin_program::plugin_runtime;
+use semio_plugin_testing_laws::artifact_app_laws;
+use semio_plugin_plugin_program::decode_wire_serialized;
+use semio_plugin_plugin_program::encode_wire_serialized;
+use semio_plugin_job::reserved_jobs::plugin_job_yield_once;
+use semio_plugin_plugin_program::plugin_runtime;
 use semio_framework_os_kernel as protocol;
-use semio_framework_plugin_job::reserved_job_outcomes;
-use semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission;
+use semio_plugin_job::reserved_job_outcomes;
+use semio_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission;
 use semio_framework_os_kernel as store;
-use semio_framework_plugin_tool_run as tool_run;
-use semio_framework_plugin_abi::ArtifactAnalysis;
-use semio_framework_plugin_abi::ArtifactAnalyzer;
-use semio_framework_plugin_abi::ArtifactBuilder;
-use semio_framework_plugin_abi::ArtifactChildren;
-use semio_framework_plugin_abi::ArtifactComposer;
-use semio_framework_plugin_abi::ArtifactComposition;
-use semio_framework_plugin_abi::ArtifactDecomposer;
-use semio_framework_plugin_decl_surface::ArtifactEditor;
-use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
-use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob;
+use semio_plugin_tool_run as tool_run;
+use semio_plugin_abi::ArtifactAnalysis;
+use semio_plugin_abi::ArtifactAnalyzer;
+use semio_plugin_abi::ArtifactBuilder;
+use semio_plugin_abi::ArtifactChildren;
+use semio_plugin_abi::ArtifactComposer;
+use semio_plugin_abi::ArtifactComposition;
+use semio_plugin_abi::ArtifactDecomposer;
+use semio_plugin_decl_surface::ArtifactEditor;
+use semio_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
+use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
+use semio_plugin_decl_app::tool_contract::ArtifactReservedJob;
 use store::ArtifactStoreInitializationAuthority;
-use semio_framework_plugin_decl_surface::ArtifactViewer;
-use semio_framework_plugin_decl_emission::AsyncTaskRun;
-use semio_framework_plugin_decl_emission::AsyncTaskSource;
-use semio_framework_plugin_decl_views::child_view::ChildContentRetainers;
-use semio_framework_plugin_abi::DerivedArtifactSpec;
-use semio_framework_plugin_window_kits::LabelAxes;
-use semio_framework_plugin_decl_app::NaturalFileDecodeCursor;
+use semio_plugin_decl_surface::ArtifactViewer;
+use semio_plugin_decl_emission::AsyncTaskRun;
+use semio_plugin_decl_emission::AsyncTaskSource;
+use semio_plugin_decl_views::child_view::ChildContentRetainers;
+use semio_plugin_abi::DerivedArtifactSpec;
+use semio_plugin_window_kits::LabelAxes;
+use semio_plugin_decl_app::NaturalFileDecodeCursor;
 use semio_framework_os_kernel::io::SubsetValidator;
-use semio_framework_plugin_decl_emission::ToolCommandCatalog;
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
-use semio_framework_plugin_window_config::WindowConfigOwner;
-use semio_framework_plugin_window_config::WindowConfigReplaceMutation;
-use semio_framework_plugin_window_kits::WindowKit;
-use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
-use semio_framework_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::{KEYED_WINDOW_BODY_KEY, KeyedTestApp, TestApp, TestCommand, app_maintenance_turn, apply_test_mutations, interaction_app_raw, keyed_pick_carrier_scope, keyed_test_registry, meta, new_test_child, original_publication_turn, reactor_native_budget, test_child_dialect};
-use semio_framework_ui_contract::*;
+use semio_plugin_decl_emission::ToolCommandCatalog;
+use semio_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_plugin_window_config::WindowConfigOwner;
+use semio_plugin_window_config::WindowConfigReplaceMutation;
+use semio_plugin_window_kits::WindowKit;
+use semio_plugin_window_transient::window_transient::WindowTransientOwner;
+use semio_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::{KEYED_WINDOW_BODY_KEY, KeyedTestApp, TestApp, TestCommand, app_maintenance_turn, apply_test_mutations, interaction_app_raw, keyed_pick_carrier_scope, keyed_test_registry, meta, new_test_child, original_publication_turn, reactor_native_budget, test_child_dialect};
+use semio_ui_contract::*;
 use semio_framework::*;
 use semio_framework::kernel::*;
 use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
 use semio_framework_value::DslValue;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin_decl_emission::{ActionMeta, ChildEmit, Emit};
-use semio_framework_plugin_app_builder::App;
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin_decl_emission::{ActionMeta, ChildEmit, Emit};
+use semio_plugin_app_builder::App;
+use semio_plugin_decl_app::ArtifactApp;
 use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_window_kits::AppActionRegistry;
-use semio_framework_plugin_decl_views::NoDraftMutation;
-use semio_framework_plugin_instance_app::VcsArtifactApp;
-use semio_framework_plugin_abi::{ArtifactDeserializer, ArtifactSerializer};
+use semio_plugin_window_kits::AppActionRegistry;
+use semio_plugin_decl_views::NoDraftMutation;
+use semio_plugin_instance_app::VcsArtifactApp;
+use semio_plugin_abi::{ArtifactDeserializer, ArtifactSerializer};
 use semio_framework_diagnostic::FaultFrom;
 use semio_framework::IconName;
 use semio_framework::ViewModel;
@@ -86,11 +86,11 @@ use semio_framework_artifact_reference::ArtifactRef;
 use pack::snapshot::ArtifactPack;
 use semio_framework_os_kernel::os_store::backbone::Backbone;
 use semio_framework_os_kernel::{MemberFactory, SpaceMember};
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot;
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_slot_children::SetSlotChildren;
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
-use semio_framework_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::TestMembers;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_slot_children::SetSlotChildren;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
+use semio_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::TestMembers;
 
     mod local_interaction_dispatch {
         include!("../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs");
@@ -137,10 +137,10 @@ use semio_framework_plugin_tests_05::plugin_runtime_plugin_builder_contract_supp
 
     #[semio_framework_async_macros::async_test]
     async fn retained_child_group_publishes_one_acknowledged_parent_child_gesture_and_retires() {
-        let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+        let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
         let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
-        let mounted_policy = semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let mounted_policy = semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
@@ -151,21 +151,21 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
         let id = 41;
         let mut app = VcsArtifactApp::<KeyedTestApp, TestMembers>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await.expect("the reference snapshot births");
-        semio_framework_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
+        semio_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(id).await;
         let declared = ArtifactRef { artifact_id: "child-1".into(), dialect: test_child_dialect().await }.to_uri();
         apply_test_mutations(app.stores.test_store_mut().await, vec![TestMutation::SetSlotChildren(SetSlotChildren { children: vec![declared] })]).await.expect("the actual parent declares the exact member before registration");
         let child = new_test_child("child-1").await.expect("construct child");
-        app.register_child("slot", "child-1", test_child_dialect().await, child, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("register child");
-        semio_framework_plugin_testing_laws::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 9 }, &ActionMeta { expected_document_revision:None, actor: "fixture".into(), instance_id: id, view_state: None }, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut identity, cx).await.expect("admit retained child gesture");
+        app.register_child("slot", "child-1", test_child_dialect().await, child, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("register child");
+        semio_plugin_testing_laws::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 9 }, &ActionMeta { expected_document_revision:None, actor: "fixture".into(), instance_id: id, view_state: None }, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut identity, cx).await.expect("admit retained child gesture");
 
-        let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
-        let cell = std::sync::Arc::new(semio_framework_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() }, runtime.mounted_policy));
+        let runtime = semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let cell = std::sync::Arc::new(semio_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() }, runtime.mounted_policy));
         runtime.instances.borrow_mut().insert_admitted(id, cell.clone());
         let acknowledgement_fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🥇️tool-latest-wins.json")).expect("language-neutral result ACK fixture");
         let mut lanes = Vec::new();
         for turn in 0..100_000 {
-            if let Err(error) = semio_framework_plugin_runtime_instances::inst_cleanup_turns::plugin_step_live_cleanup(&runtime) {
+            if let Err(error) = semio_plugin_runtime_instances::inst_cleanup_turns::plugin_step_live_cleanup(&runtime) {
                 let pump = cell.maintenance_pump.lock().expect("failed maintenance pump");
                 panic!(
                     "{error:?}: turn={turn} status={} generation={} stalled={} entries={} session={} outcome={} rejected={} terminal={} pending={:?} closing={} faulted={}",
@@ -182,7 +182,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                     pump.faulted
                 );
             }
-            let (output, scan) = semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_continue_typed_operations(&runtime, semio_framework_plugin_runtime_ops::ops_typed_operations::TypedOperationGrant::turn(reactor_native_budget(cx),cx), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("drive one production publication turn");
+            let (output, scan) = semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_continue_typed_operations(&runtime, semio_framework_plugin_runtime_ops::ops_typed_operations::TypedOperationGrant::turn(reactor_native_budget(cx),cx), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("drive one production publication turn");
             let mut more = scan.runnable || scan.contended;
             if let Some((receiver, output)) = output {
                 assert_eq!(receiver, id);
@@ -204,23 +204,23 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                         for poll in 1..=pre_ack_polls {
                             let expected_entries = maintenance_entries_before + poll;
                             for _ in 0..100_000 {
-                                semio_framework_plugin_runtime_instances::inst_cleanup_turns::plugin_step_live_cleanup(&runtime).expect("delayed renderer ACK remains valid maintenance input wait");
+                                semio_plugin_runtime_instances::inst_cleanup_turns::plugin_step_live_cleanup(&runtime).expect("delayed renderer ACK remains valid maintenance input wait");
                                 plugin_job_yield_once().await;
                                 if cell.maintenance_probe_entries.load(std::sync::atomic::Ordering::Relaxed) >= expected_entries {
                                     break;
                                 }
                             }
                             assert!(cell.maintenance_probe_entries.load(std::sync::atomic::Ordering::Relaxed) >= expected_entries, "production maintenance callback must execute before counting one delayed ACK poll");
-                            let (output, _) = semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_continue_typed_operations(&runtime, semio_framework_plugin_runtime_ops::ops_typed_operations::TypedOperationGrant::UNIT, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("delayed renderer ACK does not fault continuation");
+                            let (output, _) = semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_continue_typed_operations(&runtime, semio_framework_plugin_runtime_ops::ops_typed_operations::TypedOperationGrant::UNIT, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("delayed renderer ACK does not fault continuation");
                             assert!(output.as_ref().and_then(|(_, output)| output.typed_operation_results.first()).is_none(), "presented result page must not be republished before an explicit retry deadline");
                         }
                         assert!(cell.maintenance_probe_entries.load(std::sync::atomic::Ordering::Relaxed) >= maintenance_entries_before + pre_ack_polls);
                         let input_waits_before_alignment = cell.maintenance_probe_input_waits.load(std::sync::atomic::Ordering::SeqCst);
                         for _ in 0..100_000 {
-                            semio_framework_plugin_runtime_instances::inst_cleanup_turns::plugin_step_live_cleanup(&runtime).expect("reach one processed exact ACK-wait maintenance stage");
+                            semio_plugin_runtime_instances::inst_cleanup_turns::plugin_step_live_cleanup(&runtime).expect("reach one processed exact ACK-wait maintenance stage");
                             plugin_job_yield_once().await;
                             if cell.maintenance_probe_input_waits.load(std::sync::atomic::Ordering::SeqCst) > input_waits_before_alignment
-                                && semio_framework_plugin_reactor_lifecycle::life_cleanup_vocabulary::RuntimeMaintenanceStatus::from_repr(cell.maintenance_status.load(std::sync::atomic::Ordering::SeqCst)) == semio_framework_plugin_reactor_lifecycle::life_cleanup_vocabulary::RuntimeMaintenanceStatus::Ready
+                                && semio_plugin_reactor_lifecycle::life_cleanup_vocabulary::RuntimeMaintenanceStatus::from_repr(cell.maintenance_status.load(std::sync::atomic::Ordering::SeqCst)) == semio_plugin_reactor_lifecycle::life_cleanup_vocabulary::RuntimeMaintenanceStatus::Ready
                                 && cell.maintenance_stalled_steps.load(std::sync::atomic::Ordering::SeqCst) == 0
                             {
                                 break;
@@ -257,8 +257,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             assert_eq!(child.snapshot().expect("child snapshot").count, 9);
 
             let admitted = active.app.dispatch_action("undo", None, &ActionMeta { expected_document_revision:None, actor: "fixture".into(), instance_id: id, view_state: None }, &mut identity).await.expect("undo retained group");
-            let undone = semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(&mut active.app, admitted, cx).await.expect("undo reserved-job commit");
-            artifact_app_laws::settle_registered_typed_operation(&mut active.app, id, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(),cx).await.expect("undo publication");
+            let undone = semio_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(&mut active.app, admitted, cx).await.expect("undo reserved-job commit");
+            artifact_app_laws::settle_registered_typed_operation(&mut active.app, id, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(),cx).await.expect("undo publication");
             let skipped: Vec<String> = undone.diagnostics.iter().map(|diagnostic| diagnostic.message.clone()).collect();
             assert!(skipped.is_empty(), "the group undo skips no member of its own gesture: {skipped:?}");
             assert_eq!(active.app.snapshot().expect("undone parent snapshot").count, 0, "the parent's edit of the gesture is undone with its group (parent tail group {:?})", store::SpaceMember::tail_group_id(&*active.app.store).await);
@@ -266,17 +266,17 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             assert_eq!(child.snapshot().expect("undone child snapshot").count, 0);
 
             let admitted = active.app.dispatch_action("redo", None, &ActionMeta { expected_document_revision:None, actor: "fixture".into(), instance_id: id, view_state: None }, &mut identity).await.expect("redo retained group");
-            semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(&mut active.app, admitted, cx).await.expect("redo reserved-job commit");
-            artifact_app_laws::settle_registered_typed_operation(&mut active.app, id, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(),cx).await.expect("redo publication");
+            semio_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(&mut active.app, admitted, cx).await.expect("redo reserved-job commit");
+            artifact_app_laws::settle_registered_typed_operation(&mut active.app, id, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(),cx).await.expect("redo publication");
             assert_eq!(active.app.snapshot().expect("redone parent snapshot").count, 9);
             let TestMembers::Child(child) = &mut active.app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("redone child").member;
             assert_eq!(child.snapshot().expect("redone child snapshot").count, 9);
         }
         let retired = std::sync::Arc::downgrade(&cell);
         drop(cell);
-        semio_framework_plugin_runtime_instances::inst_cleanup_turns::plugin_destroy_app(&runtime, id).await.expect("begin runtime destroy");
+        semio_plugin_runtime_instances::inst_cleanup_turns::plugin_destroy_app(&runtime, id).await.expect("begin runtime destroy");
         for _ in 0..100_000 {
-            semio_framework_plugin_runtime_instances::inst_cleanup_turns::plugin_step_close_cleanup(&runtime).expect("drive exact runtime close");
+            semio_plugin_runtime_instances::inst_cleanup_turns::plugin_step_close_cleanup(&runtime).expect("drive exact runtime close");
             if runtime.close_quarantine.borrow().get(id).is_none() {
                 break;
             }
@@ -310,9 +310,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// 📡️ EXACTLY the host's per-turn effect drain — every effect this turn hands out.
     #[semio_framework_async_macros::async_test]
     async fn typed_ladder_never_hands_a_guest_interaction_verb_to_the_host_on_any_turn() {
-        let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+        let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
         let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
-        let mounted_policy = semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let mounted_policy = semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let mut publication_caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::allocate_operation_id(),semio_framework_job::Generation(7),mounted_policy.preparation,||Some(0),u64::MAX,4096);
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -322,11 +322,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
         let id = 47u32;
         let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_pick_test_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await.expect("the reference snapshot births");
-        semio_framework_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
+        semio_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(id).await;
         let meta = ActionMeta { expected_document_revision:None, actor: "fixture".into(), instance_id: id, view_state: None };
         let outcome: Result<(), String> = async {
-            let admitted = semio_framework_plugin_testing_laws::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TestCommand::PickItem { id: "item-1".into() }, &meta, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut identity, cx).await.map_err(|error| format!("admit the pick: {error:?}"))?;
+            let admitted = semio_plugin_testing_laws::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TestCommand::PickItem { id: "item-1".into() }, &meta, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut identity, cx).await.map_err(|error| format!("admit the pick: {error:?}"))?;
             if !admitted.requested_effects.is_empty() || !admitted.mutations.is_empty() {
                 return Err(format!("the admitting result of a typed command carries no effect and no mutation: {:?}", admitted.requested_effects));
             }
@@ -339,19 +339,19 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 app_maintenance_turn(&mut app,cx).map_err(|error| format!("maintenance: {error:?}"))?;
                 original_publication_turn(&mut app,&mut identity,&mut publication_caller,mounted_policy.maintenance).map_err(|error| format!("turn {turns}: {error:?}"))?;
                 turns += 1;
-                while let Some(mut page) = semio_framework_plugin_testing_laws::artifact_app_laws::take_fixture_result_page(&mut app,id,semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation).expect("original fixture page presentation") {
+                while let Some(mut page) = semio_plugin_testing_laws::artifact_app_laws::take_fixture_result_page(&mut app,id,semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation).expect("original fixture page presentation") {
                     if page.lane == TypedOperationResultLane::Fault {
                         return Err(format!("turn {turns}: fault page {}", String::from_utf8_lossy(page.bytes())));
                     }
                     lanes.push(page.lane);
-                    if !app.acknowledge_typed_operation_result(semio_framework_plugin_testing_laws::artifact_app_laws::close_fixture_result_page(&mut page,semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close)).map_err(|error| format!("ack: {error:?}"))? {
+                    if !app.acknowledge_typed_operation_result(semio_plugin_testing_laws::artifact_app_laws::close_fixture_result_page(&mut page,semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close)).map_err(|error| format!("ack: {error:?}"))? {
                         return Err(format!("turn {turns}: exact result ACK rejected"));
                     }
                 }
                 while let Some(effect) = app.take_typed_operation_effect() {
                     let verb = match &effect {
-                        Effect::ReplayShellCommand { action_id, .. } => semio_framework_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS.contains(&action_id.as_str()),
-                        Effect::DispatchAction { action, .. } => semio_framework_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS.contains(&action.as_str()),
+                        Effect::ReplayShellCommand { action_id, .. } => semio_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS.contains(&action_id.as_str()),
+                        Effect::DispatchAction { action, .. } => semio_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS.contains(&action.as_str()),
                         _ => false,
                     };
                     if verb {
@@ -410,7 +410,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             Ok(())
         }
         .await;
-        semio_framework_plugin_testing_laws::artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(),cx).expect("original contract fixture paid terminal close");
+        semio_plugin_testing_laws::artifact_app_laws::close_registered_fixture_app(&mut app, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(),cx).expect("original contract fixture paid terminal close");
         outcome.expect("typed-ladder per-turn fold law");
         publication_caller.retire(mounted_policy.close);
 

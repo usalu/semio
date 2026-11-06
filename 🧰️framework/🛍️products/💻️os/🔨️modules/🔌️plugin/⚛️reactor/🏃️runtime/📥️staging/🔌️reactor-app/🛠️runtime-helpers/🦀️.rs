@@ -1,8 +1,8 @@
 //! 🛠️ Small runtime helpers the instance family names: turn grants, render section, addressed view, internal fault.
 
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 use std::sync::atomic::AtomicU64;
-use semio_framework_ui_runtime::ComponentTree;
+use semio_ui_runtime::ComponentTree;
 use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin, ViewModel};
 use semio_framework_value::{FromValue, ToValue};
 use std::collections::HashMap;
@@ -37,7 +37,7 @@ pub fn addressed_action_view<'a>(view: &'a ViewModel, address: &semio_framework:
 pub fn admit_addressed_action_view<'a>(view: &'a ViewModel, address: &semio_framework::manifest::ActionAddress) -> Result<&'a ViewModel, Fault> {
     match addressed_action_view(view, address) {
         Ok(projected) => Ok(projected),
-        Err(_) if semio_framework_plugin_job::reserved_jobs::is_framework_reserved_action_id(&address.action_id) => Ok(view),
+        Err(_) if semio_plugin_job::reserved_jobs::is_framework_reserved_action_id(&address.action_id) => Ok(view),
         Err(fault) => Err(fault),
     }
 }
@@ -73,7 +73,7 @@ pub fn original_render_section<PA: PluginApp>(app: &mut PA, section: semio_frame
         semio_framework::UiRefreshSection::Tools => canonical_section_json(&::semio_framework_async::poll::resolve_ready(app.tool_measures(view_state))),
         semio_framework::UiRefreshSection::Catalogue => ::semio_framework_async::poll::resolve_ready(app.app_catalogue_json()),
     };
-    semio_framework_plugin_window_transient::section_component_tree(section, &payload).map_err(|error| plugin_internal_fault(error.to_string()))
+    semio_plugin_window_transient::section_component_tree(section, &payload).map_err(|error| plugin_internal_fault(error.to_string()))
 }
 
 /// 🧾️ What one host turn still owns after its units spent `spent`: every consumed axis shrinks, nesting depth is not consumed.

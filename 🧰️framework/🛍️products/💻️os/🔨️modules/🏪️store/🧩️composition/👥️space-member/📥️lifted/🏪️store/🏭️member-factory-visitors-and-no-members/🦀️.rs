@@ -111,7 +111,7 @@ impl SpaceMember for NoMembers {
 
 
     fn original_batch_receiving_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> { match *self {} }
-    fn admit_original_batch_receiving(&self, _: &mut Option<Vec<Vec<u8>>>, _: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>, _: RetainedCloneGrant) -> Result<Option<(Box<dyn semio_os_store_one_item_batch::member_owned_batch::original_receiving::MemberOriginalBatchReceiving>, RetainedCloneProgress)>, ValueError> { match *self {} }
+    fn admit_original_batch_receiving(&self, _: &mut Option<Vec<Vec<u8>>>, _: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>, _: RetainedCloneGrant) -> Result<Option<(Box<dyn semio_framework_os_store_one_item_batch::member_owned_batch::original_receiving::MemberOriginalBatchReceiving>, RetainedCloneProgress)>, ValueError> { match *self {} }
     fn owned_publication_birth_bytes(&self, _request: &MemberStoreOwnedBatchRequest) -> Result<usize, String> { match *self {} }
     fn begin_one_item_owned_publication(&self, _request: &mut MemberStoreOwnedBatchRequest, _grant: ArtifactStoreOneItemGrant) -> Result<Option<(Box<dyn ErasedMemberStoreOneItemPublication>, semio_framework_value::RetainedCloneProgress)>, String> { match *self {} }
 

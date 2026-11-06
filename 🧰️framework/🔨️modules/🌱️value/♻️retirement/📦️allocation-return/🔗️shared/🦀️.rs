@@ -7,10 +7,11 @@ use semio_framework_value_control_contract::{RetainedCloneGrant,RetainedClonePro
 pub fn shared_allocation_bytes<T>()->usize{std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<T>()).map_or(usize::MAX,|(layout,_)|layout.pad_to_align().size())}
 
 /// 🧰️ Allocates one genuine shared header and returns the exact original input on refusal.
-pub fn admit_shared_allocation<T>(value:T,grant:RetainedCloneGrant)->RetainedWorkOutcome<(SharedAllocation<T>,RetainedCloneProgress),(ValueError,T)>{
+pub fn admit_shared_allocation<T>(value:T,grant:RetainedCloneGrant,actual:&mut Option<usize>)->RetainedWorkOutcome<(SharedAllocation<T>,RetainedCloneProgress),(ValueError,T)>{
+ if actual.is_some(){return RetainedWorkOutcome{result:Err((ValueError::invariant("shared allocation requires an empty actual marker"),value)),work:0}}
  let kind=if grant.maximum_items==0{Some(ValueRefusalKind::WorkLimit)}else if grant.maximum_depth==0{Some(ValueRefusalKind::DepthLimit)}else if grant.maximum_capacity_bytes<shared_allocation_bytes::<T>(){Some(ValueRefusalKind::OwnershipLimit)}else{None};
  if let Some(kind)=kind{return RetainedWorkOutcome{result:Err((ValueError::literal(kind,"shared allocation birth is not funded"),value)),work:0}}
- let mut storage=match Arc::<T>::try_new_uninit(){Ok(storage)=>storage,Err(_)=>return RetainedWorkOutcome{result:Err((ValueError::literal(ValueRefusalKind::AllocationFailed,"shared allocation failed"),value)),work:1}};
+ let mut storage=match Arc::<T>::try_new_uninit(){Ok(storage)=>{*actual=Some(shared_allocation_bytes::<T>());storage},Err(_)=>{*actual=Some(0);return RetainedWorkOutcome{result:Err((ValueError::literal(ValueRefusalKind::AllocationFailed,"shared allocation failed"),value)),work:1}}};
  let Some(slot)=Arc::get_mut(&mut storage) else{return RetainedWorkOutcome{result:Err((ValueError::literal(ValueRefusalKind::AllocationFailed,"new shared storage is not unique"),value)),work:1}};slot.write(value);
  let owner=unsafe{storage.assume_init()};
  RetainedWorkOutcome{result:Ok((owner,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:shared_allocation_bytes::<T>(),..Default::default()})),work:1}

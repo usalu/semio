@@ -89,7 +89,7 @@ impl RetainedCloneCursor<DropProbe> for DropProbeCursor {
 
     fn advance_demands(&self,source:RetainedCloneRef<'_,DropProbe>,_body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand {copy_bytes:if !source.check_binding(&self.source)? {source.binding_copy_bytes()}else{size_of::<DropProbe>()},depth:1,..Default::default()})}
 
-    fn advance(&mut self, source: RetainedCloneRef<'_, DropProbe>, body:usize,grant: RetainedCloneGrant) -> crate::RetainedWorkOutcome {let mut work=0;let result=(||{
+    fn advance(&mut self, source: RetainedCloneRef<'_, DropProbe>, body:usize,grant: RetainedCloneGrant) -> crate::OriginalRetirementOutcome {let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
         let turn=source.bind(&mut self.source,grant);work=turn.work;if let Some(progress)=turn.result? { return Ok(RetainedCloneStep::Progress(progress)); }
         if self.output.is_some() {
             return Ok(RetainedCloneStep::Complete(Default::default()));
@@ -121,8 +121,8 @@ impl RetainedCloneCursor<DropProbe> for DropProbeCursor {
         self.closing && self.output.is_none() && self.source.is_none() && self.close.is_empty()
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> crate::RetainedWorkOutcome {let mut work=0;let result=(||{
-        if !self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "drop probe close must begin")); }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> crate::OriginalRetirementOutcome {let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
+        if !self.closing { return Err((crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "drop probe close must begin")).into()); }
         if !self.close.is_empty() { let turn=self.close.step_granted(grant);work=turn.work;return turn.result; }
         let turn=self.close.begin_granted(&mut self.output,grant);work=turn.work;if let Some(step)=turn.result? { return Ok(step); }
         {let turn=super::super::close_retained_binding(&mut self.source,grant);work=turn.work;turn.result}
@@ -158,7 +158,7 @@ impl RetainedCloneCursor<NonconformingChild> for NonconformingChildCursor {
 
     fn advance_demands(&self,source:RetainedCloneRef<'_,NonconformingChild>,_body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand {copy_bytes:if !source.check_binding(&self.source)? {source.binding_copy_bytes()}else{size_of::<NonconformingChild>()},depth:1,..Default::default()})}
 
-    fn advance(&mut self, source: RetainedCloneRef<'_, NonconformingChild>, body:usize,grant: RetainedCloneGrant) -> crate::RetainedWorkOutcome {let mut work=0;let result=(||{
+    fn advance(&mut self, source: RetainedCloneRef<'_, NonconformingChild>, body:usize,grant: RetainedCloneGrant) -> crate::OriginalRetirementOutcome {let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
         let turn=source.bind(&mut self.source,grant);work=turn.work;if let Some(progress)=turn.result? { return Ok(RetainedCloneStep::Progress(progress)); }
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: grant.maximum_items.saturating_add(1), copied_bytes: grant.maximum_copy_bytes.saturating_add(1), retained_capacity_bytes: 0, released_bytes: 0 }))
     })();crate::RetainedWorkOutcome{result,work}}
@@ -215,7 +215,7 @@ impl RetainedCloneCursor<NonconformingRetirementChild> for NonconformingRetireme
 
     fn advance_demands(&self,source:RetainedCloneRef<'_,NonconformingRetirementChild>,_body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand {copy_bytes:if !source.check_binding(&self.source)? {source.binding_copy_bytes()}else{size_of::<NonconformingRetirementChild>()},depth:1,..Default::default()})}
 
-    fn advance(&mut self, source: RetainedCloneRef<'_, NonconformingRetirementChild>, body:usize,grant: RetainedCloneGrant) -> crate::RetainedWorkOutcome {let mut work=0;let result=(||{
+    fn advance(&mut self, source: RetainedCloneRef<'_, NonconformingRetirementChild>, body:usize,grant: RetainedCloneGrant) -> crate::OriginalRetirementOutcome {let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
         let turn=source.bind(&mut self.source,grant);work=turn.work;if let Some(progress)=turn.result? { return Ok(RetainedCloneStep::Progress(progress)); }
         work=1;self.output = Some(NonconformingRetirementChild);
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))
@@ -240,7 +240,7 @@ impl RetainedCloneCursor<NonconformingRetirementChild> for NonconformingRetireme
         self.closing && self.reported && self.source.is_none() && self.output.is_none()
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> crate::RetainedWorkOutcome {let mut work=0;let result=(||{
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> crate::OriginalRetirementOutcome {let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
         if !self.reported {
             work=1;self.reported = true;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: grant.maximum_items.saturating_add(1), copied_bytes: 0, retained_capacity_bytes: grant.maximum_capacity_bytes.saturating_add(1), released_bytes: grant.maximum_release_bytes.saturating_add(1) }));
@@ -289,7 +289,7 @@ impl RetainedCloneCursor<ReleaseProbe> for ReleaseProbeCursor {
 
     fn advance_demands(&self,_source:RetainedCloneRef<'_,ReleaseProbe>,_body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand {copy_bytes:usize::from(!self.output_ready()),depth:1,..Default::default()})}
 
-    fn advance(&mut self, source: RetainedCloneRef<'_, ReleaseProbe>, body:usize,grant: RetainedCloneGrant) -> crate::RetainedWorkOutcome {let mut work=0;let result=(||{
+    fn advance(&mut self, source: RetainedCloneRef<'_, ReleaseProbe>, body:usize,grant: RetainedCloneGrant) -> crate::OriginalRetirementOutcome {let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
         if grant.maximum_items == 0 || grant.maximum_copy_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         work=1;self.0[0] = 1;
         self.0[2] = source.get().0;
@@ -299,7 +299,7 @@ impl RetainedCloneCursor<ReleaseProbe> for ReleaseProbeCursor {
     fn take(&mut self,g:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(ReleaseProbe,RetainedCloneProgress)>>{if !self.output_ready()||!crate::retained_clone::retained_clone_grant_admits(g,self.take_demand().unwrap()){return crate::RetainedWorkOutcome{result:Ok(None),work:0}}self.0[0]=0;let value=ReleaseProbe(std::mem::take(&mut self.0[2]));crate::RetainedWorkOutcome{result:Ok(Some((value,RetainedCloneProgress{copied_items:1,..Default::default()}))),work:1}}
     fn begin_close(&mut self) -> bool { let started=self.0[1]==0; self.0[1]=1; started }
     
-    fn close_step(&mut self, _: RetainedCloneGrant) -> crate::RetainedWorkOutcome {crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
+    fn close_step(&mut self, _: RetainedCloneGrant) -> crate::OriginalRetirementOutcome {crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
     fn next_close_depth_demand(&self)->Result<usize,crate::ValueError>{Ok(0)}
     fn next_close_capacity_byte_demand(&self, _: usize) -> Result<usize, crate::ValueError> { Ok(0) }
     fn next_close_release_byte_demand(&self) -> Result<usize, crate::ValueError> { Ok(0) }
@@ -389,7 +389,7 @@ impl RetainedCloneCursor<InsufficientScaffoldChild> for InsufficientScaffoldChil
 
     fn advance_demands(&self,source:RetainedCloneRef<'_,InsufficientScaffoldChild>,_body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand {copy_bytes:if !source.check_binding(&self.source)? {source.binding_copy_bytes()}else{size_of::<InsufficientScaffoldChild>()},depth:1,..Default::default()})}
 
-    fn advance(&mut self, source: RetainedCloneRef<'_, InsufficientScaffoldChild>, body:usize,grant: RetainedCloneGrant) -> crate::RetainedWorkOutcome {let mut work=0;let result=(||{
+    fn advance(&mut self, source: RetainedCloneRef<'_, InsufficientScaffoldChild>, body:usize,grant: RetainedCloneGrant) -> crate::OriginalRetirementOutcome {let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
         let turn=source.bind(&mut self.source,grant);work=turn.work;if let Some(progress)=turn.result? { return Ok(RetainedCloneStep::Progress(progress)); }
         if self.output.is_some() {
             return Ok(RetainedCloneStep::Complete(Default::default()));
@@ -420,10 +420,10 @@ impl RetainedCloneCursor<InsufficientScaffoldChild> for InsufficientScaffoldChil
         self.closing && self.output.is_none() && self.source.is_none()
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> crate::RetainedWorkOutcome {let mut work=0;let result=(||{
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> crate::OriginalRetirementOutcome {let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if grant.maximum_release_bytes < 128 {
-            return Err(crate::ValueError::new(crate::ValueRefusalKind::WorkLimit, "fixture scaffold cannot progress under its declared 128-byte release grant"));
+            return Err((crate::ValueError::new(crate::ValueRefusalKind::WorkLimit, "fixture scaffold cannot progress under its declared 128-byte release grant")).into());
         }
         if self.output.is_some(){work=1;self.output.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}
         {let turn=super::super::close_retained_binding(&mut self.source,grant);work=turn.work;turn.result}

@@ -72,7 +72,7 @@ pub enum CommandIngressOwner {
     PendingPresencePage { cursor: semio_framework::kernel::CommandPageCursor, publication_generation: u64, page: semio_framework::kernel::FixedCommandPage },
     GenericAssembly { cursor: semio_framework::kernel::CommandPageCursor, pages: semio_framework::kernel::CommandPageSet },
     ClosingAssembly { cursor: semio_framework::kernel::CommandPageCursor, pages: semio_framework::kernel::CommandPageSet },
-    Generic { cursor: semio_framework::kernel::CommandPageCursor, command: semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress },
+    Generic { cursor: semio_framework::kernel::CommandPageCursor, command: semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress },
 }
 
 #[doc(hidden)]
@@ -123,9 +123,9 @@ fn retire_command_ingress(state: CommandIngressOwner,cx:&mut semio_framework_job
                 Some(CommandIngressOwner::ClosingAssembly { cursor, pages })
             }
         }
-        CommandIngressOwner::Generic { cursor, command } if matches!(command,semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress::FailedDecoded{..}) => match command.retire_failed_step_on_original(cx){
-            semio_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Pending(command)=>Some(CommandIngressOwner::Generic{cursor,command}),
-            semio_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Failed(failure)=>return Err(failure),
+        CommandIngressOwner::Generic { cursor, command } if matches!(command,semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress::FailedDecoded{..}) => match command.retire_failed_step_on_original(cx){
+            semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Pending(command)=>Some(CommandIngressOwner::Generic{cursor,command}),
+            semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Failed(failure)=>return Err(failure),
         },
         CommandIngressOwner::Generic { cursor, command } => command.retire_step().map(|command| CommandIngressOwner::Generic { cursor, command }),
     })

@@ -48,6 +48,15 @@ impl<T: Send + 'static> FactoryVectorRetirement<T> {
         self.owner_demands(factory,maximum_copy_bytes)
     }
 
+    /// ⛽️ Quotes the selected issuer capture, original row, child, or backing release.
+    pub fn close_work_demand(&self, factory: &dyn ArtifactOwnedValueRetirementFactory<T>, body: usize) -> Result<u64, ValueError> {
+        self.check_issuer(factory)?;
+        if self.issuer.is_none() && !self.terminal_is_empty() { return Ok(1); }
+        if let Some(active) = self.active.as_ref() { return if active.terminal_is_empty() { Ok(1) } else { active.next_computational_work(body) }; }
+        if let Some(row) = self.pending.as_ref() { return factory.retire_owned_work_demand(row); }
+        Ok(u64::from(self.remaining.is_some()))
+    }
+
     fn owner_demands(&self, factory: &dyn ArtifactOwnedValueRetirementFactory<T>, maximum_copy_bytes: usize) -> Result<RetirementDemand, ValueError> {
         self.check_issuer(factory)?;
         if let Some(active) = self.active.as_ref() {
@@ -62,7 +71,7 @@ impl<T: Send + 'static> FactoryVectorRetirement<T> {
     }
 
     /// 🪜️ Reads original row order once, restores provider refusals and releases only empty paid backing.
-    pub fn close_step(&mut self, factory: &dyn ArtifactOwnedValueRetirementFactory<T>, grant: RetainedCloneGrant) ->crate::RetainedWorkOutcome{let mut work=0;let result=(||{
+    pub fn close_step(&mut self, factory: &dyn ArtifactOwnedValueRetirementFactory<T>, grant: RetainedCloneGrant) ->crate::OriginalRetirementOutcome{let mut work=0;let result=(||{
         let demand = self.demands(factory, grant.maximum_copy_bytes)?;
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if !fits(demand, grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -75,7 +84,7 @@ impl<T: Send + 'static> FactoryVectorRetirement<T> {
                 Ok((active, mut progress)) => {
                     *self.active = Some(active);
                     progress.copied_bytes = progress.copied_bytes.checked_add(demand.copy_bytes).ok_or_else(|| ValueError::literal(ValueRefusalKind::WorkLimit,"original vector provider copy receipt overflow"))?;
-                    if !progress.fits(grant) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original vector provider exceeded its admitted capture or constructor").with_retained_progress(progress)); }
+                    if !progress.fits(grant) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original vector provider exceeded its admitted capture or constructor").with_retained_progress(progress).into()); }
                     Ok(RetainedCloneStep::Progress(progress))
                 }
                 Err((error, row)) => {
@@ -83,7 +92,7 @@ impl<T: Send + 'static> FactoryVectorRetirement<T> {
                     let mut progress = error.retained_progress();
                     progress.copied_items = progress.copied_items.max(1);
                     progress.copied_bytes = progress.copied_bytes.checked_add(demand.copy_bytes).ok_or_else(|| ValueError::literal(ValueRefusalKind::WorkLimit,"original vector refusal copy receipt overflow"))?;
-                    Err(error.with_retained_progress(progress))
+                    Err(error.with_retained_progress(progress).into())
                 },
             };
         }

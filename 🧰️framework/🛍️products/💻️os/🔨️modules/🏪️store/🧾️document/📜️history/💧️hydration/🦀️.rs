@@ -1,7 +1,7 @@
 //! 💧️ Retained typed hydration of one persisted Pack and SPR history into an exact document owner.
 
 use semio_framework_value::ErasedSnapshotRetirement;
-use semio_os_store_member_open::MemberOpenDiagnostic;
+use semio_framework_os_store_member_open::MemberOpenDiagnostic;
 use semio_os_store_text_io::text_format::{conflict_from_history_conflict, mutation_meta_from_history_op_meta};
 use {semio_framework_artifact_reference::ArtifactRef};
 use pack::snapshot::ArtifactPack;

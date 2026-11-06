@@ -12,7 +12,7 @@ const BASE64_URL_ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklm
 
 #[path = "🎮️cursor/🦀️.rs"]
 mod cursor;
-pub use cursor::{Base64DecodeCursor, Base64DecodeOutcome, Base64DecodeParts, Base64DecodeState, Base64Input, Base64InputRange};
+pub use cursor::{Base64DecodeCursor, Base64DecodeOutcome, Base64DecodeParts, Base64DecodeReceipt, Base64DecodeState, Base64Input, Base64InputRange};
 
 /// 📍️ Bounded base64 work uses bytes for Encode and ASCII characters for Validate or Decode.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
@@ -43,7 +43,7 @@ pub fn base64_standard_encode_controlled(bytes:&[u8],control:&mut Base64Control<
 /// 🧱️ Validates strict padding before allocating the result; each pass checks at most4096 input bytes.
 pub fn base64_standard_decode_controlled(encoded:&[u8],control:&mut Base64Control<'_>)->Result<Vec<u8>,Base64ControlError>{
     let mut cursor=Base64DecodeCursor::new(Base64Input::Borrowed(encoded));
-    loop{if cursor.step(cursor.next_work_demand(),control)?==Base64DecodeState::Complete{return Ok(cursor.take_output().unwrap());}}
+    loop{if cursor.step(cursor.next_work_demand(8192),control)?==Base64DecodeState::Complete{return Ok(cursor.take_output().unwrap());}}
 }
 
 /// ❌️ Strict RFC 4648 base64 decoding failure, shared by the standard and URL-safe codecs.

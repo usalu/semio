@@ -1,0 +1,1 @@
+{"type":"object","additionalProperties":false,"required":["allocation","transfer","cloneFactory","denied","allocationRefusal","success"],"properties":{"allocation":{"const":1},"transfer":{"const":1},"cloneFactory":{"const":1},"denied":{"const":0},"allocationRefusal":{"const":1},"success":{"const":3}}}

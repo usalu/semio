@@ -52,9 +52,10 @@ fn a_fetched_glb_becomes_the_resident_world_mesh_its_url_names() {
 
     let owner = take_next_completed_world3d_asset_step(&mut state.assets).expect("completed decode owner");
     let mut probe = RendererAssetProbe::new(RendererAssetFetchOwner::Shared(owner));
+    let mut caller=OriginalRendererFixture::new();
     let mut ready = false;
     for _ in 0..16_384 {
-        match probe.step() {
+        match caller.turn(|cx|probe.step(cx)).unwrap() {
             RendererAssetProbeStep::Pending => {}
             RendererAssetProbeStep::Ready => {
                 ready = true;
@@ -80,11 +81,10 @@ fn a_fetched_glb_becomes_the_resident_world_mesh_its_url_names() {
     assert_eq!(positions, vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]], "glTF's Y-up geometry arrives in the world's Z-up frame, the way React's `<group rotation={{[π/2, 0, 0]}}>` delivers it");
 
     probe.begin_close();
-    while !probe.close_step() {}
+    while !caller.turn(|cx|probe.close_step(cx)).unwrap() {}
     let RendererAssetFetchOwner::Shared(owner) = probe.take_terminal_owner().expect("terminal owner") else { panic!("shared probe") };
     finish_world3d_asset(&mut state.assets, owner).expect("terminal handback");
     assert!(begin_world3d_dynamic_retirement(&mut state.session, &mut state.camera, &mut state.retirement, &mut state.scene, &mut state.assets));
-    let mut caller=OriginalRendererFixture::new();
     for _ in 0..4_096 {
         let terminal=caller.turn(|context| {
         let terrain_grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
@@ -127,10 +127,11 @@ fn a_real_catalogued_glb_streams_through_the_surfaces_own_asset_lane_into_its_me
     return_world3d_asset(&mut state.assets, owner).unwrap();
     let owner = take_next_completed_world3d_asset_step(&mut state.assets).unwrap();
     let mut probe = RendererAssetProbe::new(RendererAssetFetchOwner::Shared(owner));
+    let mut caller=OriginalRendererFixture::new();
     let mut steps = 0u64;
     loop {
         steps += 1;
-        match probe.step() {
+        match caller.turn(|cx|probe.step(cx)).unwrap() {
             RendererAssetProbeStep::Pending => {}
             RendererAssetProbeStep::Ready => break,
             RendererAssetProbeStep::Reject(detail) => panic!("a catalogued mesh was refused after {steps} steps: {detail}"),
@@ -145,11 +146,10 @@ fn a_real_catalogued_glb_streams_through_the_surfaces_own_asset_lane_into_its_me
     assert_eq!((schema.vertices, schema.indices, schema.uvs), (1_472, 5_250, 1_472), "the whole export lands, every primitive welded into one mesh");
     assert!(steps < 100_000, "the decode stays inside a bounded step count: {steps}");
     probe.begin_close();
-    while !probe.close_step() {}
+    while !caller.turn(|cx|probe.close_step(cx)).unwrap() {}
     let RendererAssetFetchOwner::Shared(owner) = probe.take_terminal_owner().unwrap() else { panic!() };
     finish_world3d_asset(&mut state.assets, owner).unwrap();
     assert!(begin_world3d_dynamic_retirement(&mut state.session, &mut state.camera, &mut state.retirement, &mut state.scene, &mut state.assets));
-    let mut caller=OriginalRendererFixture::new();
     for _ in 0..8_192 {
         let terminal=caller.turn(|context| {
         let terrain_grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
@@ -333,7 +333,7 @@ fn original_decoder_close_hands_back_same_response_under_exact_independent_grant
     assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(recovered.owner().owner().token(),token);assert_eq!(recovered.owner().owner().received_bytes(),observed);
     assert_eq!(row["maximumReleaseBytes"].as_u64().unwrap(),0);
     assert_eq!(caller.turn(|cx|job.close_step(cx)).unwrap(),InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress::default()});assert!(job.terminal_is_empty());
-    close_owned_decoder_fixture(authority,recovered);
+    close_owned_decoder_fixture(authority,recovered,&mut caller);
 }
 
 #[test]

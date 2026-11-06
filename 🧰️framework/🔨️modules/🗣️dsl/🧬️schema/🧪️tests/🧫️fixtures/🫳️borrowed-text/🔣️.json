@@ -1,0 +1,65 @@
+{
+  "schema": {
+    "layout": "inline",
+    "fields": [
+      {
+        "id": 0,
+        "key": "name",
+        "shape": "text"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "bare",
+      "value": "alpha",
+      "document": "name=alpha\n"
+    },
+    {
+      "name": "space",
+      "value": "alpha beta",
+      "document": "name=\"alpha beta\"\n"
+    },
+    {
+      "name": "unicode",
+      "value": "é😀",
+      "document": "name=\"é😀\"\n"
+    },
+    {
+      "name": "escape",
+      "value": "a\n\t\r\"\\\u0001",
+      "document": "name=\"a\\n\\t\\r\\\"\\\\\\u{1}\"\n"
+    },
+    {
+      "name": "empty",
+      "value": "",
+      "document": "name=\"\"\n"
+    },
+    {
+      "name": "three-byte",
+      "value": "€",
+      "document": "name=\"€\"\n"
+    },
+    {
+      "name": "control-hex",
+      "value": "\u001f",
+      "document": "name=\"\\u{1f}\"\n"
+    },
+    {
+      "name": "unicode-bare",
+      "value": "é",
+      "document": "name=é\n"
+    }
+  ],
+  "chunkSizes": [
+    1,
+    2,
+    3,
+    7,
+    64
+  ],
+  "invalidSurrogateJson": [
+    "\"\\ud800\"",
+    "\"\\udc00\""
+  ]
+}

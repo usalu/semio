@@ -12,7 +12,7 @@ pub fn test_child_emit(slot:impl Into<String>,child_id:impl Into<String>,operati
 
     /// 📨️ Funds the actual original child preparation quote within the fixture's declared per-axis ceiling.
     #[doc(hidden)]
-pub fn prepare_original_fixture_child(emit:&mut Emit<TestMutation,TestConfigMutation>,maximum_items:usize,maximum_bytes:usize)->Result<ChildEmitPreparationStep,Fault>{
+pub fn prepare_original_fixture_child(emit:&mut Emit<TestMutation,TestConfigMutation>,maximum_items:usize,maximum_bytes:usize)->Result<ChildEmitPreparationStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let demand=emit.child_preparation_demands(maximum_bytes).expect("original child preparation quote");
         assert!(demand.copy_bytes<=maximum_bytes&&demand.capacity_bytes<=maximum_bytes&&demand.release_bytes<=maximum_bytes&&demand.depth<=128);
         let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items,maximum_copy_bytes:maximum_bytes,maximum_capacity_bytes:maximum_bytes,maximum_release_bytes:maximum_bytes,maximum_depth:128};

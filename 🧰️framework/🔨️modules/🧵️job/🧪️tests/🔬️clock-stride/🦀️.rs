@@ -1,4 +1,4 @@
-use semio_framework_job::*;
+use crate::ClockStride;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 static FAKE_NOW_US: AtomicU64 = AtomicU64::new(0);

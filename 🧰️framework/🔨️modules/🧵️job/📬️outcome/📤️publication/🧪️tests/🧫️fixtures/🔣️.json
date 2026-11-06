@@ -21,7 +21,13 @@
   ],
   "sourceIdentity": [
     "address",
-    "extent"
+    "extent",
+    "operation",
+    "generation",
+    "payload",
+    "clockBinding",
+    "clockSource",
+    "deadline"
   ],
   "metadataCopyBytes": 0,
   "copyCurrency": "actual-source-octets",
@@ -52,5 +58,12 @@
   ],
   "originalFuel": 12000,
   "maximumSourceTurns": 2000,
-  "maximumCloseTurns": 10000
+  "maximumCloseTurns": 10000,
+  "closeWork": {"empty": 0, "live": 1, "deniedBudget": 0},
+  "closeBudgets": [
+    {"budget": 0, "demand": 0, "admitted": true},
+    {"budget": 0, "demand": 1, "admitted": false},
+    {"budget": 1, "demand": 1, "admitted": true},
+    {"budget": 2, "demand": 1, "admitted": true}
+  ]
 }

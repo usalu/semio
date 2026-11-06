@@ -60,7 +60,7 @@ test("component builds hold the compiler writer shared so they run beside ordina
 
 test("the warm component driver compiles in a private lane of its agent, never in the shared build directory: its shared target and build and the pass inputs it requests come from one lane, so its build-directory custody is never contended by another driver",()=>{
  const text=readFileSync(owners[0]!,"utf8");
- expect(text.includes("withRepositoryComponentLaneV1({storage:store.storage,root:store.root,workspace:repoRoot,environment:options.environment,control,policyControl:store.control}")).toBe(true);
+ expect(text.includes("withRepositoryComponentLaneV1({storage:store.storage,root:store.root,sharedBuild:store.buildDirectory,workspace:repoRoot,environment:options.environment,control,policyControl:store.control}")).toBe(true);
  expect(text.includes("shared:{target:lane.target,build:lane.build}")).toBe(true);
  expect(text.includes("build:lane.build,target:lane.target")).toBe(true);
  expect(text.includes("CARGO_TARGET_DIR!,build:store.buildDirectory")).toBe(false);

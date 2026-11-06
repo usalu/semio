@@ -9,5 +9,5 @@ publish = false
 [dependencies]
 semio-s-plugin-puzzle = { path = "../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", default-features = false }
 semio-framework = { path = "../../../../../../../../../🧰️framework/📦️packages/🦀️rust" }
-semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"] }
+semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-plugin"}
 serde_json = "1"

@@ -1,0 +1,45 @@
+{
+  "contract": "semio.ifc4.parsed-record-graph-receiving.v1",
+  "cases": [
+    {
+      "id": "denied",
+      "grant": false,
+      "childWork": 0,
+      "outcome": "pending",
+      "work": 0,
+      "frameRetained": false,
+      "sourceRetained": true,
+      "failureRetained": false
+    },
+    {
+      "id": "capture",
+      "grant": true,
+      "childWork": 0,
+      "outcome": "progress",
+      "work": 1,
+      "frameRetained": true,
+      "sourceRetained": true,
+      "failureRetained": false
+    },
+    {
+      "id": "childProgress",
+      "grant": true,
+      "childWork": 3,
+      "outcome": "progress",
+      "work": 3,
+      "frameRetained": true,
+      "sourceRetained": true,
+      "failureRetained": false
+    },
+    {
+      "id": "childFailure",
+      "grant": true,
+      "childWork": 2,
+      "outcome": "failure",
+      "work": 2,
+      "frameRetained": true,
+      "sourceRetained": true,
+      "failureRetained": true
+    }
+  ]
+}

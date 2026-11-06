@@ -3,8 +3,8 @@ use semio_framework_value::ErasedSnapshotRetirement;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_job::StepContext;
 use std::mem::ManuallyDrop;
-use semio_os_store_member_open::MemberOpenDiagnostic;
-use semio_os_store_member_open::MemberOpenRequest;
+use semio_framework_os_store_member_open::MemberOpenDiagnostic;
+use semio_framework_os_store_member_open::MemberOpenRequest;
 pub struct MemberStoreOpenRetained<P, M>
 where
     P: super::ToValue,

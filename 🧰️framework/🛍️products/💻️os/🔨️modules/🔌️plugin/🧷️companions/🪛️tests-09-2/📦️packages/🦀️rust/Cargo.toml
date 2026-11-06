@@ -37,15 +37,15 @@ semio-plugin-decl-tool-contract = { path = "../../../../📜️declaration/👁�
 semio-plugin-decl-media = { path = "../../../../📜️declaration/🎞️media/📦️packages/🦀️rust" }
 semio-plugin-extension = { path = "../../../../🧩️extension/📦️packages/🦀️rust", features = ["original-actor-context-testing"] }
 semio-plugin-instance-app = { path = "../../../../🧵️instance/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
-semio-plugin-instance-docs = { path = "../../../../🧵️instance/📄️docs/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-plugin-instance-docs = { path = "../../../../🧵️instance/📄️docs/📦️packages/🦀️rust", features = ["artifact-app-testing"], package = "semio-plugin-instance-docs"}
 semio-plugin-instance-ladders = { path = "../../../../🪜️maintenance-ladder/📦️packages/🦀️rust" }
 semio-plugin-interaction = { path = "../../../../🕹️interaction/📦️packages/🦀️rust" }
 semio-plugin-job = { path = "../../../../👷️job/📦️packages/🦀️rust" }
 semio-plugin-plugin-program = { path = "../../../../🏗️builder/🔌️program/📦️packages/🦀️rust" }
 semio-plugin-reactor-app = { path = "../../../../⚛️reactor/🔌️app/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-plugin-reactor-lifecycle = { path = "../../../../⚛️reactor/📨️pending/📦️packages/🦀️rust", features = ["artifact-app-testing", "original-actor-context-testing"] }
-semio-plugin-reactor-turn = { path = "../../../../⚛️reactor/🔄️turn/📦️packages/🦀️rust" }
-semio-plugin-retained-command = { path = "../../../../🧵️retained-command/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-plugin-reactor-turn = { path = "../../../../⚛️reactor/🔄️turn/📦️packages/🦀️rust", package = "semio-plugin-reactor-turn"}
+semio-framework-plugin-retained-command = { path = "../../../../🧵️retained-command/📦️packages/🦀️rust", features = ["artifact-app-testing"], package = "semio-plugin-retained-command"}
 semio-plugin-runtime-instances = { path = "../../../../⚛️reactor/🏃️runtime/📦️instances/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-plugin-test-support = { path = "../../../🧯️test-support/📦️packages/🦀️rust" }
 semio-plugin-testing-caller = { path = "../../../../🧪️testing/🎟️caller/📦️packages/🦀️rust" }

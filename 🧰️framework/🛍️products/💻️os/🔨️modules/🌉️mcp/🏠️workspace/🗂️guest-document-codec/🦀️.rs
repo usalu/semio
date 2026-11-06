@@ -285,7 +285,7 @@ pub(crate) fn guest_sqlite_import(schema: &str, dialect: &semio_framework_artifa
             match frame.wire.as_mut().unwrap(){
                 sqlite_wire::SnapshotPayloadResult::Rejected(rejection)=>{
                     frame.diagnostics=sqlite_wire::decode_diagnostics(&rejection.diagnostics).map_err(IoError::from_value_error)?;
-                    Err(IoError{cause:ValueError::new(rejection.kind,std::mem::take(&mut rejection.message)),diagnostics:std::mem::take(&mut frame.diagnostics)})
+                    Err(IoError{cause:ValueError::new(rejection.kind,std::mem::take(&mut rejection.message)).into(),diagnostics:std::mem::take(&mut frame.diagnostics)})
                 },
                 sqlite_wire::SnapshotPayloadResult::Pending(_)=>Err(IoError::from_value_error(ValueError::literal(ValueRefusalKind::OwnershipLimit,"guest SQLite import retains its original component ticket"))),
                 sqlite_wire::SnapshotPayloadResult::Done(payload)=>{

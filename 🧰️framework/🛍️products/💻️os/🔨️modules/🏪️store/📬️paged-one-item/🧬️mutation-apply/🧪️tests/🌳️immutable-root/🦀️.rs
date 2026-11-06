@@ -22,16 +22,17 @@ impl ImmutableRootProjection for Document{
     fn root_projection_demand(_original:RetainedCloneRef<'_,Self>)->Result<RetirementDemand,ValueError>{
         Ok(RetirementDemand{copy_bytes:size_of::<Self>()*2+size_of::<SealedShared<String>>()+PersistentList::<Node>::projection_demand().copy_bytes,depth:1,..Default::default()})
     }
+    fn root_projection_work_demand(_original:RetainedCloneRef<'_,Self>)->Result<u64,ValueError>{Ok(2)}
     fn project_root(original:RetainedCloneRef<'_,Self>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<(Self,RetainedCloneProgress)>>{
-        let result=(||->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
+        let mut work=0;let result=(||->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
         let demand=Self::root_projection_demand(original)?;
         if !retained_clone_grant_admits(grant,demand){return Ok(None);}
         let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-size_of::<Self>()*2,..grant};
-        let Some((nodes,_))=PersistentList::project(original.project(0,|document|&document.nodes),child).result?else{return Ok(None);};
-        let(title,_)=original.get().title.try_duplicate(child).result?;
+        let turn=PersistentList::project(original.project(0,|document|&document.nodes),child);work+=turn.work;let Some((nodes,_))=turn.result?else{return Ok(None);};
+        let turn=original.get().title.try_duplicate(child);work+=turn.work;let(title,_)=turn.result?;
         Ok(Some((Self{title,nodes},RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))
         })();
-        semio_framework_value::RetainedWorkOutcome{work:u64::from(result.is_ok()),result}
+        semio_framework_value::RetainedWorkOutcome{work,result}
     }
 }
 

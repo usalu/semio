@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeLocalFireCeilingHe
         record: "ChangedLocalFireCeilingHeight",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change ceiling height above the localised fire", "Deckenhöhe über dem lokalen Brand ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change ceiling height above the localised fire", "Deckenhöhe über dem lokalen Brand ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

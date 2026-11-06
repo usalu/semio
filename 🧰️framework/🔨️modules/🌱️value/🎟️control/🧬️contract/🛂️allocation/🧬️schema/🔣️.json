@@ -1,0 +1,304 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/value/control/allocation/failure",
+  "$defs": {
+    "kind": {
+      "enum": [
+        "invalidValue",
+        "canceled",
+        "ownershipLimit",
+        "allocationFailed",
+        "workLimit",
+        "depthLimit",
+        "unsupportedOwner",
+        "invariantViolated"
+      ]
+    },
+    "wire": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "message",
+        "retainedProgress"
+      ],
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/kind"
+        },
+        "message": {
+          "type": "string"
+        },
+        "retainedProgress": {
+          "$ref": "#/$defs/retainedProgress"
+        }
+      }
+    },
+    "retainedProgress": {
+      "title": "Retained Clone Progress",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "copiedItems",
+        "copiedBytes",
+        "retainedCapacityBytes",
+        "releasedBytes"
+      ],
+      "properties": {
+        "copiedItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "copiedBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "retainedCapacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "releasedBytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "allocationProgress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "admittedBytes",
+        "actualCapacityBytes",
+        "priorAdmittedBytes",
+        "requestedBytes",
+        "maximumBytes"
+      ],
+      "properties": {
+        "admittedBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "actualCapacityBytes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "priorAdmittedBytes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "requestedBytes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "maximumBytes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "priorAdmittedBytes": {
+              "type": "null"
+            },
+            "requestedBytes": {
+              "type": "null"
+            },
+            "maximumBytes": {
+              "type": "null"
+            }
+          }
+        },
+        {
+          "properties": {
+            "priorAdmittedBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "requestedBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maximumBytes": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      ]
+    },
+    "allocationFailure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "primary",
+        "admission",
+        "forwardedAdmission",
+        "scopedAdmission",
+        "forwardedQuote",
+        "scopedQuote",
+        "forwardedPost",
+        "scopedPost",
+        "forwardedCancel",
+        "scopedCancel",
+        "receipt",
+        "extent",
+        "progress"
+      ],
+      "properties": {
+        "primary": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/wire"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "admission": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/wire"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "forwardedAdmission": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/wire"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scopedAdmission": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/wire"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "forwardedQuote": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/wire"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scopedQuote": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/wire"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "forwardedPost": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/wire"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scopedPost": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/wire"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "forwardedCancel": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/wire"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scopedCancel": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/wire"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "receipt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/wire"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extent": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/wire"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "progress": {
+          "$ref": "#/$defs/allocationProgress"
+        }
+      }
+    }
+  },
+  "$ref": "#/$defs/allocationFailure"
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "grantItems": 0,
+    "grantDepth": 1,
+    "closed": false
+  },
+  {
+    "grantItems": 1,
+    "grantDepth": 1,
+    "closed": true
+  }
+]

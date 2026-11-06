@@ -20,7 +20,7 @@ semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-persistent = { workspace = true }
 semio-plugin-ownership = { workspace = true }
 semio-os-store-operation-wire = { workspace = true }
-base64_codec = { workspace = true }
+semio-framework-io-base64 = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-2d-compute = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
@@ -57,6 +57,7 @@ semio-s-artifact-stdio-semio = { workspace = true }
 semio-framework-action-bus = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-async = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }

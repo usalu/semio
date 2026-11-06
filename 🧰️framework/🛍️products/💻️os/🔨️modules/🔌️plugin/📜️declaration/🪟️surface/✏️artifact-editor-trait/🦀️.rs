@@ -5,9 +5,9 @@ use semio_framework_2d_compute::EngineHandles;
 
 pub trait ArtifactEditor: Default + Send + 'static {
     /// 📬️ Borrows this editor's original typed completion retirement birth.
-    fn completion_retirement_birth_bytes(value:&ArtifactToolCompletionValue<EditorApp<Self>>)->Option<usize>{semio_framework_plugin_decl_app::completion_retirement::derived_completion_birth_bytes(value)}
+    fn completion_retirement_birth_bytes(value:&ArtifactToolCompletionValue<EditorApp<Self>>)->Option<usize>{semio_plugin_decl_app::completion_retirement::derived_completion_birth_bytes(value)}
     /// 🎟️ Retains the editor completion on every unsupported or unfunded cleanup admission.
-    fn admit_completion_retirement(value:&mut Option<ArtifactToolCompletionValue<EditorApp<Self>>>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress)>>{semio_framework_plugin_decl_app::completion_retirement::derived_admit_completion_retirement(value,grant)}
+    fn admit_completion_retirement(value:&mut Option<ArtifactToolCompletionValue<EditorApp<Self>>>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress)>>{semio_plugin_decl_app::completion_retirement::derived_admit_completion_retirement(value,grant)}
     /// 📐️ Declares the physical authority frame needed to retain this editor's original mutation batch.
     fn owned_mutation_batch_birth_bytes() -> Option<usize> { None }
 
@@ -61,7 +61,7 @@ pub trait ArtifactEditor: Default + Send + 'static {
 
     fn mounted_job_maintenance_phase(_instance_id: u32) -> Option<MountedOwnerPhaseV1> { None }
 
-    fn mounted_job_maintenance_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    fn mounted_job_maintenance_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         Ok(PluginLifecycleStep::Complete(RetainedCloneProgress::default()))
     }
 
@@ -69,7 +69,7 @@ pub trait ArtifactEditor: Default + Send + 'static {
         Ok(RetirementDemand::default())
     }
 
-    fn mounted_job_close_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    fn mounted_job_close_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         Ok(PluginLifecycleStep::Complete(RetainedCloneProgress::default()))
     }
 
@@ -95,8 +95,8 @@ pub trait ArtifactEditor: Default + Send + 'static {
         Ok(None)
     }
     /// ⌨️ The editor's original typing algebra is forwarded by `EditorApp<Self>`; independent deliveries split by default.
-    fn original_typing_fold() -> semio_framework_plugin_decl_app::tool_contract::OriginalTypingFoldPolicy<Self::Mutation> {
-        semio_framework_plugin_decl_app::tool_contract::OriginalTypingFoldPolicy::Split
+    fn original_typing_fold() -> semio_plugin_decl_app::tool_contract::OriginalTypingFoldPolicy<Self::Mutation> {
+        semio_plugin_decl_app::tool_contract::OriginalTypingFoldPolicy::Split
     }
     /// 🔰️ This editor's entity label for a history-edit reference chip — forwarded verbatim to
     /// `ArtifactApp::entity_label` by `EditorApp<Self>`, where the contract lives.
@@ -160,13 +160,13 @@ pub trait ArtifactEditor: Default + Send + 'static {
 
     /// 📥️ Supplies the framework-owned bounded natural-file importer while leaving every other
     /// reserved route to the editor. Editors with a richer media route may override this method.
-    fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if let Some(original)=request.as_ref(){let natural=matches!(&original.input,Some(ArtifactReservedToolInput::Media{port,..})if port==NATURAL_FILE_PORT)&&Self::natural_file_codec().is_some();if !natural||!original.raw_wire.is_empty(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"natural-file import requires its owned declared media and no wire").into())}}
-        semio_framework_plugin_decl_app::tool_contract::admit_reserved_work::<EditorApp<Self>,crate::natural_file_import::NaturalFileImportWork<Self>>(request,body,cx)
+        semio_plugin_decl_app::tool_contract::admit_reserved_work::<EditorApp<Self>,crate::natural_file_import::NaturalFileImportWork<Self>>(request,body,cx)
     }
 
     /// 🎞️ Author-owned resumable media-output producer for `EditorApp<Self>`.
-    fn build_media_export_job(_request:&mut Option<ArtifactMediaExportJobRequest<EditorApp<Self>>>,_body:&mut Option<Box<dyn semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_media_export_job(_request:&mut Option<ArtifactMediaExportJobRequest<EditorApp<Self>>>,_body:&mut Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"registered media surface lacks its concrete source-preserving producer").into())
     }
 
@@ -221,14 +221,14 @@ pub trait ArtifactEditor: Default + Send + 'static {
     /// Framework-owned by default — `EditorApp<E>` forwards THIS answer, so a `None` here
     /// would strip the `ArtifactApp` default and break registered-fixture close.
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin_decl_views::presence_retirement::bounded_presence_root_retirement_factory::<Self::Presence>())
+        Some(semio_plugin_decl_views::presence_retirement::bounded_presence_root_retirement_factory::<Self::Presence>())
     }
 
     /// 👥️ Grants exact typed retirement for peer presence snapshots to this editor adapter.
     /// Framework-owned by default, for the same reason as `ArtifactApp`'s twin: `EditorApp<E>`
     /// forwards THIS answer, so a `None` here would take the framework's default back out.
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin_decl_views::presence_retirement::bounded_presence_root_retirement_factory::<Self::Presence>())
+        Some(semio_plugin_decl_views::presence_retirement::bounded_presence_root_retirement_factory::<Self::Presence>())
     }
 
     /// 🛌️ Grants bounded displaced-transient-root retirement to this editor adapter.
@@ -269,7 +269,7 @@ pub trait ArtifactEditor: Default + Send + 'static {
     }
 
     fn build_presence_store_disposer() -> ArtifactDisposal<store::PresenceStore<Self::Presence, Self::PresenceMutation>> {
-        Some(semio_framework_plugin_decl_views::presence_retirement::bounded_presence_store_disposer::<Self::Presence, Self::PresenceMutation>())
+        Some(semio_plugin_decl_views::presence_retirement::bounded_presence_store_disposer::<Self::Presence, Self::PresenceMutation>())
     }
 
     fn build_transient_store_disposer() -> ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
@@ -292,13 +292,13 @@ pub trait ArtifactEditor: Default + Send + 'static {
     fn config_schema() -> &'static str {
         "config.empty"
     }
-    fn reference_birth() -> Option<semio_framework_plugin_decl_app::ReferenceArtifactAppBirth<Self::Snapshot>> { None }
+    fn reference_birth() -> Option<semio_plugin_decl_app::ReferenceArtifactAppBirth<Self::Snapshot>> { None }
     fn initial_config() -> Self::Config {
         Self::Config::default()
     }
     /// 🏠️ Resolves a host-owned control-plane action to one configuration mutation.
     /// `EditorApp<E>` forwards this exact owner hook to the runtime adapter.
-    fn original_host_configuration(_action:&str)->Option<&'static semio_framework_plugin_decl_emission::OriginalHostConfigurationDeclaration<Self::ConfigMutation>>{None}
+    fn original_host_configuration(_action:&str)->Option<&'static semio_plugin_decl_emission::OriginalHostConfigurationDeclaration<Self::ConfigMutation>>{None}
     fn initial_draft() -> Self::Draft {
         Self::Draft::default()
     }
@@ -316,7 +316,7 @@ pub trait ArtifactEditor: Default + Send + 'static {
         "typed-command"
     }
     /// 🏭️ The declared native producer owns original action arguments, command birth and exact operation wire.
-    fn original_action_command_producer()->Option<&'static dyn semio_framework_plugin_decl_app::tool_contract::ArtifactOriginalCommandProducerFactory<Self::Command>>{None}
+    fn original_action_command_producer()->Option<&'static dyn semio_plugin_decl_app::tool_contract::ArtifactOriginalCommandProducerFactory<Self::Command>>{None}
     fn command_from_action(action: &str, _args: &mut Option<DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         Err(Fault::new(
@@ -388,7 +388,7 @@ pub trait ArtifactEditor: Default + Send + 'static {
         _transient: &TransientView<'_, Self::Transient>,
         _interaction: &InteractionView<'_>,
         _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> semio_framework_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> {
+    ) -> semio_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> {
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact did not implement retained render work").into())
     }
     fn render_with_request_context(
@@ -400,8 +400,8 @@ pub trait ArtifactEditor: Default + Send + 'static {
         transient: &TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
         cx:&mut semio_framework_job::StepContext<'_>,
-    ) -> semio_framework_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> {
-        let rendered:crate::UiAssemblyResult<semio_framework_ui_runtime::ComponentTree>=(||{
+    ) -> semio_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> {
+        let rendered:crate::UiAssemblyResult<semio_ui_runtime::ComponentTree>=(||{
         let _ = (transient, interaction);
         Self::render_with_instance_operation_owner(owner, body_key, doc, cfg, view_state)
 
@@ -480,6 +480,8 @@ pub trait ArtifactEditor: Default + Send + 'static {
     }
     /// 🎟️ Admits a controlled natural decoder while the caller retains denied source and candidate slots.
     fn admit_natural_file_decode_owner(_bytes:&mut Option<Vec<u8>>,_contract:semio_framework::ToolExecutionContract,_receiving:&mut Option<NaturalFileDecodeOwner<Self::Snapshot>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"natural-file format has no original controlled decoder").into())}
+    /// 🧷️ Declares an exact original text-wire binding for one non-document media input.
+    fn accepts_original_structured_media(_port:&str,_schema:&str,_media_type:&MediaType)->bool{false}
     async fn media_ports() -> Vec<MediaPortSpec> {
         match Self::io() {
             Some(io) => io.all_ports().await,

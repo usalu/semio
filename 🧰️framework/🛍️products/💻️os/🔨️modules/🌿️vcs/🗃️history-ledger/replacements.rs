@@ -7,6 +7,7 @@ fn grant_admits(g:RetainedCloneGrant,d:RetirementDemand)->bool{semio_framework_v
 impl<T> ArtifactHistoryLedger<T>{
  /// 📐️ Quotes both real candidate allocations and fixed original row transfers before any ownership changes.
  pub fn replacement_stage_demands(&self,key:ArtifactHistoryKey)->Result<RetirementDemand,ValueError>{
+  if self.directory_reads!=0{return Err(fault("history replacement awaits the original directory loan"))}
   self.get_key(key).ok_or_else(||fault("replacement requires its exact visible original history generation"))?;
   if self.reservation.is_some()||self.group.is_some(){return Err(fault("replacement requires its original ledger suffix to be settled"))}
   let slot=self.slot(key.index);if slot.read.is_some()||slot.replacement.is_some()||slot.value.is_none(){return Err(fault("replacement requires an unborrowed original row"))}
@@ -23,6 +24,7 @@ impl<T> ArtifactHistoryLedger<T>{
  pub fn replacement_decision_identity(&self,key:ArtifactHistoryKey)->Result<Option<usize>,ValueError>{self.get_key(key).ok_or_else(||fault("replacement decision requires its exact original generation"))?;Ok(self.slot(key.index).replacement.as_ref().and_then(|root|root.decision_identity()))}
  /// 📐️ Quotes return of the displaced original and both candidate frame releases before settlement.
  pub fn replacement_settlement_demands(&self,key:ArtifactHistoryKey)->Result<RetirementDemand,ValueError>{
+  if self.directory_reads!=0{return Err(fault("history replacement awaits the original directory loan"))}
   self.get_key(key).ok_or_else(||fault("replacement settlement requires its exact visible original generation"))?;let Some(root)=self.slot(key.index).replacement.as_ref()else{return Ok(Default::default())};let mut d=root.settlement_demands();d.release_bytes+=size_of::<RetainedPublicationRoot<T>>();d.copy_bytes+=2*size_of::<T>()+2*size_of::<RetainedPublicationRoot<T>>()+size_of::<usize>();Ok(d)
  }
  /// 🤝️ Returns the displaced row and original decision retirement after publication or abort, preserving every direct reader.

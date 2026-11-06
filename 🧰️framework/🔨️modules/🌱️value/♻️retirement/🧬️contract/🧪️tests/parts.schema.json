@@ -1,0 +1,32 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "leaf",
+    "parent",
+    "attachAllocatedBytes",
+    "attachReleasedBytes"
+  ],
+  "properties": {
+    "leaf": {
+      "const": {
+        "primary": "leaf primary",
+        "work": "leaf work",
+        "receipt": "leaf receipt"
+      }
+    },
+    "parent": {
+      "const": {
+        "primary": "parent primary",
+        "work": "parent work",
+        "receipt": "parent receipt"
+      }
+    },
+    "attachAllocatedBytes": {
+      "const": 0
+    },
+    "attachReleasedBytes": {
+      "const": 0
+    }
+  }
+}

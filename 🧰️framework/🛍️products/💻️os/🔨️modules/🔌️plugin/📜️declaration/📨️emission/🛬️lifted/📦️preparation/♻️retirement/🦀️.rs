@@ -26,7 +26,7 @@ impl RetireOwned for OwnedChildEmit{
  fn controlled_retirement_supported()->bool{true}
 }
 
-struct ChildEmitPreparationRetirement{original:ManuallyDrop<Option<ChildEmitPreparation>>,fault:Option<ControlledRetirement<Fault>>}
+struct ChildEmitPreparationRetirement{original:ManuallyDrop<Option<ChildEmitPreparation>>,fault:Option<ControlledRetirement<PluginLifecycleFailure>>}
 impl ChildEmitPreparationRetirement{
  fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
   if let Some(fault)=self.fault.as_ref(){return fault.next_demand(copy)}
@@ -45,7 +45,16 @@ impl RetirementCursor for ChildEmitPreparationRetirement{
   let result=source.close_step(grant);let work=source.last_turn_work();match result{
    Ok(PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress))=>RetirementStep::Progress(progress,work),
    Ok(PluginLifecycleStep::AwaitingInput{..}|PluginLifecycleStep::Blocked{..})=>if work==0{RetirementStep::BudgetExhausted}else{RetirementStep::Progress(Default::default(),work)},
-   Err(original)=>{match ControlledRetirement::new(original){Ok(fault)=>self.fault=Some(fault),Err((error,_))=>return RetirementStep::Failure(error,work)}RetirementStep::Failure(ValueError::literal(ValueRefusalKind::InvariantViolated,"original child preparation refusal remains retained"),work)}
+   Err(original)=>{
+    if original.receipt_refusal.is_none()&&original.context_refusal.is_none()&&original.work_refusal.is_none(){
+     match original.primary{
+      semio_plugin_ownership::bounded_ownership::PluginLifecyclePrimary::Retirement(failure) if failure.retained_progress()==original.effects=>return RetirementStep::Failure(failure,work),
+      semio_plugin_ownership::bounded_ownership::PluginLifecyclePrimary::Value(failure) if failure.retained_progress()==original.effects=>return RetirementStep::Failure(semio_framework_value::OriginalRetirementFailure::from_primary(failure),work),
+      primary=>{let effects=original.effects;self.fault=Some(ControlledRetirement::retain(PluginLifecycleFailure{effects,primary,receipt_refusal:None,context_refusal:None,work_refusal:None}));return RetirementStep::Progress(effects,work)}
+     }
+    }
+    let effects=original.effects;self.fault=Some(ControlledRetirement::retain(original));RetirementStep::Progress(effects,work)
+   }
   }
  }
  fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.fault.is_none()}

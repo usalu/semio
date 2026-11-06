@@ -145,14 +145,13 @@ impl OriginalPackWriting {
         if !self.ready() {
             return Err(invalid());
         }
-        let bytes = size_of::<Vec<u8>>();
-        if grant.maximum_items == 0 || grant.maximum_copy_bytes < bytes || grant.maximum_depth == 0 {
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
             return Ok(None);
         }
         if self.wire.len() != self.prefix.checked_add(self.written).ok_or_else(invalid)? {
             return Err(invalid());
         }
-        self.last_work=1;Ok(Some((std::mem::take(&mut *self.wire), RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() })))
+        self.last_work=1;Ok(Some((std::mem::take(&mut *self.wire), RetainedCloneProgress { copied_items: 1, ..Default::default() })))
     }
     pub fn close_demand(&self, _body: usize) -> Result<RetirementDemand, ValueError> {
         if let Some(cursor) = self.cursor.as_ref() {

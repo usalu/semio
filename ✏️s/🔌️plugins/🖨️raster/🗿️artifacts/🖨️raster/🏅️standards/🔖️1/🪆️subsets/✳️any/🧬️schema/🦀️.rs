@@ -89,7 +89,7 @@ pub use layer_tree_helpers::*;
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
+pub use semio_s_artifact_stdio_semio_image::schema::snapshot::{SemioImageSnapshot, SemioImageFrame, SemioImageMetadataEntry, SemioColorspace, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
 
 //#endregion 🔁️Re-exports
 

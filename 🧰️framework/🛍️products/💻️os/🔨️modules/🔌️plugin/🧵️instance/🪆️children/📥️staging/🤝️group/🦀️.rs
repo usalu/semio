@@ -20,7 +20,7 @@ use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use crate::children_components::ChildComposition;
 use std::future::Future;
-use semio_plugin_instance_stores::stores_components::InstanceStores;
+use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
 use store::Mutation;
 use protocol::OpText;
 use semio_plugin_reactor_app::PluginApp;
@@ -64,8 +64,8 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
         if self.private_child_groups_terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()});}
         if !plugin_grant_funds(demand,grant){return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()});}
         let Some((_,operation))=self.private_child_groups.next_id_from(0)else{
-            if cx.should_yield(){return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()})}
-            let step=self.private_child_groups.close_empty_backing_step(grant)?;cx.consume_retained(step.progress())?;cx.consume_fuel(1);
+            if cx.retirement_should_yield(){return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()})}
+            let turn=self.private_child_groups.close_empty_backing_step(grant);cx.consume_fuel(turn.work);let step=match turn.result{Ok(step)=>step,Err(error)=>return Err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(error).debit_original(cx))};let progress=step.progress();cx.consume_retained(progress).map_err(|error|semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(error.with_retained_progress(progress)))?;
             return match step{
                 RetainedCloneStep::Progress(progress)=>Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress}),
                 RetainedCloneStep::Complete(progress)=>Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress}),

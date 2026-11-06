@@ -1,0 +1,30 @@
+{
+  "fields": [
+    {
+      "id": 0,
+      "position": 2,
+      "value": 9
+    },
+    {
+      "id": 1,
+      "key": "label",
+      "value": "a b"
+    },
+    {
+      "id": 2,
+      "position": 0,
+      "value": 7
+    },
+    {
+      "id": 3,
+      "position": 1,
+      "value": null
+    },
+    {
+      "id": 4,
+      "key": "active",
+      "value": true
+    }
+  ],
+  "document": "7 _ 9 label=\"a b\" active=true\n"
+}

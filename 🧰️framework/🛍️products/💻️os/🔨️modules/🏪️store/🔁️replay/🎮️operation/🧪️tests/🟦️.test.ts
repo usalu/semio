@@ -1,0 +1,6 @@
+import {expect,test} from "bun:test";
+import {Database} from "bun:sqlite";
+import fixture from "./🧫️fixtures/🔣️.json";
+test("operation close accounts for each admitted action",()=>{const db=new Database(":memory:");try{db.exec("CREATE TABLE turns(admitted INTEGER,work INTEGER)");db.query("INSERT INTO turns VALUES(?,?)").run(0,fixture.settlementCloseWork.denied);db.query("INSERT INTO turns VALUES(?,?)").run(1,fixture.settlementCloseWork.selected);expect(db.query("SELECT admitted,work FROM turns ORDER BY admitted").all()).toEqual([{admitted:0,work:0},{admitted:1,work:1}]);}finally{db.close()}});
+
+test("original preparation close-start keeps each child action separately funded",()=>{const law=require("./🧫️fixtures/🛑️close-start.json"),db=new Database(":memory:");try{db.exec("CREATE TABLE steps(ordinal INTEGER PRIMARY KEY, action TEXT UNIQUE, work INTEGER)");law.steps.forEach((action:string,index:number)=>db.query("INSERT INTO steps VALUES(?,?,?)").run(index,action,law.selectedWork));expect(db.query("SELECT action FROM steps ORDER BY ordinal").all()).toEqual(law.steps.map((action:string)=>({action})));expect((db.query("SELECT sum(work) AS total FROM steps").get() as {total:number}).total).toBe(law.steps.length);expect(law.deniedWork).toBe(0)}finally{db.close()}});

@@ -11,7 +11,7 @@ use semio_plugin_window_transient as window_surface;
 use semio_plugin_window_transient::window_transient;
 use semio_plugin_reactor_app as plugin_app;
 use semio_plugin_app_builder as app_builder;
-use semio_plugin_retained_command as retained_command;
+use semio_framework_plugin_retained_command as retained_command;
 use semio_plugin_decl_emission::child_emit_preparation;
 use semio_plugin_decl_views::presence_retirement::{no_presence_store_disposer,no_presence_peer_retirement_factory,no_presence_local_root_retirement_factory};
 use semio_plugin_decl_views::transient_retirement::{no_transient_store_disposer,no_transient_local_root_retirement_factory};

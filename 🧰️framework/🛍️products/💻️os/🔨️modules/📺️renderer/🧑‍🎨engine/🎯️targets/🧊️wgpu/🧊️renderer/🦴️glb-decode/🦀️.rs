@@ -35,6 +35,10 @@ pub use instance_plan_math_and_outline::{GlbOutlineAccumulator, GLB_OUTLINE_SCAL
 mod materialize_cursor_step;
 pub use materialize_cursor_step::{GlbMaterializeCursor, GlbMaterializePhase};
 
+#[path = "🎟️png-texture/🦀️.rs"]
+mod original_png_texture;
+use original_png_texture::OriginalPngTexture;
+
 #[path = "📖️materialize-readers-and-component-helpers/🦀️.rs"]
 mod materialize_readers_and_component_helpers;
 use materialize_readers_and_component_helpers::{

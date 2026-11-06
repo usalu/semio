@@ -1,0 +1,54 @@
+{
+  "type": "array",
+  "minItems": 4,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "capacity",
+      "used",
+      "span",
+      "granted",
+      "postAccepted",
+      "expectedUsed",
+      "expectedWork",
+      "expectedError"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "capacity": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "used": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "span": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "granted": {
+        "type": "boolean"
+      },
+      "postAccepted": {
+        "type": "boolean"
+      },
+      "expectedUsed": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "expectedWork": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "expectedError": {
+        "type": "boolean"
+      }
+    }
+  }
+}

@@ -31,11 +31,14 @@ struct Entity {
 /// 🧭️ Only ordinal metadata is allocated; source strings and binary64 payloads remain borrowed.
 #[derive(Default, RetireOwned)]
 pub(super) struct Index {
-    nodes: Vec<Node>,
-    edges: Vec<usize>,
-    roots: Vec<usize>,
-    groups: Vec<Group>,
-    entities: Vec<Entity>,
+    allocation:semio_framework_io_control::NativeSnapshotEncodeAllocation,
+    marker:semio_framework_io_control::NativeSnapshotEffectProgress,
+    unwind_failure:Option<NativeSnapshotFailure>,
+    nodes: Option<Vec<Node>>,
+    edges: Option<Vec<usize>>,
+    roots: Option<Vec<usize>>,
+    groups: Option<Vec<Group>>,
+    entities: Option<Vec<Entity>>,
 }
 fn limit() -> ValueError {
     ValueError::literal(ValueRefusalKind::WorkLimit, "literal IFC Pack projection exceeds its bounded source admission")
@@ -49,12 +52,8 @@ fn work(owner: &mut Owner<'_, '_>, bytes: usize, meter:&mut ReceivingWork) -> Re
     owner.record_progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() })?;
     meter.performed();owner.native().step().map_err(Into::into)
 }
-fn vector<T:RetireOwnedTrait>(count:usize,owner:&mut Owner<'_,'_>,meter:&mut ReceivingWork)->Result<Vec<T>,NativeSnapshotFailure>{
- meter.take(owner.receive::<Vec<T>,Vec<T>,NativeSnapshotFailure>(|slot,native,body|receiving_turn(|meter|{
-  *slot=Some(Vec::new());let bytes=count.checked_mul(size_of::<T>()).ok_or_else(limit)?;
-  body.admit_frontier(semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<Vec<T>>(),maximum_capacity_bytes:bytes,maximum_depth:1,..Default::default()})?;
-  native.checkpoint()?;meter.performed();body.allocate_encode_vec_into(native,count,slot.as_mut().unwrap(),1)?;Ok(slot.take().unwrap())
- })))
+fn vector<T:RetireOwnedTrait>(count:usize,output:&mut Option<Vec<T>>,owner:&mut Owner<'_,'_>,meter:&mut ReceivingWork,marker:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind_failure:&mut Option<NativeSnapshotFailure>,allocation:&mut semio_framework_io_control::NativeSnapshotEncodeAllocation)->Result<(),NativeSnapshotFailure>{
+ let turn=owner.allocate_vector(count,output,marker,unwind_failure,allocation,1);meter.take(turn)?;marker.reset_completed()?;Ok(())
 }
 fn children(value: &IfcValue) -> &[IfcValue] {
     match value {
@@ -86,29 +85,29 @@ fn measure(value: &IfcValue, depth: usize, nodes: &mut usize, edges: &mut usize,
 }
 fn add(value: &IfcValue, parent: usize, child: usize, group: usize, index: &mut Index, owner: &mut Owner<'_, '_>, meter:&mut ReceivingWork) -> Result<usize, NativeSnapshotFailure> {
     work(owner, size_of::<Node>(),meter)?;
-    let at = index.nodes.len();
-    let edge = index.edges.len();
+    let at = index.nodes.as_ref().unwrap().len();
+    let edge = index.edges.as_ref().unwrap().len();
     let c = children(value);
-    index.nodes.push(Node { parent, child, group, edges: edge, length: c.len() });
+    index.nodes.as_mut().unwrap().push(Node { parent, child, group, edges: edge, length: c.len() });
     for _ in c {
         work(owner, size_of::<usize>(),meter)?;
-        index.edges.push(0);
+        index.edges.as_mut().unwrap().push(0);
     }
     for (i, value) in c.iter().enumerate() {
         let next = add(value, at, i, group, index, owner,meter)?;
         work(owner, size_of::<usize>(),meter)?;
-        index.edges[edge + i] = next;
+        index.edges.as_mut().unwrap()[edge + i] = next;
     }
     Ok(at)
 }
 fn group(values: &[IfcValue], entity: usize, complex: usize, index: &mut Index, owner: &mut Owner<'_, '_>, meter:&mut ReceivingWork) -> Result<usize, NativeSnapshotFailure> {
     work(owner, size_of::<Group>(),meter)?;
-    let at = index.groups.len();
-    index.groups.push(Group { entity, complex, start: index.roots.len(), length: values.len() });
+    let at = index.groups.as_ref().unwrap().len();
+    index.groups.as_mut().unwrap().push(Group { entity, complex, start: index.roots.as_ref().unwrap().len(), length: values.len() });
     for (i, value) in values.iter().enumerate() {
         let root = add(value, NONE, i, at, index, owner,meter)?;
         work(owner, size_of::<usize>(),meter)?;
-        index.roots.push(root);
+        index.roots.as_mut().unwrap().push(root);
     }
     Ok(at)
 }
@@ -139,19 +138,19 @@ impl Index {
                 }
             }
         }
-        self.nodes = vector(nodes, owner,meter)?;
-        self.edges = vector(edges, owner,meter)?;
-        self.roots = vector(roots, owner,meter)?;
-        self.groups = vector(groups, owner,meter)?;
-        self.entities = vector(source.entities.len(), owner,meter)?;
+        vector(nodes, &mut self.nodes, owner,meter,&mut self.marker,&mut self.unwind_failure,&mut self.allocation)?;
+        vector(edges, &mut self.edges, owner,meter,&mut self.marker,&mut self.unwind_failure,&mut self.allocation)?;
+        vector(roots, &mut self.roots, owner,meter,&mut self.marker,&mut self.unwind_failure,&mut self.allocation)?;
+        vector(groups, &mut self.groups, owner,meter,&mut self.marker,&mut self.unwind_failure,&mut self.allocation)?;
+        vector(source.entities.len(), &mut self.entities, owner,meter,&mut self.marker,&mut self.unwind_failure,&mut self.allocation)?;
         for (i, values) in [&source.header.file_description, &source.header.file_name, &source.header.file_schema].into_iter().enumerate() {
             group(values, NONE, i, self, owner,meter)?;
         }
         for (i, entity) in source.entities.iter().enumerate() {
             let g = group(&entity.args, i, NONE, self, owner,meter)?;
-            let complexes = self.groups.len();
+            let complexes = self.groups.as_ref().unwrap().len();
             work(owner, size_of::<Entity>(),meter)?;
-            self.entities.push(Entity { group: g, complexes });
+            self.entities.as_mut().unwrap().push(Entity { group: g, complexes });
             for (j, complex) in entity.complex.iter().enumerate() {
                 group(&complex.args, i, j, self, owner,meter)?;
             }
@@ -170,16 +169,16 @@ impl Projection<'_> {
     fn value(&self, index: usize) -> Result<&IfcValue, ValueError> {
         let mut path = [0usize; 64];
         let mut count = 0;
-        let mut node = self.index.nodes.get(index).ok_or_else(projection_path_error)?;
+        let mut node = self.index.nodes.as_ref().ok_or_else(projection_path_error)?.get(index).ok_or_else(projection_path_error)?;
         while node.parent != NONE {
             if count == path.len() {
                 return Err(projection_path_error());
             }
             path[count] = node.child;
             count += 1;
-            node = self.index.nodes.get(node.parent).ok_or_else(projection_path_error)?;
+            node = self.index.nodes.as_ref().ok_or_else(projection_path_error)?.get(node.parent).ok_or_else(projection_path_error)?;
         }
-        let group = self.index.groups.get(node.group).ok_or_else(projection_path_error)?;
+        let group = self.index.groups.as_ref().ok_or_else(projection_path_error)?.get(node.group).ok_or_else(projection_path_error)?;
         let values = if group.entity == NONE {
             match group.complex {
                 0 => &self.source.header.file_description,
@@ -198,15 +197,15 @@ impl Projection<'_> {
         Ok(value)
     }
     fn roots(&self, group: usize, path: &[usize]) -> Result<V<'_>, ValueError> {
-        let group = self.index.groups.get(group).ok_or_else(projection_path_error)?;
+        let group = self.index.groups.as_ref().ok_or_else(projection_path_error)?.get(group).ok_or_else(projection_path_error)?;
         match path {
             [] => Ok(V::List(group.length)),
-            [i] if *i < group.length => Ok(V::UInt(self.index.roots[group.start + i] as u64)),
+            [i] if *i < group.length => Ok(V::UInt(self.index.roots.as_ref().ok_or_else(projection_path_error)?[group.start + i] as u64)),
             _ => Err(projection_path_error()),
         }
     }
     fn node(&self, index: usize, path: &[usize]) -> Result<V<'_>, ValueError> {
-        let row = self.index.nodes.get(index).ok_or_else(projection_path_error)?;
+        let row = self.index.nodes.as_ref().ok_or_else(projection_path_error)?.get(index).ok_or_else(projection_path_error)?;
         let value = self.value(index)?;
         let kind = match value {
             IfcValue::Unset => "unset",
@@ -229,7 +228,7 @@ impl Projection<'_> {
             [4] => Ok(if let IfcValue::Reference(v) = value { V::UInt(*v) } else { V::Absent }),
             [5] => Ok(if let IfcValue::TypedValue(v) = value { V::Text(&v.name) } else { V::Absent }),
             [6] => Ok(V::List(row.length)),
-            [6, i] if *i < row.length => Ok(V::UInt(self.index.edges[row.edges + i] as u64)),
+            [6, i] if *i < row.length => Ok(V::UInt(self.index.edges.as_ref().ok_or_else(projection_path_error)?[row.edges + i] as u64)),
             _ => Err(projection_path_error()),
         }
     }
@@ -250,7 +249,7 @@ impl FieldProjectionSource for Projection<'_> {
                     return Ok(V::List(self.source.entities.len()));
                 };
                 let e = self.source.entities.get(i).ok_or_else(projection_path_error)?;
-                let at = self.index.entities.get(i).ok_or_else(projection_path_error)?;
+                let at = self.index.entities.as_ref().ok_or_else(projection_path_error)?.get(i).ok_or_else(projection_path_error)?;
                 let Some((&field, path)) = path.split_first() else {
                     return Ok(V::Record(&[0, 1, 2, 3]));
                 };
@@ -275,7 +274,7 @@ impl FieldProjectionSource for Projection<'_> {
             }
             5 => {
                 let Some((&i, path)) = path.split_first() else {
-                    return Ok(V::List(self.index.nodes.len()));
+                    return Ok(V::List(self.index.nodes.as_ref().unwrap().len()));
                 };
                 self.node(i, path)
             }

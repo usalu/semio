@@ -26,7 +26,7 @@ impl OriginalHistorySource {
             *output = Some(Self { source: ManuallyDrop::new(Some(Arc::new(history.take().unwrap()))), closing: ManuallyDrop::new(None), binding: (native.ledger_identity(), native.retirement_recipient_identity()) });
             let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, retained_capacity_bytes: demand.capacity_bytes, ..Default::default() };
             let allocation_refusal = native.record_constructed_allocation(progress.retained_capacity_bytes).err();
-            NativeConstructionStepResult { work: 1, result: if allocation_refusal.is_none() { Ok(true) } else { Err(OriginalReceivingPrimary { primary: None, quote_refusal: None, allocation_refusal, progress }) }, progress }
+            NativeConstructionStepResult { work: 1, result: if allocation_refusal.is_none() { Ok(true) } else { Err(OriginalReceivingPrimary {retirement_failure:None,work_refusal:None, primary: None, quote_refusal: None, allocation_refusal, allocation_failure:None, native_allocation:None, receipt_refusal:None, progress }) }, progress }
         })
     }
 

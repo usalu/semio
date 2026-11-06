@@ -47,6 +47,7 @@ fn quick_immutable_snapshot_projection_original_root_and_every_prefix(){
 struct InvalidReceiptRoot{rows:SealedShared<Payload>}
 impl super::ImmutableRootProjection for InvalidReceiptRoot{
  fn root_projection_demand(_original:crate::retained_clone::RetainedCloneRef<'_,Self>)->Result<RetirementDemand,crate::ValueError>{Ok(RetirementDemand{copy_bytes:3*std::mem::size_of::<Self>(),depth:1,..Default::default()})}
+ fn root_projection_work_demand(_original:crate::retained_clone::RetainedCloneRef<'_,Self>)->Result<u64,crate::ValueError>{Ok(1)}
  fn project_root(original:crate::retained_clone::RetainedCloneRef<'_,Self>,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(Self,crate::retained_clone::RetainedCloneProgress)>>{let turn=original.get().rows.try_duplicate(grant);let work=turn.work;let result=turn.result.map(|(rows,_)|Some((Self{rows},crate::retained_clone::RetainedCloneProgress{copied_items:1,copied_bytes:grant.maximum_copy_bytes+1,..Default::default()})));crate::RetainedWorkOutcome{result,work}}
 }
 #[test]

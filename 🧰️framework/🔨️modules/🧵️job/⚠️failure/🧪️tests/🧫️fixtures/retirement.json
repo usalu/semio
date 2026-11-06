@@ -1,0 +1,23 @@
+{
+  "roles": ["primary", "workRefusal", "receiptRefusal"],
+  "retirement": {
+    "primary": {"kind": "invalidValue", "message": "Original retirement primary 源", "retainedProgress": {"copiedItems": 1, "copiedBytes": 2, "retainedCapacityBytes": 3, "releasedBytes": 4}},
+    "workRefusal": {"kind": "workLimit", "message": "Original retirement work 源", "retainedProgress": {"copiedItems": 5, "copiedBytes": 6, "retainedCapacityBytes": 7, "releasedBytes": 8}},
+    "receiptRefusal": {"kind": "invariantViolated", "message": "Original retirement receipt 源", "retainedProgress": {"copiedItems": 9, "copiedBytes": 10, "retainedCapacityBytes": 11, "releasedBytes": 12}},
+    "child": {
+      "primary": {"kind": "unsupportedOwner", "message": "Original nested primary 子", "retainedProgress": {"copiedItems": 13, "copiedBytes": 14, "retainedCapacityBytes": 15, "releasedBytes": 16}},
+      "workRefusal": {"kind": "workLimit", "message": "Original nested work 子", "retainedProgress": {"copiedItems": 17, "copiedBytes": 18, "retainedCapacityBytes": 19, "releasedBytes": 20}},
+      "receiptRefusal": {"kind": "depthLimit", "message": "Original nested receipt 子", "retainedProgress": {"copiedItems": 21, "copiedBytes": 22, "retainedCapacityBytes": 23, "releasedBytes": 24}},
+      "progressOverride": null,
+      "retainedProgress": {"copiedItems": 13, "copiedBytes": 14, "retainedCapacityBytes": 15, "releasedBytes": 16}
+    },
+    "progressOverride": {"copiedItems": 31, "copiedBytes": 32, "retainedCapacityBytes": 33, "releasedBytes": 34},
+    "retainedProgress": {"copiedItems": 31, "copiedBytes": 32, "retainedCapacityBytes": 33, "releasedBytes": 34}
+  },
+  "outer": {
+    "receiptRefusal": {"kind": "ownershipLimit", "message": "Independent turn receipt 外", "retainedProgress": {"copiedItems": 35, "copiedBytes": 36, "retainedCapacityBytes": 37, "releasedBytes": 38}},
+    "contextRefusal": {"kind": "invariantViolated", "message": "Independent turn context 外", "retainedProgress": {"copiedItems": 39, "copiedBytes": 40, "retainedCapacityBytes": 41, "releasedBytes": 42}},
+    "workRefusal": {"kind": "workLimit", "message": "Independent turn work 外", "retainedProgress": {"copiedItems": 43, "copiedBytes": 44, "retainedCapacityBytes": 45, "releasedBytes": 46}}
+  },
+  "effects": {"copiedItems": 51, "copiedBytes": 52, "retainedCapacityBytes": 53, "releasedBytes": 54}
+}

@@ -19,7 +19,7 @@ use semio_plugin_instance_children::children_components::ChildComposition;
 use semio_plugin_decl_views::child_view::ChildContentView;
 use semio_framework::Fault;
 use std::future::Future;
-use semio_plugin_instance_stores::stores_components::InstanceStores;
+use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
 use semio_ui_locale::LocalizedLabel;
 use crate::jobs_components::ToolOperations;
 use semio_ui_contract::*;

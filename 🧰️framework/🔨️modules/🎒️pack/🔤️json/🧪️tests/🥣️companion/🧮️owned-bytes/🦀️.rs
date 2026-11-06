@@ -7,10 +7,10 @@ use semio_framework_value_native_owned::native_decoding::owned::NativeReceivingO
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 
 fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:64}}
-struct Turn;
+#[derive(Default)] struct Turn(semio_framework_value::RetainedCloneProgress);
 impl NativeDecodeConstructionRecipient for Turn{
- fn grant(&mut self,_:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{Ok(grant())}
- fn accept(&mut self,_:RetainedCloneGrant,_:semio_framework_value::RetainedCloneProgress)->Result<(),ValueError>{Ok(())}
+ fn submitted(&self)->semio_framework_value::RetainedCloneProgress{self.0}fn grant(&mut self,_:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{Ok(grant())}
+ fn accept(&mut self,p:RetainedCloneGrant,_:semio_framework_value::RetainedCloneProgress)->Result<(),ValueError>{self.0=self.0.checked_add(p)?;Ok(())}
 }
 fn source(value:DslValue)->RetainedCloneSource<DslValue>{
  let mut admission=RetainedCloneSource::<DslValue>::admission_owned(value,());let mut out=None;
@@ -23,7 +23,7 @@ fn law<T:NativeReceive<DslValue>+Sync>(value:DslValue){
  for turn in 0..10000{
   if owner.output_ready(){break}
   let before=control.owned_bytes();
-  let(result,heap)=observe(||control.with_construction_recipient(&mut Turn,|control|owner.advance(control,4096,grant()).result));
+  let(result,heap)=observe(||control.with_construction_recipient(&mut Turn::default(),|control|owner.advance(control,4096,grant()).result));
   result.unwrap_or_else(|error|panic!("receiving turn {turn} refused: {}",error.message()));
   assert_eq!(control.owned_bytes()-before,heap.requested_bytes,"turn {turn} charged a different byte count than it allocated");
  }

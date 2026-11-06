@@ -1,6 +1,6 @@
 //! 🪟️ Owned schema controls lend ordinary native staged-body views and exact resident edit bindings.
 use super::*;
-use semio_framework_plugin_decl_staged_form::*;
+use semio_plugin_decl_staged_form::*;
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_plugin::app::time_travel::{time_travel_pointer_get, time_travel_variant_selector};
 

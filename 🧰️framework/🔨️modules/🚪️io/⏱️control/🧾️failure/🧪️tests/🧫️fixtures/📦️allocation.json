@@ -1,0 +1,20 @@
+{
+  "messages": [
+    "body",
+    "work",
+    "physical",
+    "extent",
+    "forwarded",
+    "scoped",
+    "decode settlement",
+    "repeated"
+  ],
+  "actual": 23,
+  "maximumTurns": 10000,
+  "request": {
+    "bytes": 16,
+    "ownedBytes": 2,
+    "nextOwnedBytes": 18,
+    "maximumBytes": 40
+  }
+}

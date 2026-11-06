@@ -92,7 +92,7 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
     fn build_tool_job(request:&mut Option<ArtifactOwnedToolJobRequest<Self>>,output:&mut Option<semio_framework::ErasedToolJob>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         E::build_tool_job(request,output,cx)
     }
-    fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<Self>>,body:&mut Option<Box<dyn semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<Self>>,body:&mut Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         E::build_reserved_tool_job(request,body,cx)
     }
     fn build_media_export_job(request:&mut Option<ArtifactMediaExportJobRequest<Self>>,body:&mut Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
@@ -365,6 +365,7 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
     async fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, MediaError> {
         E::decode_natural_file(bytes)
     }
+    fn accepts_original_structured_media(port:&str,schema:&str,media_type:&MediaType)->bool{E::accepts_original_structured_media(port,schema,media_type)}
     async fn media_ports() -> Vec<MediaPortSpec> {
         E::media_ports().await
     }

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "minItems": 2,
+  "maxItems": 2,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "owned",
+      "maximum",
+      "resume",
+      "newByte"
+    ],
+    "properties": {
+      "name": {
+        "enum": [
+          "within",
+          "actualOverrun"
+        ]
+      },
+      "owned": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "maximum": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "resume": {
+        "const": true
+      },
+      "newByte": {
+        "type": "boolean"
+      }
+    }
+  }
+}

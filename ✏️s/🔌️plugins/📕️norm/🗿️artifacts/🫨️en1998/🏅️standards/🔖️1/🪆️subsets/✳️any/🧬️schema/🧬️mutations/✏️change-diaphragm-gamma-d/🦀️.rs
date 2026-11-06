@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeDiaphragmGammaD wh
         record: "ChangeDiaphragmGammaD",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change overstrength factor on the storey force (0 = registry transfer factor)", "Überfestigkeitsfaktor auf die Geschosskraft (0 = Register-Umlagerungsfaktor) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change overstrength factor on the storey force (0 = registry transfer factor)", "Überfestigkeitsfaktor auf die Geschosskraft (0 = Register-Umlagerungsfaktor) ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-diaphragm-gamma-d".into()]

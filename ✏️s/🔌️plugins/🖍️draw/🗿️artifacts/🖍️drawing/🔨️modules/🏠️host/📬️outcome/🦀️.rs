@@ -52,12 +52,13 @@ impl DrawingJobOutcomes {
 
     /// ▶️ Lends the outcome the turn decided, paying one publication frontier for a fault.
     pub fn lend<'a>(&'a mut self, turn: DrawingJobTurn, cx: &mut StepContext<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
-        match turn {
-            DrawingJobTurn::Yield => JobOutcomeBorrow::admit_yield(cx),
-            DrawingJobTurn::Complete => JobOutcomeBorrow::admit_complete(cx, None, None),
-            DrawingJobTurn::Cancelled => JobOutcomeBorrow::admit_cancelled(cx),
+        let result = match turn {
+            DrawingJobTurn::Yield => JobOutcomeBorrow::admit_yield(cx).map_err(Into::into),
+            DrawingJobTurn::Complete => JobOutcomeBorrow::admit_complete(cx, None, None).map_err(Into::into),
+            DrawingJobTurn::Cancelled => JobOutcomeBorrow::admit_cancelled(cx).map_err(Into::into),
             DrawingJobTurn::Fault => self.publication.advance_from_source(JobPublicationKind::Fault, &self.text[..self.text_length], cx),
-        }
+        };
+        semio_framework_job::InteractiveJobStep::from_callback(result)
     }
 
     /// 🤝️ Resolves a descriptor against the pages this job lent.

@@ -25,8 +25,8 @@ where
     Op: protocol::Mutation<BitmapSnapshot, Diff = BitmapDiff> + From<RestorePins> + From<crate::standards::v1::subsets::any::schema::mutations::restore_pins::RestorePins>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "restore", entity: "pins", kind: "restore-pins", record: "PinsRestored" };
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Restore Pins", "Anheftungen wiederherstellen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Restore Pins", "Anheftungen wiederherstellen")
     }
     fn target(&self) -> Vec<String> {
         vec!["pinned".into()]

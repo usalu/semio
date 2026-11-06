@@ -36,8 +36,8 @@ pub enum GuestRuntimes {
 }
 
 impl GuestRuntime for GuestRuntimes {
-    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_context::OriginalActorAdmissionReply,TurnFault>{match self{Self::Owned(runtime)=>runtime.admit_actor_context(inst,input,budget,identity).await,Self::Wasmtime(runtime)=>runtime.admit_actor_context(inst,input,budget,identity).await,#[cfg(any(test, feature = "testkit"))]Self::Mock(runtime)=>runtime.admit_actor_context(inst,input,budget,identity).await,#[cfg(any(test, feature = "testkit"))]Self::Recording(runtime)=>runtime.admit_actor_context(inst,input,budget,identity).await}}
-    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_context::OriginalActorCloseReply,TurnFault>{match self{Self::Owned(runtime)=>runtime.close_actor_context(inst,input,budget,identity).await,Self::Wasmtime(runtime)=>runtime.close_actor_context(inst,input,budget,identity).await,#[cfg(any(test, feature = "testkit"))]Self::Mock(runtime)=>runtime.close_actor_context(inst,input,budget,identity).await,#[cfg(any(test, feature = "testkit"))]Self::Recording(runtime)=>runtime.close_actor_context(inst,input,budget,identity).await}}
+    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_context::OriginalActorAdmissionReply,TurnFault>{match self{Self::Owned(runtime)=>runtime.admit_actor_context(inst,input,budget,identity).await,Self::Wasmtime(runtime)=>runtime.admit_actor_context(inst,input,budget,identity).await,#[cfg(any(test, feature = "testkit"))]Self::Mock(runtime)=>runtime.admit_actor_context(inst,input,budget,identity).await,#[cfg(any(test, feature = "testkit"))]Self::Recording(runtime)=>runtime.admit_actor_context(inst,input,budget,identity).await}}
+    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_context::OriginalActorCloseReply,TurnFault>{match self{Self::Owned(runtime)=>runtime.close_actor_context(inst,input,budget,identity).await,Self::Wasmtime(runtime)=>runtime.close_actor_context(inst,input,budget,identity).await,#[cfg(any(test, feature = "testkit"))]Self::Mock(runtime)=>runtime.close_actor_context(inst,input,budget,identity).await,#[cfg(any(test, feature = "testkit"))]Self::Recording(runtime)=>runtime.close_actor_context(inst,input,budget,identity).await}}
 
     async fn compile(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError> {
         match self {
@@ -61,7 +61,7 @@ impl GuestRuntime for GuestRuntimes {
         }
     }
 
-    async fn execute_turn(&self, inst: &mut GuestInstance, events: &mut [Event], budget: Budget, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault> {
+    async fn execute_turn(&self, inst: &mut GuestInstance, events: &mut [Event], budget: Budget, identity: &mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault> {
         match self {
             Self::Owned(r) => r.execute_turn(inst, events, budget, identity).await,
             Self::Wasmtime(r) => r.execute_turn(inst, events, budget, identity).await,
@@ -79,7 +79,7 @@ impl GuestRuntime for GuestRuntimes {
     async fn cancel_job(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobCancelReply>{match self{Self::Owned(runtime)=>runtime.cancel_job(inst,job,budget,execution).await,Self::Wasmtime(runtime)=>runtime.cancel_job(inst,job,budget,execution).await,#[cfg(any(test, feature = "testkit"))]Self::Mock(runtime)=>runtime.cancel_job(inst,job,budget,execution).await,#[cfg(any(test, feature = "testkit"))]Self::Recording(runtime)=>runtime.cancel_job(inst,job,budget,execution).await}}
     async fn close_jobs(&self,inst:&mut GuestInstance,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobCancelReply>{match self{Self::Owned(runtime)=>runtime.close_jobs(inst,budget,execution).await,Self::Wasmtime(runtime)=>runtime.close_jobs(inst,budget,execution).await,#[cfg(any(test, feature = "testkit"))]Self::Mock(runtime)=>runtime.close_jobs(inst,budget,execution).await,#[cfg(any(test, feature = "testkit"))]Self::Recording(runtime)=>runtime.close_jobs(inst,budget,execution).await}}
 
-    async fn checkpoint(&self, inst: &mut GuestInstance, identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Vec<u8>, PluginHostError> {
+    async fn checkpoint(&self, inst: &mut GuestInstance, identity: &mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Vec<u8>, PluginHostError> {
         match self {
             Self::Owned(r) => r.checkpoint(inst, identity).await,
             Self::Wasmtime(r) => r.checkpoint(inst, identity).await,
@@ -90,7 +90,7 @@ impl GuestRuntime for GuestRuntimes {
         }
     }
 
-    async fn restore(&self, inst: &mut GuestInstance, state: &[u8], identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), PluginHostError> {
+    async fn restore(&self, inst: &mut GuestInstance, state: &[u8], identity: &mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), PluginHostError> {
         match self {
             Self::Owned(r) => r.restore(inst, state, identity).await,
             Self::Wasmtime(r) => r.restore(inst, state, identity).await,
@@ -173,8 +173,8 @@ impl RecordingRuntime {
 
 #[cfg(any(test, feature = "testkit"))]
 impl GuestRuntime for RecordingRuntime {
-    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,_budget:Budget,_identity:&mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_context::OriginalActorAdmissionReply,TurnFault>{let GuestInstanceState::Mock(state)=&mut inst.state else{return Err(semio_framework_plugin_guest_contract::identity_turn_fault(semio_framework_plugin_guest_contract::operation_authority::refusal(4)))};Ok(semio_framework_actor::retained_context::OriginalActorAdmissionReply::borrow_original(&state.actor_context.admit_step(input,_budget.retained_policy,semio_framework_job::logical_now_us)))}
-    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,_budget:Budget,_identity:&mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_context::OriginalActorCloseReply,TurnFault>{let GuestInstanceState::Mock(state)=&mut inst.state else{return Err(semio_framework_plugin_guest_contract::identity_turn_fault(semio_framework_plugin_guest_contract::operation_authority::refusal(4)))};Ok(semio_framework_actor::retained_context::OriginalActorCloseReply::borrow_original(&state.actor_context.close_step(input,_budget.retained_policy)))}
+    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,_budget:Budget,_identity:&mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_context::OriginalActorAdmissionReply,TurnFault>{let GuestInstanceState::Mock(state)=&mut inst.state else{return Err(semio_framework_plugin_guest_contract::identity_turn_fault(semio_framework_plugin_guest_contract::operation_authority::refusal(4)))};Ok(semio_framework_actor::retained_context::OriginalActorAdmissionReply::borrow_original(&state.actor_context.admit_step(input,_budget.retained_policy,semio_framework_job::logical_now_us)))}
+    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,_budget:Budget,_identity:&mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_context::OriginalActorCloseReply,TurnFault>{let GuestInstanceState::Mock(state)=&mut inst.state else{return Err(semio_framework_plugin_guest_contract::identity_turn_fault(semio_framework_plugin_guest_contract::operation_authority::refusal(4)))};Ok(semio_framework_actor::retained_context::OriginalActorCloseReply::borrow_original(&state.actor_context.close_step(input,_budget.retained_policy)))}
 
     async fn compile(&self, package: &PackageRef, _bytes: &[u8]) -> Result<crate::CompiledHandle, PluginHostError> {
         Ok(crate::CompiledHandle { package_hash: package.hash.0, component: None, owned: None })
@@ -183,7 +183,7 @@ impl GuestRuntime for RecordingRuntime {
         Ok(GuestInstance { actor, state: GuestInstanceState::Mock(crate::MockInstanceState::default()) })
     }
     async fn drop_instance(&self, _inst: GuestInstance) {}
-    async fn execute_turn(&self, _inst: &mut GuestInstance, _events: &mut [Event], budget: Budget, _identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault> {
+    async fn execute_turn(&self, _inst: &mut GuestInstance, _events: &mut [Event], budget: Budget, _identity: &mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault> {
         *self.last_turn_budget.lock().expect("lock") = Some(budget);
         let retained_receipt = budget.retained.return_original(semio_framework_value::RetainedCloneProgress::default(),0).expect("recorded idle turn spends nothing");
         Ok(TurnResult {
@@ -219,10 +219,10 @@ impl GuestRuntime for RecordingRuntime {
     async fn close_jobs(&self,_inst:&mut GuestInstance,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobCancelReply>{
         crate::mock_guest_runtime::mock_job_call(execution, Ok(OriginalJobCancelReply { input: budget.input, spent: Default::default(), work_units_spent: 0, admitted: true, refusal: None }))
     }
-    async fn checkpoint(&self, _inst: &mut GuestInstance, _identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Vec<u8>, PluginHostError> {
+    async fn checkpoint(&self, _inst: &mut GuestInstance, _identity: &mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Vec<u8>, PluginHostError> {
         Ok(vec![])
     }
-    async fn restore(&self, _inst: &mut GuestInstance, _state: &[u8], _identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), PluginHostError> {
+    async fn restore(&self, _inst: &mut GuestInstance, _state: &[u8], _identity: &mut semio_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), PluginHostError> {
         Ok(())
     }
 }

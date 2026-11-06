@@ -35,20 +35,20 @@ impl<T:RetireOwned> BoxedOwner<T>{pub(super) fn new(original:Box<T>)->Self{Self{
 impl<T:RetireOwned> RetirementCursor for BoxedOwner<T>{
  fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{let Some(original)=self.original.as_ref()else{return Ok(Default::default())};if !original.is_initialized(){return Ok(RetirementDemand{release_bytes:BoxOriginal::<T>::allocation_bytes(),depth:1,..Default::default()})}let value=original.get();if let Some(demand)=value.boxed_original_demands()?{return Ok(demand)}Ok(RetirementDemand{copy_bytes:2*size_of::<T>(),capacity_bytes:value.retirement_birth_bytes().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original boxed value has no typed retirement birth"))?,depth:1,..Default::default()})}
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
-  let demand=match self.next_demand(grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return RetirementStep::Failure(error,0)};
+  let demand=match self.next_demand(grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return RetirementStep::Failure(error.into(),0)};
   if !crate::retained_clone::retained_clone_grant_admits(grant,demand){return RetirementStep::BudgetExhausted}
   let Some(original)=self.original.as_mut()else{return RetirementStep::Complete(0)};
   if !original.is_initialized(){
    let p=unsafe{original.release_empty(grant)};self.original=None;
    return RetirementStep::Progress(p,1)
   }
-  let specialized=match original.get().boxed_original_demands(){Ok(d)=>d.is_some(),Err(error)=>return RetirementStep::Failure(error,0)};
+  let specialized=match original.get().boxed_original_demands(){Ok(d)=>d.is_some(),Err(error)=>return RetirementStep::Failure(error.into(),0)};
   if specialized{
    let turn=T::boxed_original_retirement(&mut self.original,grant);
    return match turn.result{
     Ok(Some((cursor,p)))=>RetirementStep::ChildProgress(cursor,p,turn.work),
     Ok(None)=>RetirementStep::Progress(Default::default(),turn.work),
-    Err(error)=>RetirementStep::Failure(error,turn.work)
+    Err(error)=>RetirementStep::Failure(error.into(),turn.work)
    }
   }
   let value=unsafe{original.take_whole()};let cursor=value.retirement();

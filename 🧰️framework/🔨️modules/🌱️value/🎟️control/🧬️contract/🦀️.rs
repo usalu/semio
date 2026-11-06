@@ -1,4 +1,7 @@
 //! 🎟️ Original physical grant, progress and typed refusal contracts.
+#[path="🛂️allocation/🦀️.rs"]
+pub mod allocation;
+pub use allocation::{NativeAllocationFailure,NativeAllocationProgress};
 /// 📃️ The largest payload one bulk vector copy turn moves, equal to the ABI page so a bitwise run is never longer than one page of work.
 pub const RETAINED_CLONE_BULK_PAGE_BYTES: usize = 64 * 1024;
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -148,8 +151,10 @@ pub fn retained_clone_grant_admits(grant:RetainedCloneGrant,demand:RetirementDem
     grant.maximum_items>0 && grant.maximum_copy_bytes>=demand.copy_bytes && grant.maximum_capacity_bytes>=demand.capacity_bytes && grant.maximum_release_bytes>=demand.release_bytes && grant.maximum_depth>=demand.depth
 }
 
+#[path="♻️failure/🦀️.rs"]mod original_failure;
+pub use original_failure::{OriginalRetirementFailure,OriginalFailureStorage,OriginalFailureStoragePool,run_with_failure_storage,run_with_failure_storage_transaction};
 #[path="♻️original-close/🦀️.rs"]mod original_close;
-pub use original_close::OriginalRetirementCloseLoan;
+pub use original_close::{OriginalRetirementCloseLoan,OriginalRetirementClosePort};
 #[path="../../📦️paged/📖️read/🎟️.rs"]
 mod byte_source;
 pub use byte_source::{ByteReadSource,ByteReadRange};

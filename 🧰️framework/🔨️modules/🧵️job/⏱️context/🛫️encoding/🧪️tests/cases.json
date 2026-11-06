@@ -1,1 +1,73 @@
-{"version":1,"unwind":{"bytes":[9,8],"expectedCapacity":2,"expectedCopies":2},"depth":{"source":1,"consumer":128,"levels":2,"admitted":false},"cases":[{"name":"nested stages keep actual work","chunks":[[1,2],[3]],"maximumCopy":16,"maximumCapacity":16,"expectedBytes":[1,2,3],"expectedCapacity":3,"expectedWork":6,"valid":true},{"name":"copy refusal retains admitted backing","chunks":[[1,2,3]],"maximumCopy":2,"maximumCapacity":16,"expectedBytes":[],"expectedCapacity":3,"expectedWork":3,"valid":false},{"name":"capacity refusal precedes birth","chunks":[[1,2,3]],"maximumCopy":16,"maximumCapacity":2,"expectedBytes":[],"expectedCapacity":0,"expectedWork":3,"valid":false}]}
+{
+  "version": 1,
+  "unwind": {
+    "bytes": [
+      9,
+      8
+    ],
+    "expectedCapacity": 2,
+    "expectedCopies": 2
+  },
+  "depth": {
+    "source": 1,
+    "consumer": 128,
+    "levels": 2,
+    "admitted": false
+  },
+  "cases": [
+    {
+      "name": "two original append actions",
+      "chunks": [
+        [
+          1,
+          2
+        ],
+        [
+          3
+        ]
+      ],
+      "maximumCopy": 16,
+      "maximumCapacity": 16,
+      "expectedBytes": [
+        1,
+        2,
+        3
+      ],
+      "expectedCapacity": 3,
+      "expectedWork": 3,
+      "valid": true
+    },
+    {
+      "name": "copy refusal retains admitted backing",
+      "chunks": [
+        [
+          1,
+          2,
+          3
+        ]
+      ],
+      "maximumCopy": 2,
+      "maximumCapacity": 16,
+      "expectedBytes": [],
+      "expectedCapacity": 3,
+      "expectedWork": 1,
+      "valid": false
+    },
+    {
+      "name": "capacity refusal precedes birth",
+      "chunks": [
+        [
+          1,
+          2,
+          3
+        ]
+      ],
+      "maximumCopy": 16,
+      "maximumCapacity": 2,
+      "expectedBytes": [],
+      "expectedCapacity": 0,
+      "expectedWork": 0,
+      "valid": false
+    }
+  ]
+}

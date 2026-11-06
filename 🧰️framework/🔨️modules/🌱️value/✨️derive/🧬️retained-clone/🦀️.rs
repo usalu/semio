@@ -84,8 +84,9 @@ fn original_allocation_retirement(input:&DeriveInput,value_crate:&syn::Path,gene
  let declaration=quote!{
  struct #cursor #implementation #conditions{original:Option<#owner>,ordinal:usize}
  impl #implementation #value_crate::retirement::RetirementCursor for #cursor #types #conditions{
+   fn next_computational_work(&self,_:usize)->::core::result::Result<u64,#value_crate::ValueError>{Ok(u64::from(self.original.is_some()))}
   fn next_demand(&self,_body:usize)->::core::result::Result<#value_crate::RetirementDemand,#value_crate::ValueError>{let Some(original)=self.original.as_ref()else{return Ok(Default::default())};match self.ordinal{#(#demands,)*_=>Ok(#value_crate::RetirementDemand{release_bytes:<#owner>::allocation_bytes(),depth:1,..Default::default()})}}
-  fn close_step(&mut self,grant:#value_crate::retained_clone::RetainedCloneGrant)->#value_crate::retirement::RetirementStep{let demand=match <Self as #value_crate::retirement::RetirementCursor>::next_demand(self,grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return #value_crate::retirement::RetirementStep::Failure(error,0)};if !#value_crate::retained_clone::retained_clone_grant_admits(grant,demand){return #value_crate::retirement::RetirementStep::BudgetExhausted;}let Some(original)=self.original.as_mut()else{return #value_crate::retirement::RetirementStep::Complete(0)};match self.ordinal{#(#steps,)*_=>{let receipt=unsafe{original.release_empty(grant)};if receipt.copied_items==0{return #value_crate::retirement::RetirementStep::Progress(receipt,1);}self.original=None;#value_crate::retirement::RetirementStep::Progress(receipt,1)}}}
+  fn close_step(&mut self,grant:#value_crate::retained_clone::RetainedCloneGrant)->#value_crate::retirement::RetirementStep{let demand=match <Self as #value_crate::retirement::RetirementCursor>::next_demand(self,grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return #value_crate::retirement::RetirementStep::Failure(error.into(),0)};if !#value_crate::retained_clone::retained_clone_grant_admits(grant,demand){return #value_crate::retirement::RetirementStep::BudgetExhausted;}let Some(original)=self.original.as_mut()else{return #value_crate::retirement::RetirementStep::Complete(0)};match self.ordinal{#(#steps,)*_=>{let receipt=unsafe{original.release_empty(grant)};if receipt.copied_items==0{return #value_crate::retirement::RetirementStep::Progress(receipt,1);}self.original=None;#value_crate::retirement::RetirementStep::Progress(receipt,1)}}}
   fn terminal_is_empty(&self)->bool{self.original.is_none()}
   fn next_work_byte_demand(&self)->::core::result::Result<usize,#value_crate::ValueError>{Ok(<Self as #value_crate::retirement::RetirementCursor>::next_demand(self,0)?.copy_bytes)}
   fn next_birth_bytes(&self,body:usize)->Option<usize>{<Self as #value_crate::retirement::RetirementCursor>::next_demand(self,body).ok().map(|d|d.capacity_bytes)}
@@ -150,12 +151,28 @@ pub fn expand_retire_owned(input: &DeriveInput) -> syn::Result<TokenStream> {
         Data::Union(_) => unreachable!(),
     };
     let components = field_types(input);
+    let ready = match &input.data {
+        Data::Struct(data) => {
+            let fields = data.fields.iter().enumerate().map(|(index,_)| field_access(&data.fields,index));
+            quote! { true #(&& #value_crate::retirement::RetireOwned::retirement_ready(&self.#fields))* }
+        }
+        Data::Enum(data) if data.variants.is_empty() => quote! { match *self {} },
+        Data::Enum(data) => {
+            let arms = data.variants.iter().map(|variant| {
+                let (pattern, values) = destructure_fields(name,&variant.fields,Some(&variant.ident));
+                quote! { #pattern => true #(&& #value_crate::retirement::RetireOwned::retirement_ready(#values))* }
+            });
+            quote! { match self { #(#arms),* } }
+        }
+        Data::Union(_) => unreachable!(),
+    };
     let (shared_declaration,shared_methods)=original_allocation_retirement(input,&value_crate,&generics,true)?;
     let (boxed_declaration,boxed_methods)=original_allocation_retirement(input,&value_crate,&generics,false)?;
     Ok(quote! {
         #shared_declaration
         #boxed_declaration
         impl #impl_generics #value_crate::retirement::RetireOwned for #name #ty_generics #where_clause {
+            fn retirement_ready(&self)->bool { #ready }
             fn retirement(self) -> Box<dyn #value_crate::retirement::RetirementCursor> {
                 #body
             }
@@ -198,7 +215,7 @@ pub fn expand_retained_clone(input: &DeriveInput) -> syn::Result<TokenStream> {
 fn close_demand_methods<'a>(value_crate:&syn::Path,owner:TokenStream,rows:impl Iterator<Item=(&'a Type,&'a syn::Ident,&'a syn::Ident,bool)>)->TokenStream {
     let rows=rows.collect::<Vec<_>>();
     let children=rows.iter().map(|(ty,cursor,_,_)|quote! {
-        if !#value_crate::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) { return #value_crate::retained_clone::nested_retained_clone_close_demands::<#ty>(&self.#cursor,maximum_body_bytes); }
+        if !#value_crate::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) { if !#value_crate::retained_clone::RetainedCloneCursor::close_started(&self.#cursor){return Ok(#value_crate::RetirementDemand{depth:1,..Default::default()})} return #value_crate::retained_clone::nested_retained_clone_close_demands::<#ty>(&self.#cursor,maximum_body_bytes); }
     });
     let values=rows.iter().map(|(ty,_,value,boxed)| {
         let ty=if *boxed {quote!(Box<#ty>)}else{quote!(#ty)};
@@ -248,34 +265,43 @@ fn expand_struct(input: &DeriveInput, fields: &Fields) -> syn::Result<TokenStrea
         let access=field_access(fields,*index);
         quote! {
             #index => {
-                if self.draining { return if #value_crate::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) { Ok(#value_crate::RetirementDemand {depth:1,..Default::default()}) } else { #value_crate::retained_clone::nested_retained_clone_close_demands::<#ty>(&self.#cursor,maximum_copy_bytes) }; }
+                if self.draining { if !#value_crate::retained_clone::RetainedCloneCursor::close_started(&self.#cursor){return Ok(#value_crate::RetirementDemand{depth:1,..Default::default()})} return if #value_crate::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) { Ok(#value_crate::RetirementDemand {depth:1,..Default::default()}) } else { #value_crate::retained_clone::nested_retained_clone_close_demands::<#ty>(&self.#cursor,maximum_copy_bytes) }; }
                 if #value_crate::retained_clone::RetainedCloneCursor::output_ready(&self.#cursor) { return #value_crate::retained_clone::nested_retained_clone_take_demands(&self.#cursor); }
-                #value_crate::retained_clone::nested_retained_clone_demands::<#ty>(&self.#cursor,source.project(#index+1,|source|&source.#access),maximum_copy_bytes)
+                #value_crate::retained_clone::nested_retained_clone_demands::<#ty>(&self.#cursor,source.project(#index+1,|source|&source.#access),maximum_copy_bytes,maximum_work_units)
             }
         }
+    });
+    let work_arms=field_rows.iter().map(|(index,_,cursor,_)|{
+        let access=field_access(fields,*index);
+        quote!(#index=>{
+            if self.draining{if !#value_crate::retained_clone::RetainedCloneCursor::close_started(&self.#cursor){return #value_crate::retained_clone::RetainedCloneCursor::begin_close_work_demand(&self.#cursor)}return if #value_crate::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor){Ok(2)}else{#value_crate::retained_clone::RetainedCloneCursor::close_work_demand(&self.#cursor,body)}}
+            if #value_crate::retained_clone::RetainedCloneCursor::output_ready(&self.#cursor){return #value_crate::retained_clone::RetainedCloneCursor::take_work_demand(&self.#cursor)?.checked_add(2).ok_or_else(||#value_crate::ValueError::invariant("clone field transfer work overflow"))}
+            #value_crate::retained_clone::RetainedCloneCursor::advance_work_demand(&self.#cursor,source.project(#index+1,|source|&source.#access),body,maximum_work_units)
+        })
     });
     let advance_arms = field_rows.iter().map(|(index, _, cursor, value)| {
         let access=field_access(fields,*index);
         quote! {
             #index => {
                 if self.draining {
+                     if !#value_crate::retained_clone::RetainedCloneCursor::close_started(&self.#cursor){let turn=#value_crate::retained_clone::RetainedCloneCursor::begin_close_paid(&mut self.#cursor);work+=turn.work;turn.result?;return Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(#value_crate::retained_clone::RetainedCloneProgress{copied_items:1,..Default::default()}))}
                     if !#value_crate::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) {
                         let nested=#value_crate::retained_clone::nested_retained_clone_grant(grant)?;
                         let step={let turn=#value_crate::retained_clone::RetainedCloneCursor::close_step(&mut self.#cursor,nested);work+=turn.work;turn.result}?;
                         return Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(#value_crate::retained_clone::admit_retained_clone_close(nested,step,#value_crate::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor),"record original field scaffold")?.progress()));
                     }
-                    self.draining=false;work+=1;
+                    self.draining=false;work+=2;
                     self.phase+=1;
                     return Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(#value_crate::retained_clone::RetainedCloneProgress {copied_items:1,..Default::default()}));
                 }
                 if #value_crate::retained_clone::RetainedCloneCursor::output_ready(&self.#cursor) {
-                    let nested=#value_crate::retained_clone::nested_retained_clone_grant(grant)?;let turn=#value_crate::retained_clone::RetainedCloneCursor::take(&mut self.#cursor,nested);work+=turn.work;let Some((value,progress))=turn.result? else{return Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(Default::default()))};self.#value=Some(value);
-                    #value_crate::retained_clone::RetainedCloneCursor::begin_close(&mut self.#cursor);
+                    let nested=#value_crate::retained_clone::nested_retained_clone_grant(grant)?;let turn=#value_crate::retained_clone::RetainedCloneCursor::take(&mut self.#cursor,nested);work+=turn.work;let Some((value,progress))=turn.result? else{return Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(Default::default()))};self.#value=Some(value);work+=2;
+                    
                     self.draining=true;
                     return Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(#value_crate::retained_clone::admit_retained_clone_progress(nested,progress,"record field take")?));
                 }
                 let nested=#value_crate::retained_clone::nested_retained_clone_grant(grant)?;
-                let step={let turn=#value_crate::retained_clone::RetainedCloneCursor::advance(&mut self.#cursor,source.project(#index+1,|source|&source.#access),body,nested);work+=turn.work;turn.result}?;
+                let step={let turn=#value_crate::retained_clone::RetainedCloneCursor::advance(&mut self.#cursor,source.project(#index+1,|source|&source.#access),body,maximum_work_units,nested);work+=turn.work;turn.result}?;
                 Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(#value_crate::retained_clone::admit_retained_clone_progress(nested,step.progress(),"record original field clone")?))
             }
         }
@@ -284,7 +310,7 @@ fn expand_struct(input: &DeriveInput, fields: &Fields) -> syn::Result<TokenStrea
     let controlled_values = field_rows.iter().map(|(_, _, _, value)| quote!(if let Some(step) = {let turn=self.close.begin_granted(&mut self.#value, grant);work+=turn.work;turn.result}? { return Ok(step); }));
     let controlled_children = field_rows.iter().map(|(_, _, cursor, _)| quote! {
         if !#value_crate::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) {
-            if #value_crate::retained_clone::RetainedCloneCursor::begin_close(&mut self.#cursor) {work+=1;
+            if !#value_crate::retained_clone::RetainedCloneCursor::close_started(&self.#cursor) {let turn=#value_crate::retained_clone::RetainedCloneCursor::begin_close_paid(&mut self.#cursor);work+=turn.work;turn.result?;
                 return Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(#value_crate::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
             }
             let nested = #value_crate::retained_clone::nested_retained_clone_grant(grant)?;
@@ -292,6 +318,12 @@ fn expand_struct(input: &DeriveInput, fields: &Fields) -> syn::Result<TokenStrea
             return Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(#value_crate::retained_clone::admit_retained_clone_close(nested, step, #value_crate::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor), "retained record child close")?.progress()));
         }
     });
+    let work_children=field_rows.iter().map(|(_,_,cursor,_)|quote!{
+        if !#value_crate::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor){
+            return if !#value_crate::retained_clone::RetainedCloneCursor::close_started(&self.#cursor){#value_crate::retained_clone::RetainedCloneCursor::begin_close_work_demand(&self.#cursor)}else{#value_crate::retained_clone::RetainedCloneCursor::close_work_demand(&self.#cursor,body)};
+        }
+    });
+    let work_values=field_rows.iter().map(|(_,ty,_,value)|quote!{if self.#value.is_some(){return self.close.next_owner_work::<#ty>(true,&None,body);}});
     let empty_children = field_rows.iter().map(|(_, _, cursor, value)| quote!(#value_crate::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) && self.#value.is_none()));
     let close_demand=close_demand_methods(&value_crate,quote!(#name #ty_generics),field_rows.iter().map(|(_,ty,cursor,value)|(*ty,cursor,value,false)));
     let field_count = field_rows.len();
@@ -317,7 +349,7 @@ fn expand_struct(input: &DeriveInput, fields: &Fields) -> syn::Result<TokenStrea
         impl #impl_generics #value_crate::retained_clone::RetainedCloneCursor<#name #ty_generics> for #cursor_name #ty_generics #where_clause {
             fn output_ready(&self) -> bool { !self.closing && !self.spent && self.output.is_some() }
             fn close_started(&self) -> bool { self.closing }
-            fn advance_demands(&self,source: #value_crate::retained_clone::RetainedCloneRef<'_,#name #ty_generics>,maximum_copy_bytes:usize)->::core::result::Result<#value_crate::RetirementDemand,#value_crate::ValueError> {
+            fn advance_demands(&self,source: #value_crate::retained_clone::RetainedCloneRef<'_,#name #ty_generics>,maximum_copy_bytes:usize,maximum_work_units:u64)->::core::result::Result<#value_crate::RetirementDemand,#value_crate::ValueError> {
                 if self.closing || self.spent { return Err(#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::InvariantViolated,"record clone cannot quote a closing or spent owner")); }
                 if !source.check_binding(&self.source)? { return Ok(#value_crate::RetirementDemand {copy_bytes:source.binding_copy_bytes(),depth:1,..Default::default()}); }
                 if self.output.is_some() { return Ok(Default::default()); }
@@ -327,8 +359,14 @@ fn expand_struct(input: &DeriveInput, fields: &Fields) -> syn::Result<TokenStrea
                     _ => Err(#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::InvariantViolated,"record clone state is invalid")),
                 }
             }
-            fn advance(&mut self,source: #value_crate::retained_clone::RetainedCloneRef<'_,#name #ty_generics>,body: usize, grant: #value_crate::retained_clone::RetainedCloneGrant)->#value_crate::RetainedWorkOutcome{let mut work=0;let result=(||{
-                let demand=#value_crate::retained_clone::RetainedCloneCursor::advance_demands(self,source,body)?;
+            fn advance_work_demand(&self,source:#value_crate::retained_clone::RetainedCloneRef<'_,#name #ty_generics>,body:usize,maximum_work_units:u64)->Result<u64,#value_crate::ValueError>{
+                #value_crate::retained_clone::RetainedCloneCursor::advance_demands(self,source,body,maximum_work_units)?;if maximum_work_units==0{return Ok(0)}
+                if self.output.is_some(){return Ok(0)}if self.source.is_none(){return Ok(1)}
+                match self.phase{#(#work_arms,)*#field_count=>Ok(1),_=>Err(#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::InvariantViolated,"record clone state is invalid"))}
+            }
+            fn take_work_demand(&self)->Result<u64,#value_crate::ValueError>{Ok(u64::from(#value_crate::retained_clone::RetainedCloneCursor::output_ready(self)))}
+            fn advance(&mut self,source: #value_crate::retained_clone::RetainedCloneRef<'_,#name #ty_generics>,body: usize, maximum_work_units:u64, grant: #value_crate::retained_clone::RetainedCloneGrant)->#value_crate::OriginalRetirementOutcome{let mut work=0;let result=(|| -> Result<#value_crate::retained_clone::RetainedCloneStep,#value_crate::OriginalRetirementFailure>{
+                let selected=#value_crate::retained_clone::RetainedCloneCursor::advance_work_demand(self,source,body,maximum_work_units)?;if selected==0||selected>maximum_work_units{return Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(Default::default()))}let demand=#value_crate::retained_clone::RetainedCloneCursor::advance_demands(self,source,body,maximum_work_units)?;
                 if self.output.is_some() { return Ok(#value_crate::retained_clone::RetainedCloneStep::Complete(Default::default())); }
                 if !#value_crate::retained_clone::retained_clone_grant_admits(grant,demand) { return Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(Default::default())); }
                 if let Some(progress)={let turn=source.bind(&mut self.source,grant);work+=turn.work;turn.result}? { return Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(progress)); }
@@ -339,7 +377,7 @@ fn expand_struct(input: &DeriveInput, fields: &Fields) -> syn::Result<TokenStrea
                         self.phase+=1;
                         Ok(#value_crate::retained_clone::RetainedCloneStep::Complete(#value_crate::retained_clone::RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))
                     }
-                    _ => Err(#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::InvariantViolated,"record clone state is invalid")),
+                    _ => Err((#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::InvariantViolated,"record clone state is invalid")).into()),
                 }
             })();#value_crate::RetainedWorkOutcome{result,work}}
             fn take_demand(&self)->Result<#value_crate::RetirementDemand,#value_crate::ValueError>{Ok(#value_crate::retained_clone::retained_clone_take_demand())}
@@ -352,10 +390,19 @@ fn expand_struct(input: &DeriveInput, fields: &Fields) -> syn::Result<TokenStrea
                 self.closing = true;
                 true
             }
+            fn begin_close_work_demand(&self)->Result<u64,#value_crate::ValueError>{Ok(u64::from(!self.closing))}
+            fn begin_close_paid(&mut self)->#value_crate::RetainedWorkOutcome<(),#value_crate::ValueError>{if self.closing{return #value_crate::RetainedWorkOutcome{result:Ok(()),work:0}}self.closing=true;#value_crate::RetainedWorkOutcome{result:Ok(()),work:1}}
 
-            fn close_step(&mut self, grant: #value_crate::retained_clone::RetainedCloneGrant) ->#value_crate::RetainedWorkOutcome{let mut work=0;let result=(||{
+            fn close_work_demand(&self,body:usize)->Result<u64,#value_crate::ValueError>{
+                if !self.closing{return Ok(0)}
+                #(#work_children)*
+                if !self.close.is_empty(){return self.close.next_owner_work::<#name #ty_generics>(false,&None,body)}
+                #(#work_values)*
+                self.close.next_owner_work::<#name #ty_generics>(self.output.is_some(),&self.source,body)
+            }
+            fn close_step(&mut self, grant: #value_crate::retained_clone::RetainedCloneGrant) ->#value_crate::OriginalRetirementOutcome{let mut work=0;let result=(|| -> Result<#value_crate::retained_clone::RetainedCloneStep,#value_crate::OriginalRetirementFailure>{
                 if grant.maximum_items == 0 { return Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(Default::default())); }
-                if !self.closing { return Err(#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::InvariantViolated, "retained record must begin close before granted retirement")); }
+                if !self.closing { return Err((#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::InvariantViolated, "retained record must begin close before granted retirement")).into()); }
                 if !#value_crate::retained_clone::retained_clone_grant_admits(grant,#value_crate::retained_clone::retained_clone_close_demands::<#name #ty_generics>(self,grant.maximum_copy_bytes)?) { return Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(Default::default())); }
                 #(#controlled_children)*
                 if !self.close.is_empty() { return {let turn=self.close.step_granted(grant);work+=turn.work;turn.result}; }
@@ -438,34 +485,43 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> syn::Result<TokenSt
             let binding=&bindings[*field_index];
             quote! {
                 #field_index => {
-                    if self.draining { return if #value_crate::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) { Ok(#value_crate::RetirementDemand {depth:1,..Default::default()}) } else { #value_crate::retained_clone::nested_retained_clone_close_demands::<#ty>(&self.#cursor,maximum_copy_bytes) }; }
+                    if self.draining { if !#value_crate::retained_clone::RetainedCloneCursor::close_started(&self.#cursor){return Ok(#value_crate::RetirementDemand{depth:1,..Default::default()})} return if #value_crate::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) { Ok(#value_crate::RetirementDemand {depth:1,..Default::default()}) } else { #value_crate::retained_clone::nested_retained_clone_close_demands::<#ty>(&self.#cursor,maximum_copy_bytes) }; }
                     if #value_crate::retained_clone::RetainedCloneCursor::output_ready(&self.#cursor) { return #value_crate::retained_clone::nested_retained_clone_take_demands(&self.#cursor); }
-                    #value_crate::retained_clone::nested_retained_clone_demands::<#ty>(&self.#cursor,source.project((#variant_index+1)*1024+#field_index+1,|source|match source {#pattern=>#binding,_=>unreachable!("validated enum variant")}),maximum_copy_bytes)
+                    #value_crate::retained_clone::nested_retained_clone_demands::<#ty>(&self.#cursor,source.project((#variant_index+1)*1024+#field_index+1,|source|match source {#pattern=>#binding,_=>unreachable!("validated enum variant")}),maximum_copy_bytes,maximum_work_units)
                 }
             }
+        });
+        let work_arms=variant_rows.iter().map(|(_,field_index,_,cursor,_)|{
+            let binding=&bindings[*field_index];
+            quote!(#field_index=>{
+                if self.draining{if !#value_crate::retained_clone::RetainedCloneCursor::close_started(&self.#cursor){return #value_crate::retained_clone::RetainedCloneCursor::begin_close_work_demand(&self.#cursor)}return if #value_crate::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor){Ok(2)}else{#value_crate::retained_clone::RetainedCloneCursor::close_work_demand(&self.#cursor,body)}}
+                if #value_crate::retained_clone::RetainedCloneCursor::output_ready(&self.#cursor){return #value_crate::retained_clone::RetainedCloneCursor::take_work_demand(&self.#cursor)?.checked_add(2).ok_or_else(||#value_crate::ValueError::invariant("clone field transfer work overflow"))}
+                #value_crate::retained_clone::RetainedCloneCursor::advance_work_demand(&self.#cursor,source.project((#variant_index+1)*1024+#field_index+1,|source|match source{#pattern=>#binding,_=>unreachable!("validated enum variant")}),body,maximum_work_units)
+            })
         });
         let advance_arms=variant_rows.iter().map(|(_,field_index,_,cursor,value)| {
             let binding=&bindings[*field_index];
             quote! {
                 #field_index => {
                     if self.draining {
+                     if !#value_crate::retained_clone::RetainedCloneCursor::close_started(&self.#cursor){let turn=#value_crate::retained_clone::RetainedCloneCursor::begin_close_paid(&mut self.#cursor);work+=turn.work;turn.result?;return Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(#value_crate::retained_clone::RetainedCloneProgress{copied_items:1,..Default::default()}))}
                         if !#value_crate::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) {
                             let nested=#value_crate::retained_clone::nested_retained_clone_grant(grant)?;
                             let step={let turn=#value_crate::retained_clone::RetainedCloneCursor::close_step(&mut self.#cursor,nested);work+=turn.work;turn.result}?;
                             return Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(#value_crate::retained_clone::admit_retained_clone_close(nested,step,#value_crate::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor),"enum original field scaffold")?.progress()));
                         }
-                        self.draining=false;work+=1;
+                        self.draining=false;work+=2;
                         self.phase+=1;
                         return Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(#value_crate::retained_clone::RetainedCloneProgress {copied_items:1,..Default::default()}));
                     }
                     if #value_crate::retained_clone::RetainedCloneCursor::output_ready(&self.#cursor) {
-                        let nested=#value_crate::retained_clone::nested_retained_clone_grant(grant)?;let turn=#value_crate::retained_clone::RetainedCloneCursor::take(&mut self.#cursor,nested);work+=turn.work;let Some((value,progress))=turn.result? else{return Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(Default::default()))};self.#value=Some(value);
-                        #value_crate::retained_clone::RetainedCloneCursor::begin_close(&mut self.#cursor);
+                        let nested=#value_crate::retained_clone::nested_retained_clone_grant(grant)?;let turn=#value_crate::retained_clone::RetainedCloneCursor::take(&mut self.#cursor,nested);work+=turn.work;let Some((value,progress))=turn.result? else{return Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(Default::default()))};self.#value=Some(value);work+=2;
+                        
                         self.draining=true;
                         return Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(#value_crate::retained_clone::admit_retained_clone_progress(nested,progress,"enum field take")?));
                     }
                     let nested=#value_crate::retained_clone::nested_retained_clone_grant(grant)?;
-                    let step={let turn=#value_crate::retained_clone::RetainedCloneCursor::advance(&mut self.#cursor,source.project((#variant_index+1)*1024+#field_index+1,|source|match source {#pattern=>#binding,_=>unreachable!("validated enum variant")}),body,nested);work+=turn.work;turn.result}?;
+                    let step={let turn=#value_crate::retained_clone::RetainedCloneCursor::advance(&mut self.#cursor,source.project((#variant_index+1)*1024+#field_index+1,|source|match source {#pattern=>#binding,_=>unreachable!("validated enum variant")}),body,maximum_work_units,nested);work+=turn.work;turn.result}?;
                     Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(#value_crate::retained_clone::admit_retained_clone_progress(nested,step.progress(),"enum original field clone")?))
                 }
             }
@@ -489,17 +545,19 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> syn::Result<TokenSt
                     self.phase+=1;
                     Ok(#value_crate::retained_clone::RetainedCloneStep::Complete(#value_crate::retained_clone::RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))
                 }
-                _=>Err(#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::InvariantViolated,"enum clone state is invalid")),
+                _=>Err((#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::InvariantViolated,"enum clone state is invalid")).into()),
             }
         };
-        (demand,advance)
+        let work=quote!{(#variant_index,#pattern)=>match self.phase{#(#work_arms,)*#field_count=>Ok(1),_=>Err(#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::InvariantViolated,"enum clone state is invalid"))}};
+        (demand,advance,work)
     }).collect::<Vec<_>>();
-    let variant_demands=variants.iter().map(|(demand,_)|demand);
-    let variant_arms=variants.iter().map(|(_,advance)|advance);
+    let variant_demands=variants.iter().map(|(demand,_,_)|demand);
+    let variant_arms=variants.iter().map(|(_,advance,_)|advance);
+    let variant_work=variants.iter().map(|(_,_,work)|work);
     let controlled_values = rows.iter().map(|(_, _, _, _, value)| quote!(if let Some(step) = {let turn=self.close.begin_granted(&mut self.#value, grant);work+=turn.work;turn.result}? { return Ok(step); }));
     let controlled_children = rows.iter().map(|(_, _, _, cursor, _)| quote! {
         if !#value_crate::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) {
-            if #value_crate::retained_clone::RetainedCloneCursor::begin_close(&mut self.#cursor) {work+=1;
+            if !#value_crate::retained_clone::RetainedCloneCursor::close_started(&self.#cursor) {let turn=#value_crate::retained_clone::RetainedCloneCursor::begin_close_paid(&mut self.#cursor);work+=turn.work;turn.result?;
                 return Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(#value_crate::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
             }
             let nested = #value_crate::retained_clone::nested_retained_clone_grant(grant)?;
@@ -507,6 +565,10 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> syn::Result<TokenSt
             return Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(#value_crate::retained_clone::admit_retained_clone_close(nested, step, #value_crate::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor), "retained record child close")?.progress()));
         }
     });
+    let work_children=rows.iter().map(|(_,_,_,cursor,_)|quote!{
+        if !#value_crate::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor){return if !#value_crate::retained_clone::RetainedCloneCursor::close_started(&self.#cursor){#value_crate::retained_clone::RetainedCloneCursor::begin_close_work_demand(&self.#cursor)}else{#value_crate::retained_clone::RetainedCloneCursor::close_work_demand(&self.#cursor,body)}}
+    });
+    let work_values=rows.iter().map(|(_,_,ty,_,value)|quote!{if self.#value.is_some(){return self.close.next_owner_work::<#ty>(true,&None,body);}});
     let empty_children = rows.iter().map(|(_, _, _, cursor, value)| quote!(#value_crate::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) && self.#value.is_none()));
     let close_demand=close_demand_methods(&value_crate,quote!(#name #ty_generics),rows.iter().map(|(_,_,ty,cursor,value)|(*ty,cursor,value,false)));
     Ok(quote! {
@@ -532,7 +594,7 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> syn::Result<TokenSt
         impl #impl_generics #value_crate::retained_clone::RetainedCloneCursor<#name #ty_generics> for #cursor_name #ty_generics #where_clause {
             fn output_ready(&self) -> bool { !self.closing && !self.spent && self.output.is_some() }
             fn close_started(&self) -> bool { self.closing }
-            fn advance_demands(&self,source: #value_crate::retained_clone::RetainedCloneRef<'_,#name #ty_generics>,maximum_copy_bytes:usize)->::core::result::Result<#value_crate::RetirementDemand,#value_crate::ValueError> {
+            fn advance_demands(&self,source: #value_crate::retained_clone::RetainedCloneRef<'_,#name #ty_generics>,maximum_copy_bytes:usize,maximum_work_units:u64)->::core::result::Result<#value_crate::RetirementDemand,#value_crate::ValueError> {
                 if self.closing || self.spent { return Err(#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::InvariantViolated,"enum clone cannot quote a closing or spent owner")); }
                 if !source.check_binding(&self.source)? { return Ok(#value_crate::RetirementDemand {copy_bytes:source.binding_copy_bytes(),depth:1,..Default::default()}); }
                 if self.output.is_some() { return Ok(Default::default()); }
@@ -542,8 +604,14 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> syn::Result<TokenSt
                     _=>Err(#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::InvariantViolated,"enum source variant changed")),
                 }
             }
-            fn advance(&mut self,source: #value_crate::retained_clone::RetainedCloneRef<'_,#name #ty_generics>,body: usize, grant: #value_crate::retained_clone::RetainedCloneGrant)->#value_crate::RetainedWorkOutcome{let mut work=0;let result=(||{
-                let demand=#value_crate::retained_clone::RetainedCloneCursor::advance_demands(self,source,body)?;
+            fn advance_work_demand(&self,source:#value_crate::retained_clone::RetainedCloneRef<'_,#name #ty_generics>,body:usize,maximum_work_units:u64)->Result<u64,#value_crate::ValueError>{
+                #value_crate::retained_clone::RetainedCloneCursor::advance_demands(self,source,body,maximum_work_units)?;if maximum_work_units==0{return Ok(0)}
+                if self.output.is_some(){return Ok(0)}if self.source.is_none()||self.variant.is_none(){return Ok(1)}
+                match (self.variant.expect("validated enum variant"),source.get()){#(#variant_work,)*_=>Err(#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::InvariantViolated,"enum source variant changed"))}
+            }
+            fn take_work_demand(&self)->Result<u64,#value_crate::ValueError>{Ok(u64::from(#value_crate::retained_clone::RetainedCloneCursor::output_ready(self)))}
+            fn advance(&mut self,source: #value_crate::retained_clone::RetainedCloneRef<'_,#name #ty_generics>,body: usize, maximum_work_units:u64, grant: #value_crate::retained_clone::RetainedCloneGrant)->#value_crate::OriginalRetirementOutcome{let mut work=0;let result=(|| -> Result<#value_crate::retained_clone::RetainedCloneStep,#value_crate::OriginalRetirementFailure>{
+                let selected=#value_crate::retained_clone::RetainedCloneCursor::advance_work_demand(self,source,body,maximum_work_units)?;if selected==0||selected>maximum_work_units{return Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(Default::default()))}let demand=#value_crate::retained_clone::RetainedCloneCursor::advance_demands(self,source,body,maximum_work_units)?;
                 if self.output.is_some() { return Ok(#value_crate::retained_clone::RetainedCloneStep::Complete(Default::default())); }
                 if !#value_crate::retained_clone::retained_clone_grant_admits(grant,demand) { return Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(Default::default())); }
                 if let Some(progress)={let turn=source.bind(&mut self.source,grant);work+=turn.work;turn.result}? { return Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(progress)); }
@@ -553,7 +621,7 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> syn::Result<TokenSt
                 }
                 match (self.variant.expect("initialized enum variant"),source.get()) {
                     #(#variant_arms,)*
-                    _=>Err(#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::InvariantViolated,"enum source variant changed")),
+                    _=>Err((#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::InvariantViolated,"enum source variant changed")).into()),
                 }
             })();#value_crate::RetainedWorkOutcome{result,work}}
             fn take_demand(&self)->Result<#value_crate::RetirementDemand,#value_crate::ValueError>{Ok(#value_crate::retained_clone::retained_clone_take_demand())}
@@ -566,10 +634,19 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> syn::Result<TokenSt
                 self.closing = true;
                 true
             }
+            fn begin_close_work_demand(&self)->Result<u64,#value_crate::ValueError>{Ok(u64::from(!self.closing))}
+            fn begin_close_paid(&mut self)->#value_crate::RetainedWorkOutcome<(),#value_crate::ValueError>{if self.closing{return #value_crate::RetainedWorkOutcome{result:Ok(()),work:0}}self.closing=true;#value_crate::RetainedWorkOutcome{result:Ok(()),work:1}}
 
-            fn close_step(&mut self, grant: #value_crate::retained_clone::RetainedCloneGrant) ->#value_crate::RetainedWorkOutcome{let mut work=0;let result=(||{
+            fn close_work_demand(&self,body:usize)->Result<u64,#value_crate::ValueError>{
+                if !self.closing{return Ok(0)}
+                #(#work_children)*
+                if !self.close.is_empty(){return self.close.next_owner_work::<#name #ty_generics>(false,&None,body)}
+                #(#work_values)*
+                self.close.next_owner_work::<#name #ty_generics>(self.output.is_some(),&self.source,body)
+            }
+            fn close_step(&mut self, grant: #value_crate::retained_clone::RetainedCloneGrant) ->#value_crate::OriginalRetirementOutcome{let mut work=0;let result=(|| -> Result<#value_crate::retained_clone::RetainedCloneStep,#value_crate::OriginalRetirementFailure>{
                 if grant.maximum_items == 0 { return Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(Default::default())); }
-                if !self.closing { return Err(#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::InvariantViolated, "retained record must begin close before granted retirement")); }
+                if !self.closing { return Err((#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::InvariantViolated, "retained record must begin close before granted retirement")).into()); }
                 if !#value_crate::retained_clone::retained_clone_grant_admits(grant,#value_crate::retained_clone::retained_clone_close_demands::<#name #ty_generics>(self,grant.maximum_copy_bytes)?) { return Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(Default::default())); }
                 #(#controlled_children)*
                 if !self.close.is_empty() { return {let turn=self.close.step_granted(grant);work+=turn.work;turn.result}; }

@@ -1,5 +1,5 @@
 //! 🧮️ Kernel core: sequence authority, job progress presentation, turn budget, extension index, requests and close submissions.
-use semio_framework_ui_contract_validation::{UiDocumentLimits};
+use semio_ui_contract_validation::{UiDocumentLimits};
 use super::*;
 
 //#region 🎠️KernelRuntime

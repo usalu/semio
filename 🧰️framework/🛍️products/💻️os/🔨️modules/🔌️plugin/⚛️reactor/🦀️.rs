@@ -14,17 +14,17 @@
 
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
-use semio_framework_plugin_reactor_tasks::tasks_task_lane::PendingResume;
-use semio_framework_plugin_reactor_tasks::tasks_fixed_slots::ReactorFixedSlots;
-use semio_framework_plugin_reactor_tasks::tasks_task_lane::TaskResumeOutcome;
-use semio_framework_plugin_reactor_lifecycle::life_reactor_close::reactor_close_fault;
-pub use semio_framework_plugin_reactor_surfaces::checkpoint;
-pub use semio_framework_plugin_actor_host::executor;
-pub use semio_framework_plugin_reactor_lifecycle::instance_lifetime;
-pub use semio_framework_plugin_reactor_patches as patches;
-use semio_framework_plugin_reactor_lifecycle as pending;
+use semio_plugin_reactor_tasks::tasks_task_lane::PendingResume;
+use semio_plugin_reactor_tasks::tasks_fixed_slots::ReactorFixedSlots;
+use semio_plugin_reactor_tasks::tasks_task_lane::TaskResumeOutcome;
+use semio_plugin_reactor_lifecycle::life_reactor_close::reactor_close_fault;
+pub use semio_plugin_reactor_surfaces::checkpoint;
+pub use semio_plugin_actor_host::executor;
+pub use semio_plugin_reactor_lifecycle::instance_lifetime;
+pub use semio_plugin_reactor_patches as patches;
+use semio_plugin_reactor_lifecycle as pending;
 
-pub use semio_framework_plugin_plugin_program::surface_context;
+pub use semio_plugin_plugin_program::surface_context;
 
 // 🧬️ Only `wit_bridge` below (wasm32-wasip2) consumes these —
 // a plain native build never reaches the WIT-boundary translation code, so unlike `RefCell` these
@@ -35,7 +35,7 @@ use semio_framework::kernel::{Effect, MessageEndpoint};
 /// is ungated: the `PRESENCE` thread_local right below references it on EVERY build, matching how
 /// `patches::PatchTracker` (an equally wit_bridge-only consumer) is reached through the ungated
 /// `pub mod patches;` at this file's top.
-use semio_framework_ui_runtime::PresenceHub;
+use semio_ui_runtime::PresenceHub;
 use std::cell::RefCell;
 
 #[doc(hidden)]
@@ -61,7 +61,7 @@ pub fn reconcile_step_opportunities(fuel: u64) -> usize {
     usize::try_from(fuel.min(RECONCILE_STEP_OPPORTUNITY_LIMIT)).unwrap_or(RECONCILE_STEP_OPPORTUNITY_LIMIT as usize).max(1)
 }
 
-semio_framework_plugin_abi::component_persistent_local! {
+semio_plugin_abi::component_persistent_local! {
     /// 👥️ Collects presence by concrete mounted surface and node, bound atomically with each render.
     pub static PRESENCE: RefCell<PresenceHub> = RefCell::new(PresenceHub::new());
     /// 📦️ The package assets the host preloaded on `Event::InstanceOpen.assets`, by declared name — one set per
@@ -71,17 +71,17 @@ semio_framework_plugin_abi::component_persistent_local! {
     /// pack (design-abi.md §4).
     pub static ARMED_TIMERS: RefCell<FixedTimerRegistry> = RefCell::new(FixedTimerRegistry::new());
 }
-pub use semio_framework_plugin_reactor_surfaces::{COLD_PAIR_DOCUMENT_LOAD, COLD_PAIR_INGRESS, RESTORED_DOCUMENT_LOADS};
-pub use semio_framework_plugin_reactor_lifecycle::{REACTOR_CLOSES, REACTOR_CLOSE_CURSOR};
-pub use semio_framework_plugin_reactor_patches::PATCHES;
-pub use semio_framework_plugin_reactor_tasks::{INSTANCE_METADATA, JOB_RENDER_BINDINGS, REACTOR_EXECUTOR, REGISTRY, TASK_EXECUTOR, TASK_RECORDS, TASK_RESUMES};
-pub use semio_framework_plugin_reactor_tasks::tasks_fixed_slots::*;
-pub use semio_framework_plugin_reactor_tasks::tasks_instance_metadata::*;
-pub use semio_framework_plugin_reactor_tasks::tasks_task_lane::*;
-pub use semio_framework_plugin_reactor_tasks::tasks_extension_continuation::*;
-pub use semio_framework_plugin_reactor_tasks::tasks_render_bindings::*;
-pub use semio_framework_plugin_reactor_lifecycle::life_reactor_close::*;
-pub use semio_framework_plugin_runtime_instances::inst_metadata_owner::*;
+pub use semio_plugin_reactor_surfaces::{COLD_PAIR_DOCUMENT_LOAD, COLD_PAIR_INGRESS, RESTORED_DOCUMENT_LOADS};
+pub use semio_plugin_reactor_lifecycle::{REACTOR_CLOSES, REACTOR_CLOSE_CURSOR};
+pub use semio_plugin_reactor_patches::PATCHES;
+pub use semio_plugin_reactor_tasks::{INSTANCE_METADATA, JOB_RENDER_BINDINGS, REACTOR_EXECUTOR, REGISTRY, TASK_EXECUTOR, TASK_RECORDS, TASK_RESUMES};
+pub use semio_plugin_reactor_tasks::tasks_fixed_slots::*;
+pub use semio_plugin_reactor_tasks::tasks_instance_metadata::*;
+pub use semio_plugin_reactor_tasks::tasks_task_lane::*;
+pub use semio_plugin_reactor_tasks::tasks_extension_continuation::*;
+pub use semio_plugin_reactor_tasks::tasks_render_bindings::*;
+pub use semio_plugin_reactor_lifecycle::life_reactor_close::*;
+pub use semio_plugin_runtime_instances::inst_metadata_owner::*;
 
 #[doc(hidden)]
 pub const REACTOR_TIMER_SLOTS: usize = 1_024;
@@ -236,44 +236,44 @@ pub fn admit_package_assets_for_testing(assets: Vec<(String, Vec<u8>)>) {
 #[doc(hidden)]
 pub struct ReactorClosePeers;
 
-impl semio_framework_plugin_reactor_lifecycle::instance_lifetime::ClosePeers for ReactorClosePeers {
-    fn preflight_patches(&self, key: semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
+impl semio_plugin_reactor_lifecycle::instance_lifetime::ClosePeers for ReactorClosePeers {
+    fn preflight_patches(&self, key: semio_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
         PATCHES.with(|patches| patches.preflight_close_instance(key)).map_err(reactor_close_fault)
     }
 
-    fn reserve_patches(&self, key: semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
+    fn reserve_patches(&self, key: semio_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
         PATCHES.with(|patches| patches.reserve_close_instance(key)).map_err(reactor_close_fault)
     }
 
-    fn activate_patches(&self, key: semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
+    fn activate_patches(&self, key: semio_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
         PATCHES.with(|patches| patches.activate_close_instance(key)).map_err(reactor_close_fault)
     }
 
-    fn patches_complete(&self, key: semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<bool, semio_framework::Fault> {
+    fn patches_complete(&self, key: semio_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<bool, semio_framework::Fault> {
         PATCHES.with(|patches| patches.close_instance_complete(key)).map_err(reactor_close_fault)
     }
 
-    fn release_patches(&self, key: semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
+    fn release_patches(&self, key: semio_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
         PATCHES.with(|patches| patches.release_close_instance(key)).map_err(reactor_close_fault)
     }
 
-    fn preflight_cold_pair(&self, key: semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
+    fn preflight_cold_pair(&self, key: semio_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
         COLD_PAIR_INGRESS.with(|ingress| ingress.try_borrow().map_err(|_| reactor_close_fault("cold pair close preflight busy"))?.preflight_close_instance(key).map_err(reactor_close_fault))
     }
 
-    fn reserve_cold_pair(&self, key: semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
+    fn reserve_cold_pair(&self, key: semio_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
         COLD_PAIR_INGRESS.with(|ingress| ingress.try_borrow_mut().map_err(|_| reactor_close_fault("cold pair close reservation busy"))?.reserve_close_instance(key).map_err(reactor_close_fault))
     }
 
-    fn activate_cold_pair(&self, key: semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
+    fn activate_cold_pair(&self, key: semio_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
         COLD_PAIR_INGRESS.with(|ingress| ingress.try_borrow_mut().map_err(|_| reactor_close_fault("cold pair close activation busy"))?.activate_close_instance(key).map_err(reactor_close_fault))
     }
 
-    fn cold_pair_complete(&self, key: semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<bool, semio_framework::Fault> {
+    fn cold_pair_complete(&self, key: semio_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<bool, semio_framework::Fault> {
         COLD_PAIR_INGRESS.with(|ingress| ingress.try_borrow().map_err(|_| "cold pair close receipt busy")?.close_instance_complete(key)).map_err(reactor_close_fault)
     }
 
-    fn release_cold_pair(&self, key: semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
+    fn release_cold_pair(&self, key: semio_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
         COLD_PAIR_INGRESS.with(|ingress| ingress.try_borrow_mut().map_err(|_| "cold pair close release busy")?.release_close_instance(key)).map_err(reactor_close_fault)
     }
 }
@@ -285,13 +285,13 @@ impl semio_framework_plugin_reactor_lifecycle::instance_lifetime::ClosePeers for
 /// serialized (`TASK_RECORDS`/`EXECUTOR` are process memory, not pack state) — only the
 /// `restart` command bytes of every LIVE task that declared one via `.restartable(..)` survive
 /// into the pack, one `TaskRestart{instance, command}` per such task.
-pub async fn checkpoint_now<PA: semio_framework_plugin_reactor_app::PluginApp>(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>) -> Result<Vec<u8>, semio_framework::Fault> {
+pub async fn checkpoint_now<PA: semio_framework_plugin_reactor_app::PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>) -> Result<Vec<u8>, semio_framework::Fault> {
     let instances = INSTANCE_METADATA.with(|metadata| metadata.borrow().checkpoint_rows());
     let timers = ARMED_TIMERS.with(|timers| timers.borrow().rows());
     let pending = REGISTRY.with(|registry| registry.pending_ids().into_iter().map(|id| id.0).collect());
-    let task_restarts: Vec<semio_framework_plugin_reactor_surfaces::checkpoint::TaskRestart> =
-        TASK_RECORDS.with(|records| records.borrow().iter().filter_map(|(_, record)| record.restart.as_ref().map(|command| semio_framework_plugin_reactor_surfaces::checkpoint::TaskRestart { instance: record.instance, command: command.clone() })).collect());
-    semio_framework_plugin_reactor_surfaces::checkpoint::checkpoint(runtime, &instances, timers, pending, task_restarts).await
+    let task_restarts: Vec<semio_plugin_reactor_surfaces::checkpoint::TaskRestart> =
+        TASK_RECORDS.with(|records| records.borrow().iter().filter_map(|(_, record)| record.restart.as_ref().map(|command| semio_plugin_reactor_surfaces::checkpoint::TaskRestart { instance: record.instance, command: command.clone() })).collect());
+    semio_plugin_reactor_surfaces::checkpoint::checkpoint(runtime, &instances, timers, pending, task_restarts).await
 }
 
 /// 📸️ `checkpoint::restore` body — re-arms the timer list from the restored pack and hands every admitted document load
@@ -303,14 +303,14 @@ pub async fn checkpoint_now<PA: semio_framework_plugin_reactor_app::PluginApp>(r
 /// `TaskResolution::Command` takes), drained by the first `poll` after restore — restoring is a
 /// pure state-load, it must not itself re-enter app dispatch.
 #[expect(clippy::result_large_err, reason = "The fixed resume queue returns the admitted view snapshot, task metadata, and payload owner intact without allocating on rejection.")]
-pub async fn restore_now<PA: semio_framework_plugin_reactor_app::PluginApp>(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, state: &[u8]) -> Result<(), semio_framework::Fault> {
+pub async fn restore_now<PA: semio_framework_plugin_reactor_app::PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, state: &[u8]) -> Result<(), semio_framework::Fault> {
     let mut observe = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
     let observer: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_> = &mut observe;
-    let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(semio_framework_plugin_reactor_surfaces::checkpoint::RESTORE_AUTHORITY_BYTES, observer).map_err(semio_framework::FaultFrom::into_fault)?;
+    let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(semio_plugin_reactor_surfaces::checkpoint::RESTORE_AUTHORITY_BYTES, observer).map_err(semio_framework::FaultFrom::into_fault)?;
     let mut accept = |_| true;
-    let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(semio_framework_plugin_reactor_surfaces::checkpoint::RESTORE_AUTHORITY_BYTES, &mut accept);
+    let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(semio_plugin_reactor_surfaces::checkpoint::RESTORE_AUTHORITY_BYTES, &mut accept);
     let mut original = semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, runtime.mounted_owner_policy().preparation);
-    let semio_framework_plugin_reactor_surfaces::checkpoint::RestoredCheckpoint { pack, document_loads } = semio_framework_plugin_reactor_surfaces::checkpoint::restore(runtime, state, &mut identity, &mut original).await?;
+    let semio_plugin_reactor_surfaces::checkpoint::RestoredCheckpoint { pack, document_loads } = semio_plugin_reactor_surfaces::checkpoint::restore(runtime, state, &mut identity, &mut original).await?;
     RESTORED_DOCUMENT_LOADS.with(|loads| loads.borrow_mut().extend(document_loads));
     let instances = pack.instances().await;
     let armed_timers = pack.timers().await.to_vec();
@@ -335,7 +335,7 @@ pub async fn restore_now<PA: semio_framework_plugin_reactor_app::PluginApp>(runt
         Ok::<(), semio_framework::Fault>(())
     })?;
     for restart in pack.task_restarts().await {
-        let meta = semio_framework_plugin_decl_emission::ActionMeta { expected_document_revision:None, actor: semio_framework_plugin_runtime_instances::inst_wire_frames::instance_actor(runtime, restart.instance).await?.into(), instance_id: restart.instance, view_state: None };
+        let meta = semio_plugin_decl_emission::ActionMeta { expected_document_revision:None, actor: semio_plugin_runtime_instances::inst_wire_frames::instance_actor(runtime, restart.instance).await?.into(), instance_id: restart.instance, view_state: None };
         let pending = PendingResume { instance: restart.instance, meta, outcome: TaskResumeOutcome::Command(restart.command.clone()) };
         TASK_RESUMES
             .with(|resumes| resumes.borrow_mut().push(pending))

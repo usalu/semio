@@ -1,0 +1,2 @@
+import {readFileSync,writeFileSync} from "node:fs";
+const path="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🧪️tests/🔥️warm/🏊️pool.ts",source=readFileSync(path,"utf8"),before='\'export async function runCapturedBuildSourceV1(args){if(globalThis.__warm!==1',after='\'import {writeSync} from "node:fs";export async function runCapturedBuildSourceV1(args){writeSync(4,"door-ready\\\\n");if(globalThis.__warm!==1';if(!source.includes(before))throw Error("Warm pool entry seam changed");writeFileSync(path,source.replace(before,after));

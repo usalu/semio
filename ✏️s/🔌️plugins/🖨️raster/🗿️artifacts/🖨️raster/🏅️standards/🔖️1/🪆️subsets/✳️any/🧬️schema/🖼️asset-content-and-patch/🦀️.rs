@@ -172,7 +172,7 @@ pub const RASTER_DIALECT: semio_plugin::app::Dialect = semio_plugin::app::Dialec
 pub fn raster_image_content_id(prefix: &str, image: &SemioImageSnapshot) -> String {
     let mut hash = RasterImageContentHash::new();
     while !hash.advance(image,32_768).expect("fixed image hash grant is valid").done {}
-    format!("{prefix}-{}", framework_hash::hex_lower(&hash.finish().expect("canonical image hash completed")))
+    format!("{prefix}-{}", semio_framework_hash::hex_lower(&hash.finish().expect("canonical image hash completed")))
 }
 
 /// 🔓️ Attaches decoded image content without reading or writing a physical representation.

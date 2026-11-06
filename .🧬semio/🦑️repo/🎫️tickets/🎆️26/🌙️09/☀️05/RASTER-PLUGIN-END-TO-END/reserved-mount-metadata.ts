@@ -1,0 +1,2 @@
+import {readFileSync,writeFileSync} from "node:fs";
+const path="🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/👷️jobs/📥️staging/🏷️reserved/🦀️.rs";let source=readFileSync(path,"utf8");for(const [old,next] of [["[Vec<u8>;8]","[Vec<u8>;9]"],["[String;8]","[String;9]"],["[[(usize,usize);2];8]","[[(usize,usize);2];9]"],["[bool;8]","[bool;9]"],["[[(0,0);2];8]","[[(0,0);2];9]"],["[false;8]","[false;9]"],["field>=8","field>=9"]]){if(!source.includes(old))throw new Error(`missing ${old}`);source=source.replaceAll(old,next)}writeFileSync(path,source);

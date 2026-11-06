@@ -55,12 +55,12 @@ pub use super::{OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture
     }
 
     /// 📨️ Presents a real mounted page under its caller, returning when the current turn cannot advance.
-    pub fn present_fixture_mounted_page<A: semio_framework_plugin_decl_app::ArtifactApp>(mounted:&mut semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation<A>,grant:semio_framework_value::RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_plugin_job::TypedOperationResultPage>,semio_framework_job::OriginalTurnFailure>{
-        use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+    pub fn present_fixture_mounted_page<A: semio_plugin_decl_app::ArtifactApp>(mounted:&mut semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation<A>,grant:semio_framework_value::RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_plugin_job::TypedOperationResultPage>,semio_framework_job::OriginalTurnFailure>{
+        use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
         for _ in 0..OriginalFixtureCaller::maximum_turns(){
             let mut output=None;
             let demand=mounted.result_page_presentation_demands()?;
-            let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|_,issued|{
+            let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|_,issued|{
                 let (page,progress)=mounted.take_result_page(issued)?;
                 let complete=page.is_some();output=page;
                 Ok((if complete{PluginLifecycleStep::Complete(progress)}else{PluginLifecycleStep::Progress(progress)},complete))
@@ -75,8 +75,8 @@ pub use super::{OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture
     }
 
     /// 📫️ Retires the acknowledged producer through its financed public port without renewing the caller's turn.
-    pub fn retire_fixture_acknowledged_mounted_page<A: semio_framework_plugin_decl_app::ArtifactApp>(mounted:&mut semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation<A>,grant:semio_framework_value::RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+    pub fn retire_fixture_acknowledged_mounted_page<A: semio_plugin_decl_app::ArtifactApp>(mounted:&mut semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation<A>,grant:semio_framework_value::RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
         for _ in 0..OriginalFixtureCaller::maximum_turns(){
             if !mounted.result_page_retirement_pending(){return Ok(true)}
             let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(grant,|same|mounted.advance_acknowledged_result_page(same)));

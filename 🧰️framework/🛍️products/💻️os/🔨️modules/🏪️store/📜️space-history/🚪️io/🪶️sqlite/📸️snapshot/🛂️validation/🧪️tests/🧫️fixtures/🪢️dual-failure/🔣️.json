@@ -1,0 +1,7 @@
+{
+  "nativeCharge": 8,
+  "sqlMaximum": 4,
+  "authoredMessage": "space history semantic state differs",
+  "publicationRefusal": "validation publication receipt refused",
+  "expected": {"authored": "space history semantic state differs", "settlementKind": "OwnershipLimit"}
+}

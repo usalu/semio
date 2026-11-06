@@ -6,18 +6,18 @@ pub use original_record::OriginalRecordMemberSnapshotOpen;
 
 #[path = "📥️lifted/🚪️open/🦀️.rs"]
 pub mod lifted_member_open;
-use semio_os_store_member_open::history::dictionary::{MemberHistoryDictionaryLimits, MemberHistoryDictionaryStep};
+use semio_framework_os_store_member_open::history::dictionary::{MemberHistoryDictionaryLimits, MemberHistoryDictionaryStep};
 use semio_os_store_space_member::factory::{MemberFactorySelection, MemberFactorySelectionStep, SelectedMemberHistoryDictionary, SelectedMemberHistoryInput, SelectedVerifiedMemberHistory};
-use semio_os_store_member_open::history::{MemberHistoryInputStep, MemberHistoryVerification};
+use semio_framework_os_store_member_open::history::{MemberHistoryInputStep, MemberHistoryVerification};
 use semio_framework_value::ErasedSnapshotRetirement;
-use semio_os_store_member_open::source_admission::{MemberOpenSourceAdmission, diagnostic_error as member_admission_diagnostic};
-use semio_os_store_member_open::{MemberOpenAdmissionError, MemberOpenDiagnostic, MemberOpenOperation, MemberOpenPhase, MemberOpenProgress, MemberOpenRequest, MemberOpenStep};
+use semio_framework_os_store_member_open::source_admission::{MemberOpenSourceAdmission, diagnostic_error as member_admission_diagnostic};
+use semio_framework_os_store_member_open::{MemberOpenAdmissionError, MemberOpenDiagnostic, MemberOpenOperation, MemberOpenPhase, MemberOpenProgress, MemberOpenRequest, MemberOpenStep};
 use semio_framework_value::{ValueError, ValueRefusalKind, RetirementDemand};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, admit_retained_clone_close};
 use semio_os_spr::format::retained::RetainedSprLimits;
 use pack::snapshot::ArtifactPack;
 
-pub use semio_os_store_member_open::decoder::{MemberSnapshotDecoder, ArtifactPackSnapshotDecoder};
+pub use semio_framework_os_store_member_open::decoder::{MemberSnapshotDecoder, ArtifactPackSnapshotDecoder};
 use semio_os_store_engine::lifted_store::ArtifactStore;
 use semio_os_store_space_member::lifted_store::MemberFactory;
 use semio_os_store_engine_owners::member_producer::MemberStoreProducer;
@@ -28,7 +28,7 @@ use semio_framework_job::{Generation, OperationId, StepContext, OriginalTurnFail
 use std::{marker::PhantomData, mem::ManuallyDrop};
 
 
-use semio_os_store_member_open::receiving::MemberHistoryReceiving;
+use semio_framework_os_store_member_open::receiving::MemberHistoryReceiving;
 pub use semio_os_store_engine_owners::lifted_operation::{MemberSnapshotOpenOperation, MemberSnapshotOpenProgress, MemberSnapshotOpenStep};
 pub use semio_os_store_space_member::lifted_operation::{UnsupportedMemberFactoryOpen, UnsupportedMemberSnapshotOpen};
 
@@ -95,7 +95,7 @@ where
     /// 👉️ The selected history input awaiting its dictionary owner: kept across steps when the step budget
     /// is spent between selection and dictionary admission, instead of failing the open as stale.
     pub selected: ManuallyDrop<Option<SelectedMemberHistoryInput<F>>>,
-    rejected_history_input: ManuallyDrop<Option<semio_os_store_member_open::history::VerifiedMemberHistoryInput>>,
+    rejected_history_input: ManuallyDrop<Option<semio_framework_os_store_member_open::history::VerifiedMemberHistoryInput>>,
     pub dictionary: ManuallyDrop<Option<SelectedMemberHistoryDictionary<F>>>,
     pub witness: ManuallyDrop<Option<SelectedVerifiedMemberHistory<F>>>,
     history_page: Option<Box<[u8; semio_os_store_owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES]>>,
@@ -360,7 +360,7 @@ where
         let child = RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant };
         let step = semio_os_store_read::artifact_retirement_box_close_step(&mut self.active, child).result.map_err(|_| MemberOpenDiagnostic::Initialization)?;
         let progress = match step { RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress) => progress };
-        semio_os_store_member_open::record_member_step(cx, progress)?;
+        semio_framework_os_store_member_open::record_member_step(cx, progress)?;
         Ok(true)
     }
 
@@ -393,7 +393,7 @@ where
 
     fn step_original_history(&mut self,cx:&mut StepContext<'_>,grant:RetainedCloneGrant)->Result<MemberOpenStep<Box<ArtifactStore<P,M>>>,OriginalTurnFailure>{
         if let Err(diagnostic)=self.check_witness(cx){return Ok(self.reject(diagnostic))}
-        let grant=semio_os_store_member_open::member_step_grant(cx,grant);
+        let grant=semio_framework_os_store_member_open::member_step_grant(cx,grant);
         cx.set_stage("member-open.history.decode");
         if cx.should_yield(){return Ok(MemberOpenStep::Pending(self.replay_progress()))}
         if self.history_receiving.is_none(){
@@ -411,7 +411,7 @@ where
     }
 
     fn step_original_snapshot(&mut self,cx:&mut StepContext<'_>,grant:RetainedCloneGrant)->Result<MemberOpenStep<Box<ArtifactStore<P,M>>>,OriginalTurnFailure>{
-        let grant=semio_os_store_member_open::member_step_grant(cx,grant);
+        let grant=semio_framework_os_store_member_open::member_step_grant(cx,grant);
         let Some(depth)=grant.maximum_depth.checked_sub(1)else{return Ok(MemberOpenStep::Pending(self.replay_progress()))};let child=RetainedCloneGrant{maximum_depth:depth,..grant};
         Ok(match self.snapshot_open.as_mut().ok_or_else(||member_admission_diagnostic(MemberOpenDiagnostic::Stale))?.step(cx,child)?{
             MemberSnapshotOpenStep::Pending(progress)=>{if !progress.retained_progress.fits(child){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original snapshot receipt exceeded selected child grant").with_retained_progress(progress.retained_progress).into())}MemberOpenStep::Pending(progress.opening)},
@@ -426,7 +426,7 @@ where
     pub fn step_store(&mut self,cx:&mut StepContext<'_>,grant:RetainedCloneGrant)->Result<MemberOpenStep<Box<ArtifactStore<P,M>>>,OriginalTurnFailure>{self.source_loan.as_ref().ok_or_else(||member_admission_diagnostic(MemberOpenDiagnostic::Stale))?.validate_context(cx)?;if matches!(self.phase,Phase::AdmitHistory|Phase::DecodeHistory){return self.step_original_history(cx,grant)}if self.phase==Phase::Snapshot&&self.owners.as_ref().is_some_and(|owners|owners.constructor_is_complete()){return self.step_original_snapshot(cx,grant)}Ok(self.step_store_inner(cx,grant))}
 
     fn step_store_inner(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> MemberOpenStep<Box<ArtifactStore<P, M>>> {
-        let grant = semio_os_store_member_open::member_step_grant(cx, grant);
+        let grant = semio_framework_os_store_member_open::member_step_grant(cx, grant);
         self.input_buffer_progress = Default::default();
         if let Some(diagnostic) = self.diagnostic {
             return MemberOpenStep::Rejected(diagnostic);
@@ -436,9 +436,9 @@ where
                 if cx.should_yield() { return MemberOpenStep::Pending(self.replay_progress()); }
                 let demand = match owners.constructor_demands(grant.maximum_copy_bytes) { Ok(demand) => demand, Err(error) => { *self.constructor_error=Some(error); return self.reject(MemberOpenDiagnostic::Capacity); } };
                 if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth { return MemberOpenStep::Pending(self.replay_progress()); }
-                let progress = match owners.admit_constructor(grant) { Ok(progress) => progress, Err((error,progress)) => { *self.constructor_error=Some(error); self.input_buffer_progress=progress; if let Err(diagnostic)=semio_os_store_member_open::record_member_step(cx,progress){return self.reject(diagnostic)} return self.reject(MemberOpenDiagnostic::Capacity); } };
+                let progress = match owners.admit_constructor(grant) { Ok(progress) => progress, Err((error,progress)) => { *self.constructor_error=Some(error); self.input_buffer_progress=progress; if let Err(diagnostic)=semio_framework_os_store_member_open::record_member_step(cx,progress){return self.reject(diagnostic)} return self.reject(MemberOpenDiagnostic::Capacity); } };
                 self.input_buffer_progress=progress;
-                if let Err(diagnostic) = semio_os_store_member_open::record_member_step(cx, progress) { return self.reject(diagnostic); }
+                if let Err(diagnostic) = semio_framework_os_store_member_open::record_member_step(cx, progress) { return self.reject(diagnostic); }
                 return MemberOpenStep::Pending(self.replay_progress());
             }
         }
@@ -452,14 +452,14 @@ where
             Phase::CaptureGenesis => {
                 let request = self.genesis_request.as_mut().expect("genesis copy retains the admitted request");
                 let frame = match request.step_input(cx) {
-                    semio_os_store_member_open::MemberOpenInputStep::Framed(frame) => frame,
-                    semio_os_store_member_open::MemberOpenInputStep::Pending(progress) => return MemberOpenStep::Pending(progress),
-                    semio_os_store_member_open::MemberOpenInputStep::Rejected(diagnostic) => return self.reject(diagnostic),
+                    semio_framework_os_store_member_open::MemberOpenInputStep::Framed(frame) => frame,
+                    semio_framework_os_store_member_open::MemberOpenInputStep::Pending(progress) => return MemberOpenStep::Pending(progress),
+                    semio_framework_os_store_member_open::MemberOpenInputStep::Rejected(diagnostic) => return self.reject(diagnostic),
                 };
                 let total = frame.snapshot_range().1;
                 if self.genesis_pack.is_none() {
                     match admit_member_input_buffer(&mut self.genesis_pack, total, grant) {
-                        Ok(Some(progress)) => { self.input_buffer_progress = progress; if let Err(diagnostic) = semio_os_store_member_open::record_member_step(cx, progress) { return self.reject(diagnostic); } }
+                        Ok(Some(progress)) => { self.input_buffer_progress = progress; if let Err(diagnostic) = semio_framework_os_store_member_open::record_member_step(cx, progress) { return self.reject(diagnostic); } }
                         Ok(None) => {}
                         Err(_) => return self.reject(MemberOpenDiagnostic::Capacity),
                     }
@@ -474,7 +474,7 @@ where
                     self.genesis_hasher.update(&self.history_page.as_deref().expect("live member history page")[..copied]);
                     self.genesis_pack.as_mut().expect("genesis copy retains bytes").extend_from_slice(&self.history_page.as_deref().expect("live member history page")[..copied]);
                     self.input_buffer_progress = RetainedCloneProgress { copied_items: 1, copied_bytes: copied * 2, ..Default::default() };
-                    if let Err(diagnostic) = semio_os_store_member_open::record_member_step(cx, self.input_buffer_progress) { return self.reject(diagnostic); }
+                    if let Err(diagnostic) = semio_framework_os_store_member_open::record_member_step(cx, self.input_buffer_progress) { return self.reject(diagnostic); }
                     return MemberOpenStep::Pending(MemberOpenProgress { phase: MemberOpenPhase::Snapshot, completed: (offset+copied) as u64, total: total as u64 });
                 }
                 let request = self.genesis_request.take().expect("genesis copy retains request authority");
@@ -600,7 +600,7 @@ where
                     Err(_) => return self.reject(MemberOpenDiagnostic::Initialization),
                 };
                 let progress = match step { RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress) => progress };
-                if let Err(diagnostic) = semio_os_store_member_open::record_member_step(cx, progress) { return self.reject(diagnostic); }
+                if let Err(diagnostic) = semio_framework_os_store_member_open::record_member_step(cx, progress) { return self.reject(diagnostic); }
                 if self.witness.is_none() {
                     self.phase = Phase::Ready;
                     MemberOpenStep::Ready(self.member.take().expect("initialized member handoff remains exact"))
@@ -643,7 +643,7 @@ where
             return Ok(RetainedCloneStep::Progress(step.progress()))
         }
         let result=self.close_owned_field(grant).map(|step|match step{RetainedCloneStep::Complete(progress)if !self.ownership_is_empty()||self.source_loan.is_some()=>RetainedCloneStep::Progress(progress),step=>step});
-        semio_os_store_member_open::receive_member_close(cx,result)
+        semio_framework_os_store_member_open::receive_member_close(cx,result)
     }
     fn terminal_is_empty(&self) -> bool { self.ownership_is_empty()&&!self.history_page_due()&&self.source_loan.is_none() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.copy_bytes) }

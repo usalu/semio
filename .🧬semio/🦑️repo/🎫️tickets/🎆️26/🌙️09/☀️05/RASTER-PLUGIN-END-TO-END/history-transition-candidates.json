@@ -1,0 +1,1 @@
+{"cases":[{"bytes":[0],"candidate":"revert"},{"bytes":[6],"candidate":"supersede"},{"bytes":[1],"candidate":"other"},{"bytes":[5],"candidate":"other"},{"bytes":[128,0],"candidate":"decode"},{"bytes":[],"candidate":"decode"}]}

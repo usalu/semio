@@ -48,6 +48,7 @@ impl semio_framework_value::FactoryPayloadRetirement for DemoOneItemPreparationF
         if slot.preparation_is_complete(){return Ok(semio_framework_value::RetirementDemand{copy_bytes:0,depth:1,..Default::default()})}
         slot.preparation_demands(if state.issuers.prepared==0{self.snapshot_retirement.as_ref()}else{self.mutation_retirement.as_ref()},body)
     }
+    fn close_state_preparation_work_demand(&self,state:&Self::CloseState,body:usize)->Result<u64,ValueError>{let slot=match state.issuers.prepared{0=>&state.issuers.slots[0],1=>&state.issuers.slots[1],_=>return Ok(0)};if slot.preparation_is_complete(){return Ok(1)}slot.preparation_work_demand(if state.issuers.prepared==0{self.snapshot_retirement.as_ref()}else{self.mutation_retirement.as_ref()},body)}
     fn prepare_close_state_step(&self,state:&mut Self::CloseState,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome { let mut work=0;let result=self.prepare_result(state,grant,&mut work);semio_framework_value::RetainedWorkOutcome { result, work } }
     fn close_state_preparation_is_complete(state:&Self::CloseState)->bool { state.issuers.prepared==2 }
     fn prepare_close_state(&self)->Self::CloseState { DemoOneItemFactoryClose { published:None,published_close:DemoPublishedRootClose { weak:None,root:None },identity:None,issuers:semio_framework_value::FactoryChildTickets{slots:std::array::from_fn(|_|semio_framework_value::FactoryChildSlot::empty()),prepared:0} } }
@@ -81,7 +82,7 @@ impl DemoOneItemPreparationFactory {
         let slot=&mut state.issuers.slots[index];
         if slot.preparation_is_complete(){
             if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
-            state.issuers.prepared+=1;
+            state.issuers.prepared+=1;*work=1;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));
         }
         let turn=if index==0{slot.prepare_step(self.snapshot_retirement.as_ref(),||Arc::clone(&self.snapshot_retirement)as Arc<dyn semio_framework_value::FactoryRetirement>,grant)}

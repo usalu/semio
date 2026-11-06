@@ -134,7 +134,7 @@
             ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
         };
         let mut invocation:ManifestActionInvocation=semio_framework_pack_json::from_json_str(&action_json,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("closed original addressed invocation");
-        let meta=ActionMeta{ expected_document_revision:None,actor:"local".into(),instance_id:1,view_state: Some(semio_framework_plugin_testing_laws::receive_view_fixture(view, semio_framework_plugin_testing_laws::OriginalWorkFixture::stock()))};
+        let meta=ActionMeta{ expected_document_revision:None,actor:"local".into(),instance_id:1,view_state: Some(semio_plugin_testing_laws::receive_view_fixture(view, semio_plugin_testing_laws::OriginalWorkFixture::stock()))};
         let cell=runtime.instances.borrow().get(1).cloned().expect("original mounted receiver");
         let mut original_args=Some(DslValue::Object(std::mem::take(&mut invocation.arguments).into_iter().collect()));let mut original_fault=None;
         let mut admitted=None;

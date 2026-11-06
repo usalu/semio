@@ -4,7 +4,7 @@
 #![cfg(test)]
 
 pub use protocol::{ColdMutation, Edit, Mutation, MutationApplyError, MutationDiff, CompiledMutationInputDefinitions, CompiledMutationInputError};
-pub use semio_framework_os_vcs::*;
+pub use semio_os_vcs::*;
 pub use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
 pub(crate) use semio_framework_trace_memory_testing as test_allocation;
 

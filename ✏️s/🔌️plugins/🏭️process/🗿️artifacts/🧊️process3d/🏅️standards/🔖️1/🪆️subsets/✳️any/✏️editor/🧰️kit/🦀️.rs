@@ -20,7 +20,7 @@ use semio_s_artifact_process_process3d_mutations::Process3dMutation;
 use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactReferenceText as _;
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::{ActionDefinition, ActionKind, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, MediaClass, MediaForm, MediaType, MergeMode, SelectionMethod, SelectionMode, SelectionSpec};
-use semio_framework_ui_locale::{Label, LocalizedLabel};
+use semio_ui_locale::{Label, LocalizedLabel};
 use pack::snapshot::ArtifactPack;
 
 //#region 🔖️Constants
@@ -117,8 +117,8 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
 /// 🏷️ Admits resolved app text into the semantic UI contract.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
-    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI label admission failed"))
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_ui_contract::Label> {
+    semio_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI label admission failed"))
 }
 /// 📇️ A non-palette action declaration (dispatched by UI wiring/keybindings, never surfaced in the
 /// command palette) with the given execution kind.

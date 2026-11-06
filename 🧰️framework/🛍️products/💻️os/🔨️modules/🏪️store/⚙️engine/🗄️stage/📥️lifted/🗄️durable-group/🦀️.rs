@@ -220,7 +220,7 @@ where
 }
 
 /// 🧱️ Transfers already copied catalogs and exact reserved owners without traversing history.
-pub fn stage_prebuilt_batch_root<P, Mu>(store: &mut StoreParts<'_, P, Mu>, publication: &mut semio_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication<P, Mu>, grant: semio_os_store_one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::RetainedCloneProgress, String>
+pub fn stage_prebuilt_batch_root<P, Mu>(store: &mut StoreParts<'_, P, Mu>, publication: &mut semio_framework_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication<P, Mu>, grant: semio_os_store_one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::RetainedCloneProgress, String>
 where P: semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
       Mu: StoreMutation<P> + ValueToValue + Send + 'static + Clone + ValueFromValue + semio_os_spr::ColdMutation<P> + semio_os_spr::OpBinary + semio_os_spr::OpText,
 {

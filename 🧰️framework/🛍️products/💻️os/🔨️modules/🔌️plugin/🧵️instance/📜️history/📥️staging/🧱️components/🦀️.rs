@@ -73,16 +73,16 @@ impl<A: ArtifactApp> CommandHistory<A> {
 }
 
 /// 📣️ A marker occupies the same fixed physical slot as its genuine typed operation reservation.
-pub struct HostEventOperations{slots:[Option<u64>;semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS]}
-impl Default for HostEventOperations{fn default()->Self{Self{slots:[None;semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS]}}}
+pub struct HostEventOperations{slots:[Option<u64>;semio_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS]}
+impl Default for HostEventOperations{fn default()->Self{Self{slots:[None;semio_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS]}}}
 impl HostEventOperations{
  pub fn insert(&mut self,operation:u64){let index=operation as usize%self.slots.len();self.slots[index]=Some(operation);}
  pub fn remove(&mut self,operation:&u64)->bool{let index=*operation as usize%self.slots.len();if self.slots[index]!=Some(*operation){return false}self.slots[index]=None;true}
 }
 /// 🪕️ Host events: the utilities, window roster and typed operations a host event dispatch reached.
 pub struct HostEvents {
-    pub routes: semio_framework_plugin_decl_emission::original_view::routing::OriginalHostEventRoutes,
-    pub action_delivery:semio_framework_plugin_decl_emission::original_view::delivery::OriginalHostEventDelivery,
+    pub routes: semio_plugin_decl_emission::original_view::routing::OriginalHostEventRoutes,
+    pub action_delivery:semio_plugin_decl_emission::original_view::delivery::OriginalHostEventDelivery,
     pub action_event_complete:bool,
     pub action_event_removed:bool,
     pub invocation_kind: Option<ActionKind>,

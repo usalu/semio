@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["primary", "workRefusal", "receiptRefusal", "work"],
+  "additionalProperties": false,
+  "properties": {
+    "primary": {"type": "string"},
+    "workRefusal": {"type": "string"},
+    "receiptRefusal": {"type": "string"},
+    "work": {"type": "integer", "minimum": 1}
+  }
+}

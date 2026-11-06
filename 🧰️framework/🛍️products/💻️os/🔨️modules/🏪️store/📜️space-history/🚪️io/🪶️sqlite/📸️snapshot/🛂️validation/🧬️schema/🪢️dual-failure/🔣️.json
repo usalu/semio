@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["nativeCharge", "sqlMaximum", "authoredMessage", "publicationRefusal", "expected"],
+  "additionalProperties": false,
+  "properties": {
+    "nativeCharge": {"type": "integer", "minimum": 1},
+    "sqlMaximum": {"type": "integer", "minimum": 0},
+    "authoredMessage": {"type": "string"},
+    "publicationRefusal": {"type": "string"},
+    "expected": {
+      "type": "object",
+      "required": ["authored", "settlementKind"],
+      "additionalProperties": false,
+      "properties": {"authored": {"type": "string"}, "settlementKind": {"const": "OwnershipLimit"}}
+    }
+  }
+}

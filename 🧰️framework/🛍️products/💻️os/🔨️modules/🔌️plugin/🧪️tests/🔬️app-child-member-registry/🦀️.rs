@@ -60,7 +60,7 @@ mod child_member_registry_tests {
         use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
         use semio_framework_trace::observe_heap_allocations_on_this_thread;
         struct Work<'a,'b>(std::sync::Mutex<&'a mut semio_framework_job::StepContext<'b>>);
-        impl semio_framework_plugin_document_media::NativeDecodeWorkRecipient for Work<'_, '_>{
+        impl semio_plugin_document_media::NativeDecodeWorkRecipient for Work<'_, '_>{
             fn admits(&mut self,observed:u64,additional:u64)->Result<bool,semio_framework_value::ValueError>{let cx=self.0.try_lock().map_err(|_|semio_framework_value::ValueError::invariant("original archive test caller is already borrowed"))?;Ok(!cx.retirement_should_yield()&&observed.checked_add(additional).is_some_and(|work|work<=cx.fuel_remaining()))}
         }
         fn close(active:&mut ActiveDocumentArchiveLoad<TestSnapshot,TestMutation>,caller:&mut semio_framework_job::OriginalJobFixtureCaller,grant:RetainedCloneGrant,denied:bool)->RetainedCloneStep{

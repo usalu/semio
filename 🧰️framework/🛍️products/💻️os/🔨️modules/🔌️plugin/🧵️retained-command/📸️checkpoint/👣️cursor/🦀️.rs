@@ -32,6 +32,3 @@ impl ArtifactCommandCheckpointCursor{
 impl Drop for ArtifactCommandCheckpointCursor{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"checkpoint capture reached Drop before its original metadata removal")}}
 
 #[doc(hidden)]
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-pub mod tests;

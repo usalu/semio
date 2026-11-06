@@ -67,7 +67,7 @@ fn glb_sub_element_id_attributes_survive_into_the_resident_mesh_table() {
         glb
     }
 
-    fn run(glb: &[u8]) -> (WorldAssetIoAuthority, RendererAssetProbe, RendererAssetProbeStep) {
+    fn run(glb: &[u8], caller:&mut OriginalRendererFixture) -> (WorldAssetIoAuthority, RendererAssetProbe, RendererAssetProbeStep) {
         let mut authority = WorldAssetIoAuthority::default();
         authority.reserve(1, 1, WorldAssetRequestKind::Glb, "ids.glb", glb.len()).unwrap();
         let mut owner = authority.take_next().unwrap();
@@ -79,7 +79,7 @@ fn glb_sub_element_id_attributes_survive_into_the_resident_mesh_table() {
         let owner = (0..infinite_world::world::WORLD_ASSET_REQUEST_CAPACITY).find_map(|_| authority.take_next_completed_step()).expect("completed id probe owner");
         let mut probe = RendererAssetProbe::new(RendererAssetFetchOwner::Shared(owner));
         for _ in 0..262_144 {
-            match probe.step() {
+            match caller.turn(|cx|probe.step(cx)).unwrap() {
                 RendererAssetProbeStep::Pending => {}
                 terminal => return (authority, probe, terminal),
             }
@@ -87,10 +87,10 @@ fn glb_sub_element_id_attributes_survive_into_the_resident_mesh_table() {
         panic!("the GLB id probe never reached a terminal step");
     }
 
-    fn close(mut authority: WorldAssetIoAuthority, mut probe: RendererAssetProbe) {
+    fn close(mut authority: WorldAssetIoAuthority, mut probe: RendererAssetProbe, caller:&mut OriginalRendererFixture) {
         probe.begin_close();
         for _ in 0..262_144 {
-            if probe.close_step() {
+            if caller.turn(|cx|probe.close_step(cx)).unwrap() {
                 break;
             }
         }
@@ -99,8 +99,9 @@ fn glb_sub_element_id_attributes_survive_into_the_resident_mesh_table() {
         assert!(authority.terminal_is_empty());
     }
 
+    let mut caller=OriginalRendererFixture::new();
     let attributes = format!(r#","{}":2,"{}":3"#, attribute_names.0, attribute_names.1);
-    let (authority, probe, step) = run(&glb(&attributes, &indices, (&face_ids, 5125), (&vertex_ids, 5125)));
+    let (authority, probe, step) = run(&glb(&attributes, &indices, (&face_ids, 5125), (&vertex_ids, 5125)), &mut caller);
     assert!(matches!(step, RendererAssetProbeStep::Ready), "a GLB with sub-element id attributes must materialize");
     let lease = probe.glb_materialize.as_ref().expect("materializer").lease.expect("sealed mesh");
     let schema = lease.schema().expect("the id tables seal with the mesh");
@@ -110,17 +111,17 @@ fn glb_sub_element_id_attributes_survive_into_the_resident_mesh_table() {
     let point_ids: Vec<u32> = (0..schema.vertex_ids).map(|item| lease.u32(Mesh3dField::VertexIds, item).unwrap()).collect();
     assert_eq!(triangle_ids, row["expectedTriangleFaceIds"].as_array().unwrap().iter().map(|id| id.as_u64().unwrap() as u32).collect::<Vec<_>>(), "the face id of a triangle is the id of its first corner's vertex");
     assert_eq!(point_ids, vertex_ids);
-    close(authority, probe);
+    close(authority, probe, &mut caller);
 
-    let (authority, probe, step) = run(&glb("", &indices, (&face_ids, 5125), (&vertex_ids, 5125)));
+    let (authority, probe, step) = run(&glb("", &indices, (&face_ids, 5125), (&vertex_ids, 5125)), &mut caller);
     assert!(matches!(step, RendererAssetProbeStep::Ready));
     let schema = probe.glb_materialize.as_ref().unwrap().lease.unwrap().schema().unwrap();
     assert_eq!((schema.face_ids, schema.vertex_ids), (0, 0), "a primitive without the attributes publishes no id table");
-    close(authority, probe);
+    close(authority, probe, &mut caller);
 
-    let (authority, probe, step) = run(&glb(&attributes, &indices, (&face_ids, 5126), (&vertex_ids, 5125)));
+    let (authority, probe, step) = run(&glb(&attributes, &indices, (&face_ids, 5126), (&vertex_ids, 5125)), &mut caller);
     assert!(matches!(step, RendererAssetProbeStep::Reject(_) | RendererAssetProbeStep::Fault(_)), "a float id accessor is refused");
-    close(authority, probe);
+    close(authority, probe, &mut caller);
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -139,10 +140,10 @@ fn owned_decoder_fixture() -> (WorldAssetIoAuthority, RendererAssetProbe) {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn close_owned_decoder_fixture(mut authority: WorldAssetIoAuthority, mut probe: RendererAssetProbe) {
+fn close_owned_decoder_fixture(mut authority: WorldAssetIoAuthority, mut probe: RendererAssetProbe, caller:&mut OriginalRendererFixture) {
     probe.begin_close();
     for _ in 0..262_144 {
-        if probe.close_step() {
+        if caller.turn(|cx|probe.close_step(cx)).unwrap() {
             break;
         }
     }
@@ -174,8 +175,9 @@ fn embedded_glb_materials_publish_with_their_primitive_ranges_texture_and_vertex
     authority.return_owner(owner).unwrap();
     let owner = (0..infinite_world::world::WORLD_ASSET_REQUEST_CAPACITY).find_map(|_| authority.take_next_completed_step()).expect("completed material response");
     let mut probe = RendererAssetProbe::new(RendererAssetFetchOwner::Shared(owner));
+    let mut caller=OriginalRendererFixture::new();
     for turn in 0..262_144 {
-        match probe.step() {
+        match caller.turn(|cx|probe.step(cx)).unwrap() {
             RendererAssetProbeStep::Pending => {}
             RendererAssetProbeStep::Ready => break,
             RendererAssetProbeStep::Reject(detail) => panic!("neutral GLB material asset was refused at turn {turn}: {detail}"),
@@ -256,7 +258,7 @@ fn embedded_glb_materials_publish_with_their_primitive_ranges_texture_and_vertex
         }
     }
     assert!(prepared.terminal_is_empty(), "packet retirement lets the retained World asset close to exact terminal empty");
-    close_owned_decoder_fixture(authority, probe);
+    close_owned_decoder_fixture(authority, probe, &mut caller);
 }
 
 /// 🪪️ Denied original authority preserves the decoder's exact input and empty receipt.
@@ -284,7 +286,7 @@ fn decoder_denied_original_invocation_preserves_exact_owner_and_receipt() {
     job.begin_close();
     assert!(matches!(caller.turn(|cx|job.close_step(cx)).unwrap(), semio_framework_job::InteractiveJobCloseStep::Complete { .. }));
     assert!(job.terminal_is_empty());
-    close_owned_decoder_fixture(authority, recovered);
+    close_owned_decoder_fixture(authority, recovered, &mut caller);
 }
 
 /// 🛑️ One worker grant decodes one page, and cancellation returns that exact owner before disposal.
@@ -308,5 +310,5 @@ fn an_independent_decoder_job_preserves_its_exact_response_through_cancellation(
     assert_eq!(law["cancelledDecode"]["afterClose"],"cancelled");assert_eq!(job.steps,1);
     let recovered=job.take_probe().expect("host receives the exact terminal response");assert_eq!(recovered.owner().owner().token(),token);assert_eq!(recovered.observed_bytes,observed);
     job.begin_close();assert!(matches!(caller.turn(|cx|job.close_step(cx)).unwrap(),semio_framework_job::InteractiveJobCloseStep::Complete { .. }));assert!(job.terminal_is_empty());
-    close_owned_decoder_fixture(authority,recovered);
+    close_owned_decoder_fixture(authority,recovered,&mut caller);
 }

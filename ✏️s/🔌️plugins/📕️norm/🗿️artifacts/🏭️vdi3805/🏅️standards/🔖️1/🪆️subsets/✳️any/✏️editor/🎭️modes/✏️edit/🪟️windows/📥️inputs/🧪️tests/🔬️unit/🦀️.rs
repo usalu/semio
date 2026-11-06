@@ -16,7 +16,7 @@ async fn renders_the_typed_inspector() {
 
 #[test]
 fn immutable_product_identity_is_visible_and_has_no_commit_control_in_either_locale() {
-    use semio_framework_ui_locale::Locale;
+    use semio_ui_locale::Locale;
     use semio_s_plugin_norm_app_surface::{field_controls, field_view, UnitSystem};
     let path = "catalog.products[id=RAD-600].id";
     let value = semio_framework_value::DslValue::String("RAD-600".into());

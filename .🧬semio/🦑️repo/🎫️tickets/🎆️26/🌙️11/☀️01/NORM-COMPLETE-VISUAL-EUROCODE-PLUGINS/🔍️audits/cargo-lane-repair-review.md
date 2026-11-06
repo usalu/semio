@@ -1,0 +1,5 @@
+# Cargo Lane Identity Repair Review
+
+The pool canonicalizes build/target through cargoBuildLeaseIdentityV1 and compares existing physical receipt bytes via cargoTargetStoreCompatibleV1; it filters incompatible lanes and rechecks under lane claim before entering. The binder retains exclusive target lease and exact immutable receipt check. Product lane identity includes current layout and verifies its own namespace receipt. These are source findings; the descriptor reports neutral and physical claim tests pass.
+
+Concrete liveness gap: planPoolAcquireV1 counts all lanes, including incompatible idle lanes, toward maximumLiveLanes while filtering them from free candidates; planPoolTrimV1 also excludes incompatible lanes. If all available lane slots are occupied by incompatible idle lanes, plan returns busy forever despite no live owner and no possible state change. This was sent to the descriptor; preserve their receipts and custody when designing bounded resolution. Add a law for all-incompatible-at-live-limit. No production file or store was changed in this review.

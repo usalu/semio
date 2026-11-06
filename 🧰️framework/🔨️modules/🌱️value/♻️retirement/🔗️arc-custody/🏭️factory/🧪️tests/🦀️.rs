@@ -25,10 +25,10 @@ fn original_factory_shared_aliases_cancel_with_exact_full_grants_and_physical_re
         let bytes=FactorySharedRetirement::<String>::constructor_capacity_bytes();
         let g=RetainedCloneGrant {maximum_items:1,maximum_capacity_bytes:bytes,maximum_depth:1,..Default::default()};
         for denied in [RetainedCloneGrant {maximum_items:0,..g},RetainedCloneGrant {maximum_capacity_bytes:bytes-1,..g},RetainedCloneGrant {maximum_depth:0,..g}]{
-            let((_,same,same_factory),heap)=observe_retirement_allocations(||FactorySharedRetirement::admit(root.clone(),factory.clone(),denied).err().unwrap());assert_eq!(Arc::as_ptr(&same),pointer);assert!(Arc::ptr_eq(&same_factory,&factory));assert_eq!(heap,(0,0));assert_eq!(serde_json::to_value(same.as_ref()).unwrap(),text);drop(same);drop(same_factory);
+            let((_,same,same_factory),heap)=observe_retirement_allocations(||FactorySharedRetirement::admit(root.clone(),factory.clone(),denied).result.err().unwrap());assert_eq!(Arc::as_ptr(&same),pointer);assert!(Arc::ptr_eq(&same_factory,&factory));assert_eq!(heap,(0,0));assert_eq!(serde_json::to_value(same.as_ref()).unwrap(),text);drop(same);drop(same_factory);
         }
         let(mut births,mut released)=(0,0);
-        let mut owners:Vec<_>=(0..count).map(|_|{let((owner,p),heap)=observe_retirement_allocations(||FactorySharedRetirement::admit(root.clone(),factory.clone(),g).unwrap_or_else(|_|panic!("exact original shared factory admission")));assert!(p.fits(g));assert_eq!(heap,(p.retained_capacity_bytes,0));births+=heap.0;Some(owner)}).collect();
+        let mut owners:Vec<_>=(0..count).map(|_|{let((owner,p),heap)=observe_retirement_allocations(||FactorySharedRetirement::admit(root.clone(),factory.clone(),g).result.unwrap_or_else(|_|panic!("exact original shared factory admission")));assert!(p.fits(g));assert_eq!(heap,(p.retained_capacity_bytes,0));births+=heap.0;Some(owner)}).collect();
         let(_,heap)=observe_retirement_allocations(||{drop(root);drop(factory);});assert_eq!(heap,(0,0));
         for owner in &mut owners{for _ in 0..cancel{if owner.is_none(){break;}let(b,r)=turn(owner,copy);births+=b;released+=r;}}
         for owner in &mut owners{for turn_index in 0..100000{if owner.is_none(){break;}let(b,r)=turn(owner,copy);births+=b;released+=r;assert!(turn_index<99999,"shared factory full closure exceeded bounded original law");}assert!(owner.is_none());}
@@ -38,3 +38,11 @@ fn original_factory_shared_aliases_cancel_with_exact_full_grants_and_physical_re
 
 #[path="🔐️custody/🦀️.rs"]
 mod custody;
+
+#[test]
+fn original_shared_birth_reports_actual_action_work(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("../⛽️birth/fixture.json")).unwrap();let mut original=Some(Arc::new(String::from("actual shared owner")));let pointer=Arc::as_ptr(original.as_ref().unwrap());let factory:Arc<dyn ArtifactOwnedValueRetirementFactory<String>>=Arc::new(OwnedValueRetirementFactory::<String>::default());let bytes=FactorySharedRetirement::<String>::constructor_capacity_bytes();let grant=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:bytes,maximum_depth:1,..Default::default()};let denied=RetainedCloneGrant{maximum_items:0,..grant};
+ assert_eq!(FactorySharedRetirement::<String>::admit_original_source_work_demand(&original),law["allocationRefusal"].as_u64().unwrap());
+ assert_eq!(FactorySharedRetirement::<String>::admit_original_work_demand(&original,denied),law["denied"].as_u64().unwrap());let(outcome,heap)=observe_retirement_allocations(||FactorySharedRetirement::admit_original(&mut original,&factory,denied));assert_eq!(outcome.work,law["denied"].as_u64().unwrap());assert!(outcome.result.is_err());assert_eq!(heap,(0,0));assert_eq!(Arc::as_ptr(original.as_ref().unwrap()),pointer);
+ assert_eq!(FactorySharedRetirement::<String>::admit_original_work_demand(&original,grant),law["allocationRefusal"].as_u64().unwrap());let(outcome,heap)=observe_retirement_allocations(||FactorySharedRetirement::admit_original(&mut original,&factory,grant));assert_eq!(outcome.work,law["success"].as_u64().unwrap());let(owner,progress)=outcome.result.unwrap().unwrap();assert!(original.is_none());assert_eq!(FactorySharedRetirement::<String>::admit_original_source_work_demand(&original),law["denied"].as_u64().unwrap());assert_eq!(heap,(progress.retained_capacity_bytes,0));let mut owner=Some(owner);for _ in 0..100000{if owner.is_none(){break}turn(&mut owner,4096);}assert!(owner.is_none());
+}

@@ -37,10 +37,77 @@ fn original_turn_failure_domain_admission_preserves_full_source_and_paid_close()
  }
 }
 fn failure_source_stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:65536,maximum_copy_bytes:134217728,maximum_capacity_bytes:268435456,maximum_release_bytes:536870912,maximum_depth:4096}}
+#[test]
+fn original_prepared_native_work_preserves_child_and_overrun_with_prepaid_custody(){
+ use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,close_original_retained_step,receive_original_receiving_work};
+ use semio_framework_value::{OriginalRetirementFailure,RetainedWorkOutcome,retained_clone::{RetainedCloneClose,RetainedCloneStep}};
+ let law:serde_json::Value=serde_json::from_str(include_str!("../../../🌱️value/♻️retirement/🧬️contract/🧪️tests/failure-storage.json")).unwrap();let stock=failure_source_stock();let mut caller=OriginalJobFixtureCaller::admit(OperationId(91063),Generation(7),stock,||Some(1),u64::MAX,100000);let mut decoder=OriginalJobDecodeOwner::empty();let mut ready=false;
+ for turn in 0..64{
+  caller.turn_with_decoder(stock,&mut decoder,|cx|{
+   let grant=cx.retained_grant();let turn=cx.with_native_receiving::<_,ValueError>(|control|{ready=control.has_retirement_failure_storage();Ok(if ready{RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}else{control.prepare_failure_storage(grant)})})?;
+   receive_original_receiving_work(cx,turn)?;Ok(())
+  }).unwrap();if ready{break}assert!(turn<63);
+ }
+ let original=OriginalRetirementFailure::from_primary_and_work(ValueError::literal(ValueRefusalKind::Canceled,"child owner"),ValueError::literal(ValueRefusalKind::WorkLimit,"child settlement"));let pointers=(original.primary().unwrap().message.as_ptr(),original.work_refusal().unwrap().message.as_ptr());let mut source=Some(original);let mut operations=0u64;let quote=law["actualWork"].as_u64().unwrap();let actual=law["overrunWork"].as_u64().unwrap();let fuel=caller.fuel_remaining();
+ let(failure,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn_with_decoder(stock,&mut decoder,|cx|{
+  let turn=cx.with_native_receiving::<_,ValueError>(|control|Ok(control.run_prepared_work(quote,|original|{original.checkpoint().unwrap();for _ in 0..actual{operations+=1}RetainedWorkOutcome::<bool,_>{result:Err(source.take().unwrap()),work:actual}},|_|Default::default()).expect("the original recipient retains its prepaid collision node")))?;
+  let turn=RetainedWorkOutcome{result:turn.result.map(|value|{assert!(value);RetainedCloneStep::Complete(Default::default())}),work:turn.work};receive_original_receiving_work(cx,turn)?;Ok(())
+ }).unwrap_err());assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(operations,actual);assert_eq!(fuel-caller.fuel_remaining(),actual);assert!(source.is_none());
+ let original=failure.primary_retirement().unwrap();assert!(original.work_refusal().is_some());let child=original.child().unwrap();assert_eq!((child.primary().unwrap().message.as_ptr(),child.work_refusal().unwrap().message.as_ptr()),pointers);
+ let mut failure=Some(failure);let mut retirement=RetainedCloneClose::default();caller.cancel().cancel_now();
+ for turn in 0..100000{if failure.is_none()&&retirement.is_empty(){break}caller.turn(stock,|cx|{
+  let body=cx.retained_grant().maximum_copy_bytes;let demand=retirement.next_owner_demands::<OriginalTurnFailure>(failure.is_some(),&None,body)?;let work=retirement.next_owner_work::<OriginalTurnFailure>(failure.is_some(),&None,body)?;
+  semio_framework_job::close_original_quoted_retained_step(cx,demand,work,|grant|{if !retirement.is_empty(){return retirement.step_granted(grant)}let turn=retirement.begin_granted(&mut failure,grant);RetainedWorkOutcome{result:turn.result.map_err(Into::into).map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}})?;Ok(())
+ }).unwrap();assert!(turn<99999);}assert!(failure.is_none()&&retirement.is_empty());
+ for turn in 0..100000{if decoder.terminal_is_empty(){break}caller.turn(stock,|cx|{let demand=decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;close_original_retained_step(cx,demand,|grant|decoder.close_step(grant))?;Ok(())}).unwrap();assert!(turn<99999);}assert!(decoder.terminal_is_empty());caller.retire(stock);
+}
+#[test]
+fn original_retirement_turn_failure_retains_nested_causes_override_and_original_funded_close(){
+ use semio_framework_job::{OriginalJobFixtureCaller,OriginalDomainProjection,OriginalDomainView as V,close_original_quoted_retained_step};
+ use semio_framework_value::{OriginalRetirementFailure,RetainedWorkOutcome,retained_clone::{RetainedCloneClose,RetainedCloneStep}};
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/retirement.json")).unwrap();
+ let cause=|row:&serde_json::Value|ValueError::new(ValueRefusalKind::from_wire(row["kind"].as_str().unwrap()).unwrap(),row["message"].as_str().unwrap().to_owned()).with_retained_progress(progress(&row["retainedProgress"]));
+ let((original,pointers),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{
+  let outer=&law["retirement"];let nested=&outer["child"];
+  let child=OriginalRetirementFailure::from_owned_parts(Some(cause(&nested["primary"])),Some(cause(&nested["workRefusal"])),Some(cause(&nested["receiptRefusal"])),None,None);
+  let original=OriginalRetirementFailure::from_owned_parts(Some(cause(&outer["primary"])),Some(cause(&outer["workRefusal"])),Some(cause(&outer["receiptRefusal"])),Some(Box::new(child)),Some(progress(&outer["progressOverride"])));
+  let child=original.child().unwrap();let pointers=[original.primary().unwrap().message.as_ptr(),original.work_refusal().unwrap().message.as_ptr(),original.receipt_refusal().unwrap().message.as_ptr(),child.primary().unwrap().message.as_ptr(),child.work_refusal().unwrap().message.as_ptr(),child.receipt_refusal().unwrap().message.as_ptr()];
+  (original,pointers)
+ });assert!(!heap.overflowed);let mut born=heap.requested_bytes;let mut released=heap.released_bytes;
+ assert_eq!(original.retained_progress(),progress(&law["retirement"]["retainedProgress"]));assert_eq!(original.child().unwrap().retained_progress(),progress(&law["retirement"]["child"]["retainedProgress"]));assert_eq!(original.primary().unwrap().retained_progress(),progress(&law["retirement"]["primary"]["retainedProgress"]));
+ let(failure,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||OriginalTurnFailure::from(original));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+ let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{
+  assert!(matches!(failure.projection_view(&[0,0]).unwrap(),V::IntrinsicText("retirement")));
+  for(index,key)in["primary","workRefusal","receiptRefusal"].iter().enumerate(){assert_eq!(failure.projection_key(&[0,1],index).unwrap(),*key);assert!(matches!(failure.projection_view(&[0,1,index,1]).unwrap(),V::IntrinsicText(text)if text.as_ptr()==pointers[index]));assert!(matches!(failure.projection_view(&[0,1,3,index,1]).unwrap(),V::IntrinsicText(text)if text.as_ptr()==pointers[index+3]));}
+  assert_eq!(failure.projection_key(&[0,1],4).unwrap(),"progressOverride");assert!(matches!(failure.projection_view(&[0,1,3,3]).unwrap(),V::IntrinsicNull));assert_eq!(failure.primary_retirement().unwrap().child().unwrap().retained_progress(),progress(&law["retirement"]["child"]["retainedProgress"]));
+ });assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+ let stock=failure_source_stock();let mut caller=OriginalJobFixtureCaller::admit(OperationId(91062),Generation(7),stock,||Some(1),u64::MAX,100000);born+=caller.born_bytes();let mut original=Some(failure);let mut retirement=RetainedCloneClose::default();caller.cancel().cancel_now();
+ for turn in 0..100000{
+  if original.is_none()&&retirement.is_empty(){break}
+  let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(stock,|cx|{
+   let body=cx.retained_grant().maximum_copy_bytes;let demand=retirement.next_owner_demands::<OriginalTurnFailure>(original.is_some(),&None,body)?;let work=retirement.next_owner_work::<OriginalTurnFailure>(original.is_some(),&None,body)?;
+   close_original_quoted_retained_step(cx,demand,work,|grant|{if !retirement.is_empty(){return retirement.step_granted(grant)}let turn=retirement.begin_granted(&mut original,grant);RetainedWorkOutcome{work:turn.work,result:turn.result.map_err(Into::into).map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default())))}})?;Ok(())
+  }));result.unwrap();assert!(!heap.overflowed);let receipt=caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;assert!(turn<99999);
+ }
+ assert!(original.is_none()&&retirement.is_empty());released+=caller.retire(stock);assert_eq!(born,released);
+}
 fn corpus()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 fn grant(value:&serde_json::Value)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:value["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:value["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:value["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:value["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:value["maximumDepth"].as_u64().unwrap()as usize}}
 fn progress(value:&serde_json::Value)->RetainedCloneProgress{RetainedCloneProgress{copied_items:value["copiedItems"].as_u64().unwrap()as usize,copied_bytes:value["copiedBytes"].as_u64().unwrap()as usize,retained_capacity_bytes:value["retainedCapacityBytes"].as_u64().unwrap()as usize,released_bytes:value["releasedBytes"].as_u64().unwrap()as usize}}
 
+#[test]
+fn original_turn_failure_work_refusal_retains_all_cause_owners_and_paid_close(){
+ use semio_framework_job::{OriginalDomainProjection,OriginalReceivingPrimary,OriginalTurnPrimary,close_original_retained_step};
+ use semio_framework_job_testing_caller::OriginalJobFixtureCaller;
+ let law:serde_json::Value=serde_json::from_str(include_str!("../⛽️commit/fixture.json")).unwrap();let value=|name:&str|ValueError::new(ValueRefusalKind::InvariantViolated,law[name].as_str().unwrap().to_owned());
+ let progress=RetainedCloneProgress{copied_items:law["effectItems"].as_u64().unwrap()as usize,..Default::default()};
+ let primary=OriginalReceivingPrimary{retirement_failure:None,work_refusal:None,primary:Some(value("primary")),quote_refusal:Some(value("quote")),allocation_refusal:Some(value("allocation")),allocation_failure:None,native_allocation:None,receipt_refusal:None,progress};
+ let mut failure=OriginalTurnFailure::from(OriginalTurnPrimary::Receiving(primary));failure.receipt_refusal=Some(value("receipt"));failure.context_refusal=Some(value("context"));let work=value("work");let second=value("secondWork");
+ let primary=failure.primary_receiving().unwrap();let pointers=[primary.primary.as_ref().unwrap().message.as_ptr(),primary.quote_refusal.as_ref().unwrap().message.as_ptr(),primary.allocation_refusal.as_ref().unwrap().message.as_ptr(),failure.receipt_refusal.as_ref().unwrap().message.as_ptr(),failure.context_refusal.as_ref().unwrap().message.as_ptr(),work.message.as_ptr(),second.message.as_ptr()];
+ let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||failure.with_work_refusal(work));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let failure=result.unwrap();assert_eq!(failure.work_refusal().unwrap().message.as_ptr(),pointers[5]);assert_eq!(failure.projection_key(&[],3).unwrap(),"workRefusal");
+ let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||failure.with_work_refusal(second));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(failure,second)=result.unwrap_err();assert_eq!(second.message.as_ptr(),pointers[6]);let primary=failure.primary_receiving().unwrap();assert_eq!([primary.primary.as_ref().unwrap().message.as_ptr(),primary.quote_refusal.as_ref().unwrap().message.as_ptr(),primary.allocation_refusal.as_ref().unwrap().message.as_ptr(),failure.receipt_refusal.as_ref().unwrap().message.as_ptr(),failure.context_refusal.as_ref().unwrap().message.as_ptr(),failure.work_refusal().unwrap().message.as_ptr()],[pointers[0],pointers[1],pointers[2],pointers[3],pointers[4],pointers[5]]);assert_eq!(failure.effects,progress);
+ let stock=failure_source_stock();let mut caller=OriginalJobFixtureCaller::admit(OperationId(727),Generation(3),stock,||Some(1),u64::MAX,100000);let mut close=ControlledRetirement::retain((failure,second));caller.cancel().cancel_now();for _ in 0..32768{if close.terminal_is_empty(){break}caller.turn(stock,|cx|{let demand=close.selected_demand(4096)?;let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||close_original_retained_step(cx,demand,|g|{let result=close.step(g);semio_framework_value::RetainedWorkOutcome{result,work:close.last_turn_work()}}));let p=result?.progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));Ok(())}).unwrap();}assert!(close.terminal_is_empty());caller.retire(stock);
+}
 /// 🧭️ Actual failed child accounting keeps the semantic pointer and complete overdraw refusal.
 #[test]
 fn original_turn_failure_debit_preserves_both_owned_causes(){
@@ -103,7 +170,7 @@ fn original_turn_failure_receiving_preserves_five_owned_causes(){
  let corpus=corpus();let wire=&corpus["receivingWire"];let row=&wire["primary"]["original"];
  let cause=|value:&serde_json::Value|ValueError::new(ValueRefusalKind::from_wire(value["kind"].as_str().unwrap()).unwrap(),value["message"].as_str().unwrap()).with_retained_progress(progress(&value["retainedProgress"]));
  for copy in [1,3,64]{
-  let((original,receipt,context,pointers),initial)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let primary=cause(&row["primary"]);let quote=cause(&row["quoteRefusal"]);let allocation=cause(&row["allocationRefusal"]);let receipt=cause(&wire["receiptRefusal"]);let context=cause(&wire["contextRefusal"]);let pointers=[primary.message.as_ptr(),quote.message.as_ptr(),allocation.message.as_ptr(),receipt.message.as_ptr(),context.message.as_ptr()];(OriginalReceivingPrimary{primary:Some(primary),quote_refusal:Some(quote),allocation_refusal:Some(allocation),progress:progress(&row["retainedProgress"])},receipt,context,pointers)});
+  let((original,receipt,context,pointers),initial)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let primary=cause(&row["primary"]);let quote=cause(&row["quoteRefusal"]);let allocation=cause(&row["allocationRefusal"]);let receipt=cause(&wire["receiptRefusal"]);let context=cause(&wire["contextRefusal"]);let pointers=[primary.message.as_ptr(),quote.message.as_ptr(),allocation.message.as_ptr(),receipt.message.as_ptr(),context.message.as_ptr()];(OriginalReceivingPrimary{retirement_failure:None,work_refusal:None,primary:Some(primary),quote_refusal:Some(quote),allocation_refusal:Some(allocation),allocation_failure:None,native_allocation:None,receipt_refusal:None,progress:progress(&row["retainedProgress"])},receipt,context,pointers)});
   let(failure,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let mut failure=OriginalTurnFailure::from(NativeConstructionStepFailure{progress:original.progress,primary:Some(original),receipt_refusal:Some(receipt)});failure.context_refusal=Some(context);failure});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
   let original=failure.primary_receiving().unwrap();assert_eq!([original.primary.as_ref().unwrap().message.as_ptr(),original.quote_refusal.as_ref().unwrap().message.as_ptr(),original.allocation_refusal.as_ref().unwrap().message.as_ptr(),failure.receipt_refusal.as_ref().unwrap().message.as_ptr(),failure.context_refusal.as_ref().unwrap().message.as_ptr()],pointers);
   let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{assert!(matches!(failure.projection_view(&[0,0]).unwrap(),V::IntrinsicText("receiving")));for(index,name)in ["primary","quoteRefusal","allocationRefusal"].iter().enumerate(){assert_eq!(failure.projection_key(&[0,1],index).unwrap(),*name);assert!(matches!(failure.projection_view(&[0,1,index,1]).unwrap(),V::IntrinsicText(message)if message.as_ptr()==pointers[index]));}assert_eq!(failure.projection_key(&[0,1],3).unwrap(),"retainedProgress");});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));

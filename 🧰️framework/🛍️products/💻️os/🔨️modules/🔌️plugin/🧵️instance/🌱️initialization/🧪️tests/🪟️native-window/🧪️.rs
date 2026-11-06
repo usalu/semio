@@ -3,7 +3,7 @@
 #[global_allocator]
 static HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 #[cfg(test)]
-pub(crate) use semio_framework_plugin_instance_initialization::stores as original_instance_stores;
+pub(crate) use semio_plugin_instance_initialization::stores as original_instance_stores;
 #[cfg(test)]
 #[path = "🦀️.rs"]
 pub(crate) mod fixture;

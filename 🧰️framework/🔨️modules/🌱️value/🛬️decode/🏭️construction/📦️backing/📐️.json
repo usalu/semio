@@ -4,7 +4,6 @@
   "deniedWork": 0,
   "nullWork": 1,
   "birthWork": 1,
-  "copiedBytes": 0,
   "nullOwnedBytes": 0,
   "stock": {
     "items": 100000,
@@ -17,5 +16,58 @@
   },
   "requireActualWorkRecipient": true,
   "unscopedWork": 0,
-  "observedBirthWork": 3
+  "observedBirthWork": 3,
+  "layoutCases": [
+    {
+      "kind": "empty",
+      "count": 0,
+      "elementBytes": 8,
+      "allocatedBytes": 0,
+      "allocationEvent": "none"
+    },
+    {
+      "kind": "zeroSized",
+      "count": 7,
+      "elementBytes": 0,
+      "allocatedBytes": 0,
+      "allocationEvent": "none"
+    },
+    {
+      "kind": "ordinary",
+      "count": 2,
+      "elementBytes": 8,
+      "allocatedBytes": 16,
+      "allocationEvent": "quote-post"
+    },
+    {
+      "kind": "text",
+      "count": 8,
+      "elementBytes": 1,
+      "allocatedBytes": 8,
+      "allocationEvent": "quote-post"
+    }
+  ],
+  "copiedHeader": "target-header-size",
+  "workSettlement": {
+    "actual": 1,
+    "incorrect": 0,
+    "zeroPhysicalIsWork": true
+  },
+  "outcomeCases": [
+    {
+      "bytes": 0,
+      "born": false,
+      "event": "none"
+    },
+    {
+      "bytes": 16,
+      "born": false,
+      "event": "cancel"
+    },
+    {
+      "bytes": 16,
+      "born": true,
+      "event": "post"
+    }
+  ]
 }

@@ -1,9 +1,10 @@
 //! 🟰️ Structural equality over retained original values and scalar slices.
 use semio_framework_value_control_contract::{ValueError,ValueRefusalKind};
-pub use semio_framework_value_control_contract::{RetainedWorkOutcome,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
+pub use semio_framework_value_control_contract::{OriginalRetirementFailure,RetainedWorkOutcome,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 pub use semio_framework_value_control_contract as retained_clone;
 
 use semio_framework_value_retirement::{retirement,RetirementDemand};
+pub use semio_framework_value_retirement::OriginalRetirementOutcome;
 #[path = "../../../../📋️list/🟰️equal/🦀️.rs"]
 pub mod slice_equality;
 pub use slice_equality::{RetainedEqualityElement,RetainedSliceEquality};

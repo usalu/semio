@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "minItems": 6,
+  "maxItems": 6,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "identityBytes",
+      "flagBytes",
+      "birthBytes"
+    ],
+    "properties": {
+      "name": {
+        "enum": [
+          "decodeAllocation",
+          "encodeAllocation",
+          "decodeWork",
+          "encodeWork",
+          "decodeConstruction",
+          "encodeConstruction"
+        ]
+      },
+      "identityBytes": {
+        "const": 8
+      },
+      "flagBytes": {
+        "enum": [
+          0,
+          1
+        ]
+      },
+      "birthBytes": {
+        "enum": [
+          8,
+          9
+        ]
+      }
+    }
+  }
+}

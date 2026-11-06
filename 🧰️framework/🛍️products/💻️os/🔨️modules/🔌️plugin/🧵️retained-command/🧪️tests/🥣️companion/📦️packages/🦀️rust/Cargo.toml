@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-plugin-retained-command-tests"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+publish = false
+description = "Companion laws for retained command checkpoints and view retirement"
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-retained-command-tests"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dev-dependencies]
+semio-framework-plugin-retained-command = { path = "../../../../📦️packages/🦀️rust", package = "semio-plugin-retained-command"}
+semio-plugin-decl-views = { path = "../../../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
+semio-framework = { path = "../../../../../../../../../📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust" }
+semio-ui-locale = { path = "../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-trace = { path = "../../../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

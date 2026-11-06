@@ -1,0 +1,43 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "primary",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "primary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "grantMatches",
+          "copiedBytes",
+          "receiptRefused"
+        ],
+        "properties": {
+          "grantMatches": {
+            "type": "boolean"
+          },
+          "copiedBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "receiptRefused": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

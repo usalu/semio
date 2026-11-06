@@ -9,6 +9,10 @@ impl<T:RetireOwned> RetireOwned for std::sync::Mutex<T>{
  fn controlled_retirement_supported()->bool{crate::retirement::support::controlled_retirement_supported::<Self>()}fn controlled_retirement_supported_in(path:&crate::retirement::RetirementSupport<'_>)->bool{path.supports::<T>()}
 }
 impl<T:RetireOwned> RetirementCursor for Cursor<T>{
+ fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.owner.next_computational_work(body)}
+ fn requires_original_control(&self)->bool{crate::ErasedSnapshotRetirement::requires_original_control(&self.owner)}
+ fn close_step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn crate::OriginalRetirementControl)->RetirementStep{super::erased_cursor_turn(crate::ErasedSnapshotRetirement::close_step_controlled(&mut self.owner,grant,control))}
+ fn close_original_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->RetirementStep{super::erased_cursor_turn(crate::ErasedSnapshotRetirement::close_original_step(&mut self.owner,original,grant))}
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{self.owner.next_demand(body)}
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.owner.step(grant){Ok(step)if step.progress()==RetainedCloneProgress::default()&&self.owner.terminal_is_empty()=>RetirementStep::Complete(self.owner.last_turn_work()),Ok(step)=>RetirementStep::Progress(step.progress(),self.owner.last_turn_work()),Err(error)=>RetirementStep::Failure(error,self.owner.last_turn_work())}}
  fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()}

@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "primary": "Original History Failure Remains Owned",
+  "cases": [
+    {
+      "grantMatches": true,
+      "copiedBytes": 0,
+      "receiptRefused": false
+    },
+    {
+      "grantMatches": false,
+      "copiedBytes": 7,
+      "receiptRefused": true
+    }
+  ]
+}

@@ -20,7 +20,7 @@ fn canonical_image_hash_matches_the_independent_neutral_digest_per_byte_grant() 
             if progress.done { break; }
         }
         let bytes = work.finish().unwrap();
-        let digest = framework_hash::hex_lower(&bytes);
+        let digest = semio_framework_hash::hex_lower(&bytes);
         assert_eq!(digest,fixture["digest"].as_str().unwrap());
         assert_eq!(raster_image_content_id("probe",&image),format!("probe-{digest}"));
         let key = raster_image_key(bytes);

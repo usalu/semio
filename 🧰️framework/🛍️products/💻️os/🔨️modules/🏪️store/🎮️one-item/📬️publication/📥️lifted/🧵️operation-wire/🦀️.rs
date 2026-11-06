@@ -52,9 +52,9 @@ pub struct ArtifactOperationWire<M> {
 }
 
 /// 🧭️ Pure canonical codec step over an enclosing controller's original history read and actual candidate inverse.
-pub type OriginalHistoryDigestStep<M> = fn(&mut semio_os_store_ledger::native_digest::NativeEditDigest, &semio_os_spr::Edit<M>, &semio_framework_value_persistent::list::PagedList<M,{usize::MAX}>, RetainedCloneGrant) -> Result<semio_framework_value::RetainedCloneProgress,ValueError>;
+pub type OriginalHistoryDigestStep<M> = fn(&mut semio_os_store_ledger::native_digest::NativeEditDigest, &semio_os_spr::Edit<M>, &semio_framework_value_persistent::list::PagedList<M,{usize::MAX}>, RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<semio_framework_value::RetainedCloneProgress>;
 
-fn original_history_digest<M:ArtifactCanonicalJsonTree>(cursor:&mut semio_os_store_ledger::native_digest::NativeEditDigest,edit:&semio_os_spr::Edit<M>,inverse:&semio_framework_value_persistent::list::PagedList<M,{usize::MAX}>,grant:RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneProgress,ValueError>{cursor.advance_with_inverse(edit,inverse,grant)}
+fn original_history_digest<M:ArtifactCanonicalJsonTree>(cursor:&mut semio_os_store_ledger::native_digest::NativeEditDigest,edit:&semio_os_spr::Edit<M>,inverse:&semio_framework_value_persistent::list::PagedList<M,{usize::MAX}>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<semio_framework_value::RetainedCloneProgress>{cursor.advance_with_inverse(edit,inverse,grant)}
 
 /// 🔏️ Admission of the canonical digest owner of one original aggregate edit: a pure function of the mutation vocabulary, so the Store owns it beside the wire.
 pub type BatchDigestAdmission<M> = fn(&mut Option<Box<semio_os_spr::Edit<M>>>, RetainedCloneGrant) -> Result<Option<(Box<dyn crate::batch_digest::ArtifactStoreBatchDigest<M>>, semio_framework_value::RetainedCloneProgress)>, ValueError>;
@@ -121,7 +121,7 @@ impl<M> ArtifactOperationWire<M> {
     pub fn source<'a>(&self, mutation: &'a M) -> Option<ArtifactPreparedOperationSource<'a>> { (self.source)(mutation) }
 
     /// 🧭️ Uses the installed canonical vocabulary without manufacturing a source loan or requiring it on every generic model.
-    pub fn advance_history_digest(&self,cursor:&mut semio_os_store_ledger::native_digest::NativeEditDigest,edit:&semio_os_spr::Edit<M>,inverse:&semio_framework_value_persistent::list::PagedList<M,{usize::MAX}>,grant:RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneProgress,ValueError>{(self.history_digest)(cursor,edit,inverse,grant)}
+    pub fn advance_history_digest(&self,cursor:&mut semio_os_store_ledger::native_digest::NativeEditDigest,edit:&semio_os_spr::Edit<M>,inverse:&semio_framework_value_persistent::list::PagedList<M,{usize::MAX}>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<semio_framework_value::RetainedCloneProgress>{(self.history_digest)(cursor,edit,inverse,grant)}
 
     /// 🔏️ Admits the canonical digest owner of one original aggregate edit through the Store's own vocabulary.
     pub fn begin_batch_digest(&self, edit: &mut Option<Box<semio_os_spr::Edit<M>>>, grant: RetainedCloneGrant) -> Result<Option<(Box<dyn crate::batch_digest::ArtifactStoreBatchDigest<M>>, semio_framework_value::RetainedCloneProgress)>, ValueError> { (self.digest)(edit, grant) }

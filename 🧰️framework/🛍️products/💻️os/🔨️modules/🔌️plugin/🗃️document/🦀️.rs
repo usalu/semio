@@ -25,32 +25,32 @@ use std::mem::ManuallyDrop;
 pub use semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient;
 use semio_framework_plugin_composition_emission::root::advance_original_child_root_retirement;
 use semio_framework_plugin_composition_emission::root::original_child_root_retirement_demands;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_decl_app::DOCUMENT_LOAD_FAILED_CODE;
-use semio_framework_plugin_decl_app::document_load_fault;
-use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
-use semio_framework_plugin_ownership::bounded_ownership::ArtifactFixedRegistry;
-use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
-use semio_framework_plugin_ownership::bounded_ownership::plugin_bytes_close;
-use semio_framework_plugin_ownership::bounded_ownership::plugin_bytes_retirement_demand;
-use semio_framework_plugin_ownership::bounded_ownership::plugin_turn_admitted;
-use semio_framework_plugin_child::ChildContentBorrowedOwners;
-use semio_framework_plugin_decl_views::child_view::ChildContentEntry;
-use semio_framework_plugin_child::ChildContentRetirement;
-use semio_framework_plugin_decl_views::child_view::ChildContentView;
-use semio_framework_plugin_child::ChildMemberEntry;
-use semio_framework_plugin_child::ChildMemberRegistry;
-use semio_framework_plugin_child::ChildMemberRetirement;
-use semio_framework_plugin_child::DocumentClosureSourceView;
-use semio_framework_plugin_decl_views::child_view::MemberKeyRef;
-use semio_framework_plugin_child::OWNED_DOCUMENT_MEMBER_PREPARATION_BYTES;
-use semio_framework_plugin_child::OwnedDocumentMemberIngress;
-use semio_framework_plugin_child::OwnedDocumentMemberIngressRegistry;
-use semio_framework_plugin_decl_views::history_view::HistoryCommandFilter;
-use semio_framework_plugin_decl_views::history_view::HistoryView;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactDisposal;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactStoreInitializationJob;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::DOCUMENT_LOAD_FAILED_CODE;
+use semio_plugin_decl_app::document_load_fault;
+use semio_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
+use semio_plugin_ownership::bounded_ownership::ArtifactFixedRegistry;
+use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_plugin_ownership::bounded_ownership::plugin_bytes_close;
+use semio_plugin_ownership::bounded_ownership::plugin_bytes_retirement_demand;
+use semio_plugin_ownership::bounded_ownership::plugin_turn_admitted;
+use semio_plugin_child::ChildContentBorrowedOwners;
+use semio_plugin_decl_views::child_view::ChildContentEntry;
+use semio_plugin_child::ChildContentRetirement;
+use semio_plugin_decl_views::child_view::ChildContentView;
+use semio_plugin_child::ChildMemberEntry;
+use semio_plugin_child::ChildMemberRegistry;
+use semio_plugin_child::ChildMemberRetirement;
+use semio_plugin_child::DocumentClosureSourceView;
+use semio_plugin_decl_views::child_view::MemberKeyRef;
+use semio_plugin_child::OWNED_DOCUMENT_MEMBER_PREPARATION_BYTES;
+use semio_plugin_child::OwnedDocumentMemberIngress;
+use semio_plugin_child::OwnedDocumentMemberIngressRegistry;
+use semio_plugin_decl_views::history_view::HistoryCommandFilter;
+use semio_plugin_decl_views::history_view::HistoryView;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_plugin_ownership::store_lifecycle::ArtifactDisposal;
+use semio_plugin_ownership::store_lifecycle::ArtifactStoreInitializationJob;
 
 #[path = "📨️envelope-decode-and-ingress/🦀️.rs"]
 mod envelope_decode_and_ingress;
@@ -77,9 +77,9 @@ pub use store_replacement_initializer_and_retirement::{AppProjectionCache, Artif
 mod document_archive_load;
 pub use document_archive_load::{document_archive_history_decoder, ActiveDocumentArchiveLoad, ActiveDocumentArchiveLoadPhase, ActiveDocumentArchiveLoadState, PendingDocumentArchiveMember};
 
-pub use semio_framework_plugin_operation::original_catalog_constructor::{ArtifactStoreConstructorKind, ArtifactStoreConstructorPhase};
+pub use semio_plugin_operation::original_catalog_constructor::{ArtifactStoreConstructorKind, ArtifactStoreConstructorPhase};
 
-pub use semio_framework_plugin_operation::original_catalog_constructor::OriginalCatalogConstructor;
+pub use semio_plugin_operation::original_catalog_constructor::OriginalCatalogConstructor;
 
 #[path = "../🎞️media/🦀️.rs"]
 pub mod media_export;

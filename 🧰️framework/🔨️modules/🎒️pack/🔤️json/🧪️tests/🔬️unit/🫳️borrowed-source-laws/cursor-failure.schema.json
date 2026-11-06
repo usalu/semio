@@ -1,0 +1,1 @@
+{"type":"object","required":["failedActual","failedWork"],"properties":{"failedActual":{"const":0},"failedWork":{"const":1}}}

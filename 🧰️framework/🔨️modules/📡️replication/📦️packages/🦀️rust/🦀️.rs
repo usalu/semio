@@ -233,7 +233,7 @@ pub mod wire {
 #[path = "../../🧪️tests/🔬️facade/🦀️.rs"]
 mod facade_tests;
 
-pub use semio_framework_replication_retained::{retained_row_patch, retained_patch_diff, retained_set_field, retained_set_record, retained_root_record};
+pub use semio_framework_replication_retained::{retained_row_patch, retained_patch_diff, retained_set_field, retained_set_record, retained_root_record, retained_empty_option_patch};
 
 pub use semio_framework_replication_wire_core::scoped_identity::*;
 pub use semio_framework_replication_format::SprWriteError;

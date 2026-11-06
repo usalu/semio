@@ -60,7 +60,7 @@ fn an_independent_decoder_job_recovers_its_response_from_an_unadmitted_session()
         }
         assert!(session.terminal_is_empty());
     }
-    close_owned_decoder_fixture(authority,recovered);
+    close_owned_decoder_fixture(authority,recovered,&mut caller);
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -100,13 +100,26 @@ fn decoder_worker_boundary(cancel_after_ready: bool) {
     let observed_token = probe.owner().owner().token();
     let observed_bytes = probe.observed_bytes;
     assert!(decoder.terminal_is_empty());
-    close_owned_decoder_fixture(authority, probe);
+    close_owned_decoder_fixture(authority, probe, &mut caller);
     assert_eq!(completed, Some(Some(RendererAssetDecodeResult::Ready)));
     assert_eq!(observed_token, token);
     assert_eq!(observed_bytes, bytes.len());
     assert!(wakes.load(Ordering::Acquire) > 0);
     assert_eq!(law["cancelledDecode"]["afterClose"], "cancelled");
     assert_eq!(outcome, Some(if cancel_after_ready { RendererAssetDecodeResult::Cancelled } else { RendererAssetDecodeResult::Ready }));
+}
+
+/// 🧬️ A cancelled worker returns its live PNG child to the same caller for bounded parent close.
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn original_worker_png_cancellation_preserves_the_child_until_parent_close(){
+    use std::time::{Duration,Instant};
+    let bytes=semio_renderer_wgpu_test_support::repo_bytes("🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🧊️placeholder.glb");
+    let mut authority=WorldAssetIoAuthority::default();authority.reserve(1,1,WorldAssetRequestKind::Glb,"placeholder.glb",bytes.len()).unwrap();let mut owner=authority.take_next().unwrap();for page in bytes.chunks(16*1024){owner.push_page(WorldAssetResponsePage::try_from_owned(page.to_vec()).unwrap()).unwrap()}owner.seal().unwrap();authority.return_owner(owner).unwrap();let owner=(0..infinite_world::world::WORLD_ASSET_REQUEST_CAPACITY).find_map(|_|authority.take_next_completed_step()).unwrap();let token=owner.token();
+    let mut caller=OriginalRendererFixture::new();let mut session=caller.turn(|cx|Ok(RendererAssetDecodeSession::new(RendererAssetProbe::new(RendererAssetFetchOwner::Shared(owner)),cx))).unwrap();let deadline=Instant::now()+Duration::from_secs(30);let mut source_identity=None;
+    while Instant::now()<deadline{caller.turn(|cx|session.pump_one(cx)).unwrap();if let Some(job)=session.session.as_ref().and_then(|session|session.checked_out_job()){let probe=job.probe.borrow();if let Some(source)=probe.as_ref().and_then(|probe|probe.glb_materialize.as_ref()).and_then(|materialize|materialize.original_png_source()){source_identity=Some((source.as_ptr()as usize,source.len()));break}}std::thread::yield_now()}
+    let source_identity=source_identity.expect("the actual worker reaches its retained PNG source");session.cancel();let close_deadline=Instant::now()+Duration::from_secs(30);while (session.session.is_some()||session.source.is_some())&&Instant::now()<close_deadline{caller.turn(|cx|session.pump_one(cx)).unwrap();std::thread::yield_now()}
+    let(mut probe,outcome)=session.take_boundary().expect("same worker hands the original probe to its parent");assert_eq!(outcome,Some(RendererAssetDecodeResult::Cancelled));assert_eq!(probe.owner().owner().token(),token);let source=probe.glb_materialize.as_ref().and_then(|materialize|materialize.original_png_source()).expect("parent retains the actual PNG source");assert_eq!((source.as_ptr()as usize,source.len()),source_identity);assert!(session.terminal_is_empty());let before=caller.receipt();probe.begin_close();for _ in 0..262_144{if caller.turn(|cx|probe.close_step(cx)).unwrap(){break}}assert!(probe.glb_materialize.as_ref().is_none_or(|materialize|!materialize.original_png_pending()));assert!(caller.receipt().released_bytes>before.released_bytes,"the same caller pays actual child retirement");let RendererAssetFetchOwner::Shared(owner)=probe.take_terminal_owner().expect("exact terminal asset owner")else{panic!("shared probe")};authority.finish(owner).unwrap();assert!(authority.terminal_is_empty());
 }
 
 /// 🛑️ A real worker completion remains cancellable until its response crosses the host boundary.
@@ -191,7 +204,7 @@ fn a_frame_candidate_never_advances_the_independently_owned_asset_decoder() {
     assert!(candidate.terminal_is_empty());
     probe.begin_close();
     for _ in 0..262_144 {
-        if probe.close_step() {
+        if caller.turn(|cx|probe.close_step(cx)).unwrap() {
             break;
         }
     }

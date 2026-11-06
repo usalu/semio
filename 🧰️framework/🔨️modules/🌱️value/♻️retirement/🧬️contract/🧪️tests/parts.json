@@ -1,0 +1,14 @@
+{
+  "leaf": {
+    "primary": "leaf primary",
+    "work": "leaf work",
+    "receipt": "leaf receipt"
+  },
+  "parent": {
+    "primary": "parent primary",
+    "work": "parent work",
+    "receipt": "parent receipt"
+  },
+  "attachAllocatedBytes": 0,
+  "attachReleasedBytes": 0
+}

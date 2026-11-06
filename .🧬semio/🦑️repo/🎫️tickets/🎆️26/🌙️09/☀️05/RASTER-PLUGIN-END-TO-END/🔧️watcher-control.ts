@@ -1,0 +1,2 @@
+import {readFileSync,writeFileSync} from "node:fs";
+const path="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/🧰️utility/🟦️.ts",source=readFileSync(path,"utf8"),before="createForegroundRunnerV1({warmCapture,sourcePolicy,signal:residentControl.signal",after="createForegroundRunnerV1({warmCapture,sourcePolicy,startupControl:residentControl,signal:residentControl.signal";if(!source.includes(before))throw Error("Resident startup seam changed");writeFileSync(path,source.replace(before,after));

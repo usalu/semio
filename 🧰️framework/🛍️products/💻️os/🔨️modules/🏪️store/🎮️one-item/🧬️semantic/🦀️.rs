@@ -23,7 +23,8 @@ pub trait PagedOneItemEdit<S, M>: Default + Send + 'static {
     fn last_turn_work(&self)->u64;
     fn begin_close(&mut self);
     fn close_demands(&self, mutations: &dyn ArtifactOwnedValueRetirementFactory<M>, body: usize) -> Result<RetirementDemand, ValueError>;
-    fn close_step(&mut self, mutations: &dyn ArtifactOwnedValueRetirementFactory<M>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
+    fn close_work_demand(&self, mutations:&dyn ArtifactOwnedValueRetirementFactory<M>,body:usize)->Result<u64,ValueError>;
+    fn close_step(&mut self, mutations: &dyn ArtifactOwnedValueRetirementFactory<M>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure>;
     fn terminal_is_empty(&self) -> bool;
 }
 

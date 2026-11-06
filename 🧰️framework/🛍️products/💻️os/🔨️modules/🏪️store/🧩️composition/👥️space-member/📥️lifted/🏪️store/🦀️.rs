@@ -13,8 +13,8 @@ use semio_os_store_text_io::ArtifactStoreSnapshot as _;
 use semio_framework_value::ErasedSnapshotRetirement;
 use semio_framework_value::retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use crate::factory::MemberOpenDeclaration;
-use semio_os_store_member_open::{MemberOpenDiagnostic, MemberOpenOperation, MemberOpenRequest};
-use semio_os_store_member_open::source_admission::MemberOpenSourceAdmission;
+use semio_framework_os_store_member_open::{MemberOpenDiagnostic, MemberOpenOperation, MemberOpenRequest};
+use semio_framework_os_store_member_open::source_admission::MemberOpenSourceAdmission;
 use crate::lifted_operation::UnsupportedMemberFactoryOpen;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -41,13 +41,13 @@ use crate::lifted_document_materialize::{edit_ids_for_changes, materialize_docum
 use semio_os_store_engine_core::lifted_document_materialize::uncommitted_edit_ids;
 use semio_os_store_text_io::text_format::print_document_pack;
 use semio_os_store_ledger::{ArtifactStoreHistoryCommitReservation, retire_replayed_projection};
-use semio_os_store_one_item_batch::lifted_one_item_publication::{ArtifactStoreBatchAdmissionRejected, ErasedMemberStoreOneItemPublication};
+use semio_framework_os_store_one_item_batch::lifted_one_item_publication::{ArtifactStoreBatchAdmissionRejected, ErasedMemberStoreOneItemPublication};
 use semio_os_store_one_item_publication::{ArtifactStoreOneItemAdvance, ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPublicationPhase};
 use semio_os_store_one_item_publication::lifted_publication::{MemberStoreOneItemWire, MemberStoreOneItemWireRequest};
 use semio_os_store_one_item_publication::{ArtifactStoreBatchSourceOf, ArtifactTypedBatchItemAuthority};
-use semio_os_store_one_item_batch::lifted_one_item_publication::MemberStoreOneItemPublication;
+use semio_framework_os_store_one_item_batch::lifted_one_item_publication::MemberStoreOneItemPublication;
 use semio_os_store_one_item::{ARTIFACT_STORE_ONE_ITEM_ID_BYTES, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep};
-use semio_os_store_one_item_batch::member_owned_batch::MemberStoreOwnedBatchRequest;
+use semio_framework_os_store_one_item_batch::member_owned_batch::MemberStoreOwnedBatchRequest;
 use semio_os_store_replay::PairMerge;
 //#region 🔖️Backbone
 //#region 🔖️Backbone

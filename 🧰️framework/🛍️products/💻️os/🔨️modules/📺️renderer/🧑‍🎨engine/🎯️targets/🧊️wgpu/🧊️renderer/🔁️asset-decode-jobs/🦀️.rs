@@ -67,7 +67,18 @@ impl RendererAssetProbe {
         self.owner.as_mut().expect("asset probe owns response")
     }
 
-    pub fn step(&mut self) -> RendererAssetProbeStep {
+    pub fn step(&mut self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<RendererAssetProbeStep,semio_framework_job::OriginalTurnFailure> {
+        if matches!(self.phase,RendererAssetProbePhase::Materializing){
+            let deadline=cx.deadline_us();let fuel=cx.fuel_remaining().saturating_sub(1);
+            let materialize=self.glb_materialize.as_mut().expect("GLB probe owns materializer");
+            let ready=cx.with_original_work_loan(fuel,deadline,|same|materialize.step(self.owner.as_ref().expect("asset probe owns response"),&self.page_index,same))?;
+            if ready{self.phase=RendererAssetProbePhase::Ready;return Ok(RendererAssetProbeStep::Ready)}
+            return Ok(RendererAssetProbeStep::Pending)
+        }
+        Ok(self.step_value())
+    }
+
+    fn step_value(&mut self) -> RendererAssetProbeStep {
         match self.phase {
             RendererAssetProbePhase::Reading => {
                 let page = match self.owner.as_ref().expect("asset probe owns response").decode_page() {
@@ -137,19 +148,7 @@ impl RendererAssetProbe {
                     Err(detail) => self.reject(detail),
                 }
             }
-            RendererAssetProbePhase::Materializing => {
-                let mut materialize = self.glb_materialize.take().expect("GLB probe owns materializer");
-                let result = materialize.step(self.owner.as_ref().expect("asset probe owns response"), &self.page_index);
-                self.glb_materialize = Some(materialize);
-                match result {
-                    Ok(false) => RendererAssetProbeStep::Pending,
-                    Ok(true) => {
-                        self.phase = RendererAssetProbePhase::Ready;
-                        RendererAssetProbeStep::Ready
-                    }
-                    Err(detail) => self.fault(detail),
-                }
-            }
+            RendererAssetProbePhase::Materializing => self.fault("GLB materialization requires its original context"),
             RendererAssetProbePhase::Ready => RendererAssetProbeStep::Ready,
             RendererAssetProbePhase::Closing => RendererAssetProbeStep::Pending,
         }
@@ -232,13 +231,14 @@ impl RendererAssetProbe {
         self.phase = RendererAssetProbePhase::Closing;
     }
 
-    pub fn close_step(&mut self) -> bool {
+    pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
         self.begin_close();
-        if self.glb_materialize.as_mut().is_some_and(|materialize| !materialize.close_step()) {
-            return false;
+        if let Some(materialize)=self.glb_materialize.as_mut(){if !materialize.close_step(cx)?{
+            return Ok(false);
+        }
         }
         self.glb_materialize = None;
-        self.owner_mut().close_step()
+        Ok(self.owner_mut().close_step())
     }
 
     pub fn take_terminal_owner(&mut self) -> Option<RendererAssetFetchOwner> {
@@ -289,6 +289,11 @@ impl RendererAssetDecodeJob {
         self.probe.try_borrow_mut().ok()?.take()
     }
 
+    fn original_png_close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        let probe=self.probe.try_borrow().map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"decoder original response is borrowed"))?;
+        match probe.as_ref().and_then(|probe|probe.glb_materialize.as_ref()){Some(materialize)=>materialize.original_png_close_demands(body),None=>Ok(Default::default())}
+    }
+
     fn complete<'a>(&'a mut self, result: RendererAssetDecodeResult, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
         let loan = semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None)?;
         if loan.is_some() { self.result = Some(result); }
@@ -311,9 +316,10 @@ impl semio_framework_job::InteractiveJob for RendererAssetDecodeJob {
         let Some(probe) = self.probe.get_mut().as_mut() else {
             return self.complete(RendererAssetDecodeResult::Fault("asset decode lost its exact response owner"), context).map_err(semio_framework_job::OriginalTurnFailure::from);
         };
-        let result = probe.step();
+        let result = probe.step(context);
         self.steps = steps;
         context.consume_fuel(1);
+        let result=result?;
         self.result = match result {
             RendererAssetProbeStep::Pending => None,
             RendererAssetProbeStep::Ready => Some(RendererAssetDecodeResult::Ready),
@@ -335,17 +341,24 @@ impl semio_framework_job::InteractiveJob for RendererAssetDecodeJob {
 
     fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
         self.begin_close();
-        if self.probe.get_mut().is_some() { return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked); }
-        let _ = cx;
+        if let Some(probe)=self.probe.get_mut().as_mut(){
+            if let Some(materialize)=probe.glb_materialize.as_mut(){if materialize.original_png_pending(){
+                let before=cx.retained_progress();materialize.close_original_png(cx)?;let after=cx.retained_progress();
+                let difference=|whole:usize,earlier:usize|whole.checked_sub(earlier).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original PNG close receipt moved backwards"));
+                let progress=RetainedCloneProgress{copied_items:difference(after.copied_items,before.copied_items)?,copied_bytes:difference(after.copied_bytes,before.copied_bytes)?,retained_capacity_bytes:difference(after.retained_capacity_bytes,before.retained_capacity_bytes)?,released_bytes:difference(after.released_bytes,before.released_bytes)?};
+                return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress});
+            }}
+            return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked);
+        }
         Ok(semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() })
     }
 
-    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
-    fn next_close_capacity_byte_demand(&self, _: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
-    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.original_png_close_demands(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES)?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.original_png_close_demands(body)?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.original_png_close_demands(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES)?.release_bytes) }
     fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
         let probe = self.probe.try_borrow().map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "decoder original response is borrowed"))?;
-        Ok(usize::from(probe.is_some() || !self.closing))
+        Ok(self.original_png_close_demands(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES)?.depth.max(usize::from(probe.is_some() || !self.closing)))
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -381,7 +394,7 @@ impl RendererAssetDecodeSession {
                 if self.boundary.is_none() { self.boundary = source.job().and_then(RendererAssetDecodeJob::take_probe).map(|probe| (probe, Some(RendererAssetDecodeResult::Cancelled))); }
                 source.close_step(cx)?;
             } else {
-                let config = semio_framework_job_worker_authority::BatchDriveConfig { retained: cx.retained_grant(), site: "renderer_asset_decode", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: semio_framework_job::INTERACTIVE_LANE_WALL_US };
+                let config = semio_framework_job_worker_authority::BatchDriveConfig { retained: cx.retained_grant(), site: "renderer_asset_decode", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: cx.fuel_remaining().min(4096), step_budget_us: semio_framework_job::INTERACTIVE_LANE_WALL_US };
                 source.admit_pending(config, &mut self.session, cx)?;
             }
             return Ok(true);

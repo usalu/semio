@@ -40,20 +40,20 @@ struct TestSnapshotRetirement {
         lie_about_terminal: std::sync::atomic::AtomicBool,
     }
 
-    impl store::ArtifactOwnedValueRetirementFactory<TestSnapshot> for TestLyingOwnedValueRetirementFactory {
+    impl store::ArtifactOwnedValueRetirementFactory<TestSnapshot> for TestLyingOwnedValueRetirementFactory {fn retire_owned_work_demand(&self,_:&TestSnapshot)->Result<u64,semio_framework_value::ValueError>{Ok(2)}
         fn retirement_birth_bytes(&self, _: &TestSnapshot) -> usize {
             std::mem::size_of::<TestSnapshotRetirement>() + semio_framework_value::retirement::owned_retirement_birth_bytes::<TestSnapshot>()
         }
 
-        fn retire_owned(&self, value: TestSnapshot, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, TestSnapshot)> {
+        fn retire_owned(&self, value: TestSnapshot, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::OriginalRetirementFailure, TestSnapshot)> {
             use semio_framework_value::retained_clone::RetainedCloneBirthDemand;
             let frame = std::mem::size_of::<TestSnapshotRetirement>();
             let demand = RetainedCloneBirthDemand { capacity_bytes: self.retirement_birth_bytes(&value), depth: 3 };
-            if let Err(error) = demand.admit(grant) { return Err((error, value)); }
+            if let Err(error) = demand.admit(grant) { return semio_framework_value::RetainedWorkOutcome{result:Err((error.into(), value)),work:0}; }
             let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_capacity_bytes: grant.maximum_capacity_bytes - frame, maximum_depth: grant.maximum_depth - 1, ..grant };
-            let (owner, mut progress) = semio_framework_value::retirement::admit_owned_retirement(value, child)?;
+            let turn=semio_framework_value::retirement::admit_owned_retirement(value, child);let (owner, mut progress)=match turn.result{Ok(value)=>value,Err((error,value))=>return semio_framework_value::RetainedWorkOutcome{result:Err((error.into(),value)),work:turn.work}};
             progress.retained_capacity_bytes += frame;
-            Ok((Box::new(TestSnapshotRetirement { owner: Some(owner), lie_about_terminal: self.lie_about_terminal.swap(false, std::sync::atomic::Ordering::AcqRel) }), progress))
+            semio_framework_value::RetainedWorkOutcome{result:Ok((Box::new(TestSnapshotRetirement { owner: Some(owner), lie_about_terminal: self.lie_about_terminal.swap(false, std::sync::atomic::Ordering::AcqRel) }), progress)),work:turn.work+1}
         }
     }
 

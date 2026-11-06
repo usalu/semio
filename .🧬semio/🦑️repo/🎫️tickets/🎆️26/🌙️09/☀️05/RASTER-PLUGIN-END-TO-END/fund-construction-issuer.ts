@@ -1,0 +1,3 @@
+import {readFileSync,writeFileSync} from 'node:fs';
+const path='🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧪️tests/🦀️.rs';
+let body=readFileSync(path,'utf8');const old='let mut payer=ConstructionWork;let(first,birth_heap)=original.with_work_recipient(&mut payer,';const next='let mut payer=ConstructionWork;let mut payer_issuer=crate::native_decoding::NativeDecodeWorkIssuer::new();let mut payer_loan=payer_issuer.loan(&mut payer);let(first,birth_heap)=original.with_work_recipient(&mut payer_loan,';if(!body.includes(old))throw new Error('original work loan missing');writeFileSync(path,body.replace(old,next));

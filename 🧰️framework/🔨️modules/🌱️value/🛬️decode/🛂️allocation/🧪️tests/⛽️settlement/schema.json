@@ -1,0 +1,275 @@
+{
+  "type": "array",
+  "minItems": 9,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "prior",
+      "requested",
+      "authorized",
+      "allocated",
+      "postRefused",
+      "owned",
+      "ownerRetained",
+      "allocationFailed",
+      "postAttempted",
+      "receiptRefused",
+      "admitted",
+      "primary",
+      "quoteRefusal",
+      "postRefusal",
+      "receiptRefusal",
+      "performed",
+      "failure",
+      "maximum"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "prior": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "requested": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "authorized": {
+        "type": "boolean"
+      },
+      "allocated": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "postRefused": {
+        "type": "boolean"
+      },
+      "owned": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "ownerRetained": {
+        "type": "boolean"
+      },
+      "allocationFailed": {
+        "type": "boolean"
+      },
+      "postAttempted": {
+        "type": "boolean"
+      },
+      "receiptRefused": {
+        "type": "boolean"
+      },
+      "admitted": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "primary": {
+        "anyOf": [
+          {
+            "type": "string",
+            "minLength": 1
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "quoteRefusal": {
+        "anyOf": [
+          {
+            "type": "string",
+            "minLength": 1
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "postRefusal": {
+        "anyOf": [
+          {
+            "type": "string",
+            "minLength": 1
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "receiptRefusal": {
+        "anyOf": [
+          {
+            "type": "string",
+            "minLength": 1
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "performed": {
+        "type": "boolean"
+      },
+      "failure": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "primary",
+          "admission",
+          "forwardedQuote",
+          "scopedQuote",
+          "forwardedPost",
+          "scopedPost",
+          "forwardedCancel",
+          "scopedCancel",
+          "receipt",
+          "extent",
+          "forwardedAdmission",
+          "scopedAdmission"
+        ],
+        "properties": {
+          "primary": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "admission": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "forwardedQuote": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "scopedQuote": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "forwardedPost": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "scopedPost": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "forwardedCancel": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "scopedCancel": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "receipt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "extent": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "forwardedAdmission": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "scopedAdmission": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "maximum": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  }
+}

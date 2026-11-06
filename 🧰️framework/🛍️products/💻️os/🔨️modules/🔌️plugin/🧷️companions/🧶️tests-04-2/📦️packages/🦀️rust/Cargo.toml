@@ -65,7 +65,7 @@ semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/
 semio-framework-value-snapshot-read = { path = "../../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
 semio-os-command = { path = "../../../../../📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-framework-action-bus = { path = "../../../../../../../../🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
-semio-plugin-retained-command = { path = "../../../../🧵️retained-command/📦️packages/🦀️rust" }
+semio-framework-plugin-retained-command = { path = "../../../../🧵️retained-command/📦️packages/🦀️rust", package = "semio-plugin-retained-command"}
 semio-os-store-one-item = { path = "../../../../../🏪️store/🎮️one-item/📦️packages/🦀️rust" }
 
 [features]

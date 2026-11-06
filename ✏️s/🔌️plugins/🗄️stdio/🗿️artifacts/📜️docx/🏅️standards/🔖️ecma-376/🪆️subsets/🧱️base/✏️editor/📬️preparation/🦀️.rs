@@ -306,7 +306,7 @@ impl PagedOneItemEdit<DocxSnapshot, DocxMutation> for DocxXmlEdit {
 #[cfg(test)]
 mod native_work_tests{
  use super::*;
- use semio_framework_os_store_one_item::testkit::{PagedEditFixture,OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation};
+ use semio_os_store_one_item::testkit::{PagedEditFixture,OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation};
  use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::{construction::build_minimal_docx,snapshot::{DocxDocument,DocxBlock}};
  use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::docx_top_level_run_at;
  fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:16_777_216,maximum_release_bytes:16_777_216,maximum_depth:4096}}

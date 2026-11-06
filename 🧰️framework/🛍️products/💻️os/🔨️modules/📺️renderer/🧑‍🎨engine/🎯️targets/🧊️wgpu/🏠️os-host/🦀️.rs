@@ -292,7 +292,7 @@ impl ComponentSurfaceCloseOwner {
         }
         match self.phase {
             ComponentSurfaceClosePhase::Asset => {
-                if runtime.close_component_asset_step(&self.request.owner) {
+                if runtime.close_component_asset_step(&self.request.owner,cx)? {
                     self.phase = ComponentSurfaceClosePhase::World;
                 }
             }

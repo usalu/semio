@@ -1,0 +1,66 @@
+{
+  "schema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "array",
+    "items": {
+      "type": "object",
+      "required": [
+        "terminal",
+        "admitted",
+        "postAccepted",
+        "work",
+        "pending"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "terminal": {
+          "type": "boolean"
+        },
+        "admitted": {
+          "type": "boolean"
+        },
+        "postAccepted": {
+          "type": "boolean"
+        },
+        "work": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "pending": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "data": [
+    {
+      "terminal": false,
+      "admitted": true,
+      "postAccepted": true,
+      "work": 0,
+      "pending": true
+    },
+    {
+      "terminal": true,
+      "admitted": false,
+      "postAccepted": true,
+      "work": 0,
+      "pending": true
+    },
+    {
+      "terminal": true,
+      "admitted": true,
+      "postAccepted": false,
+      "work": 1,
+      "pending": false
+    },
+    {
+      "terminal": true,
+      "admitted": true,
+      "postAccepted": true,
+      "work": 1,
+      "pending": false
+    }
+  ]
+}

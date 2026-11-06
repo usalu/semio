@@ -1,0 +1,73 @@
+//! 🧳️ Paid original retirement failure custody.
+use crate::{ValueError,ValueRefusalKind,RetainedCloneProgress,RetainedWorkOutcome};
+use std::mem::MaybeUninit;
+#[derive(Debug,PartialEq)]
+pub struct OriginalRetirementFailure{primary:Option<ValueError>,work_refusal:Option<ValueError>,receipt_refusal:Option<ValueError>,child:Option<Box<OriginalRetirementFailure>>,selected:RetainedCloneProgress,override_progress:Option<RetainedCloneProgress>}
+impl OriginalRetirementFailure{
+ fn select(primary:&Option<ValueError>,work:&Option<ValueError>,receipt:&Option<ValueError>,child:&Option<Box<Self>>)->RetainedCloneProgress{child.as_ref().map_or_else(||primary.as_ref().or(work.as_ref()).or(receipt.as_ref()).map_or(Default::default(),ValueError::retained_progress),|child|child.retained_progress())}
+ pub fn from_primary(primary:ValueError)->Self{Self::from_owned_parts(Some(primary),None,None,None,None)}
+ pub fn from_work_refusal(refusal:ValueError)->Self{Self::from_owned_parts(None,Some(refusal),None,None,None)}
+ pub fn from_primary_and_work(primary:ValueError,refusal:ValueError)->Self{Self::from_owned_parts(Some(primary),Some(refusal),None,None,None)}
+ pub fn from_primary_and_receipt(primary:ValueError,refusal:ValueError)->Self{Self::from_owned_parts(Some(primary),None,Some(refusal),None,None)}
+ pub fn from_causes(primary:Option<ValueError>,work_refusal:Option<ValueError>,receipt_refusal:Option<ValueError>)->Self{Self::from_owned_parts(primary,work_refusal,receipt_refusal,None,None)}
+ /// \u{1f9f3}\uFE0F Transfers every original cause, nested owner and explicit enclosing progress unchanged.
+ pub fn from_owned_parts(primary:Option<ValueError>,work_refusal:Option<ValueError>,receipt_refusal:Option<ValueError>,child:Option<Box<Self>>,override_progress:Option<RetainedCloneProgress>)->Self{let selected=Self::select(&primary,&work_refusal,&receipt_refusal,&child);Self{primary,work_refusal,receipt_refusal,child,selected,override_progress}}
+ pub fn receipt_refusal(&self)->Option<&ValueError>{self.receipt_refusal.as_ref()}
+ pub fn primary(&self)->Option<&ValueError>{self.primary.as_ref()}
+ pub fn work_refusal(&self)->Option<&ValueError>{self.work_refusal.as_ref()}
+ pub fn child(&self)->Option<&Self>{self.child.as_deref()}
+ pub fn with_work_refusal(mut self,refusal:ValueError)->Result<Self,(Self,ValueError)>{if self.work_refusal.is_some(){return Err((self,refusal))}if self.child.is_none()&&self.primary.is_none(){self.selected=refusal.retained_progress()}self.work_refusal=Some(refusal);Ok(self)}
+ pub fn into_parts(self)->(Option<ValueError>,Option<ValueError>,Option<ValueError>,Option<Box<Self>>,Option<RetainedCloneProgress>){(self.primary,self.work_refusal,self.receipt_refusal,self.child,self.override_progress)}
+ pub fn with_retained_progress(mut self,progress:RetainedCloneProgress)->Self{self.override_progress=Some(progress);self}
+ /// 📏️ Borrows the enclosing span only when it was explicitly recorded.
+ pub fn progress_override(&self)->Option<RetainedCloneProgress>{self.override_progress}
+ pub fn retained_progress(&self)->RetainedCloneProgress{self.override_progress.unwrap_or(self.selected)}
+}
+impl From<ValueError> for OriginalRetirementFailure{fn from(error:ValueError)->Self{Self::from_primary(error)}}
+impl std::fmt::Display for OriginalRetirementFailure{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{match self.primary.as_ref().or(self.work_refusal.as_ref()).or(self.receipt_refusal.as_ref()){Some(error)=>std::fmt::Display::fmt(error,f),None=>match &self.child{Some(child)=>std::fmt::Display::fmt(child,f),None=>f.write_str("original retirement failed without a cause")}}}}
+impl std::error::Error for OriginalRetirementFailure{}
+/// 🎟️ An admitted node is retained until it is attached or explicitly released.
+#[derive(Debug)]
+pub struct OriginalFailureStorage(std::mem::ManuallyDrop<Box<MaybeUninit<OriginalRetirementFailure>>>);
+impl OriginalFailureStorage{
+ pub const fn birth_bytes()->usize{std::mem::size_of::<OriginalRetirementFailure>()}
+ pub fn admit(capacity:usize)->RetainedWorkOutcome<(Self,RetainedCloneProgress)>{let bytes=Self::birth_bytes();if capacity<bytes{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original failure node exceeds admitted capacity")),work:0}}let layout=std::alloc::Layout::new::<MaybeUninit<OriginalRetirementFailure>>();let Some(pointer)=std::ptr::NonNull::new(unsafe{std::alloc::alloc(layout)}.cast::<MaybeUninit<OriginalRetirementFailure>>())else{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"original failure node allocation failed")),work:1}};let node=unsafe{Box::from_raw(pointer.as_ptr())};RetainedWorkOutcome{result:Ok((Self(std::mem::ManuallyDrop::new(node)),RetainedCloneProgress{retained_capacity_bytes:bytes,..Default::default()})),work:1}}
+ pub fn attach(self,child:OriginalRetirementFailure,refusal:ValueError)->OriginalRetirementFailure{self.attach_owned_parts(child,None,Some(refusal),None)}
+ /// 🪢️ Installs the original child into already-admitted storage while retaining every independent parent cause without allocation.
+ /// 🧳️ Consumes one prepaid node and transfers the complete parent and child causes.
+ pub fn attach_owned_parts(self,child:OriginalRetirementFailure,primary:Option<ValueError>,work_refusal:Option<ValueError>,receipt_refusal:Option<ValueError>)->OriginalRetirementFailure{let selected=child.retained_progress();let mut storage=std::mem::ManuallyDrop::new(self);let mut node=unsafe{std::mem::ManuallyDrop::take(&mut storage.0)};node.write(child);let child=unsafe{node.assume_init()};OriginalRetirementFailure{primary,work_refusal,receipt_refusal,child:Some(child),selected,override_progress:None}}
+ pub fn release(self,release:usize)->Result<RetainedCloneProgress,Self>{let bytes=Self::birth_bytes();if release<bytes{return Err(self)}let mut storage=std::mem::ManuallyDrop::new(self);unsafe{std::mem::ManuallyDrop::drop(&mut storage.0)};Ok(RetainedCloneProgress{released_bytes:bytes,..Default::default()})}
+}
+impl Drop for OriginalFailureStorage{fn drop(&mut self){assert!(std::thread::panicking(),"original failure storage requires paid release or transfer");unsafe{std::mem::ManuallyDrop::drop(&mut self.0)}}}
+
+/// 🧺️ A prepaid intrusive spare list retains each physical node until reuse or paid release.
+#[derive(Default)]
+pub struct OriginalFailureStoragePool{head:Option<Box<MaybeUninit<OriginalRetirementFailure>>>}
+impl OriginalFailureStoragePool{
+ pub fn is_empty(&self)->bool{self.head.is_none()}
+ pub fn put(&mut self,storage:OriginalFailureStorage){
+  assert!(std::mem::size_of::<OriginalRetirementFailure>()>=std::mem::size_of::<Option<Box<MaybeUninit<OriginalRetirementFailure>>>>());
+  assert!(std::mem::align_of::<OriginalRetirementFailure>()>=std::mem::align_of::<Option<Box<MaybeUninit<OriginalRetirementFailure>>>>());
+  let mut storage=std::mem::ManuallyDrop::new(storage);let mut node=unsafe{std::mem::ManuallyDrop::take(&mut storage.0)};
+  unsafe{node.as_mut_ptr().cast::<Option<Box<MaybeUninit<OriginalRetirementFailure>>>>().write(self.head.take())};self.head=Some(node);
+ }
+ pub fn take(&mut self)->Option<OriginalFailureStorage>{let mut node=self.head.take()?;self.head=unsafe{node.as_mut_ptr().cast::<Option<Box<MaybeUninit<OriginalRetirementFailure>>>>().read()};Some(OriginalFailureStorage(std::mem::ManuallyDrop::new(node)))}
+ pub fn release_one(&mut self,grant:usize)->Result<RetainedCloneProgress,ValueError>{if grant<OriginalFailureStorage::birth_bytes(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"failure node release exceeds admitted grant"))}match self.take(){Some(storage)=>match storage.release(grant){Ok(progress)=>Ok(progress),Err(storage)=>{self.put(storage);Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"failure node release exceeds admitted grant"))}},None=>Ok(Default::default())}}
+}
+impl Drop for OriginalFailureStoragePool{fn drop(&mut self){assert!(std::thread::panicking()||self.head.is_none(),"original failure pool retains unpaid nodes");while let Some(mut node)=self.head.take(){self.head=unsafe{node.as_mut_ptr().cast::<Option<Box<MaybeUninit<OriginalRetirementFailure>>>>().read()};}}}
+
+struct OriginalFailureNodeSlot<'a>{slot:&'a mut Option<OriginalFailureStorage>,node:std::mem::ManuallyDrop<OriginalFailureStorage>,consumed:bool}
+impl OriginalFailureNodeSlot<'_>{fn attach(mut self,child:OriginalRetirementFailure,refusal:ValueError)->OriginalRetirementFailure{self.consumed=true;let node=unsafe{std::mem::ManuallyDrop::take(&mut self.node)};node.attach(child,refusal)}}
+impl Drop for OriginalFailureNodeSlot<'_>{fn drop(&mut self){if !self.consumed{*self.slot=Some(unsafe{std::mem::ManuallyDrop::take(&mut self.node)})}}}
+/// 🧾️ Reserves failure custody before one effect and its actual work settlement.
+pub fn run_with_failure_storage_transaction<T:Copy>(storage:&mut Option<OriginalFailureStorage>,action:impl FnOnce()->(RetainedWorkOutcome<T,OriginalRetirementFailure>,Result<(),ValueError>),effects:impl FnOnce(&T)->RetainedCloneProgress)->Option<RetainedWorkOutcome<T,OriginalRetirementFailure>>{
+ let node=storage.take()?;let lease=OriginalFailureNodeSlot{slot:storage,node:std::mem::ManuallyDrop::new(node),consumed:false};let(turn,settlement)=action();let result=match(turn.result,settlement){
+  (result,Ok(()))=>result,
+  (Ok(value),Err(refusal))=>Err(OriginalRetirementFailure::from_work_refusal(refusal.with_retained_progress(effects(&value)))),
+  (Err(child),Err(refusal))=>match child.with_work_refusal(refusal){Ok(failure)=>Err(failure),Err((child,refusal))=>Err(lease.attach(child,refusal))},
+ };Some(RetainedWorkOutcome{result,work:turn.work})
+}
+/// 🧮️ Runs a child and its settlement using the same reserved failure custody.
+pub fn run_with_failure_storage<T:Copy>(storage:&mut Option<OriginalFailureStorage>,child:impl FnOnce()->RetainedWorkOutcome<T,OriginalRetirementFailure>,settle:impl FnOnce(u64)->Result<(),ValueError>,effects:impl FnOnce(&T)->RetainedCloneProgress)->Option<RetainedWorkOutcome<T,OriginalRetirementFailure>>{
+ run_with_failure_storage_transaction(storage,||{let turn=child();let settlement=settle(turn.work);(turn,settlement)},effects)
+}

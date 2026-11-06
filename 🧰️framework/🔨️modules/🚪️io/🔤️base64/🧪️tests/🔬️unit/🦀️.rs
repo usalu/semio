@@ -1,6 +1,56 @@
 
 use super::*;
 
+#[test]
+fn initial_invalid_length_is_borrowed_without_invented_work(){let mut cursor=Base64DecodeCursor::new(Base64Input::Borrowed(b"A"));assert_eq!(cursor.refusal(),Some(&Base64ControlError::Codec(Base64Error::InvalidLength)));assert_eq!(cursor.next_work_demand(0),0);let mut callback=|_|true;let mut control=Base64Control{maximum_output_bytes:1,progress:&mut callback};assert_eq!(cursor.step(0,&mut control),Err(Base64ControlError::Codec(Base64Error::InvalidLength)));assert_eq!(cursor.last_turn_receipt(),Default::default());}
+
+#[test]
+fn adaptive_padding_prescan_keeps_the_same_first_refusal(){let mut wire=vec![b'A';8192];wire[0]=b'?';wire[100]=b'=';for budget in [4,8,4096,8192]{let mut cursor=Base64DecodeCursor::new(Base64Input::Borrowed(&wire));let mut callback=|_|true;let mut control=Base64Control{maximum_output_bytes:8192,progress:&mut callback};let mut refusal=None;for _ in 0..10000{match cursor.step(budget,&mut control){Err(error)=>{refusal=Some(error);break},Ok(_)=>{}}}assert_eq!(refusal,Some(Base64ControlError::Codec(Base64Error::InvalidPadding)));}}
+
+/// 🎟️ The original finite work budget selects an actual quartet and its exact output quote.
+#[test]
+fn adaptive_quartet_budgets_match_neutral_cases_and_independent_codec(){
+ use base64::Engine as _;
+ let cases:serde_json::Value=serde_json::from_str(include_str!("../🧮️accounting/🔣️budget.json")).unwrap();
+ for row in cases.as_array().unwrap(){let length=row["length"].as_u64().unwrap()as usize;let expected=row["output"].as_u64().unwrap()as usize;let mut wire=vec![b'A';length];let padding=length/4*3-expected;for byte in &mut wire[length-padding..]{*byte=b'='}let oracle=base64::engine::general_purpose::STANDARD.decode(&wire).unwrap();let mut cursor=Base64DecodeCursor::new(Base64Input::OwnedBytes(wire));let mut callback=|_|true;let mut control=Base64Control{maximum_output_bytes:expected,progress:&mut callback};cursor.step(1,&mut control).unwrap();let target=if row["phase"]=="validate"{Base64Phase::Validate}else{Base64Phase::Decode};while cursor.progress().phase!=target{let demand=cursor.next_work_demand(8192);assert!(demand>0);cursor.step(demand,&mut control).unwrap();}if target==Base64Phase::Decode{cursor.step(1,&mut control).unwrap();}let offset=row["offset"].as_u64().unwrap()as usize;while cursor.progress().completed<offset{cursor.step(4,&mut control).unwrap();}let budget=row["budget"].as_u64().unwrap()as usize;assert_eq!(cursor.next_work_demand(budget),row["work"].as_u64().unwrap()as usize);assert_eq!(cursor.next_copy_byte_demand(budget),row["copy"].as_u64().unwrap()as usize);let before=cursor.progress();let result=cursor.step(budget,&mut control).unwrap();let receipt=cursor.last_turn_receipt();assert!(receipt.work_units<=budget);assert_eq!(receipt.copied_bytes,row["copy"].as_u64().unwrap()as usize);if row["work"]==0{assert_eq!(result,Base64DecodeState::Pending);assert_eq!(cursor.progress(),before);assert_eq!(receipt,Base64DecodeReceipt::default())}for _ in 0..100_000{if cursor.is_complete(){break}cursor.step(4096,&mut control).unwrap();}assert!(cursor.is_complete());assert_eq!(cursor.take_output().unwrap(),oracle);}
+}
+
+/// 🧮️ Actual visited bytes and retained allocations remain observable on the first codec refusal.
+#[test]
+fn retained_decode_receipts_match_original_effects_and_independent_codec(){
+ use base64::Engine as _;
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧮️accounting/cases.json")).unwrap();
+ for row in corpus["cases"].as_array().unwrap(){
+  let wire=format!("{}{}",row["prefix"].as_str().unwrap(),row["word"].as_str().unwrap().repeat(row["repeat"].as_u64().unwrap()as usize));
+  let oracle=base64::engine::general_purpose::STANDARD.decode(&wire);assert_eq!(oracle.is_ok(),row["valid"].as_bool().unwrap());
+  let pointer=wire.as_ptr();let mut cursor=Base64DecodeCursor::new(Base64Input::OwnedText(wire));let mut receipt=Base64DecodeReceipt::default();
+  let mut callback=|event:Base64Progress|match row["cancel"].as_str().unwrap(){"validate-start"=>event.phase!=Base64Phase::Validate||event.completed!=0,"decode-start"=>event.phase!=Base64Phase::Decode||event.completed!=0,"decode-end"=>event.phase!=Base64Phase::Decode||event.completed==0,_=>true};
+  let mut control=Base64Control{maximum_output_bytes:row["limit"].as_u64().unwrap()as usize,progress:&mut callback};
+  let refused=loop{
+   let demand=cursor.next_work_demand(8192);let before=cursor.progress();
+   if demand>0{let denied=if cursor.next_work_demand(demand-1)==0{demand-1}else{0};let(result,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||cursor.step(denied,&mut control));assert_eq!(result,Ok(Base64DecodeState::Pending));assert_eq!(cursor.last_turn_receipt(),Default::default());assert_eq!(cursor.progress(),before);assert_eq!((allocated,released),(0,0));}
+   let(result,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||cursor.step(demand,&mut control));let actual=cursor.last_turn_receipt();assert_eq!(actual.allocated_capacity_bytes,allocated);assert_eq!(released,0);assert!(actual.work_units<=demand);
+   receipt.work_units+=actual.work_units;receipt.read_bytes+=actual.read_bytes;receipt.copied_bytes+=actual.copied_bytes;receipt.allocated_capacity_bytes+=actual.allocated_capacity_bytes;
+   match result{Err(_)=>break true,Ok(Base64DecodeState::Complete)=>break false,Ok(Base64DecodeState::Pending)=>{}}
+  };
+  assert_eq!((receipt.work_units,receipt.read_bytes,receipt.copied_bytes,receipt.allocated_capacity_bytes),(row["work"].as_u64().unwrap()as usize,row["read"].as_u64().unwrap()as usize,row["copy"].as_u64().unwrap()as usize,row["capacity"].as_u64().unwrap()as usize),"{}",row["id"]);
+  let(_,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||cursor.step(usize::MAX,&mut control));assert_eq!((allocated,released),(0,0));assert_eq!(cursor.last_turn_receipt(),Default::default());
+  let(parts,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||cursor.into_parts());assert_eq!((allocated,released),(0,0));assert_eq!(matches!(parts.outcome,Base64DecodeOutcome::Refused(_)),refused);
+  match parts.input{Base64Input::OwnedText(input)=>assert_eq!(input.as_ptr(),pointer),_=>unreachable!()}
+  let bytes=parts.output.unwrap_or_default();assert_eq!(bytes.as_slice(),row["output"].as_str().unwrap().as_bytes());
+  if !refused{assert_eq!(bytes,oracle.unwrap());}
+ }
+}
+
+/// 🧺️ Multiple funded phases accumulate one receipt and a finished caller turn resets it.
+#[test]
+fn retained_decode_receipt_accumulates_all_phases_in_one_turn(){
+ let mut cursor=Base64DecodeCursor::new(Base64Input::Borrowed(b"Zm9v"));let mut callback=|_|true;let mut control=Base64Control{maximum_output_bytes:3,progress:&mut callback};
+ let(result,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||cursor.step(usize::MAX,&mut control));
+ assert_eq!(result,Ok(Base64DecodeState::Complete));assert_eq!((allocated,released),(3,0));assert_eq!(cursor.last_turn_receipt(),Base64DecodeReceipt{work_units:12,read_bytes:8,copied_bytes:3,allocated_capacity_bytes:3});
+ assert_eq!(cursor.take_output().unwrap(),b"foo");assert_eq!(cursor.step(0,&mut control),Ok(Base64DecodeState::Complete));assert_eq!(cursor.last_turn_receipt(),Default::default());
+}
+
 /// 📐️ RFC 4648 §10 vectors, kept as a language-agnostic fixture so any implementation in any
 /// language can be checked against the same table.
 #[test]
@@ -256,10 +306,11 @@ fn retained_decode_uses_exact_work_grants_and_original_input_owner() {
         let mut control = Base64Control { maximum_output_bytes: length, progress: &mut accepted };
         let mut turns = 0;
         while !cursor.is_complete() {
-            let demand = cursor.next_work_demand();
+            let demand = cursor.next_work_demand(8192);
             let before = cursor.progress();
             assert!(demand > 0 && demand <= 8192);
             for grant in corpus["stepGrants"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize).filter(|grant| *grant < demand) {
+                if cursor.next_work_demand(grant)!=0 { continue; }
                 let prior_callbacks = callbacks.get();
                 let (state, requested) = semio_framework_trace_memory_testing::observe(|| cursor.step(grant, &mut control));
                 assert_eq!(state.unwrap(), Base64DecodeState::Pending);
@@ -286,7 +337,7 @@ fn retained_decode_uses_exact_work_grants_and_original_input_owner() {
         match parts.input { Base64Input::OwnedText(text) => assert_eq!(text.as_ptr(), pointer), _ => unreachable!() }
         let text = engine.encode(&bytes);
         let mut borrowed = Base64DecodeCursor::new(Base64Input::Borrowed(text.as_bytes()));
-        while !borrowed.is_complete() { borrowed.step(borrowed.next_work_demand(), &mut control).unwrap(); }
+        while !borrowed.is_complete() { borrowed.step(borrowed.next_work_demand(8192), &mut control).unwrap(); }
         assert_eq!(borrowed.take_output().unwrap(), bytes);
         assert_eq!(match borrowed.into_parts().input { Base64Input::Borrowed(input) => input.as_ptr(), _ => unreachable!() }, text.as_ptr());
     }
@@ -312,7 +363,7 @@ fn retained_input_ranges_preserve_backing_and_span_progress() {
             let mut progress = |event: Base64Progress| { assert_eq!(event.total, encoded.len()); assert!(event.completed <= event.total); true };
             let mut control = Base64Control { maximum_output_bytes: length, progress: &mut progress };
             let (_, requests, releases) = semio_framework_trace_memory_testing::observe_backing(|| {
-                while !cursor.is_complete() { cursor.step(cursor.next_work_demand(), &mut control).unwrap(); }
+                while !cursor.is_complete() { cursor.step(cursor.next_work_demand(8192), &mut control).unwrap(); }
             });
             assert_eq!((requests, releases), (length, 0));
             assert_eq!(cursor.take_output().unwrap(), bytes);
@@ -348,7 +399,7 @@ fn retained_input_ranges_preserve_backing_and_span_progress() {
     let mut progress = |event: Base64Progress| event.phase != Base64Phase::Decode || event.completed != 4096;
     let mut control = Base64Control { maximum_output_bytes: bytes.len(), progress: &mut progress };
     let (result, requests, releases) = semio_framework_trace_memory_testing::observe_backing(|| {
-        loop { match cursor.step(cursor.next_work_demand(), &mut control) { Ok(Base64DecodeState::Pending) => {}, result => break result } }
+        loop { match cursor.step(cursor.next_work_demand(8192), &mut control) { Ok(Base64DecodeState::Pending) => {}, result => break result } }
     });
     assert_eq!(result, Err(Base64ControlError::Cancelled));
     assert_eq!((requests, releases), (bytes.len(), 0));
@@ -361,7 +412,7 @@ fn retained_input_ranges_preserve_backing_and_span_progress() {
         let mut cursor = Base64DecodeCursor::new_range(input, range);
         let mut progress = |_| true;
         let mut control = Base64Control { maximum_output_bytes: 3, progress: &mut progress };
-        while !cursor.is_complete() { cursor.step(cursor.next_work_demand(), &mut control).unwrap(); }
+        while !cursor.is_complete() { cursor.step(cursor.next_work_demand(8192), &mut control).unwrap(); }
         assert_eq!(cursor.take_output().unwrap(), b"Man");
         assert_eq!(cursor.into_parts().range, range);
     }
@@ -384,7 +435,7 @@ fn retained_decode_refusal_transfers_exact_original_input_and_partial_output() {
     };
     let mut control = Base64Control { maximum_output_bytes: bytes.len(), progress: &mut callback };
     let (result, requests, releases) = semio_framework_trace_memory_testing::observe_backing(|| {
-        loop { match cursor.step(cursor.next_work_demand(), &mut control) { Ok(Base64DecodeState::Pending) => {}, result => break result } }
+        loop { match cursor.step(cursor.next_work_demand(8192), &mut control) { Ok(Base64DecodeState::Pending) => {}, result => break result } }
     });
     assert_eq!(result, Err(Base64ControlError::Cancelled));
     assert!(canceled.get());

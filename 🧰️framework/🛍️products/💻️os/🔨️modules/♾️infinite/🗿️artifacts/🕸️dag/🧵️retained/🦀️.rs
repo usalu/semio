@@ -15,15 +15,15 @@ impl SnapshotRetirementFactory<DagSnapshot> for DagSnapshotRetirementFactory {
 }
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct DagOwnedSnapshotRetirementFactory;
-impl ArtifactOwnedValueRetirementFactory<DagSnapshot> for DagOwnedSnapshotRetirementFactory {
+impl ArtifactOwnedValueRetirementFactory<DagSnapshot> for DagOwnedSnapshotRetirementFactory {fn retire_owned_work_demand(&self,_:&DagSnapshot)->Result<u64,semio_framework_value::ValueError>{Ok(1)}
  fn retirement_birth_bytes(&self,value:&DagSnapshot)->usize{OwnedValueRetirementFactory::<DagSnapshot>::default().retirement_birth_bytes(value)}
- fn retire_owned(&self,value:DagSnapshot,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,DagSnapshot)>{OwnedValueRetirementFactory::<DagSnapshot>::default().retire_owned(value,grant)}
+ fn retire_owned(&self,value:DagSnapshot,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(semio_framework_value::OriginalRetirementFailure,DagSnapshot)>{OwnedValueRetirementFactory::<DagSnapshot>::default().retire_owned(value,grant)}
 }
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct DagMutationRetirementFactory;
-impl ArtifactOwnedValueRetirementFactory<DagMutation> for DagMutationRetirementFactory {
+impl ArtifactOwnedValueRetirementFactory<DagMutation> for DagMutationRetirementFactory {fn retire_owned_work_demand(&self,_:&DagMutation)->Result<u64,semio_framework_value::ValueError>{Ok(1)}
  fn retirement_birth_bytes(&self,value:&DagMutation)->usize{OwnedValueRetirementFactory::<DagMutation>::default().retirement_birth_bytes(value)}
- fn retire_owned(&self,value:DagMutation,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,DagMutation)>{OwnedValueRetirementFactory::<DagMutation>::default().retire_owned(value,grant)}
+ fn retire_owned(&self,value:DagMutation,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(semio_framework_value::OriginalRetirementFailure,DagMutation)>{OwnedValueRetirementFactory::<DagMutation>::default().retire_owned(value,grant)}
 }
 
 impl MemberStoreProducer<DagSnapshot,DagMutation> for DagMemberStoreProducer {

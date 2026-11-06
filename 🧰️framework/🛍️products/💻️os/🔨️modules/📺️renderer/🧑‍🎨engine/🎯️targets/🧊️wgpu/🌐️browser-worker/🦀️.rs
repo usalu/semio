@@ -13,12 +13,12 @@ use std::collections::VecDeque;
 use std::rc::Rc;
 use ui_host::{WindowDelegate, WindowMetrics};
 use ui_render::{DispatchEvent, EventModifiers, ImeEvent, InvalidationReason, PhysicalSize, PointerButton, PointerId, PointerInfo, PointerKind};
-use semio_framework_ui_declaration::layout::ActionDescriptor;
-use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
-use semio_framework_ui_text::FontAtlas;
-use semio_framework_ui_wgpu_input::{InputState, PointerModifiers};
-use semio_framework_ui_prepared::OffscreenPresentToken;
-use semio_framework_ui_theme::Theme;
+use semio_ui_declaration::layout::ActionDescriptor;
+use semio_ui_draw_contract::{DrawList, IconAtlas};
+use semio_ui_text::FontAtlas;
+use semio_ui_wgpu_input::{InputState, PointerModifiers};
+use semio_ui_prepared::OffscreenPresentToken;
+use semio_ui_theme::Theme;
 use ui_gpu::{GpuContext};
 use wasm_bindgen::prelude::*;
 
@@ -855,7 +855,7 @@ impl BrowserRendererBootstrap {
         let presenter = AppPresenter {
             gpu: self.gpu.take().expect("bootstrap GPU exists"),
             engine: semio_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPresenter::default(),
-            gate: semio_framework_ui_prepared::PreparedRenderGate::default(),
+            gate: semio_ui_prepared::PreparedRenderGate::default(),
             runtime: runtime.clone(),
             presentation_authority: runtime.presentation_authority(),
             raster_operation_authority: runtime.raster_operation_authority(),

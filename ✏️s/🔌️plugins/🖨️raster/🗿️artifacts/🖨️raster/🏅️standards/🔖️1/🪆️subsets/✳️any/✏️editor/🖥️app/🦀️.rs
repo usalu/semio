@@ -20,7 +20,6 @@ use semio_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedComman
 use semio_plugin::AppOperationContext;
 use semio_plugin::ArtifactOwnedToolJobRequest;
 use semio_plugin::ArtifactReservedToolInput;
-use semio_plugin::ArtifactReservedToolJob;
 use semio_plugin::ArtifactReservedToolJobRequest;
 use semio_plugin::ArtifactToolFactoryRegistry;
 use semio_plugin::ArtifactView;
@@ -364,24 +363,22 @@ impl ArtifactEditor for RasterPlayApp {
         }
     }
 
+    /// 🖼️ The original workflow text wire contains one raw PNG Base64 payload.
+    fn accepts_original_structured_media(port:&str,schema:&str,media_type:&MediaType)->bool{port=="image:in"&&schema=="2d.image"&&media_type.class==MediaClass::TwoD&&media_type.form==MediaForm::Raster}
+
     /// 🎞️ Media admission belongs to the reserved retained importer.
     fn import_media(_port:&str,_media:&Media,_doc:&ArtifactView<'_,RasterSnapshot>)->Result<Emit<RasterMutation,RasterConfigMutation,Self::DraftMutation>,MediaError>{Err(MediaError::NotImplemented)}
 
     /// 🎞️ The ONE reserved route raster owns: `import-media`. Every inbound media delivery goes
     /// through `dispatch_import_media` → `build_artifact_reserved_media_job`, which fails closed
     /// unless this builder hands back a concrete resumable importer — see [`RasterImportJob`].
-    fn build_reserved_tool_job(request: ArtifactReservedToolJobRequest<EditorApp<Self>>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
-        if request.tool_id.as_str() != RASTER_IMPORT_TOOL_ID {
-            return Ok(None);
-        }
-        if !request.raw_wire.is_empty() {
-            return Err(Fault::from("raster import-media admits a decoded media value, never a wire payload"));
-        }
-        let ArtifactReservedToolInput::Media { port, media } = &request.input else {
-            return Err(Fault::from("raster import-media requires media input"));
-        };
-        let (port, media) = (port.clone(), media.clone());
-        Ok(Some(ArtifactReservedToolJob::new(RasterImportJob::new(request, port, media))))
+    fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,output:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if output.is_some(){return semio_plugin::tool_contract::admit_reserved_work::<EditorApp<Self>,RasterImportJob>(request,output,cx)}
+        let original=request.as_ref().ok_or_else(||semio_framework_value::ValueError::invariant("Raster original reserved request is absent"))?;
+        if original.tool_id.as_str()!=RASTER_IMPORT_TOOL_ID{return Ok(false)}
+        if !original.raw_wire.is_empty(){return Err(semio_framework_value::ValueError::invariant("Raster reserved import requires decoded media").into())}
+        if !matches!(original.input.as_ref(),Some(ArtifactReservedToolInput::Media{..})){return Err(semio_framework_value::ValueError::invariant("Raster reserved import media is absent").into())}
+        semio_plugin::tool_contract::admit_reserved_work::<EditorApp<Self>,RasterImportJob>(request,output,cx)
     }
 
     fn command_id(command: &RasterCommand) -> &'static str {

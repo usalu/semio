@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_plugin_host_guest_runtime::{MockGuestRuntime, PackageRef};
+use semio_plugin_host_guest_runtime::{MockGuestRuntime, PackageRef};
 use crate::component::PackageHash;
 use semio_framework_plugin_host_shard_executor::OutcomeSink;
 use semio_framework_actor::{ActivationEvent, ActorKind, Lane, PackageId, ShardKind};

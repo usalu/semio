@@ -74,7 +74,7 @@ async fn authored_seed_and_pins_survive_actual_pack_spr_replay() {
     let mut store = store::ArtifactStore::<Grid2dSnapshot, crate::mutations::Grid2dMutation>::new::<store::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("replay store opens");
     store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Grid2dSnapshot, crate::mutations::Grid2dMutation>().expect("funded replay owners")).unwrap_or_else(|(error, _)| panic!("replay owners refused: {error}"));
     for mutation in [crate::mutations::change_seed(99), crate::mutations::pin_cell(1, 0, "pipe-h".into())] {
-        store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("authored edit applies");
+        store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation], transaction: None }, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("authored edit applies");
     }
     let observed = store.snapshot().expect("edited replay projection");
     let pin = observed.pinned.iter().find(|pin| pin.x == 1 && pin.y == 0).expect("authored pin");

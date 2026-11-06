@@ -12,4 +12,4 @@ path = "main.rs"
 
 [dependencies]
 semio-s-artifact-energy-model = { path = "../../../../../../../../../✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust" }
-semio-framework-os-kernel = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel"}

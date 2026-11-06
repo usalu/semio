@@ -1,0 +1,71 @@
+{
+  "cases": [
+    {
+      "id": "successful-children-share-parent-workspace",
+      "stages": [
+        {
+          "work": 3,
+          "retained": 16,
+          "status": "success"
+        },
+        {
+          "work": 5,
+          "retained": 24,
+          "status": "success"
+        }
+      ],
+      "expectedWork": 8,
+      "retained": 40,
+      "lateTransfers": 0
+    },
+    {
+      "id": "child-refusal-keeps-performed-work-and-workspace",
+      "stages": [
+        {
+          "work": 3,
+          "retained": 16,
+          "status": "success"
+        },
+        {
+          "work": 2,
+          "retained": 24,
+          "status": "refusal"
+        }
+      ],
+      "expectedWork": 5,
+      "retained": 40,
+      "lateTransfers": 0
+    },
+    {
+      "id": "child-unwind-keeps-parent-workspace",
+      "stages": [
+        {
+          "work": 3,
+          "retained": 16,
+          "status": "success"
+        },
+        {
+          "work": 1,
+          "retained": 8,
+          "status": "unwind"
+        }
+      ],
+      "expectedWork": 4,
+      "retained": 24,
+      "lateTransfers": 0
+    },
+    {
+      "id": "denied-child-does-not-transfer-workspace",
+      "stages": [
+        {
+          "work": 0,
+          "retained": 0,
+          "status": "refusal"
+        }
+      ],
+      "expectedWork": 0,
+      "retained": 0,
+      "lateTransfers": 0
+    }
+  ]
+}

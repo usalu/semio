@@ -1,0 +1,17 @@
+[
+  {
+    "kind": "success",
+    "before": 0,
+    "after": 0
+  },
+  {
+    "kind": "refusal",
+    "before": 0,
+    "after": 0
+  },
+  {
+    "kind": "panic",
+    "before": 0,
+    "after": 0
+  }
+]

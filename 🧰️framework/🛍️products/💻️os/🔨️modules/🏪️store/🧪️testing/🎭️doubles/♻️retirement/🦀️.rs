@@ -112,25 +112,25 @@ impl SnapshotRetirementFactory<DemoSnapshot> for ExactDemoSnapshotRetirementFact
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct DemoInitialSnapshotRetirementFactory;
 
-impl ArtifactOwnedValueRetirementFactory<DemoSnapshot> for DemoInitialSnapshotRetirementFactory {
+impl ArtifactOwnedValueRetirementFactory<DemoSnapshot> for DemoInitialSnapshotRetirementFactory {fn retire_owned_work_demand(&self,_:&DemoSnapshot)->Result<u64,semio_framework_value::ValueError>{Ok(1)}
     fn retirement_birth_bytes(&self, value: &DemoSnapshot) -> usize {
         semio_framework_value::factory::OwnedValueRetirementFactory::<DemoSnapshot>::default().retirement_birth_bytes(value)
     }
-    fn retire_owned(&self, value: DemoSnapshot, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, DemoSnapshot)> {
+    fn retire_owned(&self, value: DemoSnapshot, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(semio_framework_value::OriginalRetirementFailure, DemoSnapshot)> {let turn=(||{
         semio_framework_value::factory::OwnedValueRetirementFactory::<DemoSnapshot>::default().retire_owned(value, grant)
-    }
+    })();semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(|(error,value)|(error.into(),value)),work:turn.work}}
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct DemoMutationRetirementFactory;
 
-impl<Mutation: semio_framework_value::retirement::RetireOwned> ArtifactOwnedValueRetirementFactory<Mutation> for DemoMutationRetirementFactory {
+impl<Mutation: semio_framework_value::retirement::RetireOwned> ArtifactOwnedValueRetirementFactory<Mutation> for DemoMutationRetirementFactory {fn retire_owned_work_demand(&self,_:&Mutation)->Result<u64,semio_framework_value::ValueError>{Ok(1)}
     fn retirement_birth_bytes(&self, value: &Mutation) -> usize {
         semio_framework_value::factory::OwnedValueRetirementFactory::<Mutation>::default().retirement_birth_bytes(value)
     }
-    fn retire_owned(&self, value: Mutation, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, Mutation)> {
+    fn retire_owned(&self, value: Mutation, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(semio_framework_value::OriginalRetirementFailure, Mutation)> {let turn=(||{
         semio_framework_value::factory::OwnedValueRetirementFactory::<Mutation>::default().retire_owned(value, grant)
-    }
+    })();semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(|(error,value)|(error.into(),value)),work:turn.work}}
 }
 
 /// 🧹️ Retires a detached demo envelope a test compared against, through the store's own envelope retirement.

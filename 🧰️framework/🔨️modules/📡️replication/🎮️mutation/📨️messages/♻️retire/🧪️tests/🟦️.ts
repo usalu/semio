@@ -36,3 +36,5 @@ test("♻️ nested edit diagnostics retain original owners until the exact gran
   const ledger=readFileSync(new URL("../../../../../../🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/📨️messages/🦀️.rs",import.meta.url),"utf8");
   expect(ledger.includes("inner: protocol::mutation::EditMessageLedgerRetirement")).toBe(true);
 });
+
+test("selected message action distinguishes refusal from one performed turn",()=>{const {Database}=require("bun:sqlite"),db=new Database(":memory:");try{db.exec("CREATE TABLE turns(admitted INTEGER,work INTEGER)");db.query("INSERT INTO turns VALUES(?,?)").run(0,law.selectedWork.denied);db.query("INSERT INTO turns VALUES(?,?)").run(1,law.selectedWork.performed);expect(db.query("SELECT admitted,work FROM turns ORDER BY admitted").all()).toEqual([{admitted:0,work:0},{admitted:1,work:1}]);}finally{db.close()}});

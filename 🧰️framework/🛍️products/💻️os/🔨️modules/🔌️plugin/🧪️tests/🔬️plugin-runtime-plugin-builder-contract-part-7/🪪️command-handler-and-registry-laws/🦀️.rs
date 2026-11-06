@@ -119,7 +119,7 @@
         let leftover = semio_plugin_job::TypedOperationLeftover { operation: 42, view };
         let mut frames = vec![protocol::AppFrame::Done { in_reply_to: 1 }, invocation(2, started("41")), invocation(0, started("42")), invocation(3, started("42"))];
         let untouched: Vec<Vec<u8>> = frames.iter().take(3).map(|frame| ::semio_framework_async::poll::resolve_ready(protocol::encode_app_frame(frame))).collect();
-        assert!(semio_plugin_runtime_ops::ops_typed_operations::merge_typed_operation_leftover_into_reply(&mut frames, &leftover), "the reply that started operation 42 receives the leftover");
+        assert!(semio_framework_plugin_runtime_ops::ops_typed_operations::merge_typed_operation_leftover_into_reply(&mut frames, &leftover), "the reply that started operation 42 receives the leftover");
         for (index, before) in untouched.iter().enumerate() {
             assert_eq!(&::semio_framework_async::poll::resolve_ready(protocol::encode_app_frame(&frames[index])), before, "frame {index} answers no fold and stays byte-identical");
         }
@@ -130,5 +130,5 @@
         let ids = merged.get("interactionView").and_then(|view| view.get("selectedIds")).and_then(semio_framework_value::DslValue::as_array).expect("interactionView joins the witness");
         assert_eq!(ids.iter().filter_map(semio_framework_value::DslValue::as_str).collect::<Vec<_>>(), vec!["item-1"]);
         let mut none = vec![invocation(4, started("40"))];
-        assert!(!semio_plugin_runtime_ops::ops_typed_operations::merge_typed_operation_leftover_into_reply(&mut none, &leftover), "no reply of this exchange started the folding operation");
+        assert!(!semio_framework_plugin_runtime_ops::ops_typed_operations::merge_typed_operation_leftover_into_reply(&mut none, &leftover), "no reply of this exchange started the folding operation");
     }

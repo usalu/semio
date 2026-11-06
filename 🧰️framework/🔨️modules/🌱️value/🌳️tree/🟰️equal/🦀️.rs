@@ -82,10 +82,10 @@ impl<T:RetainedEquality> RetainedEqualityOwner<T>{
 
  pub fn begin_close(&mut self){self.closing=true;self.cursor.begin_close();}
  pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Err(invalid("original typed comparison close has not begun"));}if !self.cursor.terminal_is_empty(){return self.cursor.close_demand(body);}RetainedCloneBinding::close_demand(if self.right.is_some(){&self.right}else{&self.left},body)}
- pub fn close_step(&mut self,g:RetainedCloneGrant)->crate::RetainedWorkOutcome{let mut work=0;let result=(||{
+ pub fn close_step(&mut self,g:RetainedCloneGrant)->crate::OriginalRetirementOutcome{let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
   let d=self.close_demand(g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
-  if !self.cursor.terminal_is_empty(){let turn=self.cursor.close_step(g);work=turn.work;return turn.result.map(|step|RetainedCloneStep::Progress(step.progress()))}
+  if !self.cursor.terminal_is_empty(){let turn=self.cursor.close_step(g);work=turn.work;return turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(Into::into)}
   let turn=RetainedCloneBinding::close_one(if self.right.is_some(){&mut self.right}else{&mut self.left},g);work=turn.work;let step=turn.result?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
  })();crate::RetainedWorkOutcome{result,work}}
 

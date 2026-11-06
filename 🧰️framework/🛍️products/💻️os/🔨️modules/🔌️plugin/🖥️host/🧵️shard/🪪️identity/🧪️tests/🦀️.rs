@@ -2,7 +2,7 @@
 use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneStep,RetainedCloneProgress}};
 use std::sync::{Arc,atomic::{AtomicBool,AtomicUsize,Ordering}};
 use semio_framework_value::{ErasedSnapshotRetirement, ValueError, ValueRefusalKind};
-use semio_framework_plugin_host_guest_runtime::{GuestInstance, GuestRuntimes};
+use semio_plugin_host_guest_runtime::{GuestInstance, GuestRuntimes};
 use semio_framework_value::native_encoding::{NativeEncodeAllocation, NativeEncodeControl, NativeEncodeProgress, NativeEncodeRetirementRecipient};
 use semio_framework_plugin_host_shard::identity::{OriginalShardIdentity, ShardIdentityPolicy};
 use semio_framework_value::retained_clone::RetainedCloneGrant;
@@ -13,7 +13,7 @@ async fn original_scheduler_input(kernel:&mut semio_framework_actor::Kernel,acto
 #[semio_framework_async_macros::async_test]
 async fn original_host_factory_admission_receives_real_guest_once_and_keeps_scheduler_input(){
  use semio_framework_actor::{retained_turn::{OriginalActorInput,ActorGuestPhase},RetainedTurnInput};
- use semio_framework_plugin_host_guest_runtime::{MockGuestRuntime,GuestInstanceState,MockInstanceState};
+ use semio_plugin_host_guest_runtime::{MockGuestRuntime,GuestInstanceState,MockInstanceState};
  use semio_framework_actor::ActorId as RuntimeActorId;
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🎟️context/🤝️admission/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let grant=|row:&serde_json::Value|RetainedCloneGrant{maximum_items:row[0].as_u64().unwrap()as usize,maximum_copy_bytes:row[1].as_u64().unwrap()as usize,maximum_capacity_bytes:row[2].as_u64().unwrap()as usize,maximum_release_bytes:row[3].as_u64().unwrap()as usize,maximum_depth:row[4].as_u64().unwrap()as usize};
@@ -67,7 +67,7 @@ async fn original_host_guest_invocation_borrows_issued_input_outside_scheduling(
  let law:serde_json::Value=serde_json::from_str(include_str!("../🎟️invocation/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let input=crate::unit::original_retained_turn();assert_eq!(serde_json::to_value(input).unwrap(),law["request"]["input"]);let resources=semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
  let policy:ShardIdentityPolicy=serde_json::from_str(include_str!("../⚙️configuration/🔣️.json")).unwrap();let mut identity=OriginalShardIdentity::issue(policy,Box::new(|_|true),Box::new(|_|Ok(()))).unwrap();let address=std::ptr::from_ref(identity.recipient.as_ref().get_ref());let native_bytes=identity.owned_bytes();
- let runtime=GuestRuntimes::Recording(Arc::new(semio_framework_plugin_host_guest_runtime::RecordingRuntime::new().await));let mut instance=GuestInstance{actor:semio_framework_actor::ActorId(71),state:semio_framework_plugin_host_guest_runtime::GuestInstanceState::Mock(semio_framework_plugin_host_guest_runtime::MockInstanceState::default())};
+ let runtime=GuestRuntimes::Recording(Arc::new(semio_plugin_host_guest_runtime::RecordingRuntime::new().await));let mut instance=GuestInstance{actor:semio_framework_actor::ActorId(71),state:semio_plugin_host_guest_runtime::GuestInstanceState::Mock(semio_plugin_host_guest_runtime::MockInstanceState::default())};
  let budget=semio_framework_plugin_host_shard::turn_budget_from_grant(&resources,input,input.grant,input.work.fuel,input.work.absolute_deadline_us).await;assert_eq!(budget.retained,input);
  let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_async::poll::resolve_ready(identity.execute_turn(&runtime,&mut instance,&mut [],budget)));let result=result.unwrap();assert_eq!(result.retained_receipt.input,input);assert_eq!(serde_json::to_value(result.retained_receipt.spent).unwrap(),law["spent"]);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(identity.owned_bytes(),native_bytes);assert_eq!(std::ptr::from_ref(identity.recipient.as_ref().get_ref()),address);
 }

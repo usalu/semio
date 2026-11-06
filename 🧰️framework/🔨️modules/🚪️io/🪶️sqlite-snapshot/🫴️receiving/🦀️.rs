@@ -10,17 +10,17 @@ macro_rules! original_sqlite_receiving{
  ($trait:ident,$owner:ident,$direction:ident,$progress:path,$phase:ident)=>{
  /// 🪶️ Loans concrete SQL receiving with original work, body and refusal custody.
  pub trait $trait{
-  fn receive_sqlite_snapshot<F:NativeSqliteReceivingFrame,O:semio_framework_value::retirement::RetireOwned>(&mut self,control:&mut crate::SqliteSnapshotControl<'_>,construct:impl FnOnce()->F,operation:impl FnOnce(&mut F,&mut crate::artifact::receiving::Port<'_,'_,'_,NativeSnapshotBodyWallet>)->Result<(),ValueError>,publish:impl FnOnce(&mut F)->Result<O,ValueError>)->semio_framework_value::RetainedWorkOutcome<O,semio_framework_io_control::NativeSnapshotFailure>;
+  fn receive_sqlite_snapshot<F:NativeSqliteReceivingFrame,O:semio_framework_value::retirement::RetireOwned>(&mut self,control:&mut crate::SqliteSnapshotControl<'_>,construct:&mut impl FnMut()->F,operation:&mut impl FnMut(&mut F,&mut crate::artifact::receiving::Port<'_,'_,'_,NativeSnapshotBodyWallet>)->Result<(),ValueError>,publish:&mut impl FnMut(&mut F)->Result<O,ValueError>)->semio_framework_value::RetainedWorkOutcome<O,semio_framework_io_control::NativeSnapshotFailure>;
  }
  impl $trait for $owner<'_,'_>{
-  fn receive_sqlite_snapshot<F:NativeSqliteReceivingFrame,O:semio_framework_value::retirement::RetireOwned>(&mut self,control:&mut crate::SqliteSnapshotControl<'_>,construct:impl FnOnce()->F,operation:impl FnOnce(&mut F,&mut crate::artifact::receiving::Port<'_,'_,'_,NativeSnapshotBodyWallet>)->Result<(),ValueError>,publish:impl FnOnce(&mut F)->Result<O,ValueError>)->semio_framework_value::RetainedWorkOutcome<O,semio_framework_io_control::NativeSnapshotFailure>{
+  fn receive_sqlite_snapshot<F:NativeSqliteReceivingFrame,O:semio_framework_value::retirement::RetireOwned>(&mut self,control:&mut crate::SqliteSnapshotControl<'_>,construct:&mut impl FnMut()->F,operation:&mut impl FnMut(&mut F,&mut crate::artifact::receiving::Port<'_,'_,'_,NativeSnapshotBodyWallet>)->Result<(),ValueError>,publish:&mut impl FnMut(&mut F)->Result<O,ValueError>)->semio_framework_value::RetainedWorkOutcome<O,semio_framework_io_control::NativeSnapshotFailure>{
    use semio_framework_io_control::{NativeSnapshotFailure,native_snapshot_turn};
    native_snapshot_turn(|work|{
     self.native().checkpoint()?;let before=self.native().owned_bytes();
     let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original SQLite receiving extent overflow"))?;
     let settlement=crate::artifact::receiving::ReceivingSettlement::new(control,before,crate::SqliteSnapshotPhase::$phase);
     let mut observer=|event:$progress|settlement.observe(event.owned_bytes,event.completed,event.total);
-    let turn=self.scoped_native(maximum,&mut observer,|owner|owner.receive::<F,O,NativeSnapshotFailure>(|slot,native,body|{
+    let turn=self.scoped_native(maximum,&mut observer,|owner|owner.receive::<F,O,NativeSnapshotFailure>(&mut |slot,native,body|{
      let before_work=settlement.with_control(|control|control.performed_work());
      let result=(||{
       let owned=settlement.with_control(|control|{

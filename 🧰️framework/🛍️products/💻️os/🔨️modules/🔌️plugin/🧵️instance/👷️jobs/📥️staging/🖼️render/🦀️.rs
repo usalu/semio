@@ -9,7 +9,7 @@ use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use std::future::Future;
-use semio_plugin_instance_stores::stores_components::{LocalInteraction, PeerRoster};
+use semio_framework_plugin_instance_stores::stores_components::{LocalInteraction, PeerRoster};
 use std::mem::ManuallyDrop;
 use store::{MemberFactory, Mutation, SpaceMember};
 use protocol::OpText;
@@ -193,6 +193,6 @@ impl<A: ArtifactApp> ToolOperations<A> {
     /// it, so a snapshot avoids an aliasing conflict against `&mut self`.
     #[cfg(test)]
     pub async fn stamp_and_cache_interaction_ui(&mut self, roster: &mut PeerRoster<A>, interaction: &mut LocalInteraction<A>, tree: &ComponentTree, state: &protocol::InteractionState, body_key: &str) -> UiAssemblyResult<()> {
-        OriginalRenderInteractionStamp { registry: &self.registry, interaction_hover: &interaction.interaction_hover, peer_presence: roster.peer_presence.as_deref().unwrap_or(&semio_framework_plugin_decl_views::PeerPresenceRoot::EMPTY), own_color: roster.own_color, local_interaction_authority: &mut interaction.local_interaction_authority, interaction_ui_topology: &mut interaction.interaction_ui_topology, pending_presence: &mut roster.pending_presence, presence_marked_keys: &mut roster.presence_marked_keys }.stamp_and_cache_interaction_ui(tree,state,body_key).await
+        OriginalRenderInteractionStamp { registry: &self.registry, interaction_hover: &interaction.interaction_hover, peer_presence: roster.peer_presence.as_deref().unwrap_or(&semio_plugin_decl_views::PeerPresenceRoot::EMPTY), own_color: roster.own_color, local_interaction_authority: &mut interaction.local_interaction_authority, interaction_ui_topology: &mut interaction.interaction_ui_topology, pending_presence: &mut roster.pending_presence, presence_marked_keys: &mut roster.presence_marked_keys }.stamp_and_cache_interaction_ui(tree,state,body_key).await
     }
 }

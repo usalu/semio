@@ -191,14 +191,14 @@ impl Drop for StalledNativeAssetServer {
 }
 
 #[cfg(test)]
-fn retire_component_world_fixture(runtime: &AppMailbox) {
+fn retire_component_world_fixture(runtime: &AppMailbox, original:&mut crate::os_host::fixtures::fixture_original_turn::FixtureTurnV1) {
     for (host_id, surface_id, key) in [("component-world-a", "document-world-a", "world-a"), ("component-world-b", "document-world-b", "world-b")] {
         let mut target = semio_renderer_wgpu_contracts::fixture_scene_pointer_target("component-window", surface_id, key);
         target.host_id = host_id.into();
         target.kind = semio_ui_declaration::ui::SurfaceKind::World3d;
         let mut asset_terminal = false;
         for _ in 0..262_144 {
-            asset_terminal = runtime.close_component_asset_step(&target);
+            asset_terminal = original.turn(|cx|runtime.close_component_asset_step(&target,cx)).expect("same original component asset close");
             let _ = semio_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
             if asset_terminal {
                 break;
@@ -210,23 +210,10 @@ fn retire_component_world_fixture(runtime: &AppMailbox) {
         let Some(token) = interaction.shell.surfaces.world3d_states.token(host_id) else { continue };
         let mut owner = interaction.shell.surfaces.world3d_states.take_exact_to_retirement(token).expect("the exact World transfers to bounded cleanup");
         infinite_world::world::begin_world3d_dynamic_retirement(&mut owner.value.session, &mut owner.value.camera, &mut owner.value.retirement, &mut owner.value.scene, &mut owner.value.assets);
-        let mut sequence = 0;
         for _ in 0..262_144 {
-            let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
-            let mut context = semio_framework_job::StepContext::new(
-                semio_framework_job::OperationId(1),
-                semio_framework_job::Generation(1),
-                semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT),
-                semio_framework_job::root_cancel_token(),
-                semio_framework_job::default_now_us,
-                &mut sequence,
-                &mut context_retained,
-            );
             let terrain_grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
-            let terrain=infinite_world::world::step_world3d_terrain_retirement(&mut owner.value.session, &mut owner.value.terrain,terrain_grant,&mut context);
-            assert!(terrain.ownership.fits(terrain_grant));
-            assert!(!matches!(terrain.step,infinite_world::world::WorldTerrainMeshPublicationStep::Fault(_)));
-            if terrain.step==infinite_world::world::WorldTerrainMeshPublicationStep::Idle && infinite_world::world::step_world3d_dynamic_retirement(&mut owner.value, &mut context) && infinite_world::world::world3d_dynamic_retirement_terminal_is_empty(&owner.value) {
+            let terminal=original.turn(|context|{let terrain=infinite_world::world::step_world3d_terrain_retirement(&mut owner.value.session, &mut owner.value.terrain,terrain_grant,context);assert!(terrain.ownership.fits(terrain_grant));assert!(!matches!(terrain.step,infinite_world::world::WorldTerrainMeshPublicationStep::Fault(_)));terrain.step==infinite_world::world::WorldTerrainMeshPublicationStep::Idle && infinite_world::world::step_world3d_dynamic_retirement(&mut owner.value,context) && infinite_world::world::world3d_dynamic_retirement_terminal_is_empty(&owner.value)});
+            if terminal {
                 break;
             }
         }
@@ -239,6 +226,7 @@ fn retire_component_world_fixture(runtime: &AppMailbox) {
 #[cfg(test)]
 #[test]
 fn a_temporarily_checked_out_runtime_is_busy_not_cancelled_for_its_exact_world_asset() {
+    let mut original = crate::os_host::fixtures::fixture_original_turn::FixtureTurnV1::new(crate::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT);
     let runtime = runtime_with_component_worlds();
     let fetch = runtime.take_renderer_asset_step().expect("World A's real asset owner is checked out");
     let interaction = {
@@ -252,7 +240,7 @@ fn a_temporarily_checked_out_runtime_is_busy_not_cancelled_for_its_exact_world_a
         assert!(runtime_owner.interaction.replace(interaction).is_none());
     }
     assert!(runtime.return_renderer_asset_owner(fetch).is_ok(), "the exact asset owner returns after runtime handback");
-    retire_component_world_fixture(&runtime);
+    retire_component_world_fixture(&runtime,&mut original);
     assert_eq!(current_while_checked_out, None, "a checked-out runtime reports temporary unavailability");
     assert!(!cancelled_while_checked_out, "temporary runtime unavailability is not an asset cancellation verdict");
 }
@@ -260,6 +248,7 @@ fn a_temporarily_checked_out_runtime_is_busy_not_cancelled_for_its_exact_world_a
 #[cfg(test)]
 #[test]
 fn a_component_world_close_begins_with_its_exact_checked_out_asset_before_world_transfer() {
+    let mut original = crate::os_host::fixtures::fixture_original_turn::FixtureTurnV1::new(crate::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT);
     let runtime = runtime_with_component_worlds();
     let fetch_a = runtime.take_renderer_asset_step().expect("World A's real asset owner is checked out");
     let token_a = match &fetch_a {
@@ -278,7 +267,6 @@ fn a_component_world_close_begins_with_its_exact_checked_out_asset_before_world_
     target.kind = semio_ui_declaration::ui::SurfaceKind::World3d;
     let request = ComponentSurfaceCloseRequest { token: ComponentSurfaceCloseToken(1), owner: target, engine_token: None };
     let mut close = ComponentSurfaceCloseOwner::new(request);
-    let mut original = crate::os_host::fixtures::fixture_original_turn::FixtureTurnV1::new(crate::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT);
     original.turn(|cx| close.close_asset_world_step(&runtime,cx)).expect("same original component cleanup");
     let phase_while_checked_out = format!("{:?}", close.phase);
     let (a_live_while_checked_out, b_unchanged_while_a_closes) = {
@@ -311,7 +299,7 @@ fn a_component_world_close_begins_with_its_exact_checked_out_asset_before_world_
         semio_renderer_wgpu_asset_authority::RendererAssetFetchOwner::Shared(_) => panic!("World B's request remains component-owned"),
     }
     assert!(runtime.return_renderer_asset_owner(fetch_b).is_ok(), "World B's owner returns unchanged");
-    retire_component_world_fixture(&runtime);
+    retire_component_world_fixture(&runtime,&mut original);
     assert_eq!(phase_while_checked_out, "Asset", "World transfer waits while World A's exact asset owner is checked out");
     assert!(a_live_while_checked_out, "the checked-out asset keeps its exact World reachable for handback");
     assert!(b_unchanged_while_a_closes && b_survived && fetched_b_exactly, "World B keeps its token, request, and owner while World A closes");
@@ -322,6 +310,7 @@ fn a_component_world_close_begins_with_its_exact_checked_out_asset_before_world_
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn native_asset_handoff_preserves_its_exact_response_across_seal_and_return_contention() {
+    let mut original = crate::os_host::fixtures::fixture_original_turn::FixtureTurnV1::new(crate::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT);
     let runtime = runtime_with_component_worlds();
     let mut fetch = runtime.take_renderer_asset_step().expect("World A request");
     assert!(matches!(runtime.reserve_renderer_asset_response(&mut fetch, 7), semio_renderer_wgpu_asset_authority::RendererAssetSealStep::Granted));
@@ -356,7 +345,7 @@ fn native_asset_handoff_preserves_its_exact_response_across_seal_and_return_cont
     }
     assert!(runtime.finish_renderer_asset_owner(completed, None).is_ok());
     let fault = runtime.0.frame_fault.lock().unwrap().clone();
-    retire_component_world_fixture(&runtime);
+    retire_component_world_fixture(&runtime,&mut original);
     assert_eq!((busy_seal, seal, busy_return, returned), (Some(false), Some(true), Some(false), Some(true)));
     assert_eq!(retained_before_seal, (token, 7, false));
     assert_eq!(retained_after_seal, (token, 7, true));
@@ -368,6 +357,7 @@ fn native_asset_handoff_preserves_its_exact_response_across_seal_and_return_cont
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn native_asset_handoff_cancellation_returns_the_closing_request_and_preserves_its_sibling() {
+    let mut original = crate::os_host::fixtures::fixture_original_turn::FixtureTurnV1::new(crate::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT);
     let runtime = runtime_with_component_worlds();
     let mut fetch = runtime.take_renderer_asset_step().expect("World A request");
     assert!(matches!(runtime.reserve_renderer_asset_response(&mut fetch, 7), semio_renderer_wgpu_asset_authority::RendererAssetSealStep::Granted));
@@ -376,12 +366,12 @@ fn native_asset_handoff_cancellation_returns_the_closing_request_and_preserves_i
     let mut target = semio_renderer_wgpu_contracts::fixture_scene_pointer_target("component-window", "document-world-a", "world-a");
     target.host_id = "component-world-a".into();
     target.kind = semio_ui_declaration::ui::SurfaceKind::World3d;
-    let close_with_checked_out_response = runtime.close_component_asset_step(&target);
+    let close_with_checked_out_response = original.turn(|cx|runtime.close_component_asset_step(&target,cx)).expect("same original component asset close");
     let cancelled = runtime.pump_native_asset_handoff_step(false);
     let returned = runtime.pump_native_asset_handoff_step(false);
     let mut terminal = false;
     for _ in 0..4096 {
-        if runtime.close_component_asset_step(&target) {
+        if original.turn(|cx|runtime.close_component_asset_step(&target,cx)).expect("same original component asset close") {
             terminal = true;
             break;
         }
@@ -390,7 +380,7 @@ fn native_asset_handoff_cancellation_returns_the_closing_request_and_preserves_i
     let sibling_current = runtime.renderer_asset_current(&sibling);
     assert!(runtime.return_renderer_asset_owner(sibling).is_ok());
     let fault = runtime.0.frame_fault.lock().unwrap().clone();
-    retire_component_world_fixture(&runtime);
+    retire_component_world_fixture(&runtime,&mut original);
     assert!(!close_with_checked_out_response);
     assert_eq!((cancelled, returned), (Some(true), Some(true)));
     assert!(terminal && fault.is_none());
@@ -401,6 +391,7 @@ fn native_asset_handoff_cancellation_returns_the_closing_request_and_preserves_i
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn unavailable_native_asset_isolated_to_its_exact_world_owner() {
+    let mut original = crate::os_host::fixtures::fixture_original_turn::FixtureTurnV1::new(crate::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT);
     let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📄️native-asset-response/🔣️.json")).expect("native asset contract");
     let expected = &law["failureIsolation"]["native"];
     let runtime = runtime_with_component_worlds();
@@ -424,7 +415,7 @@ fn unavailable_native_asset_isolated_to_its_exact_world_owner() {
     };
     let handoff_terminal = runtime.0.native_asset_handoff.lock().expect("native handoff").is_none();
     let frame_faults = usize::from(runtime.0.frame_fault.lock().expect("native frame fault").is_some());
-    retire_component_world_fixture(&runtime);
+    retire_component_world_fixture(&runtime,&mut original);
     assert_eq!((busy, rejected, returned), (Some(false), Some(true), Some(true)));
     assert_eq!(exact_miss, expected["unavailableMarksOneMiss"].as_bool().expect("unavailable miss"));
     assert!(!sibling_miss, "an unavailable response cannot poison a sibling World");
@@ -436,6 +427,7 @@ fn unavailable_native_asset_isolated_to_its_exact_world_owner() {
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn a_stalled_native_component_body_is_aborted_before_its_sibling_enters_the_single_fetch_lane() {
+    let mut original = crate::os_host::fixtures::fixture_original_turn::FixtureTurnV1::new(crate::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT);
     let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📄️native-asset-response/🔣️.json")).expect("native asset contract");
     let transport = &law["transportCancellation"];
     let observation_deadline = std::time::Duration::from_millis(transport["observationDeadlineMs"].as_u64().expect("observation deadline"));
@@ -451,7 +443,7 @@ fn a_stalled_native_component_body_is_aborted_before_its_sibling_enters_the_sing
     let mut sibling_started_while_stalled = false;
     let mut close_terminal = false;
     while std::time::Instant::now() < deadline {
-        close_terminal |= runtime.close_component_asset_step(&target);
+        close_terminal |= original.turn(|cx|runtime.close_component_asset_step(&target,cx)).expect("same original component asset close");
         let _ = runtime.pump_native_asset();
         if server.sibling_request.try_recv().is_ok() {
             sibling_started_while_stalled = true;
@@ -464,7 +456,7 @@ fn a_stalled_native_component_body_is_aborted_before_its_sibling_enters_the_sing
     let cleanup_limit = std::time::Instant::now() + cleanup_deadline;
     let mut sibling_started = sibling_started_while_stalled;
     while std::time::Instant::now() < cleanup_limit {
-        close_terminal |= runtime.close_component_asset_step(&target);
+        close_terminal |= original.turn(|cx|runtime.close_component_asset_step(&target,cx)).expect("same original component asset close");
         let _ = runtime.pump_native_asset();
         sibling_started |= server.sibling_request.try_recv().is_ok();
         let fetch_idle = !runtime.0.native_asset_fetching.load(Ordering::Acquire);
@@ -484,7 +476,7 @@ fn a_stalled_native_component_body_is_aborted_before_its_sibling_enters_the_sing
     }
     let frame_faults = usize::from(runtime.0.frame_fault.lock().expect("native frame fault").is_some());
     let terminal_native_owners = usize::from(runtime.0.native_asset_fetching.load(Ordering::Acquire)) + usize::from(runtime.0.native_asset_handoff.lock().expect("native handoff owner").is_some()) + runtime.native_asset_transport_live_count();
-    retire_component_world_fixture(&runtime);
+    retire_component_world_fixture(&runtime,&mut original);
 
     assert!(stalled_head_observed, "World A reaches a real response body before close");
     assert!(sibling_started_while_stalled, "closing World A must interrupt its stalled body before World B enters the one-fetch lane");
@@ -497,6 +489,7 @@ fn a_stalled_native_component_body_is_aborted_before_its_sibling_enters_the_sing
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn a_withheld_native_component_head_is_cancelled_before_its_sibling_enters_the_single_fetch_lane() {
+    let mut original = crate::os_host::fixtures::fixture_original_turn::FixtureTurnV1::new(crate::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT);
     let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📄️native-asset-response/🔣️.json")).expect("native asset contract");
     let transport = &law["transportCancellation"];
     let observation_deadline = std::time::Duration::from_millis(transport["observationDeadlineMs"].as_u64().expect("observation deadline"));
@@ -512,7 +505,7 @@ fn a_withheld_native_component_head_is_cancelled_before_its_sibling_enters_the_s
     let mut sibling_started_while_head_withheld = false;
     let mut close_terminal = false;
     while std::time::Instant::now() < deadline {
-        close_terminal |= runtime.close_component_asset_step(&target);
+        close_terminal |= original.turn(|cx|runtime.close_component_asset_step(&target,cx)).expect("same original component asset close");
         let _ = runtime.pump_native_asset();
         if server.sibling_request.try_recv().is_ok() {
             sibling_started_while_head_withheld = true;
@@ -526,7 +519,7 @@ fn a_withheld_native_component_head_is_cancelled_before_its_sibling_enters_the_s
     let cleanup_limit = std::time::Instant::now() + cleanup_deadline;
     let mut sibling_started = sibling_started_while_head_withheld;
     while std::time::Instant::now() < cleanup_limit {
-        close_terminal |= runtime.close_component_asset_step(&target);
+        close_terminal |= original.turn(|cx|runtime.close_component_asset_step(&target,cx)).expect("same original component asset close");
         let _ = runtime.pump_native_asset();
         sibling_started |= server.sibling_request.try_recv().is_ok();
         let fetch_idle = !runtime.0.native_asset_fetching.load(Ordering::Acquire);
@@ -546,7 +539,7 @@ fn a_withheld_native_component_head_is_cancelled_before_its_sibling_enters_the_s
     }
     let frame_faults = usize::from(runtime.0.frame_fault.lock().expect("native frame fault").is_some());
     let terminal_native_owners = usize::from(runtime.0.native_asset_fetching.load(Ordering::Acquire)) + usize::from(runtime.0.native_asset_handoff.lock().expect("native handoff owner").is_some()) + runtime.native_asset_transport_live_count();
-    retire_component_world_fixture(&runtime);
+    retire_component_world_fixture(&runtime,&mut original);
 
     assert!(withheld_request_observed && released_head_observed, "World A reaches the server before close and cleanup releases its withheld head");
     assert!(sibling_started_while_head_withheld, "closing World A must interrupt its withheld response head before World B enters the one-fetch lane");
@@ -559,6 +552,7 @@ fn a_withheld_native_component_head_is_cancelled_before_its_sibling_enters_the_s
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn a_cancelled_local_component_page_is_retained_for_bounded_handback_without_response_publication() {
+    let mut original = crate::os_host::fixtures::fixture_original_turn::FixtureTurnV1::new(crate::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT);
     let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📄️native-asset-response/🔣️.json")).expect("native asset contract");
     let local = &law["localPageCancellation"];
     let page_bytes = local["pageBytes"].as_u64().expect("local page bytes") as usize;
@@ -582,7 +576,7 @@ fn a_cancelled_local_component_page_is_retained_for_bounded_handback_without_res
     let mut target = semio_renderer_wgpu_contracts::fixture_scene_pointer_target("component-window", "document-world-a", "world-a");
     target.host_id = "component-world-a".into();
     target.kind = semio_ui_declaration::ui::SurfaceKind::World3d;
-    let _ = runtime.close_component_asset_step(&target);
+    let _ = original.turn(|cx|runtime.close_component_asset_step(&target,cx)).expect("same original component asset close");
     barrier.release.store(true, Ordering::Release);
     let handback_deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
     while runtime.0.native_asset_fetching.load(Ordering::Acquire) && std::time::Instant::now() < handback_deadline {
@@ -610,7 +604,7 @@ fn a_cancelled_local_component_page_is_retained_for_bounded_handback_without_res
     }
     let mut close_terminal = false;
     for _ in 0..4096 {
-        close_terminal |= runtime.close_component_asset_step(&target);
+        close_terminal |= original.turn(|cx|runtime.close_component_asset_step(&target,cx)).expect("same original component asset close");
         let _ = semio_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
         if close_terminal {
             break;
@@ -618,7 +612,7 @@ fn a_cancelled_local_component_page_is_retained_for_bounded_handback_without_res
     }
     let frame_faults = usize::from(runtime.0.frame_fault.lock().expect("local page frame fault").is_some());
     let terminal_native_owners = usize::from(runtime.0.native_asset_fetching.load(Ordering::Acquire)) + usize::from(runtime.0.native_asset_handoff.lock().expect("local page handoff owner").is_some()) + runtime.native_asset_transport_live_count();
-    retire_component_world_fixture(&runtime);
+    retire_component_world_fixture(&runtime,&mut original);
     let _ = std::fs::remove_file(path);
 
     assert!(entered, "the real local ReadPage returns its retained page into the controlled cancellation boundary");

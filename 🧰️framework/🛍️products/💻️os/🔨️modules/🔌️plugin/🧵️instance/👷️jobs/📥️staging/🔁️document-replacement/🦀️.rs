@@ -6,7 +6,7 @@ use semio_plugin_instance_history::history_components::CommandHistory;
 use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use std::future::Future;
-use semio_plugin_instance_stores::stores_components::InstanceStores;
+use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
 use std::mem::ManuallyDrop;
 use protocol::OpText;
 use crate::jobs_components::{PendingReserved, ToolOperations};

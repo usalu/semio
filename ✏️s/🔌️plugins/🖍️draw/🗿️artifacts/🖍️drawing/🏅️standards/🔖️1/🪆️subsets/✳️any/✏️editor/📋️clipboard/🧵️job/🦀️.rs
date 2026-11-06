@@ -119,28 +119,26 @@ impl DrawingClipboardJob{
         Ok(())
     }
     /// 🧬️ Seals the captured snapshot read as the original clone source before any layer or asset is copied; true while the seal is still owed.
-    fn seal_source(&mut self,request:&mut ArtifactReservedToolJobRequest<App>,cx:&mut StepContext<'_>)->Result<bool,semio_framework::Fault>{
-        let workspace=self.owner.as_mut().ok_or_else(||fault("Clipboard owner is closing"))?;
+    fn seal_source(&mut self,request:&mut ArtifactReservedToolJobRequest<App>,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        let workspace=self.owner.as_mut().ok_or_else(||ValueError::invariant("Clipboard owner is closing"))?;
         if workspace.source.is_some(){return Ok(false);}
         if workspace.unsealed.is_none()&&workspace.sealing.terminal_is_empty(){
             let demand=store::os_store::snapshot_read::SnapshotRead::<DrawingSnapshot>::duplicate_original_demands();
             if cx.fuel_remaining()==0||!semio_framework_value::retained_clone::retained_clone_grant_admits(cx.retained_grant(),demand){return Ok(true);}
             let turn=request.snapshot_read.duplicate_original(&mut workspace.unsealed,cx.retained_grant());
-            cx.consume_fuel(turn.work);let receipt=turn.result.map_err(fault)?;
-            cx.consume_retained(receipt).map_err(fault)?;return Ok(true);
+            semio_framework_job::receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress),work:turn.work})?;return Ok(true);
         }
         if let Some(read)=workspace.unsealed.take(){
-            if let Err((error,read))=workspace.sealing.begin(read){workspace.unsealed=Some(read);return Err(fault(error.into_message()));}
+            if let Err((error,read))=workspace.sealing.begin(read){workspace.unsealed=Some(read);return Err(error.into());}
         }
         let grant=cx.retained_grant();
-        let demand=workspace.sealing.next_demand().map_err(|error|fault(error.into_message()))?;
+        let demand=workspace.sealing.next_demand()?;
         if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(true);}
-        let turn=workspace.sealing.step(&mut workspace.source,grant);cx.consume_fuel(turn.work);let progress=turn.result.map_err(|error|fault(error.into_message()))?.progress();
-        cx.consume_retained(progress).map_err(fault)?;
+        let turn=workspace.sealing.step(&mut workspace.source,grant);
+        semio_framework_job::receive_original_retained_work(cx,turn)?;
         Ok(true)
     }
     fn advance(&mut self,request:&mut ArtifactReservedToolJobRequest<App>,cx:&mut StepContext<'_>)->Result<bool,semio_framework::Fault>{
-        if self.seal_source(request,cx)?{return Ok(false);}
         if self.phase==0{self.prepare(request,cx)?;cx.consume_fuel(1);return Ok(false);}
         let workspace=self.owner.as_mut().ok_or_else(||fault("Clipboard owner is closing"))?;
         match self.phase{
@@ -333,7 +331,10 @@ impl DrawingClipboardJob{
 }
 impl DrawingClipboardJob{
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self,request:&mut ArtifactReservedToolJobRequest<App>,cx:&mut StepContext<'_>)->semio_framework_job::InteractiveJobStep<'a>{let turn=self.turn(request,cx);self.outcomes.lend(turn,cx)}
+    fn step_value<'a>(&'a mut self,request:&mut ArtifactReservedToolJobRequest<App>,cx:&mut StepContext<'_>)->semio_framework_job::InteractiveJobStep<'a>{
+        if !self.closing&&!self.complete&&!cx.is_cancelled(){match self.seal_source(request,cx){Ok(true)=>return semio_framework_job::InteractiveJobStep::Outcome(None),Ok(false)=>{},Err(error)=>return semio_framework_job::InteractiveJobStep::Continuation(error)}}
+        let turn=self.turn(request,cx);self.outcomes.lend(turn,cx)
+    }
 }
 
 impl Default for DrawingClipboardJob{fn default()->Self{Self::vacant()}}
@@ -341,11 +342,11 @@ impl semio_framework_plugin::tool_contract::ArtifactReservedWork<App> for Drawin
     fn step<'a>(&'a mut self,request:&'a mut ArtifactReservedToolJobRequest<App>,cx:&mut StepContext<'_>,_claim:&mut semio_framework_job::OriginalJobReturnClaim)->semio_framework_job::InteractiveJobStep<'a>{
         if !self.owner.as_ref().is_some_and(|owner|owner.input_captured){
             let bytes=2*size_of::<Option<ArtifactReservedToolInput>>();
-            if cx.fuel_remaining()==0||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_copy_bytes<bytes{return Ok(None);}
-            let workspace=self.owner.as_mut().ok_or_else(||ValueError::invariant("Drawing source is closing"))?;
+            if cx.fuel_remaining()==0||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_copy_bytes<bytes{return semio_framework_job::InteractiveJobStep::Outcome(None);}
+            let Some(workspace)=self.owner.as_mut() else{return semio_framework_job::InteractiveJobStep::Continuation(ValueError::invariant("Drawing source is closing").into());};
             workspace.input=request.input.take();workspace.input_captured=true;
-            cx.consume_fuel(1);cx.consume_retained(semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;
-            return Ok(None);
+            cx.consume_fuel(1);
+            return semio_framework_job::InteractiveJobStep::from_callback(cx.consume_retained(semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}).map(|()|None).map_err(Into::into));
         }
         self.step_value(request,cx)
     }

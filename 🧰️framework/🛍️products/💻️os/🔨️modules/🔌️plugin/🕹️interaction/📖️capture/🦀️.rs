@@ -127,7 +127,7 @@ impl ErasedSnapshotRetirement for CapturedRootRetirement {
     /// 🧹️ Hands the captured lease back to its exact registry. The registry's ACCEPTANCE is the
     /// witness; reclaiming the accepted slot into an owned-value retirement belongs to the Store's
     /// own one-slot-per-step cursor, which this owner must never wait on.
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneStep, ValueError> { let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::OriginalRetirementOutcome { let mut work = 0; let result = (|| -> Result<RetainedCloneStep, ValueError> {
         let idle = RetainedCloneProgress::default();
         if self.terminal_is_empty() {
             return Ok(RetainedCloneStep::Complete(idle));
@@ -138,7 +138,7 @@ impl ErasedSnapshotRetirement for CapturedRootRetirement {
         if grant.maximum_items == 0 {
             return Ok(RetainedCloneStep::Progress(idle));
         }
-        if let Some(root) = self.owned.root.take() {
+        work = 1; if let Some(root) = self.owned.root.take() {
             if let Some(mut root) = Arc::into_inner(root) {
                 if !root.read.take().is_some_and(SnapshotRead::return_to_registry) {
                     return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "local-interaction.capture-read-return"));
@@ -146,7 +146,7 @@ impl ErasedSnapshotRetirement for CapturedRootRetirement {
             }
         }
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..idle }))
-    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
+    })(); semio_framework_value::RetainedWorkOutcome { result: result.map_err(Into::into), work } }
 
     fn terminal_is_empty(&self) -> bool {
         self.owned.root.is_none()

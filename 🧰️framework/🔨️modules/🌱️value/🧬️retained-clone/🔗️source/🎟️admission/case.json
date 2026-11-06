@@ -34,7 +34,13 @@
     3,
     4
   ],
-  "nullWork": 1,
+  "allocationMarker": {
+    "allocated": "heapRequestedBytes",
+    "failed": 0,
+    "denied": null,
+    "nonallocating": null
+  },
+  "nullWork": {"owner":2,"payload":1,"lease":2},
   "deniedWork": 0,
   "cachedWork": 0,
   "moveCopyBytes": 0,

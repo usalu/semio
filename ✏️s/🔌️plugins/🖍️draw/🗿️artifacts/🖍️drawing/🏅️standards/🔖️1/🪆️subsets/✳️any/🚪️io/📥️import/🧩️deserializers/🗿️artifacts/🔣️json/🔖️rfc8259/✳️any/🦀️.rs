@@ -37,7 +37,7 @@ impl Deserializer<DrawingSnapshot> for JsonIntoDraw {
 fn json_parse_error(error: semio_framework_diagnostic::TextError) -> IoError {
     use semio_framework_diagnostic::{Diagnostic,ExpectedSet,FaultCode,FaultScope,Severity};
     IoError {
-        cause: semio_framework_value::ValueError::new(error.kind,format!("JsonIntoDraw: {}",error.message)),
+        cause: semio_framework_value::ValueError::new(error.kind,format!("JsonIntoDraw: {}",error.message)).into(),
         diagnostics: vec![Diagnostic {
             code: FaultCode::new("draw.json.parse"), severity: Severity::Error, span: error.span,
             message: error.message, expected: error.expected.map(|token|ExpectedSet {tokens:vec![token],keywords:Vec::new(),keys:Vec::new()}), scope:FaultScope::default(),

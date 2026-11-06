@@ -13,7 +13,7 @@ use semio_plugin_decl_views::history_view::{CommandLogEntry, HistoryView};
 use semio_plugin_decl_emission::{Emit, TransactionPhase};
 use semio_framework::{Fault, FaultFrom};
 use std::future::Future;
-use semio_plugin_instance_stores::stores_components::InstanceStores;
+use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
 use store::{MemberFactory, Mutation, SpaceMember};
 use protocol::OpText;
 use semio_plugin_reactor_app::PluginApp;

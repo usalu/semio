@@ -1,0 +1,68 @@
+[
+  {
+    "name": "denied before body",
+    "capacity": 8,
+    "used": 2,
+    "span": 3,
+    "granted": false,
+    "postAccepted": true,
+    "expectedUsed": 2,
+    "expectedWork": 0,
+    "expectedError": true
+  },
+  {
+    "name": "successful span",
+    "capacity": 8,
+    "used": 2,
+    "span": 3,
+    "granted": true,
+    "postAccepted": true,
+    "expectedUsed": 5,
+    "expectedWork": 1,
+    "expectedError": false
+  },
+  {
+    "name": "actual span retained on post refusal",
+    "capacity": 8,
+    "used": 2,
+    "span": 3,
+    "granted": true,
+    "postAccepted": false,
+    "expectedUsed": 5,
+    "expectedWork": 1,
+    "expectedError": true
+  },
+  {
+    "name": "bounded validation fails",
+    "capacity": 4,
+    "used": 2,
+    "span": 3,
+    "granted": true,
+    "postAccepted": true,
+    "expectedUsed": 2,
+    "expectedWork": 1,
+    "expectedError": true
+  },
+  {
+    "name": "large input advances one bounded span",
+    "capacity": 70000,
+    "used": 0,
+    "span": 65537,
+    "granted": true,
+    "postAccepted": true,
+    "expectedUsed": 65536,
+    "expectedWork": 1,
+    "expectedError": false
+  },
+  {
+    "name": "empty span has no action",
+    "capacity": 8,
+    "used": 2,
+    "span": 0,
+    "granted": false,
+    "postAccepted": false,
+    "expectedUsed": 2,
+    "expectedWork": 0,
+    "expectedError": false
+  }
+]

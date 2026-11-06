@@ -1,0 +1,58 @@
+{
+  "cases": [
+    {
+      "phase": "advance",
+      "local": 0,
+      "child": 3,
+      "quoted": 3,
+      "available": 2,
+      "performed": 0,
+      "effects": false
+    },
+    {
+      "phase": "advance",
+      "local": 0,
+      "child": 3,
+      "quoted": 3,
+      "available": 3,
+      "performed": 3,
+      "effects": true
+    },
+    {
+      "phase": "take",
+      "local": 1,
+      "child": 0,
+      "quoted": 1,
+      "available": 0,
+      "performed": 0,
+      "effects": false
+    },
+    {
+      "phase": "take",
+      "local": 1,
+      "child": 0,
+      "quoted": 1,
+      "available": 1,
+      "performed": 1,
+      "effects": true
+    },
+    {
+      "phase": "close",
+      "local": 0,
+      "child": 2,
+      "quoted": 2,
+      "available": 1,
+      "performed": 0,
+      "effects": false
+    },
+    {
+      "phase": "close",
+      "local": 0,
+      "child": 2,
+      "quoted": 2,
+      "available": 2,
+      "performed": 2,
+      "effects": true
+    }
+  ]
+}

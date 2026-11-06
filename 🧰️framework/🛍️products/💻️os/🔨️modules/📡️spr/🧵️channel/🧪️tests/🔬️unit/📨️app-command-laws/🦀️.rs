@@ -9,8 +9,8 @@ async fn sample_envelope(id: &str) -> protocol::causal::MutationEnvelope {
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
-        diff: protocol::causal::ArtifactDiff { schema: protocol::ids::SchemaId("diff.v1".to_string()), payload: format!("value:{id}").into_bytes() },
-        inverse: protocol::causal::InverseMutation { schema: protocol::ids::SchemaId("diff.v1".to_string()), payload: Vec::new() },
+        diff: protocol::causal::ArtifactDiff { schema: protocol::ids::SchemaId("diff.v1".to_string()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(format!("value:{id}").as_bytes()).unwrap() },
+        inverse: protocol::causal::InverseMutation { schema: protocol::ids::SchemaId("diff.v1".to_string()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&[]).unwrap() },
         timestamp: protocol::ids::HybridLogicalTimestamp::new(1, 0),
         transaction: None, verb: None, line: None,
     }

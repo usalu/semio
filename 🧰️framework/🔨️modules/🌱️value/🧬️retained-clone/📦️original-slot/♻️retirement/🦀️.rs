@@ -13,7 +13,7 @@ impl<T:RetireOwned> OriginalSlotRetirement<T>{
   if self.factory.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<FactoryAuthority>()+size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>(),depth:1,..Default::default()});}
   self.factory_close.as_ref().map_or(Ok(Default::default()),|factory|factory.demands(body))
  }
- fn step(&mut self,g:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedCloneStep,ValueError>{let mut work=0;let result=(||{let d=self.demand(g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()));}
+ fn step(&mut self,g:RetainedCloneGrant)->semio_framework_value_retirement::OriginalRetirementOutcome{let mut work=0;let result=(||{let d=self.demand(g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()));}
   if let Some(slot)=self.slot.as_mut(){if slot.has_read(){let turn=slot.return_read(slot.key(),&mut self.factory,g);work=turn.work;return turn.result;}work=1;let slot=self.slot.take().ok_or_else(||ValueError::invariant("slot absent"))?;if !slot.is_empty(){let original=slot.try_into_original().map_err(|_|ValueError::invariant("quoted original slot returned every immutable reader"))?;*self.payload=Some(original);}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}));}
   if self.active.is_some(){let turn=crate::close_factory_ticket(&mut self.active,g);work=turn.work;return turn.result;}
   if !self.intrinsic.is_empty(){let turn=self.intrinsic.step_granted(g);work=turn.work;return turn.result;}

@@ -2,7 +2,7 @@
 use std::collections::BTreeMap;
 #[path="🧮️projection/🦀️.rs"]
 mod projection;
-pub use projection::RowWriter;
+pub use projection::{RowSink,RowWriter,TableCensus};
 use semio_framework_io_sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{Cell,FloatColumn,FloatRow,Reconstruction}};
 use semio_framework_value::ValueError;
 use semio_framework_value::ValueRefusalKind;

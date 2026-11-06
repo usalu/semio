@@ -1,0 +1,7 @@
+# Raster Staged Owner Review
+
+Source review of reserved-import found that the candidate stores the original snapshot in an Option; payload admission reads the actual context retained grant, quotes the transfer and shared-root capacity through OriginalConstructionDemand, moves the image only inside admission, and restores it on from_owned refusal. Its asset output slot is populated by the construction owner before receipt reconciliation, so a later receipt refusal retains the payload in the job.
+
+Mutation assembly separately quotes two vector elements and one boxed layer, moves candidate and payload into self.mutations before reconciliation, and preserves that owner if receipt reconciliation fails. Candidate, asset, mutations, emission and diagnostic are included in controlled close. The actual type names MediaClass::TwoD and MediaForm::{Raster,Vector,Value} exist. The mutation fields match the model types reviewed in 🔎️raster-construction-readiness.md.
+
+The native law checks image pointer preservation for each payload-denial currency, successful payload admission, zero-work assembly denial, successful two-mutation assembly and funded cleanup. It does not exercise per-currency assembly denial or receipt refusal after successful payload or mutation construction. Source ordering supports custody in those paths, but those behaviors remain unverified by this law. No native build was run; type and receipt observations are source-level only.

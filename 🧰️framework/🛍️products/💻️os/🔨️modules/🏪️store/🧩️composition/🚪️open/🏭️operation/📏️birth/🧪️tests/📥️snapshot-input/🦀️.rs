@@ -1,6 +1,6 @@
 //! 📥️ The original snapshot-input turns of the member snapshot open operation: grants, system receipts, retained source and bounded close (test only; extracted from the operation module so it can follow the member-open unit tests).
-use semio_os_store_member_open::decoder::ArtifactPackSnapshotDecoder;
-use semio_os_store_member_open::MemberOpenDiagnostic;
+use semio_framework_os_store_member_open::decoder::ArtifactPackSnapshotDecoder;
+use semio_framework_os_store_member_open::MemberOpenDiagnostic;
 use semio_os_store_engine_owners::lifted_operation::MemberSnapshotOpenStep;
 use semio_os_store_member_open_store::ProducedMemberSnapshotOpen;
 use semio_framework_value::ErasedSnapshotRetirement as _;

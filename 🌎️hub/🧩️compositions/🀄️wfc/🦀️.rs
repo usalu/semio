@@ -12,8 +12,8 @@ use semio_plugin::PluginBuilder;
 
 /// 🎟️ WFC admits a 512² bitmap pin payload whose backing can exceed one MiB. Each lifecycle
 /// phase may release the same allocation size its existing capacity grant already admits.
-pub const WFC_MOUNTED_OWNER_POLICY: semio_framework_plugin::MountedOwnerPolicyV1 = {
-    let mut policy = semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
+pub const WFC_MOUNTED_OWNER_POLICY: semio_plugin::MountedOwnerPolicyV1 = {
+    let mut policy = semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
     policy.preparation.maximum_release_bytes = policy.preparation.maximum_capacity_bytes;
     policy.maintenance.maximum_release_bytes = policy.maintenance.maximum_capacity_bytes;
     policy.close.maximum_release_bytes = policy.close.maximum_capacity_bytes;

@@ -78,6 +78,12 @@
       "elements": 17
     }
   ],
+  "workCases": [
+    {"body": 4096, "width": 1, "remaining": 9000, "work": 1, "elements": 1},
+    {"body": 4096, "width": 2, "remaining": 9000, "work": 1, "elements": 0},
+    {"body": 1, "width": 2, "remaining": 5, "work": 2, "elements": 1},
+    {"body": 0, "width": 0, "remaining": 5000, "work": 7, "elements": 7}
+  ],
   "logicalCases": [
     {
       "body": 1,

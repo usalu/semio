@@ -13,7 +13,8 @@
     "denied",
     "waiterGate",
     "gateContended",
-    "metadataCopyCurrency"
+    "metadataCopyCurrency",
+    "ownedWaiterQuote"
   ],
   "properties": {
     "schema": {
@@ -70,6 +71,28 @@
     },
     "metadataCopyCurrency": {
       "const": 0
+    },
+    "ownedWaiterQuote": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capacity",
+        "releaseElements",
+        "requiresLock"
+      ],
+      "properties": {
+        "capacity": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "releaseElements": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "requiresLock": {
+          "const": false
+        }
+      }
     }
   }
 }

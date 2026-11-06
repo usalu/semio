@@ -20,8 +20,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeSiteAGr where Op: 
         record: "ChangeSiteAGr",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change reference ground acceleration", "Referenzbodenbeschleunigung ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change reference ground acceleration", "Referenzbodenbeschleunigung ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-site-a-gr".into()]

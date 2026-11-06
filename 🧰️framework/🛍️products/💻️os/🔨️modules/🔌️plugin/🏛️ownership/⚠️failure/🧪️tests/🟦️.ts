@@ -18,10 +18,21 @@ test("public lifecycle failure exposes its exact defining owner and original con
 import "../../../👷️job/🚪️session/🫴️refusal/🧪️tests/🟦️.ts";
 
 import {Database} from "bun:sqlite";
+test("original work refusal survives lifecycle and job ownership transfers",()=>{
+ expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);
+ const db=new Database(":memory:");
+ try{for(const kind of fixture.primaryTypes){
+  const original={primary:kind==="fault"?fixture.fault:fixture.value,...fixture.independentRefusals};
+  const transferred=applyPatch<{lifecycle:typeof original|null;job:typeof original|null}>({lifecycle:original,job:null},[{op:"move",from:"/lifecycle",path:"/job"},{op:"move",from:"/job",path:"/lifecycle"}],true,false).newDocument;
+  expect(transferred.lifecycle).toEqual(original);
+  const wire=JSON.stringify(original),row=db.query("SELECT json_extract(?1,'$.receipt') AS receipt,json_extract(?1,'$.context') AS context,json_extract(?1,'$.work') AS work").get(wire) as {receipt:string;context:string;work:string};
+  expect(row).toEqual(fixture.independentRefusals);
+ }}finally{db.close();}
+});
 test("mounted receiving reconciles child and whole effects once and keeps both failures",()=>{
  expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);const law=fixture.publicationReceiving,db=new Database(":memory:");try{for(const body of law.bodyPolicy){expect(body).toBeLessThanOrEqual(law.physicalCopy);for(const axis of ["items","copy","capacity","release"] as const){const child=law.child[axis],whole=law.whole[axis],oracle=db.query<{unposted:number;posted:number;outerUnposted:number},[number,number]>("SELECT ?2-?1 AS unposted,?1+(?2-?1) AS posted,?2-(?1+(?2-?1)) AS outerUnposted").get(child,whole)!;expect(oracle.unposted).toBe(law.unposted[axis]);expect(oracle.posted).toBe(whole);expect(oracle.outerUnposted).toBe(law.outerUnposted[axis]);}}for(const row of law.cases){const original={semantic:row.semantic,receipt:null as string|null};const result=applyPatch(original,[{op:"replace",path:"/receipt",value:row.receipt}],true,false).newDocument;expect(result).toEqual({semantic:row.semantic,receipt:row.receipt});expect(original.receipt).toBe(null);}}finally{db.close();}
 });
 test("mounted native publication uses the actual parent decoder and unchanged policy",()=>{
  const owner=readFileSync(new URL("../../../🧵️retained-command/🔄️full-operation/🦀️.rs",import.meta.url),"utf8"),source=readModuleTreeSource(new URL("../../../🧵️instance/🧾️typed-operations/🦀️.rs",import.meta.url)).replace(/\s+/g,"");
- expect(owner).toContain("source_identity:semio_framework_job::OriginalSourceBinding");for(const needle of ["original_plugin_turn_grant(self.mounted_policy.preparation,retained)","admit_apply_batch(mounted.operation.operation,mounted.artifact_generation","mounted.publication_ownership_progress=Some((retained,ownership))","cx.consume_retained(unit)","flush_published_apply_batch(publication)"])expect(source).toContain(needle);expect(source).not.toContain("self.store.advance_apply_batch(publication,grant)");
+ expect(owner).toContain("source_identity:semio_framework_job::OriginalSourceBinding");for(const needle of ["original_plugin_turn_grant(self.mounted_policy.preparation,retained)","admit_apply_batch(mounted.operation.operation,mounted.artifact_generation","mounted.publication_ownership_progress=Some((retained,ownership))","letreceipt=cx.consume_receiving_retained(retained,ownership)","returnErr(primary.with_receiving_receipt(receipt))","OriginalPublicationAdvanceFailure::Domain(source)","receipt_refusal:receipt.err()","flush_published_apply_batch(publication)"])expect(source.includes(needle),needle).toBe(true);expect(source).not.toContain("self.store.advance_apply_batch(publication,grant)");
 });

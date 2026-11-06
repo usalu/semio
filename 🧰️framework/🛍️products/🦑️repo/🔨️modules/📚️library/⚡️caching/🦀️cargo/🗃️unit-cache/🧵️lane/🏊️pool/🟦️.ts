@@ -53,10 +53,10 @@ export function readPoolV1(root:string,nowMs:number):PoolLaneV1[]{
  });
 }
 
-/** 🧹️ Removes the idle lanes the pool must shed. Every removal takes the lane's own claim first, so a lane that was taken since the plan survives, and publishes the receipts a holder that was killed before its own retention left in the lane (see `retainRemovedLaneV1`) before the lane goes; returns what was removed. */
+/** 🧹️ Removes the idle lanes the pool must shed. Every removal takes the lane's own claim first, so a lane that was taken since the plan survives, and publishes authenticated binding evidence and every owned receipt before the lane goes; unresolved custody keeps it; returns what was removed. */
 export function trimPoolV1(root:string,bounds:PoolBoundsV1,nowMs:number,report?:PoolReportV1):Readonly<{removed:number;freedBytes:number}>{
  const lanes=readPoolV1(root,nowMs),size=new Map(lanes.map(lane=>[lane.id,lane.bytes??0]));let removed=0,freedBytes=0;
- const retain=(paths:ReturnType<typeof lanePathsV1>):void=>{const conflicts=retainRemovedLaneV1(paths);if(conflicts.length)report?.("retentionConflict",{lane:paths.id,count:conflicts.length,names:conflicts.slice(0,4).join(", ")});};
+ const retain=(paths:ReturnType<typeof lanePathsV1>):boolean=>{const conflicts=retainRemovedLaneV1(paths);if(conflicts.length)report?.("retentionConflict",{lane:paths.id,count:conflicts.length,names:conflicts.slice(0,4).join(", ")});return conflicts.length===0;};
  for(const id of planPoolTrimV1(lanes,bounds))if(removeLaneV1(root,id,"lane",nowMs,retain)){removed++;freedBytes+=size.get(id)!;}
  return Object.freeze({removed,freedBytes});
 }

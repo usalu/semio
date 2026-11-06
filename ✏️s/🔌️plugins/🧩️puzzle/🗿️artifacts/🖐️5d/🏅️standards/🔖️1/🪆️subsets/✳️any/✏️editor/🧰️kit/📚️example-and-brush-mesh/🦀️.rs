@@ -10,7 +10,7 @@ use semio_framework_plugin::Emit;
 use semio_framework_plugin::Fault;
 use semio_framework_plugin::InteractionTarget;
 use semio_framework_plugin::InteractionWrite;
-use semio_framework_ui_locale::Label;
+use semio_ui_locale::Label;
 use semio_framework_plugin::MergeMode;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;

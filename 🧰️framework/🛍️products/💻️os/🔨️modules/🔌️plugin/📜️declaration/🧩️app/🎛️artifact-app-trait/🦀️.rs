@@ -74,7 +74,7 @@ pub trait ArtifactApp: Default + Send + 'static {
         Ok(RetirementDemand::default())
     }
 
-    fn mounted_job_maintenance_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    fn mounted_job_maintenance_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         Ok(PluginLifecycleStep::Complete(RetainedCloneProgress::default()))
     }
     /// 💼️ Quotes the exact next [`Self::mounted_job_close_step`] turn of the owner-local mounted jobs.
@@ -82,7 +82,7 @@ pub trait ArtifactApp: Default + Send + 'static {
         Ok(RetirementDemand::default())
     }
     /// 👑️ Advances one owner-local mounted background-job close opportunity.
-    fn mounted_job_close_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    fn mounted_job_close_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         Ok(PluginLifecycleStep::Complete(RetainedCloneProgress::default()))
     }
     /// 🚪️ Exact terminal witness paired with `mounted_job_close_step`. It is also what keeps an app
@@ -240,7 +240,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// its own paging overrides it, but none has to declare one to be allowed to READ its own
     /// presence.
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin_decl_views::presence_retirement::bounded_presence_root_retirement_factory::<Self::Presence>())
+        Some(semio_plugin_decl_views::presence_retirement::bounded_presence_root_retirement_factory::<Self::Presence>())
     }
 
     /// 🌂️ Supplies exact bounded retirement for a displaced transient root.
@@ -293,12 +293,12 @@ pub trait ArtifactApp: Default + Send + 'static {
     }
 
     fn build_presence_store_disposer() -> ArtifactDisposal<store::PresenceStore<Self::Presence, Self::PresenceMutation>> {
-        Some(semio_framework_plugin_decl_views::presence_retirement::bounded_presence_store_disposer::<Self::Presence, Self::PresenceMutation>())
+        Some(semio_plugin_decl_views::presence_retirement::bounded_presence_store_disposer::<Self::Presence, Self::PresenceMutation>())
     }
 
     /// 🏁️ The peer half of the same lane, framework-owned by the same default.
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin_decl_views::presence_retirement::bounded_presence_root_retirement_factory::<Self::Presence>())
+        Some(semio_plugin_decl_views::presence_retirement::bounded_presence_root_retirement_factory::<Self::Presence>())
     }
 
     fn build_transient_store_disposer() -> ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
@@ -375,7 +375,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// 🏠️ Resolves a host-owned control-plane action directly to one event-sourced
     /// configuration mutation. App interaction commands remain on the retained tool-operation
     /// path; hidden host catalogue publication does not impersonate an interactive reducer.
-    fn original_host_configuration(_action:&str)->Option<&'static semio_framework_plugin_decl_emission::OriginalHostConfigurationDeclaration<Self::ConfigMutation>>{None}
+    fn original_host_configuration(_action:&str)->Option<&'static semio_plugin_decl_emission::OriginalHostConfigurationDeclaration<Self::ConfigMutation>>{None}
     /// ⌨️ The original typing algebra keeps independent deliveries separate unless the app declares a bounded fold.
     fn original_typing_fold() -> crate::tool_contract::OriginalTypingFoldPolicy<Self::Mutation> {
         crate::tool_contract::OriginalTypingFoldPolicy::Split
@@ -555,7 +555,7 @@ pub trait ArtifactApp: Default + Send + 'static {
         _transient: &TransientView<'_, Self::Transient>,
         _interaction: &InteractionView<'_>,
         _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> semio_framework_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> {
+    ) -> semio_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> {
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact did not implement retained render work").into())
     }
     async fn render_with_request_context(
@@ -567,8 +567,8 @@ pub trait ArtifactApp: Default + Send + 'static {
         transient: &TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
         cx:&mut semio_framework_job::StepContext<'_>,
-    ) -> semio_framework_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> {
-        let rendered:crate::UiAssemblyResult<semio_framework_ui_runtime::ComponentTree>=async{
+    ) -> semio_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> {
+        let rendered:crate::UiAssemblyResult<semio_ui_runtime::ComponentTree>=async{
         let _ = (transient, interaction);
         Self::render_with_instance_operation_owner(owner, body_key, doc, cfg, view_state).await
 
@@ -686,6 +686,8 @@ pub trait ArtifactApp: Default + Send + 'static {
     async fn decode_natural_file(_bytes: &[u8]) -> Result<Self::Snapshot, MediaError> {
         Err(MediaError::NotImplemented)
     }
+    /// 🧷️ Declares an exact original text-wire binding for one non-document media input.
+    fn accepts_original_structured_media(_port:&str,_schema:&str,_media_type:&MediaType)->bool{false}
     /// 🌊️ Declares this app's workflow ports — delegates to `Self::io().all_ports()` (implicit
     /// `document:in`/`document:out` plus any app-specific ports) when `io()` is overridden; an app that
     /// never overrides `io()` still gets no ports (matches the old `Vec::new()` default) since there is

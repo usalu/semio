@@ -1,0 +1,7 @@
+# Renderer Owner Census
+
+The actual semio-renderer-wgpu-asset-decode source closure is 169,985 bytes / 11 files / 3,084 active lines production and 170,551 / 13 / 3,111 with feature and unit tests, under its 262,144 / 32 / 4,000 limit. The new PNG owner file's absolute path is 136 Unicode scalar characters and 199 UTF-8 bytes. The direct dev-dependency path resolves to package semio-framework-io-base64; its Rust alias matches the updated test. serde_json and job testkit entries are present.
+
+The PNG advance adapter attaches the actual child last_turn_progress to converted errors before receive_original_retained_work reconciles work and effects. The real worker-to-parent binding remains unverified: OriginalSourceBinding compares operation, generation, payload authority identity, original clock and deadline. Existing PNG fixture keeps one original caller, and does not show the worker-return boundary. OriginalCallerChildSource illustrates that child contexts can use an independently admitted payload authority while preserving a separate upstream origin, but the renderer worker path must be exercised before inferring whether its binding remains equal. A genuine mounted-worker law should admit the actual renderer probe on the initiating caller, drive PNG birth/partial decode in that worker, return the exact checked-out probe to the parent boundary, and close it there under the initiating caller with denied and admitted turns.
+
+No native build or production edit was made.

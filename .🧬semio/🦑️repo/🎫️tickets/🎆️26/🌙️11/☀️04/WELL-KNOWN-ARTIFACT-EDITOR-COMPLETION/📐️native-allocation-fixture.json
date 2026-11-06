@@ -1,0 +1,135 @@
+{
+  "schema": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "quoted": {
+          "type": "boolean"
+        },
+        "performed": {
+          "type": "boolean"
+        },
+        "actual": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "postRefused": {
+          "type": "boolean"
+        },
+        "ledger": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "posts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "cancels": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "quotedBytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "name",
+        "quoted",
+        "performed",
+        "actual",
+        "postRefused",
+        "ledger",
+        "posts",
+        "cancels",
+        "quotedBytes"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "data": [
+    {
+      "name": "quote denied",
+      "quoted": false,
+      "performed": false,
+      "actual": 0,
+      "postRefused": false,
+      "ledger": 0,
+      "posts": 0,
+      "cancels": 0,
+      "quotedBytes": 24
+    },
+    {
+      "name": "allocation failed",
+      "quoted": true,
+      "performed": false,
+      "actual": 0,
+      "postRefused": false,
+      "ledger": 0,
+      "posts": 0,
+      "cancels": 1,
+      "quotedBytes": 24
+    },
+    {
+      "name": "allocation succeeds",
+      "quoted": true,
+      "performed": true,
+      "actual": 24,
+      "postRefused": false,
+      "ledger": 24,
+      "posts": 1,
+      "cancels": 0,
+      "quotedBytes": 24
+    },
+    {
+      "name": "post refuses after allocation",
+      "quoted": true,
+      "performed": true,
+      "actual": 24,
+      "postRefused": true,
+      "ledger": 24,
+      "posts": 1,
+      "cancels": 0,
+      "quotedBytes": 24
+    },
+    {
+      "name": "unwind before allocation",
+      "quoted": true,
+      "performed": false,
+      "actual": 0,
+      "postRefused": false,
+      "ledger": 0,
+      "posts": 0,
+      "cancels": 1,
+      "quotedBytes": 24
+    },
+    {
+      "name": "unwind after allocation",
+      "quoted": true,
+      "performed": true,
+      "actual": 24,
+      "postRefused": true,
+      "ledger": 24,
+      "posts": 1,
+      "cancels": 0,
+      "quotedBytes": 24
+    },
+    {
+      "name": "partial allocation",
+      "quoted": true,
+      "quotedBytes": 16,
+      "performed": true,
+      "actual": 8,
+      "postRefused": false,
+      "ledger": 8,
+      "posts": 1,
+      "cancels": 0
+    }
+  ]
+}

@@ -20,7 +20,7 @@ use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::{find_layer, layer_protection, layer_visible};
 use semio_s_artifact_raster_raster_model::RasterLayerNode;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
-use machine::Command;
+use semio_framework_machine::Command;
 use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 use semio_plugin::{ArtifactView, ConfigView, Emit, EphemeralEmit, Fault};
 use semio_framework_tool_machine::{drive_gesture, GesturePhase, GestureTool, ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolTransactionState, ToolYield};
@@ -217,7 +217,7 @@ fn cancel_stream(context: &mut PaintToolContext, _event: Option<&paint_tool::Eve
 // 🎭️ The pixel tool's control flow (plain comment: rustdoc cannot document a macro invocation): a one-shot (and a commit
 // with nothing open) yields and commits at rest; a stream opens `painting`, whose ticks extend the one leaf and whose
 // finish commits ONE transaction; a cancel aborts it.
-machine::statechart! {
+semio_framework_machine::statechart! {
     machine paint_tool {
         context: PaintToolContext;
         event Event { Stroke(PaintToolRequest), Stream(PaintToolRequest), Finish(PaintToolRequest), Cancel }
@@ -242,12 +242,12 @@ machine::statechart! {
 /// 🧷️ The paint tool's host: its chart declares no timer, no invoke and no foreign effect.
 pub struct PaintToolHost;
 
-impl machine::Host<paint_tool::PaintTool> for PaintToolHost {
-    fn execute_effect(&mut self, _actor: machine::ActorId, _effect: ToolYield<RasterMutation>) {}
-    fn schedule(&mut self, _actor: machine::ActorId, _timer: machine::TimerId, _delay_ms: u64) {}
-    fn cancel_timer(&mut self, _actor: machine::ActorId, _timer: machine::TimerId) {}
-    fn start_task(&mut self, _actor: machine::ActorId, _invoke: machine::InvokeId) {}
-    fn cancel_task(&mut self, _actor: machine::ActorId, _invoke: machine::InvokeId) {}
+impl semio_framework_machine::Host<paint_tool::PaintTool> for PaintToolHost {
+    fn execute_effect(&mut self, _actor: semio_framework_machine::ActorId, _effect: ToolYield<RasterMutation>) {}
+    fn schedule(&mut self, _actor: semio_framework_machine::ActorId, _timer: semio_framework_machine::TimerId, _delay_ms: u64) {}
+    fn cancel_timer(&mut self, _actor: semio_framework_machine::ActorId, _timer: semio_framework_machine::TimerId) {}
+    fn start_task(&mut self, _actor: semio_framework_machine::ActorId, _invoke: semio_framework_machine::InvokeId) {}
+    fn cancel_task(&mut self, _actor: semio_framework_machine::ActorId, _invoke: semio_framework_machine::InvokeId) {}
     fn now_ms(&self) -> u64 {
         semio_framework_job::default_now_ms().unwrap_or(0)
     }
@@ -284,10 +284,10 @@ impl GestureTool for RasterPaintTool {
     /// ⏯️ The stroke a window transient persisted, restored by stable ids with its open transaction; a state the current
     /// chart cannot restore is refused (`Closed`), so the runner drops it with zero trace.
     fn resume(state: &RasterStrokeToolState) -> Result<Self, ToolRefusal> {
-        let definition = <paint_tool::PaintTool as machine::Machine>::definition();
-        let persisted = machine::PersistedSnapshot { version: 1, fingerprint: definition.fingerprint, states: state.states.clone(), history: Vec::new(), done: false };
+        let definition = <paint_tool::PaintTool as semio_framework_machine::Machine>::definition();
+        let persisted = semio_framework_machine::PersistedSnapshot { version: 1, fingerprint: definition.fingerprint, states: state.states.clone(), history: Vec::new(), done: false };
         let leaf=RasterMutation::PaintStroke(state.stroke.clone());
-        let snapshot = machine::restore::<paint_tool::PaintTool, machine::NoMigrations>(&persisted, PaintToolContext { stroke: Some(leaf.clone()) }, &[]).map_err(|_| ToolRefusal::Closed)?;
+        let snapshot = semio_framework_machine::restore::<paint_tool::PaintTool, semio_framework_machine::NoMigrations>(&persisted, PaintToolContext { stroke: Some(leaf.clone()) }, &[]).map_err(|_| ToolRefusal::Closed)?;
         let transaction = ToolTransaction::resume(state.transaction.clone(), vec![(RASTER_PAINT_TOOL_KEY.to_string(), leaf)]);
         let runner = ToolMachineRunner::resume(RASTER_PAINT_TOOL_ID, protocol::ActorId(state.authoring_seed.as_str().into()), PaintToolContext::default(), snapshot, Some(transaction), PaintToolHost)?;
         Ok(Self { runner, press: state.gesture.clone(), authoring_seed: state.authoring_seed.as_str().to_owned() })
@@ -322,7 +322,7 @@ impl GestureTool for RasterPaintTool {
         let transaction = transaction.filter(|transaction| transaction.state() == ToolTransactionState::Open)?;
         let (_, leaf) = transaction.entries().iter().find(|(key, _)| key == RASTER_PAINT_TOOL_KEY)?;
         let RasterMutation::PaintStroke(leaf)=leaf else{return None;};
-        Some(RasterStrokeToolState { gesture: self.press, states: machine::persist(&snapshot).states, authoring_seed: self.authoring_seed.into(), transaction: transaction.reference().clone(), stroke: leaf.clone(),preview:None })
+        Some(RasterStrokeToolState { gesture: self.press, states: semio_framework_machine::persist(&snapshot).states, authoring_seed: self.authoring_seed.into(), transaction: transaction.reference().clone(), stroke: leaf.clone(),preview:None })
     }
 }
 

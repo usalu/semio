@@ -1,0 +1,48 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 9,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "port",
+          "schema",
+          "mediaClass",
+          "form",
+          "accepted"
+        ],
+        "properties": {
+          "port": {
+            "type": "string"
+          },
+          "schema": {
+            "type": "string"
+          },
+          "mediaClass": {
+            "enum": [
+              "twoD",
+              "data"
+            ]
+          },
+          "form": {
+            "enum": [
+              "raster",
+              "value",
+              "vector"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

@@ -348,10 +348,10 @@ impl<'ctx> PointerCtx<'ctx> {
             if self.input.overlay_state==OverlayState::None&&self.sync.sync_card_kind.is_none()&&self.dock.dock_drag.is_none(){
                 if let Some((surface,node))=self.as_session().retained_keyboard_focus(){
                     if let Some(target)=semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target(&surface,node){
-                        if target.kind==semio_framework_ui_declaration::ui::SurfaceKind::Paint2d&&semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::scene_pointer_target_is_live(&target)&&semio_framework_os_renderer_wgpu_engine_board::paint2d::cancel_paint2d_pixel_selection(&target.host_id){
+                        if target.kind==semio_ui_declaration::ui::SurfaceKind::Paint2d&&semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::scene_pointer_target_is_live(&target)&&semio_framework_os_renderer_wgpu_engine_board::paint2d::cancel_paint2d_pixel_selection(&target.host_id){
                             self.settle.owe_settle();return Ok(());
                         }
-                        if target.kind==semio_framework_ui_declaration::ui::SurfaceKind::Paint2d{
+                        if target.kind==semio_ui_declaration::ui::SurfaceKind::Paint2d{
                             let cancellation=self.docs.session.as_ref().and_then(|session|semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_selection_cancellation(&target,&self.directory.current_shell_actor(session.instance_id),session.instance_id));
                             if let Some(cancellation)=cancellation{self.as_actions().dispatch_action(cancellation).await?;self.settle.owe_settle();return Ok(());}
                         }

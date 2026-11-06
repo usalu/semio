@@ -48,6 +48,7 @@ serde_json = "1.0.140"
 
 
 [dev-dependencies]
+encoding_rs = "0.8.35"
 semio-framework-test-fixtures = { path = "../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value-testing-allocator = { path = "../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 

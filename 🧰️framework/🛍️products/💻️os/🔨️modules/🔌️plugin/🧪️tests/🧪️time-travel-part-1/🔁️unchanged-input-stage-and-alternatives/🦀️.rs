@@ -3,7 +3,7 @@
 /// 🧾️ LAW: unchanged Accept is refused through the app route, preserving the draft, preview and committed store.
 #[semio_framework_async_macros::async_test]
 async fn accepting_an_unchanged_input_retains_the_open_editor_and_preview() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
@@ -53,7 +53,7 @@ async fn accepting_an_unchanged_input_retains_the_open_editor_and_preview() {
 /// still retire; a verb stamped with the published generation applies, one stamped with the previous is stale.
 #[semio_framework_async_macros::async_test]
 async fn a_stage_change_ships_its_generation_in_the_same_turn_and_a_verb_stamped_with_it_applies() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
@@ -106,7 +106,7 @@ async fn a_stage_change_ships_its_generation_in_the_same_turn_and_a_verb_stamped
 /// switching reprojects: the edited alternative applies its history edit, the trunk shows the original.
 #[semio_framework_async_macros::async_test]
 async fn the_alternatives_section_lists_each_alternative_and_switching_reprojects_its_history_edits() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
@@ -155,7 +155,7 @@ async fn the_alternatives_section_lists_each_alternative_and_switching_reproject
 /// session delivers none), and a remote edit moving the base delivers `BaseMoved` to every window of the last roster.
 #[semio_framework_async_macros::async_test]
 async fn opening_a_history_edit_and_a_remote_edit_deliver_host_events_to_every_window() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
@@ -166,7 +166,7 @@ async fn opening_a_history_edit_and_a_remote_edit_deliver_host_events_to_every_w
     let (mut remote, mut remote_probe) = replica(&fixture, "host-events-remote", "remote", false, mounted_policy, &mut identity).await;
     relay(&mut local_probe, &mut remote_probe, &mut remote, mounted_policy, &mut identity).await;
     let roster = vec![semio_framework::ViewWindowInstance { id: "pane-a".into(), window_kind_id: "main".into() }, semio_framework::ViewWindowInstance { id: "pane-b".into(), window_kind_id: "main".into() }];
-    let under = ActionMeta { view_state: Some(semio_framework_plugin_testing_laws::receive_view_fixture(ViewModel { window_instances: roster, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }, semio_framework_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(&actor) };
+    let under = ActionMeta { view_state: Some(semio_plugin_testing_laws::receive_view_fixture(ViewModel { window_instances: roster, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }, semio_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(&actor) };
     let every = |event: fn(String) -> HostEvent| vec![event("pane-a".into()), event("pane-b".into())];
     TOY_HOST_EVENTS.with(|events| events.borrow_mut().clear());
     for index in [0, 1] {

@@ -41,3 +41,7 @@ pub mod graphql_int64;
 pub mod types;
 #[path = "../🥣️companion/⚠️refusal/🦀️.rs"]
 pub mod refusal;
+
+
+#[path = "../../♻️retirement/🧬️contract/🧪️tests/parts.rs"]
+mod failure_storage_parts_tests;

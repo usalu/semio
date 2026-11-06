@@ -1,0 +1,197 @@
+# Controlled Retirement Failure Propagation Inventory
+
+Read-only textual call inventory; each owner must retain both causes, actual work and physical receipts when adopting the inline failure. This includes direct normal decoder methods that need separate classification.
+
+- `🧰️framework/🛍️products/📓️print/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/📦️archive/🛬️decode/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 6
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🦀️.rs`: `close_retirement_recipient(` × 2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 3
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🧪️tests/🪶️sqlite/🫴️native-caller/🦀️.rs`: `close_retirement_recipient(` × 4
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🌱️derived/🧪️tests/🦀️.rs`: `.close_step_controlled(` × 2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🌱️derived/🦀️.rs`: `close_factory_ticket_controlled(` × 2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/🧪️tests/🦀️.rs`: `close_factory_ticket_controlled(` × 3
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/🧪️tests/🦀️.rs`: `close_factory_ticket_original(` × 3
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/🦀️.rs`: `close_factory_ticket_controlled(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/🔗️history/📜️report/🧪️tests/🦀️.rs`: `close_factory_ticket_controlled(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🛑️cancel/🦀️.rs`: `close_factory_ticket_controlled(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🛑️cancel/🦀️.rs`: `.close_original_step(` × 2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️one-item-owners/📥️lifted/📬️publication/🦀️.rs`: `.close_original_step(` × 2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌆️bin-02/🔬️unit/🦀️.rs`: `close_factory_ticket_controlled(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🛬️native-decoding/🧪️tests/🚪️control/🦀️.rs`: `close_retirement_recipient(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🛫️native-encoding/🧪️tests/🚪️control/🦀️.rs`: `close_retirement_recipient(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🧪️tests/💰️allocation/🦀️.rs`: `close_retirement_recipient(` × 9
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-encoding/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 5
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-retirement/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 12
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🛂️receiving/🦀️.rs`: `close_retirement_recipient(` × 2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🏪️space-member-for-artifact-store/🦀️.rs`: `.close_original_step(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 3
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🛂️validation/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 3
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/🎮️command/🦀️.rs`: `close_factory_ticket_controlled(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/🏁️replay/checkout.rs`: `close_factory_ticket_controlled(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/🏁️replay/abort.rs`: `close_factory_ticket_controlled(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/📸️snapshot/🔤️json/🧪️tests/🔬️unit/🦀️.rs`: `close_retirement_recipient(` × 2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🔁️replay/🧬️native/🦀️.rs`: `close_factory_ticket_controlled(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🔁️replay/🧬️native/🦀️.rs`: `.close_step_controlled(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧳️bundle/🦀️.rs`: `.close_original_step(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs`: `.close_step_controlled(` × 3
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs`: `.close_original_step(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/📖️derived-snapshots-replays-and-history-read-plan/🦀️.rs`: `close_factory_ticket_controlled(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/📖️derived-snapshots-replays-and-history-read-plan/🦀️.rs`: `.close_step_controlled(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/📖️derived-snapshots-replays-and-history-read-plan/🦀️.rs`: `.close_original_step(` × 3
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/📸️snapshot-alias/🦀️.rs`: `close_factory_ticket_controlled(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🫧️ephemeral/📤️ephemeral-one-item-publication/🦀️.rs`: `.close_step_controlled(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🧾️frame-build/🦀️.rs`: `.close_original_step(` × 4
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📔️registry/📇️catalogue-work/🦀️.rs`: `.step_controlled(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧪️artifact-app-laws/🎟️fixture-dispatch-steps-and-document-loading/🦀️.rs`: `.close_original_step(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🛬️receiving/📥️pack/🦀️.rs`: `.close_original_step(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🚫️cancellation-publication-boundaries/🦀️.rs`: `.close_step_controlled(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-owned-media-error/🦀️.rs`: `close_retirement_recipient(` × 9
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🦀️.rs`: `.close_step_controlled(` × 2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🎞️tick/🎮️operations/🦀️.rs`: `close_factory_ticket_controlled(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🎞️tick/🎮️operations/🔁️fold/🦀️.rs`: `close_factory_ticket_controlled(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🎞️tick/🎮️operations/🔁️fold/🦀️.rs`: `.close_step_controlled(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🎞️command/📥️custody/🛂️manifest/🦀️.rs`: `.close_original_step(` × 3
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🎞️command/📥️custody/🛂️manifest/metadata-tests.rs`: `.close_original_step(` × 2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🎞️command/📥️custody/🛂️manifest/metadata.rs`: `.close_original_step(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/📥️staging/♻️reactor-lifecycle/🧯️cleanup-pumps/🦀️.rs`: `.close_original_step(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🧰️ops/🧾️typed-operations/response-tests.rs`: `.close_original_step(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🧰️ops/🧪️tests/original-view-read.rs`: `.close_original_step(` × 2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🧰️ops/📥️ingress/🦀️.rs`: `.close_original_step(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/📥️receiving/📦️completed/🦀️.rs`: `.close_original_step(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🪟️mounted/♻️frontier/🦀️.rs`: `.close_step_controlled(` × 2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🛂️receiving/🦀️.rs`: `close_retirement_recipient(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🪪️identity/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/🎛️operation/📥️input/🦀️.rs`: `close_retirement_recipient(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/🎛️operation/📤️checkpoint/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 3
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🚪️io/📤️checkpoint/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🗄️store-owners/🦀️.rs`: `.step_controlled(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧬️preview/🦀️.rs`: `close_factory_ticket_controlled(` × 2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧬️preview/🦀️.rs`: `.close_step_controlled(` × 2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/♻️retirement/🦀️.rs`: `.close_step_controlled(` × 2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🚪️io/🛂️authority/🪶️snapshot/🦀️.rs`: `close_retirement_recipient(` × 2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧾️typed-operations/📥️staging/📬️publication/👶️child-operation-unit/🦀️.rs`: `.close_step_controlled(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📄️docs/📥️staging/📸️checkpoint/🦀️.rs`: `close_factory_ticket_controlled(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🏪️stores/📥️staging/📮️action-ingress/🦀️.rs`: `.close_original_step(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🫧️transient/🧵️publication/🧬️native/🧪️tests/🦀️.rs`: `.close_step_controlled(` × 2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🫧️transient/🧵️publication/🧬️native/🦀️.rs`: `close_factory_ticket_controlled(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🫧️transient/🧵️publication/🧬️native/🦀️.rs`: `.close_step_controlled(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🧪️tests/🔬️io-mechanism-laws/🦀️.rs`: `close_retirement_recipient(` × 2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🧪️tests/🪶️transfer/🦀️.rs`: `close_retirement_recipient(` × 2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/📸️typed-snapshot/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 6
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🧰️testing/🦀️.rs`: `close_retirement_recipient(` × 2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🧪️tests/🔬️quick/🏁️child-heads-hub-commit-and-probe-pack/🦀️.rs`: `close_retirement_recipient(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🪶️sqlite/🧪️tests/guest-input-slot.rs`: `close_retirement_recipient(` × 2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🪶️sqlite/🫴️semantic/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 4
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🪶️sqlite/🫴️native/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 5
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🚪️io/🔤️json/🦀️.rs`: `close_retirement_recipient(` × 2
+- `🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs`: `close_retirement_recipient(` × 4
+- `🧰️framework/🔨️modules/🧵️job/⏱️context/🛬️decode/🦀️.rs`: `close_retirement_recipient(` × 1
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/📦️mesh-io/🦀️.rs`: `.close_original_step(` × 1
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🩺️healing-exchange-and-tessellation/🦀️.rs`: `.close_original_step(` × 1
+- `🧰️framework/🔨️modules/🎠️kernel/🖼️ui/♻️retirement/🦀️.rs`: `.close_original_step(` × 1
+- `🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🎮️retained/🧪️tests/🦀️.rs`: `.close_original_step(` × 4
+- `🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🎮️retained/🦀️.rs`: `.close_original_step(` × 1
+- `🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/🛫️render-upload-and-eviction/🦀️.rs`: `.close_original_step(` × 1
+- `🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/🧪️tests/🦀️.rs`: `.close_original_step(` × 6
+- `🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/🧾️raster-ledger-and-atlas-permits/🦀️.rs`: `.close_original_step(` × 1
+- `🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/🗒️atlas-pages-and-raster-pages/🦀️.rs`: `.close_original_step(` × 3
+- `🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/🖼️atlas/🧪️tests/🦀️.rs`: `.close_original_step(` × 2
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🦀️.rs`: `close_factory_ticket_controlled(` × 1
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🦀️.rs`: `close_factory_ticket_original(` × 1
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🔁️continuation/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 2
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🛂️allocation/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 1
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🦀️.rs`: `close_retirement_recipient(` × 2
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 2
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🦀️.rs`: `close_retirement_recipient(` × 1
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🦀️.rs`: `close_factory_ticket_controlled(` × 1
+- `🧰️framework/🔨️modules/🌱️value/🛫️encode/🛂️allocation/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 2
+- `🧰️framework/🔨️modules/🌱️value/🛫️encode/🦀️.rs`: `close_retirement_recipient(` × 1
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎟️tickets/🦀️.rs`: `.close_step_controlled(` × 1
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎟️tickets/🦀️.rs`: `.close_original_step(` × 2
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎟️tickets/🎯️selection/🦀️.rs`: `close_factory_ticket_controlled(` × 1
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎟️tickets/🎯️selection/🦀️.rs`: `.close_step_controlled(` × 2
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🏗️birth/🗂️index/🦀️.rs`: `.step_controlled(` × 1
+- `🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔁️transfer/🫴️receiving/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 3
+- `🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️testing/🦀️.rs`: `close_retirement_recipient(` × 1
+- `🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 9
+- `🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️tests/nested-io.rs`: `close_retirement_recipient(` × 4
+- `🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 4
+- `✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/🧪️tests/🦀️.rs`: `.close_original_step(` × 2
+- `✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/🚪️io/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 2
+- `✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧠️session-core/🦀️.rs`: `.close_original_step(` × 3
+- `✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🦀️.rs`: `.close_original_step(` × 2
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🔨️modules/🏠️host/📐️geometry-service/🧪️tests/🔬️unit/🦀️.rs`: `.close_original_step(` × 1
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🔨️modules/🏠️host/📐️geometry-service/🦀️.rs`: `.close_original_step(` × 2
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🚀️original-field/🧪️tests/🦀️.rs`: `.close_original_step(` × 7
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🧪️tests/🔬️unit/🦀️.rs`: `.close_original_step(` × 1
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 2
+- `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🧪️tests/🔬️unit/🧵️original-close.rs`: `.close_original_step(` × 1
+- `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🔪️booleans-and-transforms/🦀️.rs`: `.close_original_step(` × 1
+- `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧮️operator-core/🦀️.rs`: `.close_original_step(` × 2
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/identity-index-tests.rs`: `close_retirement_recipient(` × 2
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/loads/receiver-tests.rs`: `close_retirement_recipient(` × 3
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/native-tests.rs`: `close_retirement_recipient(` × 1
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/identity-index-tests.rs`: `close_retirement_recipient(` × 2
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/loads/receiver-tests.rs`: `close_retirement_recipient(` × 3
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/native-tests.rs`: `close_retirement_recipient(` × 1
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/💾️store-preparation/🏭️member/📨️wire/🦀️.rs`: `.close_original_step(` × 1
+- `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧬️original/🌉️bridge/🦀️.rs`: `close_retirement_recipient(` × 1
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 3
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 3
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/📚️catalog/query-native-tests.rs`: `close_retirement_recipient(` × 1
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🚪️io/🧪️tests/native_step_write.rs`: `close_retirement_recipient(` × 1
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🚪️io/🧪️tests/native_fem_owned.rs`: `close_retirement_recipient(` × 4
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🚪️io/🧪️tests/native_step_entry.rs`: `close_retirement_recipient(` × 1
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🚪️io/🧪️tests/native_exchange.rs`: `close_retirement_recipient(` × 4
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🚪️io/🧪️tests/native_bim.rs`: `close_retirement_recipient(` × 2
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🚪️io/fem/nodal/native-query-tests.rs`: `close_retirement_recipient(` × 1
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🚪️io/fem/nodal/native-support.rs`: `close_retirement_recipient(` × 4
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🚪️io/native-step-read-tests.rs`: `close_retirement_recipient(` × 4
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🚪️io/native-gltf-owned-tests.rs`: `close_retirement_recipient(` × 14
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 3
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 3
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 3
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 8
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 3
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 5
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 2
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 9
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 9
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 5
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 5
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 2
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 2
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs`: `close_retirement_recipient(` × 3
+- `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🖨️native-print/🦀️.rs`: `close_retirement_recipient(` × 1
+- `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🧰️testing/🔀️routed-io/🦀️.rs`: `close_retirement_recipient(` × 2
+- `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🧰️testing/🧲️native-owners/🦀️.rs`: `close_retirement_recipient(` × 3
+
+## Erased Trait Implementations
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧩️command-decode/🧾️command-owner/🦀️.rs`: `fn close_original_step(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🌱️derived/🦀️.rs`: `fn close_step_controlled(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🛑️cancel/🦀️.rs`: `fn close_step_controlled(` × 2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🛑️cancel/🦀️.rs`: `fn close_original_step(` × 2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️one-item-owners/📥️lifted/📬️publication/🦀️.rs`: `fn close_original_step(` × 4
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📬️publication/🦀️.rs`: `fn close_original_step(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/📖️derived-snapshots-replays-and-history-read-plan/🦀️.rs`: `fn close_step_controlled(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/📸️snapshot-alias/🦀️.rs`: `fn close_step_controlled(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🫧️ephemeral/📤️ephemeral-one-item-publication/🦀️.rs`: `fn close_step_controlled(` × 2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🧾️frame-build/🦀️.rs`: `fn close_original_step(` × 2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/👤️member/🧪️tests/🦀️.rs`: `fn close_original_step(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🦀️.rs`: `fn close_step_controlled(` × 2
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🎞️command/📥️custody/🛂️manifest/🦀️.rs`: `fn close_original_step(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🪟️surfaces/native.rs`: `fn close_original_step(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🏪️stores/📥️staging/📮️action-ingress/🦀️.rs`: `fn close_original_step(` × 1
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🫧️transient/🧵️publication/🧬️native/🦀️.rs`: `fn close_step_controlled(` × 1
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/📦️mesh-io/🦀️.rs`: `fn close_original_step(` × 1
+- `🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🎮️retained/🦀️.rs`: `fn close_original_step(` × 2
+- `🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🩹️patch/📨️pending/📦️whole/🦀️.rs`: `fn close_original_step(` × 1
+- `🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/🧾️raster-ledger-and-atlas-permits/🦀️.rs`: `fn close_original_step(` × 2
+- `🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/🗒️atlas-pages-and-raster-pages/🦀️.rs`: `fn close_original_step(` × 1
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🦀️.rs`: `fn close_step_controlled(` × 1
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🦀️.rs`: `fn close_original_step(` × 1
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️contract/🦀️.rs`: `fn close_step_controlled(` × 1
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️contract/🦀️.rs`: `fn close_original_step(` × 1

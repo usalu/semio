@@ -84,22 +84,22 @@ fn field_demands<T: RetainedClone>(cursor: &RetainedFieldCursor<T>, draining: bo
     nested_retained_clone_demands::<T>(cursor,source,body)
 }
 
-fn advance_field<T: RetainedClone>(cursor: &mut RetainedFieldCursor<T>, value: &mut Option<T>, draining: &mut bool, source: RetainedCloneRef<'_, T>, body:usize, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+fn advance_field<T: RetainedClone>(cursor: &mut RetainedFieldCursor<T>, value: &mut Option<T>, draining: &mut bool, source: RetainedCloneRef<'_, T>, body:usize, grant: RetainedCloneGrant,work:&mut u64) -> Result<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
     if cursor.output_ready() {
-        *value=Some(cursor.take(nested_retained_clone_grant(grant)?).result?.ok_or_else(||invariant("retained child ready field omitted owner"))?.0);
-        cursor.begin_close();*draining=true;
+        let turn=cursor.take(nested_retained_clone_grant(grant)?);*work+=turn.work;*value=Some(turn.result?.ok_or_else(||invariant("retained child ready field omitted owner"))?.0);
+        if cursor.begin_close(){*work+=1}*draining=true;
         return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,copied_bytes:size_of::<T>(),..Default::default()}));
     }
     let nested=nested_retained_clone_grant(grant)?;
-    let step=cursor.advance(source,body,nested).result?;
+    let turn=cursor.advance(source,body,nested);*work+=turn.work;let step=turn.result?;
     Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested,step.progress(),"retained child field")?))
 }
-fn drain_field<T: RetainedClone>(cursor: &mut RetainedFieldCursor<T>, draining: &mut bool, phase: &mut usize, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+fn drain_field<T: RetainedClone>(cursor: &mut RetainedFieldCursor<T>, draining: &mut bool, phase: &mut usize, grant: RetainedCloneGrant,work:&mut u64) -> Result<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
     if !cursor.terminal_is_empty() {
         if grant.maximum_items == 0 {
             return Ok(RetainedCloneStep::Progress(Default::default()));
         }
-        let step = cursor.close_step(nested_retained_clone_grant(grant)?).result?;
+        let turn=cursor.close_step(nested_retained_clone_grant(grant)?);*work+=turn.work;let step=turn.result?;
         let progress = admit_retained_clone_close(grant, step, cursor.terminal_is_empty(), "retained child field scaffold close")?.progress();
         return Ok(RetainedCloneStep::Progress(progress));
     }
@@ -108,17 +108,18 @@ fn drain_field<T: RetainedClone>(cursor: &mut RetainedFieldCursor<T>, draining: 
     }
     *draining = false;
     *phase += 1;
+    *work+=1;
     Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
 }
 
-fn close_field<T: RetainedClone>(cursor: &mut RetainedFieldCursor<T>, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneStep>, ValueError> {
+fn close_field<T: RetainedClone>(cursor: &mut RetainedFieldCursor<T>, grant: RetainedCloneGrant,work:&mut u64) -> Result<Option<RetainedCloneStep>, semio_framework_value::OriginalRetirementFailure> {
     if cursor.terminal_is_empty() {
         return Ok(None);
     }
     if cursor.begin_close() {
-        return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })));
+        *work+=1;return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })));
     }
-    let step = cursor.close_step(nested_retained_clone_grant(grant)?).result?;
+    let turn=cursor.close_step(nested_retained_clone_grant(grant)?);*work+=turn.work;let step=turn.result?;
     Ok(Some(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, cursor.terminal_is_empty(), "retained child close")?.progress())))
 }
 
@@ -151,36 +152,58 @@ impl<S: Send + Sync + 'static> RetainedCloneCursor<ArtifactChild<S>> for Artifac
             _=>Err(invariant("retained child clone phase invalid")),
         }
     }
-    fn advance(&mut self, source: RetainedCloneRef<'_, ArtifactChild<S>>, body:usize, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome {
-        let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn advance_work_demand(&self,source:RetainedCloneRef<'_,ArtifactChild<S>>,body:usize)->Result<u64,ValueError>{
+        self.advance_demands(source,body)?;
+        if !source.check_binding(&self.source)?{return Ok(1)}
+        if self.output_ready(){return Ok(0)}
+        fn field<T:RetainedClone>(cursor:&RetainedFieldCursor<T>,draining:bool,source:RetainedCloneRef<'_,T>,body:usize)->Result<u64,ValueError>{
+            if draining{return if cursor.terminal_is_empty(){Ok(1)}else{cursor.close_work_demand(body)}}
+            if cursor.output_ready(){return cursor.take_work_demand()?.checked_add(u64::from(!cursor.close_started())).ok_or_else(||invariant("retained child field work overflow"))}
+            cursor.advance_work_demand(source,body)
+        }
+        match self.phase{0=>field(&self.child_id_cursor,self.draining,source.project(1,|child|&child.child_id),body),1=>field(&self.target_cursor,self.draining,source.project(2,|child|&child.target),body),2|3=>Ok(1),_=>Err(invariant("retained child clone phase invalid"))}
+    }
+    fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{
+        if !self.closing{return Ok(0)}
+        fn field<T:RetainedClone>(cursor:&RetainedFieldCursor<T>,body:usize)->Result<Option<u64>,ValueError>{if cursor.terminal_is_empty(){Ok(None)}else if !cursor.close_started(){Ok(Some(1))}else{cursor.close_work_demand(body).map(Some)}}
+        if let Some(work)=field(&self.child_id_cursor,body)?{return Ok(work)}
+        if let Some(work)=field(&self.target_cursor,body)?{return Ok(work)}
+        if !self.close.is_empty(){return self.close.next_owner_work::<ArtifactChild<S>>(false,&None,body)}
+        if self.child_id_value.is_some(){return self.close.next_owner_work::<String>(true,&None,body)}
+        if self.target_value.is_some(){return self.close.next_owner_work::<ArtifactRef>(true,&None,body)}
+        if self.local_owner_value.is_some(){return self.close.next_owner_work::<ArtifactChildLocalOwnerAlias>(true,&None,body)}
+        self.close.next_owner_work::<ArtifactChild<S>>(self.output.is_some(),&self.source,body)
+    }
+    fn advance(&mut self, source: RetainedCloneRef<'_, ArtifactChild<S>>, body:usize, grant: RetainedCloneGrant) -> semio_framework_value::OriginalRetirementOutcome {
+        let mut work=0;let result = (|| -> Result<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
         if self.closing {
-            return Err(invariant("retained child clone cursor is closing"));
+            return Err(invariant("retained child clone cursor is closing").into());
         }
         if self.spent {
-            return Err(invariant("retained child clone cursor is spent"));
+            return Err(invariant("retained child clone cursor is spent").into());
         }
         let demand=self.advance_demands(source,body)?;
         if self.output_ready() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if !retained_clone_grant_admits(grant,demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if let Some(progress) = source.bind(&mut self.source, grant).result? {
+        let turn=source.bind(&mut self.source, grant);work+=turn.work;if let Some(progress) = turn.result? {
             return Ok(RetainedCloneStep::Progress(progress));
         }
         if self.draining {
             return match self.phase {
-                0 => drain_field(&mut self.child_id_cursor, &mut self.draining, &mut self.phase, grant),
-                1 => drain_field(&mut self.target_cursor, &mut self.draining, &mut self.phase, grant),
-                _ => Err(invariant("retained child drain state is invalid")),
+                0 => drain_field(&mut self.child_id_cursor, &mut self.draining, &mut self.phase, grant,&mut work),
+                1 => drain_field(&mut self.target_cursor, &mut self.draining, &mut self.phase, grant,&mut work),
+                _ => Err(invariant("retained child drain state is invalid").into()),
             };
         }
         match self.phase {
-            0 => advance_field(&mut self.child_id_cursor, &mut self.child_id_value, &mut self.draining, source.project(1, |source| &source.child_id), body, grant),
-            1 => advance_field(&mut self.target_cursor, &mut self.target_value, &mut self.draining, source.project(2, |source| &source.target), body, grant),
+            0 => advance_field(&mut self.child_id_cursor, &mut self.child_id_value, &mut self.draining, source.project(1, |source| &source.child_id), body, grant,&mut work),
+            1 => advance_field(&mut self.target_cursor, &mut self.target_value, &mut self.draining, source.project(2, |source| &source.target), body, grant,&mut work),
             2 => {
                 let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() };
                 if !progress.fits(grant) {
                     return Ok(RetainedCloneStep::Progress(Default::default()));
                 }
-                self.local_owner_value = source.get().local_owner.as_ref().map(|owner| ArtifactChildLocalOwnerAlias(Arc::clone(owner)));
+                work+=1;self.local_owner_value = source.get().local_owner.as_ref().map(|owner| ArtifactChildLocalOwnerAlias(Arc::clone(owner)));
                 self.phase += 1;
                 Ok(RetainedCloneStep::Progress(progress))
             }
@@ -188,7 +211,7 @@ impl<S: Send + Sync + 'static> RetainedCloneCursor<ArtifactChild<S>> for Artifac
                 if grant.maximum_items == 0 {
                     return Ok(RetainedCloneStep::Progress(Default::default()));
                 }
-                self.output = Some(ArtifactChild {
+                work+=1;self.output = Some(ArtifactChild {
                     child_id: self.child_id_value.take().expect("retained field owner"),
                     target: self.target_value.take().expect("retained field owner"),
                     local_owner: self.local_owner_value.take().map(|alias| alias.0),
@@ -197,10 +220,9 @@ impl<S: Send + Sync + 'static> RetainedCloneCursor<ArtifactChild<S>> for Artifac
                 self.phase += 1;
                 Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes:demand.copy_bytes, ..Default::default() }))
             }
-            _ => Err(invariant("retained child clone state is invalid")),
+            _ => Err(invariant("retained child clone state is invalid").into()),
         }
     })();
-        let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default()));
         semio_framework_value::RetainedWorkOutcome { result, work }
     }
 
@@ -215,7 +237,8 @@ impl<S: Send + Sync + 'static> RetainedCloneCursor<ArtifactChild<S>> for Artifac
         if output.is_some() {
             self.spent = true;
         }
-        semio_framework_value::RetainedWorkOutcome { result: Ok(output.map(|child| (child, RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))), work: u64::from(self.spent) }
+        let work=u64::from(output.is_some());
+        semio_framework_value::RetainedWorkOutcome { result: Ok(output.map(|child| (child, RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))), work }
     }
 
     fn begin_close(&mut self) -> bool {
@@ -226,39 +249,38 @@ impl<S: Send + Sync + 'static> RetainedCloneCursor<ArtifactChild<S>> for Artifac
         true
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome {
-        let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::OriginalRetirementOutcome {
+        let mut work=0;let result = (|| -> Result<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
         if grant.maximum_items == 0 {
             return Ok(RetainedCloneStep::Progress(Default::default()));
         }
         if !self.closing {
-            return Err(invariant("retained child must begin close before granted retirement"));
+            return Err(invariant("retained child must begin close before granted retirement").into());
         }
         if !retained_clone_grant_admits(grant,retained_clone_close_demands::<ArtifactChild<S>>(self,grant.maximum_copy_bytes)?) {return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if let Some(step) = close_field(&mut self.child_id_cursor, grant)? {
+        if let Some(step) = close_field(&mut self.child_id_cursor, grant,&mut work)? {
             return Ok(step);
         }
-        if let Some(step) = close_field(&mut self.target_cursor, grant)? {
+        if let Some(step) = close_field(&mut self.target_cursor, grant,&mut work)? {
             return Ok(step);
         }
         if !self.close.is_empty() {
-            return self.close.step_granted(grant).result;
+            let turn=self.close.step_granted(grant);work+=turn.work;return turn.result;
         }
-        if let Some(step) = self.close.begin_granted(&mut self.child_id_value, grant).result? {
+        if let Some(step) = {let turn=self.close.begin_granted(&mut self.child_id_value, grant);work+=turn.work;turn.result}? {
             return Ok(step);
         }
-        if let Some(step) = self.close.begin_granted(&mut self.target_value, grant).result? {
+        if let Some(step) = {let turn=self.close.begin_granted(&mut self.target_value, grant);work+=turn.work;turn.result}? {
             return Ok(step);
         }
-        if let Some(step) = self.close.begin_granted(&mut self.local_owner_value, grant).result? {
+        if let Some(step) = {let turn=self.close.begin_granted(&mut self.local_owner_value, grant);work+=turn.work;turn.result}? {
             return Ok(step);
         }
-        if let Some(step) = self.close.begin_granted(&mut self.output, grant).result? {
+        if let Some(step) = {let turn=self.close.begin_granted(&mut self.output, grant);work+=turn.work;turn.result}? {
             return Ok(step);
         }
-        close_retained_binding(&mut self.source, grant).result
+        {let turn=close_retained_binding(&mut self.source, grant);work+=turn.work;turn.result}
     })();
-        let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default()));
         semio_framework_value::RetainedWorkOutcome { result, work }
     }
 

@@ -155,9 +155,9 @@ impl<M: RetainedCloneEntries> RetainedCloneCursor<M> for RetainedCloneEntriesCur
         Ok(demand)
     }
 
-    fn advance(&mut self, source: RetainedCloneRef<'_, M>, body: usize, grant: RetainedCloneGrant) ->crate::RetainedWorkOutcome{let mut work=0;let result=(||{
-        if self.closing { return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained standard collection clone cursor is closing")); }
-        if self.spent { return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained standard collection clone cursor is spent")); }
+    fn advance(&mut self, source: RetainedCloneRef<'_, M>, body: usize, grant: RetainedCloneGrant) ->crate::OriginalRetirementOutcome{let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
+        if self.closing { return Err((crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained standard collection clone cursor is closing")).into()); }
+        if self.spent { return Err((crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained standard collection clone cursor is spent")).into()); }
         let demand=self.advance_demands(source,body)?;
         if self.output_ready() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if !super::retained_clone_grant_admits(grant,demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -166,7 +166,7 @@ impl<M: RetainedCloneEntries> RetainedCloneCursor<M> for RetainedCloneEntriesCur
         match self.phase {
             SELECT => {
                 let count = source.get().entry_count();
-                if index > count { return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained standard collection clone index passed its source")); }
+                if index > count { return Err((crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained standard collection clone index passed its source")).into()); }
                 if index == count {
                     let bytes = size_of::<M>();
                     if grant.maximum_copy_bytes < bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -229,7 +229,7 @@ impl<M: RetainedCloneEntries> RetainedCloneCursor<M> for RetainedCloneEntriesCur
                 work+=1;let key = self.key.take().ok_or_else(|| crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained standard collection key owner is missing"))?;
                 let value = match self.value.take() {
                     Some(value) => value,
-                    None => { self.key = Some(key); return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained standard collection value owner is missing")); }
+                    None => { self.key = Some(key); return Err((crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained standard collection value owner is missing")).into()); }
                 };
                 match self.building.get_or_insert_with(M::empty).insert_entry(key, value) {
                     Ok(()) => {
@@ -240,12 +240,12 @@ impl<M: RetainedCloneEntries> RetainedCloneCursor<M> for RetainedCloneEntriesCur
                     Err((key, value)) => {
                         self.key = Some(key);
                         self.value = Some(value);
-                        Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained standard collection clone produced a duplicate key"))
+                        Err((crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained standard collection clone produced a duplicate key")).into())
                     }
                 }
             }
             DONE => Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())),
-            _ => Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained standard collection clone state is invalid")),
+            _ => Err((crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained standard collection clone state is invalid")).into()),
         }
     })();crate::RetainedWorkOutcome{result,work}}
 
@@ -258,9 +258,9 @@ impl<M: RetainedCloneEntries> RetainedCloneCursor<M> for RetainedCloneEntriesCur
         true
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) ->crate::RetainedWorkOutcome{let mut work=0;let result=(||{
+    fn close_step(&mut self, grant: RetainedCloneGrant) ->crate::OriginalRetirementOutcome{let mut work=0;let result=(||{
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if !self.closing { return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "standard collection must begin close before granted retirement")); }
+        if !self.closing { return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "standard collection must begin close before granted retirement").into()); }
         if !super::retained_clone_grant_admits(grant,super::retained_clone_close_demands::<M>(self,grant.maximum_copy_bytes)?) {return Ok(RetainedCloneStep::Progress(Default::default()));}
         if !self.key_cursor.terminal_is_empty() {
             if self.key_cursor.begin_close() {work+=1; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }

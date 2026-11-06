@@ -235,7 +235,7 @@ impl<P, Mutation: super::Mutation<P>> TransientStore<P, Mutation> {
         })
     }
 
-    pub fn advance_publish_one(&mut self, publication: &mut ArtifactEphemeralOneItemPublication<P, Mutation>, grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, String>
+    pub fn advance_publish_one(&mut self, publication: &mut ArtifactEphemeralOneItemPublication<P, Mutation>, grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, ValueError>
     where
         P: Send + Sync + 'static,
     {
@@ -256,7 +256,7 @@ impl<P, Mutation: super::Mutation<P>> TransientStore<P, Mutation> {
             *publication.fault = Some(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"transient publication became stale before commit"));
             publication.phase = ArtifactStoreOneItemPublicationPhase::Fault;
             publication.begin_close();
-            return Err("transient publication became stale before commit".into());
+            return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"transient publication became stale before commit"));
         }
         if !grant.permits_one() {
             return Ok(ArtifactStoreOneItemAdvance::Blocked);
@@ -273,14 +273,14 @@ impl<P, Mutation: super::Mutation<P>> TransientStore<P, Mutation> {
             },
             ArtifactStoreOneItemPublicationPhase::PreparingCursor => {
                 if publication.preparation.as_ref().and_then(|owner| owner.prepared()).is_none() {
-                    return Err("transient prepared root is absent".into());
+                    return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"transient prepared root is absent"));
                 }
                 publication.phase = ArtifactStoreOneItemPublicationPhase::PreflightingCommit;
                 Ok(ArtifactStoreOneItemAdvance::Progress(publication.progress()))
             }
             ArtifactStoreOneItemPublicationPhase::PreflightingCommit => {
                 if self.generation == u64::MAX || publication.footprint.work_items == 0 {
-                    return Err("transient publication fixed commit authority is exhausted".into());
+                    return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"transient publication fixed commit authority is exhausted"));
                 }
                 publication.phase = ArtifactStoreOneItemPublicationPhase::Publishing;
                 Ok(ArtifactStoreOneItemAdvance::Progress(publication.progress()))
@@ -288,15 +288,15 @@ impl<P, Mutation: super::Mutation<P>> TransientStore<P, Mutation> {
             ArtifactStoreOneItemPublicationPhase::Publishing => {
                 let demand=publication.commit_demand();
                 if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant.retained_grant(),demand){return Ok(ArtifactStoreOneItemAdvance::Blocked);}
-                receiving.admit_turn_capacity(grant.maximum_capacity_bytes).map_err(|error|error.to_string())?;
-                receiving.charge(demand.capacity_bytes).map_err(|error|error.to_string())?;
-                let prepared = publication.preparation.as_mut().and_then(|owner| owner.take_prepared()).ok_or_else(|| "transient publication lost its prepared root".to_string())?;
+                receiving.admit_turn_capacity(grant.maximum_capacity_bytes)?;
+                receiving.charge(demand.capacity_bytes)?;
+                let prepared = publication.preparation.as_mut().and_then(|owner| owner.take_prepared()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"transient publication lost its prepared root"))?;
                 let generation_before = self.generation;
                 let previous = self.current.replace(prepared.next_root).expect("live transient publication root remains");
                 *publication.displaced_root_retirement = Some(if let Some(factory) = publication.owned_retirement_factory.as_ref() {
                     Box::new(ReturnedSnapshotReadRetirement::new(previous, factory.clone()))
                 } else {
-                    ArtifactStoreDisplacedSnapshotRetirement::boxed(previous, Arc::clone(publication.root_retirement_factory.as_ref().ok_or_else(|| "transient publication lost its local-root retirement factory".to_string())?))
+                    ArtifactStoreDisplacedSnapshotRetirement::boxed(previous, Arc::clone(publication.root_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"transient publication lost its local-root retirement factory"))?))
                 });
                 self.generation += 1;
                 let receipt = LaneItemReceipt { generation_before, generation_after: self.generation };

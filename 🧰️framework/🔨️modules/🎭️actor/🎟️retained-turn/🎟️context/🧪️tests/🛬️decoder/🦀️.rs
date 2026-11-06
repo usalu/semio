@@ -12,7 +12,7 @@ fn close_source<T:RetireOwned+Send+Sync+'static>(slot:&mut OriginalActorContextS
  panic!("original decoder law did not close retained input/output");
 }
 #[test]
-fn original_actor_decoder_keeps_native_candidate_ledger_receipt_and_root_close_order(){
+fn original_actor_decoder_keeps_native_candidate_ledger_receipt_and_root_close_order(){let mut shared_allocation_frame=semio_framework_value::native_decoding::NativeSharedAdmission::default();
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🛬️decoder.json")).unwrap();let first=RetainedTurnInput{operation:fixture["operation"].as_u64().unwrap(),generation:fixture["generation"].as_u64().unwrap(),epoch:1,work:declared_work(&fixture),grant:declared_grant(&fixture,"totalGrant")};let policy=declared_grant(&fixture,"callPolicy");let mut slot=OriginalActorContextSlot::empty();let mut epoch=1;
  loop{let input=if slot.context.is_none(){first}else{retained_input(&slot,epoch)};let(call,heap)=observe(||slot.admit_step(input,loan(policy,input.grant),fixture_clock));assert_eq!(heap,(call.receipt_spent.retained_capacity_bytes,call.receipt_spent.released_bytes));if call.result.unwrap().ready{break}epoch+=1;assert!(epoch<=5);}
  let mut ledger=None;let mut recipient=None;let mut physical_source=None;let mut source_recipient=None;
@@ -20,7 +20,7 @@ fn original_actor_decoder_keeps_native_candidate_ledger_receipt_and_root_close_o
   let mut raw=Some(fixture["text"].as_str().unwrap().to_owned());let raw_pointer=raw.as_ref().unwrap().as_ptr();let mut output:Option<SealedShared<String>>=None;epoch+=1;let input=retained_input(&slot,epoch);let mut grant=loan(policy,input.grant);if case["capacity"]=="zero"{grant.maximum_capacity_bytes=0;}let mut external=Default::default();
   let(call,heap)=observe(||slot.dispatch_step(input,StepBudget::new(64,input.work.absolute_deadline_us,grant),&mut external,fixture_clock,|cx|{
    let source=cx.payload_authority_identity();if let Some(original)=physical_source{assert_eq!(source,original)}else{physical_source=Some(source)}let original_recipient=cx.original_recipient_identity();if let Some(original)=source_recipient{assert_eq!(original_recipient,original)}else{source_recipient=Some(original_recipient)}assert_eq!(cx.original_clock_binding(),Some(first.work.clock_binding));
-   let result=cx.with_native_receiving::<_,ValueError>(|control|{if let Some(original)=ledger{assert_eq!(control.ledger_identity(),original)}else{ledger=Some(control.ledger_identity())}if let Some(original)=recipient{assert_eq!(control.retirement_recipient_identity(),Some(original))}else{recipient=control.retirement_recipient_identity()}control.receive_shared(&mut raw,&mut output,semio_framework_value::shared_issuance::SharedIssuer::owned())});
+   let result=cx.with_native_receiving::<_,ValueError>(|control|{if let Some(original)=ledger{assert_eq!(control.ledger_identity(),original)}else{ledger=Some(control.ledger_identity())}if let Some(original)=recipient{assert_eq!(control.retirement_recipient_identity(),Some(original))}else{recipient=control.retirement_recipient_identity()}control.receive_shared(&mut raw,&mut output,semio_framework_value::shared_issuance::SharedIssuer::owned(),&mut shared_allocation_frame)});
    let progress=match &result{Ok(progress)=>*progress,Err(error)=>error.retained_progress()};let accepted=cx.consume_receiving_retained(grant,progress);cx.consume_fuel(progress.copied_items as u64);accepted?;result?;
    if case["semanticFailure"].as_bool().unwrap(){return Err(OriginalTurnFailure::from(refusal("same original semantic failure after native admission")))}Ok(())
   }));assert_eq!(heap,(call.receipt_spent.retained_capacity_bytes,call.receipt_spent.released_bytes));assert_eq!(call.receipt_spent,external);assert_eq!(call.receipt().unwrap().remaining,slot.context.as_ref().unwrap().remaining_grant().unwrap());
@@ -36,7 +36,7 @@ fn original_actor_decoder_keeps_native_candidate_ledger_receipt_and_root_close_o
 }
 
 #[test]
-fn original_actor_live_and_close_epochs_preserve_source_and_decoder(){
+fn original_actor_live_and_close_epochs_preserve_source_and_decoder(){let mut shared_allocation_frame=semio_framework_value::native_decoding::NativeSharedAdmission::default();
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧭️source-drain.json")).unwrap();let first=RetainedTurnInput{operation:fixture["operation"].as_u64().unwrap(),generation:fixture["generation"].as_u64().unwrap(),epoch:1,work:declared_work(&fixture),grant:declared_grant(&fixture,"totalGrant")};let policy=declared_grant(&fixture,"callPolicy");let mut slot=OriginalActorContextSlot::empty();let mut epoch=1;
  loop{let input=if slot.context.is_none(){first}else{retained_input(&slot,epoch)};let call=slot.admit_step(input,loan(policy,input.grant),fixture_clock);if call.result.unwrap().ready{break}epoch+=1;assert!(epoch<=5);}
  let mut raw=Some(fixture["text"].as_str().unwrap().to_owned());let mut output:Option<SealedShared<String>>=None;let mut binding=None;let mut decoder=None;let mut phases=Vec::new();let mut records=Vec::new();let mut identity=None;
@@ -44,7 +44,7 @@ fn original_actor_live_and_close_epochs_preserve_source_and_decoder(){
   epoch+=1;let input=retained_input(&slot,epoch);let grant=loan(policy,input.grant);let mut external=Default::default();
   let call=slot.dispatch_step(input,StepBudget::new(64,input.work.absolute_deadline_us,grant),&mut external,fixture_clock,|cx|{
    let current=semio_framework_job::OriginalSourceBinding::borrow(cx);if let Some(original)=binding{assert!(original==current)}else{binding=Some(current)}
-   if output.is_none(){let progress=cx.with_native_receiving::<_,ValueError>(|control|control.receive_shared(&mut raw,&mut output,semio_framework_value::shared_issuance::SharedIssuer::owned()))?;let issued=cx.receiving_issued_grant().unwrap();cx.consume_receiving_retained(issued,progress)?;cx.consume_fuel(progress.copied_items as u64);}
+   if output.is_none(){let progress=cx.with_native_receiving::<_,ValueError>(|control|control.receive_shared(&mut raw,&mut output,semio_framework_value::shared_issuance::SharedIssuer::owned(),&mut shared_allocation_frame))?;let issued=cx.receiving_issued_grant().unwrap();cx.consume_receiving_retained(issued,progress)?;cx.consume_fuel(progress.copied_items as u64);}
    let current=cx.native_receiving_identity().expect("actual native receiving source exists after paid admission");if let Some(original)=decoder{assert_eq!(original,current)}else{decoder=Some(current)}
    identity=Some(serde_json::json!({"operation":cx.operation().0,"generation":cx.generation().0,"parent":cx.original_source_parent()?.source_identity()?,"payload":format!("{:?}",cx.payload_authority_identity()),"decoder":current,"recipient":cx.original_recipient_identity(),"clock":cx.original_clock_binding(),"deadline":cx.original_absolute_deadline_us()}));
    if phase["cancelled"].as_bool().unwrap(){cx.observe_original_cancellation()?;cx.with_original_retirement(|cx|{assert!(binding.unwrap().matches(cx));assert_eq!(cx.native_receiving_identity(),decoder);Ok(())})?;}
@@ -67,12 +67,12 @@ fn original_actor_live_and_close_epochs_preserve_source_and_decoder(){
 std::thread_local!{static EXPIRY_CLOCK:std::cell::Cell<u64>=const{std::cell::Cell::new(1)};}
 fn expiry_clock()->Option<u64>{EXPIRY_CLOCK.with(|clock|Some(clock.get()))}
 #[test]
-fn original_actor_expired_cancelled_source_retires_without_renewing_authority(){
+fn original_actor_expired_cancelled_source_retires_without_renewing_authority(){let mut shared_allocation_frame=semio_framework_value::native_decoding::NativeSharedAdmission::default();
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⌛️source-expiry.json")).unwrap();EXPIRY_CLOCK.with(|clock|clock.set(fixture["initialClock"].as_u64().unwrap()));let first=RetainedTurnInput{operation:fixture["operation"].as_u64().unwrap(),generation:fixture["generation"].as_u64().unwrap(),epoch:1,work:declared_work(&fixture),grant:declared_grant(&fixture,"totalGrant")};let policy=declared_grant(&fixture,"callPolicy");let mut slot=OriginalActorContextSlot::empty();let mut epoch=1;
  loop{let input=if slot.context.is_none(){first}else{retained_input(&slot,epoch)};let call=slot.admit_step(input,loan(policy,input.grant),expiry_clock);if call.result.unwrap().ready{break}epoch+=1;assert!(epoch<=5);}
  let mut outputs:[Option<SealedShared<String>>;2]=[None,None];let mut binding=None;let mut decoder=None;
  for output in &mut outputs{epoch+=1;let input=retained_input(&slot,epoch);let grant=loan(policy,input.grant);let mut raw=Some(fixture["text"].as_str().unwrap().to_owned());let mut external=Default::default();let call=slot.dispatch_step(input,StepBudget::new(64,input.work.absolute_deadline_us,grant),&mut external,expiry_clock,|cx|{
-  binding=Some(semio_framework_job::OriginalSourceBinding::borrow(cx));let progress=cx.with_native_receiving::<_,ValueError>(|control|control.receive_shared(&mut raw,output,semio_framework_value::shared_issuance::SharedIssuer::owned()))?;cx.consume_receiving_retained(cx.receiving_issued_grant().unwrap(),progress)?;cx.consume_fuel(progress.copied_items as u64);decoder=cx.native_receiving_identity();Ok::<_,OriginalTurnFailure>(())
+  binding=Some(semio_framework_job::OriginalSourceBinding::borrow(cx));let progress=cx.with_native_receiving::<_,ValueError>(|control|control.receive_shared(&mut raw,output,semio_framework_value::shared_issuance::SharedIssuer::owned(),&mut shared_allocation_frame))?;cx.consume_receiving_retained(cx.receiving_issued_grant().unwrap(),progress)?;cx.consume_fuel(progress.copied_items as u64);decoder=cx.native_receiving_identity();Ok::<_,OriginalTurnFailure>(())
  });assert!(call.result.is_ok());assert!(raw.is_none());}
  EXPIRY_CLOCK.with(|clock|clock.set(fixture["expiredClock"].as_u64().unwrap()));let pointer=outputs[0].as_ref().unwrap().get().as_ptr();epoch+=1;let unscoped_input=retained_input(&slot,epoch);let mut unscoped_external=Default::default();let unscoped=slot.dispatch_step(unscoped_input,StepBudget::new(64,unscoped_input.work.absolute_deadline_us,loan(policy,unscoped_input.grant)),&mut unscoped_external,expiry_clock,|cx|{
   assert!(binding.unwrap().matches(cx));assert!(cx.should_yield());assert!(cx.retirement_should_yield());let step=semio_framework_job::close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|panic!("expired semantic scope cannot enter physical owner"))?;assert_eq!(step.progress(),RetainedCloneProgress::default());Ok::<_,OriginalTurnFailure>(())
@@ -156,4 +156,15 @@ fn original_actor_close_uses_the_same_raw_child_work_for_financial_512_cancel_er
   }
   assert!(slots.iter().all(OriginalActorContextSlot::terminal_is_empty));assert_eq!(born,released);assert!(same,"parent work and physical receipt must equal the actual raw primitive");assert!(ceiling,"financial512 never authorizes a second semantic close primitive");assert!(refused,"both actual original source aliases retain their error owners");assert!(calls<=200,"full original actor cleanup exceeded200 calls: {}",calls);
  }
+}
+
+
+#[test]
+fn original_actor_decoder_uses_a_paid_source_loan_and_work_issuer(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🛬️decoder.json")).unwrap();let first=RetainedTurnInput{operation:fixture["operation"].as_u64().unwrap(),generation:fixture["generation"].as_u64().unwrap(),epoch:1,work:declared_work(&fixture),grant:declared_grant(&fixture,"totalGrant")};let policy=declared_grant(&fixture,"callPolicy");let mut slot=OriginalActorContextSlot::empty();let mut epoch=1;
+ loop{let input=if slot.context.is_none(){first}else{retained_input(&slot,epoch)};let(call,_)=observe(||slot.admit_step(input,loan(policy,input.grant),fixture_clock));assert!(!call.result.unwrap().ready);if slot.context.as_ref().is_some_and(|owner|owner.decoder.source_loan_admitted()){break}epoch+=1;assert!(epoch<16)}
+ assert!(!slot.context.as_ref().unwrap().decoder.work_issuer_admitted());epoch+=1;let input=retained_input(&slot,epoch);let bytes=semio_framework_job::OriginalJobDecodeOwner::work_issuer_birth_copy_bytes();let mut denied=loan(policy,input.grant);denied.maximum_copy_bytes=bytes-1;
+ let(call,heap)=observe(||slot.admit_step(input,denied,fixture_clock));assert!(!call.result.unwrap().ready);assert_eq!(call.receipt_spent,RetainedCloneProgress::default());assert_eq!(heap,(0,0));assert!(!slot.context.as_ref().unwrap().decoder.work_issuer_admitted());
+ let(call,heap)=observe(||slot.admit_step(input,loan(policy,input.grant),fixture_clock));assert!(!call.result.unwrap().ready);assert_eq!(heap,(call.receipt_spent.retained_capacity_bytes,call.receipt_spent.released_bytes));assert_eq!(call.receipt_spent.copied_bytes,bytes);assert!(slot.context.as_ref().unwrap().decoder.work_issuer_admitted());
+ epoch+=1;for _ in 0..4096{if slot.terminal_is_empty(){break}let input=retained_input(&slot,epoch);let(call,_)=observe(||slot.close_step(input,loan(policy,input.grant)));call.result.unwrap();epoch+=1;}assert!(slot.terminal_is_empty());
 }

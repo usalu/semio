@@ -1,0 +1,59 @@
+{
+  "schema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "array",
+    "items": {
+      "type": "object",
+      "required": [
+        "performed",
+        "postAccepted",
+        "panic",
+        "work",
+        "retainedFailure"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "performed": {
+          "type": "boolean"
+        },
+        "postAccepted": {
+          "type": "boolean"
+        },
+        "panic": {
+          "type": "boolean"
+        },
+        "work": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "retainedFailure": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "data": [
+    {
+      "performed": false,
+      "postAccepted": true,
+      "panic": false,
+      "work": 0,
+      "retainedFailure": false
+    },
+    {
+      "performed": true,
+      "postAccepted": false,
+      "panic": false,
+      "work": 1,
+      "retainedFailure": false
+    },
+    {
+      "performed": true,
+      "postAccepted": false,
+      "panic": true,
+      "work": 1,
+      "retainedFailure": true
+    }
+  ]
+}

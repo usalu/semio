@@ -23,8 +23,8 @@ impl<Op> protocol::MutationKind<En1997Snapshot, Op> for ChangeEmbWallKind where 
         record: "ChangedEmbWallKind",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change support type of the embedded wall", "Stützungsart der eingebundenen Wand ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change support type of the embedded wall", "Stützungsart der eingebundenen Wand ändern")
     }
 }
 

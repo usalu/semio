@@ -211,15 +211,15 @@ fn only_an_admitted_completion_tick_can_publish_a_cached_solve() {
 #[test]
 fn completed_source_identity_survives_the_effect_bridge_and_current_revision_fence() {
     use crate::editor::grid2d::{Grid2dEditor, Grid2dEditorCommand};
-    use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, NoConfig, ViewModel};
+    use semio_plugin::{ArtifactEditor, ArtifactView, ConfigView, NoConfig, ViewModel};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🧪️tests/🧫️preview-revisions/🔣️.json")).expect("portable revision cases");
     let document = Arc::new(pipes::document());
     let solved = solve_with_clock(&document, semio_framework_job::logical_now_us).expect("portable pipes solve");
     let payload = Grid2dFillPayload { assignments: solved.assignments.iter().map(|(x, y, tile_id)| Grid2dFillCell { x: *x, y: *y, tile_id: Some(tile_id.clone()) }).collect(), done: true, ..Default::default() };
-    let history = semio_framework_plugin::HistoryView::empty();
+    let history = semio_plugin::HistoryView::empty();
     let no_config = NoConfig::default();
     let config = ConfigView { snapshot: &no_config, window: None };
-    let mut view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut view = ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     view.window_id = Some("preview-1".into());
     view.window_instances = vec![semio_framework::ViewWindowInstance { id: "preview-1".into(), window_kind_id: preview::WINDOW_KIND_ID.into() }];
     for case in fixture["cases"].as_array().expect("cases") {
@@ -240,7 +240,7 @@ fn completed_source_identity_survives_the_effect_bridge_and_current_revision_fen
         assert_eq!(cache.commit.assignments, solved.assignments);
         let current: Option<[u8; 32]> = serde_json::from_value(case["currentRevision"].clone()).expect("current");
         let doc = match current {
-            Some(revision) => ArtifactView::with_operation(document.as_ref(), &history, semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "doc".into(), operation_id: 1, generation: 1, canonical_base_revision: revision, retained: semio_framework_plugin::artifact_app_laws::fixture_retained_turn().grant, authoring_seed: "seed".into() }),
+            Some(revision) => ArtifactView::with_operation(document.as_ref(), &history, semio_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "doc".into(), operation_id: 1, generation: 1, canonical_base_revision: revision, retained: semio_plugin::artifact_app_laws::fixture_retained_turn().grant, authoring_seed: "seed".into() }),
             None => ArtifactView::new(document.as_ref(), &history),
         };
         let emitted = Grid2dEditor::dispatch(&command, &doc, &config, Some(&view)).expect("completion dispatch");

@@ -60,13 +60,14 @@ pub struct FinalMessageSelection {
     changed: bool,
     closing: bool,
     work: u64,
+    last_close_work:u64,
 }
 fn digits(mut value: usize) -> usize { let mut count = 1; while value >= 10 { value /= 10; count += 1; } count }
 fn failure() -> ValueError { ValueError::literal(ValueRefusalKind::InvariantViolated, "final message selection lost its admitted physical owner") }
 impl FinalMessageSelection {
     pub fn new(edit_id_bytes: usize, original_rows: usize) -> Self {
         let summary = MUTATION_MESSAGE_OWNER_BYTES + CASCADE.len() + digits(original_rows) + " more messages".len();
-        Self { phase: Phase::Reserve, output: ManuallyDrop::new(Vec::new()), pending: None, active: None, index: 0, target: 0, measuring: None, total: edit_id_bytes, original: original_rows, budget: MUTATION_MESSAGE_ENTRY_BYTES.saturating_sub(edit_id_bytes).saturating_sub(summary), used: 0, level: 0, kept: 0, threshold: None, worst: None, first_dropped: None, cut: 0, summary: [0; 34], summary_len: 0, changed: false, closing: false, work: 0 }
+        Self { phase: Phase::Reserve, output: ManuallyDrop::new(Vec::new()), pending: None, active: None, index: 0, target: 0, measuring: None, total: edit_id_bytes, original: original_rows, budget: MUTATION_MESSAGE_ENTRY_BYTES.saturating_sub(edit_id_bytes).saturating_sub(summary), used: 0, level: 0, kept: 0, threshold: None, worst: None, first_dropped: None, cut: 0, summary: [0; 34], summary_len: 0, changed: false, closing: false, work: 0, last_close_work:0 }
     }
     pub fn changed(&self) -> bool { self.changed }
     pub fn completed_work(&self) -> u64 { self.work }
@@ -131,15 +132,19 @@ impl FinalMessageSelection {
     }
     fn push(&mut self, row: MutationMessage) -> Result<(), ValueError> { if self.output.len() == self.output.capacity() { self.pending = Some(row); return Err(failure()); } self.output.push(row); Ok(()) }
     pub fn take(&mut self) -> Option<Vec<MutationMessage>> { self.is_finished().then(|| std::mem::take(&mut *self.output)) }
+    pub fn is_closing(&self)->bool{self.closing}
     pub fn begin_close(&mut self) { self.closing = true; }
-    pub fn next_close_copy_byte_demand(&self) -> usize { self.active.as_ref().map_or_else(|| usize::from(self.pending.is_some() || !self.output.is_empty()) * size_of::<MutationMessage>(), MutationMessageRetirement::next_copy_byte_demand) }
-    pub fn next_close_release_byte_demand(&self) -> usize { self.active.as_ref().map_or_else(|| if self.pending.is_none() && self.output.is_empty() { self.output.capacity() * size_of::<MutationMessage>() } else { 0 }, MutationMessageRetirement::next_release_byte_demand) }
+    pub fn next_close_copy_byte_demand(&self) -> usize { if self.active.as_ref().is_some_and(MutationMessageRetirement::terminal_is_empty){return size_of::<Option<MutationMessageRetirement>>()} self.active.as_ref().map_or_else(|| usize::from(self.pending.is_some() || !self.output.is_empty()) * size_of::<MutationMessage>(), MutationMessageRetirement::next_copy_byte_demand) }
+    pub fn next_close_release_byte_demand(&self) -> usize { if self.active.as_ref().is_some_and(MutationMessageRetirement::terminal_is_empty){return 0} self.active.as_ref().map_or_else(|| if self.pending.is_none() && self.output.is_empty() { self.output.capacity() * size_of::<MutationMessage>() } else { 0 }, MutationMessageRetirement::next_release_byte_demand) }
+    pub fn last_close_work(&self)->u64{self.last_close_work}
+    pub fn next_close_work_demand(&self)->u64{u64::from(self.closing&&!self.terminal_is_empty())}
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedCloneProgress {
-        let idle = RetainedCloneProgress::default(); if !self.closing || grant.maximum_items == 0 || grant.maximum_depth == 0 { return idle; }
-        if let Some(active) = self.active.as_mut() { let progress = active.close_step(grant); if active.terminal_is_empty() { self.active = None; } return progress; }
-        let copy = self.next_close_copy_byte_demand(); if grant.maximum_copy_bytes < copy { return idle; }
-        if let Some(row) = self.pending.take().or_else(|| self.output.pop()) { self.active = Some(MutationMessageRetirement::new(row)); return RetainedCloneProgress { copied_items: 1, copied_bytes: copy, ..idle }; }
-        let release = self.next_close_release_byte_demand(); if grant.maximum_release_bytes < release { return idle; } drop(std::mem::take(&mut *self.output)); RetainedCloneProgress { copied_items: usize::from(release > 0), released_bytes: release, ..idle }
+        self.last_close_work=0;let idle = RetainedCloneProgress::default(); if !self.closing || self.terminal_is_empty() || grant.maximum_items == 0 || grant.maximum_depth == 0 { return idle; }
+        let copy=self.next_close_copy_byte_demand();if grant.maximum_copy_bytes<copy{return idle}
+        if self.active.as_ref().is_some_and(MutationMessageRetirement::terminal_is_empty){self.active.take();self.last_close_work=1;return RetainedCloneProgress{copied_items:1,copied_bytes:copy,..idle}}
+        if let Some(active) = self.active.as_mut() { let progress = active.close_step(grant);self.last_close_work=active.last_turn_work();return progress; }
+        if let Some(row) = self.pending.take().or_else(|| self.output.pop()) { self.active = Some(MutationMessageRetirement::new(row));self.last_close_work=1;return RetainedCloneProgress { copied_items: 1, copied_bytes: copy, ..idle }; }
+        let release = self.next_close_release_byte_demand(); if grant.maximum_release_bytes < release { return idle; } drop(std::mem::take(&mut *self.output));self.last_close_work=1;RetainedCloneProgress { copied_items: 1, released_bytes: release, ..idle }
     }
     pub fn terminal_is_empty(&self) -> bool { self.output.is_empty() && self.output.capacity() == 0 && self.pending.is_none() && self.active.is_none() }
 }

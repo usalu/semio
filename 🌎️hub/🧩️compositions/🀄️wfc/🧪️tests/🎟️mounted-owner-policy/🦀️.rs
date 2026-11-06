@@ -1,6 +1,6 @@
 //! 🎟️ WFC's selected lifecycle grants can release every backing they already admit.
-use semio_framework_plugin::__value::retirement::admit_owned_retirement;
-use semio_framework_plugin::MountedOwnerPolicyV1;
+use semio_plugin::__value::retirement::admit_owned_retirement;
+use semio_plugin::MountedOwnerPolicyV1;
 
 const FIXTURE: &str = include_str!("../🧫️fixtures/🎟️mounted-owner-policy/🔣️.json");
 
@@ -22,7 +22,7 @@ fn the_portable_policy_matches_native_and_third_party_wire_output() {
 }
 
 
-fn retire_step(caller: &mut semio_framework_plugin::artifact_app_laws::OriginalWorkFixture, owner: &mut dyn semio_framework_plugin::__value::ErasedSnapshotRetirement, grant: semio_framework_job::RetainedCloneGrant) -> semio_framework_job::RetainedCloneProgress {
+fn retire_step(caller: &mut semio_plugin::artifact_app_laws::OriginalWorkFixture, owner: &mut dyn semio_plugin::__value::ErasedSnapshotRetirement, grant: semio_framework_job::RetainedCloneGrant) -> semio_framework_job::RetainedCloneProgress {
     caller.turn(grant, |cx| cx.with_original_retirement(|cx| {
         let demand = owner.next_demand(grant.maximum_copy_bytes)?;
         semio_framework_job::close_original_retained_step(cx, demand, |remaining| owner.close_step(remaining))
@@ -42,7 +42,7 @@ fn every_selected_phase_retires_the_maximum_bitmap_pin_backing() {
         let backing = original.capacity() * std::mem::size_of::<semio_s_artifact_wfc_bitmap::schema::snapshot::BitmapPinnedPixel>();
         assert!(backing >= law["minimumBackingBytes"].as_u64().expect("minimum backing") as usize);
         assert!(backing <= law["maximumBackingBytes"].as_u64().expect("maximum backing") as usize);
-        let mut caller = semio_framework_plugin::artifact_app_laws::OriginalWorkFixture::new();
+        let mut caller = semio_plugin::artifact_app_laws::OriginalWorkFixture::new();
         let mut owner = caller.turn(grant, |cx| {
             let turn = admit_owned_retirement(original, cx.retained_grant());
             cx.consume_fuel(turn.work);

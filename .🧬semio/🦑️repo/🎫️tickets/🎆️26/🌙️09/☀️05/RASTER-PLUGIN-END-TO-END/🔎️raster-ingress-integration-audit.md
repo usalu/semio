@@ -1,0 +1,7 @@
+# Raster Ingress Integration Audit
+
+At inspection RasterImportJob still invokes the existing synchronous raster_image_layer_and_asset path; the new Base64Ingress and PngIngress are mounted but not wired. The current assembly consumes Candidate = (asset_id, Option<SemioImageSnapshot>, RasterLayerNode), then converts the image through granted RasterImagePayload birth and builds the two funded mutations. The future integration must add each ingress owner to close demands, close turns and terminal emptiness, while retaining the request's media/schema and donating only its original text.
+
+Controls reports and source shows the PNG ingress now retains exact quote errors, attaches a failure-path copy receipt, and checks its frozen failure before retry. PNG metadata and decoded image remain in separate retained slots for staged transfer. Base64 close takes the cursor apart under a funded turn and retains both original text and any partial output for controlled retirement. No additional concrete handoff defect was established in this source pass; native compilation and full pipeline tests remain outstanding.
+
+The Semio image snapshot crate supplies real RetireOwned implementations at 🧿️semio/.../🖼️image/🧬️schema/📸️snapshot/📦️packages/🦀️rust/🦀️.rs:36–40 via artifact_retire_leaf for SemioColorspace and artifact_retire_struct for SemioImageFrame, SemioImageMetadataEntry and SemioImageSnapshot; snapshot-specific retirement is also registered there.

@@ -119,7 +119,7 @@ where
 
     /// 🎒️ Pages its byte accounting on the copy axis instead of demanding the whole root in one grant — the closing
     /// half of the same deadlock `advance` documents above.
-    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> semio_framework_value::OriginalRetirementOutcome {let mut work=0;let result=(||->Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>{
         let grant = grant.retained_grant();
         if self.terminal_is_empty() {
             return Ok(RetainedCloneStep::Complete(Default::default()));
@@ -130,12 +130,14 @@ where
             return Ok(RetainedCloneStep::Progress(Default::default()));
         }
         if let Some(progress) = paged_copy(&mut self.retained_bytes, grant) {
+            work=1;
             return Ok(RetainedCloneStep::Progress(progress));
         }
         drop(self.prepared.take());
         drop(self.request.take());
+        work=1;
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
-    }
+    })();semio_framework_value::RetainedWorkOutcome{result,work}}
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
         Ok(self.demand().copy_bytes)

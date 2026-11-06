@@ -1,0 +1,1 @@
+{"version":1,"cases":[{"name":"captured-module","includeWarm":true,"pinMatches":true,"ready":true,"exit":0},{"name":"missing-image","includeWarm":false,"pinMatches":true,"ready":false,"exit":1},{"name":"wrong-pin","includeWarm":true,"pinMatches":false,"ready":false,"exit":1}]}

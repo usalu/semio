@@ -14,7 +14,7 @@ use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_plugin_decl_emission::Emit;
 use semio_framework::{Fault, FaultFrom, MediaError};
 use std::future::Future;
-use semio_plugin_instance_stores::stores_components::InstanceStores;
+use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
 use std::mem::ManuallyDrop;
 use crate::docs_components::MediaTransfers;
 use store::{MemberFactory, Mutation, SpaceMember};
@@ -56,6 +56,13 @@ impl<A: ArtifactApp> MediaTransfers<A> {
         Ok(Default::default())
     }
 
+    pub fn quoted_media_refusal_selected(&self)->bool{
+        if let Some(download)=self.media_download_preparation.as_ref(){return download.quoted_close_selected()}
+        let Some(original)=self.media_export_preparation.as_ref()else{return false};
+        if let Some(checkpoint)=original.checkpoint.as_ref(){if !checkpoint.terminal_is_empty(){return checkpoint.quoted_error_selected()}}
+        original.quoted_material_selected()
+    }
+
     pub fn close_media_submission_refusal(&mut self,stores:&mut InstanceStores<A>, tools: &mut ToolOperations<A>,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         if let Some(original)=self.media_download_preparation.as_ref(){self.snapshot_retirements.get(original.operation_id).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"pending download lost its original snapshot source"))?.validate_retirement(cx)?}
         if let Some(original)=self.media_export_preparation.as_ref(){
@@ -64,9 +71,11 @@ impl<A: ArtifactApp> MediaTransfers<A> {
             else if !original.snapshot_source.terminal_is_empty(){original.snapshot_source.validate_retirement(cx)?}
             else if original.source_identity!=(cx.operation(),cx.generation(),cx.original_source_parent()?.source_identity()?){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"empty media preparation footer requires its unchanged original receiving source").into())}
         }
+        if let Some(original)=self.media_download_preparation.as_mut(){if original.quoted_close_selected(){let step=original.close_step(cx,grant)?.expect("selected download owner remains retained");return Ok(PluginLifecycleStep::Progress(step.progress()))}}
+        if self.media_download_preparation.is_none(){if let Some(original)=self.media_export_preparation.as_mut(){if let Some(checkpoint)=original.checkpoint.as_mut(){if !checkpoint.terminal_is_empty()&&checkpoint.quoted_error_selected(){let progress=checkpoint.close_step(stores,cx,grant)?;return Ok(PluginLifecycleStep::Progress(progress))}}if original.checkpoint.as_ref().is_none_or(|checkpoint|checkpoint.terminal_is_empty())&&original.quoted_material_selected(){let progress=original.close_material_step(cx,grant)?.expect("selected original material remains present");return Ok(PluginLifecycleStep::Progress(progress))}}}
         let demand=self.media_submission_refusal_demands(stores,tools, grant.maximum_copy_bytes)?;
         semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
-            if let Some(original)=self.media_download_preparation.as_mut(){if let Some(step)=original.close_step(grant)?{return Ok((PluginLifecycleStep::Progress(step.progress()),false))}self.media_download_preparation.take();return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}),false))}
+            if let Some(original)=self.media_download_preparation.as_mut(){if let Some(step)=original.close_step(cx,grant)?{return Ok((PluginLifecycleStep::Progress(step.progress()),false))}self.media_download_preparation.take();return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}),false))}
             if let Some(original)=self.media_export_preparation.as_mut(){
                 if let Some(checkpoint)=original.checkpoint.as_mut(){if !checkpoint.terminal_is_empty(){return checkpoint.close_step(stores,cx,grant).map(|progress|(PluginLifecycleStep::Progress(progress),false)).map_err(Into::into)}}
                 if let Some(progress)=original.close_material_step(cx,grant)?{return Ok((PluginLifecycleStep::Progress(progress),false))}

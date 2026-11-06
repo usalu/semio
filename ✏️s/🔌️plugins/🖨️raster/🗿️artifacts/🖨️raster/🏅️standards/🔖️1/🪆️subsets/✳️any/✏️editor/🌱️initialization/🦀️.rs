@@ -6,7 +6,7 @@ use crate::{RasterPlayApp,config::initialization::RasterConfigGenesis,store_prep
 use semio_s_artifact_raster_raster_model::{snapshot::RasterSnapshot as State,RASTER_DOCUMENT_SCHEMA,RASTER_DIALECT};
 use semio_s_artifact_raster_raster_mutations::RasterMutation as Mutation;
 use semio_s_artifact_raster_raster_host::{RasterSnapshotRetirementFactory,RasterMutationRetirementFactory};
-use semio_framework_plugin_ownership::original_store_genesis::{OriginalStoreGenesisOwner,OriginalFixedStoreInitial,FixedStoreInitial};
+use semio_plugin_ownership::original_store_genesis::{OriginalStoreGenesisOwner,OriginalFixedStoreInitial,FixedStoreInitial};
 use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind,retained_clone::RetainedCloneBirthDemand};
 use semio_framework_dsl_record::{BorrowedDslRecord,BorrowedRecordSpec,native_encoding::{FieldProjectionSource,FieldProjectionView}};
 use std::mem::size_of;
@@ -25,7 +25,7 @@ impl FieldProjectionSource for InitialRecord{
 pub struct RasterDocumentCatalog;
 impl DocumentStoreOwnerProducer<State,Mutation> for RasterDocumentCatalog{
  fn source_demands()->Result<RetirementDemand,ValueError>{Owners::shared_semantic_source_demands::<RasterSnapshotRetirementFactory,RasterSnapshotRetirementFactory,RasterMutationRetirementFactory,Disposer,RasterStorePreparationFactory>(RetainedCloneBirthDemand{capacity_bytes:0,depth:0},0)}
- fn admit_sources(grant:RetainedCloneGrant)->Result<(Owners,RetainedCloneProgress),DocumentStoreOwnersAdmissionError<State,Mutation>>{Owners::admit_source_constructor_with_shared_semantic_preparation(grant,RetainedCloneBirthDemand{capacity_bytes:0,depth:0},0,||(RasterSnapshotRetirementFactory,RasterSnapshotRetirementFactory,RasterMutationRetirementFactory,Disposer::new(),RasterStorePreparationFactory)).map(|(mut owners,progress)|{owners.operation_wire=semio_framework_os_store_operation_wire::original_edit::with_original_edit_message(store::ArtifactOperationWire::canonical().with_original_receiving().with_original_target(|operation|Some(operation)));(owners.with_batch_digest(),progress)})}
+ fn admit_sources(grant:RetainedCloneGrant)->Result<(Owners,RetainedCloneProgress),DocumentStoreOwnersAdmissionError<State,Mutation>>{Owners::admit_source_constructor_with_shared_semantic_preparation(grant,RetainedCloneBirthDemand{capacity_bytes:0,depth:0},0,||(RasterSnapshotRetirementFactory,RasterSnapshotRetirementFactory,RasterMutationRetirementFactory,Disposer::new(),RasterStorePreparationFactory)).map(|(mut owners,progress)|{owners.operation_wire=semio_os_store_operation_wire::original_edit::with_original_edit_message(store::ArtifactOperationWire::canonical().with_original_receiving().with_original_target(|operation|Some(operation)));(owners.with_batch_digest(),progress)})}
 }
 
 pub struct RasterDocumentGenesis;

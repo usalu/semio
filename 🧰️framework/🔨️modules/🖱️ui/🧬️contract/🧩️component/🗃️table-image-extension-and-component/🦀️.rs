@@ -42,7 +42,7 @@ pub struct TableProps {
 /// documents.
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 #[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct TableRowProps {
     /// 📝️ The row's cells, positional to the table's `columns`.
@@ -78,7 +78,7 @@ pub struct ImageProps {
 /// 🧩️ Props for `Component::Extension` — the old `ExternalSlot`. `params_json: String` becomes [Design notes](README.md#source-notes-85).
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 #[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct ExtensionProps {
     pub extension: crate::UiText,
@@ -90,7 +90,7 @@ pub struct ExtensionProps {
 /// 🧱️ The closed set of things a [`crate::UiNodeRecord`] can render. [Design notes](README.md#source-notes-107).
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
-#[value(tag = "type", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", tag = "type", rename_all = "camelCase")]
 #[expect(clippy::large_enum_variant, reason = "Typed copy and retirement account for inline component bytes; boxing variants would require separate allocation credits.")]
 #[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub enum Component {

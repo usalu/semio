@@ -10,7 +10,7 @@ use std::future::Future;
 use semio_plugin_job::{INTERACTIVE_TURN_WORKER_PUMPS, INTERACTIVE_TURN_WORKER_WALL_US};
 use semio_plugin_instance_extension::InstanceExtension;
 use store::{MemberFactory, Mutation, ReferenceSpaceMember};
-use semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
+use semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
 use semio_plugin_composition_publication::MountedTypedCommandFullOperationStage;
 use protocol::OpText;
 use semio_plugin_reactor_app::PluginApp;
@@ -19,11 +19,12 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedClonePro
 use crate::typed_bundle::TypedCtx;
 use semio_framework_value::ValueError;
 use semio_ui_contract::*;
-use semio_plugin_instance_docs::docs_maintenance_ladder::item;
+use semio_framework_plugin_instance_docs::docs_maintenance_ladder::item;
 
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
     #[inline(never)]
     pub fn retire_typed_operation_unit(&mut self,operation_id:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+        if self.tools.tool_operations.get(operation_id).is_some_and(|owner|owner.lease_retirement_ready()){let body=cx.retained_grant().maximum_copy_bytes;let canonical=&self.tools.tool_cancellations;let owner=self.tools.tool_operations.get_mut(operation_id).unwrap();let demand=owner.lease_retirement_demands(canonical,body)?;let work=owner.lease_retirement_work_demand(body)?;let step=semio_framework_job::close_original_quoted_retained_step(cx,demand,work,|grant|owner.lease_retirement_step(canonical,grant))?;return Ok(PluginLifecycleStep::Progress(step.progress()))}
         let grant=cx.retained_grant();let demand=self.tools.typed_operation_retirement_demands(&*self.child_composition, operation_id, &*self.stores, grant.maximum_copy_bytes)?;
         semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|self.retire_typed_operation_granted(operation_id,same,actual).map(|step|(step,false)))
     }
@@ -49,7 +50,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             self.tools.tool_operations.get_mut(operation_id).unwrap().owned_child_group = None;
             return Ok(PluginLifecycleStep::Progress(item));
         }
-        if self.tools.tool_operations.get(operation_id).is_some_and(|owner|owner.lease_retirement_ready()){let step=self.tools.tool_operations.get_mut(operation_id).unwrap().lease_retirement_step(&self.tools.tool_cancellations,grant).map_err(plugin_retirement_fault)?;return Ok(PluginLifecycleStep::Progress(step.progress()));}
+        if self.tools.tool_operations.get(operation_id).is_some_and(|owner|owner.lease_retirement_ready()){unreachable!("selected lease uses its original quoted turn")}
         self.tools.record_settled_typed_operation_command(&mut *self.history, &mut *self.host_events, operation_id);
         let operation = self
             .tools.tool_operations

@@ -30,14 +30,14 @@ pub fn grant(demand:semio_framework_value::RetirementDemand,items:usize)->semio_
 
     struct RetirementWindow;
 
-    impl semio_framework_plugin_window_transient::window_transient::WindowTransientOwner for RetirementWindow {
-        fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_framework_plugin_window_transient::window_transient::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
+    impl semio_plugin_window_transient::window_transient::WindowTransientOwner for RetirementWindow {
+        fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_plugin_window_transient::window_transient::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
         const WINDOW_KIND_ID: &'static str = "canvas";
-        type State = semio_framework_plugin_testing_fixtures_publication::publication_fixture::transient::PublicationTransient;
-        type Mutation = semio_framework_plugin_testing_fixtures_publication::publication_fixture::transient::mutations::PublicationTransientMutation;
+        type State = semio_plugin_testing_fixtures_publication::publication_fixture::transient::PublicationTransient;
+        type Mutation = semio_plugin_testing_fixtures_publication::publication_fixture::transient::mutations::PublicationTransientMutation;
 
-        fn build_owners() -> semio_framework_plugin_window_transient::window_transient::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
-            semio_framework_plugin_testing_fixtures_publication::window_transient_owners::owners()
+        fn build_owners() -> semio_plugin_window_transient::window_transient::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
+            semio_plugin_testing_fixtures_publication::window_transient_owners::owners()
         }
     }
 
@@ -48,7 +48,7 @@ pub fn grant(demand:semio_framework_value::RetirementDemand,items:usize)->semio_
         let grant=RetainedCloneGrant{maximum_items:p["items"].as_u64().unwrap()as usize,maximum_copy_bytes:p["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:p["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:p["release"].as_u64().unwrap()as usize,maximum_depth:p["depth"].as_u64().unwrap()as usize};
         let mut blocked = WindowTransientOwnerRegistry::for_document_generation(1);
         blocked.register::<RetirementWindow>().unwrap();
-        let view = ViewModel { window_id: Some("first".into()), window_instances: vec![semio_framework::ViewWindowInstance { id: "first".into(), window_kind_id: "canvas".into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+        let view = ViewModel { window_id: Some("first".into()), window_instances: vec![semio_framework::ViewWindowInstance { id: "first".into(), window_kind_id: "canvas".into() }], ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
         let held = blocked.capture(Some(&view)).unwrap().unwrap();
         let mut ready = WindowTransientOwnerRegistry::for_document_generation(2);
         ready.register::<RetirementWindow>().unwrap();

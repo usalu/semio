@@ -13,7 +13,7 @@ pub use semio_framework_value_retirement::retirement::RetireOwned;
 pub use semio_framework_value_native_owned::native_decoding;
 pub use native_decoding::OriginalReceivingPrimary;
 pub use semio_framework_value_native_owned::{NativeReceive,NativeReceiver};
-pub use semio_framework_value_retirement::{RetainedWorkOutcome,ErasedSnapshotRetirement,RetirementDemand,factory_ticket_demands,close_factory_ticket,close_factory_ticket_original,owned_retirement_birth_bytes,admit_owned_retirement,shared_retirement_birth_bytes,shared_retirement_allocation_bytes,admit_shared_retirement,artifact_retire_leaf,artifact_retirement_sequence,artifact_retire_struct,OriginalRetirementControl,RetirementSelection,select_retirement_cursor,select_factory_ticket,close_factory_ticket_controlled};
+pub use semio_framework_value_retirement::{RetainedWorkOutcome,ErasedSnapshotRetirement,OriginalRetirementFailure,OriginalRetirementOutcome,settle_original_retirement_work,run_original_retirement_work,run_original_retirement_loan,RetirementDemand,factory_ticket_demands,factory_ticket_controlled_demands,factory_ticket_original_demands,close_factory_ticket,close_factory_ticket_original,owned_retirement_birth_bytes,admit_owned_retirement,shared_retirement_birth_bytes,shared_retirement_allocation_bytes,admit_shared_retirement,artifact_retire_leaf,artifact_retirement_sequence,artifact_retire_struct,OriginalRetirementControl,OriginalFailureFunding,refill_original_failure_storage,original_failure_storage_birth_demand,original_failure_storage_birth_work_demand,original_failure_storage_release_demand,original_failure_storage_release_work_demand,RetirementSelection,select_retirement_cursor,select_factory_ticket,close_factory_ticket_controlled};
 #[path = "../../🧬️retained-clone/🦀️.rs"]
 pub mod retained_clone;
 pub use retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneSource, RetainedCloneStep, RetainedOwnedProjection};
@@ -52,11 +52,11 @@ pub mod internals {
 }
 #[path="../../📝️text/🚶️utf8/🦀️.rs"]
 pub mod retained_utf8;
-pub use retained_utf8::{RetainedUtf8Cursor,RetainedUtf8CursorStep,RetainedUtf8Buffer,RetainedUtf8Append};
+pub use retained_utf8::{RetainedUtf8Cursor,RetainedUtf8CursorStep,RetainedUtf8Buffer,RetainedUtf8Append,RetainedUtf8BytesCursor,RetainedUtf8BytesStep};
 
 pub use semio_framework_value_sort as sort;
 
-pub use semio_framework_value_control_contract::OriginalRetirementCloseLoan;
+pub use semio_framework_value_control_contract::{OriginalRetirementCloseLoan,OriginalFailureStorage,OriginalFailureStoragePool,run_with_failure_storage};
 
 #[cfg(test)]
 use semio_framework_value_testing_allocator as _;

@@ -19,6 +19,7 @@ use semio_ui_contract::*;
 impl<'ctx, A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+Send+'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
  pub fn granted_mounted_retirement_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<RetainedCloneStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
   if self.shared().next_granted_mounted_retirement().is_none(){return Ok(RetainedCloneStep::Complete(Default::default()))}
+  if let Some((index,id))=self.shared().next_granted_mounted_retirement(){if self.tools.tool_operations.get(id).is_some_and(|owner|owner.lease_retirement_ready()){let body=cx.retained_grant().maximum_copy_bytes;let canonical=&self.tools.tool_cancellations;let cursor=&mut self.close.close_typed_operation_cursor;let owner=self.tools.tool_operations.get_mut(id).unwrap();let demand=owner.lease_retirement_demands(canonical,body)?;let work=owner.lease_retirement_work_demand(body)?.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"mounted retirement work quote overflow"))?;let step=semio_framework_job::close_original_quoted_retained_step(cx,demand,work,|grant|{let mut turn=owner.lease_retirement_step(canonical,grant);if turn.result.is_ok(){*cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;turn.work=turn.work.saturating_add(1);}turn})?;return Ok(RetainedCloneStep::Progress(step.progress()))}}
   let grant=cx.retained_grant();let demand=self.shared().granted_mounted_retirement_demands(grant.maximum_copy_bytes)?;
   let step=semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|{
    self.granted_mounted_retirement_original(same,actual).map(|step|(PluginLifecycleStep::Progress(step.progress()),false))
@@ -33,7 +34,7 @@ impl<'ctx, A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+Send+'static, X: I
 
   if closing||self.tools.tool_operations.get(id).unwrap().stage==MountedTypedCommandFullOperationStage::Retiring{self.as_render().request_gesture_cancellation(id);}
   if self.tools.tool_operations.get(id).unwrap().close_fault_pending(){let step=self.tools.tool_operations.get_mut(id).unwrap().close_fault_step(grant)?;self.close.close_typed_operation_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;return Ok(step)}
-  if self.tools.tool_operations.get(id).unwrap().lease_retirement_ready(){let step=self.tools.tool_operations.get_mut(id).unwrap().lease_retirement_step(&self.tools.tool_cancellations,grant)?;self.close.close_typed_operation_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;return Ok(step)}
+  if self.tools.tool_operations.get(id).unwrap().lease_retirement_ready(){unreachable!("selected lease uses its original quoted turn")}
   if self.tools.tool_operations.get(id).unwrap().stage==MountedTypedCommandFullOperationStage::Retiring{
    if !closing{
     let step=self.as_typed().retire_typed_operation_unit(id,cx)?;self.close.close_typed_operation_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;
@@ -66,6 +67,7 @@ impl<'ctx, A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+Send+'static, X: I
 }
 
 impl<'v, A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+Send+'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
+ pub fn granted_mounted_quoted_retirement_selected(&self)->bool{self.next_granted_mounted_retirement().is_some_and(|(_,id)|self.tools.tool_operations.get(id).is_some_and(|owner|owner.lease_retirement_ready()))}
  pub(crate) fn next_granted_mounted_retirement(&self)->Option<(usize,u64)>{(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|offset|{let index=(self.close.close_typed_operation_cursor+offset)%ARTIFACT_LIVE_OUTPUT_SLOTS;self.tools.tool_operations.entry(index).filter(|(_,owner)|self.close.close_started||owner.stage==MountedTypedCommandFullOperationStage::Retiring||(owner.granted_retirement_ready()&&owner.granted_retirement_pending())).map(|(id,_)|(index,*id))})}
 
  pub fn granted_mounted_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{

@@ -20,7 +20,7 @@ impl<T:NativeReceive<DslValue>> ProvisionalFieldWork<T>{
    let mut progress=RetainedCloneProgress::default();let mut work=0;
    let result:Result<(),OriginalTurnFailure>=cx.with_native_receiving(|control|{
     let turn=self.receiver.as_mut().unwrap().advance(control,grant.maximum_copy_bytes,grant);work=turn.work;
-    progress=match turn.result{Ok(step)=>step.progress(),Err(error)=>{progress=error.progress;return Err(OriginalTurnFailure{effects:progress,primary:OriginalTurnPrimary::Receiving(error),receipt_refusal:None,context_refusal:None})}};Ok(())
+    progress=match turn.result{Ok(step)=>step.progress(),Err(error)=>{progress=error.progress;return Err(OriginalTurnFailure{effects:progress,primary:OriginalTurnPrimary::Receiving(error),receipt_refusal:None,context_refusal:None,work_refusal:None})}};Ok(())
    });
    let receipt=cx.receiving_issued_grant().map(|grant|cx.consume_receiving_retained(grant,progress)).transpose();cx.consume_fuel(work);
    match(result,receipt){(Err(mut error),Err(receipt))=>{error.context_refusal=Some(receipt);return Err(error)},(Err(error),_)=>return Err(error),(_,Err(error))=>return Err(error.into()),_=>{}}

@@ -1,6 +1,6 @@
 //! 🌱️ Raster configuration declares its original default, packed coverage receiver and shared replay preparation.
 use super::{RasterConfig as State,RasterConfigMutation as Mutation};
-use semio_framework_plugin_ownership::original_store_genesis::{OriginalStoreGenesisOwner,OriginalFixedStoreInitial,FixedStoreInitial};
+use semio_plugin_ownership::original_store_genesis::{OriginalStoreGenesisOwner,OriginalFixedStoreInitial,FixedStoreInitial};
 use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind,retained_clone::RetainedCloneBirthDemand};
 use store::os_store::document_store_owners::{DocumentStoreOwnerProducer,DocumentStoreOwners,DocumentStoreOwnersAdmissionError,BoundedArtifactRetirementFactory};
 use std::{mem::size_of,sync::Arc};
@@ -21,7 +21,7 @@ impl DocumentStoreOwnerProducer<State,Mutation> for RasterConfigCatalog{
         Owners::admit_source_constructor_with_shared_semantic_preparation(grant,children(),source_copy(),||{
             let preparation=RasterConfigPreparationFactory::new(Arc::new(Edit::new()),Arc::new(MutationRetirement::new()),Arc::new(StateRetirement::new()),store::snapshot_clone_preparation::CONFIG_APPLY_MAXIMUM_PREPARATION_DEPTH).expect("authored nonzero Raster config preparation depth");
             (StateRetirement::new(),StateRetirement::new(),MutationRetirement::new(),Disposer::new(),preparation)
-        }).map(|(mut owners,progress)|{owners.operation_wire=semio_framework_os_store_operation_wire::original_edit::with_original_edit_message(store::ArtifactOperationWire::canonical().with_original_receiving().with_original_target(|operation|Some(operation)));(owners.with_batch_digest(),progress)})
+        }).map(|(mut owners,progress)|{owners.operation_wire=semio_os_store_operation_wire::original_edit::with_original_edit_message(store::ArtifactOperationWire::canonical().with_original_receiving().with_original_target(|operation|Some(operation)));(owners.with_batch_digest(),progress)})
     }
 }
 
@@ -42,10 +42,10 @@ impl OriginalFixedStoreInitial for RasterConfigGenesis{
 }
 
 fn target(operation:&Mutation)->&'static str{match operation{Mutation::SetBrushSize(_)=>"brush-size",Mutation::SetBrushOpacity(_)=>"brush-opacity",Mutation::SetBrushColor(_)=>"brush-color",Mutation::SetBrushHardness(_)=>"brush-hardness",Mutation::SetPaintTarget(_)=>"paint-target",Mutation::SetMaskValue(_)=>"mask-value",Mutation::SetPixelSelection(_)=>"pixel-selection",Mutation::SetCompositeViewport(_)=>"composite-viewport",Mutation::SetCamera(_)=>"camera",Mutation::SetFillTolerance(_)=>"fill-tolerance",Mutation::SetFilterOptions(_)=>"filter-options",Mutation::SetImageGrid(_)=>"image-grid"}}
-impl semio_framework_os_store_operation_wire::ArtifactOperationTargets for Mutation{
+impl semio_os_store_operation_wire::ArtifactOperationTargets for Mutation{
     fn len(&self)->usize{1}
     fn segment_len(&self,index:usize)->Result<usize,ValueError>{if index!=0{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"Raster config target ordinal is absent"));}Ok(target(self).len())}
-    fn read_segment(&self,index:usize,offset:usize,output:&mut[u8])->Result<usize,ValueError>{let length=semio_framework_os_store_operation_wire::ArtifactOperationTargets::segment_len(self,index)?;if offset>length{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"Raster config target offset is absent"));}let bytes=&target(self).as_bytes()[offset..];let count=bytes.len().min(output.len());output[..count].copy_from_slice(&bytes[..count]);Ok(count)}
+    fn read_segment(&self,index:usize,offset:usize,output:&mut[u8])->Result<usize,ValueError>{let length=semio_os_store_operation_wire::ArtifactOperationTargets::segment_len(self,index)?;if offset>length{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"Raster config target offset is absent"));}let bytes=&target(self).as_bytes()[offset..];let count=bytes.len().min(output.len());output[..count].copy_from_slice(&bytes[..count]);Ok(count)}
 }
 
 #[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;

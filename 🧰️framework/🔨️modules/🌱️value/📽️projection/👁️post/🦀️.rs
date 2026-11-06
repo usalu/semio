@@ -20,7 +20,7 @@ pub struct OriginalPostRead<S:RetireOwned+Sync>{admission:ManuallyDrop<Option<Re
 impl<S:RetireOwned+Sync>Default for OriginalPostRead<S>{fn default()->Self{Self{admission:ManuallyDrop::new(None),source:ManuallyDrop::new(None)}}}
 impl<S:RetireOwned+Sync>OriginalPostRead<S>{
  fn movement_bytes()->usize{size_of::<Self>()*2+size_of::<Option<S>>()*2+size_of::<RetainedCloneSource<S,S>>()*2}
- fn child_error(error:ValueError)->ValueError{let mut progress=error.retained_progress();progress.copied_items=progress.copied_items.max(1);progress.copied_bytes=progress.copied_bytes.saturating_add(Self::movement_bytes());error.with_retained_progress(progress)}
+ fn child_error(error:crate::OriginalRetirementFailure,performed:bool)->crate::OriginalRetirementFailure{if !performed{return error}let mut progress=error.retained_progress();progress.copied_items=progress.copied_items.max(1);progress.copied_bytes=progress.copied_bytes.saturating_add(Self::movement_bytes());error.with_retained_progress(progress)}
  pub fn demand(&self,post:&Option<S>,mode:PagedOneItemPostMode,body:usize)->Result<Option<RetirementDemand>,ValueError>{
   if post.is_some()==(self.source.is_some()||self.admission.is_some()){return Err(invalid("exactly one original post owner is required"));}
   let mut demand=match(mode,self.source.as_ref(),self.admission.as_ref()){
@@ -34,16 +34,18 @@ impl<S:RetireOwned+Sync>OriginalPostRead<S>{
   demand.depth=demand.depth.checked_add(1).ok_or_else(||invalid("original post depth quote overflow"))?;
   Ok(Some(demand))
  }
- pub fn prepare(&mut self,post:&mut Option<S>,mode:PagedOneItemPostMode,body:usize,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<RetainedCloneProgress>,ValueError>{let mut work=0;let result=(||{
+ /// \u26FD\uFE0F Quotes the actual selected source admission or original-authority handback work.
+ pub fn work_demand(&self,post:&Option<S>,mode:PagedOneItemPostMode,body:usize)->Result<u64,ValueError>{if self.demand(post,mode,body)?.is_none(){return Ok(0)}match mode{PagedOneItemPostMode::Original=>match self.admission.as_ref(){None=>Ok(1),Some(admission)if admission.phase()=="ready"=>Ok(1),Some(admission)=>admission.advance_work_demand()},PagedOneItemPostMode::Mutable=>if let Some(admission)=self.admission.as_ref(){if admission.terminal_is_empty(){Ok(1)}else{admission.return_work_demand()}}else{self.source.as_ref().ok_or_else(||invalid("original post source is absent"))?.next_take_work_demand(body.saturating_sub(Self::movement_bytes()))}}}
+ pub fn prepare(&mut self,post:&mut Option<S>,mode:PagedOneItemPostMode,body:usize,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<RetainedCloneProgress>,crate::OriginalRetirementFailure>{let mut work=0;let result:Result<_,crate::OriginalRetirementFailure>=(||{
   let Some(demand)=self.demand(post,mode,body)?else{return Ok(None);};
   if !retained_clone_grant_admits(grant,demand){return Ok(Some(Default::default()));}
   let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-Self::movement_bytes(),maximum_depth:grant.maximum_depth-1,..grant};
   let mut progress=match mode{
    PagedOneItemPostMode::Original=>match self.admission.as_mut(){
     None=>{let original=post.take().ok_or_else(||invalid("original projected post is absent"))?;*self.admission=Some(RetainedCloneSource::<S,S>::admission_borrowed(original,|value:&S|value));work+=1;RetainedCloneProgress{copied_items:1,..Default::default()}},
-    Some(admission)=>{let turn=if admission.phase()=="ready"{admission.take_output(&mut self.source,child)}else{admission.advance(child)};work+=turn.work;let step=turn.result.map_err(Self::child_error)?;if admission.terminal_is_empty(){*self.admission=None;}step.progress()}
+    Some(admission)=>{let turn=if admission.phase()=="ready"{admission.take_output(&mut self.source,child)}else{admission.advance(child)};work+=turn.work;let step=turn.result.map_err(|error|Self::child_error(error.into(),turn.work!=0))?;if admission.terminal_is_empty(){if turn.work==0{work+=1}*self.admission=None;}step.progress()}
    },
-   PagedOneItemPostMode::Mutable=>if let Some(admission)=self.admission.as_mut(){let mut returned=None;let turn=admission.return_inputs(&mut returned,child);work+=turn.work;let step=turn.result.map_err(Self::child_error)?;if let Some((original,()))=returned{*post=Some(original);}if admission.terminal_is_empty(){*self.admission=None;}step.progress()}else{   match {let turn=self.source.as_mut().ok_or_else(||invalid("original post source is absent"))?.take_authority(child);work+=turn.work;turn.result}.map_err(Self::child_error)?{RetainedCloneSourceTake::Pending(progress)=>progress,RetainedCloneSourceTake::Ready(original,progress)=>{*post=Some(original);*self.source=None;progress}}},
+   PagedOneItemPostMode::Mutable=>if let Some(admission)=self.admission.as_mut(){let mut returned=None;let turn=admission.return_inputs(&mut returned,child);work+=turn.work;let step=turn.result.map_err(|error|Self::child_error(error.into(),turn.work!=0))?;if let Some((original,()))=returned{*post=Some(original);}if admission.terminal_is_empty(){if turn.work==0{work+=1}*self.admission=None;}step.progress()}else{   match {let turn=self.source.as_mut().ok_or_else(||invalid("original post source is absent"))?.take_authority(child);work+=turn.work;turn.result}.map_err(|error|Self::child_error(error,work!=0))?{RetainedCloneSourceTake::Pending(progress)=>progress,RetainedCloneSourceTake::Ready(original,progress)=>{*post=Some(original);*self.source=None;progress}}},
   };
   progress.copied_items=progress.copied_items.max(1);progress.copied_bytes=progress.copied_bytes.checked_add(Self::movement_bytes()).ok_or_else(||invalid("original post receipt overflow"))?;
   Ok(Some(admit_retained_clone_progress(grant,progress,"actual projected post original custody")?))

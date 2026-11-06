@@ -1,12 +1,12 @@
 //! 🛖️ The instance components of `instance-children`: ChildComposition (WP6, plan section 7.3).
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::bounded_ownership::ArtifactFixedRegistry;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::bounded_ownership::ArtifactFixedRegistry;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_child::{ChildContentRetirement, ChildMemberRegistry, ChildMemberRetirement};
-use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use semio_plugin_child::{ChildContentRetirement, ChildMemberRegistry, ChildMemberRetirement};
+use semio_plugin_decl_views::child_view::ChildContentView;
 use store::os_store::composition_coordinator::CompositionCoordinator;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use std::future::Future;
 use std::mem::ManuallyDrop;
@@ -15,7 +15,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoo
 use semio_framework_plugin_publication_mounted::owner::MountedPrivateChildGroup;
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_ui_contract::*;
+use semio_ui_contract::*;
 
 /// 🏕️ Child composition: the live owned children, their private groups, content roots and retirement registries.
 pub struct ChildComposition<M: SpaceMember + MemberFactory> {
@@ -52,7 +52,7 @@ pub struct ChildComposition<M: SpaceMember + MemberFactory> {
 
 impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// 📏️ Quotes this component frame and its fixed original backing; input roots remain separately admitted.
-    pub fn birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_framework_plugin_ownership::bounded_ownership::original_component_birth::<Self>(&[semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.private_child_groups,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.child_content_retirements,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.child_member_retirements,64)?,semio_framework_plugin_child::ChildMemberRegistry::<M>::birth_demands()?.capacity_bytes,CompositionCoordinator::birth_demands().capacity_bytes])}
+    pub fn birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_plugin_ownership::bounded_ownership::original_component_birth::<Self>(&[semio_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.private_child_groups,64)?,semio_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.child_content_retirements,64)?,semio_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.child_member_retirements,64)?,semio_plugin_child::ChildMemberRegistry::<M>::birth_demands()?.capacity_bytes,CompositionCoordinator::birth_demands().capacity_bytes])}
 
     /// 🛶️ Builds the component from the parts the composer constructs first; every other field starts at its construction value.
     /// 🖋️ Initializes child indexes and registries once at the caller-funded final component address.

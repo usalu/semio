@@ -1,6 +1,6 @@
 //! 🧪️ Borrowed dynamic choices preserve exact neutral labels and refuse malformed source rows.
 use super::*;
-use semio_framework_ui_contract::OriginalBuiltTreeRetirement;
+use semio_ui_contract::OriginalBuiltTreeRetirement;
 use std::sync::atomic::{AtomicUsize,Ordering};
 struct Choices{rows:Vec<(String,String)>,reads:AtomicUsize}
 impl StagedScalarChoiceSource for Choices{

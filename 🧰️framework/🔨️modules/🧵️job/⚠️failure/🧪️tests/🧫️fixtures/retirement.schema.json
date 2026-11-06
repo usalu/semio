@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["roles", "retirement", "outer", "effects"],
+  "properties": {
+    "roles": {"const": ["primary", "workRefusal", "receiptRefusal"]},
+    "retirement": {"$ref": "#/$defs/retirement"},
+    "outer": {
+      "type": "object", "additionalProperties": false,
+      "required": ["receiptRefusal", "contextRefusal", "workRefusal"],
+      "properties": {"receiptRefusal": {"$ref": "#/$defs/value"}, "contextRefusal": {"$ref": "#/$defs/value"}, "workRefusal": {"$ref": "#/$defs/value"}}
+    },
+    "effects": {"$ref": "#/$defs/progress"}
+  },
+  "$defs": {
+    "progress": {
+      "type": "object", "additionalProperties": false,
+      "required": ["copiedItems", "copiedBytes", "retainedCapacityBytes", "releasedBytes"],
+      "properties": {"copiedItems": {"type": "integer", "minimum": 0}, "copiedBytes": {"type": "integer", "minimum": 0}, "retainedCapacityBytes": {"type": "integer", "minimum": 0}, "releasedBytes": {"type": "integer", "minimum": 0}}
+    },
+    "value": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "message", "retainedProgress"],
+      "properties": {"kind": {"type": "string"}, "message": {"type": "string"}, "retainedProgress": {"$ref": "#/$defs/progress"}}
+    },
+    "retirement": {
+      "type": "object", "additionalProperties": false,
+      "required": ["progressOverride", "retainedProgress"],
+      "properties": {"primary": {"$ref": "#/$defs/value"}, "workRefusal": {"$ref": "#/$defs/value"}, "receiptRefusal": {"$ref": "#/$defs/value"}, "child": {"$ref": "#/$defs/retirement"}, "progressOverride": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/progress"}]}, "retainedProgress": {"$ref": "#/$defs/progress"}}
+    }
+  }
+}

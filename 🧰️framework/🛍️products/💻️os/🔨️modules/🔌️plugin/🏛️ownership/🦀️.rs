@@ -176,11 +176,14 @@ pub fn plugin_typed_owner_demand<T: semio_framework_value::retirement::RetireOwn
     Ok(if original.is_some() { RetirementDemand { depth: 1, ..Default::default() } } else { RetirementDemand::default() })
 }
 
-/// 🧳️ Retains an original typed owner in its controlled frame, then advances that frame under the unchanged grant.
-pub fn plugin_typed_owner_step<T: semio_framework_value::retirement::RetireOwned>(original: &mut Option<T>, active: &mut Option<ControlledRetirement<T>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {plugin_typed_owner_original(original,active,grant).result}
+/// 🧮️ Quotes work from the selected original frame or its controlled retirement frontier.
+pub fn plugin_typed_owner_work_demand<T: semio_framework_value::retirement::RetireOwned>(original: &Option<T>, active: &Option<ControlledRetirement<T>>, body: usize) -> Result<u64, ValueError> {
+    if let Some(owner) = active.as_ref() { return if owner.terminal_is_empty() { Ok(1) } else { owner.next_computational_work(body) }; }
+    Ok(u64::from(original.is_some()))
+}
 
 /// 🎟️ Preserves actual typed-frame work on success and refusal.
-pub fn plugin_typed_owner_original<T: semio_framework_value::retirement::RetireOwned>(original: &mut Option<T>, active: &mut Option<ControlledRetirement<T>>, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome {
+pub fn plugin_typed_owner_original<T: semio_framework_value::retirement::RetireOwned>(original: &mut Option<T>, active: &mut Option<ControlledRetirement<T>>, grant: RetainedCloneGrant) -> semio_framework_value::OriginalRetirementOutcome {
  let mut work=0;let result=(||{
     use semio_framework_value::retirement::controlled::ControlledRetirement;
     let empty = RetainedCloneProgress::default();
@@ -188,7 +191,7 @@ pub fn plugin_typed_owner_original<T: semio_framework_value::retirement::RetireO
         if original.is_none() {
             return Ok(RetainedCloneStep::Complete(empty));
         }
-        if grant.maximum_items == 0 {
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
             return Ok(RetainedCloneStep::Progress(empty));
         }
         work=1;
@@ -200,16 +203,18 @@ pub fn plugin_typed_owner_original<T: semio_framework_value::retirement::RetireO
             }
             Err((error, value)) => {
                 *original = Some(value);
-                Err(error)
+                Err(error.into())
             }
         };
     }
     let owner = active.as_mut().expect("typed owner frame was observed");
+    if owner.terminal_is_empty() {
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
+        *active = None;work=1;
+        return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
+    }
     let result=owner.step(grant);work=owner.last_turn_work();let step=result?;
     semio_framework_value::retained_clone::admit_retained_clone_progress(grant, step.progress(), "typed owner retirement")?;
-    if owner.terminal_is_empty() {
-        *active = None;
-    }
     Ok(RetainedCloneStep::Progress(step.progress()))
 })();semio_framework_value::RetainedWorkOutcome{result,work}
 }
@@ -469,3 +474,27 @@ pub fn runtime_lifecycle_step(demand: RetirementDemand, grant: RetainedCloneGran
 
 /// 🧮️ Intersects the authored policy with the original caller's remaining physical authority.
 pub fn original_plugin_turn_grant(policy:RetainedCloneGrant,remaining:RetainedCloneGrant)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:policy.maximum_items.min(remaining.maximum_items),maximum_copy_bytes:policy.maximum_copy_bytes.min(remaining.maximum_copy_bytes),maximum_capacity_bytes:policy.maximum_capacity_bytes.min(remaining.maximum_capacity_bytes),maximum_release_bytes:policy.maximum_release_bytes.min(remaining.maximum_release_bytes),maximum_depth:policy.maximum_depth.min(remaining.maximum_depth)}}
+
+#[cfg(test)]
+mod typed_owner_work_tests {
+    use super::*;
+
+    #[test]
+    fn denied_original_admission_preserves_owner_and_work() {
+        let mut original = Some(String::from("original"));
+        let address = original.as_ref().unwrap().as_ptr();
+        let mut active = None;
+        assert_eq!(plugin_typed_owner_work_demand(&original, &active, 1).unwrap(), 1);
+        let turn = plugin_typed_owner_original(&mut original, &mut active, RetainedCloneGrant::default());
+        assert_eq!(turn.work, 0);
+        assert_eq!(turn.result.unwrap().progress(), RetainedCloneProgress::default());
+        assert_eq!(original.as_ref().unwrap().as_ptr(), address);
+        assert!(active.is_none());
+        let depth_denied = RetainedCloneGrant { maximum_items: 1, ..RetainedCloneGrant::default() };
+        let turn = plugin_typed_owner_original(&mut original, &mut active, depth_denied);
+        assert_eq!(turn.work, 0);
+        assert_eq!(turn.result.unwrap().progress(), RetainedCloneProgress::default());
+        assert_eq!(original.as_ref().unwrap().as_ptr(), address);
+        assert!(active.is_none());
+    }
+}

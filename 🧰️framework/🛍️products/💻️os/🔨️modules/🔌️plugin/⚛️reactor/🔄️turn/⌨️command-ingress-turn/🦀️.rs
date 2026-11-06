@@ -127,7 +127,7 @@ impl CommandIngressTurn {
         self.retained = match self.retained.take() {
             Some(CommandIngressOwner::ReservedPresence { cursor, admission, page }) => {
                 let now_ms = semio_plugin_actor_host::now_ms().await;
-                match semio_plugin_runtime_ops::ops_typed_operations::plugin_admit_reserved_presence(runtime, cursor.instance, admission, if cursor.metadata & 0x100 != 0 { Some((cursor.metadata & 0xff) as u8) } else { None }, cursor.item_count, page, now_ms).await {
+                match semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_admit_reserved_presence(runtime, cursor.instance, admission, if cursor.metadata & 0x100 != 0 { Some((cursor.metadata & 0xff) as u8) } else { None }, cursor.item_count, page, now_ms).await {
                     Ok(publication_generation) => {
                         self.status = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor.clone());
                         Some(CommandIngressOwner::Presence { cursor, publication_generation })
@@ -141,7 +141,7 @@ impl CommandIngressTurn {
             owner => owner,
         };
         self.retained = match self.retained.take() {
-            Some(CommandIngressOwner::PendingPresencePage { cursor, publication_generation, page }) => match semio_plugin_runtime_ops::ops_typed_operations::plugin_push_reserved_presence_page(runtime, cursor.instance, publication_generation, cursor.page_index, page).await {
+            Some(CommandIngressOwner::PendingPresencePage { cursor, publication_generation, page }) => match semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_push_reserved_presence_page(runtime, cursor.instance, publication_generation, cursor.page_index, page).await {
                 Ok(()) => {
                     self.status = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor.clone());
                     Some(CommandIngressOwner::Presence { cursor, publication_generation })
@@ -266,10 +266,10 @@ impl CommandIngressTurn {
         };
         if !matches!(self.status, semio_framework::kernel::CommandIngressStatus::Fault { .. }) {
             if cursor.page_index == 0 && self.retained.is_none() {
-                match semio_plugin_runtime_ops::ops_typed_operations::plugin_reserve_presence_ingress(runtime, cursor.instance, cursor.seq).await {
+                match semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_reserve_presence_ingress(runtime, cursor.instance, cursor.seq).await {
                     Ok(admission) => {
                         let now_ms = semio_plugin_actor_host::now_ms().await;
-                        match semio_plugin_runtime_ops::ops_typed_operations::plugin_admit_reserved_presence(runtime, cursor.instance, admission, own_color, cursor.item_count, page, now_ms).await {
+                        match semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_admit_reserved_presence(runtime, cursor.instance, admission, own_color, cursor.item_count, page, now_ms).await {
                             Ok(publication_generation) => {
                                 self.retained = Some(CommandIngressOwner::Presence { cursor: cursor.clone(), publication_generation });
                                 self.status = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor);
@@ -286,7 +286,7 @@ impl CommandIngressTurn {
                 CommandIngressOwner::Presence { publication_generation, .. } => Some(*publication_generation),
                 _ => None,
             }) {
-                match semio_plugin_runtime_ops::ops_typed_operations::plugin_push_reserved_presence_page(runtime, cursor.instance, publication_generation, cursor.page_index, page).await {
+                match semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_push_reserved_presence_page(runtime, cursor.instance, publication_generation, cursor.page_index, page).await {
                     Ok(()) => {
                         if let Some(CommandIngressOwner::Presence { cursor: active, .. }) = self.retained.as_mut() {
                             active.page_index = cursor.page_index;
@@ -309,7 +309,7 @@ impl CommandIngressTurn {
             Ok(mut pages) => match pages.try_push(page) {
                 Err((fault, _page)) => self.status = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: semio_framework_diagnostic::encode_fault_bytes(&fault) },
                 Ok(()) if cursor.page_count == 1 => match semio_framework::kernel::PagedCommand::try_from_pages(pages) {
-                    Ok(command) => match plugin_exchange_boxed(runtime, cursor.instance, Some((cursor.seq, semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Encoded(command))), identity,cx).await {
+                    Ok(command) => match plugin_exchange_boxed(runtime, cursor.instance, Some((cursor.seq, semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Encoded(command))), identity,cx).await {
                         Ok(mut output) => {
                             if let Some((_, command)) = output.retry_command.take() {
                                 self.retained = Some(CommandIngressOwner::Generic { cursor: cursor.clone(), command });
@@ -346,7 +346,7 @@ impl CommandIngressTurn {
             match pages.try_push(page) {
                 Err((fault, _page)) => self.status = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: semio_framework_diagnostic::encode_fault_bytes(&fault) },
                 Ok(()) if cursor.page_index.checked_add(1) == Some(cursor.page_count) => match semio_framework::kernel::PagedCommand::try_from_pages(pages) {
-                    Ok(command) => match plugin_exchange_boxed(runtime, cursor.instance, Some((cursor.seq, semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Encoded(command))), identity,cx).await {
+                    Ok(command) => match plugin_exchange_boxed(runtime, cursor.instance, Some((cursor.seq, semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Encoded(command))), identity,cx).await {
                         Ok(mut output) => {
                             if let Some((_, command)) = output.retry_command.take() {
                                 self.retained = Some(CommandIngressOwner::Generic { cursor: cursor.clone(), command });

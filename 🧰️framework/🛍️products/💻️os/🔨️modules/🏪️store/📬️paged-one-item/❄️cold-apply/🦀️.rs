@@ -2,18 +2,18 @@
 //!
 //! Retained families use `mutation_apply_preparation_factory`; this is the cold sibling, never a default of it.
 use crate::OneItemOwners;
-use semio_framework_os_spr::{apply_diff_cold, apply_diff_cold_into, ColdMutation, Edit, Mutation, MutationDiff};
-use semio_framework_os_spr::command::MutationMessagePublication;
-use semio_framework_os_store_replay_operation::native::{NativeSemanticPreparation, SemanticEdit, SemanticEditStep, SemanticProjection};
-use semio_framework_os_store_replay_operation::{ArtifactReplayPreparation, ArtifactReplayPreparationFactory, ArtifactReplayPreparationRequest};
+use semio_os_spr::{apply_diff_cold, apply_diff_cold_into, ColdMutation, Edit, Mutation, MutationDiff};
+use semio_os_spr::command::MutationMessagePublication;
+use semio_os_store_replay_operation::native::{NativeSemanticPreparation, SemanticEdit, SemanticEditStep, SemanticProjection};
+use semio_os_store_replay_operation::{ArtifactReplayPreparation, ArtifactReplayPreparationFactory, ArtifactReplayPreparationRequest};
 use semio_framework_value_snapshot_projection::snapshot_projection::post::{PagedOneItemPost, PagedOneItemPostMode, PagedOneItemPostRead};
 use semio_framework_value::retained_clone::{retained_clone_grant_admits, RetainedCloneClose, RetainedCloneRef};
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, RetirementDemand};
 use std::mem::ManuallyDrop;
-use semio_framework_os_store_command::HistoryLane;
-use semio_framework_os_store_one_item::{ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep, ARTIFACT_STORE_ONE_ITEM_ID_BYTES, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES};
-use semio_framework_os_store_one_item_publication::batch_digest::{admit_artifact_batch_digest, ArtifactStoreBatchDigest};
-use semio_framework_os_store_one_item_publication::{ArtifactStoreOneItemPrepared, ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOneItemPreparationRequest};
+use semio_os_store_command::HistoryLane;
+use semio_os_store_one_item::{ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep, ARTIFACT_STORE_ONE_ITEM_ID_BYTES, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES};
+use semio_os_store_one_item_publication::batch_digest::{admit_artifact_batch_digest, ArtifactStoreBatchDigest};
+use semio_os_store_one_item_publication::{ArtifactStoreOneItemPrepared, ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOneItemPreparationRequest};
 use semio_framework_value::retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 use semio_framework_value::retirement::RetireOwned;
@@ -159,16 +159,16 @@ where
     S: Clone + RetireOwned + Send + Sync + 'static,
     M: Mutation<S> + ColdMutation<S> + ArtifactCanonicalJsonTree + RetireOwned + Send + Sync + 'static,
 {
-    fn advance(&mut self, _body: usize, grant: ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
+    fn advance(&mut self, _body: usize, grant: ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, semio_framework_value::OriginalRetirementFailure> {
         self.last_work=0;
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(ArtifactStoreOneItemPreparationStep::Blocked);
         }
         let before=receiving.actual_work();
         let mut coordinated=false;
-        let result=(||{
+        let result=(|| -> Result<ArtifactStoreOneItemPreparationStep,semio_framework_value::OriginalRetirementFailure>{
         if self.owners.refused.is_some() {
-            return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "cold mutation preparation retains its original Store refusal"));
+            return Err((ValueError::literal(ValueRefusalKind::InvalidValue, "cold mutation preparation retains its original Store refusal")).into());
         }
         if self.owners.prepared.is_some() || self.phase==ColdPreparationPhase::Prepared {
             return Ok(ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()));
@@ -186,17 +186,17 @@ where
                 if !receiving.prepare_work(4)?{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
                 coordinated=true;self.last_work+=1;
                 let outcome=ColdMutation::diff(mutation,base.get()).stamp_op_index(0);
-                let(outcome,admitted)=match outcome.admit(){semio_framework_os_spr::MutationAdmission::Admitted(outcome)=>(outcome,true),semio_framework_os_spr::MutationAdmission::Refused(outcome)=>(outcome,false)};
+                let(outcome,admitted)=match outcome.admit(){semio_os_spr::MutationAdmission::Admitted(outcome)=>(outcome,true),semio_os_spr::MutationAdmission::Refused(outcome)=>(outcome,false)};
                 let(diff,messages)=outcome.into_parts();
                 let captured=if messages.is_empty(){0}else{self.messages=Some(MutationMessagePublication::new(messages));size_of::<MutationMessagePublication>()};
                 let capture=RetainedCloneProgress{copied_items:usize::from(captured!=0),copied_bytes:captured,..Default::default()};
-                if !admitted{self.last_work+=1;<M::ReferenceDiff as MutationDiff<S>>::retire_cold(diff);self.phase=ColdPreparationPhase::Refused;self.cancelled=true;return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"cold mutation produced a refused semantic outcome").with_retained_progress(capture));}
+                if !admitted{self.last_work+=1;<M::ReferenceDiff as MutationDiff<S>>::retire_cold(diff);self.phase=ColdPreparationPhase::Refused;self.cancelled=true;return Err((ValueError::literal(ValueRefusalKind::InvalidValue,"cold mutation produced a refused semantic outcome").with_retained_progress(capture)).into());}
                 self.last_work+=1;
-                let inverse=match ColdMutation::inverse(mutation,base.get()){Ok(inverse)=>inverse,Err(error)=>{self.last_work+=1;<M::ReferenceDiff as MutationDiff<S>>::retire_cold(diff);self.phase=ColdPreparationPhase::Refused;self.cancelled=true;return Err(error.with_retained_progress(capture));}};
+                let inverse=match ColdMutation::inverse(mutation,base.get()){Ok(inverse)=>inverse,Err(error)=>{self.last_work+=1;<M::ReferenceDiff as MutationDiff<S>>::retire_cold(diff);self.phase=ColdPreparationPhase::Refused;self.cancelled=true;return Err((error.with_retained_progress(capture)).into());}};
                 self.last_work+=1;
                 let applied=apply_diff_cold(&diff,base.get());
                 self.last_work+=1;<M::ReferenceDiff as MutationDiff<S>>::retire_cold(diff);
-                let post=match applied{Ok(post)=>post,Err(_)=>{self.phase=ColdPreparationPhase::Refused;self.cancelled=true;return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"cold mutation could not produce its post root").with_retained_progress(capture));}};
+                let post=match applied{Ok(post)=>post,Err(_)=>{self.phase=ColdPreparationPhase::Refused;self.cancelled=true;return Err((ValueError::literal(ValueRefusalKind::InvalidValue,"cold mutation could not produce its post root").with_retained_progress(capture)).into());}};
                 let mutation = self.owners.mutation.take().expect("observed original mutation owner");
                 *self.owners.candidate = Some((post, inverse, mutation));
                 self.phase=if self.messages.is_some(){ColdPreparationPhase::Messages}else{ColdPreparationPhase::Seal};
@@ -216,7 +216,7 @@ where
                 let copy=size_of::<(S,Vec<M>,M)>().checked_add(if self.messages.is_some(){size_of::<MutationMessagePublication>()}else{0}).ok_or_else(||fault("cold publication copy quote overflow"))?;
                 if grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
                 let Some(authority) = self.owners.authority.as_ref() else {
-                    return Err(fault("cold mutation preparation lost its Store authority"));
+                    return Err((fault("cold mutation preparation lost its Store authority")).into());
                 };
                 if !receiving.prepare_work(1)?{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
                 let (post, inverse, mutation) = self.owners.candidate.take().ok_or_else(|| fault("cold mutation preparation lost its semantic candidate"))?;
@@ -225,7 +225,7 @@ where
                     Ok(prepared) => prepared,
                     Err((error, edit, post)) => {
                         *self.owners.refused = Some((edit, post));
-                        return Err(error);
+                        return Err((error).into());
                     }
                 };
                 if let Some(messages)=self.messages.take(){prepared.record_outcome_messages(messages);}
@@ -241,7 +241,7 @@ where
         })();
         let observed=receiving.actual_work().saturating_sub(before);
         let reported=self.last_work;self.last_work=reported.max(observed).max(u64::from(coordinated));
-        let work=semio_framework_os_store_one_item::original_one_item_turn_work(reported,observed,coordinated)?;
+        let work=semio_os_store_one_item::original_one_item_turn_work(reported,observed,coordinated)?;
         if work>observed{receiving.commit_work(work-observed)?;}
         self.last_work=work;
         result
@@ -249,7 +249,7 @@ where
 
     fn last_turn_work(&self)->u64{self.last_work}
 
-    fn outcome_messages(&self)->&[semio_framework_os_spr::MutationMessage]{if let Some(owner)=self.messages.as_ref(){owner.original_messages()}else{self.owners.prepared.as_ref().map_or(&[],ArtifactStoreOneItemPrepared::outcome_messages)}}
+    fn outcome_messages(&self)->&[semio_os_spr::MutationMessage]{if let Some(owner)=self.messages.as_ref(){owner.original_messages()}else{self.owners.prepared.as_ref().map_or(&[],ArtifactStoreOneItemPrepared::outcome_messages)}}
 
     fn checkpoint(&self) -> ArtifactStoreOneItemCheckpoint {
         self.checkpoint
@@ -272,14 +272,14 @@ where
         self.owners.begin_close();
     }
 
-    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
         if let Some(demand)=self.message_close_demand()?{
             let retained=grant.retained_grant();if !retained_clone_grant_admits(retained,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
             let owner=self.messages.as_mut().ok_or_else(||fault("cold diagnostic close owner is absent"))?;
             if owner.terminal_is_empty(){self.messages=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
-            return owner.close_step(RetainedCloneGrant{maximum_depth:retained.maximum_depth-1,..retained}).map(|step|RetainedCloneStep::Progress(step.progress()));
+            return owner.close_step(RetainedCloneGrant{maximum_depth:retained.maximum_depth-1,..retained}).map(|step|RetainedCloneStep::Progress(step.progress())).map_err(Into::into);
         }
-        self.owners.close_step(grant.retained_grant())
+        self.owners.close_step(grant.retained_grant()).map_err(Into::into)
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
@@ -345,8 +345,8 @@ impl<S: 'static> ColdReplayProjection<S> {
 }
 
 impl<S: Clone + RetireOwned + Send + Sync + 'static> SemanticProjection<S> for ColdReplayProjection<S> {
-    fn birth_work_demand(&self)->u64{1}
-    fn take_work_demand(&self)->u64{u64::from(self.clone.is_some())}
+    fn birth_work_demand(&self)->Result<u64,ValueError>{Ok(1)}
+    fn take_work_demand(&self)->Result<u64,ValueError>{Ok(u64::from(self.clone.is_some()))}
     fn last_turn_work(&self)->u64{self.last_work}
     fn birth_demand(&self) -> RetirementDemand {
         replay_header::<Self>()
@@ -366,7 +366,7 @@ impl<S: Clone + RetireOwned + Send + Sync + 'static> SemanticProjection<S> for C
         self.clone_demand(source.get())
     }
 
-    fn advance(&mut self, source: RetainedCloneRef<'_, S>, _body: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn advance(&mut self, source: RetainedCloneRef<'_, S>, _body: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
         self.last_work=0;
         let demand = self.clone_demand(source.get())?;
         if self.closing || !retained_clone_grant_admits(grant, demand) {
@@ -401,7 +401,7 @@ impl<S: Clone + RetireOwned + Send + Sync + 'static> SemanticProjection<S> for C
         Ok(if self.cloned { RetirementDemand { copy_bytes:size_of::<bool>(), depth:1, ..Default::default() } } else { RetirementDemand::default() })
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
         self.last_work=0;
         if !self.closing {
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
@@ -489,8 +489,8 @@ impl<S: Clone + RetireOwned + Send + Sync + 'static, M: Mutation<S> + ColdMutati
         let mutation = input.get();
         self.last_work+=1;let outcome = ColdMutation::diff(mutation, before.get()).stamp_op_index(self.operation_index);
         let (outcome, admitted) = match outcome.admit() {
-            semio_framework_os_spr::MutationAdmission::Admitted(outcome) => (outcome, true),
-            semio_framework_os_spr::MutationAdmission::Refused(outcome) => (outcome, false),
+            semio_os_spr::MutationAdmission::Admitted(outcome) => (outcome, true),
+            semio_os_spr::MutationAdmission::Refused(outcome) => (outcome, false),
         };
         let (diff, messages) = outcome.into_parts();
         let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, retained_capacity_bytes: demand.capacity_bytes, ..Default::default() };
@@ -512,7 +512,7 @@ impl<S: Clone + RetireOwned + Send + Sync + 'static, M: Mutation<S> + ColdMutati
         Ok(SemanticEditStep::Complete(progress, inverse, messages, false))
         })();
         let observed=receiving.actual_work().saturating_sub(observed_before);
-        let work=semio_framework_os_store_one_item::original_one_item_turn_work(self.last_work,observed,self.last_work!=0)?;
+        let work=semio_os_store_one_item::original_one_item_turn_work(self.last_work,observed,self.last_work!=0)?;
         self.last_work=work;
         if work>observed{receiving.commit_work(work-observed)?;}
         result
@@ -526,7 +526,8 @@ impl<S: Clone + RetireOwned + Send + Sync + 'static, M: Mutation<S> + ColdMutati
         Ok(replay_header::<Self>())
     }
 
-    fn close_step(&mut self, _factory: &dyn ArtifactOwnedValueRetirementFactory<M>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_work_demand(&self,_factory:&dyn ArtifactOwnedValueRetirementFactory<M>,_body:usize)->Result<u64,ValueError>{Ok(u64::from(self.closing&&!self.closed))}
+    fn close_step(&mut self, _factory: &dyn ArtifactOwnedValueRetirementFactory<M>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
         self.last_work=0;
         let demand = replay_header::<Self>();
         if !self.closing || !retained_clone_grant_admits(grant, demand) {

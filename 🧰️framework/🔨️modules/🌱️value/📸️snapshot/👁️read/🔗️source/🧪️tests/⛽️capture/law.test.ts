@@ -1,0 +1,2 @@
+import {test,expect} from "bun:test";import Ajv from "ajv";import {Database} from "bun:sqlite";import fixture from "../🧫️fixtures/🔣️.json";import schema from "./schema.json";
+test("original snapshot capture reports transfer and issuer clone",()=>{const law=fixture.captureWork;expect(new Ajv({strict:true}).validate(schema,law)).toBe(true);const db=new Database(":memory:");try{expect(db.query("select ?+? success, 0 denied").get(law.transferRead,law.cloneFactory)).toEqual({success:law.success,denied:law.denied})}finally{db.close()}});

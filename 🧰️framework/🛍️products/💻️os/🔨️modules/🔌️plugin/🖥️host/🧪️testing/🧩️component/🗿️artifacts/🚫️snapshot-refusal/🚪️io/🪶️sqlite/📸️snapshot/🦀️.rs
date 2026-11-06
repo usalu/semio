@@ -24,7 +24,7 @@ fn selected(subset:&str)->Result<ValueRefusalKind,ValueError>{
 }
 fn refusal(kind:ValueRefusalKind)->store::io_schema::IoError{
  store::io_schema::IoError{
-  cause:ValueError::new(kind,"selected typed cause\0引用😀"),
+  cause:ValueError::new(kind,"selected typed cause\0引用😀").into(),
   diagnostics:vec![Diagnostic{
    code:FaultCode::new("fixture.snapshot\0code"),severity:Severity::Error,
    span:TextSpan{line:7,column:9,length:4},message:"diagnostic\0引用😀".into(),

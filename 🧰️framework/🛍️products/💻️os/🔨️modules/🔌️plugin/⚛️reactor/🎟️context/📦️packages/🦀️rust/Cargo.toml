@@ -29,9 +29,9 @@ semio-plugin-abi = { path = "../../../../🚪️io/📦️packages/🦀️rust" 
 semio-plugin-guest-contract = { path = "../../../../🧬️guest-contract/📦️packages/🦀️rust" }
 semio-plugin-reactor-app = { path = "../../../🔌️app/📦️packages/🦀️rust" }
 semio-plugin-reactor-lifecycle = { path = "../../../📨️pending/📦️packages/🦀️rust" }
-semio-plugin-runtime-ops = { path = "../../../🏃️runtime/🧰️ops/📦️packages/🦀️rust" }
+semio-framework-plugin-runtime-ops = { path = "../../../🏃️runtime/🧰️ops/📦️packages/🦀️rust", package = "semio-plugin-runtime-ops"}
 semio-plugin-reactor-jobs = { path = "../../../💼️jobs/📦️packages/🦀️rust" }
-semio-plugin-reactor-turn = { path = "../../../🔄️turn/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-turn = { path = "../../../🔄️turn/📦️packages/🦀️rust", package = "semio-plugin-reactor-turn"}
 semio-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
 semio-plugin-extension = { path = "../../../../🧩️extension/📦️packages/🦀️rust" }
 semio-framework-actor = { workspace = true }

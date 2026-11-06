@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-value-native-encoding-action-tests"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+publish = false
+
+[package.metadata.semio]
+role = "framework"
+id = "value-native-encoding-action-tests"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value-native-encoding = { path = "../../../../📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }

@@ -1,0 +1,8 @@
+{
+  "values": {
+    "value": 1.5,
+    "kind": "ready",
+    "count": 7
+  },
+  "document": "value=1.5 kind=ready count=x7\n"
+}

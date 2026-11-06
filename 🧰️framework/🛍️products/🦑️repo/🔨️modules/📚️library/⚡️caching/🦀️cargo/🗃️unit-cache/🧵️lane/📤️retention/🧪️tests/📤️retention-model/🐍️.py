@@ -52,7 +52,7 @@ def owned(case, policy):
     if len(parts) != 1 or not re.fullmatch(r"[a-z0-9]{1,12}", parts[0]):
         return False
     lane = lanes + parts[0]
-    target_root = lane + "/" + policy["layout"]["target"]
+    target_root = lane + "/" + policy["layout"]["targetNamespace"]
     return target == target_root or target.startswith(target_root + "/")
 
 

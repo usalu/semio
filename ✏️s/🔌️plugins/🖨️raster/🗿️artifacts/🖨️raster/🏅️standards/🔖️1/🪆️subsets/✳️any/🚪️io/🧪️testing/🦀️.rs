@@ -5,7 +5,7 @@ use semio_s_artifact_raster_raster_model::{RasterImageAsset, RasterLayerNode, Ra
 
 pub fn raster_image_test_snapshot() -> RasterSnapshot {
     let mut assets = RasterOwnedMap::new();
-    let emblem = RasterImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_decode("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEklEQVR42mP4z8DwHwyBNBgAAEnICfcD2WTxAAAAAElFTkSuQmCC").unwrap_or_default() };
+    let emblem = RasterImageAsset { mime: "image/png".into(), data: semio_framework_io_base64::base64_standard_decode("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEklEQVR42mP4z8DwHwyBNBgAAEnICfcD2WTxAAAAAElFTkSuQmCC").unwrap_or_default() };
     assets.insert("semio-emblem".into(), crate::mint_raster_asset_child("semio-emblem", &emblem)).expect("single fixture asset fits the owned map");
     let mut params = RasterOwnedMap::new();
     params.insert("brightness".into(), semio_framework_value::DslValue::float(0.12)).expect("first fixture adjustment fits the owned map");

@@ -20,14 +20,14 @@
     /// step WORD is the rotation's verdict, not stage 18's. What stage 18 owes while the
     /// cancellation state is locked is that it reclaims nothing and leaves its own cursor exactly
     /// where it was — asserted directly below, over the property instead of its proxy.
-use semio_framework_plugin_decl_app::tool_contract::TypedOperationResultLane;
+use semio_plugin_decl_app::tool_contract::TypedOperationResultLane;
 pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: ArtifactApp<Presence = PublicationPresence, PresenceMutation = PublicationPresenceMutation> + Default>() {
         let mut original_scope = artifact_app_laws::OriginalFixtureScope::admit();
         let cx = original_scope.cx();
         original_ack_page_laws::<A>();
         let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️tool-latest-wins-integration.json")).unwrap();
         let mounted_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
-        let mounted_policy=semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
+        let mounted_policy=semio_plugin_mounted_owner::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
         let identity_started=std::time::Instant::now();
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
         let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("original typed fixture supplied identity authority");
@@ -96,7 +96,7 @@ pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: Artifa
                     result_page_presented: false,
                     result_sequence: 0,
                     publication_progress: 0,
-                    publication_checkpoint: None, publication_ownership_progress: None, original_retirement_receipt: None, actor_capture: None,actor_capture_pending:semio_framework_plugin_mounted_owner::actor_capture::ActorCapture::new(),
+                    publication_checkpoint: None, publication_ownership_progress: None, original_retirement_receipt: None, actor_capture: None,actor_capture_pending:semio_plugin_mounted_owner::actor_capture::ActorCapture::new(),
                     publication_attempt: 0,
                     ui_pending: false,
                     progress: None,
@@ -122,8 +122,8 @@ pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: Artifa
         let stuck = app.tools.tool_operations.get(1).expect("the structurally faulted operation stays mounted until it retires");
         assert_eq!(stuck.stage, MountedTypedCommandFullOperationStage::AwaitingAck, "a refused worker step leaves its own operation holding its own terminal fault page");
         let mut pages: Vec<(u64, TypedOperationResultLane, String)> = Vec::new();
-        while let Some(mut page) = semio_framework_plugin_testing_laws::artifact_app_laws::take_fixture_result_page(&mut app,7,semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation).expect("original fixture page presentation") {
-            let code = if page.lane == TypedOperationResultLane::Fault { semio_framework_plugin_decl_app::tool_contract::decode_typed_operation_fault_page(page.bytes()).code.0 } else { String::new() };
+        while let Some(mut page) = semio_plugin_testing_laws::artifact_app_laws::take_fixture_result_page(&mut app,7,semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation).expect("original fixture page presentation") {
+            let code = if page.lane == TypedOperationResultLane::Fault { semio_plugin_decl_app::tool_contract::decode_typed_operation_fault_page(page.bytes()).code.0 } else { String::new() };
             let operation = page.token.operation;
             pages.push((operation, page.lane, code));
             let token = page.token;
@@ -173,7 +173,7 @@ pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: Artifa
                     terminal_seen: true,
                 worker_resume_pending: false,
                     publication: None,
-                    tool_stage:semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None, pending_stream_abort:None, stream_abort_completed:false, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
+                    tool_stage:semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None,publication_failure:Default::default(), pending_stream_abort:None, stream_abort_completed:false, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
                     pending_child_publication: None,
                     owned_child_group: None,
                     owned_child_committed: false,
@@ -184,7 +184,7 @@ pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: Artifa
                     result_page_presented: true,
                     result_sequence: 0,
                     publication_progress: 0,
-                    publication_checkpoint: None, publication_ownership_progress: None, original_retirement_receipt: None, actor_capture: None,actor_capture_pending:semio_framework_plugin_mounted_owner::actor_capture::ActorCapture::new(),
+                    publication_checkpoint: None, publication_ownership_progress: None, original_retirement_receipt: None, actor_capture: None,actor_capture_pending:semio_plugin_mounted_owner::actor_capture::ActorCapture::new(),
                     publication_attempt: 0,
                     ui_pending: false,
                     progress: None,
@@ -276,7 +276,7 @@ pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: Artifa
                     terminal_seen: true,
                 worker_resume_pending: false,
                     publication: None,
-                    tool_stage:semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None, pending_stream_abort:None, stream_abort_completed:false, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
+                    tool_stage:semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None,publication_failure:Default::default(), pending_stream_abort:None, stream_abort_completed:false, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
                     pending_child_publication: None,
                     owned_child_group: None,
                     owned_child_committed: false,
@@ -287,7 +287,7 @@ pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: Artifa
                     result_page_presented: true,
                     result_sequence,
                     publication_progress: 0,
-                    publication_checkpoint: None, publication_ownership_progress: None, original_retirement_receipt: None, actor_capture: None,actor_capture_pending:semio_framework_plugin_mounted_owner::actor_capture::ActorCapture::new(),
+                    publication_checkpoint: None, publication_ownership_progress: None, original_retirement_receipt: None, actor_capture: None,actor_capture_pending:semio_plugin_mounted_owner::actor_capture::ActorCapture::new(),
                     publication_attempt: 0,
                     ui_pending: false,
                     progress: None,
@@ -325,7 +325,7 @@ pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: Artifa
         for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
             if page.terminal_is_empty() { return; }
             let demand = page.next_close_demand(grant.maximum_copy_bytes).unwrap();
-            let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx, grant, demand, |_, grant| {
+            let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx, grant, demand, |_, grant| {
                 let step = page.close_step(grant)?;
                 let complete = page.terminal_is_empty();
                 Ok((if complete { PluginLifecycleStep::Complete(step.progress()) } else { PluginLifecycleStep::Progress(step.progress()) }, complete))

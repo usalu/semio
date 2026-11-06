@@ -2,6 +2,33 @@
   "name": "repo",
   "projectType": "application",
   "targets": {
+    "test-bootstrap-dependency-store-producer": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "repo ./📜️script.ts test bootstrap-dependency-store-producer",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
+    },
     "debug-bun-bundle": {
       "executor": "repo:script",
       "cache": false,
@@ -132,6 +159,7 @@
         "test-bootstrap",
         "test-bootstrap-dependencies",
         "test-bootstrap-dependencies-processes",
+        "test-bootstrap-dependency-store-producer",
         "test-bootstrap-installation-processes",
         "test-bootstrap-original-invocation-source",
         "test-bootstrap-processes",
@@ -147,7 +175,6 @@
         "test-build-command-line",
         "test-build-cpu-profile",
         "test-build-doctor-preflight",
-        "test-build-preflight",
         "test-build-execution",
         "test-build-fleet-status",
         "test-build-generation-claims",
@@ -178,6 +205,7 @@
         "test-build-nx-tool",
         "test-build-observation",
         "test-build-parsers",
+        "test-build-preflight",
         "test-build-remote-cache",
         "test-build-remote-execution",
         "test-build-reporting",

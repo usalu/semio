@@ -1,55 +1,55 @@
 // ⏪️ Support module 1 of the split test module `🧪️time-travel`: the fixtures that more than one piece uses, as real definitions the pieces import.
-use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_owners;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
-use semio_framework_plugin_decl_emission::ArtifactMutationOutcome;
-use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_disposer;
+use semio_plugin_ownership::store_lifecycle::bounded_document_store_owners;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_decl_emission::ArtifactMutationOutcome;
+use semio_plugin_ownership::store_lifecycle::bounded_document_store_disposer;
 use semio_framework_value::RetainedCloneProgress;
 use semio_framework_os_kernel::ArtifactStore;
 use semio_framework_os_kernel::ConfigStore;
 use serde_json::Value;
 use semio_framework_os_kernel::store_schema::ArtifactCommand;
-use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_owners;
-use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
-use semio_framework_plugin_decl_emission::{ActionMeta, AsyncTaskRun, AsyncTaskSource, Emit, HostEvent, ToolCommandCatalog};
-use semio_framework_plugin_app_builder::App;
-use semio_framework_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactBuilder, ArtifactChildren, ArtifactComposer, ArtifactComposition, ArtifactDecomposer, ArtifactDeserializer, ArtifactSerializer, DerivedArtifactSpec};
-use semio_framework_plugin_decl_app::{ArtifactApp, NaturalFileDecodeCursor};
-use semio_framework_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
-use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
-use semio_framework_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobFactory, ArtifactReservedJob};
+use semio_plugin_ownership::store_lifecycle::bounded_config_store_owners;
+use semio_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
+use semio_plugin_decl_emission::{ActionMeta, AsyncTaskRun, AsyncTaskSource, Emit, HostEvent, ToolCommandCatalog};
+use semio_plugin_app_builder::App;
+use semio_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactBuilder, ArtifactChildren, ArtifactComposer, ArtifactComposition, ArtifactDecomposer, ArtifactDeserializer, ArtifactSerializer, DerivedArtifactSpec};
+use semio_plugin_decl_app::{ArtifactApp, NaturalFileDecodeCursor};
+use semio_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
+use semio_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
+use semio_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobFactory, ArtifactReservedJob};
 use store::ArtifactStoreInitializationAuthority;
-use semio_framework_plugin_decl_views::{ArtifactView, ConfigView, DraftView, InteractionView, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
-use semio_framework_ui_contract::{Buildable, HasBase, HasChildren};
-use semio_framework_ui_runtime::ComponentTree;
+use semio_plugin_decl_views::{ArtifactView, ConfigView, DraftView, InteractionView, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
+use semio_ui_contract::{Buildable, HasBase, HasChildren};
+use semio_ui_runtime::ComponentTree;
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
-use semio_framework_plugin_extension::extension_runtime_lift::extension_retirement::ExtensionResourceOwner;
-use semio_framework_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY;
-use semio_framework_ui_locale::{Label, Locale, LocalizedLabel, Terminology};
-use semio_framework_plugin_window_kits::{LabelAxes, WindowKit};
-use semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1;
+use semio_plugin_extension::extension_runtime_lift::extension_retirement::ExtensionResourceOwner;
+use semio_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY;
+use semio_ui_locale::{Label, Locale, LocalizedLabel, Terminology};
+use semio_plugin_window_kits::{LabelAxes, WindowKit};
+use semio_plugin_mounted_owner::MountedOwnerPolicyV1;
 use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_plugin_program::PluginProgram;
+use semio_plugin_plugin_program::PluginProgram;
 use semio_framework_job::StepContext;
-use semio_framework_ui_declaration::ui::SurfaceKind;
-use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
-use semio_framework_plugin_interaction::UiAssemblyResult;
-use semio_framework_plugin_instance_app::VcsArtifactApp;
-use semio_framework_plugin_window_config::WindowConfigOwner;
-use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
+use semio_ui_declaration::ui::SurfaceKind;
+use semio_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_plugin_interaction::UiAssemblyResult;
+use semio_plugin_instance_app::VcsArtifactApp;
+use semio_plugin_window_config::WindowConfigOwner;
+use semio_plugin_window_transient::window_transient::WindowTransientOwner;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_testing_laws::artifact_app_laws;
-use semio_framework_plugin_builder as builder;
-use semio_framework_plugin_window_transient::built_text_to_component_tree;
+use semio_plugin_testing_laws::artifact_app_laws;
+use semio_plugin_builder as builder;
+use semio_plugin_window_transient::built_text_to_component_tree;
 use semio_framework_os_kernel::io;
-use semio_framework_plugin_ownership::transient_publication::transient_store_disposer;
+use semio_plugin_ownership::transient_publication::transient_store_disposer;
 use semio_framework::*;
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_label::SetLabel;
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_slot_children::SetSlotChildren;
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::config::TestConfig;
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::config::mutations::TestConfigMutation;
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_label::SetLabel;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_slot_children::SetSlotChildren;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::config::TestConfig;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::config::mutations::TestConfigMutation;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot;
 use semio_framework_time_travel::TimeTravelStage;
 use store::os_store::backbone::Backbone;
 
@@ -75,7 +75,7 @@ pub fn dsl(value: &Value) -> DslValue {
 //#region 🧸️ToyHistoryApp
 thread_local! {
     /// 📨️ Every host event the toy app received on this test thread, in order.
-    pub static TOY_HOST_EVENTS: std::cell::RefCell<semio_framework_plugin_testing_laws::host_event_observation::HostEventTrace> = const { std::cell::RefCell::new(semio_framework_plugin_testing_laws::host_event_observation::HostEventTrace::new()) };
+    pub static TOY_HOST_EVENTS: std::cell::RefCell<semio_plugin_testing_laws::host_event_observation::HostEventTrace> = const { std::cell::RefCell::new(semio_plugin_testing_laws::host_event_observation::HostEventTrace::new()) };
 }
 
 #[doc(hidden)]
@@ -140,7 +140,7 @@ impl ArtifactApp for ToyHistoryApp {
     }
 
     async fn render(_body_key: &str, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
-        built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("count={} label={}", doc.snapshot.count, doc.snapshot.label)))
+        built_text_to_component_tree(semio_ui_locale::Label::data(format!("count={} label={}", doc.snapshot.count, doc.snapshot.label)))
     }
 
     fn build_document_store_owners(grant:RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>,RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
@@ -207,9 +207,9 @@ pub fn collect_original_history_command_receipt(app:&mut ToyApp){
 
 /// 🎟️ Reads independent original caller ceilings before any native fixture work.
 #[doc(hidden)]
-pub fn original_time_travel_fixture_caller()->(semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1,usize){
+pub fn original_time_travel_fixture_caller()->(semio_plugin_mounted_owner::MountedOwnerPolicyV1,usize){
  let law:Value=serde_json::from_str(include_str!("../🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🧾️fixture-caller/🔣️.json")).unwrap();let declared=&law["native"]["grant"];let grant=semio_framework_value::RetainedCloneGrant{maximum_items:declared[0].as_u64().unwrap()as usize,maximum_copy_bytes:declared[1].as_u64().unwrap()as usize,maximum_capacity_bytes:declared[2].as_u64().unwrap()as usize,maximum_release_bytes:(declared[3].as_u64().unwrap()as usize).max(1_048_576),maximum_depth:declared[4].as_u64().unwrap()as usize};
- (semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1{preparation:grant,maintenance:grant,close:grant}.validate().unwrap(),law["native"]["maximumIdentityBytes"].as_u64().unwrap()as usize)
+ (semio_plugin_mounted_owner::MountedOwnerPolicyV1{preparation:grant,maintenance:grant,close:grant}.validate().unwrap(),law["native"]["maximumIdentityBytes"].as_u64().unwrap()as usize)
 }
 
 #[doc(hidden)]
@@ -235,13 +235,13 @@ pub fn seed_op(op: &Value) -> TestMutation {
 
 /// 🌱️ A registered toy instance holding the fixture's seed, one edit per op, authored by the fixture actor.
 #[doc(hidden)]
-pub async fn seeded_app(fixture: &Value, mounted_policy:semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ToyApp {
+pub async fn seeded_app(fixture: &Value, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ToyApp {
     seeded_app_as(fixture, text(&fixture["actor"]), mounted_policy, identity).await
 }
 
 /// 🪪️ Opens the toy under its acting actor while preserving each neutral seed edit's author.
 #[doc(hidden)]
-pub async fn seeded_app_as(fixture: &Value, actor: &str, mounted_policy:semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ToyApp {
+pub async fn seeded_app_as(fixture: &Value, actor: &str, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ToyApp {
     let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(actor.into()), mounted_policy, identity).await;
     assert_eq!(app.stores.store.local_actor_id(), &protocol::ActorId(actor.into()));
     for op in fixture["seed"].as_array().expect("seed") {
@@ -253,7 +253,7 @@ pub async fn seeded_app_as(fixture: &Value, actor: &str, mounted_policy:semio_fr
 
 #[doc(hidden)]
 pub fn meta(fixture: &Value) -> ActionMeta {
-    ActionMeta { view_state: Some(semio_framework_plugin_testing_laws::receive_view_fixture(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), semio_framework_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(text(&fixture["actor"])) }
+    ActionMeta { view_state: Some(semio_plugin_testing_laws::receive_view_fixture(ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), semio_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(text(&fixture["actor"])) }
 }
 
 /// ✏️ The mutation id of seeded edit `index` (each seeded edit holds one op).
@@ -263,7 +263,7 @@ pub fn seeded_mutation(app: &ToyApp, index: usize) -> String {
 }
 
 #[doc(hidden)]
-pub async fn verb(app: &mut ToyApp, fixture: &Value, action: &str, args: Vec<(String, DslValue)>, mounted_policy:semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> InvocationResult {
+pub async fn verb(app: &mut ToyApp, fixture: &Value, action: &str, args: Vec<(String, DslValue)>, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> InvocationResult {
     app.handle_action(action, Some(&DslValue::Object(args)), &meta(fixture), identity).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}"))
 }
 
@@ -273,7 +273,7 @@ pub fn rejected(result: &InvocationResult) -> Option<&str> {
 }
 
 #[doc(hidden)]
-pub async fn pump_until(app: &mut ToyApp, what: &str, done: impl Fn(&ToyApp) -> bool, mounted_policy:semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) {
+pub async fn pump_until(app: &mut ToyApp, what: &str, done: impl Fn(&ToyApp) -> bool, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) {
     assert_eq!(app.mounted_policy,mounted_policy);
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
     while std::time::Instant::now() < deadline {
@@ -289,13 +289,13 @@ pub async fn pump_until(app: &mut ToyApp, what: &str, done: impl Fn(&ToyApp) -> 
 
 #[doc(hidden)]
 pub async fn render_body(app: &mut ToyApp) -> String {
-    let tree = app.render("time-travel.main", None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.unwrap_or_else(|fault| panic!("render: {fault:?}"));
+    let tree = app.render("time-travel.main", None, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).await.unwrap_or_else(|fault| panic!("render: {fault:?}"));
     artifact_app_laws::project_and_retire_fixture_tree(tree).unwrap_or_else(|error| panic!("project: {error}"))
 }
 
 #[doc(hidden)]
 pub async fn render_history(app: &mut ToyApp, locale: Locale) -> Value {
-    let view = ViewModel { locale, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel { locale, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let tree = app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &view).await.unwrap_or_else(|fault| panic!("history render: {fault:?}"));
     serde_json::from_str(&artifact_app_laws::project_and_retire_fixture_tree(tree).expect("history projection")).expect("history projection parses")
 }
@@ -310,7 +310,7 @@ pub fn find_node<'a>(node: &'a Value, key: &str) -> Option<&'a Value> {
 
 /// ⏯️ Runs one fixture step through the real verbs (a `replay` pumps the per-turn Report replay to completion).
 #[doc(hidden)]
-pub async fn run_step(app: &mut ToyApp, fixture: &Value, step: &Value, mounted_policy:semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Option<InvocationResult> {
+pub async fn run_step(app: &mut ToyApp, fixture: &Value, step: &Value, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Option<InvocationResult> {
     let (name, value) = step.as_object().and_then(|step| step.iter().next()).expect("one-key step");
     Some(match name.as_str() {
         "begin" => {
@@ -359,8 +359,8 @@ pub fn close(app: &mut ToyApp,cx:&mut semio_framework_job::StepContext<'_>) {
 
 /// 🏁️ Runs fixture scenario `id`, which ends in a commit, on `app`.
 #[doc(hidden)]
-pub async fn commit_scenario(app: &mut ToyApp, fixture: &Value, id: &str, mounted_policy:semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+pub async fn commit_scenario(app: &mut ToyApp, fixture: &Value, id: &str, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let scenario = fixture["scenarios"].as_array().expect("scenarios").iter().find(|scenario| text(&scenario["id"]) == id).unwrap_or_else(|| panic!("scenario {id}"));
     for step in scenario["steps"].as_array().expect("steps") {
@@ -387,7 +387,7 @@ pub async fn apply_long_edit(app: &mut ToyApp, count: i32, identity: &mut semio_
         let end = (start + BATCH).min(count);
         let batch: Vec<TestMutation> = (start..end).map(|value| SetCount { value }.into()).collect();
         app.stores.store.dispatch(ArtifactCommand::Apply { mutations: batch, transaction: None }, identity).await.expect("a long edit applies");
-        semio_framework_plugin_testing_laws::artifact_app_laws::drain_store_displaced_retirements(&mut app.stores.store);
+        semio_plugin_testing_laws::artifact_app_laws::drain_store_displaced_retirements(&mut app.stores.store);
         start = end;
     }
 }
@@ -395,7 +395,7 @@ pub async fn apply_long_edit(app: &mut ToyApp, count: i32, identity: &mut semio_
 /// 🪶️ Publishes one edit with an explicit author while preserving the opened instance actor.
 #[doc(hidden)]
 pub fn publish_as(app: &mut ToyApp, actor: &str, mutation: TestMutation) {
-    let mut receiving_job=semio_framework_plugin_testing_laws::artifact_app_laws::FixtureOriginalJob::new(semio_framework::kernel::RetainedTurnInput{operation:71,generation:3,epoch:1,work: semio_framework_actor::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:u64::MAX,fuel:1_000_000}, grant:app.mounted_policy.close});
+    let mut receiving_job=semio_plugin_testing_laws::artifact_app_laws::FixtureOriginalJob::new(semio_framework::kernel::RetainedTurnInput{operation:71,generation:3,epoch:1,work: semio_framework_actor::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:u64::MAX,fuel:1_000_000}, grant:app.mounted_policy.close});
     let grant = store::os_store::one_item::ArtifactStoreOneItemGrant::from_retained(app.mounted_policy.preparation);
     let mut publication = app
         .stores.store

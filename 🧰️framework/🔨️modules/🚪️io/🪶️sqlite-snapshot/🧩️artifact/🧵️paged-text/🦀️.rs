@@ -1,20 +1,31 @@
 //! 🧵️ Borrowed paged text pays only its actual owned SQLite output and yields cancellation at every chunk.
 use super::{SqliteSnapshotControl,SqliteSnapshotPhase,ValueError,ValueRefusalKind};
-use semio_framework_value::{NativeEncodeControl,native_encoding::NativeEncodeProgress,paged::Utf8Text};
+use semio_framework_value::paged::Utf8Text;
 
-pub(super) fn copy_text(text:&dyn Utf8Text,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<String,ValueError>{
- control.allocation_stage(phase,|remaining,progress,allocation|{
-  let mut callback=|event:NativeEncodeProgress|progress(event.completed,event.total);
-  let mut native_allocation=|request:semio_framework_value::native_encoding::NativeEncodeAllocation|allocation(request.bytes);let mut native=NativeEncodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
-  let result=native.scoped_stage(|native|{
-   let length=text.text_bytes();native.begin_stage(length)?;native.charge(length)?;
-   let mut output=String::new();output.try_reserve_exact(length).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"paged SQLite text allocation failed"))?;
-   for index in 0..text.text_chunk_count(){
-    let chunk=text.text_chunk(index).ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"paged SQLite text omitted a declared chunk"))?;
-    if output.len().checked_add(chunk.len()).is_none_or(|next|next>length){return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"paged SQLite text exceeds its declared bytes"));}
-    output.push_str(chunk);native.advance(chunk.len())?;
-   }
-   if output.len()!=length{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"paged SQLite text differs from its declared bytes"));}Ok(output)
-  });(result,native.owned_bytes())
- })?
+pub(super) fn copy_text_into(text:&dyn Utf8Text,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase,owner:&mut super::SnapshotOwner<'_,'_,'_>,output:&mut String,marker:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind:&mut Option<semio_framework_io_control::NativeSnapshotFailure>,allocation:&mut semio_framework_io_control::NativeSnapshotAllocation,stage_unwind:&mut Option<semio_framework_io_sqlite_model::SqliteNativeStageOutcome<(),semio_framework_io_control::NativeSnapshotFailure>>,depth:usize)->semio_framework_io_sqlite_model::SqliteNativeStageOutcome<(),semio_framework_io_control::NativeSnapshotFailure>{
+ use semio_framework_value::RetainedWorkOutcome;
+ use semio_framework_io_sqlite_model::{SqliteNativeStageOutcome,SqliteStageFailure,SqliteStageWorkReceipt};
+ if !output.is_empty()||output.capacity()!=0{return SqliteNativeStageOutcome{result:Err(SqliteStageFailure::NotStarted(ValueError::literal(ValueRefusalKind::InvariantViolated,"paged text destination must be empty"))),work:Some(0)}}
+ if !matches!((&*owner,&*allocation),(super::SnapshotOwner::Encode(_),semio_framework_io_control::NativeSnapshotAllocation::Encode(_))|(super::SnapshotOwner::Decode(_),semio_framework_io_control::NativeSnapshotAllocation::Decode(_))){return SqliteNativeStageOutcome{result:Err(SqliteStageFailure::NotStarted(ValueError::literal(ValueRefusalKind::InvariantViolated,"paged text allocation direction differs from owner"))),work:Some(0)}}
+ if allocation.is_unsettled(){return SqliteNativeStageOutcome{result:Err(SqliteStageFailure::NotStarted(ValueError::literal(ValueRefusalKind::InvariantViolated,"paged text original allocation is unsettled"))),work:Some(0)}}
+ if stage_unwind.is_some(){return SqliteNativeStageOutcome{result:Err(SqliteStageFailure::NotStarted(ValueError::literal(ValueRefusalKind::InvariantViolated,"paged text prior unwind receipt is unsettled"))),work:Some(0)}}
+ let length=text.text_bytes();if let Err(error)=control.check_value_bytes(length){return SqliteNativeStageOutcome{result:Err(SqliteStageFailure::NotStarted(error)),work:Some(0)}}
+ let mut payload=None;
+ let turn=control.allocation_stage_native(phase,|remaining,progress|{let before=owner.actual_work();let mut declared=0;let result=match std::panic::catch_unwind(std::panic::AssertUnwindSafe(||copy_body(text,length,remaining,progress,owner,output,marker,unwind,allocation,&mut declared,depth))){Ok(result)=>result,Err(error)=>{payload=Some(error);if marker.performed||marker.physical!=semio_framework_value::RetainedCloneProgress::default(){match declared.checked_add(1){Some(next)=>{declared=next;Ok(())},None=>Err(ValueError::literal(ValueRefusalKind::WorkLimit,"paged text unwind work overflow").into())}}else{Ok(())}}};let after=owner.actual_work();let receipt=SqliteStageWorkReceipt{declared,before,after,actual:after.checked_sub(before)};(RetainedWorkOutcome{result,work:declared},output.capacity(),receipt)});
+ if let Some(payload)=payload{*stage_unwind=Some(turn);std::panic::resume_unwind(payload)}turn
 }
+fn next_work(work:u64)->Result<u64,semio_framework_io_control::NativeSnapshotFailure>{work.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"paged text work receipt overflow").into())}
+fn record_work(turn:semio_framework_value::RetainedWorkOutcome<(),semio_framework_io_control::NativeSnapshotFailure>,work:&mut u64,next:u64)->Result<(),semio_framework_io_control::NativeSnapshotFailure>{if turn.work==1{*work=next}else{debug_assert_eq!(turn.work,0)}turn.result}
+fn copy_body(text:&dyn Utf8Text,length:usize,remaining:usize,progress:&mut dyn FnMut(usize,usize)->bool,owner:&mut super::SnapshotOwner<'_,'_,'_>,output:&mut String,marker:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind:&mut Option<semio_framework_io_control::NativeSnapshotFailure>,allocation:&mut semio_framework_io_control::NativeSnapshotAllocation,work:&mut u64,depth:usize)->Result<(),semio_framework_io_control::NativeSnapshotFailure>{
+ use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress};
+ if !output.is_empty()||output.capacity()!=0{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"paged text destination must be empty").into())}if length>remaining{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"paged text exceeds original SQL allocation allowance").into())}if !progress(0,length){return Err(ValueError::literal(ValueRefusalKind::Canceled,"paged text copy canceled").into())}if length>0{
+ let layout=std::alloc::Layout::array::<u8>(length).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"paged text extent overflow"))?;
+ let next=next_work(*work)?;let turn=owner.effect_allocated(length,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:std::mem::size_of::<String>(),maximum_capacity_bytes:length,maximum_depth:depth,..Default::default()},marker,unwind,allocation,&mut |performed,physical,actual|{let pointer=unsafe{std::alloc::alloc(layout)};if pointer.is_null(){return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"paged text allocation failed"))}*output=unsafe{String::from_raw_parts(pointer,0,length)};*actual=Some(length);*performed=true;*physical=RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<String>(),retained_capacity_bytes:length,..Default::default()};Ok(())});record_work(turn,work,next)?;marker.reset_completed()?;}
+ for index in 0..text.text_chunk_count(){let chunk=text.text_chunk(index).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"paged text omitted a declared chunk"))?;if output.len().checked_add(chunk.len()).is_none_or(|end|end>length){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"paged text exceeds declared bytes").into())}if chunk.is_empty(){let next=next_work(*work)?;let turn=owner.effect(RetainedCloneGrant{maximum_items:1,maximum_depth:depth,..Default::default()},marker,unwind,&mut |performed,_physical|{*performed=true;Ok(())});record_work(turn,work,next)?;marker.reset_completed()?;if !progress(output.len(),length){return Err(ValueError::literal(ValueRefusalKind::Canceled,"paged text copy canceled").into())}continue}
+  let next=next_work(*work)?;let turn=owner.effect(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:chunk.len(),maximum_depth:depth,..Default::default()},marker,unwind,&mut |performed,physical|{output.push_str(chunk);*performed=true;*physical=RetainedCloneProgress{copied_items:1,copied_bytes:chunk.len(),..Default::default()};Ok(())});record_work(turn,work,next)?;marker.reset_completed()?;if !progress(output.len(),length){return Err(ValueError::literal(ValueRefusalKind::Canceled,"paged text copy canceled").into())}
+ }if output.len()!=length{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"paged text differs from declared bytes").into())}Ok(())
+}
+
+#[cfg(test)]
+#[path="🧪️.rs"]
+mod tests;

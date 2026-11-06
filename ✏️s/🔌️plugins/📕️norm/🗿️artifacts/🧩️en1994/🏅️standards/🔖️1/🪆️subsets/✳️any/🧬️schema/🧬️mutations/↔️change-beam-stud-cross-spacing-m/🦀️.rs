@@ -17,8 +17,8 @@ pub struct ChangeBeamStudCrossSpacingM {
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeBeamStudCrossSpacingM where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_beam_stud_cross_spacing_m::ChangeBeamStudCrossSpacingM> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "beam-stud-transverse-spacing-m", kind: "change-beam-stud-cross-spacing-m", record: "ChangedBeamStudTransverseSpacingM" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change transverse spacing between stud row centres (0 = not declared)", "Bolzenquerabstand der Bolzenreihen (0 = nicht angegeben) ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change transverse spacing between stud row centres (0 = not declared)", "Bolzenquerabstand der Bolzenreihen (0 = nicht angegeben) ändern")
     }
 }
 

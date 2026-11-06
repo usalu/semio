@@ -30,19 +30,19 @@ fn newest_folder_archive_rebases_exactly_and_preserves_members() {
         std::fs::create_dir_all(&folder).unwrap();
         let storage = FolderEventLogStorage::new(folder.clone());
         storage.write("a", "schema", b"old", b"spr0").await.unwrap();
-        let mut carrier = semio_framework_os_spr::DocumentArchivePack { parent_pack: b"new".to_vec(), parent_spr: b"spr1".to_vec(), members: vec![semio_framework_os_spr::OwnedDocumentMemberPackEntry { envelope_pack: b"child".to_vec(), ..Default::default() }] };
-        let archive = semio_framework_os_spr::encode_document_archive_bytes(&carrier).unwrap();
+        let mut carrier = semio_os_spr::DocumentArchivePack { parent_pack: b"new".to_vec(), parent_spr: b"spr1".to_vec(), members: vec![semio_os_spr::OwnedDocumentMemberPackEntry { envelope_pack: b"child".to_vec(), ..Default::default() }] };
+        let archive = semio_os_spr::encode_document_archive_bytes(&carrier).unwrap();
         storage.write_archive("a", "schema", &archive).await.unwrap();
         assert_eq!(storage.read("a").await.unwrap(), Some((b"new".to_vec(), b"spr1".to_vec())));
         assert!(!storage.write_if_current("a", "schema", Some((b"old", b"spr0")), b"bad", b"bad").await.unwrap());
         assert!(storage.write_snapshot_if_current("a", "schema", (b"new", b"spr1"), None, b"bad", b"bad").await.unwrap().is_none());
         let published = storage.write_snapshot_if_current("a", "schema", (b"new", b"spr1"), Some(&archive), b"next", b"spr2").await.unwrap().unwrap().unwrap();
-        let observed = semio_framework_os_spr::decode_document_archive_bytes(&published).await.unwrap();
+        let observed = semio_os_spr::decode_document_archive_bytes(&published).await.unwrap();
         assert_eq!(observed.members, carrier.members);
         assert_eq!(observed.parent_pack, b"next");
         assert_eq!(storage.read_archive("a").await.unwrap(), Some(published.clone()));
         carrier.parent_pack = b"next".to_vec(); carrier.parent_spr = b"spr2".to_vec(); carrier.members[0].envelope_pack = b"peer child".to_vec();
-        let peer = semio_framework_os_spr::encode_document_archive_bytes(&carrier).unwrap();
+        let peer = semio_os_spr::encode_document_archive_bytes(&carrier).unwrap();
         storage.write_archive("a", "schema", &peer).await.unwrap();
         assert!(storage.write_snapshot_if_current("a", "schema", (b"next", b"spr2"), Some(&published), b"stale", b"stale").await.unwrap().is_none());
         assert_eq!(storage.read_archive("a").await.unwrap(), Some(peer));
@@ -61,8 +61,8 @@ fn folder_pair_archive_order_matches_neutral_vectors() {
         for row in include_str!("archive.csv").lines().skip(1).map(|line| line.split(',').collect::<Vec<_>>()) {
             if row[1] == "pair" { storage.write("a", "schema", row[2].as_bytes(), row[3].as_bytes()).await.unwrap(); }
             else {
-                let carrier = semio_framework_os_spr::DocumentArchivePack { parent_pack: row[2].as_bytes().to_vec(), parent_spr: row[3].as_bytes().to_vec(), members: vec![semio_framework_os_spr::OwnedDocumentMemberPackEntry { envelope_pack: row[4].as_bytes().to_vec(), ..Default::default() }] };
-                storage.write_archive("a", "schema", &semio_framework_os_spr::encode_document_archive_bytes(&carrier).unwrap()).await.unwrap();
+                let carrier = semio_os_spr::DocumentArchivePack { parent_pack: row[2].as_bytes().to_vec(), parent_spr: row[3].as_bytes().to_vec(), members: vec![semio_os_spr::OwnedDocumentMemberPackEntry { envelope_pack: row[4].as_bytes().to_vec(), ..Default::default() }] };
+                storage.write_archive("a", "schema", &semio_os_spr::encode_document_archive_bytes(&carrier).unwrap()).await.unwrap();
             }
             assert_eq!(storage.read("a").await.unwrap().unwrap().0, row[5].as_bytes());
             assert_eq!(storage.read_archive("a").await.unwrap().is_some(), row[6] == "1");

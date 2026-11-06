@@ -2,6 +2,12 @@
 use super::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotControl, SqliteSnapshotPhase, ValueError, ValueRefusalKind};
 #[path="🫴️receiving/🦀️.rs"]
 pub mod receiving;
+#[path="🫴️owner/🦀️.rs"]
+mod owner;
+pub use owner::SnapshotOwner;
+#[path="📦️blob/🦀️.rs"]
+mod blob;
+pub use blob::copy_into as receive_blob_into;
 
 /// 📏️ Accumulates an owner's explicit native allocation and encoded output upper bounds.
 #[doc(hidden)] pub struct NativeEncodingBound<'c, 'p> { control: &'c mut SqliteSnapshotControl<'p>, #[doc(hidden)] pub bytes: usize, units: usize, semantic:bool }
@@ -56,7 +62,7 @@ pub mod projection;
 pub use projection::{ProjectionStorage,project_owned,owned_workspace};
 
 #[path="🧵️paged-text/🦀️.rs"]
-mod paged_text;
+pub(crate) mod paged_text;
 
 /// 🪝️ Test hook: the private row writer, public only behind the `testkit` feature.
 #[cfg(feature = "testkit")]
@@ -396,6 +402,11 @@ impl<'c, 'p> Reconstruction<'c, 'p> {
             let result = semio_framework_value::paged::PagedUtf8::try_from_str_controlled(text, &mut native);
             (result, native.owned_bytes())
         })?
+    }
+    /// 📩️ Fills a caller-retained octet field while preserving every original native and SQL refusal.
+    pub fn blob_into(&mut self,output:&mut Vec<u8>,bytes:&[u8],owner:&mut SnapshotOwner<'_,'_,'_>,marker:&mut semio_framework_io_control::NativeSnapshotEffectProgress,unwind:&mut Option<semio_framework_io_control::NativeSnapshotFailure>,stage_unwind:&mut Option<super::SqliteNativeStageOutcome<(),semio_framework_io_control::NativeSnapshotFailure>>,allocation:&mut semio_framework_io_control::NativeSnapshotAllocation,depth:usize)->super::SqliteNativeStageOutcome<(),semio_framework_io_control::NativeSnapshotFailure>{
+        if let Err(error)=self.reserve(bytes.len()){return super::SqliteNativeStageOutcome{result:Err(super::SqliteStageFailure::NotStarted(error)),work:Some(0)}}
+        receive_blob_into(output,bytes,self.control,SqliteSnapshotPhase::ReconstructSnapshot,owner,marker,unwind,stage_unwind,allocation,depth)
     }
     /// 🎒️ Checks the aggregate native byte bound before copying one borrowed binary field.
     pub fn blob(&mut self, blob: &[u8]) -> Result<Vec<u8>, ValueError> { self.reserve(blob.len())?; copy_blob(blob, self.control, SqliteSnapshotPhase::ReconstructSnapshot) }

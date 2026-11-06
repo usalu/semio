@@ -7,7 +7,7 @@ use std::cell::RefCell;
 use semio_framework::kernel::{RequestOutcome, UiPatchOp};
 use semio_plugin_reactor_surfaces::checkpoint;
 use semio_plugin_reactor_surfaces as cold_pair;
-use semio_plugin_reactor_turn as turn;
+use semio_framework_plugin_reactor_turn as turn;
 use semio_ui_contract as ui_contract;
 /// 🧭️ `reactor`/`jobs`/`checkpoint`/`describe` are the only interfaces `world actor` directly
 /// `export`s, so wit-bindgen only aliases THEIR top-level types under `exports::…`. `effects`/

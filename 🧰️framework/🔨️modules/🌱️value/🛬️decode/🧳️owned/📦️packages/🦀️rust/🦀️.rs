@@ -6,18 +6,19 @@ pub use semio_framework_value_native_decoding::native_decoding::{NativeDecodeCon
 pub use semio_framework_value_persistent::list;
 pub use semio_framework_value_retained_clone::retained_clone;
 pub use semio_framework_value_retirement::retirement;
+pub use semio_framework_value_retirement::OriginalRetirementOutcome;
 pub use semio_framework_value_shared_issuance as shared_issuance;
 
 #[path = "../../🦀️.rs"]
 pub mod owned;
-pub use owned::{NativeReceive, NativeReceiver};
+pub use owned::{NativeReceive, NativeReceiver, NativeSharedSlots};
 semio_framework_value_derive::value_codec!{#[derive(NativeReceive)]#[value(crate="crate",rename_all="camelCase",deny_unknown_fields)]pub struct RetainedCloneGrant{maximum_items:usize,maximum_copy_bytes:usize,maximum_capacity_bytes:usize,maximum_release_bytes:usize,maximum_depth:usize}}
 semio_framework_value_derive::value_codec!{#[derive(NativeReceive)]#[value(crate="crate",rename_all="camelCase",deny_unknown_fields)]pub struct RetainedCloneProgress{copied_items:usize,copied_bytes:usize,retained_capacity_bytes:usize,released_bytes:usize}}
 
 pub mod native_decoding {
     pub use semio_framework_value_native_decoding::native_decoding::*;
     pub use super::owned;
-    pub use super::owned::{NativeReceive, NativeReceiver};
+    pub use super::owned::{NativeReceive, NativeReceiver, NativeSharedSlots};
 }
 
 #[cfg(test)]

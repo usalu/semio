@@ -420,7 +420,7 @@ mod ui_node_wire_format_tests {
                 paint_target: "pixels".into(),
                 mask_value: 255,
                 fill_tolerance: 24,
-                editing_options: semio_framework_ui_scene::Paint2dEditingOptions { filter_kind: "brightness".into(), filter_amount: 0.0, image_grid: semio_framework_ui_scene::Paint2dImageGrid { x: 0, y: 0, width: 512, height: 512, bilinear: true } },selection_cancellation:None,
+                editing_options: semio_ui_scene::Paint2dEditingOptions { filter_kind: "brightness".into(), filter_amount: 0.0, image_grid: semio_ui_scene::Paint2dImageGrid { x: 0, y: 0, width: 512, height: 512, bilinear: true } },selection_cancellation:None,
                 pixel_selection_json:None,
                 view_mode: "composite".into(),
                 composite_viewport_json: None,

@@ -1,0 +1,45 @@
+{
+  "type": "array",
+  "minItems": 4,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "present",
+      "progress",
+      "workDone",
+      "physicalDone",
+      "refused",
+      "status"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "present": {
+        "type": "boolean"
+      },
+      "progress": {
+        "type": "boolean"
+      },
+      "workDone": {
+        "type": "boolean"
+      },
+      "physicalDone": {
+        "type": "boolean"
+      },
+      "refused": {
+        "type": "boolean"
+      },
+      "status": {
+        "enum": [
+          "absent",
+          "pending",
+          "accepted",
+          "refused"
+        ]
+      }
+    }
+  }
+}

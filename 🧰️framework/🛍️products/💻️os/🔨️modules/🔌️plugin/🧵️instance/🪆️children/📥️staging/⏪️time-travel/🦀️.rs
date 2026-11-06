@@ -38,7 +38,7 @@ use semio_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY;
 use semio_framework::Fault;
 use std::future::Future;
 use semio_plugin_decl_views::history_view::HistoryView;
-use semio_plugin_instance_stores::stores_components::InstanceStores;
+use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
 use semio_plugin_reactor_app::PluginApp;
 use semio_ui_contract::*;
 use semio_plugin_time_travel::*;

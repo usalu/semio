@@ -1,0 +1,7 @@
+# Lane Retention Follow-Up
+
+Current discoverLaneEvidenceV1 bounds directories, entries, path length and receipt bytes, reads target bindings using O_NOFOLLOW and before/after fd checks, requires canonical in-lane physical pairs, and publishes binding evidence before lane deletion. Unresolved or conflicting retention returns a conflict and the pool seam now keeps the lane. These are source observations; gate 39756 was reported queued.
+
+Two custody gaps were sent to the descriptor owner. First, entriesV1 lstat-checks receipt names but digestV1 then opens by path without O_NOFOLLOW. Both same and published branches unlink that pathname without a final check that it is still the hashed physical source; replacement between checks can lose a different source receipt. Hash and copy via a no-follow pinned descriptor and recheck the named inode/content before unlink; treat churn as unresolved. Shared same-destination lookup should likewise reject symlinks.
+
+Second, recovered `layout.destination` is accepted if it resolves anywhere inside the compiler store outside this lane. The live writer records the shared build directory, but stale or changed in-store content can name another directory where readers do not look. Authenticate the destination against the actual issued shared build owner or its immutable store identity before treating publication as complete. This observation does not establish a live exploit or runtime failure.

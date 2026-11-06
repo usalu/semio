@@ -46,7 +46,7 @@ fn is_false(value: &bool) -> bool {
 // `UiValue`, the deliberate DslValue-free exception — see its docstring in `🎬️action.rs`.
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 #[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct UiNodeRecord {
     pub id: UiNodeId,
@@ -106,7 +106,7 @@ impl UiNodeRecord {
 // `UiNodeRecord` is the deliberate DslValue-free exception above.
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 #[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct UiSnapshot {
     pub surface: SurfaceId,
@@ -127,7 +127,7 @@ pub struct UiSnapshot {
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[allow(clippy::large_enum_variant)]
 #[serde(tag = "type", rename_all = "camelCase")]
-#[value(tag = "type", rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", tag = "type", rename_all = "camelCase")]
 #[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub enum UiPatchOp {
     Upsert(UiNodeRecord),
@@ -206,7 +206,7 @@ impl UiPatchOp {
 // is the deliberate DslValue-free exception above.
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
+#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 #[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct UiPatch {
     pub surface: SurfaceId,

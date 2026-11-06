@@ -1,6 +1,6 @@
 use semio_framework_artifact_reference::ArtifactRef;
 use semio_framework_job::{Generation, OperationId, StepContext};
-use semio_os_store_member_open::{MemberOpenDiagnostic, MemberOpenInputStep, MemberOpenProgress, MemberOpenRequest};
+use semio_framework_os_store_member_open::{MemberOpenDiagnostic, MemberOpenInputStep, MemberOpenProgress, MemberOpenRequest};
 use semio_os_store_owned_schema_decode::{OwnedSchemaDecodePage, OwnedSchemaDecodePages};
 use semio_os_store_envelope::owner::OwnerRef;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};

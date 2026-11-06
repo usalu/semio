@@ -225,11 +225,9 @@ impl SnapshotRetirementFactory<ErrorRoot> for ErrorRootRetirement {
   let unique=Arc::strong_count(&root)==1;let admitted=semio_framework_value::factory::SharedValueRetirementFactory::<ErrorRoot>::default().retire(root,grant);if admitted.result.is_ok()&&unique{self.0.fetch_add(1,Ordering::SeqCst);}admitted
  }
 }
-impl ArtifactOwnedValueRetirementFactory<ErrorRoot> for ErrorRootRetirement {
+impl ArtifactOwnedValueRetirementFactory<ErrorRoot> for ErrorRootRetirement {fn retire_owned_work_demand(&self,_:&ErrorRoot)->Result<u64,semio_framework_value::ValueError>{Ok(1)}
  fn retirement_birth_bytes(&self,root:&ErrorRoot)->usize {semio_framework_value::factory::OwnedValueRetirementFactory::<ErrorRoot>::default().retirement_birth_bytes(root)}
- fn retire_owned(&self,root:ErrorRoot,grant:RetainedCloneGrant)-> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,ErrorRoot)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,ErrorRoot)> {
-  let admitted=semio_framework_value::factory::OwnedValueRetirementFactory::<ErrorRoot>::default().retire_owned(root,grant);if admitted.result.is_ok(){self.0.fetch_add(1,Ordering::SeqCst);}admitted.result
- })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
+ fn retire_owned(&self,root:ErrorRoot,grant:RetainedCloneGrant)-> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(semio_framework_value::OriginalRetirementFailure,ErrorRoot)> {let admitted=semio_framework_value::factory::OwnedValueRetirementFactory::<ErrorRoot>::default().retire_owned(root,grant);if admitted.result.is_ok(){self.0.fetch_add(1,Ordering::SeqCst);}admitted}
 }
 impl ArtifactCanonicalJsonTree for ErrorLeaf {
  fn canonical_tree_node(&self)->Result<ArtifactCanonicalJsonNode<'_>,ValueError>{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"canonical-reader.fixture-child"))}

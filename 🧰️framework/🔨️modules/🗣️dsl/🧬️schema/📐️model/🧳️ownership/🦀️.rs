@@ -359,3 +359,69 @@ pub fn shape_type_name(shape: &Shape) -> &'static str {
     }
 }
 
+
+use semio_framework_dsl::{TextError,TextSpan};
+use std::mem::size_of;
+/// ⛓️ Constructs the declared native sequence directly from semantic field owners.
+pub trait DslSequence<T>: Default + IntoIterator<Item = T> {
+    fn from_decoded<I: IntoIterator<Item = Result<T, TextError>>>(values: I) -> Result<Self, TextError>;
+    fn begin_controlled(length: usize, control: &mut NativeDecodeControl<'_>) -> Result<Self, ValueError>;
+    fn ensure_controlled_slot(&mut self, control: &mut NativeDecodeControl<'_>) -> Result<(), ValueError>;
+    fn push_controlled(&mut self, value: T) -> Result<(), ValueError>;
+}
+
+impl<T> DslSequence<T> for Vec<T> {
+    fn from_decoded<I: IntoIterator<Item = Result<T, TextError>>>(values: I) -> Result<Self, TextError> { values.into_iter().collect() }
+    fn begin_controlled(length: usize, control: &mut NativeDecodeControl<'_>) -> Result<Self, ValueError> { control.allocate_vec(length) }
+    fn ensure_controlled_slot(&mut self, _control: &mut NativeDecodeControl<'_>) -> Result<(), ValueError> { Ok(()) }
+    fn push_controlled(&mut self, value: T) -> Result<(), ValueError> { self.push(value); Ok(()) }
+}
+
+impl<T, const N: usize> DslSequence<T> for semio_framework_value_persistent::list::PagedList<T, N> {
+    fn from_decoded<I: IntoIterator<Item = Result<T, TextError>>>(values: I) -> Result<Self, TextError> {
+        let mut output = Self::default();
+        for value in values { output.try_push(value?).map_err(|error| TextError::new(ValueRefusalKind::OwnershipLimit, error.to_string(), TextSpan::at(1, 1)))?; }
+        Ok(output)
+    }
+    fn begin_controlled(_length: usize, control: &mut NativeDecodeControl<'_>) -> Result<Self, ValueError> { control.checkpoint()?; Ok(Self::default()) }
+    fn ensure_controlled_slot(&mut self, control: &mut NativeDecodeControl<'_>) -> Result<(), ValueError> {
+        while !self.has_reserved_slot() {
+            let bytes = self.next_allocation_bytes().map_err(ValueError::from)?;
+            control.charge(bytes)?;
+            self.reserve_one(bytes).map_err(|error| ValueError::from(error.refusal()))?;
+        }
+        Ok(())
+    }
+    fn push_controlled(&mut self, value: T) -> Result<(), ValueError> { self.push_reserved(value).map_err(|_| ValueError::new(ValueRefusalKind::InvariantViolated, "paged DSL sequence rejected an admitted slot")) }
+}
+
+/// 🧭️ Projects semantic sequences through their actual borrowed native owners.
+pub trait DslSequenceView<T> {
+    type Iter<'a>: ExactSizeIterator<Item = &'a T> where Self: 'a, T: 'a;
+    fn field_items(&self) -> Self::Iter<'_>;
+}
+
+impl<T> DslSequenceView<T> for [T] {
+    type Iter<'a> = std::slice::Iter<'a, T> where T: 'a;
+    fn field_items(&self) -> Self::Iter<'_> { self.iter() }
+}
+impl<T> DslSequenceView<T> for Vec<T> {
+    type Iter<'a> = std::slice::Iter<'a, T> where T: 'a;
+    fn field_items(&self) -> Self::Iter<'_> { self.iter() }
+}
+impl<T, const N: usize> DslSequenceView<T> for semio_framework_value_persistent::list::PagedList<T, N> {
+    type Iter<'a> = semio_framework_value_persistent::list::PagedIter<'a, T, N> where T: 'a;
+    fn field_items(&self) -> Self::Iter<'_> { self.iter() }
+}
+
+/// 🎛️ Admits bounded native expression cloning through the original directional control.
+pub trait ExpressionCloneControl{fn checkpoint(&mut self)->Result<(),ValueError>;fn charge(&mut self,bytes:usize)->Result<(),ValueError>;fn step(&mut self)->Result<(),ValueError>;}
+macro_rules! expression_clone_control{($control:ident)=>{impl ExpressionCloneControl for $control<'_>{fn checkpoint(&mut self)->Result<(),ValueError>{$control::checkpoint(self)}fn charge(&mut self,bytes:usize)->Result<(),ValueError>{$control::charge(self,bytes)}fn step(&mut self)->Result<(),ValueError>{$control::step(self)}}};}
+expression_clone_control!(NativeEncodeControl);
+expression_clone_control!(NativeDecodeControl);
+fn clone_expression_name(name:&str,control:&mut impl ExpressionCloneControl)->Result<String,ValueError>{control.charge(name.len())?;let mut output=String::new();output.try_reserve_exact(name.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"expression name allocation failed"))?;let mut start=0;while start<name.len(){let mut end=(start+256).min(name.len());while !name.is_char_boundary(end){end-=1;}control.checkpoint()?;output.push_str(&name[start..end]);start=end;control.step()?;}Ok(output)}
+/// 🌿️ Clones one expression through the caller original bounded control.
+pub fn clone_expression(value:&ExprValue,depth:usize,control:&mut impl ExpressionCloneControl)->Result<ExprValue,ValueError>{
+ control.checkpoint()?;if depth>=64{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"expression construction exceeds native depth"));}
+ let output=match value{ExprValue::Num(value)=>ExprValue::Num(*value),ExprValue::Var(name)=>ExprValue::Var(clone_expression_name(name,control)?),ExprValue::Neg(child)=>{control.charge(size_of::<ExprValue>())?;ExprValue::Neg(Box::new(clone_expression(child,depth+1,control)?))},ExprValue::Binary(op,left,right)=>{control.charge(2*size_of::<ExprValue>())?;ExprValue::Binary(*op,Box::new(clone_expression(left,depth+1,control)?),Box::new(clone_expression(right,depth+1,control)?))},ExprValue::Call(name,children)=>{let name=clone_expression_name(name,control)?;control.charge(children.len().checked_mul(size_of::<ExprValue>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"expression argument capacity overflow"))?)?;let mut arguments=Vec::new();arguments.try_reserve_exact(children.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"expression argument allocation failed"))?;for child in children{arguments.push(clone_expression(child,depth+1,control)?);}ExprValue::Call(name,arguments)}};control.step()?;Ok(output)
+}

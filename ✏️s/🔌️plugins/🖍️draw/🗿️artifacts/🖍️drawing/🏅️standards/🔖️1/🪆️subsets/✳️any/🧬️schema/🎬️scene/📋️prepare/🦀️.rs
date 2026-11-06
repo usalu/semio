@@ -435,6 +435,11 @@ impl DocumentVectorRetirement<'_>{
   if grant.maximum_items>0&&grant.maximum_depth>0&&matches!(self.source,Some(DocumentVectorSource::Borrowed(_))){self.source=None;return Ok(RetainedCloneStep::Complete(semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,..Default::default()}));}
   Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(Default::default())}else{RetainedCloneStep::Progress(Default::default())})
  }
+ pub fn close_original(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{
+  if !self.private_is_empty(){let result=self.owner.step(grant);return semio_framework_value::RetainedWorkOutcome{result,work:self.owner.last_turn_work()};}
+  let moving=grant.maximum_items>0&&grant.maximum_depth>0&&matches!(self.source,Some(DocumentVectorSource::Borrowed(_)));
+  let result=self.close_step(grant);semio_framework_value::RetainedWorkOutcome{result,work:u64::from(moving)}
+ }
  pub fn next_copy_byte_demand(&self)->Result<usize,ValueError>{self.owner.next_copy_byte_demand()}
  pub fn next_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{self.owner.next_capacity_byte_demand(body)}
  pub fn next_release_byte_demand(&self)->Result<usize,ValueError>{self.owner.next_release_byte_demand()}
@@ -561,6 +566,10 @@ impl DocumentRasterRetirement<'_>{
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   let step=if !self.owner.terminal_is_empty(){self.owner.step(grant)?}else if let Some(vector)=&mut self.vector{vector.close_step(grant)?}else{RetainedCloneStep::Complete(Default::default())};
   let progress=step.progress();Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
+ }
+ pub fn close_original(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{
+  let turn=if !self.owner.terminal_is_empty(){let result=self.owner.step(grant);semio_framework_value::RetainedWorkOutcome{result,work:self.owner.last_turn_work()}}else if let Some(vector)=&mut self.vector{vector.close_original(grant)}else{semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}};
+  semio_framework_value::RetainedWorkOutcome{work:turn.work,result:turn.result.map(|step|{let progress=step.progress();if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)}})}
  }
  pub fn next_copy_byte_demand(&self)->Result<usize,ValueError>{if !self.owner.terminal_is_empty(){self.owner.next_copy_byte_demand()}else{self.vector.as_ref().map_or(Ok(0),DocumentVectorRetirement::next_copy_byte_demand)}}
  pub fn next_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{if !self.owner.terminal_is_empty(){self.owner.next_capacity_byte_demand(body)}else{self.vector.as_ref().map_or(Ok(0),|vector|vector.next_capacity_byte_demand(body))}}

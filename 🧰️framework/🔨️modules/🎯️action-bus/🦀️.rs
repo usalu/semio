@@ -532,7 +532,14 @@ struct ActionBusInner {
     aliases: HashMap<ToolFactoryKey, ToolFactoryKey>,
     factories: Vec<Box<dyn ErasedToolJobFactory>>,
     dispatch_count: u64,
+    original_entries: Vec<OriginalWireRegistration>,
 }
+
+struct OriginalWireRegistration { key:ToolFactoryKey, schema:String, factory_type_id:TypeId, factory_type_name:&'static str, contract:ToolExecutionContract }
+
+#[path="📨️wire/🌱️original/🦀️.rs"]
+mod original_admission;
+pub use original_admission::OriginalWireAdmission;
 
 #[derive(Clone)]
 pub struct ActionBus {
@@ -547,7 +554,7 @@ impl Default for ActionBus {
 
 impl ActionBus {
     pub fn new() -> Self {
-        Self { inner: Arc::new(Mutex::new(ActionBusInner { factory_by_key: HashMap::new(), factory_identity_by_key: HashMap::new(), contract_by_key: HashMap::new(), aliases: HashMap::new(), factories: Vec::new(), dispatch_count: 0 })) }
+        Self { inner: Arc::new(Mutex::new(ActionBusInner { factory_by_key: HashMap::new(), factory_identity_by_key: HashMap::new(), contract_by_key: HashMap::new(), aliases: HashMap::new(), factories: Vec::new(), dispatch_count: 0, original_entries:Vec::new() })) }
     }
 
     /// 🌐️ Process-wide production registry shared by Platform and activated app controllers.
@@ -578,6 +585,7 @@ impl ActionBus {
         }
         let index = inner.factories.len();
         for key in keys {
+            inner.original_entries.push(OriginalWireRegistration{key:key.clone(),schema:factory.payload_schema_id().to_string(),factory_type_id:TypeId::of::<F>(),factory_type_name:std::any::type_name::<F>(),contract});
             inner.factory_by_key.insert(key.clone(), index);
             inner.factory_identity_by_key.insert(key.clone(), (TypeId::of::<F>(), std::any::type_name::<F>(), factory.payload_schema_id().to_string()));
             inner.contract_by_key.insert(key.clone(), contract);
@@ -615,6 +623,7 @@ impl ActionBus {
         }
         let index = inner.factories.len();
         for key in missing {
+            inner.original_entries.push(OriginalWireRegistration{key:key.clone(),schema:identity.2.to_string(),factory_type_id:identity.0,factory_type_name:identity.1,contract});
             inner.factory_by_key.insert(key.clone(), index);
             inner.factory_identity_by_key.insert(key.clone(), (identity.0, identity.1, identity.2.to_string()));
             inner.contract_by_key.insert(key, contract);

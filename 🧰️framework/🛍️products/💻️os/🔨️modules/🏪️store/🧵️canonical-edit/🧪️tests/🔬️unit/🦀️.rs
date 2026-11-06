@@ -159,11 +159,9 @@ fn canonical_edit_large_unicode_bytes_match_serde_and_language_neutral_oracle() 
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct FixtureMutationRetirement;
-impl ArtifactOwnedValueRetirementFactory<FixtureMutation> for FixtureMutationRetirement {
+impl ArtifactOwnedValueRetirementFactory<FixtureMutation> for FixtureMutationRetirement {fn retire_owned_work_demand(&self,_:&FixtureMutation)->Result<u64,semio_framework_value::ValueError>{Ok(1)}
     fn retirement_birth_bytes(&self, _: &FixtureMutation) -> usize { semio_framework_value::retirement::controlled::controlled_retirement_birth_bytes::<FixtureMutation>() }
-    fn retire_owned(&self, value: FixtureMutation, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, FixtureMutation)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, FixtureMutation)> {
-        semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(value, grant).result.map(|(owner, progress)| (owner as Box<dyn ErasedSnapshotRetirement>, progress))
-    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
+    fn retire_owned(&self, value: FixtureMutation, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(semio_framework_value::OriginalRetirementFailure, FixtureMutation)> {let turn=semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(value, grant);semio_framework_value::RetainedWorkOutcome{result:turn.result.map(|(owner,progress)|(owner as Box<dyn ErasedSnapshotRetirement>,progress)).map_err(|(error,value)|(error.into(),value)),work:turn.work}}
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]

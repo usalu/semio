@@ -14,9 +14,24 @@ impl<T:RetireOwned,E:RetireOwned> ActiveResult<T,E>{
   match self{Self::Ok(v)=>demand!(v),Self::Err(v)=>demand!(v)}
  }
  fn last_turn_work(&self)->u64{match self{Self::Ok(v)=>v.last_turn_work(),Self::Err(v)=>v.last_turn_work()}}
- fn step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{match self{Self::Ok(v)=>v.step(g),Self::Err(v)=>v.step(g)}}
+ fn step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,crate::OriginalRetirementFailure>{match self{Self::Ok(v)=>v.step(g),Self::Err(v)=>v.step(g)}}
+ fn requires_original_control(&self)->bool{match self{Self::Ok(v)=>crate::ErasedSnapshotRetirement::requires_original_control(v),Self::Err(v)=>crate::ErasedSnapshotRetirement::requires_original_control(v)}}
+ fn close_step_controlled(&mut self,g:RetainedCloneGrant,control:&mut dyn crate::OriginalRetirementControl)->crate::OriginalRetirementOutcome{match self{Self::Ok(v)=>crate::ErasedSnapshotRetirement::close_step_controlled(v,g,control),Self::Err(v)=>crate::ErasedSnapshotRetirement::close_step_controlled(v,g,control)}}
+ fn close_original_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,g:RetainedCloneGrant)->crate::OriginalRetirementOutcome{match self{Self::Ok(v)=>crate::ErasedSnapshotRetirement::close_original_step(v,original,g),Self::Err(v)=>crate::ErasedSnapshotRetirement::close_original_step(v,original,g)}}
 }
 impl<T:RetireOwned,E:RetireOwned> OriginalResult<T,E>{
+ fn step_with(&mut self,g:RetainedCloneGrant,invoke:impl FnOnce(&mut ActiveResult<T,E>,RetainedCloneGrant)->crate::OriginalRetirementOutcome)->RetirementStep{
+  if self.terminal_is_empty(){return RetirementStep::Complete(0);}
+  let d=match self.demand(g.maximum_copy_bytes){Ok(d)=>d,Err(e)=>return RetirementStep::Failure(e.into(),0)};
+  if !permits(d,g){return RetirementStep::BudgetExhausted;}
+  let(step,work)=if let Some(original)=self.original.take(){
+   let active=match original{Ok(v)=>match ControlledRetirement::new(v){Ok(v)=>ActiveResult::Ok(v),Err((e,v))=>{*self.original=Some(Ok(v));return RetirementStep::Failure(e.into(),1);}},Err(v)=>match ControlledRetirement::new(v){Ok(v)=>ActiveResult::Err(v),Err((e,v))=>{*self.original=Some(Err(v));return RetirementStep::Failure(e.into(),1);}}};
+   *self.active=Some(active);(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}),1)
+  }else if self.active.as_ref().is_some_and(|active|active.terminal_is_empty()){
+   *self.active=None;(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}),1)
+  }else{let child=RetainedCloneGrant{maximum_depth:g.maximum_depth-1,..g};let Some(active)=self.active.as_mut()else{return RetirementStep::Failure(ValueError::invariant("original Result retirement lost its active cursor").into(),0)};let turn=invoke(active,child);let work=turn.work;match turn.result{Ok(step)=>(RetainedCloneStep::Progress(step.progress()),work),Err(e)=>return RetirementStep::Failure(e,work)}};
+  match admit_retained_clone_close(g,step,self.terminal_is_empty(),"original Result retirement"){Ok(step)=>RetirementStep::Progress(step.progress(),work),Err(e)=>RetirementStep::Failure(e.into(),work)}
+ }
  fn demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if self.original.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<Result<T,E>>>()+size_of::<Option<ActiveResult<T,E>>>(),depth:1,..Default::default()});}
   match self.active.as_ref(){None=>Ok(Default::default()),Some(v)if v.terminal_is_empty()=>Ok(RetirementDemand{copy_bytes:size_of::<Option<ActiveResult<T,E>>>(),depth:1,..Default::default()}),Some(v)=>v.demand(body)}
@@ -29,18 +44,10 @@ impl<T:RetireOwned,E:RetireOwned> RetireOwned for Result<T,E>{
 }
 impl<T:RetireOwned,E:RetireOwned> RetirementCursor for OriginalResult<T,E>{
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.demand(body)}
- fn close_step(&mut self,g:RetainedCloneGrant)->RetirementStep{
-  if self.terminal_is_empty(){return RetirementStep::Complete(0);}
-  let d=match self.demand(g.maximum_copy_bytes){Ok(d)=>d,Err(e)=>return RetirementStep::Failure(e,0)};
-  if !permits(d,g){return RetirementStep::BudgetExhausted;}
-  let(step,work)=if let Some(original)=self.original.take(){
-   let active=match original{Ok(v)=>match ControlledRetirement::new(v){Ok(v)=>ActiveResult::Ok(v),Err((e,v))=>{*self.original=Some(Ok(v));return RetirementStep::Failure(e,1);}},Err(v)=>match ControlledRetirement::new(v){Ok(v)=>ActiveResult::Err(v),Err((e,v))=>{*self.original=Some(Err(v));return RetirementStep::Failure(e,1);}}};
-   *self.active=Some(active);(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}),1)
-  }else if self.active.as_ref().is_some_and(|active|active.terminal_is_empty()){
-   *self.active=None;(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}),1)
-  }else{let child=RetainedCloneGrant{maximum_depth:g.maximum_depth-1,..g};let Some(active)=self.active.as_mut()else{return RetirementStep::Failure(ValueError::invariant("original Result retirement lost its active cursor"),0)};let result=active.step(child);let work=active.last_turn_work();match result{Ok(step)=>(RetainedCloneStep::Progress(step.progress()),work),Err(e)=>return RetirementStep::Failure(e,work)}};
-  match admit_retained_clone_close(g,step,self.terminal_is_empty(),"original Result retirement"){Ok(step)=>RetirementStep::Progress(step.progress(),work),Err(e)=>RetirementStep::Failure(e,work)}
- }
+ fn requires_original_control(&self)->bool{self.original.is_none()&&self.active.as_ref().is_some_and(|v|!v.terminal_is_empty()&&v.requires_original_control())}
+ fn close_step(&mut self,g:RetainedCloneGrant)->RetirementStep{self.step_with(g,|active,grant|{let result=active.step(grant);crate::RetainedWorkOutcome{result,work:active.last_turn_work()}})}
+ fn close_step_controlled(&mut self,g:RetainedCloneGrant,control:&mut dyn crate::OriginalRetirementControl)->RetirementStep{if !self.requires_original_control(){return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"result has no selected original child").into(),0)}self.step_with(g,|active,grant|active.close_step_controlled(grant,control))}
+ fn close_original_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,g:RetainedCloneGrant)->RetirementStep{if !self.requires_original_control(){return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"result has no selected original child").into(),0)}self.step_with(g,|active,grant|active.close_original_step(original,grant))}
  fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.active.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demand(0)?.copy_bytes)}
  fn next_birth_bytes(&self,body:usize)->Option<usize>{self.demand(body).ok().map(|d|d.capacity_bytes)}

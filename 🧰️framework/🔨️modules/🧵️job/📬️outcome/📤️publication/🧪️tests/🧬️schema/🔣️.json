@@ -17,7 +17,9 @@
     "originalStock",
     "originalFuel",
     "maximumSourceTurns",
-    "maximumCloseTurns"
+    "maximumCloseTurns",
+    "closeWork",
+    "closeBudgets"
   ],
   "properties": {
     "contract": {
@@ -51,7 +53,13 @@
     "sourceIdentity": {
       "const": [
         "address",
-        "extent"
+        "extent",
+        "operation",
+        "generation",
+        "payload",
+        "clockBinding",
+        "clockSource",
+        "deadline"
       ]
     },
     "metadataCopyBytes": {
@@ -100,6 +108,23 @@
     },
     "maximumSourceTurns": {
       "const": 2000
+    },
+    "closeWork": {
+      "const": {"empty": 0, "live": 1, "deniedBudget": 0}
+    },
+    "closeBudgets": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["budget", "demand", "admitted"],
+        "properties": {
+          "budget": {"type": "integer", "minimum": 0},
+          "demand": {"type": "integer", "minimum": 0},
+          "admitted": {"type": "boolean"}
+        }
+      }
     },
     "maximumCloseTurns": {
       "const": 10000

@@ -1,0 +1,45 @@
+{
+  "bytes": 8,
+  "cases": [
+    {
+      "port": "forwarded",
+      "event": "quote",
+      "expectedState": "quoteStarted",
+      "actual": null
+    },
+    {
+      "port": "scoped",
+      "event": "quote",
+      "expectedState": "quoteStarted",
+      "actual": null
+    },
+    {
+      "port": "forwarded",
+      "event": "post",
+      "expectedState": "settlementStarted",
+      "actual": 8
+    },
+    {
+      "port": "scoped",
+      "event": "post",
+      "expectedState": "settlementStarted",
+      "actual": 8
+    },
+    {
+      "port": "forwarded",
+      "event": "cancel",
+      "expectedState": "settlementStarted",
+      "actual": null
+    },
+    {
+      "port": "scoped",
+      "event": "cancel",
+      "expectedState": "settlementStarted",
+      "actual": null
+    }
+  ],
+  "partial": {
+    "requestBytes": 16,
+    "actualBytes": 8
+  }
+}

@@ -28,8 +28,33 @@ impl<T:RetireOwned+Send+Sync+'static> std::ops::Index<usize> for PersistentList<
 /// 🔗️ Cloning shares the immutable page root as one more alias; every live alias must be explicitly retired, exactly like `OrderedMap`.
 impl<T:RetireOwned+Send+Sync+'static> Clone for PersistentList<T>{fn clone(&self)->Self{Self{root:self.root.clone(),len:self.len,height:self.height}}}
 impl<T:RetireOwned+Send+Sync+'static> Default for PersistentList<T>{fn default()->Self{Self{root:None,len:0,height:0}}}
+fn cold_unique<T:crate::shared_issuance::ColdRetire>(page:&SealedShared<Page<T>>)->bool{
+ if !page.original_is_exclusive(){return false}
+ match page.get(){
+  Page::Leaf{rows,..}=>rows.iter().flatten().all(|value|value.original_is_exclusive()&&value.get().cold_exclusive()),
+  Page::Branch{children,..}=>children.iter().flatten().all(cold_unique),
+ }
+}
+fn cold_take<T:RetireOwned+Send+Sync+'static>(value:SealedShared<T>)->T{crate::shared_issuance::cold_take_exclusive(value)}
+fn cold_drain<T:crate::shared_issuance::ColdRetire>(page:SealedShared<Page<T>>){
+ match cold_take(page){
+  Page::Leaf{rows,..}=>for value in rows.into_iter().flatten(){cold_take(value).cold_release();},
+  Page::Branch{children,..}=>for child in children.into_iter().flatten(){cold_drain(child);},
+ }
+}
 fn fits(d:RetirementDemand,g:RetainedCloneGrant)->bool{g.maximum_items>0&&g.maximum_copy_bytes>=d.copy_bytes&&g.maximum_capacity_bytes>=d.capacity_bytes&&g.maximum_release_bytes>=d.release_bytes&&g.maximum_depth>=d.depth}
 impl<T:RetireOwned+Send+Sync+'static> PersistentList<T>{
+ /// ❄️ Checks all original page and row handles without changing custody.
+ pub fn cold_is_exclusive(&self)->bool where T:crate::shared_issuance::ColdRetire{self.root.as_ref().is_none_or(cold_unique)}
+ /// ♻️ Dismantles an exclusive cold tree without allocating; refusal leaves it unchanged.
+ pub fn cold_dismantle(&mut self)->bool where T:crate::shared_issuance::ColdRetire{
+  if !self.cold_is_exclusive(){return false}
+  self.cold_dismantle_prechecked();true
+ }
+ fn cold_dismantle_prechecked(&mut self) where T:crate::shared_issuance::ColdRetire{
+  if let Some(root)=self.root.take(){cold_drain(root)}
+  self.len=0;self.height=0;
+ }
  /// 📏️ Root projection duplicates one fixed original authority without inspecting or cloning rows.
  pub fn projection_demand()->RetirementDemand{RetirementDemand{depth:1,..Default::default()}}
  /// 🧷️ A genuine original list source lends an independent immutable candidate root.
@@ -130,7 +155,7 @@ impl<T:RetireOwned+Send+Sync+'static> PersistentSet<T>{
   let binding=if self.authored.is_some(){&self.authored}else{&self.original};crate::retained_clone::RetainedCloneBinding::close_demand(binding,body)
  }
  /// 🪜️ Only completely settled pages and source bindings permit terminal cursor release.
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{let mut work=0;let result=(||{use crate::retained_clone::{RetainedCloneStep,RetainedCloneBinding};if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"immutable candidate closure not started"))}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let d=self.close_demand(grant.maximum_copy_bytes)?;if !fits(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}if !self.retirement.is_empty(){let turn=self.retirement.step_granted(grant);work=turn.work;return turn.result.map(|s|RetainedCloneStep::Progress(s.progress()))}if self.page.is_some(){let turn=self.retirement.begin_granted(&mut self.page,grant);work=turn.work;return turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default())))}if self.candidate.is_some(){let turn=self.retirement.begin_granted(&mut self.candidate,grant);work=turn.work;return turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default())))}let turn=RetainedCloneBinding::close_one(if self.authored.is_some(){&mut self.authored}else{&mut self.original},grant);work=turn.work;let step=turn.result?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})})();crate::RetainedWorkOutcome{result,work}}
+ pub fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value_retirement::OriginalRetirementOutcome{let mut work=0;let result=(|| -> Result<crate::RetainedCloneStep,semio_framework_value_control_contract::OriginalRetirementFailure>{use crate::retained_clone::{RetainedCloneStep,RetainedCloneBinding};if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"immutable candidate closure not started").into())}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let d=self.close_demand(grant.maximum_copy_bytes)?;if !fits(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}if !self.retirement.is_empty(){let turn=self.retirement.step_granted(grant);work=turn.work;return turn.result.map(|s|RetainedCloneStep::Progress(s.progress()))}if self.page.is_some(){let turn=self.retirement.begin_granted(&mut self.page,grant);work=turn.work;return turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default())))}if self.candidate.is_some(){let turn=self.retirement.begin_granted(&mut self.candidate,grant);work=turn.work;return turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default())))}let turn=RetainedCloneBinding::close_one(if self.authored.is_some(){&mut self.authored}else{&mut self.original},grant);work=turn.work;let step=turn.result?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})})();crate::RetainedWorkOutcome{result,work}}
  pub fn terminal_is_empty(&self)->bool{self.page.is_none()&&self.candidate.is_none()&&self.retirement.is_empty()&&self.original.is_none()&&self.authored.is_none()}
 }
 impl<T:RetireOwned+Send+Sync+'static> Drop for PersistentSet<T>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(empty||std::thread::panicking(),"immutable candidate retains original pages and issuer bindings until funded closure");if empty{unsafe{std::mem::ManuallyDrop::drop(&mut self.page);std::mem::ManuallyDrop::drop(&mut self.candidate);}}}}

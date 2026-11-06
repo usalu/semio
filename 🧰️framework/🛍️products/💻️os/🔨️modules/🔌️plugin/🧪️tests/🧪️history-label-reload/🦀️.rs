@@ -8,57 +8,57 @@
 
 use semio_framework_diagnostic::TextError;
 use semio_framework_diagnostic::TextSpan;
-use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
-use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_disposer;
+use semio_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
+use semio_plugin_ownership::store_lifecycle::bounded_document_store_disposer;
 use semio_framework_artifact_reference::StandardId;
-use semio_framework_plugin_window_transient::built_text_to_component_tree;
-use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_one_item_preparation_factory;
+use semio_plugin_window_transient::built_text_to_component_tree;
+use semio_plugin_ownership::store_lifecycle::bounded_config_store_one_item_preparation_factory;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_emission::ActionMeta;
+use semio_plugin_decl_emission::ActionMeta;
 use semio_framework::kernel::ActorId;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_app_builder::App;
+use semio_plugin_app_builder::App;
 #[cfg(test)]
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 #[cfg(test)]
-use semio_framework_plugin_decl_emission::ArtifactMutationOutcome;
+use semio_plugin_decl_emission::ArtifactMutationOutcome;
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStore, ArtifactStoreInitializationAuthority, ConfigStore, MemberFactory, Mutation, SpaceMember};
 #[cfg(test)]
-use semio_framework_plugin_decl_views::{ArtifactView, ConfigView, DraftView, InteractionView};
-use semio_framework_ui_runtime::ComponentTree;
+use semio_plugin_decl_views::{ArtifactView, ConfigView, DraftView, InteractionView};
+use semio_ui_runtime::ComponentTree;
 use std::future::Future;
-use semio_framework_ui_locale::{Locale, Terminology};
+use semio_ui_locale::{Locale, Terminology};
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_views::NoTransientMutation;
+use semio_plugin_decl_views::NoTransientMutation;
 #[cfg(test)]
-use semio_framework_plugin_interaction::UiAssemblyResult;
+use semio_plugin_interaction::UiAssemblyResult;
 #[cfg(test)]
-use semio_framework_plugin_window_config::WindowConfigOwner;
+use semio_plugin_window_config::WindowConfigOwner;
 #[cfg(test)]
-use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
-use semio_framework_ui_contract::*;
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_label::SetLabel;
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::config::TestConfig;
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::config::mutations::TestConfigMutation;
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
-use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot;
+use semio_plugin_window_transient::window_transient::WindowTransientOwner;
+use semio_ui_contract::*;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_label::SetLabel;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::config::TestConfig;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::config::mutations::TestConfigMutation;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
+use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot;
 use serde_json::Value;
 use semio_framework_artifact_reference::schema::SubsetId;
-use semio_framework_plugin_decl_emission::Emit;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_plugin_decl_emission::Emit;
+use semio_ui_locale::LocalizedLabel;
 use semio_framework::IconName;
-use semio_framework_plugin_testing_laws::artifact_app_laws;
+use semio_plugin_testing_laws::artifact_app_laws;
 use semio_framework::ViewModel;
 use semio_framework_artifact_reference::schema::Dialect;
-use semio_framework_plugin_decl_views::NoDraft;
-use semio_framework_plugin_decl_views::NoDraftMutation;
-use semio_framework_plugin_decl_views::NoPresence;
-use semio_framework_plugin_decl_views::NoPresenceMutation;
-use semio_framework_plugin_decl_views::NoTransient;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
-use semio_framework_plugin_instance_app::VcsArtifactApp;
+use semio_plugin_decl_views::NoDraft;
+use semio_plugin_decl_views::NoDraftMutation;
+use semio_plugin_decl_views::NoPresence;
+use semio_plugin_decl_views::NoPresenceMutation;
+use semio_plugin_decl_views::NoTransient;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_instance_app::VcsArtifactApp;
 
 const HISTORY_LABEL_RELOAD_FIXTURE_JSON: &str = include_str!("../🧫️fixtures/🧫️history-label-reload/🔣️.json");
 
@@ -175,7 +175,7 @@ impl ArtifactApp for LabelReloadApp {
     }
 
     async fn render(_body_key: &str, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
-        built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("count={} label={}", doc.snapshot.count, doc.snapshot.label)))
+        built_text_to_component_tree(semio_ui_locale::Label::data(format!("count={} label={}", doc.snapshot.count, doc.snapshot.label)))
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -195,23 +195,23 @@ impl ArtifactApp for LabelReloadApp {
     }
 
     fn build_presence_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(semio_framework_plugin_decl_views::presence_retirement::no_presence_store_disposer())
+        Some(semio_plugin_decl_views::presence_retirement::no_presence_store_disposer())
     }
 
     fn build_transient_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin_decl_views::transient_retirement::no_transient_store_disposer())
+        Some(semio_plugin_decl_views::transient_retirement::no_transient_store_disposer())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin_decl_views::presence_retirement::no_presence_peer_retirement_factory())
+        Some(semio_plugin_decl_views::presence_retirement::no_presence_peer_retirement_factory())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin_decl_views::presence_retirement::no_presence_local_root_retirement_factory())
+        Some(semio_plugin_decl_views::presence_retirement::no_presence_local_root_retirement_factory())
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin_decl_views::transient_retirement::no_transient_local_root_retirement_factory())
+        Some(semio_plugin_decl_views::transient_retirement::no_transient_local_root_retirement_factory())
     }
 }
 //#endregion 🧸️LabelReloadApp
@@ -246,7 +246,7 @@ async fn edit_rows(app: &mut LabelReloadInstance) -> Vec<(String, String, String
 /// 🆕️ A fresh registered instance of the fixture app, opened by `actor`.
 #[doc(hidden)]
 pub async fn open(fixture: &Value, actor: &str) -> LabelReloadInstance {
-    let mut app = artifact_app_laws::new_registered_app::<LabelReloadApp, _>(manifest(fixture), protocol::ActorId(actor.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
+    let mut app = artifact_app_laws::new_registered_app::<LabelReloadApp, _>(manifest(fixture), protocol::ActorId(actor.into()), semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
     assert_eq!(app.stores.store.local_actor_id(), &protocol::ActorId(actor.into()));
     app
 }
@@ -257,28 +257,28 @@ pub async fn open(fixture: &Value, actor: &str) -> LabelReloadInstance {
 /// and the reloaded edits keep their verbs, declared by this app or not.
 #[semio_framework_async_macros::async_test]
 async fn history_labels_survive_a_text_and_a_pack_reload_in_every_locale() {
-    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let fixture = fixture();
     let cases = fixture["cases"].as_array().expect("cases");
     let mut live = open(&fixture, "author").await;
     for case in cases {
         let (id, verb) = (text(&case["id"]), text(&case["verb"]));
         let artifact_mutations = authored(&command(case));
-        let meta = ActionMeta { view_state: Some(semio_framework_plugin_testing_laws::receive_view_fixture(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), semio_framework_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta("author") };
-        live.dispatch_emit(verb, Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::mutations(artifact_mutations), &meta, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{id}: {fault:?}"));
+        let meta = ActionMeta { view_state: Some(semio_plugin_testing_laws::receive_view_fixture(ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), semio_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta("author") };
+        live.dispatch_emit(verb, Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::mutations(artifact_mutations), &meta, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{id}: {fault:?}"));
     }
     let expected: Vec<(String, String, String)> = cases.iter().map(|case| (text(&case["verb"]).to_string(), text(&case["expected"]["en"]).to_string(), text(&case["expected"]["de"]).to_string())).collect();
     let verbs: Vec<Option<String>> = cases.iter().map(|case| Some(text(&case["verb"]).to_string())).collect();
     let mut reloaded = open(&fixture, "author").await;
-    artifact_app_laws::load_document_text(&mut reloaded, &live.document_text().await.expect("document text"), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("text reload");
+    artifact_app_laws::load_document_text(&mut reloaded, &live.document_text().await.expect("document text"), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("text reload");
     let mut repacked = open(&fixture, "reader").await;
-    artifact_app_laws::load_document(&mut repacked, &live.document_pack().await.expect("document pack"), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("pack reload");
+    artifact_app_laws::load_document(&mut repacked, &live.document_pack().await.expect("document pack"), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("pack reload");
     for (who, app) in [("live", &mut live), ("text reload", &mut reloaded), ("pack reload", &mut repacked)] {
         assert_eq!(edit_rows(app).await, expected, "{who}: every row keeps its verb and its English and German label");
         assert_eq!(app.stores.store.envelope().vcs.edits.iter().map(|edit| edit.verb.clone()).collect::<Vec<_>>(), verbs, "{who}: every edit carries the verb that authored it");
     }
     for app in [&mut live, &mut reloaded, &mut repacked] {
-        artifact_app_laws::close_registered_fixture_app(app, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");
+        artifact_app_laws::close_registered_fixture_app(app, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");
     }
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
 }

@@ -17,8 +17,8 @@ where
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "solve", kind: "set-solve", record: "SetSolve" };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Set Solve", "Lösung setzen")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Set Solve", "Lösung setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["payloadJson".into()]
@@ -44,4 +44,4 @@ where
 }
 }
 
-protocol::retained_set_record!(SetSolve => Grid3dTransient, Grid3dTransientDiff, Grid3dTransientMutation { authored: SetSolve = |leaf| leaf, patch: |value: SetSolve| Grid3dTransientDiff { payload_json: Some(value.payload_json) }, inverse: |root: Grid3dTransient| SetSolve { payload_json: root.payload_json }.into() });
+protocol::retained_set_record!(SetSolve => Grid3dTransient, Grid3dTransientDiff, Grid3dTransientMutation { authored: SetSolve = |leaf| leaf, patch: |value: SetSolve| (Grid3dTransientDiff { payload_json: Some(value.payload_json) },1), patch_work: |_: &SetSolve| Ok(1), inverse: |root: Grid3dTransient| (SetSolve { payload_json: root.payload_json }.into(),2), inverse_work: |_: &Grid3dTransient| Ok(2) });

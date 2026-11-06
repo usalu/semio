@@ -44,9 +44,9 @@ fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::Re
 }
 
 /// 🚫️ A refused ephemeral preparation either raises its fault or answers `PreparationRefused` with the fault retained on the publication.
-fn ephemeral_refusal(advance: Result<ArtifactStoreOneItemAdvance, String>, retained_fault: Option<&str>) -> String {
+fn ephemeral_refusal(advance: Result<ArtifactStoreOneItemAdvance, ValueError>, retained_fault: Option<&str>) -> String {
     match advance {
-        Err(error) => error,
+        Err(error) => error.into_message(),
         Ok(ArtifactStoreOneItemAdvance::PreparationRefused) => retained_fault.expect("a refused ephemeral preparation retains its fault").to_string(),
         Ok(other) => panic!("a faulting ephemeral preparation advanced instead of refusing: {other:?}"),
     }
@@ -80,7 +80,7 @@ fn ephemeral_transfer_preparation_faults_close_presence_and_transient_owners() {
         for publication in [&mut presence_publication, &mut transient_publication] {
             assert_eq!(publication.fault(), Some(presence_error.as_str()));
             assert_eq!(format!("{:?}", publication.phase()), fixture["phase"].as_str().unwrap());
-            assert_eq!(publication.close_step(ArtifactStoreOneItemGrant { maximum_items: 0,maximum_copy_bytes: 4096,maximum_capacity_bytes: 4096,maximum_release_bytes: 4096,maximum_depth: 64 }).unwrap().progress(), RetainedCloneProgress::default());
+            assert_eq!(publication.close_step(ArtifactStoreOneItemGrant { maximum_items: 0,maximum_copy_bytes: 4096,maximum_capacity_bytes: 4096,maximum_release_bytes: 4096,maximum_depth: 64 }).result.unwrap().progress(), RetainedCloneProgress::default());
             close_ephemeral_publication(publication);
             assert!(publication.terminal_is_empty());
         }
@@ -129,7 +129,7 @@ let grant = ephemeral_test_close_grant();
     assert!(published.completed_items > 0, "a published ephemeral gesture reports the work it actually did, not zero");
     assert!(publication.acknowledge());
     for _ in 0..2048 {
-        let step = publication.close_step(ephemeral_test_close_grant()).expect("ephemeral close advances");
+        let step = publication.close_step(ephemeral_test_close_grant()).result.expect("ephemeral close advances");
         check(publication.progress(), &mut seen, "close");
         if matches!(step, RetainedCloneStep::Complete(_)) {
             break;
@@ -160,7 +160,7 @@ let grant = ephemeral_test_close_grant();
     assert!(std::ptr::eq(presence_root.as_ref(), presence.local()));
     assert!(presence_publication.acknowledge());
     assert!(old_presence_root.upgrade().is_some(), "displaced presence root remains retained before bounded close");
-    let _ = presence_publication.close_step(ephemeral_test_close_grant()).expect("presence close advances one owner");
+    let _ = presence_publication.close_step(ephemeral_test_close_grant()).result.expect("presence close advances one owner");
     assert!(old_presence_root.upgrade().is_some(), "first close unit cannot destroy the displaced root");
     close_ephemeral_publication(&mut presence_publication);
     for _ in 0..2048 {
@@ -194,7 +194,7 @@ let grant = ephemeral_test_close_grant();
     assert!(Arc::ptr_eq(&transient_root, &transient.current_root()));
     assert!(transient_publication.acknowledge());
     assert!(old_transient_root.upgrade().is_some(), "displaced transient root remains retained before bounded close");
-    let _ = transient_publication.close_step(ephemeral_test_close_grant()).expect("transient close advances one owner");
+    let _ = transient_publication.close_step(ephemeral_test_close_grant()).result.expect("transient close advances one owner");
     assert!(old_transient_root.upgrade().is_some(), "first close unit cannot destroy the displaced transient root");
     close_ephemeral_publication(&mut transient_publication);
     assert!(old_transient_root.upgrade().is_none(), "bounded retirement releases the displaced transient root");

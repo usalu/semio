@@ -1,0 +1,75 @@
+{
+  "schema": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "actual": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "forwardedRefused": {
+          "type": "boolean"
+        },
+        "scopedRefused": {
+          "type": "boolean"
+        },
+        "submitted": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "refusals": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "operationRefused": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "actual",
+        "forwardedRefused",
+        "scopedRefused",
+        "submitted",
+        "refusals",
+        "operationRefused"
+      ]
+    }
+  },
+  "data": [
+    {
+      "actual": 16,
+      "forwardedRefused": true,
+      "scopedRefused": true,
+      "submitted": 32,
+      "refusals": 2,
+      "operationRefused": false
+    },
+    {
+      "actual": 0,
+      "forwardedRefused": false,
+      "scopedRefused": false,
+      "submitted": 0,
+      "refusals": 0,
+      "operationRefused": false
+    },
+    {
+      "actual": 3,
+      "forwardedRefused": false,
+      "scopedRefused": true,
+      "submitted": 6,
+      "refusals": 1,
+      "operationRefused": false
+    },
+    {
+      "actual": 16,
+      "forwardedRefused": true,
+      "scopedRefused": true,
+      "operationRefused": true,
+      "submitted": 32,
+      "refusals": 3
+    }
+  ]
+}

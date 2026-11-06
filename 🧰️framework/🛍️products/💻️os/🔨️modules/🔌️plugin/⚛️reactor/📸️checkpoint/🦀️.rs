@@ -76,7 +76,7 @@ impl CheckpointPack {
 pub async fn checkpoint<PA: semio_plugin_reactor_app::PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, instance_ids: &[(u32, String)], timers: Vec<u64>, pending_requests: Vec<u64>, task_restarts: Vec<TaskRestart>) -> Result<Vec<u8>, Fault> {
     let mut instances = Vec::with_capacity(instance_ids.len());
     for (id, app_id) in instance_ids {
-        let files = semio_plugin_runtime_ops::ops_document::plugin_document_pack(runtime, *id).await?;
+        let files = semio_framework_plugin_runtime_ops::ops_document::plugin_document_pack(runtime, *id).await?;
         let document_pack = store::os_store::serialization::encode_document_pack_bytes(&files.pack, &files.spr).await;
         let actor = semio_plugin_runtime_instances::inst_wire_frames::instance_actor(runtime, *id).await?;
         instances.push(InstanceCheckpoint { id: *id, app_id: app_id.clone(), actor, document_pack });
@@ -136,7 +136,7 @@ pub async fn restore<PA: semio_plugin_reactor_app::PluginApp>(runtime: &semio_pl
         if !instance.document_pack.is_empty() {
             let (parent_pack, parent_spr) =
                 store::os_store::serialization::decode_document_pack_bytes(&instance.document_pack).await.map_err(|error| Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.checkpoint.decode-document"), format!("{error:?}")))?;
-            semio_plugin_runtime_ops::ops_document::plugin_begin_document_archive_load(runtime, id, RESTORE_DOCUMENT_LOAD_OPERATION, store::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).await?;
+            semio_framework_plugin_runtime_ops::ops_document::plugin_begin_document_archive_load(runtime, id, RESTORE_DOCUMENT_LOAD_OPERATION, store::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).await?;
             document_loads.push(id);
         }
     }

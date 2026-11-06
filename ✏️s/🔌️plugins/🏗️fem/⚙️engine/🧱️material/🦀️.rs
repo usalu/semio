@@ -40,6 +40,10 @@ macro_rules! native_material_row{
    fn record_key(&self,index:usize)->Result<semio_framework_value_native_owned::native_decoding::owned::NativeRecordKey<'_>,semio_framework_value::ValueError>{if index<2+$count{Ok(semio_framework_value_native_owned::native_decoding::owned::NativeRecordKey::Ordinal(index as u16))}else{Err($crate::invalid())}}
    fn record_child(&self,index:usize)->Result<&dyn semio_framework_value_native_owned::native_decoding::owned::tree::NativeValueSource,semio_framework_value::ValueError>{match index{0=>Ok(&self.id),1=>Ok(&self.name),$($ordinal=>Ok($crate::scalar(&self.$field)),)+_=>Err($crate::invalid())}}
   }
+  impl semio_framework_value::shared_issuance::ColdRetire for $row{
+   fn cold_exclusive(&self)->bool{self.id.original_is_exclusive()&&self.name.original_is_exclusive()}
+   fn cold_release(self){drop(semio_framework_value::shared_issuance::cold_take_exclusive(self.id));drop(semio_framework_value::shared_issuance::cold_take_exclusive(self.name))}
+  }
   impl $row{
    /// 🛡️ A received row is usable only after its scoped identity and elastic properties were validated by a separate funded turn.
    pub fn validate(&self)->Result<(),semio_framework_value::ValueError>{let property=|name:&str|[$((stringify!($field),self.$field)),+].into_iter().find(|(field,_)|*field==name).map(|(_,value)|value);$crate::validate(self.id.as_str(),property("e").ok_or_else($crate::invalid)?,property("nu").ok_or_else($crate::invalid)?,property("rho").ok_or_else($crate::invalid)?,property("g"))}

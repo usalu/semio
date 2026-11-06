@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Original turn work refusal custody",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "primary",
+    "quote",
+    "allocation",
+    "receipt",
+    "context",
+    "work",
+    "secondWork",
+    "effectItems",
+    "expectedAdoptions"
+  ],
+  "properties": {
+    "primary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "quote": {
+      "type": "string",
+      "minLength": 1
+    },
+    "allocation": {
+      "type": "string",
+      "minLength": 1
+    },
+    "receipt": {
+      "type": "string",
+      "minLength": 1
+    },
+    "context": {
+      "type": "string",
+      "minLength": 1
+    },
+    "work": {
+      "type": "string",
+      "minLength": 1
+    },
+    "secondWork": {
+      "type": "string",
+      "minLength": 1
+    },
+    "effectItems": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "expectedAdoptions": {
+      "const": 1
+    }
+  }
+}

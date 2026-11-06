@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Retained clone selected work law",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "phase",
+          "local",
+          "child",
+          "quoted",
+          "available",
+          "performed",
+          "effects"
+        ],
+        "properties": {
+          "phase": {
+            "enum": [
+              "advance",
+              "take",
+              "close"
+            ]
+          },
+          "local": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "child": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "quoted": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "available": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "performed": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "effects": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

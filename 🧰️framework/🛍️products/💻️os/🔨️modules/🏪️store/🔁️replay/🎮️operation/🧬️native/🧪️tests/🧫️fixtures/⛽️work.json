@@ -37,7 +37,7 @@
   "closeUnits": 11,
   "declaredWork": {
     "projectionBirth": 1,
-    "retainedCloneTake": 1,
+    "retainedCloneTake": 0,
     "pagedProjectionTake": 2,
     "editBirth": 1
   }

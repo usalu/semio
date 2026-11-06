@@ -6,7 +6,7 @@ use semio_framework_value::OwnedValueRetirementFactory;
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
 
 fn grant(owner:&dyn ErasedSnapshotRetirement)->RetainedCloneGrant{let copy=owner.next_copy_byte_demand().unwrap();RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()}}
-fn observe(work:impl FnOnce()->Result<RetainedCloneStep,ValueError>,grant:RetainedCloneGrant)->RetainedCloneProgress{let(result,heap)=observe_heap_allocations_on_this_thread(work);let progress=result.unwrap().progress();assert!(progress.fits(grant));assert!(progress.copied_bytes+progress.retained_capacity_bytes<=4096);assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));progress}
+fn observe<E:std::fmt::Debug>(work:impl FnOnce()->Result<RetainedCloneStep,E>,grant:RetainedCloneGrant)->RetainedCloneProgress{let(result,heap)=observe_heap_allocations_on_this_thread(work);let progress=result.unwrap().progress();assert!(progress.fits(grant));assert!(progress.copied_bytes+progress.retained_capacity_bytes<=4096);assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));progress}
 
 #[test]
 fn cooperative_replay_capacity_release_obeys_the_neutral_law(){
@@ -44,8 +44,8 @@ fn cooperative_replay_pending_native_lanes_birth_and_release_each_actual_child()
         let(mut owner,heap)=observe_heap_allocations_on_this_thread(||ReplayRetirement::<u8,u8>::new(factory));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
         if vector["snapshot"].as_bool().unwrap(){owner.stage_snapshot(Arc::new(7));}if vector["inverse"].as_bool().unwrap(){owner.stage_mutations(PagedList::try_from_iter(0u8..64).unwrap());}
         for turn in 0..10000{if owner.terminal_is_empty(){break;}let((copy,capacity,release,depth),heap)=observe_heap_allocations_on_this_thread(||{let copy=owner.next_copy_byte_demand().unwrap();(copy,owner.next_capacity_byte_demand(copy).unwrap(),owner.next_release_byte_demand().unwrap(),owner.next_depth_demand().unwrap())});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let current=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth};assert!(copy+capacity<=4096);
-            for short in [RetainedCloneGrant::default(),RetainedCloneGrant{maximum_depth:depth.saturating_sub(1),..current},RetainedCloneGrant{maximum_copy_bytes:copy.saturating_sub(1),..current},RetainedCloneGrant{maximum_capacity_bytes:capacity.saturating_sub(1),..current},RetainedCloneGrant{maximum_release_bytes:release.saturating_sub(1),..current}]{if short!=current{assert_eq!(observe(||owner.close_step(short),short),Default::default());}}
-            observe(||owner.close_step(current),current);assert!(turn<9999);
+            for short in [RetainedCloneGrant::default(),RetainedCloneGrant{maximum_depth:depth.saturating_sub(1),..current},RetainedCloneGrant{maximum_copy_bytes:copy.saturating_sub(1),..current},RetainedCloneGrant{maximum_capacity_bytes:capacity.saturating_sub(1),..current},RetainedCloneGrant{maximum_release_bytes:release.saturating_sub(1),..current}]{if short!=current{assert_eq!(observe(||owner.close_step(short).result,short),Default::default());}}
+            observe(||owner.close_step(current).result,current);assert!(turn<9999);
         }
         assert!(owner.terminal_is_empty());let(_,heap)=observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     }

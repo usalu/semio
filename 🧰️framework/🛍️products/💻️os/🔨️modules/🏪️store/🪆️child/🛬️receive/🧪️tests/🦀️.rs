@@ -5,7 +5,7 @@ use semio_framework_value::{DslValue,retained_clone::RetainedCloneSource};
 use semio_framework_value_retirement::retirement::controlled::ControlledRetirement;
 
 fn stock()->RetainedCloneGrant { RetainedCloneGrant { maximum_items:100000,maximum_copy_bytes:64<<20,maximum_capacity_bytes:64<<20,maximum_release_bytes:64<<20,maximum_depth:128 } }
-fn native_failure(primary:OriginalReceivingPrimary,receipt_refusal:Option<ValueError>)->OriginalTurnFailure { OriginalTurnFailure { effects:primary.retained_progress(),primary:OriginalTurnPrimary::Receiving(primary),receipt_refusal,context_refusal:None } }
+fn native_failure(primary:OriginalReceivingPrimary,receipt_refusal:Option<ValueError>)->OriginalTurnFailure { OriginalTurnFailure { effects:primary.retained_progress(),primary:OriginalTurnPrimary::Receiving(primary),receipt_refusal,context_refusal:None ,work_refusal:None} }
 fn receive(cx:&mut StepContext<'_>,run:impl FnOnce(&mut NativeDecodeControl<'_>,RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,OriginalReceivingPrimary>)->Result<RetainedCloneProgress,OriginalTurnFailure> {
  let grant=cx.retained_grant();let mut work=0;
  let result=cx.with_native_receiving::<_,OriginalReceivingPrimary>(|control|{let turn=run(control,grant);work=turn.work;turn.result});

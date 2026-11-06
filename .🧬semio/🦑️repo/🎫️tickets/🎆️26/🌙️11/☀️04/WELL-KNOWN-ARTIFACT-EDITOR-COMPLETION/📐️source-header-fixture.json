@@ -1,0 +1,23 @@
+[
+  {
+    "name": "existing insufficient copy grant",
+    "header": 24,
+    "copyGrant": 2,
+    "expectedBorn": false,
+    "expectedCopy": 0
+  },
+  {
+    "name": "separately funded exact header",
+    "header": 24,
+    "copyGrant": 24,
+    "expectedBorn": true,
+    "expectedCopy": 24
+  },
+  {
+    "name": "zero capacity still has a header",
+    "header": 8,
+    "copyGrant": 8,
+    "expectedBorn": true,
+    "expectedCopy": 8
+  }
+]

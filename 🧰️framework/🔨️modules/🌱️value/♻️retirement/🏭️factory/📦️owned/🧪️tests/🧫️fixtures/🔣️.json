@@ -30,5 +30,13 @@
   "retainOriginalOnProviderRefusal": true,
   "separateChildFrameRelease": true,
   "releaseOriginalIssuer": true,
-  "supportsSendOnlyPayload": true
+  "supportsSendOnlyPayload": true,
+  "originalAdmissionWork": {
+    "allocation": 1,
+    "transfer": 1,
+    "cloneFactory": 1,
+    "denied": 0,
+    "allocationRefusal": 1,
+    "success": 3
+  }
 }

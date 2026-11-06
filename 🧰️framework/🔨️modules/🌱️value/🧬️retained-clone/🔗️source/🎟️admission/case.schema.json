@@ -11,6 +11,7 @@
     "allocationPhases",
     "deniedAxes",
     "cancelCuts",
+    "allocationMarker",
     "nullWork",
     "deniedWork",
     "cachedWork",
@@ -70,8 +71,11 @@
         4
       ]
     },
+    "allocationMarker": {
+      "const": {"allocated":"heapRequestedBytes","failed":0,"denied":null,"nonallocating":null}
+    },
     "nullWork": {
-      "const": 1
+      "const": {"owner":2,"payload":1,"lease":2}
     },
     "deniedWork": {
       "const": 0

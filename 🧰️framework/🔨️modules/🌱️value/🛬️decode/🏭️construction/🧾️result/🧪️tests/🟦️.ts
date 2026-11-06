@@ -17,3 +17,5 @@ test("typed native construction preserves output and simultaneous original cause
   expect(refused).toBe(row.receipt?receipt:undefined);
  }}finally{db.close()}
 });
+
+test("quote, allocation post and construction receipt are distinct causes",()=>{const db=new Database(":memory:");try{expect(db.query("select ? <> ? and ? <> ? and ? <> ? distinctCauses").get(fixture.composite.quote,fixture.composite.allocation,fixture.composite.quote,fixture.composite.receipt,fixture.composite.allocation,fixture.composite.receipt)).toEqual({distinctCauses:1})}finally{db.close()}});

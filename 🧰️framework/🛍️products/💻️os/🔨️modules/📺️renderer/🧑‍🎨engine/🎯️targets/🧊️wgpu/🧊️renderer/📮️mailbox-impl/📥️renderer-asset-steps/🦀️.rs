@@ -225,7 +225,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
             return Ok(self.asset_decode_deferred_turn());
         }
         let session = self.pump_asset_decode_session_step(false, cx)?;
-        let kind = session.unwrap_or_else(|| if retire_cancelled_renderer_asset_step() { RendererAssetDecodeTurnKind::Pending } else { self.pump_renderer_asset_decode_step() });
+        let kind = match session{Some(kind)=>kind,None if retire_cancelled_renderer_asset_step()=>RendererAssetDecodeTurnKind::Pending,None=>self.pump_renderer_asset_decode_step(cx)?};
         #[cfg(not(target_arch = "wasm32"))]
         if session.is_none() && !matches!(kind, RendererAssetDecodeTurnKind::Idle | RendererAssetDecodeTurnKind::Fault) {
             if let Ok(wake) = self.0.waker.try_lock() {

@@ -26,7 +26,7 @@ while True:
     if job is None:
         break
     label = job["label"]
-    command = ["repo", "cargo", "--store=shared", "--configuration=prototype", "--", *job["args"]]
+    command = ["repo", "cargo", "--store=" + job.get("store", "shared"), "--configuration=prototype", "--", *job["args"]]
     print("[DEBUG] starting " + label, flush=True)
     with (generated / ("[DEBUG]repair-" + label + ".log")).open("w") as log:
         log.write("[DEBUG] cwd=" + job["cwd"] + "\n[DEBUG] argv=" + repr(command) + "\n")

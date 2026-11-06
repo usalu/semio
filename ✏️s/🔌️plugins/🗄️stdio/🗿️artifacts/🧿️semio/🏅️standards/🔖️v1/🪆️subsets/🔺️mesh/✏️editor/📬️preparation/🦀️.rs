@@ -180,10 +180,10 @@ mod tests {
     }
 
 
-    type Fixture=semio_framework_os_store_one_item::testkit::PagedEditFixture<SemioMeshSnapshot,SemioMeshMutation,MeshVertexEdit>;
+    type Fixture=semio_os_store_one_item::testkit::PagedEditFixture<SemioMeshSnapshot,SemioMeshMutation,MeshVertexEdit>;
     fn close_grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:16_777_216,maximum_release_bytes:16_777_216,maximum_depth:4096}}
     fn setup(post:SemioMeshSnapshot,mutation:SemioMeshMutation)->Fixture{
-        use semio_framework_os_store_one_item::testkit::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation};
+        use semio_os_store_one_item::testkit::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation};
         let before=semio_framework_value::testing::admit_owned_source(post.clone(),()).0;
         let mutation=semio_framework_value::testing::admit_owned_source(mutation,()).0;
         let caller=OriginalJobFixtureCaller::admit(OperationId(44791),Generation(8),RetainedCloneGrant{maximum_items:1<<20,maximum_copy_bytes:16_777_216,maximum_capacity_bytes:16_777_216,maximum_release_bytes:16_777_216,maximum_depth:4096},||Some(1),u64::MAX,1<<20);

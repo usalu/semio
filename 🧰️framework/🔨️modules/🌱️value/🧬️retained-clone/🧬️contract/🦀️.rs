@@ -83,8 +83,8 @@ pub fn nested_retained_clone_grant(grant:RetainedCloneGrant)->Result<RetainedClo
 }
 
 /// 🌳️ Preserves the exact admitted original action across its enclosing clone frame.
-pub fn nested_retained_clone_demands<T:RetainedClone>(child:&impl RetainedCloneCursor<T>,source:RetainedCloneRef<'_,T>,maximum_copy_bytes:usize)->Result<RetirementDemand,ValueError> {
-    let mut demand=child.advance_demands(source,maximum_copy_bytes)?;
+pub fn nested_retained_clone_demands<T:RetainedClone>(child:&impl RetainedCloneCursor<T>,source:RetainedCloneRef<'_,T>,maximum_copy_bytes:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError> {
+    let mut demand=child.advance_demands(source,maximum_copy_bytes,maximum_work_units)?;
     demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"nested clone depth overflow"))?;
     Ok(demand)
 }

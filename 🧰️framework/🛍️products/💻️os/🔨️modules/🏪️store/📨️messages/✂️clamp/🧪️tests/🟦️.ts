@@ -94,3 +94,5 @@ test("📏️ settlement copy1/7 keeps whole physical release4096 authority", ()
   expect(state).toEqual({copied:extent,allocation:0});
  }
 });
+
+test("settlement close-start funds each retained cursor flag",()=>{const {Database}=require("bun:sqlite"),db=new Database(":memory:"),start=law.settlement.closeStart;try{db.exec("CREATE TABLE stages(ordinal INTEGER PRIMARY KEY,action TEXT,work INTEGER)");start.actions.forEach((action:string,index:number)=>db.query("INSERT INTO stages VALUES(?,?,?)").run(index,action,start.selected));expect(db.query("SELECT action FROM stages ORDER BY ordinal").all()).toEqual(start.actions.map((action:string)=>({action})));expect((db.query("SELECT sum(work) AS n FROM stages").get() as {n:number}).n).toBe(start.actions.length);expect(start.denied).toBe(0)}finally{db.close()}});

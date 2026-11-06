@@ -1,3 +1,4 @@
+import{laneTargetNamespaceV1}from"../../../🟦️.ts";
 /** 📤️ Contract: a lane compile loses no provenance when its lane is released, and a recorded compiler origin is judged by what it IS (the store's shared directories or one of its own lanes), not by string equality with the shared directory. The two pure rules (`planRetentionV1`, `compilerOriginOwnedV1`) are written twice, in the production module and in the independent Python oracle `./🐍️.py`, and both agree with the language-agnostic corpus `./🔣️.json` and with a third-party-library check (`lodash`) on 500 seeded cases.
  * @see ../../🟦️.ts */
 import {expect,test} from "bun:test";
@@ -19,7 +20,7 @@ const rules=UNIT_CACHE_POLICY_V1.retention;
 test("the corpus is closed by its schema and speaks the authored policy",()=>{
  const ajv=new Ajv({strict:false});
  expect(ajv.validate(corpusSchema,corpus),JSON.stringify(ajv.errors)).toBe(true);
- expect(corpus.policy).toEqual({ledgerPattern:rules.ledgerPattern,maximumFiles:rules.maximumFiles,maximumFileBytes:rules.maximumFileBytes,layout:{lanes:UNIT_CACHE_POLICY_V1.layout.lanes,target:UNIT_CACHE_POLICY_V1.layout.target}});
+ expect(corpus.policy).toEqual({ledgerPattern:rules.ledgerPattern,maximumFiles:rules.maximumFiles,maximumFileBytes:rules.maximumFileBytes,layout:{lanes:UNIT_CACHE_POLICY_V1.layout.lanes,target:UNIT_CACHE_POLICY_V1.layout.target,targetNamespace:laneTargetNamespaceV1({version:UNIT_CACHE_POLICY_V1.layout.targetIdentityVersion,build:".",target:UNIT_CACHE_POLICY_V1.layout.target})}});
  for(const mutate of [(d:any)=>{d.extra=1;},(d:any)=>{d.version=2;},(d:any)=>{d.plan[0].kind="ledger";},(d:any)=>{d.plan[0].lane[0].sha256="xyz";},(d:any)=>{d.plan[0].expect[0].action="delete";},(d:any)=>{d.origin[0].origin.buildDirectory="relative/b";},(d:any)=>{delete d.policy.layout.lanes;},(d:any)=>{d.origin[0].expect="yes";}]){
   const copy=JSON.parse(JSON.stringify(corpus));mutate(copy);expect(ajv.validate(corpusSchema,copy),JSON.stringify(copy).slice(0,80)).toBe(false);
  }
@@ -73,7 +74,7 @@ test("on 500 seeded cases production equals the oracle, equals a lodash set comp
 
 test("on 400 seeded origins production equals the oracle and the lane identifier alone decides",()=>{
  if(!posix)return;
- const next=random(7),ids=["ab12","a","abcdefghijkl","abcdefghijklm","AB12","a-b","", ".."],tails=["t","b","t/x","t/0123456789abcdef","./t","../t","v","m","c"];
+ const namespace=corpus.policy.layout.targetNamespace,next=random(7),ids=["ab12","a","abcdefghijkl","abcdefghijklm","AB12","a-b","", ".."],tails=[namespace,"b",namespace+"/x",namespace+"/0123456789abcdef","./"+namespace,"../"+namespace,"v","m","c"];
  const cases=Array.from({length:400},(_,index)=>{
   const id=ids[Math.floor(next()*ids.length)]!,build=["/s/u/l/"+id,"/s/u/l/"+id+"/b","/s/u/lx/"+id,"/s/m/b/prototype"][Math.floor(next()*4)]!,target=build+"/"+tails[Math.floor(next()*tails.length)]!;
   return{id:"seed "+index,cacheRoot:"/s/u",shared:{build:"/s/m/b/prototype",target:"/s/m/t/prototype"},origin:{buildDirectory:build,targetDirectory:next()<0.1?"/s/m/t/prototype":target},expect:false};

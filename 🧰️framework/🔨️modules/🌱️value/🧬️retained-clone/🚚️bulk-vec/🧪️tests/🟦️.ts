@@ -92,22 +92,30 @@ test("logical clone bodies remain independent from admitted physical headers",()
   }
  }finally{db.close();}
  const source=readSourceFamilySource(new URL("../../🧬️contract/",import.meta.url));
- expect(source).toContain("source: RetainedCloneRef<'_, T>, body: usize, grant: RetainedCloneGrant");
+ expect(source).toContain("source: RetainedCloneRef<'_, T>, body: usize, maximum_work_units:u64, grant: RetainedCloneGrant");
  expect(source).not.toContain("self.advance_demands(source,grant.maximum_copy_bytes)");
- expect(source).toContain("let demand = self.advance_demands(source,body)?;");
+ expect(source).toContain("self.advance_demands(source,body,maximum_work_units)?;");
  expect(source).toContain("remaining.min(demand.copy_bytes)");
  expect(source).toContain("size_of::<[T;N]>()<=body");
  expect(source).toContain("if T::BITWISE && self.index==0");
- expect(source).toContain("copy_bytes:if self.output.is_none(){size_of::<Vec<T>>()}else{0}");
+ expect(source).toContain("maximum_work_units:u64");
  const field=readFileSync(new URL("../../📋️field/🦀️.rs",import.meta.url),"utf8");expect(field).toContain("child.advance(source,body,");
- const derive=readFileSync(new URL("../../../✨️derive/🧬️retained-clone/🦀️.rs",import.meta.url),"utf8");expect(derive).toContain("advance_demands(self,source,body)");
+ const derive=readFileSync(new URL("../../../✨️derive/🧬️retained-clone/🦀️.rs",import.meta.url),"utf8");expect(derive).toContain("advance_demands(self,source,body,maximum_work_units)");
 });
 
 
 test("production clone wrappers require the original body through quoted child loans",()=>{
  const owner=(name:string)=>readFileSync(new URL("../../../../../../"+name,import.meta.url),"utf8");
  const projection=owner("🧰️framework/🔨️modules/🌱️value/📽️projection/🦀️.rs");expect(projection).toContain("body:usize,grant:RetainedCloneGrant");
- const field=owner("🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🦀️.rs");expect(field).toContain("self.cursor.advance(source, body, grant)");expect(field).not.toContain("self.demand(source, grant.maximum_copy_bytes)");
+ const field=owner("🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🦀️.rs");expect(field).toContain("self.cursor.advance(source,body,maximum_work_units,grant)");expect(field).not.toContain("self.demand(source, grant.maximum_copy_bytes)");
  const semantic=owner("🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/🦀️.rs");expect(semantic).toContain("self.demands(body)");expect(semantic).not.toContain("self.demands(grant.maximum_copy_bytes)");
  const drivers=owner("🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/🔌️drivers/🦀️.rs");expect(drivers).toContain("advance(s,body,g)");
+});
+
+
+test("bulk selected work agrees with SQLite",()=>{
+ const db=new Database(":memory:");try{
+  const q=db.query("SELECT MIN(?1, CASE WHEN ?2=0 THEN ?5 ELSE MAX(1,MIN(?3,?4)/?2) END, ?6/MAX(1,?2)) AS elements");
+  for(const row of law.workCases){const oracle=q.get(row.remaining,row.width,row.body,law.pageBytes,law.maximumZeroSizedElementsPerTurn,row.work) as {elements:number};expect(oracle.elements).toBe(row.elements);expect(oracle.elements*Math.max(1,row.width)).toBeLessThanOrEqual(row.work);}
+ }finally{db.close();}
 });

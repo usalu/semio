@@ -1,4 +1,5 @@
 import { decodeShellAppCommand } from "@semio-tech/framework/mcp/channel";
+import { fileURLToPath } from "node:url";
 import { Database } from "bun:sqlite";
 import { test, expect } from "bun:test";
 import Ajv from "ajv/dist/2020";
@@ -46,3 +47,5 @@ test("private command codec preserves genuine locale and terminology without inv
  const absent=decodeShellAppCommand(new TextEncoder().encode(JSON.stringify({version:1,kind:"pureCommand",capabilityId:"test.command",input:{}})));
  expect("context" in absent).toBe(false);
 });
+
+test("bundled schema retains the original neutral document",async()=>{const result=await Bun.build({entrypoints:[fileURLToPath(new URL("../../🧬️schema/🟦️.ts",import.meta.url))],target:"bun",write:false});expect(result.success).toBe(true);const source=await result.outputs[0]!.text(),bundled=await import("data:text/javascript;base64,"+Buffer.from(source).toString("base64"));expect(bundled.OS_MCP_SCHEMA_DOCUMENT).toEqual(OS_MCP_SCHEMA_DOCUMENT);expect(new Ajv({strict:false}).compile(bundled.OS_MCP_SCHEMA_DOCUMENT.$defs.ContextResolveInput)({locale:"en"})).toBe(true);});

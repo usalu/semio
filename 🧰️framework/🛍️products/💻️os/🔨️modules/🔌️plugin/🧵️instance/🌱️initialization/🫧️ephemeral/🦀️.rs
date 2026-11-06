@@ -1,13 +1,13 @@
 //! 🫧️ Original ephemeral lane sources retain their exact authored values, registry pages and concrete lifecycle factories.
-use semio_framework_os_kernel as store;
-use semio_framework_plugin_decl_views::{NoPresence,NoPresenceMutation,NoTransient,NoTransientMutation,presence_retirement};
-use semio_framework_plugin_ownership::{store_lifecycle::ArtifactOwnedDisposer,transient_publication};
+use semio_os_kernel as store;
+use semio_plugin_decl_views::{NoPresence,NoPresenceMutation,NoTransient,NoTransientMutation,presence_retirement};
+use semio_plugin_ownership::{store_lifecycle::ArtifactOwnedDisposer,transient_publication};
 use semio_framework_job::*;
 use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind,FactoryAuthority,FactoryRetirement};
 use semio_framework_value_snapshot_read::snapshot_read_registry_handle::birth::SnapshotReadRegistryBirth;
 use std::{mem::{size_of,size_of_val,ManuallyDrop},sync::Arc};
 use semio_framework_value::retirement::{RetireOwned,controlled::ControlledRetirement};
-pub use semio_framework_plugin_ownership::original_store_genesis::{OriginalStoreInitialSource,OriginalFixedStoreInitial,FixedStoreInitial};
+pub use semio_plugin_ownership::original_store_genesis::{OriginalStoreInitialSource,OriginalFixedStoreInitial,FixedStoreInitial};
 type Presence<A>=store::PresenceStore<<A as OriginalEphemeralLanes>::Presence,<A as OriginalEphemeralLanes>::PresenceMutation>;
 type Transient<A>=store::TransientStore<<A as OriginalEphemeralLanes>::Transient,<A as OriginalEphemeralLanes>::TransientMutation>;
 type Disposer<T>=Box<dyn ArtifactOwnedDisposer<T>>;

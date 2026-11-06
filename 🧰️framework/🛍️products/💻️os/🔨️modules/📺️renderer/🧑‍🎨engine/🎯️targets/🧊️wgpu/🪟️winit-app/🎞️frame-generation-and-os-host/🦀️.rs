@@ -185,7 +185,7 @@ impl OsHost {
         if !self.snapshot_sink.publish_on_original_caller(cx)?{return Ok(None)}
         let _=self.present_snapshot(self.clock.now_seconds());
         let Some(snapshot)=self.snapshot_sink.acquire_output_on_original_caller(cx)?else{return Ok(None)};
-        let cursor_css=semio_framework_ui_wgpu_hosting::cursor::semio_cursor_css(snapshot.snapshot().accepted_cursor,snapshot.snapshot().accepted_theme_dark);
+        let cursor_css=semio_ui_wgpu_hosting::cursor::semio_cursor_css(snapshot.snapshot().accepted_cursor,snapshot.snapshot().accepted_theme_dark);
         Ok(Some(crate::os_host::BrowserRedrawOutcome{cursor_css,media_slots:snapshot}))
     }
 
@@ -330,8 +330,8 @@ impl OsHost {
 /// 🖱️ Narrows `AppRuntime`'s cursor for the generic host outcome. The accepted product
 /// cursor and theme remain intact in `RenderSnapshot` for browser presentation.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-fn semio_cursor_to_request(cursor: semio_framework_ui_wgpu_hosting::cursor::SemioCursor) -> CursorRequest {
-    use semio_framework_ui_wgpu_hosting::cursor::SemioCursor as S;
+fn semio_cursor_to_request(cursor: semio_ui_wgpu_hosting::cursor::SemioCursor) -> CursorRequest {
+    use semio_ui_wgpu_hosting::cursor::SemioCursor as S;
     match cursor {
         S::Default | S::EwResize | S::NsResize | S::NwseResize | S::NeswResize | S::Crosshair | S::CrosshairCentered | S::NotAllowed => CursorRequest::Default,
         S::Pointer | S::Selectable | S::Foldable => CursorRequest::Pointer,

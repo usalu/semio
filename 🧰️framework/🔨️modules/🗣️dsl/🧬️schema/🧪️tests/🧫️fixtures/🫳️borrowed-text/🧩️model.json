@@ -1,0 +1,11 @@
+{
+  "node": {
+    "id": "A",
+    "x": 1.5
+  },
+  "element": {
+    "kind": "truss",
+    "id": "A"
+  },
+  "document": "elements {\n  truss id=A\n}\nnodes [id:TEXT x:NUM] {\n  A 1.5\n}\n"
+}

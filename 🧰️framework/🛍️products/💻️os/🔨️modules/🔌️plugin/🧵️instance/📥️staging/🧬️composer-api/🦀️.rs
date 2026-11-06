@@ -1,29 +1,29 @@
 //! 🧬 The composer API of the mounted artifact instance: the public readers and entry points that delegate to a component.
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 use semio_framework_artifact_reference::ArtifactDialect;
-use semio_framework_plugin_document_media::{ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll};
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_document_media::{ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll};
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStore, MemberFactory, Mutation, ReferenceSpaceMember};
-use semio_framework_plugin_operation::original_catalog_constructor::{ArtifactStoreConstructorKind, ArtifactStoreConstructorPhase};
-use semio_framework_plugin_decl_views::child_view::ChildContentView;
-use semio_framework_plugin_child::{ChildMemberRegistrationError, OwnedDocumentMemberIngress};
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_operation::original_catalog_constructor::{ArtifactStoreConstructorKind, ArtifactStoreConstructorPhase};
+use semio_plugin_decl_views::child_view::ChildContentView;
+use semio_plugin_child::{ChildMemberRegistrationError, OwnedDocumentMemberIngress};
+use semio_plugin_decl_emission::Emit;
 use semio_framework::{Fault, FaultFrom, ViewModel};
-use semio_framework_plugin_job::reserved_jobs::FrameworkReservedCommitProgress;
+use semio_plugin_job::reserved_jobs::FrameworkReservedCommitProgress;
 use std::future::Future;
-use semio_framework_plugin_instance_extension::InstanceExtension;
+use semio_plugin_instance_extension::InstanceExtension;
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::PluginApp;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
-use semio_framework_plugin_operation::ToolCancellationHandle;
+use semio_plugin_operation::ToolCancellationHandle;
 use crate::VcsArtifactApp;
 use semio_framework_job::{Generation, OperationId, StepContext};
-use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure;
-use semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
+use semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure;
+use semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
 use store::os_store::owned_schema_decode::{ArtifactEnvelopeDecodePage, OwnedSchemaDecodePages};
-use semio_framework_plugin_window_transient::window_transient::WindowTransientSnapshot;
-use semio_framework_ui_contract::*;
+use semio_plugin_window_transient::window_transient::WindowTransientSnapshot;
+use semio_ui_contract::*;
 
 impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
     /// 📷️ Copies persisted state for structural inspection.

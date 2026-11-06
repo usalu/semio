@@ -1,0 +1,18 @@
+[
+  {
+    "status": "absent",
+    "mayReset": true
+  },
+  {
+    "status": "pending",
+    "mayReset": false
+  },
+  {
+    "status": "accepted",
+    "mayReset": false
+  },
+  {
+    "status": "refused",
+    "mayReset": false
+  }
+]

@@ -134,14 +134,17 @@ pub type ArtifactSqliteSnapshotExportFile=fn(&semio_framework_artifact_reference
 /// 🪆️ Receives a complete snapshot into an exact empty caller slot without creating erased backing.
 pub type ArtifactSqliteSnapshotImportFile=fn(&semio_framework_artifact_reference::ArtifactDialect,&[u8],&mut(dyn std::any::Any+Send),&mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>,&mut NativeSnapshotEncodeOwner<'_,'_>)->semio_framework_io_schema::IoResult<()>;
 
+/// 🧮️ Preserves actual relational child work and the complete original IO result.
+pub type ArtifactSqliteSnapshotTurn=semio_framework_value::RetainedWorkOutcome<(),semio_framework_io_control::NativeSnapshotFailure>;
+
 /// 🔌️ An artifact's explicit complete snapshot files and native payload relational bridge.
 #[derive(Clone)]
 pub struct ArtifactSqliteSnapshotCodec {
     pub schema: std::borrow::Cow<'static, str>,
     pub snapshot_type: Option<std::any::TypeId>,
-    pub export: fn(&str, &semio_framework_artifact_reference::ArtifactDialect, &semio_framework_io_schema::IoPayload, &mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>, &mut NativeSnapshotDecodeOwner<'_, '_>) -> semio_framework_io_schema::IoResult<semio_framework_io_sqlite_snapshot::SqliteDatabase>,
+    pub export: fn(&str, &semio_framework_artifact_reference::ArtifactDialect, &semio_framework_io_schema::IoPayload, &mut Option<semio_framework_io_schema::IoResult<semio_framework_io_sqlite_snapshot::SqliteDatabase>>, &mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>, &mut NativeSnapshotDecodeOwner<'_, '_>) -> ArtifactSqliteSnapshotTurn,
     pub import:
-        fn(&str, &semio_framework_artifact_reference::ArtifactDialect, &mut Option<semio_framework_io_sqlite_snapshot::SqliteDatabase>, semio_framework_io_sqlite_snapshot::SnapshotEncoding, &mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>, &mut NativeSnapshotEncodeOwner<'_, '_>) -> semio_framework_io_schema::IoResult<semio_framework_io_schema::IoPayload>,
+        fn(&str, &semio_framework_artifact_reference::ArtifactDialect, &mut Option<semio_framework_io_sqlite_snapshot::SqliteDatabase>, semio_framework_io_sqlite_snapshot::SnapshotEncoding, &mut Option<semio_framework_io_schema::IoResult<semio_framework_io_schema::IoPayload>>, &mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>, &mut NativeSnapshotEncodeOwner<'_, '_>) -> ArtifactSqliteSnapshotTurn,
     pub export_file:Option<ArtifactSqliteSnapshotExportFile>,
     pub import_file:Option<ArtifactSqliteSnapshotImportFile>,
 }

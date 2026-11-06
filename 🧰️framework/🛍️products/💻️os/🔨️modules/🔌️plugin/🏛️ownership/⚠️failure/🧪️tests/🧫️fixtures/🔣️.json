@@ -19,6 +19,11 @@
   ],
   "wholePrimary": true,
   "separateReceiptRefusal": true,
+  "independentRefusals": {
+    "receipt": "original receipt refusal 源",
+    "context": "original context refusal 源",
+    "work": "original work settlement refusal 源"
+  },
   "sameSourcePointers": true,
   "noClone": true,
   "noFormat": true,
@@ -92,5 +97,21 @@
         "receipt": "original recipient refusal"
       }
     ]
-  }
+  },
+  "typedOwnerWork": [
+    {
+      "id": "denied",
+      "admitted": false,
+      "actual": 0,
+      "fuelDebit": 0,
+      "originalRetained": true
+    },
+    {
+      "id": "paidBirth",
+      "admitted": true,
+      "actual": 1,
+      "fuelDebit": 1,
+      "originalRetained": false
+    }
+  ]
 }

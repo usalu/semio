@@ -611,5 +611,25 @@
    "unreachableDone": 0,
    "overlaps": 48
   }
- }
+ },
+ "layout": [
+  {
+   "version": 1,
+   "build": ".",
+   "target": "t",
+   "expected": "t-ce555540"
+  },
+  {
+   "version": 1,
+   "build": "b",
+   "target": "t",
+   "expected": "t-7c549797"
+  },
+  {
+   "version": 2,
+   "build": ".",
+   "target": "t",
+   "expected": "t-74d885e1"
+  }
+ ]
 }

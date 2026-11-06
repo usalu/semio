@@ -308,6 +308,486 @@
           "allocation"
         ]
       }
+    },
+    {
+      "id": "2-terminal-clear-admitted",
+      "dimension": 2,
+      "priorWork": 7,
+      "admitted": true,
+      "actions": [
+        {
+          "kind": "terminal_clear",
+          "units": 1,
+          "physicalItems": 1,
+          "fails": false,
+          "causes": []
+        }
+      ],
+      "expected": {
+        "work": 1,
+        "physicalItems": 1,
+        "outcome": "ok",
+        "causes": []
+      }
+    },
+    {
+      "id": "2-terminal-clear-denied",
+      "dimension": 2,
+      "priorWork": 7,
+      "admitted": false,
+      "actions": [],
+      "expected": {
+        "work": 0,
+        "physicalItems": 0,
+        "outcome": "denied",
+        "causes": []
+      }
+    },
+    {
+      "id": "3-terminal-clear-admitted",
+      "dimension": 3,
+      "priorWork": 7,
+      "admitted": true,
+      "actions": [
+        {
+          "kind": "terminal_clear",
+          "units": 1,
+          "physicalItems": 1,
+          "fails": false,
+          "causes": []
+        }
+      ],
+      "expected": {
+        "work": 1,
+        "physicalItems": 1,
+        "outcome": "ok",
+        "causes": []
+      }
+    },
+    {
+      "id": "3-terminal-clear-denied",
+      "dimension": 3,
+      "priorWork": 7,
+      "admitted": false,
+      "actions": [],
+      "expected": {
+        "work": 0,
+        "physicalItems": 0,
+        "outcome": "denied",
+        "causes": []
+      }
+    },
+    {
+      "id": "2-forecast-row-cells",
+      "dimension": 2,
+      "priorWork": 7,
+      "admitted": true,
+      "actions": [
+        {
+          "kind": "census",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": false,
+          "causes": []
+        },
+        {
+          "kind": "forecast_row",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": false,
+          "causes": []
+        },
+        {
+          "kind": "forecast_cell",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": false,
+          "causes": []
+        },
+        {
+          "kind": "forecast_cell",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": false,
+          "causes": []
+        }
+      ],
+      "expected": {
+        "work": 4,
+        "physicalItems": 0,
+        "outcome": "ok",
+        "causes": []
+      }
+    },
+    {
+      "id": "2-forecast-cell-failure",
+      "dimension": 2,
+      "priorWork": 7,
+      "admitted": true,
+      "actions": [
+        {
+          "kind": "forecast_row",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": false,
+          "causes": []
+        },
+        {
+          "kind": "forecast_cell",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": true,
+          "causes": [
+            "primary"
+          ]
+        }
+      ],
+      "expected": {
+        "work": 2,
+        "physicalItems": 0,
+        "outcome": "failure",
+        "causes": [
+          "primary"
+        ]
+      }
+    },
+    {
+      "id": "3-forecast-row-cells",
+      "dimension": 3,
+      "priorWork": 7,
+      "admitted": true,
+      "actions": [
+        {
+          "kind": "census",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": false,
+          "causes": []
+        },
+        {
+          "kind": "forecast_row",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": false,
+          "causes": []
+        },
+        {
+          "kind": "forecast_cell",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": false,
+          "causes": []
+        },
+        {
+          "kind": "forecast_cell",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": false,
+          "causes": []
+        }
+      ],
+      "expected": {
+        "work": 4,
+        "physicalItems": 0,
+        "outcome": "ok",
+        "causes": []
+      }
+    },
+    {
+      "id": "3-forecast-cell-failure",
+      "dimension": 3,
+      "priorWork": 7,
+      "admitted": true,
+      "actions": [
+        {
+          "kind": "forecast_row",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": false,
+          "causes": []
+        },
+        {
+          "kind": "forecast_cell",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": true,
+          "causes": [
+            "primary"
+          ]
+        }
+      ],
+      "expected": {
+        "work": 2,
+        "physicalItems": 0,
+        "outcome": "failure",
+        "causes": [
+          "primary"
+        ]
+      }
+    },
+    {
+      "id": "2-forecast-effect-and-post-refusal",
+      "dimension": 2,
+      "priorWork": 7,
+      "admitted": true,
+      "actions": [
+        {
+          "kind": "forecast_cell",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": true,
+          "causes": [
+            "primary",
+            "work_post"
+          ]
+        }
+      ],
+      "expected": {
+        "work": 1,
+        "physicalItems": 0,
+        "outcome": "failure",
+        "causes": [
+          "primary",
+          "work_post"
+        ]
+      }
+    },
+    {
+      "id": "3-forecast-effect-and-post-refusal",
+      "dimension": 3,
+      "priorWork": 7,
+      "admitted": true,
+      "actions": [
+        {
+          "kind": "forecast_cell",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": true,
+          "causes": [
+            "primary",
+            "work_post"
+          ]
+        }
+      ],
+      "expected": {
+        "work": 1,
+        "physicalItems": 0,
+        "outcome": "failure",
+        "causes": [
+          "primary",
+          "work_post"
+        ]
+      }
+    },
+    {
+      "id": "2-forecast-field-read-and-cell",
+      "dimension": 2,
+      "priorWork": 7,
+      "admitted": true,
+      "actions": [
+        {
+          "kind": "forecast_field_read",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": false,
+          "causes": []
+        },
+        {
+          "kind": "forecast_cell",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": false,
+          "causes": []
+        }
+      ],
+      "expected": {
+        "work": 2,
+        "physicalItems": 0,
+        "outcome": "ok",
+        "causes": []
+      }
+    },
+    {
+      "id": "3-forecast-field-read-and-cell",
+      "dimension": 3,
+      "priorWork": 7,
+      "admitted": true,
+      "actions": [
+        {
+          "kind": "forecast_field_read",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": false,
+          "causes": []
+        },
+        {
+          "kind": "forecast_cell",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": false,
+          "causes": []
+        }
+      ],
+      "expected": {
+        "work": 2,
+        "physicalItems": 0,
+        "outcome": "ok",
+        "causes": []
+      }
+    },
+    {
+      "id": "2-collection-header-and-handoff",
+      "dimension": 2,
+      "priorWork": 7,
+      "admitted": true,
+      "actions": [
+        {
+          "kind": "row",
+          "units": 1,
+          "physicalItems": 1,
+          "fails": false,
+          "causes": []
+        },
+        {
+          "kind": "transfer",
+          "units": 1,
+          "physicalItems": 1,
+          "fails": false,
+          "causes": []
+        }
+      ],
+      "expected": {
+        "work": 2,
+        "physicalItems": 2,
+        "outcome": "ok",
+        "causes": []
+      }
+    },
+    {
+      "id": "3-collection-header-and-handoff",
+      "dimension": 3,
+      "priorWork": 7,
+      "admitted": true,
+      "actions": [
+        {
+          "kind": "row",
+          "units": 1,
+          "physicalItems": 1,
+          "fails": false,
+          "causes": []
+        },
+        {
+          "kind": "transfer",
+          "units": 1,
+          "physicalItems": 1,
+          "fails": false,
+          "causes": []
+        }
+      ],
+      "expected": {
+        "work": 2,
+        "physicalItems": 2,
+        "outcome": "ok",
+        "causes": []
+      }
+    },
+    {
+      "id": "2-finite-check-and-field-handoff",
+      "dimension": 2,
+      "priorWork": 7,
+      "admitted": true,
+      "actions": [
+        {
+          "kind": "validation",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": false,
+          "causes": []
+        },
+        {
+          "kind": "transfer",
+          "units": 1,
+          "physicalItems": 1,
+          "fails": false,
+          "causes": []
+        }
+      ],
+      "expected": {
+        "work": 2,
+        "physicalItems": 1,
+        "outcome": "ok",
+        "causes": []
+      }
+    },
+    {
+      "id": "3-finite-check-and-field-handoff",
+      "dimension": 3,
+      "priorWork": 7,
+      "admitted": true,
+      "actions": [
+        {
+          "kind": "validation",
+          "units": 1,
+          "physicalItems": 0,
+          "fails": false,
+          "causes": []
+        },
+        {
+          "kind": "transfer",
+          "units": 1,
+          "physicalItems": 1,
+          "fails": false,
+          "causes": []
+        }
+      ],
+      "expected": {
+        "work": 2,
+        "physicalItems": 1,
+        "outcome": "ok",
+        "causes": []
+      }
+    },
+    {
+      "id": "2-locator-swap",
+      "dimension": 2,
+      "priorWork": 7,
+      "admitted": true,
+      "actions": [
+        {
+          "kind": "row",
+          "units": 1,
+          "physicalItems": 2,
+          "fails": false,
+          "causes": []
+        }
+      ],
+      "expected": {
+        "work": 1,
+        "physicalItems": 2,
+        "outcome": "ok",
+        "causes": []
+      }
+    },
+    {
+      "id": "3-locator-swap",
+      "dimension": 3,
+      "priorWork": 7,
+      "admitted": true,
+      "actions": [
+        {
+          "kind": "row",
+          "units": 1,
+          "physicalItems": 2,
+          "fails": false,
+          "causes": []
+        }
+      ],
+      "expected": {
+        "work": 1,
+        "physicalItems": 2,
+        "outcome": "ok",
+        "causes": []
+      }
     }
   ]
 }

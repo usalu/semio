@@ -1,0 +1,132 @@
+{
+  "schema": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "properties": {
+        "performed": {
+          "type": "boolean"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "operationRefused": {
+          "type": "boolean"
+        },
+        "allocationRefused": {
+          "type": "boolean"
+        },
+        "workRefused": {
+          "type": "boolean"
+        },
+        "physicalRefused": {
+          "type": "boolean"
+        },
+        "work": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "retainedBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "causes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "headerBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "copiedHeaderBytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "performed",
+        "bytes",
+        "operationRefused",
+        "allocationRefused",
+        "workRefused",
+        "physicalRefused",
+        "work",
+        "retainedBytes",
+        "causes",
+        "headerBytes",
+        "copiedHeaderBytes"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "data": [
+    {
+      "performed": true,
+      "bytes": 16,
+      "operationRefused": true,
+      "allocationRefused": true,
+      "workRefused": true,
+      "physicalRefused": true,
+      "work": 1,
+      "retainedBytes": 16,
+      "causes": 4,
+      "headerBytes": 24,
+      "copiedHeaderBytes": 24
+    },
+    {
+      "performed": false,
+      "bytes": 0,
+      "operationRefused": true,
+      "allocationRefused": false,
+      "workRefused": false,
+      "physicalRefused": false,
+      "work": 0,
+      "retainedBytes": 0,
+      "causes": 1,
+      "headerBytes": 24,
+      "copiedHeaderBytes": 0
+    },
+    {
+      "performed": true,
+      "bytes": 8,
+      "operationRefused": false,
+      "allocationRefused": false,
+      "workRefused": false,
+      "physicalRefused": false,
+      "work": 1,
+      "retainedBytes": 8,
+      "causes": 0,
+      "headerBytes": 24,
+      "copiedHeaderBytes": 24
+    },
+    {
+      "performed": true,
+      "bytes": 0,
+      "operationRefused": false,
+      "allocationRefused": false,
+      "workRefused": false,
+      "physicalRefused": false,
+      "work": 1,
+      "retainedBytes": 0,
+      "causes": 0,
+      "headerBytes": 24,
+      "copiedHeaderBytes": 24
+    },
+    {
+      "performed": true,
+      "bytes": 8,
+      "operationRefused": false,
+      "allocationRefused": false,
+      "workRefused": false,
+      "physicalRefused": false,
+      "work": 1,
+      "retainedBytes": 8,
+      "causes": 0,
+      "headerBytes": 12,
+      "copiedHeaderBytes": 12
+    }
+  ]
+}

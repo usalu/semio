@@ -1,0 +1,5 @@
+# Captured Cargo Runtime Entry Trace
+
+Authenticated verb entry at 🏗️build/⌨️command/📥️entry/🟦️.ts unconditionally wraps every body with withRepositoryRuntimeEntriesV1. That calls 🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🟦️.ts:21-24, resolves nativeDirectoryRuntimeEntryV1, captures its source closure, serializes the snapshot and installs a scoped runtime-entry provider before Cargo body runs.
+
+This is not a fresh Authorizer promotion or an ambient execution path. captureBuildSourceClosureV1 at 🏗️build/📥️source/🔏️closure/🟦️.ts:55-59 walks the authenticated parent import map, rereads each admitted source and validates its hash before forming the child snapshot. The reported build:implementation-source phase is that required child subset capture. Cargo storage can need the native directory helper. An optimization must reuse parent-authenticated bytes and import resolution with equivalent original custody, freshness, snapshot and loader identity, and bounded subset accounting; removing this wrapper or silently executing live source weakens the contract. No production files were changed.

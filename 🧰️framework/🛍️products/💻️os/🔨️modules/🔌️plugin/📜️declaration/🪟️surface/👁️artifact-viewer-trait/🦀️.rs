@@ -1,7 +1,7 @@
 //! 👁️ Artifact viewer trait: the read-only surface contract `ArtifactViewer` with its snapshot, view and viewer hooks. See [`super`].
 
 use super::*;
-use semio_framework_plugin_decl_emission::surface_contract::ViewEmit;
+use semio_plugin_decl_emission::surface_contract::ViewEmit;
 use semio_framework_2d_compute::EngineHandles;
 
 /// 👁️ Authoring trait for a read-only surface (contract §2.2) — the mutation-incapable twin of
@@ -10,9 +10,9 @@ use semio_framework_2d_compute::EngineHandles;
 /// carry an artifact or draft mutation. `ViewerApp<V>` below is the sole `ArtifactApp` implementor.
 pub trait ArtifactViewer: Default + Send + 'static {
     /// 📬️ Borrows this viewer's original typed completion retirement birth.
-    fn completion_retirement_birth_bytes(value:&ArtifactToolCompletionValue<ViewerApp<Self>>)->Option<usize>{semio_framework_plugin_decl_app::completion_retirement::derived_completion_birth_bytes(value)}
+    fn completion_retirement_birth_bytes(value:&ArtifactToolCompletionValue<ViewerApp<Self>>)->Option<usize>{semio_plugin_decl_app::completion_retirement::derived_completion_birth_bytes(value)}
     /// 🎟️ Retains the viewer completion on every unsupported or unfunded cleanup admission.
-    fn admit_completion_retirement(value:&mut Option<ArtifactToolCompletionValue<ViewerApp<Self>>>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress)>>{semio_framework_plugin_decl_app::completion_retirement::derived_admit_completion_retirement(value,grant)}
+    fn admit_completion_retirement(value:&mut Option<ArtifactToolCompletionValue<ViewerApp<Self>>>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress)>>{semio_plugin_decl_app::completion_retirement::derived_admit_completion_retirement(value,grant)}
     /// 🧮️ Declares the physical authority frame for this viewer's decoded editor-authored mutation batch.
     fn owned_mutation_batch_birth_bytes() -> Option<usize> { None }
 
@@ -67,7 +67,7 @@ pub trait ArtifactViewer: Default + Send + 'static {
     }
 
     fn build_presence_store_disposer() -> ArtifactDisposal<store::PresenceStore<Self::Presence, Self::PresenceMutation>> {
-        Some(semio_framework_plugin_decl_views::presence_retirement::bounded_presence_store_disposer::<Self::Presence, Self::PresenceMutation>())
+        Some(semio_plugin_decl_views::presence_retirement::bounded_presence_store_disposer::<Self::Presence, Self::PresenceMutation>())
     }
 
     fn build_transient_store_disposer() -> ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
@@ -75,7 +75,7 @@ pub trait ArtifactViewer: Default + Send + 'static {
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin_decl_views::presence_retirement::bounded_presence_root_retirement_factory::<Self::Presence>())
+        Some(semio_plugin_decl_views::presence_retirement::bounded_presence_root_retirement_factory::<Self::Presence>())
     }
 
     /// 🎭️ Always `Viewer` in practice — defaulted so implementors never restate it.
@@ -108,7 +108,7 @@ pub trait ArtifactViewer: Default + Send + 'static {
 
     fn mounted_job_maintenance_phase(_instance_id: u32) -> Option<MountedOwnerPhaseV1> { None }
 
-    fn mounted_job_maintenance_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    fn mounted_job_maintenance_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         Ok(PluginLifecycleStep::Complete(RetainedCloneProgress::default()))
     }
 
@@ -116,7 +116,7 @@ pub trait ArtifactViewer: Default + Send + 'static {
         Ok(RetirementDemand::default())
     }
 
-    fn mounted_job_close_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    fn mounted_job_close_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         Ok(PluginLifecycleStep::Complete(RetainedCloneProgress::default()))
     }
 
@@ -196,12 +196,12 @@ pub trait ArtifactViewer: Default + Send + 'static {
     }
 
     /// 🧭️ Builds a persistent producer/import job for one explicitly registered viewer route.
-    fn build_reserved_tool_job(_request:&mut Option<ArtifactReservedToolJobRequest<ViewerApp<Self>>>,_body:&mut Option<Box<dyn semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_reserved_tool_job(_request:&mut Option<ArtifactReservedToolJobRequest<ViewerApp<Self>>>,_body:&mut Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"registered reserved viewer route lacks its original producer").into())
     }
 
     /// 🎞️ Builds an owned resumable producer for an explicitly registered viewer media-output port.
-    fn build_media_export_job(_request:&mut Option<ArtifactMediaExportJobRequest<ViewerApp<Self>>>,_body:&mut Option<Box<dyn semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_media_export_job(_request:&mut Option<ArtifactMediaExportJobRequest<ViewerApp<Self>>>,_body:&mut Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"registered media surface lacks its concrete source-preserving producer").into())
     }
 
@@ -226,7 +226,7 @@ pub trait ArtifactViewer: Default + Send + 'static {
     /// Framework-owned by default — `ViewerApp<V>` forwards THIS answer, so a `None` here
     /// would strip the `ArtifactApp` default and break registered-fixture close.
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin_decl_views::presence_retirement::bounded_presence_root_retirement_factory::<Self::Presence>())
+        Some(semio_plugin_decl_views::presence_retirement::bounded_presence_root_retirement_factory::<Self::Presence>())
     }
 
     /// 🧹️ Grants bounded displaced-transient-root retirement to this viewer adapter.
@@ -252,7 +252,7 @@ pub trait ArtifactViewer: Default + Send + 'static {
     fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
         &[]
     }
-    fn reference_birth() -> Option<semio_framework_plugin_decl_app::ReferenceArtifactAppBirth<Self::Snapshot>> { None }
+    fn reference_birth() -> Option<semio_plugin_decl_app::ReferenceArtifactAppBirth<Self::Snapshot>> { None }
     fn initial_config() -> Self::Config {
         Self::Config::default()
     }
@@ -271,7 +271,7 @@ pub trait ArtifactViewer: Default + Send + 'static {
         "typed-command"
     }
     /// 🏭️ The declared native producer owns original action arguments, command birth and exact operation wire.
-    fn original_action_command_producer()->Option<&'static dyn semio_framework_plugin_decl_app::tool_contract::ArtifactOriginalCommandProducerFactory<Self::Command>>{None}
+    fn original_action_command_producer()->Option<&'static dyn semio_plugin_decl_app::tool_contract::ArtifactOriginalCommandProducerFactory<Self::Command>>{None}
     fn command_from_action(action: &str, _args: &mut Option<DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         Err(Fault::new(
@@ -299,8 +299,8 @@ pub trait ArtifactViewer: Default + Send + 'static {
         transient: &TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
         cx:&mut semio_framework_job::StepContext<'_>,
-    ) -> semio_framework_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> {
-        let rendered:crate::UiAssemblyResult<semio_framework_ui_runtime::ComponentTree>=(||{
+    ) -> semio_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> {
+        let rendered:crate::UiAssemblyResult<semio_ui_runtime::ComponentTree>=(||{
         let _ = (transient, interaction);
         Self::render(body_key, doc, cfg, view_state)
 

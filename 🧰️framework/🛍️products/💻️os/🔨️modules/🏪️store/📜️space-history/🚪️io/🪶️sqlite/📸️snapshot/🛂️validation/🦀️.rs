@@ -11,7 +11,7 @@ const ORDERED:[usize;5]=[1,3,4,5,6];
 pub(super) fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"space history semantic state differs")}
 pub(super) fn add(a:usize,b:usize)->Result<usize>{a.checked_add(b).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"space history validation row census overflow"))}
 #[derive(semio_framework_value::RetireOwned)]
-pub(super) struct Frame{pub(super) ids:[Vec<usize>;7],pub(super) ordered:[Vec<usize>;5],result:Option<IoResult<()>>}
+pub(super) struct Frame{pub(super) ids:[Vec<usize>;7],pub(super) ordered:[Vec<usize>;5],result:Option<Result<()>>}
 impl Frame{pub(super) fn new()->Self{Self{ids:std::array::from_fn(|_|Vec::new()),ordered:std::array::from_fn(|_|Vec::new()),result:None}}}
 pub(super) fn table<'a>(database:&'a SqliteDatabase,index:usize)->Result<&'a SqliteTable>{database.tables.iter().find(|table|table.name.eq_ignore_ascii_case(TABLES[index].0)).ok_or_else(invalid)}
 pub(super) fn text(row:&SqliteRow,column:usize)->Result<&str>{match row.values.get(column){Some(SqliteValue::Text(text))=>Ok(text),_=>Err(invalid())}}
@@ -46,16 +46,53 @@ fn check<W:ReceivingWallet>(source:&SpaceHistorySnapshot,dialect:&semio_framewor
  let alternatives=parent_range(&tables[5].rows,&frame.ordered[3],document.rowid,1,port)?;if alternatives.len()!=source.alternatives.len(){return Err(invalid())}for(index,alternative)in source.alternatives.iter().enumerate(){let row=&tables[5].rows[frame.ordered[3][alternatives.start+index]];if integer(row,2)?!=ordinal(index)?{return Err(invalid())}equal(&alternative.id,text(row,3)?,port)?;equal(&alternative.name,text(row,4)?,port)?;let checkpoint_ids=parent_range(&tables[6].rows,&frame.ordered[4],row.rowid,1,port)?;if checkpoint_ids.len()!=alternative.checkpoint_ids.len(){return Err(invalid())}for(index,checkpoint_id)in alternative.checkpoint_ids.iter().enumerate(){let actual=&tables[6].rows[frame.ordered[4][checkpoint_ids.start+index]];if integer(actual,2)?!=ordinal(index)?{return Err(invalid())}equal(checkpoint_id,text(actual,3)?,port)?;}}
  Ok(())
 }
+fn finish_validation(status:IoResult<()>,settlement:&TypedFileSettlement<'_,'_>,owned:usize)->std::result::Result<IoResult<()>,semio_framework_io_sqlite_snapshot::SqliteStageFailure<IoResult<()>,semio_framework_io_control::NativeSnapshotFailure>>{match settlement.finish_body(owned){Ok(())=>Ok(status),Err(refusal)=>Err(semio_framework_io_sqlite_snapshot::SqliteStageFailure::Settlement{operation:Ok(status),refusal,receipt:None})}}
 macro_rules! receive{
  ($name:ident,$owner:ident,$progress:path,$direction:ident,$phase:ident)=>{
- pub(super) fn $name(source:&SpaceHistorySnapshot,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_io_control::$owner<'_,'_>)->IoResult<()>{
-  let result=(||->IoResult<()>{let before=owner.native().owned_bytes();let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||IoError::from_value_error(ValueError::literal(ValueRefusalKind::OwnershipLimit,"space history validation original SQL ceiling overflow")))?;let settlement=TypedFileSettlement::new(control,before,SqliteSnapshotPhase::$phase);let mut observer=|event:$progress|settlement.observe(event.owned_bytes,event.completed,event.total);
-   let received=owner.scoped_native(maximum,&mut observer,|owner|owner.receive::<Frame,IoResult<()>>(|slot,native,body|{
-    let mut borrowed=settlement.control.borrow_mut();let control=&mut **borrowed;let mut port=Port{control,native:Direction::$direction(native),body};port.work(1,size_of::<Frame>())?;*slot=Some(Frame::new());let frame=slot.as_mut().unwrap();port.work(1,size_of::<IoResult<()>>())?;frame.result=Some(check(source,dialect,database,frame,&mut port).map(|()|IoOutcome::clean(())).map_err(IoError::from_value_error));let owned=port.owned();drop(port);drop(borrowed);settlement.finish_body(owned)?;Ok(frame.result.take().unwrap())
-   }));match received{Ok(result)=>result,Err(error)=>Err(IoError::from_value_error(settlement.refused(owner.native().owned_bytes(),error)))}
-  })();result.map_err(|mut error|{error.cause=error.cause.with_retained_progress(owner.progress());error})
+ pub(super) fn $name(source:&SpaceHistorySnapshot,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_io_control::$owner<'_,'_>,output:&mut Option<crate::lifted_serialization::SnapshotReceivingOutput<IoResult<()>>>)->crate::lifted_serialization::SnapshotReceivingOutcome{
+  use semio_framework_io_control::NativeSnapshotFailure;
+  use semio_framework_io_sqlite_snapshot::SqliteStageFailure as Stage;
+  use semio_framework_value::RetainedWorkOutcome;
+  if output.is_some(){return RetainedWorkOutcome{result:Err(Stage::NotStarted(ValueError::literal(ValueRefusalKind::InvalidValue,"original validation output slot is occupied"))),work:0}}
+  let before=owner.native().owned_bytes();let Some(maximum)=before.checked_add(control.allocation_remaining_bytes())else{return RetainedWorkOutcome{result:Err(Stage::NotStarted(ValueError::literal(ValueRefusalKind::OwnershipLimit,"space history validation original SQL ceiling overflow"))),work:0}};
+  let settlement=TypedFileSettlement::new(control,before,SqliteSnapshotPhase::$phase);let mut observer=|event:$progress|settlement.observe(event.owned_bytes,event.completed,event.total);
+  let turn=owner.scoped_native(maximum,&mut observer,|owner|owner.receive::<Frame,crate::lifted_serialization::SnapshotReceivingOutput<IoResult<()>>,NativeSnapshotFailure>(output,&mut |slot,result,_marker,_unwind,native,body|{
+   let before_work=settlement.control.borrow().performed_work();
+   let outcome=(||->std::result::Result<(),NativeSnapshotFailure>{
+    let mut borrowed=settlement.control.borrow_mut();let control=&mut **borrowed;let mut port=Port{control,native:Direction::$direction(native),body};port.work(1,size_of::<Frame>())?;*slot=Some(Frame::new());let frame=slot.as_mut().unwrap();port.work(1,size_of::<IoResult<()>>())?;frame.result=Some(check(source,dialect,database,frame,&mut port));let owned=port.owned();drop(port);drop(borrowed);let status=frame.result.take().unwrap().map(|()|IoOutcome::clean(())).map_err(IoError::from_value_error);*result=Some(finish_validation(status,&settlement,owned));Ok(())
+   })();
+   RetainedWorkOutcome{result:outcome,work:settlement.control.borrow().performed_work().checked_sub(before_work).expect("original SQL producer work is monotone")}
+  }));
+  let result=match settlement.cause.borrow_mut().take(){Some(refusal)=>Err(Stage::Settlement{operation:turn.result,refusal,receipt:None}),None=>turn.result.map_err(Stage::Operation)};
+  RetainedWorkOutcome{result,work:turn.work}
  }
  };
 }
 receive!(decoding,NativeSnapshotDecodeOwner,semio_framework_value_native_owned::native_decoding::NativeDecodeProgress,Decode,ProjectSnapshot);
 receive!(encoding,NativeSnapshotEncodeOwner,semio_framework_value::native_encoding::NativeEncodeProgress,Encode,ReconstructSnapshot);
+
+#[cfg(test)]
+mod dual_failure_tests{
+ use super::*;
+ #[test]
+ fn original_validation_and_sql_settlement_keep_both_owners(){
+  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🪢️dual-failure/🔣️.json")).unwrap();let mut observe=|_|true;let mut native=semio_framework_value::NativeEncodeControl::new(fixture["nativeCharge"].as_u64().unwrap()as usize,&mut observe);let backing=native.allocate_vec::<u8>(fixture["nativeCharge"].as_u64().unwrap()as usize).unwrap();assert!(backing.capacity()>=fixture["nativeCharge"].as_u64().unwrap()as usize);let mut progress=|_|true;let mut control=SqliteSnapshotControl::new(&mut progress,semio_framework_io_sqlite_snapshot::SqliteDatabaseLimits{max_allocation_bytes:fixture["sqlMaximum"].as_u64().unwrap()as usize,..Default::default()});let settlement=TypedFileSettlement::new(&mut control,0,SqliteSnapshotPhase::ProjectSnapshot);let primary=invalid();let pointer=primary.message.as_ptr();let result=finish_validation(Err(IoError::from_value_error(primary)),&settlement,native.owned_bytes());let semio_framework_io_sqlite_snapshot::SqliteStageFailure::Settlement{operation:Ok(Err(authored)),refusal,..}=result.err().expect("actual SQL settlement must refuse")else{panic!("original validation and settlement custody")};assert_eq!(authored.cause.message.as_ptr(),pointer);assert_eq!(refusal.kind,ValueRefusalKind::OwnershipLimit);let actual=serde_json::json!({"authored":authored.cause.message,"settlementKind":format!("{:?}",refusal.kind)});assert_eq!(actual,fixture["expected"]);
+ }
+ #[test]
+ fn original_validation_output_survives_publication_receipt_refusal(){
+  use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedWorkOutcome,RetirementDemand};
+  use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,NativeDecodeConstructionRecipient,NativeDecodeRetirementRecipient};
+  struct Work(u64);
+ impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for Work{fn admits(&mut self,observed:u64,additional:u64)->std::result::Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=self.0))}}
+ struct Recipient{grant:RetainedCloneGrant,received:RetainedCloneProgress,refused:bool}
+  impl NativeDecodeConstructionRecipient for Recipient{
+   fn submitted(&self)->RetainedCloneProgress{self.received}
+   fn grant(&mut self,_:RetirementDemand)->Result<RetainedCloneGrant>{Ok(self.grant)}
+   fn accept(&mut self,_:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<()>{self.received=self.received.checked_add(progress)?;if !self.refused&&progress.copied_items==1&&progress.copied_bytes==0&&progress.retained_capacity_bytes==0&&progress.released_bytes==0{self.refused=true;Err(ValueError::literal(ValueRefusalKind::Canceled,"validation publication receipt refused"))}else{Ok(())}}
+  }
+  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🪢️dual-failure/🔣️.json")).unwrap();let grant=RetainedCloneGrant{maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:64};let mut observer=|_|true;let mut retirement=NativeDecodeRetirementRecipient::new();let mut native=NativeDecodeControl::new(grant.maximum_capacity_bytes,&mut observer);native.install_retirement_recipient(&mut retirement).unwrap();let mut recipient=Recipient{grant,received:Default::default(),refused:false};let mut output:Option<IoResult<()>>=None;let primary=invalid();let pointer=primary.message.as_ptr();let mut primary=Some(primary);
+  let mut work=Work(1000000);native.with_work_recipient(&mut work,|native|{let turn=native.with_construction_recipient(&mut recipient,|native|{let mut owner=semio_framework_io_control::NativeSnapshotDecodeOwner::new(native,grant);Ok::<_,ValueError>(owner.receive::<(),IoResult<()>,semio_framework_io_control::NativeSnapshotFailure>(&mut output,&mut |_frame,result,marker,unwind,native,body|{let demand=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<IoResult<()>>(),maximum_depth:1,..Default::default()};let quote=match semio_framework_io_control::NativeSnapshotDecodeEffectQuote::decode(body,native,demand){Ok(quote)=>quote,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};quote.run(marker,unwind,&mut |performed,physical|{*result=Some(Err(IoError::from_value_error(primary.take().unwrap())));*performed=true;*physical=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<IoResult<()>>(),..Default::default()};Ok(())})}))}).unwrap();
+  assert!(recipient.refused);assert!(turn.work>0);let failure=turn.result.err().expect("publication must retain its refusal");assert_eq!(failure.receipt_refusal().unwrap().message,fixture["publicationRefusal"].as_str().unwrap());let authored=output.take().unwrap().unwrap_err();assert_eq!(authored.cause.message.as_ptr(),pointer);assert_eq!(authored.cause.message,fixture["authoredMessage"].as_str().unwrap());
+  while native.has_retirement_owner(){native.close_retirement_recipient(grant).result.unwrap();}Ok::<(),ValueError>(())}).unwrap();
+ }
+}

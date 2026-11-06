@@ -38,7 +38,7 @@ fn original_history_native_fault_keeps_all_three_causes_until_paid_close(){
  let law:serde_json::Value=serde_json::from_str(include_str!("native.json")).unwrap();
  let messages=law["causes"].as_array().unwrap();
  let make=|index:usize|ValueError::new(ValueRefusalKind::AllocationFailed,messages[index].as_str().unwrap().to_owned());
- let primary=semio_framework_value_native_owned::OriginalReceivingPrimary{primary:Some(make(0)),quote_refusal:Some(make(1)),allocation_refusal:Some(make(2)),progress:Default::default()};
+ let primary=semio_framework_value_native_owned::OriginalReceivingPrimary{retirement_failure:None,work_refusal:None,primary:Some(make(0)),quote_refusal:Some(make(1)),allocation_refusal:Some(make(2)),allocation_failure:None,native_allocation:None,receipt_refusal:None,progress:Default::default()};
  let pointers=[primary.primary.as_ref().unwrap().message.as_ptr(),primary.quote_refusal.as_ref().unwrap().message.as_ptr(),primary.allocation_refusal.as_ref().unwrap().message.as_ptr()];
  let fault=RetainedHistoryOpMetaFault::Native(primary);
  let RetainedHistoryOpMetaFault::Native(actual)=&fault else{panic!("native cause changed its typed owner")};

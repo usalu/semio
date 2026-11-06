@@ -21,8 +21,8 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeTieBeamFoundationA
         record: "ChangeTieBeamFoundationAId",
     };
 
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native("Change first foundation of the tie beam", "Erstes Fundament des Fundamentbalkens ändern")
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        semio_ui_locale::LocalizedLabel::native("Change first foundation of the tie beam", "Erstes Fundament des Fundamentbalkens ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-tie-beam-foundation-a-id".into()]

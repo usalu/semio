@@ -223,32 +223,35 @@ struct RefusedFactory(std::sync::atomic::AtomicBool);
 struct RefusedTicket{original:Option<Arc<RefusedFactory>>,prepared:bool}
 fn refused_factory_extent()->usize{std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<RefusedFactory>()).unwrap().0.pad_to_align().size()}
 impl semio_framework_value::FactoryRetirement for RefusedFactory{
+ fn factory_retirement_work_demand(&self)->Result<u64,ValueError>{Ok(1)}
  fn factory_retirement_birth_bytes(&self)->usize{size_of::<RefusedTicket>()}
  fn factory_retirement_copy_byte_demand(&self)->usize{0}
  fn factory_retirement_depth_demand(&self)->usize{1}
- fn preborn_factory_retirement(self:Arc<Self>,grant:RetainedCloneGrant)->Result<(Box<dyn semio_framework_value::FactoryRetirementTicket>,RetainedCloneProgress),semio_framework_value::FactoryRetirementAdmissionError>{
+ fn preborn_factory_retirement(self:Arc<Self>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn semio_framework_value::FactoryRetirementTicket>,RetainedCloneProgress),semio_framework_value::FactoryRetirementAdmissionError>{
   use semio_framework_value::FactoryRetirementAdmissionError;
-  if grant.maximum_items==0||grant.maximum_capacity_bytes<size_of::<RefusedTicket>()||grant.maximum_depth==0{return Err(FactoryRetirementAdmissionError{error:ValueError::literal(ValueRefusalKind::OwnershipLimit,"original refused factory requires its exact constructor"),original:Some(self),ticket:None,progress:Default::default()})}
+  if grant.maximum_items==0||grant.maximum_capacity_bytes<size_of::<RefusedTicket>()||grant.maximum_depth==0{return semio_framework_value::RetainedWorkOutcome{result:Err(FactoryRetirementAdmissionError{error:ValueError::literal(ValueRefusalKind::OwnershipLimit,"original refused factory requires its exact constructor"),original:Some(self),ticket:None,progress:Default::default()}),work:0}}
   let refused=!self.0.swap(true,Ordering::SeqCst);let original=refused.then(||self.clone() as Arc<dyn semio_framework_value::FactoryRetirement>);let ticket=Box::new(RefusedTicket{original:Some(self),prepared:false});let progress=RetainedCloneProgress{copied_items:1,retained_capacity_bytes:size_of::<RefusedTicket>(),..Default::default()};
-  if refused{Err(FactoryRetirementAdmissionError{error:ValueError::literal(ValueRefusalKind::AllocationFailed,"original constructor retained its partial ticket").with_retained_progress(progress),original,ticket:Some(ticket),progress})}else{Ok((ticket,progress))}
+  let result=if refused{Err(FactoryRetirementAdmissionError{error:ValueError::literal(ValueRefusalKind::AllocationFailed,"original constructor retained its partial ticket").with_retained_progress(progress),original,ticket:Some(ticket),progress})}else{Ok((ticket as Box<dyn semio_framework_value::FactoryRetirementTicket>,progress))};semio_framework_value::RetainedWorkOutcome{result,work:1}
  }
 }
 impl SnapshotRetirementFactory<Root> for RefusedFactory{
  fn retirement_birth_bytes(&self,_:&Arc<Root>)->usize{semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<Root>()}
- fn retire(&self,root:Arc<Root>,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Arc<Root>)>{semio_framework_value::retirement::arc_custody::admit_shared_retirement(root,grant,false)}
+ fn retire(&self,root:Arc<Root>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Arc<Root>)>{semio_framework_value::retirement::arc_custody::admit_shared_retirement(root,grant,false)}
 }
 impl semio_framework_value::FactoryRetirementTicket for RefusedTicket{
+ fn preparation_work_demand(&self,_:usize)->Result<u64,ValueError>{Ok(u64::from(!self.prepared))}
  fn preparation_demands(&self,_:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(semio_framework_value::RetirementDemand{depth:usize::from(!self.prepared),..Default::default()})}
- fn prepare_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if self.prepared{return Ok(RetainedCloneStep::Complete(Default::default()))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original partial ticket preparation needs depth"))}self.prepared=true;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))}
+ fn prepare_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{if self.prepared{return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}if grant.maximum_items==0{return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}if grant.maximum_depth==0{return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original partial ticket preparation needs depth")),work:0}}self.prepared=true;semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
  fn preparation_is_complete(&self)->bool{self.prepared}
 }
 impl ErasedSnapshotRetirement for RefusedTicket{
+ fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(u64::from(!self.terminal_is_empty()))}
     fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand {release_bytes:if self.prepared&&self.original.as_ref().is_some_and(|original|Arc::strong_count(original)==1){refused_factory_extent()}else{0},depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
- fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original partial ticket close needs depth"))}
-  if !self.prepared{let step=semio_framework_value::FactoryRetirementTicket::prepare_step(self,grant)?;return Ok(RetainedCloneStep::Progress(step.progress()))}
-  let released_bytes=self.next_release_byte_demand()?;if grant.maximum_release_bytes<released_bytes{return Ok(RetainedCloneStep::Progress(Default::default()))}drop(self.original.take());Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()}))
- }
+ fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{let mut work=0;let result=(||{
+  if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original partial ticket close needs depth").into())}
+  if !self.prepared{let turn=semio_framework_value::FactoryRetirementTicket::prepare_step(self,grant);work=turn.work;return turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(Into::into)}
+  let released_bytes=self.next_release_byte_demand()?;if grant.maximum_release_bytes<released_bytes{return Ok(RetainedCloneStep::Progress(Default::default()))}drop(self.original.take());work=1;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()}))
+ })();semio_framework_value::RetainedWorkOutcome{result,work}}
  fn terminal_is_empty(&self)->bool{self.original.is_none()}
  fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
  fn next_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Ok(0)}

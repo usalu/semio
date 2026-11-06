@@ -34,14 +34,14 @@ test("original receiving result and terminal child shell have closed independent
  const validate=new Ajv({strict:true,allErrors:true}).compile(grantSchema);expect(validate(fixture.grant)).toBe(true);expect(validate(fixture.deniedGrant)).toBe(true);
 expect(fixture.originalInput).toBe("callerSlotUntilAdmission");expect(fixture.originalError).toBe("IoResultInReceivingOutput");expect(fixture.finalPublication).toBe("afterIntermediateTerminal");
  const db=new Database(":memory:");try{
- db.exec("CREATE TABLE terminal_child(native_word_bytes INTEGER PRIMARY KEY,slot_words INTEGER NOT NULL,copy_bytes INTEGER NOT NULL,depth INTEGER NOT NULL,items INTEGER NOT NULL,capacity_bytes INTEGER NOT NULL)");
- for(const word of [4,8])db.query("INSERT INTO terminal_child VALUES(?,?,?,?,?,?)").run(word,fixture.terminalChild.slotNativeWords,word*fixture.terminalChild.slotNativeWords,fixture.terminalChild.requiredDepth,fixture.terminalChild.requiredItems,fixture.terminalChild.capacityBytes);
- expect(db.query("SELECT copy_bytes FROM terminal_child ORDER BY native_word_bytes").all()).toEqual([{copy_bytes:8},{copy_bytes:16}]);
- expect(db.query("SELECT COUNT(*) AS count FROM terminal_child WHERE copy_bytes=native_word_bytes*slot_words AND depth=2 AND items=1 AND capacity_bytes=0").get()).toEqual({count:2});
+ db.exec("CREATE TABLE terminal_child(native_word_bytes INTEGER PRIMARY KEY,copy_bytes INTEGER NOT NULL,depth INTEGER NOT NULL,items INTEGER NOT NULL,capacity_bytes INTEGER NOT NULL)");
+ for(const word of [4,8])db.query("INSERT INTO terminal_child VALUES(?,?,?,?,?)").run(word,fixture.terminalChild.copyBytes,fixture.terminalChild.requiredDepth,fixture.terminalChild.requiredItems,fixture.terminalChild.capacityBytes);
+ expect(db.query("SELECT copy_bytes FROM terminal_child ORDER BY native_word_bytes").all()).toEqual([{copy_bytes:0},{copy_bytes:0}]);
+ expect(db.query("SELECT COUNT(*) AS count FROM terminal_child WHERE copy_bytes=0 AND depth=2 AND items=1 AND capacity_bytes=0").get()).toEqual({count:2});
  db.exec("CREATE TABLE original_error(kind TEXT PRIMARY KEY,text TEXT NOT NULL,octets INTEGER NOT NULL)");
  for(const[kind,text]of Object.entries(fixture.error)){db.query("INSERT INTO original_error VALUES(?,?,?)").run(kind,text,Buffer.byteLength(text));expect(JSON.parse(JSON.stringify(text))).toBe(text);}
  expect(db.query("SELECT kind FROM original_error WHERE length(CAST(text AS BLOB))<>octets").all()).toEqual([]);
- expect(fixture.terminalChild.denials).toEqual(["maximumItems","maximumCopyBytes","maximumReleaseBytes","maximumDepth"]);
+ expect(fixture.terminalChild.denials).toEqual(["maximumItems","maximumReleaseBytes","maximumDepth"]);
  for(const axis of Object.keys(fixture.grant)){const missing:Record<string,unknown>={...fixture.grant};delete missing[axis];expect(validate(missing)).toBe(false);expect(validate({...fixture.grant,[axis]:-1})).toBe(false);}
  }finally{db.close();}
 });
@@ -69,7 +69,7 @@ test("original typed decoder cursor preserves independently funded receiving cus
 test("original receiving final publication prices native header before original output leaves its frame",async()=>{
  expect(existsSync(resolve(import.meta.dir,"../🧬️schema/📤️publication.json"))).toBe(false);
  const db=new Database(":memory:");try{db.exec("CREATE TABLE publication(word INTEGER PRIMARY KEY,header INTEGER NOT NULL,intermediate INTEGER NOT NULL,denied INTEGER NOT NULL,accepted INTEGER NOT NULL)");for(const word of [4,8])db.query("INSERT INTO publication VALUES(?,?,?,?,?)").run(word,word*fixture.publicationHeader.nativeWords,fixture.publicationHeader.intermediateBytes,fixture.publicationHeader.intermediateBytes,fixture.publicationHeader.intermediateBytes+word*fixture.publicationHeader.nativeWords);expect(db.query("SELECT header,denied,accepted FROM publication ORDER BY word").all()).toEqual([{header:12,denied:1,accepted:13},{header:24,denied:1,accepted:25}]);expect(db.query("SELECT count(*) AS count FROM publication WHERE denied-intermediate<header AND accepted-intermediate=header").get()).toEqual({count:2});}finally{db.close();}
- const source=await Bun.file(new URL("../🦀️.rs",import.meta.url)).text();expect(source.includes("copied_bytes:size_of::<Option<O>>()")).toBe(true);expect(source.includes("publication_progress::<O>(grant,frame_bytes)?")).toBe(true);expect(fixture.publicationHeader.entries).toEqual(["receive","cursor"]);expect(fixture.publicationHeader.cases).toEqual(["zero","oneShort","exact"]);for(const layout of fixture.publicationHeader.layouts){expect(layout.oneShortCopyBytes).toBe(layout.exactCopyBytes-1);expect(layout.exactCopyBytes).toBe(layout.headerBytes+fixture.publicationHeader.intermediateBytes);}expect(source.includes("publication_progress::<O>(remaining,frame_bytes)?")).toBe(true);expect(source.includes("*performed=receipt;Ok(frame.output.take_original()")).toBe(true);
+ const source=await Bun.file(new URL("../🦀️.rs",import.meta.url)).text();expect(source.includes("copied_bytes:size_of::<Option<O>>()")).toBe(true);expect(source.includes("publication_progress::<O>(local)?")).toBe(true);expect(fixture.publicationHeader.entries).toEqual(["receive","cursor"]);expect(fixture.publicationHeader.cases).toEqual(["zero","oneShort","exact"]);for(const layout of fixture.publicationHeader.layouts){expect(layout.oneShortCopyBytes).toBe(layout.exactCopyBytes-1);expect(layout.exactCopyBytes).toBe(layout.headerBytes+fixture.publicationHeader.intermediateBytes);}expect(source.includes("publication_progress::<O>(quote)?")).toBe(true);expect(source.includes("*output=frame.output.take_original().flatten();")).toBe(true);
 });
 
 

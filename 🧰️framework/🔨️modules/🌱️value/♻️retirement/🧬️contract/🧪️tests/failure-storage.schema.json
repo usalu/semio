@@ -1,0 +1,56 @@
+{
+  "type": "object",
+  "required": [
+    "deniedCapacity",
+    "childCallsOnDenial",
+    "childPrimary",
+    "childSettlement",
+    "outerSettlement",
+    "actualWork",
+    "allocationFailure",
+    "receiptFailure",
+    "genericResult",
+    "genericItems",
+    "overrunWork",
+    "unwindReservationHeld"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "deniedCapacity": {
+      "const": 0
+    },
+    "childCallsOnDenial": {
+      "const": 0
+    },
+    "childPrimary": {
+      "const": "child owner"
+    },
+    "childSettlement": {
+      "const": "child settlement"
+    },
+    "outerSettlement": {
+      "const": "outer settlement"
+    },
+    "actualWork": {
+      "const": 3
+    },
+    "allocationFailure": {
+      "const": "allocation refused"
+    },
+    "genericResult": {
+      "const": true
+    },
+    "genericItems": {
+      "const": 7
+    },
+    "overrunWork": {
+      "const": 4
+    },
+    "receiptFailure": {
+      "const": "receipt refused"
+    },
+    "unwindReservationHeld": {
+      "const": true
+    }
+  }
+}

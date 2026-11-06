@@ -64,3 +64,5 @@ test("original history cleanup authority is independent of its retirement demand
  expect(native.includes(".max(work)")).toBe(false);expect(native.includes(".max(demand.copy_bytes)")).toBe(false);
  const grants=[...native.matchAll(/let grant=([^;]+);/g)].map(match=>match[1]);expect(grants).toHaveLength(6);for(const grant of grants)expect(grant).toBe("cleanup_grant(&law)");
 });
+
+test("original retirement failure retains each owned channel",()=>{const law=JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json",import.meta.url),"utf8")).retirementFailure,db=new Database(":memory:");try{db.exec("CREATE TABLE causes(channel TEXT PRIMARY KEY,message TEXT)");for(const channel of ["primary","work","receipt"])db.query("INSERT INTO causes VALUES(?,?)").run(channel,law[channel]);expect(db.query("SELECT channel,message FROM causes ORDER BY rowid").all()).toEqual(["primary","work","receipt"].map(channel=>({channel,message:law[channel]})));expect(law.progressBytes).toBe(13)}finally{db.close()}});

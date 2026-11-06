@@ -3,29 +3,29 @@
 //! 🪜️ The retained-field rung of one hosted app's close ladder: every owned field the app retains
 //! beyond its stores is released through exact per-axis quotes and an unchanged caller grant.
 use store::os_store::ArtifactStoreNativeVcsTurn as _;
-use semio_framework_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, PluginLifecycleStep};
+use semio_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, PluginLifecycleStep};
 use semio_framework_plugin_instance_stores::stores_components::{ActionIngress, InstanceStores, PeerRoster};
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_decl_views::child_view::CHILD_CONTENT_SLOTS;
-use semio_framework_plugin_child::ChildMemberRetirement;
-use semio_framework_plugin_decl_emission::Emit;
+use semio_plugin_decl_views::child_view::CHILD_CONTENT_SLOTS;
+use semio_plugin_child::ChildMemberRetirement;
+use semio_plugin_decl_emission::Emit;
 use semio_framework::{Fault, FaultFrom};
 use std::future::Future;
-use semio_framework_plugin_instance_extension::InstanceExtension;
+use semio_plugin_instance_extension::InstanceExtension;
 use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
-use semio_framework_plugin_instance_jobs::jobs_components::{PendingReserved, ToolOperations};
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_instance_jobs::jobs_components::{PendingReserved, ToolOperations};
+use semio_plugin_reactor_app::PluginApp;
 use crate::VcsArtifactApp;
-use semio_framework_ui_contract::*;
-use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure;
+use semio_ui_contract::*;
+use semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure;
 use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_plugin_instance_docs::docs_maintenance_ladder::{idle, removed};
-use semio_framework_plugin_instance_jobs::jobs_close_ladder::{handoff, handoff_demand};
-use semio_framework_plugin_instance_ladders::ladders_close_ladder::{CloseRung, child_grant, registry_demands, registry_step};
+use semio_plugin_instance_jobs::jobs_close_ladder::{handoff, handoff_demand};
+use semio_plugin_instance_ladders::ladders_close_ladder::{CloseRung, child_grant, registry_demands, registry_step};
 
 
 impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
@@ -39,7 +39,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
         match self.ladder_ref().close_rung() {
             CloseRung::Begin | CloseRung::PendingReserved | CloseRung::ReservedOutcome | CloseRung::DetachChildRoot | CloseRung::DetachChildren | CloseRung::PeerRosterOutcomes => Ok(handoff_demand()),
             CloseRung::DetachPeerPresence => self.ladder_ref().detach_peer_presence_demands(body),
-            CloseRung::ReservedCommit=>{if let Some(commit)=self.pending.reserved_commits.front(){if let semio_framework_plugin_job::reserved_jobs::FrameworkReservedCommitStage::Repin{pins,publication,retirement,closing,..}=&commit.stage{if pins.is_some()||publication.is_some()||!retirement.is_empty(){return self.stores.checkpoint_composition_pins_close_demands(pins,publication,retirement,*closing,4096)}}if let semio_framework_plugin_job::reserved_jobs::FrameworkReservedCommitStage::Revert{command:Some(command),..}=&commit.stage{return if command.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<store::os_store::ArtifactNativeVcsCommand<A::Snapshot,A::Mutation>>>(),depth:1,..Default::default()})}else{self.stores.store.native_vcs_command_close_demands(command,body)}}}Ok(handoff_demand())},
+            CloseRung::ReservedCommit=>{if let Some(commit)=self.pending.reserved_commits.front(){if let semio_plugin_job::reserved_jobs::FrameworkReservedCommitStage::Repin{pins,publication,retirement,closing,..}=&commit.stage{if pins.is_some()||publication.is_some()||!retirement.is_empty(){return self.stores.checkpoint_composition_pins_close_demands(pins,publication,retirement,*closing,4096)}}if let semio_plugin_job::reserved_jobs::FrameworkReservedCommitStage::Revert{command:Some(command),..}=&commit.stage{return if command.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<store::os_store::ArtifactNativeVcsCommand<A::Snapshot,A::Mutation>>>(),depth:1,..Default::default()})}else{self.stores.store.native_vcs_command_close_demands(command,body)}}}Ok(handoff_demand())},
             CloseRung::CancellationSlots => {let mut demand=self.tools.tool_cancellations.cancellation_cleanup_demands(self.close.close_cancellation_cursor,body,false)?;demand.copy_bytes=demand.copy_bytes.checked_add(size_of::<usize>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original cancellation cursor quote overflow"))?;Ok(demand)},
             CloseRung::DirectIngress => self.stores.window_config_store.direct_ingress_demands(body),
             CloseRung::CommandPrune => self.history.command_prune_demands(true, body),
@@ -54,7 +54,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             CloseRung::MountedJobs => self.tools.live_runtime_instance_id.map_or(Ok(Default::default()), |instance_id| A::mounted_job_close_demands(instance_id, body)),
             CloseRung::LatestWinsKeys => self.tools.latest_wins_keys.advance_demands(),
             CloseRung::LatestWinsCommands => self.tools.latest_wins_order.items.front().copied().map_or(Ok(Default::default()), |operation_id| self.tools.close_latest_wins_command_demands(operation_id, body)),
-            CloseRung::TypedOperations => if self.original_host_event_command.pending(){self.original_host_event_close_demands(body)}else if !self.host_events.action_delivery.terminal_is_empty(){self.host_events.action_delivery.close_demands(body)}else if self.original_typed_tag_pending(){self.original_typed_tag_close_demands(body)}else if self.original_typed_command.pending(){self.original_typed_command.close_demands()}else if self.original_typing.pending(){self.original_typing.close_demands()}else if self.original_emission.pending(){self.original_emission.close_demands()}else if !self.host_events.routes.terminal_is_empty(){self.host_events.routes.close_demands(body)}else{self.tools.close_typed_operation_demands(&self.child_composition, &self.stores, body).map_err(fault)},
+            CloseRung::TypedOperations => if self.original_host_event_command.pending(){self.host_event_routing_ref().original_host_event_close_demands(body)}else if !self.host_events.action_delivery.terminal_is_empty(){self.host_events.action_delivery.close_demands(body)}else if self.original_typed_tag_pending(){self.original_typed_tag_close_demands(body)}else if self.original_typed_command.pending(){self.original_typed_command.close_demands()}else if self.original_typing.pending(){self.original_typing.close_demands()}else if self.original_emission.pending(){self.original_emission.close_demands()}else if !self.host_events.routes.terminal_is_empty(){self.host_events.routes.close_demands(body)}else{self.tools.close_typed_operation_demands(&self.child_composition, &self.stores, body).map_err(fault)},
             CloseRung::InstanceOwner=>if self.close.close_instance_operation_owner_drained{self.tools.instance_operation_owner.inference_retirement_demands(body)}else{self.tools.instance_operation_owner.retirement_demands(body).map(|demand|if demand==Default::default(){handoff_demand()}else{demand})},
             CloseRung::AgentPreview=>self.tools.agent_lane_preview.as_ref().map_or(Ok(Default::default()),|state|state.retirement_demands(body,self.tools.tool_cancellations.handle())),
             CloseRung::ConfigurationFailure=>self.pending.configuration_failure_demands(body),
@@ -89,6 +89,8 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
         }
     }
 
+    pub(crate) fn close_ladder_quoted_retirement_selected(&self)->bool{(matches!(self.ladder_ref().close_rung(),CloseRung::LatestWinsCommands)&&self.tools.latest_wins_order.items.front().is_some_and(|id|self.tools.latest_wins_quoted_retirement_selected(*id)))||(matches!(self.ladder_ref().close_rung(),CloseRung::GrantedMounted)&&self.ladder_ref().granted_mounted_quoted_retirement_selected())||(matches!(self.ladder_ref().close_rung(),CloseRung::MediaRefusal)&&self.media.quoted_media_refusal_selected())}
+
     /// 🎟️ Advances exactly one frontier under the caller's unchanged grant; a closed app answers `Complete`.
     pub(crate) fn close_ladder_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, PluginLifecycleFailure> {
         let idle=RetainedCloneProgress::default();let child=child_grant(grant);
@@ -100,10 +102,10 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             CloseRung::PrivateChildGroups=>Ok(match self.child_composition.close_private_child_group_step(&mut self.stores, cx, grant)?{semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>RetainedCloneStep::Progress(progress),semio_framework_job::InteractiveJobCloseStep::Blocked=>RetainedCloneStep::Progress(idle)}),
             CloseRung::PendingReserved=>{if let Some((_,id))=self.pending.pending_reserved.next_id_from(0){if let Some(pending)=self.pending.pending_reserved.remove(id){pending.permit.finish()}}Ok(RetainedCloneStep::Progress(handoff()))}
             CloseRung::ReservedCommit=>{
-                if let Some(commit)=self.pending.reserved_commits.front_mut(){if let semio_framework_plugin_job::reserved_jobs::FrameworkReservedCommitStage::Repin{pins,publication,retirement,closing,..}=&mut commit.stage{if pins.is_some()||publication.is_some()||!retirement.is_empty(){let before=cx.retained_progress();let complete=self.stores.checkpoint_composition_pins_unit(pins,publication,retirement,closing,false,4096,cx)?;let p=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;if !complete||p!=RetainedCloneProgress::default(){return Ok(RetainedCloneStep::Progress(p))}}}}
-                if let Some(commit)=self.pending.reserved_commits.front_mut(){if let semio_framework_plugin_job::reserved_jobs::FrameworkReservedCommitStage::Revert{command:Some(command),..}=&mut commit.stage{
-                    if !command.terminal_is_empty(){let before=cx.retained_progress();cx.with_original_retirement(|cx|self.stores.store.close_native_vcs_command(command,cx))?;let p=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;return Ok(RetainedCloneStep::Progress(p))}
-                    if let semio_framework_plugin_job::reserved_jobs::FrameworkReservedCommitStage::Revert{command,..}=&mut commit.stage{*command=None;}let d=RetirementDemand{copy_bytes:size_of::<Option<store::os_store::ArtifactNativeVcsCommand<A::Snapshot,A::Mutation>>>(),depth:1,..Default::default()};return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))
+                if let Some(commit)=self.pending.reserved_commits.front_mut(){if let semio_plugin_job::reserved_jobs::FrameworkReservedCommitStage::Repin{pins,publication,retirement,closing,..}=&mut commit.stage{if pins.is_some()||publication.is_some()||!retirement.is_empty(){let before=cx.retained_progress();let complete=self.stores.checkpoint_composition_pins_unit(pins,publication,retirement,closing,false,4096,cx)?;let p=semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;if !complete||p!=RetainedCloneProgress::default(){return Ok(RetainedCloneStep::Progress(p))}}}}
+                if let Some(commit)=self.pending.reserved_commits.front_mut(){if let semio_plugin_job::reserved_jobs::FrameworkReservedCommitStage::Revert{command:Some(command),..}=&mut commit.stage{
+                    if !command.terminal_is_empty(){let before=cx.retained_progress();cx.with_original_retirement(|cx|self.stores.store.close_native_vcs_command(command,cx))?;let p=semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;return Ok(RetainedCloneStep::Progress(p))}
+                    if let semio_plugin_job::reserved_jobs::FrameworkReservedCommitStage::Revert{command,..}=&mut commit.stage{*command=None;}let d=RetirementDemand{copy_bytes:size_of::<Option<store::os_store::ArtifactNativeVcsCommand<A::Snapshot,A::Mutation>>>(),depth:1,..Default::default()};return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))
                 }}
                 if let Some(commit)=self.pending.reserved_commits.pop_front(){commit.permit.finish()}Ok(RetainedCloneStep::Progress(handoff()))
             }
@@ -117,16 +119,16 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             CloseRung::MountedJobs=>{let Some(instance_id)=self.tools.live_runtime_instance_id else{return Ok(RetainedCloneStep::Progress(idle))};A::mounted_job_close_step(instance_id, cx, grant).map(ToolOperations::<A>::lifecycle_retained)}
             CloseRung::CancellationSlots=>{
                 let before=cx.retained_progress();let complete=self.tools.tool_cancellations.cleanup_slot(self.close.close_cancellation_cursor,cx,false)?;
-                let progress=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;
+                let progress=semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;
                 if complete&&progress==RetainedCloneProgress::default(){
                     let bytes=std::mem::size_of::<usize>();if cx.retirement_should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_copy_bytes<bytes||cx.retained_grant().maximum_depth==0{return Ok(RetainedCloneStep::Progress(idle))}
                     cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);self.close.close_cancellation_cursor+=1;
                 }
-                Ok(RetainedCloneStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))
+                Ok(RetainedCloneStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))
             },
             CloseRung::LatestWinsKeys=>Ok(RetainedCloneStep::Progress(self.tools.latest_wins_keys.advance(grant)?.progress())),
             CloseRung::LatestWinsCommands=>{let Some(operation_id)=self.tools.latest_wins_order.items.front().copied()else{return Ok(RetainedCloneStep::Progress(idle))};self.tools.close_latest_wins_command_step(operation_id, grant,cx).map(|step|RetainedCloneStep::Progress(step.progress()))}
-            CloseRung::TypedOperations=>{if self.original_host_event_command.pending(){Ok(self.close_original_host_event_source(cx)?)}else if !self.host_events.action_delivery.terminal_is_empty(){let before=cx.retained_progress();self.host_events.action_delivery.close_step(cx)?;Ok(RetainedCloneStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}else if self.original_typed_tag_pending(){Ok(self.close_original_typed_tag(cx)?)}else if self.original_typed_command.pending(){let before=cx.retained_progress();self.original_typed_command.close_step(cx)?;Ok(RetainedCloneStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}else if self.original_typing.pending(){let before=cx.retained_progress();self.original_typing.close_step(cx)?;Ok(RetainedCloneStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}else if self.original_emission.pending(){let before=cx.retained_progress();self.original_emission.close_step(cx)?;Ok(RetainedCloneStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}else if !self.host_events.routes.terminal_is_empty(){let before=cx.retained_progress();self.host_events.routes.close_step(cx)?;Ok(RetainedCloneStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}else{self.ladder_ctx().close_typed_operation_unit(cx).map(ToolOperations::<A>::lifecycle_retained)}},
+            CloseRung::TypedOperations=>{if self.original_host_event_command.pending(){Ok(self.host_event_routing_ctx().close_original_host_event_source(cx)?)}else if !self.host_events.action_delivery.terminal_is_empty(){let before=cx.retained_progress();self.host_events.action_delivery.close_step(cx)?;Ok(RetainedCloneStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}else if self.original_typed_tag_pending(){Ok(self.close_original_typed_tag(cx)?)}else if self.original_typed_command.pending(){let before=cx.retained_progress();self.original_typed_command.close_step(cx)?;Ok(RetainedCloneStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}else if self.original_typing.pending(){let before=cx.retained_progress();self.original_typing.close_step(cx)?;Ok(RetainedCloneStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}else if self.original_emission.pending(){let before=cx.retained_progress();self.original_emission.close_step(cx)?;Ok(RetainedCloneStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}else if !self.host_events.routes.terminal_is_empty(){let before=cx.retained_progress();self.host_events.routes.close_step(cx)?;Ok(RetainedCloneStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}else{self.ladder_ctx().close_typed_operation_unit(cx).map(ToolOperations::<A>::lifecycle_retained)}},
             CloseRung::InstanceOwner=>{
                 if self.close.close_instance_operation_owner_drained{return self.tools.instance_operation_owner.close_inference_step(cx,grant).map(ToolOperations::<A>::lifecycle_retained)}
                 let step=self.tools.instance_operation_owner.close_step(cx,grant)?;let mut progress=step.progress().unwrap_or_default();

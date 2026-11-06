@@ -171,5 +171,10 @@
         "accepted": false
       }
     ]
+  },
+  "settlementCloseWork": {
+    "denied": 0,
+    "selected": 1,
+    "witnessBytes": 73
   }
 }

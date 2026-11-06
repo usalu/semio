@@ -34,11 +34,12 @@ function lines(stream,onLine){
 }
 
 /** 🏊 Creates the pool. `command` is the argv that starts the main script with the preload already included. */
-export function createWarmPoolV1({command,environment,cwd,size,idleMilliseconds,readyTimeoutMilliseconds=60000,spawnProcess=spawn,log=()=>{},now=()=>Date.now()}){
+export function createWarmPoolV1({command,environment,cwd,size,idleMilliseconds,readyTimeoutMilliseconds=60000,spawnProcess=spawn,log=()=>{},now=()=>Date.now(),snapshot}){
  const idle=[];let starting=0,closed=false,spawned=0,served=0,coldServed=0;
  const create=()=>{
   starting++;spawned++;
-  const child=spawnProcess(command[0],command.slice(1),{cwd,env:environment,stdio:["ignore","pipe","pipe","pipe"]});
+   const child=spawnProcess(command[0],command.slice(1),{cwd,env:environment,stdio:["ignore","pipe","pipe","pipe",...(snapshot?["pipe"]:[])]});
+   if(snapshot){child.stdio[4].on("error",()=>{});child.stdio[4].end(snapshot);}
   const worker={child,state:"starting",bornAt:now(),readyAt:0};
   const control=child.stdio[3];
   worker.ready=new Promise(resolve=>{

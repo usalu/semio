@@ -31,7 +31,7 @@ pub fn drive_hydration_retirement(active: &mut Option<Box<dyn ErasedSnapshotReti
     let grant = RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant };
     let step = semio_os_store_read::artifact_retirement_box_close_step(active, grant).result.map_err(|_| MemberOpenDiagnostic::Initialization)?;
     let progress = step.progress();
-    semio_os_store_member_open::record_member_step(cx, progress)?;
+    semio_framework_os_store_member_open::record_member_step(cx, progress)?;
     Ok(true)
 }
 
@@ -43,7 +43,7 @@ pub fn drive_hydration_runtime<P: Send + Sync + 'static>(runtime: &mut ArtifactS
     let terminal = runtime.terminal_is_empty();
     semio_framework_value::retained_clone::admit_retained_clone_close(grant, step, terminal, "hydration original initialization").map_err(|_| MemberOpenDiagnostic::Initialization)?;
     let progress = step.progress();
-    semio_os_store_member_open::record_member_step(cx, progress)?;
+    semio_framework_os_store_member_open::record_member_step(cx, progress)?;
     Ok(terminal)
 }
 
@@ -344,12 +344,12 @@ where
         let (owner, progress) = semio_framework_value::retirement::admit_owned_retirement(value, child).result.map_err(|_| MemberOpenDiagnostic::Initialization)?;
         *self.active = Some(owner);
         semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "hydration owned retirement").map_err(|_| MemberOpenDiagnostic::Initialization)?;
-        semio_os_store_member_open::record_member_step(cx, progress)?;
+        semio_framework_os_store_member_open::record_member_step(cx, progress)?;
         Ok(())
     }
 
     pub(super) fn admitted_step(&mut self, step: Result<RetainedCloneStep, ValueError>, cx: &mut StepContext<'_>) -> PersistedDocumentHydrationStep<P, M> {
-        match step.map_err(|_| MemberOpenDiagnostic::Initialization).and_then(|step| semio_os_store_member_open::record_member_step(cx, step.progress())) {
+        match step.map_err(|_| MemberOpenDiagnostic::Initialization).and_then(|step| semio_framework_os_store_member_open::record_member_step(cx, step.progress())) {
             Ok(()) => PersistedDocumentHydrationStep::Pending(self.progress()),
             Err(diagnostic) => self.reject(diagnostic),
         }

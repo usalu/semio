@@ -86,7 +86,7 @@ fn stepping_publishes_a_strictly_increasing_partial_before_the_finish() {
     let oracle = solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("blocks solves");
     let finished = oracle.assignments.len();
     assert!(finished > 2, "the fixture must leave room to collapse");
-    let port=semio_framework_plugin::ToolRunJobPort::default();
+    let port=semio_plugin::ToolRunJobPort::default();
     let mut job = Grid3dFillRunJob::new(identity(), snapshot, port.clone());
     let (operation, generation, cancel) = (semio_framework_job::allocate_operation_id(), Generation(1), semio_framework_job::root_cancel_token());
     let mut driver = TestJobDriver::new(operation, generation);
@@ -120,7 +120,7 @@ fn stepping_publishes_a_strictly_increasing_partial_before_the_finish() {
 #[test]
 fn aborting_mid_run_cancels_and_never_stores_residency() {
     let snapshot = Arc::new(crate::examples::blocks::snapshot());
-    let port=semio_framework_plugin::ToolRunJobPort::default();
+    let port=semio_plugin::ToolRunJobPort::default();
     let mut job = Grid3dFillRunJob::new(identity(), snapshot, port.clone());
     let (operation, generation, cancel) = (semio_framework_job::allocate_operation_id(), Generation(1), semio_framework_job::root_cancel_token());
     let mut driver = TestJobDriver::new(operation, generation);
@@ -150,7 +150,7 @@ fn aborting_mid_run_cancels_and_never_stores_residency() {
 fn the_final_payload_matches_solve_for_blocks() {
     let snapshot = Arc::new(crate::examples::blocks::snapshot());
     let oracle = solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("blocks solves");
-    let port=semio_framework_plugin::ToolRunJobPort::default();
+    let port=semio_plugin::ToolRunJobPort::default();
     let mut job = Grid3dFillRunJob::new(identity(), snapshot, port.clone());
     let (operation, generation, cancel) = (semio_framework_job::allocate_operation_id(), Generation(1), semio_framework_job::root_cancel_token());
     let mut driver = TestJobDriver::new(operation, generation);
@@ -178,7 +178,7 @@ fn the_final_payload_matches_solve_for_blocks() {
 #[test]
 fn a_full_lane_step_publishes_many_collapses_in_one_tick() {
     let snapshot = Arc::new(crate::examples::blocks::snapshot());
-    let port=semio_framework_plugin::ToolRunJobPort::default();
+    let port=semio_plugin::ToolRunJobPort::default();
     let mut job = Grid3dFillRunJob::new(identity(), snapshot, port.clone());
     let (operation, generation, cancel) = (semio_framework_job::allocate_operation_id(), Generation(1), semio_framework_job::root_cancel_token());
     let mut driver = TestJobDriver::new(operation, generation);

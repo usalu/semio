@@ -15,6 +15,23 @@ pub struct PersistentListBuilder<T:crate::retirement::RetireOwned+Send+Sync+'sta
 fn refusal(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
 fn receipt(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}}
 impl<T:crate::retirement::RetireOwned+Send+Sync+'static> PersistentListBuilder<T>{
+ /// 🔍️ A cold owner checks every retained row and page before releasing any original.
+ pub fn cold_is_exclusive(&self)->bool where T:crate::shared_issuance::ColdRetire{
+  self.retirement.is_empty()
+   && self.rows.iter().flatten().all(|value|value.original_is_exclusive()&&value.get().cold_exclusive())
+   && self.levels.iter().flatten().all(|level|level.iter().flatten().all(|list|list.cold_is_exclusive()))
+   && self.carry.as_ref().is_none_or(|list|list.cold_is_exclusive())
+   && self.output.as_ref().is_none_or(|list|list.cold_is_exclusive())
+ }
+ /// ♻️ Returns false without mutation when an original page, row or nested payload has aliases.
+ pub fn cold_dismantle(&mut self)->bool where T:crate::shared_issuance::ColdRetire{
+  if !self.cold_is_exclusive(){return false}
+  for slot in self.rows.iter_mut(){if let Some(value)=slot.take(){super::cold_take(value).cold_release();}}
+  for level in self.levels.iter_mut(){if let Some(mut level)=level.take(){for list in level.iter_mut().flatten(){list.cold_dismantle_prechecked();}}}
+  if let Some(mut list)=self.carry.take(){list.cold_dismantle_prechecked();}
+  if let Some(mut list)=self.output.take(){list.cold_dismantle_prechecked();}
+  true
+ }
  /// 🌱️ Initializes only the fixed empty frontier without allocating or probing original input.
  pub fn new(expected:usize)->Self{Self{rows:ManuallyDrop::new(std::array::from_fn(|_|None)),levels:ManuallyDrop::new(std::array::from_fn(|_|None)),carry:ManuallyDrop::new(None),output:ManuallyDrop::new(None),retirement:Default::default(),counts:[0;LEVELS],expected,adopted:0,row_count:0,level:0,close_index:0,phase:Phase::Wait,finishing:false,closing:false}}
  /// 🚪️ Only the current original stream position may supply another owned row header.
@@ -53,8 +70,8 @@ impl<T:crate::retirement::RetireOwned+Send+Sync+'static> PersistentListBuilder<T
   if !present{return Ok(RetirementDemand{depth:1,..Default::default()})}if self.close_index<PERSISTENT_PAGE_FANOUT{self.retirement.next_owner_demands::<SealedShared<T>>(true,&None,body)}else if self.close_index<PERSISTENT_PAGE_FANOUT+LEVELS{self.retirement.next_owner_demands::<Box<Roots<T>>>(true,&None,body)}else{self.retirement.next_owner_demands::<PersistentList<T>>(true,&None,body)}
  }
  /// 🚚️ Each genuine child outcome precedes separate frontier metadata work.
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{let mut work=0;let result=(||{
-  if !self.closing{return Err(refusal("original persistent closure has not started"))}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let d=self.close_demand(grant.maximum_copy_bytes)?;if !fits(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}if !self.retirement.is_empty(){let turn=self.retirement.step_granted(grant);work=turn.work;return turn.result.map(|s|RetainedCloneStep::Progress(s.progress()))}
+ pub fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value_retirement::OriginalRetirementOutcome{let mut work=0;let result=(|| -> Result<crate::RetainedCloneStep,semio_framework_value_control_contract::OriginalRetirementFailure>{
+  if !self.closing{return Err(refusal("original persistent closure has not started").into())}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let d=self.close_demand(grant.maximum_copy_bytes)?;if !fits(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}if !self.retirement.is_empty(){let turn=self.retirement.step_granted(grant);work=turn.work;return turn.result.map(|s|RetainedCloneStep::Progress(s.progress()))}
   let present=if self.close_index<PERSISTENT_PAGE_FANOUT{self.rows[self.close_index].is_some()}else if self.close_index<PERSISTENT_PAGE_FANOUT+LEVELS{self.levels[self.close_index-PERSISTENT_PAGE_FANOUT].is_some()}else if self.close_index==PERSISTENT_PAGE_FANOUT+LEVELS{self.carry.is_some()}else{self.output.is_some()};if !present{work=1;self.close_index+=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
   let turn=if self.close_index<PERSISTENT_PAGE_FANOUT{self.retirement.begin_granted(&mut self.rows[self.close_index],grant)}else if self.close_index<PERSISTENT_PAGE_FANOUT+LEVELS{self.retirement.begin_granted(&mut self.levels[self.close_index-PERSISTENT_PAGE_FANOUT],grant)}else if self.close_index==PERSISTENT_PAGE_FANOUT+LEVELS{self.retirement.begin_granted(&mut self.carry,grant)}else{self.retirement.begin_granted(&mut self.output,grant)};work=turn.work;turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default())))
  })();crate::RetainedWorkOutcome{result,work}}

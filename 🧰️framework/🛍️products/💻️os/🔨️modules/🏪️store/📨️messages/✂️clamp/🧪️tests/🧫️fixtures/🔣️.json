@@ -375,6 +375,16 @@
       ],
       "allocationBytes": 1000,
       "oneBelowRetains": true
+    },
+    "closeStart": {
+      "actions": [
+        "settlement",
+        "selection",
+        "copyCancel",
+        "copyClose"
+      ],
+      "denied": 0,
+      "selected": 1
     }
   }
 }

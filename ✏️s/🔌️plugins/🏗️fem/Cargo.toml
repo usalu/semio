@@ -5,6 +5,7 @@ resolver = "2"
 members = [
     "⚙️engine/🖥️app-surface/📦️packages/🦀️rust",
     "🧩️sqlite/📦️packages/🦀️rust",
+    "🧩️receiving/📦️packages/🦀️rust",
 ]
 exclude = [
     "**/🏅️standards/**",
@@ -90,3 +91,6 @@ redundant_clone = "warn"
   level = "warn"
   priority = -1
 
+
+[workspace.dependencies.semio-framework-dsl-record]
+path = "../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust"

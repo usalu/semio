@@ -135,7 +135,7 @@ pub(crate) mod context {
     }
 
     pub async fn render(app: &mut SourcingTestApp, body_key: &str) -> String {
-        render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("bounded retained fixture projection")
+        render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx()).await.expect("bounded retained fixture projection")
     }
 
     /// 📊️ The table scene a rendered pool/curated body carries — found anywhere in the tree, since the
@@ -143,18 +143,18 @@ pub(crate) mod context {
     pub fn table_scene_of(node: &semio_framework_plugin::BuiltNode) -> Option<semio_framework_plugin::TableScene> {
         if let semio_framework_plugin::Component::Surface(props) = &node.component {
             if props.kind == semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Table {
-                let spine: semio_framework_plugin::TableScene = semio_framework_ui_scene::decode(props).expect("typed table spine");
+                let spine: semio_framework_plugin::TableScene = semio_ui_scene::decode(props).expect("typed table spine");
                 assert!(node.rejected_children.is_empty(), "exact retained table has no rejected children");
                 assert_eq!(spine.lanes.len(), 2, "complete table lane declarations");
                 assert_eq!(node.children.len(), spine.lanes.len(), "complete retained table carriers");
-                for (name, key) in [("columns", semio_framework_ui_scene::TABLE_COLUMNS_LANE_KEY), ("rows", semio_framework_ui_scene::TABLE_ROWS_LANE_KEY)] {
+                for (name, key) in [("columns", semio_ui_scene::TABLE_COLUMNS_LANE_KEY), ("rows", semio_ui_scene::TABLE_ROWS_LANE_KEY)] {
                     let declared: Vec<_> = spine.lanes.iter().filter(|lane| lane.lane == name).collect();
                     assert_eq!(declared.len(), 1, "one exact declared table lane {name}");
                     let carriers: Vec<_> = node.children.iter().filter(|child| child.key.as_str() == key).collect();
                     assert_eq!(carriers.len(), 1, "one exact retained table carrier {key}");
                     let payload = semio_framework_plugin::artifact_app_laws::built_carrier_text(carriers[0]);
                     assert_eq!(payload.len(), declared[0].bytes as usize, "complete lane UTF-8 bytes");
-                    assert_eq!(semio_framework_ui_scene::scene_lane_hash(&payload), declared[0].hash, "complete lane digest");
+                    assert_eq!(semio_ui_scene::scene_lane_hash(&payload), declared[0].hash, "complete lane digest");
                 }
                 return Some(semio_framework_plugin::artifact_app_laws::built_surface_scene(node).expect("complete first-party retained table scene"));
             }
@@ -164,7 +164,7 @@ pub(crate) mod context {
 
     /// 🖼️ Renders `body_key` through the live app and decodes its table scene's column ids and row records.
     pub async fn table_of(app: &mut SourcingTestApp, body_key: &str) -> (Vec<String>, Vec<serde_json::Value>) {
-        observe_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx(), |root| {
+        observe_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), app.1.cx(), |root| {
             let scene = table_scene_of(root).expect("a table scene in the rendered body");
             let columns: Vec<serde_json::Value> = serde_json::from_str(&scene.columns_json).expect("columns json");
             let rows: Vec<serde_json::Value> = serde_json::from_str(&scene.rows_json).expect("rows json");
@@ -577,7 +577,7 @@ fn every_command() -> Vec<SourcingCurationCommand> {
 #[semio_framework_async_macros::async_test]
 async fn app_definition_labels_resolve_german() {
     let def = &create_sourcing_curation_app();
-    let (terminology, locale) = (semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De);
+    let (terminology, locale) = (semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De);
     assert_eq!(def.window_kinds.iter().find(|entry| entry.id == pool::SOURCING_CURATION_WINDOW_POOL).expect("pool window").label.resolve(terminology, locale), "Pool");
     assert_eq!(def.window_kinds.iter().find(|entry| entry.id == curated::SOURCING_CURATION_WINDOW_CURATED).expect("curated window").label.resolve(terminology, locale), "Kuratiert");
     assert_eq!(def.modes.iter().find(|entry| entry.id == edit::SOURCING_CURATION_MODE_CURATION).expect("curation mode").label.resolve(terminology, locale), "Kuratierung");
@@ -679,7 +679,7 @@ fn retained_table_lanes_restore_complete_neutral_owner() {
     assert_eq!(node.children.len(), 2);
     assert!(serde_json::to_string(&node).unwrap_err().to_string().contains("BuiltChildren requires retained page transport"));
     let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("typed table surface") };
-    let spine: semio_framework_plugin::TableScene = semio_framework_ui_scene::decode(props).unwrap();
+    let spine: semio_framework_plugin::TableScene = semio_ui_scene::decode(props).unwrap();
     assert_eq!(props.doc_schema.as_str(), fixture["surfaceSchema"].as_str().unwrap());
     assert!(spine.columns_json.is_empty() && spine.rows_json.is_empty());
     assert_eq!(spine.lanes.len(), fixture["lanes"].as_array().unwrap().len());

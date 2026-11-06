@@ -1,31 +1,31 @@
 mod typed_command_full_operation_tests {
     use semio_framework_actor::typed_operation_page::{TypedOperationResultPage,TypedOperationResultToken,TYPED_OPERATION_RESULT_PAGE_BYTES};
-    use semio_framework_plugin_decl_app::tool_contract::TYPED_OPERATION_FAULT_BYTES;
-    use semio_framework_plugin_instance_app::typed_operation_document_is_fresh;
-    use semio_framework_plugin_operation::TOOL_CANCELLATION_SLOTS;
-    use semio_framework_plugin_job::reserved_jobs::{plugin_job_yield_once,QualifiedToolProof};
+    use semio_plugin_decl_app::tool_contract::TYPED_OPERATION_FAULT_BYTES;
+    use semio_plugin_instance_app::typed_operation_document_is_fresh;
+    use semio_plugin_operation::TOOL_CANCELLATION_SLOTS;
+    use semio_plugin_job::reserved_jobs::{plugin_job_yield_once,QualifiedToolProof};
     use semio_framework_os_kernel::one_item_publication;
 use semio_framework_os_kernel::one_item::{ArtifactStoreOneItemCheckpoint,ArtifactStoreOneItemPreparationStep};
 use semio_framework_os_kernel::one_item;
-use semio_framework_plugin_decl_emission::ChildEmitGenesis;
+use semio_plugin_decl_emission::ChildEmitGenesis;
 use semio_framework_artifact_reference::ArtifactRef;
-use semio_framework_plugin_operation::ArtifactDocumentAuthority;
-use semio_framework_plugin_operation::ToolOperationKey;
+use semio_plugin_operation::ArtifactDocumentAuthority;
+use semio_plugin_operation::ToolOperationKey;
 use semio_framework::ArtifactDialect;
 use semio_framework_os_kernel::SchemaId;
-use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
+use semio_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
 use semio_framework_os_kernel::LocalizedLabel;
 use semio_framework_test_fixtures::fixture_path;
 
     use super::*;
     use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-    use semio_framework_plugin_testing_fixtures_publication::publication_fixture::presence::mutations::change_publication_presence::ChangePublicationPresence;
-use semio_framework_plugin_testing_fixtures_publication::publication_fixture::presence::PublicationPresence;
-use semio_framework_plugin_testing_fixtures_publication::publication_fixture::presence::mutations::PublicationPresenceMutation;
+    use semio_plugin_testing_fixtures_publication::publication_fixture::presence::mutations::change_publication_presence::ChangePublicationPresence;
+use semio_plugin_testing_fixtures_publication::publication_fixture::presence::PublicationPresence;
+use semio_plugin_testing_fixtures_publication::publication_fixture::presence::mutations::PublicationPresenceMutation;
 
     /// 📖️ One module tree of the plugin SDK, read at run time from the manifest folder of the hosting crate instead of embedded: the root file first, then every file it mounts in declaration order.
     fn module_source(relative: &str) -> String {
-        semio_framework_plugin_test_support::read_module_tree_source(&fixture_path!("../../../..").join(relative)).expect("the module tree reads")
+        semio_plugin_test_support::read_module_tree_source(&fixture_path!("../../../..").join(relative)).expect("the module tree reads")
     }
 
     /// 🧵️ Source text of the mounted artifact instance family: the composer and use-case crates of the instance, the maintenance ladder, the cancellation owners, the retained command shell and the lifted full-operation job, each crate family in path order, read at run time from the manifest folder of the hosting crate.
@@ -33,7 +33,7 @@ use semio_framework_plugin_testing_fixtures_publication::publication_fixture::pr
 pub fn instance_source() -> String {
         ["🧵️instance", "🪜️maintenance-ladder", "♻️cancellation", "🧵️retained-command", "👷️job"]
             .iter()
-            .map(|folder| semio_framework_plugin_test_support::read_source_family_source(&fixture_path!("../../../..").join(folder)).expect("the instance family reads"))
+            .map(|folder| semio_plugin_test_support::read_source_family_source(&fixture_path!("../../../..").join(folder)).expect("the instance family reads"))
             .collect::<Vec<_>>()
             .join("\n")
     }
@@ -50,7 +50,7 @@ pub const FIXTURE: &str = include_str!("../../🧵️retained-command/🔄️ful
             app.typed_ctx().publish_mounted_typed_operation_unit(mounted, grant, same)?;
             if let Some((returned_grant, progress)) = mounted.publication_ownership_progress.take() {
                 assert!(progress.fits(returned_grant) && progress.fits(grant));
-                let unposted = semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_unposted(progress, before, same.retained_progress())?;
+                let unposted = semio_plugin_ownership::bounded_ownership::original_lifecycle_unposted(progress, before, same.retained_progress())?;
                 same.consume_retained(unposted)?;
             }
             if same.fuel_remaining() == fuel { same.consume_fuel(1); }
@@ -63,7 +63,7 @@ pub const FIXTURE: &str = include_str!("../../🧵️retained-command/🔄️ful
             let mut output = None;
             let demand = mounted.result_page_presentation_demands().unwrap();
             let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| {
-                semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx, grant, demand, |_, grant| {
+                semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx, grant, demand, |_, grant| {
                     let (page, progress) = mounted.take_result_page(grant)?;
                     let complete = page.is_some();
                     output = page;

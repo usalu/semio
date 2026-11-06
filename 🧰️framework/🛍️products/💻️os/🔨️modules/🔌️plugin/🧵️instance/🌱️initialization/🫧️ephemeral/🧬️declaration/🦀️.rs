@@ -7,7 +7,7 @@ pub trait OriginalEphemeralLanes:'static{
  type Transient:RetireOwned+Clone+Default+Send+Sync+'static;
  type TransientMutation:store::Mutation<Self::Transient>+store::ColdMutation<Self::Transient>+Send+'static;
 }
-impl<A:semio_framework_plugin_decl_app::ArtifactApp> OriginalEphemeralLanes for A{type Presence=A::Presence;type PresenceMutation=A::PresenceMutation;type Transient=A::Transient;type TransientMutation=A::TransientMutation;}
+impl<A:semio_plugin_decl_app::ArtifactApp> OriginalEphemeralLanes for A{type Presence=A::Presence;type PresenceMutation=A::PresenceMutation;type Transient=A::Transient;type TransientMutation=A::TransientMutation;}
 /// 📦️ A presence birth installs these exact local and peer issuers alongside its actual disposer and optional preparation.
 pub struct OriginalPresenceOwners<A:OriginalEphemeralLanes>{pub local:Arc<dyn store::SnapshotRetirementFactory<A::Presence>>,pub peer:Arc<dyn store::SnapshotRetirementFactory<A::Presence>>,pub disposer:Disposer<Presence<A>>,pub preparation:Option<Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<A::Presence,A::PresenceMutation>>>}
 /// 📦️ A transient birth installs its exact disposer and aliases without constructing another Store.
@@ -23,7 +23,7 @@ pub trait OriginalEphemeralDeclaration<A:OriginalEphemeralLanes>:'static{
 }
 /// 🫙️ Only genuinely empty lane pairs share the empty authored declaration.
 pub trait OriginalEmptyEphemeralLanes:OriginalEphemeralLanes<Presence=NoPresence,PresenceMutation=NoPresenceMutation,Transient=NoTransient,TransientMutation=NoTransientMutation>{}
-impl<A:semio_framework_plugin_decl_app::ArtifactApp<Presence=NoPresence,PresenceMutation=NoPresenceMutation,Transient=NoTransient,TransientMutation=NoTransientMutation>> OriginalEmptyEphemeralLanes for A{}
+impl<A:semio_plugin_decl_app::ArtifactApp<Presence=NoPresence,PresenceMutation=NoPresenceMutation,Transient=NoTransient,TransientMutation=NoTransientMutation>> OriginalEmptyEphemeralLanes for A{}
 pub struct EmptyLanes;
 impl OriginalEphemeralLanes for EmptyLanes{type Presence=NoPresence;type PresenceMutation=NoPresenceMutation;type Transient=NoTransient;type TransientMutation=NoTransientMutation;}
 impl OriginalEmptyEphemeralLanes for EmptyLanes{}

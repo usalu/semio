@@ -1,0 +1,34 @@
+[
+  {
+    "name": "pending retains live control",
+    "pending": true,
+    "sameIssuer": true,
+    "sameRecipient": true,
+    "pause": false,
+    "resume": false
+  },
+  {
+    "name": "original identities resume",
+    "pending": false,
+    "sameIssuer": true,
+    "sameRecipient": true,
+    "pause": true,
+    "resume": true
+  },
+  {
+    "name": "different issuer retains receipt",
+    "pending": false,
+    "sameIssuer": false,
+    "sameRecipient": true,
+    "pause": true,
+    "resume": false
+  },
+  {
+    "name": "different recipient retains receipt",
+    "pending": false,
+    "sameIssuer": true,
+    "sameRecipient": false,
+    "pause": true,
+    "resume": false
+  }
+]

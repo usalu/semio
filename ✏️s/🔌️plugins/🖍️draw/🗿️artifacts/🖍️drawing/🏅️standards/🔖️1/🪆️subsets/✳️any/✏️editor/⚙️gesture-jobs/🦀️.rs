@@ -186,14 +186,14 @@ impl DrawingGestureOperationJob {
 
 impl DrawingGestureOperationJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step_value<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
         let turn = self.turn(context);
         self.outcomes.lend(turn, context)
     }
 }
 
 impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
-    fn step<'a>(&'a mut self,context:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(context).map_err(semio_framework_job::OriginalTurnFailure::from)}
+    fn step<'a>(&'a mut self,context:&mut semio_framework_job::StepContext<'_>,_claim:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{self.step_value(context)}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
         self.outcomes.borrow_outcome(descriptor)
@@ -208,17 +208,18 @@ impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         semio_framework_job::close_original_granted_step(cx,|grant|{
+            if self.closing && !self.outcomes.terminal_is_empty() { return self.outcomes.close_job_step(grant); }
+            let mut work=0;
+            let result=(||{
             let maximum_items=grant.maximum_items;let maximum_bytes=grant.maximum_release_bytes;
             let pending=|copied_items,released_bytes|semio_framework_job::InteractiveJobCloseStep::Pending {progress:semio_framework_value::retained_clone::RetainedCloneProgress {copied_items,released_bytes,..Default::default()}};
             if !self.closing {
                 return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked);
             }
-            if !self.outcomes.terminal_is_empty() {
-                return self.outcomes.close_job_step(grant);
-            }
             if let Some(rejected) = self.pending_completion_rejection.as_mut() {
                 if let Ok(emit) = rejected.emit.as_mut() {
-                    match emit.close_child_one(grant) {
+                    let turn=emit.close_child_original(grant);work=turn.work;
+                    match turn.result {
                         Ok(Some(semio_plugin::PluginLifecycleStep::Progress(progress) | semio_plugin::PluginLifecycleStep::Complete(progress))) => return Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress }),
                         Ok(Some(semio_plugin::PluginLifecycleStep::Blocked { .. } | semio_plugin::PluginLifecycleStep::AwaitingInput { .. })) => return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked),
                         Ok(None) => {}
@@ -228,6 +229,7 @@ impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
                 if maximum_items == 0 {
                     return Ok(pending(0,0));
                 }
+                work=1;
                 self.pending_completion_rejection = None;
                 return Ok(pending(1,0));
             }
@@ -236,6 +238,7 @@ impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
             }
             if let Some(input) = self.raw_input.as_mut() {
                 let step = input.close_step(semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,..grant})?;
+                work=u64::from(step.progress().copied_items>0);
                 if input.terminal_is_empty() {
                     self.raw_input = None;
                 }
@@ -245,15 +248,19 @@ impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
                 });
             }
             if self.payload.take().is_some() {
+                work=1;
                 return Ok(pending(1,0));
             }
             if let Some(decoder)=self.decoder.as_mut() {
                 let bytes=decoder.raw.capacity();
                 if bytes>maximum_bytes {return Ok(pending(0,0));}
+                work=1;
                 drop(std::mem::take(&mut decoder.raw));self.decoder=None;
                 return Ok(pending(1,bytes));
             }
             Ok(semio_framework_job::InteractiveJobCloseStep::Complete {progress:Default::default()})
+            })();
+            semio_framework_value::RetainedWorkOutcome{result,work}
         })
     }
 

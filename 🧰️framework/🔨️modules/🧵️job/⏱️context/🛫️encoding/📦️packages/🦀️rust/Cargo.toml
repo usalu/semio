@@ -1,0 +1,36 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-job-native-encoding"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Original source-bound native encoding and its paid receiving custody"
+
+[package.metadata.semio]
+role = "framework"
+id = "job-native-encoding"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-job-context = { workspace = true }
+semio-framework-job-receiving = { workspace = true }
+semio-framework-value = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+semio-framework-job-testing-caller = { workspace = true }
+semio-framework-trace = { workspace = true }
+
+[[test]]
+name = "original-source-native-encoding"
+path = "../../🧪️tests/🦀️.rs"

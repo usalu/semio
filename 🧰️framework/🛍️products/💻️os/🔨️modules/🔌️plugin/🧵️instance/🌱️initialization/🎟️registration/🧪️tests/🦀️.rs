@@ -1,25 +1,25 @@
 //! 🧪️ The actual declared native Window App opens, donates its original allocation and closes under mounted authority.
 use crate::fixture;
-use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
 use semio_framework_plugin_instance_construction::{OriginalVcsApp,factory::original_instance_factory};
-use semio_framework_plugin_instance_initialization::registration::OriginalSingleWindowRegistration;
+use semio_plugin_instance_initialization::registration::OriginalSingleWindowRegistration;
 use semio_framework_plugin_reactor_app::{PluginApp,OriginalPluginAppSource};
-use semio_framework_plugin_window_kits::RegisteredAppDefinition;
+use semio_plugin_window_kits::RegisteredAppDefinition;
 use semio_framework_os_kernel::NoMembers;
 use semio_framework_job::*;
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 type App=fixture::NativeWindowApp;
 type Recipient=OriginalVcsApp<App,NoMembers>;
 type Registration=OriginalSingleWindowRegistration<App,NoMembers,fixture::Owner>;
-const POLICY:semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1=semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
+const POLICY:semio_plugin_mounted_owner::MountedOwnerPolicyV1=semio_plugin_mounted_owner::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
 #[track_caller]
 fn turn<T>(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,grant:RetainedCloneGrant,action:impl FnOnce(&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->(T,RetainedCloneProgress){let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn_with_decoder(grant,decoder,action));let p=caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes),"actual native mounted owner physical receipt {p:?}, caller={}, failure={:?}",std::panic::Location::caller(),result.as_ref().err());(result.unwrap(),p)}
 fn cancellation_boundary_reached(boundary:Option<&str>,progress:RetainedCloneProgress)->bool{
  let cursor=semio_framework_plugin_instance_construction::OriginalArtifactInstanceAdmission::<App,NoMembers>::INITIALIZATION_CURSOR_BYTES;
  let(copy,capacity)=match boundary{
  Some("final-allocation-before-service-initialization")=>(None,semio_framework_plugin_instance_construction::OriginalArtifactInstanceAdmission::<App,NoMembers>::birth_demands().capacity_bytes),
- Some("after-child-service-backing")=>(Some(semio_framework_plugin_instance_app::ChildComposition::<NoMembers>::initial_copy_bytes()+cursor),semio_framework_plugin_instance_app::ChildComposition::<NoMembers>::birth_demands().unwrap().capacity_bytes),
- Some("after-tool-service-backing")=>{let demand=semio_framework_plugin_instance_app::ToolOperations::<App>::initial_field_demands(semio_framework_plugin_instance_app::ToolOperations::<App>::EFFECT_OUTBOX_FIELD,0,POLICY.preparation.maximum_copy_bytes-cursor,true).unwrap();(Some(demand.copy_bytes+cursor),demand.capacity_bytes)},
+ Some("after-child-service-backing")=>(Some(semio_plugin_instance_app::ChildComposition::<NoMembers>::initial_copy_bytes()+cursor),semio_plugin_instance_app::ChildComposition::<NoMembers>::birth_demands().unwrap().capacity_bytes),
+ Some("after-tool-service-backing")=>{let demand=semio_plugin_instance_app::ToolOperations::<App>::initial_field_demands(semio_plugin_instance_app::ToolOperations::<App>::EFFECT_OUTBOX_FIELD,0,POLICY.preparation.maximum_copy_bytes-cursor,true).unwrap();(Some(demand.copy_bytes+cursor),demand.capacity_bytes)},
  Some("during-large-absent-field")=>(Some(POLICY.preparation.maximum_copy_bytes),0),
  None=>return false,Some(_)=>panic!("unknown neutral native cancellation boundary"),
  };progress.retained_capacity_bytes==capacity&&copy.is_none_or(|bytes|progress.copied_bytes==bytes)}

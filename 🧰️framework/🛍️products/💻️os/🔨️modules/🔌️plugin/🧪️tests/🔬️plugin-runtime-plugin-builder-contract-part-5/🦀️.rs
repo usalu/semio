@@ -18,7 +18,7 @@ use semio_framework_value::retained_clone::RetainedCloneProgress;
 use serde_json::Value;
 use semio_plugin_testing_laws::artifact_app_laws;
 use semio_plugin_window_kits::context_menu;
-use semio_plugin_instance_docs::docs_maintenance_ladder::item;
+use semio_framework_plugin_instance_docs::docs_maintenance_ladder::item;
 use semio_plugin_decl_app::media_type;
 use semio_plugin_plugin_program::plugin_runtime;
 use semio_os_kernel as protocol;

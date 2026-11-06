@@ -61,7 +61,7 @@ use semio_plugin_decl_emission::ArtifactMutationOutcome;
 #[cfg(test)]
 use semio_plugin_composition_publication::PendingArtifactStorePublication;
 #[cfg(test)]
-use semio_plugin_retained_command::typed_operation::PendingPublicationOutcome;
+use semio_framework_plugin_retained_command::typed_operation::PendingPublicationOutcome;
 #[cfg(test)]
 use semio_plugin_window_config::WindowConfigMutation;
 #[cfg(test)]

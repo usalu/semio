@@ -1,0 +1,46 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "accepted",
+    "postRefused",
+    "quoteRefused",
+    "postRefusal",
+    "workDenied",
+    "allocationFailed"
+  ],
+  "properties": {
+    "accepted": {
+      "const": [
+        "quote",
+        "post"
+      ]
+    },
+    "postRefused": {
+      "const": [
+        "quote",
+        "post"
+      ]
+    },
+    "quoteRefused": {
+      "const": [
+        "quote"
+      ]
+    },
+    "postRefusal": {
+      "const": "fixture post refused"
+    },
+    "workDenied": {
+      "const": [
+        "quote",
+        "cancel"
+      ]
+    },
+    "allocationFailed": {
+      "const": [
+        "quote",
+        "post"
+      ]
+    }
+  }
+}

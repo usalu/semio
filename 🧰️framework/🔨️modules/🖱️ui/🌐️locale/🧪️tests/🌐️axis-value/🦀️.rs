@@ -61,10 +61,10 @@ fn funding(d:RetirementDemand)->RetainedCloneGrant{
 fn denials(d:RetirementDemand)->Vec<RetainedCloneGrant>{
  let g=funding(d);[(true,RetainedCloneGrant{maximum_items:0,..g}),(d.copy_bytes>0,RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes.saturating_sub(1),..g}),(d.capacity_bytes>0,RetainedCloneGrant{maximum_capacity_bytes:d.capacity_bytes.saturating_sub(1),..g}),(d.release_bytes>0,RetainedCloneGrant{maximum_release_bytes:d.release_bytes.saturating_sub(1),..g}),(d.depth>0,RetainedCloneGrant{maximum_depth:d.depth.saturating_sub(1),..g})].into_iter().filter_map(|(positive,g)|positive.then_some(g)).collect()
 }
-struct Turn(RetainedCloneGrant);
+struct Turn(RetainedCloneGrant,RetainedCloneProgress);
 impl NativeDecodeConstructionRecipient for Turn{
- fn grant(&mut self,d:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{assert!(retained_clone_grant_admits(self.0,d));Ok(self.0)}
- fn accept(&mut self,g:RetainedCloneGrant,p:RetainedCloneProgress)->Result<(),ValueError>{assert!(p.fits(g));Ok(())}
+ fn submitted(&self)->RetainedCloneProgress{self.1}fn grant(&mut self,d:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{assert!(retained_clone_grant_admits(self.0,d));Ok(self.0)}
+ fn accept(&mut self,g:RetainedCloneGrant,p:RetainedCloneProgress)->Result<(),ValueError>{self.1=self.1.checked_add(p)?;assert!(p.fits(g));Ok(())}
 }
 fn measured<T>(run:impl FnOnce()->T,receipt:impl FnOnce(&T)->RetainedCloneProgress)->T{
  let(value,physical)=observed(run);let p=receipt(&value);assert_eq!(physical,(p.retained_capacity_bytes,p.released_bytes));value
@@ -105,8 +105,8 @@ fn receive_erased<S:NativeValueSource+RetireOwned+serde::Serialize,T:NativeRecei
  let mut callback=|_|true;let mut control=NativeDecodeControl::new(1<<24,&mut callback);let mut turns=0;
  while turns<MAXIMUM_TURNS&&!receiver.output_ready()&&cut.is_none_or(|cut|turns<cut){
   let source_ref=source.borrow().project(0,|value|value.as_source());let d=receiver.demands(source_ref,BODY).unwrap();let g=funding(d);let ready=receiver.output_ready();
-  for denied in denials(d){assert!(!retained_clone_grant_admits(denied,d));let mut turn=Turn(denied);let(step,physical)=observed(||control.with_construction_recipient(&mut turn,|control|Ok::<_,ValueError>(receiver.advance(source_ref,control,BODY,denied))).unwrap().result.unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(physical,(0,0));assert_eq!(receiver.output_ready(),ready);assert_eq!(receiver.demands(source_ref,BODY).unwrap(),d);assert_eq!(serde_json::to_value(source.borrow().get()).unwrap(),original);}
-  let mut turn=Turn(g);let step=measured(||control.with_construction_recipient(&mut turn,|control|Ok::<_,ValueError>(receiver.advance(source_ref,control,BODY,g))).unwrap().result.unwrap(),|step|step.progress());assert!(step.progress().fits(g));assert_eq!(serde_json::to_value(source.borrow().get()).unwrap(),original);turns+=1;
+  for denied in denials(d){assert!(!retained_clone_grant_admits(denied,d));let mut turn=Turn(denied,Default::default());let(step,physical)=observed(||control.with_construction_recipient(&mut turn,|control|Ok::<_,ValueError>(receiver.advance(source_ref,control,BODY,denied))).unwrap().result.unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(physical,(0,0));assert_eq!(receiver.output_ready(),ready);assert_eq!(receiver.demands(source_ref,BODY).unwrap(),d);assert_eq!(serde_json::to_value(source.borrow().get()).unwrap(),original);}
+  let mut turn=Turn(g,Default::default());let step=measured(||control.with_construction_recipient(&mut turn,|control|Ok::<_,ValueError>(receiver.advance(source_ref,control,BODY,g))).unwrap().result.unwrap(),|step|step.progress());assert!(step.progress().fits(g));assert_eq!(serde_json::to_value(source.borrow().get()).unwrap(),original);turns+=1;
  }
  let output=if cut.is_none(){assert!(receiver.output_ready());let d=receiver.take_demand().unwrap();for denied in denials(d){let(value,physical)=observed(||receiver.take(denied).result.unwrap());assert!(value.is_none());assert_eq!(physical,(0,0));assert!(receiver.output_ready());assert_eq!(receiver.take_demand().unwrap(),d);}let g=funding(d);let(value,p)=measured(||receiver.take(g).result.unwrap().unwrap(),|(_,p)|*p);assert!(p.fits(g));assert_eq!(serde_json::to_value(&value).unwrap(),*expected);Some(value)}else{assert_eq!(turns,cut.unwrap());None};
  receiver.begin_close();

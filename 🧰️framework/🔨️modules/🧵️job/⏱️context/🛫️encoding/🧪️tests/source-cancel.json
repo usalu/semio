@@ -1,0 +1,16 @@
+{
+  "contract": "semio.job.source-encoder-post-effect-cancellation.v1",
+  "prefix": [
+    233,
+    155,
+    170
+  ],
+  "tail": [
+    33
+  ],
+  "expectedCopiedBytes": 3,
+  "expectedCapacityBytes": 4,
+  "expectedActionWork": 2,
+  "expectedFuel": 4,
+  "expectedKind": "canceled"
+}

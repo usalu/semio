@@ -3,6 +3,9 @@ import{closeSync,createReadStream,fstatSync,openSync}from"node:fs";
 import{constants as osConstants}from"node:os";
 import{relative}from"node:path";
 import{fileURLToPath}from"node:url";
+import{repositoryCommandKernelV1}from"../../⌨️command/🧭️selection/🟦️.ts";
+import kernelSchema from"../../⌨️command/🧭️selection/🧬️schema/🔣️.json"with{type:"json"};
+import{acquirePartitionGroupV1,adoptPartitionPinV1,partitionGroupV1,readPartitionPinV1,releasePartitionPinV1}from"../🔀️partition/📌️retention/🟦️.ts";
 import door from"../../🚪️door/🔣️.json"with{type:"json"};
 import stamps from"../../🧷️format-stamps/🧬️schema/🔣️.json"with{type:"json"};
 import{implementationModeV1,readSealedBlockedV1,readSealedCheckedV1,readSealedLoaderV1,readSealedPointerV1,readSealedReceiptV1,sealedEntryOfV1,sealedExplicitActionV1,sealedLanguagesV1,sealedLightActionV1,sealedLightCommandV1,sealedPolicyV1,sealedTextV1,sealedTreeDriftV1,writeSealedCheckedV1,type ImplementationModeV1,type SealedEntryV1,type SealedPointerV1,type SealedPolicyV1}from"../🟦️.ts";
@@ -43,12 +46,16 @@ export async function startImplementationV1(root:string,argv:readonly string[],e
  try{mode=implementationModeV1(environment,policy);}catch(error){process.stderr.write((error as Error).message+"\n");process.exitCode=2;return;}
  if(mode==="live")return live();
  const entry=options.entry??relative(root,fileURLToPath(new URL("../🚪️entry/🟦️.ts",import.meta.url))).split("\\").join("/"),store=sealedEntryOfV1(root,entry,policy),languages=sealedLanguagesV1(environment),promote=options.promote??promoteLiveV1,say=(text:string)=>{try{process.stderr.write(text);}catch{}};
- let pointer=readSealedPointerV1(store);
+ const kernelArgs=argv[0]==="repo"?argv.slice(1):argv,kernel=options.entry?undefined:repositoryCommandKernelV1(kernelArgs,environment),kernelEntry=kernel&&relative(root,kernel.entry).split("\\").join("/"),allKernels=kernelEntry&&(kernel?.kind==="utility"||argv[0]==="test"||argv[0]==="build")?Object.values(kernelSchema.properties.kernels.const).map(path=>relative(root,fileURLToPath(new URL("../../⌨️command/"+path,import.meta.url))).split("\\").join("/")):kernelEntry?[kernelEntry]:[];
+ let promotionAccepted=true;const promotePartition=async(path:string)=>{const result=await promote(root,path,environment,say);if(!["fresh","refreshed","promoted","served"].includes(result.status))promotionAccepted=false;return result;};
+ const inheritedToken=mode!=="promote"&&allKernels.length?environment.SEMIO_SEALED_PARTITION_PIN:undefined,inherited=inheritedToken?readPartitionPinV1(root,inheritedToken,policy):undefined,inheritedGroup=inherited&&inherited.door.entry===entry&&inherited.door.digest===environment.SEMIO_SEALED_DOOR_DIGEST&&allKernels.every(path=>inherited.kernels.some(value=>value.entry===path))?inherited:undefined;
+ let pin:string|undefined,pointer=inheritedGroup?.door??readSealedPointerV1(store);
  const light=sealedLightCommandV1(argv,door.light.map(row=>row.operation)),verdict=startVerdictV1(root,store,mode,pointer,light,policy,(Number.parseInt(environment[stamps.$defs.Protocol.const.reexecutionEnvironment]??"0",10)||0)>0);
- if(verdict.action==="promote"){
+ if(!inheritedGroup&&verdict.action==="promote"){
   try{
-   const done=await promote(root,entry,environment,say);
-   if(mode==="promote"){say(sealedTextV1(languages,"promoteDone",{digest:done.pointer.digest.slice(0,12),status:done.status})+"\n");process.exitCode=["fresh","refreshed","promoted","served"].includes(done.status)?0:1;return;}
+   const done=await promotePartition(entry);
+   for(const selectedEntry of allKernels)await promotePartition(selectedEntry);
+   if(mode==="promote"&&!allKernels.length){say(sealedTextV1(languages,"promoteDone",{digest:done.pointer.digest.slice(0,12),status:done.status})+"\n");process.exitCode=["fresh","refreshed","promoted","served"].includes(done.status)?0:1;return;}
   }catch(error){
    const message=String((error as Error).message??error);
    say((error as{code?:string}).code==="SEMIO_IMPLEMENTATION_NONE"?message+"\n":sealedTextV1(languages,"promoter",{reason:message.replace(/\s+/gu," ").slice(0,200)})+"\n");
@@ -59,16 +66,26 @@ export async function startImplementationV1(root:string,argv:readonly string[],e
    const rows=readSealedBlockedV1(store)?.rows??[],shown=rows.slice(0,policy.shownBlockedRows).map(row=>sealedTextV1(["en"],"blockedRow",{path:row.path,line:row.line,column:row.column,message:row.message})).join("; ")||"-";
    say(sealedTextV1(languages,"refused",{digest:pointer.digest.slice(0,12),hours:Math.floor((Date.now()-pointer.promotedAtMs)/3600000),rows:shown,variable:policy.modeVariable},policy)+"\n");process.exitCode=75;return;
   }
- }else if(verdict.action==="refresh"&&verdict.start&&pointer){
+ }else if(!inheritedGroup&&verdict.action==="refresh"&&verdict.start&&pointer){
   const pid=(options.refresh??refreshV1)(argv,environment,policy);
   if(pid!==undefined)say(sealedTextV1(languages,"stale",{digest:pointer.digest.slice(0,12),minutes:Math.floor((Date.now()-pointer.promotedAtMs)/60000),pid},policy)+"\n");
- }else if(verdict.changed.length&&pointer)say(sealedTextV1(languages,"unpromoted",{count:verdict.changed.length,first:verdict.changed[0]!,digest:pointer.digest.slice(0,12),promoted:new Date(pointer.promotedAtMs).toTimeString().slice(0,8),variable:policy.modeVariable},policy)+"\n");
+ }else if(!inheritedGroup&&verdict.changed.length&&pointer)say(sealedTextV1(languages,"unpromoted",{count:verdict.changed.length,first:verdict.changed[0]!,digest:pointer.digest.slice(0,12),promoted:new Date(pointer.promotedAtMs).toTimeString().slice(0,8),variable:policy.modeVariable},policy)+"\n");
+ const selectedPointers:SealedPointerV1[]=[];
+ for(const selectedEntry of inheritedGroup?[]:allKernels){
+  const kernelStore=sealedEntryOfV1(root,selectedEntry,policy);let selected=readSealedPointerV1(kernelStore);
+  const kernelVerdict=startVerdictV1(root,kernelStore,mode,selected,light,policy,(Number.parseInt(environment[stamps.$defs.Protocol.const.reexecutionEnvironment]??"0",10)||0)>0);
+  if(kernelVerdict.action!=="run"){try{await promotePartition(selectedEntry);}catch(error){promotionAccepted=false;say(String((error as Error).message??error)+"\n");}selected=readSealedPointerV1(kernelStore);}
+  if(selected)selectedPointers.push(selected);
+ }
+ if(inheritedGroup&&inheritedToken){try{pin=adoptPartitionPinV1(root,inheritedToken,policy);}catch(error){say(String((error as Error).message??error)+"\n");process.exitCode=1;return;}}
+ else if(allKernels.length){try{const candidate=promotionAccepted&&pointer&&selectedPointers.length===allKernels.length?partitionGroupV1(pointer,selectedPointers):undefined,admission=acquirePartitionGroupV1(root,entry,allKernels,candidate,policy);pin=admission.token;pointer=admission.group.door;if(mode==="promote"){releasePartitionPinV1(root,pin,policy);process.exitCode=admission.committed?0:1;return;}}catch(error){say(String((error as Error).message??error)+"\n");process.exitCode=1;return;}}
  const loader=pointer&&readSealedLoaderV1(store,pointer);
- if(!pointer||loader===undefined)return live();
+ if(!pointer||loader===undefined){if(pin){releasePartitionPinV1(root,pin,policy);say("Pinned authenticated door is unavailable.\n");process.exitCode=1;return;}return live();}
+ try{
  let snapshot:number|undefined;
- if(process.platform!=="win32")try{snapshot=openSync(store.snapshot(pointer.digest),"r");if(fstatSync(snapshot).size!==pointer.bytes){closeSync(snapshot);return live();}}catch{if(snapshot!==undefined)try{closeSync(snapshot);}catch{}return live();}
+ if(process.platform!=="win32")try{snapshot=openSync(store.snapshot(pointer.digest),"r");if(fstatSync(snapshot).size!==pointer.bytes){closeSync(snapshot);if(pin){say("Pinned authenticated door changed.\n");process.exitCode=1;return;}return live();}}catch{if(snapshot!==undefined)try{closeSync(snapshot);}catch{}if(pin){say("Pinned authenticated door is unavailable.\n");process.exitCode=1;return;}return live();}
  const code=await new Promise<number|undefined>(accept=>{
-  const child=spawn(process.execPath,["--eval",loader,"--",pointer.digest,doorRoleV1,...argv],{stdio:["inherit","inherit","inherit",snapshot??"pipe","pipe"],env:{...environment,BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0"}}),forwards=(["SIGINT","SIGTERM","SIGHUP"] as const).map(signal=>[signal,()=>{stopped=true;try{child.kill(signal);}catch{}}] as const);
+  const child=spawn(process.execPath,["--eval",loader,"--",pointer.digest,doorRoleV1,...argv],{stdio:["inherit","inherit","inherit",snapshot??"pipe","pipe"],env:{...environment,...(pin?{SEMIO_SEALED_PARTITION_PIN:pin}:{}),BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0"}}),forwards=(["SIGINT","SIGTERM","SIGHUP"] as const).map(signal=>[signal,()=>{stopped=true;try{child.kill(signal);}catch{}}] as const);
   let ready=false,stopped=false;
   for(const[signal,forward] of forwards)process.on(signal,forward);
   const finish=(value:number|undefined)=>{for(const[signal,forward] of forwards)process.off(signal,forward);accept(value);};
@@ -79,6 +96,7 @@ export async function startImplementationV1(root:string,argv:readonly string[],e
   child.once("error",()=>finish(undefined));
   child.once("close",(status,signal)=>{const exit=status??(signal?128+(osConstants.signals[signal]??0):1);finish(ready||stopped||process.platform==="win32"||status===0?exit:undefined);});
  });
- if(code===undefined){say(sealedTextV1(languages,"startup",{code:"-"})+"\n");return live();}
+ if(code===undefined){say(sealedTextV1(languages,"startup",{code:"-"})+"\n");if(pin){process.exitCode=1;return;}return live();}
  process.exitCode=code;
+ }finally{if(pin)releasePartitionPinV1(root,pin,policy);}
 }

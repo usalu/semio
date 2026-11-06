@@ -16,7 +16,7 @@ use semio_plugin_decl_emission::Emit;
 use crate::docs_components::EnvelopeJobs;
 use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin};
 use std::future::Future;
-use semio_plugin_instance_stores::stores_components::{InstanceStores, LocalInteraction};
+use semio_framework_plugin_instance_stores::stores_components::{InstanceStores, LocalInteraction};
 use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_plugin_reactor_app::PluginApp;

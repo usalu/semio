@@ -354,15 +354,15 @@ where
     }
 
     /// 🎟️ Retains all original history and physical archive backing until full admission succeeds.
-    pub fn close_step(&mut self, grant: RetainedCloneGrant,recipient:&mut dyn semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient) -> semio_framework_value::RetainedWorkOutcome {
-        self.last_native_work=0;let mut work=0;let result=(||{
+    pub fn close_step(&mut self, grant: RetainedCloneGrant,recipient:&mut dyn semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure> {
+        self.last_native_work=0;let mut work=0;let result:Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>=(||{
         let empty=RetainedCloneProgress::default();
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}
         let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(empty));}
         let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-        if self.retained.is_some(){let turn=store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retained,child);work=turn.work;return turn.result.map(|step|RetainedCloneStep::Progress(step.progress()));}
-        if self.archive_retirement.is_some(){let turn=store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.archive_retirement,child);work=turn.work;return turn.result.map(|step|RetainedCloneStep::Progress(step.progress()));}
+        if self.retained.is_some(){let turn=store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retained,child);work=turn.work;return turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(Into::into);}
+        if self.archive_retirement.is_some(){let turn=store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.archive_retirement,child);work=turn.work;return turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(Into::into);}
         if let Some(hydration)=self.hydration.as_mut(){
             if store::ErasedSnapshotRetirement::terminal_is_empty(hydration){work=1;drop(self.hydration.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
             let turn=store::ErasedSnapshotRetirement::close_step(hydration,child);work=turn.work;let step=turn.result?;
@@ -390,16 +390,16 @@ where
         if let Some(original)=self.history_custody.take(){
             let turn=semio_framework_value::retirement::admit_owned_retirement(original,child);work=turn.work;match turn.result {
                 Ok((owner,progress))=>{self.retained=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(child,progress,"original archive history birth")?;return Ok(RetainedCloneStep::Progress(progress));}
-                Err((error,original))=>{self.history_custody=Some(original);return Err(error);}
+                Err((error,original))=>{self.history_custody=Some(original);return Err(error.into());}
             }
         }
         if let Some(original)=self.archive.take(){
             let turn=semio_framework_value::retirement::admit_owned_retirement(original,child);work=turn.work;return match turn.result {
                 Ok((owner,progress))=>{self.archive_retirement=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(child,progress,"original physical archive birth")?;Ok(RetainedCloneStep::Progress(progress))}
-                Err((error,original))=>{self.archive=Some(original);Err(error)}
+                Err((error,original))=>{self.archive=Some(original);Err(error.into())}
             };
         }
-        Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"archive close lost its quoted original frontier"))
+        Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"archive close lost its quoted original frontier").into())
     })();semio_framework_value::RetainedWorkOutcome{result,work}
     }
 

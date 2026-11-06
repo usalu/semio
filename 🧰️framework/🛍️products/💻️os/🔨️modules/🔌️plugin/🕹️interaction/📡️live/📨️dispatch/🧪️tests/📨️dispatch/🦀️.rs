@@ -449,14 +449,14 @@ async fn query_command(runtime: &semio_plugin_reactor_lifecycle::life_instance_r
 
 async fn wire_command(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<TestRuntimeApps>, seq: u64, command: protocol::AppCommand,cx:&mut semio_framework_job::StepContext<'_>) -> Vec<protocol::AppFrame> {
     let encoded = protocol::encode_app_command(&command).await.unwrap();
-    run_ingress(runtime, seq, semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Encoded(encoded),cx).await
+    run_ingress(runtime, seq, semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Encoded(encoded),cx).await
 }
 
 async fn cold_decoded_command(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<TestRuntimeApps>, seq: u64, command: protocol::AppCommand,cx:&mut semio_framework_job::StepContext<'_>) -> Vec<protocol::AppFrame> {
-    run_ingress(runtime, seq, semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Decoded(semio_plugin_runtime_ops::ops_ingress::original_manifest_receiving::OriginalDecodedPluginCommand::new(command)),cx).await
+    run_ingress(runtime, seq, semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Decoded(semio_framework_plugin_runtime_ops::ops_ingress::original_manifest_receiving::OriginalDecodedPluginCommand::new(command)),cx).await
 }
 
-async fn run_ingress(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<TestRuntimeApps>, seq: u64, ingress: semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress,cx:&mut semio_framework_job::StepContext<'_>) -> Vec<protocol::AppFrame> {
+async fn run_ingress(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<TestRuntimeApps>, seq: u64, ingress: semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress,cx:&mut semio_framework_job::StepContext<'_>) -> Vec<protocol::AppFrame> {
     let mut input = Some((seq, ingress));
     let mut frames = Vec::new();
     for _ in 0..100 {
@@ -588,7 +588,7 @@ async fn local_interaction_registered_query_channel_continuation_ack_and_close()
     let mut ephemeral = 0;
     for _ in 0..200_000 {
         if pending.is_empty() {
-            let (next, _) = semio_plugin_runtime_ops::ops_typed_operations::plugin_continue_typed_operations(&runtime, semio_plugin_runtime_ops::ops_typed_operations::TypedOperationGrant::UNIT, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.unwrap();
+            let (next, _) = semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_continue_typed_operations(&runtime, semio_framework_plugin_runtime_ops::ops_typed_operations::TypedOperationGrant::UNIT, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.unwrap();
             if let Some((instance, batch)) = next {
                 assert_eq!(instance, 7);
                 for bytes in batch.frames { pending.push_back(protocol::decode_app_frame(&bytes).await.unwrap()); }

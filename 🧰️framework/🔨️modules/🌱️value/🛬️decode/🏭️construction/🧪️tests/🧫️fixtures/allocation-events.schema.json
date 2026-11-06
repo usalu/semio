@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "oneOf": [
+          {
+            "const": {
+              "id": "accepted",
+              "refuse": "none",
+              "events": [
+                "quote",
+                "post"
+              ],
+              "born": true
+            }
+          },
+          {
+            "const": {
+              "id": "quote-refused",
+              "refuse": "quote",
+              "events": [
+                "quote"
+              ],
+              "born": false
+            }
+          },
+          {
+            "const": {
+              "id": "post-refused",
+              "refuse": "post",
+              "events": [
+                "quote",
+                "post"
+              ],
+              "born": true
+            }
+          }
+        ]
+      }
+    }
+  }
+}

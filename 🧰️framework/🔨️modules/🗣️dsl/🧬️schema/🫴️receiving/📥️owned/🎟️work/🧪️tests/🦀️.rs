@@ -36,11 +36,11 @@ fn declared_record_work_matches_neutral_success_refusal_and_independent_serde() 
   let original=record.clone();
   for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{
    let mut callback=|_|true;let mut native=NativeDecodeControl::new(65536,&mut callback);let mut owner=super::super::NativeSnapshotDecodeOwner::new(&mut native,denied);
-   let(turn,heap)=observe(||super::super::receiving_turn(|_|declared_record(&record,&declared,&mut owner).map_err(Into::into)));
+   let(turn,heap)=observe(||super::super::receiving_turn(|meter|declared_record(&record,&declared,&mut owner,meter).map_err(Into::into)));
    assert!(turn.result.is_err());assert_eq!(turn.work,0);assert_eq!(owner.progress(),Default::default());assert_eq!(heap,(0,0));assert_eq!(record,original);
   }
   let mut callback=|_|true;let mut native=NativeDecodeControl::new(65536,&mut callback);let mut owner=super::super::NativeSnapshotDecodeOwner::new(&mut native,grant);
-  let(turn,heap)=observe(||super::super::receiving_turn(|_|declared_record(&record,&declared,&mut owner).map_err(Into::into)));
+  let(turn,heap)=observe(||super::super::receiving_turn(|meter|declared_record(&record,&declared,&mut owner,meter).map_err(Into::into)));
   assert_eq!(turn.result.is_ok(),allowed,"{}",row["id"]);assert_eq!(turn.work,row["work"].as_u64().unwrap(),"{}",row["id"]);
   assert_eq!(owner.progress().copied_items,row["probes"].as_u64().unwrap()as usize);assert!(owner.progress().fits(grant));assert_eq!(heap,(0,0));assert_eq!(record,original);
  }

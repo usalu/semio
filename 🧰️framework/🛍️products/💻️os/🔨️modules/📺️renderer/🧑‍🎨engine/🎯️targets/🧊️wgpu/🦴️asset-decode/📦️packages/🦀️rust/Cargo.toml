@@ -28,6 +28,7 @@ semio-renderer-wgpu-host-base = { path = "../../../🏛️host-base/📦️packa
 semio-renderer-wgpu-host-plumbing = { path = "../../../🔧️host-plumbing/📦️packages/🦀️rust" }
 infinite_canvas = { path = "../../../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-os-infinite" }
 semio-framework-job = { workspace = true }
+semio-framework-job-payload = { workspace = true }
 semio-plugin-ownership = { path = "../../../../../../../🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-job-worker = { path = "../../../../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
 semio-framework-job-worker-authority = { path = "../../../../../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
@@ -48,3 +49,7 @@ semio-framework-async = { workspace = true }
 semio-framework-async-slots = { workspace = true }
 
 [dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-trace = { workspace = true }
+semio-framework-io-base64 = { path = "../../../../../../../../../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

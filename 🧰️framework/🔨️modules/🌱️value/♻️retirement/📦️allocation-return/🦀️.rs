@@ -3,6 +3,9 @@
 use semio_framework_value_control_contract::{ValueError,ValueRefusalKind};
 use std::{alloc::Layout,mem::ManuallyDrop,ptr::NonNull};
 
+/// 🫧️ Fallibly admits one uninitialized standard shared allocation through its existing allocator owner.
+pub fn try_uninitialized_arc<T>()->Result<std::sync::Arc<std::mem::MaybeUninit<T>>,ValueError>{std::sync::Arc::<T>::try_new_uninit().map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"native Arc birth allocation failed"))}
+
 struct ReturnedAllocation{pointer:NonNull<u8>,layout:Layout}
 trait AllocationRelease{unsafe fn release(pointer:NonNull<u8>,layout:Layout);}
 struct GlobalAllocationRelease;

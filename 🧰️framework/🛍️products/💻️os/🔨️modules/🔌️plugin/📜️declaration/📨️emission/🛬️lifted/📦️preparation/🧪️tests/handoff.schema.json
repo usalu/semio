@@ -1,0 +1,1 @@
+{"type":"object","required":["headers","pointerWords","work","deniedAxes"],"additionalProperties":false,"properties":{"headers":{"const":2},"pointerWords":{"const":2},"work":{"const":1},"deniedAxes":{"const":["items","copy","depth"]}}}

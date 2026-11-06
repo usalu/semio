@@ -5,18 +5,18 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedClonePro
 use semio_framework_async::PublicationClaimHandle;
 use std::mem::ManuallyDrop;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds;
-use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_decl_emission::ActionMeta;
-use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
-use semio_framework_plugin_ownership::bounded_ownership::{PluginLifecycleStep, PluginLifecycleFailure};
-use semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand;
-use semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step;
-use semio_framework_plugin_job::reserved_jobs::QualifiedToolProof;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
-use semio_framework_plugin_operation::ToolCancellationLease;
-use semio_framework_plugin_job::TYPED_OPERATION_RESULT_PAGE_BYTES;
+use semio_plugin_ownership::bounded_ownership::plugin_grant_funds;
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_decl_emission::ActionMeta;
+use semio_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
+use semio_plugin_ownership::bounded_ownership::{PluginLifecycleStep, PluginLifecycleFailure};
+use semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand;
+use semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original;
+use semio_plugin_job::reserved_jobs::QualifiedToolProof;
+use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_plugin_operation::ToolCancellationLease;
+use semio_plugin_job::TYPED_OPERATION_RESULT_PAGE_BYTES;
 fn built<O>(cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce()->Result<(O,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{semio_framework_job::admit_original_construction(cx,output,demand,|_|semio_framework_value::RetainedWorkOutcome{result:construct(),work:1})}
 fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
 
@@ -81,7 +81,7 @@ impl ToolLatestWinsRegistry {
         if !self.can_begin()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<capacity{return Ok(None);}
         if self.map.as_ref().expect("live original key map").len()>=ARTIFACT_LIVE_OUTPUT_SLOTS{match self.admission_scan{None=>{self.admission_scan=Some(ARTIFACT_LIVE_OUTPUT_SLOTS);return Ok(Some(RetainedCloneProgress{copied_items:1,..Default::default()}));},Some(0)=>{},Some(_)=>return Ok(None)}}
         let scope=ToolLatestWinsScope{key:key.clone(),operation,token:lease.cancel_token().clone(),claim:lease.publication_claim().clone()};
-        let(scope,progress)=match semio_framework_value_ordered::ordered::SharedOwner::admit(scope,grant).result {Ok(value)=>value,Err((error,original))=>{*self.pending_scope=Some(original);return Err(semio_framework_plugin_decl_emission::retirement_refusal_fault(&error));}};
+        let(scope,progress)=match semio_framework_value_ordered::ordered::SharedOwner::admit(scope,grant).result {Ok(value)=>value,Err((error,original))=>{*self.pending_scope=Some(original);return Err(semio_plugin_decl_emission::retirement_refusal_fault(&error));}};
         self.update=Some(self.map.as_ref().expect("original live key map").begin_set_shared(key.clone(),scope));self.active_operation=Some(operation);self.update_closing=false;Ok(Some(progress))
     }
 
@@ -106,7 +106,7 @@ impl ToolLatestWinsRegistry {
     fn retire_scope(&mut self,scope:ToolLatestWinsScope){assert!(self.retired_scope.is_none(),"one original latest scope frontier");*self.retired_scope=Some(scope);}
     pub fn retirement_step(&mut self,step:semio_framework_value_ordered::ordered::RetirementStep<ToolLatestWinsScope>)->Result<RetainedCloneStep,Fault>{
         use semio_framework_value_ordered::ordered::RetirementStep;
-        Ok(match step{RetirementStep::Blocked=>RetainedCloneStep::Progress(Default::default()),RetirementStep::Progress{released_items,released_bytes}=>RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:released_items,released_bytes,..Default::default()}),RetirementStep::ProcessedBytes(copied_bytes)=>RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()}),RetirementStep::OwnedValue(scope)=>{self.retire_scope(scope);RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})},RetirementStep::Failure(error)=>return Err(semio_framework_plugin_decl_emission::retirement_refusal_fault(&error)),RetirementStep::Complete=>RetainedCloneStep::Progress(Default::default())})
+        Ok(match step{RetirementStep::Blocked=>RetainedCloneStep::Progress(Default::default()),RetirementStep::Progress{released_items,released_bytes}=>RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:released_items,released_bytes,..Default::default()}),RetirementStep::ProcessedBytes(copied_bytes)=>RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()}),RetirementStep::OwnedValue(scope)=>{self.retire_scope(scope);RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})},RetirementStep::Failure(error)=>return Err(semio_plugin_decl_emission::retirement_refusal_fault(&error)),RetirementStep::Complete=>RetainedCloneStep::Progress(Default::default())})
     }
     /// 📏️ Quotes the exact next [`Self::advance`] turn, one original owner at a time in the same order.
     pub fn advance_demands(&self)->Result<RetirementDemand,ValueError>{
@@ -133,26 +133,26 @@ impl ToolLatestWinsRegistry {
     }
     pub fn advance(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,Fault>{
         let idle=RetainedCloneProgress::default();let item=RetainedCloneProgress{copied_items:1,..idle};
-        let demand=self.advance_demands().map_err(|error|semio_framework_plugin_decl_emission::retirement_refusal_fault(&error))?;
+        let demand=self.advance_demands().map_err(|error|semio_plugin_decl_emission::retirement_refusal_fault(&error))?;
         if !plugin_grant_funds(demand,grant){return Ok(RetainedCloneStep::Progress(idle));}
         if self.retired_scope.is_none(){if let Some(scope)=self.pending_scope.take(){self.retire_scope(scope);return Ok(RetainedCloneStep::Progress(item));}}
-        if self.retired_token.is_some()||self.token_retirement.is_some(){let step=plugin_typed_owner_step(&mut self.retired_token,&mut self.token_retirement,grant).map_err(|error|semio_framework_plugin_decl_emission::retirement_refusal_fault(&error))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
-        if self.retired_claim.is_some()||self.claim_retirement.is_some(){let step=plugin_typed_owner_step(&mut self.retired_claim,&mut self.claim_retirement,grant).map_err(|error|semio_framework_plugin_decl_emission::retirement_refusal_fault(&error))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
+        if self.retired_token.is_some()||self.token_retirement.is_some(){let step=plugin_typed_owner_original(&mut self.retired_token,&mut self.token_retirement,grant).map_err(|error|semio_plugin_decl_emission::retirement_refusal_fault(&error))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
+        if self.retired_claim.is_some()||self.claim_retirement.is_some(){let step=plugin_typed_owner_original(&mut self.retired_claim,&mut self.claim_retirement,grant).map_err(|error|semio_plugin_decl_emission::retirement_refusal_fault(&error))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
         if let Some(scope)=self.retired_scope.as_mut(){
-            if !scope.key.terminal_is_empty(){let step=scope.key.release_step(grant).result.map_err(|error|semio_framework_plugin_decl_emission::retirement_refusal_fault(&error))?;self.retired_key=step.value;return Ok(RetainedCloneStep::Progress(step.progress));}
+            if !scope.key.terminal_is_empty(){let step=scope.key.release_step(grant).result.map_err(|error|semio_plugin_decl_emission::retirement_refusal_fault(&error))?;self.retired_key=step.value;return Ok(RetainedCloneStep::Progress(step.progress));}
             if self.retired_key.is_none()&&self.retired_shared_key.is_none()&&self.removed_scope.is_none(){
                 let ToolLatestWinsScope{key,token,claim,..}=self.retired_scope.take().expect("original retired latest scope");
                 drop(key);self.retired_token=Some(token);self.retired_claim=Some(claim);
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<ToolLatestWinsScope>(),..idle}));
             }
         }
-        if let Some(scope)=self.removed_scope.as_mut(){if scope.terminal_is_empty(){self.removed_scope.take();return Ok(RetainedCloneStep::Progress(item));}let step=scope.release_step(grant).result.map_err(|error|semio_framework_plugin_decl_emission::retirement_refusal_fault(&error))?;if let Some(scope)=step.value{self.retire_scope(scope);}return Ok(RetainedCloneStep::Progress(step.progress));}
-        if let Some(key)=self.retired_shared_key.as_mut(){if key.terminal_is_empty(){self.retired_shared_key.take();return Ok(RetainedCloneStep::Progress(item));}let step=key.release_step(grant).result.map_err(|error|semio_framework_plugin_decl_emission::retirement_refusal_fault(&error))?;self.retired_key=step.value;return Ok(RetainedCloneStep::Progress(step.progress));}
+        if let Some(scope)=self.removed_scope.as_mut(){if scope.terminal_is_empty(){self.removed_scope.take();return Ok(RetainedCloneStep::Progress(item));}let step=scope.release_step(grant).result.map_err(|error|semio_plugin_decl_emission::retirement_refusal_fault(&error))?;if let Some(scope)=step.value{self.retire_scope(scope);}return Ok(RetainedCloneStep::Progress(step.progress));}
+        if let Some(key)=self.retired_shared_key.as_mut(){if key.terminal_is_empty(){self.retired_shared_key.take();return Ok(RetainedCloneStep::Progress(item));}let step=key.release_step(grant).result.map_err(|error|semio_plugin_decl_emission::retirement_refusal_fault(&error))?;self.retired_key=step.value;return Ok(RetainedCloneStep::Progress(step.progress));}
         if let Some(key)=self.retired_key.as_ref(){let released_bytes=key.capacity();if released_bytes>grant.maximum_release_bytes{return Ok(RetainedCloneStep::Progress(idle));}drop(self.retired_key.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{released_bytes,..item}));}
         if let Some(retirement)=self.retirement.as_mut(){if retirement.terminal_is_empty(){self.retirement.take();return Ok(RetainedCloneStep::Progress(item));}let step=retirement.advance(grant);return self.retirement_step(step);}
         if let Some(update)=self.update.as_mut(){
             if self.update_closing{if update.terminal_is_empty(){self.update.take();self.active_operation=None;self.update_closing=false;return Ok(RetainedCloneStep::Progress(item));}let step=update.close_step(grant);return self.retirement_step(step);}
-            if !update.is_complete(){let step=update.advance(grant).result.map_err(|error|semio_framework_plugin_decl_emission::retirement_refusal_fault(&error))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
+            if !update.is_complete(){let step=update.advance(grant).result.map_err(|error|semio_plugin_decl_emission::retirement_refusal_fault(&error))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
             let candidate=update.take_result().expect("complete original key candidate");self.admission_scan=None;
             if candidate.len()>ARTIFACT_LIVE_OUTPUT_SLOTS{self.retirement=Some(candidate.retire());if let Some(operation)=self.active_operation{self.outcome=Some((operation,false));}}
             else{let previous=self.map.replace(candidate).expect("original live key map");self.retirement=Some(previous.retire());if let Some(scope)=update.take_removed(){if self.active_operation.is_some_and(|operation|operation!=scope.operation){scope.cancel();}self.removed_scope=Some(scope);}if let Some(operation)=self.active_operation{self.outcome=Some((operation,true));}}
@@ -202,7 +202,7 @@ pub struct PendingLatestWinsCommand<A: ArtifactApp> {
     pub source_identity:semio_framework_job::OriginalSourceBinding,
     pub revision: [u8; 32],
     pub lease: Option<ToolCancellationLease>,
-    pub cancellation_retirement:Option<Box<semio_framework_plugin_operation::ToolCancellationLeaseRetirement>>,
+    pub cancellation_retirement:Option<Box<semio_plugin_operation::ToolCancellationLeaseRetirement>>,
     pub key_copy: Option<ToolLatestWinsKeyCopy>,
     pub key: Option<semio_framework_value_ordered::ordered::SharedOwner<String>>,
     pub retired_key: Option<String>,
@@ -239,10 +239,10 @@ impl<A: ArtifactApp> PendingLatestWinsCommand<A> {
     pub fn close_metadata(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{self.validate_original(cx)?;if !self.context_metadata_is_empty(){self.close_context_metadata(cx)?;return Ok(false)}if self.meta.is_none()&&self.metadata_retirement.is_empty(){if let Some(caller)=self.original_caller.as_mut(){caller.close_step(cx.original_source_parent()?,cx)?;if caller.terminal_is_empty(){self.original_caller.take();}return Ok(false)}return Ok(true)}let d=self.metadata_close_demands()?;retired(cx,d,|g|{if self.meta.is_some(){return Ok(self.metadata_retirement.begin_granted(&mut self.meta,g).result?.unwrap_or(RetainedCloneStep::Progress(Default::default())))}self.metadata_retirement.select(self.original_body)?.step(g).result})?;Ok(false)}
     pub fn metadata_is_empty(&self)->bool{self.context_metadata_is_empty()&&self.meta.is_none()&&self.metadata_retirement.is_empty()&&self.original_caller.is_none()}
 
-    pub fn admit_original_lease(&mut self,issuer:&mut semio_framework_plugin_operation::ToolCancellationIssuer,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    pub fn admit_original_lease(&mut self,issuer:&mut semio_plugin_operation::ToolCancellationIssuer,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if self.closing||self.lease.is_some(){return Ok(self.lease.is_some())}
         if !self.source_identity.matches(cx){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"mounted pending lease requires its original command caller").into())}
-        let key=semio_framework_plugin_operation::ToolOperationKey{app_instance_id:self.metadata()?.instance_id,document:semio_framework_plugin_operation::ArtifactDocumentAuthority(self.metadata()?.instance_id),operation_id:self.operation.operation,base_revision:self.operation.base_revision,generation:self.operation.generation};
+        let key=semio_plugin_operation::ToolOperationKey{app_instance_id:self.metadata()?.instance_id,document:semio_plugin_operation::ArtifactDocumentAuthority(self.metadata()?.instance_id),operation_id:self.operation.operation,base_revision:self.operation.base_revision,generation:self.operation.generation};
         self.lease=issuer.begin_keyed(&key,cx)?;
         Ok(self.lease.is_some())
     }

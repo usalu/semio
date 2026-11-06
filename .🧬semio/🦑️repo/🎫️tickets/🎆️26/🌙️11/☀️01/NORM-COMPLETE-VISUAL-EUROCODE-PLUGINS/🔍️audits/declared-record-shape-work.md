@@ -35,3 +35,9 @@ Embedded data:
 ## Extracted Ownership Successor
 
 After descriptor-owned production ownership extraction and runtime fixture custody repair, collector snapshot model lib-test32files258742bytes2147lines and ownership6files38603bytes624lines fit unchanged bounds. Gate28946 then passed target source admission and reached actual model lib-test rustc, but terminated1/Cargo101 on one existing fixture E0277 at receiving/🧪️tests/🦀️.rs:12: receiving_issued_grant()? applies Result propagation to an Option. Descriptor owns that explicit required-source refusal repair. No intended shape-work regression body ran; production declared_record remains unchanged. Log generated/dsl-shape-work-red-2.log.
+
+## Runtime Red And Fix
+
+Gate 46747 reached the regression body and failed as intended: required-only work was 0 instead of 2, Cargo 101. The owned declared-record loop now adds each shape step’s actual last_turn_work to its enclosing ReceivingWork before handling either progress or refusal. The generated caller and existing neutral/serde regression pass the meter.
+
+Green attempt 76007 did not reach Rust compilation: repo authorizer source capture refused 16,788,269 bytes against its unchanged 16,777,216-byte boundary. This is not a passing result. Raw output is in 🗑️generated/dsl-shape-work-green.log; retry after the authorizer source boundary is repaired.

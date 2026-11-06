@@ -1,0 +1,7 @@
+import {readFileSync} from "node:fs";
+import {Database} from "bun:sqlite";
+import Ajv from "ajv";
+const fixture=JSON.parse(readFileSync("🧰️framework/🔨️modules/🚪️io/⏱️control/🧾️failure/🧪️tests/🧫️fixtures/📏️measured-work.json","utf8"));
+const schema={type:"object",required:["contract","admitted","denied","expectedKind","cases"],additionalProperties:false,properties:{contract:{const:"semio.native-snapshot.measured-child-work.v1"},admitted:{const:2},denied:{const:0},expectedKind:{const:"canceled"},cases:{type:"array",minItems:2,items:{type:"object",required:["allowance","work","kind"],additionalProperties:false,properties:{allowance:{type:"integer",minimum:0},work:{type:"integer",minimum:0},kind:{enum:["canceled","workLimit"]}}}}}};
+const ajv=new Ajv();if(!ajv.validate(schema,fixture))throw Error(ajv.errorsText());
+const db=new Database(":memory:");db.run("CREATE TABLE cases (allowance INTEGER NOT NULL, work INTEGER NOT NULL, kind TEXT NOT NULL)");const insert=db.prepare("INSERT INTO cases VALUES (?, ?, ?)");for(const row of fixture.cases)insert.run(row.allowance,row.work,row.kind);const row=db.query("SELECT COUNT(*) AS cases, SUM(CASE WHEN work = CASE WHEN allowance >= 2 THEN 2 ELSE 0 END AND kind = CASE WHEN allowance >= 2 THEN 'canceled' ELSE 'workLimit' END THEN 1 ELSE 0 END) AS matching, SUM(work) AS work FROM cases").get() as {cases:number;matching:number;work:number};if(row.cases!==fixture.cases.length||row.matching!==row.cases||row.work!==2)throw Error(JSON.stringify(row));console.log(JSON.stringify(row));db.close();

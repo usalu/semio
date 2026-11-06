@@ -292,5 +292,10 @@
       "sourceCase": 2,
       "cancelAt": 20
     }
-  ]
+  ],
+  "selectedWork": {
+    "denied": 0,
+    "performed": 1,
+    "positiveWitnessBytes": 73
+  }
 }

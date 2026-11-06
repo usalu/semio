@@ -5,7 +5,7 @@ Inputs are authored in this ticket, without copied repository source. `wfc-brows
 ## Coverage
 
 - Step 101 stages named action forms through the existing matrix input interface and requires a new document edit. Every variant changes a seed; tiled/graph variants create a tile; grid3d also changes its colour. Exact scoped slider keyboard input prevents the matrix helper's generic first-slider fallback from seating the wrong colour.
-- Step 102 starts fill through the public tool controls, observes public ARIA progress, pauses and verifies a held progress value when a nonterminal run is observable, resumes, finalizes, dismisses and compares preview screenshots. It starts another run and aborts immediately while Starting, Running, Paused or Complete. It requires an Aborted status and no authored document edit; abort of Complete is explicitly reported as cancellation before finalization. Every solve has a 120-second deadline and abort cleanup.
+- Step 102 starts fill through the public tool controls, observes public ARIA progress, pauses and verifies a held progress value when a nonterminal run is observable, resumes, finalizes, dismisses and compares preview screenshots. It starts another run and requires an active nonterminal run to reach Aborted with no authored document edit; a completion race is a coverage gap, and abort of Complete is separate cancellation-before-finalization evidence. Every solve has a 120-second deadline and abort cleanup.
 - Bitmap also invokes the public no-argument `pin-preview` action and requires one authored edit. Other artifacts intentionally persist models/seed/pins and derive their preview.
 - Step 103 attaches a fresh ticket-generated folder through the existing history-session interface, independently observes a nonempty folder, reloads the page, then requires the authored ledger rows to return.
 - Step 9 is the framework's shared console/fault digest. Harness owns Chromium, fresh locale contexts, launch/reuse, cancellation, reports and screenshots.
@@ -16,7 +16,7 @@ Inputs are authored in this ticket, without copied repository source. `wfc-brows
 
 Result: Ajv validates the language-neutral case table, and all five scenario modules load successfully with their intended variants, ports and ordered steps. Node's TypeScript syntax check also passes. This is input/module validation, not an executed browser acceptance result.
 
-R2 consolidated native session88441 and bitmap browser session55225 are live after admission, waiting for the shared dependency builder. Previous sessions57596 and61555 terminated before compilation. No native pass or browser pass is claimed.
+Historical R2/R3 session references are not current process evidence. No native pass or browser acceptance pass is claimed by this input check.
 
 ## Commands
 
@@ -40,11 +40,11 @@ The explicit `--only` is required: the existing runner changes a `--universal` r
 
 This scenario currently targets React. WGPU is refused with a named prerequisite because these observers consume public DOM/ARIA rather than the WGPU mirror. No private session or guest transport is used.
 
-A tiny default graph may finish before Pause or Abort can be observed. Such a run records pause-not-observed, pause-raced-with-completion or abort-not-observed as a note and does not claim coverage of that phase. A larger prepared problem may allow nonterminal control coverage to be observed; scheduling still prevents a timing guarantee. The default examples are intentionally kept small and bounded here.
+The scenario prepares larger workloads through public forms: 64×64 bitmap and grid2d, 16×16×16 grid3d, and 256 graph slots. It requires observed held pause and resume, active-work abort, and advancing progress. Completion races are noted as coverage gaps and fail the corresponding positive-control verdict; scheduling can still make the configured workload insufficient.
 
 The preview screenshot comparison proves rendered pixels survive dismissing the finalized run; it does not inspect semantic tile assignments. Native fixture/oracle tests own semantic assignment correctness. Durable bitmap keeping uses the new public `pin-preview` action; the script never manufactures a solved pixel payload.
 
-Folder reload checks authored ledger persistence and independently checks files were written. It does not claim that transient solve caches survive reload. The complete runner still needs an admitted browser/guest build and actual UI execution; host capacity has not admitted that verification in this session.
+Folder reload checks authored ledger persistence, matching public surface pixels and accessibility labels, written files, and disappearance of the prior tool-run UI. Hidden seed and unrendered fields require canonical snapshot and SPR replay verification; transient cache contents are outside this observer. The complete runner still needs an admitted browser/guest build and actual UI execution; host capacity has not admitted that verification in this session.
 
 ## R2 Input Corrections
 

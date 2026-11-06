@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "two-physical-bindings",
+      "mode": "valid",
+      "removed": 1
+    },
+    {
+      "id": "conflicting-provenance",
+      "mode": "conflict",
+      "removed": 0
+    },
+    {
+      "id": "malformed-binding",
+      "mode": "malformed",
+      "removed": 0
+    },
+    {
+      "id": "missing-destination",
+      "mode": "missing",
+      "removed": 0
+    },
+    {
+      "id": "oversized-provenance",
+      "mode": "oversized",
+      "removed": 0
+    },
+    {
+      "id": "publication-failure",
+      "mode": "blocked",
+      "removed": 0
+    },
+    {
+      "id": "unbound-provenance",
+      "mode": "unbound",
+      "removed": 0
+    },
+    {
+      "id": "discovery-limit",
+      "mode": "limit",
+      "removed": 0
+    }
+  ]
+}

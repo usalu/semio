@@ -1,7 +1,7 @@
 //! 📥️ Items of `operation` that belong to `os-store-space-member` (PLAN-OS-KERNEL-CRATES.md, Appendix C): lifted out of `🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs`.
 use semio_framework_value::ErasedSnapshotRetirement;
-use semio_os_store_member_open::source_admission::{MemberOpenSourceAdmission, diagnostic_error as member_admission_diagnostic};
-use semio_os_store_member_open::{MemberOpenAdmissionError, MemberOpenDiagnostic, MemberOpenOperation, MemberOpenRequest, MemberOpenStep};
+use semio_framework_os_store_member_open::source_admission::{MemberOpenSourceAdmission, diagnostic_error as member_admission_diagnostic};
+use semio_framework_os_store_member_open::{MemberOpenAdmissionError, MemberOpenDiagnostic, MemberOpenOperation, MemberOpenRequest, MemberOpenStep};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, admit_retained_clone_close};
 use semio_framework_job::{StepContext, OriginalTurnFailure, OriginalCallerSourceParent, OriginalCallerSourceLoan};
@@ -66,7 +66,7 @@ impl<M: Send> UnsupportedMemberFactoryOpen<M> {
         if opened.is_some(){return Err(member_admission_diagnostic(MemberOpenDiagnostic::Stale).into())}
         if !admission.admit_source(parent,cx)?||cx.should_yield()||cx.retained_grant().maximum_items==0{return Ok(false)}
         let request=admission.request.take().unwrap();
-        match UnsupportedMemberSnapshotOpen::begin(request){Ok(snapshot)=>{*opened=Some(Self{snapshot,source_loan:ManuallyDrop::new(admission.source_loan.take())});semio_os_store_member_open::receive_member_close(cx,Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})))?;Ok(true)},Err(rejected)=>{*admission.request=Some(rejected.request);Err(member_admission_diagnostic(rejected.diagnostic).into())}}
+        match UnsupportedMemberSnapshotOpen::begin(request){Ok(snapshot)=>{*opened=Some(Self{snapshot,source_loan:ManuallyDrop::new(admission.source_loan.take())});semio_framework_os_store_member_open::receive_member_close(cx,Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})))?;Ok(true)},Err(rejected)=>{*admission.request=Some(rejected.request);Err(member_admission_diagnostic(rejected.diagnostic).into())}}
     }
 }
 
@@ -94,7 +94,7 @@ impl<M: Send> MemberOpenOperation for UnsupportedMemberFactoryOpen<M> {
         grant.maximum_copy_bytes=grant.maximum_copy_bytes.min(usize::try_from(cx.fuel_remaining().saturating_sub(1)).unwrap_or(usize::MAX));
         let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
         let result=self.snapshot.close_step(child).result.and_then(|step|admit_retained_clone_close(child,step,self.snapshot.terminal_is_empty(),"unsupported factory request"));
-        semio_os_store_member_open::receive_member_close(cx,result).map(|step|RetainedCloneStep::Progress(step.progress()))
+        semio_framework_os_store_member_open::receive_member_close(cx,result).map(|step|RetainedCloneStep::Progress(step.progress()))
     }
     fn terminal_is_empty(&self) -> bool { self.snapshot.terminal_is_empty()&&self.source_loan.is_none() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.snapshot.next_copy_byte_demand() }

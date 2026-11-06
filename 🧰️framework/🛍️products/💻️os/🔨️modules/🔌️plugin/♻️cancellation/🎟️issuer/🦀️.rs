@@ -129,7 +129,7 @@ impl ToolCancellationIssuer{
    let state=match canonical.state.try_lock(){Ok(state)=>state,Err(_)=>return Ok(false)};if state.occupied.iter().any(|word|*word!=0)||state.keyed_operations.occupied!=0||state.keyed_documents.occupied!=0{return Ok(false)}
   }
   if self.renew_swapped{
-   if let Some(parts)=self.pending_close.as_mut(){if !parts.terminal_is_empty(){progress=parts.close_step(self.issued.as_ref().unwrap(),self.admission.source.as_ref().unwrap().cancellation()?,grant)?.progress();cx.consume_retained(progress)?;if progress.copied_items>0{cx.consume_fuel(1)}return Ok(false)}self.pending_close.take();}
+   if let Some(parts)=self.pending_close.as_mut(){if !parts.terminal_is_empty(){let parent=self.admission.source.as_ref().unwrap().cancellation()?;let demand=parts.retirement_demands(self.issued.as_ref().unwrap(),parent,grant.maximum_copy_bytes)?;let work=parts.retirement_work_demand(grant.maximum_copy_bytes)?;cx.with_retained_loan(grant,|cx|semio_framework_job::close_original_quoted_retained_step(cx,demand,work,|grant|parts.close_step(self.issued.as_ref().unwrap(),parent,grant)))?;return Ok(false)}self.pending_close.take();}
    if grant.maximum_copy_bytes<size_of::<(semio_framework_job::OperationId,semio_framework_job::Generation,usize)>(){return Ok(false)}self.renew_source=None;self.renew_swapped=false;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<(semio_framework_job::OperationId,semio_framework_job::Generation,usize)>(),..Default::default()})?;cx.consume_fuel(1);return Ok(true)
   }else if self.renew_cancel.is_none(){let original=self.admission.source.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"renewal lost its retained creation authority"))?;let Some((token,paid))=original.cancellation()?.admit_child(grant)?else{return Ok(false)};*self.renew_cancel=Some(token);progress=paid;}
   else if self.renew_claim.is_none(){let Some((claim,paid))=PublicationClaim::admit(grant)?else{return Ok(false)};*self.renew_claim=Some(claim);progress=paid;}
@@ -148,7 +148,7 @@ impl ToolCancellationIssuer{
   if self.pending.is_some()||self.renew_swapped{return Ok(false)}if self.cleanup_index.is_some_and(|selected|selected!=index){return Ok(false)}
   if !self.ready(){return Ok(true)}if if finished_only{cx.should_yield()}else{cx.retirement_should_yield()}{return Ok(false)}let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
   if let Some(parts)=self.pending_close.as_mut(){
-   if !parts.terminal_is_empty(){let progress=parts.close_step(self.issued.as_ref().unwrap(),self.admission.source.as_ref().unwrap().cancellation()?,grant)?.progress();cx.consume_retained(progress)?;if progress.copied_items>0{cx.consume_fuel(1)}return Ok(false)}
+   if !parts.terminal_is_empty(){let parent=self.admission.source.as_ref().unwrap().cancellation()?;let demand=parts.retirement_demands(self.issued.as_ref().unwrap(),parent,grant.maximum_copy_bytes)?;let work=parts.retirement_work_demand(grant.maximum_copy_bytes)?;cx.with_retained_loan(grant,|cx|semio_framework_job::close_original_quoted_retained_step(cx,demand,work,|grant|parts.close_step(self.issued.as_ref().unwrap(),parent,grant)))?;return Ok(false)}
    if grant.maximum_copy_bytes<size_of::<usize>(){return Ok(false)}self.pending_close.take();self.cleanup_index=None;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<usize>(),..Default::default()})?;cx.consume_fuel(1);return Ok(true)
   }
   let canonical=self.issued.as_ref().unwrap();if Arc::strong_count(&canonical.state)!=1||Arc::weak_count(&canonical.state)!=0{return Ok(false)}let mut state=match canonical.state.try_lock(){Ok(state)=>state,Err(_)=>return Ok(false)};
@@ -198,10 +198,11 @@ impl ToolCancellationIssuer{
   if cx.should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
   let demand=self.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;let grant=cx.retained_grant();
   if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
+  if self.closing&&self.pending.is_none(){if let Some(parts)=self.pending_close.as_mut(){if !parts.terminal_is_empty(){let original=self.admission.source.as_ref().unwrap().cancellation()?;let work=parts.retirement_work_demand(grant.maximum_copy_bytes)?;return semio_framework_job::close_original_quoted_retained_step(cx,demand,work,|grant|parts.close_step(self.issued.as_ref().unwrap(),original,grant))}}}
   let mut progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()};let source=&mut*self.admission;
   if !self.closing{self.closing=true;if let Some(handle)=self.issued.as_ref(){handle.cancel_scope_generation()}}
   else if let Some(pending)=self.pending.take(){*self.pending_close=Some(pending.into_parts());}
-  else if let Some(parts)=self.pending_close.as_mut(){if parts.terminal_is_empty(){self.pending_close.take();}else{progress=parts.close_step(self.issued.as_ref().unwrap(),source.source.as_ref().unwrap().cancellation()?,grant)?.progress()}}
+  else if self.pending_close.is_some(){self.pending_close.take();}
   else if self.renew_cancel.is_some()||self.renew_claim.is_some(){*self.pending_close=Some(crate::CancellationLeaseParts::unpublished(None,[self.renew_cancel.take(),None,None],[self.renew_claim.take(),None,None,None],None));}
   else if let Some(handle)=self.issued.take(){let ToolCancellationHandle{state,app_scope,publication_scope,app_generation,active}=handle;source.state=Some(state);source.cancel=Some(app_scope);source.claim=Some(publication_scope);source.generation=Some(app_generation);source.active=Some(active)}
   else if let Some(state)=source.state.as_ref(){

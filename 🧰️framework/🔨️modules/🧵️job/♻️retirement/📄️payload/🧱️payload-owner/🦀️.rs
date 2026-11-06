@@ -12,6 +12,8 @@ pub fn close_ledger(ledger:&mut Option<Arc<JobPayloadOperationLedger>>,grant:Ret
 }
 
 impl RetainedJobPayload {
+    /// ⛽️ One selected page return or ledger return consumes one original work unit.
+    pub fn retirement_work(&self)->Result<u64,ValueError>{self.retirement_demands()?;Ok(u64::from(!self.terminal_is_empty()))}
     pub fn next_close_byte_demand(&self)->usize{self.retirement_demands().expect("original job payload demand").release_bytes}
     /// 📏️ Borrows the exact original page or separately retained operation ledger before effects.
     pub fn retirement_demands(&self)->Result<RetirementDemand,ValueError>{if self.page_count>0{Ok(RetirementDemand{release_bytes:self.live_pages().last().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original payload page count lacks backing"))?.source.allocated_capacity_bytes(),depth:if self.ledger.is_some(){3}else{1},..Default::default()})}else{Ok(ledger_demands(&self.ledger))}}

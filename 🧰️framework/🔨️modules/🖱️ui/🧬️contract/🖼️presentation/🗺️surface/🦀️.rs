@@ -78,7 +78,14 @@ pub struct SurfaceDoc {
     pub bytes: crate::UiFixedBytes,
 }
 
-/// 🛍️ An embedded product surface. Replaces the old `UiComponentSceneNode`'s 15 sparse [Design notes](README.md#source-notes-143).
+/// 🛍️ An embedded product surface. Replaces the old `UiComponentSceneNode`'s 15 sparse
+/// `Option<XxxScene>` fields with exactly ONE payload, identified by `doc_schema` — the 15 product
+/// scene structs themselves stay product payloads and move to `🖱️ui/🎬️scene/🦀️.rs` in a
+/// later packet, never into this dependency-free contract crate. See this file's own module doc for
+/// the exact reasoning behind each field (and each field the scaffold this replaces used to carry but
+/// no longer does).
+// 🌱️ No `ToValue`/`FromValue` here: `bindings: UiNodeBindings` embeds `crate::ActionBinding`, the
+// deliberate DslValue-free exception — see its own note above.
 #[derive(Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]

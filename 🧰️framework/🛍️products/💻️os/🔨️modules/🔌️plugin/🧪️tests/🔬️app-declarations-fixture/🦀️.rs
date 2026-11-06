@@ -669,23 +669,23 @@ pub fn build_declaration() -> ArtifactDeclaration<FixtureApps> {
         for schema in schemas {
             let expected: Vec<&str> = owners.iter().filter(|(_, owned)| *owned == schema).map(|(id, _)| id.as_str()).collect();
             assert_eq!(expected.len(), 2, "{schema}: its editor and its viewer");
-            let candidates: Vec<&str> = semio_plugin_runtime_ops::ops_document::artifact_codec_candidates(&plugin, schema).map(|definition| definition.id.as_str()).collect();
+            let candidates: Vec<&str> = semio_framework_plugin_runtime_ops::ops_document::artifact_codec_candidates(&plugin, schema).map(|definition| definition.id.as_str()).collect();
             assert_eq!(candidates, expected, "{schema}");
-            let owner = semio_plugin_runtime_ops::ops_document::artifact_codec_owner(&plugin, schema).expect("one owner");
+            let owner = semio_framework_plugin_runtime_ops::ops_document::artifact_codec_owner(&plugin, schema).expect("one owner");
             assert_eq!(owner.role, AppRole::Editor, "{schema}: the editor is the creation authority");
         }
-        assert!(semio_plugin_runtime_ops::ops_document::artifact_codec_owner(&plugin, "semio.testkit.nobody/v1").is_err(), "no owner is refused");
+        assert!(semio_framework_plugin_runtime_ops::ops_document::artifact_codec_owner(&plugin, "semio.testkit.nobody/v1").is_err(), "no owner is refused");
         let runtime = semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         semio_plugin_runtime_instances::inst_descriptor::install_plugin_bundle(&runtime, plugin);
         for schema in schemas {
-            let hash = semio_plugin_runtime_ops::ops_document::plugin_artifact_pack_schema_hash(&runtime, schema).await;
+            let hash = semio_framework_plugin_runtime_ops::ops_document::plugin_artifact_pack_schema_hash(&runtime, schema).await;
             assert!(hash.as_ref().is_ok_and(|hash| *hash != [0; 32]) || format!("{hash:?}").contains("no structural record specification"), "{schema}: {hash:?}");
             let document_id = format!("artifact-{}", "1".repeat(32));
-            let pair = semio_plugin_runtime_ops::ops_document::plugin_artifact_genesis(&runtime, schema, &document_id).await.expect("genesis without an app");
-            let mirror = semio_plugin_runtime_ops::ops_document::plugin_artifact_print_mirror(&runtime, schema, &pair.pack, &pair.spr).await.expect("print mirror without an app");
+            let pair = semio_framework_plugin_runtime_ops::ops_document::plugin_artifact_genesis(&runtime, schema, &document_id).await.expect("genesis without an app");
+            let mirror = semio_framework_plugin_runtime_ops::ops_document::plugin_artifact_print_mirror(&runtime, schema, &pair.pack, &pair.spr).await.expect("print mirror without an app");
             assert!(!pair.pack.is_empty() && !mirror.dsl.is_empty(), "{schema}");
         }
-        assert!(semio_plugin_runtime_ops::ops_document::plugin_artifact_pack_schema_hash(&runtime, "semio.testkit.nobody/v1").await.is_err(), "no owner is refused");
+        assert!(semio_framework_plugin_runtime_ops::ops_document::plugin_artifact_pack_schema_hash(&runtime, "semio.testkit.nobody/v1").await.is_err(), "no owner is refused");
     }
 
     /// 🎯️ Force a preflight failure by construction: standard "2"'s subset gets standard

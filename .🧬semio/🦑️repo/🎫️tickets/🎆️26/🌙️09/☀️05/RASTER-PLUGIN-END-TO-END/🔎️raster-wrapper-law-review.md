@@ -1,0 +1,5 @@
+# Raster Reserved Wrapper Law Review
+
+The current inline law `editor/🎞️reserved-import/🦀️.rs:219–229` uses a registry-backed app, refreshes the actual cache, compares request snapshot/config/history Arc identity to the cache and checks that the source read points at the same snapshot. It drives the original return receiver to checkpoint and completion, observes the retained completion, and explicitly closes the emission, job, return origin and registered app under its scope. No definite compile or lifecycle defect was identified from source inspection; the native test has not been run.
+
+Its 13-lane assertion is incomplete: retained policy, contract, UI axes, canonical revision, children and completion are merely borrowed as a tuple, without assertions of their value, identity or preservation on a denied transfer. It calls `advance_reserved_media` directly and manually drives the resulting wrapper, so it does not exercise `PluginApp::advance_original_media_import`'s producer permit, mounted operation and publication receipt. Those are coverage limits, not a claim that the tested real cache roots were fabricated.

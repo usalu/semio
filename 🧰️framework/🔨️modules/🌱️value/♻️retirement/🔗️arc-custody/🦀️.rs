@@ -24,13 +24,15 @@ impl<T:RetireOwned+Sync> SharedControlledRetirement<T> {
     pub fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {self.owned.as_ref().map_or(Ok(0),|owner|owner.next_capacity_byte_demand(copy))}
     pub fn next_release_byte_demand(&self)->Result<usize,ValueError> {if let Some(source)=self.source.as_ref(){return Ok(if (self.lease_only||Arc::strong_count(source)==1)&&Arc::weak_count(source)==0{arc_bytes::<T>()}else{0});}self.owned.as_ref().map_or(Ok(0),ControlledRetirement::next_release_byte_demand)}
     pub fn next_depth_demand(&self)->Result<usize,ValueError> {self.owned.as_ref().map_or(Ok(usize::from(self.source.is_some())),ControlledRetirement::next_depth_demand)}
+    /// ⛽️ Quotes the original shared handoff, child step or owner clearance.
+    pub fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.next_demand(body)?;if self.source.is_some(){return Ok(1)}match self.owned.as_ref(){Some(owner)if owner.terminal_is_empty()=>Ok(1),Some(owner)=>owner.next_computational_work(body),None=>Ok(0)}}
     /// ⏰️ Borrows actual shared handoff, child or terminal custody work of the last invoked turn.
     pub fn last_turn_work(&self)->u64{self.last_work}
-    pub fn step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
+    pub fn step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::OriginalRetirementFailure> {
         self.last_work=0;let empty=RetainedCloneProgress::default();
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
-        if grant.maximum_depth<self.next_depth_demand()?{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"shared retirement exceeds admitted depth"));}
+        if grant.maximum_depth<self.next_depth_demand()?{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"shared retirement exceeds admitted depth").into());}
         if let Some(source)=self.source.as_mut(){
             if self.lease_only {
                 let extent=if Arc::weak_count(source)==0{arc_bytes::<T>()}else{0};
@@ -51,8 +53,12 @@ impl<T:RetireOwned+Sync> SharedControlledRetirement<T> {
 }
 
 impl<T:RetireOwned+Sync> crate::ErasedSnapshotRetirement for SharedControlledRetirement<T> {
+    fn requires_original_control(&self)->bool{self.source.is_none()&&self.owned.as_ref().is_some_and(|owner|!owner.terminal_is_empty()&&crate::ErasedSnapshotRetirement::requires_original_control(owner))}
+    fn close_step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn crate::OriginalRetirementControl)->crate::OriginalRetirementOutcome{match self.owned.as_mut(){Some(owner) if !owner.terminal_is_empty()&&self.source.is_none()=>{let turn=crate::ErasedSnapshotRetirement::close_step_controlled(owner,grant,control);self.last_work=turn.work;turn},_=>crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"shared retirement has no selected original child").into()),work:0}}}
+    fn close_original_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome{match self.owned.as_mut(){Some(owner) if !owner.terminal_is_empty()&&self.source.is_none()=>{let turn=crate::ErasedSnapshotRetirement::close_original_step(owner,original,grant);self.last_work=turn.work;turn},_=>crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"shared retirement has no selected original child").into()),work:0}}}
+    fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{SharedControlledRetirement::next_computational_work(self,body)}
         fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{SharedControlledRetirement::next_demand(self,body)}
-fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome {let result=self.step(grant);crate::RetainedWorkOutcome{result,work:self.last_turn_work()}}
+fn close_step(&mut self,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome {let result=self.step(grant).map_err(Into::into);crate::RetainedWorkOutcome{result,work:self.last_turn_work()}}
     fn terminal_is_empty(&self)->bool {Self::terminal_is_empty(self)}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError> {Self::next_copy_byte_demand(self)}
     fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {Self::next_capacity_byte_demand(self,copy)}
@@ -75,6 +81,10 @@ pub fn admit_shared_retirement<T:RetireOwned+Sync>(source:Arc<T>,grant:RetainedC
 
 impl<T:RetireOwned+Sync> Drop for SharedControlledRetirement<T> {fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"shared retirement abandoned actual Arc allocation ownership");if self.terminal_is_empty(){unsafe {ManuallyDrop::drop(&mut self.source);ManuallyDrop::drop(&mut self.owned);}}}}
 impl<T:RetireOwned+Sync> RetirementCursor for SharedControlledRetirement<T> {
+ fn requires_original_control(&self)->bool{crate::ErasedSnapshotRetirement::requires_original_control(self)}
+ fn close_step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn crate::OriginalRetirementControl)->RetirementStep{super::erased_cursor_turn(crate::ErasedSnapshotRetirement::close_step_controlled(self,grant,control))}
+ fn close_original_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->RetirementStep{super::erased_cursor_turn(crate::ErasedSnapshotRetirement::close_original_step(self,original,grant))}
+    fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{SharedControlledRetirement::next_computational_work(self,body)}
         fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{SharedControlledRetirement::next_demand(self,body)}
 fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {match self.step(grant){Err(error)=>RetirementStep::Failure(error,self.last_turn_work()),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete(self.last_turn_work()),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,self.last_turn_work())}}
     fn terminal_is_empty(&self)->bool {Self::terminal_is_empty(self)}
@@ -103,4 +113,4 @@ pub fn arc_bytes<T>()->usize {shared_retirement_allocation_bytes::<T>()}
 #[path="🔐️unique/🧪️tests/🦀️.rs"]
 mod shared_unique_tests;
 
-pub use semio_framework_value_allocation_return::{admit_shared_allocation,shared_allocation_bytes,SharedAllocation};
+pub use semio_framework_value_allocation_return::{admit_shared_allocation,shared_allocation_bytes,try_uninitialized_arc,SharedAllocation};

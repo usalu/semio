@@ -20,7 +20,7 @@ impl<T:RetireOwned+Sync> LeaseView for ReadLease<T> {
 pub struct ErasedReadLease {lease:ManuallyDrop<Option<Box<dyn LeaseView>>>}
 impl ErasedReadLease {
     pub fn terminal_is_empty(&self)->bool {self.lease.is_none()}
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome {ErasedSnapshotRetirement::close_step(self,grant)}
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value_retirement::OriginalRetirementOutcome {ErasedSnapshotRetirement::close_step(self,grant)}
     pub fn next_depth_demand(&self)->Result<usize,ValueError> {Ok(self.demands(0)?.depth)}
     pub const fn constructor_capacity_bytes<T:RetireOwned+Sync>()->usize {size_of::<ReadLease<T>>()}
     pub fn admit<T:RetireOwned+Sync>(lease:ReadLease<T>,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(ValueError,ReadLease<T>)> {
@@ -47,11 +47,11 @@ impl ErasedReadLease {
     }
 }
 impl ErasedSnapshotRetirement for ErasedReadLease {
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome {
+    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value_retirement::OriginalRetirementOutcome {
         let Some(lease)=self.lease.as_mut()else{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}};
         if grant.maximum_items==0{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
         if lease.terminal_is_empty(){
-            if grant.maximum_depth==0{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::DepthLimit,"erased read frame release requires admitted depth")),work:0}}
+            if grant.maximum_depth==0{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::DepthLimit,"erased read frame release requires admitted depth").into()),work:0}}
             let bytes=size_of_val(lease.as_ref());if grant.maximum_release_bytes<bytes{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
             drop(self.lease.take());return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()})),work:1}
         }

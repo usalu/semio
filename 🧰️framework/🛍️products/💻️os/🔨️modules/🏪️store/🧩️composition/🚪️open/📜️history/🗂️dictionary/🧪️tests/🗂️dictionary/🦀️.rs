@@ -1,14 +1,14 @@
 //! 🧪️ Actual retained input and production SPR writer exercise the neutral owner contract.
 
 use semio_framework_value::ErasedSnapshotRetirement as _;
-use semio_os_store_member_open::history::{MemberHistoryInputStep, MemberHistoryVerification};
-use semio_os_store_member_open::history::dictionary::{MemberHistoryDictionaryLimits, MemberHistoryDictionaryOwner, MemberHistoryDictionaryStep, VerifiedMemberHistoryDictionary};
-use semio_os_store_member_open::{MemberOpenDiagnostic, MemberOpenRequest};
+use semio_framework_os_store_member_open::history::{MemberHistoryInputStep, MemberHistoryVerification};
+use semio_framework_os_store_member_open::history::dictionary::{MemberHistoryDictionaryLimits, MemberHistoryDictionaryOwner, MemberHistoryDictionaryStep, VerifiedMemberHistoryDictionary};
+use semio_framework_os_store_member_open::{MemberOpenDiagnostic, MemberOpenRequest};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_os_store_member_open::history::dictionary::record::RetainedDictionaryDelta;
+use semio_framework_os_store_member_open::history::dictionary::record::RetainedDictionaryDelta;
 use semio_os_spr::format::retained::{RetainedSprLimits, RetainedSprVerification};
 use semio_framework_job::StepContext;
-use semio_os_store_member_open::history::VerifiedMemberHistoryInput;
+use semio_framework_os_store_member_open::history::VerifiedMemberHistoryInput;
 use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_artifact_reference::ArtifactRef};
 use semio_os_store_owned_schema_decode::{OWNED_SCHEMA_DECODE_PAGE_BYTES, OwnedSchemaDecodeCredits, OwnedSchemaDecodePage, OwnedSchemaDecodePages};
 use semio_os_store_envelope::owner::OwnerRef;

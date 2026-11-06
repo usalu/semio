@@ -28,5 +28,6 @@ semio-framework-dsl-notation = { path="../../../🖋️notation/📦️packages/
 semio-framework-value = { path="../../../../../🌱️value/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-io-control = { path = "../../../../../🚪️io/⏱️control/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 semio-framework-async-macros = { path="../../../../../⏳️async/✨️macros/📦️packages/🦀️rust" }

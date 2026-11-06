@@ -64,8 +64,7 @@ pub mod io {
         #[path="🪪️checkpoint-identity/🦀️.rs"]
         pub mod checkpoint_identity;
 
-        #[path="🪪️entity-identity/🦀️.rs"]
-        pub mod entity_identity;
+        pub use semio_os_vcs_entity_identity as entity_identity;
 
         #[path="🌱️genesis/🦀️.rs"]
         pub mod genesis;

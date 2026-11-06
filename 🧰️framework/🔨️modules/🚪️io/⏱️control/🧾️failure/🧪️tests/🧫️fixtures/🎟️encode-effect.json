@@ -1,0 +1,157 @@
+{
+  "cause": null,
+  "allocation": null,
+  "encodeEffect": {
+    "primary": {
+      "kind": "canceled",
+      "message": "effect primary",
+      "retainedProgress": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      }
+    },
+    "invariant": {
+      "kind": "canceled",
+      "message": "effect invariant",
+      "retainedProgress": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      }
+    },
+    "physicalInvariant": {
+      "kind": "canceled",
+      "message": "physical invariant",
+      "retainedProgress": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      }
+    },
+    "capacityInvariant": {
+      "kind": "canceled",
+      "message": "capacity invariant",
+      "retainedProgress": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      }
+    },
+    "work": {
+      "kind": "canceled",
+      "message": "work refusal",
+      "retainedProgress": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      }
+    },
+    "local": {
+      "kind": "canceled",
+      "message": "local refusal",
+      "retainedProgress": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      }
+    },
+    "physical": {
+      "kind": "canceled",
+      "message": "physical refusal 雪",
+      "retainedProgress": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      }
+    },
+    "allocation": {
+      "type": "encode",
+      "request": {
+        "bytes": 16,
+        "ownedBytes": 3,
+        "nextOwnedBytes": 19,
+        "maximumBytes": 32
+      },
+      "admitted": true,
+      "primary": {
+        "kind": "canceled",
+        "message": "allocation operation",
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
+      },
+      "forwardedQuote": {
+        "kind": "canceled",
+        "message": "forwarded quote",
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
+      },
+      "scopedQuote": {
+        "kind": "canceled",
+        "message": "scoped quote",
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
+      },
+      "extentRefusal": {
+        "kind": "canceled",
+        "message": "allocation extent",
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
+      },
+      "forwardedRefusal": {
+        "kind": "canceled",
+        "message": "forwarded post",
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
+      },
+      "scopedRefusal": {
+        "kind": "canceled",
+        "message": "scoped post",
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
+      },
+      "actual": 8
+    }
+  },
+  "receiptRefusal": null,
+  "contextRefusal": null,
+  "workRefusal": null,
+  "settlementRefusal": null,
+  "progress": {
+    "copiedItems": 0,
+    "copiedBytes": 0,
+    "retainedCapacityBytes": 0,
+    "releasedBytes": 0
+  }
+}

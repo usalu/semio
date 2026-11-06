@@ -1,5 +1,5 @@
 //! 📤️ Original source identity and physical pages remain inside one artifact-neutral publication.
-use semio_framework_job::{OperationId, Generation, StepContext, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView, JobOutcomeKind, OriginalTurnFailure, receive_original_retained_work, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_job::{OriginalSourceBinding, StepContext, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView, JobOutcomeKind, OriginalTurnFailure, receive_original_retained_work, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_job_payload::{RetainedPayloadBuilder, JobPayloadStream, RetainedJobPayload};
 use semio_framework_value::{RetainedWorkOutcome,ValueError,ValueRefusalKind};
 use semio_framework_value::RetirementDemand;
@@ -11,7 +11,7 @@ impl JobPublicationKind{
  fn stream(self)->JobPayloadStream{match self{Self::Preview=>JobPayloadStream::Preview,Self::Checkpoint{..}=>JobPayloadStream::CheckpointState,Self::Fault=>JobPayloadStream::Fault}}
 }
 #[derive(Clone,Copy,PartialEq,Eq)]
-struct OriginalPublicationSource{address:usize,extent:usize,operation:OperationId,generation:Generation,kind:JobPublicationKind}
+struct OriginalPublicationSource{address:usize,extent:usize,caller:OriginalSourceBinding,kind:JobPublicationKind}
 
 /// 🧳️ Enclosing admission owns this inline storage; each turn funds one original frontier.
 pub struct RetainedJobPublication{builder:RetainedPayloadBuilder,stream:JobPayloadStream,binding:Option<OriginalPublicationSource>,cursor:usize,delivered:bool,closing:bool}
@@ -24,7 +24,7 @@ impl RetainedJobPublication{
  pub unsafe fn initialize_empty_at(target:*mut Self){unsafe{RetainedPayloadBuilder::initialize_empty_at(std::ptr::addr_of_mut!((*target).builder),JobPayloadStream::Preview);std::ptr::addr_of_mut!((*target).stream).write(JobPayloadStream::Preview);std::ptr::addr_of_mut!((*target).binding).write(None);std::ptr::addr_of_mut!((*target).cursor).write(0);std::ptr::addr_of_mut!((*target).delivered).write(false);std::ptr::addr_of_mut!((*target).closing).write(false);}}
 
  pub fn new()->Self{Self{builder:RetainedPayloadBuilder::new(JobPayloadStream::Preview),stream:JobPayloadStream::Preview,binding:None,cursor:0,delivered:false,closing:false}}
- fn original(kind:JobPublicationKind,source:&[u8],cx:&StepContext<'_>)->OriginalPublicationSource{OriginalPublicationSource{address:source.as_ptr()as usize,extent:source.len(),operation:cx.operation(),generation:cx.generation(),kind}}
+ fn original(kind:JobPublicationKind,source:&[u8],cx:&StepContext<'_>)->OriginalPublicationSource{OriginalPublicationSource{address:source.as_ptr()as usize,extent:source.len(),caller:OriginalSourceBinding::borrow(cx),kind}}
  fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"publication requires its same original source extent kind and operation until physical closure")}
  fn permits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
  pub fn terminal_is_empty(&self)->bool{self.binding.is_none()&&self.builder.terminal_is_empty()&&!self.closing}
@@ -60,6 +60,13 @@ impl RetainedJobPublication{
   if !self.closing{return Ok(RetirementDemand{depth:1,..Default::default()})}
   if !self.builder.terminal_is_empty(){let mut demand=self.builder.retirement_demands()?;demand.depth=demand.depth.checked_add(1).ok_or_else(Self::invalid)?;return Ok(demand)}
   Ok(RetirementDemand{depth:1,..Default::default()})
+ }
+ /// ⛽️ Quotes the actual child close or one separate publication metadata turn.
+ pub fn retirement_work(&self)->Result<u64,ValueError>{
+  self.retirement_demands()?;
+  if self.terminal_is_empty(){return Ok(0)}
+  if self.closing&&!self.builder.terminal_is_empty(){return self.builder.retirement_work()}
+  Ok(1)
  }
  /// ♻️ The caller ends its descriptor loan before original pages and publication metadata close.
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{

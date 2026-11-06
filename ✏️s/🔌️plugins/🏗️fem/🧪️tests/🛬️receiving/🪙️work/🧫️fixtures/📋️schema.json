@@ -11,7 +11,7 @@
     },
     "cases": {
       "type": "array",
-      "minItems": 14,
+      "minItems": 32,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -58,7 +58,12 @@
                     "header",
                     "validation",
                     "row",
-                    "transfer"
+                    "transfer",
+                    "terminal_clear",
+                    "census",
+                    "forecast_row",
+                    "forecast_cell",
+                    "forecast_field_read"
                   ]
                 },
                 "units": {
@@ -79,7 +84,8 @@
                     "enum": [
                       "primary",
                       "quote",
-                      "allocation"
+                      "allocation",
+                      "work_post"
                     ]
                   }
                 }
@@ -118,7 +124,8 @@
                   "enum": [
                     "primary",
                     "quote",
-                    "allocation"
+                    "allocation",
+                    "work_post"
                   ]
                 }
               }

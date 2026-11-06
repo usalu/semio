@@ -59,28 +59,28 @@ impl<P:Send+Sync+'static,M:Send+Sync+'static> Preparation<P,M>{
   if self.snapshots.is_some()||self.mutations.is_some()||self.semantics.is_some(){return Ok(header::<FactoryAuthority>());}
   self.factories.iter().find_map(Option::as_ref).map_or(Ok(Default::default()),|owner|owner.demands(body))
  }
- fn close(&mut self,grant:RetainedCloneGrant,mut control:Option<&mut dyn OriginalRetirementControl>)->Result<RetainedCloneStep,ValueError>{
+ fn close(&mut self,grant:RetainedCloneGrant,mut control:Option<&mut dyn OriginalRetirementControl>)->semio_framework_value::OriginalRetirementOutcome{let mut work=0;let result=(||->Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>{
   if self.empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
   let demand=self.close_demand(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
-  if self.original.is_some()&&control.as_ref().is_none_or(|control|self.original!=Some((control.ledger_identity(),control.retirement_recipient_identity()))){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"ephemeral retirement requires its original decoder and recipient"));}
-  if let Some(owner)=self.native.as_mut(){if owner.terminal_is_empty(){self.native.take();return Ok(RetainedCloneStep::Progress(progress(demand)));}return owner.close_step_controlled(grant,&mut **control.as_mut().ok_or_else(||invalid("ephemeral native retirement lacks original control"))?).result;}
-  if self.active.is_some(){return match control{Some(control)=>semio_framework_value::close_factory_ticket_controlled(&mut self.active,grant,control).result,None=>semio_framework_value::close_factory_ticket(&mut self.active,grant).result};}
+  if self.original.is_some()&&control.as_ref().is_none_or(|control|self.original!=Some((control.ledger_identity(),control.retirement_recipient_identity()))){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"ephemeral retirement requires its original decoder and recipient").into());}
+  if let Some(owner)=self.native.as_mut(){if owner.terminal_is_empty(){self.native.take();work=1;return Ok(RetainedCloneStep::Progress(progress(demand)));}let turn=owner.close_step_controlled(grant,&mut **control.as_mut().ok_or_else(||invalid("ephemeral native retirement lacks original control"))?);work=turn.work;return turn.result;}
+  if self.active.is_some(){let turn=match control{Some(control)=>semio_framework_value::close_factory_ticket_controlled(&mut self.active,grant,control),None=>semio_framework_value::close_factory_ticket(&mut self.active,grant)};work=turn.work;return turn.result;}
   if let Some(control)=control.as_mut(){control.charge(demand.capacity_bytes)?;}
-  if !self.retirement.is_empty(){return self.retirement.step_granted(grant).result;}
-  if let Some(owner)=self.input.as_mut(){if owner.terminal_is_empty(){self.input.take();return Ok(RetainedCloneStep::Progress(progress(demand)));}return owner.close_step(grant).result;}
-  if let Some(owner)=self.source.as_mut(){if owner.terminal_is_empty(){self.source.take();return Ok(RetainedCloneStep::Progress(progress(demand)));}return owner.close_step(grant).result;}
-  if let Some(a)=self.admission.as_mut(){if a.phase()=="ready"{let mut output=None;let step=a.take_output(&mut output,grant).result?;if let Some(source)=output{*self.source=Some(source);self.admission.take();}return Ok(RetainedCloneStep::Progress(step.progress()));}let mut back=None;let step=a.return_inputs(&mut back,grant).result?;if let Some((authority,()))=back{*self.authority=Some(authority);self.admission.take();}return Ok(RetainedCloneStep::Progress(step.progress()));}
-  if let Some(step)=self.retirement.begin_granted(&mut self.authority,grant).result?{return Ok(step);}
-  if self.base.is_some(){let Some((owner,receipt))=CapturedSnapshotSource::admit(&mut self.base,self.snapshots.as_ref().unwrap(),grant)?else{return Ok(RetainedCloneStep::Progress(Default::default()));};*self.captured=Some(owner);return Ok(RetainedCloneStep::Progress(receipt));}
-  if let Some(step)=self.retirement.begin_granted(&mut self.captured,grant).result?{return Ok(step);}
-  if self.mutation.is_some(){let Some((owner,receipt))=semio_framework_value::FactoryOwnedRetirement::admit_original(&mut self.mutation,self.mutations.as_ref().unwrap(),grant).result?else{return Ok(RetainedCloneStep::Progress(Default::default()));};*self.active=Some(owner);return Ok(RetainedCloneStep::Progress(receipt));}
-  if let Some(prepared)=self.prepared.take(){let mut original=Some(prepared.next_root);match semio_framework_value::factory::shared::FactorySharedRetirement::admit_original(&mut original,self.snapshots.as_ref().unwrap(),grant){Ok(Some((owner,mut receipt)))=>{*self.active=Some(owner);receipt.copied_bytes+=demand.copy_bytes;return Ok(RetainedCloneStep::Progress(receipt));},Ok(None)=>{*self.prepared=Some(store::ArtifactEphemeralOneItemPrepared{next_root:original.unwrap()});return Ok(RetainedCloneStep::Progress(Default::default()));},Err(error)=>{*self.prepared=Some(store::ArtifactEphemeralOneItemPrepared{next_root:original.unwrap()});return Err(error);}}}
-  if let Some(owner)=self.snapshots.take(){self.factories[0]=Some(FactoryAuthority::new(owner));return Ok(RetainedCloneStep::Progress(progress(demand)));}
-  if let Some(owner)=self.mutations.take(){self.factories[1]=Some(FactoryAuthority::new(owner));return Ok(RetainedCloneStep::Progress(progress(demand)));}
-  if let Some(owner)=self.semantics.take(){self.factories[2]=Some(FactoryAuthority::new(owner));return Ok(RetainedCloneStep::Progress(progress(demand)));}
-  if let Some(slot)=self.factories.iter_mut().find(|slot|slot.is_some()){let Some(owner)=slot.as_mut()else{return Err(invalid("transient publication factory close slot is absent"))};let step=owner.step(grant).result?;if owner.terminal_is_empty(){*slot=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+  if !self.retirement.is_empty(){let turn=self.retirement.step_granted(grant);work=turn.work;return turn.result;}
+  if let Some(owner)=self.input.as_mut(){if owner.terminal_is_empty(){self.input.take();work=1;return Ok(RetainedCloneStep::Progress(progress(demand)));}let turn=owner.close_step(grant);work=turn.work;return turn.result;}
+  if let Some(owner)=self.source.as_mut(){if owner.terminal_is_empty(){self.source.take();work=1;return Ok(RetainedCloneStep::Progress(progress(demand)));}let turn=owner.close_step(grant);work=turn.work;return turn.result;}
+  if let Some(a)=self.admission.as_mut(){if a.phase()=="ready"{let mut output=None;let turn=a.take_output(&mut output,grant);work=turn.work;let step=turn.result?;if let Some(source)=output{*self.source=Some(source);self.admission.take();}return Ok(RetainedCloneStep::Progress(step.progress()));}let mut back=None;let turn=a.return_inputs(&mut back,grant);work=turn.work;let step=turn.result?;if let Some((authority,()))=back{*self.authority=Some(authority);self.admission.take();}return Ok(RetainedCloneStep::Progress(step.progress()));}
+  let turn=self.retirement.begin_granted(&mut self.authority,grant);work=turn.work;if let Some(step)=turn.result?{return Ok(step);}
+  if self.base.is_some(){let turn=CapturedSnapshotSource::admit(&mut self.base,self.snapshots.as_ref().unwrap(),grant);work=turn.work;let Some((owner,receipt))=turn.result?else{return Ok(RetainedCloneStep::Progress(Default::default()));};*self.captured=Some(owner);return Ok(RetainedCloneStep::Progress(receipt));}
+  let turn=self.retirement.begin_granted(&mut self.captured,grant);work=turn.work;if let Some(step)=turn.result?{return Ok(step);}
+  if self.mutation.is_some(){let turn=semio_framework_value::FactoryOwnedRetirement::admit_original(&mut self.mutation,self.mutations.as_ref().unwrap(),grant);work=turn.work;let Some((owner,receipt))=turn.result?else{return Ok(RetainedCloneStep::Progress(Default::default()));};*self.active=Some(owner);return Ok(RetainedCloneStep::Progress(receipt));}
+  if let Some(prepared)=self.prepared.take(){let mut original=Some(prepared.next_root);let turn=semio_framework_value::factory::shared::FactorySharedRetirement::admit_original(&mut original,self.snapshots.as_ref().unwrap(),grant);work=turn.work;match turn.result{Ok(Some((owner,mut receipt)))=>{*self.active=Some(owner);receipt.copied_bytes+=demand.copy_bytes;return Ok(RetainedCloneStep::Progress(receipt));},Ok(None)=>{*self.prepared=Some(store::ArtifactEphemeralOneItemPrepared{next_root:original.unwrap()});return Ok(RetainedCloneStep::Progress(Default::default()));},Err(error)=>{*self.prepared=Some(store::ArtifactEphemeralOneItemPrepared{next_root:original.unwrap()});return Err(error.into());}}}
+  if let Some(owner)=self.snapshots.take(){self.factories[0]=Some(FactoryAuthority::new(owner));work=1;return Ok(RetainedCloneStep::Progress(progress(demand)));}
+  if let Some(owner)=self.mutations.take(){self.factories[1]=Some(FactoryAuthority::new(owner));work=1;return Ok(RetainedCloneStep::Progress(progress(demand)));}
+  if let Some(owner)=self.semantics.take(){self.factories[2]=Some(FactoryAuthority::new(owner));work=1;return Ok(RetainedCloneStep::Progress(progress(demand)));}
+  if let Some(slot)=self.factories.iter_mut().find(|slot|slot.is_some()){let Some(owner)=slot.as_mut()else{return Err(invalid("transient publication factory close slot is absent").into())};if owner.terminal_is_empty(){*slot=None;work=1;return Ok(RetainedCloneStep::Progress(progress(demand)))}let turn=owner.step(grant);work=turn.work;return turn.result.map(|step|RetainedCloneStep::Progress(step.progress()));}
   Ok(RetainedCloneStep::Complete(Default::default()))
- }
+ })();semio_framework_value::RetainedWorkOutcome{result,work}}
 }
 impl<P:Send+Sync+'static,M:Send+Sync+'static> store::ArtifactEphemeralOneItemPreparation<P,M> for Preparation<P,M>{
  fn advance(&mut self,grant:store::os_store::one_item::ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep,ValueError>{
@@ -113,8 +113,8 @@ impl<P:Send+Sync+'static,M:Send+Sync+'static> store::ArtifactEphemeralOneItemPre
  fn take_prepared(&mut self)->Option<store::ArtifactEphemeralOneItemPrepared<P>>{self.prepared.take()}
  fn cancel(&mut self){self.begin_close();}
  fn begin_close(&mut self){self.closing=true;if let Some(owner)=self.native.as_mut(){owner.cancel();}}
- fn close_step(&mut self,grant:store::os_store::one_item::ArtifactStoreOneItemGrant)->Result<RetainedCloneStep,ValueError>{self.close(grant.retained_grant(),None)}
- fn close_step_controlled(&mut self,grant:store::os_store::one_item::ArtifactStoreOneItemGrant,control:&mut dyn OriginalRetirementControl)->Result<RetainedCloneStep,ValueError>{self.close(grant.retained_grant(),Some(control))}
+  fn close_step(&mut self,grant:store::os_store::one_item::ArtifactStoreOneItemGrant)->semio_framework_value::OriginalRetirementOutcome{self.close(grant.retained_grant(),None)}
+  fn close_step_controlled(&mut self,grant:store::os_store::one_item::ArtifactStoreOneItemGrant,control:&mut dyn OriginalRetirementControl)->semio_framework_value::OriginalRetirementOutcome{self.close(grant.retained_grant(),Some(control))}
  fn requires_original_control(&self)->bool{self.original.is_some()}
  fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demand(0)?.copy_bytes)}
  fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_demand(body)?.capacity_bytes)}

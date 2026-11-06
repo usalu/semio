@@ -30,10 +30,10 @@ fn retained_image_decoder_admits_a_reference_plan_and_rejects_a_pixel_bomb_witho
         let owner = (0..infinite_world::world::WORLD_ASSET_REQUEST_CAPACITY).find_map(|_| authority.take_next_completed_step()).expect("completed probe owner");
         (authority, RendererAssetProbe::new(RendererAssetFetchOwner::Shared(owner)))
     }
-    fn drive(bytes: &[u8]) -> (WorldAssetIoAuthority, RendererAssetProbe, RendererAssetProbeStep) {
+    fn drive(bytes: &[u8], caller:&mut OriginalRendererFixture) -> (WorldAssetIoAuthority, RendererAssetProbe, RendererAssetProbeStep) {
         let (authority, mut probe) = probe_image(bytes);
         for _ in 0..4_096 {
-            match probe.step() {
+            match caller.turn(|cx|probe.step(cx)).unwrap() {
                 RendererAssetProbeStep::Pending => {}
                 step => return (authority, probe, step),
             }
@@ -56,29 +56,30 @@ fn retained_image_decoder_admits_a_reference_plan_and_rejects_a_pixel_bomb_witho
     let mut cursor = RendererAssetFormatCursor::new(WorldAssetRequestKind::ReferenceImage, &bomb, bomb.len()).expect("PNG format cursor");
     assert_eq!(feed(&bomb, &mut cursor), Err("PNG dimensions exceeded fixed pixel credits"));
 
-    let (mut authority, mut probe, step) = drive(&jpeg(2275, 2560));
+    let mut caller=OriginalRendererFixture::new();
+    let (mut authority, mut probe, step) = drive(&jpeg(2275, 2560),&mut caller);
     assert!(matches!(step, RendererAssetProbeStep::Ready), "the playground's own reference plan reaches Ready");
     probe.begin_close();
-    while !probe.close_step() {}
+    while !caller.turn(|cx|probe.close_step(cx)).unwrap() {}
     let RendererAssetFetchOwner::Shared(owner) = probe.take_terminal_owner().unwrap() else { panic!("shared probe") };
     authority.finish(owner).unwrap();
 
-    let (mut authority, mut probe, step) = drive(&jpeg(4097, 4097));
+    let (mut authority, mut probe, step) = drive(&jpeg(4097, 4097),&mut caller);
     assert!(matches!(step, RendererAssetProbeStep::Reject("JPEG dimensions exceeded fixed pixel credits")), "a refused image is ONE missing asset — a Fault here quarantines the whole surface");
     let (detail, kind, url) = probe.take_rejection().expect("a rejection carries the lane its miss belongs to");
     assert_eq!(detail, "JPEG dimensions exceeded fixed pixel credits");
     assert_eq!(kind, WorldAssetRequestKind::ReferenceImage);
     assert_eq!(url, "reference.jpg", "the url is captured BEFORE begin_close clears it");
-    while !probe.close_step() {}
+    while !caller.turn(|cx|probe.close_step(cx)).unwrap() {}
     let RendererAssetFetchOwner::Shared(owner) = probe.take_terminal_owner().unwrap() else { panic!("shared probe") };
     authority.finish(owner).unwrap();
     assert!(authority.terminal_is_empty());
 
     for source in [br#"<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>"#.as_slice(), b"GIF89a\x01\0\x01\0".as_slice()] {
-        let (mut authority, mut probe, step) = drive(source);
+        let (mut authority, mut probe, step) = drive(source,&mut caller);
         assert!(matches!(step, RendererAssetProbeStep::Ready), "React-accepted reference media reaches the target decoder rather than being narrowed at the shared probe");
         probe.begin_close();
-        while !probe.close_step() {}
+        while !caller.turn(|cx|probe.close_step(cx)).unwrap() {}
         let RendererAssetFetchOwner::Shared(owner) = probe.take_terminal_owner().unwrap() else { panic!("shared probe") };
         authority.finish(owner).unwrap();
     }

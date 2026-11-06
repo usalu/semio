@@ -10,9 +10,10 @@ impl<T:Sync+'static,A:RetireOwned+Sync> StagedSourceAdmission<T,A>{
  /// 📏️ Quotes the next admission action, or the empty header once published.
  pub fn next_demand(&self)->Result<RetirementDemand,ValueError>{self.admission.as_ref().map_or_else(||Ok(Default::default()),RetainedCloneSourceAdmission::next_demand)}
  /// ✍️ Advances one admission action, then moves the ready source into the caller's place.
- pub fn advance(&mut self,output:&mut Option<RetainedCloneSource<T,A>>,grant:RetainedCloneGrant)->RetainedWorkOutcome{
+ pub fn advance(&mut self,output:&mut Option<RetainedCloneSource<T,A>>,grant:RetainedCloneGrant,actual:&mut Option<usize>)->RetainedWorkOutcome{
+  if actual.is_some(){return RetainedWorkOutcome{result:Err(ValueError::invariant("staged source requires an empty allocation marker")),work:0}}
   let Some(admission)=self.admission.as_mut()else{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}};
-  let turn=if admission.phase()=="ready"{admission.take_output(output,grant)}else{admission.advance(grant)};
+  let turn=if admission.phase()=="ready"{admission.take_output(output,grant)}else{admission.advance(grant,actual)};
   if admission.terminal_is_empty(){self.admission=None;}turn
  }
  /// 📏️ Quotes the next paid return action of an admission that is cancelled.
@@ -37,9 +38,9 @@ impl<T:Sync+'static,A:RetireOwned+Sync+Send> RetirementCursor for AdmissionRetir
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.next_demand(0)?.depth)}
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
   let(result,work)=if let Some(published)=self.published.as_mut(){let result=published.step(grant);let work=published.last_turn_work();if published.terminal_is_empty(){self.published=None;}(result.map(|step|step.progress()),work)}
-  else if let Some(admission)=self.admission.as_mut().filter(|admission|admission.phase()=="ready"){let mut source=None;let turn=admission.take_output(&mut source,grant);if let Some(source)=source{self.published=Some(ControlledRetirement::retain(source));}if admission.terminal_is_empty(){self.admission=None;}(turn.result.map(|step|step.progress()),turn.work)}
+  else if let Some(admission)=self.admission.as_mut().filter(|admission|admission.phase()=="ready"){let mut source=None;let turn=admission.take_output(&mut source,grant);if let Some(source)=source{self.published=Some(ControlledRetirement::retain(source));}if admission.terminal_is_empty(){self.admission=None;}(turn.result.map(|step|step.progress()).map_err(Into::into),turn.work)}
   else if let Some(returned)=self.returned.as_mut(){let result=returned.step(grant);let work=returned.last_turn_work();if returned.terminal_is_empty(){self.returned=None;}(result.map(|step|step.progress()),work)}
-  else if let Some(admission)=self.admission.as_mut(){let mut input=None;let turn=admission.return_inputs(&mut input,grant);if let Some((original,()))=input{self.returned=Some(ControlledRetirement::retain(original));}if admission.terminal_is_empty(){self.admission=None;}(turn.result.map(|step|step.progress()),turn.work)}
+  else if let Some(admission)=self.admission.as_mut(){let mut input=None;let turn=admission.return_inputs(&mut input,grant);if let Some((original,()))=input{self.returned=Some(ControlledRetirement::retain(original));}if admission.terminal_is_empty(){self.admission=None;}(turn.result.map(|step|step.progress()).map_err(Into::into),turn.work)}
   else{return RetirementStep::Complete(0)};
   match result{Err(error)=>RetirementStep::Failure(error,work),Ok(progress)=>if self.terminal_is_empty()&&progress==RetainedCloneProgress::default(){RetirementStep::Complete(work)}else{RetirementStep::Progress(progress,work)}}
  }

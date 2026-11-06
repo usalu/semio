@@ -1,0 +1,45 @@
+{
+  "type": "array",
+  "minItems": 5,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "actual",
+      "retained",
+      "event",
+      "mismatch"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "actual": {
+        "anyOf": [
+          {
+            "type": "integer",
+            "minimum": 0
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "retained": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "event": {
+        "enum": [
+          "cancel",
+          "post",
+          "pending"
+        ]
+      },
+      "mismatch": {
+        "type": "boolean"
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+# Retirement cursor original-control forwarding
+
+Source review identified three selected-child propagation gaps, sent to the value owner: OwnedSourceRetirement wraps FactoryOwnedRetirement but calls ordinary close and exposes none of the new original-control ports; mutex Cursor wraps ControlledRetirement and similarly hides its selected controlled child; factory boxed Cursor retains a factory-returned erased unique child and selects ordinary ticket close without forwarding. Its box extraction, vacant backing release, original admission and factory shell are distinct local actions. The value owner reports these adapters are being aligned.
+
+ProtocolConflictRetirement consistently forwards the chosen enum owner and its returned work, with physical admission on the same grant. IO NativeSnapshotReceiving initially skipped unwind_failure before output in controlled selection; the revised source forwards intermediate, unwind failure and output in the same order as ordinary closure, addressing that finding. This is source-only review, no runtime verification.

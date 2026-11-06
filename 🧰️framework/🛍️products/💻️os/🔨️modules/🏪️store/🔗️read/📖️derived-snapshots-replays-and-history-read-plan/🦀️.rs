@@ -47,6 +47,7 @@ pub struct ArtifactDerivedReplay<P, Mu: Mutation<P>> {
     pub history_operation:Option<(usize,usize)>,
     pub failed_operation:Option<semio_os_store_replay_operation::ArtifactDerivedOperation<P,Mu>>,
     pub preparation_receipt:RetainedCloneProgress,
+    pub preparation_work:Option<u64>,
 pub replay: Option<EditReplay<P, Mu>>,
     pub plan: Option<HistoryReadPlan>,
     pub plan_retirement: Option<semio_framework_value::retirement::controlled::ControlledRetirement<HistoryReadPlan>>,
@@ -58,6 +59,8 @@ pub replay: Option<EditReplay<P, Mu>>,
 impl<P, Mu: Mutation<P> + OpBinary> ArtifactDerivedReplay<P, Mu> {
         /// 🧾️ Exposes the original caller-granted replay work to the mounted history controller.
     pub fn take_preparation_receipt(&mut self)->RetainedCloneProgress{std::mem::take(&mut self.preparation_receipt)}
+    /// 🪙️ Transfers the independently measured work of the original source turn, when selected.
+    pub fn take_preparation_work(&mut self)->Option<u64>{self.preparation_work.take()}
 /// 📈️ Reports genuine cumulative work inside the currently sealed operation producer.
     pub fn operation_preparation_progress(&self) -> ArtifactReplayPreparationProgress {
         self.replay.as_ref().map_or_else(ArtifactReplayPreparationProgress::default, |replay|replay.operation_preparation_progress())
@@ -116,6 +119,7 @@ pub struct ArtifactDerivedHistoryPreview<P, Mu: Mutation<P>> {
     pub operation_identity:Option<MutationId>,
     pub operation_adopted:bool,
     pub preparation_receipt:RetainedCloneProgress,
+    pub preparation_work:Option<u64>,
 pub plan: Option<HistoryReadPlan>,
     pub plan_retirement: Option<semio_framework_value::retirement::controlled::ControlledRetirement<HistoryReadPlan>>,
     pub drafts: protocol::HistoryInputDrafts,
@@ -137,6 +141,8 @@ impl<P, Mu: Mutation<P>> ArtifactDerivedHistoryPreview<P, Mu> {
 
         /// 🧾️ Transfers the actual most recent native preparation turn to its mounted caller.
     pub fn take_preparation_receipt(&mut self)->RetainedCloneProgress{std::mem::take(&mut self.preparation_receipt)}
+    /// 🪙️ Transfers independently measured original source work for the selected turn.
+    pub fn take_preparation_work(&mut self)->Option<u64>{self.preparation_work.take()}
 /// 📤️ Transfers the completed projection while retaining every original input and planner residue.
     pub fn take_finished_snapshot_owner(&mut self)->Result<Arc<P>,VcsError> {
         if !self.finished{return Err(VcsError::HistoryReplaying);}
@@ -226,6 +232,8 @@ pub struct ArtifactHistoryReadRetirement<P, Mu: Mutation<P>> {
     pub factory_retirement:[Option<semio_framework_value::FactoryAuthority>;2],
 }
 
+enum HistoryCloseControl<'a,'loan>{Controlled(&'a mut dyn semio_framework_value::OriginalRetirementControl),Original(&'a mut semio_framework_value::OriginalRetirementCloseLoan<'loan>)}
+
 impl<P, Mu> ArtifactHistoryReadRetirement<P, Mu>
 where P: Send + Sync + 'static, Mu: Mutation<P> + Send + 'static {
     fn derived_snapshot_demands(&self)->Option<Result<semio_framework_value::RetirementDemand,ValueError>> {
@@ -233,110 +241,136 @@ where P: Send + Sync + 'static, Mu: Mutation<P> + Send + 'static {
         if self.derived_alias.is_some(){return Some(Ok(semio_framework_value::RetirementDemand{capacity_bytes:ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes(),depth:2,..Default::default()}))}
         self.derived.is_some().then_some(Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()}))
     }
-    fn close_derived_snapshot(&mut self,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,ValueError>{
+    fn close_derived_snapshot(&mut self,grant:RetainedCloneGrant,work:&mut u64)->Result<Option<RetainedCloneStep>,semio_framework_value::OriginalRetirementFailure>{
         use semio_framework_value::retained_clone::{RetainedCloneProgress,RetainedCloneStep};
         let Some(demand)=self.derived_snapshot_demands()else{return Ok(None)};let demand=demand?;
         if grant.maximum_items==0||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_depth<demand.depth{return Ok(Some(RetainedCloneStep::Progress(Default::default())))}
-        if self.registry_retirement.is_some(){return snapshot_registry_alias_close_step(&mut self.registry_retirement,grant).map(Some)}
-        if self.derived_alias.is_some(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let Some((owner,receipt))=ReturnedSnapshotReadRetirement::admit_original(&mut self.derived_alias,self.snapshots.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"derived original lost its snapshot issuer"))?,child)?else{unreachable!("preflight retains derived original alias")};*self.active=Some(owner);return Ok(Some(RetainedCloneStep::Progress(receipt)))}
-        let ArtifactDerivedSnapshot{owner,registry,..}=self.derived.take().unwrap();*self.derived_alias=Some(owner);*self.registry_retirement=Some(SnapshotReadRegistryAliasRetirement::new(registry));Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})))
+        if self.registry_retirement.is_some(){let turn=snapshot_registry_alias_close_step(&mut self.registry_retirement,grant);*work=turn.work;return turn.result.map(Some)}
+        if self.derived_alias.is_some(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let turn=ReturnedSnapshotReadRetirement::admit_original(&mut self.derived_alias,self.snapshots.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"derived original lost its snapshot issuer"))?,child);*work=turn.work;let Some((owner,receipt))=turn.result?else{unreachable!("preflight retains derived original alias")};*self.active=Some(owner);return Ok(Some(RetainedCloneStep::Progress(receipt)))}
+        *work=1;let ArtifactDerivedSnapshot{owner,registry,..}=self.derived.take().unwrap();*self.derived_alias=Some(owner);*self.registry_retirement=Some(SnapshotReadRegistryAliasRetirement::new(registry));Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})))
     }
     fn plan_demands(&self,body:usize)->Option<Result<semio_framework_value::RetirementDemand,ValueError>> {
         if self.plan_retirement.is_some() {return Some(retirement_owner_demands(&self.plan_retirement,body));}
-        if self.preview.as_ref().is_some_and(|owner|owner.plan.is_some()||owner.plan_retirement.is_some())||self.replay.as_ref().is_some_and(|owner|owner.plan.is_some()||owner.plan_retirement.is_some()) {return Some(Ok(semio_framework_value::RetirementDemand {depth:1,..Default::default()}));}
+        if self.preview.as_ref().is_some_and(|owner|owner.plan_retirement.is_some())||self.replay.as_ref().is_some_and(|owner|owner.plan_retirement.is_some()){return Some(Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_framework_value::retirement::controlled::ControlledRetirement<HistoryReadPlan>>>(),depth:1,..Default::default()}))}if self.preview.as_ref().is_some_and(|owner|owner.plan.is_some())||self.replay.as_ref().is_some_and(|owner|owner.plan.is_some()){return Some(Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<HistoryReadPlan>>(),depth:1,..Default::default()}))}
         None
     }
-    fn close_plan(&mut self,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,ValueError> {
+    fn close_plan(&mut self,grant:RetainedCloneGrant,control:Option<&mut HistoryCloseControl<'_,'_>>,work:&mut u64)->Result<Option<RetainedCloneStep>,semio_framework_value::OriginalRetirementFailure> {
         use semio_framework_value::retained_clone::{RetainedCloneStep,RetainedCloneProgress};
         let Some(demand)=self.plan_demands(grant.maximum_copy_bytes) else{return Ok(None)};
-        let demand=demand?;if grant.maximum_items==0 {return Ok(Some(RetainedCloneStep::Progress(Default::default())));}if grant.maximum_depth<demand.depth {return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"history plan retirement requires its original owner depth"));}
-        if self.plan_retirement.is_some() {return retirement_owner_close(&mut self.plan_retirement,grant).result.map(Some);}
+        let demand=demand?;if grant.maximum_items==0 {return Ok(Some(RetainedCloneStep::Progress(Default::default())));}if grant.maximum_depth<demand.depth {return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"history plan retirement requires its original owner depth" ).into());}
+        if self.plan_retirement.is_some(){let turn=match control{Some(HistoryCloseControl::Controlled(control))=>retirement_owner_close_controlled(&mut self.plan_retirement,grant,*control),Some(HistoryCloseControl::Original(original))=>retirement_owner_close_original(&mut self.plan_retirement,grant,*original),None=>retirement_owner_close(&mut self.plan_retirement,grant)};*work=turn.work;return turn.result.map(Some)}
+        *work=1;
         if let Some(owner)=self.preview.as_mut().and_then(|owner|owner.plan_retirement.take()).or_else(||self.replay.as_mut().and_then(|owner|owner.plan_retirement.take())) {*self.plan_retirement=Some(owner);}else {
             let original=self.preview.as_mut().and_then(|owner|owner.plan.take()).or_else(||self.replay.as_mut().and_then(|owner|owner.plan.take())).expect("observed original history planner");
             *self.plan_retirement=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(original).unwrap_or_else(|_|unreachable!("history planner schema declares controlled retirement")));
         }
-        Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..Default::default()})))
+        Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))
     }
     fn preview_demands(&self,body:usize)->Option<Result<semio_framework_value::RetirementDemand,ValueError>> {
         use semio_framework_value::RetirementDemand;
         if self.draft_retirement.is_some() {return Some(retirement_owner_demands(&self.draft_retirement,body));}
         if self.registry_retirement.is_some() {return Some(snapshot_registry_alias_demands(&self.registry_retirement));}
         let preview=self.preview.as_ref()?;
+        if preview.history_source.is_some()||preview.history_input.is_some()||preview.history_issuer.is_some()||preview.history_issuer_close.is_some(){return Some(Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"preview retains Store-owned history source or issuer")))}
         if preview.checkpoint.is_some(){return Some(Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<ArtifactCheckpointSelection>>(),depth:1,..Default::default()}))}
-        if !preview.drafts.terminal_is_empty() {return Some(Ok(RetirementDemand {depth:1,..Default::default()}));}
                 if let Some(owner)=preview.derived_operation.as_ref(){return Some(if owner.terminal_is_empty(){Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_os_store_replay_operation::ArtifactDerivedOperation<P,Mu>>>(),depth:1,..Default::default()})}else if owner.is_closing(){owner.next_demand(body)}else{Ok(RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()})});}
         if let Some(owner)=preview.operation_close.as_ref(){return Some(semio_framework_value::factory_ticket_demands(owner,body));}
         if preview.displaced_operation.is_some(){return Some(Ok(RetirementDemand{capacity_bytes:ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes(),depth:1,..Default::default()}));}
         if let Some(id)=preview.operation_identity.as_ref(){return Some(Ok(RetirementDemand{copy_bytes:size_of::<MutationId>(),release_bytes:id.0.capacity(),depth:1,..Default::default()}));}
+        if !preview.drafts.terminal_is_empty(){return Some(Ok(RetirementDemand{copy_bytes:size_of::<protocol::HistoryInputDrafts>(),depth:1,..Default::default()}))}
 if preview.state.is_some() {return Some(Ok(RetirementDemand {capacity_bytes:ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes(),depth:2,..Default::default()}));}
-        Some(Ok(RetirementDemand {depth:1,..Default::default()}))
+        Some(Ok(RetirementDemand{copy_bytes:size_of::<Option<ArtifactDerivedHistoryPreview<P,Mu>>>()+size_of::<SnapshotReadRegistryHandle>(),depth:1,..Default::default()}))
     }
-    fn close_preview(&mut self,grant:RetainedCloneGrant,control:Option<&mut dyn semio_framework_value::OriginalRetirementControl>)->Result<Option<RetainedCloneStep>,ValueError> {
+    fn close_preview(&mut self,grant:RetainedCloneGrant,control:Option<&mut HistoryCloseControl<'_,'_>>,work:&mut u64)->Result<Option<RetainedCloneStep>,semio_framework_value::OriginalRetirementFailure> {
         use semio_framework_value::retained_clone::{RetainedCloneStep,RetainedCloneProgress};
         let Some(demand)=self.preview_demands(grant.maximum_copy_bytes)else{return Ok(None)};let demand=demand?;
         if grant.maximum_items==0||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_copy_bytes<demand.copy_bytes {return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
-        if grant.maximum_depth<demand.depth {return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"history preview retirement requires its exact owner depth"));}
-        if self.draft_retirement.is_some() {return retirement_owner_close(&mut self.draft_retirement,grant).result.map(Some);}
-        if self.registry_retirement.is_some() {return snapshot_registry_alias_close_step(&mut self.registry_retirement,grant).map(Some);}
+        if grant.maximum_depth<demand.depth {return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"history preview retirement requires its exact owner depth").into());}
+        if self.draft_retirement.is_some(){let turn=match control{Some(HistoryCloseControl::Controlled(control))=>retirement_owner_close_controlled(&mut self.draft_retirement,grant,*control),Some(HistoryCloseControl::Original(original))=>retirement_owner_close_original(&mut self.draft_retirement,grant,*original),None=>retirement_owner_close(&mut self.draft_retirement,grant)};*work=turn.work;return turn.result.map(Some)}
+        if self.registry_retirement.is_some(){let turn=snapshot_registry_alias_close_step(&mut self.registry_retirement,grant);*work=turn.work;return turn.result.map(Some)}
         let preview=self.preview.as_mut().expect("observed original preview");
-        if preview.checkpoint.take().is_some(){return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))}
-                if let Some(owner)=preview.derived_operation.as_mut(){if owner.terminal_is_empty(){drop(preview.derived_operation.take());return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})));}if !owner.is_closing(){owner.cancel();return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})));}return match control{Some(control)=>owner.close_step_controlled(grant,control),None=>owner.close_step(grant)}.result.map(Some);}
-        if preview.operation_close.is_some(){return semio_framework_value::close_factory_ticket(&mut preview.operation_close,grant).result.map(Some);}
-        if preview.displaced_operation.is_some(){let Some((owner,p))=ReturnedSnapshotReadRetirement::<P>::admit_original(&mut preview.displaced_operation,self.snapshots.as_ref().unwrap(),grant)?else{return Ok(Some(RetainedCloneStep::Progress(Default::default())))};preview.operation_close=Some(owner);return Ok(Some(RetainedCloneStep::Progress(p)));}
-        if preview.operation_identity.is_some(){drop(preview.operation_identity.take());return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()})));}
-if !preview.drafts.terminal_is_empty() {let drafts=std::mem::take(&mut preview.drafts);*self.draft_retirement=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(drafts).unwrap_or_else(|_|unreachable!("draft schema declares controlled retirement")));return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..Default::default()})));}
-        if let Some(snapshot)=preview.state.take() {
-            let factory=self.snapshots.as_ref().expect("original preview retains its snapshot issuer").clone();
-            let child_grant=RetainedCloneGrant {maximum_depth:grant.maximum_depth-1,..grant};
-            return match ReturnedSnapshotReadRetirement::admit(snapshot,factory,child_grant) {Ok((owner,progress))=>{*self.active=Some(owner);Ok(Some(RetainedCloneStep::Progress(progress)))},Err((error,snapshot,factory))=>{preview.state=Some(snapshot);drop(factory);Err(error)}};
-        }
-        *self.registry_retirement=Some(SnapshotReadRegistryAliasRetirement::new(preview.registry.clone()));drop(self.preview.take());
-        Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..Default::default()})))
+        if preview.checkpoint.is_some(){*work=1;preview.checkpoint.take();return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))}
+                if let Some(owner)=preview.derived_operation.as_mut(){if owner.terminal_is_empty(){*work=1;drop(preview.derived_operation.take());return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})));}if !owner.is_closing(){*work=1;owner.cancel();return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})));}let turn=match control{Some(HistoryCloseControl::Controlled(control))=>owner.close_step_controlled(grant,*control),Some(HistoryCloseControl::Original(original))=>owner.close_original_step(*original,grant),None=>owner.close_step(grant)};*work=turn.work;return turn.result.map(Some);}
+        if preview.operation_close.is_some(){let turn=match control{Some(HistoryCloseControl::Controlled(control))=>semio_framework_value::close_factory_ticket_controlled(&mut preview.operation_close,grant,*control),Some(HistoryCloseControl::Original(original))=>semio_framework_value::close_factory_ticket_original(&mut preview.operation_close,*original,grant),None=>semio_framework_value::close_factory_ticket(&mut preview.operation_close,grant)};*work=turn.work;return turn.result.map(Some)}
+        if preview.displaced_operation.is_some(){let turn=ReturnedSnapshotReadRetirement::<P>::admit_original(&mut preview.displaced_operation,self.snapshots.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"preview lost its original snapshot issuer"))?,grant);*work=turn.work;let Some((owner,p))=turn.result?else{return Ok(Some(RetainedCloneStep::Progress(Default::default())))};preview.operation_close=Some(owner);return Ok(Some(RetainedCloneStep::Progress(p)));}
+        if preview.operation_identity.is_some(){*work=1;drop(preview.operation_identity.take());return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()})));}
+if !preview.drafts.terminal_is_empty() {*work=1;let drafts=std::mem::take(&mut preview.drafts);*self.draft_retirement=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(drafts).unwrap_or_else(|_|unreachable!("draft schema declares controlled retirement")));return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})));}
+        if preview.state.is_some(){let child_grant=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let factory=self.snapshots.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"preview lost its original snapshot issuer"))?;let turn=ReturnedSnapshotReadRetirement::admit_original(&mut preview.state,factory,child_grant);*work=turn.work;return match turn.result?{Some((owner,progress))=>{*self.active=Some(owner);Ok(Some(RetainedCloneStep::Progress(progress)))},None=>Ok(Some(RetainedCloneStep::Progress(Default::default())))}}
+        *work=2;*self.registry_retirement=Some(SnapshotReadRegistryAliasRetirement::new(preview.registry.clone()));drop(self.preview.take());
+        Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))
     }
     fn factory_demands(&self,body:usize)->Option<Result<semio_framework_value::RetirementDemand,ValueError>> {
         if self.derived.is_some()||self.derived_alias.is_some()||self.preview.is_some()||self.replay.is_some()||self.loaded_replay.is_some()||self.finished.is_some() {return None;}
-        if let Some(owner)=self.factory_retirement.iter().flatten().next() {return Some(owner.demands(body).and_then(|mut demand| {demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"history factory retirement depth overflow"))?;Ok(demand)}));}
-        (self.snapshots.is_some()||self.mutations.is_some()).then_some(Ok(semio_framework_value::RetirementDemand {depth:1,..Default::default()}))
+        if let Some(owner)=self.factory_retirement.iter().flatten().next() {if owner.terminal_is_empty(){return Some(Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_framework_value::FactoryAuthority>>(),depth:1,..Default::default()}))}return Some(owner.demands(body).and_then(|mut demand| {demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"history factory retirement depth overflow"))?;Ok(demand)}));}
+        (self.snapshots.is_some()||self.mutations.is_some()).then_some(Ok(semio_framework_value::RetirementDemand {copy_bytes:size_of::<Option<Arc<dyn semio_framework_value::FactoryRetirement>>>(),depth:1,..Default::default()}))
     }
-    fn close_factories(&mut self,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,ValueError> {
+    fn close_factories(&mut self,grant:RetainedCloneGrant,control:Option<&mut HistoryCloseControl<'_,'_>>,work:&mut u64)->Result<Option<RetainedCloneStep>,semio_framework_value::OriginalRetirementFailure> {
         use semio_framework_value::retained_clone::{RetainedCloneStep,RetainedCloneProgress};
-        let Some(demand)=self.factory_demands(grant.maximum_copy_bytes)else{return Ok(None)};let demand=demand?;if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes {return Ok(Some(RetainedCloneStep::Progress(Default::default())));}if grant.maximum_depth<demand.depth {return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"history factory retirement requires its original owner depth"));}
+        let Some(demand)=self.factory_demands(grant.maximum_copy_bytes)else{return Ok(None)};let demand=demand?;if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes {return Ok(Some(RetainedCloneStep::Progress(Default::default())));}if grant.maximum_depth<demand.depth {return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"history factory retirement requires its original owner depth").into());}
         if let Some(slot)=self.factory_retirement.iter_mut().find(|owner|owner.is_some()) {
             let owner=slot.as_mut().unwrap();
+            if owner.terminal_is_empty(){*work=1;drop(slot.take());return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))}
             let child_grant=RetainedCloneGrant {maximum_depth:grant.maximum_depth-1,..grant};
-            let step=owner.step(child_grant).result?;
+            let turn=match control{Some(HistoryCloseControl::Controlled(control))=>owner.step_controlled(child_grant,*control),Some(HistoryCloseControl::Original(original))=>owner.step_original(*original,child_grant),None=>owner.step(child_grant)};*work=turn.work;let step=turn.result?;
             semio_framework_value::retained_clone::admit_retained_clone_close(child_grant,step,owner.terminal_is_empty(),"history factory authority")?;
-            if owner.terminal_is_empty() {drop(slot.take());}
             return Ok(Some(step));
         }
-        let factory:Arc<dyn semio_framework_value::FactoryRetirement>=if let Some(factory)=self.snapshots.take(){factory}else{self.mutations.take().expect("original history mutation issuer")};
-        self.factory_retirement[0]=Some(semio_framework_value::FactoryAuthority::new(factory));Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..Default::default()})))
+        *work=1;let factory:Arc<dyn semio_framework_value::FactoryRetirement>=if let Some(factory)=self.snapshots.take(){factory}else{self.mutations.take().expect("original history mutation issuer")};
+        self.factory_retirement[0]=Some(semio_framework_value::FactoryAuthority::new(factory));Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))
     }
     fn raw_replay_demands(&self,body:usize)->Option<Result<semio_framework_value::RetirementDemand,ValueError>> {
-        let demand=if let Some(owner)=self.finished.as_ref(){if owner.terminal_is_empty(){return Some(Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()}));}owner.retirement_demands(body)}else if let Some(owner)=self.loaded_replay.as_ref().or_else(||self.replay.as_ref().and_then(|owner|owner.replay.as_ref())){if owner.terminal_is_empty(){return Some(Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()}));}owner.retirement_demands(body)}else{return self.replay.is_some().then_some(Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()}));};
+        if self.finished.is_none()&&self.loaded_replay.is_none(){if let Some(replay)=self.replay.as_ref(){if !replay.replacement_wire.terminal_is_empty()||!replay.target.terminal_is_empty()||!replay.replacement.terminal_is_empty()||replay.failed_operation.is_some()||replay.history_source.is_some()||replay.history_input.is_some()||replay.history_issuer.is_some()||replay.history_issuer_close.is_some(){return Some(Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"replay retains Store-owned history or replacement authority")))}}}
+        let demand=if let Some(owner)=self.finished.as_ref(){if owner.terminal_is_empty(){return Some(Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<EditReplayResult<P,Mu>>>(),depth:1,..Default::default()}));}if !owner.retirement_started(){return Some(Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()}));}owner.retirement_demands(body)}else if let Some(owner)=self.loaded_replay.as_ref().or_else(||self.replay.as_ref().and_then(|owner|owner.replay.as_ref())){if owner.terminal_is_empty(){return Some(Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<EditReplay<P,Mu>>>(),depth:1,..Default::default()}));}if !owner.retirement_started(){return Some(Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()}));}owner.retirement_demands(body)}else{return self.replay.is_some().then_some(Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<ArtifactDerivedReplay<P,Mu>>>()+size_of::<SnapshotReadRegistryHandle>(),depth:1,..Default::default()}));};
         Some(demand.and_then(|mut demand|{demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"history raw replay retirement depth overflow"))?;Ok(demand)}))
     }
-    fn close_raw_replay(&mut self,grant:RetainedCloneGrant,mut control:Option<&mut dyn semio_framework_value::OriginalRetirementControl>)->Result<Option<RetainedCloneStep>,ValueError> {
+    fn close_raw_replay(&mut self,grant:RetainedCloneGrant,mut control:Option<&mut HistoryCloseControl<'_,'_>>,work:&mut u64)->Result<Option<RetainedCloneStep>,semio_framework_value::OriginalRetirementFailure> {
         use semio_framework_value::retained_clone::{RetainedCloneStep,RetainedCloneProgress,admit_retained_clone_close};
         let Some(demand)=self.raw_replay_demands(grant.maximum_copy_bytes)else{return Ok(None)};let demand=demand?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
-        let moved=RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()});
+        let moved=RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()});
         let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
-        if let Some(owner)=self.finished.as_mut(){if owner.terminal_is_empty(){drop(self.finished.take());return Ok(Some(moved));}owner.begin_retirement();let step=match control.as_mut().map(|control|&mut **control as &mut dyn semio_framework_value::OriginalRetirementControl){Some(control)=>owner.close_original_step_controlled(child,control)?,None=>owner.close_original_step(child)?};return admit_retained_clone_close(child,step,owner.terminal_is_empty(),"history original finished replay").map(Some);}
-        if let Some(owner)=self.loaded_replay.as_mut(){if owner.terminal_is_empty(){drop(self.loaded_replay.take());return Ok(Some(moved));}owner.begin_retirement();let step=match control.as_mut().map(|control|&mut **control as &mut dyn semio_framework_value::OriginalRetirementControl){Some(control)=>owner.close_original_step_controlled(child,control)?,None=>owner.close_original_step(child)?};return admit_retained_clone_close(child,step,owner.terminal_is_empty(),"history original loaded replay").map(Some);}
+        if let Some(owner)=self.finished.as_mut(){if owner.terminal_is_empty(){*work=1;drop(self.finished.take());return Ok(Some(moved));}if !owner.retirement_started(){*work=1;owner.begin_retirement();return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<bool>(),..Default::default()})))}let turn=match control.as_deref_mut(){Some(HistoryCloseControl::Controlled(control))=>owner.close_original_step_controlled(child,*control),Some(HistoryCloseControl::Original(original))=>ErasedSnapshotRetirement::close_original_step(owner,*original,child),None=>owner.close_original_step(child)};*work=turn.work;let step=turn.result?;return admit_retained_clone_close(child,step,owner.terminal_is_empty(),"history original finished replay").map(Some).map_err(Into::into);}
+        if let Some(owner)=self.loaded_replay.as_mut(){if owner.terminal_is_empty(){*work=1;drop(self.loaded_replay.take());return Ok(Some(moved));}if !owner.retirement_started(){*work=1;owner.begin_retirement();return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<bool>(),..Default::default()})))}let turn=match control.as_deref_mut(){Some(HistoryCloseControl::Controlled(control))=>owner.close_original_step_controlled(child,*control),Some(HistoryCloseControl::Original(original))=>ErasedSnapshotRetirement::close_original_step(owner,*original,child),None=>owner.close_original_step(child)};*work=turn.work;let step=turn.result?;return admit_retained_clone_close(child,step,owner.terminal_is_empty(),"history original loaded replay").map(Some).map_err(Into::into);}
         let derived=self.replay.as_mut().expect("observed original derived replay");
-        if let Some(owner)=derived.replay.as_mut(){if owner.terminal_is_empty(){drop(derived.replay.take());return Ok(Some(moved));}owner.begin_retirement();let step=match control.as_mut().map(|control|&mut **control as &mut dyn semio_framework_value::OriginalRetirementControl){Some(control)=>owner.close_original_step_controlled(child,control)?,None=>owner.close_original_step(child)?};return admit_retained_clone_close(child,step,owner.terminal_is_empty(),"history original derived replay").map(Some);}
-        *self.registry_retirement=Some(SnapshotReadRegistryAliasRetirement::new(derived.registry.clone()));drop(self.replay.take());Ok(Some(moved))
+        if let Some(owner)=derived.replay.as_mut(){if owner.terminal_is_empty(){*work=1;drop(derived.replay.take());return Ok(Some(moved));}if !owner.retirement_started(){*work=1;owner.begin_retirement();return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<bool>(),..Default::default()})))}let turn=match control.as_deref_mut(){Some(HistoryCloseControl::Controlled(control))=>owner.close_original_step_controlled(child,*control),Some(HistoryCloseControl::Original(original))=>ErasedSnapshotRetirement::close_original_step(owner,*original,child),None=>owner.close_original_step(child)};*work=turn.work;let step=turn.result?;return admit_retained_clone_close(child,step,owner.terminal_is_empty(),"history original derived replay").map(Some).map_err(Into::into);}
+        *work=2;*self.registry_retirement=Some(SnapshotReadRegistryAliasRetirement::new(derived.registry.clone()));drop(self.replay.take());Ok(Some(moved))
     }
 }
 
 impl<P, Mu> ErasedSnapshotRetirement for ArtifactHistoryReadRetirement<P, Mu>
 where P: Send + Sync + 'static, Mu: Mutation<P> + Send + 'static {
-    fn requires_original_control(&self)->bool{self.active.as_ref().is_some_and(|owner|owner.requires_original_control())||self.preview.as_ref().and_then(|owner|owner.derived_operation.as_ref()).is_some_and(|owner|owner.requires_original_control())||self.finished.as_ref().is_some_and(|owner|owner.requires_original_control())||self.loaded_replay.as_ref().is_some_and(|owner|owner.requires_original_control())||self.replay.as_ref().and_then(|owner|owner.replay.as_ref()).is_some_and(|owner|owner.requires_original_control())}
+    fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{
+        if self.terminal_is_empty(){return Ok(0)}
+        if let Some(owner)=self.active.as_ref(){return if owner.terminal_is_empty(){Ok(1)}else{owner.next_computational_work(body)}}
+        if let Some(demand)=self.derived_snapshot_demands(){demand?;if self.registry_retirement.is_some(){return snapshot_registry_alias_work_demand(&self.registry_retirement)}if self.derived_alias.is_some(){return Ok(ReturnedSnapshotReadRetirement::<P>::admit_original_source_work_demand(&self.derived_alias))}return Ok(1)}
+        if let Some(demand)=self.plan_demands(body){demand?;return if self.plan_retirement.is_some(){retirement_owner_work_demand(&self.plan_retirement,body)}else{Ok(1)}}
+        if let Some(demand)=self.preview_demands(body){demand?;if self.draft_retirement.is_some(){return retirement_owner_work_demand(&self.draft_retirement,body)}if self.registry_retirement.is_some(){return snapshot_registry_alias_work_demand(&self.registry_retirement)}let preview=self.preview.as_ref().ok_or_else(||ValueError::invariant("selected preview vanished"))?;if preview.checkpoint.is_some(){return Ok(1)}if let Some(owner)=preview.derived_operation.as_ref(){return if owner.terminal_is_empty()||!owner.is_closing(){Ok(1)}else{owner.next_computational_work(body)}}if let Some(owner)=preview.operation_close.as_ref(){return if owner.terminal_is_empty(){Ok(1)}else{owner.next_computational_work(body)}}if preview.displaced_operation.is_some(){return Ok(ReturnedSnapshotReadRetirement::<P>::admit_original_source_work_demand(&preview.displaced_operation))}if preview.operation_identity.is_some()||!preview.drafts.terminal_is_empty(){return Ok(1)}if preview.state.is_some(){return Ok(ReturnedSnapshotReadRetirement::<P>::admit_original_source_work_demand(&preview.state))}return Ok(2)}
+        if let Some(demand)=self.raw_replay_demands(body){demand?;if let Some(owner)=self.finished.as_ref(){return if owner.terminal_is_empty()||!owner.retirement_started(){Ok(1)}else{ErasedSnapshotRetirement::next_computational_work(owner,body)}}if let Some(owner)=self.loaded_replay.as_ref().or_else(||self.replay.as_ref().and_then(|replay|replay.replay.as_ref())){return if owner.terminal_is_empty()||!owner.retirement_started(){Ok(1)}else{ErasedSnapshotRetirement::next_computational_work(owner,body)}}return Ok(2)}
+        if let Some(demand)=self.factory_demands(body){demand?;return match self.factory_retirement.iter().flatten().next(){Some(owner)if !owner.terminal_is_empty()=>owner.next_computational_work(body),_=>Ok(1)}}
+        Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"history read residual authority is not admitted"))
+    }
+    fn requires_original_control(&self)->bool{
+        if let Some(owner)=self.active.as_ref(){return !owner.terminal_is_empty()&&owner.requires_original_control()}
+        if self.derived_snapshot_demands().is_some(){return false}
+        if self.plan_demands(0).is_some(){return self.plan_retirement.as_ref().is_some_and(|owner|!owner.terminal_is_empty()&&ErasedSnapshotRetirement::requires_original_control(owner))}
+        if self.preview_demands(0).is_some(){
+            if let Some(owner)=self.draft_retirement.as_ref(){return !owner.terminal_is_empty()&&ErasedSnapshotRetirement::requires_original_control(owner)}
+            if self.registry_retirement.is_some(){return false}
+            if let Some(preview)=self.preview.as_ref(){
+                if preview.checkpoint.is_some(){return false}
+                if let Some(owner)=preview.derived_operation.as_ref(){return !owner.terminal_is_empty()&&owner.is_closing()&&owner.requires_original_control()}
+                if let Some(owner)=preview.operation_close.as_ref(){return !owner.terminal_is_empty()&&owner.requires_original_control()}
+                return false
+            }
+        }
+        if self.raw_replay_demands(0).is_some(){if let Some(owner)=self.finished.as_ref(){return !owner.terminal_is_empty()&&owner.retirement_started()&&owner.requires_original_control()}if let Some(owner)=self.loaded_replay.as_ref(){return !owner.terminal_is_empty()&&owner.retirement_started()&&owner.requires_original_control()}return self.replay.as_ref().and_then(|owner|owner.replay.as_ref()).is_some_and(|owner|!owner.terminal_is_empty()&&owner.retirement_started()&&owner.requires_original_control())}
+        self.factory_retirement.iter().flatten().next().is_some_and(|owner|owner.requires_original_control())
+    }
         fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if let Some(active)=self.active.as_ref(){return artifact_retirement_box_demands(active,body);}self.derived_snapshot_demands().or_else(||self.plan_demands(body)).or_else(||self.preview_demands(body)).or_else(||self.raw_replay_demands(body)).or_else(||self.factory_demands(body)).unwrap_or_else(||if self.terminal_is_empty(){Ok(Default::default())}else{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"history read residual authority is not admitted"))})}
 
-fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> { self.close_inner(grant,None) })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
-fn close_step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn semio_framework_value::OriginalRetirementControl)->semio_framework_value::RetainedWorkOutcome{let result=self.close_inner(grant,Some(control));let work=u64::from(result.as_ref().is_ok_and(|step|step.progress()!=Default::default()));semio_framework_value::RetainedWorkOutcome{result,work}}
+fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{let mut work=0;let result=self.close_inner(grant,None,&mut work);semio_framework_value::RetainedWorkOutcome{result,work}}
+fn close_step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn semio_framework_value::OriginalRetirementControl)->semio_framework_value::OriginalRetirementOutcome{if !self.requires_original_control(){return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"history read selected turn does not own an original child loan").into()),work:0}}let mut work=0;let mut control=HistoryCloseControl::Controlled(control);let result=self.close_inner(grant,Some(&mut control),&mut work);semio_framework_value::RetainedWorkOutcome{result,work}}
+fn close_original_step(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{if !self.requires_original_control(){return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"history read selected turn does not own an original child loan").into()),work:0}}let mut work=0;let mut control=HistoryCloseControl::Original(original);let result=self.close_inner(grant,Some(&mut control),&mut work);semio_framework_value::RetainedWorkOutcome{result,work}}
 
     fn terminal_is_empty(&self) -> bool { self.derived.is_none() && self.derived_alias.is_none() && self.preview.is_none() && self.replay.is_none() && self.loaded_replay.is_none() && self.finished.is_none() && self.active.is_none() && self.plan_retirement.is_none() && self.draft_retirement.is_none() && self.registry_retirement.is_none() && self.snapshots.is_none() && self.mutations.is_none() && self.factory_retirement.iter().all(Option::is_none) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { if let Some(active)=self.active.as_ref(){return artifact_retirement_box_demands(active,0).map(|demand|demand.copy_bytes);} self.derived_snapshot_demands().or_else(||self.plan_demands(0)).or_else(||self.preview_demands(0)).or_else(||self.raw_replay_demands(0)).or_else(||self.factory_demands(0)).map_or_else(|| if self.terminal_is_empty() { Ok(0) } else { Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "history read residual copy authority is not admitted")) }, |demand| demand.map(|demand| demand.copy_bytes)) }
@@ -350,20 +384,20 @@ impl<P, Mu: Mutation<P>> Drop for ArtifactHistoryReadRetirement<P, Mu> {
 }
 
 impl<P:Send+Sync+'static,Mu:Mutation<P>+Send+'static> ArtifactHistoryReadRetirement<P,Mu>{
-    fn close_inner(&mut self,grant:RetainedCloneGrant,mut control:Option<&mut dyn semio_framework_value::OriginalRetirementControl>)->Result<RetainedCloneStep,ValueError>{
+    fn close_inner(&mut self,grant:RetainedCloneGrant,mut control:Option<&mut HistoryCloseControl<'_,'_>>,work:&mut u64)->Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>{
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if self.active.is_some() {return match control.as_mut().map(|control|&mut **control as &mut dyn semio_framework_value::OriginalRetirementControl){Some(control)=>semio_framework_value::close_factory_ticket_controlled(&mut self.active,grant,control).result,None=>artifact_retirement_box_close_step(&mut self.active,grant).result};}
+        if self.active.is_some(){let turn=match control.as_deref_mut(){Some(HistoryCloseControl::Controlled(control))=>{let mut child=grant;child.maximum_depth=child.maximum_depth.checked_sub(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"history boxed child requires enclosing depth"))?;semio_framework_value::close_factory_ticket_controlled(&mut self.active,child,*control)},Some(HistoryCloseControl::Original(original))=>{let mut child=grant;child.maximum_depth=child.maximum_depth.checked_sub(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"history boxed child requires enclosing depth"))?;semio_framework_value::close_factory_ticket_original(&mut self.active,*original,child)},None=>artifact_retirement_box_close_step(&mut self.active,grant)};*work=turn.work;return turn.result}
         let moved = |step: RetainedCloneStep| match step {
-            RetainedCloneStep::Complete(progress) => RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress }),
+            RetainedCloneStep::Complete(progress) => RetainedCloneStep::Progress(progress),
             RetainedCloneStep::Progress(progress) => RetainedCloneStep::Progress(progress),
         };
-        if let Some(step)=self.close_derived_snapshot(grant)?{return Ok(moved(step))}
-        if let Some(step) = self.close_plan(grant)? { return Ok(moved(step)); }
-        if let Some(step) = self.close_preview(grant,control.as_mut().map(|control|&mut **control as &mut dyn semio_framework_value::OriginalRetirementControl))? { return Ok(moved(step)); }
-        if let Some(step) = self.close_raw_replay(grant,control.as_mut().map(|control|&mut **control as &mut dyn semio_framework_value::OriginalRetirementControl))? { return Ok(moved(step)); }
-        if let Some(step) = self.close_factories(grant)? { return Ok(moved(step)); }
+        if let Some(step)=self.close_derived_snapshot(grant,work)?{return Ok(moved(step))}
+        if let Some(step) = self.close_plan(grant,control.as_deref_mut(),work)? { return Ok(moved(step)); }
+        if let Some(step) = self.close_preview(grant,control.as_deref_mut(),work)? { return Ok(moved(step)); }
+        if let Some(step) = self.close_raw_replay(grant,control.as_deref_mut(),work)? { return Ok(moved(step)); }
+        if let Some(step) = self.close_factories(grant,control.as_deref_mut(),work)? { return Ok(moved(step)); }
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
-        Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "history read residual owners require exact constructor admission"))
+        Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "history read residual owners require exact constructor admission").into())
     }
 }
 

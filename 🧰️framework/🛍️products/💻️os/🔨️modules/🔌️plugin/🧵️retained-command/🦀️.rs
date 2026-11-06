@@ -28,9 +28,6 @@ pub use semio_framework_job as __job;
 pub use semio_framework_value as __value;
 
 #[doc(hidden)]
-#[path="♻️metadata/🦀️.rs"]
-pub mod metadata_retirement;
-#[doc(hidden)]
 #[path="🎟️admission/🦀️.rs"]
 pub mod admission;
 pub use crate::admission::ArtifactRetainedAdmissionRefusal;
@@ -44,16 +41,8 @@ pub use producer::custody::ArtifactRetainedCommandCustody;
 #[path="📸️checkpoint/👣️cursor/🦀️.rs"]
 pub mod checkpoint_cursor;
 pub use crate::checkpoint_cursor::ArtifactCommandCheckpointCursor;
-#[path="🔗️read/🦀️.rs"]
-mod snapshot_read_donor;
-pub use crate::snapshot_read_donor::ArtifactCommandSnapshotRead;
-
-#[path = "🔖️checkpoint-and-work-contract/🦀️.rs"]
-mod checkpoint_and_work_contract;
-pub use checkpoint_and_work_contract::{ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES, ArtifactCommandExtent, ArtifactCommandInputs, ArtifactCommandReducer, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity, BoundedArtifactCommandWork};
-use checkpoint_and_work_contract::{ARTIFACT_COMMAND_FAULT_DETAIL_MAXIMUM_BYTES, decode_artifact_command_checkpoint};
-#[cfg(test)]
-use checkpoint_and_work_contract::{ARTIFACT_COMMAND_CHECKPOINT_HEADER_BYTES, ArtifactCommandCheckpoint, encode_artifact_command_checkpoint};
+pub use semio_plugin_retained_work::{ArtifactCommandSnapshotRead,ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES,ArtifactCommandExtent,ArtifactCommandInputs,ArtifactCommandReducer,ArtifactCommandWork,ArtifactCommandWorkStep,ArtifactRetainedWorkCapacity,BoundedArtifactCommandWork};
+use semio_plugin_retained_work::{ARTIFACT_COMMAND_FAULT_DETAIL_MAXIMUM_BYTES,decode_artifact_command_checkpoint};
 
 #[path = "🧵️retained-command-job/🦀️.rs"]
 mod retained_command_job;

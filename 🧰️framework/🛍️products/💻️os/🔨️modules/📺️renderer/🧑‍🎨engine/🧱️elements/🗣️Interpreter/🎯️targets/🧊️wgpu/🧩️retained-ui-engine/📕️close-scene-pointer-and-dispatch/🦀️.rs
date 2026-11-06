@@ -64,19 +64,19 @@ pub fn close_ui_document_one(cx:&mut semio_framework_job::StepContext<'_>)->Resu
         match engine.close_surface_one(owner.token,cx){
             Err(error)=>{failure=Some(error);(false,None)},
             Ok(step)=>match step{
-            semio_framework_ui_wgpu_engine_surface::UiSurfaceCloseStep::Refused(refusal) => {
+            semio_ui_wgpu_engine_surface::UiSurfaceCloseStep::Refused(refusal) => {
                 document_debug_log(&format!("[TRACE] ui-doc retained close refusal window={window_id} stage={} kind={}", refusal.stage, refusal.kind.as_str()));
                 (false, None)
             }
-            semio_framework_ui_wgpu_engine_surface::UiSurfaceCloseStep::Pending => (false, None),
-            semio_framework_ui_wgpu_engine_surface::UiSurfaceCloseStep::RetiredScene(retirement) => (false, Some(retirement)),
-            semio_framework_ui_wgpu_engine_surface::UiSurfaceCloseStep::Complete => (true, None),
+            semio_ui_wgpu_engine_surface::UiSurfaceCloseStep::Pending => (false, None),
+            semio_ui_wgpu_engine_surface::UiSurfaceCloseStep::RetiredScene(retirement) => (false, Some(retirement)),
+            semio_ui_wgpu_engine_surface::UiSurfaceCloseStep::Complete => (true, None),
         },
         }
     });
     if let Some(retired) = retirement {
         let owner = ScenePointerTarget::from(retired);
-        if owner.kind==semio_framework_ui_declaration::ui::SurfaceKind::Paint2d{semio_framework_os_renderer_wgpu_engine_board::paint2d::cancel_paint2d_pixel_selection(&owner.host_id);}
+        if owner.kind==semio_ui_declaration::ui::SurfaceKind::Paint2d{semio_framework_os_renderer_wgpu_engine_board::paint2d::cancel_paint2d_pixel_selection(&owner.host_id);}
         semio_framework_os_renderer_wgpu_scene_state::retire_scene_identity(&owner);
     }
     if complete {
@@ -95,7 +95,7 @@ pub fn close_ui_document_one(cx:&mut semio_framework_job::StepContext<'_>)->Resu
 /// 🪪️ Captures the exact retained scene identity published by one document node.
 /// 🪟️ Every windowed tree container the retained surface `window_id` presents, measured against its scroll viewport
 /// (`Ui::tree_window_measures`) — the Shell's tree window observer reads the shared engine through this.
-pub fn tree_window_measures(window_id: &str) -> Option<(f64, Vec<semio_framework_ui_wgpu_light::tree_window::TreeWindowContainerMeasure>)> {
+pub fn tree_window_measures(window_id: &str) -> Option<(f64, Vec<semio_ui_wgpu_light::tree_window::TreeWindowContainerMeasure>)> {
     UI_ENGINE.with(|cell| cell.borrow().tree_window_measures(window_id))
 }
 
@@ -126,7 +126,7 @@ pub fn retained_scene_target_at(window_id: &str, x: f32, y: f32) -> Option<Scene
     })
 }
 
-fn retained_scene_target_in(engine: &semio_framework_ui_wgpu_engine::Ui, window_id: &str, node: NodeId) -> Option<ScenePointerTarget> {
+fn retained_scene_target_in(engine: &semio_ui_wgpu_engine::Ui, window_id: &str, node: NodeId) -> Option<ScenePointerTarget> {
     let retained = engine.tree(window_id)?.node(node)?;
     let UiNode::ComponentScene(scene) = &retained.spec.0 else { return None };
     if window_id.len() > SCENE_INTENT_ID_BYTES || scene.host_id.is_empty() || scene.host_id.len() > SCENE_INTENT_ID_BYTES || scene.surface_id.len() > SCENE_INTENT_ID_BYTES {
@@ -145,7 +145,7 @@ fn retained_scene_target_in(engine: &semio_framework_ui_wgpu_engine::Ui, window_
     })
 }
 
-fn candidate_scene_target_in(engine: &semio_framework_ui_wgpu_engine::Ui, window_id: &str, node: NodeId) -> Option<ScenePointerTarget> {
+fn candidate_scene_target_in(engine: &semio_ui_wgpu_engine::Ui, window_id: &str, node: NodeId) -> Option<ScenePointerTarget> {
     let retained = engine.candidate_tree(window_id)?.node(node)?;
     let UiNode::ComponentScene(scene) = &retained.spec.0 else { return None };
     if window_id.len() > SCENE_INTENT_ID_BYTES || scene.host_id.is_empty() || scene.host_id.len() > SCENE_INTENT_ID_BYTES || scene.surface_id.len() > SCENE_INTENT_ID_BYTES {
@@ -219,7 +219,7 @@ pub fn release_scene_pointer(pointer_id: ui_render::PointerId) -> Option<ScenePo
         .filter(scene_pointer_target_is_live)
 }
 
-pub fn cancel_scene_pointer(pointer_id: ui_render::PointerId, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<ScenePointerTarget> {
+pub fn cancel_scene_pointer(pointer_id: ui_render::PointerId, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<ScenePointerTarget> {
     let owners = SCENE_POINTER_OWNERS.with(|cell| {
         let mut registry = cell.borrow_mut();
         let mut cancelled = Vec::new();
@@ -238,13 +238,13 @@ pub fn cancel_scene_pointer(pointer_id: ui_render::PointerId, input: &mut semio_
     for owner in &owners {
         let owner = &owner.target;
         match owner.kind {
-            semio_framework_ui_declaration::ui::SurfaceKind::TextEditor => {
+            semio_ui_declaration::ui::SurfaceKind::TextEditor => {
                 semio_renderer_wgpu_engine_text::text_editor::text_editor_pointer_cancel_into(&owner.host_id);
             }
-            semio_framework_ui_declaration::ui::SurfaceKind::Paint2d => {
+            semio_ui_declaration::ui::SurfaceKind::Paint2d => {
                 semio_renderer_wgpu_engine_board::paint2d::paint2d_pointer_cancel_into(&owner.host_id);
             }
-            semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas => {
+            semio_ui_declaration::ui::SurfaceKind::InkCanvas => {
                 let controller_id = UI_ENGINE.with(|cell| {
                     let engine = cell.borrow();
                     match &engine.tree(&owner.window_id).and_then(|tree| tree.node(owner.node))?.spec.0 {
@@ -287,7 +287,7 @@ static POINTER_EDGE_STATE: WorkerCell<std::collections::HashMap<String, (bool, i
  * 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md` §6). The
  * window's own `ScrollRegion` is registered by the chrome BEFORE the body paints, so every body
  * child outranks it in `InputState::hit_at`'s reverse scan. */
-pub fn register_retained_hit_targets(window_id: &str, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<String> {
+pub fn register_retained_hit_targets(window_id: &str, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<String> {
     UI_ENGINE.with(|cell| {
         let engine = cell.borrow();
         let registrations = engine.window_hit_targets(window_id);
@@ -300,7 +300,7 @@ pub fn register_retained_hit_targets(window_id: &str, input: &mut semio_framewor
     })
 }
 
-pub fn register_clipped_retained_hit_targets(window_id: &str, clip: semio_framework_ui_theme::geometry::Rect, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<(String, Option<ScenePointerTarget>, Rect)> {
+pub fn register_clipped_retained_hit_targets(window_id: &str, clip: semio_ui_theme::geometry::Rect, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<(String, Option<ScenePointerTarget>, Rect)> {
     UI_ENGINE.with(|cell| {
         let engine = cell.borrow();
         let mut ids = Vec::new();
@@ -314,7 +314,7 @@ pub fn register_clipped_retained_hit_targets(window_id: &str, clip: semio_framew
                 if right <= x || bottom <= y {
                     continue;
                 }
-                target.rect = semio_framework_ui_theme::geometry::Rect::new(x, y, right - x, bottom - y);
+                target.rect = semio_ui_theme::geometry::Rect::new(x, y, right - x, bottom - y);
             }
             let scene = registration.scene.as_ref().and_then(|_| candidate_scene_target_in(&engine, window_id, registration.node));
             ids.push((registration.control_id.clone(), scene, target.rect));
@@ -347,7 +347,7 @@ pub fn retained_root_is_tree(window_id: &str) -> bool {
     UI_ENGINE.with(|cell| {
         let engine = cell.borrow();
         let Some(tree) = engine.tree(window_id) else { return false };
-        tree.root.and_then(|root| tree.node(root)).is_some_and(|node| matches!(&node.spec.0, semio_framework_ui_declaration::ui::UiNode::Tree(_)))
+        tree.root.and_then(|root| tree.node(root)).is_some_and(|node| matches!(&node.spec.0, semio_ui_declaration::ui::UiNode::Tree(_)))
     })
 }
 
@@ -356,7 +356,7 @@ pub fn active_retained_drag_sessions() -> Vec<(String, f32, f32, std::collection
     UI_ENGINE.with(|cell| cell.borrow().active_drag_sessions())
 }
 
-pub fn canvas_catalogue_drag_over(window_id: &str, x: f32, y: f32, drag_data: &std::collections::HashMap<String, String>, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
+pub fn canvas_catalogue_drag_over(window_id: &str, x: f32, y: f32, drag_data: &std::collections::HashMap<String, String>, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
     if !drag_data.contains_key(semio_renderer_wgpu_scene_render::CANVAS_CATALOGUE_DRAG_MIME) {
         return semio_renderer_wgpu_scene_render::cancel_canvas_catalogue_drag(input);
     }
@@ -365,7 +365,7 @@ pub fn canvas_catalogue_drag_over(window_id: &str, x: f32, y: f32, drag_data: &s
     let outcome = UI_ENGINE.with(|cell| {
         let engine = cell.borrow();
         let hit = engine.scene_at(window_id, x, y)?;
-        if hit.kind != semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d {
+        if hit.kind != semio_ui_declaration::ui::SurfaceKind::Canvas2d {
             return None;
         }
         let generation = engine.surface_generation(window_id)?;
@@ -386,14 +386,14 @@ pub fn canvas_catalogue_drag_over(window_id: &str, x: f32, y: f32, drag_data: &s
     }
 }
 
-pub fn canvas_catalogue_drop(window_id: &str, x: f32, y: f32, drag_data: &std::collections::HashMap<String, String>, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
+pub fn canvas_catalogue_drop(window_id: &str, x: f32, y: f32, drag_data: &std::collections::HashMap<String, String>, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
     let Some(raw_payload) = drag_data.get(semio_renderer_wgpu_scene_render::CANVAS_CATALOGUE_DRAG_MIME) else {
         return false;
     };
     let outcome = UI_ENGINE.with(|cell| {
         let engine = cell.borrow();
         let hit = engine.scene_at(window_id, x, y)?;
-        if hit.kind != semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d {
+        if hit.kind != semio_ui_declaration::ui::SurfaceKind::Canvas2d {
             return None;
         }
         let generation = engine.surface_generation(window_id)?;
@@ -414,19 +414,19 @@ pub fn canvas_catalogue_drop(window_id: &str, x: f32, y: f32, drag_data: &std::c
     }
 }
 
-pub(super) fn stamp_window_clock(engine: &mut semio_framework_ui_wgpu_engine::Ui, window_id: &str) -> Option<semio_framework_ui_wgpu_engine_surface::UiWindowClockStep> {
+pub(super) fn stamp_window_clock(engine: &mut semio_ui_wgpu_engine::Ui, window_id: &str) -> Option<semio_ui_wgpu_engine_surface::UiWindowClockStep> {
     let seconds = semio_framework_job::default_now_us()? as f64 / 1_000_000.0;
     engine.advance_window_clock(window_id, seconds)
 }
 
-pub(super) fn apply_window_clock_caret(window_id: &str, step: Option<&semio_framework_ui_wgpu_engine_surface::UiWindowClockStep>) {
+pub(super) fn apply_window_clock_caret(window_id: &str, step: Option<&semio_ui_wgpu_engine_surface::UiWindowClockStep>) {
     if let Some(caret) = step.and_then(|step| step.caret) {
         apply_presented_scene_caret(window_id, caret);
     }
 }
 
 /// ⏲️ Advances one accepted surface and delivers its timer commands through the ordinary boundary.
-pub fn advance_retained_window_clock(window_id: &str, surface: semio_framework_ui_wgpu_engine::UiSurfaceToken, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Option<semio_framework_ui_wgpu_engine_surface::UiWindowClockStep> {
+pub fn advance_retained_window_clock(window_id: &str, surface: semio_ui_wgpu_engine::UiSurfaceToken, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Option<semio_ui_wgpu_engine_surface::UiWindowClockStep> {
     let (step, mut commands) = UI_ENGINE.with(|cell| {
         let mut engine = cell.borrow_mut();
         if engine.surface_token(window_id) != Some(surface) {
@@ -440,7 +440,7 @@ pub fn advance_retained_window_clock(window_id: &str, surface: semio_framework_u
     step
 }
 
-pub fn dispatch_ui_event(window_id: &str, event: semio_framework_ui_wgpu_events::UiEvent, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<semio_framework_ui_wgpu_events::UiCommand> {
+pub fn dispatch_ui_event(window_id: &str, event: semio_ui_wgpu_events::UiEvent, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<semio_ui_wgpu_events::UiCommand> {
     let (mut commands, clock) = UI_ENGINE.with(|cell| {
         let mut engine = cell.borrow_mut();
         let clock = stamp_window_clock(&mut engine, window_id);
@@ -453,13 +453,13 @@ pub fn dispatch_ui_event(window_id: &str, event: semio_framework_ui_wgpu_events:
     commands
 }
 
-pub fn dispatch_ui_pointer_event(window_id: &str, pointer_id: ui_render::PointerId, event: semio_framework_ui_wgpu_events::UiEvent, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<semio_framework_ui_wgpu_events::UiCommand> {
+pub fn dispatch_ui_pointer_event(window_id: &str, pointer_id: ui_render::PointerId, event: semio_ui_wgpu_events::UiEvent, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<semio_ui_wgpu_events::UiCommand> {
     dispatch_presented_ui_pointer_event(window_id, pointer_id, event, input)
 }
 
 /// 🎞️ Routes pointer state through the exact presented retained tree and router.
-pub fn dispatch_presented_ui_pointer_event(window_id: &str, pointer_id: ui_render::PointerId, event: semio_framework_ui_wgpu_events::UiEvent, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<semio_framework_ui_wgpu_events::UiCommand> {
-    if matches!(event, semio_framework_ui_wgpu_events::UiEvent::PointerDown { .. }) {
+pub fn dispatch_presented_ui_pointer_event(window_id: &str, pointer_id: ui_render::PointerId, event: semio_ui_wgpu_events::UiEvent, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<semio_ui_wgpu_events::UiCommand> {
+    if matches!(event, semio_ui_wgpu_events::UiEvent::PointerDown { .. }) {
         FOCUSED_TABLE_STEPPER.with(|cell| *cell.borrow_mut() = None);
         FOCUSED_VFS_CONTROL.with(|cell| *cell.borrow_mut() = None);
     }

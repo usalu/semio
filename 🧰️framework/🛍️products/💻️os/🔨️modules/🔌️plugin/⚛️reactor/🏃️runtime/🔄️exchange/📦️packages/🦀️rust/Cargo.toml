@@ -32,7 +32,7 @@ semio-plugin-reactor-app = { path = "../../../../🔌️app/📦️packages/🦀
 semio-plugin-plugin-program = { path = "../../../../../🏗️builder/🔌️program/📦️packages/🦀️rust" }
 semio-plugin-reactor-lifecycle = { path = "../../../../📨️pending/📦️packages/🦀️rust" }
 semio-plugin-runtime-instances = { path = "../../../📦️instances/📦️packages/🦀️rust" }
-semio-plugin-runtime-ops = { path = "../../../🧰️ops/📦️packages/🦀️rust" }
+semio-framework-plugin-runtime-ops = { path = "../../../🧰️ops/📦️packages/🦀️rust", package = "semio-plugin-runtime-ops"}
 replication = { path = "../../../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async = { path = "../../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async" }

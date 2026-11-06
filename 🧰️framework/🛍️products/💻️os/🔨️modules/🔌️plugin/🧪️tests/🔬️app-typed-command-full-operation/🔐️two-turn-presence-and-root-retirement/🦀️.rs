@@ -2,7 +2,7 @@
 
     use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
+use semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
     struct TwoTurnPublicationPresencePreparationFactory;
 
@@ -74,16 +74,17 @@ use semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOpera
             self.closing = true;
         }
 
-        fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> semio_framework_value::OriginalRetirementOutcome {let mut work=0;let result=(||{
             use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
             if !self.closing || !grant.permits_one() {
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
             }
             if self.prepared.take().is_some() || self.request.take().is_some() {
+                work=1;
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
             }
             Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))
-        }
+        })();semio_framework_value::RetainedWorkOutcome{result,work}}
 
         fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
             Ok(0)

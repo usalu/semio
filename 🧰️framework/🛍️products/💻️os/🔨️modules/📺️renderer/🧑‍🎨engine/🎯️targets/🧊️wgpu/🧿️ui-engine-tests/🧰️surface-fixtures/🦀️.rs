@@ -23,28 +23,28 @@ use semio_renderer_wgpu_ui_engine::retained_ui_engine::request_ui_document_close
 use semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target_at;
 use semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending;
 use semio_renderer_wgpu_ui_engine::retained_ui_engine;
-use semio_framework_ui_declaration::ui::SurfaceKind;
-use semio_framework_ui_declaration::ui::UiComponentSceneNode;
-use semio_framework_ui_draw_contract::DrawList;
-use semio_framework_ui_draw_contract::IconAtlas;
-use semio_framework_ui_layout::layout::ActionDescriptor;
-use semio_framework_ui_text::FontAtlas;
-use semio_framework_ui_theme::Theme;
-use semio_framework_ui_theme::geometry::Rect;
+use semio_ui_declaration::ui::SurfaceKind;
+use semio_ui_declaration::ui::UiComponentSceneNode;
+use semio_ui_draw_contract::DrawList;
+use semio_ui_draw_contract::IconAtlas;
+use semio_ui_layout::layout::ActionDescriptor;
+use semio_ui_text::FontAtlas;
+use semio_ui_theme::Theme;
+use semio_ui_theme::geometry::Rect;
 use std::collections::HashMap;
 use ui_contract::SurfaceId;
 use ui_contract::UiDocumentLease;
 use ui_contract::UiText;
-use semio_framework_ui_wgpu_input::InputState;
+use semio_ui_wgpu_input::InputState;
 use semio_renderer_wgpu_engine_attach::drop_engine_surface;
 
 pub fn retained_surface_record(scene: &UiComponentSceneNode) -> ui_contract::UiNodeRecord {
     let component = match scene.component_kind {
-        SurfaceKind::NodeGraph => ui_contract::Component::Surface(semio_framework_ui_scene_surface::encode(ui_contract::SurfaceKind::NodeGraph, scene.node_graph.as_ref().expect("NodeGraph scene payload")).expect("bounded NodeGraph scene encodes")),
-        SurfaceKind::TiledMap => ui_contract::Component::Surface(semio_framework_ui_scene_surface::encode(ui_contract::SurfaceKind::TiledMap, scene.tiled_map.as_ref().expect("TiledMap scene payload")).expect("bounded TiledMap scene encodes")),
-        SurfaceKind::Board2d => ui_contract::Component::Surface(semio_framework_ui_scene_surface::encode(ui_contract::SurfaceKind::Board2d, scene.board2d.as_ref().expect("Board2d scene payload")).expect("bounded Board2d scene encodes")),
-        SurfaceKind::Paint2d => ui_contract::Component::Surface(semio_framework_ui_scene_surface::encode(ui_contract::SurfaceKind::Paint2d, scene.paint_2d.as_ref().expect("Paint2d scene payload")).expect("bounded Paint2d scene encodes")),
-        SurfaceKind::TextEditor => ui_contract::Component::Surface(semio_framework_ui_scene_surface::encode(ui_contract::SurfaceKind::TextEditor, scene.text_editor.as_ref().expect("TextEditor scene payload")).expect("bounded TextEditor scene encodes")),
+        SurfaceKind::NodeGraph => ui_contract::Component::Surface(semio_ui_scene_surface::encode(ui_contract::SurfaceKind::NodeGraph, scene.node_graph.as_ref().expect("NodeGraph scene payload")).expect("bounded NodeGraph scene encodes")),
+        SurfaceKind::TiledMap => ui_contract::Component::Surface(semio_ui_scene_surface::encode(ui_contract::SurfaceKind::TiledMap, scene.tiled_map.as_ref().expect("TiledMap scene payload")).expect("bounded TiledMap scene encodes")),
+        SurfaceKind::Board2d => ui_contract::Component::Surface(semio_ui_scene_surface::encode(ui_contract::SurfaceKind::Board2d, scene.board2d.as_ref().expect("Board2d scene payload")).expect("bounded Board2d scene encodes")),
+        SurfaceKind::Paint2d => ui_contract::Component::Surface(semio_ui_scene_surface::encode(ui_contract::SurfaceKind::Paint2d, scene.paint_2d.as_ref().expect("Paint2d scene payload")).expect("bounded Paint2d scene encodes")),
+        SurfaceKind::TextEditor => ui_contract::Component::Surface(semio_ui_scene_surface::encode(ui_contract::SurfaceKind::TextEditor, scene.text_editor.as_ref().expect("TextEditor scene payload")).expect("bounded TextEditor scene encodes")),
         kind => panic!("retained EngineCanvas fixture does not support {kind:?}"),
     };
     let mut record = ui_contract::UiNodeRecord {
@@ -134,7 +134,7 @@ pub fn paint_retained_surface_in_window(scene: &UiComponentSceneNode, bounds: Re
     let complete = (0..(1 << 20)).any(|_| {
         let mut ctx = semio_renderer_wgpu_scene_canvas2d::ui_image_loading::framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, bounds.h);
         let mut hosts = semio_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: semio_renderer_wgpu_scene_state::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id };
-        let done = caller.turn(|cx|semio_renderer_wgpu_ui_engine::retained_document_consumer::render_ui_document_step(&mut cursor, &document, bounds, &mut ctx, window_id, &scene.controller_id, semio_framework_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx));
+        let done = caller.turn(|cx|semio_renderer_wgpu_ui_engine::retained_document_consumer::render_ui_document_step(&mut cursor, &document, bounds, &mut ctx, window_id, &scene.controller_id, semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx));
         semio_renderer_wgpu_host_winit::os_host::finish_cpu_only_fixture_component_close(|owner| drop_engine_surface(&owner.host_id));
         assert!(done || !cursor.terminal_is_fault(), "retained EngineCanvas document faulted in phase {}", cursor.phase_name());
         done
@@ -163,10 +163,10 @@ mod selection_tests {
     fn unchanged_production_frames_advance_selection_intent_and_released_capture_cancels(){
         let _guard=semio_framework_os_renderer_wgpu_engine_registry::engine_surface_law_guard();
         let window="paint-selection-production-frames";let bounds=Rect::new(0.0,0.0,100.0,100.0);
-        let paint=semio_framework_ui_scene_plane::Paint2dScene {
+        let paint=semio_ui_scene_plane::Paint2dScene {
             document_sync_json:serde_json::json!({"schema":"raster.document","layers":[{"kind":"pixel","id":"p","visible":true,"mask":null,"width":64,"height":64,"transform":{"x":0,"y":0,"a":1,"b":0,"c":0,"d":1}}]}).to_string(),
             assets_json:"{}".into(),camera_json:r#"{"x":0,"y":0,"zoom":1}"#.into(),selection_json:r#"["p"]"#.into(),hovered_id:None,active_utility:"selectMarquee".into(),brush_size:12.0,brush_opacity:1.0,brush_color:"#000000".into(),brush_hardness:1.0,paint_target:"pixels".into(),mask_value:255,fill_tolerance:0,pixel_selection_json:None,view_mode:"composite".into(),composite_viewport_json:None,lanes:Vec::new(),
-            editing_options: semio_framework_ui_scene_plane::Paint2dEditingOptions { filter_kind: "brightness".into(), filter_amount: 0.0, image_grid: semio_framework_ui_scene_plane::Paint2dImageGrid { x: 0, y: 0, width: 512, height: 512, bilinear: true } },selection_cancellation:None,
+            editing_options: semio_ui_scene_plane::Paint2dEditingOptions { filter_kind: "brightness".into(), filter_amount: 0.0, image_grid: semio_ui_scene_plane::Paint2dImageGrid { x: 0, y: 0, width: 512, height: 512, bilinear: true } },selection_cancellation:None,
         };
         let mut scene=UiComponentSceneNode {host_id:window.into(),surface_id:window.into(),controller_id:"raster".into(),component_kind:SurfaceKind::Paint2d,pane_id:None,binding_id:None,presence:Default::default(),menu:None,canvas_2d:None,world_3d:None,node_graph:None,text_editor:None,table:None,paint_2d:Some(paint),virtual_file_system:None,tiled_map:None,board2d:None,icon_render:None,ink_canvas:None,graph_timeline:None,block_list:None,diff_view:None,event_feed:None};
         scene.paint_2d.as_mut().unwrap().active_utility="selectLasso".into();
@@ -189,7 +189,7 @@ mod selection_tests {
         let target=retained_ui_engine::retained_scene_target(window,first.owner.node).unwrap();assert_eq!(target.host_id,scene.host_id);
         assert!(cancel_paint2d_pixel_selection(&target.host_id));assert!(!paint2d_pixel_selection_work_pending());
         assert!(paint_retained_surface_in_window(&scene,bounds,window).actions.iter().all(|action|action.action!="selectPixels"));
-        let authority=semio_framework_ui_scene_plane::Paint2dSelectionCancellation{actor:"user:fixture#client-a".into(),app_instance_id:7,window_id:window.into(),operation_id:"0020000000000001".into(),generation:"fffffffffffffffd".into()};
+        let authority=semio_ui_scene_plane::Paint2dSelectionCancellation{actor:"user:fixture#client-a".into(),app_instance_id:7,window_id:window.into(),operation_id:"0020000000000001".into(),generation:"fffffffffffffffd".into()};
         scene.paint_2d.as_mut().unwrap().selection_cancellation=Some(authority);
         let admitted=paint_retained_surface_in_window(&scene,bounds,window);
         let cancel=retained_ui_engine::retained_selection_cancellation(&admitted.owner,"user:fixture#client-a",7).unwrap();

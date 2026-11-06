@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 use semio_os_store_engine_live::lifted_store::StoreParts;
-use semio_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication;
+use semio_framework_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication;
 use semio_os_store_read::{ArtifactStoreDisplacedOwnerReservation, ArtifactStoreDisplacedRetirements, ArtifactStoreRevisionAccumulatorRetirement, ArtifactStoreStringRetirement, ArtifactStoreStringVectorRetirement};
 use semio_os_store_ledger::{ArtifactStoreHistoryCommitReservation, CursorRevisionAccumulator, CursorRevisionRecord};
 use semio_os_store_one_item::{ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep, LaneItemReceipt};

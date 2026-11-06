@@ -356,11 +356,12 @@ fn renderer_asset_probe_keeps_pages_owned_across_chunk_boundaries_and_rejects_ma
         (authority, RendererAssetProbe::new(RendererAssetFetchOwner::Shared(owner)))
     }
 
+    let mut caller=OriginalRendererFixture::new();
     let valid = semantic_glb();
     let (mut authority, mut cursor) = probe(&valid, 5);
     let mut ready = false;
     for _ in 0..4_096 {
-        match cursor.step() {
+        match caller.turn(|cx|cursor.step(cx)).unwrap() {
             RendererAssetProbeStep::Pending => {}
             RendererAssetProbeStep::Ready => {
                 ready = true;
@@ -400,17 +401,17 @@ fn renderer_asset_probe_keeps_pages_owned_across_chunk_boundaries_and_rejects_ma
     assert_eq!(normals, world_frame(&legacy.normals));
     assert_eq!(indices, legacy.indices);
     cursor.begin_close();
-    while !cursor.close_step() {}
+    while !caller.turn(|cx|cursor.close_step(cx)).unwrap() {}
     let RendererAssetFetchOwner::Shared(owner) = cursor.take_terminal_owner().unwrap() else { panic!("shared probe") };
     authority.finish(owner).unwrap();
     assert!(authority.terminal_is_empty());
 
     let malformed = b"glTF\x02\0\0\0\xff\0\0\0";
     let (mut authority, mut cursor) = probe(malformed, 7);
-    assert!(matches!(cursor.step(), RendererAssetProbeStep::Pending));
-    assert!(matches!(cursor.step(), RendererAssetProbeStep::Pending));
-    assert!(matches!(cursor.step(), RendererAssetProbeStep::Reject("asset response format probe rejected malformed input")));
-    while !cursor.close_step() {}
+    assert!(matches!(caller.turn(|cx|cursor.step(cx)).unwrap(), RendererAssetProbeStep::Pending));
+    assert!(matches!(caller.turn(|cx|cursor.step(cx)).unwrap(), RendererAssetProbeStep::Pending));
+    assert!(matches!(caller.turn(|cx|cursor.step(cx)).unwrap(), RendererAssetProbeStep::Reject("asset response format probe rejected malformed input")));
+    while !caller.turn(|cx|cursor.close_step(cx)).unwrap() {}
     let RendererAssetFetchOwner::Shared(owner) = cursor.take_terminal_owner().unwrap() else { panic!("shared probe") };
     authority.finish(owner).unwrap();
     assert!(authority.terminal_is_empty());

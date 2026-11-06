@@ -192,7 +192,7 @@ where
     }
 
     fn original_batch_receiving_demands(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { SpaceMember::original_batch_receiving_demands(&self.0) }
-    fn admit_original_batch_receiving(&self,wires:&mut Option<Vec<Vec<u8>>>,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,grant:semio_framework_value::RetainedCloneGrant)->Result<Option<(Box<dyn semio_os_store_one_item_batch::member_owned_batch::MemberOriginalBatchReceiving>,semio_framework_value::RetainedCloneProgress)>,semio_framework_value::ValueError>{SpaceMember::admit_original_batch_receiving(&self.0,wires,control,grant)}
+    fn admit_original_batch_receiving(&self,wires:&mut Option<Vec<Vec<u8>>>,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,grant:semio_framework_value::RetainedCloneGrant)->Result<Option<(Box<dyn semio_framework_os_store_one_item_batch::member_owned_batch::MemberOriginalBatchReceiving>,semio_framework_value::RetainedCloneProgress)>,semio_framework_value::ValueError>{SpaceMember::admit_original_batch_receiving(&self.0,wires,control,grant)}
     fn owned_publication_birth_bytes(&self, request: &MemberStoreOwnedBatchRequest) -> Result<usize, String> { SpaceMember::owned_publication_birth_bytes(&self.0, request) }
     fn begin_one_item_owned_publication(&self, request: &mut MemberStoreOwnedBatchRequest, grant: ArtifactStoreOneItemGrant) -> Result<Option<(Box<dyn ErasedMemberStoreOneItemPublication>, semio_framework_value::RetainedCloneProgress)>, String> {
         SpaceMember::begin_one_item_owned_publication(&self.0, request, grant)

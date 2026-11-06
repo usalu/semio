@@ -673,10 +673,12 @@ impl<T> BoundedArtifactRetirementFactory<T> {
 }
 
 impl<T: semio_framework_value::retirement::RetireOwned> ArtifactOwnedValueRetirementFactory<T> for BoundedArtifactRetirementFactory<T> {
+    fn retire_owned_work_demand(&self, _: &T) -> Result<u64, ValueError> { Ok(u64::from(T::controlled_retirement_supported())) }
     fn retirement_birth_bytes(&self, _: &T) -> usize { semio_framework_value::retirement::controlled::controlled_retirement_birth_bytes::<T>() }
-    fn retire_owned(&self, value: T, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, T)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, T)> {
-        semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(value, grant).result.map(|(owner, progress)| (owner as Box<dyn ErasedSnapshotRetirement>, progress))
-    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
+    fn retire_owned(&self, value: T, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(semio_framework_value::OriginalRetirementFailure, T)> {let turn=(||{
+        let turn = semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(value, grant);
+        semio_framework_value::RetainedWorkOutcome { result: turn.result.map(|(owner, progress)| (owner as Box<dyn ErasedSnapshotRetirement>, progress)), work: turn.work }
+    })();semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(|(error,value)|(error.into(),value)),work:turn.work}}
 }
 
 impl<T: semio_framework_value::retirement::RetireOwned + Sync> SnapshotRetirementFactory<T> for BoundedArtifactRetirementFactory<T> {

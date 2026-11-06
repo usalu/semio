@@ -17,7 +17,7 @@ use protocol::OpText;
 use semio_plugin_reactor_app::PluginApp;
 use semio_plugin_instance_jobs::jobs_components::ToolOperations;
 use semio_ui_contract::*;
-use semio_plugin_instance_docs::docs_plugin_app_impl::history_changed_event;
+use semio_framework_plugin_instance_docs::docs_plugin_app_impl::history_changed_event;
 
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> DispatchCtx<'ctx, A, M, X> {
     /// ↩️ Task 4: group-aware undo/redo. Routes through

@@ -21,14 +21,36 @@ fn original_source_publication_preserves_native_identity_paid_stages_and_every_c
   }
   if let Some(mut descriptor)=descriptor{
    assert_eq!(copied,extent);let(view,heap)=observed(||publication.borrow_outcome(&descriptor).unwrap());assert_eq!(heap,(0,0));let payload=match view{JobOutcomeView::PreviewReady{payload,..}=>payload,JobOutcomeView::CheckpointReady{state,applied_progress,..}=>{assert_eq!(applied_progress,7);state},JobOutcomeView::Fault{detail,..}=>detail,_=>panic!("wrong original publication kind")};assert_eq!(payload.len(),extent);let pointer=payload as*const _;let mut bytes=Vec::new();for index in 0..payload.page_count(){bytes.extend_from_slice(payload.page(index).unwrap());}assert_eq!(serde_json::to_value(&bytes).unwrap(),serde_json::to_value(source).unwrap());assert_eq!(publication.published().unwrap()as*const _,pointer);
-   let(step,heap)=observed(||descriptor.acknowledge(RetainedCloneGrant{maximum_items:0,..quantum}));assert_eq!(heap,(0,0));assert_eq!(step.progress(),Default::default());assert!(!descriptor.is_acknowledged());
-   caller.turn(quantum,|cx|{let step=descriptor.acknowledge(RetainedCloneGrant{maximum_copy_bytes:0,..cx.retained_grant()});assert!(descriptor.is_acknowledged());assert_eq!(step.progress(),RetainedCloneProgress{copied_items:1,..Default::default()});receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome::<_,semio_framework_value::ValueError>{result:Ok(step),work:1})?;Ok(())}).unwrap();let(_,heap)=observed(||drop(descriptor));assert_eq!(heap,(0,0));
+   let(turn,heap)=observed(||descriptor.acknowledge(RetainedCloneGrant{maximum_items:0,..quantum}));assert_eq!(heap,(0,0));assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap().progress(),Default::default());assert!(!descriptor.is_acknowledged());
+   caller.turn(quantum,|cx|{let turn=descriptor.acknowledge(RetainedCloneGrant{maximum_copy_bytes:0,..cx.retained_grant()});assert!(descriptor.is_acknowledged());assert_eq!(turn.result.as_ref().unwrap().progress(),RetainedCloneProgress{copied_items:1,..Default::default()});receive_original_retained_work(cx,turn)?;Ok(())}).unwrap();let(_,heap)=observed(||drop(descriptor));assert_eq!(heap,(0,0));
   }
+  assert_eq!(publication.retirement_work().unwrap(),if publication.terminal_is_empty(){law["closeWork"]["empty"].as_u64().unwrap()}else{law["closeWork"]["live"].as_u64().unwrap()});
   caller.cancel().cancel_now();let mut closes=0;while !publication.terminal_is_empty(){
    closes+=1;assert!(closes<law["maximumCloseTurns"].as_u64().unwrap()as usize,"original publication closure stalled");let(demand,heap)=observed(||publication.retirement_demands().unwrap());assert_eq!(heap,(0,0));
    for denied in [Some(RetainedCloneGrant{maximum_items:0,..quantum}),(demand.release_bytes>0).then_some(RetainedCloneGrant{maximum_release_bytes:demand.release_bytes.saturating_sub(1),..quantum}),(demand.depth>0).then_some(RetainedCloneGrant{maximum_depth:demand.depth.saturating_sub(1),..quantum})].into_iter().flatten(){let(turn,heap)=observed(||publication.close_step(denied));assert_eq!(turn.work,0);assert_eq!(heap,(0,0));assert_eq!(turn.result.unwrap().progress(),Default::default());assert!(!publication.terminal_is_empty());}
-   let(result,heap)=observed(||caller.turn(quantum,|cx|{let demand=publication.retirement_demands()?;close_original_retained_step(cx,demand,|grant|publication.close_step(grant)).map(|_|())}));result.unwrap();assert_physical(caller.receipt(),heap,quantum);born+=heap.0;released+=heap.1;
+   let quote=publication.retirement_work().unwrap();assert_eq!(quote,law["closeWork"]["live"].as_u64().unwrap());
+   let fuel=caller.fuel_remaining();let(result,heap)=observed(||caller.turn(quantum,|cx|{let deadline=cx.deadline_us();cx.with_original_work_loan(law["closeWork"]["deniedBudget"].as_u64().unwrap(),deadline,|cx|{let demand=publication.retirement_demands()?;close_original_quoted_retained_step(cx,demand,quote,|grant|publication.close_step(grant)).map(|_|())})}));result.unwrap();assert_eq!(heap,(0,0));assert_eq!(caller.receipt(),Default::default());assert_eq!(caller.fuel_remaining(),fuel);assert_eq!(publication.retirement_work().unwrap(),quote);
+   let(result,heap)=observed(||caller.turn(quantum,|cx|{let deadline=cx.deadline_us();cx.with_original_work_loan(quote,deadline,|cx|{let demand=publication.retirement_demands()?;close_original_quoted_retained_step(cx,demand,quote,|grant|publication.close_step(grant)).map(|_|())})}));result.unwrap();assert_eq!(fuel-caller.fuel_remaining(),quote);assert_physical(caller.receipt(),heap,quantum);born+=heap.0;released+=heap.1;
   }
+  assert_eq!(publication.retirement_work().unwrap(),law["closeWork"]["empty"].as_u64().unwrap());
   let(_,heap)=observed(||drop(publication));assert_eq!(heap,(0,0));released+=caller.retire(stock);assert_eq!(born,released);assert_eq!(source.as_ptr(),source_pointer);
  }}}
+}
+
+#[test]
+fn original_publication_refuses_another_real_caller_before_first_page_and_for_empty_sources(){
+ fn clock()->Option<u64>{Some(0)}
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let quantum=grant(&law["originalGrant"]);let stock=grant(&law["originalStock"]);let bytes=[7u8,11,13];
+ for extent in [0,bytes.len()]{
+  let source=&bytes[..extent];let mut caller=OriginalJobFixtureCaller::admit(OperationId(99732),Generation(5),stock,clock,u64::MAX,law["originalFuel"].as_u64().unwrap());let mut foreign=OriginalJobFixtureCaller::admit(OperationId(99732),Generation(5),stock,clock,u64::MAX,law["originalFuel"].as_u64().unwrap());let mut publication=RetainedJobPublication::new();
+  for _ in 0..3{
+   caller.turn(quantum,|cx|{assert!(publication.advance_from_source(JobPublicationKind::Preview,source,cx)?.is_none());Ok(())}).unwrap();
+   let fuel=foreign.fuel_remaining();let(result,heap)=observed(||foreign.turn(quantum,|cx|{publication.advance_from_source(JobPublicationKind::Preview,source,cx)?;Ok(())}));assert!(result.is_err());assert_eq!(heap,(0,0));assert_eq!(foreign.receipt(),Default::default());assert_eq!(foreign.fuel_remaining(),fuel);
+  }
+  let mut descriptor=None;for turn in 0..2000{if descriptor.is_some(){break}caller.turn(quantum,|cx|{if let Some(outcome)=publication.advance_from_source(JobPublicationKind::Preview,source,cx)?{descriptor=Some(outcome.into_descriptor())}Ok(())}).unwrap();assert!(turn<1999);}
+  let mut descriptor=descriptor.unwrap();assert!(matches!(publication.borrow_outcome(&descriptor).unwrap(),JobOutcomeView::PreviewReady{..}));
+  caller.turn(quantum,|cx|{receive_original_retained_work(cx,descriptor.acknowledge(cx.retained_grant()))?;Ok(())}).unwrap();drop(descriptor);
+  for turn in 0..10000{if publication.terminal_is_empty(){break}caller.turn(quantum,|cx|{close_original_quoted_retained_step(cx,publication.retirement_demands()?,publication.retirement_work()?,|grant|publication.close_step(grant))?;Ok(())}).unwrap();assert!(turn<9999);}
+  assert!(publication.terminal_is_empty());caller.retire(stock);foreign.retire(stock);
+ }
 }

@@ -22,26 +22,30 @@ impl<R,P:RetainedRowPatch<R>> RetainedRowPatchApply<R,P>{
  /// 🌱️ Empty construction captures no payload, projection or dynamic child.
  pub fn new()->Self{Self{fields:ManuallyDrop::new(None),patch:ManuallyDrop::new(None),retirement:Default::default(),phase:0,index:0,closing:false,row:std::marker::PhantomData}}
  /// 📏️ Every source capture, original field copy and fixed transfer has a separate quote.
- pub fn stage_demand(&self,patch:RetainedCloneRef<'_,P>,row:RetainedCloneRef<'_,R>,body:usize)->Result<RetirementDemand,ValueError>{
+ pub fn stage_demand(&self,patch:RetainedCloneRef<'_,P>,row:RetainedCloneRef<'_,R>,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{
   if self.closing{return Err(invalid());}
+  if maximum_work_units==0{return Ok(Default::default())}
   match self.phase{
    0=>Ok(RetirementDemand{capacity_bytes:size_of::<P::Fields>(),..scalar(size_of::<P::Fields>()+size_of::<Option<Box<P::Fields>>>()+META)}),
-   1=>nested(self.fields.as_ref().ok_or_else(invalid)?.demand(patch,row,body)?),
+   1=>nested(self.fields.as_ref().ok_or_else(invalid)?.demand(patch,row,body,maximum_work_units)?),
    2=>Ok(scalar(size_of::<P>()*2+size_of::<Option<P>>()+META)),
    _=>Err(invalid()),
   }
  }
  /// 🪡️ Copies only schema-declared authored sparse fields from their genuine immutable event source.
- pub fn stage(&mut self,patch:RetainedCloneRef<'_,P>,row:RetainedCloneRef<'_,R>,body:usize,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  let demand=self.stage_demand(patch,row,body)?;if !retained_mutation_demand_fits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
+ /// ⛽️ Quotes the selected original sparse-field stage work.
+ pub fn stage_work_demand(&self,patch:RetainedCloneRef<'_,P>,row:RetainedCloneRef<'_,R>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{self.stage_demand(patch,row,body,maximum_work_units)?;if maximum_work_units==0{return Ok(0)}let work=match self.phase{0=>P::Fields::new_work_demand()?.checked_add(1).ok_or_else(invalid)?,2=>1,1=>return self.fields.as_ref().ok_or_else(invalid)?.advance_work_demand(patch,row,body,maximum_work_units),_=>return Err(invalid())};Ok(if work<=maximum_work_units{work}else{0})}
+ pub fn stage(&mut self,patch:RetainedCloneRef<'_,P>,row:RetainedCloneRef<'_,R>,body:usize,maximum_work_units:u64,grant:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{let mut work=0;let result:Result<_,semio_framework_value::OriginalRetirementFailure>=(||{
+  let selected=self.stage_work_demand(patch,row,body,maximum_work_units)?;if selected==0{return Ok(RetainedCloneStep::Progress(Default::default()))}let demand=self.stage_demand(patch,row,body,maximum_work_units)?;if !retained_mutation_demand_fits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
   let mut progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:if self.phase==0{demand.capacity_bytes}else{0},..Default::default()};
   match self.phase{
-   0=>{*self.fields=Some(Box::new(P::Fields::new(RetainedPatchSource::Authored)));self.phase=1;},
-   1=>{let step=self.fields.as_mut().ok_or_else(invalid)?.advance(patch,row,body,child(grant))?;progress=receipt(step.progress())?;if matches!(step,RetainedCloneStep::Complete(_)){self.phase=2;}},
-   2=>{let(value,child)=self.fields.as_mut().ok_or_else(invalid)?.take(RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-size_of::<Option<P>>()-META,..grant})?;*self.patch=value;progress=child;progress.copied_bytes+=size_of::<Option<P>>()+META;self.phase=3;return Ok(RetainedCloneStep::Complete(progress));},
-   _=>return Err(invalid()),
+   0=>{let(fields,actual)=P::Fields::new(RetainedPatchSource::Authored);work=actual+1;*self.fields=Some(Box::new(fields));self.phase=1;if work>selected{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"sparse owner birth exceeded its work quote").with_retained_progress(progress).into())}},
+   1=>{let turn=self.fields.as_mut().ok_or_else(invalid)?.advance(patch,row,body,maximum_work_units,child(grant));work+=turn.work;let step=turn.result.map_err(|error|if turn.work==0{error}else{let mut p=error.retained_progress();p.copied_bytes=p.copied_bytes.saturating_add(META);error.with_retained_progress(p)})?;progress=receipt(step.progress())?;if matches!(step,RetainedCloneStep::Complete(_)){self.phase=2;}},
+   2=>{work+=1;let(value,child)=self.fields.as_mut().ok_or_else(invalid)?.take(RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-size_of::<Option<P>>()-META,..grant})?;*self.patch=value;progress=child;progress.copied_bytes+=size_of::<Option<P>>()+META;self.phase=3;return Ok(RetainedCloneStep::Complete(progress));},
+   _=>return Err(invalid().into()),
   }
   Ok(RetainedCloneStep::Progress(progress))
+  })();semio_framework_value::RetainedWorkOutcome{result,work}
  }
  /// 🛂️ A staged cursor is ready only after the complete original authored-field transfer.
  pub fn staged(&self)->bool{self.phase>=3&&!self.closing}
@@ -51,12 +55,15 @@ impl<R,P:RetainedRowPatch<R>> RetainedRowPatchApply<R,P>{
   if self.index==P::FIELD_COUNT{return Ok(scalar(META));}
   let mut demand=self.patch.as_ref().ok_or_else(invalid)?.exchange_demand(self.index)?;demand.copy_bytes=demand.copy_bytes.checked_add(META).ok_or_else(invalid)?;Ok(demand)
  }
+ /// ⛽️ Quotes the selected fixed original row-field exchange.
+ pub fn exchange_work_demand(&self)->Result<u64,ValueError>{self.exchange_demand()?;Ok(1)}
  /// 🔑️ Only the central applier capability authorizes one validated field exchange in unpublished storage.
- pub fn exchange(&mut self,row:&mut R,capability:ApplyCapability,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+ pub fn exchange(&mut self,row:&mut R,capability:ApplyCapability,grant:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{let mut work=0;let result:Result<_,semio_framework_value::OriginalRetirementFailure>=(||{
   let demand=self.exchange_demand()?;if !retained_mutation_demand_fits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
-  if self.index==P::FIELD_COUNT{self.phase=4;return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:META,..Default::default()}));}
+  work=1;if self.index==P::FIELD_COUNT{self.phase=4;return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:META,..Default::default()}));}
   let progress=self.patch.as_mut().ok_or_else(invalid)?.exchange_field(row,self.index,capability,RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-META,..grant})?;
   self.index+=1;Ok(RetainedCloneStep::Progress(receipt(progress)?))
+  })();semio_framework_value::RetainedWorkOutcome{result,work}
  }
  /// ✅️ Original source ownership remains closeable after the final field exchange.
  pub fn complete(&self)->bool{self.phase==4&&!self.closing}
@@ -70,12 +77,15 @@ impl<R,P:RetainedRowPatch<R>> RetainedRowPatchApply<R,P>{
   Ok(Default::default())
  }
  /// 🪜️ Each returned child and physical backing release is paid before its original owner disappears.
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+ /// ⛽️ Quotes the selected sparse-field or displaced-patch close work.
+ pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{self.close_demand(body)?;if let Some(fields)=self.fields.as_ref(){return if fields.terminal_is_empty(){Ok(1)}else{fields.close_work_demand(body.saturating_sub(META))}}self.retirement.next_owner_work::<P>(self.patch.is_some(),&None,body.saturating_sub(META))}
+ pub fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{let mut work=0;let result:Result<_,semio_framework_value::OriginalRetirementFailure>=(||{
   let demand=self.close_demand(grant.maximum_copy_bytes)?;if !retained_mutation_demand_fits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
-  if let Some(fields)=self.fields.as_mut(){if !fields.terminal_is_empty(){let step=fields.close_step(child(grant))?;return Ok(RetainedCloneStep::Progress(receipt(step.progress())?));}drop(self.fields.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}));}
-  if !self.retirement.is_empty(){let step=self.retirement.step_granted(child(grant)).result?;return Ok(RetainedCloneStep::Progress(receipt(step.progress())?));}
-  if self.patch.is_some(){if let Some(step)=self.retirement.begin_granted(&mut self.patch,child(grant)).result?{return Ok(RetainedCloneStep::Progress(receipt(step.progress())?));}}
+  if let Some(fields)=self.fields.as_mut(){if !fields.terminal_is_empty(){let turn=fields.close_step(child(grant));work+=turn.work;let step=turn.result.map_err(|error|if turn.work==0{error}else{let mut p=error.retained_progress();p.copied_bytes=p.copied_bytes.saturating_add(META);error.with_retained_progress(p)})?;return Ok(RetainedCloneStep::Progress(receipt(step.progress())?));}work+=1;drop(self.fields.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}));}
+  if !self.retirement.is_empty(){let turn=self.retirement.step_granted(child(grant));work+=turn.work;let step=turn.result.map_err(|error|if turn.work==0{error}else{let mut p=error.retained_progress();p.copied_bytes=p.copied_bytes.saturating_add(META);error.with_retained_progress(p)})?;return Ok(RetainedCloneStep::Progress(receipt(step.progress())?));}
+  if self.patch.is_some(){let turn=self.retirement.begin_granted(&mut self.patch,child(grant));work+=turn.work;if let Some(step)=turn.result?{return Ok(RetainedCloneStep::Progress(receipt(step.progress())?));}}
   Ok(RetainedCloneStep::Complete(Default::default()))
+  })();semio_framework_value::RetainedWorkOutcome{result,work}
  }
  /// 🫙️ All genuine source aliases and displaced payload allocations have returned.
  pub fn terminal_is_empty(&self)->bool{self.fields.is_none()&&self.patch.is_none()&&self.retirement.is_empty()}

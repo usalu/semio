@@ -126,15 +126,15 @@ path = "../../../🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🦀�
 version = "1.0.149"
 features = [ "raw_value" ]
 
-[workspace.dependencies.base64_codec]
+[workspace.dependencies.semio-framework-io-base64]
 path = "../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust"
 package = "semio-framework-io-base64"
 
-[workspace.dependencies.framework_hash]
+[workspace.dependencies.semio-framework-hash]
 package = "semio-framework-hash"
 path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust"
 
-[workspace.dependencies.machine]
+[workspace.dependencies.semio-framework-machine]
 path = "../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust"
 package = "semio-framework-machine"
 

@@ -34,10 +34,22 @@ semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-fem-2d-model = { workspace = true }
 semio-s-fem-sqlite = { workspace = true }
+semio-s-fem-receiving = { path = "../../../../../../../../../🧩️receiving/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-trace = { workspace = true }
+serde_json = { workspace = true }
 semio-framework-dsl = { workspace = true }
 
 [[test]]
 name = "fixed_dofs_laws"
 path = "../../🏗️structure/🧪️tests/🔬️fixed-dofs/🦀️.rs"
+
+[[test]]
+name = "cold_reference_graph"
+path = "../../📸️snapshot/cold-tests.rs"
+
+[[test]]
+name = "original_fem_receiving"
+path = "../../📸️snapshot/original-receiving-tests.rs"

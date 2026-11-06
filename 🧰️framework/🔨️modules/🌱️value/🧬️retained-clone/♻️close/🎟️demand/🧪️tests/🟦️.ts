@@ -8,6 +8,10 @@ import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {nestedRetainedCloseDemand,type RetainedCloseDemandSource} from "../🟦️.ts";
 
+test("compound original close failure has one portable lossless receipt",()=>{
+ const law=JSON.parse(readFileSync(new URL("../../🧪️tests/🧫️fixtures/🪢️compound-failure/🔣️.json",import.meta.url),"utf8"));const shape=JSON.parse(readFileSync(new URL("../../🧬️schema/🪢️compound-failure/🔣️.json",import.meta.url),"utf8"));expect(new Ajv2020({strict:true}).compile(shape)(law)).toBe(true);expect(JSON.parse(JSON.stringify({primary:law.primary,workRefusal:law.workRefusal,receiptRefusal:law.receiptRefusal,work:law.work}))).toEqual(law);
+});
+
 test("one original complete close quote visits each child once",()=>{
  expect(new Ajv2020({strict:true}).compile(schema)(fixture)).toBe(true);const database=new Database(":memory:");
  try{for(const row of fixture.cases){

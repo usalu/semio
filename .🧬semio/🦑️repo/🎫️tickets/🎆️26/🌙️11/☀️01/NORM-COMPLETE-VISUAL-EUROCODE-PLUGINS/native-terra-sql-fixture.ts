@@ -1,0 +1,24 @@
+import fs from "node:fs";
+const p="🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔁️transfer/🫴️receiving/🧪️tests/🦀️.rs";
+let s=fs.readFileSync(p,"utf8");
+function replace(a:string,b:string){if(!s.includes(a))throw Error("missing "+a);s=s.replaceAll(a,b)}
+for(const [frame,out] of [["PhysicalExportFrame","()"],["PhysicalImportFrame","()"],["PhysicalExportFrame","Vec<u8>"],["PhysicalImportFrame","SqliteDatabase"]])replace("receive::<"+frame+","+out+">(","receive::<"+frame+","+out+",ValueError>(");
+replace("let mut port=artifact::receiving::Port{control:&mut control,native:artifact::receiving::Direction::Decode(native),body};","let result=(||{let mut port=artifact::receiving::Port{control:&mut control,native:artifact::receiving::Direction::Decode(native),body};");
+replace("let mut port=artifact::receiving::Port{control:&mut control,native:artifact::receiving::Direction::Encode(native),body};","let result=(||{let mut port=artifact::receiving::Port{control:&mut control,native:artifact::receiving::Direction::Encode(native),body};");
+replace("prefix.store(slot.as_ref().unwrap().output.len(),Ordering::Relaxed);result}));","prefix.store(slot.as_ref().unwrap().output.len(),Ordering::Relaxed);result})();semio_framework_value::RetainedWorkOutcome{work:control.performed_work(),result}}));");
+replace("Ok(std::mem::take(&mut slot.as_mut().unwrap().output))}));","Ok(std::mem::take(&mut slot.as_mut().unwrap().output))})();semio_framework_value::RetainedWorkOutcome{work:control.performed_work(),result}}));");
+replace("Ok(std::mem::replace(&mut slot.as_mut().unwrap().database,SqliteDatabase{tables:Vec::new()}))}));","Ok(std::mem::replace(&mut slot.as_mut().unwrap().database,SqliteDatabase{tables:Vec::new()}))})();semio_framework_value::RetainedWorkOutcome{work:control.performed_work(),result}}));");
+replace("import_sqlite_database_receiving_into(&file,slot.as_mut().unwrap(),&mut port)}));","import_sqlite_database_receiving_into(&file,slot.as_mut().unwrap(),&mut port)})();semio_framework_value::RetainedWorkOutcome{work:control.performed_work(),result}}));");
+replace("let error=result.unwrap_err();","let work=result.work;let error=result.result.unwrap_err();assert!(work>0);");
+replace("let file=exported.unwrap();","assert!(exported.work>0);let file=exported.result.unwrap();");
+replace("let actual=imported.unwrap();","assert!(imported.work>0);let actual=imported.result.unwrap();");
+replace("let file=result.unwrap();","assert!(result.work>0);let file=result.result.unwrap();");
+replace("let actual=result.unwrap();","assert!(result.work>0);let actual=result.result.unwrap();");
+replace("error.kind.as_str()","error.kind().as_str()");replace("error.kind,ValueRefusalKind::Canceled","error.kind(),ValueRefusalKind::Canceled");replace("error.message,law[","error.message(),law[");replace("error.message,f[","error.message(),f[");
+replace("native.close_retirement_recipient(Default::default()).unwrap()","{let turn=native.close_retirement_recipient(Default::default());assert_eq!(turn.work,0);turn.result.unwrap()}");
+replace("native.close_retirement_recipient(grant).unwrap()","{let turn=native.close_retirement_recipient(grant);retirement_work+=turn.work;turn.result.unwrap()}");
+replace("let mut cleanup_born=0;let mut cleanup_released=0;","let mut cleanup_born=0;let mut cleanup_released=0;let mut retirement_work=0;");
+replace("let mut extra=0;let mut retired=0;","let mut extra=0;let mut retired=0;let mut retirement_work=0;");
+replace("assert!(!native.has_retirement_owner());assert_eq!(cleanup_released,born+cleanup_born);","assert!(!native.has_retirement_owner());assert!(retirement_work>0);assert_eq!(cleanup_released,born+cleanup_born);");
+replace("assert!(!native.has_retirement_owner());assert_eq!(retired,born+extra);","assert!(!native.has_retirement_owner());assert!(retirement_work>0);assert_eq!(retired,born+extra);");
+fs.writeFileSync(p,s);

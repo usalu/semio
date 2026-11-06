@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-io-control-tests"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Original native IO public ownership and receipt laws"
+
+[package.metadata.semio]
+role = "framework"
+id = "io-control-tests"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🥣️companion.rs"
+
+[dev-dependencies]
+semio-framework-io-control = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-value-control-contract = { path = "../../../../../🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-trace = { workspace = true }
+semio-framework-trace-memory-testing = { path = "../../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
+serde_json = "1.0.140"
+semio-framework-io-schema = { path = "../../../../🧬️schema/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../../../⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-value.workspace = true
+semio-framework-value-native-owned.workspace = true

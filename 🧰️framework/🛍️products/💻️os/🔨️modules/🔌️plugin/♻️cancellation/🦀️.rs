@@ -9,7 +9,7 @@ use semio_framework::{Fault, FaultCode, FaultOrigin};
 use semio_framework_async::{PublicationClaimHandle, PublicationClaim, PublicationPermit};
 use semio_plugin_ownership::bounded_ownership::ArtifactFixedRegistry;
 use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_plugin_ownership::bounded_ownership::{plugin_grant_funds, plugin_typed_owner_demand, plugin_typed_owner_step};
+use semio_plugin_ownership::bounded_ownership::{plugin_grant_funds, plugin_typed_owner_demand, plugin_typed_owner_original};
 use semio_framework_value::{retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, RetirementDemand, ValueError};
 use std::mem::ManuallyDrop;
 #[path="🎟️issuer/🦀️.rs"]

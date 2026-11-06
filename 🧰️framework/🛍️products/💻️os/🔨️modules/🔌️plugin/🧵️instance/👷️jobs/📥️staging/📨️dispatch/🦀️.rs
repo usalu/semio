@@ -15,7 +15,7 @@ use std::future::Future;
 #[cfg(test)]
 use semio_plugin_command::HISTORY_ROWS_BUILT;
 use std::collections::HashMap;
-use semio_plugin_instance_stores::stores_components::InstanceStores;
+use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
 use semio_ui_locale::LocalizedLabel;
 use store::{MemberFactory, Mutation, SpaceMember};
 use protocol::OpText;

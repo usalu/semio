@@ -1,0 +1,8 @@
+import {readFileSync,writeFileSync} from "node:fs";
+const base="🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/";
+for(const [file,before,after] of [
+ ["🕰️history/🏁️replay/checkout.rs","let mut work=0u64;let result=cx.with_native_receiving(|control|{let turn=metadata.advance_in_order(store,result,Some(order),control,grant);","let fuel=cx.fuel_remaining();let mut work=0u64;let result=cx.with_native_receiving(|control|{let turn=metadata.advance_in_order(store,result,Some(order),control,grant,fuel);"],
+ ["🕰️history/🏁️replay/abort.rs","let mut work=0u64;let result=cx.with_native_receiving(|control|{let turn=self.metadata.as_mut().unwrap().advance(store,self.result.as_ref().unwrap(),control,grant);","let fuel=cx.fuel_remaining();let mut work=0u64;let result=cx.with_native_receiving(|control|{let turn=self.metadata.as_mut().unwrap().advance(store,self.result.as_ref().unwrap(),control,grant,fuel);"],
+ ["🕰️history/🏁️replay/🦀️.rs","let mut work=0u64;let result=cx.with_native_receiving(|native|{let turn=owner.advance(store,result,native,grant);","let fuel=cx.fuel_remaining();let mut work=0u64;let result=cx.with_native_receiving(|native|{let turn=owner.advance(store,result,native,grant,fuel);"],
+ ["🔁️replay/🎮️operation/🧬️native/🔗️history/📜️report/🧪️tests/🦀️.rs","let mut work=0u64;let result=cx.with_native_receiving(|control|{let turn=metadata.advance(&mut store,&finished,control,g);","let fuel=cx.fuel_remaining();let mut work=0u64;let result=cx.with_native_receiving(|control|{let turn=metadata.advance(&mut store,&finished,control,g,fuel);"]
+]){const path=base+file;const text=readFileSync(path,"utf8");if(!text.includes(before))throw new Error(`missing metadata fuel caller: ${file}`);writeFileSync(path,text.replace(before,after));}

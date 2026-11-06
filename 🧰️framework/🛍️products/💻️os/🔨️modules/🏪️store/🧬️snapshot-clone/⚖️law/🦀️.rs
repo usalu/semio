@@ -12,10 +12,11 @@ use semio_framework_value::retirement::RetireOwned;
 use std::sync::Arc;
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
 use semio_framework_value_native_owned::{native_decoding::NativeDecodeConstructionRecipient, native_decoding::NativeDecodeProgress};
-struct LawConstruction { original:RetainedCloneGrant, spent:RetainedCloneProgress }
+struct LawConstruction { original:RetainedCloneGrant, spent:RetainedCloneProgress, submitted:RetainedCloneProgress }
 impl NativeDecodeConstructionRecipient for LawConstruction {
- fn grant(&mut self,d:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{if !semio_framework_value::retained_clone::retained_clone_grant_admits(self.original,d){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"law original construction denied"));}Ok(self.original)}
- fn accept(&mut self,g:RetainedCloneGrant,p:RetainedCloneProgress)->Result<(),ValueError>{if !p.fits(g){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"law original construction receipt changed"));}self.spent=self.spent.checked_add(p)?;if !self.spent.fits(self.original){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"law original construction turn exhausted"));}Ok(())}
+ fn submitted(&self)->RetainedCloneProgress{self.submitted}
+ fn grant(&mut self,d:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{let remaining=RetainedCloneGrant{maximum_items:self.original.maximum_items.saturating_sub(self.submitted.copied_items),maximum_copy_bytes:self.original.maximum_copy_bytes.saturating_sub(self.submitted.copied_bytes),maximum_capacity_bytes:self.original.maximum_capacity_bytes.saturating_sub(self.submitted.retained_capacity_bytes),maximum_release_bytes:self.original.maximum_release_bytes.saturating_sub(self.submitted.released_bytes),maximum_depth:self.original.maximum_depth};if !semio_framework_value::retained_clone::retained_clone_grant_admits(remaining,d){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"law original construction denied"));}Ok(remaining)}
+ fn accept(&mut self,g:RetainedCloneGrant,p:RetainedCloneProgress)->Result<(),ValueError>{self.submitted=self.submitted.checked_add(p)?;if !p.fits(g){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"law original construction receipt changed"));}self.spent=self.spent.checked_add(p)?;if !self.spent.fits(self.original){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"law original construction turn exhausted"));}Ok(())}
 }
 
 /// ⚖️ What a lawful preparation published: the post snapshot, the ordered inverse rows and the cumulative physical cost.
@@ -73,7 +74,7 @@ where
     let mut observer=|_:NativeDecodeProgress|!cancelled;
     let prepared = loop {
         turns += 1;
-        let mut construction=LawConstruction{original:grant.retained_grant(),spent:Default::default()};
+        let mut construction=LawConstruction{original:grant.retained_grant(),spent:Default::default(),submitted:Default::default()};
         let step=receiving.receive(grant.retained_grant(),&mut observer,&mut construction,|control|owner.advance(body,grant,control)).unwrap_or_else(|error| panic!("law preparation failed at turn {turns}: {error}"));
         let progress=match &step{ArtifactStoreOneItemPreparationStep::Prepared(_,p)|ArtifactStoreOneItemPreparationStep::Progress(_,p)=>*p,ArtifactStoreOneItemPreparationStep::Blocked=>Default::default()};
         assert!(progress.copied_bytes>=construction.spent.copied_bytes&&progress.retained_capacity_bytes>=construction.spent.retained_capacity_bytes&&progress.released_bytes>=construction.spent.released_bytes,"law enclosing receipt lost its original construction");

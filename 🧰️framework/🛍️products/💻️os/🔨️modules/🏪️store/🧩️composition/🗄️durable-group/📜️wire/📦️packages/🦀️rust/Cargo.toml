@@ -22,7 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-durable-group-testing = ["semio-os-store-one-item-batch/durable-group-testing", "semio-os-store-one-item-publication/durable-group-testing"]
+durable-group-testing = ["semio-framework-os-store-one-item-batch/durable-group-testing", "semio-os-store-one-item-publication/durable-group-testing"]
 
 [dependencies]
 semio-os-dsl = { path = "../../../../../../🗣️dsl/📦️packages/🦀️rust" }
@@ -30,7 +30,7 @@ semio-os-semio = { path = "../../../../../../🧬️semio/📦️packages/🦀�
 semio-os-spr = { path = "../../../../../../📡️spr/📦️packages/🦀️rust" }
 semio-os-store-ledger = { path = "../../../../../📒️ledger/📦️packages/🦀️rust" }
 semio-os-store-canonical-json = { path = "../../../../../🧵️canonical-edit/📦️packages/🦀️rust" }
-semio-os-store-one-item-batch = { path = "../../../../../📬️one-item-owners/📦️packages/🦀️rust" }
+semio-framework-os-store-one-item-batch = { path = "../../../../../📬️one-item-owners/📦️packages/🦀️rust", package = "semio-os-store-one-item-batch"}
 semio-os-store-one-item-publication = { path = "../../../../../🎮️one-item/📬️publication/📦️packages/🦀️rust" }
 semio-os-store-read = { path = "../../../../../🔗️read/📦️packages/🦀️rust" }
 semio-os-store-space-schema = { path = "../../../../../🧬️schema/📦️packages/🦀️rust" }

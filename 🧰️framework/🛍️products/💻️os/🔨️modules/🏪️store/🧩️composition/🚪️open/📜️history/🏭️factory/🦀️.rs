@@ -1,10 +1,10 @@
 //! 🏭️ Closed factory declarations stay paired with the retained input through semantic admission.
 //! Selection is not space or pin authorization; no typed document is hydrated here.
 
-use semio_os_store_member_open::history::dictionary::{MemberHistoryDictionaryLimits, MemberHistoryDictionaryOwner, MemberHistoryDictionaryStep, VerifiedMemberHistoryDictionary};
+use semio_framework_os_store_member_open::history::dictionary::{MemberHistoryDictionaryLimits, MemberHistoryDictionaryOwner, MemberHistoryDictionaryStep, VerifiedMemberHistoryDictionary};
 use semio_framework_value::ErasedSnapshotRetirement;
-use semio_os_store_member_open::{MemberOpenDiagnostic, MemberOpenPhase, MemberOpenProgress};
-use semio_os_store_member_open::history::VerifiedMemberHistoryInput;
+use semio_framework_os_store_member_open::{MemberOpenDiagnostic, MemberOpenPhase, MemberOpenProgress};
+use semio_framework_os_store_member_open::history::VerifiedMemberHistoryInput;
 use crate::lifted_store::MemberFactory;
 use semio_framework_job::StepContext;
 use semio_framework_value::{ValueError, RetirementDemand};
@@ -304,10 +304,10 @@ pub struct SelectedVerifiedMemberHistory<M: MemberFactory> {
 }
 
 impl<M: MemberFactory> SelectedVerifiedMemberHistory<M> {
-    pub fn original_history_close_source(&self,cx:&StepContext<'_>)->Result<semio_os_store_member_open::OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
+    pub fn original_history_close_source(&self,cx:&StepContext<'_>)->Result<semio_framework_os_store_member_open::OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
         self.input.as_ref().ok_or(MemberOpenDiagnostic::Stale)?.original_history_close_source(cx)
     }
-    pub fn original_history_source(&mut self,cx:&StepContext<'_>)->Result<semio_os_store_member_open::OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
+    pub fn original_history_source(&mut self,cx:&StepContext<'_>)->Result<semio_framework_os_store_member_open::OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
         self.input.as_mut().ok_or(MemberOpenDiagnostic::Stale)?.original_history_source(cx)
     }
     pub fn history_limits(&self)->protocol::codec::HistoryReadLimits{self.declaration.history_limits}

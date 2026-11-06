@@ -1,0 +1,2 @@
+import {test,expect} from "bun:test";import Ajv from "ajv";import {Database} from "bun:sqlite";import fixture from "./cursor-init.json";import schema from "./cursor-failure.schema.json";
+test("failed JSON frontier allocation records a zero birth and one attempt",()=>{expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);const db=new Database(":memory:");try{expect(db.query("select 0 failedActual,1 failedWork").get()).toEqual({failedActual:fixture.failedActual,failedWork:fixture.failedWork})}finally{db.close()}});
