@@ -12,7 +12,7 @@ pub use semio_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalO
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::sync::{Arc, Mutex};
 
-/// 🪪️ The authored source of the owned runtime: the root and every child module, one text that the engine identity digests.
+/// 🪪️ The owned runtime source used for engine identity.
 const OWNED_RUNTIME_SOURCE: &str = concat!(
     include_str!("🦀️.rs"),
     include_str!("🧮️owned-constants-and-codec-origin/🦀️.rs"),
@@ -32,7 +32,7 @@ const OWNED_RUNTIME_SOURCE: &str = concat!(
     include_str!("🏗️startup/🦀️.rs"),
 );
 
-/// 🛂️ The neutral test caller admission the plugin host's runtime laws share; this crate's laws drive part of it.
+/// 🛂️ Shared runtime test caller.
 #[cfg(test)]
 pub(crate) use semio_plugin_host_operation::test_native_authority;
 
@@ -51,11 +51,17 @@ pub fn owned_input_echo_guest(channel:u32)->Vec<u8>{owned_guest(channel,true,0,N
 /// 🕰️ Startup crosses the actual original clock import before returning the current channel.
 pub fn owned_clock_guest(channel:u32,binding:u64)->Vec<u8>{owned_guest(channel,false,0,Some(binding))}
 
-/// 📥️ The synthetic input receiver returns a real borrowed-input handback frame from its actual authority suffix.
+/// 📥️ The actual input handback fixture.
 pub fn owned_input_receipt_guest(channel:u32)->Vec<u8>{owned_guest(channel,false,3,None)}
 
 /// ⏳️ The synthetic pending receiver retains its borrowed input through every actual invocation.
 pub fn owned_input_pending_guest(channel:u32)->Vec<u8>{owned_guest(channel,false,4,None)}
+
+/// 🔁️ Poll lends output and actual receipts.
+pub fn owned_poll_guest(channel:u32)->Vec<u8>{owned_guest(channel,false,5,None)}
+
+/// 🕰️ The cleanup export uses its actual budget clock binding through the host import.
+pub fn owned_poll_clock_guest(channel:u32)->Vec<u8>{owned_guest(channel,false,6,None)}
 
 fn owned_guest(channel:u32,input_echo:bool,input_receipt:u8,clock:Option<u64>)->Vec<u8>{
     fn uleb(mut value: u64, output: &mut Vec<u8>) {
@@ -99,9 +105,11 @@ fn owned_guest(channel:u32,input_echo:bool,input_receipt:u8,clock:Option<u64>)->
                 body.push(0x0b);
                 (2, body)
             }
-            OwnedSemioExport::AdmitActorInput if input_receipt!=0=>{let mut body=vec![0];for index in 0..11{body.push(0x41);sleb(2048,&mut body);body.extend([0x20,index+2,0x37,3,8+index*8]);}body.push(0x42);sleb((136i64<<32)|2048,&mut body);body.push(0x0b);(9,body)},
+            OwnedSemioExport::AdmitActorInput if input_receipt!=0=>{let mut body=vec![0];for index in 0..11{body.push(0x41);sleb(2048,&mut body);body.extend([0x20,index+2,0x37,3,8+index*8]);}body.push(0x42);sleb((144i64<<32)|2048,&mut body);body.push(0x0b);(9,body)},
             OwnedSemioExport::AdmitActorInput if input_echo => (9,vec![0x00,0x20,0x01,0xad,0x42,0x20,0x86,0x20,0x00,0xad,0x84,0x0b]),
             OwnedSemioExport::AdmitActorInput=>(9,vec![0x00,0x42,0,0x0b]),
+            OwnedSemioExport::Poll if input_receipt>=5=>{let mut body=vec![0];for index in 0..11{body.push(0x41);sleb(2800,&mut body);body.extend([0x20,index,0x37,3,8+index*8]);}body.push(0x42);sleb((152i64<<32)|2800,&mut body);body.push(0x0b);(5,body)},
+            OwnedSemioExport::CloseActorOutput if input_receipt>=5=>{let mut body=vec![0];if input_receipt==6{body.extend([0x20,3,0x41]);sleb(3008,&mut body);body.extend([0x10,0]);}for index in 0..11{body.push(0x41);sleb(2560,&mut body);body.extend([0x20,index,0x37,3,8+index*8]);}body.push(0x42);sleb((144i64<<32)|2560,&mut body);body.push(0x0b);(5,body)},
             
             OwnedSemioExport::StartJob|OwnedSemioExport::PublishActorFailure|OwnedSemioExport::ReadActorFailure|OwnedSemioExport::AcknowledgeActorFailure|OwnedSemioExport::StepJob|OwnedSemioExport::ReadJobOutput|OwnedSemioExport::AcknowledgeJobOutput|OwnedSemioExport::CancelJob=>(4,vec![0x00,0x00,0x0b]),
             OwnedSemioExport::CloseJobs=>(5,vec![0x00,0x00,0x0b]),
@@ -115,7 +123,7 @@ fn owned_guest(channel:u32,input_echo:bool,input_receipt:u8,clock:Option<u64>)->
     for count in [20,19,5,22]{signatures.extend([0x60,count]);signatures.extend(std::iter::repeat_n(0x7e,count as usize));signatures.extend([1,0x7e]);}
     signatures.extend([0x60,2,0x7e,0x7f,0,0x60,21,0x7f,0x7f]);signatures.extend(std::iter::repeat_n(0x7e,19));signatures.extend([1,0x7e]);
     section(1,signatures,&mut core);
-    if clock.is_some(){let module="semio:framework/pure@1.0.0";let name="operation-clock-us";let mut imports=vec![1];uleb(module.len()as u64,&mut imports);imports.extend(module.as_bytes());uleb(name.len()as u64,&mut imports);imports.extend(name.as_bytes());imports.extend([0,8]);section(2,imports,&mut core);}
+    if clock.is_some()||input_receipt==6{let module="semio:framework/pure@1.0.0";let name="operation-clock-us";let mut imports=vec![1];uleb(module.len()as u64,&mut imports);imports.extend(module.as_bytes());uleb(name.len()as u64,&mut imports);imports.extend(name.as_bytes());imports.extend([0,8]);section(2,imports,&mut core);}
     let mut functions = Vec::new();
     uleb(types.len() as u64, &mut functions);
     functions.extend(&types);
@@ -130,7 +138,7 @@ fn owned_guest(channel:u32,input_echo:bool,input_receipt:u8,clock:Option<u64>)->
         uleb(export.core_name().len() as u64, &mut exports);
         exports.extend(export.core_name().as_bytes());
         exports.push(0);
-        uleb(index as u64+u64::from(clock.is_some()), &mut exports);
+        uleb(index as u64+u64::from(clock.is_some()||input_receipt==6), &mut exports);
     }
     section(7, exports, &mut core);
     let mut code = Vec::new();
@@ -140,7 +148,7 @@ fn owned_guest(channel:u32,input_echo:bool,input_receipt:u8,clock:Option<u64>)->
         code.extend(body);
     }
     section(10, code, &mut core);
-    if input_receipt!=0{let mut data=vec![1,0,0x41];sleb(2048,&mut data);data.push(0x0b);uleb(136,&mut data);data.extend(b"SAC3");data.extend([4,input_receipt&3,0,0]);data.resize(data.len()+128,0);section(11,data,&mut core);}
+    if input_receipt!=0{let escrow=[128,12,0,0,48,0,0,0];let mut data=vec![if input_receipt>=5{5}else{2},0,0x41];sleb(2048,&mut data);data.push(0x0b);uleb(144,&mut data);data.extend(b"SAC3");data.extend([4,if input_receipt>=5{3}else{input_receipt&3},0,0]);data.resize(data.len()+128,0);data.extend(escrow);if input_receipt>=5{data.extend([0,0x41]);sleb(2400,&mut data);data.push(0x0b);uleb(4,&mut data);data.extend(b"true");data.extend([0,0x41]);sleb(2560,&mut data);data.push(0x0b);uleb(144,&mut data);data.extend(b"SAC3");data.extend([2,1,0,0]);data.resize(data.len()+128,0);data.extend(escrow);data.extend([0,0x41]);sleb(2800,&mut data);data.push(0x0b);uleb(152,&mut data);data.extend(b"SAC3");data.extend([5,3,0,0]);data.resize(data.len()+128,0);data.extend(escrow);data.extend(2400u32.to_le_bytes());data.extend(4u32.to_le_bytes());}data.extend([0,0x41]);sleb(3200,&mut data);data.push(0x0b);uleb(48,&mut data);data.extend(b"SRE1");data.extend([0;4]);for v in [101u64,1,202,1,0]{data.extend(v.to_le_bytes());}section(11,data,&mut core);}
     let mut component = b"\0asm\x0d\0\x01\0".to_vec();
     section(1, core, &mut component);
     component
@@ -148,7 +156,7 @@ fn owned_guest(channel:u32,input_echo:bool,input_receipt:u8,clock:Option<u64>)->
 
 }
 
-/// 🧮️ The heap witness the crate's allocation laws read through `semio_framework_trace::observe_heap_allocations_on_this_thread`.
+/// 🧮️ Runtime allocation witness.
 #[cfg(test)]
 #[global_allocator]
 static OWNED_RUNTIME_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
@@ -170,7 +178,7 @@ pub use original_unit::OwnedOriginalUnitCall;
 #[path="🎟️call/🦀️.rs"]
 mod original_call;
 pub use original_call::{OwnedOriginalCallStatus,OwnedOriginalCallProgress,OwnedOriginalCallResult};
-pub use semio_framework_plugin_interpreter::Value as OriginalCoreValue;
+pub use semio_plugin_interpreter::Value as OriginalCoreValue;
 
 #[path="🏗️startup/🦀️.rs"]
 mod original_startup;

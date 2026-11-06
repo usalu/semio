@@ -1,0 +1,1 @@
+const fs=require('fs'),source=fs.readFileSync('🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/🎟️source/🦀️.rs','utf8');console.log([...new Set([...source.matchAll(/"([^"\r\n]{40,})"/g)].map(match=>match[1]))].join('\n'));

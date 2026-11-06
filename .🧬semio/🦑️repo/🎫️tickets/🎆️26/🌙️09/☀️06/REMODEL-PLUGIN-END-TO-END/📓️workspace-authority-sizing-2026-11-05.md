@@ -1,0 +1,11 @@
+# Full Workspace Authority Sizing
+
+This is a deliberate own authority-size change, not a restart based on elapsed age, a source edit or an observation timeout. Actual snapshot1793883753381 maps the exact full Remodel --workspace command (captured26776, parent53704, handle7986) to four admitted jobs/4356MB, observed540MB, in cargo:workspace-selection without a compiler lease. Actual queue output shows required one-job native/oracle gates waiting with all16cores booked. Processfacts1793883801568 confirms this owned subtree has no Cargo/rustc child, only a read-only process-enumeration child.
+
+Root chose normal requested one-core authority for the same full unfiltered suite, accepting potentially longer native compilation to release three currently reserved cores for the independent acceptance gates. Engine independently found no scope/authority objection. No cap, governor, queue priority, Original or peer reservation was overridden. There is no live-resize operation in the previously inspected public capacity interface.
+
+Only owned7986 received Ctrl-C and returned exit1, with no compiler/test verdict claimed. Snapshot1793883829361 confirms old26776/53704 holders/admission absent; processfacts1793883834284 confirms all known owned main/enumeration PIDs gone. One replacement10411 was then launched: repo cargo --parallelism=1 --store=shared --configuration=prototype -- test --manifest-path ✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/Cargo.toml --workspace --message-format=short, with output in generated/workspace-one-job.log. All56members and library/integration/doctest coverage remain required. The requested one core is not claimed as a wider future compiler grant. Actual admission and test outcome remain pending.
+
+The existing Hub60548, WASM13885, JS97244, host64120 and all worker-owned jobs remain untouched. No peer process or lock was changed.
+
+Later observations: corrected Ajv/SQLite39624 was actually admitted and completed exit0 with279assertions; native presentation4716 also advanced into admitted Cargo preparation. These observed transitions do not establish sole causal attribution to the reservation change. Root inspected workspace-one-job capacity admission lines: ["[capacity] admitted cargo: 1 job(s), 2772 MB reserved (23071 MB available, 4096 MB floor)"]. No wider compiler authority is assumed.

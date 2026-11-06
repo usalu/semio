@@ -1,8 +1,8 @@
 //! 🧪️ Output window — the read-only inferred canvas, its staleness guard and its action roster.
 
 use crate::editor::bitmap::transient::BitmapTransient;
-use semio_framework_plugin::SurfaceKind;
-use semio_framework_plugin::ToolRunView;
+use semio_plugin::SurfaceKind;
+use semio_plugin::ToolRunView;
 use crate::editor::bitmap::modes::edit::windows::output::*;
 use crate::editor::bitmap::modes::edit::windows::output::config::BitmapOutputWindowConfig;
 use crate::standards::v1::subsets::any::io::text::snapshot::decode_base64;
@@ -114,7 +114,7 @@ fn a_contradiction_transient_paints_a_labelled_overlay_not_a_silent_empty() {
 #[test]
 fn a_partial_fill_payload_paints_differently_from_empty_and_finished() {
     use crate::editor::bitmap::modes::edit::tools::fill::{self as fill_tool, payload_from_assignment};
-    use semio_framework_plugin::ToolRunView;
+    use semio_plugin::ToolRunView;
     use semio_framework_tool_run::{ToolRunId, ToolRunIdentity, ToolRunState};
 
     let snapshot = crate::examples::rooms_16::snapshot();

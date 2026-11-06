@@ -98,7 +98,7 @@ pub fn norm_bounded_contract() -> ToolExecutionContract {
 /// dispatches, and inherits every retained-command constant, reducer, factory and store preparation
 /// below. `dispatch_retained` MUST route into the app's `🎮️commands/*` bodies, which stay the sole
 /// authority for what a norm command does.
-pub trait NormRetainedEditor: semio_framework_plugin::ArtifactEditor<Config = NoConfig, ConfigMutation = NoConfigMutation, DraftMutation = semio_framework_plugin::NoDraftMutation> {
+pub trait NormRetainedEditor: semio_plugin::ArtifactEditor<Config = NoConfig, ConfigMutation = NoConfigMutation, DraftMutation = semio_plugin::NoDraftMutation> {
     const TOOL_IDS: &'static [&'static str] = NORM_RETAINED_TOOL_IDS;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = NORM_PUBLICATION_CONTRACTS;
     type Family: NormFamily<Document = Self::Snapshot, Mutation = Self::Mutation>;
@@ -113,12 +113,12 @@ pub trait NormRetainedEditor: semio_framework_plugin::ArtifactEditor<Config = No
     fn selected_check_window_mutation(command: &Self::Command) -> Option<semio_s_plugin_norm_results_config::mutations::NormResultsWindowConfigMutation>;
 
     /// 🔗️ The view effects of a click on a check row (the selection of its owner entity, see [`live_check_focus_effects`]); none for apps without a viewport.
-    fn check_focus_effects(_command: &Self::Command, _document: &Self::Snapshot) -> Vec<semio_framework_plugin::Effect> {
+    fn check_focus_effects(_command: &Self::Command, _document: &Self::Snapshot) -> Vec<semio_plugin::Effect> {
         Vec::new()
     }
 
     /// 🎹️ Interaction effects of an ephemeral view command, resolved from its captured transient and interaction roots.
-    fn view_focus_effects(_command: &Self::Command, _document: &Self::Snapshot, _transient: &Self::Transient, _interaction: &protocol::InteractionState) -> Vec<semio_framework_plugin::Effect> {
+    fn view_focus_effects(_command: &Self::Command, _document: &Self::Snapshot, _transient: &Self::Transient, _interaction: &protocol::InteractionState) -> Vec<semio_plugin::Effect> {
         Vec::new()
     }
 
@@ -130,7 +130,7 @@ pub fn dispatch_norm_command<A: NormRetainedEditor>(
     command: &A::Command,
     doc: &ArtifactView<'_, A::Snapshot>,
     cfg: &ConfigView<'_, NoConfig>,
-    view: Option<&semio_framework_plugin::ViewModel>,
+    view: Option<&semio_plugin::ViewModel>,
 ) -> NormRetainedCommandResult<A::Mutation> {
     let Some(mutation) = A::selected_check_window_mutation(command) else {
         return A::dispatch_retained(command, doc, cfg);
@@ -156,11 +156,11 @@ pub fn norm_retained_reduce<A: NormRetainedEditor>(
     command: &A::Command,
     snapshot: &A::Snapshot,
     config: &A::Config,
-    history: &semio_framework_plugin::HistoryView,
+    history: &semio_plugin::HistoryView,
     interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<A>>>,
-    operation: &semio_framework_plugin::AppOperationContext,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<semio_plugin::EditorApp<A>>>,
+    operation: &semio_plugin::AppOperationContext,
 ) -> NormRetainedCommandResult<A::Mutation> {
     if !A::TOOL_IDS.contains(&A::command_id(command)) {
         return Err(Fault::from("norm-command-retained-route-rejected"));
@@ -194,8 +194,8 @@ impl<A: NormRetainedEditor> NormBoundedCommandJobFactory<A> {
 }
 
 impl<A: NormRetainedEditor> semio_framework::ToolJobFactory for NormBoundedCommandJobFactory<A> {
-    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<semio_framework_plugin::EditorApp<A>>;
-    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<semio_framework_plugin::EditorApp<A>>;
+    type Payload = semio_plugin::retained_command::ArtifactRetainedCommandPayload<semio_plugin::EditorApp<A>>;
+    type Job = semio_plugin::retained_command::ArtifactRetainedCommandJob<semio_plugin::EditorApp<A>>;
 
     fn keys(&self) -> &[semio_framework::ToolFactoryKey] {
         &self.keys
@@ -205,22 +205,22 @@ impl<A: NormRetainedEditor> semio_framework::ToolJobFactory for NormBoundedComma
         NORM_RETAINED_PAYLOAD_SCHEMA
     }
 
-    fn classification(&self) -> semio_framework_plugin::InteractiveJobClassification {
-        semio_framework_plugin::InteractiveJobClassification::Migrated
+    fn classification(&self) -> semio_plugin::InteractiveJobClassification {
+        semio_plugin::InteractiveJobClassification::Migrated
     }
 
     fn execution_contract(&self) -> ToolExecutionContract {
         norm_bounded_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: NORM_RETAINED_RAW_BYTES, checkpoint_resume: true);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: NORM_RETAINED_RAW_BYTES, checkpoint_resume: true);
 
 }
 
-impl<A: NormRetainedEditor> semio_framework_plugin::ArtifactOwnedToolJobFactory for NormBoundedCommandJobFactory<A> {
-    type Owner = semio_framework_plugin::EditorApp<A>;
+impl<A: NormRetainedEditor> semio_plugin::ArtifactOwnedToolJobFactory for NormBoundedCommandJobFactory<A> {
+    type Owner = semio_plugin::EditorApp<A>;
     const TOOL_IDS: &'static [&'static str] = A::TOOL_IDS;
-    const DOCUMENT_SCHEMA: &'static str = <A as semio_framework_plugin::ArtifactEditor>::DOCUMENT_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = <A as semio_plugin::ArtifactEditor>::DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = A::PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️RetainedCommands
@@ -238,16 +238,16 @@ where
 }
 
 /// 🧵️ `ArtifactEditor::build_tool_job` for every norm editor.
-pub fn build_norm_tool_job<A: NormRetainedEditor>(request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<A>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-    let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "norm-command-retained-producer-request-absent"))?;
+pub fn build_norm_tool_job<A: NormRetainedEditor>(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::EditorApp<A>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+    let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "norm-command-retained-producer-request-absent"))?;
     if !A::TOOL_IDS.contains(&original.tool_id.as_str()) {
         return Ok(false);
     }
     let tool_id = A::command_id(&original.command);
     if tool_id != original.tool_id {
-        return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "norm-command-tool-mismatch").into());
+        return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "norm-command-tool-mismatch").into());
     }
-    semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, A::command_id, NORM_RETAINED_RAW_BYTES, 1, true, |request| -> Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<A>>> { Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, norm_retained_reduce::<A>, norm_bounded_extent::<A>)) })
+    semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, A::command_id, NORM_RETAINED_RAW_BYTES, 1, true, |request| -> Box<dyn semio_plugin::retained_command::ArtifactCommandWork<semio_plugin::EditorApp<A>>> { Box::new(semio_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, norm_retained_reduce::<A>, norm_bounded_extent::<A>)) })
 }
 //#endregion 🔌️EditorOverrides
 

@@ -9,7 +9,7 @@ impl PluginArtifactChannel {
         self.pending_command_closes.terminal_is_empty()
     }
 
-    pub fn new(repo_root: PathBuf, entry: PluginRegistryEntry, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy, operation_policy:semio_framework_os_mcp_port::channel_port::HostOperationPolicy) -> Result<Self, GatewayError> {
+    pub fn new(repo_root: PathBuf, entry: PluginRegistryEntry, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String, host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy, operation_policy:semio_os_mcp_port::channel_port::HostOperationPolicy) -> Result<Self, GatewayError> {
         let wasm_path = resolve_plugin_wasm_path(&repo_root, &entry)?;
         let runtime = shared_plugin_runtime()?;
         let compiled = scoped_compiled_component(runtime.as_ref(), &entry.plugin_id, ComponentBytes::File(&wasm_path), &ActivationScope::detached())?;
@@ -20,14 +20,14 @@ impl PluginArtifactChannel {
     /// a repo build read from disk, or the execution-target component a Hub authorized and served.
     /// Everything past the bytes is identical, which is exactly the point: a hub-bound agent's guest
     /// is the SAME guest a local one gets, not a second code path with its own behaviour.
-    pub fn from_component(bytes: &[u8], plugin_id: String, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy, operation_policy:semio_framework_os_mcp_port::channel_port::HostOperationPolicy) -> Result<Self, GatewayError> {
+    pub fn from_component(bytes: &[u8], plugin_id: String, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String, host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy, operation_policy:semio_os_mcp_port::channel_port::HostOperationPolicy) -> Result<Self, GatewayError> {
         let runtime = shared_plugin_runtime()?;
         let compiled = shared_compiled_component(runtime.as_ref(), &plugin_id, bytes)?;
         Ok(Self::from_compiled(runtime, compiled, plugin_id, descriptor, app_ref, actor_label, host_driver_policy, operation_policy))
     }
 
     /// 🧩️ A channel over a component this process already compiled — see [`scoped_compiled_component`].
-    pub fn from_compiled(runtime: Arc<GuestRuntimes>, compiled: semio_plugin_host::CompiledHandle, plugin_id: String, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy, operation_policy:semio_framework_os_mcp_port::channel_port::HostOperationPolicy) -> Self {
+    pub fn from_compiled(runtime: Arc<GuestRuntimes>, compiled: semio_plugin_host::CompiledHandle, plugin_id: String, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String, host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy, operation_policy:semio_os_mcp_port::channel_port::HostOperationPolicy) -> Self {
         Self {
             runtime,
             compiled,
@@ -41,7 +41,7 @@ impl PluginArtifactChannel {
             startup_instance_custody:None,
             startup_failure:None,
             operation_refusal:None,
-            host_driver:Arc::new(semio_framework_plugin_host::GuestRelayWakeDriver::new(host_driver_policy,semio_framework_job::default_now_us,Box::new(||false)).expect("headless wake driver admission")),
+            host_driver:Arc::new(semio_plugin_host::GuestRelayWakeDriver::new(host_driver_policy,semio_framework_job::default_now_us,Box::new(||false)).expect("headless wake driver admission")),
             instances: HashMap::new(),
             closing_instances:std::collections::BTreeSet::new(),
             pending_exchanges: PendingExchangeRegistry::new(),
@@ -62,29 +62,7 @@ impl PluginArtifactChannel {
         std::mem::take(&mut self.backbone_egress)
     }
 
-    /// 🧵️ Binds this guest instance's DOCUMENT BACKBONE to this channel's own actor uri, once.
-    ///
-    /// 🐛️ A guest publishes `Effect::SendMessage { target: Backbone { uri } }` **only for an
-    /// instance a host has explicitly bound** (`🔌️plugin/🦀️.rs`'s
-    /// `plugin_handle_document_backbone_binding` → `document_backbone_effects`). Without this
-    /// command the agent's committed transaction is real inside the guest — `action_invoke` answers
-    /// `SUCCEEDED` with a moved `headEditId` — and its envelopes are published to nobody, so the hub
-    /// ledger stays at `head_seq 0`. Measured live on hub 7681, 2026-09-22
-    /// (`🗑️generated/m10-7681-note-status-after.txt`): an invoke that succeeded against a document
-    /// whose ledger never moved. A silent success is the worst shape this lane can have, which is
-    /// why the bind is a hard precondition of dispatch rather than a best-effort extra.
-    ///
-    /// 🪢 The uri is [`Self::actor_label`]'s value, which is the SAME string
-    /// [`document_backbone_payload`] fences egress on — bind and relay cannot drift apart because
-    /// they read one field.
-    ///
-    /// 🧭️ Ordering: the guest refuses a bind-then-load
-    /// (`plugin.document-backbone.load-while-bound`), so this runs AFTER
-    /// [`Self::load_session_document`], never before.
-    ///
-    /// 🧵️ A bind turn can already carry egress — the guest flushes whatever its store had
-    /// pending onto the freshly bound backbone — so it is captured here exactly as a command
-    /// turn's is, rather than left in the turn and lost.
+    /// 🧵️ Binds this guest instance's DOCUMENT BACKBONE to this channel's own actor uri, once. [Design notes](README.md#source-notes-65).
     pub fn ensure_document_backbone(&mut self, instance: u32) -> Result<(), Fault> {
         if self.backbone_bindings.contains(&instance) {
             return Ok(());
@@ -129,21 +107,7 @@ impl PluginArtifactChannel {
         self.session_artifact_id = artifact_id;
     }
 
-    /// 📥️ Makes `artifact_id`'s canonical pair this guest's session document — one stepped archive
-    /// load ([`Self::load_document_archive`]), the same whole-document load every host and this file's
-    /// `ExportMedia` arm drive, so nothing about the bytes is interpreted here. `scope` hears its progress
-    /// and may cancel it; a cancelled or faulted load leaves the guest's previous document as it was and
-    /// records nothing.
-    ///
-    /// 🧭️ Idempotent per guest: a channel that already holds this artifact's pair does nothing, so
-    /// the load happens once per (instance, artifact) and never once per command — re-loading on
-    /// every exchange would discard the guest's own uncommitted transaction state between
-    /// `TransactionPrepare` and `TransactionCommit`, which is the whole two-phase contract.
-    /// [`Self::discard_instance`] forgets it, because a thrown-away guest holds nothing.
-    ///
-    /// 🔀️ A guest that holds ANOTHER artifact (its app's session document moved to a document the agent opened since,
-    /// [`route_session_artifact`]) is thrown away first: a guest is only ever seeded fresh, never while its backbone is
-    /// bound to a different document.
+    /// 📥️ Makes `artifact_id`'s canonical pair this guest's session document — one stepped archive [Design notes](README.md#source-notes-132).
     pub fn load_session_document(&mut self, instance: u32, artifact_id: &str, pack: &[u8], spr: &[u8], archive: Option<&[u8]>, scope: &ActivationScope) -> Result<(), Fault> {
         match self.session_documents.get(&instance) {
             Some(loaded) if loaded == artifact_id => return Ok(()),
@@ -163,20 +127,7 @@ impl PluginArtifactChannel {
         Ok(())
     }
 
-    /// 🗃️ Makes `pack`/`spr` `instance`'s whole document through the stepped, ACK-owned archive load
-    /// (`📓️api-stepped-document-load.md` §2, driven by `store::DocumentArchiveLoadHost`): `LoadDocumentArchive`
-    /// with no members, `PollDocumentArchiveLoad` until a terminal status, then `AcknowledgeDocumentArchiveLoad`,
-    /// each one bounded command exchange, so a long history folds across many guest turns instead of inside one.
-    ///
-    /// 📊️ Every polled status reaches `scope` as [`ActivationPhase::LoadingDocument`] at `completed / total`.
-    ///
-    /// 🛑️ A cancel `scope` reports, or [`DOCUMENT_LOAD_WALL_BUDGET`] running out, cancels the load in the guest and
-    /// keeps polling until the guest says it restored the previous document with zero trace; the caller gets
-    /// `job.cancelled` or `budget.exceeded`. A load that won that race is a loaded document. A guest that does not
-    /// settle its cancel within one more [`COMMAND_RESUME_WALL_BUDGET`] is discarded, so the next command starts on
-    /// a fresh instance.
-    ///
-    /// ⚠️ A guest fault, terminal or refused, is the guest's own typed fault with its own code (`document.loading`, …).
+    /// 🗃️ Makes `pack`/`spr` `instance`'s whole document through the stepped, ACK-owned archive load [Design notes](README.md#source-notes-166).
     pub(crate) fn load_document_archive(&mut self, instance: u32, pack: &[u8], spr: &[u8], scope: &ActivationScope) -> Result<(), Fault> {
         self.load_archive_carrier(instance, store::DocumentArchivePack { parent_pack: pack.to_vec(), parent_spr: spr.to_vec(), members: Vec::new() }, scope)
     }

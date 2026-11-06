@@ -1,10 +1,10 @@
 //! 🧪️ The concrete type recipe agrees with the neutral ownership declaration and genuine app-associated member family.
 use super::*;
-use semio_framework_plugin::WindowTransientOwner;
+use semio_plugin::WindowTransientOwner;
 #[test]
 fn raster_native_registration_keeps_its_actual_lane_and_window_types(){
  let fixture:semio_framework_value::serde_json::Value=semio_framework_value::serde_json::from_str(include_str!("../fixture.json")).unwrap();
- fn registration<R:semio_framework_plugin::original_instance_registration::OriginalInstanceRegistration<EditorApp<RasterPlayApp>,<RasterPlayApp as ArtifactEditor>::Members>>(){}
+ fn registration<R:semio_plugin::original_instance_registration::OriginalInstanceRegistration<EditorApp<RasterPlayApp>,<RasterPlayApp as ArtifactEditor>::Members>>(){}
  registration::<RasterNativeRegistration>();
  fn presence<D:OriginalInstanceDeclarations<EditorApp<RasterPlayApp>,Ephemeral=crate::app::original_ephemeral::RasterEphemeralDeclaration>>(){}
  presence::<RasterInstanceDeclarations>();

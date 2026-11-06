@@ -1,6 +1,6 @@
+//! 🧳️ Native receiving keeps its exact original source until the receiver and staged output settle.
 use crate::OriginalReceivingPrimary;
 use crate::RetainedWorkOutcome;
-//! 🧳️ Native receiving keeps its exact original source until the receiver and staged output settle.
 use super::{NativeReceive,NativeReceiver};
 use crate::{NativeDecodeControl,RetirementDemand,ValueError,ValueRefusalKind,retirement::{RetireOwned,RetirementCursor,RetirementStep},retained_clone::{RetainedCloneSource,RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneClose,retained_clone_grant_admits}};
 use std::mem::{ManuallyDrop,size_of};

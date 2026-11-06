@@ -36,7 +36,7 @@ fn borrowed_sink_one_work_resumes_exact_canonical_output_and_physically_closes()
 }
 #[test]
 fn borrowed_sink_cancel_keeps_frontier_and_exact_written_prefix_for_funded_close(){
- let source=semio_framework_pack_json::DslValue::String("雪\\\"\n".repeat(100));
+ let source=semio_framework_value::DslValue::String("雪\\\"\n".repeat(100));
  for cut in[0,1,2,3,4,8,17]{
   let mut cursor=JsonBorrowedSinkCursor::empty(8).unwrap();let calls=std::cell::Cell::new(0usize);let mut observer=|_|{let value=calls.get();calls.set(value+1);value<cut};let mut control=NativeEncodeControl::new(65536,&mut observer);
   let mut output=Vec::new();let mut refused=false;
@@ -49,3 +49,20 @@ fn borrowed_sink_cancel_keeps_frontier_and_exact_written_prefix_for_funded_close
   assert!(refused);assert_eq!(cursor.written_bytes(),output.len());let canonical=semio_framework_pack_json::to_json_string(&source);assert!(canonical.as_bytes().starts_with(&output));close(&mut cursor);
  }
 }
+
+struct QuotedSource(u128);
+impl semio_framework_pack_json::JsonWriteSource for QuotedSource{
+ fn node_at_path(&self,path:&[usize])->Result<semio_framework_pack_json::JsonWriteNode<'_>,semio_framework_value::ValueError>{assert!(path.is_empty());Ok(semio_framework_pack_json::JsonWriteNode::QuotedUnsigned(self.0))}
+ fn object_key_at_path(&self,_:&[usize],_:usize)->Result<&str,semio_framework_value::ValueError>{panic!("quoted scalar has no object keys")}
+}
+#[test]
+fn quoted_unsigned_sink_matches_shared_decimal_oracle_with_exact_heap_receipts(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🔢️decimal/🔣️.json")).unwrap();
+ for row in law["cases"].as_array().unwrap(){let source=QuotedSource(row["value"].as_str().unwrap().parse().unwrap());let expected=row["expected"].as_str().unwrap();assert_eq!(serde_json::to_string(row["value"].as_str().unwrap()).unwrap(),expected);let mut cursor=JsonBorrowedSinkCursor::empty(1).unwrap();let mut observer=|_|true;let mut control=NativeEncodeControl::new(128,&mut observer);let mut output=Vec::new();
+  for _ in 0..128{if cursor.is_complete(){break}let mut bytes=[0;7];let g=grant(cursor.next_demands(bytes.len(),4096).unwrap());let(before,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.step(&source,&mut bytes,RetainedCloneGrant{maximum_items:0,..g},1,&mut control));assert_eq!(before.result.unwrap().progress,Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.step(&source,&mut bytes,g,1,&mut control));let step=step.result.unwrap();assert!(step.progress.fits(g));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress.retained_capacity_bytes,step.progress.released_bytes));output.extend_from_slice(&bytes[..step.written_bytes]);}
+  assert!(cursor.is_complete());assert_eq!(output,expected.as_bytes());close(&mut cursor);
+ }
+}
+
+#[path="../../../👁️borrow/🧪️tests/🦀️.rs"]
+mod native_projection;

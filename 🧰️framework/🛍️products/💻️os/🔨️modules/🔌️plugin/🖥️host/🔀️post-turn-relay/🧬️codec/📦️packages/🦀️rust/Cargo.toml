@@ -26,9 +26,9 @@ doctest = false
 semio-framework-actor = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-value = { workspace = true }
-semio-framework-plugin-host-post-turn-relay = { path = "../../../📦️packages/🦀️rust" }
-semio-framework-plugin-host-wake = { path = "../../../../🔔️wake/📦️packages/🦀️rust" }
-semio-framework-plugin-host-guest-runtime = { path = "../../../../🎭️guest-runtime/📦️packages/🦀️rust" }
+semio-plugin-host-post-turn-relay = { path = "../../../📦️packages/🦀️rust" }
+semio-plugin-host-wake = { path = "../../../../🔔️wake/📦️packages/🦀️rust" }
+semio-plugin-host-guest-runtime = { path = "../../../../🎭️guest-runtime/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 serde_json = { workspace = true }

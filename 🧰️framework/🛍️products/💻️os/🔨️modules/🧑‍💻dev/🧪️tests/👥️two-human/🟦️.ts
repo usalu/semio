@@ -1,4 +1,6 @@
-import {ensureRepositoryBrowserPathV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts";
+import { checkScriptInvocation, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { withPreparedBrowserV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🚀️startup/🟦️.ts";
+import {ensureRepositoryBrowserPathV1,prepareRepositoryBrowserV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts";
 /** 👥️ Two humans, one hub, every kind the hub can create — driven in two isolated browser profiles of the React `s` shell.
  *
  * Per kind the hub's creation catalog offers: A creates it from the Space app (the creation saga opens it for A), B opens it
@@ -17,18 +19,26 @@ import {ensureRepositoryBrowserPathV1} from "../../../../../🦑️repo/🔨️m
 
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
+import { browserLaunchOptionsV1, PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 import { readMatrixPins, withDevServe } from "../🧮️program-matrix/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "@semio-tech/repo-test/acceptance/orchestration";
 import { activate, boot, clickRowAction, dialog, faultsSince, type Human, openSessions, pause, readStatus, selectOption, type Session, signIn, started, submitDialog, until, waitNamedRow, waitRow } from "./🔑️sessions/🟦️.ts";
 import { awaitMounted, awaitSharedSpace, creatableKinds, createArtifact, openSpace, PLUGIN_BY_KIND, settleHome } from "./🏠️space-creation-and-edits/🟦️.ts";
 import type { KindRow, KindTimings, TwoHumanJourney, TwoHumanOptions, TwoHumanReport } from "./📋️run-types/🟦️.ts";
+import {requiredJourneyChecksPass} from "./📋️run-types/🟦️.ts";
 import { JOURNEYS, seedSharedSpaceThroughHub } from "./🧭️journeys/🟦️.ts";
+import {createDocumentTransportControl} from "./📡️transport/🟦️.ts";
+import reconnectPolicy from "./🧭️journeys/🧬️reconnect.json";
 
 //#region 🔖️TwoHuman
 /** 👥️ Runs the two-human journey over every selected creatable kind; the report is flushed after every kind and the
  * signal ends the run after the current kind. */
 export async function runTwoHuman(repoRoot: string, options: TwoHumanOptions): Promise<TwoHumanReport> {
+  const transport=options.journey==="reconnect"?await createDocumentTransportControl(options.hub,reconnectPolicy.maximumOfflineMs,options.serves):undefined;
+  try{return await runTwoHumanWithTransport(repoRoot,options,transport)}finally{await transport?.close()}
+}
+
+async function runTwoHumanWithTransport(repoRoot:string,options:TwoHumanOptions,transport?:Awaited<ReturnType<typeof createDocumentTransportControl>>):Promise<TwoHumanReport>{
   const pins = readMatrixPins();
   const outDir = join(options.outDir, options.tag);
   mkdirSync(outDir, { recursive: true });
@@ -36,8 +46,9 @@ export async function runTwoHuman(repoRoot: string, options: TwoHumanOptions): P
   const report: TwoHumanReport = { tag: options.tag, journey: options.journey, hub: options.hub, serves: options.serves, locale: browserLocale, startedAt: new Date().toISOString(), spaceId: options.spaceId, kinds: [], rows: [], misses: [] };
   ensureRepositoryBrowserPathV1(repoRoot,process.env);
   const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
-  const browser = await chromium.launch({ headless: true, args: ["--use-angle=metal", "--ignore-gpu-blocklist"] });
-  const sessions = await openSessions(browser, options.serves, options.humans, browserLocale);
+  const launch=browserLaunchOptionsV1();
+  const browser = await chromium.launch(transport?{...launch,args:[...launch.args,"--proxy-bypass-list=<-loopback>"]}:launch);
+  const sessions = await openSessions(browser, options.serves, options.humans, browserLocale,transport?.proxyUrl).catch(async error=>{await browser.close();throw error});
   const [A, B] = sessions as [Session, Session];
   const flush = (): void => {
     writeFileSync(join(outDir, "report.json"), JSON.stringify(report, null, 2));
@@ -84,7 +95,9 @@ export async function runTwoHuman(repoRoot: string, options: TwoHumanOptions): P
       }
       const cursors = [A.lines.length, B.lines.length] as const;
       const row: KindRow = { kindId: kind.kindId, label: kind.label, checks: {}, faults: { A: [], B: [] }, pass: false };
+      const duplicateChecks=new Set<string>();
       const check = (name: string, pass: boolean, detail: unknown): void => {
+        if(name in row.checks)duplicateChecks.add(name);
         row.checks[name] = { pass, detail };
         log(`  ${kind.kindId} ${name}: ${pass ? "PASS" : "FAIL"} ${typeof detail === "string" ? detail : JSON.stringify(detail)}`);
       };
@@ -111,24 +124,25 @@ export async function runTwoHuman(repoRoot: string, options: TwoHumanOptions): P
         }, 45_000);
         check("presence 2/2", presence !== null, presence ?? { a: (await readStatus(A.page)).peers, b: (await readStatus(B.page)).peers });
         const windowCursor = [A.lines.length, B.lines.length] as const;
+        const windowClicks:boolean[]=[];
         for (const session of [A, B])
           for (const windowId of shellA.windowIds) {
-            await session.page.locator(`[data-window-id="${windowId}"]`).first().click({ position: { x: 40, y: 8 }, force: true }).catch(() => undefined);
+            windowClicks.push(await session.page.locator(`[data-window-id="${windowId}"]`).first().click({ position: { x: 40, y: 8 }, force: true }).then(()=>true,()=>false));
             await pause(session, 800);
           }
         const windowFaults = [...faultsSince(A, windowCursor[0]), ...faultsSince(B, windowCursor[1])];
-        check("every window takes focus and commands", windowFaults.length === 0 && shellA.windowIds.length > 0, { windows: shellA.windowIds, faults: windowFaults.slice(0, 4) });
+        check("every window accepts interaction", windowFaults.length === 0 && shellA.windowIds.length > 0 && windowClicks.every(Boolean), { windows: shellA.windowIds, clicks:windowClicks, faults: windowFaults.slice(0, 4) });
         const time = (name: keyof KindTimings, value: number | null): void => {
           if (value !== null) row.timings = { ...row.timings, [name]: value };
         };
-        await JOURNEYS[options.journey].run({ A, B, check, time, plugin, pins, options, spaceId, artifactId, misses: report.misses });
+        await JOURNEYS[options.journey].run({ A, B, check, time, plugin, pins, options, spaceId, artifactId, misses: report.misses,transport });
       } catch (error) {
         check("journey", false, String(error instanceof Error ? error.message : error).slice(0, 600));
         await shot(A, `${kind.kindId}-fail`);
         await shot(B, `${kind.kindId}-fail`);
       }
       row.faults = { A: faultsSince(A, cursors[0]), B: faultsSince(B, cursors[1]) };
-      row.pass = Object.values(row.checks).every((entry) => entry.pass) && Object.keys(row.checks).length >= JOURNEYS[options.journey].checks;
+      row.pass = Object.values(row.checks).every((entry) => entry.pass) && Object.keys(row.checks).length >= JOURNEYS[options.journey].checks && requiredJourneyChecksPass(JOURNEYS[options.journey].required??[],row.checks,duplicateChecks);
       report.rows.push(row);
       flush();
       log(`${index + 1}/${kinds.length} ${row.pass ? "PASS" : "FAIL"} ${kind.kindId} (${Object.values(row.checks).filter((entry) => entry.pass).length}/${Object.keys(row.checks).length} checks, faults A ${row.faults.A.length} B ${row.faults.B.length})`);
@@ -170,29 +184,27 @@ function readHumans(segments: readonly string[]): readonly [Human, Human] {
   return [{ label: "user1", ...users[0]! }, { label: "user2", ...users[1]! }];
 }
 
-/** 🚪️ `verify two-human --hub <url> --serve <url> [--serve-b <url>] [--journey edit|viewer|cross-undo] [--locale en|de] [--kinds <kindId,…>]
+/** 🚪️ `verify two-human --hub <url> --serve <url> [--serve-b <url>] [--journey edit|viewer|cross-undo|reconnect] [--locale en|de] [--kinds <kindId,…>]
  * [--space <id>] [--tag <t>] [--out <dir>] [--admin-capability <file>] [--users <json>] [--max-create-to-mounted-ms <n>]
  * [--max-open-to-mounted-ms <n>] [--mount-budget-ms <n>]` — runs the journey (a creation or an open waits up to
  * `--mount-budget-ms`, default 15 min, for the document to mount; the latency bounds judge it), writes `report.json`,
  * `console.txt` and failure screenshots under `<out>/<tag>/`, publishes the acceptance record, exits non-zero unless every
  * kind passes. */
-export async function runTwoHumanCli(repoRoot: string, defaultOutDir: string, segments: readonly string[]): Promise<void> {
+export async function runTwoHumanCli(invocation: ScriptInvocation, repoRoot: string, defaultOutDir: string, segments: readonly string[]): Promise<void> {
+  checkScriptInvocation(invocation);
+  invocation.control.signal.throwIfAborted();
   const hub = flagValue(segments, "--hub");
   const serve = flagValue(segments, "--serve");
-  if (!hub || !serve) throw new Error("usage: verify two-human --hub <url> --serve <url> [--serve-b <url>] [--journey edit|viewer|cross-undo] [--locale en|de] [--kinds …] [--space <id>] [--tag <t>] [--out <dir>] [--admin-capability <file>] [--users <json>]");
+  if (!hub || !serve) throw new Error("usage: verify two-human --hub <url> --serve <url> [--serve-b <url>] [--journey edit|viewer|cross-undo|reconnect] [--locale en|de] [--kinds …] [--space <id>] [--tag <t>] [--out <dir>] [--admin-capability <file>] [--users <json>]");
   const journey = flagValue(segments, "--journey") ?? "edit";
   if (!(journey in JOURNEYS)) throw new Error(`verify two-human: unknown --journey ${journey} (${Object.keys(JOURNEYS).join("|")})`);
   const { check } = JOURNEYS[journey as TwoHumanJourney];
   const locale = flagValue(segments, "--locale") === "de" ? "de" : "en";
   const tag = flagValue(segments, "--tag") ?? `${check}-${locale}`;
-  const controller = new AbortController();
-  const cancel = (): void => controller.abort();
-  process.once("SIGINT", cancel);
-  process.once("SIGTERM", cancel);
   const startedAt = new Date();
   const serveB = flagValue(segments, "--serve-b") ?? serve;
   const hubUrl = hub.replace(/\/$/u, "");
-  const served = (url: string, run: (baseUrl: string) => Promise<void>): Promise<void> => withDevServe(repoRoot, check, { serveUrl: url, hubUrl, locale, signal: controller.signal, startedAt }, run);
+  const served = (url: string, run: (baseUrl: string) => Promise<void>): Promise<void> => withDevServe(repoRoot, check, { serveUrl: url, hubUrl, locale, signal: invocation.control.signal, startedAt }, run);
   const body = async (serveUrl: string, serveBUrl: string): Promise<void> => {
     const outDir = resolve(flagValue(segments, "--out") ?? defaultOutDir);
     const report = await runTwoHuman(repoRoot, {
@@ -207,7 +219,7 @@ export async function runTwoHumanCli(repoRoot: string, defaultOutDir: string, se
       outDir,
       adminCapabilityFile: flagValue(segments, "--admin-capability") ?? null,
       mountBudgetMs: Number(flagValue(segments, "--mount-budget-ms") ?? 900_000),
-      signal: controller.signal,
+      signal: invocation.control.signal,
     });
     const passed = report.rows.filter((row) => row.pass).length;
     const total = report.rows.length;
@@ -242,8 +254,10 @@ export async function runTwoHumanCli(repoRoot: string, defaultOutDir: string, se
     console.log(`[two-human] === ${tag}: PASS ${passed}/${total} → ${join(outDir, tag)} ===`);
     if (status !== "pass") process.exitCode = 1;
   };
-  await withAcceptanceRecord(repoRoot, check, () => served(serve, (serveUrl) => (serveB === serve ? body(serveUrl, serveUrl) : served(serveB, (serveBUrl) => body(serveUrl, serveBUrl)))));
-  process.removeListener("SIGINT", cancel);
-  process.removeListener("SIGTERM", cancel);
+  await withAcceptanceRecord(repoRoot, check, async () => {
+    await withPreparedBrowserV1(invocation, current => prepareRepositoryBrowserV1(repoRoot, current), async () => {
+      await served(serve, (serveUrl) => (serveB === serve ? body(serveUrl, serveUrl) : served(serveB, (serveBUrl) => body(serveUrl, serveBUrl))));
+    });
+  });
 }
 //#endregion 🔖️TwoHuman

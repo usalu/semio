@@ -3,9 +3,7 @@
 use super::*;
 use crate::ArtifactInstanceOperationOwnerHandle;
 
-#[path="../🎟️request/🔒️command/🦀️.rs"]
-mod original_command;
-pub use original_command::ArtifactOriginalToolCommand;
+pub use semio_plugin_original_job_ownership::ArtifactOriginalToolCommand;
 
 /// 🎒️ Fully owned input handed to an app-defined factory builder after exact raw admission.
 pub struct ArtifactOwnedToolJobRequest<A: ArtifactApp> {

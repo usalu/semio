@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,StepContext,OriginalTurnFailure,OperationId,Generation};
 use semio_framework_value::{RetainedCloneStep,RetainedWorkOutcome,ToValue};
-type Source=original_ephemeral::OriginalEphemeralSource<semio_framework_plugin::EditorApp<RasterPlayApp>,RasterEphemeralDeclaration>;
+type Source=original_ephemeral::OriginalEphemeralSource<semio_plugin::EditorApp<RasterPlayApp>,RasterEphemeralDeclaration>;
 fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:32,maximum_copy_bytes:32768,maximum_capacity_bytes:1<<24,maximum_release_bytes:1<<20,maximum_depth:4096}}
 fn stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1<<24,maximum_copy_bytes:1<<28,maximum_capacity_bytes:1<<28,maximum_release_bytes:1<<28,maximum_depth:4096}}
 fn turn<T>(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,run:impl FnOnce(&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->T{caller.turn_with_decoder(grant(),decoder,run).unwrap()}

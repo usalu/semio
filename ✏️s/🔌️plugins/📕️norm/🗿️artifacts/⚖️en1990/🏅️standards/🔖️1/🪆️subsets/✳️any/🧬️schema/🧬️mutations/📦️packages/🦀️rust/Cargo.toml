@@ -72,8 +72,8 @@ test-support = ["dep:serde", "semio-s-artifact-norm-en1990-diff/test-support", "
 [dev-dependencies]
 semio-framework-job = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-trace = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
-semio-framework-os-store-one-item-batch = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️one-item-owners/📦️packages/🦀️rust" }
-semio-framework-os-store-replay-operation = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/📦️packages/🦀️rust" }
+semio-os-store-one-item-batch = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️one-item-owners/📦️packages/🦀️rust" }
+semio-os-store-replay-operation = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/📦️packages/🦀️rust" }
 semio-framework-value-snapshot-read = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
 semio-s-artifact-norm-en1990-model = { workspace = true, features = ["test-support"] }
 serde_json = { workspace = true }

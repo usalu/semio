@@ -304,7 +304,7 @@ fn the_touch_menu_renders_actions_for_enabled_entries_and_names_the_disabled_one
     use crate::viewport3d::config::Lang;
     let entries = touch_menu(0, false, None);
     for (locale, copy, none) in [(Locale::En, "Copy", "Not available"), (Locale::De, "Kopieren", "Nicht verfügbar")] {
-        let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_touch_menu(&entries, "norm.mock", locale).expect("menu"))).expect("projection");
+        let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::ComponentTree::new(render_touch_menu(&entries, "norm.mock", locale).expect("menu"))).expect("projection");
         assert!(json.contains(copy) && json.contains(none), "{json}");
         let projected: serde_json::Value = serde_json::from_str(&json).expect("projected menu");
         let rows = projected["children"].as_array().expect("menu entries");
@@ -334,7 +334,7 @@ mod select_all {
     fn the_touch_menu_select_all_raises_the_framework_verb_with_the_norm_scope_for_any_scene_size() {
         use crate::viewport3d::config::Lang;
         let entries = touch_menu(0, false, None);
-        let tree = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_touch_menu(&entries, "norm.mock", Locale::En).expect("menu"))).expect("projection");
+        let tree = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::ComponentTree::new(render_touch_menu(&entries, "norm.mock", Locale::En).expect("menu"))).expect("projection");
         assert!(tree.contains("selectAll") && tree.contains(&select_all_granularities()) && !tree.contains("interactionSelect"), "{tree}");
         assert!(tree.len() < 4_096, "the menu never carries targets, so it does not grow with the scene");
         assert_eq!(touch_menu_nodes(&entries, Lang::En).len(), entries.len() + 1);
@@ -417,7 +417,7 @@ fn a_selection_that_ties_between_an_entity_collection_and_its_placement_rows_act
 
 mod context_menu {
     use super::*;
-    use semio_framework_plugin::ContextMenuItemSpec;
+    use semio_plugin::ContextMenuItemSpec;
 
     fn hit(domain: &str, id: &str) -> MenuProbe {
         MenuProbe { hits: vec![(domain.to_string(), id.to_string())], ..MenuProbe::default() }
@@ -567,7 +567,7 @@ mod batch_delete {
 
     #[test]
     fn the_language_agnostic_rows_replay_to_the_same_edits_refusals_notices_and_one_undo_step() {
-        use semio_framework_ui_locale::{Locale, Terminology};
+        use semio_ui_locale::{Locale, Terminology};
         let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🗑️delete-entities/🔣️.json")).expect("delete fixture");
         let dsl = |value: &serde_json::Value| semio_framework_pack_json::from_json_str::<DslValue>(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture value");
         let text = |value: &serde_json::Value| value.as_str().expect("text").to_owned();

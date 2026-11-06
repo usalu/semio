@@ -3,7 +3,7 @@ use super::*;
 pub(super) use semio_framework_job_payload::{close_ledger,ledger_demands};
 use semio_framework_value_retained_clone::{RetirementDemand,RetainedWorkOutcome};
 
-/// 📬️ Original inline outcome with separately admitted presence and in-place terminal removal.
+/// 📬️ See `README.md`.
 pub struct JobOutcomeSlot {
     original: MaybeUninit<StepOutcome>,
     present: bool,
@@ -21,7 +21,7 @@ impl JobOutcomeSlot {
     pub fn original(&self) -> Option<&StepOutcome> { if self.present { Some(unsafe { self.original.assume_init_ref() }) } else { None } }
     pub fn original_mut(&mut self) -> Option<&mut StepOutcome> { if self.present { Some(unsafe { self.original.assume_init_mut() }) } else { None } }
     pub fn is_empty(&self) -> bool { !self.present }
-    /// 🚚 Transfers the original carrier by value, separately from bounded in-place retirement.
+    /// 🚚 See `README.md`.
     pub fn return_original(&mut self) -> Option<StepOutcome> {
         if !self.present { return None; }
         self.present = false;
@@ -38,14 +38,14 @@ impl Default for JobOutcomeSlot { fn default() -> Self { Self::empty() } }
 impl std::fmt::Debug for JobOutcomeSlot { fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { formatter.debug_struct("JobOutcomeSlot").field("original", &self.original()).finish() } }
 impl Drop for JobOutcomeSlot { fn drop(&mut self) { assert!(std::thread::panicking() || self.is_empty(), "job outcome slot abandoned its original carrier"); } }
 
-/// 🛟️ Original inline fault payload whose terminal carrier is dropped in place under its presence grant.
+/// 🛟️ See `README.md`.
 pub struct JobPayloadSlot { pub(super) original: MaybeUninit<RetainedJobPayload>, pub(super) present: bool }
 impl JobPayloadSlot {
     pub fn from_payload(payload:RetainedJobPayload)->Self {Self{original:MaybeUninit::new(payload),present:true}}
     pub fn original(&self)->Option<&RetainedJobPayload>{if self.present{Some(unsafe{self.original.assume_init_ref()})}else{None}}
     pub fn original_mut(&mut self)->Option<&mut RetainedJobPayload>{if self.present{Some(unsafe{self.original.assume_init_mut()})}else{None}}
     pub fn is_empty(&self)->bool{!self.present}
-    /// 🚒️ Transfers the actual fault payload by value outside its bounded retirement frontier.
+    /// 🚒️ See `README.md`.
     pub fn return_original(&mut self)->Option<RetainedJobPayload>{if !self.present{return None;}self.present=false;Some(unsafe{self.original.assume_init_read()})}
     pub fn retirement_demands(&self)->Result<RetirementDemand,ValueError>{let Some(payload)=self.original()else{return Ok(Default::default());};if payload.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:0,depth:1,..Default::default()})}else{parent(payload.retirement_demands()?)}}
     pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
@@ -65,9 +65,9 @@ fn parent(mut demand:RetirementDemand)->Result<RetirementDemand,ValueError>{dema
 
 impl StepOutcome {
     pub fn next_close_byte_demand(&self)->usize{self.retirement_demands().expect("original job outcome demand").release_bytes}
-    /// 📏️ Borrows the actual selected result payload and its parent depth without reconstructing it.
+    /// 📏️ See `README.md`.
     pub fn retirement_demands(&self)->Result<RetirementDemand,ValueError>{let child=match self{Self::Yield|Self::Cancelled=>return Ok(Default::default()),Self::PreviewReady(payload)=>payload,Self::CheckpointReady(checkpoint)=>&checkpoint.state,Self::Complete(candidate)if !candidate.state.terminal_is_empty()=>&candidate.state,Self::Complete(candidate)=>&candidate.output,Self::Fault(fault)=>&fault.detail};if self.terminal_is_empty(){Ok(Default::default())}else{parent(child.retirement_demands()?)}}
-    /// 📪️ Preserves every actual receipt while a second success payload remains retained.
+    /// 📪️ See `README.md`.
     pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
         if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0};}
         let demand=match self.retirement_demands(){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
@@ -77,14 +77,14 @@ impl StepOutcome {
     }
 }
 
-/// 🪧️ Quotes the original payload frontier or its separately retained inline outcome header.
+/// 🪧️ See `README.md`.
 pub fn step_outcome_slot_retirement_demands(slot:&JobOutcomeSlot)->Result<RetirementDemand,ValueError>{
     let Some(outcome)=slot.original()else{return Ok(Default::default());};
     if outcome.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:0,depth:1,..Default::default()});}
     parent(outcome.retirement_demands()?)
 }
 
-/// 📭️ Closes original payloads before releasing their header under a separate caller-funded turn.
+/// 📭️ See `README.md`.
 pub fn close_step_outcome_slot(slot:&mut JobOutcomeSlot,grant:RetainedCloneGrant)->RetainedWorkOutcome{
     if slot.is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0};}
     let demand=match step_outcome_slot_retirement_demands(slot){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};

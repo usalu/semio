@@ -6,7 +6,8 @@ use crate::original_job_continuation::{OriginalReturnSource,OriginalReturnSource
 
 #[path="🏠️native/🦀️.rs"]
 mod native;
-pub use native::{ORIGINAL_NATIVE_SOURCE_CAPACITY,OriginalNativeLease,OriginalNativeRetirement,OriginalNativeBorrow,OriginalNativeRecipientIdentity,OriginalNativeRetiredWitness};
+pub use native::{ORIGINAL_NATIVE_SOURCE_CAPACITY,OriginalNativeLease,OriginalNativeRetirement,OriginalNativeBorrow,OriginalNativeBorrowed,OriginalNativeRecipientIdentity,OriginalNativeRecipientClosed,OriginalNativeRetiredWitness};
+static ORIGINAL_RETURN_BIRTH:std::sync::atomic::AtomicU32=std::sync::atomic::AtomicU32::new(1);
 struct SourceRoots{authority:JobPayloadAuthority,cancel:CancelToken,returns:OriginalReturnSource,native:native::NativeSources}
 impl SourceRoots{fn issuer()->SharedIssuer<Self>{let mut issuer=SharedIssuer::owned();issuer.transfer_copy_bytes=|_|0;issuer}}
 struct SourceRetirement{authority:JobPayloadAuthority,cancel:CancelTokenRetirement,returns:OriginalReturnSource}
@@ -31,22 +32,23 @@ impl RetirementCursor for SourceRetirement{
  fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 
-/// 🏡️ Owns already-paid original cancellation and payload sources before any child or context borrows them.
+/// 🏡️ See `README.md`.
 pub struct OriginalCallerSourceParent{original:ManuallyDrop<Option<SealedShared<SourceRoots>>>,retiring:ManuallyDrop<Option<SourceRetirement>>,pending_roots:ManuallyDrop<Option<SourceRoots>>,borrowed_cancel:bool,borrowed_source:bool,lending_open:bool,clock_authority:Option<(u64,fn()->Option<u64>,u64)>}
 impl OriginalCallerSourceParent{
- /// 🚪️ Observes whether this original parent still accepts new genuine loans.
+ /// 🚪️ See `README.md`.
  pub fn lending_is_open(&self)->bool{self.lending_open}
 
- /// 🪪️ Stable paid source identity survives moves of its original parent or borrowed wrapper.
+ /// 🪪️ See `README.md`.
  pub fn source_identity(&self)->Result<usize,ValueError>{Ok(self.original.as_ref().ok_or_else(||refused("original source identity has entered physical retirement"))?.identity())}
+ pub fn guards_header_pointer(&self,pointer:usize)->Result<bool,ValueError>{self.return_source()?.guards_header_pointer(pointer)}
  pub fn payload_authority_identity(&self)->Result<OriginalPayloadSourceIdentity,ValueError>{self.original.as_ref().and_then(|source|source.get().authority.identity()).ok_or_else(||refused("original payload source identity has entered physical retirement"))}
  pub fn cancellation(&self)->Result<&CancelToken,ValueError>{Ok(&self.original.as_ref().ok_or_else(||refused("original parent cancellation has entered physical retirement"))?.get().cancel)}
  pub fn admission_demand()->RetirementDemand{RetirementDemand{capacity_bytes:SealedShared::<SourceRoots>::birth_bytes(),depth:1,..Default::default()}}
- pub fn admit(authority:JobPayloadAuthority,cancel:CancelToken,grant:RetainedCloneGrant)->RetainedWorkOutcome<(Self,RetainedCloneProgress),(ValueError,JobPayloadAuthority,CancelToken)>{if authority.terminal_is_empty(){return RetainedWorkOutcome{result:Err((refused("original parent requires its live paid payload source"),authority,cancel)),work:0}}let turn=SealedShared::admit(SourceRoots{authority,cancel,returns:OriginalReturnSource::empty(),native:native::NativeSources::new()},SourceRoots::issuer(),grant);RetainedWorkOutcome{work:turn.work,result:match turn.result{Ok((original,progress))=>Ok((Self{original:ManuallyDrop::new(Some(original)),retiring:ManuallyDrop::new(None),pending_roots:ManuallyDrop::new(None),borrowed_cancel:false,borrowed_source:false,lending_open:true,clock_authority:None},progress)),Err((error,roots))=>Err((error,roots.authority,roots.cancel))}}}
+ pub fn admit(authority:JobPayloadAuthority,cancel:CancelToken,grant:RetainedCloneGrant)->RetainedWorkOutcome<(Self,RetainedCloneProgress),(ValueError,JobPayloadAuthority,CancelToken)>{if authority.terminal_is_empty(){return RetainedWorkOutcome{result:Err((refused("original parent requires its live paid payload source"),authority,cancel)),work:0}}let birth=match ORIGINAL_RETURN_BIRTH.fetch_update(std::sync::atomic::Ordering::Relaxed,std::sync::atomic::Ordering::Relaxed,|value|value.checked_add(1)){Ok(value)=>u64::from(value),Err(_)=>return RetainedWorkOutcome{result:Err((refused("original Source birth serial exhausted"),authority,cancel)),work:0}};let turn=SealedShared::admit(SourceRoots{authority,cancel,returns:OriginalReturnSource::empty(birth),native:native::NativeSources::new()},SourceRoots::issuer(),grant);RetainedWorkOutcome{work:turn.work,result:match turn.result{Ok((original,progress))=>Ok((Self{original:ManuallyDrop::new(Some(original)),retiring:ManuallyDrop::new(None),pending_roots:ManuallyDrop::new(None),borrowed_cancel:false,borrowed_source:false,lending_open:true,clock_authority:None},progress)),Err((error,roots))=>Err((error,roots.authority,roots.cancel))}}}
  pub fn borrow_context<'turn>(&'turn self,budget:StepBudget,now_us:fn()->Option<u64>,sequence:&'turn mut u64,recipient:&'turn mut RetainedCloneProgress)->Result<StepContext<'turn>,ValueError>{if self.borrowed_cancel{return Err(refused("inherited original child context requires its live parent budget loan"))}self.borrow_context_with_return(budget,now_us,sequence,recipient,self.return_source()?.try_borrow().ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original return source already lends its budget"))?)}
  pub(crate) fn borrow_context_with_return<'turn>(&'turn self,budget:StepBudget,now_us:fn()->Option<u64>,sequence:&'turn mut u64,recipient:&'turn mut RetainedCloneProgress,returns:OriginalReturnBudgetReference<'turn>)->Result<StepContext<'turn>,ValueError>{let roots=self.original.as_ref().ok_or_else(||refused("original parent source has entered physical retirement"))?.get();let ledger=roots.authority.original().ok_or_else(||refused("original parent payload source has closed"))?;let mut cx=StepContext::with_payload_authority(ledger.operation,ledger.generation,budget,&roots.cancel,now_us,sequence,recipient,&roots.authority)?;cx.source_parent=Some(self);cx.attach_original_return_budget(returns)?;if let Some((binding,clock,deadline))=self.clock_authority{if !std::ptr::fn_addr_eq(clock,now_us)||budget.deadline_us>deadline{return Err(refused("borrowed original source changed its clock or widened its absolute deadline"))}cx.original_clock_binding=Some(binding);cx.original_absolute_deadline=deadline;}Ok(cx)}
  pub(crate) fn return_source(&self)->Result<&OriginalReturnSource,ValueError>{Ok(&self.original.as_ref().ok_or_else(||refused("original return source has entered retirement"))?.get().returns)}
- pub(crate) fn admit_return_origin(&self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate_borrowed_context(cx)?;let input=OriginalReturnSourceInput::capture(cx)?;let bound=cx.return_budget.as_ref().ok_or_else(||refused("original return source has no live budget loan"))?.get().is_bound();if bound{cx.return_budget.as_mut().ok_or_else(||ValueError::invariant("return_budget absent"))?.get_mut().bind(input)?;return Ok(true)}if cx.should_yield()||cx.is_cancelled()||!metadata_fits(cx){return Ok(false)}cx.return_budget.as_mut().ok_or_else(||ValueError::invariant("return_budget absent"))?.get_mut().bind(input)?;crate::receive_original_retained_work(cx,RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(metadata())),work:1})?;Ok(true)}
+ pub(crate) fn admit_return_origin(&self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate_borrowed_context(cx)?;let input=OriginalReturnSourceInput::capture(cx)?;let bound=cx.return_budget.as_ref().ok_or_else(||refused("original return source has no live budget loan"))?.get().is_bound();if bound{cx.return_budget.as_mut().ok_or_else(||ValueError::invariant("return_budget absent"))?.get_mut().bind(input)?;return Ok(true)}if (if cx.original_retirement_active(){cx.retirement_should_yield()}else{cx.should_yield()||cx.is_cancelled()})||!metadata_fits(cx){return Ok(false)}cx.return_budget.as_mut().ok_or_else(||ValueError::invariant("return_budget absent"))?.get_mut().bind(input)?;crate::receive_original_retained_work(cx,RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(metadata())),work:1})?;Ok(true)}
  pub fn validate_borrowed_context(&self,cx:&StepContext<'_>)->Result<(),ValueError>{let original=self.original.as_ref().ok_or_else(||refused("original source parent has entered physical retirement"))?;if !matches_roots(original.get(),cx){return Err(refused("owned original reply requires its genuine source receiver"))}Ok(())}
  pub fn admit_loan(&self,output:&mut Option<OriginalCallerSourceLoan>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if let Some(loan)=output.as_ref(){loan.validate_context(cx)?;if loan.source_identity()?!=self.source_identity()?{return Err(refused("original source loan slot belongs to another parent").into())}return Ok(true)}
@@ -54,7 +56,7 @@ impl OriginalCallerSourceParent{
   #[cfg(any(test,feature="testkit"))]crate::testkit::narrow_loan_receipt(cx);
   crate::receive_original_retained_work(cx,RetainedWorkOutcome{result,work:turn.work})?;Ok(output.is_some())
  }
- /// 🎟️ Places the real new alias and its owned caller header before the actual alias receipt is posted.
+ /// 🎟️ See `README.md`.
  pub(crate) fn admit_owned_turn(&self,output:&mut Option<crate::OriginalOwnedCallerTurn>,cx:&mut StepContext<'_>,epoch:u64)->Result<bool,OriginalTurnFailure>{
   if output.is_some(){return Err(refused("owned original admission requires an empty caller receiver").into())}
   if !self.lending_open{return Err(refused("original source parent has entered loan closure").into())}let original=self.original.as_ref().ok_or_else(||refused("original parent has no source to lend"))?;if !matches_roots(original.get(),cx){return Err(refused("owned original admission requires its actual incoming source context").into())}if cx.should_yield()||cx.is_cancelled()||!metadata_fits(cx){return Ok(false)}
@@ -64,7 +66,7 @@ impl OriginalCallerSourceParent{
  }
  pub(crate) fn into_source_loan(mut self)->Result<OriginalCallerSourceLoan,Self>{if !self.borrowed_source||self.retiring.is_some()||self.pending_roots.is_some(){return Err(self)}let source_identity=self.original.as_ref().expect("live borrowed source").identity();let original=self.original.take();Ok(OriginalCallerSourceLoan{source_identity,original:ManuallyDrop::new(original),closing:false,clock_authority:self.clock_authority})}
  pub fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.pending_roots.is_none()&&self.retiring.is_none()}
- /// 🪺️ Reads the paid source's actual strong-loan return without changing its lending authority.
+ /// 🪺️ See `README.md`.
  pub fn original_loans_are_returned(&self)->bool{!self.borrowed_source&&self.original.as_ref().is_none_or(SealedShared::original_aliases_are_returned)}
  pub fn retirement_demands(&self)->Result<RetirementDemand,ValueError>{
   if self.terminal_is_empty(){return Ok(Default::default());}
@@ -97,22 +99,22 @@ impl OriginalCallerSourceParent{
 }
 impl Drop for OriginalCallerSourceParent{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original source parent reached Drop before paid child return and physical roots closure")}}
 
-/// 🪢️ One paid strong source loan moves into a static child without exposing roots or renewing caller authority.
+/// 🪢️ See `README.md`.
 pub struct OriginalCallerSourceLoan{source_identity:usize,original:ManuallyDrop<Option<SealedShared<SourceRoots>>>,closing:bool,clock_authority:Option<(u64,fn()->Option<u64>,u64)>}
 impl OriginalCallerSourceLoan{
- /// 🪪️ Reads the actual still-retained strong source identity without issuing any alias or authority.
+ /// 🪪️ See `README.md`.
  pub fn source_identity(&self)->Result<usize,ValueError>{let original=self.original.as_ref().ok_or_else(||refused("original source loan identity has already returned"))?;if original.terminal_is_empty(){return Err(refused("original source loan identity has already returned"))}Ok(original.identity())}
- /// 🕰️ Only the still-owned genuine source loan supplies its immutable opaque clock binding.
+ /// 🕰️ See `README.md`.
  pub fn original_clock_source(&self)->Result<(u64,fn()->Option<u64>,u64),ValueError>{if self.original.is_none(){return Err(refused("original source clock loan has already returned"))}self.clock_authority.ok_or_else(||refused("original source loan has no clock authority"))}
  fn validates_clock(&self,cx:&StepContext<'_>)->bool{self.clock_authority.is_some_and(|(binding,clock,deadline)|cx.original_clock_binding()==Some(binding)&&std::ptr::fn_addr_eq(clock,cx.clock_source())&&deadline==cx.original_absolute_deadline_us())}
- /// 🔗️ Borrows the exact retained original cancellation witness without creating or dropping an alias.
+ /// 🔗️ See `README.md`.
  pub fn cancellation(&self)->Result<&CancelToken,ValueError>{Ok(&self.original.as_ref().ok_or_else(||refused("original source loan cancellation has already returned"))?.get().cancel)}
  pub(crate) fn into_borrowed_parent(mut self)->OriginalCallerSourceParent{assert!(!self.closing&&self.original.is_some(),"only the actual live original source loan can issue a borrowed parent");let original=self.original.take();OriginalCallerSourceParent{original:ManuallyDrop::new(original),retiring:ManuallyDrop::new(None),pending_roots:ManuallyDrop::new(None),borrowed_cancel:false,borrowed_source:true,lending_open:true,clock_authority:self.clock_authority}}
  pub fn terminal_is_empty(&self)->bool{self.original.is_none()}
  pub fn validate_context(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{let original=self.original.as_ref().ok_or_else(||refused("original source loan has already returned"))?;if self.closing||!matches_roots(original.get(),cx)||!self.validates_clock(cx){return Err(refused("original source loan refused foreign or closing caller context").into())}Ok(())}
  pub fn validate_retirement_context(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{if self.original.is_none(){return Err(refused("original source loan has already returned").into())}let parent=cx.original_source_parent()?;parent.validate_borrowed_context(cx)?;if parent.source_identity()?!=self.source_identity||!self.validates_clock(cx){return Err(refused("original loan retirement requires its same actual issuer roots").into())}Ok(())}
  pub fn run_close<'context>(&mut self,cx:&mut StepContext<'context>,requested:RetainedCloneGrant,run:impl FnOnce(&mut StepContext<'context>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>)->Result<OriginalCallerCloseReturn,OriginalTurnFailure>{self.validate_context(cx)?;let before=cx.retained_progress();let recipient=cx.original_recipient_identity();let original=cx.with_retained_loan(requested,run);let after=cx.retained_progress();let report=match &original{Ok(step)=>step.progress(),Err(failure)=>failure.retained_progress()};let receipt_refusal=if recipient!=cx.original_recipient_identity(){Some(refused("original owned caller return changed recipient"))}else{delta(before,after).and_then(|actual|if actual==report{Ok(())}else{Err(refused("original owned caller return differs from actual posted effects"))}).err()};Ok(OriginalCallerCloseReturn{original,receipt_refusal})}
- /// 🪙️ Quotes the owning source's fixed metadata return without deriving authority from the quote.
+ /// 🪙️ See `README.md`.
  pub fn retirement_demands(&self)->RetirementDemand{RetirementDemand{depth:usize::from(!self.terminal_is_empty()),..Default::default()}}
  pub fn close_step(&mut self,parent:&OriginalCallerSourceParent,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
   if self.terminal_is_empty(){return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()});}

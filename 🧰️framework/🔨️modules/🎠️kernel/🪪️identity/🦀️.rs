@@ -61,8 +61,7 @@ impl semio_framework_value::FromValue for WindowHandle {
 #[serde(transparent)]
 pub struct AssetHandle(pub u128);
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(transparent)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct CapabilityToken(pub u128);
 
 semio_framework_value::artifact_retire_leaf!(CapabilityToken);
@@ -75,14 +74,7 @@ impl semio_framework_value::ToValue for CapabilityToken {
     }
 }
 
-impl semio_framework_value::FromValue for CapabilityToken {
-    fn from_value(value: DslValue) -> Result<Self, semio_framework_value::ValueError> {
-        match value {
-            DslValue::String(s) => s.parse().map(CapabilityToken).map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a u128 decimal string for CapabilityToken, found {s:?}"))),
-            other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string for CapabilityToken, found {other:?}"))),
-        }
-    }
-}
+impl semio_framework_value::FromValue for CapabilityToken{fn from_value(value:DslValue)->Result<Self,ValueError>{match value{DslValue::String(text)=>decimal_handles::parse(&text).map(Self),_=>Err(decimal_handles::invalid())}}}
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
@@ -91,16 +83,7 @@ impl semio_framework_value::FromValue for CapabilityToken {
 #[derive(semio_framework_value::NativeReceive)]
 pub struct PluginInstanceId(pub String);
 
-// 🎞️ CW3 kernel cut-over: MutationId/ActorId/ArtifactId/ArtifactVersion/SchemaId moved to
-// `protocol_core` (frozen contract `.🧬semio/🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md`),
-// re-exported here under their original names — shapes are unchanged (plain serde-transparent
-// String/u64 newtypes), so every existing reference (internal `kernel` types below, and external
-// crates like `framework/sync`/`framework/product/os/semio_hub` that import them straight from
-// `semio_framework`) keeps resolving without edits. `SchemaVersion` below is NOT re-exported
-// from `protocol_core` — that crate's own `SchemaVersion` is `u32`-shaped (a distinct, unrelated
-// protocol-format concept), incompatible with this kernel's `String`-shaped version below, which
-// several external crates (`framework/sync`, semio_hub storage crates) still construct from plain
-// strings; moving it would be a breaking shape change out of this wave's scope.
+// 🎞️ CW3 kernel cut-over: MutationId/ActorId/ArtifactId/ArtifactVersion/SchemaId moved to [Design notes](README.md#source-notes-86).
 pub use ::replication::{ActorId, ArtifactId, ArtifactVersion, MutationId, SchemaId};
 
 /// 🆔️ Identifies one dispatched invocation — of an action *or* a command; both route through the same
@@ -125,6 +108,7 @@ pub struct CommandId(pub String);
 #[serde(transparent)]
 #[value(transparent)]
 #[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
 pub struct AppInstanceId(pub String);
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -141,14 +125,7 @@ pub struct WindowKindId(pub String);
 //#endregion 🔖️Identifiers
 //#region 🔖️HybridLogicalTimestamp
 
-// 🎯️ W6 kernel unification: re-exports `protocol_core::HybridLogicalTimestamp` now (identical
-// `{actor, physical_ms, logical}` shape, plus a real actor-tiebroken `Ord`/`PartialOrd` the old
-// local struct lacked). The CW3-era deferral note this region used to carry (kept local because
-// this struct's `#[serde(rename_all = "camelCase")]` put `physicalMs` on the wire, vs.
-// `protocol_core`'s unrenamed `physical_ms`) is resolved: this wave already rewired the JSON/wire
-// boundary end-to-end (W5's binary `protocol_wire` codec, its TS twin, and the fixture
-// byte-identity canary all speak `physical_ms`), so the wire-format reconciliation this note
-// deferred is verified, not assumed.
+// 🎯️ W6 kernel unification: re-exports `protocol_core::HybridLogicalTimestamp` now (identical [Design notes](README.md#source-notes-137).
 pub use ::replication::HybridLogicalTimestamp;
 
 //#endregion 🔖️HybridLogicalTimestamp
@@ -196,17 +173,7 @@ pub struct CapabilityRequirement {
     pub scope: Scope,
 }
 
-// 🚧️ BLOCKED (26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): `artifact:
-// ArtifactId` below is `protocol_core::ArtifactId` — defined in the `semio-framework-replication`
-// crate (`📡️replication/🆔️ids/🦀️.rs`), which implements its OWN `crate::value::ToValue`
-// (`🌱️value/🦀️.rs`, separately path-mounted into that crate) — a structurally-identical but
-// nominally DISTINCT trait from this crate's `dsl::ToValue` (`os_dsl::schema::{ToValue,
-// FromValue}`, canonical definition per `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🦀️.rs`
-// L332-347). Confirmed via source inspection, not `cargo check` alone: `ArtifactId` does not
-// implement `dsl::ToValue`, so `#[derive(ToValue, FromValue)]` here would fail. Fixing it means
-// giving replication's frozen protocol newtypes a second, os-kernel-flavored `ToValue`/`FromValue`
-// impl — out of this pass's scope (replication is a frozen contract, not a named target of this
-// ticket). Left serde-only.
+// 🚧️ BLOCKED (26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): `artifact: [Design notes](README.md#source-notes-192).
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -420,6 +387,7 @@ pub enum RequestOutcome {
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
 pub enum ActivationEvent {
     OnCommand { id: String },
     OnViewVisible { id: String },
@@ -436,6 +404,9 @@ pub enum ActivationEvent {
 /// record.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive)]
+#[value(crate="::semio_framework_value",rename_all="camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct Budget {
     pub retained: RetainedTurnInput,
     pub retained_policy:semio_framework_value::RetainedCloneGrant,
@@ -491,12 +462,7 @@ pub struct Usage {
 //#endregion 🔖️TurnResult
 //#region 🔖️Broker
 
-/// 🔑️ A capability's identity — dotted/colon-scoped strings (`storage.read`, `http:<origin>`,
-/// `messaging.plugin:<id>`, `extension.invoke:<id>`, ...) per `📓️design-abi.md` §5's catalogue.
-/// A `String` newtype rather than a closed enum: several members carry a caller-chosen parameter
-/// (`<origin>`/`<uri>`/`<id>`/`<point>`) the broker matches by prefix, and the catalogue is
-/// expected to grow as new capability surfaces land — an exhaustive enum would need a matching
-/// wildcard arm anyway.
+/// 🔑️ A capability's identity — dotted/colon-scoped strings (`storage.read`, `http:<origin>`, [Design notes](README.md#source-notes-491).
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
 #[value(transparent)]
@@ -523,15 +489,12 @@ pub struct CapabilityRequest {
     pub optional: bool,
 }
 
-/// 📬️ A broker-issued grant answering a `CapabilityRequest` — `📓️design-abi.md` §5.
-/// Named `BrokerCapabilityGrant`, not the design prose's bare `CapabilityGrant`: this file
-/// already has a `CapabilityGrant` (above, `🔖️Capability` region) for the unrelated kernel-level
-/// action/window capability model (`ActionContext.granted_capabilities`), with live consumers
-/// outside this packet's owned paths (`📦️packages/🦀️rust/🦀️.rs`'s re-export list) — see the
-/// report's naming-collision note.
+/// 📬️ A broker-issued grant answering a `CapabilityRequest` — `📓️design-abi.md` §5. [Design notes](README.md#source-notes-523).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
+#[value(crate="::semio_framework_value",rename_all="camelCase")]
 pub struct BrokerCapabilityGrant {
     /// 🔢️ `u128` has no JavaScript number equivalent, so the mirror carries it as a decimal string —
     /// same treatment `PluginDependency.version` gets in `🛂️manifest`.
@@ -539,6 +502,7 @@ pub struct BrokerCapabilityGrant {
     pub id: CapabilityId,
     pub scope: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default,skip_serializing_if="Option::is_none")]
     pub expires_ms: Option<u64>,
 }
 
@@ -548,6 +512,8 @@ pub struct BrokerCapabilityGrant {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
+#[value(crate="::semio_framework_value",rename_all="camelCase",rename_all_fields="camelCase")]
 pub enum CapabilityChange {
     Granted { id: CapabilityId, grant: BrokerCapabilityGrant },
     Revoked { id: CapabilityId },
@@ -562,6 +528,7 @@ pub enum CapabilityChange {
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
 pub struct QuotaSchema {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -649,22 +616,7 @@ pub enum FailureAction {
 //#endregion 🔖️Broker
 //#region 🔖️ExtensionActivation
 
-/// 🔌️ Canonical installed-extension descriptor the host queries at plugin-activation time —
-/// `extension-activation` packet (`📌️important.md`): "on plugin activation, the kernel queries
-/// installed descriptors for `extends == plugin_id` and activates each as `ActorKind::Extension`,
-/// pinned to the parent's shard, capabilities scoped to the parent". Deliberately independent of
-/// the `.sxt` wire-format-specific `ExtensionPackageManifest` (`💻️os/🔨️modules/🧩️extension`, a
-/// different crate's mount set than this file's) and of the guest-side `ExtensionManifest`
-/// (`semio-plugin`) — this shape uses only vocabulary this very file already owns
-/// (`CapabilityId`/`CapabilityRequest`), so `extensions_extending` stays callable from every crate
-/// this file reaches: it is `#[path]`-mounted (as `pub mod kernel`) into `🛂️manifest/🦀️.rs`
-/// alone, which is itself `#[path]`-mounted into THREE crates — `semio-framework` (root),
-/// `semio-framework-graph`, and `semio-s-plugin-stdio` (verified: `grep -rn '#\[path.*🎠️kernel'`
-/// and `grep -rn '#\[path.*🛂️manifest/🦀️component'`, both over absolute paths) — without pulling in
-/// the `.sxt`/guest-SDK dependency edge. `💻️os/🖥️host`'s own install-region `InstalledExtension` is
-/// the `.sxt`-shaped twin of this — see that type's docstring for why the two are NOT unified (same
-/// dependency-edge-law reason `PackagePluginDependency`'s own docstring gives for its wire-shape
-/// duplication).
+/// 🔌️ Canonical installed-extension descriptor the host queries at plugin-activation time — [Design notes](README.md#source-notes-655).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ExtensionDescriptor {

@@ -454,7 +454,7 @@ macro_rules! lowpoly_command_factory {
             fn payload_schema_id(&self) -> &str { LOWPOLY_RETAINED_PAYLOAD_SCHEMA }
             fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
             fn execution_contract(&self) -> ToolExecutionContract { $contract() }
-            semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: $maximum, checkpoint_resume: true);
+            semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: $maximum, checkpoint_resume: true);
         }
     };
 }

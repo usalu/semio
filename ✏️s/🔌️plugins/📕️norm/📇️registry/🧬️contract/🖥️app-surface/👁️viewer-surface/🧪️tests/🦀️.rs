@@ -117,8 +117,8 @@ fn the_live_scene_of_a_viewer_is_projected_under_the_view_lane() {
     assert_eq!(view_options_of(&ViewLane::default()).stamp_text(), "", "an untouched lane follows the governing choices");
 }
 
-fn projected(context: &str, node: semio_framework_plugin::BuiltNode) -> serde_json::Value {
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).unwrap_or_else(|error| panic!("{context} IR: {error}"));
+fn projected(context: &str, node: semio_plugin::BuiltNode) -> serde_json::Value {
+    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).unwrap_or_else(|error| panic!("{context} IR: {error}"));
     serde_json::from_str(&json).expect("projected IR JSON")
 }
 
@@ -146,10 +146,10 @@ fn readonly_windows_render_the_same_picked_owner_without_edit_actions() {
     let picked = [crate::viewport3d::picking::entity_address(EntityKind::Solid, "B2").unwrap()];
     let frame = NormViewerFrame::new(report, ViewLane { check: Some(0), ..Default::default() }, &picked);
     assert_eq!((frame.selection.check, frame.diagram_focus().as_deref()), (Some(1), Some("B2")));
-    let viewport = projected("viewport", frame.render_viewport("norm.en1993.view.viewport", &scene, "norm.en1993", "s.norm.en1993@1/*#viewer", semio_framework_ui_locale::Locale::En).expect("viewer viewport"));
+    let viewport = projected("viewport", frame.render_viewport("norm.en1993.view.viewport", &scene, "norm.en1993", "s.norm.en1993@1/*#viewer", semio_ui_locale::Locale::En).expect("viewer viewport"));
     assert!(contains_selected(&viewport, "B2"), "{viewport}");
     assert!(!viewport.to_string().contains("setFields"));
-    let checks = projected("checks", frame.render_checks(&semio_framework_plugin::TreeWindows::unhosted(), "norm.en1993", "s.norm.en1993@1/*#viewer", semio_framework_ui_locale::Locale::En).expect("viewer checks"));
+    let checks = projected("checks", frame.render_checks(&semio_plugin::TreeWindows::unhosted(), "norm.en1993", "s.norm.en1993@1/*#viewer", semio_ui_locale::Locale::En).expect("viewer checks"));
     assert!(contains_selected(&checks, "check b"), "{checks}");
     assert!(!checks.to_string().contains("setSelectedCheckIndex") && !checks.to_string().contains("applyRemedy"));
     assert!(checks.to_string().contains(&crate::check_address("b").unwrap()));
@@ -160,7 +160,7 @@ fn readonly_windows_render_the_same_picked_owner_without_edit_actions() {
         series: Vec::new(), markers: Vec::new(), annotations: Vec::new(), focus: Some(EntityRef::new(EntityKind::Solid, &focus, "")), legend: false,
         table_twin: DataTable { columns: vec![DataColumn { header: Text::new("Value", "Wert"), unit: "1".into(), values: vec![0.0, 1.0] }] },
     };
-    let diagrams = projected("diagrams", frame.render_diagrams("norm.en1993.view.diagrams", &[diagram], &semio_framework_plugin::TreeWindows::unhosted(), semio_framework_ui_locale::Locale::En).expect("viewer diagrams"));
+    let diagrams = projected("diagrams", frame.render_diagrams("norm.en1993.view.diagrams", &[diagram], &semio_plugin::TreeWindows::unhosted(), semio_ui_locale::Locale::En).expect("viewer diagrams"));
     assert!(diagrams.to_string().contains("Diagram B2"));
     assert!(!diagrams.to_string().contains("setFields"));
 }
@@ -168,7 +168,7 @@ fn readonly_windows_render_the_same_picked_owner_without_edit_actions() {
 #[test]
 fn shortcut_help_groups_the_complete_neutral_table_without_exceeding_fixed_lists() {
     let law: serde_json::Value = serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/shortcut-help/🔣️.json")).expect("shortcut help law");
-    for (locale, language) in [(semio_framework_ui_locale::Locale::En, "en"), (semio_framework_ui_locale::Locale::De, "de")] {
+    for (locale, language) in [(semio_ui_locale::Locale::En, "en"), (semio_ui_locale::Locale::De, "de")] {
         let help = projected("shortcut help", crate::toolbar::render_shortcut_help(locale, false).expect("complete shortcut help"));
         let groups = help["children"][0]["children"].as_array().expect("scope groups");
         assert_eq!(groups.len(), law["scopes"].as_array().expect("scopes").len());

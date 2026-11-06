@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../.."
-name = "semio-framework-plugin-interpreter-imports"
+name = "semio-plugin-interpreter-imports"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -17,11 +17,11 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-plugin-interpreter = { workspace = true }
-semio-framework-plugin-guest-contract = { workspace = true }
+semio-plugin-interpreter = { workspace = true }
+semio-plugin-guest-contract = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-value = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 
 [dev-dependencies]
 serde_json.workspace = true

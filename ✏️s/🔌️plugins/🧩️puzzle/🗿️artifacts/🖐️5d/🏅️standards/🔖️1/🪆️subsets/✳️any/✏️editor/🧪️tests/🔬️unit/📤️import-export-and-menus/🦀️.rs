@@ -28,6 +28,67 @@ fn import_identity_matches_neutral_fixtures_and_independent_json() {
     }
 }
 
+/// 📏️ Inline and text imports enforce the same UTF-8 JSON byte boundary.
+#[test]
+fn inline_import_matches_independent_json_capacity_boundary() {
+    let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../🔬️unit/📤️import-export-and-menus/🧫️fixtures/📏️inline-limit.json")).expect("limit fixture");
+    let limit = crate::retained_command::PUZZLE_IMPORT_TOTAL_BYTES;
+    let mut document = serde_json::json!({"schema": PUZZLE5D_SCHEMA, "parts": [], "padding": ""});
+    let overhead = serde_json::to_vec(&document).expect("independent baseline").len();
+    for offset in fixture["offsets"].as_array().expect("offsets") {
+        let size = (limit as i64 + offset.as_i64().expect("offset")) as usize;
+        document["padding"] = serde_json::Value::String(fixture["padding"].as_str().expect("padding").repeat(size - overhead));
+        let bytes = serde_json::to_string(&document).expect("independent serialization");
+        assert_eq!(bytes.len(), size);
+        let value = parse(&bytes, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("inline JSON");
+        let inline = import_snapshot::puzzle5d_import_value(&semio_framework_pack_json::json!({"payload": value}));
+        let text = import_snapshot::puzzle5d_import_value(&semio_framework_pack_json::json!({"payload": bytes}));
+        assert_eq!(inline.is_ok(), size <= limit, "inline size {size}");
+        assert_eq!(text.is_ok(), size <= limit, "text size {size}");
+    }
+}
+
+/// 🧬️ Optional wire fields keep empty values distinct from absent or null values.
+#[test]
+fn optional_part_and_grip_fields_round_trip_against_independent_json() {
+    let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../🔬️unit/📤️import-export-and-menus/🧫️fixtures/🔣️optional-fields.json")).expect("optional-field vectors");
+    let paths = [("partKind", "/parts/0/partKind"), ("shape", "/parts/0/2d/shape"), ("radius", "/parts/0/2d/radius"), ("text", "/parts/0/2d/text"), ("gripKind", "/parts/0/grips/0/gripKind"), ("grip2dKind", "/parts/0/grips/0/2d/gripKind"), ("grip2dRadius", "/parts/0/grips/0/2d/radius"), ("grip3dRadius", "/parts/0/grips/0/3d/radius")];
+    for case in fixture["cases"].as_array().expect("cases") {
+        let input = serde_json::json!({"schema": PUZZLE5D_SCHEMA, "parts": [case["part"].clone()]});
+        let bytes = serde_json::to_string(&input).expect("input JSON");
+        let decoded = import_snapshot::puzzle5d_decode_document(&bytes).expect("document identity");
+        let document: Puzzle5dDocument = crate::editor::puzzle5d::puzzle5d_record_from_projection(decoded).expect("document fields");
+        let snapshot = crate::editor::puzzle5d::entities::puzzle5d_snapshot_from_document(&document).expect("typed snapshot");
+        let restored = crate::editor::puzzle5d::entities::puzzle5d_document_from_snapshot(&snapshot).expect("editor projection");
+        let actual: serde_json::Value = serde_json::from_str(&export_snapshot::puzzle5d_export_json(&restored)).expect("independent export JSON");
+        for (key, pointer) in paths {
+            let expected = case["expected"].get(key);
+            let found = actual.pointer(pointer);
+            if expected.is_some_and(serde_json::Value::is_number) {
+                assert_eq!(found.and_then(serde_json::Value::as_f64), expected.and_then(serde_json::Value::as_f64), "{} {key}", case["id"]);
+            } else {
+                assert_eq!(found, expected, "{} {key}", case["id"]);
+            }
+        }
+    }
+}
+
+/// 🗂️ Every catalog category and its puzzle-owned extension survives snapshot composition.
+#[test]
+fn catalog_extensions_round_trip_against_independent_json() {
+    let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../🔬️unit/📤️import-export-and-menus/🧫️fixtures/🗂️catalog-roundtrip.json")).expect("catalog vectors");
+    let input = serde_json::json!({"schema": PUZZLE5D_SCHEMA, "parts": [], "kindCatalogs": fixture["kindCatalogs"].clone()});
+    let bytes = serde_json::to_string(&input).expect("input JSON");
+    let document: Puzzle5dDocument = crate::editor::puzzle5d::puzzle5d_record_from_projection(import_snapshot::puzzle5d_decode_document(&bytes).expect("identity")).expect("document");
+    let snapshot = crate::editor::puzzle5d::entities::puzzle5d_snapshot_from_document(&document).expect("typed snapshot");
+    let restored = crate::editor::puzzle5d::entities::puzzle5d_document_from_snapshot(&snapshot).expect("editor projection");
+    let actual: serde_json::Value = serde_json::from_str(&export_snapshot::puzzle5d_export_json(&restored)).expect("independent export JSON");
+    for pointer in fixture["pointers"].as_array().expect("pointers") {
+        let pointer = pointer.as_str().expect("pointer");
+        assert_eq!(actual.pointer(pointer), input.pointer(pointer), "{pointer}");
+    }
+}
+
 /// 📚️ LAW (diagnosis-first): the three SHIPPED examples really carry puzzle 5d content. Every other
 /// law in this region, and most of the clipboard, dialog and context-menu laws, read a shipped
 /// document — so when the examples are empty they all fail at once and none of them names WHY.
@@ -270,7 +331,7 @@ async fn add_part_dialog_enumerates_live_part_kinds() {
         .chain(
             [concrete_forest_example_document(), nakagin_example_document(), capsule_dream_example_document()]
                 .iter()
-                .flat_map(|document| document.parts.iter().map(|part| part.part_kind.clone()).collect::<Vec<_>>())
+                .flat_map(|document| document.parts.iter().filter_map(|part| part.part_kind.clone()).collect::<Vec<_>>())
                 .collect::<Vec<_>>(),
         )
         .collect();
@@ -511,7 +572,7 @@ fn puzzle5d_part_kind_rows(document: &Puzzle5dDocument) -> Vec<(String, String)>
     if !declared.is_empty() {
         return declared;
     }
-    let mut inferred: Vec<String> = document.parts.iter().map(|part| part.part_kind.clone()).filter(|kind| !kind.is_empty()).collect();
+    let mut inferred: Vec<String> = document.parts.iter().filter_map(|part| part.part_kind.clone()).filter(|kind| !kind.is_empty()).collect();
     inferred.sort();
     inferred.dedup();
     inferred.into_iter().map(|kind| (kind.clone(), kind)).collect()

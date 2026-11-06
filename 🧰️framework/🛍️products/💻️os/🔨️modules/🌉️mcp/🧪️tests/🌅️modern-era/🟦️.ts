@@ -13,7 +13,8 @@
  * capabilities, serverInfo, _meta?}`) exactly, NOT a bug. The full supported-version SET is exposed
  * authoritatively via the `-32022` error's `data.supported` array instead — asserted below. */
 import { beforeEach, describe, expect, it } from "vitest";
-import { requireMcpBinary, spawnRawMcp, type RawMcpProcess } from "../../🟦️.ts";
+import { spawnRawMcp, type RawMcpProcess } from "../../🟦️.ts";
+import { requireMcpBinary } from "../../📦️binary/🟦️.ts";
 import { findWorkspaceRoot } from "@semio-tech/process/routing";
 
 const repoRoot = findWorkspaceRoot();

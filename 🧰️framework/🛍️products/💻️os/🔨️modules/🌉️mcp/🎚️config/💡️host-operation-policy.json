@@ -30,6 +30,7 @@
       "maximumReleaseBytes": 67108864,
       "maximumDepth": 64
     },
-    "workFuel": 10000000
+    "workFuel": 10000000,
+    "maximumCleanupMicroseconds": 100000
   }
 }

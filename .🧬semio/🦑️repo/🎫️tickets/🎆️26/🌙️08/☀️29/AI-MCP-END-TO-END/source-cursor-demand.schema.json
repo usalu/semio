@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "demand",
+      "turn",
+      "total",
+      "expected"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "demand": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "turn": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "total": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "expected": {
+        "enum": [
+          "advance",
+          "pending",
+          "refuse"
+        ]
+      }
+    }
+  }
+}

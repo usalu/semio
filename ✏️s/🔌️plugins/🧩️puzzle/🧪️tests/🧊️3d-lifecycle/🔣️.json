@@ -1,0 +1,45 @@
+{
+  "schema": "s.puzzle3d.lifecycle.v1",
+  "variant": "puzzle3d",
+  "world": "#puzzle3d-main-perspective [data-instances-json]",
+  "canvas": "#puzzle3d-main-perspective canvas",
+  "selection": "#puzzle3d-main-perspective [data-selection-json]",
+  "palette": {
+    "en": "Add Object",
+    "de": "Objekt hinzufügen"
+  },
+  "grid": [
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.7
+  ],
+  "addedObjects": 1,
+  "dragPixels": 96,
+  "minMovement": 0.001,
+  "pickTimeoutMs": 1200,
+  "clearTimeoutMs": 2000,
+  "clearExample": {
+    "en": "Set Active Example",
+    "de": "Aktives Beispiel festlegen"
+  },
+  "clearPoints": [
+    [
+      0.03,
+      0.03
+    ],
+    [
+      0.97,
+      0.03
+    ],
+    [
+      0.03,
+      0.97
+    ],
+    [
+      0.97,
+      0.97
+    ]
+  ]
+}

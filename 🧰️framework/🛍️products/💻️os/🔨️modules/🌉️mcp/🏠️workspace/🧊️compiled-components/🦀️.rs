@@ -26,41 +26,53 @@ use semio_os_mcp_port::channel_port::{ACTIVATION_CANCELLED_FAULT_CODE, Activatio
 /// 🧠️ The process shares one firstparty interpreter for dynamically supplied component bytes.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn shared_plugin_runtime() -> Result<Arc<GuestRuntimes>, GatewayError> {
-    Ok(Arc::clone(plugin_runtime_origin().get_or_init(||Arc::new(GuestRuntimes::Owned(OwnedRuntime::new(semio_framework_job::default_now_us))))))
+    Ok(Arc::clone(&plugin_runtime_origin().get_or_init(||{static NEXT:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(1);let identity=NEXT.fetch_update(std::sync::atomic::Ordering::Relaxed,std::sync::atomic::Ordering::Relaxed,|value|value.checked_add(1)).expect("process cache identity remains finite");PluginRuntimeOrigin{identity,runtime:Arc::new(GuestRuntimes::Owned(OwnedRuntime::new(semio_framework_job::default_now_us)))}}).runtime))
 }
 
 #[cfg(not(target_arch="wasm32"))]
-fn plugin_runtime_origin()->&'static OnceLock<Arc<GuestRuntimes>>{static RUNTIME:OnceLock<Arc<GuestRuntimes>>=OnceLock::new();&RUNTIME}
+fn plugin_runtime_origin()->&'static OnceLock<PluginRuntimeOrigin>{static RUNTIME:OnceLock<PluginRuntimeOrigin>=OnceLock::new();&RUNTIME}
+
+#[cfg(not(target_arch="wasm32"))]
+struct PluginRuntimeOrigin{identity:u64,runtime:Arc<GuestRuntimes>}
 
 /// 🏠️ The actual immutable process cache lends its selected compiled parent without issuing aliases.
 #[cfg(not(target_arch="wasm32"))]
-pub fn native_instance_origin(package_hash:[u8;32])->semio_framework_plugin_host::GuestRelayNativeOrigin{
-    semio_framework_plugin_host::GuestRelayNativeOrigin{package_hash,resolve:resolve_native_instance_origin}
+pub fn native_instance_origin(package_hash:[u8;32])->Result<semio_plugin_host::GuestRelayNativeOrigin,semio_framework_job::OriginalTurnFailure>{
+ let runtime=plugin_runtime_origin().get().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native origin requires its initialized immutable process cache"))?;
+ Ok(semio_plugin_host::GuestRelayNativeOrigin{cache_identity:runtime.identity,package_hash,acquire:acquire_native_instance_origin,resolve:resolve_native_instance_origin,release:release_native_instance_origin})
+}
+#[cfg(not(target_arch="wasm32"))]
+fn resolve_native_instance_origin(cache_identity:u64,hash:[u8;32],run:&mut dyn FnMut(&GuestRuntimes,&semio_plugin_host::CompiledHandle)->Result<(),semio_framework_job::OriginalTurnFailure>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    let Some(runtime)=plugin_runtime_origin().get()else{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native instance has no admitted process runtime origin").into())};
+    if cache_identity==0||cache_identity!=runtime.identity{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native origin belongs to another immutable cache generation").into())}
+    let Ok(cache)=compiled_components().try_lock()else{return Ok(false)};
+    let compiled=cache.get(&hash).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native instance has no admitted immutable compiled origin"))?;
+    if compiled.compiled.package_hash!=hash||compiled.homes==0{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native compiled cache identity differs from its selected origin").into())}
+    run(&runtime.runtime,&compiled.compiled)?;Ok(true)
 }
 
 #[cfg(not(target_arch="wasm32"))]
-fn resolve_native_instance_origin(hash:[u8;32],run:&mut dyn FnMut(&GuestRuntimes,&semio_framework_plugin_host::CompiledHandle)->Result<(),semio_framework_job::OriginalTurnFailure>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-    let Some(runtime)=plugin_runtime_origin().get()else{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native instance has no admitted process runtime origin").into())};
-    let Ok(cache)=compiled_components().try_lock()else{return Ok(false)};
-    let compiled=cache.get(&hash).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native instance has no admitted immutable compiled origin"))?;
-    if compiled.package_hash!=hash{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native compiled cache identity differs from its selected origin").into())}
-    run(runtime,compiled)?;Ok(true)
+struct CompiledParent{compiled:semio_plugin_host::CompiledHandle,homes:u64}
+#[cfg(not(target_arch="wasm32"))]
+fn acquire_native_instance_origin(identity:u64,hash:[u8;32],held:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{change_native_instance_custody(identity,hash,held,true,cx)}
+#[cfg(not(target_arch="wasm32"))]
+fn release_native_instance_origin(identity:u64,hash:[u8;32],held:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{change_native_instance_custody(identity,hash,held,false,cx)}
+#[cfg(not(target_arch="wasm32"))]
+fn change_native_instance_custody(identity:u64,hash:[u8;32],held:&mut bool,acquire:bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
+ use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneProgress};
+ let refuse=||ValueError::literal(ValueRefusalKind::InvariantViolated,"native parent custody identity or balance differs");
+ let runtime=plugin_runtime_origin().get().ok_or_else(refuse)?;if identity==0||identity!=runtime.identity||*held==acquire{return Err(refuse().into())}
+ let Ok(mut cache)=compiled_components().try_lock()else{return Ok(())};let parent=cache.get_mut(&hash).ok_or_else(refuse)?;
+ if parent.compiled.package_hash!=hash{return Err(refuse().into())}let next=if acquire{parent.homes.checked_add(1)}else{parent.homes.checked_sub(1)}.ok_or_else(refuse)?;
+ let grant=cx.retained_grant();let bytes=std::mem::size_of::<u64>()+std::mem::size_of::<bool>();
+ if(if acquire{cx.should_yield()}else{cx.retirement_should_yield()})||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(())}
+ cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);parent.homes=next;*held=acquire;Ok(())
 }
 
-/// 🧩️ ONE compiled component per staged build, for the life of the process, keyed by the
-/// component's own content hash so a rebuilt plugin is a different entry rather than a stale one.
-///
-/// 🪦️ This is not only about not compiling twice. A `wasmtime::Component` owns a mapped code image
-/// — 136 MB for an unoptimized `🖍️draw` build — and releasing the LAST `Arc` to one runs
-/// `CodeMemory`'s `UnwindRegistration::drop`, i.e. a `__deregister_frame` walk over every frame in
-/// that image. Measured 2026-09-20 on a calm machine: the open itself is 34 ms and the drop of the
-/// component behind it pins a thread at 100 % for minutes, which is what made the gateway's first
-/// plugin tool call answer nothing at all inside the MCP client's 240 s budget — the work was in
-/// tearing the component DOWN after a successful call, not in bringing it up. Holding the handle
-/// here keeps the refcount above zero, so a channel's own drop releases its `Store` and stops.
+/// 🧩️ ONE compiled component per staged build, for the life of the process, keyed by the [Design notes](README.md#source-notes-72).
 #[cfg(not(target_arch = "wasm32"))]
-fn compiled_components() -> &'static Mutex<HashMap<[u8; 32], semio_plugin_host::CompiledHandle>> {
-    static COMPILED: OnceLock<Mutex<HashMap<[u8; 32], semio_plugin_host::CompiledHandle>>> = OnceLock::new();
+fn compiled_components() -> &'static Mutex<HashMap<[u8; 32], CompiledParent>> {
+    static COMPILED: OnceLock<Mutex<HashMap<[u8; 32], CompiledParent>>> = OnceLock::new();
     COMPILED.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
@@ -74,14 +86,7 @@ struct ComponentFileIdentity {
     modified_ns: u128,
 }
 
-/// 🔏️ The content hash of every staged component file already read, by file identity — held in this
-/// process and persisted beside the compiled-code cache, so a staged build is read and hashed once
-/// per build rather than once per process.
-///
-/// ⏱️ Every channel open used to read the whole component and hash it before it could ask the
-/// compiled cache anything: measured 2026-09-24 (ticket 26/09/23 slice G6) the 125 MB `🀄️wfc`
-/// build took 8.5–11.5 s to hash in a dev host, once for `artifact_create` and again for the first
-/// `inference_run` binding of the same session, while the compiled-code lookup behind it took 0.3 s.
+/// 🔏️ The content hash of every staged component file already read, by file identity — held in this [Design notes](README.md#source-notes-99).
 #[cfg(not(target_arch = "wasm32"))]
 fn component_file_hashes() -> &'static Mutex<HashMap<ComponentFileIdentity, [u8; 32]>> {
     static HASHES: OnceLock<Mutex<HashMap<ComponentFileIdentity, [u8; 32]>>> = OnceLock::new();
@@ -136,13 +141,7 @@ pub fn activation_fault(fault: Fault) -> GatewayError {
     GatewayError::new(GatewayErrorCode::Internal, fault.message)
 }
 
-/// 🔏️ `bytes`' own 32-byte content digest, one chunk per progress report and cancel check.
-///
-/// 🔏️ The component's OWN digest, not `hash_bytes`' 64-char HEX STRING: that string's `into_bytes()`
-/// is 64 long, so `try_into::<[u8; 32]>()` always failed and every plugin in this process took a
-/// `[0u8; 32]` fallback. `WasmtimeRuntime::compile` keys its on-disk `.cwasm` cache on it, so the
-/// placeholder made every plugin collide on ONE cache entry and replay whichever component compiled
-/// first. Measured 2026-09-20: a single 130 MB `0000…0000.cwasm`.
+/// 🔏️ `bytes`' own 32-byte content digest, one chunk per progress report and cancel check. [Design notes](README.md#source-notes-161).
 #[cfg(not(target_arch = "wasm32"))]
 fn scoped_component_hash(bytes: &[u8], scope: &ActivationScope) -> Result<[u8; 32], GatewayError> {
     let mut hasher = framework_hash::Hasher::new();
@@ -161,12 +160,7 @@ fn read_component(path: &Path, scope: &ActivationScope) -> Result<Vec<u8>, Gatew
     std::fs::read(path).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("reading {}: {error}", path.display())))
 }
 
-/// 🧩️ The process's compiled handle for one component, reporting each phase it actually runs to
-/// `scope`. A staged file already hashed in this process is neither read nor hashed again; compiled
-/// code already in this process or on disk is loaded, never compiled again, and the component is
-/// read only when it must be compiled. A cold compile runs in an isolated worker process shared by
-/// every requester of the same content hash ([`CompileFlight`]), so a cancel detaches this requester
-/// at once and the last requester's cancel kills the compile.
+/// 🧩️ The process's compiled handle for one component, reporting each phase it actually runs to [Design notes](README.md#source-notes-186).
 #[cfg(not(target_arch = "wasm32"))]
 pub fn scoped_compiled_component(runtime: &GuestRuntimes, plugin_id: &str, component: ComponentBytes<'_>, scope: &ActivationScope) -> Result<semio_plugin_host::CompiledHandle, GatewayError> {
     let (package_hash, mut bytes) = match component {
@@ -190,7 +184,7 @@ pub fn scoped_compiled_component(runtime: &GuestRuntimes, plugin_id: &str, compo
         ComponentBytes::Held(bytes) => (scoped_component_hash(bytes, scope)?, Some(std::borrow::Cow::Borrowed(bytes))),
     };
     if let Some(compiled) = compiled_components().lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&package_hash) {
-        return Ok(compiled.clone());
+        return Ok(compiled.compiled.clone());
     }
     scope.enter(ActivationPhase::LoadingCompiledCode).map_err(activation_fault)?;
     let package = semio_plugin_host::PackageRef { package: semio_plugin_host::PackageId(plugin_id.to_string()), hash: semio_plugin_host::PackageHash(package_hash) };
@@ -212,8 +206,8 @@ pub fn scoped_compiled_component(runtime: &GuestRuntimes, plugin_id: &str, compo
             }
         }
     };
-    compiled_components().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(package_hash, compiled.clone());
-    Ok(compiled)
+    let mut cache=compiled_components().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    Ok(cache.entry(package_hash).or_insert(CompiledParent{compiled,homes:0}).compiled.clone())
 }
 
 //#region 🧊️CompileFlight

@@ -1,0 +1,12 @@
+const fs=require('node:fs');const file='🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/🎭️exports/🦀️.rs';const before=fs.readFileSync(file,'utf8');let after=before;
+for(const [old,next] of [
+ ['use super::{OriginalActorFixedReceipt, OriginalActorGuestEntry, OriginalOwnedJobReceiptLoan};','use super::{OriginalActorFixedReceipt, OriginalActorTurnOutputReceipt, OriginalActorGuestEntry, OriginalOwnedJobReceiptLoan};'],
+ [' static ORIGINAL_ACTOR_RECEIPT:RefCell<OriginalActorFixedReceipt>=RefCell::new(OriginalActorFixedReceipt::empty());',' static ORIGINAL_ACTOR_RECEIPT:RefCell<OriginalActorFixedReceipt>=RefCell::new(OriginalActorFixedReceipt::empty());\n static ORIGINAL_TURN_RECEIPT:RefCell<OriginalActorTurnOutputReceipt>=RefCell::new(OriginalActorTurnOutputReceipt::empty());'],
+ ['if actor{return true}ORIGINAL_OWNED_JOB_RECEIPT.with','if actor{return true}let turn=ORIGINAL_TURN_RECEIPT.with(|original|{let mut original=original.borrow_mut();if !original.owns_pointer(pointer as usize){return false}assert!(original.hand_back(pointer as usize,length as usize),"original turn receipt handback does not match its outstanding loan");true});if turn{return true}ORIGINAL_OWNED_JOB_RECEIPT.with'],
+ ['fn actor_receipt_available()->bool{ORIGINAL_ACTOR_RECEIPT.with(|original|original.try_borrow().is_ok_and(|original|!original.is_borrowed()))}','fn actor_receipt_available()->bool{ORIGINAL_ACTOR_RECEIPT.with(|original|original.try_borrow().is_ok_and(|original|!original.is_borrowed()))&&ORIGINAL_TURN_RECEIPT.with(|original|original.try_borrow().is_ok_and(|original|!original.is_borrowed()))}'],
+]){if(after.split(old).length!==2)throw Error('turn receipt mount changed');after=after.replace(old,next)}
+const marker='/// 📤️ The original fixed result is resident instance storage, so deallocation releases only its loan.';
+if(after.split(marker).length!==2)throw Error('fixed result marker changed');
+const helper='fn return_turn_fixed(call:OriginalActorFixedCall)->u64{ORIGINAL_TURN_RECEIPT.with(|original|{let mut original=original.borrow_mut();match original.produce(call){Ok(bytes)=>u64::from(bytes.as_ptr()as usize as u32)|(144u64<<32),Err(error)=>semio_plugin_abi::operation_authority::owned_result::encode_refusal(error.kind)}})}\n';
+after=after.replace(marker,helper+marker);
+const temp='.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/AI-MCP-END-TO-END/🗑️generated/poll-resident-receipt.tmp';fs.writeFileSync(temp,after);if(fs.readFileSync(file,'utf8')!==before)throw Error('shared exports changed');fs.renameSync(temp,file);

@@ -1,6 +1,6 @@
 //! 🫳️ Canonical JSON octets borrow original ranked source fields and retain caller output on refusal.
 use semio_framework_pack_json::{JsonWriteSource,JsonWriteNode,MAX_DEPTH};
-use semio_framework_pack_json_float::{ScalarText,write_float_to};
+use semio_framework_pack_json_float::{ScalarText,write_float_to,write_float32_to};
 use semio_framework_value::{NativeEncodeControl,ValueError,ValueRefusalKind};
 use std::fmt::Write;
 
@@ -45,6 +45,8 @@ impl<F> Sink<'_,F>{
                 JsonWriteNode::Null=>self.raw("null",control),
                 JsonWriteNode::Bool(value)=>self.raw(if value{"true"}else{"false"},control),
                 JsonWriteNode::Number(value)=>{let mut scalar=ScalarText::new();match value{semio_framework_value::Number::UInt(value)=>write!(scalar,"{value}"),semio_framework_value::Number::Int(value)=>write!(scalar,"{value}"),semio_framework_value::Number::Float(value)=>write_float_to(value,&mut scalar)}.map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"borrowed JSON number exceeds fixed scalar cell"))?;self.raw(scalar.text(),control)},
+                JsonWriteNode::Float32(value)=>{let mut scalar=ScalarText::new();write_float32_to(value,&mut scalar).map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"borrowed JSON binary32 exceeds fixed scalar cell"))?;self.raw(scalar.text(),control)},
+                JsonWriteNode::QuotedUnsigned(value)=>{let mut scalar=ScalarText::new();write!(scalar,"{value}").map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"borrowed JSON unsigned value exceeds fixed scalar cell"))?;self.string(scalar.text(),control)},
                 JsonWriteNode::String(value)=>self.string(value,control),
                 JsonWriteNode::NativeString(value)=>{
                     self.raw("\"",control)?;

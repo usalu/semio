@@ -1,6 +1,6 @@
+//! 🗂️ Native object receiving owns each actual immutable map update through publication or cancellation.
 use crate::OriginalReceivingPrimary;
 use crate::RetainedWorkOutcome;
-//! 🗂️ Native object receiving owns each actual immutable map update through publication or cancellation.
 use super::{NativeReceive,NativeReceiver,NativeDefault,tree::{NativeValueSource,NativeReceiveSlot,fixed,invalid,receipt,nested,child_grant,add_receipt}};
 use crate::{NativeDecodeControl,RetirementDemand,ValueError,retirement::RetireOwned,retained_clone::{RetainedCloneBinding,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,retained_clone_grant_admits}};
 use semio_framework_value_ordered::{OrderedMap,SharedOwner,UpdateCursor};

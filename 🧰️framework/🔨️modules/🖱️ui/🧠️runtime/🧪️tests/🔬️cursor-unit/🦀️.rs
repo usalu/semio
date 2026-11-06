@@ -50,6 +50,7 @@ fn semantic_aggregate_quota_faults_before_key_or_record_clone() {
 }
 #[test]
 fn semantic_census_low_fuel_wide_container_and_deep_value_advance_one_unit_without_recursion() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let _guard = registry_guard();
     let wide = (0..128).map(|index| ui_contract::UiValue::Text(ui_contract::UiText::try_from_string(format!("value-{index}")).expect("bounded fixture text"))).collect::<Vec<_>>();
     let node = crate::TreeNode::try_new("wide", ui_contract::Component::Extension(ui_contract::ExtensionProps { extension: ui_text("fixture"), props: ui_contract::UiValue::List(ui_list(wide)) })).expect("bounded fixture node");

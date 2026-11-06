@@ -76,7 +76,6 @@ pub(super) enum ControlKind {
 }
 
 impl CoreModule{
-    /// ▶️ The actual declared start function, without opening an instance or cloning its body.
     pub fn original_start_function(&self)->Option<u32>{self.start}
 }
 
@@ -202,12 +201,6 @@ impl CoreInstance {
         CoreStepOutcome::Yield { fuel_used: used }
     }
 
-    /// 🧯️ Names a shadow-stack underflow for what it is. A `--stack-first` guest keeps its shadow
-    /// stack in `[0, __stack_pointer_init)` and grows it down, so an overrun addresses below zero and
-    /// surfaces as an ordinary out-of-bounds access at a huge unsigned address — indistinguishable,
-    /// in the bare trap text, from a wild pointer. Reported once, at the only place that still holds
-    /// the guest's call depth and globals (ticket 26/09/18 slice A2: a 1 MiB-linked component
-    /// overflowing at call depth 26 read as "runaway recursion" for a full slice).
     fn diagnose_fault(&self, error: CoreError) -> CoreError {
         let CoreError::Trap(message) = &error else { return error };
         if !message.contains("is out of bounds: start=4294") {

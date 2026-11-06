@@ -532,6 +532,111 @@
           ]
         }
       }
+    },
+    "SurfaceProps": {
+      "type": "object",
+      "required": [
+        "kind",
+        "docSchema",
+        "doc"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "canvas-2d",
+            "world-3d",
+            "node-graph",
+            "text-editor",
+            "table",
+            "paint-2d",
+            "virtual-file-system",
+            "tiled-map",
+            "board-2d",
+            "icon-render",
+            "ink-canvas",
+            "graph-timeline",
+            "block-list",
+            "diff-view",
+            "event-feed"
+          ]
+        },
+        "docSchema": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "doc": {
+          "type": "object",
+          "required": [
+            "bytes"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              },
+              "maxItems": 32768
+            }
+          }
+        },
+        "bindings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "trigger",
+              "action"
+            ],
+            "properties": {
+              "trigger": {
+                "type": "string",
+                "enum": [
+                  "activate",
+                  "change",
+                  "commit",
+                  "delta",
+                  "drop",
+                  "submit",
+                  "abort",
+                  "repeatLast",
+                  "hoverPreview"
+                ]
+              },
+              "action": {
+                "type": "object",
+                "required": [
+                  "scope",
+                  "name",
+                  "version"
+                ],
+                "properties": {
+                  "scope": {
+                    "type": "string",
+                    "maxLength": 256
+                  },
+                  "name": {
+                    "type": "string",
+                    "maxLength": 256
+                  },
+                  "version": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 65535
+                  }
+                }
+              },
+              "args": {},
+              "capability": {
+                "type": "string",
+                "maxLength": 256
+              }
+            }
+          },
+          "maxItems": 32
+        }
+      }
     }
   },
   "cases": [
@@ -1413,6 +1518,31 @@
     {
       "family": "WindowLayout",
       "wire": "{\"root\":{\"kind\":\"split\",\"axis\":\"diagonal\",\"children\":[]}}",
+      "accepted": false
+    },
+    {
+      "family": "SurfaceProps",
+      "wire": "{\"kind\":\"world-3d\",\"docSchema\":\"unknown-surface@77\",\"doc\":{\"bytes\":[0,127,255]},\"bindings\":[{\"trigger\":\"delta\",\"action\":{\"scope\":\"note\",\"name\":\"textReplace\",\"version\":1},\"args\":2,\"capability\":\"can.edit\"}]}",
+      "accepted": true
+    },
+    {
+      "family": "SurfaceProps",
+      "wire": "{\"kind\":\"canvas-2d\",\"docSchema\":\"unknown@0\",\"doc\":{\"bytes\":[]}}",
+      "accepted": true
+    },
+    {
+      "family": "SurfaceProps",
+      "wire": "{\"kind\":\"unknown-kind\",\"docSchema\":\"unknown@0\",\"doc\":{\"bytes\":[]}}",
+      "accepted": false
+    },
+    {
+      "family": "SurfaceProps",
+      "wire": "{\"kind\":\"canvas-2d\",\"docSchema\":\"unknown@0\",\"doc\":{\"bytes\":[256]}}",
+      "accepted": false
+    },
+    {
+      "family": "SurfaceProps",
+      "wire": "{\"kind\":\"canvas-2d\",\"docSchema\":\"unknown@0\",\"doc\":{\"bytes\":[]},\"bindings\":[{\"trigger\":\"wrong\",\"action\":{\"scope\":\"note\",\"name\":\"textReplace\",\"version\":1}}]}",
       "accepted": false
     }
   ]

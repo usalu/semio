@@ -52,6 +52,7 @@ semio-framework-async = { workspace = true, features = ["entrypoint"] }
 semio-framework-async-sync = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-job-payload = { workspace = true }
+semio-framework-job-return-escrow-publication = { workspace = true }
 # 🐕️ P1c (one-pool-worker-runtime): `ShardLoop::execute_turn_for`/its job-step counterpart wrap each
 # guest call in a `semio_framework_trace::Watchdog` so an over-8ms turn is recorded as a contract
 # violation instead of silently absorbed — see `📓️p1c-actor-shards.md`.

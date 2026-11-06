@@ -4,7 +4,6 @@ use super::*;
 
 //#region 💾️CheckpointCodec
 impl CoreInstance {
-    /// 👓️ Visits original borrowed checkpoint fields without creating intermediate storage.
     pub fn visit_checkpoint(&self,visitor:&mut dyn FnMut(&[u8])->Result<(),semio_framework_value::ValueError>)->Result<(),semio_framework_value::ValueError>{
         let mut writer=CheckpointWriter{sink:Some(visitor),..Default::default()};self.write_checkpoint(&mut writer);writer.error.map_or(Ok(()),Err)
     }
@@ -28,7 +27,6 @@ impl CoreInstance {
         writer.option(self.machine.as_ref(), |writer, machine| writer.machine(machine));
     }
 
-    /// 📤️ Measures borrowed state before original allocation and returns every failure owner to its caller slot.
     pub fn checkpoint_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<Vec<u8>,semio_framework_value::ValueError>{
         use semio_framework_value::{ValueError,ValueRefusalKind};
         control.scoped_stage(|control|{

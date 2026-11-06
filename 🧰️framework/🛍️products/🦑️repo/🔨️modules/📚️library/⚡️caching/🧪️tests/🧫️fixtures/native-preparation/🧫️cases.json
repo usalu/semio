@@ -1,6 +1,6 @@
 {
   "files": {
-    "Cargo.toml": "[workspace]\nmembers = [\"app\", \"library\", \"development\", \"transitive\", \"unused\", \"builder\"]\nresolver = \"2\"\n[workspace.dependencies]\ncommon = { package = \"library\", path = \"library\" }\n",
+    "Cargo.toml": "[workspace]\nmembers = [\"app\", \"library\", \"development\", \"transitive\", \"unused\", \"builder\", \"puzzle\", \"canvas\", \"runtime-assets\"]\nresolver = \"2\"\n[workspace.dependencies]\ncommon = { package = \"library\", path = \"library\" }\n",
     "app/Cargo.toml": "[package]\nname = \"app\"\nversion = \"0.1.0\"\nedition = \"2021\"\n[dependencies]\ncommon.workspace = true\n[dev-dependencies]\ndevelopment = { path = \"../development\" }\n",
     "library/Cargo.toml": "[package]\nname = \"library\"\nversion = \"0.1.0\"\nedition = \"2021\"\n[dependencies]\ntransitive = { path = \"../transitive\" }\n[build-dependencies]\nbuilder = { path = \"../builder\" }\n[dev-dependencies]\nunused = { path = \"../unused\" }\n",
     "development/Cargo.toml": "[package]\nname = \"development\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
@@ -12,7 +12,13 @@
     "development/src/lib.rs": "pub const VALUE: u8 = 1;\n",
     "transitive/src/lib.rs": "pub const VALUE: u8 = 1;\n",
     "unused/src/lib.rs": "pub const VALUE: u8 = 1;\n",
-    "builder/src/lib.rs": "pub const VALUE: u8 = 1;\n"
+    "builder/src/lib.rs": "pub const VALUE: u8 = 1;\n",
+    "puzzle/Cargo.toml": "[package]\nname = \"puzzle\"\nversion = \"0.1.0\"\nedition = \"2021\"\n[dependencies]\ncanvas = { path = \"../canvas\" }\n",
+    "puzzle/src/lib.rs": "pub const VALUE: u8 = 1;\n",
+    "canvas/Cargo.toml": "[package]\nname = \"canvas\"\nversion = \"0.1.0\"\nedition = \"2021\"\n[dependencies]\nruntime-assets = { path = \"../runtime-assets\" }\n",
+    "canvas/src/lib.rs": "pub const VALUE: u8 = 1;\n",
+    "runtime-assets/Cargo.toml": "[package]\nname = \"runtime-assets\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+    "runtime-assets/src/lib.rs": "pub const VALUE: u8 = 1;\n"
   },
   "contracts": {
     "library": {
@@ -99,6 +105,23 @@
           "inclusion": "ignored"
         }
       ]
+    },
+    "runtime-assets": {
+      "ownership": "owned",
+      "ownerPath": "assets",
+      "target": "runtime-assets:generate",
+      "nativeConsumers": [
+        "runtime-assets"
+      ],
+      "inputPatterns": [
+        "assets/source.json"
+      ],
+      "outputRoots": [
+        {
+          "path": "assets/generated",
+          "inclusion": "ignored"
+        }
+      ]
     }
   },
   "cases": [
@@ -140,6 +163,14 @@
       "tests": false,
       "targets": [
         "unused:generate"
+      ]
+    },
+    {
+      "name": "puzzle-transitive-runtime-assets",
+      "root": "puzzle",
+      "tests": false,
+      "targets": [
+        "runtime-assets:generate"
       ]
     }
   ],

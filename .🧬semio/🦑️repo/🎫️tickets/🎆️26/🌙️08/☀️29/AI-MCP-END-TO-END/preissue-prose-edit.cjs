@@ -1,0 +1,5 @@
+const fs=require('fs');
+const file='🧰️framework/🔨️modules/🧵️job/⏱️context/🛬️decode/🦀️.rs', readme='🧰️framework/🔨️modules/🧵️job/⏱️context/🛬️decode/README.md';
+const before=fs.readFileSync(file,'utf8'),old=fs.existsSync(readme)?fs.readFileSync(readme,'utf8'):'',docs=[];
+const after=before.split('\n').map(line=>{const m=line.match(/^(\s*)\/\/\/ (\S+) (.{85,})$/u);if(!m)return line;docs.push(m[2]+' '+m[3]);return m[1]+'/// '+m[2]+' See `README.md`.'}).join('\n');
+if(docs.length<5)throw Error('unexpected docs');const tmp=file+'.preissue-prose';fs.writeFileSync(tmp,after,{flag:'wx'});if(fs.readFileSync(file,'utf8')!==before||(fs.existsSync(readme)?fs.readFileSync(readme,'utf8'):'')!==old){fs.unlinkSync(tmp);throw Error('concurrent change')}fs.writeFileSync(readme,old+'\n## Decoder Source\n\n'+docs.join('\n\n')+'\n');fs.renameSync(tmp,file);

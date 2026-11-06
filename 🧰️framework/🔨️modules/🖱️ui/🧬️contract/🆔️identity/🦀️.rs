@@ -32,14 +32,7 @@ impl<'a> TryFrom<&'a str> for SurfaceId {
     }
 }
 
-/// 🔢️ A node's identity within one [`SurfaceId`] — monotonic per surface, never reused, so a stale
-/// reference to a removed node is always distinguishable from a fresh node at the same tree position.
-///
-/// The TypeScript type is pinned to `number`, not a Rust-centric `bigint` projection for `u64`: serde writes
-/// this as a plain JSON number, so `JSON.parse` hands JavaScript a `number` at runtime and a `bigint`
-/// declaration would be a type that never actually occurs. Ids are per-surface and monotonic, so the
-/// 2^53 exact-integer ceiling is unreachable in practice — a surface would have to mint nine
-/// quadrillion nodes to reach it.
+/// 🔢️ A node's identity within one [`SurfaceId`] — monotonic per surface, never reused, so a stale [Design notes](README.md#source-notes-35).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
 #[value(crate = "::semio_framework_value", transparent)]

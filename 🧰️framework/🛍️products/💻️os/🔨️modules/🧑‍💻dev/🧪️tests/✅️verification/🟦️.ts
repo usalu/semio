@@ -54,7 +54,7 @@ class VerifyScript extends BundleScript {
       return;
     }
     if (segments[0] === "two-human") {
-      await runTwoHumanCli(repoRoot, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/👥️two-human"), segments.slice(1));
+      await runTwoHumanCli(this.invocation,repoRoot, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/👥️two-human"), segments.slice(1));
       return;
     }
     if (segments[0] === "time-travel") {

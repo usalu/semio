@@ -90,14 +90,14 @@ impl BitmapCommandWork {
                 } else { context.transient.output_pixels.as_deref().expect("captured preview") }
             }
             BitmapEditorCommand::PinSolution { pixels, contradiction } => {
-                if *contradiction { return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.solution.contradiction"), "wfc.bitmap.solution.contradiction").into()); }
+                if *contradiction { return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("wfc.bitmap.solution.contradiction"), "wfc.bitmap.solution.contradiction").into()); }
                 pixels.as_str()
             }
             _ => return Err(Fault::from("wfc-bitmap-retained-route-mismatch").into()),
         };
         if self.pin.is_none() {
             let cells = pin_solution::pin_cells(input.snapshot).ok_or_else(|| Fault::from("wfc-bitmap-output-capacity"))?;
-            if pixels.len() != cells.div_ceil(3) * 4 { return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.solution.pixels-invalid"), "wfc.bitmap.solution.pixels-invalid").into()); }
+            if pixels.len() != cells.div_ceil(3) * 4 { return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("wfc.bitmap.solution.pixels-invalid"), "wfc.bitmap.solution.pixels-invalid").into()); }
             self.pin = Some(pin_solution::BitmapPinCursor::new(cells));
         }
         if cx.is_cancelled() { return Ok(ArtifactCommandWorkStep::Pending { stage: "bitmap-pin-cancel", preview: b"" }); }
@@ -293,7 +293,7 @@ mod pin_retirement_tests {
     #[test]
     fn cancelled_pin_work_closes_actual_allocations_through_its_original_caller() {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../🎮️commands/📌️pin-solution/🧪️tests/🧫️preview/🔣️.json")).unwrap();
-        let mut grant = semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance;
+        let mut grant = semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance;
         grant.maximum_release_bytes = grant.maximum_capacity_bytes;
         for case in fixture["cursorCases"].as_array().unwrap() {
             let mut snapshot = BitmapSnapshot::reference_scene();
@@ -305,7 +305,7 @@ mod pin_retirement_tests {
             for stop in 0..=2 {
                 let mut work = BitmapCommandWork::new("pin-preview");
                 work.pin = Some(pin_solution::BitmapPinCursor::new(cells));
-                let mut caller = semio_framework_plugin::artifact_app_laws::OriginalWorkFixture::new();
+                let mut caller = semio_plugin::artifact_app_laws::OriginalWorkFixture::new();
                 let mut allocated = 0;
                 for _ in 0..stop {
                     caller.work_turn(grant, pin_solution::BITMAP_PIN_WORK_UNITS_PER_TURN as u64, |cx| {
@@ -349,14 +349,14 @@ mod pin_retirement_tests {
     /// 📨️ The actual completion work emits no rows and preserves the complete newer cache for a stale source.
     #[test]
     fn stale_completion_cannot_overwrite_a_fresh_bitmap_cache() {
-        use semio_framework_plugin::retained_command::ArtifactCommandSnapshotRead;
+        use semio_plugin::retained_command::ArtifactCommandSnapshotRead;
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🧪️tests/🧫️preview-revisions/🔣️.json")).unwrap();
         let snapshot = BitmapSnapshot::reference_scene();
-        let history = semio_framework_plugin::HistoryView::empty();
+        let history = semio_plugin::HistoryView::empty();
         let config = NoConfig::default();
         let interaction = protocol::InteractionState::default();
         let hover = Default::default();
-        let grant = semio_framework_plugin::artifact_app_laws::fixture_retained_turn().grant;
+        let grant = semio_plugin::artifact_app_laws::fixture_retained_turn().grant;
         let cells = (snapshot.output.width * snapshot.output.height) as usize;
         let encode = crate::standards::v1::subsets::any::io::text::snapshot::encode_base64;
         for case in fixture["cases"].as_array().unwrap() {
@@ -369,7 +369,7 @@ mod pin_retirement_tests {
             let mut cache = BitmapTransient { output_pixels: Some(encode(&vec![0;cells])), contradiction: false, output_width: snapshot.output.width, output_height: snapshot.output.height, source_revision: encode(&revision) };
             let before = cache.clone();
             let mut work = BitmapCommandWork::new("commit-fill-solve");
-            let mut caller = semio_framework_plugin::artifact_app_laws::OriginalWorkFixture::new();
+            let mut caller = semio_plugin::artifact_app_laws::OriginalWorkFixture::new();
             let step = caller.work_turn(grant, 1, |cx| { cx.consume_fuel(1); work.step(&input, cx) }).unwrap();
             let rows = match step { ArtifactCommandWorkStep::CompleteWithEphemeral { ephemeral, .. } => ephemeral.transient, ArtifactCommandWorkStep::Complete(_) => Vec::new(), _ => panic!("completion must settle") };
             let visible = case["visible"].as_bool().unwrap();

@@ -236,21 +236,18 @@ macro_rules! __semio_owned_core_exports {
         }
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         #[unsafe(no_mangle)]
-        pub unsafe extern "C" fn semio_owned_admit_actor_context_v1(pointer: u32, length: u32) -> u64 {
-            let input = unsafe { $crate::owned_abi::take_actor_admission_input(pointer, length) };
-            match input {
-                Ok(budget) => $crate::reactor::original_actor_context::exports::admit_owned(budget,|_|{$ensure();Ok(())}),
-                Err(kind) => $crate::operation_authority::owned_result::encode_refusal(kind),
-            }
+        pub unsafe extern "C" fn semio_owned_admit_actor_input_v1(pointer:u32,length:u32,operation:u64,generation:u64,epoch:u64,clock_binding:u64,absolute_deadline_us:u64,total_fuel:u64,items:u64,copy:u64,capacity:u64,release:u64,depth:u64,policy_items:u64,policy_copy:u64,policy_capacity:u64,policy_release:u64,policy_depth:u64,fuel:u64,deadline_us:u64,cancelled:u64)->u64{
+            match $crate::owned_abi::original_job_budget([operation,generation,epoch,clock_binding,absolute_deadline_us,total_fuel,items,copy,capacity,release,depth,policy_items,policy_copy,policy_capacity,policy_release,policy_depth,fuel,deadline_us,cancelled]){Ok(budget)=>unsafe{$crate::reactor::original_actor_context::exports::admit_input_owned(pointer,length,budget)},Err(kind)=>$crate::operation_authority::owned_result::encode_refusal(kind)}
         }
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         #[unsafe(no_mangle)]
-        pub unsafe extern "C" fn semio_owned_close_actor_context_v1(pointer: u32, length: u32) -> u64 {
-            let input = unsafe { $crate::owned_abi::take_actor_admission_input(pointer, length) };
-            match input {
-                Ok(budget) => $crate::reactor::original_actor_context::exports::close_owned(budget),
-                Err(kind) => $crate::operation_authority::owned_result::encode_refusal(kind),
-            }
+        pub extern "C" fn semio_owned_admit_actor_context_v1(operation:u64,generation:u64,epoch:u64,clock_binding:u64,absolute_deadline_us:u64,total_fuel:u64,items:u64,copy:u64,capacity:u64,release:u64,depth:u64,policy_items:u64,policy_copy:u64,policy_capacity:u64,policy_release:u64,policy_depth:u64,fuel:u64,deadline_us:u64,cancelled:u64) -> u64 {
+            match $crate::owned_abi::original_job_budget([operation,generation,epoch,clock_binding,absolute_deadline_us,total_fuel,items,copy,capacity,release,depth,policy_items,policy_copy,policy_capacity,policy_release,policy_depth,fuel,deadline_us,cancelled]){Ok(budget)=>$crate::reactor::original_actor_context::exports::admit_owned(budget,|_|{$ensure();Ok(())}),Err(kind)=>$crate::operation_authority::owned_result::encode_refusal(kind)}
+        }
+        #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+        #[unsafe(no_mangle)]
+        pub extern "C" fn semio_owned_close_actor_context_v1(operation:u64,generation:u64,epoch:u64,clock_binding:u64,absolute_deadline_us:u64,total_fuel:u64,items:u64,copy:u64,capacity:u64,release:u64,depth:u64,policy_items:u64,policy_copy:u64,policy_capacity:u64,policy_release:u64,policy_depth:u64,fuel:u64,deadline_us:u64,cancelled:u64) -> u64 {
+            match $crate::owned_abi::original_job_budget([operation,generation,epoch,clock_binding,absolute_deadline_us,total_fuel,items,copy,capacity,release,depth,policy_items,policy_copy,policy_capacity,policy_release,policy_depth,fuel,deadline_us,cancelled]){Ok(budget)=>$crate::reactor::original_actor_context::exports::close_owned(budget),Err(kind)=>$crate::operation_authority::owned_result::encode_refusal(kind)}
         }
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         #[unsafe(no_mangle)]
@@ -264,22 +261,29 @@ macro_rules! __semio_owned_core_exports {
         }
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         #[unsafe(no_mangle)]
-        pub unsafe extern "C" fn semio_owned_close_turn_output_v1(pointer:u32,length:u32)->u64{
-            match unsafe{$crate::owned_abi::take_actor_output_close_input(pointer,length)}{
-                Ok(budget)=>$crate::reactor::original_actor_context::exports::close_turn_output_owned(budget),
-                Err(kind)=>$crate::operation_authority::owned_result::encode_refusal(kind),
-            }
+        pub extern "C" fn semio_owned_close_actor_output_v1(operation:u64,generation:u64,epoch:u64,clock_binding:u64,absolute_deadline_us:u64,total_fuel:u64,items:u64,copy:u64,capacity:u64,release:u64,depth:u64,policy_items:u64,policy_copy:u64,policy_capacity:u64,policy_release:u64,policy_depth:u64,fuel:u64,deadline_us:u64,cancelled:u64) -> u64 {
+            match $crate::owned_abi::original_job_budget([operation,generation,epoch,clock_binding,absolute_deadline_us,total_fuel,items,copy,capacity,release,depth,policy_items,policy_copy,policy_capacity,policy_release,policy_depth,fuel,deadline_us,cancelled]){Ok(budget)=>$crate::reactor::original_actor_context::exports::close_turn_output_owned(budget),Err(kind)=>$crate::operation_authority::owned_result::encode_refusal(kind)}
         }
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         #[unsafe(no_mangle)]
-        pub unsafe extern "C" fn semio_owned_start_job_v1(pointer: u32, length: u32) -> u64 {
-            let input = unsafe { $crate::owned_abi::take_actor_start_job_input(pointer, length) };
-            $ensure();
-            match input {
-                Ok(input) => $crate::reactor::original_actor_context::exports::start_job_owned(input.source, input.budget),
-                Err(kind) => $crate::operation_authority::owned_result::encode_refusal(kind),
-            }
+        pub extern "C" fn semio_owned_start_job_v1(job:u64,operation:u64,generation:u64,epoch:u64,clock_binding:u64,absolute_deadline_us:u64,total_fuel:u64,items:u64,copy:u64,capacity:u64,release:u64,depth:u64,policy_items:u64,policy_copy:u64,policy_capacity:u64,policy_release:u64,policy_depth:u64,fuel:u64,deadline_us:u64,cancelled:u64)->u64{
+            match $crate::owned_abi::original_job_budget([operation,generation,epoch,clock_binding,absolute_deadline_us,total_fuel,items,copy,capacity,release,depth,policy_items,policy_copy,policy_capacity,policy_release,policy_depth,fuel,deadline_us,cancelled]){Ok(budget)=>$crate::reactor::original_actor_context::exports::start_job_owned(job,budget),Err(kind)=>$crate::operation_authority::owned_result::encode_refusal(kind)}
         }
+        #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+        #[unsafe(no_mangle)]
+        pub extern "C" fn semio_owned_publish_actor_failure_v1(job:u64,operation:u64,generation:u64,epoch:u64,clock_binding:u64,absolute_deadline_us:u64,total_fuel:u64,items:u64,copy:u64,capacity:u64,release:u64,depth:u64,policy_items:u64,policy_copy:u64,policy_capacity:u64,policy_release:u64,policy_depth:u64,fuel:u64,deadline_us:u64,cancelled:u64)->u64{match $crate::owned_abi::original_job_budget([operation,generation,epoch,clock_binding,absolute_deadline_us,total_fuel,items,copy,capacity,release,depth,policy_items,policy_copy,policy_capacity,policy_release,policy_depth,fuel,deadline_us,cancelled]){Ok(budget)=>$crate::reactor::original_actor_context::exports::publish_actor_failure_owned(job,budget),Err(kind)=>$crate::operation_authority::owned_result::encode_refusal(kind)}}
+        #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+        #[unsafe(no_mangle)]
+        pub extern "C" fn semio_owned_read_actor_failure_v1(job:u64,operation:u64,generation:u64,epoch:u64,clock_binding:u64,absolute_deadline_us:u64,total_fuel:u64,items:u64,copy:u64,capacity:u64,release:u64,depth:u64,policy_items:u64,policy_copy:u64,policy_capacity:u64,policy_release:u64,policy_depth:u64,fuel:u64,deadline_us:u64,cancelled:u64)->u64{match $crate::owned_abi::original_job_budget([operation,generation,epoch,clock_binding,absolute_deadline_us,total_fuel,items,copy,capacity,release,depth,policy_items,policy_copy,policy_capacity,policy_release,policy_depth,fuel,deadline_us,cancelled]){Ok(budget)=>$crate::reactor::original_actor_context::exports::read_actor_failure_owned(job,budget),Err(kind)=>$crate::operation_authority::owned_result::encode_refusal(kind)}}
+        #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+        #[unsafe(no_mangle)]
+        pub extern "C" fn semio_owned_acknowledge_actor_failure_v1(job:u64,operation:u64,generation:u64,epoch:u64,clock_binding:u64,absolute_deadline_us:u64,total_fuel:u64,items:u64,copy:u64,capacity:u64,release:u64,depth:u64,policy_items:u64,policy_copy:u64,policy_capacity:u64,policy_release:u64,policy_depth:u64,fuel:u64,deadline_us:u64,cancelled:u64)->u64{match $crate::owned_abi::original_job_budget([operation,generation,epoch,clock_binding,absolute_deadline_us,total_fuel,items,copy,capacity,release,depth,policy_items,policy_copy,policy_capacity,policy_release,policy_depth,fuel,deadline_us,cancelled]){Ok(budget)=>$crate::reactor::original_actor_context::exports::acknowledge_actor_failure_owned(job,budget),Err(kind)=>$crate::operation_authority::owned_result::encode_refusal(kind)}}
+        #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+        #[unsafe(no_mangle)]
+        pub extern "C" fn semio_owned_borrow_actor_failure_v1(job:u64,operation:u64,generation:u64,offset:u64,length:u64)->u64{$crate::reactor::original_actor_context::exports::borrow_actor_failure_owned(job,operation,generation,offset,length)}
+        #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+        #[unsafe(no_mangle)]
+        pub extern "C" fn semio_owned_acknowledge_actor_failure_chunk_v1(job:u64,offset:u64,length:u64,operation:u64,generation:u64,epoch:u64,clock_binding:u64,absolute_deadline_us:u64,total_fuel:u64,items:u64,copy:u64,capacity:u64,release:u64,depth:u64,policy_items:u64,policy_copy:u64,policy_capacity:u64,policy_release:u64,policy_depth:u64,fuel:u64,deadline_us:u64,cancelled:u64)->u64{match $crate::owned_abi::original_job_budget([operation,generation,epoch,clock_binding,absolute_deadline_us,total_fuel,items,copy,capacity,release,depth,policy_items,policy_copy,policy_capacity,policy_release,policy_depth,fuel,deadline_us,cancelled]){Ok(budget)=>$crate::reactor::original_actor_context::exports::acknowledge_actor_failure_chunk_owned(job,offset,length,budget),Err(kind)=>$crate::operation_authority::owned_result::encode_refusal(kind)}}
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         #[unsafe(no_mangle)]
         pub extern "C" fn semio_owned_step_job_v1(job:u64,operation:u64,generation:u64,epoch:u64,clock_binding:u64,absolute_deadline_us:u64,total_fuel:u64,items:u64,copy:u64,capacity:u64,release:u64,depth:u64,policy_items:u64,policy_copy:u64,policy_capacity:u64,policy_release:u64,policy_depth:u64,fuel:u64,deadline_us:u64,cancelled:u64) -> u64 {

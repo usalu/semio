@@ -109,3 +109,13 @@ pub fn derive_retained_equality(input:TokenStream)->TokenStream{let input=parse_
 /// 🛬️ Derives funded native receiving from genuine original fields independently of cold wire admission.
 #[proc_macro_derive(NativeReceive,attributes(value))]
 pub fn derive_native_receive(input:TokenStream)->TokenStream{let input=parse_macro_input!(input as DeriveInput);component::expand_native_receive(&input).unwrap_or_else(|error|error.to_compile_error()).into()}
+
+#[path="👁️borrow/🦀️.rs"]
+mod native_json_borrow;
+/// 👁️ Emits bounded borrowed fields over the declared value wire shape.
+#[proc_macro_derive(NativeJsonBorrow,attributes(value,borrowed_json))]
+pub fn derive_native_json_borrow(input:TokenStream)->TokenStream{let input=parse_macro_input!(input as DeriveInput);native_json_borrow::expand(&input).unwrap_or_else(|error|error.to_compile_error()).into()}
+
+/// 🧩️ Checks and projects an external type through a domain-local borrowed JSON protocol.
+#[proc_macro]
+pub fn native_json_codec(input:TokenStream)->TokenStream{let input=parse_macro_input!(input as DeriveInput);native_json_borrow::codec(&input).unwrap_or_else(|error|error.to_compile_error()).into()}

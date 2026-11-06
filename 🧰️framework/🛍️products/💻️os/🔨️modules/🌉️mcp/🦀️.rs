@@ -568,13 +568,7 @@ pub(crate) const HUB_OPEN_RETRY_ATTEMPTS: u32 = 6;
 
 const HUB_OPEN_RETRY_STEP_MS: u64 = 500;
 
-/// 🔁️ Opens the hub workspace, re-attempting ONLY the states the hub marks retryable — a descriptor
-/// index that is `refreshing`, a directory stream that has not re-dialled yet. Those are ordinary
-/// mid-refresh states of a live hub, not faults, and before this a client whose hub happened to be
-/// refreshing at `initialize` time saw the gateway process EXIT (measured 2026-09-21, M8 §5.4(2):
-/// `PluginUnavailable: authenticated hub descriptor index is refreshing; retry after authority
-/// refresh`, exit 1, before `initialize`). A non-retryable error — a bad credential, a space the
-/// principal is not a member of, a version boundary — is returned on its first occurrence untouched.
+/// 🔁️ Opens the hub workspace, re-attempting ONLY the states the hub marks retryable — a descriptor [Design notes](README.md#source-notes-571).
 fn open_hub_workspace_with_retry(hub: &HubOptions, credential: std::sync::Arc<semio_os_kernel::os_directory::client::LocalHubCredential>, principal: &AgentPrincipal, host_driver_policy:semio_plugin_host_wake::GuestRelayDriverPolicy, operation_policy:semio_os_mcp_port::channel_port::HostOperationPolicy) -> Result<HeadlessWorkspace, GatewayError> {
     let scopes: Vec<String> = principal.scopes.iter().map(|scope| scope.0.clone()).collect();
     let mut attempts_made = 0;
@@ -601,38 +595,7 @@ pub fn hub_open_retry_backoff_ms(error: &GatewayError, attempts_made: u32) -> Op
     Some(HUB_OPEN_RETRY_STEP_MS.saturating_mul(u64::from(attempts_made) + 1))
 }
 
-/// 🏠️ Builds the real `McpServer` for a `--folder`/`--hub`-bound session: opens a real
-/// `HeadlessWorkspace` and a `workspace::RoutingArtifactChannel`, which resolves the owning plugin
-/// per capability from the compiled catalog and lazily opens one `PluginArtifactChannel` per plugin
-/// (ticket 26/08/29/AI-MCP-END-TO-END packet W8 — the predecessor pinned the single plugin `note`,
-/// then a single-plugin-only `resolve_default_plugin_id`, both of which break the moment more than
-/// one plugin is installed). `folder`/`hub` are mutually exclusive; with NEITHER given the server is
-/// built on [`UnboundArtifactChannel`] — every mutation-protocol call then answers the typed,
-/// retryable `PLUGIN_UNAVAILABLE` naming both flags, the same answer the `🗿️artifact` tools' own
-/// tier-1 gate gives. There is no scripted stand-in on any production path any more.
-///
-/// 🤖️ Filled by the agent branch below and applied before the workspace is opened: a process
-/// that exchanged a delegation IS that agent principal, and every surface that names a
-/// principal — `context_resolve`, the audit sink, the policy gate — must say so rather than
-/// the `--principal` default the launcher happened to pass (observed live 2026-09-20:
-/// `context_resolve` reported `agent:local` while the process was acting as
-/// `agent:<delegation id>`).
-///
-/// 🤖️ Agent mode: a delegation a human minted for this agent, read from a 0600 file (or
-/// an inherited descriptor), exchanged once through the explicitly installed owner protocol. The session
-/// it returns is an ordinary hub session whose *kind* is `agent`, so everything below
-/// this line is identical to a human's — and everything above the hub's presence
-/// normalization now knows this peer is an agent principal, not the delegating human.
-///
-/// 🐚️ Both routes are built; `SessionChannelBinding` picks one per session at `context_resolve`
-/// time and `ContextSummary.channel` reports which — a delegated agent always its own headless hub route
-/// (`SessionChannelBinding::for_principal`). With no shell attached this behaves exactly as the pre-LB1 gateway
-/// did — the headless workspace, unchanged. Answers the server and the principal it acts as (the delegated agent's
-/// `agent:<delegation id>` once the credential was exchanged) — the principal a stdio gateway's bridge offer names.
-///
-/// 🐚️ The artifact-level verbs (`artifact_create`, `artifact_export`) open a channel of their own
-/// inside the workspace; publishing the binding there is what keeps a `shell` session from having
-/// two document owners (`📓️lb1…` §7.3 step 1).
+/// 🏠️ Builds the real `McpServer` for a `--folder`/`--hub`-bound session: opens a real [Design notes](README.md#source-notes-604).
 fn server_for_workspace_options(mut principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, folder: Option<&str>, hub: Option<&HubOptions>, mut runtime: GatewayRuntime, host_driver_policy:semio_plugin_host_wake::GuestRelayDriverPolicy, operation_policy:semio_os_mcp_port::channel_port::HostOperationPolicy) -> Result<(McpServer, String), GatewayError> {
     let origin_label;
     let workspace = if let Some(folder) = folder {

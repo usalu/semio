@@ -1,0 +1,16 @@
+{
+  "maximum": 100,
+  "owned": 13,
+  "completed": 2,
+  "total": 5,
+  "stage": 9,
+  "depth": 3,
+  "started": true,
+  "receiving": true,
+  "sourceDepth": 7,
+  "allocationLocal": true,
+  "retirement": false,
+  "allocation": true,
+  "work": true,
+  "refusal": "InvariantViolated"
+}

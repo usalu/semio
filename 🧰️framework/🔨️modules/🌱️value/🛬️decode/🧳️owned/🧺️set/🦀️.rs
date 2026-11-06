@@ -1,6 +1,6 @@
+//! 🧺️ Native membership receiving reads the wire string array through funded sequence custody, then admits every member insert through the ordered owner's paid update cursor.
 use crate::OriginalReceivingPrimary;
 use crate::RetainedWorkOutcome;
-//! 🧺️ Native membership receiving reads the wire string array through funded sequence custody, then admits every member insert through the ordered owner's paid update cursor.
 use super::{NativeDefault,NativeReceive,NativeReceiver,tree::{NativeReceiveSlot,NativeValueSource,add_receipt,child_grant,fixed,invalid,nested,receipt}};
 use crate::{NativeDecodeControl,RetirementDemand,ValueError,retirement::RetireOwned,retained_clone::{RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,retained_clone_grant_admits}};
 use semio_framework_value_ordered::{OrderedMap,OrderedSet,SharedOwner,UpdateCursor};

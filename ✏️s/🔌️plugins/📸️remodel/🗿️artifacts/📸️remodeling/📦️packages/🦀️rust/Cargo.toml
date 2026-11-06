@@ -37,7 +37,6 @@ semio-s-artifact-remodel-remodeling-write = { workspace = true }
 
 [dev-dependencies]
 semio-plugin-reactor-app = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔌️app/📦️packages/🦀️rust" }
-semio-framework-plugin-reactor-app = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔌️app/📦️packages/🦀️rust" }
 semio-s-artifact-remodel-remodeling-reconstruct = { workspace = true }
 semio-s-artifact-stdio-jpg-test-oracle = { path = "../../../../../🗄️stdio/🗿️artifacts/📸️jpg/🔮️oracles/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }

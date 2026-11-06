@@ -114,3 +114,13 @@ impl<'de> Deserialize<'de> for FixedCommandPage {
     }
 }
 //#endregion 🔖️PagedCommandIngress
+
+impl semio_framework_value::native_decoding::owned::tree::NativeSequenceCollection<u8> for FixedCommandPage{
+ type Storage=Vec<u8>;
+ fn storage_demand(count:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if count>COMMAND_PAGE_MAXIMUM_BYTES{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"command page exceeds its fixed byte extent"))}Ok(semio_framework_value::RetirementDemand{capacity_bytes:COMMAND_PAGE_MAXIMUM_BYTES,depth:1,..Default::default()})}
+ fn admit_storage(output:&mut Option<Vec<u8>>,count:usize,control:&mut semio_framework_value::NativeDecodeControl<'_>,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<semio_framework_value::RetainedCloneStep,semio_framework_value::OriginalReceivingPrimary>{if let Err(error)=<Self as semio_framework_value::native_decoding::owned::tree::NativeSequenceCollection<u8>>::storage_demand(count){return semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:0}}control.admit_vec(output,COMMAND_PAGE_MAXIMUM_BYTES,grant)}
+ fn push_step(storage:&mut Vec<u8>,index:usize,input:&mut Option<u8>,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<semio_framework_value::RetainedCloneProgress>>{<Vec<u8>as semio_framework_value::native_decoding::owned::tree::NativeSequenceCollection<u8>>::push_step(storage,index,input,grant)}
+ fn finish_copy_bytes(storage:&Vec<u8>)->Result<usize,semio_framework_value::ValueError>{COMMAND_PAGE_MAXIMUM_BYTES.checked_sub(storage.len()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"command page lost its fixed byte extent"))}
+ fn finish(mut storage:Vec<u8>)->Self{let len=storage.len()as u16;storage.resize(COMMAND_PAGE_MAXIMUM_BYTES,0);let bytes=storage.into_boxed_slice().try_into().expect("admitted command page has its fixed extent");Self{bytes,len}}
+}
+impl<I:semio_framework_value::native_decoding::owned::tree::NativeValueSource+?Sized>semio_framework_value::NativeReceive<I>for FixedCommandPage{type Receiver=semio_framework_value::native_decoding::owned::tree::NativeSequenceReceiver<I,u8,Self>;fn receiver()->Self::Receiver{Self::Receiver::new()}}

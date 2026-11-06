@@ -87,16 +87,7 @@ impl UiTreeItemAction {
     }
 }
 
-/// 🪟️ The materialised slice of a logically `total`-long tree child list: the node's `items` are
-/// the entries `[offset, offset + items.len())` of that list. `total > 0` with no materialised
-/// items means expandable-but-not-yet-loaded, never "empty" — a renderer pitches the
-/// unmaterialised rows as empty spacer bands so the scrollbar spans the whole document. The
-/// legacy-node mirror of `ui_contract::TreeWindow`; the two are bridged in
-/// `🎯️targets/🧊️wgpu/🔀️reconcile/🦀️.rs`. The retained layout pitches the unmaterialised rows as spacers
-/// (`layout::tree_window_spacer_px`), `Ui::tree_window_measures` reads every windowed container against its scroll
-/// viewport, and the one request rule (`🧱️elements/🌳️Tree/🪟️window/🦀️.rs`, React's `treeWindowServedRequestsV1`) asks
-/// back the rows the viewport needs — the same `ViewModel.tree_windows` React's host reports. There is deliberately no
-/// `+N` continuation-row fallback.
+/// 🪟️ The materialised slice of a logically `total`-long tree child list: the node's `items` are [Design notes](README.md#source-notes-90).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -293,15 +284,7 @@ pub struct UiTreeNode {
     pub interaction_domain: Option<String>,
 }
 
-/// 🖌️ Stamps `selected`/`previewed`/`color`/`peers` per-item presence across every item in every
-/// section of a tree — the framework-side counterpart of a `UiTreeNode.interaction_domain`
-/// binding. `previewed` wins visually over a plain `selected` item only insofar as both are
-/// representable simultaneously (an item can be selected AND previewed). `own_color` (ticket
-/// 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.6) is stamped onto
-/// every item unconditionally — it names the color THIS session renders its own hover/selection
-/// as, whether or not this particular item is currently marked; `peer_marks_for` resolves an
-/// item's own peer roster by id (called once per item, not pre-collected, since the caller's
-/// `InteractionView::peers_selecting`/`peers_hovering` are themselves per-id lookups).
+/// 🖌️ Stamps `selected`/`previewed`/`color`/`peers` per-item presence across every item in every [Design notes](README.md#source-notes-296).
 pub fn ui_tree_stamp_presence(sections: &mut [UiTreeSectionNode], selected: &std::collections::HashSet<String>, previewed: &std::collections::HashSet<String>, own_color: Option<u8>, peer_marks_for: &dyn Fn(&str) -> Vec<UiPeerMark>) {
     fn stamp_items(items: &mut [UiTreeItemNode], selected: &std::collections::HashSet<String>, previewed: &std::collections::HashSet<String>, own_color: Option<u8>, peer_marks_for: &dyn Fn(&str) -> Vec<UiPeerMark>) {
         for item in items {

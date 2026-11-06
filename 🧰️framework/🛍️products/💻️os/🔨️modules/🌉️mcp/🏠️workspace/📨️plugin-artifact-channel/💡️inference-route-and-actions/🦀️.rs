@@ -6,8 +6,8 @@ use super::*;
 #[cfg(not(target_arch = "wasm32"))]
 impl PluginArtifactChannel {
     /// 🏭️ Opens the actual compiled actor through synchronous slices of its retained lifetime source.
-    pub(super) fn open_original_instance(&mut self,actor:semio_framework_actor::ActorId,driver:&Arc<semio_framework_plugin_host::GuestRelayWakeDriver>,scope:&ActivationScope)->Result<semio_framework_plugin_host::GuestInstance,Fault>{
-        use semio_framework_plugin_host::GuestRelayAdmissionCall;
+    pub(super) fn open_original_instance(&mut self,actor:semio_framework_actor::ActorId,driver:&Arc<semio_plugin_host::GuestRelayWakeDriver>,scope:&ActivationScope)->Result<semio_plugin_host::GuestInstance,Fault>{
+        use semio_plugin_host::GuestRelayAdmissionCall;
         if self.startup_custody.is_some()||self.startup_instance_custody.is_some()||self.startup_failure.is_some(){return Err(Self::not_wired("original startup","an earlier opening still owns its refused source"))}
         scope.enter(ActivationPhase::OpeningGuest)?;
         let runtime=Arc::clone(&self.runtime);
@@ -40,7 +40,7 @@ impl PluginArtifactChannel {
     }
 
     /// 💡️ Registers the committed inference roster over a separate actual actor on this compiled runtime.
-    fn ensure_inference_route(&mut self,cancel:&semio_framework_async::CancelToken,funding:&semio_framework_plugin_host::GuestRelayWakeAuthority) -> Result<&PluginInferenceRoute, Fault> {
+    fn ensure_inference_route(&mut self,cancel:&semio_framework_async::CancelToken,funding:&semio_plugin_host::GuestRelayWakeAuthority) -> Result<&PluginInferenceRoute, Fault> {
         if self.inference.is_none() {
             let roster: Vec<_> = self
                 .descriptor
@@ -58,8 +58,8 @@ impl PluginArtifactChannel {
             let runtimes = Arc::clone(&self.runtime);
             let driver=Arc::clone(&funding.receiver);
             let instance=self.open_original_instance(actor,&driver,&ActivationScope::new(cancel.clone(),|_,_|{}))?;
-            let handle = Arc::new(semio_framework_async::block_on(semio_framework_plugin_host::PluginInstanceHandle::new(actor, Arc::clone(&runtimes), self.compiled.clone(), instance,funding.clone())));
-            let router = semio_framework_plugin_host::ArtifactInferenceRouter::new();
+            let handle = Arc::new(semio_framework_async::block_on(semio_plugin_host::PluginInstanceHandle::new(actor, Arc::clone(&runtimes), self.compiled.clone(), instance,funding.clone())));
+            let router = semio_plugin_host::ArtifactInferenceRouter::new();
             semio_framework_async::block_on(router.register_plugin(&self.plugin_id, &self.descriptor.manifest.dependencies, handle, &roster_bytes)).map_err(|error| Self::not_wired("inference route registration", error))?;
             self.inference = Some(PluginInferenceRoute { router });
         }
@@ -109,13 +109,13 @@ impl PluginArtifactChannel {
         };
         let policy=self.operation_policy;
         let reserve=policy.cleanup;
-        let caps=self.host_driver_policy.operation_caps(semio_framework_plugin_host::GuestRelayOperationReserve{retained:reserve.retained,work_fuel:reserve.work_fuel,execution_fuel:reserve.execution_fuel,maximum_microseconds:reserve.maximum_microseconds},semio_framework_plugin_host::GuestRelayOperationTransit{retained:policy.transit.retained,work_fuel:policy.transit.work_fuel},semio_framework_plugin_host::GuestRelayOperationInfrastructure{retained:policy.infrastructure.retained,work_fuel:policy.infrastructure.work_fuel});
-        let requested=semio_framework_plugin_host::GuestRelayOperationRequest{work_units:command.work_units,maximum_elapsed_microseconds:command.maximum_elapsed_milliseconds.saturating_mul(1000),retained:command.retained_policy};
+        let caps=self.host_driver_policy.operation_caps(semio_plugin_host::GuestRelayOperationReserve{retained:reserve.retained,work_fuel:reserve.work_fuel,execution_fuel:reserve.execution_fuel,maximum_microseconds:reserve.maximum_microseconds},semio_plugin_host::GuestRelayOperationTransit{retained:policy.transit.retained,work_fuel:policy.transit.work_fuel},semio_plugin_host::GuestRelayOperationInfrastructure{retained:policy.infrastructure.retained,work_fuel:policy.infrastructure.work_fuel,maximum_cleanup_microseconds:policy.infrastructure.maximum_cleanup_microseconds});
+        let requested=semio_plugin_host::GuestRelayOperationRequest{work_units:command.work_units,maximum_elapsed_microseconds:command.maximum_elapsed_milliseconds.saturating_mul(1000),retained:command.retained_policy};
         let request_bytes=semio_framework_pack_json::to_json_string(&request).into_bytes();
         let cancel=command.cancel.0.clone();
         let driver=Arc::new(caps.issue(requested,semio_framework_job::default_now_us,Box::new(move||cancel.is_cancelled_now())).map_err(|error|Self::not_wired("inference operation admission",error))?);
         let policy=match driver.policy(){Ok(policy)=>policy,Err(error)=>return self.settle_inference_operation(driver,Err(Self::not_wired("inference operation policy",error))).and_then(|_|unreachable!())};
-        let funding=semio_framework_plugin_host::GuestRelayWakeAuthority{drive_policy:policy.drive,policy:policy.wake,issuer:semio_framework_job_worker::admit_original_thread_worker_wake,receiver:Arc::clone(&driver)};
+        let funding=semio_plugin_host::GuestRelayWakeAuthority{drive_policy:policy.drive,policy:policy.wake,issuer:semio_framework_job_worker::admit_original_thread_worker_wake,receiver:Arc::clone(&driver)};
         if let Err(error)=self.ensure_inference_route(&command.cancel.0,&funding){drop(funding);return self.settle_inference_operation(driver,Err(error)).and_then(|_|unreachable!())}
         let route=self.inference.as_ref().expect("inference route was activated");
         let result=semio_framework_async::block_on(route.router.infer(&request_bytes, &command.cancel.0, &funding)).map_err(|error|Fault{code:"app.command.rejected".into(),message:format!("inference refused: {error}")});
@@ -126,7 +126,7 @@ impl PluginArtifactChannel {
     }
 
     /// 🪢️ A failed close retains the exact source and both body and cleanup failures.
-    fn settle_inference_operation(&mut self,driver:Arc<semio_framework_plugin_host::GuestRelayWakeDriver>,result:Result<Vec<u8>,Fault>)->Result<Vec<u8>,Fault>{
+    fn settle_inference_operation(&mut self,driver:Arc<semio_plugin_host::GuestRelayWakeDriver>,result:Result<Vec<u8>,Fault>)->Result<Vec<u8>,Fault>{
         match semio_framework_async::block_on(driver.close_operation()){
             Ok(())=>result,
             Err(error)=>{

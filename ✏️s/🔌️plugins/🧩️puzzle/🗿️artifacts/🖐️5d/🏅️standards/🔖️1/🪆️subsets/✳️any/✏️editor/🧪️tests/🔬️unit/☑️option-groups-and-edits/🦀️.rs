@@ -278,6 +278,39 @@ pub(super) fn seeded_parts(app: &mut Puzzle5dTestApp, count: usize) -> Vec<Strin
     projection_of(app).get("parts").and_then(Value::as_array).map(|parts| parts.iter().filter_map(|part| part.get("id").and_then(Value::as_str).map(str::to_string)).collect()).unwrap_or_default()
 }
 
+/// 💾️ Created parts retain board and world edits and their history across both document encodings.
+#[semio_framework_async_macros::async_test]
+async fn created_part_board_and_world_edits_reopen_with_history() {
+    let scenario: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../🔬️unit/☑️option-groups-and-edits/🧫️fixtures/🔣️.json")).expect("scenario");
+    let board_x = scenario["boardX"].as_f64().expect("board x");
+    let world_x = scenario["worldX"].as_f64().expect("world x");
+    for form in ["text", "pack"] {
+        let mut original = Box::new(app_with_registry());
+        let id = seeded_parts(&mut original, 1).remove(0);
+        dispatch(&mut original, "patchPart", Some(&semio_framework_pack_json::json!({ "partId": id, "field": "x", "value": board_x })), Some(board2d::WINDOW_KIND_ID)).expect("edit board");
+        let board = projection_of(&original);
+        assert_eq!(board.get("parts").and_then(Value::as_array).and_then(|parts| parts.first()).and_then(|part| part.get("2d")).and_then(|flat| flat.get("x")).and_then(Value::as_f64), Some(board_x));
+        dispatch(&mut original, "patchPart", Some(&semio_framework_pack_json::json!({ "partId": id, "field": "origin.x", "value": world_x })), Some(world3d::WINDOW_KIND_ID)).expect("edit world");
+        let edited = projection_of(&original);
+        assert_eq!(edited.get("parts").and_then(Value::as_array).and_then(|parts| parts.first()).and_then(|part| part.get("3d")).and_then(|volume| volume.get("origin")).and_then(Value::as_array).and_then(|origin| origin.first()).and_then(Value::as_f64), Some(world_x));
+        let mut reopened = Box::new(app_with_registry());
+        if form == "text" {
+            let saved = original.document_text().await.expect("save text");
+            semio_plugin::app::artifact_app_laws::load_document_text(&mut *reopened.0, &saved, &mut semio_plugin::artifact_app_laws::fixture_identity(), reopened.1.cx()).await.expect("reopen text");
+        } else {
+            let saved = original.document_pack().await.expect("save pack");
+            semio_plugin::app::artifact_app_laws::load_document(&mut *reopened.0, &saved, &mut semio_plugin::artifact_app_laws::fixture_identity(), reopened.1.cx()).await.expect("reopen pack");
+        }
+        assert_eq!(projection_of(&reopened), edited, "{form} reopened both edits");
+        dispatch(&mut reopened, "undo", None, None).expect("undo world edit");
+        assert_eq!(projection_of(&reopened), board, "{form} preserved history");
+        dispatch(&mut reopened, "redo", None, None).expect("redo world edit");
+        assert_eq!(projection_of(&reopened), edited, "{form} restored history");
+        close_app(&mut original);
+        close_app(&mut reopened);
+    }
+}
+
 /// 🛍️ LAW: the example switcher really switches, and it can NEVER produce the framework's opaque
 /// "exceeds fixed semantic work capacity" fault: `extent` answers `Some(_)` for every shipped example id,
 /// refusing an oversized switch with the localized `example_too_large` notice on its first step instead.

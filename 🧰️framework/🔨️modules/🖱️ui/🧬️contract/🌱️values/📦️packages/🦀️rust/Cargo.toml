@@ -18,10 +18,11 @@ path = "../../🦀️.rs"
 
 [features]
 default = []
-testkit = []
+testkit = ["dep:semio-framework-job-testing-caller"]
 
 [dependencies]
 semio-framework-job = { path="../../../../../🧵️job/📦️packages/🦀️rust" }
+semio-framework-job-testing-caller = { workspace = true, optional = true }
 semio-ui-contract-budget = { path = "../../../📏️budget/📦️packages/🦀️rust" }
 semio-ui-contract-text = { path = "../../../🔤️text/📦️packages/🦀️rust" }
 semio-ui-contract-identity = { path = "../../../🆔️identity/📦️packages/🦀️rust" }

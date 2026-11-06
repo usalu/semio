@@ -29,7 +29,7 @@ semio-framework-pack-json-source-sink = { path = "../../../../../../../../../�
 semio-framework-actor = { workspace = true }
 
 [dev-dependencies]
-semio-framework-os-store-one-item = { path = "../../../../../../🏪️store/🎮️one-item/📦️packages/🦀️rust" }
+semio-os-store-one-item = { path = "../../../../../../🏪️store/🎮️one-item/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-trace = { workspace = true }
 serde_json = "1.0.140"

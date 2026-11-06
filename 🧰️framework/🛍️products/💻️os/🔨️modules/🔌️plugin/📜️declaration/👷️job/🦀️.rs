@@ -1,12 +1,10 @@
 //! 👷️ The tool job contract an app declares: bounded proofs, factories and registrations, instance operation owners, owned and reserved job requests, completions and faults.
-#[path="🎮️command/🎯️action/🦀️.rs"]
-pub mod original_action_command;
+pub use semio_plugin_original_job_ownership::original_action_command;
 pub use original_action_command::{ArtifactOriginalCommandProducer,ArtifactOriginalCommandProducerFactory};
 #[path="🎮️command/🧬️op-binary/🦀️.rs"]
 pub mod original_op_binary_command;
 pub use original_op_binary_command::{admit_op_binary_producer,declared_action_command_bridge,OriginalActionCommandBridge,OriginalCommandBirth,RUNTIME_COMMAND_WIRE_MAXIMUM};
-#[path="⌨️typing/🔗️fold/🦀️.rs"]
-pub mod original_typing_fold;
+pub use semio_plugin_original_job_ownership::original_typing_fold;
 pub use original_typing_fold::{OriginalTypingFoldPolicy,ArtifactOriginalTypingFoldFactory,ArtifactOriginalTypingFoldProducer};
 use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 use semio_framework_diagnostic::FaultFrom;

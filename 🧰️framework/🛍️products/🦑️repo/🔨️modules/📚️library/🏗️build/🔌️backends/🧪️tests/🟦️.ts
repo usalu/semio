@@ -48,7 +48,7 @@ test("the policy default, the catalogue and the help derive from the registry",(
  for(const language of (catalog as any).languages){
   const text=renderBuildHelpV1(catalog as unknown as BuildHelpCatalogV1,{},language);
   expect(text).toContain(`repo [--tool=${alternation}]`);expect(text).not.toContain("{backends}");
-  expect(renderBuildHelpV1(catalog as unknown as BuildHelpCatalogV1,{operation:"tools"},language)).toContain(`tools setup [${alternation}|toolchains|all]`);
+  expect(renderBuildHelpV1(catalog as unknown as BuildHelpCatalogV1,{operation:"tools"},language)).toContain(`tools setup [${alternation}|toolchains [tool...]|all]`);
  }
  expect(backendMissingOperationsV1("bazel")).toEqual(["inputs"]);expect(backendMissingOperationsV1("semio")).toEqual([]);
  expect(()=>buildBackendRowV1("buck2")).toThrow("Unknown build tool: buck2 (nx|bazel|semio)");

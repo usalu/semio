@@ -1,0 +1,11 @@
+# Targeted Tool Setup Review
+
+General setup58231 actually failed before Chromium because Bun verification reported an unknown version instead of pinned1.4.2. Engine therefore exposed the existing tool-name selection through one normal public syntax: repo tools setup toolchains [tool...]. The bare form retains whole-table setup. Root independently reviewed the parser and dispatcher.
+
+The parser requires the exact command prefix, rejects duplicate and unknown rows and excluded Bazel installers, and selects only existing registry tools. Runtime passes selected names to the unchanged runToolchainsSetupV1 with the same genuine invocation, resource control, offline policy and exclusions. Whole-table warm helpers still run only for an empty selection. No runtime dependency, alias or authority bypass was added. Root requested removal of source-substring assertions; Engine replaced them with meaningful neutral multi-tool and wrong-prefix cases.
+
+Initial selection89227 passed one test/10assertions. Revised current-source selection68921 actually completed exit0 with one test/11assertions. Normal CLI/help inspection recognizes the new syntax; actual targeted Chromium setup3046 is active in generated/chromium-targeted-setup.log with no installer/readiness result yet. Existing operations/backends/dispatch suite69888 recorded28passed/1failed/3021assertions on a cache-grow catalogue/snapshot key mismatch before per-command comparison. Engine preserved that unrelated current state and corrected only the touched tools help wrapping. No full-suite GREEN is claimed.
+
+## Actual Chromium Setup GREEN
+
+Normal targeted setup3046 completed exit0 and reported Chromium1248 ready; Root independently inspected its retained receipt. Normal independent verify41590 also completed exit0, reporting pin1248/found1248/status ok in the configured node_modules browser path. Engine checked the matching headless-shell executable. This proves the normal selected setup/verification path on this Windows environment, not macOS/Linux runtime or document-socket behavior. Provisioned worker/offline oracle 59209 executed and failed worker routing/offline behavior after Chromium setup passed; browser behavior is not green.

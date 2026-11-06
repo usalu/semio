@@ -39,7 +39,11 @@ pub fn puzzle2d_import_value(args: &Value) -> Result<Value, Puzzle2dImportFault>
     let value = match args.get(IMPORT_ARGUMENT_PAYLOAD).and_then(Value::as_str) {
         Some(text) if text.len() > PUZZLE_IMPORT_TOTAL_BYTES => return Err(Puzzle2dImportFault::Capacity),
         Some(text) => semio_framework_pack_json::from_json_str::<Value>(text,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| Puzzle2dImportFault::Payload)?,
-        None => args.get(IMPORT_ARGUMENT_PAYLOAD).cloned().filter(|payload| payload.as_object().is_some()).ok_or(Puzzle2dImportFault::Payload)?,
+        None => {
+            let payload = args.get(IMPORT_ARGUMENT_PAYLOAD).filter(|value| value.as_object().is_some()).ok_or(Puzzle2dImportFault::Payload)?;
+            if semio_framework_pack_json::bounded_json_len(payload, PUZZLE_IMPORT_TOTAL_BYTES).is_none() { return Err(Puzzle2dImportFault::Capacity); }
+            payload.clone()
+        },
     };
     let nodes = value.get("nodes");
     let is_snapshot = match value.get("schema") {

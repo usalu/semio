@@ -408,12 +408,7 @@ pub enum WindowStackCorner {
     BottomRight,
 }
 
-/// 🌲️ The window-shell tree: a single recursive, internally-tagged enum replacing the old
-/// `WindowLayoutWindowNode`/`WindowLayoutStackNode`/`WindowLayoutAxisNode` trio and their
-/// `kind: String` + `#[serde(untagged)]` scheme. `size` stays an `Option<f64>` fraction of the parent
-/// split (a ratio, not a pixel measurement, so it is exempt from the [`SpaceToken`] rule). The
-/// `alias = "activeId"` serde alias on the old stack node is dropped — greenfield, fixtures
-/// re-handcrafted, no compatibility requirement.
+/// 🌲️ The window-shell tree: a single recursive, internally-tagged enum replacing the old [Design notes](README.md#source-notes-411).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(crate = "::semio_framework_value", tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]

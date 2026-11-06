@@ -3,8 +3,8 @@ use crate::{RasterCommand,RasterSnapshot,RasterMutation,RasterConfig,RasterConfi
 use crate::commands::work_app::RasterWorkApp;
 use crate::config::SetPixelSelectionEdit;
 use crate::selection::RasterPixelSelection;
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs,ArtifactCommandWork,ArtifactCommandWorkStep};
-use semio_framework_plugin::{ArtifactView,ConfigView,Emit,Fault};
+use semio_plugin::retained_command::{ArtifactCommandInputs,ArtifactCommandWork,ArtifactCommandWorkStep};
+use semio_plugin::{ArtifactView,ConfigView,Emit,Fault};
 use semio_framework_pixels::editing::{PixelSelectionJob,PixelFloodSelectionJob,SelectionShape,SelectionMerge,SelectionCombineJob};
 use semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan;
 use semio_s_artifact_raster_raster_host::RasterPixelSourceWork;
@@ -282,7 +282,7 @@ impl SelectPixelsWork {
 impl<A:RasterWorkApp> ArtifactCommandWork<A> for SelectPixelsWork {
     fn tool_id(&self)->&'static str{"selectPixels"}
     fn receive_original_command(&mut self,command:&mut RasterCommand,_cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if self.request.is_none(){let RasterCommand::SelectPixels(request)=command else{return Err(refused("raster-selection-route-mismatch"));};self.request=Some(std::mem::take(request));}Ok(true)}
-    fn extent(&self,command:&RasterCommand,_snapshot:&RasterSnapshot,_interaction:&protocol::InteractionState,_context:Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<A>>)->Option<usize>{matches!(command,RasterCommand::SelectPixels(_)).then_some(1)}
+    fn extent(&self,command:&RasterCommand,_snapshot:&RasterSnapshot,_interaction:&protocol::InteractionState,_context:Option<&semio_plugin::app::ArtifactOwnedToolJobContext<A>>)->Option<usize>{matches!(command,RasterCommand::SelectPixels(_)).then_some(1)}
     fn work_demands(&self,input:&ArtifactCommandInputs<'_,A>,maximum_copy_bytes:usize)->Result<RetirementDemand,ValueError>{
         if self.stage==8{return Ok(RetirementDemand{copy_bytes:size_of::<Vec<RasterConfigMutation>>()+size_of::<RasterConfigMutation>(),capacity_bytes:if self.publication.capacity()==0{size_of::<RasterConfigMutation>()}else{0},depth:4,..Default::default()});}
         if self.stage==7{return self.writer.as_ref().ok_or_else(||value_refused("selection writer missing"))?.demands(maximum_copy_bytes);}

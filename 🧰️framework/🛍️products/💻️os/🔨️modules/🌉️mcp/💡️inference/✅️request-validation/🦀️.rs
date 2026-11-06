@@ -20,19 +20,7 @@ pub(super) fn inference_run_result_value(payload: &[u8]) -> Option<serde_json::V
     std::str::from_utf8(payload).ok().and_then(|text| serde_json::from_str(text).ok())
 }
 
-/// 📜️ The published contract check, BEFORE a single guest is touched. Three named refusals, each
-/// carrying the exact field a client has to fix:
-///
-/// 1. an artifact-bound inference with neither `artifactId` nor a caller-authored payload field —
-///    the case that used to spend a whole component compile and 240 s of guest time before the
-///    guest answered `missing field 'snapshot'` (`📓️pz2-…md` §5.2, `📓️ce3-…md` §3.3);
-/// 2. a caller payload missing a field the contract's own `input_schema` declares `required`;
-/// 3. an inference that publishes NO contract at all AND was called with no payload — nothing in
-///    the tree can tell the caller what to send, so saying so beats dispatching `{}`.
-///
-/// 🧾️ `input_schema` is the plugin's own JSON Schema TEXT. Only its top-level `required` list is
-/// enforced here: that is what makes the difference between "answers in 200 ms naming the field"
-/// and "hangs" — a full JSON Schema evaluator belongs to the guest that owns the schema.
+/// 📜️ The published contract check, BEFORE a single guest is touched. Three named refusals, each [Design notes](README.md#source-notes-23).
 pub(crate) fn validate_inference_request(item: &DeclaredInference, payload: Option<&serde_json::Value>, artifact_id: Option<&str>) -> Result<(), GatewayError> {
     let Some(contract) = item.payload.as_ref() else {
         if payload.is_none() {
@@ -100,15 +88,7 @@ pub(super) fn inference_field_invalid(field: &str, message: impl Into<String>) -
     GatewayError::new(GatewayErrorCode::InputInvalid, message).with_details(serde_json::json!({ "field": field }))
 }
 
-/// 🔗️ The named artifact's canonical pair, for an inference whose contract binds one. `None` when
-/// no artifact was named or the contract declares no binding; a NAMED artifact this workspace
-/// cannot read is `NOT_FOUND`, never a silent empty document.
-///
-/// ⏳️ Binding is the job's own first expensive step — on the first call of a session it activates
-/// the plugin guest the artifact lives in — so it runs as a job: each phase it actually runs is
-/// pushed to the client as progress (`crate::actions::ActivationPhase`), and a cancel is answered as
-/// soon as it lands. Laws: `🧫️fixtures/⏱️binding-cancellation-law.json` and
-/// `🏠️workspace/🧫️fixtures/⏱️compile-cancellation-law.json`.
+/// 🔗️ The named artifact's canonical pair, for an inference whose contract binds one. `None` when [Design notes](README.md#source-notes-103).
 pub(super) fn resolve_inference_artifact_document(workspace: &Arc<HeadlessWorkspace>, item: &DeclaredInference, artifact_id: Option<&str>, job_id: &str, cancel: &semio_framework_async::CancelToken) -> Result<Option<ArtifactDocumentBinding>, GatewayError> {
     let Some(artifact_id) = artifact_id else { return Ok(None) };
     if item.payload.as_ref().and_then(|contract| contract.artifact_binding.as_ref()).is_none() {

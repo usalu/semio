@@ -15,6 +15,7 @@ pub const ARTIFACT_INFERENCE_WIRE_VERSION: u32 = 2;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeJsonBorrow)]
 pub struct ArtifactInferenceBudgetV1 {
     pub allocation_bytes: u64,
     pub work_units: u64,
@@ -29,21 +30,18 @@ fn retained_clone_grant_schema(_: &mut schemars::gen::SchemaGenerator) -> schema
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeJsonBorrow)]
 pub enum ArtifactInferenceCacheModeV1 {
     Cold,
     Incremental,
     Bypass,
 }
 
-/// 💡️ The request `semio_plugin_host::ArtifactInferenceRouter::infer` decodes — os is a
-/// CLIENT of that router here, so this export is an explicit MIRROR of the router's own private
-/// `InferenceRouteRequest` (which that crate does not export), never a second authority. The router
-/// re-checks every identity field against its registered route and against the guest's echo before
-/// any result is publishable, so a drift between this mirror and the router is a decode failure at
-/// the first call, not a silently wrong answer.
+/// 💡️ The request `semio_plugin_host::ArtifactInferenceRouter::infer` decodes — os is a [Design notes](README.md#source-notes-40).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeJsonBorrow)]
 pub struct ArtifactInferenceRequestV1 {
     pub wire_version: u32,
     pub owner: String,
@@ -76,6 +74,7 @@ pub struct ArtifactInferenceRequestV1 {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeJsonBorrow)]
 pub struct ArtifactInferenceResultV1 {
     pub wire_version: u32,
     pub owner: String,

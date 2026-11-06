@@ -31,13 +31,14 @@ pub enum UiPageValue {
 #[derive(Debug)]
 pub struct UiPageSlot {
     pub(super) epoch: u64,
+    pub(super) owner: Option<UiCollectionHandle>,
     pub next: usize,
     pub value: Option<UiPageValue>,
 }
 
 impl Default for UiPageSlot {
     fn default() -> Self {
-        Self { epoch: 0, next: UI_VALUE_NONE, value: None }
+        Self { epoch: 0, owner: None, next: UI_VALUE_NONE, value: None }
     }
 }
 
@@ -99,6 +100,7 @@ pub struct UiValueArena {
     pub(super) bytes: usize,
 }
 
+#[cfg(any(test,feature="testkit"))]
 impl Default for UiValueArena {
     fn default() -> Self {
         let mut pages = Vec::with_capacity(UI_VALUE_AGGREGATE_ITEMS);
@@ -122,30 +124,18 @@ impl Default for UiValueArena {
     }
 }
 
-pub static UI_VALUE_ARENA: LazyLock<Mutex<UiValueArena>> = LazyLock::new(|| Mutex::new(UiValueArena::default()));
-static UI_VALUE_ARENA_PUBLISHED:std::sync::atomic::AtomicBool=std::sync::atomic::AtomicBool::new(false);
-pub(super) fn initialized_arena()->Result<Option<std::sync::MutexGuard<'static,UiValueArena>>,&'static str>{
-    if !UI_VALUE_ARENA_PUBLISHED.load(std::sync::atomic::Ordering::Acquire){return Err("UI value arena source is not initialized");}
-    match UI_VALUE_ARENA.try_lock(){Ok(arena)=>Ok(Some(arena)),Err(std::sync::TryLockError::WouldBlock)=>Ok(None),Err(std::sync::TryLockError::Poisoned(_))=>Err("UI value arena source is poisoned")}
+pub(super) fn initialized_arena()->Result<Option<UiArenaBorrow>,&'static str>{
+    ui_value_arena_registry().borrow().map_err(|_|"UI value arena source is unavailable")
 }
 
 pub const fn resident_static_backing_bytes() -> usize {
-    size_of::<LazyLock<Mutex<UiValueArena>>>()
-        + UI_VALUE_AGGREGATE_ITEMS * (size_of::<UiPageSlot>() + size_of::<usize>())
-        + UI_VALUE_ADMISSION_SLOTS * (size_of::<UiCollectionSlot>() + size_of::<usize>())
+    size_of::<UiArenaRegistry>()
         + size_of::<UiArenaHandbacks<UI_VALUE_ADMISSION_SLOTS, UI_VALUE_HANDBACK_WORDS>>()
 }
 
-/// ☣️ Runs `f` on the process-global value arena. A poisoned lock is recovered AND cleared: the arena's fixed slots keep their
-/// authority through a panic, so every later `try_lock` (retirement, copy, compare) admits the arena again instead of refusing it
-/// as poisoned forever.
+/// 🏟️ Runs one synchronous operation on the already registered original arena backing.
 pub fn with_ui_value_arena<T>(f: impl FnOnce(&mut UiValueArena) -> T) -> T {
-    let source=&*UI_VALUE_ARENA;
-    UI_VALUE_ARENA_PUBLISHED.store(true,std::sync::atomic::Ordering::Release);
-    let mut arena = source.lock().unwrap_or_else(|poisoned| {
-        UI_VALUE_ARENA.clear_poison();
-        poisoned.into_inner()
-    });
+    let mut arena=ui_value_arena_registry().borrow_blocking().expect("UI value arena requires its actual registered Source");
     f(&mut arena)
 }
 
@@ -175,6 +165,22 @@ impl UiValueArena {
         (slot.occupied && slot.epoch == handle.epoch && slot.kind == handle.kind).then_some(slot)
     }
 
+    /// 🧭️ Borrows the active collection's actual first page and item count.
+    pub fn borrowed_collection(&self, handle: UiCollectionHandle) -> Option<(usize, usize)> {
+        let collection = self.collection(handle)?;
+        (!collection.retiring).then_some((collection.head, collection.items))
+    }
+
+    /// 📄️ Borrows a collection's head or previously returned successor without copying its value.
+    pub fn borrowed_page(&self, handle: UiCollectionHandle, page: usize) -> Option<(usize, &UiPageValue)> {
+        self.borrowed_collection(handle)?;
+        let slot = self.pages.get(page)?;
+        if slot.owner != Some(handle) { return None; }
+        let value = slot.value.as_ref()?;
+        if !matches!((handle.kind, value), (UiCollectionKind::List, UiPageValue::List(_)) | (UiCollectionKind::Map, UiPageValue::Map(_, _))) { return None; }
+        Some((slot.next, value))
+    }
+
     #[expect(clippy::result_large_err, reason = "Rejected arena admission returns the exact page and its retained value credits without allocating.")]
     pub fn try_push_page(&mut self, handle: UiCollectionHandle, value: UiPageValue) -> Result<(), UiPageValue> {
         let bytes = size_of::<UiPageSlot>();
@@ -191,7 +197,7 @@ impl UiValueArena {
         let Some(collection_bytes) = collection.bytes.checked_add(bytes) else { return Err(value) };
         let tail = collection.tail;
         self.free_page_count = free_page_count;
-        self.pages[page] = UiPageSlot { epoch, next: UI_VALUE_NONE, value: Some(value) };
+        self.pages[page] = UiPageSlot { epoch, owner: Some(handle), next: UI_VALUE_NONE, value: Some(value) };
         if tail == UI_VALUE_NONE {
             self.collections[handle.slot].head = page;
         } else {
@@ -260,7 +266,7 @@ impl UiValueArena {
         } else {
             self.pages.get(prev).map(|slot| slot.next).unwrap_or(UI_VALUE_NONE)
         };
-        self.pages[page] = UiPageSlot { epoch, next, value: Some(UiPageValue::Map(key, value)) };
+        self.pages[page] = UiPageSlot { epoch, owner: Some(handle), next, value: Some(UiPageValue::Map(key, value)) };
         if prev == UI_VALUE_NONE {
             self.collections[handle.slot].head = page;
             if self.collections[handle.slot].tail == UI_VALUE_NONE {
@@ -327,6 +333,7 @@ impl UiValueArena {
         if collection.retiring || page == UI_VALUE_NONE {
             return None;
         }
+        if self.pages.get(page)?.owner != Some(handle) { return None; }
         let next = self.pages.get(page)?.next;
         let value = self.pages.get_mut(page)?.value.take()?;
         let cloned = match &value {

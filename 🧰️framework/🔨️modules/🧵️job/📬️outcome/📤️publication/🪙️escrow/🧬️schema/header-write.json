@@ -1,0 +1,1 @@
+{"type":"object","additionalProperties":false,"required":["capacity","writes","complete"],"properties":{"capacity":{"enum":[144,152,184]},"writes":{"type":"array","maxItems":25,"items":{"type":"integer","minimum":1,"maximum":184}},"complete":{"type":"boolean"}}}

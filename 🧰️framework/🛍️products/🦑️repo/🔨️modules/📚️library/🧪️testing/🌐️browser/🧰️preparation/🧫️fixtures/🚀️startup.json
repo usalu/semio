@@ -1,0 +1,29 @@
+[
+  {
+    "name": "success",
+    "events": [
+      "prepare",
+      "serve"
+    ],
+    "outcome": "served"
+  },
+  {
+    "name": "refusal",
+    "events": [
+      "prepare"
+    ],
+    "outcome": "refused"
+  },
+  {
+    "name": "pre-abort",
+    "events": [],
+    "outcome": "cancelled"
+  },
+  {
+    "name": "during-preparation",
+    "events": [
+      "prepare"
+    ],
+    "outcome": "cancelled"
+  }
+]

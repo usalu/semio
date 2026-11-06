@@ -155,7 +155,7 @@ fn read<T:NativeReceive<dyn NativeValueSource>+Sync+'static>(owner:&mut Owner,co
  owner.receive(|control|{let turn=input.take(control,grant());let Some((value,receipt))=turn.result.unwrap()else{panic!("static source not ready")};output=Some(value);(Ok(()),receipt,turn.work)});
  close(owner,&mut input);output.unwrap()
 }
-fn page(cancel:Option<usize>,locale:semio_framework_ui_locale::Locale,compiled:&'static CompiledMutationInputDefinitions,offset:usize,handoff:bool)->usize{
+fn page(cancel:Option<usize>,locale:semio_ui_locale::Locale,compiled:&'static CompiledMutationInputDefinitions,offset:usize,handoff:bool)->usize{
  use crate::{NormInspectorPageOriginal,NormInspectorPreparedSemantics,NormInspectorDraftKey,NormInspectorSchemaPath,NormInspectorPagePreparation};
  use semio_framework::action_staging::{StagedFormRequest,StagedFormStatus,StagedFormToken};
  let mut owner=if handoff{Owner::production(913)}else{Owner::new()};
@@ -237,21 +237,21 @@ fn page(cancel:Option<usize>,locale:semio_framework_ui_locale::Locale,compiled:&
 }
 #[test]
 fn original_page_retains_exact_seed_authority_and_cancels_at_every_preparation_prefix(){
- for locale in [semio_framework_ui_locale::Locale::En,semio_framework_ui_locale::Locale::De]{let count=page(None,locale,&COMPILED,0,false);for prefix in 0..=count{page(Some(prefix),locale,&COMPILED,0,false);}}
+ for locale in [semio_ui_locale::Locale::En,semio_ui_locale::Locale::De]{let count=page(None,locale,&COMPILED,0,false);for prefix in 0..=count{page(Some(prefix),locale,&COMPILED,0,false);}}
 }
 
 #[test]
 fn original_array_pages_use_sixteen_content_and_two_navigation_slots(){
- for offset in [0,16,64]{page(None,semio_framework_ui_locale::Locale::En,&ARRAY,offset,false);}
+ for offset in [0,16,64]{page(None,semio_ui_locale::Locale::En,&ARRAY,offset,false);}
 }
 #[test]
 fn original_large_choice_page_keeps_thirty_one_choices_and_the_entered_resident(){
- page(None,semio_framework_ui_locale::Locale::De,&CHOICE,0,false);
+ page(None,semio_ui_locale::Locale::De,&CHOICE,0,false);
 }
 
 #[test]
 fn original_variant_page_borrows_aligned_complete_parent_replacements(){
- page(None,semio_framework_ui_locale::Locale::En,&VARIANT,0,false);
+ page(None,semio_ui_locale::Locale::En,&VARIANT,0,false);
 }
 
 #[test]
@@ -301,10 +301,10 @@ fn next_caller(page:crate::NormInspectorPreparedPage,pointer:*const DslValue,sin
 }
 #[test]
 fn finalized_original_page_survives_decoder_and_caller_return_and_lends_native_source_to_next_caller(){
- page(None,semio_framework_ui_locale::Locale::En,&VARIANT,0,true);
+ page(None,semio_ui_locale::Locale::En,&VARIANT,0,true);
 }
 
 #[test]
 fn compiled_singleton_seed_lends_a_real_array_across_complete_original_caller_return(){
- page(None,semio_framework_ui_locale::Locale::De,&ABSENT_ARRAY,0,true);
+ page(None,semio_ui_locale::Locale::De,&ABSENT_ARRAY,0,true);
 }

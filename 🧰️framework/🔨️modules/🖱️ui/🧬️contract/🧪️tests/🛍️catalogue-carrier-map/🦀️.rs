@@ -60,6 +60,7 @@ fn a_javascript_ordered_carrier_map_decodes_into_the_sorted_map() {
 /// and extension props use `UiMap`, not `UiFixedMap`.
 #[test]
 fn a_javascript_ordered_ui_map_decodes_into_the_sorted_map() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = fixture();
     let map: UiMap = serde_json::from_str(&fixture.data_attributes_json).unwrap_or_else(|error| panic!("a UiMap must decode from any JSON object key order, failed at column {}: {error}", error.column()));
     assert_eq!(map.len(), UI_FIXED_LIST_ITEMS, "every entry is admitted");
@@ -70,6 +71,7 @@ fn a_javascript_ordered_ui_map_decodes_into_the_sorted_map() {
 /// 📖️ …and each value round-trips as the text slice the carrier stores.
 #[test]
 fn a_javascript_ordered_ui_map_preserves_text_values() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = fixture();
     let parsed: serde_json::Value = serde_json::from_str(&fixture.data_attributes_json).expect("fixture object parses");
     let map: UiMap = serde_json::from_str(&fixture.data_attributes_json).expect("UiMap decodes");
@@ -83,6 +85,7 @@ fn a_javascript_ordered_ui_map_preserves_text_values() {
 /// 🔑️ A duplicate key is still a refusal for `UiMap`.
 #[test]
 fn a_ui_map_still_refuses_duplicate_keys() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let duplicated = r#"{"02":"b","01":"a","02":"c"}"#;
     let error = serde_json::from_str::<UiMap>(duplicated).expect_err("a duplicate key must be refused");
     assert!(error.to_string().contains("unique"), "the decoder names duplication: {error}");
@@ -91,6 +94,7 @@ fn a_ui_map_still_refuses_duplicate_keys() {
 /// 🛑️ …and so is one entry past capacity, whatever order it arrives in.
 #[test]
 fn a_ui_map_still_refuses_one_entry_past_capacity() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let entries: Vec<String> = (0..=UI_VALUE_MAX_ITEMS).rev().map(|index| format!(r#""{index:03}":"v{index}""#)).collect();
     let overflowing = format!("{{{}}}", entries.join(","));
     let error = serde_json::from_str::<UiMap>(&overflowing).expect_err("one entry past capacity must be refused");

@@ -968,7 +968,7 @@
     {
       "name": "tools",
       "requires": "none",
-      "synopsis": "tools setup [{backends}|toolchains|all]|verify [tool...]|list [--json]|exec <tool|command> -- <arguments>",
+      "synopsis": "tools setup [{backends}|toolchains [tool...]|all]|verify [tool...]|list [--json]|exec <tool|command> -- <arguments>",
       "summary": { "en": "Provision the pinned tools for this host, report where it differs from the pins and run every other external tool through the tool registry.", "de": "Richtet die gepinnten Werkzeuge für diesen Rechner ein, meldet, wo er von den Pins abweicht, und führt jedes andere externe Werkzeug über die Werkzeugregistratur aus." },
       "dryRun": false,
       "progress": true,
@@ -976,7 +976,7 @@
       "subcommands": [
         {
           "name": "setup",
-          "synopsis": "tools setup [{backends}|toolchains|all]",
+          "synopsis": "tools setup [{backends}|toolchains [tool...]|all]",
           "summary": { "en": "Install and verify the pinned tools: Nx, Bazel, the native toolchains (Go, uv, Python, .NET, CMake, Ninja, Rust, WebAssembly tools, TeX, browsers) or all of them.", "de": "Installiert und prüft die gepinnten Werkzeuge: Nx, Bazel, die nativen Toolchains (Go, uv, Python, .NET, CMake, Ninja, Rust, WebAssembly-Werkzeuge, TeX, Browser) oder alle." }
         },
         {

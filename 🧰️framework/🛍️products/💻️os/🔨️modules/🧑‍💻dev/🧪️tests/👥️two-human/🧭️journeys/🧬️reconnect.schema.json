@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","type":"object","additionalProperties":false,"required":["maximumOfflineMs","requiredChecks"],"properties":{"maximumOfflineMs":{"type":"integer","minimum":1,"maximum":30000},"requiredChecks":{"type":"array","minItems":8,"maxItems":8,"uniqueItems":true,"items":{"type":"string","minLength":1}}}}

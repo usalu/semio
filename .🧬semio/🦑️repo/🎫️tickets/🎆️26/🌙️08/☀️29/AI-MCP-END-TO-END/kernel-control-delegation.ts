@@ -1,0 +1,7 @@
+import{readFileSync,writeFileSync,renameSync}from"node:fs";
+const base="🧰️framework/🔨️modules/🎠️kernel/📤️return/🔤️json",ticket=import.meta.dir;
+function edit(path:string,change:(s:string)=>string){const old=readFileSync(path,"utf8"),next=change(old);if(next===old)throw Error("unchanged "+path);if(readFileSync(path,"utf8")!==old)throw Error("concurrent "+path);const temp=ticket+"/🗑️generated/kernel-control.tmp";writeFileSync(temp,next);renameSync(temp,path)}
+edit(base+"/🖼️ui/🦀️.rs",s=>{const marker="semio_framework_value::native_json_codec!{";let pos=0,removed=0;while((pos=s.indexOf(marker,pos))>=0){let i=pos+marker.length,depth=1,quoted=false;for(;i<s.length;i++){const c=s[i];if(c==='"'&&s[i-1]!=="\\")quoted=!quoted;if(!quoted){if(c==="{")depth++;if(c==="}"&&!--depth){i++;break}}}const block=s.slice(pos,i);if(/\bstruct RetainedClone(?:Grant|Progress)\b/.test(block)){s=s.slice(0,pos)+s.slice(i);removed++}else pos=i;}if(removed!==2)throw Error("control codecs moved "+removed);return s});
+edit(base+"/🧬️projection/🦀️.rs",s=>s.replace("String,semio_framework_value::DslValue);","String,semio_framework_value::DslValue,semio_framework_value::RetainedCloneGrant,semio_framework_value::RetainedCloneProgress);"));
+edit(ticket+"/kernel-output-codecs.ts",s=>s.replace('"UiPublicationRevision"]','"UiPublicationRevision","RetainedCloneGrant","RetainedCloneProgress"]').replace('row.file.includes("/🧬️contract/")','row.file.startsWith("🧰️framework/🔨️modules/🖱️ui/🧬️contract/")'));
+console.log("Delegated neutral control metadata to its canonical JSON owner");

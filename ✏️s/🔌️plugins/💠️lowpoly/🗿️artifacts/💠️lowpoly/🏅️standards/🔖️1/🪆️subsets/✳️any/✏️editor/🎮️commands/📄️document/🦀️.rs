@@ -16,11 +16,11 @@ pub const LOWPOLY_SNAPSHOT_JSON_BYTES: usize = 2 * 1024 * 1024;
 
 fn reset_from_json(json: &str) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
     if json.len() > LOWPOLY_SNAPSHOT_JSON_BYTES {
-        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("lowpoly.snapshot-json.capacity"), "Snapshot JSON exceeds its declared UTF-8 input budget"));
+        return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("lowpoly.snapshot-json.capacity"), "Snapshot JSON exceeds its declared UTF-8 input budget"));
     }
     let parsed = semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::lowpoly_json_decode::<LowpolySnapshot>(json)
-        .map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("lowpoly.snapshot-json.invalid"), error.to_string()))?;
-    parsed.validate_paint_pixels().map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(semio_s_artifact_lowpoly_lowpoly_model::paint_texture::PaintTextureError::CODE), error.to_string()))?;
+        .map_err(|error| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("lowpoly.snapshot-json.invalid"), error.to_string()))?;
+    parsed.validate_paint_pixels().map_err(|error| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new(semio_s_artifact_lowpoly_lowpoly_model::paint_texture::PaintTextureError::CODE), error.to_string()))?;
     Ok(Emit { effects: vec![semio_s_artifact_lowpoly_lowpoly_kit::reset_document_effect(&parsed)], ..Default::default() })
 }
 

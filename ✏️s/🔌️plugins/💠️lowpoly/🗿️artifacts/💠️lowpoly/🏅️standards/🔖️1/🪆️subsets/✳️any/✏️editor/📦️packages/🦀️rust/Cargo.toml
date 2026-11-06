@@ -120,8 +120,7 @@ semio-plugin = { workspace = true }
 semio-framework-schema-registry = { workspace = true }
 semio-framework-tool-machine = { workspace = true }
 semio-ui-locale = { workspace = true }
-semio-framework-ui-locale = { workspace = true }
-semio-framework-ui-contract = { workspace = true }
+semio-ui-contract = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-s-artifact-lowpoly-lowpoly-commands = { workspace = true }
 semio-s-artifact-lowpoly-lowpoly-config = { workspace = true }
@@ -137,8 +136,6 @@ semio-s-artifact-lowpoly-lowpoly-options = { workspace = true }
 semio-s-artifact-lowpoly-lowpoly-panels = { workspace = true }
 semio-s-artifact-lowpoly-lowpoly-presence = { workspace = true }
 semio-s-artifact-lowpoly-lowpoly-view = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
-semio-framework-plugin = { workspace = true }
 
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
@@ -155,5 +152,3 @@ semio-framework-async-macros = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 serde_json = { workspace = true }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

@@ -1,8 +1,8 @@
 //! 🪺️ Typed inspector drafts reuse mutation input schemas and retain raw entered values until native admission.
 use semio_framework::{ActionArgDef, ArgSchema, mutation_input_defs, registered_input_schema_document};
 use semio_framework::action_staging::*;
-use semio_framework_plugin::app::time_travel::{time_travel_coerce, time_travel_default_value, time_travel_switch_variant, time_travel_variant_selector};
-use semio_framework_ui_locale::{Locale, LocalizedLabel, Terminology};
+use semio_plugin::app::time_travel::{time_travel_coerce, time_travel_default_value, time_travel_switch_variant, time_travel_variant_selector};
+use semio_ui_locale::{Locale, LocalizedLabel, Terminology};
 use semio_framework_value::DslValue;
 
 pub const NORM_INSPECTOR_FORM_BODY: &str = "norm.inspector.form";

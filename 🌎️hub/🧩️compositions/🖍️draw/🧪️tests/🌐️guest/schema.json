@@ -4,11 +4,38 @@
   "additionalProperties": false,
   "required": [
     "version",
-    "scenarios"
+    "scenarios",
+    "caller"
   ],
   "properties": {
     "version": {
-      "const": 1
+      "const": 2
+    },
+    "caller": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["clock", "lifetimeUs", "fuel", "retirementFuel", "executionFuel", "executionFuelPerCall", "maximumTurns", "grant"],
+      "properties": {
+        "clock": { "const": "native-monotonic" },
+        "lifetimeUs": { "type": "integer", "minimum": 1, "maximum": 120000000 },
+        "fuel": { "type": "integer", "minimum": 1, "maximum": 100000000 },
+        "retirementFuel": { "type": "integer", "minimum": 1, "maximum": 1000000 },
+        "executionFuel": { "type": "integer", "minimum": 1, "maximum": 4096000000000 },
+        "executionFuelPerCall": { "type": "integer", "minimum": 1, "maximum": 1000000000 },
+        "maximumTurns": { "type": "integer", "minimum": 1, "maximum": 4096 },
+        "grant": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["maximumItems", "maximumCopyBytes", "maximumCapacityBytes", "maximumReleaseBytes", "maximumDepth"],
+          "properties": {
+            "maximumItems": { "type": "integer", "minimum": 1, "maximum": 1048576 },
+            "maximumCopyBytes": { "type": "integer", "minimum": 1, "maximum": 67108864 },
+            "maximumCapacityBytes": { "type": "integer", "minimum": 1, "maximum": 268435456 },
+            "maximumReleaseBytes": { "type": "integer", "minimum": 1, "maximum": 268435456 },
+            "maximumDepth": { "type": "integer", "minimum": 1, "maximum": 4096 }
+          }
+        }
+      }
     },
     "scenarios": {
       "type": "array",

@@ -1,0 +1,9 @@
+const fs=require('fs'),path='🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🪙️return-escrow/🦀️.rs';
+const before=fs.readFileSync(path,'utf8');let after=before;
+const old='self.stage.is_none_or(|(slot,_)|slot!=index)';
+const replacement='self.stage.is_none_or(|(slot,_)|slot!=index)&&self.borrowed.is_none_or(|(_,mask)|mask&(1u32<<index)==0)';
+if(after.split(old).length!==3)throw Error('expected both reclaim guards');after=after.split(old).join(replacement);
+const marker=' #[test]\n fn source_table_birth_quotes_real_capacity_and_pointer_copy_separately(){';
+const law=' #[test]\n fn borrowed_snapshot_fences_a_previously_acknowledged_tombstone(){let mut table=OriginalReturnEscrowTable::empty();let value=identity(1);let held=OriginalReturnEscrowAmounts{items:2,copy_bytes:48,work:2};let slot=loop{match table.stage_step(&value,held,64).unwrap(){OriginalReturnEscrowStage::Progress{..}=>{},OriginalReturnEscrowStage::Ready{slot}=>break slot,OriginalReturnEscrowStage::Blocked=>panic!("staging refused")}};table.commit_stage(slot,value,held).unwrap();assert!(table.finish_committed_stage());table.redeem(value,held,Default::default()).unwrap();let revision=table.revision();table.borrow_snapshot(revision).unwrap();table.hand_back_snapshot(revision).unwrap();assert!(table.has_reclaimable());table.borrow_snapshot(revision).unwrap();assert!(!table.has_reclaimable());assert!(!table.reclaim_one().unwrap());table.hand_back_snapshot(revision).unwrap();assert!(table.reclaim_one().unwrap());}\n';
+if(after.split(marker).length!==2)throw Error('expected test marker');after=after.replace(marker,law+marker);
+const tmp=path+'.guest-borrowed-fence';fs.writeFileSync(tmp,after,{flag:'wx'});if(fs.readFileSync(path,'utf8')!==before){fs.unlinkSync(tmp);throw Error('concurrent change')}fs.renameSync(tmp,path);

@@ -278,11 +278,7 @@ impl NativeHubBindingDriver {
         Ok((binding, Self { cancel, thread: Some(thread), runtime, pair_transport, inference_transport, client, budget, assets }, grant_source))
     }
 
-    /// 🧩️ The plugin COMPONENT the Hub authorized for `scope`, bit-for-bit the one its lease names — exact byte length and
-    /// exact SHA-256, compared before the bytes reach any runtime, because a component the Hub serves is executable code.
-    /// This is the leg of the browser shell's own attach chain a native client never had: `open-plan` →
-    /// `execution-target/{manifest, component, descriptor}`; it comes from the per-user store when that holds the bytes, else
-    /// from the hub as a static asset ([`HubComponentAssets`]), and the calling tool hears the transfer as progress.
+    /// 🧩️ The plugin COMPONENT the Hub authorized for `scope`, bit-for-bit the one its lease names — exact byte length and [Design notes](README.md#source-notes-281).
     pub fn fetch_execution_target_component(&self, plugin_id: &str, scope: &DocumentScope, expected: &semio_os_kernel::os_directory::DocumentExecutionTargetComponentV1) -> Result<Vec<u8>, GatewayError> {
         let intent = DocumentOpenIntentV1 {
             schema: "semio.hub.document-open-intent/v1".into(),
@@ -306,17 +302,7 @@ impl NativeHubBindingDriver {
         })
     }
 
-    /// 🪪️ Fetches the execution-target LEASE the Hub minted for one exact document — the small JSON
-    /// projection (≈3 KB, measured on hub 7621) that carries what the package-keyed catalog snapshot
-    /// deliberately does not: this document's own `surface` (`surfaceId`/`appId`/`windowKindId`),
-    /// its `artifact` kind and schema, and the grant behind them.
-    ///
-    /// 🧭️ `refresh_catalog` deduplicates its selections by PACKAGE identity, so its `scope` names
-    /// whichever document first resolved that package — never necessarily the one a caller is
-    /// opening. A per-document lease is therefore the only honest source for a per-document surface,
-    /// and it is fetched here rather than derived: a surface id assembled host-side from a manifest
-    /// would be this gateway's guess at what the hub authorized, which is exactly the class of
-    /// fabrication `PROBE_SURFACE_ID` already was.
+    /// 🪪️ Fetches the execution-target LEASE the Hub minted for one exact document — the small JSON [Design notes](README.md#source-notes-309).
     pub fn fetch_execution_target_lease(&self, scope: &DocumentScope, client_instance_id: &str) -> Result<DocumentExecutionTargetLeaseFieldsV1, GatewayError> {
         let intent = DocumentOpenIntentV1 {
             schema: "semio.hub.document-open-intent/v1".into(),

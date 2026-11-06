@@ -12,7 +12,7 @@ impl OwnedRuntime {
             match event {
                 Event::CommandIngressPage{cursor,bytes} if command_page.is_none()&&bytes.len()<=semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES&&(!bytes.is_empty()||(cursor.kind==28&&cursor.item_count==0))=>command_page=Some((cursor,bytes)),
                 Event::CommandIngressPage{..}=>return Err(invalid("original poll has duplicate or invalid command pages")),
-                Event::ColdDocumentPairPage(page) if cold_pair_page.is_none()=>{semio_framework_plugin_guest_contract::validate_cold_page(page).map_err(|_|invalid("original poll has an invalid cold pair page"))?;cold_pair_page=Some(page);},
+                Event::ColdDocumentPairPage(page) if cold_pair_page.is_none()=>{semio_plugin_guest_contract::validate_cold_page(page).map_err(|_|invalid("original poll has an invalid cold pair page"))?;cold_pair_page=Some(page);},
                 Event::ColdDocumentPairPage(_)=>return Err(invalid("original poll has duplicate cold pair pages")),
                 event if ordinary.is_none()=>ordinary=Some(event),
                 _=>return Err(invalid("original poll admits at most one ordinary event")),

@@ -95,7 +95,7 @@ pub fn owned_engine_identity() -> &'static str {
     IDENTITY.get_or_init(|| {
         let interpreter = semio_plugin_interpreter::INTERPRETER_SOURCE.as_bytes();
         let host = OWNED_RUNTIME_SOURCE.as_bytes();
-        let imports=semio_framework_plugin_interpreter_imports::ORIGINAL_HOST_SOURCE.as_bytes();
+        let imports=semio_plugin_interpreter_imports::ORIGINAL_HOST_SOURCE.as_bytes();
         let mut engine = Vec::with_capacity(72 + interpreter.len() + host.len()+imports.len());
         engine.extend_from_slice(b"semio.owned-engine/v1\n");
         engine.extend_from_slice(&(interpreter.len() as u64).to_le_bytes());
@@ -108,8 +108,7 @@ pub fn owned_engine_identity() -> &'static str {
     })
 }
 
-/// 🏃️ The owned interpreter as a guest runtime: compiles components, instantiates actors and runs their turns, jobs,
-/// checkpoints and pure `codec` exports under instruction fuel. Holds no engine; instance ids are its only state.
+/// 🏃️ The owned interpreter implements the guest runtime.
 pub struct OwnedRuntime {
     pub(super) next_instance_id: std::sync::atomic::AtomicU32,
     pub(super) original_clock:fn()->Option<u64>,

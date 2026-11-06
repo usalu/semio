@@ -15,7 +15,7 @@ fn owned_operation_resumes(state: &OwnedGuestInstance, operation: OwnedOperation
     }
 }
 
-/// 🧮️ Starts an owned export whose arguments are fixed scalars and whose result is a resident fixed receipt or a borrowed view.
+/// 🧮️ Starts a scalar export with a resident receipt or borrowed view.
 pub(super) fn begin_owned_scalar_operation(state: &mut OwnedGuestInstance, operation: OwnedOperation, arguments: Vec<Value>) -> Result<(), TurnFault> {
     if owned_operation_resumes(state, operation)? {return Ok(())}
     state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.begin(operation.export(), arguments).map_err(core_fault)?;

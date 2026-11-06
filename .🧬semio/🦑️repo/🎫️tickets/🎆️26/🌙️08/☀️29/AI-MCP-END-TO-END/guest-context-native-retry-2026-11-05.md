@@ -1,0 +1,5 @@
+# Guest Context Native Retry
+
+The first actual receiver-law run (`63359`, capture `🗑️generated/mcp-39824.json`) reached dependency compilation and stopped on the duplicate `RetireOwned` import in SQLite receiving. That exact duplicate was removed with a fresh comparison and atomic rename.
+
+Before the only retry, the doctor-backed census at 1793874793767 found no process matching the exact receiver-law command. Retry `68088` reached actual dependency compilation and ended with code 1 before the receiver law. The MCP result (`🗑️generated/mcp-30712.json`) truncated the compiler diagnostic. The owned build fingerprint at `.cache/b/r/m/u/l/paecd3b/prototype/build/semio-framework-pack-record-encode-cursor/ef1b5aade35d0657/fingerprint/output-lib-semio_framework_pack_record_encode_cursor` contains only a build scheduler refusal: the broker pipe was unreachable because all pipe instances were busy (Windows error 231). This is infrastructure contention, not evidence of a Rust source error. No receiver test passed. Source revisions also changed after capture began, so neither run qualifies the current guest.

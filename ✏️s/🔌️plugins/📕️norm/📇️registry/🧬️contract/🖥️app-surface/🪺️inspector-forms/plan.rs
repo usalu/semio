@@ -3,7 +3,7 @@ use super::*;
 use semio_framework::{ActionArgDef,ArgSchema,mutation_input_defs,registered_input_schema_document};
 use semio_framework::action_staging::StagedFormRequest;
 use semio_framework_value::DslValue;
-use semio_framework_plugin::app::time_travel::time_travel_variant_selector;
+use semio_plugin::app::time_travel::time_travel_variant_selector;
 use crate::{NormEdit, NormRetainedEditor, get_value_at_path, parse_path, PathSegment, resolve_list_index, resolve_norm_edits};
 use semio_framework_value::{ToValue, retirement::RetireOwned};
 

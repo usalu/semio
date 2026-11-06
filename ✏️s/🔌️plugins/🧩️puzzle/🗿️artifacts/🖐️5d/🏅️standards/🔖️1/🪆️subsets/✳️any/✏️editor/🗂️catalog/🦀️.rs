@@ -47,13 +47,10 @@ pub fn puzzle5d_part_display_label(part: &Puzzle5dPart, document: &Puzzle5dDocum
     if let Some(label) = part.part_3d.label.as_deref().filter(|value| !value.is_empty()) {
         return label.to_string();
     }
-    if !part.part_2d.text.is_empty() {
-        return part.part_2d.text.clone();
+    if let Some(text) = part.part_2d.text.as_deref().filter(|text| !text.is_empty()) {
+        return text.to_string();
     }
-    if part.part_kind.is_empty() {
-        return part.id.clone();
-    }
-    puzzle5d_kind_catalog_label(document, &part.part_kind)
+    part.part_kind.as_deref().filter(|kind| !kind.is_empty()).map_or_else(|| part.id.clone(), |kind| puzzle5d_kind_catalog_label(document, kind))
 }
 
 /// 🪧️ What a history-edit reference chip reads for one entity of the typed document (design §16.4) — the outliner's
@@ -82,7 +79,7 @@ pub fn puzzle5d_entity_label(snapshot: &Puzzle5dSnapshot, kinds: &[String], id: 
 /// further one appends ` 2`, ` 3`, … to the root its peers already carry.
 pub fn puzzle5d_next_part_label(parts: &[Puzzle5dPart], document: &Puzzle5dDocument, kind_id: &str) -> String {
     let catalog_base = puzzle5d_kind_catalog_label(document, kind_id);
-    let peers: Vec<&Puzzle5dPart> = parts.iter().filter(|part| part.part_kind == kind_id).collect();
+    let peers: Vec<&Puzzle5dPart> = parts.iter().filter(|part| part.part_kind.as_deref() == Some(kind_id)).collect();
     if peers.is_empty() {
         return catalog_base;
     }
@@ -154,14 +151,15 @@ pub fn puzzle5d_next_part_label_from_projection(projection: &Value, kind_id: &st
 pub fn puzzle5d_inferred_part_kind_rows(document: &Puzzle5dDocument) -> Vec<Value> {
     let mut rows: Vec<Value> = Vec::new();
     for part in &document.parts {
-        if part.part_kind.is_empty() || rows.iter().any(|row| row.get("id").and_then(Value::as_str) == Some(part.part_kind.as_str())) {
+        let Some(kind) = part.part_kind.as_deref().filter(|kind| !kind.is_empty()) else { continue };
+        if rows.iter().any(|row| row.get("id").and_then(Value::as_str) == Some(kind)) {
             continue;
         }
-        let rectangle = part.part_2d.shape == "rectangle";
+        let rectangle = part.part_2d.shape.as_deref() == Some("rectangle");
         let size = if rectangle {
             part.part_2d.width.unwrap_or(PUZZLE5D_DEFAULT_PART_RADIUS * 2.0).max(part.part_2d.height.unwrap_or(PUZZLE5D_DEFAULT_PART_RADIUS * 2.0))
         } else {
-            (if part.part_2d.radius > 0.0 { part.part_2d.radius } else { PUZZLE5D_DEFAULT_PART_RADIUS }) * 2.0
+            part.part_2d.radius.filter(|radius| *radius > 0.0).unwrap_or(PUZZLE5D_DEFAULT_PART_RADIUS) * 2.0
         };
         let grips: Vec<Value> = part
             .grips
@@ -170,15 +168,15 @@ pub fn puzzle5d_inferred_part_kind_rows(document: &Puzzle5dDocument) -> Vec<Valu
                 semio_framework_pack_json::json!({
                     "gripKind": engine_grip_kind(grip),
                     "angle": grip.grip_2d.angle,
-                    "radius": grip.grip_3d.radius,
+                    "radius": grip.grip_3d.radius.unwrap_or_default(),
                     "position": grip.grip_3d.position,
                     "direction": grip.grip_3d.direction.unwrap_or([0.0, 0.0, -1.0]),
                 })
             })
             .collect();
         let mut row = semio_framework_pack_json::json!({
-            "id": part.part_kind,
-            "name": part.part_kind,
+            "id": kind,
+            "name": kind,
             "shape": if rectangle { "rectangle" } else { "circle" },
             "radius": size * 0.5,
             "width": size,
@@ -227,8 +225,8 @@ pub fn puzzle5d_kind_ids(document: &Puzzle5dDocument, slice: &str) -> Vec<String
         document.kind_catalogs.as_ref().and_then(|catalogs| catalogs.get(slice)).and_then(|value| value.as_array()).into_iter().flatten().filter_map(|entry| entry.get("id").and_then(|value| value.as_str()).map(str::to_string)).collect();
     if ids.is_empty() {
         let mut inferred: Vec<String> = match slice {
-            "parts" => document.parts.iter().map(|part| part.part_kind.clone()).collect(),
-            "grips" => document.parts.iter().flat_map(|part| part.grips.iter().map(|grip| grip.grip_kind.clone())).collect(),
+            "parts" => document.parts.iter().filter_map(|part| part.part_kind.clone()).collect(),
+            "grips" => document.parts.iter().flat_map(|part| part.grips.iter().filter_map(|grip| grip.grip_kind.clone())).collect(),
             _ => Vec::new(),
         };
         inferred.sort();
@@ -317,8 +315,8 @@ pub fn add_palette_part(envelope: &mut Puzzle5dScene, part_kind: &str, x: f64, y
     envelope.document.parts.push(Puzzle5dPart {
         id: id,
         anchor: Default::default(),
-        part_kind: part_kind.into(),
-        part_2d: Puzzle5dPart2d { x, y, shape: "circle".into(), radius: PUZZLE5D_DEFAULT_PART_RADIUS, width: None, height: None, text: part_kind.into(), icon_kind: None, hidden: None, locked: None },
+        part_kind: Some(part_kind.into()),
+        part_2d: Puzzle5dPart2d { x, y, shape: Some("circle".into()), radius: Some(PUZZLE5D_DEFAULT_PART_RADIUS), width: None, height: None, text: Some(part_kind.into()), icon_kind: None, hidden: None, locked: None },
         part_3d: Puzzle5dPart3d { origin, mesh_url, orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, label: Some(label) },
         grips,
     });

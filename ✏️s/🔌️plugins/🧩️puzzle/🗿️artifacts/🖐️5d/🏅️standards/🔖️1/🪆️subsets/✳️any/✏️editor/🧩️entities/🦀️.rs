@@ -184,10 +184,10 @@ fn next_scoped_id(prefix: &str, cursor: &mut u64, occupied: &mut HashSet<String>
 pub struct Puzzle5dGrip2d {
     #[value(default)]
     pub angle: f64,
-    #[value(default, rename = "gripKind")]
-    pub grip_kind: String,
-    #[value(default)]
-    pub radius: f64,
+    #[value(default, rename = "gripKind", skip_serializing_if = "Option::is_none")]
+    pub grip_kind: Option<String>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub radius: Option<f64>,
 }
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::RetireOwned)]
@@ -195,11 +195,11 @@ pub struct Puzzle5dGrip2d {
 pub struct Puzzle5dGrip3d {
     #[value(default)]
     pub position: [f64; 3],
-    #[value(default)]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub direction: Option<[f64; 3]>,
-    #[value(default)]
-    pub radius: f64,
-    #[value(default)]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub radius: Option<f64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
 }
 
@@ -207,8 +207,8 @@ pub struct Puzzle5dGrip3d {
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dGrip {
     pub id: String,
-    #[value(default, rename = "gripKind")]
-    pub grip_kind: String,
+    #[value(default, rename = "gripKind", skip_serializing_if = "Option::is_none")]
+    pub grip_kind: Option<String>,
     #[value(default, rename = "2d")]
     pub grip_2d: Puzzle5dGrip2d,
     #[value(default, rename = "3d")]
@@ -256,16 +256,16 @@ pub struct Puzzle5dPart2d {
     pub x: f64,
     #[value(default)]
     pub y: f64,
-    #[value(default)]
-    pub shape: String,
-    #[value(default)]
-    pub radius: f64,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub shape: Option<String>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub radius: Option<f64>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub width: Option<f64>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub height: Option<f64>,
-    #[value(default)]
-    pub text: String,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub text: Option<String>,
     #[value(default, rename = "iconKind", skip_serializing_if = "Option::is_none")]
     pub icon_kind: Option<String>,
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -279,9 +279,9 @@ pub struct Puzzle5dPart2d {
 pub struct Puzzle5dPart3d {
     #[value(default)]
     pub origin: [f64; 3],
-    #[value(default, rename = "meshUrl")]
+    #[value(default, rename = "meshUrl", skip_serializing_if = "Option::is_none")]
     pub mesh_url: Option<String>,
-    #[value(default)]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub orientation: Option<[f64; 4]>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub scale: Option<Value>,
@@ -293,8 +293,8 @@ pub struct Puzzle5dPart3d {
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dPart {
     pub id: String,
-    #[value(default, rename = "partKind", skip_serializing_if = "String::is_empty")]
-    pub part_kind: String,
+    #[value(default, rename = "partKind", skip_serializing_if = "Option::is_none")]
+    pub part_kind: Option<String>,
     #[value(default)]
     pub anchor: Puzzle5dPartAnchor,
     #[value(default, rename = "2d")]
@@ -529,7 +529,7 @@ pub fn resolve_part_mesh_url(part: &Puzzle5dPart, kind_catalogs: Option<&Value>)
     if let Some(url) = part.part_3d.mesh_url.as_ref().filter(|url| !url.is_empty()) {
         return Some(url.clone());
     }
-    resolve_part_kind_mesh_url(&part.part_kind, kind_catalogs)
+    resolve_part_kind_mesh_url(part.part_kind.as_deref().unwrap_or_default(), kind_catalogs)
 }
 
 pub fn resolve_part_kind_mesh_url(part_kind: &str, kind_catalogs: Option<&Value>) -> Option<String> {
@@ -575,7 +575,7 @@ pub fn grips_from_templates(document: &Puzzle5dDocument, part_kind: &str) -> Vec
             let grip_kind = template.get("gripKind").and_then(|v| v.as_str()).unwrap_or("grip").to_string();
             let grip_2d: Puzzle5dGrip2d = template.get("2d").and_then(|v| puzzle5d_record_from_projection(v.clone()).ok()).unwrap_or_default();
             let grip_3d: Puzzle5dGrip3d = template.get("3d").and_then(|v| puzzle5d_record_from_projection(v.clone()).ok()).unwrap_or_default();
-            Puzzle5dGrip { id: format!("v{index}"), grip_kind, grip_2d, grip_3d }
+            Puzzle5dGrip { id: format!("v{index}"), grip_kind: Some(grip_kind), grip_2d, grip_3d }
         })
         .collect()
 }

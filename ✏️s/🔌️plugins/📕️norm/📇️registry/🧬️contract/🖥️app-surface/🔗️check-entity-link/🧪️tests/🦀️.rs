@@ -138,7 +138,7 @@ async fn pick_step_and_fresh_pick_follow_the_real_interaction_machine() {
         } else {
             let forward = row["forward"].as_bool().unwrap();
             let effect = check_step_selection_effect("norm.sequence", &report, &lane, &interaction.ids, LaneEvent::ViewStep { step: ViewStep::Check, forward }, || scene.clone()).expect("step selection effect");
-            let semio_framework_plugin::Effect::ReplayShellCommand { action_id, args: Some(args) } = effect else { panic!("interaction selection replay") };
+            let semio_plugin::Effect::ReplayShellCommand { action_id, args: Some(args) } = effect else { panic!("interaction selection replay") };
             assert_eq!(action_id, semio_framework::INTERACTION_SELECT_ACTION_ID);
             let targets: Vec<ShellSelectTarget> = serde_json::from_str(args.get("targets").unwrap().as_str().unwrap()).expect("framework targets");
             lane = crate::step_view(&lane, ViewStep::Check, forward, &report, || scene.clone());

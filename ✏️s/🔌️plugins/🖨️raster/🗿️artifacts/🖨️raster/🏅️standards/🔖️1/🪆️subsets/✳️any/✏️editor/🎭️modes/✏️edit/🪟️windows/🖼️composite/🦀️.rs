@@ -57,7 +57,7 @@ pub fn window_measures(config: &RasterConfig, labels: &crate::terminology::Raste
 //#region 🔖️Render
 /// 🎬️ Encodes the shared `Paint2dScene` behind the semantic surface contract — the app's controller is
 /// resolved by the host from the owning app instance now, so the surface node carries only the scene.
-pub fn render(document: &RasterDocument, config: &RasterConfig, active_utility: &str, selected_ids: &[String], hovered_id: Option<&str>, cancellation:Option<semio_framework_plugin::Paint2dSelectionCancellation>) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &RasterDocument, config: &RasterConfig, active_utility: &str, selected_ids: &[String], hovered_id: Option<&str>, cancellation:Option<semio_plugin::Paint2dSelectionCancellation>) -> UiAssemblyResult<BuiltNode> {
     let mut scene=raster_scene(document, config, active_utility, "composite", selected_ids, hovered_id);
     scene.selection_cancellation=cancellation;
     scene_surface(RASTER_PLAY_SURFACE_COMPOSITE, ContractSurfaceKind::Paint2d, &scene)

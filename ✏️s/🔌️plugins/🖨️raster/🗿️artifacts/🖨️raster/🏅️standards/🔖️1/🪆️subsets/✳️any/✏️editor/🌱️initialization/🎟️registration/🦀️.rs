@@ -1,7 +1,7 @@
 //! 🎟️ Raster's native declaration installs its actual presence, image member family and Composite transient owner.
 use crate::RasterPlayApp;
-use semio_framework_plugin::{ArtifactEditor,EditorApp,WindowConfigOwnerRegistry,WindowTransientOwnerRegistry,OriginalWindowTransientOwnerRegistration};
-use semio_framework_plugin::original_instance_registration::{OriginalNativeRegistration,OriginalInstanceDeclarations,OriginalWindowSequence,OriginalNoWindows};
+use semio_plugin::{ArtifactEditor,EditorApp,WindowConfigOwnerRegistry,WindowTransientOwnerRegistry,OriginalWindowTransientOwnerRegistration};
+use semio_plugin::original_instance_registration::{OriginalNativeRegistration,OriginalInstanceDeclarations,OriginalWindowSequence,OriginalNoWindows};
 use crate::modes::edit::windows::composite::transient::RasterCompositeWindowTransientOwner;
 /// 🧩️ Camera and viewport persist in RasterConfig; Composite gesture state belongs only to its concrete window.
 pub struct RasterInstanceDeclarations;

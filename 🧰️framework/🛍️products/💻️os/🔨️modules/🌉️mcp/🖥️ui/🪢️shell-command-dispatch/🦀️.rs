@@ -67,12 +67,7 @@ pub fn active_shell_connection(bridge: &BridgeHandle) -> Option<ShellConnectionI
     bridge.connections().into_iter().max()
 }
 
-/// 📤️ Encodes `command_json` the same way `AgentBridge`'s renderer-side hook does (opaque JSON
-/// bytes inside `GatewayToShell::ShellCommand.command` — `🧵️bridge`'s own design note: the codec
-/// never interprets these bytes), sends it to the active shell connection, and blocks (bounded by
-/// `timeout`, polling `BridgeHandle::last_command_result`) for a `ShellCommandResult` whose
-/// `in_reply_to` matches the `seq` this call minted. A stale/unrelated result already sitting on the
-/// connection is never mistaken for this call's reply (`in_reply_to` must match exactly).
+/// 📤️ Encodes `command_json` the same way `AgentBridge`'s renderer-side hook does (opaque JSON [Design notes](README.md#source-notes-70).
 pub fn dispatch_shell_command_with_timeout(bridge: &BridgeHandle, command_json: serde_json::Value, timeout: Duration) -> Result<(), GatewayError> {
     let connection_id = active_shell_connection(bridge).ok_or_else(no_shell_attached_error)?;
     let seq = next_shell_command_seq();

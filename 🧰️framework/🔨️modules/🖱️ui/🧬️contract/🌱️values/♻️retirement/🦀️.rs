@@ -53,10 +53,10 @@ impl UiValueRetirement {
             return Ok(UiValueRetirementStep::default());
         }
         if let Some(root) = self.root {
-            let mut arena = match UI_VALUE_ARENA.try_lock() {
-                Ok(arena) => arena,
-                Err(std::sync::TryLockError::WouldBlock) => return Ok(UiValueRetirementStep::default()),
-                Err(std::sync::TryLockError::Poisoned(_)) => return Err("UI value retirement arena is poisoned"),
+            let mut arena = match ui_value_arena_registry().borrow() {
+                Ok(Some(arena)) => arena,
+                Ok(None) => return Ok(UiValueRetirementStep::default()),
+                Err(_) => return Err("UI value retirement arena is poisoned"),
             };
             let mut step = arena.advance_exact_root(root, maximum_bytes, &UI_VALUE_HANDBACKS)?;
             let active = arena.collection(root).is_some();
@@ -73,10 +73,10 @@ impl UiValueRetirement {
         };
         if let Some(handle) = handle {
             self.root = {
-                let mut arena = match UI_VALUE_ARENA.try_lock() {
-                    Ok(arena) => arena,
-                    Err(std::sync::TryLockError::WouldBlock) => return Ok(UiValueRetirementStep::default()),
-                    Err(std::sync::TryLockError::Poisoned(_)) => return Err("UI value retirement arena is poisoned"),
+                let mut arena = match ui_value_arena_registry().borrow() {
+                    Ok(Some(arena)) => arena,
+                    Ok(None) => return Ok(UiValueRetirementStep::default()),
+                    Err(_) => return Err("UI value retirement arena is poisoned"),
                 };
                 if UI_VALUE_HANDBACKS.has_slot_pending(handle.slot) {
                     return arena.consume_handback(handle.slot, &UI_VALUE_HANDBACKS);
@@ -347,10 +347,10 @@ pub fn close_ui_value_page_with_grant(maximum_items: usize, maximum_bytes: usize
     if maximum_items == 0 || maximum_bytes == 0 {
         return Ok(UiValueRetirementStep::default());
     }
-    let mut arena = match UI_VALUE_ARENA.try_lock() {
-        Ok(arena) => arena,
-        Err(std::sync::TryLockError::WouldBlock) => return Ok(UiValueRetirementStep::default()),
-        Err(std::sync::TryLockError::Poisoned(_)) => return Err("queued UI value retirement arena is poisoned"),
+    let mut arena = match ui_value_arena_registry().borrow() {
+        Ok(Some(arena)) => arena,
+        Ok(None) => return Ok(UiValueRetirementStep::default()),
+        Err(_) => return Err("queued UI value retirement arena is poisoned"),
     };
     arena.advance_retirement_queue(maximum_bytes)
 }

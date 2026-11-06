@@ -7,6 +7,8 @@ pub use semio_framework_actor::cold_pair::{ColdDocumentPairApplied, ColdDocument
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
+#[value(crate="::semio_framework_value",rename_all="camelCase",deny_unknown_fields)]
 pub struct ColdDocumentPairHeader {
     pub lifetime: super::ActorInstanceLifetime,
     pub transfer_generation: u64,
@@ -62,6 +64,8 @@ impl ColdDocumentPairHeader {
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::NativeReceive)]
+#[value(crate="::semio_framework_value",rename_all="camelCase",deny_unknown_fields)]
 pub struct ColdDocumentPairPage {
     pub header: ColdDocumentPairHeader,
     pub page_index: u32,

@@ -9,6 +9,27 @@ fn ui_text(value: &str) -> UiText {
     UiText::try_from_str(value).expect("bounded fixture text")
 }
 
+#[test]
+fn readonly_arena_pages_preserve_actual_borrowed_values() {
+    let _arena = UiArenaFixture::new();
+    let list = ui_list([UiValue::Bool(true), UiValue::Bool(false)]);
+    let other = ui_list([UiValue::Bool(true)]);
+    let map = ui_map([("key".to_owned(), UiValue::Null)]);
+    let arena = ui_value_arena_registry().borrow().unwrap().unwrap();
+    let list_handle = list.handle.unwrap();
+    let map_handle = map.handle.unwrap();
+    let (head, count) = arena.borrowed_collection(list_handle).unwrap();
+    assert_eq!(count, 2);
+    let (next, value) = arena.borrowed_page(list_handle, head).unwrap();
+    assert!(matches!(value, UiPageValue::List(UiValue::Bool(true))));
+    let (end, value) = arena.borrowed_page(list_handle, next).unwrap();
+    assert!(matches!(value, UiPageValue::List(UiValue::Bool(false))));
+    assert_eq!(end, UI_VALUE_NONE);
+    assert!(arena.borrowed_page(map_handle, head).is_none());
+    assert!(arena.borrowed_page(other.handle.unwrap(), head).is_none());
+    assert!(arena.borrowed_page(list_handle, UI_VALUE_NONE).is_none());
+}
+
 fn ui_list(values: impl IntoIterator<Item = UiValue>) -> UiList {
     let mut builder = UiListBuilder::try_new().expect("fixed list builder");
     for value in values {
@@ -54,6 +75,7 @@ fn fixed_bytes_admit_the_scene_packet_census_exactly() {
 
 #[test]
 fn every_ui_value_shape_round_trips() {
+    let _arena = UiArenaFixture::new();
     value_round_trips(UiValue::Null);
     value_round_trips(UiValue::Bool(true));
     value_round_trips(UiValue::Number(-3.5));
@@ -81,6 +103,7 @@ fn fixed_page_max_plus_one_returns_the_exact_untransferred_owner() {
 
 #[test]
 fn ascending_map_duplicate_refusal_preserves_key_and_value() {
+    let _arena = UiArenaFixture::new();
     let mut builder = UiMapBuilder::try_new().expect("fixed map builder");
     builder.push("a".to_string(), UiValue::Number(1.0)).expect("first key");
     let (key, value) = builder.push("a".to_string(), UiValue::Text(ui_text("owner"))).expect_err("duplicate key must be inert");
@@ -90,6 +113,7 @@ fn ascending_map_duplicate_refusal_preserves_key_and_value() {
 
 #[test]
 fn credited_alias_keeps_pages_live_after_original_handle_is_lost() {
+    let _arena = UiArenaFixture::new();
     let original = ui_list([UiValue::Text(ui_text("retained"))]);
     let handle = original.handle.unwrap();
     let alias = original.credited_clone().expect("credited alias slot");
@@ -100,18 +124,19 @@ fn credited_alias_keeps_pages_live_after_original_handle_is_lost() {
     assert!(with_ui_value_arena(|arena| arena.collection(handle).is_none()));
 }
 
-/// ☣️ A poisoned arena lock still admits a fixed value, and the recovery CLEARS the poison: the arena is process-global, so a
-/// lock left poisoned made every later retirement `try_lock` refuse it and the refusing owner's exact-closure `Drop` abort the
-/// whole lib run (`s14-lw1-logs/wg11-laws-2.txt`).
+/// 🛡️ Only the original registered Source recovers its poisoned borrow.
 #[test]
 fn poisoned_arena_lock_recovers_without_losing_fixed_authority() {
+    let mut arena = UiArenaFixture::new();
     let _ = std::panic::catch_unwind(|| {
-        let _guard = UI_VALUE_ARENA.lock().expect("unpoisoned fixture entry");
+        let _guard = ui_value_arena_registry().borrow_blocking().expect("unpoisoned fixture entry");
         panic!("poison fixed arena");
     });
+    assert!(ui_value_arena_registry().borrow().is_err());
+    arena.recover();
     let list = ui_list([UiValue::Bool(true)]);
     assert_eq!(list.cursor().next(), Some(UiValue::Bool(true)));
-    assert!(!UI_VALUE_ARENA.is_poisoned(), "the recovering lock hands the arena back unpoisoned");
+    assert!(ui_value_arena_registry().borrow().is_ok());
 }
 
 #[test]

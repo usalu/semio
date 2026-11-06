@@ -70,10 +70,10 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
     profileMarkV1("dependencies.opening");await withRepositoryCacheStoreV1(root,"dependencies",parent,phaseControl,async(_dependencies,phaseControl)=>{profileMarkV1("dependencies.opened");
     if(command==="tools"){
       const {buildBackendIdsV1,buildBackendAlternationV1,loadBuildBackendV1,requireBuildBackendIdV1}=await import("../../🔌️backends/🟦️.ts");
-      if(resolved.args[1]!=="setup"||resolved.args.length>3)throw new Error(`Expected repo tools setup [${buildBackendAlternationV1()}|toolchains|all] or repo tools verify [tool...]`);
+      if(resolved.args[1]!=="setup"||(resolved.args.length>3&&resolved.args[2]!=="toolchains"))throw new Error(`Expected repo tools setup [${buildBackendAlternationV1()}|toolchains [tool...]|all] or repo tools verify [tool...]`);
       const tools=resolved.args[2]??selected.tool;
       if(!["toolchains","all"].includes(tools))requireBuildBackendIdV1(tools);
-      if(tools==="toolchains"||tools==="all"){const{runToolchainsSetupV1}=await import("../../🧰️tool-setup/⌨️command/🟦️.ts"),{issueBuildTaskEnvironmentV1:issueToolsEnvironmentV1}=await import("../../📥️caller/🟦️.ts"),reports=await runToolchainsSetupV1(root,invocation,phaseControl,[],["bazel"],issueToolsEnvironmentV1(root,invocation,{kind:"noop"},[],process.env).CARGO_NET_OFFLINE==="true");if(reports.some(report=>report.status!=="ok"&&report.status!=="deferred"))process.exitCode=1;}
+      if(tools==="toolchains"||tools==="all"){const{runToolchainsSetupV1,parseToolSetupSelectionV1}=await import("../../🧰️tool-setup/⌨️command/🟦️.ts"),names=tools==="toolchains"?parseToolSetupSelectionV1(resolved.args):[],{issueBuildTaskEnvironmentV1:issueToolsEnvironmentV1}=await import("../../📥️caller/🟦️.ts"),reports=await runToolchainsSetupV1(root,invocation,phaseControl,names,["bazel"],issueToolsEnvironmentV1(root,invocation,{kind:"noop"},[],process.env).CARGO_NET_OFFLINE==="true");if(reports.some(report=>report.status!=="ok"&&report.status!=="deferred"))process.exitCode=1;}
       for(const id of tools==="toolchains"?[]:tools==="all"?buildBackendIdsV1():[tools])await(await loadBuildBackendV1(id)).setup({root,invocation,phase:phaseControl,args:resolved.args,tool:id});
       return;
     }

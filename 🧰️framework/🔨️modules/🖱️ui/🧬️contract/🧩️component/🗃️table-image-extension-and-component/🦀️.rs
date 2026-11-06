@@ -2,14 +2,7 @@
 
 use super::*;
 
-//#region 🎨️Props
-/// 📊️ Props for `Component::Table` — a column-headed data table. The header lives HERE, as props, and
-/// every [`TableRowProps`] child is one row, so a table costs one node record plus one per MATERIALISED
-/// row however many columns and row actions it has. `window` is the same [`TreeWindow`] contract a tree
-/// section carries: the children are the rows `[offset, offset + children.len())` of a logically
-/// `total`-long row list, a renderer pitches the unmaterialised rows as spacers and asks for the rows its
-/// viewport shows through `ViewModel::tree_windows` — one windowing mechanism and one body-wide node
-/// ledger ([`TREE_WINDOW_BODY_NODE_BUDGET`]) for trees and tables alike.
+/// 📊️ Props for `Component::Table` — a column-headed data table. The header lives HERE, as props, and [Design notes](README.md#source-notes-5).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
@@ -82,39 +75,19 @@ pub struct ImageProps {
     pub alt: Option<Label>,
 }
 
-/// 🧩️ Props for `Component::Extension` — the old `ExternalSlot`. `params_json: String` becomes
-/// structured `crate::UiValue`; `plugin_id`/`app_id`/`body_key` collapse into one opaque `extension`
-/// address string (the old three-part addressing is a concern of whatever resolves `extension` to a
-/// slot, not of this contract).
-// 🌱️ No `ToValue`/`FromValue` here: `props: crate::UiValue` directly — the deliberate DslValue-free
-// exception, see `UiValue`'s own docstring in `🎬️action.rs`.
+/// 🧩️ Props for `Component::Extension` — the old `ExternalSlot`. `params_json: String` becomes [Design notes](README.md#source-notes-85).
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct ExtensionProps {
     pub extension: crate::UiText,
-    /// ⚠️ Decision: `crate::UiValue` is referenced, not defined, here. The packet brief's explicit
-    /// "leave unresolved" list (`LayoutSpec`/`StyleSpec`/`AccessibilitySpec`/`ActionBinding`/
-    /// `MenuRef`/`Activity`/`SurfaceProps`) does not name `UiValue`, but `📋️master.md`'s "1. Contract
-    /// crate" section places `UiValue` right beside `ActionId`/`Trigger`/`UiIntent` — the action
-    /// model, owned by packet `contract-action`'s `🎬️action.rs`, not this file. Defining it here
-    /// risks the exact duplicate-definition collision U2 calls out as worse than an unresolved name.
+    /// ⚠️ Decision: `crate::UiValue` is referenced, not defined, here. The packet brief's explicit [Design notes](README.md#source-notes-97).
     pub props: crate::UiValue,
 }
 //#endregion 🎨️Props
 
-//#region 🧩️Enum
-/// 🧱️ The closed set of things a [`crate::UiNodeRecord`] can render.
-///
-/// ⚠️ Unlike the old `UiNode`, no `#[allow(clippy::large_enum_variant)]` is needed: the old
-/// `ComponentScene` variant carried up to fifteen `Option<XxxScene>` fields inline, which is exactly
-/// the size disparity that lint was suppressing. `Component::Surface` now carries one
-/// `crate::SurfaceProps` (a single pack-encoded payload keyed by a `doc_schema` id), so the variants
-/// are all comparably small.
-// 🌱️ No `ToValue`/`FromValue` on the dispatch enum itself: the `TreeItem`/`Extension` variants carry
-// `TreeItemProps`/`ExtensionProps`, both deliberately DslValue-free-exception types — see their own
-// notes above.
+/// 🧱️ The closed set of things a [`crate::UiNodeRecord`] can render. [Design notes](README.md#source-notes-107).
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
 #[value(tag = "type", rename_all = "camelCase")]

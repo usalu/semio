@@ -1,0 +1,1 @@
+{"cases":[{"name":"pending without payload","complete":false,"canonicalPayload":null,"accepted":true},{"name":"pending with candidate","complete":false,"canonicalPayload":[1],"accepted":true},{"name":"complete empty payload","complete":true,"canonicalPayload":[],"accepted":true},{"name":"complete without payload","complete":true,"canonicalPayload":null,"accepted":false}]}

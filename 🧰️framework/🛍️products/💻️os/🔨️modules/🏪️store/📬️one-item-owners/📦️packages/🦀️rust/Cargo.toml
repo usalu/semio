@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-framework-os-store-one-item-batch"
+name = "semio-os-store-one-item-batch"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -22,7 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-durable-group-testing = ["semio-framework-os-store-one-item-publication/durable-group-testing"]
+durable-group-testing = ["semio-os-store-one-item-publication/durable-group-testing"]
 test-support = []
 
 [[test]]
@@ -30,18 +30,18 @@ name = "mutation_apply"
 path = "../../../📬️paged-one-item/🧬️mutation-apply/🧪️tests/🦀️.rs"
 
 [dependencies]
-semio-framework-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
-semio-framework-os-store-ledger = { path = "../../../📒️ledger/📦️packages/🦀️rust" }
-semio-framework-os-store-one-item-publication = { path = "../../../🎮️one-item/📬️publication/📦️packages/🦀️rust" }
-semio-framework-os-store-read = { path = "../../../🔗️read/📦️packages/🦀️rust" }
-semio-framework-os-store-replay = { path = "../../../🔁️replay/📦️packages/🦀️rust" }
-semio-framework-os-store-replay-operation = { path = "../../../🔁️replay/🎮️operation/📦️packages/🦀️rust" }
-semio-framework-os-store-snapshot-clone = { path = "../../../🧬️snapshot-clone/📦️packages/🦀️rust" }
+semio-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
+semio-os-store-ledger = { path = "../../../📒️ledger/📦️packages/🦀️rust" }
+semio-os-store-one-item-publication = { path = "../../../🎮️one-item/📬️publication/📦️packages/🦀️rust" }
+semio-os-store-read = { path = "../../../🔗️read/📦️packages/🦀️rust" }
+semio-os-store-replay = { path = "../../../🔁️replay/📦️packages/🦀️rust" }
+semio-os-store-replay-operation = { path = "../../../🔁️replay/🎮️operation/📦️packages/🦀️rust" }
+semio-os-store-snapshot-clone = { path = "../../../🧬️snapshot-clone/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
-semio-framework-os-store-command = { path = "../../../📬️command/📦️packages/🦀️rust" }
-semio-framework-os-store-ephemeral = { path = "../../../🫧️ephemeral/📦️packages/🦀️rust"}
-semio-framework-os-store-one-item = { path = "../../../🎮️one-item/📦️packages/🦀️rust" }
-semio-framework-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-os-store-command = { path = "../../../📬️command/📦️packages/🦀️rust" }
+semio-os-store-ephemeral = { path = "../../../🫧️ephemeral/📦️packages/🦀️rust"}
+semio-os-store-one-item = { path = "../../../🎮️one-item/📦️packages/🦀️rust" }
+semio-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-replication = { workspace = true }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
@@ -53,9 +53,9 @@ semio-framework-value-factory = { path = "../../../../../../../🔨️modules/�
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }
-semio-framework-os-store-ephemeral = { path = "../../../🫧️ephemeral/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-store-ephemeral = { path = "../../../🫧️ephemeral/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-os-store-one-item-batch = { path = ".", features = ["test-support"] }
+semio-os-store-one-item-batch = { path = ".", features = ["test-support"] }
 semio-framework-trace = { workspace = true }
 semio-framework-trace-memory-testing = { path = "../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }

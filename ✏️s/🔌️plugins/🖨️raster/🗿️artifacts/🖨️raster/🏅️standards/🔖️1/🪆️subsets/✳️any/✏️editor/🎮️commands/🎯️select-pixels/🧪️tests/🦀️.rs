@@ -1,7 +1,7 @@
 use super::*;
 use semio_framework_value::RetainedCloneGrant;
 use semio_s_artifact_raster_raster_model::{RasterLayerNode,RasterTransform,RasterOwnedMap};
-use semio_framework_plugin::artifact_app_laws::OriginalWorkFixture;
+use semio_plugin::artifact_app_laws::OriginalWorkFixture;
 
 fn spans(rows:Vec<RasterSelectionSpan>)->crate::selection::RasterSelectionSpans{let mut caller=OriginalWorkFixture::new();let result=caller.receive_native(rows,wallet());caller.finish();result}
 fn retire<T:semio_framework_value::retirement::RetireOwned>(value:T){let mut fixture=OriginalWorkFixture::new();fixture.retire_owned(value,OriginalWorkFixture::stock());fixture.finish();}

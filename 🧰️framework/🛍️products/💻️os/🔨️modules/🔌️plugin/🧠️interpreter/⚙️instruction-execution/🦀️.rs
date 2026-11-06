@@ -302,16 +302,12 @@ impl CoreInstance {
     }
 }
 
-/// 🎯️ What a taken branch needs of its target once the results are in place.
 struct BranchTargetV1 {
     pub(super) kind: ControlKind,
     pub(super) start_pc: usize,
     pub(super) end_pc: usize,
 }
 
-/// 📥️ Leaves exactly `types` on top of the operand stack at `stack_height`: the same checks, in the same
-/// order and with the same traps, as [`take_results`] followed by re-pushing its values — without the
-/// intermediate copy, which every block end, branch and return used to allocate.
 fn keep_results(machine: &mut Machine, stack_height: usize, types: &[ValueType]) -> Result<(), CoreError> {
     if stack_height > machine.values.len() {
         return Err(CoreError::Trap("control stack height exceeds operand stack".into()));

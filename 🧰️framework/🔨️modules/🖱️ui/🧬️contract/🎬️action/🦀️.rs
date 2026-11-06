@@ -5,12 +5,7 @@ use std::fmt;
 pub use semio_ui_contract_values::*;
 //#region 🔖️Action
 
-/// 🆔️ A versioned action address. `scope` names the controller/domain (the old `ActionDescriptor`'s
-/// stringly `controller_id`, e.g. `"cad-play"`, grepped verbatim from the plugin fleet's
-/// `ActionFactory::new(CONTROLLER_ID)` call sites), `name` the verb (the old `action`, e.g.
-/// `"objectMove"`/`"setValue"`/`"addWidget"`), and `version` is new: it lets a renderer reject or
-/// migrate a stale action instead of silently invoking the wrong one — the one axis the old stringly
-/// pair never carried.
+/// 🆔️ A versioned action address. `scope` names the controller/domain (the old `ActionDescriptor`'s [Design notes](README.md#source-notes-8).
 #[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
@@ -60,12 +55,7 @@ pub enum Trigger {
     HoverPreview,
 }
 
-/// 🔗️ One node-carried binding from a [`Trigger`] moment to a versioned [`ActionId`]. Replaces every
-/// old `on_change`/`action`/`drop_action`/... field scattered across the wgpu target's per-component
-/// node structs — a record's `bindings: Vec<ActionBinding>` is the one place any of them now live.
-// 🌱️ No `ToValue`/`FromValue` here: `args: Option<UiValue>` and `UiValue` itself is the deliberate
-// DslValue-free exception (see `UiValue`'s docstring below) — a derived impl would need
-// `UiValue: ToValue`, which is exactly the forbidden conversion.
+/// 🔗️ One node-carried binding from a [`Trigger`] moment to a versioned [`ActionId`]. Replaces every [Design notes](README.md#source-notes-63).
 #[derive(Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]

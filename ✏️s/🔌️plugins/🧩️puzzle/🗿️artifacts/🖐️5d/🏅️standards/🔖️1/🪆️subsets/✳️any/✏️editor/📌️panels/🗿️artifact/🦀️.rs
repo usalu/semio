@@ -86,7 +86,7 @@ fn pick_item(id: &str, label: impl AsRef<str>, icon: &str, granularity: &str) ->
 
 fn grip_row(part: &Puzzle5dPart, grip: &Puzzle5dGrip) -> UiAssemblyResult<BuiltNode> {
     let full_id = puzzle5d_grip_full_id(&part.id, &grip.id);
-    pick_item(&full_id, format!("{} ({})", grip.id, grip.grip_kind), "circle-dot", PUZZLE5D_GRANULARITY_GRIP)?
+            pick_item(&full_id, format!("{} ({})", grip.id, grip.grip_kind.as_deref().unwrap_or_default()), "circle-dot", PUZZLE5D_GRANULARITY_GRIP)?
         .try_build()
         .map_err(|_| PluginAssemblyError::new("ui.document.grip", "grip row admission failed"))
 }
@@ -145,7 +145,7 @@ fn with_hide_lock_actions(item: ui::TreeItemBuilder, target: UiAssemblyResult<ui
 fn part_row(windows: &TreeWindows<'_>, document: &Puzzle5dDocument, part: &Puzzle5dPart, labels: &Puzzle5dLabels) -> UiAssemblyResult<BuiltNode> {
     let hidden = part.part_2d.hidden.unwrap_or(false);
     let locked = part.part_2d.locked.unwrap_or(false);
-    let item = pick_item(&part.id, puzzle5d_part_display_label(part, document), "box", PUZZLE5D_GRANULARITY_PART)?.description(ui_text(&part.part_kind)?).dimmed(hidden);
+        let item = pick_item(&part.id, puzzle5d_part_display_label(part, document), "box", PUZZLE5D_GRANULARITY_PART)?.description(ui_text(part.part_kind.as_deref().unwrap_or_default())?).dimmed(hidden);
     let item = with_hide_lock_actions(item, part_flag_target(&part.id, hidden, locked), hide_lock_actions(hidden, locked, labels, ["setSelectionHidden", "setSelectionLocked"]));
     tree_window_item(windows, item, &part.id, false, &part.grips, |grip| grip_row(part, grip))
 }

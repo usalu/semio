@@ -1,1 +1,1 @@
-{"value":"A🧩Z","wire":"\"A🧩Z\"","wireBytes":8,"maximumSlices":4096,"foreignSourceMayClose":false,"cancelledSourceMayRetire":true}
+{"value":"A🧩Z","wire":"\"A🧩Z\"","wireBytes":8,"maximumSlices":4096,"foreignSourceMayClose":false,"cancelledSourceMayRetire":true,"jobSource":{"job":7,"kind":"semio.infer","input":[123,125],"checkpoint":null}}

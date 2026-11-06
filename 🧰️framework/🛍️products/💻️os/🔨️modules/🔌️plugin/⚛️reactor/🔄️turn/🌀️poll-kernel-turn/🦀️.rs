@@ -12,7 +12,7 @@ pub(super) async fn poll_kernel_turn<PA: semio_plugin_reactor_app::PluginApp, T,
     runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>,
     events: &mut Option<Event>,
     command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
-    cold_pair_page: Option<semio_framework::kernel::ColdDocumentPairPage>,
+    cold_pair_page: Option<&semio_framework::kernel::ColdDocumentPairPage>,
     budget: semio_framework::kernel::Budget,
     prepare: impl FnOnce(&semio_framework::kernel::TurnResult) -> Result<Prepared, semio_framework::Fault>,
     publish: impl FnOnce(semio_framework::kernel::TurnResult, Prepared) -> T,
@@ -21,6 +21,7 @@ pub(super) async fn poll_kernel_turn<PA: semio_plugin_reactor_app::PluginApp, T,
 ) -> Result<T, semio_framework_job::OriginalTurnFailure> {
     admit_turn_entry(budget, cx)?;
     let original_progress=cx.retained_progress();let original_work=cx.original_work_units_spent();
+    let reserved_progress=cx.reserved_return_progress();let reserved_work=cx.reserved_return_work();
     let retryable_lifecycle = command_page.is_none() && cold_pair_page.is_none() && events.iter().all(|event| matches!(event, Event::InstanceOpen { .. } | Event::InstanceClose(_) | Event::InstanceLifecycleAck(_)));
     let mut dirty = DirtyPollOwners::new();
     let focus = admit_lifecycle_focus(runtime, events)?;
@@ -70,7 +71,33 @@ pub(super) async fn poll_kernel_turn<PA: semio_plugin_reactor_app::PluginApp, T,
     });
     let status = if more_work { TurnStatus::MoreWork } else { TurnStatus::Idle };
 
-    let retained_receipt=budget.retained.return_original(original_turn_progress(original_progress,cx.retained_progress())?,u64::try_from(cx.original_work_units_spent()-original_work).map_err(|_|reactor_close_fault("original turn work exceeds fixed receipt extent"))?)?;
-    let result = semio_framework::kernel::TurnResult { retained_receipt, ui_patches, effects, presence, next_wake: ARMED_TIMERS.with(|timers| timers.borrow().first()), status, fuel_used: 0, command_ingress, cold_pair_ingress, lifecycle_receipt, ui_patch_receipt };
+    let fuel_used=u64::try_from(cx.original_work_units_spent().checked_sub(original_work).ok_or_else(||reactor_close_fault("original kernel work observer moved backward"))?).map_err(|_|reactor_close_fault("original turn work exceeds fixed receipt extent"))?;
+    let reserved_work=cx.reserved_return_work().checked_sub(reserved_work).ok_or_else(||reactor_close_fault("reserved kernel work observer moved backward"))?;
+    let retained_receipt=kernel_work_receipt(budget.retained,original_turn_progress(original_progress,cx.retained_progress())?,fuel_used,original_turn_progress(reserved_progress,cx.reserved_return_progress())?,reserved_work)?;
+    let result = semio_framework::kernel::TurnResult { retained_receipt, ui_patches, effects, presence, next_wake: ARMED_TIMERS.with(|timers| timers.borrow().first()), status, fuel_used, command_ingress, cold_pair_ingress, lifecycle_receipt, ui_patch_receipt };
     publish_turn_result(runtime, result, focus, retryable_lifecycle, prepare, publish)
+}
+
+/// 🧮️ Keeps the nested input receipt fresh-conserved; fixed Core receipts carry the authenticated aggregate.
+fn kernel_work_receipt(input:semio_framework::kernel::RetainedTurnInput,aggregate:semio_framework_value::RetainedCloneProgress,work:u64,reserved:semio_framework_value::RetainedCloneProgress,reserved_work:u64)->Result<semio_framework::kernel::RetainedTurnReceipt,semio_framework_job::OriginalTurnFailure>{
+    let fresh=original_turn_progress(reserved,aggregate)?;
+    let work=work.checked_sub(reserved_work).ok_or_else(||reactor_close_fault("reserved kernel work exceeds its observed aggregate"))?;
+    Ok(input.return_original(fresh,work)?)
+}
+
+#[cfg(test)]
+mod receipt_tests{
+ use super::*;
+ #[test]
+ fn kernel_receipt_keeps_fresh_conservation_and_reserved_aggregate_work(){
+  let corpus:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();
+  for case in corpus["cases"].as_array().unwrap(){
+   let input=serde_json::from_value(serde_json::json!({"operation":1,"generation":1,"epoch":1,"work":{"clockBinding":1,"absoluteDeadlineUs":1,"fuel":case["fuel"]},"grant":{"maximumItems":case["grant"],"maximumCopyBytes":0,"maximumCapacityBytes":0,"maximumReleaseBytes":0,"maximumDepth":1}})).unwrap();
+   let aggregate=semio_framework_value::RetainedCloneProgress{copied_items:case["aggregate"].as_u64().unwrap()as usize,..Default::default()};
+   let reserved=semio_framework_value::RetainedCloneProgress{copied_items:case["reserved"].as_u64().unwrap()as usize,..Default::default()};
+   let result=kernel_work_receipt(input,aggregate,case["work"].as_u64().unwrap(),reserved,case["reservedWork"].as_u64().unwrap());
+   assert_eq!(result.is_ok(),case["accepted"].as_bool().unwrap());
+   if let Ok(receipt)=result{receipt.validate_for(input).unwrap();assert_eq!(receipt.spent.copied_items,case["fresh"].as_u64().unwrap()as usize);assert_eq!(receipt.work_units_spent,case["freshWork"].as_u64().unwrap());}
+  }
+ }
 }

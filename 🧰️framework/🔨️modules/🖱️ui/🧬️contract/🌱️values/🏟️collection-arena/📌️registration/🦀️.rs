@@ -11,6 +11,8 @@ pub struct UiArenaRegistry{state:Mutex<RegisteredArena>}
 impl UiArenaRegistry{
  pub const fn new()->Self{Self{state:Mutex::new(RegisteredArena{pointer:0,epoch:0,closing:false})}}
  pub fn borrow(&'static self)->Result<Option<UiArenaBorrow>,ValueError>{let guard=match self.state.try_lock(){Ok(guard)=>guard,Err(TryLockError::WouldBlock)=>return Ok(None),Err(TryLockError::Poisoned(_))=>return Err(invalid())};if guard.pointer==0||guard.closing{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"UI arena has no accepting lifetime registration"))}Ok(Some(UiArenaBorrow{guard}))}
+ /// 🔒️ Borrows the same registered backing for an existing synchronous arena operation.
+ pub fn borrow_blocking(&'static self)->Result<UiArenaBorrow,ValueError>{let guard=self.state.lock().map_err(|_|invalid())?;if guard.pointer==0||guard.closing{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"UI arena has no accepting lifetime registration"))}Ok(UiArenaBorrow{guard})}
 }
 pub static UI_ARENA_REGISTRY:UiArenaRegistry=UiArenaRegistry::new();
 pub fn ui_value_arena_registry()->&'static UiArenaRegistry{&UI_ARENA_REGISTRY}

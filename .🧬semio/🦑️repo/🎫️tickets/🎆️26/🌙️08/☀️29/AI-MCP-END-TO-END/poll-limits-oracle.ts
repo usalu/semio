@@ -1,0 +1,13 @@
+import { Database } from "bun:sqlite";
+import { readFileSync } from "node:fs";
+import { strict as assert } from "node:assert";
+import Ajv from "ajv";
+const vectors = JSON.parse(readFileSync("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🔁️persistent-local/📊️poll-limits.json", "utf8"));
+const array = {type:"array",items:{type:"integer",minimum:0},minItems:8,maxItems:8};
+const schema = {type:"array",items:{type:"object",properties:{requested:array,authorized:array,expected:array},required:["requested","authorized","expected"],additionalProperties:false}};
+assert.equal(new Ajv({strict:true}).validate(schema, vectors), true);
+const db = new Database(":memory:");
+const query = db.query("select min(?1,?2) value");
+for (const row of vectors) assert.deepEqual(row.requested.map((x:number,i:number)=>(query.get(x,row.authorized[i]) as {value:number}).value),row.expected);
+db.close();
+console.log(`poll limits: ${vectors.length} vectors passed Ajv and SQLite`);

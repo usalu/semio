@@ -84,7 +84,7 @@ fn row_keys(node: &BuiltNode) -> Vec<String> {
 }
 
 fn grip(id: &str) -> Puzzle5dGrip {
-    Puzzle5dGrip { id: id.into(), grip_kind: "socket".into(), grip_2d: Default::default(), grip_3d: Default::default() }
+    Puzzle5dGrip { id: id.into(), grip_kind: Some("socket".into()), grip_2d: Default::default(), grip_3d: Default::default() }
 }
 
 /// 🏗️ A document of `ids` parts, each with one `g0` grip, plus one fastener between the first two.
@@ -94,7 +94,7 @@ fn scene(ids: &[String]) -> Puzzle5dScene {
         .iter()
         .map(|id| Puzzle5dPart {
             id: id.clone(),
-            part_kind: "capsule".into(),
+            part_kind: Some("capsule".into()),
             anchor: Default::default(),
             part_2d: Puzzle5dPart2d { x: 4.0, y: 8.0, ..Default::default() },
             part_3d: Puzzle5dPart3d::default(),

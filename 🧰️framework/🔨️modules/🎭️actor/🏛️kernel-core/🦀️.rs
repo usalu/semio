@@ -8,15 +8,7 @@ impl Kernel {
         Self { scheduler: Scheduler::new(grants_per_tick).await, shards: ShardTable::new(shard_kind, shard_count, exclusive_reserve).await, scenes: HashMap::new(), actors: HashMap::new(), next_ordinal: HashMap::new(), links: HashMap::new() }
     }
 
-    /// ▶️ Instantiates a fresh actor for `kind` under `package`/`lane`, pins it to a shard, and
-    /// returns its freshly minted [`ActorId`] (generation 0).
-    ///
-    /// 🔥️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-interactive-isolation): `Lane::Interactive`
-    /// alone pays [`Self::saturated_shards`]'s avoidance cost, via [`ShardTable::pin_avoiding`] rather
-    /// than [`ShardTable::pin`] — every other lane pins exactly as before this packet (see
-    /// `pin_avoiding`'s own doc for why: a wholesale avoid-saturated-shards policy for EVERY lane
-    /// would just relocate the count imbalance `pin`'s own budget-3 guarantee depends on, not fix
-    /// interactive latency).
+    /// ▶️ Instantiates a fresh actor for `kind` under `package`/`lane`, pins it to a shard, and [Design notes](README.md#source-notes-11).
     pub async fn activate(&mut self, package: PackageId, plugin_ordinal: u16, kind: ActorKind, lane: Lane, window: Option<WindowId>, _event: ActivationEvent, retained: RetainedTurnInput,loan:OriginalActorTurnLoan) -> ActorId {
         let ordinal = self.next_ordinal.entry(package.clone()).or_insert(0);
         let id = ActorId::new(plugin_ordinal, kind.tag().await, *ordinal, 0).await;

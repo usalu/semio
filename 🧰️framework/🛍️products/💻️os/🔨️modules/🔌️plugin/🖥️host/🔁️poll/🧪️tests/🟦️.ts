@@ -3,6 +3,7 @@ import{Database}from"bun:sqlite";
 import Ajv from"ajv";
 import corpus from"../🔣️.json";
 import schema from"../🧬️.json";
+test("each Poll crossing requires both real scopes to cover its Core reserve",()=>{const db=new Database(":memory:"),valid=new Ajv({strict:true}).compile({type:"array",minItems:6,maxItems:6,items:{type:"integer",minimum:0}});try{for(const header of [144,152,144]){const copy=4400+header+1024,work=2948;for(const [row,expected]of [[[21,copy,work,21,copy,work],1],[[21,copy-1,work,21,copy,work],0],[[21,copy,work,21,copy-1,work],0],[[21,copy,work-1,21,copy,work],0],[[21,copy,work,21,copy,work-1],0]] as const){expect(valid(row)).toBe(true);expect(db.query("SELECT ?>=21 AND ?>=? AND ?>=? AND ?>=21 AND ?>=? AND ?>=? AS ok").get(row[0],row[1],copy,row[2],work,row[3],row[4],copy,row[5],work)).toEqual({ok:expected})}}}finally{db.close()}});
 test("poll transport preserves typed capture and both guest output owners before callbacks and Source return",()=>{
  const validate=new Ajv({strict:true}).compile(schema),db=new Database(":memory:");
  db.exec("create table events(name text primary key,position integer not null)");

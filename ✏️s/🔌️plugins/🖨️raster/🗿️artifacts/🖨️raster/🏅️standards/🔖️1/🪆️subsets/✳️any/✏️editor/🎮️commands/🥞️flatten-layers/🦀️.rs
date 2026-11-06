@@ -6,8 +6,8 @@ use semio_s_artifact_raster_raster_model::{RasterLayerNode,layer_node_id};
 use semio_s_artifact_raster_raster_model::SemioImageSnapshot;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
-use semio_framework_plugin::{ArtifactView,ConfigView,Emit,Fault};
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs,ArtifactCommandWork,ArtifactCommandWorkStep};
+use semio_plugin::{ArtifactView,ConfigView,Emit,Fault};
+use semio_plugin::retained_command::{ArtifactCommandInputs,ArtifactCommandWork,ArtifactCommandWorkStep};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,ValueError,retained_clone::RetainedCloneClose};
 use semio_framework_value_derive::{FromValue,ToValue};
 use std::mem::ManuallyDrop;
@@ -31,7 +31,7 @@ impl<const MERGE:bool>LayerBakeWork<MERGE>{
 }
 impl<A:RasterWorkApp,const MERGE:bool>ArtifactCommandWork<A>for LayerBakeWork<MERGE>{
     fn tool_id(&self)->&'static str{if MERGE{"mergeDown"}else{"flattenLayers"}}
-    fn extent(&self,command:&RasterCommand,_snapshot:&RasterSnapshot,_interaction:&protocol::InteractionState,_context:Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<A>>)->Option<usize>{matches!((MERGE,command),(false,RasterCommand::FlattenLayers(_))|(true,RasterCommand::MergeDown(_))).then_some(1)}
+    fn extent(&self,command:&RasterCommand,_snapshot:&RasterSnapshot,_interaction:&protocol::InteractionState,_context:Option<&semio_plugin::app::ArtifactOwnedToolJobContext<A>>)->Option<usize>{matches!((MERGE,command),(false,RasterCommand::FlattenLayers(_))|(true,RasterCommand::MergeDown(_))).then_some(1)}
     fn work_demands(&self,_input:&ArtifactCommandInputs<'_,A>,body:usize)->Result<RetirementDemand,ValueError>{if let Some(owner)=self.owner.as_ref(){if !owner.output_ready(){return owner.demands(body.clamp(1,32768))}}Ok(RetirementDemand{depth:1,..Default::default()})}
     fn step(&mut self,input:&ArtifactCommandInputs<'_,A>,cx:&mut semio_framework_job::StepContext<'_>)->Result<ArtifactCommandWorkStep<A>,semio_framework_job::OriginalTurnFailure>{
         if self.closing||cx.is_cancelled(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"raster bake is closing").into())}

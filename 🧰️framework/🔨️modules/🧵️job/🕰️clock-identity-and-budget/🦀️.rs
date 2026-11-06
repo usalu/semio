@@ -1,5 +1,9 @@
 //! 🕰️ Clock, identity and budget: the synchronous poll, the cancel tokens, the millisecond and microsecond clocks, the revision and operation identities, the commit validation and the step budget with its lane constants. The owning job context consumes these scalar values.
 
+#[path="🪜️stride/🦀️.rs"]
+mod stride;
+pub use stride::ClockStride;
+
 use std::future::Future;
 use std::task::{Context,Poll,Waker};
 use semio_framework_async::CancelToken;

@@ -14,7 +14,7 @@
   "maximumTurns": 32,
   "heldReturnItems": 2,
   "heldReturnFuel": 2,
-  "boundSourceWork": 1,
+  "boundSourceWork": 0,
   "claimWork": 1,
   "actualCapturedReturnWork": 1,
   "actualReceivingWork": 1,
@@ -24,19 +24,19 @@
       "name": "returned",
       "recordReturn": true,
       "cancel": false,
-      "finalDebit": 4
+      "finalDebit": 3
     },
     {
       "name": "cancelled-return",
       "recordReturn": true,
       "cancel": true,
-      "finalDebit": 4
+      "finalDebit": 3
     },
     {
       "name": "cancelled-unused",
       "recordReturn": false,
       "cancel": true,
-      "finalDebit": 3
+      "finalDebit": 2
     }
   ],
   "foreignReceiveEffects": 0,

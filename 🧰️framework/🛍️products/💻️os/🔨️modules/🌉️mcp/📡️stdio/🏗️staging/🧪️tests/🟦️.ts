@@ -11,7 +11,7 @@ import ts from "typescript";
 
 const schema = JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", import.meta.url), "utf8"));
 const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
-const source = readFileSync(new URL("../../../🟦️.ts", import.meta.url), "utf8");
+const source = readFileSync(new URL("../../../📦️binary/🟦️.ts", import.meta.url), "utf8");
 const ast = ts.createSourceFile("mcp.ts", source, ts.ScriptTarget.Latest, true);
 const names = ["mcpStagingEnvironment", "stageMcpBinaryAsync", "nativeMcpBinaryStagingFor"];
 const declarations = ast.statements.filter(node => ts.isFunctionDeclaration(node) ? names.includes(node.name?.text ?? "") : ts.isVariableStatement(node) && node.declarationList.declarations.some(declaration => ts.isIdentifier(declaration.name) && names.includes(declaration.name.text)));
@@ -66,9 +66,10 @@ for (const row of fixture.cases) test(`native staging actual ports retain argv, 
 test("catalog launch names its producer and consumes only native server arguments", () => {
  const row=JSON.parse(readFileSync(new URL("./🧫️fixtures/catalog.json",import.meta.url),"utf8"));
  expect(new Ajv({strict:false}).validate(schema.definitions.CatalogLaunch,row)).toBe(true);
- const selected=ast.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="takeMcpPluginCatalog");
+ const gatewayAst=ts.createSourceFile("mcp.ts",readFileSync(new URL("../../../🟦️.ts",import.meta.url),"utf8"),ts.ScriptTarget.Latest,true);
+ const selected=gatewayAst.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="takeMcpPluginCatalog");
  if(!selected)throw Error("Actual catalog launch parser required");
- const source=ts.transpileModule(selected.getText(ast).replace(/^export /u,""),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
+ const source=ts.transpileModule(selected.getText(gatewayAst).replace(/^export /u,""),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
  const parser=new Function("resolve",source+";return takeMcpPluginCatalog;")((root:string,path:string)=>root+"/"+path);
  const actual=parser(row.arguments,"workspace");
  expect(actual).toEqual({args:row.forwarded,env:{SEMIO_PLUGIN_CATALOG:"workspace/"+row.catalog},target:row.target});

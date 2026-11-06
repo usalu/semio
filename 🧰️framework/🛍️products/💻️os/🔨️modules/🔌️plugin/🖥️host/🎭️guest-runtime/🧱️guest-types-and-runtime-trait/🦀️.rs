@@ -35,6 +35,15 @@ pub struct CompiledHandle {
 }
 
 impl CompiledHandle {
+    /// 🪪️ Compares the exact immutable compiled parents, not merely their package digest.
+    pub fn same_origin(&self,other:&Self)->bool {
+        self.package_hash==other.package_hash&&match (&self.component,&other.component,&self.owned,&other.owned){
+            (Some(a),Some(b),None,None)=>Arc::ptr_eq(a,b),
+            (None,None,Some(a),Some(b))=>a.same_origin(b),
+            _=>false,
+        }
+    }
+
     /// 🔌️ Whether a real wasmtime component was compiled; the backend type itself stays inside this implementation.
     pub fn has_component(&self) -> bool {
         self.component.is_some()
@@ -126,12 +135,7 @@ impl std::fmt::Debug for GuestInstance {
 
 pub enum GuestInstanceState {
     Closed,
-    /// 🧪️ Only `MockGuestRuntime` (`#[cfg(any(test, feature = "testkit"))]`) ever constructs this variant — `#[allow(dead_code)]`
-    /// rather than `#[cfg(any(test, feature = "testkit"))]` on the variant itself, so `GuestInstanceState` stays a REFUTABLE
-    /// match target (`Wasmtime` is not the only variant) in every build config; a `#[cfg(any(test, feature = "testkit"))]`
-    /// variant would make the `let GuestInstanceState::Wasmtime(state) = .. else { .. }` guards in
-    /// `WasmtimeRuntime`'s own methods irrefutable outside `cfg(test)`, turning their `else` arms into
-    /// a NEW dead-code warning instead of fixing one.
+    /// 🧪️ The mock variant keeps backend matches refutable in every build.
     #[allow(dead_code)]
     Mock(MockInstanceState),
     Owned(OwnedGuestInstance),

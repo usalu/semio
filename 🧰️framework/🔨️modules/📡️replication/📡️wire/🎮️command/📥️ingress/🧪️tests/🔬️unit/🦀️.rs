@@ -135,3 +135,40 @@ fn every_command_ingress_refusal_answers_a_fault_and_keeps_its_page() {
 }
 
 //#endregion 📥️CommandIngressPages
+
+#[test]
+fn command_page_input_moves_only_after_actual_page_admission(){
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📥️borrow/🔣️.json")).unwrap();
+ for case in corpus["cases"].as_array().unwrap(){
+  let mut pages=CommandPageSet::try_new(case["declared"].as_u64().unwrap()as usize).unwrap();
+  for _ in 0..case["occupied"].as_u64().unwrap(){pages.try_push(FixedCommandPage::try_copy_from(&[1]).unwrap()).unwrap();}
+  let cursor=CommandPageCursor{owner:7,generation:11,command_index:0,command_count:1,instance:13,seq:17,kind:19,page_index:0,page_count:1,item_count:0,metadata:0};
+  let bytes=vec![19;case["bytes"].as_u64().unwrap()as usize];
+  let mut input=case["incoming"].as_bool().unwrap().then(||(cursor,FixedCommandPage::try_copy_from(&bytes).unwrap()));
+  let original=input.as_ref().map(|(_,page)|page.as_slice().as_ptr());
+  let accepted=pages.try_push_input(&mut input).is_ok_and(|cursor|cursor.is_some());
+  assert_eq!(accepted,case["accepted"].as_bool().unwrap());
+  assert_eq!(input.is_some(),case["remaining"].as_bool().unwrap());
+  if accepted{assert_eq!(pages.pages.back().unwrap().as_slice().as_ptr(),original.unwrap());assert_eq!(pages.pages.back().unwrap().as_slice(),bytes)}
+  else if let Some((_,page))=input.as_ref(){assert_eq!(Some(page.as_slice().as_ptr()),original);assert_eq!(page.as_slice(),bytes)}
+ }
+}
+
+#[test]
+fn command_page_sources_return_real_backing_only_under_funded_retirement(){
+ use semio_framework_value::{RetainedCloneGrant,retirement::controlled::ControlledRetirement};
+ for count in 0..=2{
+  let mut pages=CommandPageSet::try_new(2).unwrap();
+  for _ in 0..count{pages.try_push(FixedCommandPage::try_copy_from(&[19]).unwrap()).unwrap();}
+  let existing=pages.pages.capacity()*size_of::<FixedCommandPage>()+count*COMMAND_PAGE_MAXIMUM_BYTES;
+  let mut owner=ControlledRetirement::retain(pages);let mut born=0;let mut released=0;
+  for at in 0..10000{
+   if owner.terminal_is_empty(){break}
+   let d=owner.next_demand(4096).unwrap();
+   let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth.max(1)};
+   let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.step(g));let p=result.unwrap().progress();
+   assert!(p.fits(g));assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));born+=p.retained_capacity_bytes;released+=p.released_bytes;assert!(at<9999);
+  }
+  assert!(owner.terminal_is_empty());assert_eq!(released,existing+born);
+ }
+}

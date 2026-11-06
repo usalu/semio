@@ -51,11 +51,19 @@ export function bunArchiveExecutable(archive: Buffer, member: string): Buffer {
   throw new Error("Bun archive has no selected executable");
 }
 
-/** 🔐️ Acquires and atomically publishes a pinned workspace-owned installer with cancellation. */
-export function prepareBun(workspace:string,version:string,store:RepositoryToolingStoreV1,control:ResourceLeaseControl,publisher?:ManagedToolingPublisherV1):Promise<string|ToolingHeadroomRefusalV1>{return withRepositoryToolingOperationV1(workspace,store,control,actual=>prepareBunOwnedV1(workspace,version,store,actual,publisher));}
-async function prepareBunOwnedV1(workspace:string,version:string,store:RepositoryToolingStoreV1,control:ResourceLeaseControl,publisher?:ManagedToolingPublisherV1):Promise<string|ToolingHeadroomRefusalV1>{
+/** 🧭️ Selects whether the caller needs an owned installation or can reuse the running runtime. */
+export type BunPlacementPurposeV1 = "runtime" | "published";
+
+/** 🧭️ Reuses a matching runtime only when the caller does not require an owned installation. */
+export async function withBunPlacementV1<T>(purpose:BunPlacementPurposeV1,runtime:Readonly<{id:string;version:string|undefined}>,pin:string,reuse:()=>T,publish:()=>Promise<T>):Promise<T>{
+  return purpose === "runtime" && runtime.id === manifest.runtime && runtime.version === pin ? reuse() : publish();
+}
+
+/** 🔐️ Acquires and atomically publishes a pinned workspace-owned installer with cancellation when publication is required. */
+export function prepareBun(workspace:string,version:string,store:RepositoryToolingStoreV1,control:ResourceLeaseControl,purpose:BunPlacementPurposeV1,publisher?:ManagedToolingPublisherV1):Promise<string|ToolingHeadroomRefusalV1>{return withRepositoryToolingOperationV1(workspace,store,control,actual=>prepareBunOwnedV1(workspace,version,store,actual,purpose,publisher));}
+async function prepareBunOwnedV1(workspace:string,version:string,store:RepositoryToolingStoreV1,control:ResourceLeaseControl,purpose:BunPlacementPurposeV1,publisher?:ManagedToolingPublisherV1):Promise<string|ToolingHeadroomRefusalV1>{
   requireNativeStorageReservationV1(store.storage,store.control);await store.storage.recheck();const signal=control.signal;signal.throwIfAborted();
-  if (runtimeIdentityV1().id === manifest.runtime && runtimeIdentityV1().version === version) return runtimeExecutableV1();
+  return withBunPlacementV1(purpose,runtimeIdentityV1(),version,()=>runtimeExecutableV1(),async()=>{
   const row = bunDistribution(version, process.platform, process.arch, process.platform === "linux" && linuxHostLibcV1() === "musl");
   const base = requireNativeStoragePathV1(store.root,join(store.root,manifest.runtime)), directory = join(base, row.sha256), executable = join(directory, process.platform === "win32" ? manifest.runtime + ".exe" : manifest.runtime);
   for (let current = base; ; current = dirname(current)) {
@@ -92,4 +100,5 @@ async function prepareBunOwnedV1(workspace:string,version:string,store:Repositor
       checkResourceLeaseControl(control); renameSync(staging, directory); return executable;
     } finally { clearInterval(watch);clearInterval(progress); rmSync(staging, { recursive: true, force: true }); }
   }));
+  });
 }

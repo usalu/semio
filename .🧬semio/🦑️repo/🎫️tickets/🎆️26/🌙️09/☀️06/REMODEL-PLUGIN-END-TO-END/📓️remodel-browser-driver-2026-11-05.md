@@ -1,0 +1,7 @@
+# Remodel browser acceptance driver
+
+The plugin-owned browser acceptance route takes a genuine repository invocation and explicit host URL, output path and locale. It never starts a second host. The neutral checklist retains twelve required scenarios. Acceptance requires each authored ID exactly once, a passed result with nonempty evidence for every scenario, and no faults; unexecuted and unsupported items cannot pass.
+
+Current driver records the editor role chip, but it does not pass identity because no public relationship to a rendered body has been established. It attempts the source-backed navbar mode buttons in both languages and exact registered example options; those scenarios remain incomplete without layout, durable 36-frame and camera evidence. It attempts the visible Import Frames action and actual multiple file chooser using three existing source PNGs in place; picker selection is not counted as import/persistence proof. It does not simulate native picker cancellation. Other reconstruction, viewer, cold-reopen and export scenarios remain unexecuted.
+
+Focused Vitest accounting and input checks used neutral JSON/Ajv. Logs remodel-browser-refusals-red.log and remodel-browser-refusals-green.log cover identity accounting, all distinct IDs, strict arguments and JSON serialization. remodel-browser-images-red.log and remodel-browser-images-green.log cover the exact three existing inputs. These are source-level tests, not browser acceptance evidence. No live browser run has been made. Existing root-owned host and native gates remain independent.

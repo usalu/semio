@@ -3,7 +3,7 @@
 use super::*;
 #[path="🌱️ephemeral/🦀️.rs"]
 pub mod original_ephemeral;
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::ArtifactEditor;
 use semio_s_artifact_raster_raster_editor_commands::RasterCommand;
 use semio_s_artifact_raster_raster_editor_panels::panels;
 use crate::config::{RasterConfig, RasterConfigMutation};
@@ -14,33 +14,33 @@ use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::RASTER_DOCUMENT_SCHEMA;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework::ToolExecutionContract;
-use semio_framework_plugin::app::InteractionView;
+use semio_plugin::app::InteractionView;
 use semio_framework_job::{RetainedCloneGrant, RetainedCloneProgress};
-use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactReservedToolInput;
-use semio_framework_plugin::ArtifactReservedToolJob;
-use semio_framework_plugin::ArtifactReservedToolJobRequest;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactReservedToolInput;
+use semio_plugin::ArtifactReservedToolJob;
+use semio_plugin::ArtifactReservedToolJobRequest;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
 use semio_framework_artifact_reference::Dialect;
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaError;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaPayload;
-use semio_framework_plugin::MediaType;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::WindowMeasure;
+use semio_plugin::DraftView;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_ui_locale::Label;
+use semio_ui_locale::LocalizedLabel;
+use semio_plugin::Media;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaError;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaPayload;
+use semio_plugin::MediaType;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::WindowMeasure;
 use std::collections::HashMap;
 use semio_framework_2d_compute::EngineHandles;
 use semio_s_artifact_raster_raster_editor_commands::commands::flatten_layers;
@@ -49,7 +49,7 @@ use semio_s_artifact_raster_raster_editor_commands::commands::mask_from_selectio
 pub(super) struct RasterCommandProofs;
 
 impl RasterCommandProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<RasterPlayApp>,
         owner_file: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.raster.raster@1/*#editor",
@@ -72,7 +72,7 @@ pub(super) struct RasterMaskSelectionProofs;
 pub(super) struct RasterLayerBakeProofs;
 pub(super) struct RasterPixelEditProofs;
 impl RasterPixelEditProofs{
- semio_framework_plugin::bounded_first_step_tool_proofs!{
+ semio_plugin::bounded_first_step_tool_proofs!{
   owner:EditorApp<RasterPlayApp>,
   owner_file:"✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
   controller:"s.raster.raster@1/*#editor",
@@ -89,7 +89,7 @@ impl RasterPixelEditProofs{
  }
 }
 impl RasterLayerBakeProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner:EditorApp<RasterPlayApp>,
         owner_file:"✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller:"s.raster.raster@1/*#editor",
@@ -100,7 +100,7 @@ impl RasterLayerBakeProofs {
     }
 }
 impl RasterMaskSelectionProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner:EditorApp<RasterPlayApp>,
         owner_file:"✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller:"s.raster.raster@1/*#editor",
@@ -111,7 +111,7 @@ impl RasterMaskSelectionProofs {
     }
 }
 impl RasterSelectionProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner:EditorApp<RasterPlayApp>,
         owner_file:"✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller:"s.raster.raster@1/*#editor",
@@ -123,7 +123,7 @@ impl RasterSelectionProofs {
 }
 
 impl RasterDownloadProofs {
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<RasterPlayApp>,
         owner_file: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.raster.raster@1/*#editor",
@@ -157,7 +157,7 @@ impl ArtifactEditor for RasterPlayApp {
     }
 
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
-    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+    fn examples() -> Vec<semio_plugin::ExampleSource> {
         vec![semio_s_artifact_raster_raster_examples::art_raster_demo::source()]
     }
     type Snapshot = RasterSnapshot;
@@ -168,8 +168,8 @@ impl ArtifactEditor for RasterPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = RasterPresence;
     type PresenceMutation = RasterPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Transient = semio_plugin::NoTransient;
+    type TransientMutation = semio_plugin::NoTransientMutation;
 
     type Command = RasterCommand;
 
@@ -181,7 +181,7 @@ impl ArtifactEditor for RasterPlayApp {
     /// projection` before the decoded document can replace the store. `assets` declares no child slot
     /// (see `🧬️schema/📸️snapshot`), so the projection is honestly empty.
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
-        semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("raster.child-projection"), error.to_string()))
+        semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("raster.child-projection"), error.to_string()))
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -192,7 +192,7 @@ impl ArtifactEditor for RasterPlayApp {
         Some(store::snapshot_clone_preparation::config_apply_preparation_factory::<RasterConfig, RasterConfigMutation>())
     }
 
-    fn bounded_first_step_tool_proofs()->Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+    fn bounded_first_step_tool_proofs()->Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
         RasterCommandProofs::bounded_first_step_tool_proofs().into_iter().chain(RasterPixelEditProofs::bounded_first_step_tool_proofs()).chain(RasterDownloadProofs::bounded_first_step_tool_proofs()).chain(RasterSelectionProofs::bounded_first_step_tool_proofs()).chain(RasterMaskSelectionProofs::bounded_first_step_tool_proofs()).chain(RasterLayerBakeProofs::bounded_first_step_tool_proofs()).collect()
     }
 
@@ -207,42 +207,42 @@ impl ArtifactEditor for RasterPlayApp {
         registry.register(media_export::RasterDownloadJobFactory::new(&controller_id))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if original.tool_id=="exportPng" {return media_export::build_download_job(request, output, cx);}
         if original.tool_id=="selectPixels"{
-            if !matches!(original.command,RasterCommand::SelectPixels(_)){return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated,"selection command does not match its registered tool").into());}
-            return semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request,output,cx,RasterCommand::command_id,RASTER_SELECT_PIXELS_RAW_BYTES,RASTER_RETAINED_WORK_ITEMS,false,|_|semio_s_artifact_raster_raster_editor_commands::commands::select_pixels::SelectPixelsWork::default());
+            if !matches!(original.command,RasterCommand::SelectPixels(_)){return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated,"selection command does not match its registered tool").into());}
+            return semio_plugin::retained_command::producer::admit_retained_tool_producer(request,output,cx,RasterCommand::command_id,RASTER_SELECT_PIXELS_RAW_BYTES,RASTER_RETAINED_WORK_ITEMS,false,|_|semio_s_artifact_raster_raster_editor_commands::commands::select_pixels::SelectPixelsWork::default());
         }
         if original.tool_id=="maskFromSelection"{
-            if !matches!(original.command,RasterCommand::MaskFromSelection(_)){return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated,"mask command does not match its registered tool").into());}
-            return semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request,output,cx,RasterCommand::command_id,RASTER_RETAINED_RAW_BYTES,RASTER_RETAINED_WORK_ITEMS,false,|_|mask_from_selection::MaskFromSelectionWork::default());
+            if !matches!(original.command,RasterCommand::MaskFromSelection(_)){return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated,"mask command does not match its registered tool").into());}
+            return semio_plugin::retained_command::producer::admit_retained_tool_producer(request,output,cx,RasterCommand::command_id,RASTER_RETAINED_RAW_BYTES,RASTER_RETAINED_WORK_ITEMS,false,|_|mask_from_selection::MaskFromSelectionWork::default());
         }
         if RASTER_PIXEL_EDIT_TOOL_IDS.contains(&original.tool_id.as_str()){
-            if original.command.command_id()!=original.tool_id{return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated,"pixel command does not match its registered tool").into())}
+            if original.command.command_id()!=original.tool_id{return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated,"pixel command does not match its registered tool").into())}
             let tool=original.command.command_id();
             if tool=="paintStroke"{
-                return semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request,output,cx,RasterCommand::command_id,RASTER_PIXEL_EDIT_RAW_BYTES,RASTER_RETAINED_WORK_ITEMS,false,|_|semio_s_artifact_raster_raster_editor_commands::commands::paint_stroke::PaintStrokeWork::default());
+                return semio_plugin::retained_command::producer::admit_retained_tool_producer(request,output,cx,RasterCommand::command_id,RASTER_PIXEL_EDIT_RAW_BYTES,RASTER_RETAINED_WORK_ITEMS,false,|_|semio_s_artifact_raster_raster_editor_commands::commands::paint_stroke::PaintStrokeWork::default());
             }
-            return semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request,output,cx,RasterCommand::command_id,RASTER_PIXEL_EDIT_RAW_BYTES,RASTER_RETAINED_WORK_ITEMS,false,|_|semio_s_artifact_raster_raster_editor_commands::commands::pixel_edit::PixelLeafWork::new(tool));
+            return semio_plugin::retained_command::producer::admit_retained_tool_producer(request,output,cx,RasterCommand::command_id,RASTER_PIXEL_EDIT_RAW_BYTES,RASTER_RETAINED_WORK_ITEMS,false,|_|semio_s_artifact_raster_raster_editor_commands::commands::pixel_edit::PixelLeafWork::new(tool));
         }
         if !raster_retained_accepts(&original.tool_id) {
             return Ok(false);
         }
         if original.command.command_id() != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "Raster command does not match its exact registered tool").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "Raster command does not match its exact registered tool").into());
         }
         if raster_retained_extent(&original.command, &original.snapshot, &original.interaction_state) != Some(1) {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "the raster document exceeds the retained command's work bound").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "the raster document exceeds the retained command's work bound").into());
         }
         let tool_id = original.command.command_id();
         if tool_id == "flattenLayers" {
-            return semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, RasterCommand::command_id, RASTER_RETAINED_RAW_BYTES, RASTER_RETAINED_WORK_ITEMS, false, |_| flatten_layers::LayerBakeWork::<false>::default());
+            return semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, RasterCommand::command_id, RASTER_RETAINED_RAW_BYTES, RASTER_RETAINED_WORK_ITEMS, false, |_| flatten_layers::LayerBakeWork::<false>::default());
         }
         if tool_id == "mergeDown" {
-            return semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, RasterCommand::command_id, RASTER_RETAINED_RAW_BYTES, RASTER_RETAINED_WORK_ITEMS, false, |_| flatten_layers::LayerBakeWork::<true>::default());
+            return semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, RasterCommand::command_id, RASTER_RETAINED_RAW_BYTES, RASTER_RETAINED_WORK_ITEMS, false, |_| flatten_layers::LayerBakeWork::<true>::default());
         }
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, RasterCommand::command_id, RASTER_RETAINED_RAW_BYTES, RASTER_RETAINED_WORK_ITEMS, false, |_| BoundedArtifactCommandWork::new(tool_id, raster_retained_reduce, raster_retained_extent))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, RasterCommand::command_id, RASTER_RETAINED_RAW_BYTES, RASTER_RETAINED_WORK_ITEMS, false, |_| BoundedArtifactCommandWork::new(tool_id, raster_retained_reduce, raster_retained_extent))
     }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
@@ -257,46 +257,46 @@ impl ArtifactEditor for RasterPlayApp {
         Some(semio_s_artifact_raster_raster_host::raster_document_store_owners_admission(grant))
     }
 
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(Box::new(semio_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
 
     /// 🧹️ The config and draft lanes' owner catalogs are the framework's bounded defaults; their
     /// disposers close through the matching bounded store disposers (forms precedent) — without them
     /// a closing instance faults `interactive-job.close-owned-disposer-missing … config-store`.
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_plugin::no_draft_store_disposer())
     }
 
     /// 👥️ Presence/transient lanes: raster's `RasterPresence` is plain inline data (its own
     /// one-turn retirement in `👥️presence/🦀️.rs`), the transient lane is `NoTransient` — the same
     /// rows forms/process3d declare.
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
         Some(crate::presence::raster_presence_store_disposer())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+        Some(semio_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
+        Some(semio_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
     }
 
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_plugin::no_transient_store_disposer())
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+        Some(semio_plugin::no_transient_local_root_retirement_factory())
     }
 
     /// 🫧️ The Composite window's transient partition — where a streamed stroke lives between its dispatches.
-    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_transient_owners(registry: &mut semio_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
         composite::transient::register(registry)
     }
 
@@ -304,13 +304,13 @@ impl ArtifactEditor for RasterPlayApp {
     /// `blur`, a lost pointer capture `captureLost`, a utility switch or a closing window `retired`, an opened history
     /// edit `frozen`. A remote edit (`BaseMoved`) keeps the stroke: its leaf names points and brush and repaints on any
     /// base. A window with no stroke in flight takes no write.
-    fn host_event_demands(event: &semio_framework_plugin::HostEvent) -> Option<semio_framework_value::RetirementDemand> {
-        let bytes=match event{semio_framework_plugin::HostEvent::WindowBlurred{..}=>9,semio_framework_plugin::HostEvent::PointerCaptureLost{..}=>16,semio_framework_plugin::HostEvent::UtilityChanged{..}|semio_framework_plugin::HostEvent::Retiring{..}=>12,semio_framework_plugin::HostEvent::TimeTravelFrozen{..}=>11,semio_framework_plugin::HostEvent::BaseMoved{..}=>16};
+    fn host_event_demands(event: &semio_plugin::HostEvent) -> Option<semio_framework_value::RetirementDemand> {
+        let bytes=match event{semio_plugin::HostEvent::WindowBlurred{..}=>9,semio_plugin::HostEvent::PointerCaptureLost{..}=>16,semio_plugin::HostEvent::UtilityChanged{..}|semio_plugin::HostEvent::Retiring{..}=>12,semio_plugin::HostEvent::TimeTravelFrozen{..}=>11,semio_plugin::HostEvent::BaseMoved{..}=>16};
         let header=std::mem::size_of::<RasterCommand>();Some(semio_framework_value::RetirementDemand{copy_bytes:header.saturating_mul(2).saturating_add(bytes),capacity_bytes:header.saturating_add(bytes),depth:1,..Default::default()})
     }
 
-    fn host_event(event: &semio_framework_plugin::HostEvent) -> Option<RasterCommand> {
-        use semio_framework_plugin::HostEvent;
+    fn host_event(event: &semio_plugin::HostEvent) -> Option<RasterCommand> {
+        use semio_plugin::HostEvent;
         use semio_framework_tool_machine::ToolAbortReason;
         let reason = match event {
             HostEvent::WindowBlurred { .. } => ToolAbortReason::Blur,
@@ -333,22 +333,22 @@ impl ArtifactEditor for RasterPlayApp {
     /// through the bounded `set-active-example` mutations (the same document flow block2d/forms
     /// use). Found at the first react boots of ticket 26/09/05/RASTER-PLUGIN-END-TO-END
     /// (2026-09-16).
-    fn reference_birth()->Option<fn()->Result<RasterSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<RasterSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot())
     })}
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_plugin::AppIo> {
         Some(raster_io())
     }
 
     /// 📤️ Captures image output in a retained operation with framework-owned cancellation and disposal.
-    fn build_media_export_job(request:&mut Option<semio_framework_plugin::ArtifactMediaExportJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_framework_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_media_export_job(request:&mut Option<semio_plugin::ArtifactMediaExportJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if request.as_ref().is_some_and(|request|request.port!="image:out"||request.tool_id!=media_export::TOOL_ID){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"raster media producer requires its exact registered output port").into())}
         media_export::RasterImageExportJob::admit_original(request,body,cx)
     }
 
-    fn interaction_topology(doc:&ArtifactView<'_,RasterSnapshot>,_cfg:&ConfigView<'_,RasterConfig>)->Result<semio_framework_plugin::InteractionTopology, semio_framework_value::ValueError> {
-        Ok(semio_framework_plugin::InteractionTopology {domains:std::collections::BTreeMap::from([(RASTER_INTERACTION_DOMAIN.into(),layer_selection::layer_topology(&doc.snapshot.layers))])})
+    fn interaction_topology(doc:&ArtifactView<'_,RasterSnapshot>,_cfg:&ConfigView<'_,RasterConfig>)->Result<semio_plugin::InteractionTopology, semio_framework_value::ValueError> {
+        Ok(semio_plugin::InteractionTopology {domains:std::collections::BTreeMap::from([(RASTER_INTERACTION_DOMAIN.into(),layer_selection::layer_topology(&doc.snapshot.layers))])})
     }
 
     /// 📦️ Batch serializers for structured image media and editable artifact packs.
@@ -408,31 +408,31 @@ impl ArtifactEditor for RasterPlayApp {
         doc: &ArtifactView<'_, RasterSnapshot>,
         cfg: &ConfigView<'_, RasterConfig>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<RasterMutation, RasterConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn window_measures(_doc: &ArtifactView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::from([(composite::RASTER_PLAY_WINDOW_COMPOSITE.into(), composite::window_measures(cfg.snapshot, raster_play_labels(view_state)))])
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         render_raster_body(body_key, doc, None, cfg, view_state, &[], None)
     }
 
     fn render_with_request_context(
-        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        _owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, RasterSnapshot>,
         cfg: &ConfigView<'_, RasterConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        view_state: &semio_plugin::ViewModel,
+        transient: &semio_plugin::TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
-        _cx:&mut semio_framework_plugin::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        _cx:&mut semio_plugin::StepContext<'_>,
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
         let preview=if body_key==composite::RASTER_PLAY_BODY_COMPOSITE{doc.render_operation_ref().and_then(|operation|transient.window::<composite::transient::RasterCompositeWindowTransientOwner>().and_then(|window|composite::transient::cached_stroke_preview(window,&operation.canonical_base_revision)))}else{None};
         render_raster_body(body_key,doc,preview,cfg,view_state,&interaction.selection(RASTER_INTERACTION_DOMAIN).ids,interaction.hover(RASTER_INTERACTION_DOMAIN,"pointer").ids.first().map(String::as_str)).map(Some).map_err(Into::into)
         }
@@ -440,12 +440,12 @@ impl ArtifactEditor for RasterPlayApp {
 
 /// 🖼️ Projects live selection into both paint windows without a second selection store; the Composite window paints
 /// `preview` (the committed document with its stroke in flight) when it holds one.
-pub(super) fn render_raster_body(body_key: &str, doc: &ArtifactView<'_, RasterSnapshot>, preview: Option<&RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>, view_state: &semio_framework_plugin::ViewModel, selected_ids: &[String], hovered_id: Option<&str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+pub(super) fn render_raster_body(body_key: &str, doc: &ArtifactView<'_, RasterSnapshot>, preview: Option<&RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>, view_state: &semio_plugin::ViewModel, selected_ids: &[String], hovered_id: Option<&str>) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let document = preview.unwrap_or(doc.snapshot);
         let config = cfg.snapshot;
         let active_utility = view_state.active_utility_id.as_deref().unwrap_or("selectMarquee");
         let labels = raster_play_labels(view_state);
-        let windows = semio_framework_plugin::TreeWindows::for_body(view_state, body_key);
+        let windows = semio_plugin::TreeWindows::for_body(view_state, body_key);
         let node = match body_key {
             composite::RASTER_PLAY_BODY_COMPOSITE => composite::render(document, config, active_utility, selected_ids, hovered_id, selection_cancellation(doc.operations(),view_state.window_id.as_deref()))?,
             navigator::RASTER_PLAY_BODY_NAVIGATOR => navigator::render(document, config, active_utility, selected_ids, hovered_id)?,
@@ -453,21 +453,21 @@ pub(super) fn render_raster_body(body_key: &str, doc: &ArtifactView<'_, RasterSn
             crate::panels::masks::RASTER_PLAY_BODY_MASKS => crate::panels::masks::render(document, config, labels, &windows)?,
             crate::panels::catalogue::RASTER_PLAY_BODY_CATALOGUE => crate::panels::catalogue::render(labels, &windows)?,
             crate::panels::inspection::RASTER_PLAY_BODY_PROPERTIES => crate::panels::inspection::render(document, config, selected_ids, labels)?,
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "raster unknown-body label admission failed"))?,
+            _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "raster unknown-body label admission failed"))?,
         };
         let node=if body_key==crate::panels::document::RASTER_PLAY_BODY_LAYERS&&!doc.operations().is_empty() {
-            use semio_framework_plugin::{Buildable,HasBase,HasChildren};
-            let progress=semio_framework_plugin::app::operation_progress::operation_progress_controls(doc.operations(),RASTER_PLAY_CONTROLLER_ID,view_state.locale)?;
-            semio_framework_ui_contract::column().try_id("raster.layers.with-progress").map_err(|_|semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity","raster progress container"))?.try_children([progress,node]).map_err(|_|semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity","raster progress children"))?.try_build().map_err(|_|semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity","raster progress build"))?
+            use semio_plugin::{Buildable,HasBase,HasChildren};
+            let progress=semio_plugin::app::operation_progress::operation_progress_controls(doc.operations(),RASTER_PLAY_CONTROLLER_ID,view_state.locale)?;
+            semio_ui_contract::column().try_id("raster.layers.with-progress").map_err(|_|semio_plugin::PluginAssemblyError::new("ui.fixed-capacity","raster progress container"))?.try_children([progress,node]).map_err(|_|semio_plugin::PluginAssemblyError::new("ui.fixed-capacity","raster progress children"))?.try_build().map_err(|_|semio_plugin::PluginAssemblyError::new("ui.fixed-capacity","raster progress build"))?
         }else{node};
-        Ok(semio_framework_plugin::built_to_component_tree(node))
+        Ok(semio_plugin::built_to_component_tree(node))
 }
 
 /// ⎋️ Only one exact admitted selection owner is offered to its original window; the host checks actor authority.
-fn selection_cancellation(operations:&[semio_framework_plugin::ArtifactOperationProgress],window:Option<&str>)->Option<semio_framework_plugin::Paint2dSelectionCancellation>{
+fn selection_cancellation(operations:&[semio_plugin::ArtifactOperationProgress],window:Option<&str>)->Option<semio_plugin::Paint2dSelectionCancellation>{
     let window=window?;
     let mut matching=operations.iter().filter(|operation|operation.tool_id=="selectPixels"&&!operation.cancelling&&operation.window_id.as_deref()==Some(window));
     let operation=matching.next()?;
     if matching.next().is_some(){return None;}
-    Some(semio_framework_plugin::Paint2dSelectionCancellation{actor:operation.actor.clone(),app_instance_id:operation.app_instance_id,window_id:window.into(),operation_id:format!("{:016x}",operation.operation_id),generation:format!("{:016x}",operation.generation)})
+    Some(semio_plugin::Paint2dSelectionCancellation{actor:operation.actor.clone(),app_instance_id:operation.app_instance_id,window_id:window.into(),operation_id:format!("{:016x}",operation.operation_id),generation:format!("{:016x}",operation.generation)})
 }

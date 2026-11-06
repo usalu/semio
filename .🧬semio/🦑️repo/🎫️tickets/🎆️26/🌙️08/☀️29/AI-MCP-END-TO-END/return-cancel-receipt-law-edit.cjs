@@ -1,0 +1,4 @@
+const fs=require('fs'),path='🧰️framework/🔨️modules/🧵️job/⏱️context/📦️return/🎟️place/🧪️tests/🦀️.rs',before=fs.readFileSync(path,'utf8');
+const old='assert!(place.terminal_is_empty());assert_eq!(copied,destination.len());caller.retire(stock);';
+const value='assert!(place.terminal_is_empty());let metadata=2*std::mem::size_of::<semio_framework_job_payload::OriginalReturnEscrowAmounts>()+std::mem::size_of::<bool>()+std::mem::size_of::<u64>()+2*std::mem::size_of::<u8>()+std::mem::size_of::<usize>();assert_eq!(copied,destination.len()+2*metadata+std::mem::size_of::<u8>()+std::mem::size_of::<u32>());caller.retire(stock);';
+if(before.split(old).length!==2)throw Error('unexpected cancellation law');const tmp=path+'.guest-cancel-law';fs.writeFileSync(tmp,before.replace(old,value),{flag:'wx'});if(fs.readFileSync(path,'utf8')!==before){fs.unlinkSync(tmp);throw Error('concurrent change')}fs.renameSync(tmp,path);

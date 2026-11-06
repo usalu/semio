@@ -1,0 +1,1 @@
+{"cases":[{"reference":"crate/feature","dependencies":["crate"],"valid":true},{"reference":"crate?/feature","dependencies":["crate"],"valid":true},{"reference":"missing/feature","dependencies":["crate"],"valid":false},{"reference":"dep:crate","dependencies":["crate"],"valid":true},{"reference":"dep:missing","dependencies":[],"valid":false}]}

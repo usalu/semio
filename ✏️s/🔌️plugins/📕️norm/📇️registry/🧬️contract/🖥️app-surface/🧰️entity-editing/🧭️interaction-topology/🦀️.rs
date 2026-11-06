@@ -2,7 +2,7 @@
 //!
 //! 🔗️ Seam: `ArtifactEditor::interaction_topology`; ids: [`entity_address`](crate::viewport3d::picking::entity_address), [`row_address`](crate::row_address) and the `check` granularity of [`GRANULARITY_CHECK`](crate::viewport3d::picking::GRANULARITY_CHECK).
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 
 pub use semio_s_plugin_norm_app_surface_viewport3d as viewport3d;
 use semio_s_plugin_norm_compliance::CheckReport;

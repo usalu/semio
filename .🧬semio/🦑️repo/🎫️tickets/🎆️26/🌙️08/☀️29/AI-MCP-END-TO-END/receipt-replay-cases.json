@@ -1,0 +1,29 @@
+[
+  {
+    "name": "identical replay",
+    "savedAggregate": 50,
+    "observedAggregate": 50,
+    "savedFresh": 2,
+    "delta": 0,
+    "expected": "accept",
+    "fresh": 2
+  },
+  {
+    "name": "changed aggregate",
+    "savedAggregate": 50,
+    "observedAggregate": 51,
+    "savedFresh": 2,
+    "delta": 0,
+    "expected": "reject",
+    "fresh": 2
+  },
+  {
+    "name": "changed escrow",
+    "savedAggregate": 50,
+    "observedAggregate": 50,
+    "savedFresh": 2,
+    "delta": 1,
+    "expected": "reject",
+    "fresh": 2
+  }
+]

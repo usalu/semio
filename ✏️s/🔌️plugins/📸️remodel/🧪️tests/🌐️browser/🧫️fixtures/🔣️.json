@@ -1,0 +1,55 @@
+[
+  {
+    "id": "identity",
+    "description": "Verify the mounted editor identity and real rendered content."
+  },
+  {
+    "id": "locales-and-modes",
+    "description": "Exercise English and German accessible modes and layouts."
+  },
+  {
+    "id": "examples",
+    "description": "Load all three examples and inspect the 36-frame Synthetic Orbit."
+  },
+  {
+    "id": "import-images",
+    "description": "Import the existing PNG stills through the visible file picker.",
+    "assets": [
+      "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🛰️synthetic-orbit/🖼️assets/🎞️frame-00.png",
+      "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🛰️synthetic-orbit/🖼️assets/🎞️frame-01.png",
+      "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🛰️synthetic-orbit/🖼️assets/🎞️frame-02.png"
+    ]
+  },
+  {
+    "id": "import-video",
+    "description": "Import a supported video through the visible file picker."
+  },
+  {
+    "id": "import-cancel",
+    "description": "Cancel an actual file picker and verify no document mutation."
+  },
+  {
+    "id": "run-controls-and-abort",
+    "description": "Pause, single-step, resume and abort actual reconstruction."
+  },
+  {
+    "id": "reconstruct-and-finalize",
+    "description": "Finalize a completed reconstruction and inspect committed geometry."
+  },
+  {
+    "id": "undo-redo",
+    "description": "Undo and redo the finalized reconstruction as one change."
+  },
+  {
+    "id": "windows-and-viewer",
+    "description": "Check independent windows and the same persisted artifact in the viewer."
+  },
+  {
+    "id": "cold-reopen",
+    "description": "Close and reopen the persisted artifact without an in-memory cache."
+  },
+  {
+    "id": "mesh-and-qc-export",
+    "description": "Inspect actual mesh export and download the QC JSON report."
+  }
+]

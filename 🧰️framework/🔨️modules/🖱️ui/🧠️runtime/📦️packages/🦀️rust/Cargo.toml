@@ -25,6 +25,7 @@ semio-ui-runtime-reconcile-primitives = { path = "../../🧱️primitives/📦�
 semio-ui-runtime-reconcile = { path = "../../♻️reconcile/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-ui-contract-values = { path = "../../../🧬️contract/🌱️values/📦️packages/🦀️rust", features = ["testkit"] }
 ui_contract = { path = "../../../🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
 semio-framework-job = { path = "../../../../🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 semio-ui-runtime-reconcile = { path = "../../♻️reconcile/📦️packages/🦀️rust", features = ["testkit"] }

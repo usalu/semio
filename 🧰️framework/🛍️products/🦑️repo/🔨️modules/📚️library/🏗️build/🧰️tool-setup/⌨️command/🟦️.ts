@@ -30,6 +30,14 @@ export function selectToolRowsV1(names: readonly string[], excluded: readonly st
   return toolRowsV1(names.length === 0 ? "all" : names, environment).filter(row => !excluded.includes(row.setup.kind));
 }
 
+/** 🎯️ Selects unique known toolchains without admitting excluded backend installers. */
+export function parseToolSetupSelectionV1(args:readonly string[]):readonly string[]{
+ if(args[0]!=="tools"||args[1]!=="setup"||args[2]!=="toolchains")throw Error("Expected repo tools setup toolchains [tool...]");
+ const names=args.slice(3);if(new Set(names).size!==names.length)throw Error("Duplicate toolchain selection");
+ if(names.length&&selectToolRowsV1(names,["bazel"]).length!==names.length)throw Error("Selected tool is not a toolchain");
+ return names;
+}
+
 /** 📍️ The directory a dotnet SDK is installed to below the tools partition: named by SDK, host and the digest of the pinned installer script. */
 export function dotnetSdkDirectoryV1(toolsRoot: string, sdk: string, host: ToolchainHostV1, scriptSha256: string): string {
   return join(toolsRoot, "native", "dotnet", sdk, host + "-" + scriptSha256.slice(0, 16));
@@ -151,7 +159,7 @@ export async function runToolchainsSetupV1(root: string, invocation: ScriptInvoc
   const provision: ToolProvisionerV1 = async (row, pin, signal) => {
     const setup = row.setup;
     if (setup.kind === "native") await inStore((store, actual) => provisionNativeToolsV1([setup.tool], store.root, ownedNativeToolPortV1(store.environment, actual), actual.signal));
-    else if (setup.kind === "bun") await inStore((store, actual) => prepareBun(root, pin, store, actual));
+    else if (setup.kind === "bun") await inStore((store, actual) => prepareBun(root, pin, store, actual, "published"));
     else if (setup.kind === "binaryen") await inStore(store => prepareBinaryen(root, store));
     else if (setup.kind === "script") await execute(process.execPath, [join(root, ...setup.script.split("/")), ...setup.prepare], pinned(), signal);
     else if (setup.kind === "python") {

@@ -1,4 +1,8 @@
 //! 🎞️ The media export contract an app producer writes into: output chunks, results, completions, credits and handles.
+#[path="⚠️turn/🦀️.rs"]
+pub mod media_operation_refusal;
+#[path="🛫️intrinsic/🦀️.rs"]
+pub mod media_intrinsic;
 use semio_framework::Fault;
 use semio_framework::FaultCode;
 use semio_framework::FaultOrigin;

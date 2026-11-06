@@ -1,0 +1,5 @@
+# Component Terminal Audit — 2026-11-05
+
+Retained generated/component-canonical.log is 2771461 bytes, 13872 lines, containing 134 Compiling lines. Actual Cargo reached semio-framework-kernel-identity and reported it could not compile; shown rustc-wrapper invocation exited 1. No individual rustc diagnostic line is retained in this log. That unit invocation has no --target and no --extern semio_framework_value_native_owned; it belongs to the earlier pre-manifest-fix host-side unit, not a component link result. Its p21ef46 identity/26acf277499f13ce fingerprint directory contains only invoked.timestamp, no retained compiler diagnostic.
+
+Outer command reports cargo:build stopped timeout 3591718ms and repository command failed status 1. No component artifact, WASM link or successful result is established. After current manifest fixes are verified and this old invocation is terminal, one fresh normal repository Cargo component invocation under the same declared authority/limits and full output is the appropriate next attempt; do not increase budget, bypass preparation or overlap another matching gate. Further compiler errors remain possible.

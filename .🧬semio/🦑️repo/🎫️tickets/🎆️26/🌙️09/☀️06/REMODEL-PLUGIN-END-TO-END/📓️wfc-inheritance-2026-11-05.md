@@ -1,0 +1,5 @@
+# WFC Workspace Inheritance — 2026-11-05
+
+Hub and component preparation reported bitmap missing inherited semio-framework-os-kernel. Current workspace owners already declare canonical semio-os-kernel, semio-plugin and semio-ui-contract. The dual-parser inheritance validator failed on four missing bindings in the eight-member WFC engine workspace and nine in the eleven-member bitmap workspace. It now passes for all 19 members and checks the actual canonical owner package names with both TOML parsers.
+
+Removed redundant obsolete inherited kernel keys from engine job and oracle manifests, and obsolete kernel/plugin/UI keys from bitmap facade manifest, where canonical entries with identical features already exist. Renamed the pin-solution manifest inherited kernel/plugin keys to the existing canonical keys. Updated matching exact Rust crate paths in bitmap source and tests. No compatibility alias or dependency feature was added. Retained input helper 🐍️wfc-inheritance-check.cjs accepts either workspace root. Native compilation and Hub/component publication remain unverified.

@@ -141,7 +141,7 @@ async fn fill_tolerance_shared_vectors_round_trip_and_restore() {
 
 #[semio_framework_async_macros::async_test]
 async fn completed_selection_contract_round_trips_and_survives_style_changes(){
-    use semio_framework_plugin::artifact_app_laws::OriginalWorkFixture;
+    use semio_plugin::artifact_app_laws::OriginalWorkFixture;
     use store::snapshot_clone_preparation::config_apply::ConfigApplyMutation;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎯️pixel-selection/🔣️.json")).unwrap();
     let mut caller=OriginalWorkFixture::new();let grant=OriginalWorkFixture::stock();

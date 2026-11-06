@@ -1,5 +1,5 @@
 //! 🧬️ The embedding CLI supplies immutable operation data; every pure codec call receives a genuinely fresh Source.
-use semio_framework_plugin_host_wake::{GuestRelayOperationCaps,GuestRelayOperationRequest,GuestRelayWakeDriver};
+use semio_plugin_host_wake::{GuestRelayOperationCaps,GuestRelayOperationRequest,GuestRelayWakeDriver};
 use semio_framework_value::ValueError;
 #[path="📥️receiving/🦀️.rs"]
 mod receiving;

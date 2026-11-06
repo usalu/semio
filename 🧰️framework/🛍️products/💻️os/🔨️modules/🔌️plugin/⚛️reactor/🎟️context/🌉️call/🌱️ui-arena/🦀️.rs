@@ -1,7 +1,7 @@
 //! 🌱️ Guest UI backing is born and registered only inside its admitted original actor Source.
 use super::*;
 use std::mem::size_of;
-use semio_framework_ui_contract::{UiArenaOpening,UiArenaBacking,UiArenaRegistration,ui_value_arena_registry};
+use semio_ui_contract::{UiArenaOpening,UiArenaBacking,UiArenaRegistration,ui_value_arena_registry};
 pub(super) struct OriginalGuestUiArena{opening:ManuallyDrop<Option<UiArenaOpening>>,backing:ManuallyDrop<Option<UiArenaBacking>>,registration:ManuallyDrop<Option<UiArenaRegistration>>,closing:bool}
 impl OriginalGuestUiArena{
  pub(super) fn empty()->Self{Self{opening:ManuallyDrop::new(None),backing:ManuallyDrop::new(None),registration:ManuallyDrop::new(None),closing:false}}

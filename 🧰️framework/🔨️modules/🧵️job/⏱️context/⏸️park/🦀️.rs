@@ -4,11 +4,11 @@ use std::mem::ManuallyDrop;
 
 struct OwnedTurnWallet{fuel:u64,deadline:u64,grant:RetainedCloneGrant,clock:fn()->Option<u64>,clock_binding:Option<u64>,epoch:u64,clock_observation:ClockStride,payload_page_granted:bool,stage:&'static str}
 
-/// 🧳️ Owns the paid original source alias and one non-renewable wallet before issuing its context.
+/// 🧳️ See `README.md`.
 pub struct OriginalOwnedCallerTurn{binding:OriginalSourceBinding,parent_identity:usize,active:bool,ready:bool,source:ManuallyDrop<Option<OriginalCallerSourceParent>>,loan:ManuallyDrop<Option<OriginalCallerSourceLoan>>,wallet:Option<OwnedTurnWallet>,sequence:u64,recipient:RetainedCloneProgress,issued:bool,initial_fuel:u64,work_units_spent:u128,receiving_valid:bool,initial_grant:RetainedCloneGrant,deadline:u64,epoch:u64,clock:fn()->Option<u64>}
 
 impl OriginalCallerSourceParent{
-    /// 🎟️ Pays the actual source loan before moving the remaining work and physical currencies out of this donor.
+    /// 🎟️ See `README.md`.
     pub fn park_owned_turn(&self,output:&mut Option<OriginalOwnedCallerTurn>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         self.validate_borrowed_context(cx)?;let epoch=cx.original_source_epoch().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"owned async turn requires its genuinely issued source epoch"))?;let identity=self.source_identity()?;
         if let Some(owner)=output.as_ref(){if !owner.binding.matches(cx)||owner.parent_identity!=identity{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"owned async admission requires its unchanged original caller").into())}if owner.ready{return Ok(true)}}
@@ -29,15 +29,15 @@ impl OriginalOwnedCallerTurn{
     pub fn admission_is_ready(&self)->bool{self.ready}
     pub fn admission_is_empty(&self)->bool{!self.active&&self.source.is_none()&&self.loan.is_none()}
 
-    /// ♻️ Returns every partial original admission under the same genuine source.
+    /// ♻️ See `README.md`.
     pub fn close_admission_step(&mut self,parent:&OriginalCallerSourceParent,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{parent.validate_borrowed_context(cx)?;if self.parent_identity!=parent.source_identity()?||!self.binding.matches(cx){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"partial owned async return requires its actual source").into())}self.close_source(parent,cx)}
-    /// 📏️ The actual delegated grant remains independent from all later polling callbacks.
+    /// 📏️ See `README.md`.
     pub fn original_grant(&self)->RetainedCloneGrant{self.initial_grant}
     pub fn original_fuel(&self)->u64{self.initial_fuel}
     pub fn original_deadline_us(&self)->u64{self.deadline}
     pub fn original_epoch(&self)->u64{self.epoch}
     pub fn original_clock(&self)->fn()->Option<u64>{self.clock}
-    /// 🤝️ The owning future borrows one actual source context continuously through the asynchronous producer.
+    /// 🤝️ See `README.md`.
     pub async fn execute<R>(mut self,run:impl for<'turn> AsyncFnOnce(&mut StepContext<'turn>)->Result<R,OriginalTurnFailure>)->OriginalOwnedCallerReturn<R>{
         let mut receiving_refusal=None;
         let original=if self.issued||!self.ready{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"owned original turn cannot issue its wallet twice").into())}else{
@@ -67,11 +67,11 @@ impl OriginalOwnedCallerTurn{
 }
 impl Drop for OriginalOwnedCallerTurn{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"owned original turn reached Drop before its paid source loan return")}}
 
-/// 📬️ Whole semantic return and independent receiving refusal remain owned together after their exact physical effects.
+/// 📬️ See `README.md`.
 #[derive(Debug,semio_framework_value_derive::RetireOwned)]
 #[value(crate="::semio_framework_value_retained_clone")]
 pub struct OriginalOwnedCallerOutcome<R>{pub original:Result<R,OriginalTurnFailure>,pub receiving_refusal:Option<ValueError>}
-/// 🪢️ Carries the unchanged issuing epoch, exact physical/work receipt and still-live source until paid caller transfer.
+/// 🪢️ See `README.md`.
 pub struct OriginalOwnedCallerReturn<R>{turn:OriginalOwnedCallerTurn,original:ManuallyDrop<Option<Result<R,OriginalTurnFailure>>>,receiving_refusal:ManuallyDrop<Option<ValueError>>}
 impl<R> OriginalOwnedCallerReturn<R>{
     pub fn validate_original_receiver(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{self.turn.validate_polling_context(cx)}
@@ -83,7 +83,7 @@ impl<R> OriginalOwnedCallerReturn<R>{
     pub fn original_epoch(&self)->u64{self.turn.epoch}
     pub fn original_deadline_us(&self)->u64{self.turn.deadline}
     pub fn original_grant(&self)->RetainedCloneGrant{self.turn.initial_grant}
-    /// 📤️ Polling authority pays only the transfer of this complete already-debited original return.
+    /// 📤️ See `README.md`.
     pub fn take_original_on_caller(&mut self,cx:&mut StepContext<'_>)->Result<Option<OriginalOwnedCallerOutcome<R>>,OriginalTurnFailure>{
         if self.original.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"owned async reply was already transferred").into())}
         self.turn.validate_polling_context(cx)?;let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
@@ -91,7 +91,7 @@ impl<R> OriginalOwnedCallerReturn<R>{
         *cx.preview_sequence=(*cx.preview_sequence).max(self.turn.sequence);if let Some(wallet)=self.turn.wallet.as_ref(){if cx.latest_us().is_none_or(|now|wallet.clock_observation.latest_us().is_some_and(|returned|returned>now)){cx.clock.set(wallet.clock_observation);}}
         Ok(Some(OriginalOwnedCallerOutcome{original:self.original.take().unwrap(),receiving_refusal:self.receiving_refusal.take()}))
     }
-    /// ♻️ Its exact original source returns to the still-retained actual parent under paid caller metadata.
+    /// ♻️ See `README.md`.
     pub fn close_source(&mut self,parent:&OriginalCallerSourceParent,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{if self.original.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"owned original source stays retained until its output transfer").into())}self.turn.close_source(parent,cx)}
     pub fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.receiving_refusal.is_none()&&self.turn.terminal_is_empty()}
 }

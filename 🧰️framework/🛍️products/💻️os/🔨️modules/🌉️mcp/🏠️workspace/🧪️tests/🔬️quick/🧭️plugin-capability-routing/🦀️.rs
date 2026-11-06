@@ -225,7 +225,7 @@ fn pure_command_binds_the_actual_caller_context() {
         if let Some(expected) = row["expectedFault"].as_str() {
             let fault = result.expect_err("refused target");
             assert_eq!(fault.code.0, expected, "{}", row["id"]);
-            if expected == "input.invalid" { assert_eq!(semio_framework_os_mcp_port::channel_port::map_fault(&Fault { code: expected.into(), message: fault.message.clone() }).code, GatewayErrorCode::InputInvalid); }
+            if expected == "input.invalid" { assert_eq!(semio_os_mcp_port::channel_port::map_fault(&Fault { code: expected.into(), message: fault.message.clone() }).code, GatewayErrorCode::InputInvalid); }
             continue;
         }
         let actual = result.expect("bound caller");

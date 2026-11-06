@@ -537,4 +537,6 @@ pub mod component {
 mod persistent_local;
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 #[doc(hidden)]
-pub use persistent_local::{component_persistent_local, owned_abi};
+pub use persistent_local::component_persistent_local;
+#[doc(hidden)]
+pub use persistent_local::owned_abi;

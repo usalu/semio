@@ -1,0 +1,197 @@
+# Cargo Path Normalization Audit
+
+Fresh reread of the earlier 4461-manifest census mismatch candidates only; concurrent edits may change counts. 376 candidate declarations remain mismatched across 97 targets; 347 occur in explicitly listed root workspace members. Other consumers are not proven outside resolution: path dependencies can be implicit members and glob patterns were not expanded. 28 are explicit package aliases. 9 targets still declare the framework-prefixed name while a consumer requests the shorter canonical name; 88 targets have the shorter name while a consumer requests the framework-prefixed name. Treat these classifications as prefix evidence, not independent proof of naming policy.
+
+## Normalization
+
+Use the canonical physical package identity consistently in the target package.name, dependency key and Rust imports. For framework-prefixed targets whose short names are already requested, rename the target and update all other consumers and imports together. For short-name targets, rename stale consumer keys and corresponding imports. Inspect non-prefix differences individually. Do not retain package aliases to mask migration. Recheck all references, including direct, dev, build, target-specific and inherited workspace dependencies, plus lock resolution and sources; this audit cannot establish compile success.
+
+## Target groups
+
+Each line lists current target name, mismatched requested identities and counts, explicit root members, aliases, and physical manifest.
+
+- semio-framework-plugin-retained-command: semio-plugin-retained-command (34); root members 27; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-plugin-runtime-ops: semio-plugin-runtime-ops (21); root members 21; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🧰️ops/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-plugin-instance-docs: semio-plugin-instance-docs (18); root members 18; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📄️docs/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-plugin-reactor-turn: semio-plugin-reactor-turn (17); root members 17; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-os-store-one-item-batch: semio-os-store-one-item-batch (16); root members 16; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️one-item-owners/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-plugin-instance-stores: semio-plugin-instance-stores (15); root members 15; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🏪️stores/📦️packages/🦀️rust/Cargo.toml
+- semio-os-kernel: semio-framework-os-kernel (14); root members 13; aliases 13; 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-ownership: semio-framework-plugin-ownership (9); root members 8; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-reactor-app: semio-framework-plugin-reactor-app (9); root members 9; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔌️app/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-decl-emission: semio-framework-plugin-decl-emission (8); root members 8; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/📨️emission/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-decl-app: semio-framework-plugin-decl-app (8); root members 8; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/📦️packages/🦀️rust/Cargo.toml
+- semio-ui-contract: semio-framework-ui-contract (8); root members 8; aliases 8; 🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/Cargo.toml
+- semio-os-store-one-item: semio-framework-os-store-one-item (7); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-operation: semio-framework-plugin-operation (7); root members 7; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️cancellation/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-decl-views: semio-framework-plugin-decl-views (7); root members 7; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-job: semio-framework-plugin-job (7); root members 7; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/📦️packages/🦀️rust/Cargo.toml
+- semio-ui-locale: semio-framework-ui-locale (6); root members 4; aliases 0; 🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-window-config: semio-framework-plugin-window-config (6); root members 6; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-reactor-lifecycle: semio-framework-plugin-reactor-lifecycle (5); root members 5; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📨️pending/📦️packages/🦀️rust/Cargo.toml
+- semio-ui-runtime: semio-framework-ui-runtime (5); root members 5; aliases 4; 🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-mounted-owner: semio-framework-plugin-mounted-owner (5); root members 5; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-window-kits: semio-framework-plugin-window-kits (5); root members 5; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-composition-publication: semio-framework-plugin-composition-publication (5); root members 5; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-abi: semio-framework-plugin-abi (4); root members 4; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🚪️io/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-window-transient: semio-framework-plugin-window-transient (4); root members 4; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-decl-media: semio-framework-plugin-decl-media (4); root members 4; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🎞️media/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-plugin-program: semio-framework-plugin-plugin-program (4); root members 4; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🔌️program/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-runtime-instances: semio-framework-plugin-runtime-instances (4); root members 4; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/📦️instances/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-command: semio-framework-plugin-command (4); root members 4; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎮️command/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-instance-app: semio-framework-plugin-instance-app (4); root members 4; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-time-travel: semio-framework-plugin-time-travel (4); root members 4; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/📦️packages/🦀️rust/Cargo.toml
+- semio-os-command: semio-framework-os-command (3); root members 0; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-plugin-instance-construction: semio-plugin-instance-construction (3); root members 2; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧱️construction/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-testing-caller: semio-framework-plugin-testing-caller (3); root members 3; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🎟️caller/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-actor-host: semio-framework-plugin-actor-host (3); root members 3; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐host/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-decl-surface: semio-framework-plugin-decl-surface (3); root members 3; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🪟️surface/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-peer: semio-framework-plugin-peer (3); root members 3; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️peer/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-interaction: semio-framework-plugin-interaction (3); root members 3; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-decl-staged-form: semio-framework-plugin-decl-staged-form (2); root members 0; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/staged-form/📦️packages/🦀️rust/Cargo.toml
+- semio-os-store-replay-operation: semio-framework-os-store-replay-operation (2); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/📦️packages/🦀️rust/Cargo.toml
+- semio-os-store-operation-wire: semio-framework-os-store-operation-wire (2); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin: semio-framework-plugin (2); root members 0; aliases 2; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml
+- semio-os-spr: semio-framework-os-spr (2); root members 2; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📦️packages/🦀️rust/Cargo.toml
+- semio-os-store-read: semio-framework-os-store-read (2); root members 2; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/📦️packages/🦀️rust/Cargo.toml
+- semio-os-store-command: semio-framework-os-store-command (2); root members 2; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️command/📦️packages/🦀️rust/Cargo.toml
+- semio-os-store-ephemeral: semio-framework-os-store-ephemeral (2); root members 2; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🫧️ephemeral/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-document-media: semio-framework-plugin-document-media (2); root members 2; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🗃️document/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-app-builder: semio-framework-plugin-app-builder (2); root members 2; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🧩️app/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-reactor-patches: semio-framework-plugin-reactor-patches (2); root members 2; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🩹️patches/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-extension: semio-framework-plugin-extension (2); root members 2; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️extension/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-runtime-exchange: semio-framework-plugin-runtime-exchange (2); root members 2; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🔄️exchange/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-reactor-tasks: semio-framework-plugin-reactor-tasks (2); root members 2; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/⏲️tasks/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-instance-initialization: semio-framework-plugin-instance-initialization (2); root members 2; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🌱️initialization/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-child: semio-framework-plugin-child (2); root members 2; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪆️child/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-tool-run: semio-framework-plugin-tool-run (2); root members 2; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/📦️packages/🦀️rust/Cargo.toml
+- semio-os-store-engine-replay: semio-framework-os-store-engine-replay (2); root members 2; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/🏁️replay/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-instance-children: semio-framework-plugin-instance-children (2); root members 2; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🪆️children/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-decl-tool-contract: semio-framework-plugin-decl-tool-contract (2); root members 2; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🛬️lifted/👷️job/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-testing-laws: semio-framework-plugin-testing-laws (2); root members 2; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-plugin-tests-01: semio-plugin-tests-01 (2); root members 2; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🍎️tests-01/📦️packages/🦀️rust/Cargo.toml
+- semio-os: semio-framework-os (1); root members 0; aliases 1; 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml
+- semio-ui-declaration: semio-framework-ui-declaration (1); root members 0; aliases 0; 🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust/Cargo.toml
+- semio-os-mcp-capabilities: semio-framework-os-mcp-capabilities (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧰️capabilities/📦️packages/🦀️rust/Cargo.toml
+- semio-os-mcp-workspace: semio-framework-os-mcp-workspace (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🪟️workspace-host/📦️packages/🦀️rust/Cargo.toml
+- semio-os-store-ledger: semio-framework-os-store-ledger (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/📦️packages/🦀️rust/Cargo.toml
+- semio-os-store-one-item-publication: semio-framework-os-store-one-item-publication (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📬️publication/📦️packages/🦀️rust/Cargo.toml
+- semio-os-store-replay: semio-framework-os-store-replay (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/📦️packages/🦀️rust/Cargo.toml
+- semio-os-store-snapshot-clone: semio-framework-os-store-snapshot-clone (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/📦️packages/🦀️rust/Cargo.toml
+- semio-os-vcs: semio-framework-os-vcs (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/📦️packages/🦀️rust/Cargo.toml
+- semio-os-store-owned-schema-decode: semio-framework-os-store-owned-schema-decode (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/📦️packages/🦀️rust/Cargo.toml
+- semio-os-pack: semio-framework-os-pack (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/📦️packages/🦀️rust/Cargo.toml
+- semio-os-store-envelope: semio-framework-os-store-envelope (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/✉️envelope/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-job-receiving: semio-framework-plugin-job-receiving (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🛬️receiving/📦️packages/🦀️rust/Cargo.toml
+- semio-ui-layout: semio-framework-ui-layout (1); root members 1; aliases 0; 🧰️framework/🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust/Cargo.toml
+- semio-ui-contract-validation: semio-framework-ui-contract-validation (1); root members 1; aliases 0; 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🛡️limits/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-window-kits-rich: semio-framework-plugin-window-kits-rich (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🧱️rich/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-reactor-surfaces: semio-framework-plugin-reactor-surfaces (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📥️cold-pair/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-reactor-turn-limits: semio-framework-plugin-reactor-turn-limits (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🧯️retirement-drivers-and-turn-limits/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-reactor-core: semio-framework-plugin-reactor-core (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-host-post-turn-relay: semio-framework-plugin-host-post-turn-relay (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔀️post-turn-relay/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-host-wake: semio-framework-plugin-host-wake (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔔️wake/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-host-guest-runtime: semio-framework-plugin-host-guest-runtime (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🎭️guest-runtime/📦️packages/🦀️rust/Cargo.toml
+- semio-os-store-codec-registry: semio-framework-os-store-codec-registry (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-window-config-mutation: semio-framework-plugin-window-config-mutation (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/📬️mutation/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-instance-jobs: semio-framework-plugin-instance-jobs (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/👷️jobs/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-window-config-original: semio-framework-plugin-window-config-original (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧿️original/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-instance-extension: semio-framework-plugin-instance-extension (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧩️extensions/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-test-support: semio-framework-plugin-test-support (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🧯️test-support/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-testing-fixtures-publication: semio-framework-plugin-testing-fixtures-publication (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧰️fixtures-publication/📦️packages/🦀️rust/Cargo.toml
+- semio-os-store-testing-doubles: semio-framework-os-store-testing-doubles (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🎭️doubles/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-builder: semio-framework-plugin-builder (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-instance-ladders: semio-framework-plugin-instance-ladders (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪜️maintenance-ladder/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-reactor-jobs: semio-framework-plugin-reactor-jobs (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-testing-fixtures: semio-framework-plugin-testing-fixtures (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧰️fixtures/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-tests-02: semio-framework-plugin-tests-02 (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🍐️tests-02/📦️packages/🦀️rust/Cargo.toml
+- semio-plugin-tests-05: semio-framework-plugin-tests-05 (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🍌️tests-05/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-os-kernel-dsl-derive-expand: semio-os-kernel-dsl-derive-expand (1); root members 1; aliases 0; 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧩️expand/📦️packages/🦀️rust/Cargo.toml
+
+## Root workspace dependency mappings
+
+These are path mappings whose requested package mismatches its fresh target, have package aliases, or use the old prefix. Inherited workspace dependencies refer to these keys; inspect and rename the consuming keys/imports along with the mapping. 83 mappings listed, 5 mismatched, 4 aliases.
+
+- semio-framework-value-original-slot -> semio-framework-value-original-slot -> semio-framework-value-original-slot at 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-diagnostic -> semio-framework-diagnostic -> semio-framework-diagnostic at 🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-artifact-reference -> semio-framework-artifact-reference -> semio-framework-artifact-reference at 🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-schema-state -> semio-framework-schema-state -> semio-framework-schema-state at 🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-schema-composition -> semio-framework-schema-composition -> semio-framework-schema-composition at 🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-schema-validator -> semio-framework-schema-validator -> semio-framework-schema-validator at 🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-plugin-host-test-component -> semio-framework-plugin-host-test-component -> semio-plugin-host-test-component at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-plugin-host -> semio-framework-plugin-host -> semio-plugin-host at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-plugin-interpreter -> semio-framework-plugin-interpreter -> semio-plugin-interpreter at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-plugin-interpreter-runtime -> semio-framework-plugin-interpreter-runtime -> semio-plugin-interpreter-runtime at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-plugin-guest-contract -> semio-framework-plugin-guest-contract -> semio-plugin-guest-contract at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️guest-contract/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-artifact-infinite-dag -> semio-framework-artifact-infinite-dag -> semio-framework-artifact-infinite-dag at 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-artifact-flow-flow -> semio-framework-artifact-flow-flow -> semio-framework-artifact-flow-flow at 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-artifact-playbook-playbook -> semio-framework-artifact-playbook-playbook -> semio-framework-artifact-playbook-playbook at 🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-artifact-workflow-workflow -> semio-framework-artifact-workflow-workflow -> semio-framework-artifact-workflow-workflow at 🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-artifact-space-space -> semio-framework-artifact-space-space -> semio-framework-artifact-space-space at 🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-artifact-space-collection -> semio-framework-artifact-space-collection -> semio-framework-artifact-space-collection at 🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-artifact-workflow-run -> semio-framework-artifact-workflow-run -> semio-framework-artifact-workflow-run at 🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-math-sampling-vocabulary -> semio-framework-math-sampling-vocabulary -> semio-framework-math-sampling-vocabulary at 🧰️framework/🔨️modules/🧮️math/🎯️sampling/🔤️vocabulary/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-math-sampling-config -> semio-framework-math-sampling-config -> semio-framework-math-sampling-config at 🧰️framework/🔨️modules/🧮️math/🎯️sampling/🎚️config/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-math-sampling-workspace -> semio-framework-math-sampling-workspace -> semio-framework-math-sampling-workspace at 🧰️framework/🔨️modules/🧮️math/🎯️sampling/🧺️workspace/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-math-sampling-testing -> semio-framework-math-sampling-testing -> semio-framework-math-sampling-testing at 🧰️framework/🔨️modules/🧮️math/🎯️sampling/🧪️testing/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-math-sampling-processors -> semio-framework-math-sampling-processors -> semio-framework-math-sampling-processors at 🧰️framework/🔨️modules/🧮️math/🎯️sampling/🎛️processors/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-math-sampling-constraints -> semio-framework-math-sampling-constraints -> semio-framework-math-sampling-constraints at 🧰️framework/🔨️modules/🧮️math/🎯️sampling/🚧️constraints/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-math-sampling-engine -> semio-framework-math-sampling-engine -> semio-framework-math-sampling-engine at 🧰️framework/🔨️modules/🧮️math/🎯️sampling/🚂️engine/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-math-sampling-decoding -> semio-framework-math-sampling-decoding -> semio-framework-math-sampling-decoding at 🧰️framework/🔨️modules/🧮️math/🎯️sampling/🔍️decoding/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-math-sampling-diffusion -> semio-framework-math-sampling-diffusion -> semio-framework-math-sampling-diffusion at 🧰️framework/🔨️modules/🧮️math/🎯️sampling/🌫️diffusion/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-number -> semio-framework-number -> semio-framework-number at 🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-geometry -> semio-framework-geometry -> semio-framework-geometry at 🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-expression -> semio-framework-expression -> semio-framework-expression at 🧰️framework/🔨️modules/🧮️expression/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-raster -> semio-framework-raster -> semio-framework-raster at 🧰️framework/🔨️modules/🖌️raster/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-typeset -> semio-framework-typeset -> semio-framework-typeset at 🧰️framework/🔨️modules/🔤️typeset/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-graph-manifest -> semio-framework-graph-manifest -> semio-framework-graph-manifest at 🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-graph-engine -> semio-framework-graph-engine -> semio-framework-graph-engine at 🧰️framework/🔨️modules/🕸️graph/⚙️engine/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-graph-algorithms -> semio-framework-graph-algorithms -> semio-framework-graph-algorithms at 🧰️framework/🔨️modules/🕸️graph/🧮️algorithms/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-graph-drawing -> semio-framework-graph-drawing -> semio-framework-graph-drawing at 🧰️framework/🔨️modules/🕸️graph/🖊️drawing/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-graph-dsl -> semio-framework-graph-dsl -> semio-framework-graph-dsl at 🧰️framework/🔨️modules/🕸️graph/🗣️dsl/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-graph-layout-run -> semio-framework-graph-layout-run -> semio-framework-graph-layout-run at 🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-actor -> semio-framework-actor -> semio-framework-actor at 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-replication -> semio-framework-replication -> semio-framework-replication at 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-value -> semio-framework-value -> semio-framework-value at 🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-value-native-owned -> semio-framework-value-native-owned -> semio-framework-value-native-owned at 🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-value-native-default -> semio-framework-value-native-default -> semio-framework-value-native-default at 🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-value-control-contract -> semio-framework-value-control-contract -> semio-framework-value-control-contract at 🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-value-native-storage -> semio-framework-value-native-storage -> semio-framework-value-native-storage at 🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-value-resident -> semio-framework-value-resident -> semio-framework-value-resident at 🧰️framework/🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-pack -> semio-framework-pack -> semio-framework-pack at 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/Cargo.toml
+- pack -> semio-framework-pack -> semio-framework-pack at 🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/Cargo.toml (alias)
+- semio-framework-server -> semio-framework-server -> semio-framework-server at 🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-course -> semio-framework-course -> semio-framework-course at 🧰️framework/🛍️products/📚️course/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-course-presence -> semio-framework-course-presence -> semio-framework-course-presence at 🧰️framework/🛍️products/📚️course/🔨️modules/👥️presence/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-pets -> semio-framework-pets -> semio-framework-pets at 🧰️framework/🛍️products/🐾️pets/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-async -> semio-framework-async -> semio-framework-async at 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-async-macros -> semio-framework-async-macros -> semio-framework-async-macros at 🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-async-testkit -> semio-framework-async-testkit -> semio-framework-async-testkit at 🧰️framework/🔨️modules/⏳️async/🎭️testkit/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-async-slots -> semio-framework-async-slots -> semio-framework-async-slots at 🧰️framework/🔨️modules/⏳️async/🧱️boxed-slots/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-async-sync -> semio-framework-async-sync -> semio-framework-async-sync at 🧰️framework/🔨️modules/⏳️async/🚦️sync-primitives/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-async-timer -> semio-framework-async-timer -> semio-framework-async-timer at 🧰️framework/🔨️modules/⏳️async/⏰️timer-wheel/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-trace -> semio-framework-trace -> semio-framework-trace at 🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-job -> semio-framework-job -> semio-framework-job at 🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-job-payload -> semio-framework-job-payload -> semio-framework-job-payload at 🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-tool-run -> semio-framework-tool-run -> semio-framework-tool-run at 🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-tool-run-tick-wire -> semio-framework-tool-run-tick-wire -> semio-framework-tool-run-tick-wire at 🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-tool-run-entities -> semio-framework-tool-run-entities -> semio-framework-tool-run-entities at 🧰️framework/🔨️modules/⏯️tool-run/👥️entities/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-tool-run-presentation -> semio-framework-tool-run-presentation -> semio-framework-tool-run-presentation at 🧰️framework/🔨️modules/⏯️tool-run/📊️progress/🪟️presentation/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-time-travel -> semio-framework-time-travel -> semio-framework-time-travel at 🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-tool-machine -> semio-framework-tool-machine -> semio-framework-tool-machine at 🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-dispatch-macros -> semio-framework-dispatch-macros -> semio-framework-dispatch-macros at 🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-hash -> semio-framework-hash -> semio-framework-hash at 🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-mesh-engine -> semio-framework-mesh-engine -> semio-framework-mesh-engine at 🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-mesh-component-references -> semio-framework-mesh-component-references -> semio-framework-mesh-component-references at 🧰️framework/🔨️modules/🏗️mesh-engine/🎯️component-references/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-schema -> semio-framework-schema -> semio-framework-schema at 🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-schema-registry -> semio-framework-schema-registry -> semio-framework-schema-registry at 🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust/Cargo.toml
+- schema -> semio-framework-schema -> semio-framework-schema at 🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/Cargo.toml (alias)
+- semio-framework-value-derive -> semio-framework-value-derive -> semio-framework-value-derive at 🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-kernel-infinite-world -> semio-os-infinite -> semio-os-infinite at 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml (alias)
+- semio-os-kernel-db -> semio-os-kernel-db -> semio-os-kernel-db at 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/Cargo.toml (alias)
+- semio-framework-surface -> semio-framework-surface -> semio-framework-surface at 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-2d -> semio-framework-2d -> semio-framework-2d at 🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-3d -> semio-framework-3d -> semio-framework-3d at 🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-artifact-workflow-run-admission -> semio-framework-artifact-workflow-run-admission -> semio-framework-artifact-workflow-run-admission at 🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/⚡️admission/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-filesystem-workspace -> semio-framework-filesystem-workspace -> semio-framework-filesystem-workspace at 🧰️framework/🔨️modules/📁️filesystem/📝️workspace/📦️packages/🦀️rust/Cargo.toml
+- semio-framework-value-snapshot-projection -> semio-framework-value-snapshot-projection -> semio-framework-value-snapshot-projection at 🧰️framework/🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust/Cargo.toml

@@ -1,7 +1,7 @@
 //! 📶️ Operation progress and exact cancellation stay visible in both Lowpoly editing windows.
-use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, HistoryView, ViewModel};
-use semio_framework_plugin::app::ArtifactOperationProgress;
-use semio_framework_ui_locale::{Locale, LocalizedLabel, Terminology};
+use semio_plugin::{ArtifactEditor, ArtifactView, ConfigView, HistoryView, ViewModel};
+use semio_plugin::app::ArtifactOperationProgress;
+use semio_ui_locale::{Locale, LocalizedLabel, Terminology};
 use semio_s_artifact_lowpoly_lowpoly_config::LowpolyConfig;
 use semio_s_artifact_lowpoly_lowpoly_editor::LowpolyPlayApp;
 use serde_json::Value;
@@ -27,14 +27,14 @@ fn scene(body: &str, locale: Locale, operations: &[ArtifactOperationProgress]) -
     let config = LowpolyConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
     let tree = LowpolyPlayApp::render(body, &doc, &cfg, &ViewModel::new(locale, Terminology::Native)).unwrap();
-    serde_json::from_str(&semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).unwrap()).unwrap()
+    serde_json::from_str(&semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).unwrap()).unwrap()
 }
 
 #[test]
 fn editing_windows_present_localized_progress_and_exact_cancellation() {
     let fixture: Value = serde_json::from_str(include_str!("status.json")).unwrap();
     let definition = semio_s_artifact_lowpoly_lowpoly_editor::create_lowpoly_app();
-    let editor = semio_framework_plugin::EditorApp::<LowpolyPlayApp>::default();
+    let editor = semio_plugin::EditorApp::<LowpolyPlayApp>::default();
     let runtime_id = semio_framework_async::poll::resolve_ready(editor.surface_id());
     assert_eq!(definition.id, fixture["controller"].as_str().unwrap());
     assert_eq!(definition.controller_id, definition.id);

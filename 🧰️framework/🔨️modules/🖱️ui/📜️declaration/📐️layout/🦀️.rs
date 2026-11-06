@@ -161,13 +161,7 @@ pub mod utilities {
         pub category: Option<UtilityCategory>,
     }
 
-    /// 🧬️ Derives the utility bar `UtilityNode` tree from resolved utilities and the host-owned active utility id.
-    /// Each utility becomes a `Toggle` whose `pressed` reflects `active_utility_id == Some(id)` and whose
-    /// `on_change` dispatches `setActiveUtility { utilityId }` against `controller_id`. Utilities sharing a `group`
-    /// collapse into one `Collection` (placed where the group first appears, in utility order); ungrouped
-    /// utilities stay flat siblings. A group that ends with exactly one child is hoisted to a top-level toggle —
-    /// a lone `group:transform`/`transform` pair must not render as two nested "Transform" rows. This is the
-    /// single source of truth for the utility bar — `ArtifactApp::utilities` no longer exists.
+    /// 🧬️ Derives the utility bar `UtilityNode` tree from resolved utilities and the host-owned active utility id. [Design notes](README.md#source-notes-164).
     pub fn derive_utility_nodes(controller_id: &str, utilities: &[DerivedUtilitySpec], active_utility_id: Option<&str>) -> Vec<UtilityNode> {
         fn utility_toggle_node(controller_id: &str, utility: &DerivedUtilitySpec, active_utility_id: Option<&str>) -> UtilityNode {
             UtilityNode::Toggle {
@@ -231,15 +225,7 @@ pub mod utilities {
 }
 
 pub mod role_chrome {
-    // #region role_chrome
-    //! 👁️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §5: role-aware wgpu
-    //! shell chrome primitives, parity with the React shell (lane 1-C) against the SAME frozen
-    //! strings/command ids as `📋️contract-freeze.md` §3/§5. Domain-neutral: this crate never depends
-    //! on `semio_framework` (see the `wgpu` feature's `Cargo.toml` deps), so `ChromeRole` is a local
-    //! wire-compatible mirror of `semio_framework::AppRole`/the TS host's own `AppRole` mirror in
-    //! `🎠️kernel/🧭️app-router/🟦️.ts` — same boundary this file already draws around `PluginCatalog`-style
-    //! product data. A concrete `AppRouter`/`ConfigStore` never appears here: callers (the renderer
-    //! product) resolve real entries and hand this module only already-resolved data to render.
+    //! 👁️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §5: role-aware wgpu [Design notes](README.md#source-notes-234).
 
     use super::layout::{ContextMenuItemSpec, ShellMenuAction};
     use super::utilities::{UtilityCategory, UtilityNode};
@@ -381,17 +367,7 @@ pub mod role_chrome {
         }
     }
 
-    /// 🖱️ Builds the "Open with…" `ContextMenuItemSpec` submenu row — contract freeze §5: entries
-    /// grouped by role, viewer group first then editor (matching `AppRole`'s own declaration order,
-    /// contract §1 C1), each headed by a labeled separator (`layout::context_menu_is_header`'s own
-    /// convention: a separator carrying a `label` is a non-interactive section header). Every entry
-    /// carries a nested "Set as default" toggle child dispatching `OS_SET_DEFAULT_VIEWER`/`_EDITOR`
-    /// when turning default ON, `OS_CLEAR_DEFAULT_APP` when turning it OFF — the toggle direction is
-    /// resolved here (not left to the host) because there is no single OS command that flips a
-    /// boolean; `checked` mirrors `entry.is_default` for a caller to paint a checkmark. Clicking the
-    /// entry itself dispatches `PALETTE_OPEN_ARTIFACT_WITH_VIEWER`/`_EDITOR` with `{pluginId,
-    /// appId}` args. An empty `entries` list still returns the "Open with…" row with zero children —
-    /// the caller decides whether to omit an empty menu.
+    /// 🖱️ Builds the "Open with…" `ContextMenuItemSpec` submenu row — contract freeze §5: entries [Design notes](README.md#source-notes-384).
     pub fn open_with_menu_item(entries: &[OpenWithEntry], is_de: bool) -> ContextMenuItemSpec {
         let mut children: Vec<ContextMenuItemSpec> = Vec::new();
         for role in [ChromeRole::Viewer, ChromeRole::Editor] {

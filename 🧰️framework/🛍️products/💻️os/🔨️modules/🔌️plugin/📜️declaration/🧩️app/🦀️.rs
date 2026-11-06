@@ -38,16 +38,12 @@ pub use completion_refusal_retirement::*;
 pub mod owned_context;
 #[allow(unused_imports)]
 pub use owned_context::*;
-#[doc(hidden)]
-#[path = "🛬️lifted/🎞️media-turn/🦀️.rs"]
-pub mod media_operation_refusal;
+pub use semio_plugin_decl_media::media_operation_refusal;
 #[allow(unused_imports)]
-pub use media_operation_refusal::*;
-#[doc(hidden)]
-#[path = "🛬️lifted/🛫️intrinsic/🦀️.rs"]
-pub mod media_intrinsic;
+pub use media_operation_refusal::{invalid,key_media_error,media_type,project_media_error};
+pub use semio_plugin_decl_media::media_intrinsic;
 #[allow(unused_imports)]
-pub use media_intrinsic::*;
+pub use media_intrinsic::media_projection_error;
 #[doc(hidden)]
 #[path = "🛬️lifted/⏳️operation-progress/🦀️.rs"]
 pub mod operation_progress;

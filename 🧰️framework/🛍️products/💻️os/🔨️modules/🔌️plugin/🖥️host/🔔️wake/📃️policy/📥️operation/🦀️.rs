@@ -1,7 +1,8 @@
 //! 🪪️ Identity-free per-operation caps authorize distinct authenticated requests, never renewal of an existing source.
 #[path="🪙️guest/🦀️.rs"]
 mod guest;
-pub use guest::{GuestRelayGuestSubloan,GuestRelayGuestPurpose};
+pub use guest::{GuestRelayGuestSubloan,GuestRelayGuestPurpose,GuestRelayGuestSettlement,GuestEscrowReconcile,GuestIssuedHistoryHome,PendingIssuedLoan,FrozenCaptureProgress,SreValidationProgress,HeaderValidationProgress};
+pub(super) use guest::GuestLedger;
 use super::{GuestRelayDriverPolicy,GuestRelayWakeDriver,intersect};
 use semio_framework_value::{RetainedCloneGrant,ValueError,ValueRefusalKind};
 use semio_framework_value_derive::{FromValue,ToValue};
@@ -29,7 +30,7 @@ impl GuestRelayOperationCaps {
  /// 📏️ The request bounds guest logical work and elapsed time; the host keeps its independently declared finite physical stock.
  pub fn bind_request(self,request:GuestRelayOperationRequest)->Result<Self,ValueError>{
   if request.work_units==0||request.maximum_elapsed_microseconds==0{return Err(invalid("positive requested operation work and elapsed duration required"))}
-  self.cleanup.validate()?;self.transit.validate()?;self.infrastructure.validate()?;
+  self.cleanup.validate()?;self.transit.validate()?;self.infrastructure.validate()?;if self.infrastructure.maximum_cleanup_microseconds>=self.cleanup.maximum_microseconds{return Err(invalid("guest infrastructure cleanup must leave host cleanup time"))}
   consumable_remaining(consumable_remaining(consumable_remaining(self.operation,self.cleanup.retained)?,self.transit.retained)?,self.infrastructure.retained)?;let elapsed=self.maximum_lifetime_microseconds.min(request.maximum_elapsed_microseconds);
   if elapsed<=self.cleanup.maximum_microseconds||self.cleanup.work_fuel.checked_add(self.transit.work_fuel).and_then(|fuel|fuel.checked_add(self.infrastructure.work_fuel)).is_none_or(|minimum|minimum>=self.operation_fuel)||self.cleanup.execution_fuel>=self.operation_execution_fuel{return Err(invalid("cleanup reserve leaves no requested semantic authority"))}
   Ok(Self{maximum_turn_microseconds:self.maximum_turn_microseconds.min(elapsed),maximum_lifetime_microseconds:elapsed,..self})
@@ -65,10 +66,10 @@ impl GuestRelayOperationTransit{
 #[derive(Clone,Copy,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize,FromValue,ToValue)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
 #[value(rename_all="camelCase")]
-pub struct GuestRelayOperationInfrastructure{pub retained:RetainedCloneGrant,pub work_fuel:u64}
+pub struct GuestRelayOperationInfrastructure{pub retained:RetainedCloneGrant,pub work_fuel:u64,pub maximum_cleanup_microseconds:u64}
 impl GuestRelayOperationInfrastructure{
  /// 🏗️ Guest bootstrap and close receive explicit authority distinct from transport and client work.
- pub fn validate(self)->Result<(),ValueError>{if self.work_fuel==0||self.retained.maximum_items==0||self.retained.maximum_depth==0{return Err(invalid("explicit positive guest infrastructure scope required"))}Ok(())}
+ pub fn validate(self)->Result<(),ValueError>{if self.work_fuel==0||self.maximum_cleanup_microseconds==0||self.retained.maximum_items==0||self.retained.maximum_depth==0{return Err(invalid("explicit positive guest infrastructure scope required"))}Ok(())}
 }
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
 fn consumable_remaining(total:RetainedCloneGrant,reserve:RetainedCloneGrant)->Result<RetainedCloneGrant,ValueError>{
@@ -127,11 +128,17 @@ impl GuestRelayWakeDriver {
   let held=match self.original.try_lock(){Ok(original)=>matches!(original.checkout.as_ref(),Some(super::DriverCheckout::Context{slot:0,generation:actual,..})if*actual==generation),Err(_)=>return Err(GuestRelayAdmissionFailure{primary:result.err(),settlement:Some(invalid("operation handback source is borrowed").into())})};
   let settlement=if held{self.finish_turn(0,generation).map(|_|()).map_err(Into::into)}else{Ok(())};match(result,settlement){(Ok(ready),Ok(()))=>Ok(ready.is_some()),(result,settlement)=>Err(GuestRelayAdmissionFailure{primary:result.err(),settlement:settlement.err()})}
  }
+ fn dispatch_guest_reconcile_step(&self,cleanup:bool,produce:impl FnOnce(&mut semio_framework_job::StepContext<'_>,&mut GuestLedger)->Result<(),semio_framework_job::OriginalTurnFailure>)->Result<bool,GuestRelayAdmissionFailure>{
+  let generation={let original=self.original.try_lock().map_err(|_|invalid("guest reconciliation source is borrowed"))?;let operation=original.operation.as_ref().ok_or_else(||invalid("guest reconciliation requires its operation"))?;if operation.closed||operation.cleanup&&!cleanup||cleanup&&!original.root.ready(){return Err(invalid("guest reconciliation cannot restart its Source").into())}let(items,bytes,work)=GuestIssuedHistoryHome::ledger_commit_minimum();let drive=original.treasury.policy().drive;let copy=bytes.max(GuestIssuedHistoryHome::journal_claim_minimum_bytes()).max(GuestIssuedHistoryHome::journal_snapshot_minimum_bytes()).max(GuestIssuedHistoryHome::frozen_identity_minimum_bytes()).max(GuestIssuedHistoryHome::header_handback_transfer_minimum_bytes()).max(GuestIssuedHistoryHome::issued_loan_minimum_bytes());if drive.maximum_items<items||drive.maximum_copy_bytes<copy||drive.maximum_depth==0||original.root.policy().turn_fuel<work{return Err(invalid("operation policy cannot fund escrow reconciliation minimum").into())}original.root.policy().generation};
+  let result=self.dispatch_original_with_guest_step(0,generation,cleanup,false,|cx,ledger|produce(cx,ledger.ok_or_else(||invalid("guest reconciliation lost its actual ledger"))?));
+  let held=match self.original.try_lock(){Ok(original)=>matches!(original.checkout.as_ref(),Some(super::DriverCheckout::Context{slot:0,generation:actual,..})if*actual==generation),Err(_)=>return Err(GuestRelayAdmissionFailure{primary:result.err(),settlement:Some(invalid("guest reconciliation handback source is borrowed").into())})};
+  let settlement=if held{self.finish_turn(0,generation).map(|_|()).map_err(Into::into)}else{Ok(())};match(result,settlement){(Ok(ready),Ok(()))=>Ok(ready.is_some()),(result,settlement)=>Err(GuestRelayAdmissionFailure{primary:result.err(),settlement:settlement.err()})}
+ }
  /// ♻️ Closes the same finite operation source; lack of funded progress remains an owned refusal.
  pub async fn close_operation(&self)->Result<(),GuestRelayAdmissionFailure>{
   {let mut original=self.original.try_lock().map_err(|_|invalid("operation close source is borrowed"))?;let Some(operation)=original.operation.as_mut()else{return Err(invalid("per-operation source required for operation close").into())};operation.cleanup=true;}
   loop{
-   let before={let mut original=self.original.try_lock().map_err(|_|invalid("operation close source is borrowed"))?;if original.root.terminal_is_empty(){if let Some(operation)=original.operation.as_mut(){operation.closed=true;}return Ok(())}(original.treasury.original_remaining(),original.root.fuel_remaining(),original.checkout.is_some(),original.root.remaining_work().absolute_deadline_us,original.root.clock_source())};
+   let before={let mut original=self.original.try_lock().map_err(|_|invalid("operation close source is borrowed"))?;if original.root.terminal_is_empty(){if original.operation.as_ref().is_some_and(|operation|operation.guest.escrow_pending()){return Err(invalid("operation Source cannot close while guest escrow remains").into())}if let Some(operation)=original.operation.as_mut(){operation.closed=true;}return Ok(())}(original.treasury.original_remaining(),original.root.fuel_remaining(),original.checkout.is_some(),original.root.remaining_work().absolute_deadline_us,original.root.clock_source())};
    if self.close_root_step()?{let mut original=self.original.try_lock().map_err(|_|invalid("operation close source is borrowed"))?;if let Some(operation)=original.operation.as_mut(){operation.closed=true;}return Ok(())}
    let after={let original=self.original.try_lock().map_err(|_|invalid("operation close source is borrowed"))?;(original.treasury.original_remaining(),original.root.fuel_remaining(),original.checkout.is_some())};
    if !before.2&&!after.2&&before.0==after.0&&before.1==after.1{return Err(spent("operation cleanup made no funded progress; source remains retained").into())}
@@ -155,7 +162,7 @@ impl GuestRelayWakeDriver {
   let budget=semio_framework_actor::OriginalGuestExecutionBudget{input,fuel:credit.budget.fuel,deadline_us:cx.deadline_us()};budget.validate_narrowing(credit.budget)?;credit.claimed=true;let receipt=produce(budget,cx);credit.receipt=receipt;let receipt=receipt.ok_or_else(||invalid("submitted VM crossing retains its missing actual receipt"))?;receipt.validate_for(budget)?;Ok(())
  }
  /// 🔎️ The request owner removes refusal custody only after the actual source is empty.
- pub fn operation_terminal_is_empty(&self)->Result<bool,ValueError>{let original=self.original.try_lock().map_err(|_|invalid("operation source is borrowed"))?;Ok(original.root.terminal_is_empty()&&original.checkout.is_none()&&self.execution.try_lock().map_err(|_|invalid("original VM credit is borrowed"))?.is_none())}
+ pub fn operation_terminal_is_empty(&self)->Result<bool,ValueError>{let original=self.original.try_lock().map_err(|_|invalid("operation source is borrowed"))?;Ok(original.root.terminal_is_empty()&&original.checkout.is_none()&&!original.operation.as_ref().is_some_and(|operation|operation.guest.escrow_pending())&&self.execution.try_lock().map_err(|_|invalid("original VM credit is borrowed"))?.is_none())}
 }
 
 thread_local!{static CURRENT_EXECUTION_DRIVER:std::cell::Cell<(*const GuestRelayWakeDriver,usize)>=const{std::cell::Cell::new((std::ptr::null(),0))};}

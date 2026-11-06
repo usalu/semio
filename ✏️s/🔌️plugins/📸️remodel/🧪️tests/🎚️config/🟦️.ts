@@ -11,7 +11,7 @@ export default defineConfig({
     root: testRoot,
     name: "@semio-tech/remodel-js",
     environment: "node",
-    include: ["📦️packages/🟦️typescript/🧪️tests/🔬️declaration/🟦️.ts", "🗿️artifacts/**/📚️examples/**/🧪️tests/🧩️example/🟦️.ts", "🗿️artifacts/**/🧬️schema/🧪️tests/🧩️suite/🟦️.ts"],
+    include: ["🧪️tests/🌐️browser/🧪️tests/🟦️.ts", "📦️packages/🟦️typescript/🧪️tests/🔬️declaration/🟦️.ts", "🗿️artifacts/**/📚️examples/**/🧪️tests/🧩️example/🟦️.ts", "🗿️artifacts/**/🧬️schema/🧪️tests/🧩️suite/🟦️.ts"],
     passWithNoTests: false,
   },
 });

@@ -1,0 +1,65 @@
+[
+  {
+    "verified": true,
+    "faultView": true,
+    "exactDescriptor": true,
+    "source": true,
+    "recipient": true,
+    "retirement": true,
+    "accepted": true
+  },
+  {
+    "verified": false,
+    "faultView": true,
+    "exactDescriptor": true,
+    "source": true,
+    "recipient": true,
+    "retirement": true,
+    "accepted": false
+  },
+  {
+    "verified": true,
+    "faultView": false,
+    "exactDescriptor": true,
+    "source": true,
+    "recipient": true,
+    "retirement": true,
+    "accepted": false
+  },
+  {
+    "verified": true,
+    "faultView": true,
+    "exactDescriptor": false,
+    "source": true,
+    "recipient": true,
+    "retirement": true,
+    "accepted": false
+  },
+  {
+    "verified": true,
+    "faultView": true,
+    "exactDescriptor": true,
+    "source": false,
+    "recipient": true,
+    "retirement": true,
+    "accepted": false
+  },
+  {
+    "verified": true,
+    "faultView": true,
+    "exactDescriptor": true,
+    "source": true,
+    "recipient": false,
+    "retirement": true,
+    "accepted": false
+  },
+  {
+    "verified": true,
+    "faultView": true,
+    "exactDescriptor": true,
+    "source": true,
+    "recipient": true,
+    "retirement": false,
+    "accepted": false
+  }
+]

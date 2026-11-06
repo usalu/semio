@@ -138,7 +138,8 @@
       "additionalProperties": false,
       "required": [
         "retained",
-        "workFuel"
+        "workFuel",
+        "maximumCleanupMicroseconds"
       ],
       "properties": {
         "retained": {
@@ -183,6 +184,11 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 9007199254740991
+        },
+        "maximumCleanupMicroseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum guest infrastructure time during cancellation cleanup; must be smaller than the complete host cleanup window."
         }
       }
     }

@@ -10,7 +10,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import Ajv from "ajv";
 import { describe, expect, it } from "vitest";
-import { requireMcpBinary, spawnRawMcp } from "../../🟦️.ts";
+import { spawnRawMcp } from "../../🟦️.ts";
+import { requireMcpBinary } from "../../📦️binary/🟦️.ts";
 import { findWorkspaceRoot } from "@semio-tech/process/routing";
 
 const repoRoot = findWorkspaceRoot();

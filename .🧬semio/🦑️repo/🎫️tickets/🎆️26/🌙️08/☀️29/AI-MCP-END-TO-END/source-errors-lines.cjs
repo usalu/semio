@@ -1,0 +1,1 @@
+const fs=require('fs'),s=fs.readFileSync('🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/🎟️source/🦀️.rs','utf8');const result=[];for(const line of s.split('\n')){const pieces=line.split('"');for(let i=1;i<pieces.length;i+=2)if(pieces[i].length>40)result.push(pieces[i])}console.log([...new Set(result)].join('\n'));

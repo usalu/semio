@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"agent":"semio-mcp-guest-poll","command":["test","--manifest-path","🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🚪️io/📦️packages/🦀️rust/Cargo.toml","--lib","poll_limits_narrow_without_replacing_authenticated_identity"],"configuration":"prototype","store":"shared","language":"en"}}

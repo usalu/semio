@@ -6,7 +6,6 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-/// 🪪️ The interpreter's authored source: the half of the owned engine identity that names every instruction a guest executes.
 pub const INTERPRETER_SOURCE: &str = concat!(
     include_str!("🦀️.rs"),
     include_str!("🧱️core-types-and-module-model/🦀️.rs"),
@@ -27,7 +26,6 @@ pub const INTERPRETER_SOURCE: &str = concat!(
     include_str!("🏗️instance/▶️invocation/📞️host/🦀️.rs"),
 );
 
-/// 🧮️ The heap witness the crate's allocation laws read through `semio_framework_trace::observe_heap_allocations_on_this_thread`.
 #[cfg(test)]
 #[global_allocator]
 static INTERPRETER_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;

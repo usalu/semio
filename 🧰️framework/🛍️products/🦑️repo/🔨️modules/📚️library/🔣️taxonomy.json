@@ -30212,6 +30212,9 @@
       "target": "@semio-tech/assets:build",
       "previewTarget": "@semio-tech/assets:preview-generated",
       "checkTarget": "@semio-tech/assets:check-generated",
+      "nativeConsumers": [
+        "🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/📦️packages/🦀️rust"
+      ],
       "inputPatterns": [
         "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🏗️builder/📽️projection/🟦️.ts",
         "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/*.svg",
@@ -30234,6 +30237,14 @@
         },
         {
           "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🔤️shortcodes/🔣️.json",
+          "inclusion": "ignored"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🔤️shortcodes/🦀️.rs",
+          "inclusion": "ignored"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🔤️shortcodes/🔏️digest",
           "inclusion": "ignored"
         },
         {

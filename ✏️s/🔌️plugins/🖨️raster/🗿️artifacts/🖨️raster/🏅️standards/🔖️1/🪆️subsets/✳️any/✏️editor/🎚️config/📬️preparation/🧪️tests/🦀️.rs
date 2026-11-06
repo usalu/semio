@@ -1,6 +1,6 @@
 use super::*;
 use semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan;
-use semio_framework_plugin::artifact_app_laws::OriginalWorkFixture;
+use semio_plugin::artifact_app_laws::OriginalWorkFixture;
 
 fn rows(count:usize)->Vec<RasterSelectionSpan>{(0..count).map(|start|RasterSelectionSpan{start:start as u32,length:1,coverage:128}).collect()}
 fn selected(rows:Vec<RasterSelectionSpan>)->RasterPixelSelection{let mut stock=OriginalWorkFixture::stock();stock.maximum_items=8*1024*1024;let mut caller=OriginalWorkFixture::with_source(semio_framework_job::OperationId(9697),semio_framework_job::Generation(17),stock,||Some(1),u64::MAX,stock.maximum_items as u64*16);let spans=caller.receive_native(rows,stock);caller.finish();RasterPixelSelection{layer_id:"p".into(),target:"pixels".into(),width:256,height:256,spans}}

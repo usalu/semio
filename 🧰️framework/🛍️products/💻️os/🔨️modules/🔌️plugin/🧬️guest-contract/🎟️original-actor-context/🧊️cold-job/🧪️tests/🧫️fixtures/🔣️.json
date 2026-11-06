@@ -51,6 +51,10 @@
           "next": "acknowledge-chunk"
         },
         {
+          "event": "chunk-ack-pending",
+          "next": "acknowledge-chunk"
+        },
+        {
           "event": "chunk-acknowledged",
           "next": "read"
         },
@@ -74,6 +78,22 @@
         },
         {
           "event": "output-acknowledged",
+          "next": "close-jobs"
+        },
+        {
+          "event": "close-jobs-pending",
+          "next": "close-jobs"
+        },
+        {
+          "event": "close-jobs-closed",
+          "next": "close-actor-output"
+        },
+        {
+          "event": "close-output-pending",
+          "next": "close-actor-output"
+        },
+        {
+          "event": "close-output-closed",
           "next": "close-actor"
         },
         {
@@ -112,6 +132,22 @@
         },
         {
           "event": "output-acknowledged",
+          "next": "close-jobs"
+        },
+        {
+          "event": "close-jobs-pending",
+          "next": "close-jobs"
+        },
+        {
+          "event": "close-jobs-closed",
+          "next": "close-actor-output"
+        },
+        {
+          "event": "close-output-pending",
+          "next": "close-actor-output"
+        },
+        {
+          "event": "close-output-closed",
           "next": "close-actor"
         },
         {
@@ -213,6 +249,10 @@
           "next": "acknowledge-failure-chunk"
         },
         {
+          "event": "failure-chunk-ack-pending",
+          "next": "acknowledge-failure-chunk"
+        },
+        {
           "event": "failure-chunk-acknowledged",
           "next": "read-failure"
         },
@@ -222,6 +262,22 @@
         },
         {
           "event": "failure-acknowledged",
+          "next": "close-jobs"
+        },
+        {
+          "event": "close-jobs-pending",
+          "next": "close-jobs"
+        },
+        {
+          "event": "close-jobs-closed",
+          "next": "close-actor-output"
+        },
+        {
+          "event": "close-output-pending",
+          "next": "close-actor-output"
+        },
+        {
+          "event": "close-output-closed",
           "next": "close-actor"
         },
         {
@@ -231,5 +287,55 @@
       ]
     }
   ],
-  "version": 26
+  "version": 26,
+  "startCases": [
+    {
+      "admitted": false,
+      "returnedSource": true,
+      "refusal": false,
+      "next": "start"
+    },
+    {
+      "admitted": true,
+      "returnedSource": false,
+      "refusal": false,
+      "next": "step"
+    },
+    {
+      "admitted": false,
+      "returnedSource": false,
+      "refusal": false,
+      "next": "refused"
+    },
+    {
+      "admitted": true,
+      "returnedSource": true,
+      "refusal": false,
+      "next": "refused"
+    },
+    {
+      "admitted": false,
+      "returnedSource": true,
+      "refusal": true,
+      "next": "publish-failure"
+    },
+    {
+      "admitted": false,
+      "returnedSource": false,
+      "refusal": true,
+      "next": "refused"
+    },
+    {
+      "admitted": true,
+      "returnedSource": false,
+      "refusal": true,
+      "next": "refused"
+    },
+    {
+      "admitted": true,
+      "returnedSource": true,
+      "refusal": true,
+      "next": "refused"
+    }
+  ]
 }

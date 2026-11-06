@@ -1,22 +1,4 @@
-//! 🖥️ UI information, UI actions, and jobs — ticket 26/08/29/AI-MCP-END-TO-END packet
-//! W6-ui-and-jobs. `ui_focus`/`ui_reveal` forward a `ShellCommand` (JSON-encoded, matching
-//! `💻️os/🔨️modules/🖥️shell`'s own wire vocabulary) to the attached `/bridge` shell as a
-//! `GatewayToShell::ShellCommand` frame and block on its `ShellCommandResult` (bounded by
-//! [`SHELL_COMMAND_TIMEOUT_MS`], never forever). `semio://window[/…]`/`semio://ui/active-context`/
-//! `semio://ui/selection` project the SAME `ShellState` mirror `🧵️bridge::BridgeHandle::last_shell_state`
-//! already holds — never a second, invented source of truth. `job_get`/`job_cancel` read/act through
-//! [`job_registry`], a plugin-agnostic, process-wide job tracker any producer (W5's inference, a
-//! future tessellation job, …) mints ids into via [`JobRegistry::begin`] and reports progress/result
-//! into via [`JobRegistry::report_progress`]/[`JobRegistry::succeed`]/[`JobRegistry::fail`] — this
-//! facet never reaches into the plugin-host reactor's own `job: u64` ids directly (those are
-//! per-guest-instance and require a live `GuestInstance` this crate's tool layer never holds); a
-//! producer that spawns one is the bridge between the two id spaces. Every tool this file registers
-//! stays PRESENT in `tools/list` and every resource stays LISTED regardless of tier — only a `call`/
-//! `read` result varies (bare: no bridge at all; headless: a bridge exists but no shell has dialed
-//! it yet, a normal, retryable state; attached: a live shell). Never a panic, never a protocol-level
-//! failure, never fabricated UI state — see `read_ui_resource`'s doc for the one deliberate honesty
-//! trade-off (`semio://ui/selection` omits per-artifact object selection, which `ShellState` does
-//! not model).
+//! 🖥️ UI information, UI actions, and jobs — ticket 26/08/29/AI-MCP-END-TO-END packet [Design notes](README.md#source-notes-1).
 
 use std::sync::Arc;
 use std::sync::atomic::AtomicU64;
@@ -213,12 +195,7 @@ pub fn register_conversation_tools(registry: &mut InMemoryToolRegistry, bridge: 
 
 //#region 🔖️ShellStateProjection
 
-/// 🧭️ The attached shell's last full `ShellState` snapshot, decoded as raw JSON — `🧵️bridge`'s own
-/// design note says `state`/`command` bytes are opaque, AgentBridge encodes/decodes them as JSON on
-/// the renderer side, so this facet mirrors that instead of taking a new compile-time dependency on
-/// `semio-os-shell`'s Rust types (see this file's W6 report for the tradeoff). A
-/// `ShellStatePatch`-only connection (no full snapshot received yet) is a typed, retryable
-/// `PLUGIN_UNAVAILABLE`, never a guess at merging a patch onto nothing.
+/// 🧭️ The attached shell's last full `ShellState` snapshot, decoded as raw JSON — `🧵️bridge`'s own [Design notes](README.md#source-notes-216).
 fn full_shell_state(bridge: Option<&Arc<BridgeHandle>>) -> Result<serde_json::Value, GatewayError> {
     let bridge = bridge.ok_or_else(bridge_not_running_error)?;
     let connection_id = active_shell_connection(bridge).ok_or_else(no_shell_attached_error)?;
@@ -391,12 +368,7 @@ pub fn read_ui_resource(uri: &str, bridge: Option<&BridgeSlot>, _workspace: Opti
     }
 }
 
-/// 💬️ The receiving half of the agent chat panel: every turn the human typed at the agent since the
-/// last read, oldest first. A READ DRAINS the queue — MCP resources have no server-push, so the
-/// agent polls this uri, and a turn it has already been handed must not be handed to it twice.
-/// Bare/headless tiers answer the same typed, retryable `PLUGIN_UNAVAILABLE` every other UI resource
-/// does; an attached shell that has simply said nothing answers an empty list, which is a real
-/// answer, not a gap.
+/// 💬️ The receiving half of the agent chat panel: every turn the human typed at the agent since the [Design notes](README.md#source-notes-394).
 fn read_agent_messages_resource(bridge: Option<&Arc<BridgeHandle>>) -> Result<Vec<ResourceContent>, GatewayError> {
     let bridge = bridge.ok_or_else(bridge_not_running_error)?;
     let connection = active_shell_connection(bridge).ok_or_else(no_shell_attached_error)?;

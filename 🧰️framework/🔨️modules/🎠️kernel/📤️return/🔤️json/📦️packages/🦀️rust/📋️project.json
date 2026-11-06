@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/framework-kernel-json-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

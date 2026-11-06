@@ -43,7 +43,7 @@ semio_framework_value::artifact_retire_struct!(RasterCompositeWindowTransient { 
 //#endregion 🔖️State
 
 //#region 🔖️Owner
-semio_framework_plugin::transient_root! {
+semio_plugin::transient_root! {
     state: RasterCompositeWindowTransient,
     mutation: RasterCompositeWindowTransientMutation,
     diff: RasterCompositeWindowTransientDiff,
@@ -71,7 +71,7 @@ impl RasterCompositeWindowTransientMutation{
     pub fn into_state(self)->RasterCompositeWindowTransient{let Self::Snapshot{transient}=self;transient}
 }
 
-semio_framework_plugin::window_transient_registry! {
+semio_plugin::window_transient_registry! {
     state: RasterCompositeWindowTransient,
     mutation: RasterCompositeWindowTransientMutation,
     windows: {

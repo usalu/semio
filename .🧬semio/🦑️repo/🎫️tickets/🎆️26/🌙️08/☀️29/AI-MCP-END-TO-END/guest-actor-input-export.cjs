@@ -1,0 +1,11 @@
+const fs = require('node:fs');
+const path = '🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🚪️io/🦀️.rs';
+const before = fs.readFileSync(path, 'utf8');
+const from = '#[cfg(all(target_arch = "wasm32", target_env = "p2"))]\n#[doc(hidden)]\npub use persistent_local::{component_persistent_local, owned_abi};';
+if (before.split(from).length !== 2) throw new Error('expected one guest export');
+const after = before.replace(from, '#[cfg(all(target_arch = "wasm32", target_env = "p2"))]\n#[doc(hidden)]\npub use persistent_local::component_persistent_local;\n#[doc(hidden)]\npub use persistent_local::owned_abi;');
+const temporary = '.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/AI-MCP-END-TO-END/🗑️generated/guest-input-export.tmp';
+fs.mkdirSync(require('node:path').dirname(temporary), {recursive:true});
+fs.writeFileSync(temporary, after);
+if (fs.readFileSync(path, 'utf8') !== before) throw new Error('shared facade changed; refusing publication');
+fs.renameSync(temporary, path);

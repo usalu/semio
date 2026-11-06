@@ -1,7 +1,7 @@
 //! 📌️ Owns the bitmap pin command, bounded materialization and its complete command laws.
 
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as vcs;
 
 pub use semio_s_artifact_wfc_bitmap_inferences::BitmapMutation;
 pub use semio_s_artifact_wfc_bitmap_snapshot::standards::v1::subsets::any::schema::snapshot::BitmapSnapshot;

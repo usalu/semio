@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_plugin_decl_staged_form::*;
 use semio_framework_value::{ValueError, ValueRefusalKind};
-use semio_framework_plugin::app::time_travel::{time_travel_pointer_get, time_travel_variant_selector};
+use semio_plugin::app::time_travel::{time_travel_pointer_get, time_travel_variant_selector};
 
 #[derive(Clone, semio_framework_value::RetireOwned)]
 struct Choice { key: String, label: String }

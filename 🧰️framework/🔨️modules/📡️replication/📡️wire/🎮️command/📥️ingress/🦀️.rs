@@ -73,6 +73,8 @@ struct FixedCommandPageRetirement{bytes:std::mem::ManuallyDrop<Option<Box<[u8;CO
 /// [`semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES`], which is the law that decides
 /// how many pages a command may declare at all.
 #[derive(Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned)]
+#[value(crate="::semio_framework_value")]
 pub struct CommandPageSet {
     pages: std::collections::VecDeque<FixedCommandPage>,
     declared: usize,
@@ -82,6 +84,8 @@ pub struct CommandPageSet {
 }
 
 #[derive(Debug, PartialEq)]
+#[derive(semio_framework_value::RetireOwned)]
+#[value(crate="::semio_framework_value")]
 pub struct PagedCommand {
     pages: std::collections::VecDeque<FixedCommandPage>,
     byte_len: usize,
@@ -91,6 +95,8 @@ pub struct PagedCommand {
 }
 
 #[derive(Debug)]
+#[derive(semio_framework_value::RetireOwned)]
+#[value(crate="::semio_framework_value")]
 pub struct PagedCommandReader {
     command: PagedCommand,
     offset: usize,
@@ -241,3 +247,7 @@ pub enum CommandIngressStatus {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod unit_tests;
+
+#[cfg(test)]
+#[global_allocator]
+static COMMAND_PAGE_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

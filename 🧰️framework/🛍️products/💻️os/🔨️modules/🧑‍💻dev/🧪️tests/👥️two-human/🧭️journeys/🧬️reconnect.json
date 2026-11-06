@@ -1,0 +1,1 @@
+{"maximumOfflineMs":30000,"requiredChecks":["A creates + opens","B opens via Space index","presence 2/2","every window accepts interaction","A responsive during outage","B edits while A disconnected","same artifact catches up","A edits after reconnect"]}

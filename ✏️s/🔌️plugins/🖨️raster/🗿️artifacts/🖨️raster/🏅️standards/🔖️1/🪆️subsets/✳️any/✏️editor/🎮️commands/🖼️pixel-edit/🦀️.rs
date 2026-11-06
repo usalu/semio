@@ -5,7 +5,7 @@ use semio_s_artifact_raster_raster_model::{snapshot::RasterSnapshot,RASTER_OWNED
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_mutations_pixels::{fill_region as fill_leaf,fill_selection as selection_leaf,apply_filter as filter_leaf,transform_image as transform_leaf};
 use semio_s_artifact_raster_raster_host::RasterPixelSourceWork;
-use semio_framework_plugin::{Emit,retained_command::{ArtifactCommandInputs,ArtifactCommandWork,ArtifactCommandWorkStep}};
+use semio_plugin::{Emit,retained_command::{ArtifactCommandInputs,ArtifactCommandWork,ArtifactCommandWorkStep}};
 use semio_framework_job::{StepContext,OriginalTurnFailure,OriginalSourceBinding,InteractiveJobCloseStep,receive_original_retained_work};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,retained_clone::retained_clone_grant_admits};
 use std::mem::{size_of,ManuallyDrop};
@@ -65,7 +65,7 @@ impl PixelLeafWork{
 impl<A:RasterWorkApp> ArtifactCommandWork<A> for PixelLeafWork{
  fn tool_id(&self)->&'static str{self.route.id()}
  fn receive_original_command(&mut self,command:&mut RasterCommand,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.receive(command,cx)}
- fn extent(&self,command:&RasterCommand,_:&RasterSnapshot,_:&protocol::InteractionState,_:Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<A>>)->Option<usize>{(command.command_id()==self.route.id()).then_some(1)}
+ fn extent(&self,command:&RasterCommand,_:&RasterSnapshot,_:&protocol::InteractionState,_:Option<&semio_plugin::app::ArtifactOwnedToolJobContext<A>>)->Option<usize>{(command.command_id()==self.route.id()).then_some(1)}
  fn work_demands(&self,input:&ArtifactCommandInputs<'_,A>,body:usize)->Result<RetirementDemand,ValueError>{self.demands(input.snapshot,input.config,input.operation.authoring_seed.as_str(),body)}
  fn step(&mut self,input:&ArtifactCommandInputs<'_,A>,cx:&mut StepContext<'_>)->Result<ArtifactCommandWorkStep<A>,OriginalTurnFailure>{Ok(match self.advance(input.snapshot,input.config,input.operation.authoring_seed.as_str(),cx)?{Some(emit)=>ArtifactCommandWorkStep::Complete(emit),None=>ArtifactCommandWorkStep::Progress{stage:if self.stage<=2{"pixel-target"}else{"pixel-intent"},preview:b""}})}
  fn begin_close(&mut self){PixelLeafWork::begin_close(self)}

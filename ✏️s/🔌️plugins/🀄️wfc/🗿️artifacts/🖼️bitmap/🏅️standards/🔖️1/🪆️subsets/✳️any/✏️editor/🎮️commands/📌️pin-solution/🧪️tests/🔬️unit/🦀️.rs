@@ -98,8 +98,8 @@ fn keeping_a_preview_follows_the_language_neutral_cases_and_restores_on_undo() {
 #[derive(semio_framework_value::RetireOwned)]
 struct PinFixtureRemnant { cursor: BitmapPinCursor, output: Vec<crate::schema::snapshot::BitmapPinnedPixel> }
 
-fn retire_pin_fixture(caller: &mut semio_framework_plugin::artifact_app_laws::OriginalWorkFixture, cursor: BitmapPinCursor, output: Vec<crate::schema::snapshot::BitmapPinnedPixel>, grant: semio_framework_job::RetainedCloneGrant) {
-    use semio_framework_plugin::__value::retirement::admit_owned_retirement;
+fn retire_pin_fixture(caller: &mut semio_plugin::artifact_app_laws::OriginalWorkFixture, cursor: BitmapPinCursor, output: Vec<crate::schema::snapshot::BitmapPinnedPixel>, grant: semio_framework_job::RetainedCloneGrant) {
+    use semio_plugin::__value::retirement::admit_owned_retirement;
     let mut owner = caller.turn(grant, |cx| {
         let turn = admit_owned_retirement(PinFixtureRemnant { cursor, output }, cx.retained_grant());
         cx.consume_fuel(turn.work);
@@ -121,7 +121,7 @@ fn retire_pin_fixture(caller: &mut semio_framework_plugin::artifact_app_laws::Or
 #[test]
 fn pin_materialization_is_incremental_atomic_and_cancellable_at_the_schema_limit() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️preview/🔣️.json")).unwrap();
-    let mut grant = semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance;
+    let mut grant = semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance;
     grant.maximum_release_bytes = grant.maximum_capacity_bytes;
     for case in fixture["cursorCases"].as_array().unwrap() {
         let mut snapshot = BitmapSnapshot::reference_scene();
@@ -138,7 +138,7 @@ fn pin_materialization_is_incremental_atomic_and_cancellable_at_the_schema_limit
         let before = snapshot.clone();
         let pixels = encode_base64(&colors);
         let mut cursor = BitmapPinCursor::new(count);
-        let mut caller = semio_framework_plugin::artifact_app_laws::OriginalWorkFixture::new();
+        let mut caller = semio_plugin::artifact_app_laws::OriginalWorkFixture::new();
         let mut output = None;
         let mut turns = 0usize;
         for _ in 0..100_000 {

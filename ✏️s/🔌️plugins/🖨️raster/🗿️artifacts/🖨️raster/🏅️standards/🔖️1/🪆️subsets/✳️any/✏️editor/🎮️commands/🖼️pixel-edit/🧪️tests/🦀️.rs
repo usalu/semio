@@ -1,6 +1,6 @@
 //! 🧪️ Four typed pixel intents retain original custody and match independent neutral semantic leaves.
 use super::*;
-use semio_framework_plugin::artifact_app_laws::OriginalWorkFixture;
+use semio_plugin::artifact_app_laws::OriginalWorkFixture;
 use semio_s_artifact_raster_raster_model::{RasterLayerNode,RasterLayerMask,RasterTransform,RasterOwnedMap,RASTER_DOCUMENT_SCHEMA};
 use semio_framework_value::ToValue;
 

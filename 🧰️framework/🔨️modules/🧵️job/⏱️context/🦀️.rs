@@ -1,8 +1,6 @@
 //! 🧵️ Resumable interactive job protocol and its original caller authority.
 //!
-//! StepContext retains the initiating clock, absolute deadline, cancellation, recipient and funded stock.
-//! Results borrow their paid payload source through descriptors and close through exact physical receipts.
-//! Core owns the private payload/context/retirement knot; worker, scope, registry and progress have distinct owners.
+//! See `README.md`.
 
 use std::future::Future;
 use std::mem::{ManuallyDrop, MaybeUninit,size_of_val};
@@ -87,7 +85,7 @@ enum StepCancelReference<'a>{Owned(CancelToken),Borrowed(&'a CancelToken),Observ
 impl std::ops::Deref for StepCancelReference<'_>{type Target=CancelToken;fn deref(&self)->&Self::Target{match self{Self::Owned(original)=>original,Self::Borrowed(original)|Self::Observed(original)=>original}}}
 #[path="📸️capture/🦀️.rs"]
 mod original_caller_capture;
-pub use original_caller_capture::{OriginalCallerCapture,CapturedOriginalCaller,OriginalCallerIssuer,OriginalCallerTurn,OriginalCallerCloseReturn,OriginalCallerSourceParent,OriginalCallerSourceLoan,OriginalCallerChildSource,OriginalChildTurnReturn,ORIGINAL_NATIVE_SOURCE_CAPACITY,OriginalNativeLease,OriginalNativeRetirement,OriginalNativeBorrow,OriginalNativeRecipientIdentity,OriginalNativeRetiredWitness};
+pub use original_caller_capture::{OriginalCallerCapture,CapturedOriginalCaller,OriginalCallerIssuer,OriginalCallerTurn,OriginalCallerCloseReturn,OriginalCallerSourceParent,OriginalCallerSourceLoan,OriginalCallerChildSource,OriginalChildTurnReturn,ORIGINAL_NATIVE_SOURCE_CAPACITY,OriginalNativeLease,OriginalNativeRetirement,OriginalNativeBorrow,OriginalNativeBorrowed,OriginalNativeRecipientIdentity,OriginalNativeRecipientClosed,OriginalNativeRetiredWitness};
 pub use semio_framework_job_receiving::OriginalJobDecodeOwner;
 //#endregion 📄️RetainedPayload
 
@@ -102,11 +100,6 @@ mod original_owned_caller_turn;
 pub use original_owned_caller_turn::{OriginalOwnedCallerTurn,OriginalOwnedCallerReturn,OriginalOwnedCallerOutcome};
 
 //#region 🧭️StepContext
-/// 🧭️ Everything one [`InteractiveJob::step`] call needs: identity ([`OperationId`]/[`Generation`]),
-/// the two-bound budget, cancellation, the clock, and the running preview-sequence cursor. Fields are
-/// private with accessor methods (a deliberate narrowing from the design doc's Decision 1 sketch,
-/// which exposed `pub fuel: &mut u64`/`pub cancel: CancelToken` directly) so [`StepContext::is_cancelled`]
-/// can own the the canonical cancellation observation seam in exactly one place instead of every job reimplementing it.
 struct NativeCurrentWork<'turn,'source>{fuel:&'turn u64,cancel:&'turn StepCancelReference<'source>,deadline:&'turn u64,now:fn()->Option<u64>}
 impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for NativeCurrentWork<'_,'_>{
  fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{
@@ -148,10 +141,7 @@ pub struct StepContext<'a> {
     payload_page_granted: bool,
 }
 
-fn retained_delta(after:RetainedCloneProgress,before:RetainedCloneProgress)->RetainedCloneProgress{RetainedCloneProgress{copied_items:after.copied_items.saturating_sub(before.copied_items),copied_bytes:after.copied_bytes.saturating_sub(before.copied_bytes),retained_capacity_bytes:after.retained_capacity_bytes.saturating_sub(before.retained_capacity_bytes),released_bytes:after.released_bytes.saturating_sub(before.released_bytes)}}
-fn retained_remaining(grant:RetainedCloneGrant,spent:RetainedCloneProgress)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:grant.maximum_items.saturating_sub(spent.copied_items),maximum_copy_bytes:grant.maximum_copy_bytes.saturating_sub(spent.copied_bytes),maximum_capacity_bytes:grant.maximum_capacity_bytes.saturating_sub(spent.retained_capacity_bytes),maximum_release_bytes:grant.maximum_release_bytes.saturating_sub(spent.released_bytes),..grant}}
-fn retained_min(a:RetainedCloneGrant,b:RetainedCloneGrant)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:a.maximum_items.min(b.maximum_items),maximum_copy_bytes:a.maximum_copy_bytes.min(b.maximum_copy_bytes),maximum_capacity_bytes:a.maximum_capacity_bytes.min(b.maximum_capacity_bytes),maximum_release_bytes:a.maximum_release_bytes.min(b.maximum_release_bytes),maximum_depth:a.maximum_depth.min(b.maximum_depth)}}
-fn retained_is_subset(a:RetainedCloneGrant,b:RetainedCloneGrant)->bool{retained_min(a,b)==a}
+use semio_framework_job_payload::{original_retained_delta as retained_delta,original_retained_remaining as retained_remaining,original_retained_min as retained_min,original_retained_is_subset as retained_is_subset};
 
 impl Drop for StepContext<'_>{fn drop(&mut self){if let Some((recipient,start))=self.original_physical_recipient.as_mut(){let delta=retained_delta(*self.retained_progress,*start);**recipient=recipient.checked_add(delta).expect("original physical receipt exceeds usize");}if let Some(recipient)=self.original_work_recipient.as_mut(){**recipient=recipient.checked_add(self.work_units_spent).expect("original source work counter exceeds u128");}}}
 
@@ -181,25 +171,22 @@ impl JobPayloadStep for StepContext<'_> {
 }
 
 impl<'a> StepContext<'a> {
-    /// 🛬️ Captures the owning operation's original decoder without creating replacement capacity or cancellation authority.
-    /// 🪪️ Reads the installed original decoder continuation without creating a decoder or borrowing construction credit.
+    pub fn admit_original_core_wire_delivery(&mut self)->Result<bool,OriginalTurnFailure>{original_job_continuation::source::admit_original_core_wire_delivery(self)}
+    pub fn admit_original_return_table(&mut self)->Result<bool,OriginalTurnFailure>{original_job_continuation::source::admit_original_return_table(self)}
+    pub fn admit_original_escrow_publisher(&mut self)->Result<bool,OriginalTurnFailure>{original_job_continuation::source::admit_original_escrow_publisher(self)}
+    pub fn publish_original_escrow(&mut self,header:usize,expose:impl for<'loan> FnOnce(&'loan [u8])->Result<(),OriginalTurnFailure>)->Result<bool,OriginalTurnFailure>{original_job_continuation::source::publish_original_escrow(self,header,expose)}
     pub fn native_receiving_identity(&self)->Option<(u64,u64)>{self.original_decoder.as_deref().and_then(OriginalJobDecodeOwner::receiving_identity)}
     pub fn with_original_decoder(mut self,original:&'a mut OriginalJobDecodeOwner)->Self{self.original_decoder=Some(original);self}
-    /// 🫴️ Loans original cancellation, clock, independent remaining credits and the exact shared construction receipt.
     pub fn with_native_receiving<T,E:From<ValueError>>(&mut self,operation:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<T,E>)->Result<T,E>{
         if self.receiving_spent!=RetainedCloneProgress::default(){return Err(E::from(ValueError::literal(ValueRefusalKind::InvariantViolated,"original receiving scope still owes its enclosing semantic receipt")))}let before=self.retained_progress();let grant=self.retained_grant();self.receiving_issued=Some(grant);let result={let Self{original_decoder,retained_progress,receiving_spent,cancel,deadline_us,now_us,fuel_remaining,..}=self;let owner=original_decoder.as_deref_mut().ok_or_else(||E::from(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native construction requires the original Job decoder issuer")))?;let mut callback=|_progress:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|{#[cfg(any(test,feature="testkit"))]testkit::observe_native_decode_progress(_progress);!cancel.is_cancelled_now()&&now_us().is_some_and(|now|now<*deadline_us)};let mut recipient=OriginalJobConstructionRecipient{original:grant,start:before,spent:&mut **retained_progress,receiving_spent};let mut work=NativeCurrentWork{fuel:fuel_remaining,cancel,deadline:deadline_us,now:*now_us};owner.receive(grant,&mut callback,&mut recipient,|control|control.with_work_recipient(&mut work,operation))};let progress=retained_delta(self.retained_progress(),before);if let Some(budget)=self.return_budget.as_mut(){let _=budget.get_mut().record_retained(progress);}result
     }
-    /// ♻️ Loans retirement-only authority after cancellation while retaining the original deadline, fuel and physical credits.
     pub fn with_native_retirement<T>(&mut self,operation:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeRetirementDecodeControl<'_, '_>)->Result<T,ValueError>)->Result<T,ValueError>{
         if self.receiving_spent!=RetainedCloneProgress::default()||self.receiving_issued.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original receiving scope still owes its physical receipt"));}if self.fuel_remaining==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original retirement turn has no fuel"));}
         let grant=self.retained_grant();let Self{original_decoder,deadline_us,now_us,original_retirement,..}=self;let owner=original_decoder.as_deref_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native retirement requires the original Job decoder issuer"))?;let mut callback=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|*original_retirement||now_us().is_some_and(|now|now<*deadline_us);let mut deadline=||*original_retirement||now_us().is_some_and(|now|now<*deadline_us);owner.retire(grant,&mut callback,&mut deadline,operation)
     }
-    /// 🧾️ Debits the enclosing semantic receipt once after its original construction child already accepted physical spend.
     pub fn receiving_issued_grant(&self)->Option<RetainedCloneGrant>{self.receiving_issued}
     pub fn receiving_child_progress(&self)->RetainedCloneProgress{self.receiving_spent}
-    /// 📩️ Closes one receiving scope whose enclosing semantic receipt equals its accepted physical spend: no further debit, no open obligation.
     pub fn settle_receiving_scope(&mut self)->Result<(),ValueError>{match self.receiving_issued{Some(issued)=>{let spent=self.receiving_spent;self.consume_receiving_retained(issued,spent)}None=>Ok(())}}
-    /// 🌉️ Runs one non-suspending async step inside one original native receiving scope and settles that scope as its own semantic receipt; a suspended step is refused instead of being dropped silently.
     pub fn with_native_receiving_ready<T>(&mut self,step:impl AsyncFnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->T)->Result<T,ValueError>{
         let output=self.with_native_receiving::<T,ValueError>(|control|{let mut task=std::task::Context::from_waker(std::task::Waker::noop());let mut future=std::pin::pin!(step(control));match future.as_mut().poll(&mut task){std::task::Poll::Ready(output)=>Ok(output),std::task::Poll::Pending=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original receiving scope cannot span a suspension"))}})?;
         self.settle_receiving_scope()?;Ok(output)
@@ -216,7 +203,6 @@ impl<'a> StepContext<'a> {
             work_units_spent:0, deadline_us: budget.deadline_us, now_us, clock: std::cell::Cell::new(clock), cancel:StepCancelReference::Owned(cancel), stage: "initial", preview_sequence, payload_ledger:JobPayloadLedgerReference::Owned(payload_ledger), source_parent:None,return_budget:None,reserved_return_progress:Default::default(),reserved_return_work:0,native_weak_parent:None,source_epoch:None,original_retirement:false,original_clock_binding:None,original_work_recipient:None,original_total_retained_start:Default::default(),retained_policy:None,original_physical_recipient:None, payload_page_granted: false }
     }
 
-    /// 🤝️ Borrows the original paid ledger and cancellation while preserving the caller's exact recipient.
     pub fn with_payload_authority(operation:OperationId,generation:Generation,budget:StepBudget,cancel:&'a CancelToken,now_us:fn()->Option<u64>,preview_sequence:&'a mut u64,retained_progress:&'a mut RetainedCloneProgress,authority:&'a JobPayloadAuthority)->Result<Self,ValueError>{
         let Some(original)=authority.original()else{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original payload authority has already closed"))};
         if original.operation!=operation||original.generation!=generation{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original payload authority identity does not match caller turn"))}
@@ -224,9 +210,7 @@ impl<'a> StepContext<'a> {
         Ok(Self{original_decoder:None,receiving_spent:Default::default(),receiving_issued:None,retained:budget.retained,retained_progress,operation,generation,fuel_remaining:budget.fuel,original_total_fuel:budget.fuel,original_total_work_start:0,original_absolute_deadline:budget.deadline_us,original_total_retained:budget.retained,work_units_spent:0,deadline_us:budget.deadline_us,now_us,clock:std::cell::Cell::new(ClockStride::new()),cancel:StepCancelReference::Borrowed(cancel),stage:"initial",preview_sequence,payload_ledger:JobPayloadLedgerReference::Borrowed(authority),source_parent:None,return_budget:None,reserved_return_progress:Default::default(),reserved_return_work:0,native_weak_parent:None,source_epoch:None,original_retirement:false,original_clock_binding:None,original_work_recipient:None,original_total_retained_start:Default::default(),retained_policy:None,original_physical_recipient:None,payload_page_granted:false})
     }
 
-    /// 🎟️ Preserves the original caller depth and independently unspent physical credits.
     pub fn retained_grant(&self)->RetainedCloneGrant{let current=retained_delta(*self.retained_progress,self.reserved_return_progress);let remaining=retained_remaining(self.retained,current);let total=retained_remaining(self.original_total_retained,retained_delta(current,self.original_total_retained_start));let mut remaining=retained_min(remaining,total);if let Some(budget)=self.return_budget.as_ref().filter(|budget|budget.get().is_bound()){remaining=retained_min(remaining,budget.get().remaining().map_or(RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0},|remaining|remaining.0));}match self.retained_policy{Some((policy,start))=>retained_min(remaining,retained_remaining(policy,retained_delta(current,start))),None=>remaining}}
-    /// 🪙️ Narrows the same original recipient and restores ceilings only while its initiating context remains intact.
     pub fn with_retained_loan<R:Copy>(&mut self,requested:RetainedCloneGrant,run:impl FnOnce(&mut Self)->Result<R,OriginalTurnFailure>)->Result<R,OriginalTurnFailure>{
         let original=self.retained;let posted=retained_delta(self.retained_progress(),self.reserved_return_progress);
         if !posted.fits(original){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original retained loan recipient already exceeds its ceiling").into())}
@@ -237,7 +221,6 @@ impl<'a> StepContext<'a> {
         let refusal=||ValueError::literal(ValueRefusalKind::InvariantViolated,"original retained loan callback replaced its initiating context");
         Err(match result{Ok(_)=>{let mut failure=OriginalTurnFailure::from(refusal());failure.context_refusal=Some(refusal());failure},Err(mut failure)=>{if failure.context_refusal.is_none(){failure.context_refusal=Some(refusal())}failure}})
     }
-    /// ⏳️ Narrows actual CPU and absolute deadline on the same original context, preserving clock observations and charging actual child work even through unwind.
     pub fn with_original_work_loan<R:Copy>(&mut self,requested_fuel:u64,absolute_deadline_us:u64,run:impl FnOnce(&mut Self)->Result<R,OriginalTurnFailure>)->Result<R,OriginalTurnFailure>{
         self.with_retained_loan(self.retained_grant(),|cx|{
             let fuel=cx.fuel_remaining;let deadline=cx.deadline_us;let issued=requested_fuel.min(cx.fuel_remaining());cx.fuel_remaining=issued;cx.deadline_us=absolute_deadline_us.min(deadline);
@@ -247,7 +230,6 @@ impl<'a> StepContext<'a> {
             Err(match result{Ok(_)=>{let mut failure=OriginalTurnFailure::from(refusal());failure.context_refusal=Some(refusal());failure},Err(mut failure)=>{if failure.context_refusal.is_none(){failure.context_refusal=Some(refusal())}failure}})
         })
     }
-    /// 📹️ Records actual child effects in the external recipient before refusing exceeded authority.
     pub fn consume_retained(&mut self,progress:RetainedCloneProgress)->Result<(),ValueError>{
         let admitted=self.retained_recipient_is_admitted()&&progress.fits(self.retained_grant());
         *self.retained_progress=self.retained_progress.checked_add(progress).map_err(|error|error.with_retained_progress(progress))?;
@@ -255,47 +237,32 @@ impl<'a> StepContext<'a> {
         if !admitted{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"job child receipt exceeds original remaining retained grant").with_retained_progress(progress));}source?;Ok(())
     }
     pub(crate) fn record_original_source_retained(&mut self,progress:RetainedCloneProgress)->Result<(),ValueError>{if let Some(budget)=self.return_budget.as_mut(){budget.get_mut().record_retained(progress)?;}Ok(())}
-    /// 📊️ Exposes actual effects recorded by this same original step context, including failed turns.
     pub fn retained_progress(&self)->RetainedCloneProgress{*self.retained_progress}
-    /// 🚪️ Quotes one normal-work demand against the caller's remaining retained grant on every axis, independent of CPU fuel; a denied quote allocates and posts nothing.
     pub fn retained_work_can_enter(&self,demand:RetirementDemand)->bool{retained_work::RetainedWorkBudget::new(self.retained_grant()).can_enter(demand)}
-    /// ✅️ Checks the original cumulative recipient against the issued turn grant.
     pub fn retained_recipient_is_admitted(&self)->bool{retained_delta(self.retained_progress(),self.reserved_return_progress).fits(self.retained)}
 
-    /// 🪪️ Identifies the actual external recipient without creating a replacement or alias.
     pub fn original_recipient_identity(&self)->usize{self.retained_progress as*const RetainedCloneProgress as usize}
-    /// 🔑️ Borrows only the equality identity of this turn's live original payload source.
     pub fn payload_authority_identity(&self)->OriginalPayloadSourceIdentity{OriginalPayloadSourceIdentity(Arc::as_ptr(&self.payload_ledger)as usize)}
 
-    /// 🕰️ Borrows the caller's original clock source for a retained child authority.
     pub fn clock_source(&self)->fn()->Option<u64>{self.now_us}
-    /// ⏰️ Returns the same monotonic observation state after one worker turn.
     pub fn clock_stride(&self)->ClockStride{self.clock.get()}
     pub fn restore_clock_stride(&self,stride:ClockStride){self.clock.set(stride)}
-    /// 🕰️ Advances only the observed clock after the actual callback returns.
     pub fn observe_step_clock(&self,end:Option<u64>){let mut clock=self.clock.get();clock.begin(end);self.clock.set(clock);}
 
-    /// 📖️ Reads the original supplied source turn without deriving it from trace sequences.
     pub fn original_source_epoch(&self)->Option<u64>{self.source_epoch}
 
     pub(crate) fn attach_original_return_budget(&mut self,budget:original_job_continuation::OriginalReturnBudgetReference<'a>)->Result<(),ValueError>{if budget.get().is_bound(){let(retained,fuel)=budget.get().remaining()?;self.original_total_retained=retained;self.original_total_retained_start=retained_delta(*self.retained_progress,self.reserved_return_progress);self.original_total_fuel=fuel;self.original_total_work_start=self.work_units_spent.saturating_sub(u128::from(self.reserved_return_work));}self.return_budget=Some(budget);Ok(())}
 
-    /// 🕐️ Reads the opaque clock authority supplied by this actual retained source.
     pub fn original_clock_binding(&self)->Option<u64>{self.original_clock_binding}
 
-    /// 💼️ Quotes the same source's total remaining CPU while its semantic work loan stays narrowed.
     pub fn original_total_fuel_remaining(&self)->u64{let work=self.work_units_spent.saturating_sub(u128::from(self.reserved_return_work));let remaining=self.original_total_fuel.saturating_sub(u64::try_from(work.saturating_sub(self.original_total_work_start)).unwrap_or(u64::MAX));self.return_budget.as_ref().filter(|budget|budget.get().is_bound()).map_or(remaining,|budget|remaining.min(budget.get().remaining().map_or(0,|remaining|remaining.1)))}
 
-    /// ⌛️ The supplied source deadline remains immutable while a semantic view may yield sooner.
     pub fn original_absolute_deadline_us(&self)->u64{self.original_absolute_deadline}
 
-    /// 💲️ Quotes total original remaining currencies without changing the active semantic loan.
     pub fn original_total_retained_grant(&self)->RetainedCloneGrant{let current=retained_delta(*self.retained_progress,self.reserved_return_progress);let remaining=retained_remaining(self.original_total_retained,retained_delta(current,self.original_total_retained_start));self.return_budget.as_ref().filter(|budget|budget.get().is_bound()).map_or(remaining,|budget|retained_min(remaining,budget.get().remaining().map_or(RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0},|remaining|remaining.0)))}
 
-    /// 🔏️ Binds one opaque source clock label without changing its actual callback or absolute deadline.
     pub fn bind_original_clock_binding(&mut self,binding:u64)->Result<(),ValueError>{self.original_source_parent()?.validate_borrowed_context(self).map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"original clock binding requires its genuine source context"))?;if binding==0||self.original_clock_binding.is_some_and(|original|original!=binding){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original source clock authority cannot be absent or rebound"))}self.original_clock_binding=Some(binding);Ok(())}
 
-    /// 🪢️ The genuine parent issuer binds one input epoch before children borrow this context.
     pub fn bind_original_source_epoch(&mut self,epoch:u64)->Result<(),ValueError>{
         self.original_source_parent()?;
         if epoch==0||self.source_epoch.is_some_and(|original|original!=epoch){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original source epoch cannot be absent or rebound"))}
@@ -310,33 +277,25 @@ impl<'a> StepContext<'a> {
         self.generation
     }
 
-    /// ✖️ Borrows this caller's original cancellation witness without issuing another alias.
     pub fn original_cancel_token(&self)->&CancelToken{&self.cancel}
 
-    /// 🛑️ Borrows the admitted external cancellation for native controls without an alias or context replacement.
     pub fn borrowed_original_cancel_token(&self)->Result<&'a CancelToken,ValueError>{match &self.cancel{StepCancelReference::Borrowed(original)|StepCancelReference::Observed(original)=>Ok(*original),StepCancelReference::Owned(_)=>Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native job controls require an original borrowed cancellation witness"))}}
 
-    /// 🏡️ Borrows the genuine supplier parent for its source lifetime without creating another strong loan.
     pub fn original_source_parent(&self)->Result<&'a OriginalCallerSourceParent,ValueError>{self.source_parent.ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original caller has no parent source supplier"))}
 
-    /// 📸️ Borrows the genuine external ledger and cancellation roots without creating authority.
     fn borrowed_original_caller_source(&self)->Result<original_caller_capture::OriginalCallerSource<'a>,ValueError>{let ledger=match &self.payload_ledger{JobPayloadLedgerReference::Borrowed(authority)=>authority.original().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original caller ledger has already closed"))?,JobPayloadLedgerReference::Owned(_)=>return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"caller capture requires its admitted borrowed original ledger"))};Ok(original_caller_capture::OriginalCallerSource{ledger,cancel:self.borrowed_original_cancel_token()?,operation:self.operation,generation:self.generation,clock:self.now_us,deadline:self.deadline_us})}
 
-    /// ❌️ Issues one alias only after this original context admits its metadata item and depth.
     pub fn admit_original_cancel_alias(&mut self,output:&mut Option<CancelToken>)->Result<bool,OriginalTurnFailure>{
         self.original_source_parent()?.validate_borrowed_context(self)?;if let Some(alias)=output{if !alias.is_same_node(self.original_cancel_token()){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original cancellation alias slot belongs to another source").into())}return Ok(true)}let grant=self.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0||self.is_cancelled()||self.should_yield(){return Ok(false)}let turn=self.original_cancel_token().admit_alias(grant);let result=match turn.result{Ok(Some((alias,progress)))=>{*output=Some(alias);Ok(RetainedCloneStep::Progress(progress))},Ok(None)=>Ok(RetainedCloneStep::Progress(Default::default())),Err(error)=>Err(error)};
         #[cfg(any(test,feature="testkit"))]if output.is_some(){crate::testkit::narrow_cancel_receipt(self);}
         receive_original_retained_work(self,semio_framework_value_retained_clone::RetainedWorkOutcome{result,work:turn.work})?;Ok(output.is_some())
     }
 
-    /// 🏷️ The label passed to the most recent [`StepContext::set_stage`] call (`"initial"` before the
     /// first one).
     pub fn stage(&self) -> &'static str {
         self.stage
     }
 
-    /// ⏱️ The step's clock, read for real only every [`ClockStride`] calls — see there. A job may
-    /// call this after every unit of work; inside a Wasm guest each real read is a host call.
     pub fn now_us(&self) -> Option<u64> {
         let mut clock = self.clock.get();
         let now = clock.read(self.now_us);
@@ -344,7 +303,6 @@ impl<'a> StepContext<'a> {
         now
     }
 
-    /// 🪜️ The latest reading this step holds, without reading the clock.
     pub fn latest_us(&self) -> Option<u64> {
         self.clock.get().latest_us()
     }
@@ -357,15 +315,12 @@ impl<'a> StepContext<'a> {
         self.now_us().is_none_or(|now_us| now_us >= self.deadline_us)
     }
 
-    /// 💰️ Raw work remains visible even when a returned guest exceeds the caller's finite wallet.
     pub fn narrow_original_work_budget(&mut self,budget:StepBudget)->Result<(),ValueError>{self.original_source_parent()?;if self.original_clock_binding.is_none()||!retained_is_subset(budget.retained,self.retained_grant())||budget.fuel>self.fuel_remaining||budget.deadline_us>self.deadline_us{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original work view cannot change source currencies or increase its work/deadline"))}self.retained_policy=Some((budget.retained,retained_delta(*self.retained_progress,self.reserved_return_progress)));self.fuel_remaining=budget.fuel;self.deadline_us=budget.deadline_us;Ok(())}
     pub fn bind_original_retained_total(&mut self,total:RetainedCloneGrant)->Result<(),ValueError>{self.original_source_parent()?;if !retained_is_subset(total,self.retained_grant()){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original total exceeds its persistent source recipient"))}self.original_total_retained=total;self.original_total_retained_start=retained_delta(*self.retained_progress,self.reserved_return_progress);Ok(())}
     pub fn bind_original_physical_recipient(&mut self,recipient:&'a mut RetainedCloneProgress)->Result<(),ValueError>{self.original_source_parent()?;if self.original_physical_recipient.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original physical delta already has its external recipient"))}self.original_physical_recipient=Some((recipient,*self.retained_progress));Ok(())}
     pub fn bind_original_work_recipient(&mut self,recipient:&'a mut u128)->Result<(),ValueError>{self.original_source_parent()?;if self.original_clock_binding.is_none()||self.original_work_recipient.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original work return requires its one source-bound clock and external recipient"))}self.original_work_recipient=Some(recipient);Ok(())}
     pub fn original_work_units_spent(&self)->u128{self.work_units_spent}
-    /// 🧾️ Borrows only the separately claimed original return receipt from this current callback.
     pub fn reserved_return_progress(&self)->RetainedCloneProgress{self.reserved_return_progress}
-    /// ⛽️ Reports actual return CPU funded by a prior original claim, independently of current semantic fuel.
     pub fn reserved_return_work(&self)->u64{self.reserved_return_work}
     pub fn original_source_fuel_remaining(&self)->u64{self.return_budget.as_ref().filter(|budget|budget.get().is_bound()).map_or(self.fuel_remaining,|budget|budget.get().raw_remaining().map_or(0,|remaining|remaining.1))}
     fn preflight_original_reserved_return(&self,progress:RetainedCloneProgress,work:u64)->Result<(),ValueError>{self.retained_progress.checked_add(progress)?;self.reserved_return_progress.checked_add(progress)?;self.reserved_return_work.checked_add(work).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original reserved return CPU observer overflow"))?;self.work_units_spent.checked_add(u128::from(work)).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original return actual CPU counter overflow"))?;Ok(())}
@@ -378,8 +333,6 @@ impl<'a> StepContext<'a> {
         self.return_budget.as_ref().filter(|budget|budget.get().is_bound()).map_or(self.fuel_remaining,|budget|self.fuel_remaining.min(budget.get().remaining().map_or(0,|remaining|remaining.1)))
     }
 
-    /// ⛽️ Decrements the remaining fuel by `units`, saturating at zero — a job calls this after doing
-    /// `units` worth of its own work, never before.
     pub fn consume_fuel(&mut self, units: u64) {
         self.work_units_spent+=u128::from(units);self.fuel_remaining = self.fuel_remaining.saturating_sub(units);if let Some(budget)=self.return_budget.as_mut(){budget.get_mut().record_work(units);}
     }
@@ -388,52 +341,33 @@ impl<'a> StepContext<'a> {
         self.fuel_remaining() == 0
     }
 
-    /// 🚦️ Whether the job must return NOW (before the hard 8 ms ceiling) — either bound crossed.
     pub fn should_yield(&self) -> bool {
         self.fuel_exhausted() || self.deadline_exceeded()
     }
 
-    /// 🧹️ Physical close spends the same finite source even when its semantic deadline expired.
     pub fn retirement_should_yield(&self)->bool{self.fuel_exhausted()||(!self.original_retirement&&self.deadline_exceeded())}
 
-    /// 🛂️ Only a genuine original source can lend close permission; semantic yield remains unchanged.
+    pub fn original_retirement_active(&self)->bool{self.original_retirement}
+
     pub fn with_original_retirement<T>(&mut self,run:impl FnOnce(&mut Self)->Result<T,OriginalTurnFailure>)->Result<T,OriginalTurnFailure>{self.original_source_parent()?.validate_borrowed_context(self)?;let restore=OriginalRetirementLoan{target:std::ptr::addr_of_mut!(*self),original:self.original_retirement,identity:OriginalRetainedLoanIdentity::capture(self)};self.original_retirement=true;let result=run(self);drop(restore);result}
 
-    /// 🎨️ Whether this step's [`CancelToken`] (or an ancestor's) is cancelled — checked via a single
-    /// non-blocking the canonical cancellation observation, see the module doc. A job MUST check this on entry and after
-    /// every bounded unit of work (design doc Decision 6): return [`StepOutcome::Cancelled`] without
-    /// doing further work once true.
     pub fn is_cancelled(&self) -> bool {
         matches!(self.cancel,StepCancelReference::Observed(_))||self.cancel.is_cancelled_now()
     }
 
-    /// 🚩️ Observes the initiating supplier cancellation without spending an outstanding original loan.
     pub fn observe_original_cancellation(&mut self)->Result<(),ValueError>{self.original_source_parent()?;if self.original_clock_binding.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original cancellation observation requires its bound source clock"))}let original=self.borrowed_original_cancel_token()?;self.cancel=StepCancelReference::Observed(original);Ok(())}
 
-    /// 👶️ A clone of this step's [`CancelToken`] — `Arc`-cheap — for a job that wants to derive a
-    /// child scope (see [`JobScope::child_of`]) or hand the token to work it submits elsewhere.
     pub fn cancel_token(&self) -> CancelToken {
         self.cancel.clone()
     }
 
-    /// 👣️ Records a `semio_framework_trace::StageChanged` event and updates [`StepContext::stage`] —
-    /// the job's own instrumentation call for switching between internal lanes/phases (Puzzle 3D's
-    /// brush → fill switch is the template). Terminal per-call events (preview/checkpoint/commit/
-    /// cancel/fail) are recorded once by [`drive_step`] from the returned [`StepOutcome`] instead —
-    /// see the module doc's "trace, not a second instrumentation layer" section.
-    ///
-    /// 🕰️ The event is stamped with the step's latest reading ([`StepContext::latest_us`]), at most
-    /// one stride old, instead of a read of its own.
     pub fn set_stage(&mut self, label: &'static str) -> Option<TraceEvent> {
         self.stage = label;
         let at_us = self.latest_us().or_else(|| self.now_us());
         semio_framework_trace::record_trace_event_at(self.operation, self.generation, semio_framework_trace::TraceStage::StageChanged { label }, at_us)
     }
 
-    /// 🔢️ The next preview-sequence number for this operation, advancing a cursor that survives
-    /// across every [`StepContext`] built for the same retained session — one call per
     /// [`StepOutcome::PreviewReady`]/[`ProgressEvent::PreviewPatch`] a job emits.
-    /// 🔢️ Reads the original caller cursor without admitting another preview.
     pub fn preview_sequence(&self) -> u64 { *self.preview_sequence }
 
     pub fn next_preview_sequence(&mut self) -> Result<u64, JobSequenceExhausted> {
@@ -452,15 +386,6 @@ impl semio_framework_value_native_owned::native_decoding::NativeDecodeConstructi
 //#endregion 🧭️StepContext
 
 //#region 🐕️Drive
-/// ▶️ Runs exactly one [`InteractiveJob::step`] call under a [`Watchdog`] (so an 8 ms-plus step is
-/// ALWAYS caught — never eyeballed, see this ticket's exit gate), pre-checks cancellation so an
-/// already-cancelled operation never even enters the job, and is the ONE place a returned
-/// [`StepOutcome`] becomes a `semio_framework_trace::record_*` call (module doc). `site` is the
-/// `&'static str` label `Watchdog`/the trace ring key on; `stage` is which [`InteractiveStage`]
-/// contract family this call belongs to (mirrors the caller's `semio_framework_async::Lane`, kept a
-/// separate parameter rather than converted from `Lane` since this crate must not depend on the actor
-/// crate's lane-to-stage mapping). `preview_sequence` is threaded across an entire run — see
-/// [`StepContext::next_preview_sequence`].
 //#endregion 🐕️Drive
 
 
@@ -477,7 +402,6 @@ pub(crate) const TEST_RETAINED_POLICY:RetainedCloneGrant=RetainedCloneGrant{maxi
 
 
 
-/// 🔬️ Thin accessors for the companion white-box laws; they borrow the private operation ledger, its context constructor and the writer's custody without granting any new authority.
 #[cfg(any(test,feature="testkit"))]
 pub mod testkit {
     use super::*;
@@ -486,18 +410,13 @@ pub mod testkit {
     thread_local!{static NATIVE_PROGRESS_OBSERVER:std::cell::RefCell<Option<NativeProgressObserver>>=const{std::cell::RefCell::new(None)};}
     struct NativeProgressObserverScope{previous:Option<NativeProgressObserver>}
     impl Drop for NativeProgressObserverScope{fn drop(&mut self){let displaced=NATIVE_PROGRESS_OBSERVER.with(|slot|slot.replace(self.previous.take()));drop(displaced);}}
-    /// 📊️ Observes the same original progress without supplying a verdict, source, clock or budget.
     pub fn with_native_decode_progress<T>(observer:NativeProgressObserver,run:impl FnOnce()->T)->T{let previous=NATIVE_PROGRESS_OBSERVER.with(|slot|slot.replace(Some(observer)));let _scope=NativeProgressObserverScope{previous};run()}
     pub(crate) fn observe_native_decode_progress(progress:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress){NATIVE_PROGRESS_OBSERVER.with(|slot|{if let Some(observer)=slot.borrow_mut().as_mut(){observer(progress);}})}
-    /// 🧪️ Arms the original one-shot post-alias receipt cut used by the defining loan laws.
     pub fn set_loan_receipt_refusal(value:bool){NEXT_LOAN_REFUSAL.with(|flag|flag.set(value))}
-    /// 🧪️ Arms the original one-shot post-alias receipt cut used by the defining cancellation laws.
     pub fn set_cancel_receipt_refusal(value:bool){NEXT_CANCEL_REFUSAL.with(|flag|flag.set(value))}
     pub(crate) fn narrow_loan_receipt(cx:&mut StepContext<'_>){if NEXT_LOAN_REFUSAL.with(|flag|flag.replace(false)){cx.retained.maximum_items=cx.retained_progress().copied_items}}
     pub(crate) fn narrow_cancel_receipt(cx:&mut StepContext<'_>){if NEXT_CANCEL_REFUSAL.with(|flag|flag.replace(false)){cx.retained_policy=Some((RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0},cx.retained_progress()))}}
-    /// 🔁️ Opens the next fixture turn on one long-lived context: production builds a fresh context, with a fresh one-page payload grant, for every reactor turn.
     pub fn renew_payload_page_grant(cx:&mut StepContext<'_>){cx.payload_page_granted=false}
-    /// 🔁️ Opens the next fixture turn on the one long-lived source: fresh per-turn fuel, payload grant and retained grant on top of the receipts already posted, like the reactor's fresh context per turn on its long-lived source parent; a bound return source restores its admitting lifetime stock and is refused while a claim holds currencies.
     pub fn renew_turn(cx:&mut StepContext<'_>,fuel:u64,grant:RetainedCloneGrant)->Result<(),ValueError>{
         let current=retained_delta(*cx.retained_progress,cx.reserved_return_progress);
         if let Some(budget)=cx.return_budget.as_mut().filter(|budget|budget.get().is_bound()){budget.get_mut().renew_turn()?}
@@ -510,34 +429,21 @@ pub mod testkit {
         }
         Ok(())
     }
-    /// 👶️ Reads the defining child's actual ready, closing and initiating identity fields.
     pub fn child_source_status(child:&OriginalCallerChildSource)->(bool,bool,usize,OriginalSourceBinding){child.test_status()}
-    /// 🪙️ Reads the genuine parent's currently borrowable source ledger.
     pub fn source_return_budget_is_bound(parent:&OriginalCallerSourceParent)->Result<bool,ValueError>{Ok(parent.return_source()?.try_borrow().ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"actual source budget is borrowed"))?.get().is_bound())}
-    /// 🪢️ Observes the actual inherited budget-reference arm without replacing its source.
     pub fn return_budget_is_inherited(cx:&StepContext<'_>)->bool{matches!(cx.return_budget.as_ref(),Some(original_return_source::OriginalReturnBudgetReference::Borrowed(_)))}
 
     pub use super::original_job_continuation::source as original_return_source;
-    /// 🧪️ Borrows the actual operation slot solely for deliberate source-mismatch laws.
     pub fn operation_mut<'a>(cx:&'a mut StepContext<'_>)->&'a mut OperationId{&mut cx.operation}
-    /// 🧪️ Borrows the same current ceiling solely for exact private refusal laws.
     pub fn retained_grant_mut<'a>(cx:&'a mut StepContext<'_>)->&'a mut RetainedCloneGrant{&mut cx.retained}
-    /// 🧪️ Borrows the initiating external recipient solely for checked-overflow refusal laws.
     pub fn retained_progress_mut<'a>(cx:&'a mut StepContext<'_>)->&'a mut RetainedCloneProgress{cx.retained_progress}
-    /// 📊️ Reads the actual original source hold ledger without creating a budget or alias.
     pub fn return_budget_snapshot(cx:&StepContext<'_>)->original_return_source::OriginalReturnBudgetSnapshot{cx.return_budget.as_ref().expect("actual original source budget").get().snapshot()}
-    /// 🪙️ Observes whether the real incoming source has bound its lifetime stock.
     pub fn return_budget_is_bound(cx:&StepContext<'_>)->bool{cx.return_budget.as_ref().is_some_and(|budget|budget.get().is_bound())}
-    /// 🎟️ Reads the source's actual enclosing start independently of current turn effects.
     pub fn original_total_retained_start(cx:&StepContext<'_>)->RetainedCloneProgress{cx.original_total_retained_start}
-    /// 🔐️ Observes the genuine gate using its actual nonblocking borrow.
     pub fn return_source_is_borrowed(parent:&OriginalCallerSourceParent)->Result<bool,ValueError>{Ok(parent.return_source()?.try_borrow().is_none())}
-    /// 🎟️ Runs the defining admission against this same original parent and context.
     pub fn admit_return_origin(cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{cx.original_source_parent()?.admit_return_origin(cx)}
-    /// 🪪️ Checks the live defining claim without issuing another credit.
     pub fn qualify_return_claim(claim:&OriginalJobReturnClaim<'_>,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{claim.qualify(cx)}
 
-    /// 🧪️ Applies exact white-box operation and capacity refusals on this real source, restoring both through unwind.
     pub fn with_original_work_refusals<T>(cx:&mut StepContext<'_>,operation:Option<OperationId>,capacity:Option<usize>,run:impl FnOnce(&mut StepContext<'_>)->T)->T{
         struct Restore<'a>{context:*mut StepContext<'a>,operation:OperationId,retained:RetainedCloneGrant}
         impl Drop for Restore<'_>{fn drop(&mut self){unsafe{(*self.context).operation=self.operation;(*self.context).retained=self.retained}}}
@@ -546,9 +452,7 @@ pub mod testkit {
         let value=run(cx);drop(restore);value
     }
 
-    /// 🧪️ Restores only the original receipt policy around a defining real-source refusal law.
     pub fn with_retained_receipt_policy<T>(cx:&mut StepContext<'_>,run:impl FnOnce(&mut StepContext<'_>)->T)->T{let original=cx.retained_policy;let result=run(cx);cx.retained_policy=original;result}
-    /// 🚫️ Narrows the current real recipient after a law has observed an actual retained effect.
     pub fn refuse_current_retained_receipt(cx:&mut StepContext<'_>){cx.retained_policy=Some((RetainedCloneGrant{maximum_items:0,..cx.retained_grant()},cx.retained_progress()));}
 
     pub fn payload_ledger(operation:OperationId,generation:Generation)->Arc<JobPayloadOperationLedger>{Arc::new(JobPayloadOperationLedger::new(operation,generation))}
@@ -564,7 +468,9 @@ pub mod testkit {
 
 #[path="📦️return/🎟️place/🦀️.rs"]
 mod original_return_place;
-pub use original_return_place::OriginalCallerReturnPlace;
+pub use original_return_place::{OriginalCallerReturnPlace,OriginalSizedClaimReserve};
+pub use original_job_continuation::source::finish_original_header;
+
 
 #[path="⚠️failure/🦀️.rs"]
 mod original_failure_context;

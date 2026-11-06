@@ -43,7 +43,7 @@ pub use parser_and_grammar_cursor::*;
 mod text_writer;
 pub use text_writer::*;
 
-use semio_framework_pack_json_float::{write_float_to, ScalarText};
+use semio_framework_pack_json_float::{write_float_to,write_float32_to, ScalarText};
 
 #[path = "🎛️controlled-and-borrowed-bridge/🦀️.rs"]
 mod controlled_and_borrowed_bridge;
@@ -141,3 +141,11 @@ pub mod testkit {
 /// 🛬️ Native JSON schema recipients use the actual first-party decoding owner.
 pub use semio_framework_value_native_owned::native_decoding;
 pub use semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary;
+
+#[path="👁️borrow/🦀️.rs"]
+mod native_borrow;
+pub use native_borrow::{JsonBorrowProjection,JsonBorrowKey,JsonBorrowContext,JsonBorrowNode,JsonNativeBorrow,JsonBorrowNoContext,JsonNativeSource,json_borrow_absent,json_borrow_native};
+
+pub use semio_framework_value::ValueError as JsonBorrowError;
+
+pub use controlled_and_borrowed_bridge::JsonWriteEdge;

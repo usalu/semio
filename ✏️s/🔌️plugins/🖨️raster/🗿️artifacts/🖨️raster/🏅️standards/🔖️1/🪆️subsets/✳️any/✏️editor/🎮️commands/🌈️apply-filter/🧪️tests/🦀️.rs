@@ -2,7 +2,7 @@
 //! session selection (a flip mirrors the whole image); a filter the layer or the session cannot take leaves zero trace.
 
 use semio_s_artifact_raster_raster_editor::config::RasterConfig;
-use semio_framework_plugin::artifact_app_laws::OriginalWorkFixture;
+use semio_plugin::artifact_app_laws::OriginalWorkFixture;
 
 fn receive_persistent_fixture(value:semio_framework_value::DslValue,grant:semio_framework_value::RetainedCloneGrant)->semio_s_artifact_raster_raster_model::RasterSelectionSpans{
  let mut caller=OriginalWorkFixture::new();let output=caller.receive_native(value,grant);caller.finish();output

@@ -1,0 +1,17 @@
+# Browser Launch Policy — 2026-11-05
+
+Shared owner 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts exposes browserLaunchOptionsV1 from schema 🧬️schema/🔣️.json: headless true, --use-angle=swiftshader, --enable-unsafe-swiftshader, --enable-unsafe-webgpu. It selects Playwright and probes Chromium and chromium-headless-shell plus host requirements. Neutral corpus 🧪️tests/🧫️fixtures/🔣️.json and test 🧪️tests/🟦️.test.ts cover launch arguments and Windows/Unix readiness; 🧰️preparation/🟦️.ts sets owned browser path.
+
+Within OS dev test owner, unconditional --use-angle=metal sites: 👥️two-human/🟦️.ts:39, ⏯️tool-run-matrix/🟦️.ts:297, ⏱️interaction-latency/🟦️.ts:283, 🎬️studio/🟦️.ts:253, 💤️idle-budget/🟦️.ts:147, 🔀️connection-budget/🟦️.ts:126, 🥾️boot-budget/🟦️.ts:202, 🧮️program-matrix/🟦️.ts:585. All paths relative to 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests. OS dev 🧪️testing/🚶️journey/🟦️.ts:323 guards Metal by darwin, so is not unconditional. No browser launched; no runtime claim.
+
+## Zero-Touch Browser Preparation
+
+Canonical API repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts:8–15 prepareRepositoryBrowserV1(root, invocation) checks original ScriptInvocation and repository authority, sets owned browser cache, issues browser:preparation control, invokes runToolchainsSetupV1 for chromium with caller offline authority and requires matching ready status. OS dev 🧪️tests/🧪️time-travel/🟦️.ts:46,66–67 passes genuine invocation before ensureDevServe and browser. Repo 🎛️commands/🧪️test/🟦️.ts:173–178 does so before Storybook.
+
+Current two-human dispatcher 🧑‍💻dev/🧪️tests/✅️verification/🟦️.ts:56–57 calls runTwoHumanCli without this.invocation; driver only calls ensureRepositoryBrowserPathV1 before launch, which defaults path but does not provision. Its project targets declare no browser prerequisite. Threading genuine invocation through existing CLI and canonical preparation is the established design direction; no fabricated control, duplicate installer or setup was used in this audit. Canonical preparation sets owned cache explicitly, unlike path-only helper that preserves an inherited path.
+
+## Genuine Caller Test Harness
+
+Repo library 🧪️testing/🪪️native-birth/🟦️.ts declareLibraryBuildTestEnvelopeV1 declares native-build-caller grant derived by registered issuer from actual build bootstrap capabilities. Process 🧪️testing/📥️invocation/🟦️.ts withBuildTestInvocationV1 receives and validates actual inherited parent envelope under official suite; standalone declared-birth path issues an in-process envelope, so parent-origin proof must run through official repo suite. Concrete schema-corpus and issued-control example repo library ⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🏭️producer/🟦️.ts:15–32.
+
+Process 🏗️build/🎟️capacity/🛟️custodian/🧪️tests/🛑️cancel/🟦️.ts:4–13 receives actual process invocation and derives cancellation using withScriptInvocationSignalV1(original, controller.signal,...). Repo library 🧪️testing/🌱️genuine-birth/🟦️.ts runGenuineBunTestV1 can birth an owned child beneath real bootstrap capabilities. No existing test directly invoking prepareRepositoryBrowserV1 was located in the bounded process/routing/repo-testing owners; current browser policy tests use narrow VM stubs. A preparation-before-launch law needs genuine original and meaningful observed positive/refusal/cancel behavior; no test was run here.

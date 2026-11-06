@@ -1,6 +1,6 @@
 //! 🌈️ Native pixel operations dispatch the same semantic commands as every other host.
 use super::*;
-use semio_framework_plugin::UiValue;
+use semio_plugin::UiValue;
 use semio_s_artifact_raster_raster_editor_session::{ui_value_bool, ui_value_number};
 
 fn action(key: &str, command: &str, label: LabelText, id: &str, enabled: bool, mut args: Vec<(&'static str, UiValue)>) -> UiAssemblyResult<BuiltNode> {

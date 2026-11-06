@@ -23,13 +23,7 @@ fn require_workspace(workspace: &Option<Arc<HeadlessWorkspace>>) -> Result<&Arc<
     workspace.as_ref().ok_or_else(|| GatewayError::new(GatewayErrorCode::PluginUnavailable, "no workspace is bound to this session — start the gateway with --folder <dir> or --hub <url> --space <id> to use artifact tools").retryable())
 }
 
-/// 🥈️ `artifact_export` alone needs a SPECIFIC plugin id (to read its committed `export_formats`
-/// via `resolve_plugin_export_formats`). This workspace has no `artifact_id` → `plugin_id` mapping —
-/// every artifact it manages today is the generic, schema-agnostic probe document `🏠️workspace`'s own
-/// module doc describes, never a plugin-typed one — so the only honest answer is the workspace's
-/// plugin when there is EXACTLY one; two or more is a typed, named gap (never a guess at which one
-/// owns `artifact_id`), same real, retryable `PLUGIN_UNAVAILABLE` shape the deleted
-/// `resolve_default_plugin_id` used to build.
+/// 🥈️ `artifact_export` alone needs a SPECIFIC plugin id (to read its committed `export_formats` [Design notes](README.md#source-notes-26).
 fn require_resolvable_export_plugin(workspace: &HeadlessWorkspace, artifact_id: &str) -> Result<String, GatewayError> {
     if let Some(binding) = workspace.plugin_artifact_binding(artifact_id) {
         return Ok(binding.plugin_id);
@@ -120,7 +114,7 @@ fn session_document_report(workspace: &Arc<HeadlessWorkspace>, artifact_id: &str
     let write_path = match (&binding.backbone, &binding.backbone_blocked_by) {
         (Some(_), _) => "open".to_string(),
         (None, Some(reason)) => reason.clone(),
-        (None, None) if matches!(workspace.origin(), semio_framework_os_mcp_plugin_runtime::plugin_binding_and_activation::WorkspaceOrigin::Folder { .. }) => "folder-event-log".to_string(),
+        (None, None) if matches!(workspace.origin(), semio_os_mcp_plugin_runtime::plugin_binding_and_activation::WorkspaceOrigin::Folder { .. }) => "folder-event-log".to_string(),
         (None, None) => "this document has no open document actor".to_string(),
     };
     #[cfg(target_arch = "wasm32")]
@@ -137,16 +131,7 @@ fn session_document_report(workspace: &Arc<HeadlessWorkspace>, artifact_id: &str
     }))
 }
 
-/// 🌎️ Opening a HUB document is what binds it to the plugin, app and surface the hub's own
-/// execution-target lease names, and hands that binding the canonical pair just read — so
-/// every later `action_prepare` on this session runs the plugin's guest against THIS
-/// document rather than against the plugin's genesis (ticket 26/09/18 slice M10, step 1 of
-/// M8 §5.3's write path). A workspace that is not hub-bound, or a document the hub
-/// authorizes no execution target for, binds nothing and still opens.
-///
-/// 🟢️ The open answers once the document's actor is live (bounded), so the hub's tail past that pair —
-/// every writer's edit since the last checkpoint — is already queued for the guest when the agent's first
-/// command runs; `sessionDocument.sync` reports the link either way.
+/// 🌎️ Opening a HUB document is what binds it to the plugin, app and surface the hub's own [Design notes](README.md#source-notes-140).
 fn artifact_open_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments: serde_json::Value) -> CallToolResult {
     let artifact_id = match require_field(&arguments, "artifactId") {
         Ok(value) => value.to_string(),

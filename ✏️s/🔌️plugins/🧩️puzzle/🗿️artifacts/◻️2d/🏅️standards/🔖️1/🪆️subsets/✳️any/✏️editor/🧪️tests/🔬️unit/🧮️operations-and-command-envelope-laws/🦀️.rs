@@ -128,6 +128,47 @@ async fn undo_redo_round_trip_through_the_wrapper() {
     assert_eq!(board_snapshot_nodes(&fixture_of(&app)).len(), 1);
     close_app(&mut app);
 }
+/// 💾️ A created and edited board retains its edit history across both document encodings.
+#[semio_framework_async_macros::async_test]
+async fn created_and_edited_board_reopens_with_undo_and_redo() {
+    use semio_plugin::PluginApp;
+    const FIXTURE: &str = include_str!("🧫️fixtures/🔣️.json");
+    let plan: Value = semio_framework_pack_json::from_json_str(FIXTURE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("portable lifecycle");
+    let oracle: serde_json::Value = serde_json::from_str(FIXTURE).expect("independent fixture parser");
+    assert_eq!(oracle["schema"].as_str(), Some("s.puzzle2d.document-lifecycle.v1"));
+    let assert_position = |nodes: &[Value], expected: &serde_json::Value| {
+        let rows: serde_json::Value = serde_json::from_str(&Value::Array(nodes.to_vec()).to_string()).expect("independent snapshot parser");
+        assert_eq!(rows.as_array().expect("node array").len(), 1);
+        assert_eq!(rows[0]["x"].as_f64(), expected[0].as_f64());
+        assert_eq!(rows[0]["y"].as_f64(), expected[1].as_f64());
+    };
+    for form in oracle["forms"].as_array().expect("encodings").iter().map(|form| form.as_str().expect("encoding")) {
+        let mut original = app_with_registry();
+        dispatch(&mut original, "addNode", plan.get("create"), None).expect("create");
+        let id = first_node_id(&original);
+        select_id(&mut original, PUZZLE2D_GRANULARITY_NODE, &id).expect("select");
+        let created = board_snapshot_nodes(&fixture_of(&original)).to_vec();
+        assert_position(&created, &oracle["createdPosition"]);
+        dispatch(&mut original, "translateSelection", plan.get("translate"), None).expect("edit");
+        let edited = board_snapshot_nodes(&fixture_of(&original)).to_vec();
+        assert_position(&edited, &oracle["editedPosition"]);
+        let mut reopened = app_with_registry();
+        if form == "text" {
+            let saved = block_on(original.document_text()).expect("save text");
+            block_on(semio_plugin::app::artifact_app_laws::load_document_text(&mut *reopened.0, &saved, &mut semio_plugin::artifact_app_laws::fixture_identity(), reopened.1.cx())).expect("reopen text");
+        } else {
+            let saved = block_on(original.document_pack()).expect("save pack");
+            block_on(semio_plugin::app::artifact_app_laws::load_document(&mut *reopened.0, &saved, &mut semio_plugin::artifact_app_laws::fixture_identity(), reopened.1.cx())).expect("reopen pack");
+        }
+        assert_eq!(board_snapshot_nodes(&fixture_of(&reopened)), edited, "{form} reopened the edited board");
+        dispatch(&mut reopened, "undo", None, None).expect("undo reopened edit");
+        assert_eq!(board_snapshot_nodes(&fixture_of(&reopened)), created, "{form} preserved the edit history");
+        dispatch(&mut reopened, "redo", None, None).expect("redo reopened edit");
+        assert_eq!(board_snapshot_nodes(&fixture_of(&reopened)), edited, "{form} restored the edit");
+        close_app(&mut original);
+        close_app(&mut reopened);
+    }
+}
 //#endregion 🔖️Operations
 
 //#region 🔖️CommandEnvelopeTests

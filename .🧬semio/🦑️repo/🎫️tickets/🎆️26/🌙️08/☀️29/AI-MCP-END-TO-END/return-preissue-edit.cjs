@@ -1,0 +1,8 @@
+const fs=require('fs');const file='🧰️framework/🔨️modules/🧵️job/⏱️context/📦️return/🎟️place/🦀️.rs';const before=fs.readFileSync(file,'utf8');const needle=' pub fn settle_return(&mut self,cx:&mut StepContext';const insertion=` /// 🪙️ Quotes Source-funded witness and claim-phase placements before physical handback.
+ pub const fn capture_preissue_demand()->(usize,usize,u64){(2,std::mem::size_of::<Option<OriginalReturnWitness>>()+std::mem::size_of::<bool>(),2)}
+ /// 📮️ Preissues the actual capture witness; callers retain this place until physical return.
+ pub fn preissue_capture(&mut self,cx:&mut StepContext<'_>,destination:usize,copy_bytes:usize)->Result<bool,OriginalTurnFailure>{
+  self.qualify_sized(cx,destination,copy_bytes)?;let(items,bytes,work)=Self::capture_preissue_demand();let progress=semio_framework_value_retained_clone::RetainedCloneProgress{copied_items:items,copied_bytes:bytes,..Default::default()};
+  if !progress.fits(cx.retained_grant())||cx.fuel_remaining()<work{return Ok(false)}cx.retained_progress().checked_add(progress)?;self.record_sized_return(destination,copy_bytes)?;cx.consume_fuel(work);cx.consume_retained(progress)?;Ok(true)
+ }
+`;if(before.split(needle).length!==2)throw Error('anchor changed');const after=before.replace(needle,insertion+needle),tmp=file+'.preissue-edit';fs.writeFileSync(tmp,after,{flag:'wx'});if(fs.readFileSync(file,'utf8')!==before){fs.unlinkSync(tmp);throw Error('concurrent change')}fs.renameSync(tmp,file);

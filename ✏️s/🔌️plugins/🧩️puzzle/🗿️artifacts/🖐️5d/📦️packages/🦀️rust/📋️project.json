@@ -148,6 +148,51 @@
         "command": "repo ./📜️script.ts preview-generated"
       }
     },
+    "verify-optional-fields": {
+      "executor": "repo:script",
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify optional-fields",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-inline-capacity": {
+      "executor": "repo:script",
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify inline-capacity",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-catalog-fields": {
+      "executor": "repo:script",
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify catalog-fields",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-edit-acceptance": {
+      "executor": "repo:script",
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify edit-acceptance",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-import-acceptance": {
+      "executor": "repo:script",
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify import-acceptance",
+        "forwardAllArgs": true
+      }
+    },
     "verify-original-work-construction": {
       "executor": "repo:script",
       "outputs": [],

@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"command":["metadata","--format-version=1","--offline","--manifest-path","🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔔️wake/📦️packages/🦀️rust/Cargo.toml"],"configuration":"prototype","store":"shared","parallelism":1,"language":"en","agent":"codex-root-wake-lock"}}

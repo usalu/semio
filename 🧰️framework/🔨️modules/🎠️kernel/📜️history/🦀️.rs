@@ -97,14 +97,7 @@ pub struct HistoryMutationMessage {
     pub op_index: Option<u32>,
 }
 
-/// 📝️ One applied mutation of a history row: its replica-independent id, applied position and index inside its edit,
-/// its localized kind label, its outcome (the time-travel replay's while a session holds a report, else the durable
-/// one) and its editing state. `editable` = the op has an input schema and emits no foreign steps; `withdrawable` = the
-/// store's supersede law lets this actor withdraw it and it is not withdrawn yet (design §22.1); `pending` = it is
-/// downstream of the mutation being edited and not applied in the preview; `edited` = the session holds a draft for it;
-/// `introduced` = the session's replay outcome carries a message (level and code) its pre-edit durable outcome does not,
-/// so a host marks what the edit made new (design §16.5); `store` = the composed member store that holds it
-/// (`<slot>/<childId>`, design §12), absent for the document's own.
+/// 📝️ One applied mutation of a history row: its replica-independent id, applied position and index inside its edit, [Design notes](README.md#source-notes-100).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -403,11 +396,7 @@ pub struct HistoryPatch {
     pub edit_count: u32,
 }
 
-/// 📢️ Framework-owned EN/DE notices of the store and runtime refusals a dispatch answers outside a history-edit session
-/// (an open tool transaction, an exhausted or still replaying history, a whole-document load in flight, a history step whose
-/// replay would leave errors, a withdrawal of a step that also changed other documents), by fault code — every shell shows
-/// these bytes; `{n}` is the edit count a refusal names. Fixture `🧫️fixtures/🧫️history-notices/🔣️.json`; TS twin
-/// `HISTORY_NOTICE_LABELS`.
+/// 📢️ Framework-owned EN/DE notices of the store and runtime refusals a dispatch answers outside a history-edit session [Design notes](README.md#source-notes-406).
 pub const HISTORY_NOTICE_LABELS: [(&str, &str, &str); 9] = [
     ("toolTransaction.open", "A tool is still recording — finish or cancel it first.", "Ein Werkzeug zeichnet noch auf — zuerst abschließen oder abbrechen."),
     ("toolTransaction.unknown", "The tool's recording has already ended.", "Die Aufzeichnung des Werkzeugs ist bereits beendet."),
@@ -543,11 +532,7 @@ pub fn framework_fault_notice(code: &str) -> Option<(&'static str, &'static str)
     FRAMEWORK_FAULT_NOTICE_LABELS.iter().find(|(known, _, _)| *known == code).map(|(_, en, de)| (*en, *de))
 }
 
-/// 🗯️ The notice a fault earns: its own code, then each cause's, is looked up in the framework's tables
-/// ([`HISTORY_NOTICE_LABELS`], [`FRAMEWORK_FAULT_NOTICE_LABELS`]) first and the refusing app's published table
-/// (`AppDefinition::fault_notices`) second; the first declared code decides, its `{name}` placeholders filled from
-/// `Fault.params` only. `None` when no code is declared or a placeholder has no value — the shell then shows its generic
-/// refusal, never a raw code. Corpus `🛂️manifest/🧫️fixtures/🧫️fault-notices`; TS twin `faultNotice`.
+/// 🗯️ The notice a fault earns: its own code, then each cause's, is looked up in the framework's tables [Design notes](README.md#source-notes-546).
 pub fn fault_notice(fault: &Fault, notices: &[FaultNoticeDefinition], terminology: semio_ui_locale::Terminology, locale: semio_ui_locale::Locale) -> Option<FaultNotice> {
     let params = fault.params.as_deref();
     let framework = |code: &str| history_notice(code).or_else(|| framework_fault_notice(code));
@@ -562,11 +547,7 @@ pub fn fault_notice(fault: &Fault, notices: &[FaultNoticeDefinition], terminolog
 //#endregion 🔖️FaultNotices
 //#region 🔖️HistoryReprojectionStatus
 
-/// 🦜️ Framework-owned EN/DE copy of a history change replaying before this replica adopts it ([`HistoryReprojection`]), by
-/// `<kind>.<part>` key: every shell announces it in a polite status region outside the History panel and the history body
-/// titles its reprojection section with it (design §16.6, gap N17, audit W1E-3). `{done}`/`{total}` are replayed
-/// operations, `{reason}` a refusal's notice. Fixture `🧫️fixtures/🧫️history-reprojection/🔣️.json`; TS twin
-/// `HISTORY_REPROJECTION_LABELS`.
+/// 🦜️ Framework-owned EN/DE copy of a history change replaying before this replica adopts it ([`HistoryReprojection`]), by [Design notes](README.md#source-notes-565).
 pub const HISTORY_REPROJECTION_LABELS: [(&str, &str, &str); 12] = [
     ("remote.title", "Remote history change", "Entfernte Verlaufsänderung"),
     ("remote.progress", "Replaying a remote history change: {done} of {total} steps", "Entfernte Verlaufsänderung wird angewendet: {done} von {total} Schritten"),
@@ -595,11 +576,7 @@ pub struct HistoryReprojectionStatus {
     pub fault: Option<String>,
 }
 
-/// 📛️ The one status copy of a history change replaying before adoption, for both shells and the history body: a refused
-/// adoption (a fault with nothing left to replay) reads `<kind>.refused` with the fault's placeholder-free history notice
-/// ([`HISTORY_NOTICE_LABELS`]) or `reason.unnamed` — never a raw code; a paused remote change reads `remote.paused` (a step or
-/// a load is never paused); anything else its kind's progress. Labels [`HISTORY_REPROJECTION_LABELS`]; TS twin
-/// `historyReprojectionStatus`.
+/// 📛️ The one status copy of a history change replaying before adoption, for both shells and the history body: a refused [Design notes](README.md#source-notes-598).
 pub fn history_reprojection_status(reprojection: &HistoryReprojection, terminology: semio_ui_locale::Terminology, locale: semio_ui_locale::Locale) -> HistoryReprojectionStatus {
     let localized = |en: &str, de: &str| semio_ui_locale::LocalizedLabel::native(en, de).resolve(terminology, locale).to_string();
     let label = |key: String| HISTORY_REPROJECTION_LABELS.iter().find(|(known, _, _)| *known == key).map_or_else(String::new, |(_, en, de)| localized(en, de));
@@ -629,10 +606,7 @@ pub fn history_reprojection_status(reprojection: &HistoryReprojection, terminolo
 //#region 🔖️Manifest
 //#region 🔖️FaultNotices
 
-/// 🎨️ One app-declared fault notice (design §20.12): the `code` a guest refusal carries (`<app>.<area>.<name>`) and its
-/// text in every shell locale × terminology, whose `{name}` placeholders are filled from the fault's `params` — never from
-/// its English `message`. Published in [`AppDefinition::fault_notices`]; schema `🛂️manifest/🧬️schema` `$defs.FaultNoticeDefinition`,
-/// TS twin `FaultNoticeDefinition` (`🤖️generated/🪪️manifest`), corpus `🧫️fixtures/🧫️fault-notices`.
+/// 🎨️ One app-declared fault notice (design §20.12): the `code` a guest refusal carries (`<app>.<area>.<name>`) and its [Design notes](README.md#source-notes-632).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]

@@ -1,5 +1,5 @@
 //! 🎯️ Completed selection coverage shared by paint hosts and authoritative commands.
-use semio_framework_plugin::{Fault,FaultCode,FaultOrigin};
+use semio_plugin::{Fault,FaultCode,FaultOrigin};
 pub use semio_s_artifact_raster_raster_model::selection::coverage;
 pub use semio_s_artifact_raster_raster_model::{RasterSelectionSpans,RasterSelectionSpansBuilder,RasterSpanPage,RASTER_SELECTION_PAGE_ROWS,RASTER_SELECTION_PAGE_BYTES};
 

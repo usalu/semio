@@ -1,0 +1,128 @@
+[
+  {
+    "name": "late semantic claim on infrastructure turn",
+    "current": 2,
+    "epoch": 1,
+    "producer": 7,
+    "history": [
+      {
+        "epoch": 1,
+        "producer": 7,
+        "settled": true,
+        "purpose": "semantic"
+      },
+      {
+        "epoch": 2,
+        "producer": 7,
+        "settled": false,
+        "purpose": "infrastructure"
+      }
+    ],
+    "expected": "semantic"
+  },
+  {
+    "name": "current origin",
+    "current": 2,
+    "epoch": 2,
+    "producer": 7,
+    "history": [
+      {
+        "epoch": 1,
+        "producer": 7,
+        "settled": true,
+        "purpose": "semantic"
+      },
+      {
+        "epoch": 2,
+        "producer": 7,
+        "settled": false,
+        "purpose": "infrastructure"
+      }
+    ],
+    "expected": "infrastructure"
+  },
+  {
+    "name": "missing epoch",
+    "current": 2,
+    "epoch": 3,
+    "producer": 7,
+    "history": [
+      {
+        "epoch": 2,
+        "producer": 7,
+        "settled": false,
+        "purpose": "infrastructure"
+      }
+    ],
+    "expected": "reject"
+  },
+  {
+    "name": "foreign producer",
+    "current": 2,
+    "epoch": 1,
+    "producer": 7,
+    "history": [
+      {
+        "epoch": 1,
+        "producer": 8,
+        "settled": true,
+        "purpose": "semantic"
+      },
+      {
+        "epoch": 2,
+        "producer": 7,
+        "settled": false,
+        "purpose": "infrastructure"
+      }
+    ],
+    "expected": "reject"
+  },
+  {
+    "name": "duplicate epoch",
+    "current": 2,
+    "epoch": 1,
+    "producer": 7,
+    "history": [
+      {
+        "epoch": 1,
+        "producer": 7,
+        "settled": true,
+        "purpose": "semantic"
+      },
+      {
+        "epoch": 1,
+        "producer": 7,
+        "settled": true,
+        "purpose": "semantic"
+      },
+      {
+        "epoch": 2,
+        "producer": 7,
+        "settled": false,
+        "purpose": "infrastructure"
+      }
+    ],
+    "expected": "reject"
+  },
+  {
+    "name": "prior unsettled",
+    "current": 2,
+    "epoch": 1,
+    "producer": 7,
+    "history": [
+      {
+        "epoch": 1,
+        "producer": 7,
+        "settled": false,
+        "purpose": "semantic"
+      },
+      {
+        "epoch": 2,
+        "producer": 7,
+        "settled": false,
+        "purpose": "infrastructure"
+      }
+    ],
+    "expected": "reject"
+  }
+]

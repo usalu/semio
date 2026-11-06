@@ -23,6 +23,7 @@ path = "../../🦀️.rs"
 doctest = false
 
 [dependencies]
+semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 framework_hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 schemars = "0.8.22"
 semio-framework-schema = { path = "../../../../../../../🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
@@ -32,3 +33,10 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 semio-os-mcp-foundation = { path = "../../../🧱️foundation/📦️packages/🦀️rust" }
 semio-os-mcp-wire = { path = "../../../📡️wire/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-trace = { workspace = true }
+
+[[test]]
+name = "inference-borrowed-json"
+path = "../../../🧬️schema/🧪️tests/💡️borrowed-wire/🦀️.rs"

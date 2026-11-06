@@ -32,6 +32,7 @@ semio-framework-job-receiving = { workspace = true }
 semio-framework-job-clock = { workspace = true }
 semio-framework-trace = { workspace = true }
 semio-framework-job-payload = { workspace = true }
+semio-framework-job-return-escrow-publication = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-value-retained-clone = { path = "../../../../🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { workspace = true }

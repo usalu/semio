@@ -12,7 +12,7 @@ struct OriginalNativeWeakLoan<'context>{target:*mut StepContext<'context>,previo
 impl OriginalNativeWeakLoan<'_>{fn matches(&self)->bool{unsafe{let actual=&*self.target;self.identity.matches(actual)&&self.cancel==actual.original_cancel_token()as*const _ as usize&&self.epoch==actual.source_epoch}}}
 impl Drop for OriginalNativeWeakLoan<'_>{fn drop(&mut self){NATIVE_WEAK_SCOPES.with(|slots|{assert_eq!(slots[self.slot].replace(0),self.ticket,"original scoped Weak ticket has one return")});let restore=if self.matches(){self.previous}else{None};unsafe{(*self.target).native_weak_parent=restore}}}
 impl StepContext<'_>{
-    /// 🧲️ Borrows a still-live typed native parent without a new alias, source identity, budget, clock or recipient.
+    /// 🧲️ See `README.md`.
     pub fn with_original_native_weak_parent<T:'static,R:Copy>(&mut self,parent:&Arc<T>,run:impl FnOnce(&mut Self)->Result<R,OriginalTurnFailure>)->Result<R,OriginalTurnFailure>{
         self.original_source_parent()?;
         let ticket=NEXT_NATIVE_WEAK_SCOPE.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original scoped Weak receiver epochs are exhausted"))?;
@@ -23,13 +23,13 @@ impl StepContext<'_>{
         let refusal=||ValueError::literal(ValueRefusalKind::InvariantViolated,"native Weak return callback replaced its original initiating context");
         Err(match result{Ok(_)=>OriginalTurnFailure::from(refusal()),Err(mut original)=>{if original.context_refusal.is_none(){original.context_refusal=Some(refusal())}original}})
     }
-    /// 🔎️ Lends the original still-live producer source without upgrading its Weak into another strong alias.
+    /// 🔎️ See `README.md`.
     pub fn with_original_native_weak_source<T:'static,R>(&mut self,original:&Weak<T>,run:impl FnOnce(&T,&mut Self)->Result<R,OriginalTurnFailure>)->Result<R,OriginalTurnFailure>{
         let parent=self.native_weak_parent.ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original native Weak has no scoped strong parent witness"))?;
         if !parent.active(self)||parent.source_type!=TypeId::of::<T>()||parent.allocation!=original.as_ptr()as usize{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original native Weak requires its exact typed allocation parent").into())}
         let source=unsafe{&*(parent.allocation as*const T)};run(source,self)
     }
-    /// 🧾️ Returns one matching native Weak alias while its actual strong parent keeps the allocation live.
+    /// 🧾️ See `README.md`.
     pub fn return_original_native_weak<T:'static>(&mut self,original:&mut Option<Weak<T>>)->Result<Option<RetainedCloneProgress>,OriginalTurnFailure>{
         let Some(source)=original.as_ref()else{return Ok(Some(Default::default()))};
         let parent=self.native_weak_parent.ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original native Weak has no scoped strong parent witness"))?;

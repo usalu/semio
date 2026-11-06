@@ -21,8 +21,8 @@ use semio_s_artifact_raster_raster_model::{find_layer, layer_protection, layer_v
 use semio_s_artifact_raster_raster_model::RasterLayerNode;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use machine::Command;
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, EphemeralEmit, Fault};
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+use semio_plugin::{ArtifactView, ConfigView, Emit, EphemeralEmit, Fault};
 use semio_framework_tool_machine::{drive_gesture, GesturePhase, GestureTool, ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolTransactionState, ToolYield};
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::mem::size_of;
@@ -53,12 +53,12 @@ pub struct PaintStroke {
 //#region 🎨️Leaf
 /// 🏷️ A raster tool refusal under its named code `raster.<area>.<name>`, localized through [`raster_fault_notices`].
 pub fn raster_fault(code: &'static str) -> Fault {
-    Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), code)
+    Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new(code), code)
 }
 
 /// 📣️ The en/de notices of the raster tool refusals (design §20.12): strokes, fills, filters, transforms and the retained route.
-pub fn raster_fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
-    use semio_framework_ui_locale::LocalizedLabel;
+pub fn raster_fault_notices() -> &'static [(&'static str, semio_ui_locale::LocalizedLabel)] {
+    use semio_ui_locale::LocalizedLabel;
     static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 16]> = std::sync::LazyLock::new(|| {
         [
             ("raster.stroke.phase-invalid", LocalizedLabel::native("This stroke step is not known.", "Dieser Strichschritt ist unbekannt.")),
@@ -381,7 +381,7 @@ pub fn handle_in_window(payload: &PaintStroke, doc: &ArtifactView<'_, RasterSnap
     };
     let tick = PaintToolRequest { stroke, points: payload.xs.iter().zip(&payload.ys).map(|(x, y)| RasterStrokePoint { x: *x, y: *y }).collect() };
     let seed = doc.operation_optional().map(|operation| operation.authoring_seed.as_str()).unwrap_or_default();
-    let drive = drive_gesture::<RasterPaintTool>(open, press, phase, Some(tick), seed, "").map_err(|refusal| Fault::new(semio_framework_plugin::FaultOrigin::App, refusal.code(), "the paint tool refused the stroke"))?;
+    let drive = drive_gesture::<RasterPaintTool>(open, press, phase, Some(tick), seed, "").map_err(|refusal| Fault::new(semio_plugin::FaultOrigin::App, refusal.code(), "the paint tool refused the stroke"))?;
     let stroke = drive.next.map_or_else(|| window.stroke.clone(), |next| next.map(Box::new));
     Ok(match drive.committed {
         Some((transaction, mutations)) if !seed.is_empty() => (Emit::commit_transaction(transaction, mutations), RasterCompositeWindowTransient { stroke: None, closed: closing(gesture) }),

@@ -83,12 +83,7 @@ impl MockJobStepGate {
     }
 }
 
-/// 🎭️ `design-runtime.md` §2's `MockGuestRuntime` (`#[cfg(any(test, feature = "testkit"))]`): scripted turns + a controllable
-/// clock, backing scheduler/failure-ladder tests without a real wasm component or `bindgen!` — the
-/// TS twin is `createMockShard()`. `script_turn`/`script_fault` queue outcomes FIFO per actor;
-/// `execute_turn` on an actor with an empty queue returns `TurnFault::Exhausted` rather than
-/// silently fabricating an idle turn, so a test that forgets to script a call fails loudly instead
-/// of passing by accident.
+/// 🎭️ Scripted mock turns use a controllable clock and explicit outcomes.
 #[cfg(any(test, feature = "testkit"))]
 pub struct MockGuestRuntime {
     pub fail_instantiate: AtomicBool,

@@ -17,11 +17,11 @@ pub fn select_same_kind(ctx: &mut Puzzle5dActionCtx<'_>) {
         ctx.abort = true;
         return;
     };
-    let Some(kind) = ctx.scene.document.parts.iter().find(|part| part.id == first_id).map(|part| part.part_kind.clone()).filter(|kind| !kind.is_empty()) else {
+    let Some(kind) = ctx.scene.document.parts.iter().find(|part| part.id == first_id).and_then(|part| part.part_kind.clone()).filter(|kind| !kind.is_empty()) else {
         ctx.notice(|labels| labels.nothing_selected.as_str());
         ctx.abort = true;
         return;
     };
-    let ids: Vec<String> = ctx.scene.document.parts.iter().filter(|part| part.part_kind == kind).map(|part| part.id.clone()).collect();
+    let ids: Vec<String> = ctx.scene.document.parts.iter().filter(|part| part.part_kind.as_deref() == Some(kind.as_str())).map(|part| part.id.clone()).collect();
     ctx.replace_selection(PUZZLE5D_GRANULARITY_PART, ids);
 }

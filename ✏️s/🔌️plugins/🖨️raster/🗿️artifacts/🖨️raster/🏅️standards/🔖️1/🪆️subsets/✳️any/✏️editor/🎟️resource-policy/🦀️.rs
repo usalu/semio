@@ -1,5 +1,5 @@
 //! 🎟️ Raster's embedding admits one reserved RGBA backing while initialization and copying remain paged.
-use semio_framework_plugin::MountedOwnerPolicyV1;
+use semio_plugin::MountedOwnerPolicyV1;
 /// 🖼️ This per-turn policy lends no lifetime stock and never increases the original caller's currencies.
 pub const fn raster_mounted_owner_policy()->MountedOwnerPolicyV1{
  let mut policy=MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;let bytes=semio_framework_pixels::editing::MAX_IMAGE_PIXELS*4;policy.preparation.maximum_capacity_bytes=bytes;policy.preparation.maximum_release_bytes=bytes;policy.maintenance.maximum_capacity_bytes=bytes;policy.maintenance.maximum_release_bytes=bytes;policy.close.maximum_capacity_bytes=bytes;policy.close.maximum_release_bytes=bytes;policy

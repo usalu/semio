@@ -107,6 +107,7 @@ import { reloadCheck } from "./🔂️reload-check/🟦️.ts";
 import { step6, step7, step8 } from "./🌿️alternatives/🟦️.ts";
 import { step10, step11, step12, step13, step14, step15 } from "./🧮️gaps/🟦️.ts";
 import { step16, step17, step18, step19 } from "./🛣️lanes/🟦️.ts";
+import { step24 } from "./💾️persistence-journey/🟦️.ts";
 import { step20, step21, step22, step23 } from "./🕹️interaction/🟦️.ts";
 
 /** 🔁️ The contexts whose reload check already ran. */
@@ -163,9 +164,9 @@ export const timeTravelScenarioV1: TimeTravelScenarioV1<Ctx> = {
   bootWindowPrefix: "2d-",
   editorNumbers: ["dx", "dy"],
   paletteQuery: { en: "Rotate", de: "Drehen" },
-  stepNumbers: [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
-  order: [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 19, 20, 21, 22, 23, 14, 15, 16, 17, 18],
-  steps: { 1: step1, 2: step2, 3: step3, 4: step4, 5: step5, 6: step6, 7: step7, 8: step8, 10: step10, 11: step11, 12: step12, 13: step13, 14: step14, 15: step15, 16: step16, 17: step17, 18: step18, 19: step19, 20: step20, 21: step21, 22: step22, 23: step23 },
+  stepNumbers: [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24],
+  order: [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 19, 20, 21, 22, 23, 14, 15, 16, 17, 18, 24],
+  steps: { 1: step1, 2: step2, 3: step3, 4: step4, 5: step5, 6: step6, 7: step7, 8: step8, 10: step10, 11: step11, 12: step12, 13: step13, 14: step14, 15: step15, 16: step16, 17: step17, 18: step18, 19: step19, 20: step20, 21: step21, 22: step22, 23: step23, 24: step24 },
   context: () => ({}),
   prepare,
   beforeStep,

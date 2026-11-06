@@ -3,12 +3,12 @@ use super::*;
 use semio_framework_async::{CancelTokenRetirement,CancelTokenRetirementError};
 #[path="../🎟️source/🦀️.rs"]
 mod owned_source;
-pub use owned_source::{OriginalCallerSourceParent,OriginalCallerSourceLoan,OriginalCallerChildSource,OriginalChildTurnReturn,ORIGINAL_NATIVE_SOURCE_CAPACITY,OriginalNativeLease,OriginalNativeRetirement,OriginalNativeBorrow,OriginalNativeRecipientIdentity,OriginalNativeRetiredWitness};
+pub use owned_source::{OriginalCallerSourceParent,OriginalCallerSourceLoan,OriginalCallerChildSource,OriginalChildTurnReturn,ORIGINAL_NATIVE_SOURCE_CAPACITY,OriginalNativeLease,OriginalNativeRetirement,OriginalNativeBorrow,OriginalNativeBorrowed,OriginalNativeRecipientIdentity,OriginalNativeRecipientClosed,OriginalNativeRetiredWitness};
 
 pub(super) struct OriginalCallerSource<'source>{pub(super) ledger:&'source Arc<JobPayloadOperationLedger>,pub(super) cancel:&'source CancelToken,pub(super) operation:OperationId,pub(super) generation:Generation,pub(super) clock:fn()->Option<u64>,pub(super) deadline:u64}
 static NEXT_CALLER_ISSUER:AtomicU64=AtomicU64::new(1);
 
-/// 📷️ Keeps original borrowed roots live until each independently funded alias is captured or returned.
+/// 📷️ See `README.md`.
 pub struct OriginalCallerCapture<'source>{source:OriginalCallerSource<'source>,ledger:ManuallyDrop<Option<Arc<JobPayloadOperationLedger>>>,cancel:ManuallyDrop<Option<CancelTokenRetirement>>,issuer:u64}
 impl<'source> OriginalCallerCapture<'source>{
  pub fn begin(authority:&'source JobPayloadAuthority,cancel:&'source CancelToken,cx:&StepContext<'_>)->Result<Self,ValueError>{let actual=cx.borrowed_original_caller_source()?;let ledger=authority.original().ok_or_else(||refused("original factory ledger has already closed"))?;if !Arc::ptr_eq(ledger,actual.ledger)||!std::ptr::eq(cancel,actual.cancel){return Err(refused("original factory sources do not witness the actual caller"))}let source=OriginalCallerSource{ledger,cancel,operation:actual.operation,generation:actual.generation,clock:actual.clock,deadline:actual.deadline};let issuer=NEXT_CALLER_ISSUER.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).map_err(|_|refused("original caller issuer identity exhausted"))?;Ok(Self{source,ledger:ManuallyDrop::new(None),cancel:ManuallyDrop::new(None),issuer})}
@@ -20,7 +20,7 @@ impl<'source> OriginalCallerCapture<'source>{
 }
 impl Drop for OriginalCallerCapture<'_>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original partial caller capture reached Drop before paid alias return")}}
 
-/// 🧳️ Owns only the actual paid source aliases; it cannot create a context, budget, root or deadline.
+/// 🧳️ See `README.md`.
 pub struct CapturedOriginalCaller<'source>{ledger:ManuallyDrop<Option<Arc<JobPayloadOperationLedger>>>,cancel:ManuallyDrop<Option<CancelTokenRetirement>>,source:OriginalCallerSource<'source>,issuer:u64}
 impl CapturedOriginalCaller<'_>{
  fn matches(&self,cx:&StepContext<'_>)->bool{self.ledger.is_some()&&self.cancel.as_ref().is_some_and(|cancel|cancel.is_original_alias_witness(cx.original_cancel_token()))&&self.matches_return(cx)}
@@ -30,13 +30,13 @@ impl CapturedOriginalCaller<'_>{
 }
 impl Drop for CapturedOriginalCaller<'_>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"captured original caller reached Drop before paid alias return")}}
 
-/// 🎟️ Exclusively issues an actual supplied context; epochs never construct or renew authority.
+/// 🎟️ See `README.md`.
 pub struct OriginalCallerIssuer{identity:u64,epoch:u64,closing:bool}
 impl OriginalCallerIssuer{
  pub fn issue<'turn,'context>(&'turn mut self,original:&CapturedOriginalCaller,cx:&'turn mut StepContext<'context>)->Result<OriginalCallerTurn<'turn,'context>,ValueError>{if self.closing||self.identity!=original.issuer||!original.matches(cx){return Err(refused("original caller supplier refused foreign or closing context"))}let epoch=self.epoch.checked_add(1).ok_or_else(||refused("original caller turn epoch exhausted"))?;self.epoch=epoch;let before=cx.retained_progress();let recipient_identity=cx.retained_progress as*mut RetainedCloneProgress as usize;Ok(OriginalCallerTurn{issuer:self,context:cx,before,recipient_identity,epoch,returned:false})}
 }
 
-/// 🤝️ Borrows one live supplier context and the same exclusive receipt recipient through the callback.
+/// 🤝️ See `README.md`.
 pub struct OriginalCallerTurn<'turn,'context>{issuer:&'turn mut OriginalCallerIssuer,context:&'turn mut StepContext<'context>,before:RetainedCloneProgress,recipient_identity:usize,epoch:u64,returned:bool}
 impl<'turn,'context> OriginalCallerTurn<'turn,'context>{
  pub fn epoch(&self)->u64{self.epoch}
@@ -45,7 +45,7 @@ impl<'turn,'context> OriginalCallerTurn<'turn,'context>{
 }
 impl Drop for OriginalCallerTurn<'_,'_>{fn drop(&mut self){assert!(std::thread::panicking()||self.returned,"original caller turn reached Drop before exact receipt receiving")}}
 
-/// 🪢️ Preserves the complete child return and any independent receiving refusal in one owned carrier.
+/// 🪢️ See `README.md`.
 #[derive(Debug,semio_framework_value_derive::RetireOwned)]
 #[value(crate="::semio_framework_value_retained_clone")]
 #[value(send_only)]

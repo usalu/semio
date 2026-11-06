@@ -1,0 +1,37 @@
+[
+  {
+    "name": "funded lookup",
+    "need": 4,
+    "current": 4,
+    "total": 8,
+    "expected": "progress"
+  },
+  {
+    "name": "later slice funds depth",
+    "need": 4,
+    "current": 2,
+    "total": 8,
+    "expected": "pending"
+  },
+  {
+    "name": "permanent depth shortage",
+    "need": 4,
+    "current": 2,
+    "total": 3,
+    "expected": "refusal"
+  },
+  {
+    "name": "empty lookup",
+    "need": 0,
+    "current": 0,
+    "total": 0,
+    "expected": "progress"
+  },
+  {
+    "name": "exact lifetime minimum",
+    "need": 7,
+    "current": 6,
+    "total": 7,
+    "expected": "pending"
+  }
+]

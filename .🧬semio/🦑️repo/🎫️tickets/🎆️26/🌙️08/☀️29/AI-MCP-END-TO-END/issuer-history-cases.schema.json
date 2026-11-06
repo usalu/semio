@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "current",
+      "epoch",
+      "producer",
+      "history",
+      "expected"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "current": {
+        "type": "integer"
+      },
+      "epoch": {
+        "type": "integer"
+      },
+      "producer": {
+        "type": "integer"
+      },
+      "history": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "epoch",
+            "producer",
+            "settled",
+            "purpose"
+          ],
+          "properties": {
+            "epoch": {
+              "type": "integer"
+            },
+            "producer": {
+              "type": "integer"
+            },
+            "settled": {
+              "type": "boolean"
+            },
+            "purpose": {
+              "enum": [
+                "semantic",
+                "infrastructure"
+              ]
+            }
+          }
+        }
+      },
+      "expected": {
+        "enum": [
+          "semantic",
+          "infrastructure",
+          "reject"
+        ]
+      }
+    }
+  }
+}

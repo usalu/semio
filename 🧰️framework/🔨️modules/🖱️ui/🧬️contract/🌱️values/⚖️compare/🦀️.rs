@@ -284,10 +284,10 @@ impl ValueComparison {
                 _ => Err("typed comparison unexpected collection"),
             };
         }
-        let arena = match UI_VALUE_ARENA.try_lock() {
-            Ok(arena) => arena,
-            Err(std::sync::TryLockError::WouldBlock) => return Ok(Default::default()),
-            Err(std::sync::TryLockError::Poisoned(_)) => return Err("typed comparison arena is poisoned"),
+        let arena = match ui_value_arena_registry().borrow() {
+            Ok(Some(arena)) => arena,
+            Ok(None) => return Ok(Default::default()),
+            Err(_) => return Err("typed comparison arena is poisoned"),
         };
         if self.length == 0 {
             return match root(&mut self.position, &mut self.remembered, Some(&arena))? {

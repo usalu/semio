@@ -159,7 +159,7 @@ impl GuestRelayPublication {
         Self { kind, source:std::mem::ManuallyDrop::new(source), cursor: 0, copied: false, retired: false, oversized, delivered: false, writer: Some(semio_framework_job_payload::RetainedPayloadBuilder::new(stream)) }
     }
 
-    /// 🏁️ A commit or fault ends the relay; only a preview is retired inside the running job.
+    /// 🏁️ See `README.md`.
     pub(super) fn is_terminal(&self) -> bool {
         !matches!(self.kind, GuestRelayPublicationKind::Preview)
     }
@@ -168,7 +168,7 @@ impl GuestRelayPublication {
         semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, detail)
     }
 
-    /// ✍️ Pays one frontier of the publication (bind, append, retire the source, seal) and lends the sealed pages once.
+    /// ✍️ See `README.md`.
     pub(crate) fn step<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         if self.delivered {
             return Ok(None);
@@ -219,7 +219,7 @@ impl GuestRelayPublication {
         Ok(outcome)
     }
 
-    /// 🤝️ Resolves a descriptor against the same sealed pages this publication lent.
+    /// 🤝️ See `README.md`.
     pub(crate) fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
         let payload = self.writer.as_ref().and_then(semio_framework_job_payload::RetainedPayloadBuilder::published).filter(|_| self.delivered).ok_or_else(|| Self::invalid("guest relay descriptor requires its delivered payload"))?;
         match self.kind {
@@ -229,7 +229,7 @@ impl GuestRelayPublication {
         }
     }
 
-    /// ♻️ Retires a delivered non-terminal publication's pages inside the next running step; true once nothing is left.
+    /// ♻️ See `README.md`.
     pub(crate) fn retire(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         if let Some(writer) = self.writer.as_mut() {
             if !writer.terminal_is_empty() {

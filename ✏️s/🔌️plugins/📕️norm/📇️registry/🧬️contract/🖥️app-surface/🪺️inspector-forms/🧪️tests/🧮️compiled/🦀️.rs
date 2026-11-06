@@ -61,7 +61,7 @@ pub fn norm_compiled_input_findings<A: NormRetainedEditor>() -> Vec<String> {
 
 fn cold_seeds(inputs:&[semio_framework::ActionArgDef])->Vec<semio_framework::ActionArgShapeSeed>{
  fn node(schema:&semio_framework::ArgSchema,path:&mut Vec<usize>,key:Option<String>,value:DslValue,output:&mut Vec<semio_framework::ActionArgShapeSeed>){
-  let variant_selector=match schema{semio_framework::ArgSchema::Object{fields}=>semio_framework_plugin::app::time_travel::time_travel_variant_selector(fields).and_then(|selector|fields.iter().position(|field|std::ptr::eq(field,selector))),_=>None};
+  let variant_selector=match schema{semio_framework::ArgSchema::Object{fields}=>semio_plugin::app::time_travel::time_travel_variant_selector(fields).and_then(|selector|fields.iter().position(|field|std::ptr::eq(field,selector))),_=>None};
   let singleton=match schema{semio_framework::ArgSchema::Array{items,..}=>Some(DslValue::Array(vec![crate::norm_inspector_seed(items)])),semio_framework::ArgSchema::Reference{many:true,..}=>{let mut item=schema.clone();if let semio_framework::ArgSchema::Reference{many,..}=&mut item{*many=false}Some(DslValue::Array(vec![crate::norm_inspector_seed(&item)]))},_=>None};
   let own=output.len();output.push(semio_framework::ActionArgShapeSeed{schema_path:path.clone(),value,key,children:Vec::new(),variant_selector,singleton});
   match schema{

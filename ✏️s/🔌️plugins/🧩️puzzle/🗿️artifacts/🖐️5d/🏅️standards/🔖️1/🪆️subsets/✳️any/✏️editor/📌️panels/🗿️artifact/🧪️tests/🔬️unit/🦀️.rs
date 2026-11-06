@@ -81,11 +81,11 @@ fn scaled_scene(parts: usize, grips: usize, fasteners: usize) -> Puzzle5dScene {
     document.parts = (0..parts)
         .map(|part| Puzzle5dPart {
             id: format!("part-{part}"),
-            part_kind: "capsule".into(),
+            part_kind: Some("capsule".into()),
             anchor: Default::default(),
             part_2d: Default::default(),
             part_3d: Default::default(),
-            grips: (0..grips).map(|grip| Puzzle5dGrip { id: format!("grip-{grip}"), grip_kind: "socket".into(), grip_2d: Default::default(), grip_3d: Default::default() }).collect(),
+            grips: (0..grips).map(|grip| Puzzle5dGrip { id: format!("grip-{grip}"), grip_kind: Some("socket".into()), grip_2d: Default::default(), grip_3d: Default::default() }).collect(),
         })
         .collect();
     document.fasteners = (0..fasteners)
@@ -300,9 +300,9 @@ fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node_ceili
 fn part_rows_read_authored_labels_and_numbered_peers() {
     let mut document = crate::editor::puzzle5d::entities::empty_document();
     document.parts = vec![
-        Puzzle5dPart { id: "a".into(), part_kind: "capsule".into(), anchor: Default::default(), part_2d: Default::default(), part_3d: crate::editor::puzzle5d::entities::Puzzle5dPart3d { label: Some("Capsule".into()), ..Default::default() }, grips: Vec::new() },
-        Puzzle5dPart { id: "b".into(), part_kind: "capsule".into(), anchor: Default::default(), part_2d: Default::default(), part_3d: crate::editor::puzzle5d::entities::Puzzle5dPart3d { label: Some("Capsule 2".into()), ..Default::default() }, grips: Vec::new() },
-        Puzzle5dPart { id: "c".into(), part_kind: "capsule".into(), anchor: Default::default(), part_2d: Default::default(), part_3d: Default::default(), grips: Vec::new() },
+        Puzzle5dPart { id: "a".into(), part_kind: Some("capsule".into()), anchor: Default::default(), part_2d: Default::default(), part_3d: crate::editor::puzzle5d::entities::Puzzle5dPart3d { label: Some("Capsule".into()), ..Default::default() }, grips: Vec::new() },
+        Puzzle5dPart { id: "b".into(), part_kind: Some("capsule".into()), anchor: Default::default(), part_2d: Default::default(), part_3d: crate::editor::puzzle5d::entities::Puzzle5dPart3d { label: Some("Capsule 2".into()), ..Default::default() }, grips: Vec::new() },
+        Puzzle5dPart { id: "c".into(), part_kind: Some("capsule".into()), anchor: Default::default(), part_2d: Default::default(), part_3d: Default::default(), grips: Vec::new() },
     ];
     assert_eq!(puzzle5d_part_display_label(&document.parts[0], &document), "Capsule");
     assert_eq!(puzzle5d_part_display_label(&document.parts[2], &document), "capsule", "an unlabelled part falls back to its kind's catalogue name");

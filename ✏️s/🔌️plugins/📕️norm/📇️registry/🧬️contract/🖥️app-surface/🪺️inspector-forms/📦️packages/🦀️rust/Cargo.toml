@@ -22,11 +22,11 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework = { workspace = true }
-semio-framework-plugin = { workspace = true }
+semio-plugin = { workspace = true }
 semio-framework-pack-json = { workspace = true }
-semio-framework-ui-locale = { workspace = true }
+semio-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
-semio-framework-plugin-decl-staged-form = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/staged-form/📦️packages/🦀️rust" }
+semio-plugin-decl-staged-form = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/staged-form/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-replication-mutation = { path = "../../../../../../../../../🧰️framework/🔨️modules/📡️replication/🎮️mutation/📦️packages/🦀️rust" }
 

@@ -88,6 +88,7 @@ fn retained_binding_copy_separates_allocation_clone_and_placement() {
 
 #[test]
 fn retained_binding_copy_cancel_and_arena_contention_keep_exact_aliases() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = fixture();
     for frontier in fixture["cancelFrontiers"].as_array().unwrap() {
         for grant in fixture["closeGrants"].as_array().unwrap() {

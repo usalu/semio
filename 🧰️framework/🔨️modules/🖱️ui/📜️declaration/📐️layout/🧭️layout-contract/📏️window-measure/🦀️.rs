@@ -151,14 +151,7 @@ pub struct WindowMeasurePartition<'a> {
     pub utility_options: UiFixedList<&'a WindowMeasure, WINDOW_MEASURE_PARTITION_CAPACITY>,
 }
 
-/// ✂️ Splits a window's top-level measures into `(general, utility_options)`.
-///
-/// A top-level [`WindowMeasure::Group`] tagged with `active_utility_id: Some(id)` is *utility-scoped chrome*:
-/// its **children** land in `utility_options` **only** when `id == active_utility_id`, and the tagged wrapper
-/// is dropped from both buckets otherwise (it is irrelevant to whichever utility — or no utility — is
-/// currently active). The wrapper itself is a routing envelope only — never rendered — so activating a
-/// utility shows its option tree directly (no duplicate utility-name group header). Every untagged group
-/// and every non-group top-level measure stays in `general`, unchanged. Tagging is a top-level concept only.
+/// ✂️ Splits a window's top-level measures into `(general, utility_options)`. [Design notes](README.md#source-notes-154).
 pub fn partition_window_measures<'a>(measures: &'a [WindowMeasure], active_utility_id: Option<&str>) -> Result<WindowMeasurePartition<'a>, &'a WindowMeasure> {
     let mut partition = WindowMeasurePartition { general: UiFixedList::default(), utility_options: UiFixedList::default() };
     for measure in measures {

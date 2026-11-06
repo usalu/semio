@@ -51,7 +51,7 @@ semio-s-artifact-stdio-zip-schema-2 = { path = "../../../🏅️standards/🔖�
 serde_json = { workspace = true }
 
 [dev-dependencies]
-semio-framework-os-store-one-item = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-store-one-item = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-async-macros = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }

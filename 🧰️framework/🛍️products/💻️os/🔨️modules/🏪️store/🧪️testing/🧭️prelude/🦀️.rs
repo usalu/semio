@@ -39,7 +39,7 @@ pub use semio_framework_os_store_ledger::edit_retirement::{ArtifactStoreDecodedE
 pub use semio_framework_os_store_initialization_replay::initialization_authority::ArtifactStoreInitializationAuthority;
 pub use semio_framework_os_store_initialization_runtime::lifted_store::{ArtifactStoreInitializationRuntime, bound_edit_messages};
 pub use semio_framework_os_store_initialization_replay::{ArtifactStoreReplayInitializer, initialization_authority};
-pub use semio_framework_os_store_text_io::text_format::{append_history_events_to_spr, ArtifactTextFiles, empty_document_spr, expected_mutation_message_level, genesis_member_envelope_pack, mutation_ids, operation_ids, ops_line_from_transition, parse_document_pack, parse_document_spr, parse_document_text, ParsedDocumentText, print_document_pack, print_document_spr, print_document_text, print_edit_lines, stable_mutation_ids_for_edit, validate_persisted_conflicts, validate_persisted_message};
+pub use semio_os_store_text_io::text_format::{append_history_events_to_spr, ArtifactTextFiles, empty_document_spr, expected_mutation_message_level, genesis_member_envelope_pack, mutation_ids, operation_ids, ops_line_from_transition, parse_document_pack, parse_document_spr, parse_document_text, ParsedDocumentText, print_document_pack, print_document_spr, print_document_text, print_edit_lines, stable_mutation_ids_for_edit, validate_persisted_conflicts, validate_persisted_message};
 pub use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 pub use semio_framework_os_store_backbone::{Backbone, BackboneChannelPort as _, BackboneMessage, BackbonePort as _, Backbones, ChannelBackbone, ChannelBackboneRemote, decode_hot_backbone_message_exact, LocalStorageBackbonePort, MemoryBackbone, MemoryBackbonePort};
 pub use semio_framework_os_store_blob_identity::BlobRef;
@@ -95,7 +95,7 @@ pub use semio_framework_os_store_retirement::resident_backing;
 pub use semio_framework_os_store_space_schema::{space_history_document, space_history_mutations};
 pub use semio_framework_os_store_space::space_history_registration;
 pub use semio_framework_os_io::sqlite_snapshot_operations;
-pub use semio_framework_os_store_text_io::{ArtifactStoreSnapshot as _, text_format};
+pub use semio_os_store_text_io::{ArtifactStoreSnapshot as _, text_format};
 pub use semio_framework_os_store_ephemeral::{ArtifactEphemeralBaseOwner, ArtifactEphemeralBaseRead, ArtifactEphemeralOneItemPreparation, ArtifactEphemeralOneItemPreparationFactory, ArtifactEphemeralOneItemPreparationRequest, ArtifactEphemeralOneItemPrepared, ArtifactEphemeralOneItemPublication, InteractionStore, TransientStore};
 pub use semio_framework_os_store_presence::PresenceStore;
 #[cfg(not(target_arch = "wasm32"))]
@@ -129,7 +129,7 @@ pub mod store_schema {
 }
 
 pub mod serialization {
-    pub use semio_framework_os_store_text_io::*;
+    pub use semio_os_store_text_io::*;
     pub use semio_framework_os_store_space_history::lifted_serialization::*;
 }
 

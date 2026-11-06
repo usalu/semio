@@ -160,13 +160,13 @@ fn volume_flag_row(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, v
 fn part_fields(part: &Puzzle5dPart, document: &Puzzle5dDocument, ids: &[String], labels: &Puzzle5dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let mut fields = UiFixedList::default();
     read_only(&mut fields, "part.id", labels.id.as_str(), &part.id)?;
-    patch_row(&mut fields, "part.kind", labels.kind.as_str(), "patchPart", "partIds", ids, "partKind", &part.part_kind)?;
+    patch_row(&mut fields, "part.kind", labels.kind.as_str(), "patchPart", "partIds", ids, "partKind", part.part_kind.as_deref().unwrap_or_default())?;
     patch_row(&mut fields, "part.label", labels.label.as_str(), "patchPart", "partIds", ids, "label", part.part_3d.label.as_deref().unwrap_or_default())?;
     read_only(&mut fields, "part.display-label", labels.part.as_str(), puzzle5d_part_display_label(part, document))?;
-    patch_row(&mut fields, "part.text", labels.flat_text.as_str(), "patchPart", "partIds", ids, "text", &part.part_2d.text)?;
+    patch_row(&mut fields, "part.text", labels.flat_text.as_str(), "patchPart", "partIds", ids, "text", part.part_2d.text.as_deref().unwrap_or_default())?;
     patch_row(&mut fields, "part.x", labels.flat_x.as_str(), "patchPart", "partIds", ids, "x", part.part_2d.x)?;
     patch_row(&mut fields, "part.y", labels.flat_y.as_str(), "patchPart", "partIds", ids, "y", part.part_2d.y)?;
-    read_only(&mut fields, "part.radius", labels.radius.as_str(), part.part_2d.radius)?;
+    read_only(&mut fields, "part.radius", labels.radius.as_str(), part.part_2d.radius.unwrap_or_default())?;
     read_only(&mut fields, "part.origin", labels.volume_origin.as_str(), vec3(part.part_3d.origin))?;
     read_only(&mut fields, "part.orientation", labels.orientation.as_str(), vec4(part.part_3d.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0])))?;
     read_only(&mut fields, "part.scale", labels.scale.as_str(), vec3(part_scale_json(part)))?;
@@ -182,7 +182,7 @@ fn grip_fields(part: &Puzzle5dPart, grip: &Puzzle5dGrip, ids: &[String], labels:
     read_only(&mut fields, "grip.part", labels.part.as_str(), &part.id)?;
     patch_row(&mut fields, "grip.kind", labels.kind.as_str(), "patchGrip", "gripFullIds", ids, "gripKind", engine_grip_kind(grip))?;
     patch_row(&mut fields, "grip.angle", labels.flat_angle.as_str(), "patchGrip", "gripFullIds", ids, "angle", grip.grip_2d.angle)?;
-    patch_row(&mut fields, "grip.radius", labels.radius.as_str(), "patchGrip", "gripFullIds", ids, "radius", grip.grip_3d.radius)?;
+    patch_row(&mut fields, "grip.radius", labels.radius.as_str(), "patchGrip", "gripFullIds", ids, "radius", grip.grip_3d.radius.unwrap_or_default())?;
     read_only(&mut fields, "grip.position", labels.position.as_str(), vec3(grip.grip_3d.position))?;
     read_only(&mut fields, "grip.direction", labels.direction.as_str(), vec3(grip.grip_3d.direction.unwrap_or([0.0, 0.0, -1.0])))?;
     Ok(fields)

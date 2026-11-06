@@ -57,6 +57,9 @@ mod original_instance_opening;
 pub use original_instance_opening::GuestActorOpening;
 #[path="🎟️unit/🦀️.rs"]
 mod original_unit;
+#[path="🪙️escrow/🦀️.rs"]
+mod original_escrow;
+pub use original_escrow::{GuestHeaderDeallocateReturned,GuestFrozenEscrowBorrow,GuestFrozenEscrowIdentity};
 
 #[path = "💼️job-crossing/🦀️.rs"]
 mod job_crossing;

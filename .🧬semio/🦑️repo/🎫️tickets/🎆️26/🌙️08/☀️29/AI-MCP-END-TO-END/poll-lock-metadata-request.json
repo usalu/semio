@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"agent":"semio-mcp-poll-lock","configuration":"prototype","language":"en","parallelism":2,"store":"shared","command":["metadata","--format-version=1","--offline","--manifest-path","🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔁️poll/📦️packages/🦀️rust/Cargo.toml"]}}

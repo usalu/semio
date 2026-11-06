@@ -20,6 +20,7 @@ path = "../../🦀️.rs"
 default = []
 
 [dependencies]
+semio-framework-value-native-owned = { path = "../../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-ui-contract-budget = { path = "../../../📏️budget/📦️packages/🦀️rust" }
 semio-ui-contract-values = { path = "../../../🌱️values/📦️packages/🦀️rust" }
 semio-ui-contract-actions = { path = "../../../🎬️action/📦️packages/🦀️rust" }

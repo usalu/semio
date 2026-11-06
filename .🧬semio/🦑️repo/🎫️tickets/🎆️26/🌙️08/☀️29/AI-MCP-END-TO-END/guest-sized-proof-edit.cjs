@@ -1,0 +1,3 @@
+const fs=require('fs');const f='🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/📥️input/🦀️.rs';const before=fs.readFileSync(f,'utf8');let s=before;
+for(const[a,b]of[['pub fn input_returned(&self)->bool{self.returned}','pub fn input_returned(&self)->bool{self.returned&&self.capture.terminal_is_empty()}'],['Ok(if self.returned{if self.closing','Ok(if self.returned&&self.capture.terminal_is_empty(){if self.closing']]){if(s.split(a).length!==2)throw Error(a);s=s.replace(a,b)}
+if(fs.readFileSync(f,'utf8')!==before)throw Error('changed');let t=f+'.guest-proof.tmp';fs.writeFileSync(t,s);if(fs.readFileSync(f,'utf8')!==before){fs.unlinkSync(t);throw Error('changed before rename')}fs.renameSync(t,f);

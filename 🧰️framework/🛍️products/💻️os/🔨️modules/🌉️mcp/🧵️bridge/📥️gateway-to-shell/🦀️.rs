@@ -31,14 +31,7 @@ pub enum GatewayToShell {
     /// inverse of the result's own `isError`, `summary` its first text block (or the gateway error
     /// message), truncated the same way.
     AgentToolResult { invocation_id: String, tool_name: String, ok: bool, summary: String },
-    /// 💬️ One chunk of the connected agent's OWN free-text turn — the channel that lets an agent
-    /// explain, ask a clarifying question, or answer at all, rather than only act. `reply_id`
-    /// identifies the turn (every chunk of one turn repeats it, so a shell appends instead of
-    /// stacking rows); `in_reply_to` is the `message_id` of the `ShellToGateway::AgentMessage` this
-    /// answers, or `None` for a turn the agent opened itself; `complete` marks the last chunk, so a
-    /// shell can show a turn as still arriving without inventing a heuristic. The text carries no
-    /// locale: it is the agent's own words, and the only translated strings on the surface are the
-    /// role nouns around them.
+    /// 💬️ One chunk of the connected agent's OWN free-text turn — the channel that lets an agent [Design notes](README.md#source-notes-34).
     AgentReply { reply_id: String, in_reply_to: Option<String>, text: String, complete: bool },
     /// 🪦️ The approval request `approval_id` is withdrawn — its call was cancelled, it timed out, or it
     /// moved to a newer shell connection — so the shell retires its affordance and says why.

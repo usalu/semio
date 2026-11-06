@@ -69,7 +69,6 @@ macro_rules! component_persistent_local {
 //#endregion 🔖️ComponentPersistentLocal
 
 //#region 📦️OwnedAbi
-#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 #[doc(hidden)]
 pub mod owned_abi {
     /// 📋️ Fixed stack authority preserves all original scalar fields and refuses malformed extents.
@@ -78,12 +77,49 @@ pub mod owned_abi {
     use semio_framework_value_derive::{FromValue, ToValue};
     use serde::{Deserialize, Serialize};
 
-    #[derive(Deserialize, Serialize)]
+    #[derive(Deserialize, Serialize, semio_framework_value::NativeReceive, semio_framework_value::RetireOwned)]
+    #[serde(deny_unknown_fields)]
+    #[value(deny_unknown_fields)]
     pub struct PollInput {
         pub events: Vec<semio_framework::kernel::Event>,
         pub command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
         pub cold_pair_page: Option<semio_framework::kernel::ColdDocumentPairPage>,
-        pub budget: semio_framework::kernel::Budget,
+        pub limits: PollRequestLimits,
+    }
+
+    /// ⛽️ Caller-requested ceilings contain no Source identity or authority.
+    #[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize, semio_framework_value::NativeReceive, semio_framework_value::RetireOwned)]
+    #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    #[value(rename_all = "camelCase", deny_unknown_fields)]
+    pub struct PollRequestLimits {
+        pub retained_policy: semio_framework_value::RetainedCloneGrant,
+        pub work_fuel: u64,
+        pub fuel: u64,
+        pub deadline_us: u64,
+        pub max_effects: u32,
+        pub max_patch_bytes: u32,
+        pub max_frames: u32,
+    }
+    impl PollRequestLimits {
+        /// 🔒️ Narrows requested data against the actual authenticated scalar loan.
+        pub fn narrow(self, authority: semio_framework::kernel::OriginalJobBudget) -> semio_framework::kernel::Budget {
+            let requested = self.retained_policy;
+            let granted = authority.retained_policy;
+            semio_framework::kernel::Budget {
+                retained: authority.input,
+                retained_policy: semio_framework_value::RetainedCloneGrant {
+                    maximum_items: requested.maximum_items.min(granted.maximum_items),
+                    maximum_copy_bytes: requested.maximum_copy_bytes.min(granted.maximum_copy_bytes),
+                    maximum_capacity_bytes: requested.maximum_capacity_bytes.min(granted.maximum_capacity_bytes),
+                    maximum_release_bytes: requested.maximum_release_bytes.min(granted.maximum_release_bytes),
+                    maximum_depth: requested.maximum_depth.min(granted.maximum_depth),
+                },
+                work_fuel: self.work_fuel.min(authority.fuel),
+                fuel: self.fuel.min(authority.fuel),
+                deadline_us: self.deadline_us.min(authority.deadline_us),
+                max_effects: self.max_effects, max_patch_bytes: self.max_patch_bytes, max_frames: self.max_frames,
+            }
+        }
     }
 
     /// 🌉️ Hand-written, not derived — `events`/`command_page`/`budget` are foreign kernel types
@@ -103,13 +139,9 @@ pub mod owned_abi {
         }
     }
 
-    #[derive(Deserialize, FromValue, Serialize, ToValue)]
-    pub struct StartJobInput {
-        pub source: Option<semio_framework::kernel::OriginalJobSource>,
-        pub budget: semio_framework::kernel::OriginalJobBudget,
-    }
-
-    #[derive(Deserialize, FromValue, Serialize, ToValue)]
+    #[derive(Deserialize, FromValue, Serialize, ToValue, semio_framework_value::NativeReceive, semio_framework_value::RetireOwned)]
+    #[serde(deny_unknown_fields)]
+    #[value(deny_unknown_fields)]
     pub struct RestoreInput {
         pub state: Vec<u8>,
     }
@@ -119,17 +151,24 @@ pub mod owned_abi {
     /// stream), and the pair only by `print-mirror`/`apply-ops`/`replay-envelopes` — one shape for
     /// all five keeps the owned ABI's JSON envelope single-valued per export, exactly as
     /// `RestoreInput` does.
-    #[derive(Deserialize, FromValue, Serialize, ToValue)]
+    #[derive(Deserialize, FromValue, Serialize, ToValue, semio_framework_value::NativeReceive, semio_framework_value::RetireOwned)]
+    #[serde(deny_unknown_fields)]
+    #[value(deny_unknown_fields)]
     pub struct CodecInput {
         pub artifact_schema: String,
-        #[serde(default)]
         pub document_id: String,
-        #[serde(default)]
         pub pack: Vec<u8>,
-        #[serde(default)]
         pub spr: Vec<u8>,
-        #[serde(default)]
         pub ops: Vec<u8>,
+    }
+
+    /// 📥️ One explicit actor input owns its original typed payload across the borrowed wire admission.
+    #[derive(Deserialize, Serialize, semio_framework_value::NativeReceive, semio_framework_value::RetireOwned)]
+    pub enum ActorInput {
+        Job(semio_framework::kernel::OriginalJobSource),
+        Poll(PollInput),
+        Codec(CodecInput),
+        Restore(RestoreInput),
     }
 
     /// 📦️ Output of the owned `codec.genesis`/`codec.apply-ops`/`codec.replay-envelopes` core exports.
@@ -171,23 +210,8 @@ pub mod owned_abi {
         serde_json::from_slice(&bytes).map_err(|error| error.to_string().into_bytes())
     }
 
-    unsafe fn take_actor_json<T: serde::de::DeserializeOwned>(pointer:u32,length:u32)->Result<T,semio_framework_value::ValueRefusalKind>{
-        let slice=std::ptr::slice_from_raw_parts_mut(pointer as usize as *mut u8,length as usize);
-        let bytes=unsafe{Box::from_raw(slice)};
-        serde_json::from_slice(&bytes).map_err(|_|semio_framework_value::ValueRefusalKind::InvalidValue)
-    }
-
-    /// 🌱️ The owned actor admission port never creates dynamic diagnostic prose on malformed input.
-    pub unsafe fn take_actor_admission_input(pointer:u32,length:u32)->Result<semio_framework::kernel::OriginalJobBudget,semio_framework_value::ValueRefusalKind>{unsafe{take_actor_json(pointer,length)}}
-
-    /// 📥️ Retains the original job source and budget without an error-text carrier.
-    pub unsafe fn take_actor_start_job_input(pointer:u32,length:u32)->Result<StartJobInput,semio_framework_value::ValueRefusalKind>{unsafe{take_actor_json(pointer,length)}}
-
-    /// 📬️ Retains the original declared poll fields without an error-text carrier.
-    pub unsafe fn take_actor_poll_input(pointer:u32,length:u32)->Result<PollInput,semio_framework_value::ValueRefusalKind>{unsafe{take_actor_json(pointer,length)}}
-
-    /// 🧹️ Reads the same original job budget for one explicit resident turn-output retirement slice.
-    pub unsafe fn take_actor_output_close_input(pointer:u32,length:u32)->Result<semio_framework::kernel::OriginalJobBudget,semio_framework_value::ValueRefusalKind>{unsafe{take_actor_json(pointer,length)}}
+    #[cfg(test)]
+    mod poll_limits_tests { include!("🧪️poll-limits/🦀️.rs"); }
 
     pub fn return_json<T: Serialize>(value: &T) -> u64 {
         match serde_json::to_vec(value) {

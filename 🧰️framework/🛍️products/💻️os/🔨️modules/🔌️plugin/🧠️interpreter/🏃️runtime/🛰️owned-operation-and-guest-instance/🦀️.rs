@@ -100,7 +100,7 @@ pub(super) struct OwnedCheckpointView<'a>{pub(super) pending:&'a Option<OwnedPen
 /// 🏃️ One instance of an owned compiled guest: its interpreter state, the operation it has in flight, the original receipt
 /// that operation keeps, and what the guest printed.
 pub struct OwnedGuestInstance {
-    pub(super) original_host:Option<semio_framework_plugin_interpreter_imports::OriginalHostState>,
+    pub(super) original_host:Option<semio_plugin_interpreter_imports::OriginalHostState>,
     pub(super) original_job_clock:Option<(u64,fn()->Option<u64>)>,
     pub(super) artifact: Arc<OwnedSemioArtifact>,
     pub(super) actor: Option<OwnedSemioInstance>,
@@ -111,10 +111,7 @@ pub struct OwnedGuestInstance {
     pub(super) original_unit:Option<super::original_unit::OwnedUnit>,
     pub(super) pending: Option<OwnedPending>,
     pub(super) original_receipt: Option<semio_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceipt>,
-    /// ☠️ Set by the first guest trap. A trapped guest keeps whatever linear memory, shadow-stack
-    /// pointer and allocator state the trap left behind, so every later call starts from a lower
-    /// stack pointer and traps again 112 bytes further down — ticket 26/09/18 slice A1 read that
-    /// drift as the defect itself. There is no recovery short of re-instantiation, so this refuses.
+    /// ☠️ A trapped guest remains quarantined until its paid cleanup.
     pub(super) poisoned: bool,
     /// 🩺️ Keeps guest output in the declared diagnostic capacity.
     pub(super) diagnostics: Vec<u8>,

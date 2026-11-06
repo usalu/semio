@@ -25,6 +25,10 @@ pub struct NativeEncodeContinuation { receiving:bool, maximum_bytes:usize, owned
 /// 🧵️ Scoped Source encoding retains only cumulative admission and stage data between actual caller turns.
 #[derive(Debug)]
 pub struct NativeScopedEncodeContinuation{receipt:NativeEncodeContinuation}
+/// 🧾️ Retains every scalar control field when a scoped pause cannot be qualified.
+#[derive(Debug)]
+pub struct NativeScopedEncodePauseFailure{scope_maximum:Option<usize>,receiving:bool,maximum_bytes:usize,owned_bytes:usize,completed:usize,total:usize,started:bool,stage:u64,depth:usize,source_depth:Option<usize>,local_allocation:bool,retirement_present:bool,allocation_present:bool,work_present:bool}
+impl NativeScopedEncodePauseFailure{pub fn scope_maximum(&self)->Option<usize>{self.scope_maximum}pub fn receiving(&self)->bool{self.receiving}pub fn maximum_bytes(&self)->usize{self.maximum_bytes}pub fn owned_bytes(&self)->usize{self.owned_bytes}pub fn completed(&self)->usize{self.completed}pub fn total(&self)->usize{self.total}pub fn started(&self)->bool{self.started}pub fn stage(&self)->u64{self.stage}pub fn depth(&self)->usize{self.depth}pub fn source_depth(&self)->Option<usize>{self.source_depth}pub fn local_allocation(&self)->bool{self.local_allocation}pub fn retirement_present(&self)->bool{self.retirement_present}pub fn allocation_present(&self)->bool{self.allocation_present}pub fn work_present(&self)->bool{self.work_present}}
 impl NativeScopedEncodeContinuation{
  pub fn owned_bytes(&self)->usize{self.receipt.owned_bytes}
  pub fn maximum_bytes(&self)->usize{self.receipt.maximum_bytes}
@@ -114,9 +118,10 @@ impl<'a> NativeEncodeControl<'a> {
     /// 🎟️ A synchronous Source port admits actual reservations and each work span without observing stage counter deltas.
     pub fn new_scoped_source(maximum_bytes:usize,maximum_depth:usize,callback:&'a mut dyn FnMut(NativeEncodeProgress)->bool,allocate:&'a mut dyn FnMut(NativeEncodeAllocation)->Result<(),ValueError>,work:&'a mut dyn FnMut(usize,usize)->Result<(),ValueError>)->Self{let mut control=Self::new_retained(callback);control.maximum_bytes=maximum_bytes;control.scoped_allocation=Some(allocate);control.work=Some(work);control.source_depth=Some(maximum_depth);control}
     /// ⏸️ Ends the current actual port borrows while preserving the complete cumulative admission receipt.
-    pub fn pause_scoped_source(self)->Result<NativeScopedEncodeContinuation,ValueError>{
-        if !matches!(self.allocation,allocation::Binding::Local)||self.scoped_allocation.is_none()||self.work.is_none()||self.source_depth.is_none()||self.retirement.is_some()||!self.receiving||self.scope_maximum.is_some(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"scoped encoding continuation requires its complete original Source ports"))}
-        self.continuation().map(|receipt|NativeScopedEncodeContinuation{receipt})
+    pub fn pause_scoped_source(self)->Result<NativeScopedEncodeContinuation,(NativeScopedEncodePauseFailure,ValueError)>{
+        let failure=||NativeScopedEncodePauseFailure{scope_maximum:self.scope_maximum,receiving:self.receiving,maximum_bytes:self.maximum_bytes,owned_bytes:self.owned_bytes,completed:self.completed,total:self.total,started:self.started,stage:self.stage,depth:self.depth,source_depth:self.source_depth,local_allocation:matches!(self.allocation,allocation::Binding::Local),retirement_present:self.retirement.is_some(),allocation_present:self.scoped_allocation.is_some(),work_present:self.work.is_some()};
+        if !matches!(self.allocation,allocation::Binding::Local)||self.scoped_allocation.is_none()||self.work.is_none()||self.source_depth.is_none()||self.retirement.is_some()||!self.receiving||self.scope_maximum.is_some(){return Err((failure(),ValueError::literal(ValueRefusalKind::UnsupportedOwner,"scoped encoding continuation requires its complete original Source ports")))}
+        match self.continuation(){Ok(receipt)=>Ok(NativeScopedEncodeContinuation{receipt}),Err(error)=>Err((failure(),error))}
     }
     /// ▶️ Reborrows fresh actual ports and capacity without resetting already admitted bytes or stage progress.
     pub fn resume_scoped_source(receipt:NativeScopedEncodeContinuation,capacity:usize,depth:usize,callback:&'a mut dyn FnMut(NativeEncodeProgress)->bool,allocate:&'a mut dyn FnMut(NativeEncodeAllocation)->Result<(),ValueError>,work:&'a mut dyn FnMut(usize,usize)->Result<(),ValueError>)->Result<Self,(NativeScopedEncodeContinuation,ValueError)>{
@@ -161,6 +166,16 @@ impl<'a> NativeEncodeControl<'a> {
     pub fn append_bytes(&mut self,output:&mut Vec<u8>,bytes:&[u8])->Result<(),ValueError>{self.scoped_stage(|control|{control.begin_stage(bytes.len())?;for chunk in bytes.chunks(65536){let capacity=output.len().checked_add(chunk.len()).filter(|capacity|*capacity<=isize::MAX as usize).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"native encoding output capacity overflow"))?;if capacity>output.capacity(){control.charge(capacity)?;output.try_reserve_exact(chunk.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"native encoding output allocation failed"))?;}control.advance(chunk.len())?;output.extend_from_slice(chunk);}Ok(())})}
 }
 
+
+
+#[cfg(test)]
+mod pause_state_tests{
+ use super::*;
+ #[test]
+ fn invalid_pause_returns_original_control_state_and_refusal(){
+  let mut observe=|_:NativeEncodeProgress|true;let mut allocate=|_:NativeEncodeAllocation|Ok(());let mut work=|_:usize,_:usize|Ok(());let mut control=NativeEncodeControl::new_scoped_source(100,7,&mut observe,&mut allocate,&mut work);control.owned_bytes=13;control.completed=2;control.total=5;control.started=true;control.stage=9;control.depth=3;let(state,error)=control.pause_scoped_source().unwrap_err();assert_eq!(error.kind,ValueRefusalKind::InvariantViolated);assert_eq!((state.maximum_bytes,state.owned_bytes,state.completed,state.total,state.stage,state.depth),(100,13,2,5,9,3));assert!(state.receiving&&state.started&&state.local_allocation&&state.allocation_present&&state.work_present);assert_eq!(state.source_depth,Some(7));assert!(!state.retirement_present);assert_eq!(state.scope_maximum,None);
+ }
+}
 
 
 #[cfg(test)]

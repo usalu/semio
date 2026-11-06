@@ -280,11 +280,7 @@ pub(super) fn settle_progress_message(progress: &HubBindingProgress) -> String {
     }
 }
 
-/// 🔁️ Runs one canonical pair `attempt` until it stops failing for a reason a wait cures: an authority refresh in flight
-/// (the attempt raced a directory event: waits for it to settle, `wait_ms` in all) or a spent network byte budget (waits
-/// through `await_budget`). Every other outcome is the attempt's own. The first `artifact_open` right after a gateway
-/// starts used to answer "canonical pair descriptor is unavailable" while the refresh a directory event started was still
-/// running (ticket 26/09/23, session 14c).
+/// 🔁️ Runs one canonical pair `attempt` until it stops failing for a reason a wait cures: an authority refresh in flight [Design notes](README.md#source-notes-283).
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) fn settled_pair_attempt<T>(
     binding: &HubRemoteBinding,

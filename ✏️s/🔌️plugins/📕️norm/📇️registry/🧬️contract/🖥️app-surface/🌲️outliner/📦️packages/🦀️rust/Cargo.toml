@@ -17,13 +17,13 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-os-kernel = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
-semio-framework-ui-contract = { workspace = true }
-semio-framework-ui-locale = { workspace = true }
-semio-framework-plugin = { workspace = true }
+semio-ui-contract = { workspace = true }
+semio-ui-locale = { workspace = true }
+semio-plugin = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
 semio-s-plugin-norm-app-surface-foundation = { workspace = true }
@@ -31,4 +31,4 @@ semio-s-plugin-norm-app-surface-live-core = { workspace = true }
 semio-s-plugin-norm-app-surface-interaction-topology = { workspace = true }
 
 [dev-dependencies]
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-plugin = { workspace = true, features = ["artifact-app-testing"] }

@@ -1,0 +1,42 @@
+[
+  {
+    "header": 144,
+    "items": 21,
+    "copy": 5568,
+    "work": 2948,
+    "availableItems": 21,
+    "availableCopy": 5568,
+    "availableWork": 2948,
+    "expected": true
+  },
+  {
+    "header": 152,
+    "items": 21,
+    "copy": 5576,
+    "work": 2948,
+    "availableItems": 21,
+    "availableCopy": 5575,
+    "availableWork": 2948,
+    "expected": false
+  },
+  {
+    "header": 184,
+    "items": 21,
+    "copy": 5608,
+    "work": 2948,
+    "availableItems": 21,
+    "availableCopy": 5608,
+    "availableWork": 2947,
+    "expected": false
+  },
+  {
+    "header": 184,
+    "items": 21,
+    "copy": 5608,
+    "work": 2948,
+    "availableItems": 20,
+    "availableCopy": 5608,
+    "availableWork": 2948,
+    "expected": false
+  }
+]

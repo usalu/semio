@@ -50,14 +50,7 @@ pub(super) mod thread_transport {
             self.heartbeat_ms.store(now_ms, Ordering::SeqCst);
         }
 
-        /// ⏳️ Blocking receive with a timeout — `ShardExecutor` (terra-shard-grants,
-        /// `🖥️host/🧵️shard/🧵️executor/🦀️.rs`) parks here between pumps instead of a caller-driven
-        /// busy-poll loop. `mpsc::Receiver::recv_timeout` blocks only the CALLING thread; it spawns
-        /// no thread of its own, so the purity grep this crate's core is verified against (no
-        /// `std::thread` in `🦀️.rs`) still holds. Not part of the [`ShardTransport`]
-        /// trait — `WorkerTransport`/`ProcessTransport` have their own, different ways of parking
-        /// (a JS event loop, a blocking `read`), so this stays a `ThreadTransport`-only inherent
-        /// method, the same shape `Self::beat` already uses for its own extra, non-trait surface.
+        /// ⏳️ Blocking receive with a timeout — `ShardExecutor` (terra-shard-grants, [Design notes](README.md#source-notes-53).
         pub async fn recv_deadline(&self, timeout: std::time::Duration) -> Option<Vec<u8>> {
             if self.killed.load(Ordering::SeqCst) {
                 return None;
@@ -165,12 +158,7 @@ pub struct Kernel {
     pub(super) scenes: HashMap<WindowId, SceneStore>,
     pub(super) actors: HashMap<ActorId, ActorMeta>,
     pub(super) next_ordinal: HashMap<PackageId, u32>,
-    /// 🔗️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): explicit parent→children
-    /// edge table for extension cascade — see `//#region 🔗️ExtensionActivation` below. Kept explicit
-    /// rather than re-derived from `ActorKind::Extension.plugin` on every cascade so that (a) cascade is
-    /// O(children) instead of an O(actors) scan, and (b) it survives multiple *instances* of one plugin
-    /// (several `PluginApp` actors sharing a `PackageId`, each with its own extension subtree) without
-    /// the `plugin: PackageId` field alone being able to disambiguate which instance a child belongs to.
+    /// 🔗️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): explicit parent→children [Design notes](README.md#source-notes-168).
     pub(super) links: HashMap<ActorId, Vec<ActorId>>,
 }
 //#endregion 🏛️Kernel

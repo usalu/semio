@@ -101,7 +101,8 @@
               "MenuRef",
               "UiIntent",
               "UiPublicationRevision",
-              "WindowLayout"
+              "WindowLayout",
+              "SurfaceProps"
             ]
           },
           "wire": {

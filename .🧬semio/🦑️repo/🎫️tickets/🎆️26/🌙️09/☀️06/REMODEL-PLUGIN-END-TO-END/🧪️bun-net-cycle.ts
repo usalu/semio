@@ -1,0 +1,4 @@
+import {test,expect} from "bun:test";
+import {createServer,connect} from "node:net";
+import {once} from "node:events";
+test("loopback timeout, destroy and reconnect",async()=>{const peers=new Set<import("node:net").Socket>(),server=createServer(s=>{peers.add(s);s.once("close",()=>peers.delete(s));s.pipe(s)});await new Promise<void>(r=>server.listen(0,"127.0.0.1",r));try{const port=(server.address() as {port:number}).port;for(let i=0;i<3;i++){console.error("[DEBUG] cycle",i);const client=connect(port,"127.0.0.1");await once(client,"connect");client.write(Buffer.from([1,2,3]));expect([...(await once(client,"data") as [Buffer])[0]]).toEqual([1,2,3]);await new Promise(r=>setTimeout(r,30));const closed=once(client,"close");client.destroy();await closed;}}finally{for(const socket of peers)socket.destroy();await new Promise<void>(r=>server.close(()=>r()))}});

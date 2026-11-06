@@ -1,0 +1,1 @@
+{"birth":1000,"lifetime":1000,"hostReserve":30,"guestWindow":10,"cases":[{"now":1000,"allowed":true,"deadline":1010},{"now":1975,"allowed":true,"deadline":1980},{"now":1980,"allowed":false}],"semanticHeader":0,"cancelled":true}

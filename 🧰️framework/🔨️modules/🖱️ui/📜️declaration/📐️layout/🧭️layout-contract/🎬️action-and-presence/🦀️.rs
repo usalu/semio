@@ -68,17 +68,7 @@ pub(super) fn is_default<T: Default + PartialEq>(value: &T) -> bool {
     *value == T::default()
 }
 
-/// 🚩️ The shared, compile-time-enforced state model every rendered UI element embeds as a
-/// mandatory `presence` field: `state` × `status` × `hover` × `selected`. All combinations are
-/// visually distinguishable except `state == Hidden`, which makes the rest irrelevant — see
-/// [`UiPresence::visible`]. Defaults to fully inert (`Normal`/`Idle`/`false`/`false`) and is omitted
-/// from the wire format entirely at default (see `UiPresence::is_default`).
-/// 👥️ One peer's mark on the element carrying this `UiPresence` — hover/selection dot plus
-/// initials chip (contract-freeze §C7.6 of ticket `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/
-/// SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION`). `label` is the actor id
-/// itself (no display name is carried this far down the stack — see `PeerPresence`'s own doc
-/// comment in the plugin crate); a renderer that has the full roster may substitute a friendlier
-/// name, but every renderer must always carry SOME text alongside color (never color alone).
+/// 🚩️ The shared, compile-time-enforced state model every rendered UI element embeds as a [Design notes](README.md#source-notes-71).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -96,15 +86,7 @@ pub struct UiPeerMark {
     pub label: String,
 }
 
-/// ⌛️ The shared, compile-time-enforced state model every rendered UI element embeds as a
-/// mandatory `presence` field: `state` × `status` × `hover` × `selected` × own `color` × peer
-/// `marks`. All combinations are visually distinguishable except `state == Hidden`, which makes
-/// the rest irrelevant — see [`UiPresence::visible`]. Defaults to fully inert
-/// (`Normal`/`Idle`/`false`/`false`/`None`/`[]`) and is omitted from the wire format entirely at
-/// default (see `UiPresence::is_default`). `color`/`peers` (ticket 26/08/17/SHARED-PRESENCE-
-/// SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.6) make `UiPresence` `Clone`-only — no
-/// longer `Copy` — since `peers: Vec<UiPeerMark>` owns heap data; `UiNode::presence()`/
-/// `UiControlNode::presence()` therefore return `&UiPresence`, not a by-value copy.
+/// ⌛️ The shared, compile-time-enforced state model every rendered UI element embeds as a [Design notes](README.md#source-notes-99).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase", default)]
 #[value(rename_all = "camelCase", default)]

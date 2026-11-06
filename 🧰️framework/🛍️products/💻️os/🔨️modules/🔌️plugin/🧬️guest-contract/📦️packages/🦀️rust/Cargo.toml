@@ -17,17 +17,20 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-pack-json-source = { workspace = true }
+semio-framework-kernel-json = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-actor = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
+semio-framework-job-return-escrow-publication = { workspace = true }
 semio-framework-job-payload = { workspace = true }
 semio-framework-job-fault-publication = { path = "../../../../../../../🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/📦️packages/🦀️rust" }
 semio-os-kernel = { workspace = true }
 semio-plugin-abi = { path = "../../../🚪️io/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
-semio-framework-ui-contract = { workspace = true }
+semio-ui-contract = { path = "../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-derive = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -38,6 +41,8 @@ semio-framework-trace = { workspace = true, optional = true }
 original-actor-context-testing = ["dep:semio-framework-trace"]
 
 [dev-dependencies]
+semio-ui-contract-values = { path = "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🌱️values/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-job-testing-caller = { workspace = true }
 wasmtime = { version = "47.0.3", features = ["cranelift", "component-model", "component-model-async"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-trace = { workspace = true }

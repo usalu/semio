@@ -62,7 +62,7 @@ impl JsonBorrowedSinkCursor{
    match self.phase{
     0=>{*self.frames=Vec::with_capacity(self.maximum_depth+1);self.phase=1;progress=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()};},
     1=>{*self.path=Vec::with_capacity(self.maximum_depth);self.phase=2;progress=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()};},
-    2=>{self.frames.push(JsonWriteFrame{state:0,index:0,position:0});self.phase=3;progress=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};},
+    2=>{self.frames.push(JsonWriteFrame{state:0,index:0,position:0,source_index:0,next_cursor:0});self.phase=3;progress=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};},
     3 if self.pending_position<self.pending_length=>{
      let count=d.copy_bytes-3*size_of::<usize>();let end=self.pending_position+count;output[..count].copy_from_slice(&self.pending[self.pending_position..end]);self.pending_position=end;self.written+=count;written_bytes=count;
      if self.pending_position==self.pending_length{self.pending_position=0;self.pending_length=0}
@@ -72,7 +72,7 @@ impl JsonBorrowedSinkCursor{
      if self.frames.is_empty(){self.phase=4;progress=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<u8>(),..Default::default()};}
      else{
       let mut atom=Atom{bytes:&mut self.pending,length:0};
-      let result=advance_source(&mut self.frames,&mut self.path,&mut atom,source,control);
+      let result=advance_source(&mut self.frames,&mut self.path,&mut atom,source,control,0);
       self.pending_length=atom.length;self.pending_position=0;
       let metadata=match &result{Ok(bytes)=>*bytes,Err(error)=>error.retained_progress().copied_bytes};
       progress=RetainedCloneProgress{copied_items:1,copied_bytes:metadata+atom.length+2*size_of::<usize>(),..Default::default()};

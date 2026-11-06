@@ -10,6 +10,25 @@
     , "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🎯️targets/⚛️5d-react/🧪️tests/🎚️config/🟦️.ts"]
   },
   "targets": {
+    "verify-lifecycle": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
+          }
+        }
+      },
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify time-travel --scenario ✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🖐️5d-lifecycle/🟦️.ts --renderer react --locales en,de",
+        "forwardAllArgs": true
+      }
+    },
     "test": {
       "executor": "repo:script",
       "outputs": [],

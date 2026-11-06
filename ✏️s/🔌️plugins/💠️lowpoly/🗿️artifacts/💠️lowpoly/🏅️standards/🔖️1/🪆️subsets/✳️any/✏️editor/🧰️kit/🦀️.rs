@@ -13,7 +13,7 @@ use pack::snapshot::ArtifactPack;
 //#region 🔖️Constants
 /// 🪪️ The editor address derives once from the owned dialect and surface role.
 pub fn lowpoly_controller_id() -> &'static str {
-    static ID: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| semio_framework::surface_app_id(&semio_s_artifact_lowpoly_lowpoly_model::snapshot::LOWPOLY_DIALECT.into(), semio_framework_plugin::AppRole::Editor));
+    static ID: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| semio_framework::surface_app_id(&semio_s_artifact_lowpoly_lowpoly_model::snapshot::LOWPOLY_DIALECT.into(), semio_plugin::AppRole::Editor));
     ID.as_str()
 }
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome

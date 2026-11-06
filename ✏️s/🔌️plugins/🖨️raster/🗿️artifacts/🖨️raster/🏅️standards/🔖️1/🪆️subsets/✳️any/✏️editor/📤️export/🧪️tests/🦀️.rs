@@ -4,15 +4,15 @@ use std::mem::size_of;
 use semio_s_artifact_raster_raster_editor::RasterPlayApp;
 use semio_framework_pixels::png_encoding::PngEncodeJob;
 use semio_framework_job::RetainedCloneGrant;
-use semio_framework_plugin::app::ArtifactOutputChunks;
+use semio_plugin::app::ArtifactOutputChunks;
 use semio_s_artifact_raster_raster_editor::media_export::*;
 use semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot;
 use semio_s_artifact_raster_raster_model::create_pixel_layer;
 use semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot;
 
 fn loan()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:64,maximum_copy_bytes:32768,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:4096}}
-fn close_work(work:&mut ImageExportWork,caller:&mut semio_framework_plugin::artifact_app_laws::OriginalWorkFixture){work.cancel();for _ in 0..100000{if work.terminal_is_empty(){return}caller.turn(loan(),|cx|{let demand=work.close_demands(32768)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|work.close_step(grant))?;Ok(())}).unwrap();}panic!("finite export close")}
-fn advance_work(work:&mut ImageExportWork,document:&RasterSnapshot,caller:&mut semio_framework_plugin::artifact_app_laws::OriginalWorkFixture)->Result<Option<Vec<u8>>,semio_framework_job::OriginalTurnFailure>{
+fn close_work(work:&mut ImageExportWork,caller:&mut semio_plugin::artifact_app_laws::OriginalWorkFixture){work.cancel();for _ in 0..100000{if work.terminal_is_empty(){return}caller.turn(loan(),|cx|{let demand=work.close_demands(32768)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|work.close_step(grant))?;Ok(())}).unwrap();}panic!("finite export close")}
+fn advance_work(work:&mut ImageExportWork,document:&RasterSnapshot,caller:&mut semio_plugin::artifact_app_laws::OriginalWorkFixture)->Result<Option<Vec<u8>>,semio_framework_job::OriginalTurnFailure>{
  let mut page=None;let result=caller.turn(loan(),|cx|{if work.page_ready(){let turn=work.take_page(cx.retained_grant());let cpu=turn.work;let result=turn.result.map(|output|if let Some((bytes,progress))=output{page=Some(bytes);semio_framework_value::RetainedCloneStep::Progress(progress)}else{semio_framework_value::RetainedCloneStep::Progress(Default::default())});semio_framework_job::receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result,work:cpu})?;}else{semio_framework_job::receive_original_retained_work(cx,work.advance(document,cx.retained_grant()))?;}Ok(())});
  if let Err(error)=result{if let Some(page)=page{caller.retire_owned(page,loan());}Err(error)}else{Ok(page)}
 }
@@ -37,7 +37,7 @@ fn export_pages_match_neutral_base64_vectors() {
 fn export_work_preserves_rgba_and_yields_each_stage() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let image=&fixture["image"];
     let pixels:Vec<u8>=serde_json::from_value(image["pixels"].clone()).unwrap();let document=document(2,2,pixels.clone());
-    let mut caller=semio_framework_plugin::artifact_app_laws::OriginalWorkFixture::new();let mut work=ImageExportWork::default();let turn=work.advance(&document,Default::default());assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap().progress(),Default::default());assert_eq!(work.stage(),"prepare");
+    let mut caller=semio_plugin::artifact_app_laws::OriginalWorkFixture::new();let mut work=ImageExportWork::default();let turn=work.advance(&document,Default::default());assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap().progress(),Default::default());assert_eq!(work.stage(),"prepare");
     let mut stages=std::collections::BTreeSet::new();let mut output=Vec::new();
     for _ in 0..1000 {stages.insert(work.stage());if let Some(chunk)=advance_work(&mut work,&document,&mut caller).unwrap(){assert!(chunk.len()<=ArtifactOutputChunks::CHUNK_BYTES);output.extend_from_slice(&chunk);caller.retire_owned(chunk,loan());}if work.done{break;}}
     assert!(work.done);for stage in fixture["stages"].as_array().unwrap(){assert!(stages.contains(stage.as_str().unwrap()));}
@@ -49,30 +49,30 @@ fn export_work_preserves_rgba_and_yields_each_stage() {
 fn export_cancels_every_stage_and_refuses_an_empty_document() {
     let document=document(128,128,(0..128*128*4).map(|i|((i*73+i/31)%256) as u8).collect());
     for stage in ["prepare","composite","encode","output"] {
-        let mut caller=semio_framework_plugin::artifact_app_laws::OriginalWorkFixture::new();let mut work=ImageExportWork::default();for _ in 0..100000 {if work.stage()==stage{break;}if let Some(page)=advance_work(&mut work,&document,&mut caller).unwrap(){caller.retire_owned(page,loan());}}assert_eq!(work.stage(),stage);
+        let mut caller=semio_plugin::artifact_app_laws::OriginalWorkFixture::new();let mut work=ImageExportWork::default();for _ in 0..100000 {if work.stage()==stage{break;}if let Some(page)=advance_work(&mut work,&document,&mut caller).unwrap(){caller.retire_owned(page,loan());}}assert_eq!(work.stage(),stage);
         work.cancel();assert!(work.advance(&document,loan()).result.is_err());close_work(&mut work,&mut caller);assert!(work.terminal_is_empty());caller.finish();
     }
     retire_raster_snapshot(document);
-    let empty=empty_raster_snapshot();let mut caller=semio_framework_plugin::artifact_app_laws::OriginalWorkFixture::new();let mut work=ImageExportWork::default();let mut refused=false;for _ in 0..100000 {if let Err(error)=advance_work(&mut work,&empty,&mut caller){refused=true;caller.retire_owned(error,loan());break;}}assert!(refused);close_work(&mut work,&mut caller);caller.finish();retire_raster_snapshot(empty);
+    let empty=empty_raster_snapshot();let mut caller=semio_plugin::artifact_app_laws::OriginalWorkFixture::new();let mut work=ImageExportWork::default();let mut refused=false;for _ in 0..100000 {if let Err(error)=advance_work(&mut work,&empty,&mut caller){refused=true;caller.retire_owned(error,loan());break;}}assert!(refused);close_work(&mut work,&mut caller);caller.finish();retire_raster_snapshot(empty);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn retained_image_export_completes_or_cancels_without_mutating_history() {
-    use semio_framework_plugin::{PluginApp,ArtifactMediaExportPoll};
+    use semio_plugin::{PluginApp,ArtifactMediaExportPoll};
     use crate::unit_tests::context;
     let mut app=context::app().await;
     context::dispatch(&mut app,semio_s_artifact_raster_raster_editor::RasterCommand::AddLayer(semio_s_artifact_raster_raster_editor::commands::add_layer::AddLayer {kind:"pixel".into()})).await;
     let before=app.snapshot().unwrap();
-    let handle=semio_framework_plugin::artifact_app_laws::submit_fixture_media_export(&mut app.0, "image:out", app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("registered retained export");let mut running=0;let mut progress=0;let mut result=None;
-    for _ in 0..100000 {semio_framework_async::yield_once().await;match semio_framework_plugin::artifact_app_laws::poll_fixture_media_export(&mut app.0, &handle, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap(){ArtifactMediaExportPoll::Running {applied_progress,..}=>{assert!(applied_progress>=progress);progress=applied_progress;running+=1;},ArtifactMediaExportPoll::Complete(media)=>{result=Some(media);break;},other=>panic!("export did not complete: {other:?}")}}
+    let handle=semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app.0, "image:out", app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("registered retained export");let mut running=0;let mut progress=0;let mut result=None;
+    for _ in 0..100000 {semio_framework_async::yield_once().await;match semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app.0, &handle, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap(){ArtifactMediaExportPoll::Running {applied_progress,..}=>{assert!(applied_progress>=progress);progress=applied_progress;running+=1;},ArtifactMediaExportPoll::Complete(media)=>{result=Some(media);break;},other=>panic!("export did not complete: {other:?}")}}
     assert!(running>1);assert!(progress>0);let media=result.expect("complete export");assert_eq!(media.schema,"2d.image");let mut output=Vec::new();while let Some(chunk)=media.chunks.take_chunk().unwrap(){assert!(chunk.len()<=ArtifactOutputChunks::CHUNK_BYTES);output.extend(chunk);}
     let bytes=base64_codec::base64_standard_decode(std::str::from_utf8(&output).unwrap()).unwrap();let image=semio_framework_pixels::decode_png(&bytes).unwrap();assert_eq!((image.width,image.height),(512,512));assert!(image.pixels.iter().all(|value|*value==0));
-    let handle=semio_framework_plugin::artifact_app_laws::submit_fixture_media_export(&mut app.0, "image:out", app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();app.cancel_media_export(&handle).await.unwrap();
-    assert!(semio_framework_plugin::artifact_app_laws::poll_fixture_media_export(&mut app.0, &handle, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.is_err(),"cancelled media handles transfer to the close lane immediately");
+    let handle=semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app.0, "image:out", app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();app.cancel_media_export(&handle).await.unwrap();
+    assert!(semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app.0, &handle, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.is_err(),"cancelled media handles transfer to the close lane immediately");
     let after=app.snapshot().unwrap();assert_eq!(before,after);retire_raster_snapshot(before);retire_raster_snapshot(after);
     context::history(&mut app,"undo").await;let undone=app.snapshot().unwrap();assert!(undone.layers.is_empty());retire_raster_snapshot(undone);
     drop(media);
-    for _ in 0..100000 {if app.close_terminal_is_empty(){break;}app.0.close_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).unwrap();semio_framework_async::yield_once().await;}
+    for _ in 0..100000 {if app.close_terminal_is_empty(){break;}app.0.close_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).unwrap();semio_framework_async::yield_once().await;}
     assert!(app.close_terminal_is_empty(),"completed and cancelled export owners must retire");
 }
 
@@ -84,34 +84,34 @@ fn export_progress_uses_neutral_localized_stage_labels() {
 
 #[semio_framework_async_macros::async_test]
 async fn retained_export_refuses_a_superseded_document_and_retires_its_output() {
-    use semio_framework_plugin::{PluginApp,ArtifactMediaExportPoll};
+    use semio_plugin::{PluginApp,ArtifactMediaExportPoll};
     use crate::unit_tests::context;
     use semio_s_artifact_raster_raster_editor::RasterCommand;
     use semio_s_artifact_raster_raster_editor::commands::{add_layer, patch_layer};
     let mut app=context::app().await;context::dispatch(&mut app,RasterCommand::AddLayer(add_layer::AddLayer {kind:"pixel".into()})).await;
     let document=app.snapshot().unwrap();let id=semio_s_artifact_raster_raster_model::layer_node_id(&document.layers[0]).to_owned();retire_raster_snapshot(document);
-    let handle=semio_framework_plugin::artifact_app_laws::submit_fixture_media_export(&mut app.0, "image:out", app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
+    let handle=semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app.0, "image:out", app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
     context::dispatch(&mut app,RasterCommand::PatchLayer(patch_layer::PatchLayer {layer_id:id,field:"name".into(),value:"Changed during export".into()})).await;
-    let mut refused=false;for _ in 0..100000 {semio_framework_async::yield_once().await;match semio_framework_plugin::artifact_app_laws::poll_fixture_media_export(&mut app.0, &handle, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap(){ArtifactMediaExportPoll::Running {..}=>{},ArtifactMediaExportPoll::Failed(detail)=>{assert!(detail.contains("stale revision or generation"),"{detail}");refused=true;break;},other=>panic!("superseded export escaped: {other:?}")}}
+    let mut refused=false;for _ in 0..100000 {semio_framework_async::yield_once().await;match semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app.0, &handle, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap(){ArtifactMediaExportPoll::Running {..}=>{},ArtifactMediaExportPoll::Failed(detail)=>{assert!(detail.contains("stale revision or generation"),"{detail}");refused=true;break;},other=>panic!("superseded export escaped: {other:?}")}}
     assert!(refused);let document=app.snapshot().unwrap();assert_eq!(semio_s_artifact_raster_raster_model::layer_name(&document.layers[0]),"Changed during export");retire_raster_snapshot(document);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn png_command_download_survives_operation_retirement_and_preserves_history() {
-    use semio_framework_plugin::{PluginApp,artifact_app_laws,app::TypedOperationResultLane};
+    use semio_plugin::{PluginApp,artifact_app_laws,app::TypedOperationResultLane};
     use crate::unit_tests::context;
     use semio_s_artifact_raster_raster_editor::RasterCommand;
     use semio_s_artifact_raster_raster_editor::commands::{add_layer, export_png};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let expected=&fixture["download"];
-    let command=<RasterPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action(expected["action"].as_str().unwrap(), None, None).unwrap();assert!(matches!(command,RasterCommand::ExportPng(_)));
+    let command=<RasterPlayApp as semio_plugin::ArtifactEditor>::command_from_action(expected["action"].as_str().unwrap(), None, None).unwrap();assert!(matches!(command,RasterCommand::ExportPng(_)));
     store::os_store::test_support::assert_op_text_binary_equivalence(&command);
     let mut app=context::app().await;context::dispatch(&mut app,RasterCommand::AddLayer(add_layer::AddLayer {kind:"pixel".into()})).await;
     let before=app.snapshot().unwrap();let mut meta=artifact_app_laws::meta("local");meta.view_state=Some(context::raster_view_state());let instance=meta.instance_id;
-    let admission=semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &RasterCommand::ExportPng(export_png::ExportPng {}), &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();assert!(admission.mutations.is_empty());
+    let admission=semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &RasterCommand::ExportPng(export_png::ExportPng {}), &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();assert!(admission.mutations.is_empty());
     let mut download=None;let mut turns=0;
     while app.has_pending_typed_operations() {
         turns+=1;assert!(turns<100000);semio_framework_async::yield_once().await;
-        app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
+        app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
         if let Some(page)=app.take_typed_operation_result_page(instance) {
             assert_ne!(page.lane,TypedOperationResultLane::Fault,"{}",String::from_utf8_lossy(page.bytes()));
             if page.lane==TypedOperationResultLane::Download {assert!(download.is_none());let row:serde_json::Value=serde_json::from_slice(page.bytes()).unwrap();download=Some((page.token.operation,row));}
@@ -129,18 +129,18 @@ async fn png_command_download_survives_operation_retirement_and_preserves_histor
 
 #[semio_framework_async_macros::async_test]
 async fn cancelled_png_command_never_publishes_a_download_or_changes_history() {
-    use semio_framework_plugin::{PluginApp,artifact_app_laws,app::{TypedOperationResultLane,ArtifactDocumentAuthority}};
+    use semio_plugin::{PluginApp,artifact_app_laws,app::{TypedOperationResultLane,ArtifactDocumentAuthority}};
     use crate::unit_tests::context;
     use semio_s_artifact_raster_raster_editor::RasterCommand;
     use semio_s_artifact_raster_raster_editor::commands::{add_layer, export_png};
     for cancel_after in [0,8] {
         let mut app=context::app().await;context::dispatch(&mut app,RasterCommand::AddLayer(add_layer::AddLayer {kind:"pixel".into()})).await;
         let before=app.snapshot().unwrap();let mut meta=artifact_app_laws::meta("local");meta.view_state=Some(context::raster_view_state());
-        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &RasterCommand::ExportPng(export_png::ExportPng {}), &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();let cancellation=app.tool_cancellation_handle();let mut cancelled=false;let mut turns=0;
+        semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &RasterCommand::ExportPng(export_png::ExportPng {}), &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();let cancellation=app.tool_cancellation_handle();let mut cancelled=false;let mut turns=0;
         while app.has_pending_typed_operations() {
             if turns==cancel_after {assert!(cancellation.cancel_document(ArtifactDocumentAuthority(meta.instance_id)).unwrap());cancelled=true;}
             turns+=1;assert!(turns<100000);semio_framework_async::yield_once().await;
-            app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
+            app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
             if let Some(page)=app.take_typed_operation_result_page(meta.instance_id) {assert_ne!(page.lane,TypedOperationResultLane::Download);assert!(app.acknowledge_typed_operation_result(page.token).unwrap());}
             let _=app.take_typed_operation_effect();let _=app.take_typed_operation_event();let _=app.take_typed_operation_completion().await.unwrap();let _=app.take_typed_operation_ui_scope();
         }
@@ -151,26 +151,26 @@ async fn cancelled_png_command_never_publishes_a_download_or_changes_history() {
 
 #[semio_framework_async_macros::async_test]
 async fn png_progress_control_cancels_its_exact_visible_operation() {
-    use semio_framework_plugin::PluginApp;
-    use semio_framework_plugin::artifact_app_laws;
-    use semio_framework_plugin::app::TypedOperationResultLane;
-    use semio_framework_ui_locale::Locale;
+    use semio_plugin::PluginApp;
+    use semio_plugin::artifact_app_laws;
+    use semio_plugin::app::TypedOperationResultLane;
+    use semio_ui_locale::Locale;
     use crate::unit_tests::context;
     use semio_s_artifact_raster_raster_editor::RasterCommand;
     use semio_s_artifact_raster_raster_editor::commands::{add_layer, export_png};
     use semio_s_artifact_raster_raster_editor::panels::document::RASTER_PLAY_BODY_LAYERS;
     fn find_identity(value:&serde_json::Value)->Option<serde_json::Value> {match value{serde_json::Value::Object(map)=>{if map.get("operationId").is_some_and(serde_json::Value::is_string)&&map.get("generation").is_some_and(serde_json::Value::is_string){return Some(value.clone());}map.values().find_map(find_identity)},serde_json::Value::Array(items)=>items.iter().find_map(find_identity),_=>None}}
     let mut app=context::app().await;context::dispatch(&mut app,RasterCommand::AddLayer(add_layer::AddLayer {kind:"pixel".into()})).await;
-    let mut meta=artifact_app_laws::meta("local");meta.view_state=Some(context::raster_view_state());semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &RasterCommand::ExportPng(export_png::ExportPng {}), &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
+    let mut meta=artifact_app_laws::meta("local");meta.view_state=Some(context::raster_view_state());semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &RasterCommand::ExportPng(export_png::ExportPng {}), &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
     let mut identity=None;
-    for _ in 0..100000 {semio_framework_async::yield_once().await;app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();if app.take_typed_operation_ui_scope().is_some(){let view=context::raster_view_state();let json=context::render_with_view(&mut app,RASTER_PLAY_BODY_LAYERS,&view).await;if json.contains("cancelTypedOperation"){assert!(json.contains("Cancel"));identity=find_identity(&serde_json::from_str(&json).unwrap());let mut german=view;german.locale=Locale::De;let json=context::render_with_view(&mut app,RASTER_PLAY_BODY_LAYERS,&german).await;assert!(json.contains("Abbrechen"));assert!(json.contains("Abgeschlossene Schritte"));break;}}}
-    let identity=identity.expect("visible progress carries exact cancellation arguments");let mut wrong=identity.clone();wrong["generation"]=serde_json::Value::String("ffffffffffffffff".into());let wrong=semio_framework_pack_json::from_json_str(&wrong.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert!(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "cancelTypedOperation", Some(wrong.clone()), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.is_err());
+    for _ in 0..100000 {semio_framework_async::yield_once().await;app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();if app.take_typed_operation_ui_scope().is_some(){let view=context::raster_view_state();let json=context::render_with_view(&mut app,RASTER_PLAY_BODY_LAYERS,&view).await;if json.contains("cancelTypedOperation"){assert!(json.contains("Cancel"));identity=find_identity(&serde_json::from_str(&json).unwrap());let mut german=view;german.locale=Locale::De;let json=context::render_with_view(&mut app,RASTER_PLAY_BODY_LAYERS,&german).await;assert!(json.contains("Abbrechen"));assert!(json.contains("Abgeschlossene Schritte"));break;}}}
+    let identity=identity.expect("visible progress carries exact cancellation arguments");let mut wrong=identity.clone();wrong["generation"]=serde_json::Value::String("ffffffffffffffff".into());let wrong=semio_framework_pack_json::from_json_str(&wrong.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert!(semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "cancelTypedOperation", Some(wrong.clone()), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.is_err());
     let args=semio_framework_pack_json::from_json_str(&identity.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let mut foreign=meta.clone();foreign.actor="foreign".into();assert!(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "cancelTypedOperation", Some(args.clone()), &foreign, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.is_err());
-    foreign=meta.clone();foreign.instance_id+=1;assert!(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "cancelTypedOperation", Some(args.clone()), &foreign, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.is_err());
-    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "cancelTypedOperation", Some(args.clone()), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "cancelTypedOperation", Some(args.clone()), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
+    let mut foreign=meta.clone();foreign.actor="foreign".into();assert!(semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "cancelTypedOperation", Some(args.clone()), &foreign, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.is_err());
+    foreign=meta.clone();foreign.instance_id+=1;assert!(semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "cancelTypedOperation", Some(args.clone()), &foreign, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.is_err());
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "cancelTypedOperation", Some(args.clone()), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "cancelTypedOperation", Some(args.clone()), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
     let cancelling=context::render_with_view(&mut app,RASTER_PLAY_BODY_LAYERS,&context::raster_view_state()).await;assert!(cancelling.contains("Cancelling"));
-    let mut terminal=false;let mut retired_refresh=false;let mut turns=0;while app.has_pending_typed_operations(){turns+=1;assert!(turns<100000);semio_framework_async::yield_once().await;app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();if let Some(page)=app.take_typed_operation_result_page(meta.instance_id){assert_ne!(page.lane,TypedOperationResultLane::Download);assert_ne!(page.lane,TypedOperationResultLane::Fault,"an explicit Cancel is a normal terminal outcome");terminal|=page.lane==TypedOperationResultLane::Terminal;assert!(app.acknowledge_typed_operation_result(page.token).unwrap());}let _=app.take_typed_operation_effect();let _=app.take_typed_operation_event();let _=app.take_typed_operation_completion().await.unwrap();if app.take_typed_operation_ui_scope().is_some()&&app.live_typed_operation_slots()==0{retired_refresh=true;}}
+    let mut terminal=false;let mut retired_refresh=false;let mut turns=0;while app.has_pending_typed_operations(){turns+=1;assert!(turns<100000);semio_framework_async::yield_once().await;app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();if let Some(page)=app.take_typed_operation_result_page(meta.instance_id){assert_ne!(page.lane,TypedOperationResultLane::Download);assert_ne!(page.lane,TypedOperationResultLane::Fault,"an explicit Cancel is a normal terminal outcome");terminal|=page.lane==TypedOperationResultLane::Terminal;assert!(app.acknowledge_typed_operation_result(page.token).unwrap());}let _=app.take_typed_operation_effect();let _=app.take_typed_operation_event();let _=app.take_typed_operation_completion().await.unwrap();if app.take_typed_operation_ui_scope().is_some()&&app.live_typed_operation_slots()==0{retired_refresh=true;}}
     assert!(terminal);assert!(retired_refresh,"retiring the final operation must still publish a UI refresh");
     let json=context::render_with_view(&mut app,RASTER_PLAY_BODY_LAYERS,&context::raster_view_state()).await;assert!(!json.contains("cancelTypedOperation"));context::history(&mut app,"undo").await;let document=app.snapshot().unwrap();assert!(document.layers.is_empty());retire_raster_snapshot(document);
 }
@@ -184,10 +184,10 @@ fn export_snapshot_installed_supplier_returns_each_actual_shared_owner(){
 
 #[test]
 fn original_download_completion_preserves_source_until_admitted_and_keeps_it_after_receipt_refusal(){
-    use semio_framework_plugin::{ArtifactToolCompletion,EditorApp,ArtifactDownloadOutput,EphemeralEmit};
+    use semio_plugin::{ArtifactToolCompletion,EditorApp,ArtifactDownloadOutput,EphemeralEmit};
     let law:serde_json::Value=serde_json::from_str(include_str!("../🧵️work/🧪️tests/🔣️.json")).unwrap();
     let completion=ArtifactToolCompletion::<EditorApp<RasterPlayApp>>::new();
-    let mut caller=semio_framework_plugin::artifact_app_laws::OriginalWorkFixture::new();let mut chunks=None;
+    let mut caller=semio_plugin::artifact_app_laws::OriginalWorkFixture::new();let mut chunks=None;
     caller.turn(loan(),|cx|ArtifactOutputChunks::original_birth_admit(law["outputPageBytes"].as_u64().unwrap()as usize,&mut chunks,cx)).unwrap();let chunks=chunks.unwrap();
     caller.turn(loan(),|cx|chunks.seal_original(cx)).unwrap();
     let mut source=Some(ArtifactDownloadOutput{filename:law["filename"].as_str().unwrap().into(),mime_type:law["mimeType"].as_str().unwrap().into(),encoding:Some(law["encoding"].as_str().unwrap().into()),chunks,media_export_handle:None,media_export_metadata:None});

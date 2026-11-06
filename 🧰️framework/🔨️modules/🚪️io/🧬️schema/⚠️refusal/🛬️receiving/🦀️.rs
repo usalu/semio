@@ -1,5 +1,5 @@
 //! 🛬️ Original IO refusal receiving retains every cause, diagnostic and copied prefix.
-use crate::{IoError,Diagnostic,NativeSnapshotFailure};
+use super::{IoError,Diagnostic,NativeSnapshotFailure};
 use semio_framework_io_control::{NativeSnapshotDecodeOwner,NativeSnapshotBodyWallet,NativeSnapshotWork,native_snapshot_turn};
 use semio_framework_value::{DslValue,ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetainedWorkOutcome,FromValue};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;

@@ -120,3 +120,19 @@ schema has no registered `store::os_store::serialization::ArtifactCodec` in this
 at all: `connect_hub` reads `document_codec(schema).pack_schema_hash` to build its
 `SocketHelloV1` and silently reschedules a reconnect forever when there is none. Recording
 the reason here is what turns that silence into something a reader can see.
+
+
+## Preserved Source Rationale
+
+<a id="source-notes-674"></a>
+
+### 🦀️.rs:674
+
+🔀️ dedyn-fw-os-misc, O1/R11: closes `crate::actions::ArtifactChannel`'s implementor set
+(`UnboundArtifactChannel` in `🔀️dispatch`, `PluginArtifactChannel`/`RoutingArtifactChannel` above)
+— defined here (not in `🔀️dispatch`, where `ActionAdapter` actually stores it) because this is the
+one module every implementor is jointly nameable from; `🔀️dispatch` imports `ArtifactChannels`
+back in. Replaces `Box<dyn ArtifactChannel>`. The enum is spelled twice under complementary
+`cfg`s because `dyn_enum_close!` carries no per-variant attributes: the scripted
+`MockArtifactChannel` exists ONLY in a test build, so no production path can reach it
+(`📓️g7-mcp-agent-and-collaboration-audit.md` §6 P0.3).

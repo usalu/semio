@@ -100,12 +100,7 @@ impl ActorMetrics {
         samples[idx.min(samples.len() - 1)]
     }
 
-    /// 🪣️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-interactive-isolation): observed-behaviour
-    /// CPU-saturation signal — purely `record_turn`'s own tracked `wall_us_p95` against `budget`'s
-    /// OWN declared `wall_ms` ceiling, never a fixture/profile name (this crate has no such concept
-    /// and must not gain one — see the module doc's purity rule). Used by
-    /// `Kernel::saturated_shards`/`ShardTable::pin_avoiding` to keep freshly-activated interactive
-    /// actors off a shard a background actor is already monopolizing.
+    /// 🪣️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-interactive-isolation): observed-behaviour [Design notes](README.md#source-notes-103).
     pub async fn is_saturating(&self, budget: &Budget) -> bool {
         if self.turns < SATURATION_MIN_TURNS {
             return false;

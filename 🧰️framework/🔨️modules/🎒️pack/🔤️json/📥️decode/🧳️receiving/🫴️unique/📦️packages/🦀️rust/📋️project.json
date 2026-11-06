@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/framework-pack-json-output-receiving-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

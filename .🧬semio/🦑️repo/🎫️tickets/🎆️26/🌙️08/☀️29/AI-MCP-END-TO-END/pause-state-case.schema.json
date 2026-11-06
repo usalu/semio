@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "maximum",
+    "owned",
+    "completed",
+    "total",
+    "stage",
+    "depth",
+    "started",
+    "receiving",
+    "sourceDepth",
+    "allocationLocal",
+    "retirement",
+    "allocation",
+    "work",
+    "refusal"
+  ],
+  "properties": {
+    "maximum": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "owned": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "completed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "total": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "stage": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "depth": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "started": {
+      "type": "boolean"
+    },
+    "receiving": {
+      "type": "boolean"
+    },
+    "sourceDepth": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "allocationLocal": {
+      "type": "boolean"
+    },
+    "retirement": {
+      "type": "boolean"
+    },
+    "allocation": {
+      "type": "boolean"
+    },
+    "work": {
+      "type": "boolean"
+    },
+    "refusal": {
+      "const": "InvariantViolated"
+    }
+  }
+}

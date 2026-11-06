@@ -1,0 +1,14 @@
+const fs = require('node:fs');
+const path = '🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🔁️persistent-local/🦀️.rs';
+const before = fs.readFileSync(path, 'utf8');
+const begin = before.indexOf('    pub struct CodecInput {');
+const end = before.indexOf('\n    }', begin);
+if (begin < 0 || end < 0) throw new Error('CodecInput missing');
+const body = before.slice(begin, end);
+if ((body.match(/#\[serde\(default\)\]/g) || []).length !== 4) throw new Error('unexpected codec defaults');
+const after = before.slice(0, begin) + body.replaceAll('        #[serde(default)]\n', '') + before.slice(end);
+const temporary = '.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/AI-MCP-END-TO-END/🗑️generated/guest-codec-strict.tmp';
+fs.mkdirSync(require('node:path').dirname(temporary), {recursive:true});
+fs.writeFileSync(temporary, after);
+if (fs.readFileSync(path, 'utf8') !== before) throw new Error('shared schema changed; refusing publication');
+fs.renameSync(temporary, path);

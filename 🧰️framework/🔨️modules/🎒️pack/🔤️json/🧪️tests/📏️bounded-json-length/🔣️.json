@@ -1,0 +1,55 @@
+[
+  {
+    "payload": {},
+    "maximum": 2,
+    "expected": 2
+  },
+  {
+    "payload": {
+      "text": "quote\" slash\\ newline\n \u0001 雪"
+    },
+    "maximum": 100,
+    "expected": 47
+  },
+  {
+    "payload": [
+      null,
+      true,
+      false,
+      0,
+      -19,
+      123456,
+      [
+        1,
+        2
+      ],
+      {
+        "a": "z"
+      }
+    ],
+    "maximum": 100,
+    "expected": 46
+  },
+  {
+    "payload": {
+      "x": "1234567890"
+    },
+    "maximum": 5,
+    "expected": 18
+  },
+  {
+    "payload": {
+      "雪\n\u0001": "🧊\t\u0002",
+      "nested": [
+        {},
+        [],
+        [
+          {}
+        ]
+      ]
+    },
+    "maximum": 200,
+    "expected": null
+  },
+  {"payload": [-0.0, 1e-7, 1e20, 1e-300, 1.5], "maximum": 512, "expected": null}
+]

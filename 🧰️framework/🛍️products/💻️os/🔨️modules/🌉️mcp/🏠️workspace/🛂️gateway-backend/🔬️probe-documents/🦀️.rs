@@ -10,12 +10,7 @@ fn probe_identity() -> semio_os_kernel::os_vcs::io::binary::entity_identity::con
 }
 
 impl HeadlessWorkspace {
-    /// 🧪️ Opens (creating on first use) a real `ProbeStore` bound through `ArtifactHost` — real VCS
-    /// history, real backbone attachment (`ArtifactHost::send`/`subscribe` — §6 of the brief: "guest
-    /// `SendMessage{Backbone}` effects route to `ArtifactHost::send`; inbound
-    /// `ArtifactEvent::RemoteMutations` come back as guest events"). Applies `initial` as the FIRST
-    /// commit only if the document has no history yet, so re-running this against an already-seeded
-    /// workspace is idempotent and never double-commits. Returns the resulting `RevisionStamp`.
+    /// 🧪️ Opens (creating on first use) a real `ProbeStore` bound through `ArtifactHost` — real VCS [Design notes](README.md#source-notes-13).
     pub async fn ensure_probe_artifact(&self, artifact_id: &str, initial: semio_framework_value::DslValue) -> Result<RevisionStamp, GatewayError> {
         let existing = self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(artifact_id);
         let mut probe_store = match existing {
@@ -57,13 +52,7 @@ impl HeadlessWorkspace {
         Ok(revision)
     }
 
-    /// 🧪️ A real SECOND (or later) commit against an already-`ensure_probe_artifact`-opened
-    /// document — proves genuine mutate-and-observe end to end for the ONE document kind this crate
-    /// owns outright, independent of `ensure_probe_artifact`'s own idempotent-seed-only contract.
-    /// This is deliberately scoped to `os.agent.probe/v1` — see this file's own module doc and
-    /// `PluginArtifactChannel::exchange`'s `PureCommand`/`TransactionPrepare` arms for exactly why a
-    /// generic, arbitrary-plugin equivalent is not real yet (a guest-dispatch gap in `🔌️plugin`'s
-    /// own shared code, out of this packet's owned file).
+    /// 🧪️ A real SECOND (or later) commit against an already-`ensure_probe_artifact`-opened [Design notes](README.md#source-notes-60).
     pub async fn apply_probe_mutation(&self, artifact_id: &str, value: semio_framework_value::DslValue) -> Result<RevisionStamp, GatewayError> {
         self.ensure_probe_artifact(artifact_id, semio_framework_value::DslValue::Null).await?;
         let mut probe_store =

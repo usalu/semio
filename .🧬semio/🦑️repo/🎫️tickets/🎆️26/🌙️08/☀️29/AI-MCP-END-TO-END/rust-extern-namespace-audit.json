@@ -1,0 +1,153 @@
+{
+  "method": "Narrow static traversal from lib entry and explicit path/conventional modules for MCP plugin-runtime, interpreter and guest-contract. Normal/dev/build dependencies; target-specific tables, macros and cfg not evaluated. Strings/comments excluded. Earlier broad audit terminated after PID verification because it traversed too much of framework; no output was produced. No build.",
+  "manifests": [
+    "🧰️framework\\🛍️products\\💻️os\\🔨️modules\\🌉️mcp\\⚙️plugin-runtime\\📦️packages\\🦀️rust\\Cargo.toml",
+    "🧰️framework\\🛍️products\\💻️os\\🔨️modules\\🔌️plugin\\🧠️interpreter\\🏃️runtime\\📦️packages\\🦀️rust\\Cargo.toml",
+    "🧰️framework\\🛍️products\\💻️os\\🔨️modules\\🔌️plugin\\🧠️interpreter\\📦️packages\\🦀️rust\\Cargo.toml",
+    "🧰️framework\\🛍️products\\💻️os\\🔨️modules\\🔌️plugin\\🧠️interpreter\\🚪️io\\📞️imports\\📦️packages\\🦀️rust\\Cargo.toml",
+    "🧰️framework\\🛍️products\\💻️os\\🔨️modules\\🔌️plugin\\🧬️guest-contract\\📦️packages\\🦀️rust\\Cargo.toml"
+  ],
+  "findings": [
+    {
+      "file": "🧰️framework\\🛍️products\\💻️os\\🔨️modules\\🔌️plugin\\🧠️interpreter\\🏃️runtime\\🦀️.rs",
+      "owner_manifest": "🧰️framework\\🛍️products\\💻️os\\🔨️modules\\🔌️plugin\\🧠️interpreter\\🏃️runtime\\📦️packages\\🦀️rust\\Cargo.toml",
+      "owner_package": "semio-plugin-interpreter-runtime",
+      "owner_lib_name": "semio_plugin_interpreter_runtime",
+      "old": "semio_framework_plugin_interpreter",
+      "candidate": "semio_plugin_interpreter",
+      "dependency": {
+        "key": "semio-plugin-interpreter",
+        "package": "semio-plugin-interpreter"
+      },
+      "old_dependency": null,
+      "status": "matching_direct_dependency",
+      "lines": [
+        181
+      ]
+    },
+    {
+      "file": "🧰️framework\\🛍️products\\💻️os\\🔨️modules\\🔌️plugin\\🧠️interpreter\\🏃️runtime\\🏗️startup\\🦀️.rs",
+      "owner_manifest": "🧰️framework\\🛍️products\\💻️os\\🔨️modules\\🔌️plugin\\🧠️interpreter\\🏃️runtime\\📦️packages\\🦀️rust\\Cargo.toml",
+      "owner_package": "semio-plugin-interpreter-runtime",
+      "owner_lib_name": "semio_plugin_interpreter_runtime",
+      "old": "semio_framework_os_kernel",
+      "candidate": "semio_os_kernel",
+      "dependency": {
+        "key": "semio-os-kernel",
+        "package": "semio-os-kernel"
+      },
+      "old_dependency": null,
+      "status": "matching_direct_dependency",
+      "lines": [
+        77,
+        85,
+        102
+      ]
+    },
+    {
+      "file": "🧰️framework\\🛍️products\\💻️os\\🔨️modules\\🔌️plugin\\🧠️interpreter\\🏃️runtime\\🎟️call\\🦀️.rs",
+      "owner_manifest": "🧰️framework\\🛍️products\\💻️os\\🔨️modules\\🔌️plugin\\🧠️interpreter\\🏃️runtime\\📦️packages\\🦀️rust\\Cargo.toml",
+      "owner_package": "semio-plugin-interpreter-runtime",
+      "owner_lib_name": "semio_plugin_interpreter_runtime",
+      "old": "semio_framework_os_kernel",
+      "candidate": "semio_os_kernel",
+      "dependency": {
+        "key": "semio-os-kernel",
+        "package": "semio-os-kernel"
+      },
+      "old_dependency": null,
+      "status": "matching_direct_dependency",
+      "lines": [
+        65
+      ]
+    },
+    {
+      "file": "🧰️framework\\🛍️products\\💻️os\\🔨️modules\\🔌️plugin\\🧠️interpreter\\🏃️runtime\\🎟️call\\🧮️unit\\🦀️.rs",
+      "owner_manifest": "🧰️framework\\🛍️products\\💻️os\\🔨️modules\\🔌️plugin\\🧠️interpreter\\🏃️runtime\\📦️packages\\🦀️rust\\Cargo.toml",
+      "owner_package": "semio-plugin-interpreter-runtime",
+      "owner_lib_name": "semio_plugin_interpreter_runtime",
+      "old": "semio_framework_os_kernel",
+      "candidate": "semio_os_kernel",
+      "dependency": {
+        "key": "semio-os-kernel",
+        "package": "semio-os-kernel"
+      },
+      "old_dependency": null,
+      "status": "matching_direct_dependency",
+      "lines": [
+        88,
+        98
+      ]
+    },
+    {
+      "file": "🧰️framework\\🛍️products\\💻️os\\🔨️modules\\🔌️plugin\\🧠️interpreter\\🏃️runtime\\🎟️call\\🧮️unit\\🦀️.rs",
+      "owner_manifest": "🧰️framework\\🛍️products\\💻️os\\🔨️modules\\🔌️plugin\\🧠️interpreter\\🏃️runtime\\📦️packages\\🦀️rust\\Cargo.toml",
+      "owner_package": "semio-plugin-interpreter-runtime",
+      "owner_lib_name": "semio_plugin_interpreter_runtime",
+      "old": "semio_framework_plugin_guest_contract",
+      "candidate": "semio_plugin_guest_contract",
+      "dependency": {
+        "key": "semio-plugin-guest-contract",
+        "package": "semio-plugin-guest-contract"
+      },
+      "old_dependency": null,
+      "status": "matching_direct_dependency",
+      "lines": [
+        6
+      ]
+    },
+    {
+      "file": "🧰️framework\\🛍️products\\💻️os\\🔨️modules\\🔌️plugin\\🧠️interpreter\\🏃️runtime\\🎟️call\\🧮️unit\\🦀️.rs",
+      "owner_manifest": "🧰️framework\\🛍️products\\💻️os\\🔨️modules\\🔌️plugin\\🧠️interpreter\\🏃️runtime\\📦️packages\\🦀️rust\\Cargo.toml",
+      "owner_package": "semio-plugin-interpreter-runtime",
+      "owner_lib_name": "semio_plugin_interpreter_runtime",
+      "old": "semio_framework_plugin_interpreter",
+      "candidate": "semio_plugin_interpreter",
+      "dependency": {
+        "key": "semio-plugin-interpreter",
+        "package": "semio-plugin-interpreter"
+      },
+      "old_dependency": null,
+      "status": "matching_direct_dependency",
+      "lines": [
+        3
+      ]
+    },
+    {
+      "file": "🧰️framework\\🛍️products\\💻️os\\🔨️modules\\🔌️plugin\\🧠️interpreter\\🏃️runtime\\🎟️call\\🔄️poll\\🦀️.rs",
+      "owner_manifest": "🧰️framework\\🛍️products\\💻️os\\🔨️modules\\🔌️plugin\\🧠️interpreter\\🏃️runtime\\📦️packages\\🦀️rust\\Cargo.toml",
+      "owner_package": "semio-plugin-interpreter-runtime",
+      "owner_lib_name": "semio_plugin_interpreter_runtime",
+      "old": "semio_framework_plugin_guest_contract",
+      "candidate": "semio_plugin_guest_contract",
+      "dependency": {
+        "key": "semio-plugin-guest-contract",
+        "package": "semio-plugin-guest-contract"
+      },
+      "old_dependency": null,
+      "status": "matching_direct_dependency",
+      "lines": [
+        15
+      ]
+    },
+    {
+      "file": "🧰️framework\\🛍️products\\💻️os\\🔨️modules\\🔌️plugin\\⚛️reactor\\🎟️context\\🌉️call\\🌱️ui-arena\\🦀️.rs",
+      "owner_manifest": "🧰️framework\\🛍️products\\💻️os\\🔨️modules\\🔌️plugin\\🧬️guest-contract\\📦️packages\\🦀️rust\\Cargo.toml",
+      "owner_package": "semio-plugin-guest-contract",
+      "owner_lib_name": "semio_plugin_guest_contract",
+      "old": "semio_framework_ui_contract",
+      "candidate": "semio_ui_contract",
+      "dependency": {
+        "key": "semio-ui-contract",
+        "package": "semio-ui-contract",
+        "lib_name": "semio_ui_contract",
+        "target_manifest": "🧰️framework\\🔨️modules\\🖱️ui\\🧬️contract\\📦️packages\\🦀️rust\\Cargo.toml"
+      },
+      "old_dependency": null,
+      "status": "matching_direct_dependency",
+      "lines": [
+        4
+      ]
+    }
+  ]
+}

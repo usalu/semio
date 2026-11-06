@@ -1,6 +1,6 @@
+//! 🔢️ Fixed array receiving initializes and retires one actual row while uninitialized native storage has no element callbacks.
 use crate::OriginalReceivingPrimary;
 use crate::RetainedWorkOutcome;
-//! 🔢️ Fixed array receiving initializes and retires one actual row while uninitialized native storage has no element callbacks.
 use super::*;
 use std::mem::MaybeUninit;
 pub struct NativeArrayReceiver<I:NativeValueSource+?Sized,T:NativeReceive<dyn NativeValueSource>,const N:usize>where[T;N]:RetireOwned{binding:Option<RetainedCloneBinding>,child:NativeReceiveSlot<dyn NativeValueSource,T>,rows:ManuallyDrop<MaybeUninit<[T;N]>>,pending:ManuallyDrop<Option<T>>,output:ManuallyDrop<Option<[T;N]>>,retirement:RetainedCloneClose,index:usize,live:usize,phase:u8,closing:bool,failed:bool,input:std::marker::PhantomData<fn(&I)>}

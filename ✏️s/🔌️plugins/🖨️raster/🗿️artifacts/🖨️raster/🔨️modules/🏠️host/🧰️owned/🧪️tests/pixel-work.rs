@@ -32,7 +32,7 @@ fn prepared_mutation(source:&RasterSnapshot,mutation:&RasterMutation)->RasterPre
 
 #[test]
 fn replay_candidate_uses_actual_original_control_and_refuses_foreign_caller(){
- use semio_framework_plugin::artifact_app_laws::OriginalWorkFixture;
+ use semio_plugin::artifact_app_laws::OriginalWorkFixture;
  let row:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/replay-source.json")).unwrap();let mut fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/pixel-work.json")).unwrap();fixture["source"]["width"]=1.into();fixture["source"]["height"]=1.into();let source=pixel_source(&fixture);
  let mutation=RasterMutation::RenameLayer(rename_layer::RenameLayer{layer_id:"paint".into(),new_name:row["renamed"].as_str().unwrap().into()});let context=store::os_store::ArtifactReplayPreparationContext{mode:store::os_store::ArtifactReplayPreparationMode::Prefix,operation_index:row["operationIndex"].as_u64().unwrap()as u32,generation:row["generation"].as_u64().unwrap(),base_revision:[row["revisionByte"].as_u64().unwrap()as u8;32]};let mut apply=RasterOneItemApply::new();let mut caller=OriginalWorkFixture::new();let mut foreign=OriginalWorkFixture::new();let mut prepared=None;
  for index in 0..10000{
@@ -180,13 +180,13 @@ fn exclusive_pixel_replacement_uses_the_released_asset_slot() {
     for index in 1..semio_s_artifact_raster_raster_model::RASTER_OWNED_MAP_CAPACITY{
         let key=format!("unused-{index}");source.assets.insert(key.clone(),semio_s_artifact_raster_raster_model::mint_raster_image_child(&key,&image)).unwrap();
     }
-    let mutation=pixel_route("apply-filter");let outcome=::semio_framework_os_kernel::ColdMutation::diff(&mutation,&source);
+    let mutation=pixel_route("apply-filter");let outcome=::semio_os_kernel::ColdMutation::diff(&mutation,&source);
     assert!(!outcome.messages().iter().any(|message|matches!(message.level,semio_framework_diagnostic::Severity::Error|semio_framework_diagnostic::Severity::Fatal)));
     let(diff,_)=outcome.into_parts();let next=protocol::apply_diff_cold(&diff,&source).unwrap();
     assert_eq!(next.assets.len(),semio_s_artifact_raster_raster_model::RASTER_OWNED_MAP_CAPACITY);assert!(!next.assets.contains_key("source"));assert!(source.assets.contains_key("source"));
     let inverse=mutation.inverse(&source).unwrap();assert_eq!(inverse.len(),4);
     let mut restored=next;
-    for step in &inverse{let outcome=::semio_framework_os_kernel::ColdMutation::diff(step,&restored);let(diff,_)=outcome.into_parts();let next=protocol::apply_diff_cold(&diff,&restored).unwrap();protocol::MutationDiff::retire_cold(diff);retire_raster_value_cold(restored);restored=next;}
+    for step in &inverse{let outcome=::semio_os_kernel::ColdMutation::diff(step,&restored);let(diff,_)=outcome.into_parts();let next=protocol::apply_diff_cold(&diff,&restored).unwrap();protocol::MutationDiff::retire_cold(diff);retire_raster_value_cold(restored);restored=next;}
     assert_eq!(restored,source);
     protocol::MutationDiff::retire_cold(diff);retire_raster_value_cold(restored);retire_raster_value_cold(inverse);retire_raster_value_cold(source);retire_raster_value_cold(mutation);
 }

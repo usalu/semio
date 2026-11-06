@@ -5,11 +5,11 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub const ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES: usize = 35;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
-#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase", deny_unknown_fields)]
 pub struct ActorUiPatchReceipt {
     pub lifetime: ActorInstanceLifetime,
-    #[cfg_attr(test, serde(with = "decimal_generation"))]
+    #[serde(with = "decimal_generation")]
     #[value(with = "decimal_generation")]
     pub patch_sequence: u64,
 }
@@ -55,13 +55,7 @@ impl ActorUiPatchReceipt {
         Ok(Self { lifetime: ActorInstanceLifetime { activation_generation, instance_id, guest_lifetime }, patch_sequence })
     }
 
-    /// 🔗️ The typed producer and consumer each validate the exact logical patch count.
-    ///
-    /// 🧾️ ONE receipt authorizes the WHOLE patch batch a turn carries: a turn result publishes every
-    /// surface that was ready and fits its byte budget, and each of those patches is addressed by its
-    /// own `(receipt, surface, revision)` when the host acknowledges it. Before 2026-09-15 a turn could
-    /// carry at most one patch, so the cardinality here was `1` and that count cap was the reason N
-    /// published surfaces cost N + 1 host round trips.
+    /// 🔗️ The typed producer and consumer each validate the exact logical patch count. [Design notes](README.md#source-notes-58).
     pub fn validate_pairing(receipt: Option<Self>, patch_count: usize) -> Result<(), &'static str> {
         match (patch_count, receipt) {
             (0, None) => Ok(()),

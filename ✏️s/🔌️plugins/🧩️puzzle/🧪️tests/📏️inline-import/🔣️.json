@@ -1,0 +1,20 @@
+{
+  "deltas": [
+    -1,
+    0,
+    1
+  ],
+  "puzzle2d": {
+    "nodes": []
+  },
+  "puzzle3d": {
+    "schema": "puzzle.3d",
+    "objects": []
+  },
+  "fills": [
+    "x",
+    "雪",
+    "\"",
+    "\n"
+  ]
+}

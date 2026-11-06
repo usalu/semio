@@ -1,7 +1,7 @@
 //! 🧫️ Native text receiving retains every cancelled prefix and matches the independent UTF8 corpus.
 use super::*;
 use semio_framework_value::{DslValue,NativeDecodeControl,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome};
-use semio_framework_value_native_decoding::{NativeReceive,NativeReceiver};
+use semio_framework_value_native_owned::{NativeReceive,NativeReceiver};
 use semio_framework_value_testing_allocator::observe_retirement_allocations as observe;
 fn run(text:&str,accepted:bool,cut:Option<usize>,profile:&serde_json::Value){
  let stock=&profile["stock"];let mut bank=RetainedCloneGrant{maximum_items:stock["items"].as_u64().unwrap()as usize,maximum_copy_bytes:stock["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:stock["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:stock["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:stock["depth"].as_u64().unwrap()as usize};let mut fuel=stock["fuel"].as_u64().unwrap();

@@ -45,8 +45,8 @@ test("administrative funding is required before workspace and actor construction
  const text=(path:string)=>readFileSync(new URL("../../"+path,import.meta.url),"utf8"),port=text("🔀️dispatch/🔌️channel-port/🦀️.rs"),workspace=text("🏠️workspace/🪪️headless-workspace-state/🦀️.rs"),open=text("🏠️workspace/🛂️gateway-backend/🏗️open-and-discovery/🦀️.rs"),channel=text("🏠️workspace/📨️plugin-artifact-channel/🧱️channel-record/🦀️.rs");
  const infer=port.slice(port.indexOf("pub struct InferCommand"),port.indexOf("pub struct InferenceCancel"));
  expect(infer).not.toContain("operation_policy");
- expect(workspace).not.toContain("OnceLock<semio_framework_os_mcp_port::channel_port::HostOperationPolicy>");
- expect(workspace).toContain("pub operation_policy: semio_framework_os_mcp_port::channel_port::HostOperationPolicy");
+ expect(workspace).not.toContain("OnceLock<semio_os_mcp_port::channel_port::HostOperationPolicy>");
+ expect(workspace).toContain("pub operation_policy: semio_os_mcp_port::channel_port::HostOperationPolicy");
  expect(open).toContain("operation_policy,");
- expect(channel).toContain("pub operation_policy:semio_framework_os_mcp_port::channel_port::HostOperationPolicy");
+ expect(channel).toContain("pub operation_policy:semio_os_mcp_port::channel_port::HostOperationPolicy");
 });

@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"command":["test","--manifest-path","🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📐️schema-contract/📦️packages/🦀️rust/Cargo.toml","-p","semio-os-mcp-schema","--test","inference-borrowed-json"],"configuration":"prototype","store":"shared","parallelism":1,"language":"en","agent":"semio-mcp-inference-json-native"}}

@@ -1,0 +1,6 @@
+const fs=require('fs');
+for(const name of ['📸️capture','🎟️source/👶️child','📦️return/🪶️weak']){
+ const base='🧰️framework/🔨️modules/🧵️job/⏱️context/'+name,file=base+'/🦀️.rs',readme=base+'/README.md';if(fs.existsSync(readme))throw Error('README exists: '+readme);
+ const before=fs.readFileSync(file,'utf8');let docs='# Original Context API\n\n';const after=before.split('\n').map(line=>{const m=line.match(/^(\s*)\/\/\/ (\S+) (.{45,})$/u);if(!m)return line;docs+=m[2]+' '+m[3]+'\n\n';return m[1]+'/// '+m[2]+' See `README.md`.'}).join('\n');
+ if(after===before)throw Error('no prose: '+file);const tmp=file+'.guest-prose';fs.writeFileSync(tmp,after,{flag:'wx'});if(fs.readFileSync(file,'utf8')!==before||fs.existsSync(readme)){fs.unlinkSync(tmp);throw Error('concurrent change: '+file)}fs.writeFileSync(readme,docs,{flag:'wx'});fs.renameSync(tmp,file);
+}

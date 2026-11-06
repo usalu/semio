@@ -558,3 +558,27 @@ async fn leftover_import_snapshot_replaces_live_document_with_distinct_two_objec
     assert_eq!(object_cores(&imported_projection(&settled)).len(), 2, "distinct leftover import must carry both objects");
 }
 //#endregion 🩹️CheckedDefects
+
+/// 📏️ Inline payloads obey the same exact byte cap as serialized files.
+#[test]
+fn inline_snapshot_import_enforces_portable_byte_boundary() {
+    use semio_s_artifact_puzzle_3d_commands_document::import_snapshot::{puzzle3d_import_value, Puzzle3dImportFault};
+    use semio_s_plugin_puzzle_retained::PUZZLE_IMPORT_TOTAL_BYTES;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../🧪️tests/📏️inline-import/🔣️.json")).expect("fixture");
+    for fill in fixture["fills"].as_array().expect("fills") {
+    for delta in fixture["deltas"].as_array().expect("deltas") {
+        let mut payload = fixture["puzzle3d"].clone();
+        payload["padding"] = serde_json::json!("");
+        let base = serde_json::to_vec(&payload).expect("oracle").len();
+        let length = (PUZZLE_IMPORT_TOTAL_BYTES as isize - base as isize + delta.as_i64().expect("delta") as isize) as usize;
+        let fill = fill.as_str().expect("fill");
+        let width = serde_json::to_string(fill).expect("encoded fill").len() - 2;
+        payload["padding"] = serde_json::json!(fill.repeat(length / width) + &"x".repeat(length % width));
+        let encoded = serde_json::to_string(&payload).expect("oracle payload");
+        let args = semio_framework_pack_json::json!({ "payload": semio_framework_pack_json::parse(&encoded, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("payload") });
+        let result = puzzle3d_import_value(&args);
+        assert_eq!(result.is_ok(), encoded.len() <= PUZZLE_IMPORT_TOTAL_BYTES);
+        if encoded.len() > PUZZLE_IMPORT_TOTAL_BYTES { assert!(matches!(result, Err(Puzzle3dImportFault::Capacity))); }
+    }
+    }
+}

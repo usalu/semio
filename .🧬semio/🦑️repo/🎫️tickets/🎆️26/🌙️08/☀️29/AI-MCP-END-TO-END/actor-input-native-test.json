@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"agent":"semio-mcp-guest-input","command":["test","--manifest-path","🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/📦️packages/🦀️rust/Cargo.toml","--lib","borrowed_actor_input_keeps_identity_and_returns_wire_only_after_source_close"],"configuration":"prototype","store":"shared","language":"en"}}

@@ -331,9 +331,9 @@ fn the_port_contract_of_one_command_per_exchange_is_enforced_here_too() {
 #[test]
 fn explicit_targets_follow_the_neutral_owned_instance_corpus() {
     let cases: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🎯️target/🔣️.json")).expect("neutral target corpus");
-    let base = semio_framework_os_mcp_capabilities::core_capabilities::gateway_only_catalog();
+    let base = semio_os_mcp_capabilities::core_capabilities::gateway_only_catalog();
     let mut capability = base.entries[0].clone();
-    capability.owner = semio_framework_os_mcp_catalog::catalog::CapabilityOwner::Plugin { plugin_id: "test".into(), app_id: Some("editor".into()), window_kind_id: None, mode_id: None, label: None };
+    capability.owner = semio_os_mcp_catalog::catalog::CapabilityOwner::Plugin { plugin_id: "test".into(), app_id: Some("editor".into()), window_kind_id: None, mode_id: None, label: None };
     let capability_id = capability.id.as_str().to_string();
     let catalog = std::sync::Arc::new(Catalog { hash: "target-corpus".into(), entries: vec![capability] });
     let handle = std::sync::Arc::new(BridgeHandle::new());

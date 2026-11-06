@@ -16,10 +16,10 @@ export const originOf = (session: Session): string => new URL(session.url).origi
 export const faultsSince = (session: Session, cursor: number): string[] => session.lines.slice(cursor).filter((line) => FAULT.test(line) && !NOISE.test(line)).map((line) => line.slice(0, 240));
 export const short = (text: string): string => (text.length <= 160 ? text : `${text.slice(0, 80)}…${text.slice(-70)}`);
 
-export async function openSessions(browser: Browser, urls: readonly string[], humans: readonly Human[], locale: string): Promise<Session[]> {
+export async function openSessions(browser: Browser, urls: readonly string[], humans: readonly Human[], locale: string, firstProxy?:string): Promise<Session[]> {
   const sessions: Session[] = [];
   for (const [index, human] of humans.entries()) {
-    const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale });
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale, ...(index===0&&firstProxy?{proxy:{server:firstProxy}}:{}) });
     const page = await context.newPage();
     const lines: string[] = [];
     page.on("console", (message) => {

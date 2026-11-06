@@ -9,7 +9,7 @@ use command_fixture::every_command;
 /// 🎟️ Unbounded retained grant: the pre-migration step budget carried no retained limit.
 const UNBOUNDED_STEP_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
 fn retained_operation() -> AppOperationContext {
-    AppOperationContext { app_instance_id: 7, parent_document_id: "lowpoly-retained-test".into(), operation_id: 11, generation: 13, canonical_base_revision: [17; 32], authoring_seed: "authoring-seed-test".into(), retained: semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance }
+    AppOperationContext { app_instance_id: 7, parent_document_id: "lowpoly-retained-test".into(), operation_id: 11, generation: 13, canonical_base_revision: [17; 32], authoring_seed: "authoring-seed-test".into(), retained: semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance }
 }
 
 fn retained_context(transient: LowpolyTransient, transient_generation: u64) -> std::sync::Arc<ArtifactOwnedToolJobContext<EditorApp<LowpolyPlayApp>>> {
@@ -19,8 +19,8 @@ fn retained_context(transient: LowpolyTransient, transient_generation: u64) -> s
         [17; 32],
         0,
         transient_generation,
-        semio_framework_plugin::app::ArtifactOwnedToolJobSnapshots {
-            children: std::sync::Arc::new(semio_framework_plugin::ChildContentView::EMPTY),
+        semio_plugin::app::ArtifactOwnedToolJobSnapshots {
+            children: std::sync::Arc::new(semio_plugin::ChildContentView::EMPTY),
             draft: std::sync::Arc::new(NoDraft::default()),
             transient: std::sync::Arc::new(transient),
             window_config: None,
@@ -56,7 +56,7 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
     let snapshot = semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     let config = LowpolyConfig::default();
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let hover = semio_plugin::app::InteractionHoverState::default();
     let history = HistoryView::empty();
     let operation = retained_operation();
     let context = retained_context(LowpolyTransient::default(), 19);
@@ -64,8 +64,8 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
     let mut uninterrupted = LowpolyRetainedCommandWork::new("toggleShowEdges", LowpolyCommandDisposition::Config, operation.operation_id, operation.generation, operation.canonical_base_revision, context_identity);
     assert!(matches!(
         uninterrupted
-            .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs {
-                snapshot_owner: None, snapshot_read: semio_framework_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation), command: &command,
+            .step(&semio_plugin::retained_command::ArtifactCommandInputs {
+                snapshot_owner: None, snapshot_read: semio_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation), command: &command,
                 snapshot: &snapshot,
                 config: &config,
                 history: &history,
@@ -85,8 +85,8 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
     replayed.restore(&checkpoint).expect("work restore");
     assert!(matches!(
         replayed
-            .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs {
-                snapshot_owner: None, snapshot_read: semio_framework_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation), command: &command,
+            .step(&semio_plugin::retained_command::ArtifactCommandInputs {
+                snapshot_owner: None, snapshot_read: semio_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation), command: &command,
                 snapshot: &snapshot,
                 config: &config,
                 history: &history,
@@ -100,8 +100,8 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
     ));
     assert!(matches!(
         replayed
-            .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs {
-                snapshot_owner: None, snapshot_read: semio_framework_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation), command: &command,
+            .step(&semio_plugin::retained_command::ArtifactCommandInputs {
+                snapshot_owner: None, snapshot_read: semio_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation), command: &command,
                 snapshot: &snapshot,
                 config: &config,
                 history: &history,
@@ -116,12 +116,12 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
     let drifted = AppOperationContext { generation: operation.generation + 1, ..operation.clone() };
     let mut rejected = LowpolyRetainedCommandWork::new("toggleShowEdges", LowpolyCommandDisposition::Config, operation.operation_id, operation.generation, operation.canonical_base_revision, context_identity);
     assert!(rejected
-        .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, snapshot_read: semio_framework_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&drifted), command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: Some(&context), operation: &drifted }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default()))
+        .step(&semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, snapshot_read: semio_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&drifted), command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: Some(&context), operation: &drifted }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default()))
         .is_err());
     let drifted_context = retained_context(LowpolyTransient::default(), 20);
     assert!(rejected
-        .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs {
-            snapshot_owner: None, snapshot_read: semio_framework_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation), command: &command,
+        .step(&semio_plugin::retained_command::ArtifactCommandInputs {
+            snapshot_owner: None, snapshot_read: semio_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation), command: &command,
             snapshot: &snapshot,
             config: &config,
             history: &history,
@@ -133,8 +133,8 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
         .is_err());
     assert!(matches!(
         rejected
-            .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs {
-                snapshot_owner: None, snapshot_read: semio_framework_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation), command: &command,
+            .step(&semio_plugin::retained_command::ArtifactCommandInputs {
+                snapshot_owner: None, snapshot_read: semio_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation), command: &command,
                 snapshot: &snapshot,
                 config: &config,
                 history: &history,
@@ -178,7 +178,7 @@ async fn retained_migrated_turns_stay_below_eight_milliseconds() {
     let snapshot = semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::snapshot_from_mesh_json(&unit_box, "obj-1", "Unit Box");
     let config = LowpolyConfig::default();
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let hover = semio_plugin::app::InteractionHoverState::default();
     let history = HistoryView::empty();
     let operation = retained_operation();
     let context = retained_context(LowpolyTransient::default(), 29);
@@ -192,7 +192,7 @@ async fn retained_migrated_turns_stay_below_eight_milliseconds() {
             let mut refused = false;
             loop {
                 let started = std::time::Instant::now();
-                let step = work.step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, snapshot_read: semio_framework_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation),
+                let step = work.step(&semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, snapshot_read: semio_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation),
                     command: &command,
                     snapshot: &snapshot,
                     config: &config,
@@ -232,7 +232,7 @@ fn fill_caller(operation: &AppOperationContext) -> semio_framework_job::Original
     semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(operation.operation_id), semio_framework_job::Generation(operation.generation), stock, semio_framework_job::default_now_us, u64::MAX, 1 << 30)
 }
 
-fn fill_turn(caller: &mut semio_framework_job::OriginalJobFixtureCaller, decoder: &mut semio_framework_job::OriginalJobDecodeOwner, work: &mut LowpolyRetainedCommandWork, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<LowpolyPlayApp>>, grant: semio_framework_job::RetainedCloneGrant, fuel: u64) -> (ArtifactCommandWorkStep<EditorApp<LowpolyPlayApp>>, u128) {
+fn fill_turn(caller: &mut semio_framework_job::OriginalJobFixtureCaller, decoder: &mut semio_framework_job::OriginalJobDecodeOwner, work: &mut LowpolyRetainedCommandWork, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<LowpolyPlayApp>>, grant: semio_framework_job::RetainedCloneGrant, fuel: u64) -> (ArtifactCommandWorkStep<EditorApp<LowpolyPlayApp>>, u128) {
     let mut result = None;
     let mut spent = 0;
     caller.turn_with_decoder(grant, decoder, |cx| {
@@ -305,11 +305,11 @@ fn retained_fill_pays_for_pixel_work_and_exposes_cancellation_boundaries() {
     });
     assert_eq!(command.command_id(), fixture["action"].as_str().unwrap());
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let hover = semio_plugin::app::InteractionHoverState::default();
     let history = HistoryView::empty();
     let operation = retained_operation();
     let context = retained_context(LowpolyTransient::default(), 31);
-    let input = semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, snapshot_read: semio_framework_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation), command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: Some(&context), operation: &operation };
+    let input = semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, snapshot_read: semio_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation), command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: Some(&context), operation: &operation };
     let mut work = LowpolyRetainedCommandWork::new(command.command_id(), lowpoly_command_disposition(command.command_id()).unwrap(), operation.operation_id, operation.generation, operation.canonical_base_revision, context.identity_digest());
     let fuel = fixture["turn"]["fuel"].as_u64().unwrap();
     let grant = semio_framework_job::RetainedCloneGrant {
@@ -319,7 +319,7 @@ fn retained_fill_pays_for_pixel_work_and_exposes_cancellation_boundaries() {
         maximum_release_bytes: fixture["turn"]["maximumReleaseBytes"].as_u64().unwrap() as usize,
         maximum_depth: fixture["turn"]["maximumDepth"].as_u64().unwrap() as usize,
     };
-    assert_eq!(grant, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance);
+    assert_eq!(grant, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance);
     let mut paid_work = 0_u128;
     let mut progress_turns = 0_u64;
     let mut completed = None;
@@ -429,13 +429,13 @@ fn retained_fill_comb_preserves_sparse_pixel_topology() {
         x: None, y: None,
     });
     let interaction = protocol::InteractionState::default();
-    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let hover = semio_plugin::app::InteractionHoverState::default();
     let history = HistoryView::empty();
     let operation = retained_operation();
     let context = retained_context(LowpolyTransient::default(), 32);
-    let input = semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, snapshot_read: semio_framework_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation), command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: Some(&context), operation: &operation };
+    let input = semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, snapshot_read: semio_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation), command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: Some(&context), operation: &operation };
     let mut work = LowpolyRetainedCommandWork::new(command.command_id(), lowpoly_command_disposition(command.command_id()).unwrap(), operation.operation_id, operation.generation, operation.canonical_base_revision, context.identity_digest());
-    let grant = semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance;
+    let grant = semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance;
     let fuel = 256;
     let maximum_turns = 16_384;
     let mut caller = fill_caller(&operation);

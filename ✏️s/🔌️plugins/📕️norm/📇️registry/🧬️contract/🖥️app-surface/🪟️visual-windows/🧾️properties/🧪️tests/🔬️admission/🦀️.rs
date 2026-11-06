@@ -34,7 +34,7 @@ fn value(source: &serde_json::Value) -> DslValue {
 }
 
 fn projection(node: BuiltNode) -> String {
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(node)).expect("rendered UI projection")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::ComponentTree::new(node)).expect("rendered UI projection")
 }
 
 fn readonly_report() -> CheckReport {
@@ -53,8 +53,8 @@ fn readonly_scalars_keep_accessible_localized_values_and_have_no_mutation_afford
     let rows = law["fields"].as_array().expect("fields").iter().filter(|row| row["editable"] == false).collect::<Vec<_>>();
     let tree = DslValue::object(rows.iter().map(|row| (row["path"].as_str().unwrap().to_owned(), value(&row["value"]))));
     for (locale, tag) in [(Locale::En, "en"), (Locale::De, "de")] {
-        let model = semio_framework_plugin::ViewModel::new(locale, semio_framework_ui_locale::Terminology::Native);
-        let windows = semio_framework_plugin::TreeWindows::for_body(&model, "norm.admission.inputs");
+        let model = semio_plugin::ViewModel::new(locale, semio_ui_locale::Terminology::Native);
+        let windows = semio_plugin::TreeWindows::for_body(&model, "norm.admission.inputs");
         let report = readonly_report();
         let node = render_inspector_value(&tree, &report, locale, "s.norm.en1990@1/*#editor", Some(metadata), &windows, &InspectorOptions::new(UnitSystem::Engineering, Tier::Expert)).expect("read-only inspector");
         let json = projection(node);

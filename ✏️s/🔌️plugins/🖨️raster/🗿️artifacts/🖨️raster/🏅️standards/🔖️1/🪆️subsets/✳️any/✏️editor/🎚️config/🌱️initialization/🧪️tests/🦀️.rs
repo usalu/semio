@@ -2,7 +2,7 @@
 use super::*;
 use crate::{config::{RasterConfig,SetPixelSelectionEdit},selection::{RasterPixelSelection,RasterSelectionSpans}};
 use semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan;
-use semio_framework_plugin::artifact_app_laws::OriginalWorkFixture;
+use semio_plugin::artifact_app_laws::OriginalWorkFixture;
 use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation,OriginalTurnFailure,StepContext};
 use semio_framework_value::{RetainedCloneStep,RetainedWorkOutcome,retirement::{RetireOwned,controlled::ControlledRetirement}};
 use semio_framework_value_native_owned::OriginalReceivingPrimary;

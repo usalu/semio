@@ -265,3 +265,21 @@ fn retained_json_writer_quotes_bounded_utf8_blocks_and_preserves_actual_work(){
   let matches=output.as_deref()==Some(expected.as_str());retire_original_json(writer,3,100000);retire_original_json(source,3,100000);assert!(matches,"bounded native writer matches independent serde JSON");
  }
 }
+
+#[test]
+fn retained_json_writer_preserves_reordered_keys_chunked_text_and_cancelled_prefix(){
+ use semio_framework_value::paged::Utf8Text;
+ struct Chunks(Vec<String>);
+ impl Utf8Text for Chunks{fn text_bytes(&self)->usize{self.0.iter().map(String::len).sum()}fn text_chunk_count(&self)->usize{self.0.len()}fn text_chunk(&self,index:usize)->Option<&str>{self.0.get(index).map(String::as_str)}}
+ struct Source{keys:Vec<String>,text:Chunks}
+ impl JsonWriteSource for Source{
+  fn traversal_edge_at_path(&self,_:&[usize],index:usize,_:usize)->Result<JsonWriteEdge,ValueError>{Ok(JsonWriteEdge{child:1-index,cursor:index+1})}
+  fn node_at_path(&self,path:&[usize])->Result<JsonWriteNode<'_>,ValueError>{Ok(if path.is_empty(){JsonWriteNode::Object(2)}else if path==[1]{JsonWriteNode::NativeString(&self.text)}else{JsonWriteNode::Bool(true)})}
+  fn object_key_at_path(&self,_:&[usize],index:usize)->Result<&str,ValueError>{Ok(&self.keys[index])}
+ }
+ let fixture:serde_json::Value=serde_json::from_str(crate::text("🧪️tests/🧫️fixtures/🫳️source-sink.json")).unwrap();let row=&fixture["retainedChunkedObject"];let source=Source{keys:row["keys"].as_array().unwrap().iter().map(|v|v.as_str().unwrap().to_owned()).collect(),text:Chunks(row["chunks"].as_array().unwrap().iter().map(|v|v.as_str().unwrap().to_owned()).collect())};
+ let mut expected=serde_json::Map::new();expected.insert(source.keys[1].clone(),serde_json::Value::String(source.text.0.concat()));expected.insert(source.keys[0].clone(),serde_json::Value::Bool(true));let expected=serde_json::Value::Object(expected);let live=std::cell::Cell::new(true);let cancel=std::cell::Cell::new(false);let mut callback=|p:semio_framework_value::native_encoding::NativeEncodeProgress|live.get()&&!(cancel.get()&&p.completed==1);let mut control=semio_framework_value::NativeEncodeControl::new(1<<20,&mut callback);let mut writer=JsonBorrowedWriteCursor::new();let grant=RetainedCloneGrant{maximum_copy_bytes:64,..JSON_NORMAL_TEST_POLICY};
+ let mut turns=0;loop{turns+=1;assert!(turns<10000);let frame=writer.frames.last().copied();if writer.phase==2&&frame.is_some_and(|f|f.state==6&&f.position==0){break}assert!(writer.step(&source,1,&mut control,grant).unwrap().is_none());}
+ control.begin_stage(1).unwrap();cancel.set(true);let error=writer.step(&source,1,&mut control,grant).unwrap_err();assert_eq!(error.kind,ValueRefusalKind::Canceled);let receipt=writer.normal_step_progress();assert_eq!(error.retained_progress(),receipt);assert!(receipt.copied_bytes>0&&receipt.fits(grant));let saved=writer.progress();let frame=*writer.frames.last().unwrap();assert!(frame.position>0);
+ cancel.set(false);control.begin_stage(0).unwrap();let output=loop{turns+=1;assert!(turns<10000);if let Some(output)=writer.step(&source,1,&mut control,grant).unwrap(){break output}};assert!(writer.progress().0>=saved.0);assert_eq!(serde_json::from_str::<serde_json::Value>(&output).unwrap(),expected);retire_original_json(writer,3,100000);retire_original_json(output,3,100000);
+}

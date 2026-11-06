@@ -5,7 +5,7 @@ import { NativeDependenciesScript } from "../../⚡️caching/🚀️bootstrap/�
 import { ticketOutput } from "../../⚡️caching/🎫️output/🟦️.ts";
 import { nativeBootstrapCommandV1 } from "../../../🔩️native/🥾️bootstrap/🟦️.ts";
 import { nativeTemporarySystemPortV1, withNativeTemporaryDirectoryV1 } from "../../../🔩️native/🥾️bootstrap/📁️temporary/🟦️.ts";
-import { ensureMcpBinary } from "../../../../../💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🟦️.ts";
+import { ensureMcpBinary } from "../../../../../💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/📦️binary/🟦️.ts";
 import { dispatchSubcommand } from "../../🚨️policy/🧭️entrypoints/🟦️.ts";
 import { runCmd, runCmdStatus } from "../../🏃️process/🟦️.ts";
 import { installMicroCommitGitHooks, reportHookShellV1 } from "../📝️commit/🪝️hooks/🟦️.ts";

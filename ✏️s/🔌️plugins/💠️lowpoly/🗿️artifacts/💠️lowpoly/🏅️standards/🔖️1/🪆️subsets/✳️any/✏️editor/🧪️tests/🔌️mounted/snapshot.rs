@@ -1,6 +1,6 @@
 //! 📥️ Public snapshot JSON ingress preserves painted bytes and exposes one complete host load.
 use super::{context,effects::{collect,collect_with_faults}};
-use semio_framework_plugin::{PluginApp,artifact_app_laws};
+use semio_plugin::{PluginApp,artifact_app_laws};
 use semio_framework::kernel::Effect;
 use semio_framework_value::DslValue;
 use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
@@ -24,7 +24,7 @@ async fn public_snapshot_json_imports_accept_painted_and_exact_limit_inputs_and_
    let text=format!("{json}{}"," ".repeat(length-json.len()));let mut app=context::app_with_registry().await;
    let before=app.snapshot().unwrap();let history=app.take_history_patch().await.unwrap();let edits=context::committed_edits(&mut app).await;
    let arguments=DslValue::object([("json".to_string(),DslValue::String(text))]);
-   artifact_app_laws::dispatch_fixture_action(&mut app.0,action.as_str().unwrap(),Some(arguments),&context::action_meta(),&mut artifact_app_laws::fixture_identity(),app.1.cx(),semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).await.expect("painted snapshot admitted through public original producer");
+   artifact_app_laws::dispatch_fixture_action(&mut app.0,action.as_str().unwrap(),Some(arguments),&context::action_meta(),&mut artifact_app_laws::fixture_identity(),app.1.cx(),semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).await.expect("painted snapshot admitted through public original producer");
    let effects=collect(&mut app).await;assert_eq!(effects.len(),fixture["expected"]["loadEffects"].as_u64().unwrap()as usize);
    let Effect::LoadDocument{pack,..}=&effects[0]else{panic!("one complete host document load")};let loaded=LowpolySnapshot::decode_pack(pack).unwrap();
    assert_eq!(loaded.objects.len(),1);assert_eq!(loaded.objects[0].id,fixture["recipe"]["object"]["id"].as_str().unwrap());
@@ -34,7 +34,7 @@ async fn public_snapshot_json_imports_accept_painted_and_exact_limit_inputs_and_
   }
   let mut app=context::app_with_registry().await;let before=app.snapshot().unwrap();let edits=context::committed_edits(&mut app).await;
   let text=format!("{json}{}"," ".repeat(maximum+1-json.len()));let arguments=DslValue::object([("json".to_string(),DslValue::String(text))]);
-  let immediate=artifact_app_laws::dispatch_fixture_action(&mut app.0,action.as_str().unwrap(),Some(arguments),&context::action_meta(),&mut artifact_app_laws::fixture_identity(),app.1.cx(),semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).await;
+  let immediate=artifact_app_laws::dispatch_fixture_action(&mut app.0,action.as_str().unwrap(),Some(arguments),&context::action_meta(),&mut artifact_app_laws::fixture_identity(),app.1.cx(),semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).await;
   let(effects,mut faults)=collect_with_faults(&mut app).await;if let Err(fault)=immediate{faults.push(fault.code.0);}
   assert!(!faults.is_empty(),"one over-budget byte must refuse");assert!(faults.iter().all(|code|code=="lowpoly.snapshot-json.capacity"),"unrelated refusal is not a budget proof: {faults:?}");
   assert!(effects.is_empty());assert_eq!(app.snapshot().unwrap(),before);assert_eq!(context::committed_edits(&mut app).await,edits);

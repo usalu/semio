@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::*;
-use semio_framework_plugin::scene_surface;
+use semio_plugin::scene_surface;
 
 /// 🪟️ Canvas size and theme of one diagrams window, and the controller whose `setFields` the editable marker rows commit through (`None` keeps every marker row read-only).
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -106,7 +106,7 @@ pub fn render_diagrams(body_key: &str, diagrams: &[Diagram2d], spec: &DiagramsWi
         if let Some(basis) = diagram.basis() {
             children.push(diagram_text(&base, "basis", &copy_text(basis, locale))?);
         }
-        children.push(scene_surface(&base, semio_framework_ui_contract::SurfaceKind::Canvas2d, &canvas)?);
+        children.push(scene_surface(&base, semio_ui_contract::SurfaceKind::Canvas2d, &canvas)?);
         children.push(diagram_text(&base, "description", &accessible_description(diagram, locale))?);
         children.push(table_tree(body_key, diagram, windows, spec.controller_id, locale)?);
     }

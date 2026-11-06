@@ -1,0 +1,1 @@
+{"allowed":["Deallocate","CloseActorOutput","CloseActorContext","CloseJobs","PublishActorFailure","ReadActorFailure","BorrowActorFailure","AcknowledgeActorFailureChunk","AcknowledgeActorFailure"],"denied":["Poll","StartJob","StepJob","ReadJobOutput","BorrowJobOutput","AcknowledgeJobOutput","AcknowledgeJobOutputChunk","AdmitActorInput","Allocate","Restore","Checkpoint","Genesis"]}

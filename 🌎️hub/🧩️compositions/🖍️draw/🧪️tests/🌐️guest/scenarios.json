@@ -1,5 +1,21 @@
 {
-  "version": 1,
+  "version": 2,
+  "caller": {
+    "clock": "native-monotonic",
+    "lifetimeUs": 120000000,
+    "fuel": 100000000,
+    "retirementFuel": 1000000,
+    "executionFuel": 4096000000000,
+    "executionFuelPerCall": 1000000000,
+    "maximumTurns": 4096,
+    "grant": {
+      "maximumItems": 1048576,
+      "maximumCopyBytes": 67108864,
+      "maximumCapacityBytes": 268435456,
+      "maximumReleaseBytes": 268435456,
+      "maximumDepth": 4096
+    }
+  },
   "scenarios": [
     {
       "appId": "s.draw.drawing@1/*#editor",

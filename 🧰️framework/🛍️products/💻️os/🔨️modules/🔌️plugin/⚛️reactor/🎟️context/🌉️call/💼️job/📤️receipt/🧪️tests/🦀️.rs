@@ -2,23 +2,26 @@ use super::*;
 
 fn bytes(hex: &str) -> std::vec::Vec<u8> { hex.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect() }
 
+#[test]
+fn job_header_codec_emits_bounded_sequential_work(){struct Sink{bytes:Vec<u8>,writes:usize}impl OriginalEscrowHeaderWrite for Sink{fn write(&mut self,bytes:&[u8])->Result<(),ValueError>{self.writes+=1;self.bytes.extend_from_slice(bytes);Ok(())}}let actor:serde_json::Value=serde_json::from_str(include_str!("../../../📤️receipt/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let(base,escrow)=OriginalActorFixedReceipt::read(&bytes(actor["failureHex"].as_str().unwrap())).unwrap();let call=OriginalOwnedJobCall{input:base.input,spent:base.spent,work_units_spent:base.work_units_spent,status:OriginalOwnedJobStatus::Cancel{admitted:false},refusal:None};let mut sink=Sink{bytes:Vec::new(),writes:0};OriginalOwnedJobFixedReceipt::write_to(&mut sink,call,escrow).unwrap();assert_eq!(sink.writes,25);assert_eq!(sink.bytes.len(),184);let(decoded,decoded_escrow)=OriginalOwnedJobFixedReceipt::read(&sink.bytes).unwrap();assert_eq!(decoded.input,call.input);assert_eq!(decoded_escrow,escrow);}
+
 /// 💼️ Real fixed job frames preserve all current variants and original actor currencies with no heap activity.
 #[cfg_attr(test,test)]
 pub fn original_owned_job_header_matches_portable_oracle_without_allocation() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let actor: serde_json::Value = serde_json::from_str(include_str!("../../../📤️receipt/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let base = bytes(actor["failureHex"].as_str().unwrap());
-    let original = OriginalActorFixedReceipt::read(&base).unwrap();
+    let (original,escrow) = OriginalActorFixedReceipt::read(&base).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let mut expected = [0u8; 184];
         expected[..8].copy_from_slice(&bytes(row["prefixHex"].as_str().unwrap()));
-        expected[8..144].copy_from_slice(&base);
-        let mut body = [0u64; 5];
-        for (index, value) in row["body"].as_array().unwrap().iter().enumerate() { body[index] = value.as_u64().unwrap(); expected[144 + index * 8..152 + index * 8].copy_from_slice(&body[index].to_le_bytes()); }
+        expected[8..152].copy_from_slice(&base);
+        let mut body = [0u64; 4];
+        for (index, value) in row["body"].as_array().unwrap().iter().enumerate() { body[index] = value.as_u64().unwrap(); expected[152 + index * 8..160 + index * 8].copy_from_slice(&body[index].to_le_bytes()); }
         let refusal = match row["refusal"].as_str().unwrap() { "none" => None, "semantic" => Some(OriginalJobCallFailure::Semantic), "ownershipLimit" => { expected[14] = 3; Some(OriginalJobCallFailure::Authority(ValueRefusalKind::OwnershipLimit)) }, _ => unreachable!() };
         let status = match row["kind"].as_str().unwrap() {
             "start" => OriginalOwnedJobStatus::Start { admitted: false, returned_source: true },
-            "step" => OriginalOwnedJobStatus::Step { outcome: Some(OriginalJobOutcome { job: body[0], operation: body[1], generation: body[2], state: OriginalJobOutputState::Done, byte_length: body[4] }), source_closed: false },
+            "step" => OriginalOwnedJobStatus::Step { outcome: Some(OriginalJobOutcome { job: body[0], operation: original.input.operation, generation: original.input.generation, state: OriginalJobOutputState::Done, byte_length: body[2] }), source_closed: false },
             "output" => OriginalOwnedJobStatus::Output { chunk: Some(OriginalOwnedJobChunk { offset: body[0], byte_length: Some(body[1]), output_closed: true }), source_closed: false },
             "acknowledge" => OriginalOwnedJobStatus::Acknowledge { acknowledged: true, source_closed: true },
             "cancel" => OriginalOwnedJobStatus::Cancel { admitted: false },
@@ -28,16 +31,16 @@ pub fn original_owned_job_header_matches_portable_oracle_without_allocation() {
         let call = OriginalOwnedJobCall { input: original.input, spent: original.spent, work_units_spent: original.work_units_spent, status, refusal };
         let (mut receipt, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(OriginalOwnedJobFixedReceipt::empty);
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| receipt.write(call));
+        let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| receipt.write(call,escrow).unwrap());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert_eq!(receipt.bytes(), &expected);
         let (decoded, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| OriginalOwnedJobFixedReceipt::read(receipt.bytes()));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        let decoded = decoded.unwrap();
+        let (decoded,decoded_escrow) = decoded.unwrap();assert_eq!(decoded_escrow,escrow);
         assert_eq!(decoded.input, original.input);
         assert_eq!(decoded.spent, original.spent);
         assert_eq!(decoded.work_units_spent, original.work_units_spent);
-        receipt.write(decoded);
+        receipt.write(decoded,escrow).unwrap();
         assert_eq!(receipt.bytes(), &expected);
         for (index, value) in [(0, 0), (4, 7), (5, 16), (6, 3), (7, 1), (8, 0)] {
             let mut invalid = expected;
@@ -55,8 +58,8 @@ pub fn original_owned_job_header_matches_portable_oracle_without_allocation() {
 /// 🔒️ Actual resident metadata cannot be overwritten or acknowledge a different physical loan.
 #[cfg_attr(test,test)]
 pub fn original_owned_job_metadata_loan_denies_overwrite_before_body_without_heap(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../📤️receipt/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let original=OriginalActorFixedReceipt::read(&bytes(fixture["failureHex"].as_str().unwrap())).unwrap();let call=OriginalOwnedJobCall{input:original.input,spent:original.spent,work_units_spent:original.work_units_spent,status:OriginalOwnedJobStatus::Close{admitted:false},refusal:None};
- let(mut loan,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(OriginalOwnedJobReceiptLoan::empty);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(pointer,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||loan.produce(||call).unwrap().as_ptr()as usize);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut entered=false;
- let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||loan.produce(||{entered=true;call}).map(|_|()));assert!(result.is_err());assert!(!entered);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let handbacks:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();for row in handbacks["loanHandbacks"].as_array().unwrap(){let candidate=if row["pointer"].as_str().unwrap()=="original"{pointer}else{pointer+1};assert_eq!(loan.hand_back(candidate,row["extent"].as_u64().unwrap()as usize),row["accepted"].as_bool().unwrap());}assert!(!loan.hand_back(pointer,184));
- let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let bytes=loan.produce(||call).unwrap();let decoded=OriginalOwnedJobFixedReceipt::read(bytes).unwrap();assert_eq!(decoded.input,call.input);assert_eq!(decoded.spent,call.spent);assert_eq!(decoded.work_units_spent,call.work_units_spent)});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(loan.hand_back(pointer,184));
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../📤️receipt/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let (original,escrow)=OriginalActorFixedReceipt::read(&bytes(fixture["failureHex"].as_str().unwrap())).unwrap();let call=OriginalOwnedJobCall{input:original.input,spent:original.spent,work_units_spent:original.work_units_spent,status:OriginalOwnedJobStatus::Close{admitted:false},refusal:None};
+ let(mut loan,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(OriginalOwnedJobReceiptLoan::empty);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(pointer,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||loan.produce(escrow,||call).unwrap().as_ptr()as usize);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut entered=false;
+ let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||loan.produce(escrow,||{entered=true;call}).map(|_|()));assert!(result.is_err());assert!(!entered);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let handbacks:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();for row in handbacks["loanHandbacks"].as_array().unwrap(){let candidate=if row["pointer"].as_str().unwrap()=="original"{pointer}else{pointer+1};assert_eq!(loan.hand_back(candidate,row["extent"].as_u64().unwrap()as usize),row["accepted"].as_bool().unwrap());}assert!(!loan.hand_back(pointer,184));
+ let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let bytes=loan.produce(escrow,||call).unwrap();let (decoded,decoded_escrow)=OriginalOwnedJobFixedReceipt::read(bytes).unwrap();assert_eq!(decoded_escrow,escrow);assert_eq!(decoded.input,call.input);assert_eq!(decoded.spent,call.spent);assert_eq!(decoded.work_units_spent,call.work_units_spent)});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(loan.hand_back(pointer,184));
 }

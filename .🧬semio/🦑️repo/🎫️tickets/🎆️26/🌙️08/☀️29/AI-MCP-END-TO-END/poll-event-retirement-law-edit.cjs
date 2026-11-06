@@ -1,0 +1,12 @@
+const fs=require('fs'),f='🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/📥️input/🧪️tests/🦀️.rs',s=fs.readFileSync(f,'utf8');const add=`
+#[test]
+fn poll_input_retains_an_unconsumed_event_until_paid_retirement(){
+ let rows:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧬️schema/🔁️persistent-local/📊️actor-input.json")).unwrap();let mut wire=rows.as_array().unwrap().iter().find_map(|row|row["wire"].get("Poll").map(|_|row["wire"].clone())).unwrap();
+ wire["Poll"]["events"]=serde_json::json!([{"instanceClose":{"lifetime":{"activationGeneration":"1","instanceId":0,"guestLifetime":"2"},"requestSequence":2}}]);let wire=serde_json::to_vec(&wire).unwrap();
+ let stock=RetainedCloneGrant{maximum_items:1_000_000,maximum_copy_bytes:32_000_000,maximum_capacity_bytes:32_000_000,maximum_release_bytes:32_000_000,maximum_depth:128};let grant=RetainedCloneGrant{maximum_items:32,maximum_copy_bytes:131_072,maximum_capacity_bytes:131_072,maximum_release_bytes:131_072,maximum_depth:64};
+ let mut caller=OriginalJobFixtureCaller::admit(OperationId(946),Generation(2),stock,clock,100_000_000,10_000_000);let mut receiver=OriginalActorInputReceiving::new(OriginalNativeDecodePolicy{maximum_owned_bytes:stock.maximum_capacity_bytes},JsonReadLimits{maximum_bytes:wire.len() as u64,maximum_allocation_bytes:stock.maximum_capacity_bytes,maximum_depth:64,maximum_items:100_000});
+ for step in 0..100_000{if receiver.input_returned(){break}assert_ne!(funded(&mut caller,grant,|cx|receiver.advance(Some(&wire),cx)),InputAdmission::Failed);assert!(step<99_999)}assert!(receiver.input_returned());
+ assert!(funded(&mut caller,grant,|cx|receiver.prepare_poll_event(cx)));assert!(receiver.poll_event_pending());assert!(funded(&mut caller,grant,|cx|receiver.with_poll_step(cx,|poll,event,_|{assert!(poll.events.is_empty());assert!(event.is_some());Ok(())})).is_some());assert!(receiver.poll_event_pending());
+ while !funded(&mut caller,grant,|cx|cx.with_original_retirement(|cx|receiver.begin_close(None,cx))){}for step in 0..100_000{if receiver.terminal_is_empty(){break}funded(&mut caller,grant,|cx|cx.with_original_retirement(|cx|receiver.advance(None,cx)));assert!(step<99_999)}assert!(receiver.terminal_is_empty());drop(receiver);caller.retire(grant);
+}
+`;if(s.includes('fn poll_input_retains_an_unconsumed_event'))throw Error('duplicate');let p=f+'.event-law';fs.writeFileSync(p,s+add,{flag:'wx'});if(fs.readFileSync(f,'utf8')!==s){fs.unlinkSync(p);throw Error('concurrent change')}fs.renameSync(p,f);

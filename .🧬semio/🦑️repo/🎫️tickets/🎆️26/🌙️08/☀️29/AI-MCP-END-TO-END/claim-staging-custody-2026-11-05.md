@@ -1,0 +1,9 @@
+# Source Claim Staging Custody
+
+The current Source claim insertion quotes a whole `OriginalReturnEscrowRow` at once. It therefore does not yet meet the required one-item, small-copy producer liveness. The table is preborn, but its capacity is not a copy receipt. Native qualification and publication must remain blocked until insertion is replaced.
+
+An incremental claim must reserve one real free Source cell before writing it, bind the original destination and extent under a paid small-field quote, and retain that staged owner through every retry. Identity and held-axis fields can then be written under individually quoted bounded grants. A staged cell must not be reported as a live hold or allow producer work. Its final commit must atomically bind the actual current issuer epoch, reserve real item/copy/work authority, publish the live row, and fund the retained credit metadata. Host-side settlement must receive the committed row in that same call's authentic snapshot before refunding unused loan stock.
+
+Staging also changes cancellation and retry custody. The existing native return inbox may not create a replacement cell on each pending attempt: it must retain and resume the same actual staged destination, or run a separately funded cancellation/reclamation path. Dropping a caller cannot silently erase Source staging. LocalWitness and CoreWireSnapshot are Source-owned domains selected before any claim; only an exact received local witness permits local tombstone reclamation, while Core-wire tombstones require exact capsule handback followed by paid Source cleanup.
+
+The present table primitive has a 32-cell cap and an allocation/birth quote, but claim staging, complete SRE1 encoding, header handback, actor call retention, and native proof are not complete. Its current atomic insertion is not a readiness proof.

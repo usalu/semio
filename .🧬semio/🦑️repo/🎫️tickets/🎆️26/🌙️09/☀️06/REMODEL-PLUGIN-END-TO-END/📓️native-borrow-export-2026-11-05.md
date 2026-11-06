@@ -1,0 +1,9 @@
+# Native Borrow Export Repair
+
+The actual unfiltered Remodel workspace invocation1764 failed compilation in semio-framework-job-context at context/🦀️.rs90 with E0432: original_caller_capture did not export OriginalNativeBorrowed. The canonical type already exists in context/🎟️source/🏠️native/🦀️.rs, and the source module already explicitly reexports it. The root context also already requests it. Only the intermediate context/📸️capture/🦀️.rs explicit owned_source export omitted the name.
+
+Added that one existing canonical type to the intermediate explicit reexport. No alias, compatibility type, dependency or behavior was introduced, and concurrent content was preserved by a unique exact replacement. This is a compiler prerequisite repair following actual compiler RED, with no new feature semantics. Independent source review and actual current native compilation remain required; the original failed run is not a pass. Raw diagnostic is retained in generated/workspace-canonical.log until ticket completion.
+
+Independent Engine source review confirms the same canonical symbol is defined by the native owner, explicitly reexported by source and now capture, and requested by the context root. Actual process snapshot1793882228110 showed the old captured workspace PID46992 had no Cargo/rustc child after its recorded compile failure; remaining children were detached GC and read-only process enumeration. Root sent Ctrl-C only to failed owned session1764, which returned exit1. Snapshot1793882254770 confirms all known owned command/GC/enumeration PIDs gone, and capacity/lease snapshot1793882258300 no longer contains old46992/47400. No peer or lock was touched. A single replacement full unfiltered workspace run was launched with unchanged packages/flags and a new generated/workspace-borrow-export.log. Native GREEN remains pending.
+
+Replacement full workspace tool handle:7986.

@@ -212,6 +212,6 @@ pub fn gumball_target_world(envelope: &Puzzle5dScene, selected_part_ids: &[Strin
 //#region 🔖️Engine
 /// 🔘️ The kind a grip gates attraction compatibility with: its own kind, else its flat aspect's kind.
 pub fn engine_grip_kind(grip: &Puzzle5dGrip) -> String {
-    if grip.grip_kind.is_empty() { grip.grip_2d.grip_kind.clone() } else { grip.grip_kind.clone() }
+    grip.grip_kind.as_deref().filter(|kind| !kind.is_empty()).or(grip.grip_2d.grip_kind.as_deref()).unwrap_or_default().to_string()
 }
 //#endregion 🔖️Engine

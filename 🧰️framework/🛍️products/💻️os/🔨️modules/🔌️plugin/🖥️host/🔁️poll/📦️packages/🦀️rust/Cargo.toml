@@ -1,0 +1,40 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-plugin-host-poll"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "product"
+id = "os-plugin-host-poll"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-kernel = { path = "../../../../../../../../🔨️modules/🎠️kernel/📦️packages/🦀️rust" }
+semio-framework-kernel-identity = { path = "../../../../../../../../🔨️modules/🎠️kernel/🪪️identity/📦️packages/🦀️rust" }
+semio-framework-actor = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-job-return-escrow-publication = { workspace = true }
+semio-framework-job-native-decode = { path = "../../../../../../../../🔨️modules/🧵️job/⏱️context/🛬️decode/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-pack-json-output-receiving = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🫴️unique/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+semio-plugin-guest-contract = { workspace = true }
+semio-plugin-host-guest-runtime = { path = "../../../🎭️guest-runtime/📦️packages/🦀️rust" }
+semio-plugin-host-post-turn-relay = { path = "../../../🔀️post-turn-relay/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-os-kernel = { workspace = true }
+semio-framework-async = { workspace = true, features = ["entrypoint"] }
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-trace = { workspace = true }
+semio-plugin-interpreter-runtime = { workspace = true, features = ["testkit"] }
+serde_json = { workspace = true }
+wasmtime = { version = "47.0.3", features = ["cranelift"] }

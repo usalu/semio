@@ -287,10 +287,10 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧠️s
 [workspace.dependencies.semio-s-artifact-raster-raster-editor-tests]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🥣️companion/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-plugin-ownership]
+[workspace.dependencies.semio-plugin-ownership]
 path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-os-store-operation-wire]
+[workspace.dependencies.semio-os-store-operation-wire]
 path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-value-persistent]

@@ -1,6 +1,6 @@
+//! 🔗️ Original native receiving seals one typed child after its own receiver has transferred and closed.
 use crate::OriginalReceivingPrimary;
 use crate::RetainedWorkOutcome;
-//! 🔗️ Original native receiving seals one typed child after its own receiver has transferred and closed.
 use super::{NativeReceive,NativeReceiver};
 use crate::{NativeDecodeControl,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneBinding,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,retained_clone_grant_admits},shared_issuance::{SealedShared,SharedIssuer}};
 use std::mem::ManuallyDrop;

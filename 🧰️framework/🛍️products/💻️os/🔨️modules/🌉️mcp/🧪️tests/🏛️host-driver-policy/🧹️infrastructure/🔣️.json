@@ -1,0 +1,1 @@
+{"cases":[{"now":1000,"absolute":2000,"cleanup":500,"guest":100,"expected":1100},{"now":1550,"absolute":2000,"cleanup":500,"guest":100,"expected":1600},{"now":1600,"absolute":2000,"cleanup":500,"guest":100,"expected":null},{"now":1999,"absolute":2000,"cleanup":500,"guest":100,"expected":null}],"invalid":[0,500,501]}

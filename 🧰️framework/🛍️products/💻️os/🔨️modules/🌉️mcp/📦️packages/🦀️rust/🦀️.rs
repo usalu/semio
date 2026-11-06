@@ -58,4 +58,4 @@ pub use crate::entrypoint::run_mcp_entrypoint;
 
 /** 🏛️ Shares the explicitly authored host policy across native facade laws. */
 #[cfg(test)]
-pub(crate) fn test_host_driver_policy()->semio_framework_plugin_host::GuestRelayDriverPolicy{serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy")}
+pub(crate) fn test_host_driver_policy()->semio_plugin_host::GuestRelayDriverPolicy{serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy")}

@@ -1,0 +1,30 @@
+[
+  {
+    "name": "other live producer retained",
+    "total": 3,
+    "old": 1,
+    "next": 0,
+    "expected": 2
+  },
+  {
+    "name": "new producer born",
+    "total": 2,
+    "old": 0,
+    "next": 1,
+    "expected": 3
+  },
+  {
+    "name": "producer replaces its own table",
+    "total": 5,
+    "old": 2,
+    "next": 3,
+    "expected": 6
+  },
+  {
+    "name": "foreign old census rejected",
+    "total": 1,
+    "old": 2,
+    "next": 0,
+    "expected": -1
+  }
+]

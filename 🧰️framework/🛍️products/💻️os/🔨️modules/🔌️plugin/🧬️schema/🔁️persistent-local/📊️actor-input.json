@@ -1,0 +1,10 @@
+[
+  {"wire":{"Job":{"job":7,"kind":"example","input":[1,2],"checkpoint":null}},"valid":true},
+  {"wire":{"Poll":{"events":[],"command_page":null,"cold_pair_page":null,"limits":{"retainedPolicy":{"maximumItems":1,"maximumCopyBytes":2,"maximumCapacityBytes":3,"maximumReleaseBytes":4,"maximumDepth":5},"workFuel":6,"fuel":7,"deadlineUs":8,"maxEffects":9,"maxPatchBytes":10,"maxFrames":11}}},"valid":true},
+  {"wire":{"Codec":{"artifact_schema":"note","document_id":"doc","pack":[],"spr":[],"ops":[]}},"valid":true},
+  {"wire":{"Restore":{"state":[1,2]}},"valid":true},
+  {"wire":{"job":7,"kind":"example","input":null,"checkpoint":null},"valid":false},
+  {"wire":{"Codec":{"artifact_schema":"note"}},"valid":false},
+  {"wire":{"Restore":{"state":[],"extra":1}},"valid":false},
+  {"wire":{"Restore":{"state":[]},"Job":{"job":7,"kind":"example","input":null,"checkpoint":null}},"valid":false}
+]

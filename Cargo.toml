@@ -3,6 +3,9 @@ cargo-features = ["trim-paths"]
 [workspace]
 resolver = "2"
 members = [
+    "🧰️framework/🔨️modules/🎠️kernel/📤️return/🔤️json/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🎒️pack/🔤️json/🎟️source/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔁️poll/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🚪️io/📞️imports/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🧪️test/⚖️transient-preparation-law/📦️packages/🦀️rust",
@@ -858,6 +861,8 @@ edition = "2021"
 rust-version = "1.95"
 
 [workspace.dependencies]
+semio-framework-kernel-json = { path = "🧰️framework/🔨️modules/🎠️kernel/📤️return/🔤️json/📦️packages/🦀️rust" }
+semio-framework-pack-json-source = { path = "🧰️framework/🔨️modules/🎒️pack/🔤️json/🎟️source/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-idf = { path = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/⚡️idf/📦️packages/🦀️rust" }
 semio-framework-value-original-slot = { path = "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📦️packages/🦀️rust" }
 semio-ui-contract-values = { path = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/📦️packages/🦀️rust" }
@@ -880,12 +885,7 @@ semio-plugin-host = { path = "🧰️framework/🛍️products/💻️os/🔨️
 semio-plugin-interpreter = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/📦️packages/🦀️rust" }
 semio-plugin-interpreter-runtime = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/📦️packages/🦀️rust" }
 semio-plugin-guest-contract = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️guest-contract/📦️packages/🦀️rust" }
-semio-framework-plugin-host-test-component = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust" }
-semio-framework-plugin-host = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
-semio-framework-plugin-interpreter = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/📦️packages/🦀️rust" }
-semio-framework-plugin-interpreter-imports = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🚪️io/📞️imports/📦️packages/🦀️rust" }
-semio-framework-plugin-interpreter-runtime = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/📦️packages/🦀️rust" }
-semio-framework-plugin-guest-contract = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️guest-contract/📦️packages/🦀️rust" }
+semio-plugin-interpreter-imports = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🚪️io/📞️imports/📦️packages/🦀️rust" }
 semio-repo-test-host = { path = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust" }
 semio-renderer-wgpu = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust" }
 semio-framework-artifact-infinite-dag = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/📦️packages/🦀️rust" }
@@ -938,6 +938,7 @@ semio-framework-async-timer = { path = "🧰️framework/🔨️modules/⏳️as
 semio-framework-trace = { path = "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-job = { path = "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-framework-job-payload = { path = "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust" }
+semio-framework-job-return-escrow-publication = { path = "🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/🪙️escrow/📦️packages/🦀️rust" }
 semio-framework-tool-run = { path = "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust" }
 semio-framework-tool-run-tick-wire = { path = "🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/📦️packages/🦀️rust" }
 semio-framework-tool-run-entities = { path = "🧰️framework/🔨️modules/⏯️tool-run/👥️entities/📦️packages/🦀️rust" }

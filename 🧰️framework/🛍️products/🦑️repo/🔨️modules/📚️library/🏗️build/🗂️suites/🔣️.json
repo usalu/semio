@@ -2,6 +2,19 @@
   "version": 1,
   "suites": [
     {
+      "id": "build-browser-preparation",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../🧪️testing/🌐️browser/🧰️preparation/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
       "id": "build-command-line",
       "budgetMs": 300000,
       "typecheck": "none",

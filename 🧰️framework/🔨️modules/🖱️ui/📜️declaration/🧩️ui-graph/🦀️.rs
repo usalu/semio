@@ -94,18 +94,7 @@ pub use status_builders::{ui_empty_state, ui_error_state, ui_import_drop_zone, u
 
 //#region 🔖️ComponentScenes
 
-// 🎬️ The 15 product scene structs (`Canvas2dScene`, `World3dScene`, `NodeGraphScene` + its
-// nested port/node/edge/viewport/operator records, `TextEditorScene`, `TableScene`,
-// `Paint2dScene`, `IconRenderScene`, `VirtualFileSystemScene`, `TiledMapScene`, `Board2dScene`,
-// `InkCanvasScene`, `GraphTimelineScene`, `DiffViewScene`, `EventFeedScene`, `BlockListScene`)
-// relocated to `semio-ui-scene` — ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-
-// RUNTIME packet `scene-surface`. Re-exported here (not a compatibility shim: this crate
-// genuinely still builds `UiNode`s from them, see `build_table_scene` etc. below) so every
-// Scene payload ownership belongs to the independent scene contract.
-// `TableScene::drop_action_json` and `NodeGraphOperatorChannelRecord::default_json` are now
-// opaque JSON strings, not live `ActionDescriptor`/`serde_json::Value` — see the scene crate's
-// own `🦀️scenes.rs` header for why (that crate is wasm-safe and depends on nothing beyond
-// `ui_contract`/`serde`, so it cannot carry either type).
+// 🎬️ The 15 product scene structs (`Canvas2dScene`, `World3dScene`, `NodeGraphScene` + its [Design notes](README.md#source-notes-97).
 pub use ui_scene::{
     canvas2d_snapshot_abort_write, canvas2d_snapshot_abort_write_step, canvas2d_snapshot_admit_page, canvas2d_snapshot_begin, canvas2d_snapshot_begin_close, canvas2d_snapshot_close_step, canvas2d_snapshot_seal,
     canvas2d_snapshot_terminal_is_empty, canvas2d_snapshot_with_page, canvas2d_snapshot_write_terminal_is_empty, decode as decode_surface_doc, encode as encode_surface_doc, world3d_snapshot_abort_write, world3d_snapshot_abort_write_step,
@@ -141,13 +130,7 @@ pub use ui_scene::{
 include!("../../🧪️tests/🔬️targets-wgpu-component-ui-ui-node-wire-format/🦀️.rs");
 //#endregion 🔖️WireFormatGoldenTests
 
-//#region 🔖️ValueRoundTripTests
-/// 🌱️ `ToValue`/`FromValue` round-trip tests for ticket
-/// 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS's additive pass over
-/// `pub mod ui`'s standalone node types, plus (since `semio-ui-scene` landed hand-
-/// written `ToValue`/`FromValue` for all 15 embedded scene payload types) the previously-
-/// blocked recursive-through-`UiNode` family: `UiStackNode`/`UiGroupNode`/`UiFieldNode`/
-/// `UiSectionNode`/`UiInspectorFieldGroup`/`UiComponentSceneNode`/`UiNode` itself.
+/// 🌱️ `ToValue`/`FromValue` round-trip tests for ticket [Design notes](README.md#source-notes-144).
 #[cfg(test)]
 include!("../../🧪️tests/🔬️targets-wgpu-component-ui-value-round-trip/🦀️.rs");
 //#endregion 🔖️ValueRoundTripTests

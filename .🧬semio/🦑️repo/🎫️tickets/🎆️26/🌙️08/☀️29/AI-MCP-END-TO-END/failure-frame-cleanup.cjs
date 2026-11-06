@@ -1,0 +1,4 @@
+const fs=require('node:fs');const file='🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/🎭️exports/🦀️.rs';const before=fs.readFileSync(file,'utf8');
+const old='if ORIGINAL_FAILURE_FRAME.with(|frame|!frame.borrow().is_empty())||ORIGINAL_FAILURE_DESCRIPTOR.with(|descriptor|descriptor.borrow().is_some()){return Ok(false)}ORIGINAL_OWNED_INPUT.with';
+const next='if ORIGINAL_FAILURE_DESCRIPTOR.with(|descriptor|descriptor.borrow().is_some()){return Ok(false)}if !ORIGINAL_FAILURE_FRAME.with(|frame|frame.borrow_mut().close_unpublished(cx))?{return Ok(false)}ORIGINAL_OWNED_INPUT.with';
+if(before.split(old).length!==2)throw Error('failure cleanup gate changed');const temp='.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/AI-MCP-END-TO-END/🗑️generated/failure-frame-cleanup.tmp';fs.writeFileSync(temp,before.replace(old,next));if(fs.readFileSync(file,'utf8')!==before)throw Error('shared exports changed');fs.renameSync(temp,file);

@@ -1,0 +1,30 @@
+[
+  {
+    "purpose": "runtime",
+    "runtime": "bun",
+    "version": "1.4.2",
+    "pin": "1.4.2",
+    "path": "runtime"
+  },
+  {
+    "purpose": "runtime",
+    "runtime": "bun",
+    "version": "1.4.1",
+    "pin": "1.4.2",
+    "path": "publication"
+  },
+  {
+    "purpose": "runtime",
+    "runtime": "node",
+    "version": "1.4.2",
+    "pin": "1.4.2",
+    "path": "publication"
+  },
+  {
+    "purpose": "published",
+    "runtime": "bun",
+    "version": "1.4.2",
+    "pin": "1.4.2",
+    "path": "publication"
+  }
+]

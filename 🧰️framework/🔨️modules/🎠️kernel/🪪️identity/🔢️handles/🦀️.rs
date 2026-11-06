@@ -1,5 +1,5 @@
 //! 🔢️ Artifact and window identities preserve their full canonical u128 decimal string across every codec.
-use super::{ArtifactHandle,WindowHandle};
+use super::{ArtifactHandle,WindowHandle,CapabilityToken};
 use semio_framework_value::{ValueError,ValueRefusalKind,native_decoding::{NativeReceive,owned::tree::{NativeValueSource,NativeScalarValue,NativeScalarReceiver}}};
 pub(super) fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"native handle requires canonical decimal u128 string")}
 pub(super) fn parse(text:&str)->Result<u128,ValueError>{if text.is_empty()||text.len()>39||text.len()>1&&text.as_bytes()[0]==b'0'||!text.bytes().all(|byte|byte.is_ascii_digit()){return Err(invalid())}text.parse().map_err(|_|invalid())}
@@ -14,4 +14,5 @@ macro_rules! handle{($ty:ident)=>{
 };}
 handle!(ArtifactHandle);
 handle!(WindowHandle);
+handle!(CapabilityToken);
 #[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;

@@ -72,12 +72,7 @@ pub(super) fn capability_from_command(id: &str, owner: CapabilityOwner, artifact
     }
 }
 
-/// 🧩️ One typed contribution row, reduced to the three things a capability needs: a stable local
-/// id, a human title, and the artifact kind it acts on. Implemented once per `ContributionSet`
-/// category so {@link capability_from_contribution} stays a single generic function — the four
-/// categories carry genuinely different shapes (an inference names schemas, an io entry names a
-/// dialect pair), and flattening them back into one untyped row would discard exactly the fields
-/// that make a contributed capability findable.
+/// 🧩️ One typed contribution row, reduced to the three things a capability needs: a stable local [Design notes](README.md#source-notes-75).
 trait ContributionRow {
     /// 🪪️ Stable id segment, unique within `(plugin, category)`.
     fn row_id(&self) -> String;

@@ -14,7 +14,7 @@ fn refusal(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKin
 
 #[path="../../⚛️reactor/🎟️context/🌉️call/🦀️.rs"]
 mod guest_entry;
-pub use guest_entry::{OriginalActorEntryFailure,OriginalActorGuestEntry,OriginalActorFixedCall,OriginalActorFixedKind,OriginalActorFixedReceipt,OriginalTurnOutput};
+pub use guest_entry::{with_core_wire_reserve,borrowed_scalar_escrow,OriginalActorEntryFailure,OriginalActorGuestEntry,OriginalActorFixedCall,OriginalActorFixedKind,OriginalActorFixedReceipt,OriginalActorTurnOutputReceipt,OriginalEscrowExtent,OriginalEscrowRow,OriginalEscrowSnapshot,OriginalTurnOutput};
 pub use guest_entry::{OriginalOwnedJobCall,OriginalOwnedJobChunk,OriginalOwnedJobFixedReceipt,OriginalOwnedJobReceiptLoan,OriginalOwnedJobStatus};
 
 /// 🧪️ Links narrow native tests to the same production owner and canonical neutral law bodies.

@@ -1,4 +1,4 @@
-use semio_framework_plugin::{TreeWindowRequest, ViewModel};
+use semio_plugin::{TreeWindowRequest, ViewModel};
 use crate::*;
 use semio_framework_value::DslValue;
 use super::shown_in;
@@ -7,7 +7,7 @@ use semio_s_plugin_norm_compliance::{AnnexChoice, CheckResult, ClauseId, Localiz
 const GOLDEN: &str = include_str!("../🔮️oracles/🔣️.json");
 
 fn project(node: BuiltNode) -> String {
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(node)).expect("projection")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::ComponentTree::new(node)).expect("projection")
 }
 
 fn number(value: f64) -> DslValue {
@@ -75,13 +75,13 @@ fn failing_report() -> CheckReport {
 }
 
 fn open_everything() -> ViewModel {
-    use semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR as SEP;
+    use semio_plugin::TREE_WINDOW_PATH_SEPARATOR as SEP;
     let root = inputs_section_id("");
     let members = format!("{root}{SEP}{}", inputs_section_id("members"));
     let b1 = format!("{members}{SEP}{}", inputs_section_id("members[id=b1]"));
     let c2 = format!("{members}{SEP}{}", inputs_section_id("members[id=c2]"));
     let request = |node_key: String| TreeWindowRequest { body_key: BODY.into(), node_key, open: Some(true), offset: 0, rows: 32 };
-    ViewModel { tree_windows: vec![request(root), request(members), request(b1), request(c2)], tree_viewport_rows: Some(32), ..ViewModel::new(Locale::En, semio_framework_ui_locale::Terminology::Native) }
+    ViewModel { tree_windows: vec![request(root), request(members), request(b1), request(c2)], tree_viewport_rows: Some(32), ..ViewModel::new(Locale::En, semio_ui_locale::Terminology::Native) }
 }
 
 const BODY: &str = "norm.mock.inputs";
@@ -353,13 +353,13 @@ fn a_multi_selection_shows_the_common_value_or_mixed_and_its_controls_raise_one_
     let row = |id: &str, x: f64, kind: &str| DslValue::object(vec![("id".to_string(), DslValue::String(id.into())), ("xM".to_string(), DslValue::float(x)), ("kind".to_string(), DslValue::String(kind.into()))]);
     let tree = DslValue::object(vec![("beams".to_string(), DslValue::Array(vec![row("b1", 1.0, "steel"), row("b2", 2.0, "steel"), row("b3", 3.0, "timber")]))]);
     let both = ["b1".to_string(), "b2".to_string()];
-    let json = |locale| semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_bulk_inspector(&tree, "beams", &both, locale, "norm.mock", Some(admitted_metadata), UnitSystem::Engineering).expect("bulk inspector"))).expect("projection");
+    let json = |locale| semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::ComponentTree::new(render_bulk_inspector(&tree, "beams", &both, locale, "norm.mock", Some(admitted_metadata), UnitSystem::Engineering).expect("bulk inspector"))).expect("projection");
     let english = json(Locale::En);
     assert!(english.contains("2 selected") && english.contains("Mixed"), "xM differs between b1 and b2: {english}");
     assert!(english.contains("setFields") && english.contains("b1\\nb2") && english.contains("xM"), "a control writes every selected row: {english}");
     assert!(!english.contains("\"setField\""), "no single-row write remains: {english}");
     assert!(json(Locale::De).contains("2 ausgewählt") && json(Locale::De).contains("Gemischt"));
-    let same = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_bulk_inspector(&tree, "beams", &["b1".to_string(), "b2".to_string()], Locale::En, "norm.mock", Some(admitted_metadata), UnitSystem::Engineering).expect("bulk"))).expect("projection");
+    let same = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::ComponentTree::new(render_bulk_inspector(&tree, "beams", &["b1".to_string(), "b2".to_string()], Locale::En, "norm.mock", Some(admitted_metadata), UnitSystem::Engineering).expect("bulk"))).expect("projection");
     assert!(same.contains("steel"), "kind is the same in both rows: {same}");
     let mixed_kind = ["b2".to_string(), "b3".to_string()];
     assert_eq!(bulk_rows(&tree, "beams", &mixed_kind, false).iter().filter(|line| line.mixed).count(), 2);

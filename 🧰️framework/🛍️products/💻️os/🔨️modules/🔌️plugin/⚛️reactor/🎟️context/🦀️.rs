@@ -5,6 +5,11 @@ use semio_framework_job::{StepBudget, StepContext};
 use semio_framework_value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
 use std::mem::ManuallyDrop;
 
+#[path="🌉️call/📥️input/🦀️.rs"]
+pub mod original_input;
+#[path="🌉️call/📤️fault-frame/🦀️.rs"]
+pub mod original_failure_frame;
+
 use semio_framework_actor::retained_context::{OriginalActorAdmissionReply, OriginalActorCall, OriginalActorCloseReply};
 
 #[cfg(all(target_arch="wasm32",target_env="p2"))]

@@ -10,6 +10,8 @@ impl UiArenaLifetime{
  pub fn admit_source(input:&mut Option<Self>,output:&mut Option<OriginalNativeLease<Self>>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{cx.admit_original_native(input,output)}
  pub fn ready(&self)->bool{!self.closing&&self.registration.as_ref().is_some_and(UiArenaRegistration::registered)}
  pub fn advance_on_source(lease:&mut OriginalNativeLease<Self>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{let mut ready=false;lease.with_native(cx,|home,cx|{home.advance(cx)?;ready=home.ready();Ok(())})?;Ok(ready)}
+ /// 🛡️ Only the original lifetime owner can recover its poisoned registry borrow.
+ pub fn recover_on_source(lease:&mut OriginalNativeLease<Self>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{let mut recovered=false;lease.with_native(cx,|home,cx|{let owner=home.registration.as_mut().ok_or_else(||semio_framework_value::ValueError::invariant("UI arena recovery requires its registered owner"))?;let turn=owner.recover_borrow_step(cx.retained_grant());recovered=matches!(&turn.result,Ok(semio_framework_value::RetainedCloneStep::Complete(_)));settle(turn,cx)})?;Ok(recovered)}
  fn advance(&mut self,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
   if self.closing{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"UI arena lifetime is closing").into())}if self.ready()||cx.should_yield(){return Ok(())}
   if self.opening.is_none(){let d=UiArenaOpening::constructor_demand();if !fits(cx,d,false){return Ok(())}cx.consume_retained(progress(d))?;cx.consume_fuel(1);self.opening=Some(UiArenaOpening::new());return Ok(())}

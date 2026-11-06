@@ -1,6 +1,6 @@
 //! 📦️ Packed coverage preserves flat JSON and metadata at every immutable page boundary.
 use super::*;
-use semio_framework_plugin::artifact_app_laws::OriginalWorkFixture;
+use semio_plugin::artifact_app_laws::OriginalWorkFixture;
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 fn serde_rows(count:usize,cycle:&[serde_json::Value])->serde_json::Value{serde_json::Value::Array((0..count).map(|index|serde_json::json!({"start":index,"length":1,"coverage":cycle[index%cycle.len()]})).collect())}
 #[test]

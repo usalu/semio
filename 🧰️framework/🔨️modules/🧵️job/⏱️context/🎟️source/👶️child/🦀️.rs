@@ -1,13 +1,13 @@
 //! 👶️ One child identity is originally issued in separate paid parent turns and lends only actual supplier inputs.
 use super::*;
 
-/// 🪢️ Holds the upstream original source through initial child births, callbacks and witnessed physical return.
+/// 🪢️ See `README.md`.
 pub struct OriginalCallerChildSource{upstream:ManuallyDrop<Option<OriginalCallerSourceLoan>>,cancel:ManuallyDrop<Option<CancelToken>>,cancel_retiring:ManuallyDrop<Option<CancelTokenRetirement>>,initial_child_ledger:ManuallyDrop<Option<JobPayloadAuthority>>,parent:ManuallyDrop<Option<OriginalCallerSourceParent>>,operation:OperationId,generation:Generation,origin:OriginalSourceBinding,parent_identity:usize,ready:bool,closing:bool}
 impl OriginalCallerChildSource{
  #[cfg(any(test,feature="testkit"))]
  pub(crate) fn test_status(&self)->(bool,bool,usize,OriginalSourceBinding){(self.ready,self.closing,self.parent_identity,self.origin)}
 
- /// 🌱️ Retains only the declared inline child header; original aliases are admitted by later paid turns.
+ /// 🌱️ See `README.md`.
  pub fn new(parent:&OriginalCallerSourceParent,cx:&StepContext<'_>,operation:OperationId,generation:Generation)->Result<Self,ValueError>{if operation.0==0||generation.0==0{return Err(refused("original child source requires its declared nonzero business identity"))}parent.validate_borrowed_context(cx)?;Ok(Self{upstream:ManuallyDrop::new(None),cancel:ManuallyDrop::new(None),cancel_retiring:ManuallyDrop::new(None),initial_child_ledger:ManuallyDrop::new(None),parent:ManuallyDrop::new(None),operation,generation,origin:OriginalSourceBinding::borrow(cx),parent_identity:parent.source_identity()?,ready:false,closing:false})}
 
  fn validate_parent(&self,parent:&OriginalCallerSourceParent,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{
@@ -56,7 +56,7 @@ impl OriginalCallerChildSource{
 }
 impl Drop for OriginalCallerChildSource{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original child source reached Drop before all original births and upstream source loan returned")}}
 
-/// 🧾️ Keeps the entire semantic value and independent receiving cause owned after actual parent spending is already posted.
+/// 🧾️ See `README.md`.
 #[derive(Debug)]
 pub struct OriginalChildTurnReturn<T>{original:ManuallyDrop<Option<(Result<T,OriginalTurnFailure>,Option<ValueError>)>>,before:RetainedCloneProgress,after:RetainedCloneProgress}
 impl<T> OriginalChildTurnReturn<T>{pub fn raw_progress(&self)->Result<RetainedCloneProgress,ValueError>{delta(self.before,self.after)}pub fn original_receiving(&self)->(RetainedCloneProgress,RetainedCloneProgress){(self.before,self.after)}pub fn admitted(&self)->Option<&Result<T,OriginalTurnFailure>>{let(original,refusal)=self.original.as_ref()?;refusal.is_none().then_some(original)}pub fn retained_original(&self)->Option<&Result<T,OriginalTurnFailure>>{self.original.as_ref().map(|(original,_)|original)}pub fn receipt_refusal(&self)->Option<&ValueError>{self.original.as_ref().and_then(|(_,refusal)|refusal.as_ref())}pub fn into_original(mut self)->Result<Result<T,OriginalTurnFailure>,Self>{if self.receipt_refusal().is_some(){return Err(self)}Ok(self.original.take().expect("original child return extracted once").0)}pub fn terminal_is_empty(&self)->bool{self.original.is_none()}}

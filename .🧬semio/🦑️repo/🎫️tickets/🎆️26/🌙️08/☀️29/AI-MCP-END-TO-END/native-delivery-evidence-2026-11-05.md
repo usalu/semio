@@ -1,0 +1,3 @@
+# Native Delivery Evidence
+
+The ticket MCP client now preserves each complete received protocol line and stderr chunk immediately in generated logs, before UI output can truncate them. It sends request cancellation on a delivery deadline and awaits the owned child drain after stdin EOF; it no longer force-kills the repository child solely because delivery timed out. Native Source/control preparation and execution deadlines remain unchanged. Existing already-running clients retain their loaded prior behavior; their handles must still be censused before retries. This is ticket instrumentation, not an implementation or native-test pass.

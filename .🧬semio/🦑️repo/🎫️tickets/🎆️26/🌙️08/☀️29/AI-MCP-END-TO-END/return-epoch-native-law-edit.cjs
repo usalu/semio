@@ -1,0 +1,12 @@
+const fs=require('fs'),path='🧰️framework/🔨️modules/🧵️job/⏱️context/📦️return/🎟️place/🧪️tests/🦀️.rs',before=fs.readFileSync(path,'utf8');if(before.includes('fn sized_return_epoch_watermark_is_paid_only_at_actual_birth'))throw Error('law already exists');
+const law=`
+#[test]
+fn sized_return_epoch_watermark_is_paid_only_at_actual_birth(){
+ let stock=RetainedCloneGrant{maximum_items:64,maximum_copy_bytes:1048576,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:8};let q=RetainedCloneGrant{maximum_items:1,..stock};let mut caller=OriginalJobFixtureCaller::admit(OperationId(8820),Generation(6),stock,clock,10000,128);let mut place=OriginalCallerReturnPlace::empty();let mut target=[0u8;8];let destination=target.as_mut_ptr()as usize;let mut watermark=0u64;
+ caller.turn(q,|cx|{assert!(place.admit_sized_with_epoch(cx,destination,target.len(),&mut watermark).is_err());assert_eq!(watermark,0);Ok(())}).unwrap();let mut born=false;for _ in 0..24{caller.turn(q,|cx|{cx.bind_original_source_epoch(1)?;born=cx.admit_original_return_table()?;Ok(())}).unwrap();if born{break}}assert!(born);
+ caller.turn(q,|cx|{cx.bind_original_source_epoch(2)?;let before=cx.retained_progress();assert!(place.admit_sized_with_epoch(cx,destination,target.len(),&mut watermark)?);let copy=cx.retained_progress().copied_bytes-before.copied_bytes;assert_eq!(copy,semio_framework_job_context::testkit::original_return_source::original_return_claim_copy_bytes()+std::mem::size_of::<Option<OriginalSourceBinding>>()+std::mem::size_of::<Option<(usize,usize)>>()+std::mem::size_of::<u64>());assert_eq!(watermark,2);Ok(())}).unwrap();
+ caller.turn(q,|cx|{cx.bind_original_source_epoch(3)?;let before=cx.retained_progress();assert!(place.admit_sized_with_epoch(cx,destination,target.len(),&mut watermark)?);assert_eq!(cx.retained_progress(),before);assert_eq!(watermark,2);Ok(())}).unwrap();
+ caller.turn(q,|cx|{cx.bind_original_source_epoch(1)?;assert!(place.admit_sized_with_epoch(cx,destination,target.len(),&mut watermark).is_err());assert_eq!(watermark,2);Ok(())}).unwrap();for _ in 0..8{if place.terminal_is_empty(){break}caller.turn(q,|cx|{cx.bind_original_source_epoch(3)?;place.settle_return(cx)?;Ok(())}).unwrap()}assert!(place.terminal_is_empty());caller.retire(stock);
+}
+`;
+const tmp=path+'.guest-epoch-law';fs.writeFileSync(tmp,before+law,{flag:'wx'});if(fs.readFileSync(path,'utf8')!==before){fs.unlinkSync(tmp);throw Error('concurrent source change')}fs.renameSync(tmp,path);

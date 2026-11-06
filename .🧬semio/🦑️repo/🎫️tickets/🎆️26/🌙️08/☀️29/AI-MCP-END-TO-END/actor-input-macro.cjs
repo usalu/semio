@@ -1,0 +1,7 @@
+const fs=require('node:fs');const file='🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📣️macros/⚛️wp4-reactor/🦀️.rs';
+const before=fs.readFileSync(file,'utf8');const marker='        #[cfg(all(target_arch = "wasm32", target_env = "p2"))]\n        #[unsafe(no_mangle)]\n        pub extern "C" fn semio_owned_admit_actor_context_v1(';
+if(before.split(marker).length!==2)throw Error('actor admission marker changed');
+const fields='operation,generation,epoch,clock_binding,absolute_deadline_us,total_fuel,items,copy,capacity,release,depth,policy_items,policy_copy,policy_capacity,policy_release,policy_depth,fuel,deadline_us,cancelled'.split(',');
+const args=fields.map(field=>`${field}:u64`).join(',');
+const added=`        #[cfg(all(target_arch = "wasm32", target_env = "p2"))]\n        #[unsafe(no_mangle)]\n        pub unsafe extern "C" fn semio_owned_admit_actor_input_v1(pointer:u32,length:u32,${args})->u64{\n            match $crate::owned_abi::original_job_budget([${fields.join(',')}]){Ok(budget)=>unsafe{$crate::reactor::original_actor_context::exports::admit_input_owned(pointer,length,budget)},Err(kind)=>$crate::operation_authority::owned_result::encode_refusal(kind)}\n        }\n`;
+const temp='.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/AI-MCP-END-TO-END/🗑️generated/actor-input-macro.tmp';fs.writeFileSync(temp,before.replace(marker,added+marker));if(fs.readFileSync(file,'utf8')!==before)throw Error('shared macro changed');fs.renameSync(temp,file);

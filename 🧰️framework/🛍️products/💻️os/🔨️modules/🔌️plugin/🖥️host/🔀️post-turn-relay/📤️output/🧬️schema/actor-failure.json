@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "verified",
+      "faultView",
+      "exactDescriptor",
+      "source",
+      "recipient",
+      "retirement",
+      "accepted"
+    ],
+    "properties": {
+      "verified": {
+        "type": "boolean"
+      },
+      "faultView": {
+        "type": "boolean"
+      },
+      "exactDescriptor": {
+        "type": "boolean"
+      },
+      "source": {
+        "type": "boolean"
+      },
+      "recipient": {
+        "type": "boolean"
+      },
+      "retirement": {
+        "type": "boolean"
+      },
+      "accepted": {
+        "type": "boolean"
+      }
+    }
+  }
+}

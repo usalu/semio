@@ -2,7 +2,7 @@
 use super::{page::{NormInspectorPreparedPage,Control},original::NormInspectorPageOriginal,walk::{self,Kind}};
 use semio_framework::ArgSchema;
 use semio_framework_plugin_decl_staged_form::{StagedScalarChoice,StagedScalarChoiceSource};
-use semio_framework_ui_locale::{Locale,Terminology};
+use semio_ui_locale::{Locale,Terminology};
 use semio_framework_value::{DslValue,ValueError,ValueRefusalKind};
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"norm.inspector.choice-source")}
 /// 🍱 A borrowed page keeps its current option resident without copying labels, keys or whole option vectors.

@@ -18,8 +18,8 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-persistent = { workspace = true }
-semio-framework-plugin-ownership = { workspace = true }
-semio-framework-os-store-operation-wire = { workspace = true }
+semio-plugin-ownership = { workspace = true }
+semio-os-store-operation-wire = { workspace = true }
 base64_codec = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-2d-compute = { workspace = true }
@@ -30,16 +30,16 @@ semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-job-payload = { workspace = true }
 semio-framework-job-publication = { workspace = true }
-semio-framework-os-command = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
-semio-framework-os-kernel = { workspace = true }
+semio-os-command = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
+semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-pixels = { workspace = true }
-semio-framework-plugin = { workspace = true }
+semio-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-schema-registry = { workspace = true }
 semio-framework-tool-machine = { workspace = true }
-semio-framework-ui-contract = { workspace = true }
-semio-framework-ui-locale = { workspace = true }
+semio-ui-contract = { workspace = true }
+semio-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-raster-raster-editor-commands = { workspace = true }
@@ -59,5 +59,5 @@ semio-framework-action-bus = { path = "../../../../../../../../../../../../🧰�
 [dev-dependencies]
 serde_json = { workspace = true }
 semio-framework-job = { workspace = true, features = ["testkit"] }
-semio-framework-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
+semio-plugin = { workspace = true, features = ["artifact-app-testing"] }

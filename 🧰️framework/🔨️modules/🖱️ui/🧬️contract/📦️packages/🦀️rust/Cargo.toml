@@ -27,6 +27,7 @@ default = []
 typegen = ["dep:semio-ui-contract-typegen"]
 
 [dependencies]
+semio-framework-value-native-owned = { path = "../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-ui-contract-typegen = { path = "../../🧬️schema/🟦️projection/📦️packages/🦀️rust", optional = true }
 semio-ui-contract-text-edit = { path = "../../🪢️text-edit/📦️packages/🦀️rust" }
 semio-ui-contract-builder = { path = "../../🏗️builder/📦️packages/🦀️rust" }

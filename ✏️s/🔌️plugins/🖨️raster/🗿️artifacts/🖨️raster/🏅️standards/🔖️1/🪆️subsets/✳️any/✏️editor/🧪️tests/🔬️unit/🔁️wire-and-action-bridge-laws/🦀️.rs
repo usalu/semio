@@ -226,11 +226,11 @@ fn command_from_action_round_trips_every_command_id() {
             other => other.clone(),
         };
         let camel = camel_case_keys(&payload);
-        let bridged = <RasterPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action(id, &mut Some(camel), &mut None).unwrap_or_else(|error| panic!("action {id} failed to bridge: {}", error.message));
+        let bridged = <RasterPlayApp as semio_plugin::ArtifactEditor>::command_from_action(id, &mut Some(camel), &mut None).unwrap_or_else(|error| panic!("action {id} failed to bridge: {}", error.message));
         assert_eq!(bridged.command_id(), id, "command_id mismatch for action {id}");
         assert_eq!(bridged, command, "payload mismatch for action {id}");
     }
-    assert!(<RasterPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action("nonsense", &mut None, &mut None).is_err());
+    assert!(<RasterPlayApp as semio_plugin::ArtifactEditor>::command_from_action("nonsense", &mut None, &mut None).is_err());
 }
 
 /// 🐫️ The shell's spelling of the payload keys.
@@ -258,9 +258,9 @@ fn camel_case_keys(value: &semio_framework_value::DslValue) -> semio_framework_v
 #[test]
 fn command_from_action_bridges_host_spellings() {
     let args = |json: &str| semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture JSON"));
-    let bridge = |action: &str, json: &str| <RasterPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action(action, &mut Some(args(json)), &mut None).expect(action);
+    let bridge = |action: &str, json: &str| <RasterPlayApp as semio_plugin::ArtifactEditor>::command_from_action(action, &mut Some(args(json)), &mut None).expect(action);
     assert_eq!(bridge("maskFromSelection",r#"{"layerId":"paint","expectedImageKey":null}"#),RasterCommand::MaskFromSelection(semio_s_artifact_raster_raster_editor::commands::mask_from_selection::MaskFromSelection {layer_id:"paint".into(),expected_image_key:None}));
-    for json in [r#"{"layerId":"paint","expectedImageKey":null,"selection":[]}"#,r#"{"layerId":"paint","selection":[]}"#] {assert!(<RasterPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action("maskFromSelection",&mut Some(args(json)),&mut None).is_err());}
+    for json in [r#"{"layerId":"paint","expectedImageKey":null,"selection":[]}"#,r#"{"layerId":"paint","selection":[]}"#] {assert!(<RasterPlayApp as semio_plugin::ArtifactEditor>::command_from_action("maskFromSelection",&mut Some(args(json)),&mut None).is_err());}
     assert_eq!(bridge("setActiveExample", r#"{"exampleId":"demo"}"#), RasterCommand::SetActiveExample(semio_s_artifact_raster_raster_editor::commands::set_active_example::SetActiveExample { example_id: "demo".into() }));
     assert_eq!(bridge("deleteLayer", r#"{"id":"layer-1"}"#), RasterCommand::DeleteLayer(semio_s_artifact_raster_raster_editor::commands::delete_layer::DeleteLayer { layer_id: "layer-1".into() }));
     assert_eq!(bridge("setCamera", r#"{"camera":{"x":1,"y":2,"zoom":3}}"#), RasterCommand::SetCamera(semio_s_artifact_raster_raster_editor::commands::camera::set_camera::SetCamera { camera: semio_s_artifact_raster_raster_model::RasterCamera { x: 1.0, y: 2.0, zoom: 3.0 } }));

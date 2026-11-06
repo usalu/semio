@@ -1,0 +1,24 @@
+const fs=require('fs');function stage(f,edit){const before=fs.readFileSync(f,'utf8');let s=before;function rep(a,b,n=1){if(s.split(a).length-1!==n)throw Error(f+': '+a);s=s.split(a).join(b)}edit(rep);return{f,before,s}}
+const f='🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/🎟️source/🦀️.rs';const src=stage(f,rep=>{
+ rep('const TABLE_UPDATE_COPY:usize=2*std::mem::size_of::<OriginalReturnEscrowAmounts>()+std::mem::size_of::<bool>()+std::mem::size_of::<u64>();','const TABLE_UPDATE_COPY:usize=2*std::mem::size_of::<OriginalReturnEscrowAmounts>()+std::mem::size_of::<bool>()+std::mem::size_of::<u64>()+2*std::mem::size_of::<u8>()+std::mem::size_of::<usize>();\nconst TABLE_FINAL_COPY:usize=std::mem::size_of::<u8>();');
+ rep('held_items:usize,held_copy_bytes:usize,held_fuel:u64,claims:usize,serial:u64,failure:','held_items:u8,held_copy_bytes:usize,held_fuel:u8,claims:u8,serial:u64,failure:');
+ rep('held_items:self.held_items,held_copy_bytes:self.held_copy_bytes,held_fuel:self.held_fuel,claims:self.claims,','held_items:usize::from(self.held_items),held_copy_bytes:self.held_copy_bytes,held_fuel:u64::from(self.held_fuel),claims:usize::from(self.claims),');
+ rep('checked_sub(self.held_items).ok_or_else','checked_sub(usize::from(self.held_items)).ok_or_else');rep('fuel.checked_sub(self.held_fuel).ok_or_else','fuel.checked_sub(u64::from(self.held_fuel)).ok_or_else');
+ rep('2*TABLE_UPDATE_COPY+if local{LOCAL_ACK_COPY}else{0}','2*TABLE_UPDATE_COPY+TABLE_FINAL_COPY+if local{LOCAL_ACK_COPY}else{0}');
+ rep('2*TABLE_UPDATE_COPY+if budget.get().delivery==OriginalReturnDelivery::LocalWitness{LOCAL_ACK_COPY}else{0}','2*TABLE_UPDATE_COPY+TABLE_FINAL_COPY+if budget.get().delivery==OriginalReturnDelivery::LocalWitness{LOCAL_ACK_COPY}else{0}');
+ rep('OriginalReturnClaimCredit{source:origin.source,recipient:origin.recipient,serial,slot,local,capture:true','OriginalReturnClaimCredit{source:origin.source,serial,slot,local,capture:true');
+ rep('credit.source!=origin.source||credit.recipient!=origin.recipient||credit.serial!=witness.serial||witness.source!=origin.source||witness.recipient!=origin.recipient','credit.source!=origin.source||credit.serial!=witness.serial||witness.source!=origin.source');
+ rep('let held=1+usize::from(witness.release_capture);let actual_copy=TABLE_UPDATE_COPY+if witness.phase==OriginalReturnPhase::Capture{extent}else if credit.local{LOCAL_ACK_COPY}else{0};','let held=1u8+u8::from(witness.release_capture);let actual_copy=TABLE_UPDATE_COPY+if witness.phase==OriginalReturnPhase::Capture{extent}else{TABLE_FINAL_COPY+if credit.local{LOCAL_ACK_COPY}else{0}};');
+ rep('self.held_fuel<u64::try_from(held).unwrap_or(u64::MAX)','self.held_fuel<held');rep('self.held_fuel-=u64::try_from(held).unwrap();','self.held_fuel-=held;');
+ rep('pub struct OriginalReturnClaimCredit{source:usize,recipient:usize,serial:u64,slot:usize,local:bool','pub struct OriginalReturnClaimCredit{source:usize,serial:u64,slot:usize,local:bool');
+ rep('TABLE_UPDATE_COPY.checked_add(if phase==OriginalReturnPhase::Capture{copy_bytes}else if self.local{LOCAL_ACK_COPY}else{0})','TABLE_UPDATE_COPY.checked_add(if phase==OriginalReturnPhase::Capture{copy_bytes}else{TABLE_FINAL_COPY+if self.local{LOCAL_ACK_COPY}else{0}})');
+ rep('OriginalReturnWitness{source:self.source,recipient:self.recipient,serial:self.serial','OriginalReturnWitness{source:self.source,serial:self.serial');
+ rep('origin.source==self.source&&origin.recipient==self.recipient','origin.source==self.source');
+ rep('pub struct OriginalReturnWitness{source:usize,recipient:usize,serial:u64','pub struct OriginalReturnWitness{source:usize,serial:u64');
+ rep('||credit.source!=origin.source||credit.recipient!=origin.recipient||credit.serial>budget.serial','||credit.source!=origin.source||credit.serial>budget.serial');
+ rep('origin.source!=witness.source||origin.recipient!=witness.recipient||origin.recipient!=budget.get()','origin.source!=witness.source||origin.recipient!=budget.get()');
+});
+const test='🧰️framework/🔨️modules/🧵️job/⏱️context/📦️return/🎟️place/🧪️tests/🦀️.rs';const t=stage(test,rep=>{
+ rep('let metadata=2*std::mem::size_of::<semio_framework_job_payload::OriginalReturnEscrowAmounts>()+std::mem::size_of::<bool>()+std::mem::size_of::<u64>();let local_ack=std::mem::size_of::<u32>();','let metadata=2*std::mem::size_of::<semio_framework_job_payload::OriginalReturnEscrowAmounts>()+std::mem::size_of::<bool>()+std::mem::size_of::<u64>()+2*std::mem::size_of::<u8>()+std::mem::size_of::<usize>();let local_ack=std::mem::size_of::<u8>()+std::mem::size_of::<u32>();');
+});
+for(const x of [src,t])if(fs.readFileSync(x.f,'utf8')!==x.before)throw Error('changed before prepare');for(const x of [src,t]){let p=x.f+'.guest-bound.tmp';fs.writeFileSync(p,x.s);if(fs.readFileSync(x.f,'utf8')!==x.before){fs.unlinkSync(p);throw Error('changed before rename')}fs.renameSync(p,x.f)}

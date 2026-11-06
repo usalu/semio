@@ -20,7 +20,7 @@ pub const NORM_VIEWER_TOOL_IDS: &[&str] = &["viewportAct"];
 pub const NORM_VIEWER_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: "viewportAct", lanes: &[ArtifactToolPublicationLane::Transient] }];
 
 /// 🧵️ What a norm viewer states to keep its view lane: how it settles its report, projects its scene and reads a `viewportAct` command.
-pub trait NormViewerSurface: semio_framework_plugin::ArtifactViewer<Config = NoConfig, ConfigMutation = NoConfigMutation> {
+pub trait NormViewerSurface: semio_plugin::ArtifactViewer<Config = NoConfig, ConfigMutation = NoConfigMutation> {
     const VARIANT: &'static str;
     const CONTROLLER: &'static str;
     const INTERACTION_DOMAIN: &'static str;
@@ -35,13 +35,13 @@ pub trait NormViewerSurface: semio_framework_plugin::ArtifactViewer<Config = NoC
 }
 
 /// 🕹️ The readonly scene exposes the same entity and check selection vocabulary as the editor, with no edit tools.
-pub fn viewer_interaction_definition(variant: &str) -> semio_framework_plugin::InteractionDefinition {
+pub fn viewer_interaction_definition(variant: &str) -> semio_plugin::InteractionDefinition {
     use semio_s_plugin_norm_structural_scene::EntityKind;
-    crate::viewport_interaction_definition(variant, semio_framework_ui_locale::LocalizedLabel::native("Model", "Modell"), &[EntityKind::Member, EntityKind::Plate, EntityKind::Shell, EntityKind::Solid, EntityKind::Fastener, EntityKind::Support, EntityKind::Load, EntityKind::Surface, EntityKind::Group])
+    crate::viewport_interaction_definition(variant, semio_ui_locale::LocalizedLabel::native("Model", "Modell"), &[EntityKind::Member, EntityKind::Plate, EntityKind::Shell, EntityKind::Solid, EntityKind::Fastener, EntityKind::Support, EntityKind::Load, EntityKind::Surface, EntityKind::Group])
 }
 
 /// 🗺️ Keeps readonly viewport and check addresses admitted when the framework revalidates its interaction state.
-pub fn viewer_interaction_topology<V: NormViewerSurface>(document: &V::Snapshot) -> semio_framework_plugin::InteractionTopology
+pub fn viewer_interaction_topology<V: NormViewerSurface>(document: &V::Snapshot) -> semio_plugin::InteractionTopology
 where
     V::Snapshot: semio_framework_value::ToValue,
 {
@@ -68,30 +68,30 @@ impl NormViewerFrame {
         self.selection.primary(&self.report).or_else(|| self.report.checks.iter().filter(|check| check.status != CheckStatus::NotApplicable && !check.subject.entity_id.is_empty()).max_by(|a, b| a.utilization.total_cmp(&b.utilization)).map(|check| check.subject.entity_id.clone())).map(|id| semio_s_plugin_norm_structural_scene::projection_kit::base_id(&id).to_owned())
     }
 
-    pub fn render_viewport(&self, body: &str, scene: &StructuralScene, domain: &'static str, controller: &'static str, locale: semio_framework_ui_locale::Locale) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    pub fn render_viewport(&self, body: &str, scene: &StructuralScene, domain: &'static str, controller: &'static str, locale: semio_ui_locale::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
         let selected = self.selection.highlights(scene.entities.iter().map(|entity| (entity.entity.kind, entity.entity.id.as_str())));
         crate::toolbar::render_viewport_panel(body, scene, &crate::toolbar::ViewportView { lane: self.lane.clone(), ..Default::default() }, &selected, domain, controller, locale)
     }
 
-    pub fn render_checks(&self, windows: &semio_framework_plugin::TreeWindows<'_>, domain: &'static str, controller: &'static str, locale: semio_framework_ui_locale::Locale) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    pub fn render_checks(&self, windows: &semio_plugin::TreeWindows<'_>, domain: &'static str, controller: &'static str, locale: semio_ui_locale::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
         crate::render_checks_with(&self.report, &self.selection.checks_state(&self.report, ChecksViewState::default()), &ChecksWindowSpec { controller_id: Some(controller), interaction_domain: Some(domain), ..Default::default() }, windows, locale)
     }
 
-    pub fn render_diagrams(&self, body: &str, diagrams: &[semio_s_plugin_norm_structural_scene::Diagram2d], windows: &semio_framework_plugin::TreeWindows<'_>, locale: semio_framework_ui_locale::Locale) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    pub fn render_diagrams(&self, body: &str, diagrams: &[semio_s_plugin_norm_structural_scene::Diagram2d], windows: &semio_plugin::TreeWindows<'_>, locale: semio_ui_locale::Locale) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
         crate::diagrams2d::render_diagrams(body, diagrams, &crate::diagrams2d::DiagramsWindowSpec::default(), windows, locale)
     }
 }
 
 /// 👁️ Paints every readonly Eurocode window from the same report, interaction selection and local view lane.
-pub fn render_norm_viewer<V: NormViewerSurface>(body_key: &str, doc: &ArtifactView<'_, V::Snapshot>, cfg: &ConfigView<'_, V::Config>, view: &semio_framework_plugin::ViewModel, transient: &semio_framework_plugin::TransientView<'_, V::Transient>, interaction: &semio_framework_plugin::app::InteractionView<'_>) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+pub fn render_norm_viewer<V: NormViewerSurface>(body_key: &str, doc: &ArtifactView<'_, V::Snapshot>, cfg: &ConfigView<'_, V::Config>, view: &semio_plugin::ViewModel, transient: &semio_plugin::TransientView<'_, V::Transient>, interaction: &semio_plugin::app::InteractionView<'_>) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
     let frame = NormViewerFrame::new(V::view_report(doc.snapshot), V::view_lane(transient.snapshot), &interaction.selection(V::INTERACTION_DOMAIN).ids);
     let rendered = match body_key {
         key if key == V::VIEWPORT_BODY => frame.render_viewport(body_key, &V::view_scene(doc.snapshot, &frame.report, &view_options_of(&frame.lane)), V::INTERACTION_DOMAIN, V::CONTROLLER, view.locale),
-        key if key == V::CHECKS_BODY => frame.render_checks(&semio_framework_plugin::TreeWindows::for_body(view, body_key), V::INTERACTION_DOMAIN, V::CONTROLLER, view.locale),
-        key if key == V::DIAGRAMS_BODY => frame.render_diagrams(body_key, &V::view_diagrams(doc.snapshot, &frame.report, frame.diagram_focus().as_deref()), &semio_framework_plugin::TreeWindows::for_body(view, body_key), view.locale),
+        key if key == V::CHECKS_BODY => frame.render_checks(&semio_plugin::TreeWindows::for_body(view, body_key), V::INTERACTION_DOMAIN, V::CONTROLLER, view.locale),
+        key if key == V::DIAGRAMS_BODY => frame.render_diagrams(body_key, &V::view_diagrams(doc.snapshot, &frame.report, frame.diagram_focus().as_deref()), &semio_plugin::TreeWindows::for_body(view, body_key), view.locale),
         _ => return V::render(body_key, doc, cfg, view).map(Some).map_err(Into::into),
     };
-    rendered.map(|node| Some(semio_framework_plugin::built_to_component_tree(node))).map_err(Into::into)
+    rendered.map(|node| Some(semio_plugin::built_to_component_tree(node))).map_err(Into::into)
 }
 
 /// 🫧️ The lane mutations of one view event: a stepping intent resolves against the report and the scene (projected only for a combination step), every other event folds directly; no mutation when the lane does not change.
@@ -109,7 +109,7 @@ pub fn view_lane_mutations<T: LaneTransient>(event: LaneEvent, lane: &T, report:
 }
 
 /// 🫧️ `ArtifactViewer::ephemeral` of every norm viewer: the transient mutations of the command, none for presence; the document is only read.
-pub fn viewer_ephemeral<V: NormViewerSurface>(command: &V::Command, doc: &ArtifactView<'_, V::Snapshot>, transient: &semio_framework_plugin::TransientView<'_, V::Transient>) -> (Vec<V::PresenceMutation>, Vec<V::TransientMutation>)
+pub fn viewer_ephemeral<V: NormViewerSurface>(command: &V::Command, doc: &ArtifactView<'_, V::Snapshot>, transient: &semio_plugin::TransientView<'_, V::Transient>) -> (Vec<V::PresenceMutation>, Vec<V::TransientMutation>)
 where
     V::Transient: LaneTransient<Mutation = V::TransientMutation>,
 {
@@ -129,11 +129,11 @@ pub fn norm_view_reduce<V: NormViewerSurface>(
     command: &V::Command,
     snapshot: &V::Snapshot,
     _config: &V::Config,
-    _history: &semio_framework_plugin::HistoryView,
+    _history: &semio_plugin::HistoryView,
     interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::ViewerApp<V>>>,
-    _operation: &semio_framework_plugin::AppOperationContext,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<semio_plugin::ViewerApp<V>>>,
+    _operation: &semio_plugin::AppOperationContext,
 ) -> NormRetainedCommandResult<V::Mutation> {
     if !NORM_VIEWER_TOOL_IDS.contains(&V::command_id(command)) {
         return Err(Fault::from("norm-command-retained-route-rejected"));
@@ -166,8 +166,8 @@ impl<V: NormViewerSurface> NormViewBoundedCommandJobFactory<V> {
 }
 
 impl<V: NormViewerSurface> semio_framework::ToolJobFactory for NormViewBoundedCommandJobFactory<V> {
-    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<semio_framework_plugin::ViewerApp<V>>;
-    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<semio_framework_plugin::ViewerApp<V>>;
+    type Payload = semio_plugin::retained_command::ArtifactRetainedCommandPayload<semio_plugin::ViewerApp<V>>;
+    type Job = semio_plugin::retained_command::ArtifactRetainedCommandJob<semio_plugin::ViewerApp<V>>;
 
     fn keys(&self) -> &[semio_framework::ToolFactoryKey] {
         &self.keys
@@ -177,35 +177,35 @@ impl<V: NormViewerSurface> semio_framework::ToolJobFactory for NormViewBoundedCo
         NORM_RETAINED_PAYLOAD_SCHEMA
     }
 
-    fn classification(&self) -> semio_framework_plugin::InteractiveJobClassification {
-        semio_framework_plugin::InteractiveJobClassification::Migrated
+    fn classification(&self) -> semio_plugin::InteractiveJobClassification {
+        semio_plugin::InteractiveJobClassification::Migrated
     }
 
     fn execution_contract(&self) -> ToolExecutionContract {
         norm_bounded_contract()
     }
 
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: NORM_RETAINED_RAW_BYTES, checkpoint_resume: true);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: NORM_RETAINED_RAW_BYTES, checkpoint_resume: true);
 }
 
-impl<V: NormViewerSurface> semio_framework_plugin::ArtifactOwnedToolJobFactory for NormViewBoundedCommandJobFactory<V> {
-    type Owner = semio_framework_plugin::ViewerApp<V>;
+impl<V: NormViewerSurface> semio_plugin::ArtifactOwnedToolJobFactory for NormViewBoundedCommandJobFactory<V> {
+    type Owner = semio_plugin::ViewerApp<V>;
     const TOOL_IDS: &'static [&'static str] = NORM_VIEWER_TOOL_IDS;
-    const DOCUMENT_SCHEMA: &'static str = <V as semio_framework_plugin::ArtifactViewer>::DOCUMENT_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = <V as semio_plugin::ArtifactViewer>::DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = NORM_VIEWER_PUBLICATION_CONTRACTS;
 }
 
 /// 🧵️ `ArtifactViewer::build_tool_job` for every norm viewer.
-pub fn build_norm_view_tool_job<V: NormViewerSurface>(request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::ViewerApp<V>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-    let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "norm-command-retained-producer-request-absent"))?;
+pub fn build_norm_view_tool_job<V: NormViewerSurface>(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::ViewerApp<V>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+    let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "norm-command-retained-producer-request-absent"))?;
     if !NORM_VIEWER_TOOL_IDS.contains(&original.tool_id.as_str()) {
         return Ok(false);
     }
     let tool_id = V::command_id(&original.command);
     if tool_id != original.tool_id {
-        return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "norm-command-tool-mismatch").into());
+        return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "norm-command-tool-mismatch").into());
     }
-    semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, V::command_id, NORM_RETAINED_RAW_BYTES, 1, true, |request| -> Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::ViewerApp<V>>> { Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, norm_view_reduce::<V>, norm_view_extent::<V>)) })
+    semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, V::command_id, NORM_RETAINED_RAW_BYTES, 1, true, |request| -> Box<dyn semio_plugin::retained_command::ArtifactCommandWork<semio_plugin::ViewerApp<V>>> { Box::new(semio_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, norm_view_reduce::<V>, norm_view_extent::<V>)) })
 }
 //#endregion 🧵️RetainedCommands
 
@@ -221,7 +221,7 @@ macro_rules! norm_owned_view_tool_job_factory {
                 Self($crate::NormViewBoundedCommandJobFactory::<$viewer>::new(controller_id))
             }
 
-            pub fn register(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::ViewerApp<$viewer>>) -> Result<(), semio_framework_plugin::Fault> {
+            pub fn register(registry: &mut semio_plugin::ArtifactToolFactoryRegistry<'_, semio_plugin::ViewerApp<$viewer>>) -> Result<(), semio_plugin::Fault> {
                 let controller = registry.controller_id().to_string();
                 registry.register(Self::new(&controller))
             }
@@ -239,7 +239,7 @@ macro_rules! norm_owned_view_tool_job_factory {
                 semio_framework::ToolJobFactory::payload_schema_id(&self.0)
             }
 
-            fn classification(&self) -> semio_framework_plugin::InteractiveJobClassification {
+            fn classification(&self) -> semio_plugin::InteractiveJobClassification {
                 semio_framework::ToolJobFactory::classification(&self.0)
             }
 
@@ -256,11 +256,11 @@ macro_rules! norm_owned_view_tool_job_factory {
             }
         }
 
-        impl semio_framework_plugin::ArtifactOwnedToolJobFactory for $factory {
-            type Owner = semio_framework_plugin::ViewerApp<$viewer>;
+        impl semio_plugin::ArtifactOwnedToolJobFactory for $factory {
+            type Owner = semio_plugin::ViewerApp<$viewer>;
             const TOOL_IDS: &'static [&'static str] = $crate::NORM_VIEWER_TOOL_IDS;
-            const DOCUMENT_SCHEMA: &'static str = <$viewer as semio_framework_plugin::ArtifactViewer>::DOCUMENT_SCHEMA;
-            const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = $crate::NORM_VIEWER_PUBLICATION_CONTRACTS;
+            const DOCUMENT_SCHEMA: &'static str = <$viewer as semio_plugin::ArtifactViewer>::DOCUMENT_SCHEMA;
+            const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = $crate::NORM_VIEWER_PUBLICATION_CONTRACTS;
         }
     };
 }
@@ -277,8 +277,8 @@ macro_rules! norm_viewer_commands {
                 pub text: Option<String>,
                 pub number: Option<f64>,
             }
-            pub fn handle(_payload: &ViewportAct, _doc: &semio_framework_plugin::ArtifactView<'_, $snapshot>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>) -> Result<semio_framework_plugin::ViewEmit<semio_framework_plugin::NoConfigMutation>, semio_framework_plugin::Fault> {
-                Ok(semio_framework_plugin::ViewEmit::default())
+            pub fn handle(_payload: &ViewportAct, _doc: &semio_plugin::ArtifactView<'_, $snapshot>, _cfg: &semio_plugin::ConfigView<'_, semio_plugin::NoConfig>) -> Result<semio_plugin::ViewEmit<semio_plugin::NoConfigMutation>, semio_plugin::Fault> {
+                Ok(semio_plugin::ViewEmit::default())
             }
         }
     };
@@ -288,7 +288,7 @@ macro_rules! norm_viewer_commands {
 #[macro_export]
 macro_rules! norm_view_command_from_action {
     ($command:ident) => {
-        fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<semio_framework_plugin::Fault>) -> Result<$command, semio_framework_plugin::Fault> {
+        fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<semio_plugin::Fault>) -> Result<$command, semio_plugin::Fault> {
             if let Some(fault) = original_fault.take() {
                 return Err(fault);
             }
@@ -301,9 +301,9 @@ macro_rules! norm_view_command_from_action {
                 })),
                 other => match $crate::shortcut_view_act(other) {
                     Some((action, direction)) => Ok($command::ViewportAct(viewport_act::ViewportAct { action: action.to_string(), text: None, number: Some(direction) })),
-                    None => Err(semio_framework_plugin::Fault::new(
-                        semio_framework_plugin::FaultOrigin::App,
-                        semio_framework_plugin::FaultCode::new("norm.unhandled-action"),
+                    None => Err(semio_plugin::Fault::new(
+                        semio_plugin::FaultOrigin::App,
+                        semio_plugin::FaultCode::new("norm.unhandled-action"),
                         format!("action '{other}' is not one of this viewer's declared verbs (viewportAct/norm.shortcut.<step>)"),
                     )),
                 },
@@ -324,19 +324,19 @@ macro_rules! norm_viewer_surface {
             const CHECKS_BODY: &'static str = concat!("norm.", $variant, ".view.checks");
             const DIAGRAMS_BODY: &'static str = concat!("norm.", $variant, ".view.diagrams");
 
-            fn view_report(document: &<$viewer as semio_framework_plugin::ArtifactViewer>::Snapshot) -> $crate::NormViewReport {
+            fn view_report(document: &<$viewer as semio_plugin::ArtifactViewer>::Snapshot) -> $crate::NormViewReport {
                 ($report)(document)
             }
 
-            fn view_scene(document: &<$viewer as semio_framework_plugin::ArtifactViewer>::Snapshot, report: &$crate::NormViewReport, view: &semio_s_plugin_norm_structural_scene::projection::ViewOptions) -> semio_s_plugin_norm_structural_scene::StructuralScene {
+            fn view_scene(document: &<$viewer as semio_plugin::ArtifactViewer>::Snapshot, report: &$crate::NormViewReport, view: &semio_s_plugin_norm_structural_scene::projection::ViewOptions) -> semio_s_plugin_norm_structural_scene::StructuralScene {
                 ($scene)(document, report, view)
             }
 
-            fn view_diagrams(document: &<$viewer as semio_framework_plugin::ArtifactViewer>::Snapshot, report: &$crate::NormViewReport, focus: Option<&str>) -> Vec<semio_s_plugin_norm_structural_scene::Diagram2d> {
+            fn view_diagrams(document: &<$viewer as semio_plugin::ArtifactViewer>::Snapshot, report: &$crate::NormViewReport, focus: Option<&str>) -> Vec<semio_s_plugin_norm_structural_scene::Diagram2d> {
                 ($diagrams)(document, report, focus)
             }
 
-            fn view_lane(transient: &<$viewer as semio_framework_plugin::ArtifactViewer>::Transient) -> $crate::ViewLane {
+            fn view_lane(transient: &<$viewer as semio_plugin::ArtifactViewer>::Transient) -> $crate::ViewLane {
                 $crate::LaneTransient::lane(transient).view
             }
 

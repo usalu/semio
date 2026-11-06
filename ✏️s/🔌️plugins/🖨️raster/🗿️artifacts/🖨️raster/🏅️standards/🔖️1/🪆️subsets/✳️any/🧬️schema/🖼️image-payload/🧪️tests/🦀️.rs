@@ -1,6 +1,6 @@
 //! 🖼️ Image payloads preserve original pixels, array wire and funded shared-owner closure.
 use super::*;
-use semio_framework_plugin::artifact_app_laws::OriginalWorkFixture;
+use semio_plugin::artifact_app_laws::OriginalWorkFixture;
 use semio_framework_value::{ToValue,RetainedCloneGrant,RetainedCloneStep,RetainedWorkOutcome};
 use semio_framework_value::retained_clone::{RetainedClone,RetainedCloneCursor,RetainedCloneSource};
 use semio_framework_value::retirement::{RetireOwned,arc_custody::SharedControlledRetirement};

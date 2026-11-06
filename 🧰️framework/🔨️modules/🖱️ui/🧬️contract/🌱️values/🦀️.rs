@@ -1,6 +1,6 @@
 //! 🌱️ Canonical bounded UI values, collection arenas, serde and exact retirement.
 use serde::{Deserialize,Deserializer,Serialize,Serializer};
-use std::{fmt,mem::size_of,sync::{LazyLock,Mutex}};
+use std::{fmt,mem::size_of,sync::Mutex};
 pub use semio_ui_contract_budget::*;
 pub use semio_ui_contract_text::{UiText,UiTextOriginalCopy,UI_TEXT_CLIP_MARK};
 pub use semio_ui_contract_identity::{UiNodeId,UiRevision,SurfaceId};
@@ -18,16 +18,13 @@ pub use fixed_map_and_bytes::{UiFixedBytes, UiFixedMap};
 
 #[path = "🏟️collection-arena/🦀️.rs"]
 mod collection_arena;
-use collection_arena::{
-    with_ui_value_arena, UiCollectionHandle, UiCollectionKind, UiPageValue, UiValueArena,
-    UI_VALUE_ARENA,
-};
+use collection_arena::{with_ui_value_arena, UiCollectionKind};
 pub use collection_arena::{
     close_ui_value_page_one, resident_static_backing_bytes, ui_value_headroom, UiValueHeadroom,
     UI_VALUE_AGGREGATE_BYTES,
     UiArenaOpening,UiArenaBacking,
     UiArenaLifetime,
-    UiArenaRegistry,UiArenaRegistration,UiArenaBorrow,ui_value_arena_registry,
+    UiArenaRegistry,UiArenaRegistration,UiArenaBorrow,ui_value_arena_registry,UiCollectionHandle,UiPageValue,UiValueArena,
 };
 
 #[path = "📃️ui-list/🦀️.rs"]
@@ -45,21 +42,7 @@ mod retirement;
 pub use retirement::{close_ui_value_page_with_grant,UiValueRetirement,UiValueRetirementStep};
 pub use retirement::{UiArenaHandback,UiArenaHandbacks,UiTypedRetire,UiTypedRetirementCursor};
 
-//#region 🔖️Value
-/// 🧬️ A neutral, JSON-shaped value — the ONE recursive type in this crate. Every node in
-/// `📃️document.rs` avoids inline recursion by addressing children through [`crate::UiNodeId`] instead
-/// of nesting a node inside another; `UiValue` is the deliberate exception because it does not
-/// describe document shape at all, it describes an arbitrary opaque payload (action args, extension
-/// props) that genuinely IS JSON-shaped, and owned fixed list/map pages give the schema an indirection
-/// to resolve (heap-allocated, not an inline field) rather than the infinitely-sized-struct problem
-/// direct node-in-node nesting would create.
-///
-/// ⚠️ The os-kernel's `DslValue` (`🧰️framework/🔨️modules/🌱️value/🦀️.rs`) must NEVER appear in
-/// this crate — this crate has no such dependency and stays `wasm32-wasip2`/`wasm32-unknown-unknown`
-/// safe by construction. `From`/`Into` conversions between `UiValue` and `DslValue` belong in the
-/// os-kernel crate, never here.
-// 🌱️ No `ToValue`/`FromValue` on `UiValue` — see the DslValue prohibition above. `#[serde(untagged)]`
-// also has no `#[value(...)]` equivalent regardless (would need a hand-written impl).
+/// 🧬️ A neutral, JSON-shaped value — the ONE recursive type in this crate. Every node in [Design notes](README.md#source-notes-45).
 #[derive(Debug, Default, PartialEq, Deserialize)]
 #[serde(untagged)]
 #[expect(clippy::large_enum_variant, reason = "Text stays in its fixed inline byte ceiling; collection payloads use separately credited arena handles.")]
@@ -76,7 +59,7 @@ pub enum UiValue {
 impl UiValue {
     /// 🎟️ Attempts an alias of this exact immutable value without blocking its issuing arena.
     pub fn try_credited_clone(&self)->Result<Option<Self>,&'static str>{
-        let mut arena=match UI_VALUE_ARENA.try_lock(){Ok(arena)=>arena,Err(std::sync::TryLockError::WouldBlock)=>return Ok(None),Err(std::sync::TryLockError::Poisoned(_))=>return Err("UI value alias arena is poisoned")};
+        let mut arena=match ui_value_arena_registry().borrow(){Ok(Some(arena))=>arena,Ok(None)=>return Ok(None),Err(_)=>return Err("UI value alias arena is unavailable")};
         arena.try_clone_value(self).map(Some).ok_or("UI value exact alias admission failed")
     }
     pub fn credited_clone(&self) -> Option<Self> {
@@ -120,8 +103,13 @@ pub use compare_protocol::UiComponentCompareProgress;
 pub mod test_observer;
 
 #[cfg(any(test, feature = "testkit"))]
+#[path="🧪️fixture/🦀️.rs"]
+mod test_arena;
+
+#[cfg(any(test, feature = "testkit"))]
 pub mod testkit {
     pub use super::{fixed_list::*, fixed_map_and_bytes::*, collection_arena::*, ui_list::*, ui_map::*, retirement::*};
+    pub use super::test_arena::UiArenaFixture;
 }
 
 #[path="🌱️original/🦀️.rs"]mod original;

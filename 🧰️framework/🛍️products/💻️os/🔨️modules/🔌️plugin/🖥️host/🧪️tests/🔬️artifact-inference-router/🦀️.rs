@@ -44,12 +44,24 @@ async fn only_exactly_echoed_guest_results_are_publishable() {
         cancellation_id: request.cancellation_id.clone(),
         previous_state: request.previous_state.clone(),
         requested_cache_mode: request.requested_cache_mode.clone(),
-        canonical_payload: request.canonical_payload.clone(),
+        canonical_payload: Some(request.canonical_payload.clone()),
         dependencies: request.dependencies.clone(),
         complete: true,
         actual_cache_mode: request.requested_cache_mode.clone(),
     };
     assert!(validate_inference_echo(&request, &valid).await.is_ok());
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("./🔣️.json")).expect("inference corpus");
+    for case in corpus["cases"].as_array().expect("cases") {
+        let mut wire = serde_json::to_value(&request).expect("third-party request oracle");
+        wire["complete"] = case["complete"].clone();
+        wire["actualCacheMode"] = serde_json::json!("cold");
+        wire["canonicalPayload"] = case["canonicalPayload"].clone();
+        let text = serde_json::to_string(&wire).expect("third-party result wire");
+        let echoed: InferenceRouteResult = semio_framework_pack_json::from_json_str(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("native optional payload");
+        let foreign: InferenceRouteResult = serde_json::from_str(&text).expect("third-party decoder");
+        assert_eq!(echoed, foreign);
+        assert_eq!(validate_inference_echo(&request, &echoed).await.is_ok(), case["accepted"].as_bool().expect("accepted"), "{}", case["name"]);
+    }
     let mut changed_wallet=valid.clone();changed_wallet.retained.maximum_release_bytes-=1;assert!(validate_inference_echo(&request,&changed_wallet).await.is_err());
     let stale = InferenceRouteResult { generation: 8, ..valid };
     assert!(matches!(validate_inference_echo(&request, &stale).await, Err(PluginHostError::Plugin(_))));

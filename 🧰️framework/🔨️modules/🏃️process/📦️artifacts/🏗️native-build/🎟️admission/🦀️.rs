@@ -13,7 +13,7 @@ use std::env;
 use std::ffi::OsString;
 use std::io::{BufRead, BufReader, Write};
 use std::process::{Command, ExitCode, Stdio};
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -37,7 +37,20 @@ struct Unit {
 /// 🧷️ Options whose value is the next argument, so it is never mistaken for the crate root source.
 const VALUED: [&str; 16] = ["--crate-name", "--crate-type", "--edition", "--emit", "--out-dir", "--target", "--extern", "-C", "-L", "-l", "--cfg", "--check-cfg", "--cap-lints", "--error-format", "--json", "-Z"];
 
-/// 🔎️ Reads the unit a compile invocation builds, `None` for probes (`-vV`, `--print`) and arguments that are not UTF-8.
+/// 📥️ Reads one level of rustc response files for the same admission facts as direct arguments.
+fn expand_admission_arguments(args: &[OsString]) -> Result<Vec<String>, String> {
+    let mut expanded = Vec::new();
+    for arg in args {
+        let text = arg.to_str().ok_or_else(|| "compiler argument is not UTF-8".to_string())?;
+        if let Some(path) = text.strip_prefix('@').filter(|path| !path.is_empty()) {
+            let content = std::fs::read_to_string(path).map_err(|error| format!("cannot read compiler response file: {error}"))?;
+            expanded.extend(content.lines().map(str::to_string));
+        } else { expanded.push(text.to_string()); }
+    }
+    Ok(expanded)
+}
+
+/// 🔎️ Reads the unit a compile invocation builds, returning `None` for probes (`-vV`, `--print`).
 fn parse_unit(args: &[String], var: &dyn Fn(&str) -> Option<String>) -> Option<Unit> {
     let mut crate_name = None;
     let (mut crate_types, mut externs) = (Vec::new(), Vec::new());
@@ -342,25 +355,33 @@ fn bounded_threads(args: &[OsString], tokens: Option<usize>) -> Vec<OsString> {
     result
 }
 
-/// 📎️ Applies the same bound inside `@file` arguments: Cargo hands very long rustc command lines over as an argument file (always on Windows), where an authored `threads=0` would otherwise stay unbounded. A file whose lines change is replaced by a bounded copy next to it (`<file>.semio-threads-<pid>`) and the argument points at the copy; the copies are returned so the caller removes them after rustc ended. A file that cannot be read or written keeps its argument, so the bound never stops a compile.
+/// 📎️ Applies the front-end bound across direct and response-file arguments and retains owned copies until rustc ends.
 /// @see ./🧪️tests/🧵️frontend-threads/🟦️.ts
-fn bounded_argfiles(args: &[OsString], tokens: Option<usize>) -> (Vec<OsString>, Vec<std::path::PathBuf>) {
+fn bounded_argfiles(args: &[OsString], tokens: Option<usize>) -> Result<(Vec<OsString>, Vec<std::path::PathBuf>), String> {
+    static NEXT_COPY: AtomicUsize = AtomicUsize::new(0);
     let mut copies = Vec::new();
-    if tokens.filter(|count| *count >= 1).is_none() { return (args.to_vec(), copies) }
+    if tokens.filter(|count| *count >= 1).is_none() { return Ok((args.to_vec(), copies)) }
+    let mut previous_z = false;
+    let mut bound = |arg: &OsString| {
+        let pair = if previous_z { vec![OsString::from("-Z"), arg.clone()] } else { vec![arg.clone()] };
+        previous_z = arg == "-Z";
+        bounded_threads(&pair, tokens).pop().unwrap()
+    };
     let result = args.iter().map(|arg| {
-        let Some(path) = arg.to_str().and_then(|text| text.strip_prefix('@')) else { return arg.clone() };
-        let Ok(text) = std::fs::read_to_string(path) else { return arg.clone() };
+        let Some(path) = arg.to_str().and_then(|text| text.strip_prefix('@')) else { return Ok(bound(arg)) };
+        let text = std::fs::read_to_string(path).map_err(|error| format!("cannot read compiler response file: {error}"))?;
         let lines: Vec<OsString> = text.lines().map(OsString::from).collect();
-        let bounded = bounded_threads(&lines, tokens);
-        if bounded == lines { return arg.clone() }
-        let copy = std::path::PathBuf::from(format!("{path}.semio-threads-{}", std::process::id()));
+        let bounded: Vec<OsString> = lines.iter().map(&mut bound).collect();
+        if bounded == lines { return Ok(arg.clone()) }
+        let copy = std::env::temp_dir().join(format!("semio-threads-{}-{}.rsp", std::process::id(), NEXT_COPY.fetch_add(1, Ordering::Relaxed)));
+        if copy.as_os_str().to_string_lossy().encode_utf16().count() > 256 { return Err("bounded response path exceeds 256 characters".to_string()) }
         let body = bounded.iter().map(|line| line.to_string_lossy().into_owned()).collect::<Vec<_>>().join("\n");
-        match std::fs::write(&copy, body) {
-            Ok(()) => { let mut argument = OsString::from("@"); argument.push(copy.as_os_str()); copies.push(copy); argument }
-            Err(_) => arg.clone(),
-        }
-    }).collect();
-    (result, copies)
+        let mut file = std::fs::OpenOptions::new().write(true).create_new(true).open(&copy).map_err(|error| format!("cannot create bounded response file: {error}"))?;
+        copies.push(copy.clone());
+        file.write_all(body.as_bytes()).map_err(|error| format!("cannot write bounded response file: {error}"))?;
+        let mut argument = OsString::from("@"); argument.push(copy.as_os_str()); Ok(argument)
+    }).collect::<Result<Vec<_>, String>>();
+    match result { Ok(result) => Ok((result, copies)), Err(error) => { for copy in copies { let _ = std::fs::remove_file(copy); } Err(error) } }
 }
 
 /// 🎟️ The admitted parallelism of this run, from the variable the launcher sets for every child of its jobserver.
@@ -462,10 +483,10 @@ fn main() -> ExitCode {
         return ExitCode::from(2);
     };
     let args: Vec<OsString> = arguments.collect();
-    let text: Option<Vec<String>> = args.iter().map(|arg| arg.to_str().map(str::to_string)).collect();
-    let unit = text.and_then(|text| parse_unit(&text, &|name| env::var(name).ok())).map(|unit| Unit { source: absolute(&unit.source), out_dir: absolute(&unit.out_dir), externs: unit.externs.iter().map(|path| absolute(path)).collect(), ..unit });
+    let text = match expand_admission_arguments(&args) { Ok(text) => text, Err(error) => { eprintln!("semio-build-scheduler: {error}"); return ExitCode::from(1); } };
+    let unit = parse_unit(&text, &|name| env::var(name).ok()).map(|unit| Unit { source: absolute(&unit.source), out_dir: absolute(&unit.out_dir), externs: unit.externs.iter().map(|path| absolute(path)).collect(), ..unit });
     let tokens = admitted_tokens();
-    let (args, copies) = bounded_argfiles(&bounded_threads(&args, tokens), tokens);
+    let (args, copies) = match bounded_argfiles(&args, tokens) { Ok(result) => result, Err(error) => { eprintln!("semio-build-scheduler: {error}"); return ExitCode::from(1); } };
     let code = match (unit, env::var("SEMIO_BUILD_BROKER").ok(), env::var("SEMIO_BUILD_PASS").ok()) {
         (Some(unit), Some(endpoint), Some(pass)) => scheduled(&rustc, &args, &unit, &endpoint, &pass).unwrap_or_else(|error| {
             eprintln!("semio-build-scheduler: {error}");
@@ -494,6 +515,55 @@ mod tests {
         assert_eq!(unit.externs, vec!["/b/deps/libalpha-9f.rmeta".to_string()]);
         assert_eq!(unit.build_script_out_dir.as_deref(), Some("/b/build/beta-1/out"));
         assert!(!unit.primary);
+    }
+
+    /// 📋️ Response-file units receive the same broker identity and dependencies as direct arguments.
+    #[test]
+    fn reads_response_file_unit() {
+        let path = std::env::temp_dir().join(format!("semio-scheduler-unit-{}-{}.rsp", std::process::id(), SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos()));
+        std::fs::write(&path, "--crate-name\nbeta\nsrc/lib.rs\n--extern\nalpha=/b/a.rmeta\n").unwrap();
+        let args = vec![OsString::from(format!("@{}", path.display())), OsString::from("--target=wasm32-wasip2")];
+        let expanded = expand_admission_arguments(&args).unwrap();
+        let direct = vec!["--crate-name", "beta", "src/lib.rs", "--extern", "alpha=/b/a.rmeta", "--target=wasm32-wasip2"].into_iter().map(str::to_string).collect::<Vec<_>>();
+        assert_eq!(parse_unit(&expanded, &|_| None), parse_unit(&direct, &|_| None));
+        std::fs::remove_file(path).unwrap();
+        assert!(expand_admission_arguments(&args).is_err());
+    }
+
+    /// 🧵️ The front-end grant also applies across a response-file boundary.
+    #[test]
+    fn bounds_threads_across_response_boundaries() {
+        let path = std::env::temp_dir().join(format!("semio-scheduler-boundary-{}-{}.rsp", std::process::id(), SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos()));
+        std::fs::write(&path, "-Z\n").unwrap();
+        let args = vec![OsString::from(format!("@{}", path.display())), OsString::from("threads=0")];
+        let (actual, copies) = bounded_argfiles(&args, Some(3)).unwrap();
+        assert_eq!(actual[1], OsString::from("threads=3"));
+        for copy in copies { std::fs::remove_file(copy).unwrap(); }
+        std::fs::write(&path, "threads=0\n").unwrap();
+        let args = vec![OsString::from("-Z"), OsString::from(format!("@{}", path.display()))];
+        let (actual, copies) = bounded_argfiles(&args, Some(3)).unwrap();
+        assert_eq!(std::fs::read_to_string(actual[1].to_str().unwrap().strip_prefix('@').unwrap()).unwrap(), "threads=3");
+        for copy in copies { std::fs::remove_file(copy).unwrap(); }
+        std::fs::remove_file(path).unwrap();
+    }
+
+    /// 📏️ Bounded copies use short owned paths without modifying the original response file.
+    #[test]
+    fn bounds_long_response_path_without_mutating_original() {
+        let directory = std::env::temp_dir().join(format!("semio-path-{}", std::process::id()));
+        std::fs::create_dir_all(&directory).unwrap();
+        let remaining = 245usize.saturating_sub(directory.as_os_str().to_string_lossy().encode_utf16().count() + 5);
+        let path = directory.join(format!("{}.rsp", "x".repeat(remaining)));
+        std::fs::write(&path, "-Z\nthreads=0\n").unwrap();
+        let (args, copies) = bounded_argfiles(&[OsString::from(format!("@{}", path.display()))], Some(3)).unwrap();
+        assert_eq!(copies.len(), 1);
+        assert!(copies[0].as_os_str().to_string_lossy().encode_utf16().count() <= 256);
+        assert_ne!(copies[0], path);
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), "-Z\nthreads=0\n");
+        assert_eq!(std::fs::read_to_string(args[0].to_str().unwrap().strip_prefix('@').unwrap()).unwrap(), "-Z\nthreads=3");
+        for copy in copies { std::fs::remove_file(copy).unwrap(); }
+        std::fs::remove_file(path).unwrap();
+        std::fs::remove_dir(directory).unwrap();
     }
 
     /// 🚫️ Version and print probes are never admitted.
@@ -536,7 +606,7 @@ mod tests {
         }
     }
 
-    /// 📎️ An argument file is bounded like the command line: a changed file is replaced by a bounded copy that is listed for removal, an unchanged or unreadable one keeps its argument, nothing without a grant.
+    /// 📎️ Changed response files use owned bounded copies and unreadable files fail closed.
     #[test]
     fn bounds_front_end_threads_in_argument_files() {
         let directory = std::env::temp_dir().join(format!("semio-argfile-{}", std::process::id()));
@@ -545,15 +615,16 @@ mod tests {
         let calm = directory.join("calm.args");
         std::fs::write(&unbounded, "-C\nopt-level=0\n-Z\nthreads=0\na.rs").unwrap();
         std::fs::write(&calm, "-C\nopt-level=0\na.rs").unwrap();
-        let args: Vec<OsString> = vec![OsString::from("--edition=2021"), OsString::from(format!("@{}", unbounded.display())), OsString::from(format!("@{}", calm.display())), OsString::from("@/nonexistent/semio.args")];
-        let (bounded, copies) = bounded_argfiles(&args, Some(3));
+        let args: Vec<OsString> = vec![OsString::from("--edition=2021"), OsString::from(format!("@{}", unbounded.display())), OsString::from(format!("@{}", calm.display()))];
+        let (bounded, copies) = bounded_argfiles(&args, Some(3)).unwrap();
         assert_eq!(copies.len(), 1);
         assert_eq!(std::fs::read_to_string(&copies[0]).unwrap(), "-C\nopt-level=0\n-Z\nthreads=3\na.rs");
         assert_eq!(bounded[0], args[0]);
         assert_eq!(bounded[1].to_str().unwrap(), format!("@{}", copies[0].display()));
         assert_eq!(&bounded[2..], &args[2..]);
-        assert_eq!(bounded_argfiles(&args, None), (args.clone(), Vec::new()));
+        assert_eq!(bounded_argfiles(&args, None).unwrap(), (args.clone(), Vec::new()));
         for copy in copies { std::fs::remove_file(copy).unwrap(); }
+        assert!(bounded_argfiles(&[args[1].clone(), OsString::from("@/nonexistent/semio.args")], Some(3)).is_err());
         std::fs::remove_dir_all(&directory).unwrap();
     }
 

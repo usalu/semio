@@ -17,12 +17,12 @@ impl<'job> OriginalJobOutcomeReturn<'job>{
  pub fn original(&self)->Option<&JobOutcomeBorrow<'job>>{self.outcome.as_ref()}
  pub fn into_descriptor(self)->OriginalJobOutcome{OriginalJobOutcome{outcome:self.outcome.map(JobOutcomeBorrow::into_descriptor),witness:self.witness}}
 }
-/// 👁️ Immutable original causes and descriptor stay in their actual continuation owner.
+/// 👁️ See `README.md`.
 pub struct OriginalJobContinuationView<'a>{pub callback:Option<&'a OriginalTurnFailure>,pub qualification:Option<&'a OriginalTurnFailure>,pub receipt_qualification:Option<&'a OriginalTurnFailure>,pub descriptor:Option<&'a JobOutcomeDescriptor>}
 #[must_use]
 pub struct OriginalJobContinuation{pub(super) frame:Option<Box<OriginalReturnFrame>>,pub(super) callback:Option<OriginalTurnFailure>,pub(super) qualification:Option<OriginalTurnFailure>,pub(super) receipt_qualification:Option<OriginalTurnFailure>,pub(super) descriptor:Option<JobOutcomeDescriptor>,pub(super) witness:Option<OriginalReturnWitness>,pub(super) source:Option<(usize,Option<u64>,fn()->Option<u64>,u64)>,inserted:bool}
 impl OriginalJobContinuation{
- /// 🪟️ Borrows complete original causes both before and after their paid frame insertion.
+ /// 🪟️ See `README.md`.
  pub fn view(&self)->OriginalJobContinuationView<'_>{OriginalJobContinuationView{callback:self.callback(),qualification:self.qualification(),receipt_qualification:self.receipt_qualification.as_ref().or_else(||self.frame.as_ref()?.owner.original()?.receipt_qualification.as_ref()),descriptor:self.descriptor.as_ref().or_else(||self.frame.as_ref()?.descriptor.as_ref())}}
  pub(super) fn captured(frame:Box<OriginalReturnFrame>,callback:Option<OriginalTurnFailure>,qualification:Option<OriginalTurnFailure>,receipt_qualification:Option<OriginalTurnFailure>,descriptor:Option<JobOutcomeDescriptor>,witness:OriginalReturnWitness,source:(usize,Option<u64>,fn()->Option<u64>,u64))->Self{Self{frame:Some(frame),callback,qualification,receipt_qualification,descriptor,witness:Some(witness),source:Some(source),inserted:false}}
  pub(crate) fn callback(&self)->Option<&OriginalTurnFailure>{self.callback.as_ref().or_else(||self.frame.as_ref()?.owner.original()?.callback.as_ref())}

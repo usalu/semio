@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-framework-os-kernel-dsl-derive-expand"
+name = "semio-os-kernel-dsl-derive-expand"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -24,7 +24,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-manifest-input-compiler = { path = "../../../../../../../../🔨️modules/🛂️manifest/🔡️mutation-inputs/🏗️compiler/📦️packages/🦀️rust" }
-semio-framework-ui-locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-ui-locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-schema-state = { path = "../../../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 # 🧷️ `visit`/`visit-mut` pinned: `wasm-bindgen-macro-support` requests them in some hub components, and one host `syn` feature set keeps every component on the same proc-macro units.

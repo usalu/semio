@@ -23,9 +23,7 @@ pub(super) const OWNED_CODEC_ORIGIN_SCHEMA: &str = "";
 /// own cancellation.
 pub(super) const OWNED_CODEC_ORIGIN_WAIT_POLL: std::time::Duration = std::time::Duration::from_millis(50);
 
-/// 🧠️ One component compiled for the owned interpreter: its parsed artifact, and the origin its codec calls start from
-/// once one of them assembled it. A clone shares both, so every holder of one compiled guest starts its codec calls from the
-/// same origin.
+/// 🧠️ A compiled component shares its artifact and codec origin.
 #[derive(Clone)]
 pub struct OwnedCompiledGuest {
     pub(super) artifact: Arc<OwnedSemioArtifact>,
@@ -33,6 +31,8 @@ pub struct OwnedCompiledGuest {
 }
 
 impl OwnedCompiledGuest {
+    /// 🪪️ Both handles must borrow the same actual artifact and codec-origin owner.
+    pub fn same_origin(&self,other:&Self)->bool{Arc::ptr_eq(&self.artifact,&other.artifact)&&Arc::ptr_eq(&self.codec_origin,&other.codec_origin)}
     /// 📏️ The bytes this compiled guest holds beyond its parsed component: its codec origin once a codec call assembled it
     /// ([`OwnedCodecOriginCell`]), else none. A residency budget charges a compiled guest this on top of its component.
     pub fn codec_origin_bytes(&self) -> u64 {
@@ -94,17 +94,14 @@ impl OwnedCodecOriginCell {
     }
 }
 
-/// 🧊️ A codec call's use of its compiled guest's origin: the origin, the fuel THIS call spent assembling it (the part of its
-/// budget it used), and the fuel it already reported as progress — the assembly's own, or the one it relayed while it waited
-/// for another call's — so its operation's progress continues from there instead of starting over.
+/// 🧊️ A codec call retains its origin and actual fuel progress.
 pub(super) struct OwnedCodecOriginUse {
     pub(super) origin: Arc<OwnedCodecOrigin>,
     pub(super) spent_fuel: u64,
     pub(super) reported_fuel: u64,
 }
 
-/// 🧯️ One origin assembly in flight: however it ends — with an origin, a fault, a cancellation or a panic — the cell
-/// settles (ready, or absent again) and every waiting call wakes.
+/// 🧯️ One origin assembly settles and wakes its waiters.
 pub(super) struct OwnedCodecOriginAssembly<'a> {
     pub(super) cell: &'a OwnedCodecOriginCell,
     pub(super) origin: Option<Arc<OwnedCodecOrigin>>,

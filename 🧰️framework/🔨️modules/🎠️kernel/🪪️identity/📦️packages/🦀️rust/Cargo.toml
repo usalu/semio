@@ -24,6 +24,7 @@ path = "../../🦀️.rs"
 replication = { package = "semio-framework-replication", path = "../../../../📡️replication/📦️packages/🦀️rust" }
 semio-framework-actor = { workspace = true }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 serde = { workspace = true }
 

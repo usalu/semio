@@ -5,10 +5,12 @@ import {createHash} from "node:crypto";
 import {join} from "node:path";
 import Ajv from "ajv";
 import {requireTestToolV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
-import {bunArchiveExecutable,bunDistribution} from "../🟦️.ts";
+import {bunArchiveExecutable,bunDistribution,withBunPlacementV1} from "../🟦️.ts";
 import manifestSchema from "../🧬️schema/🔣️.json";
 import corpus from "./🔣️.json";
 import corpusSchema from "./🧬️schema/🔣️.json";
+import placement from "./🧫️fixtures/🧭️purpose.json";
+import placementSchema from "./🧬️schema/🧭️purpose.json";
 
 setDefaultTimeout(60000);
 
@@ -63,5 +65,15 @@ test("a sample of unrelated random bytes never extracts a member and never throw
  for(let round=0;round<200;round++){
   const bytes=Buffer.from(Array.from({length:30+round},next)),message=refusal(()=>bunArchiveExecutable(bytes,"x"));
   expect(declared.has(message)||/range|zlib|bounds/iu.test(message),message).toBe(true);
+ }
+});
+
+
+test("Bun placement reaches publication when the caller requires the owned installation",async()=>{
+ const ajv=new Ajv({strict:true});expect(ajv.validate(placementSchema,placement)).toBe(true);
+ for(const row of placement){
+  const events:string[]=[];
+  const result=await withBunPlacementV1(row.purpose as "runtime"|"published",{id:row.runtime,version:row.version},row.pin,()=>{events.push("runtime");return "runtime";},async()=>{events.push("publication");return "publication";});
+  expect(result).toBe(row.path);expect(events).toEqual([row.path]);
  }
 });

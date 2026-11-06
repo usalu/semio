@@ -1,6 +1,7 @@
 #!/usr/bin/env repo
 import {spawn,spawnSync} from "node:child_process";
-import {existsSync,mkdirSync,readFileSync,readdirSync,statSync,writeFileSync} from "node:fs";
+import {existsSync,mkdtempSync,mkdirSync,readFileSync,readdirSync,rmdirSync,statSync,unlinkSync,writeFileSync} from "node:fs";
+import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
 import {admitFactsV1,expandRustcArgumentsV1,keyEnvironmentV1,normalizeRustcArgumentsV1,parseRustcUnitV1,rustcBypassV1,toolchainIdentityV1,unitKeyPartsV1,unitKeyV1,UNIT_CACHE_POLICY_V1} from "./🔏️key/🟦️.ts";
 import {acquireSlotV1,acquireUnitClaimV1,type ClaimV1} from "./🔒️lock/🟦️.ts";
@@ -27,16 +28,26 @@ export function readSettingsV1(environment:Environment):Settings|undefined{
 }
 
 type Outcome=Readonly<{status:number;stdout:string;stderr:string}>;
+/** 📜️ Keeps existing response references and unrepresentable arguments in place while shortening a Windows compiler invocation. */
+function compilerArgumentsV1(inner:readonly string[],args:readonly string[]):Readonly<{args:readonly string[];close:()=>void}>{
+ if(process.platform!=="win32"||[...inner,...args].reduce((n,arg)=>n+2*arg.length+3,0)<32767)return{args,close:()=>{}};
+ const directory=mkdtempSync(join(tmpdir(),"semio-rustc-")),files:string[]=[],result:string[]=[],pending:string[]=[];
+ const close=()=>{for(const file of files)try{unlinkSync(file);}catch{}try{rmdirSync(directory);}catch{}};
+ const flush=()=>{if(!pending.length)return;const file=join(directory,String(files.length)+".rsp");files.push(file);writeFileSync(file,pending.join("\n")+"\n",{flag:"wx"});result.push("@"+file);pending.length=0;};
+ try{for(const arg of args){if(arg===""||arg.startsWith("@")||/[\r\n]/u.test(arg)){flush();result.push(arg);}else pending.push(arg);}flush();return{args:result,close};}catch(error){close();throw error;}
+}
 function run(inner:readonly string[],args:readonly string[],environment:Environment,capture:boolean):Promise<Outcome>{
  return new Promise((done,fail)=>{
   const jobs=jobserverPlanV1(environment),message=jobserverClosedMessageV1(jobs);
   if(message)process.stderr.write(message+"\n");
-  const child=spawn(inner[0]!,[...inner.slice(1),...args],{env:jobserverChildEnvironmentV1(environment,jobs),stdio:jobserverStdioV1(jobs.descriptors,capture)}),out:Buffer[]=[],err:Buffer[]=[];
+  const prepared=compilerArgumentsV1(inner,args);let child:ReturnType<typeof spawn>;
+  try{child=spawn(inner[0]!,[...inner.slice(1),...prepared.args],{env:jobserverChildEnvironmentV1(environment,jobs),stdio:jobserverStdioV1(jobs.descriptors,capture)});}catch(error){prepared.close();throw error;}
+  const out:Buffer[]=[],err:Buffer[]=[];let failure:Error|undefined;
   const forward=(signal:NodeJS.Signals)=>{child.kill(signal);};
   for(const signal of["SIGINT","SIGTERM"] as const)process.once(signal,()=>forward(signal));
   if(capture){child.stdout!.on("data",chunk=>{out.push(chunk);process.stdout.write(chunk);});child.stderr!.on("data",chunk=>{err.push(chunk);process.stderr.write(chunk);});}
-  child.on("error",fail);
-  child.on("close",(status,signal)=>done({status:status??(signal?128+({SIGINT:2,SIGTERM:15,SIGKILL:9} as Record<string,number>)[signal]!:1),stdout:Buffer.concat(out).toString("utf8"),stderr:Buffer.concat(err).toString("utf8")}));
+  child.on("error",error=>{failure??=error;});
+  child.on("close",(status,signal)=>{prepared.close();if(failure){fail(failure);return;}done({status:status??(signal?128+({SIGINT:2,SIGTERM:15,SIGKILL:9} as Record<string,number>)[signal]!:1),stdout:Buffer.concat(out).toString("utf8"),stderr:Buffer.concat(err).toString("utf8")});});
  });
 }
 

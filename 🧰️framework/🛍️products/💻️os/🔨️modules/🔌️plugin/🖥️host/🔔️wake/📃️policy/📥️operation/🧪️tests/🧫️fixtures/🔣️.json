@@ -67,7 +67,8 @@
         "maximumReleaseBytes": 1048576,
         "maximumDepth": 64
       },
-      "workFuel": 10000
+      "workFuel": 10000,
+      "maximumCleanupMicroseconds": 2000
     },
     "maximumLifetimeMicroseconds": 60000000
   },
@@ -153,7 +154,8 @@
             "maximumReleaseBytes": 1048576,
             "maximumDepth": 64
           },
-          "workFuel": 10000
+          "workFuel": 10000,
+          "maximumCleanupMicroseconds": 2000
         },
         "maximumLifetimeMicroseconds": 2000000
       }
@@ -239,7 +241,8 @@
             "maximumReleaseBytes": 1048576,
             "maximumDepth": 64
           },
-          "workFuel": 10000
+          "workFuel": 10000,
+          "maximumCleanupMicroseconds": 2000
         },
         "maximumLifetimeMicroseconds": 4000000
       }

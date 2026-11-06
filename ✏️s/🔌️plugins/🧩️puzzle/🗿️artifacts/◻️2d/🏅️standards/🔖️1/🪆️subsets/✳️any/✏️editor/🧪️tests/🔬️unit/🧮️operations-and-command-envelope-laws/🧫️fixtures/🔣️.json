@@ -1,0 +1,24 @@
+{
+  "schema": "s.puzzle2d.document-lifecycle.v1",
+  "forms": [
+    "text",
+    "pack"
+  ],
+  "create": {
+    "kind": "node",
+    "x": 8,
+    "y": -3
+  },
+  "translate": {
+    "dx": 12,
+    "dy": -7
+  },
+  "createdPosition": [
+    8,
+    -3
+  ],
+  "editedPosition": [
+    20,
+    -10
+  ]
+}

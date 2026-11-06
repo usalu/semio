@@ -27,7 +27,6 @@ artifact-app-testing = []
 
 [dependencies]
 semio-plugin-original-job-ownership = { path = "../../../👷️job/🧱️ownership/📦️packages/🦀️rust" }
-semio-framework-tool-typing-edit = { path = "../../../../../../../../🔨️modules/🛠️tool-machine/⌨️typing/✍️edit/📦️packages/🦀️rust" }
 semio-framework-job-payload = { path = "../../../../../../../../🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust" }
 semio-plugin-actor-host = { path = "../../../../🌐host/📦️packages/🦀️rust" }
 semio-framework-actor = { workspace = true }

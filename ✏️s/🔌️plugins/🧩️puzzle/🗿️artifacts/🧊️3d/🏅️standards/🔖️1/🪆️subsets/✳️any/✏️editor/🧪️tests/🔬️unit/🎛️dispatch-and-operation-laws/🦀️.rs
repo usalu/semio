@@ -204,6 +204,31 @@ async fn initial_snapshot_is_the_concrete_forest_fixture() {
     assert!(object_count(&app) > 0, "the concrete-forest default scene_snapshot ships with objects");
 }
 
+/// 💾 An edited document survives export, native pack decoding and history traversal.
+#[semio_framework_async_macros::async_test]
+async fn edited_document_survives_export_pack_and_history() {
+    use store::snapshot::ArtifactPack;
+    let mut app = app().await;
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty document");
+    dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [3.0, 2.0, 1.0] })), None).await.expect("create object");
+    let exported = dispatch(&mut app, "exportSnapshot", None, None).await.expect("export");
+    let data = exported.requested_effects.iter().find_map(|effect| match effect { Effect::DownloadMediaExport { data, .. } => Some(data), _ => None }).expect("download");
+    let expected: serde_json::Value = serde_json::from_str(data).expect("independent JSON parser");
+    assert_eq!(expected["objects"].as_array().expect("objects").len(), 1);
+    let origin = expected["objects"][0]["origin"].as_array().expect("origin");
+    assert_eq!(origin.iter().map(|value| value.as_f64().expect("coordinate")).collect::<Vec<_>>(), vec![3.0, 2.0, 1.0]);
+    let snapshot = app.snapshot().expect("edited snapshot");
+    let reopened = Puzzle3dPlaySnapshot::decode_pack(&snapshot.encode_pack()).expect("reopen native pack");
+    let reopened_json = export_snapshot::puzzle3d_export_json(&puzzle3d_scene_snapshot_from_play_snapshot(&reopened));
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&reopened_json).expect("reopened JSON"), expected, "pack must preserve every exported field");
+    dispatch(&mut app, "undo", None, None).await.expect("undo");
+    assert_eq!(object_count(&app), 0);
+    dispatch(&mut app, "redo", None, None).await.expect("redo");
+    let redone = app.snapshot().expect("redone snapshot");
+    let redone_json = export_snapshot::puzzle3d_export_json(&puzzle3d_scene_snapshot_from_play_snapshot(&redone));
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&redone_json).expect("redone JSON"), expected, "redo must restore every exported field");
+}
+
 /// 📦️ `Puzzle3dPlaySnapshot`'s pack encoding round-trips through the same `(RecordSpec,
 /// RecordValue)` pair its `parse_dsl`/`print_dsl` do (both delegate to the underlying
 /// `serde_json::Value` bridge impls), reusing the default concrete-forest scene_snapshot.

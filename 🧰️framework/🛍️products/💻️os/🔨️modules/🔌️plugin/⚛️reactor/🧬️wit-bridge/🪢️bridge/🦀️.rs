@@ -90,7 +90,7 @@ pub async fn poll<PA: semio_plugin_reactor_app::PluginApp + 'static>(
     }
     let kernel_budget = semio_framework::kernel::Budget { retained:wit_retained_input_to_kernel(budget.retained)?, retained_policy:wit_retained_grant_to_kernel(budget.retained_policy)?,work_fuel:budget.work_fuel, fuel: budget.fuel, deadline_us: budget.deadline_us, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
     let staged = STAGED_PAGES.with(|pages| pages.try_borrow_mut().map(|mut pages| std::mem::take(&mut *pages)).map_err(|_| staging_fault("turn page staging authority busy")))?;
-    turn::poll_kernel_output(runtime, &mut kernel_event, staged.command.map(|(cursor, page)| (cursor, *page)), staged.cold_pair.map(|page| *page), kernel_budget, |result| kernel_turn_result_to_wit(result, budget), |_, prepared| prepared, identity,cx).await
+    turn::poll_kernel_output(runtime, &mut kernel_event, staged.command.map(|(cursor, page)| (cursor, *page)), staged.cold_pair.as_deref(), kernel_budget, |result| kernel_turn_result_to_wit(result, budget), |_, prepared| prepared, identity,cx).await
 }
 
 /// 🩺️ Bulk bytes a turn's events carry across the component boundary — every `pack`/`list<u8>`

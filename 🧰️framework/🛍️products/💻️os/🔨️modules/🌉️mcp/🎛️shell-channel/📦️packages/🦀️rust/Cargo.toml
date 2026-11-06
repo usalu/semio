@@ -32,7 +32,7 @@ semio-os-mcp-bridge-codec = { path = "../../../🧶️bridge-codec/📦️packag
 semio-os-mcp-bridge = { path = "../../../🪢️bridge-session/📦️packages/🦀️rust" }
 
 [dev-dependencies]
-semio-framework-os-mcp-capabilities = { path = "../../../🧰️capabilities/📦️packages/🦀️rust" }
+semio-os-mcp-capabilities = { path = "../../../🧰️capabilities/📦️packages/🦀️rust" }
 semio-framework-actor = { path = "../../../../../../../🔨️modules/🎭️actor/📦️packages/🦀️rust", package = "semio-framework-actor" }
 semio-framework-test-fixtures = { path = "../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }

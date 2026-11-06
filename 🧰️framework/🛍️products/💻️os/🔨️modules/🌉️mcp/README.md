@@ -545,3 +545,55 @@ own `semio-os-mcp schemas` emitter; `schema-mirror-check` fails on drift, and th
 Nested modules own their own contracts the same way — `🏠️workspace/🧬️schema/🔣️.json`,
 `🏠️workspace/🔗️remote/🧬️schema/🔣️.json` and `💡️inference/🧬️schema/🔣️.json`. Fixtures under
 `🧫️fixtures`/`🧪️fixtures` hold data only.
+
+
+## Preserved Source Rationale
+
+<a id="source-notes-571"></a>
+
+### 🦀️.rs:571
+
+🔁️ Opens the hub workspace, re-attempting ONLY the states the hub marks retryable — a descriptor
+index that is `refreshing`, a directory stream that has not re-dialled yet. Those are ordinary
+mid-refresh states of a live hub, not faults, and before this a client whose hub happened to be
+refreshing at `initialize` time saw the gateway process EXIT (measured 2026-09-21, M8 §5.4(2):
+`PluginUnavailable: authenticated hub descriptor index is refreshing; retry after authority
+refresh`, exit 1, before `initialize`). A non-retryable error — a bad credential, a space the
+principal is not a member of, a version boundary — is returned on its first occurrence untouched.
+
+<a id="source-notes-604"></a>
+
+### 🦀️.rs:604
+
+🏠️ Builds the real `McpServer` for a `--folder`/`--hub`-bound session: opens a real
+`HeadlessWorkspace` and a `workspace::RoutingArtifactChannel`, which resolves the owning plugin
+per capability from the compiled catalog and lazily opens one `PluginArtifactChannel` per plugin
+(ticket 26/08/29/AI-MCP-END-TO-END packet W8 — the predecessor pinned the single plugin `note`,
+then a single-plugin-only `resolve_default_plugin_id`, both of which break the moment more than
+one plugin is installed). `folder`/`hub` are mutually exclusive; with NEITHER given the server is
+built on [`UnboundArtifactChannel`] — every mutation-protocol call then answers the typed,
+retryable `PLUGIN_UNAVAILABLE` naming both flags, the same answer the `🗿️artifact` tools' own
+tier-1 gate gives. There is no scripted stand-in on any production path any more.
+
+🤖️ Filled by the agent branch below and applied before the workspace is opened: a process
+that exchanged a delegation IS that agent principal, and every surface that names a
+principal — `context_resolve`, the audit sink, the policy gate — must say so rather than
+the `--principal` default the launcher happened to pass (observed live 2026-09-20:
+`context_resolve` reported `agent:local` while the process was acting as
+`agent:<delegation id>`).
+
+🤖️ Agent mode: a delegation a human minted for this agent, read from a 0600 file (or
+an inherited descriptor), exchanged once through the explicitly installed owner protocol. The session
+it returns is an ordinary hub session whose *kind* is `agent`, so everything below
+this line is identical to a human's — and everything above the hub's presence
+normalization now knows this peer is an agent principal, not the delegating human.
+
+🐚️ Both routes are built; `SessionChannelBinding` picks one per session at `context_resolve`
+time and `ContextSummary.channel` reports which — a delegated agent always its own headless hub route
+(`SessionChannelBinding::for_principal`). With no shell attached this behaves exactly as the pre-LB1 gateway
+did — the headless workspace, unchanged. Answers the server and the principal it acts as (the delegated agent's
+`agent:<delegation id>` once the credential was exchanged) — the principal a stdio gateway's bridge offer names.
+
+🐚️ The artifact-level verbs (`artifact_create`, `artifact_export`) open a channel of their own
+inside the workspace; publishing the binding there is what keeps a `shell` session from having
+two document owners (`📓️lb1…` §7.3 step 1).

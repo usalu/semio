@@ -5,13 +5,7 @@ use crate::probe_json;
 
 //#region 🔖️ProbeDocument
 
-/// 🧪️ A generic, single-JSON-value document kind this crate owns outright — used ONLY to exercise
-/// the real `store::sync::ArtifactHost` / `ArtifactStore` / backbone-propagation pipeline end to end
-/// (§6 of the packet brief: "a commit made headlessly propagates to any live shell on the same
-/// folder/hub — prove it in a test if you can") without pretending to understand any actual plugin's
-/// document schema, which is host-opaque by design (this file's own module doc). Schema id
-/// `os.agent.probe/v1` is namespaced under `os.agent.*` precisely so it can never collide with a real
-/// plugin schema id.
+/// 🧪️ A generic, single-JSON-value document kind this crate owns outright — used ONLY to exercise [Design notes](README.md#source-notes-8).
 pub const PROBE_SCHEMA: &str = "os.agent.probe/v1";
 
 pub const PROBE_PACK_SCHEMA_HASH: &str = "0302ac7cf70cd2452759542a24931331935527fb9388bb6967cbc0575ccf728e";
@@ -254,31 +248,12 @@ pub fn ensure_probe_codec_registered() {
     });
 }
 
-/// 🔐️ The one real owner catalog every `ProbeStore` installs right after construction
-/// (`ensure_probe_artifact`) — required before `ArtifactStore::drop`'s terminal-empty witness can
-/// ever be reached (`install_document_store_owners_exact`'s own doc: "There is no default catalog").
-/// `store::ArtifactStoreCursorDisposer` is the store crate's own canonical full-store close driver
-/// (used the same way by its `#[cfg(test)] demo_closable_store_owners`): it walks every detached
-/// authority — displaced retirements, returned reads, history, metadata, message ledgers,
-/// conflicts, the pending report, every runtime string (applied/redo edit ids, the revision
-/// accumulator, the checkpoint/local-actor ids), the tail/current snapshot roots, the backbone, the
-/// causal DAG, and finally the envelope shell — in the exact order `ArtifactStore::drop`'s witness
-/// checks them.
+/// 🔐️ The one real owner catalog every `ProbeStore` installs right after construction [Design notes](README.md#source-notes-257).
 pub fn probe_store_owners() -> store::os_store::document_store_owners::DocumentStoreOwners<ProbeSnapshot, ProbeMutation> {
     store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<ProbeSnapshot, ProbeMutation>().expect("Probe first-party store retirement catalog")
 }
 
-/// 🚪️ Drains one `ProbeStore` to `ArtifactStore::drop`'s exact terminal-empty witness before
-/// letting it actually drop — the production teardown a `--folder`/`--hub`-bound `semio-os-mcp`
-/// process needs at shutdown (`HeadlessWorkspace`'s own `Drop`, below) and what every `workspace`/
-/// `artifact` test that opens a real probe now relies on too. `close_owned_step` is bounded per call
-/// (`SpaceMember`'s own contract), so this is a loop to completion, not a single call; a `Blocked`
-/// step means an external owner (the backbone's shared queue — its remote `ChannelBackboneRemote`
-/// end lives on the `ArtifactHost` actor this same caller already asked to close) hasn't released
-/// its side yet. That release happens on the real `WorkerPool` background thread the actor runs on,
-/// concurrently with this thread — never something a plain busy-spin can force — so a `Blocked` step
-/// yields the thread briefly instead of re-polling immediately, giving that background thread real
-/// wall-clock time to finish tearing the actor down.
+/// 🚪️ Drains one `ProbeStore` to `ArtifactStore::drop`'s exact terminal-empty witness before [Design notes](README.md#source-notes-271).
 pub fn close_probe_store_to_terminal(mut probe_store: ProbeStore) {
     const PROBE_STORE_CLOSE_MAXIMUM_TURNS: usize = 20_000;
     const PROBE_STORE_CLOSE_BLOCKED_BACKOFF: std::time::Duration = std::time::Duration::from_millis(1);

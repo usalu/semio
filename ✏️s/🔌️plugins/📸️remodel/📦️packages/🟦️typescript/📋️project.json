@@ -5,10 +5,23 @@
     "default": [
       "{projectRoot}/**/*",
       "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🧪️tests/🎚️config/🟦️.ts",
+      "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🧪️tests/🌐️browser/**/*",
       "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/**/*.{ts,tsx,json,semio,png,absent,rs}"
     ]
   },
   "targets": {
+    "browser-acceptance": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📸️remodel/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts browser-acceptance",
+        "forwardAllArgs": true
+      },
+      "inputs": ["default", "^default", "testEnv"],
+      "metadata": { "semio": { "execution": { "version": 1, "kind": "source" } } }
+    },
     "test": {
       "executor": "repo:script",
       "outputs": [],
@@ -31,6 +44,7 @@
           "sourceInputObservation": "freshness",
           "runtimeSourceEntries": [
             "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🧪️tests/🎚️config/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🧪️tests/🌐️browser/🧪️tests/🟦️.ts",
             "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts",
             "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts",
             "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🛰️synthetic-orbit/🧪️tests/🧩️example/🟦️.ts",

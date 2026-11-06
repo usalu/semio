@@ -48,12 +48,8 @@ pub const SEMIO_OWNED_CLOSE_ACTOR_CONTEXT_EXPORT:&str="semio_owned_close_actor_c
 
 pub const SEMIO_OWNED_CLOSE_ACTOR_OUTPUT_EXPORT:&str="semio_owned_close_actor_output_v1";
 
-/// 🤝️ The owned twin of `reactor.channel-version`: the guest's compiled app-channel version, which a host admits before any frame.
 pub const SEMIO_OWNED_CHANNEL_VERSION_EXPORT: &str = "semio_owned_channel_version_v1";
 
-/// 🧬️ OS-HUB-COLLABORATION-AI-END-TO-END (TC3b): the owned twin of `world actor`'s `codec`
-/// interface — the four pure document-kind functions a headless host calls on a package whose Rust
-/// codec it does not link.
 pub const SEMIO_OWNED_PACK_SCHEMA_HASH_EXPORT: &str = "semio_owned_pack_schema_hash_v1";
 
 pub const SEMIO_OWNED_GENESIS_EXPORT: &str = "semio_owned_genesis_v1";
@@ -62,7 +58,6 @@ pub const SEMIO_OWNED_PRINT_MIRROR_EXPORT: &str = "semio_owned_print_mirror_v1";
 
 pub const SEMIO_OWNED_APPLY_OPS_EXPORT: &str = "semio_owned_apply_ops_v1";
 
-/// 📜️ The owned twin of `codec.replay-envelopes`, the hub's Check In fold.
 pub const SEMIO_OWNED_REPLAY_ENVELOPES_EXPORT: &str = "semio_owned_replay_envelopes_v1";
 
 pub const SEMIO_OWNED_SQLITE_SCHEMA_EXPORT: &str = "semio_owned_sqlite_schema_v1";
@@ -120,7 +115,6 @@ pub enum OwnedSemioExport {
 }
 
 impl OwnedSemioExport {
-    /// 📏️ The largest authored scalar export carries its three-scalar prefix and nineteen-scalar authority.
     pub const MAX_SCALAR_ARGUMENTS:usize=22;
     pub const ALL: [Self; 36] = [
         Self::Allocate,
@@ -248,7 +242,6 @@ impl OwnedSemioArtifact {
         Ok(Self { component, actor_module })
     }
 
-    /// 🪢️ The immutable module witness used by original phased opening.
     pub fn original_actor_module(&self)->&Arc<CoreModule>{&self.actor_module}
 
     pub fn fingerprint(&self) -> u64 {
@@ -283,7 +276,6 @@ pub struct OwnedSemioInstance {
 pub struct OwnedSemioCheckpointLayout<'a>{pub(super) actor:&'a OwnedSemioInstance,core_bytes:usize}
 
 impl OwnedSemioCheckpointLayout<'_>{
-    /// 👓️ Writes the same retained borrowed VM after its original observed measurement.
     pub fn visit(&self,visitor:&mut dyn FnMut(&[u8])->Result<(),semio_framework_value::ValueError>)->Result<(),semio_framework_value::ValueError>{
         visitor(SEMIO_ACTOR_CHECKPOINT_MAGIC)?;visitor(&[SEMIO_ACTOR_CHECKPOINT_VERSION])?;visitor(&self.actor.component_fingerprint.to_le_bytes())?;visitor(&(self.core_bytes as u64).to_le_bytes())?;
         let mut written=0usize;self.actor.core.visit_checkpoint(&mut |bytes|{written=written.checked_add(bytes.len()).filter(|written|*written<=self.core_bytes).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"borrowed actor checkpoint changed after measurement"))?;visitor(bytes)})?;
@@ -292,7 +284,6 @@ impl OwnedSemioCheckpointLayout<'_>{
 }
 
 impl OwnedSemioInstance {
-    /// 📏️ Retains the original VM borrow and scalar extent without allocating checkpoint storage.
     pub fn checkpoint_layout<'a>(&'a self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<OwnedSemioCheckpointLayout<'a>,semio_framework_value::ValueError>{
         control.scoped_stage(|control|{control.begin_stage(0)?;let mut core_bytes=0usize;self.core.visit_checkpoint(&mut |bytes|{core_bytes=core_bytes.checked_add(bytes.len()).filter(|count|*count<=isize::MAX as usize-25).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"borrowed actor checkpoint extent exceeds address space"))?;control.advance(bytes.len())})?;Ok(OwnedSemioCheckpointLayout{actor:self,core_bytes})})
     }

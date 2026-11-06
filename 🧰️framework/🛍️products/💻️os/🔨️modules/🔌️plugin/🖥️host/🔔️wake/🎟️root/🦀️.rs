@@ -21,6 +21,7 @@ impl GuestRelayOriginalRoot{
  pub fn policy(&self)->GuestRelayRootPolicy{self.policy}
  pub fn ready(&self)->bool{self.ready}
  pub fn native_sources_pending(&self)->bool{self.context.native_sources_pending()}
+ pub fn native_close_requires_execution(&self)->Option<bool>{self.context.native_close_requires_execution()}
  pub fn fuel_remaining(&self)->u64{self.fuel_remaining}
  pub fn execution_fuel_remaining(&self)->u64{self.execution_fuel_remaining}
  pub fn clock_source(&self)->fn()->Option<u64>{self.clock}

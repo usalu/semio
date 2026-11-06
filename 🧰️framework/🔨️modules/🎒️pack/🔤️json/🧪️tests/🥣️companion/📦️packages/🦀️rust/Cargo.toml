@@ -32,6 +32,7 @@ semio-framework-value-persistent = { path = "../../../../../../🌱️value/📋
 semio-framework-value-native-owned = { path = "../../../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-shared-issuance = { path = "../../../../../../🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust" }
 serde = { workspace = true }
 serde_json = { version = "1.0.140", features = ["float_roundtrip"] }
 semio-framework-trace = { path = "../../../../../../⏱️trace/📦️packages/🦀️rust" }

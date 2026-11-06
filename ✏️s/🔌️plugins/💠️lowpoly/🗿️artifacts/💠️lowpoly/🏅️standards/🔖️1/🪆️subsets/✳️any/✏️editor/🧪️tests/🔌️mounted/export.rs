@@ -1,7 +1,7 @@
 //! 📤️ Public export dispatch publishes exact downloads without changing document or history.
 use super::{context, effects::collect};
 use semio_framework::kernel::Effect;
-use semio_framework_plugin::{PluginApp, artifact_app_laws};
+use semio_plugin::{PluginApp, artifact_app_laws};
 use semio_s_artifact_lowpoly_lowpoly_commands::media::import_mesh_bytes;
 use semio_framework_3d::mesh::{FaceId, VertexId};
 use serde_json::Value;
@@ -26,7 +26,7 @@ async fn public_mesh_exports_publish_exact_downloads_and_preserve_document_and_h
     expected.sort_by(|a,b| a.partial_cmp(b).unwrap());
     for format in fixture["formats"].as_array().unwrap() {
         let arguments = semio_framework_value::DslValue::object([("format".to_string(), semio_framework_value::DslValue::String(format["format"].as_str().unwrap().to_string()))]);
-        artifact_app_laws::dispatch_fixture_action(&mut app.0, "exportMesh", Some(arguments), &context::action_meta(), &mut artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
+        artifact_app_laws::dispatch_fixture_action(&mut app.0, "exportMesh", Some(arguments), &context::action_meta(), &mut artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
         let effects = collect(&mut app).await;
         assert_eq!(effects.len(), 1, "export publishes one host download");
         let Effect::DownloadMediaExport {filename, mime_type, data, encoding} = &effects[0] else { panic!("expected exact DownloadMediaExport"); };

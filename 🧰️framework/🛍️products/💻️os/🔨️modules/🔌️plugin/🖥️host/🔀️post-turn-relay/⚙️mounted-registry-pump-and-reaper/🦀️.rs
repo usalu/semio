@@ -103,7 +103,7 @@ impl GuestRelayMountedRegistry {
         std::task::Poll::Pending
     }
 
-    /// 🔄️ Runs one caller turn on the original driver and returns its receipt before the next opportunity; `None` while the driver is occupied.
+    /// 🔄️ See `README.md`.
     fn dispatch_returning<T>(&self, index: usize, generation: u64, produce: impl FnOnce(&mut semio_framework_job::StepContext<'_>) -> Result<T, semio_framework_job::OriginalTurnFailure>) -> Result<Option<T>, semio_framework_job::OriginalTurnFailure> {
         let result = self.wake_authority.receiver.dispatch_step(index, generation, produce);
         if result.as_ref().is_ok_and(Option::is_none) {
@@ -121,12 +121,12 @@ impl GuestRelayMountedRegistry {
         }
     }
 
-    /// 🏃️ One paid original-caller step of a mounted relay owner; a checked-out outcome moves into the session.
+    /// 🏃️ See `README.md`.
     fn step_owner<J: semio_framework_job::InteractiveJob + 'static>(&self, owner: &semio_framework_job_worker::WorkerJobSession<J>, index: usize, generation: u64) -> Result<Option<GuestRelayStep<J>>, semio_framework_job::OriginalTurnFailure> {
         self.dispatch_returning(index, generation, |cx| step_guest_relay_owner(owner, cx))
     }
 
-    /// 🌱️ One paid admission opportunity: the born session replaces the admitting owner; a refusal detaches the slot for its paid reap.
+    /// 🌱️ See `README.md`.
     fn pump_admission(self: &Arc<Self>, session: &mut GuestRelayMountedSession, index: usize, waker: &std::task::Waker) -> std::task::Poll<Result<Vec<u8>, PluginHostError>> {
         let generation = session.generation;
         let advanced = match &mut session.owner {
@@ -163,7 +163,7 @@ impl GuestRelayMountedRegistry {
         }
     }
 
-    /// ✅️ One paid acknowledgement turn of the checked-out outcome descriptor.
+    /// ✅️ See `README.md`.
     fn acknowledge_outcome(&self, session: &mut GuestRelayMountedSession, index: usize, generation: u64, waker: &std::task::Waker) -> std::task::Poll<Result<Vec<u8>, PluginHostError>> {
         let acknowledged = match (session.checked_out.as_mut(), session.lifecycle_probe_checked_out.as_mut()) {
             (Some(checked), _) => self.dispatch_returning(index, generation, |cx| checked.acknowledge_outcome(cx)),
@@ -179,7 +179,7 @@ impl GuestRelayMountedRegistry {
         std::task::Poll::Pending
     }
 
-    /// 📖️ One paid turn of the checked-out outcome: read its pages once, acknowledge the descriptor, then resume or drain the terminal.
+    /// 📖️ See `README.md`.
     fn pump_outcome(&self, session: &mut GuestRelayMountedSession, index: usize, generation: u64, waker: &std::task::Waker) -> std::task::Poll<Result<Vec<u8>, PluginHostError>> {
         use semio_framework_value::RetainedCloneProgress;
         if session.outcome_stage == GuestRelayOutcomeStage::Acknowledging {
@@ -234,7 +234,7 @@ impl GuestRelayMountedRegistry {
         std::task::Poll::Pending
     }
 
-    /// 🔚️ A continuing outcome resumes its worker; a terminal one becomes the result the caller drains while the session closes.
+    /// 🔚️ See `README.md`.
     fn finish_guest_relay_outcome(&self, session: &mut GuestRelayMountedSession) {
         match session.outcome_kind {
             GuestRelayOutcomeKind::Continues => {
@@ -269,7 +269,7 @@ impl GuestRelayMountedRegistry {
     }
 }
 
-/// 🪜️ One caller-driven worker step of a mounted relay owner, its physical receipt already posted to the original caller.
+/// 🪜️ See `README.md`.
 pub(super) enum GuestRelayStep<J> {
     Checked(semio_framework_job_worker::WorkerJobOutcome<J>),
     Idle,
@@ -293,7 +293,7 @@ pub(super) fn step_guest_relay_owner<J: semio_framework_job::InteractiveJob + 's
     Ok(GuestRelayStep::Checked(checked))
 }
 
-/// 📄️ Borrows one page of the checked-out outcome's payload and classifies the outcome.
+/// 📄️ See `README.md`.
 pub(super) fn read_guest_relay_outcome_page<J: semio_framework_job::InteractiveJob>(checked: &semio_framework_job_worker::WorkerJobOutcome<J>, page: usize) -> Result<(Option<&[u8]>, GuestRelayOutcomeKind), semio_framework_value::ValueError> {
     use semio_framework_job::JobOutcomeView as V;
     let view = checked.outcome()?.ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "mounted relay outcome is absent"))?;

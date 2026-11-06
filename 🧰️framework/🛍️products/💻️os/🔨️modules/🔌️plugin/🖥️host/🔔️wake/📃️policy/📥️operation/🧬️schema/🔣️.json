@@ -307,7 +307,8 @@
           "additionalProperties": false,
           "required": [
             "retained",
-            "workFuel"
+            "workFuel",
+            "maximumCleanupMicroseconds"
           ],
           "properties": {
             "retained": {
@@ -344,6 +345,10 @@
               }
             },
             "workFuel": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maximumCleanupMicroseconds": {
               "type": "integer",
               "minimum": 1
             }
@@ -719,7 +724,8 @@
                 "additionalProperties": false,
                 "required": [
                   "retained",
-                  "workFuel"
+                  "workFuel",
+                  "maximumCleanupMicroseconds"
                 ],
                 "properties": {
                   "retained": {
@@ -756,6 +762,10 @@
                     }
                   },
                   "workFuel": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "maximumCleanupMicroseconds": {
                     "type": "integer",
                     "minimum": 1
                   }

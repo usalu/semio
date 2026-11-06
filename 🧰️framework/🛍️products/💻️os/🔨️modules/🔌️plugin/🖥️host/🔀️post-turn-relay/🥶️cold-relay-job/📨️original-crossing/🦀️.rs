@@ -1,6 +1,6 @@
 //! 📬️ A cold crossing retains its whole physical reply until the real Source receives both receipts.
 use semio_framework_actor::{OriginalGuestExecutionReceipt,OriginalJobStartReply,OriginalJobStepReply,OriginalJobOutcome,OriginalJobOutputReply,OriginalJobOutputAckReply,OriginalJobCancelReply,OriginalJobTurnLoan};
-use semio_framework_plugin_host_guest_runtime::OriginalGuestJobCall;
+use semio_plugin_host_guest_runtime::OriginalGuestJobCall;
 use semio_framework_job::{StepContext,OriginalTurnFailure};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 

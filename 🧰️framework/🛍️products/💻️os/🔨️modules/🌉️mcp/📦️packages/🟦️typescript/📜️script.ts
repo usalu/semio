@@ -9,14 +9,15 @@ import { join } from "node:path";
 import { runVitest } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { requireMcpBinary } from "../../🟦️.ts";
+import { requireMcpBinary } from "../../📦️binary/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments, "quick");
     const {withAdmittedPublishedCargoExecutableV1}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts");
     const {readBuildMode}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts");
-    const {MCP_MANIFEST_REL,MCP_BINARY_NAME,MCP_STDIO_BUILD_MODE_V1}=await import("../../🟦️.ts");
+    const {MCP_MANIFEST_REL}=await import("../../🟦️.ts");
+    const {MCP_BINARY_NAME,MCP_STDIO_BUILD_MODE_V1}=await import("../../📦️binary/🟦️.ts");
     const run=async(binary:string)=>{
       const previous=process.env.SEMIO_OS_MCP_BIN;process.env.SEMIO_OS_MCP_BIN=binary;
       try{console.log(`[test] ${requireMcpBinary(this.repoRoot)}`);await runVitest(this.root,rest,"../../🧪️tests/🎚️config/🟦️.ts");}

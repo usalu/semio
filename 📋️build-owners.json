@@ -1,6 +1,7 @@
 {
   "version": 1,
   "owners": [
+    {"name":"@semio-tech/job-return-escrow-publication-rs","root":"🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/🪙️escrow/📦️packages/🦀️rust","manifest":"🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/🪙️escrow/📦️packages/🦀️rust/📋️project.json","packages":[]},
     {
       "name": "@leutwiler/realparts-of-powers-z-n",
       "root": "👴️leutwiler/💤️realparts-of-powers-z-n",
@@ -1936,6 +1937,12 @@
       "packages": []
     },
     {
+      "name": "@semio-tech/framework-pack-json-output-receiving-rs",
+      "root": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🫴️unique/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🫴️unique/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
       "name": "@semio-tech/framework-pack-json-rs",
       "root": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📋️project.json",
@@ -2039,6 +2046,12 @@
       "name": "@semio-tech/framework-plugin-host-operation-rs",
       "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🚪️io/🎛️operation/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🚪️io/🎛️operation/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/framework-plugin-host-poll-rs",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔁️poll/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔁️poll/📦️packages/🦀️rust/📋️project.json",
       "packages": []
     },
     {
@@ -9171,6 +9184,12 @@
       "name": "@semio-tech/value-sort-rs",
       "root": "🧰️framework/🔨️modules/🌱️value/📶️sort/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🔨️modules/🌱️value/📶️sort/📦️packages/🦀️rust/📋️project.json",
+      "packages": []
+    },
+    {
+      "name": "@semio-tech/value-testing-admission-rs",
+      "root": "🧰️framework/🔨️modules/🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust/📋️project.json",
       "packages": []
     },
     {

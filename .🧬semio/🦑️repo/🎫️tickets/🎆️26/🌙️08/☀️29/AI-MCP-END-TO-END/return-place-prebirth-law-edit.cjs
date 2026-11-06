@@ -1,0 +1,6 @@
+const fs=require('fs');const base='🧰️framework/🔨️modules/🧵️job/⏱️context/📦️return/🎟️place/';
+const files=[base+'case.json',base+'case.schema.json',base+'🧪️tests/🦀️.rs'];
+for(const path of files){const before=fs.readFileSync(path,'utf8');let after=before;
+ if(path.endsWith('.rs')){const old='let mut place=OriginalCallerReturnPlace::empty();let before=caller.turn(q,|cx|Ok(cx.original_total_fuel_remaining())).unwrap();';const value='let mut place=OriginalCallerReturnPlace::empty();let mut born=false;for _ in 0..32{caller.turn(q,|cx|{born=cx.admit_original_return_table()?;Ok(())}).unwrap();if born{break}}assert!(born);let before=caller.turn(q,|cx|Ok(cx.original_total_fuel_remaining())).unwrap();';if(after.split(old).length!==2)throw Error('native law changed');after=after.replace(old,value)}else{const json=JSON.parse(before);if(path.endsWith('schema.json')){json.properties.boundSourceWork.const=0;for(const row of json.properties.cases.const)row.finalDebit-=1}else{json.boundSourceWork=0;for(const row of json.cases)row.finalDebit-=1}after=JSON.stringify(json,null,2)+'\n'}
+ const tmp=path+'.guest-prebirth-edit';fs.writeFileSync(tmp,after,{flag:'wx'});if(fs.readFileSync(path,'utf8')!==before){fs.unlinkSync(tmp);throw Error('concurrent change: '+path)}fs.renameSync(tmp,path);
+}

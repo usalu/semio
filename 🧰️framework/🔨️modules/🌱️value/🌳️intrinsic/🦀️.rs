@@ -9,13 +9,7 @@ pub fn equal_f64(left: f64, right: f64) -> bool { left.to_bits() == right.to_bit
 /// 🔬️ Complete binary32 identity preserves its native width and payload bits.
 pub fn equal_f32(left: f32, right: f32) -> bool { left.to_bits() == right.to_bits() }
 
-//#region 🔖️Number
-/// 👁️ A JSON-equivalent number that keeps the writer's-eye distinction a bare `f64` erases:
-/// an integer literal (`UInt`/`Int`) round-trips without a decimal point, `Float` always keeps one
-/// (or an exponent). Mirrors [`pack::json::Number`]'s shape exactly so the wire bridge between them
-/// (`🎒️pack/🔤️json/🦀️.rs`) is a straight variant-to-variant map, never a widen-then-guess. See
-/// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/
-/// 🔍️research/📓️dslvalue-integer-fidelity.md`.
+/// 👁️ A JSON-equivalent number that keeps the writer's-eye distinction a bare `f64` erases: [Design notes](README.md#source-notes-12).
 #[derive(Clone, Copy, Debug)]
 pub enum Number {
     UInt(u64),
@@ -335,14 +329,7 @@ impl PartialEq<DslValue> for serde_json::Value {
     }
 }
 
-//#region 🔖️Literal
-/// 🧾️ Builds a [`DslValue`] from a JSON-shaped literal — the first-party replacement for
-/// `serde_json::json!` + `DslValue::from` at every action-argument site. Grammar: `null`, `true`,
-/// `false`, `[ … ]`, `{ key: value, … }` (a key is a string literal or any expression convertible
-/// `Into<String>`, e.g. a `const`), and any other expression, converted through [`ToValue`] by method call
-/// (so a borrowed `&String`/`&[T]` auto-derefs to its implementation, as `serde_json::json!` accepts it). Object
-/// entries keep their written order (a `DslValue::Object` is ordered); trailing commas are
-/// accepted. The equivalence law against `serde_json::json!` lives in `🧪️tests/🔬️unit/🦀️.rs`.
+/// 🧾️ Builds a [`DslValue`] from a JSON-shaped literal — the first-party replacement for [Design notes](README.md#source-notes-338).
 #[macro_export]
 macro_rules! dsl_value {
     (@array [$($elements:expr,)*]) => { ::std::vec![$($elements,)*] };

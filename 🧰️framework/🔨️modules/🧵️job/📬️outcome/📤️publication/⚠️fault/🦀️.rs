@@ -1,10 +1,16 @@
 //! 📤️ Canonical faults stream from their original typed owner into separately funded publication pages.
 use semio_framework_diagnostic::{Fault,FaultWireCursor};
 use semio_framework_job::{Generation, OperationId, StepContext, OriginalTurnFailure, receive_original_retained_work, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView};
-use semio_framework_job_payload::{JobPayloadStream, RetainedJobPayload, RetainedPayloadBuilder};
+use semio_framework_job_payload::{JobPayloadStream, RetainedJobPayload, RetainedPayloadBuilder,JobPayloadStep,JobPayloadOperationLedger};
+use std::sync::Arc;
 use semio_framework_value::{RetainedWorkOutcome,ValueError,ValueRefusalKind,RetirementDemand};
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 use std::mem::MaybeUninit;
+
+/// 🧯️ A fault publisher borrows only the authenticated, bounded original retirement loan.
+pub struct OriginalFaultPayloadStep<'a,'b>(&'a mut StepContext<'b>,std::marker::PhantomData<&'a ()>);
+impl<'a,'b> OriginalFaultPayloadStep<'a,'b>{fn bind(cx:&'a mut StepContext<'b>)->Result<Self,ValueError>{if !cx.original_retirement_active(){return Err(ValueError::invariant("fault publication requires original retirement authority"))}Ok(Self(cx,std::marker::PhantomData))}pub fn borrow_fault(cx:&'a mut StepContext<'b>,_:&'a Fault)->Result<Self,ValueError>{Self::bind(cx)}pub fn borrow_failure(cx:&'a mut StepContext<'b>,_:&'a OriginalTurnFailure)->Result<Self,ValueError>{Self::bind(cx)}}
+impl JobPayloadStep for OriginalFaultPayloadStep<'_,'_>{fn payload_ledger(&self)->&Arc<JobPayloadOperationLedger>{JobPayloadStep::payload_ledger(self.0)}fn payload_page_granted(&self)->bool{JobPayloadStep::payload_page_granted(self.0)}fn grant_payload_page(&mut self){JobPayloadStep::grant_payload_page(self.0)}fn is_cancelled(&self)->bool{false}fn should_yield(&self)->bool{self.0.retirement_should_yield()}fn retained_grant(&self)->RetainedCloneGrant{self.0.retained_grant()}fn consume_retained(&mut self,p:RetainedCloneProgress)->Result<(),ValueError>{self.0.consume_retained(p)}}
 
 #[derive(Clone,Copy,PartialEq,Eq)]
 struct OriginalFaultSource{address:usize,operation:OperationId,generation:Generation}
@@ -31,18 +37,20 @@ impl RetainedFaultPublication{
   Ok(RetirementDemand{depth:2,..Default::default()})
  }
  /// ✍️ Preserves the same typed source while actual bytes cross one original window and page at a time.
- pub fn advance_from_fault<'a>(&'a mut self,fault:&Fault,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,OriginalTurnFailure>{
-  cx.original_source_parent()?.validate_borrowed_context(cx)?;let demand=self.advance_demands(fault,cx)?;if cx.should_yield()||self.delivered||!Self::permits(cx.retained_grant(),demand){return Ok(None)}
+ pub fn advance_from_fault<'a>(&'a mut self,fault:&Fault,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,OriginalTurnFailure>{self.advance_from_fault_with_cursor(fault,cx,0)}
+ /// 📤️ Funds the caller's exact descriptor destination when the sealed fault is admitted.
+ pub fn advance_from_fault_with_cursor<'a>(&'a mut self,fault:&Fault,cx:&mut StepContext<'_>,cursor:usize)->Result<Option<JobOutcomeBorrow<'a>>,OriginalTurnFailure>{
+  cx.original_source_parent()?.validate_borrowed_context(cx)?;let mut demand=self.advance_demands(fault,cx)?;if self.wire.is_complete()&&self.wire.buffered_bytes(&self.buffer)?.is_empty()&&self.builder.published().is_some(){demand.copy_bytes=demand.copy_bytes.checked_add(cursor).ok_or_else(Self::invalid)?;}if (if cx.original_retirement_active(){cx.retirement_should_yield()}else{cx.should_yield()})||self.delivered||!Self::permits(cx.retained_grant(),demand){return Ok(None)}
   if self.binding.is_none(){self.binding=Some(Self::original(fault,cx));receive_original_retained_work(cx,RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1})?;return Ok(None)}
-  if !self.builder.is_initialized(){let turn=self.builder.advance_initialization(cx);receive_original_retained_work(cx,turn)?;return Ok(None)}
+  if !self.builder.is_initialized(){let turn=if cx.original_retirement_active(){self.builder.advance_initialization(&OriginalFaultPayloadStep::borrow_fault(cx,fault)?)}else{self.builder.advance_initialization(cx)};receive_original_retained_work(cx,turn)?;return Ok(None)}
   let buffered=self.wire.buffered_bytes(&self.buffer)?.len();
   if buffered==self.buffer.len()||self.wire.is_complete()&&buffered>0{
-   if self.flush_cursor<buffered{let turn=self.builder.append_original(cx,self.wire.buffered_bytes(&self.buffer)?,&mut self.flush_cursor);receive_original_retained_work(cx,turn)?;return Ok(None)}
+   if self.flush_cursor<buffered{let turn=if cx.original_retirement_active(){self.builder.append_original(&mut OriginalFaultPayloadStep::borrow_fault(cx,fault)?,self.wire.buffered_bytes(&self.buffer)?,&mut self.flush_cursor)}else{self.builder.append_original(cx,self.wire.buffered_bytes(&self.buffer)?,&mut self.flush_cursor)};receive_original_retained_work(cx,turn)?;return Ok(None)}
    let turn=self.wire.drain_buffer(&self.buffer,RetainedCloneGrant{maximum_depth:cx.retained_grant().maximum_depth-1,..cx.retained_grant()});let step=receive_original_retained_work(cx,turn)?;if step.progress().copied_items>0{self.flush_cursor=0}return Ok(None)
   }
   if !self.wire.is_complete(){let turn=self.wire.advance_one(fault,&mut self.buffer,RetainedCloneGrant{maximum_depth:cx.retained_grant().maximum_depth-1,..cx.retained_grant()});receive_original_retained_work(cx,turn)?;return Ok(None)}
-  if self.builder.published().is_none(){let turn=self.builder.seal(cx);receive_original_retained_work(cx,turn)?;return Ok(None)}
-  let original=JobOutcomeBorrow::admit_fault(cx,self.builder.published().ok_or_else(Self::invalid)?)?;if original.is_some(){self.delivered=true}Ok(original)
+  if self.builder.published().is_none(){let turn=if cx.original_retirement_active(){self.builder.seal(&OriginalFaultPayloadStep::borrow_fault(cx,fault)?)}else{self.builder.seal(cx)};receive_original_retained_work(cx,turn)?;return Ok(None)}
+  let original=if cx.original_retirement_active(){JobOutcomeBorrow::admit_fault_with_cursor_retiring(cx,self.builder.published().ok_or_else(Self::invalid)?,cursor)?}else{JobOutcomeBorrow::admit_fault_with_cursor(cx,self.builder.published().ok_or_else(Self::invalid)?,cursor)?};if original.is_some(){self.delivered=true}Ok(original)
  }
  /// 🤝️ Resolves only the same original sealed fault header against its exclusive descriptor.
  pub fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{if !self.delivered||self.closing{return Err(Self::invalid())}descriptor.fault(self.builder.published().ok_or_else(Self::invalid)?)}

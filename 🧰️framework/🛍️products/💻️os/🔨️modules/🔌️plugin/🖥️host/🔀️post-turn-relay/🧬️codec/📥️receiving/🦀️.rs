@@ -1,7 +1,7 @@
 //! 🧮️ Declared guest reservations remain sealed by the actual held semantic loan until producer retirement.
 use semio_framework_job::{OriginalSourceBinding,StepContext};
-use semio_framework_plugin_host_guest_runtime::OriginalOperationReceiving;
-use semio_framework_plugin_host_wake::{GuestRelayGuestSubloan,GuestRelayGuestPurpose};
+use semio_plugin_host_guest_runtime::OriginalOperationReceiving;
+use semio_plugin_host_wake::{GuestRelayGuestSubloan,GuestRelayGuestPurpose};
 use semio_framework_value::{ValueError,ValueRefusalKind,native_encoding::{NativeEncodeProgress,NativeEncodeAllocation}};
 fn refused()->ValueError{ValueError::literal(ValueRefusalKind::OwnershipLimit,"codec receiving ledger differs from its original held semantic source")}
 struct Reservations{capacity:usize,reserved:usize,phase_owned:usize,maximum:usize,returned:usize,output:usize,active:bool,finished:bool}

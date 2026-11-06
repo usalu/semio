@@ -17,6 +17,51 @@ import {ensureUnitCacheShimV1,unitCacheEnvironmentV1,unitCacheShimPathV1,UNIT_CA
 import {removeClaimFileV1,tryClaimV1} from "../../🔒️lock/🟦️.ts";
 import {churnProtocolV1} from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 
+test.skipIf(process.platform!=="win32")("nested compiler launch preserves a near-limit Cargo command through a response file", () => {
+ const root=scratch();
+ try {
+  const data=JSON.parse(readFileSync(resolve(here,"🧫️fixtures/nested-argv.json"),"utf8")),schema=JSON.parse(readFileSync(resolve(here,"🧫️fixtures/nested-argv.schema.json"),"utf8"));
+  expect(new Ajv({strict:true}).validate(schema,data)).toBe(true);
+  const wrapper=ensureUnitCacheShimV1(join(root,"u"),process.execPath,undefined,"win32"),echo=resolve(here,"🧫️fixtures/🟦️response-echo.ts");
+  const args=[...data.arguments,data.prefix+"x".repeat(data.payloadLength-data.prefix.length)];
+  const run=spawnSync(wrapper,["rustc",...args],{encoding:"utf8",env:{PATH:process.env.PATH??"",SEMIO_UNIT_CACHE_INNER:JSON.stringify([process.execPath,echo])},maxBuffer:100000});
+  expect(run.status,run.stderr).toBe(0);expect(JSON.parse(run.stdout)).toEqual(args);
+ } finally {rmSync(root,{recursive:true,force:true});}
+},120000);
+
+test.skipIf(process.platform!=="win32")("long compiler arguments agree with rustc including interleaved response files", () => {
+ const root=scratch();
+ try {
+  const data=JSON.parse(readFileSync(resolve(here,"🧫️fixtures/nested-argv.json"),"utf8"));
+  const tool=spawnSync("rustup",["which","rustc"],{encoding:"utf8"});expect(tool.status,tool.stderr).toBe(0);const rustc=tool.stdout.trim();
+  const first=join(root,"first response.rsp"),second=join(root,"second response.rsp");writeFileSync(first,"--cfg=first\n");writeFileSync(second,"--cfg=second\n");
+  const args=["--print=cfg","@"+first,data.compilerQuoted,...Array(data.compilerRepetitions).fill(data.compilerArgument),"@"+second];
+  const expected=spawnSync(rustc,args,{encoding:"utf8",maxBuffer:1000000});expect(expected.status,expected.stderr).toBe(0);
+  const wrapper=ensureUnitCacheShimV1(join(root,"u"),process.execPath,undefined,"win32");
+  const actual=spawnSync(wrapper,["rustc",...args],{encoding:"utf8",env:{...process.env,SEMIO_UNIT_CACHE_INNER:JSON.stringify([rustc])},maxBuffer:1000000});
+  expect(actual.status,actual.stderr).toBe(expected.status);expect(actual.stdout).toBe(expected.stdout);
+  for(const value of ["","line\nbreak"]){const direct=spawnSync(rustc,[...args,value],{encoding:"utf8",maxBuffer:1000000}),wrapped=spawnSync(wrapper,["rustc",...args,value],{encoding:"utf8",env:{...process.env,SEMIO_UNIT_CACHE_INNER:JSON.stringify([rustc])},maxBuffer:1000000});expect(wrapped.status).toBe(direct.status);expect(wrapped.stderr).toBe(direct.stderr);}
+ } finally {rmSync(root,{recursive:true,force:true});}
+},120000);
+
+test.skipIf(process.platform!=="win32")("response files outlive the child and are retired after its actual failure", () => {
+ const root=scratch();
+ try {
+  const data=JSON.parse(readFileSync(resolve(here,"🧫️fixtures/nested-argv.json"),"utf8")),wrapper=ensureUnitCacheShimV1(join(root,"u"),process.execPath,undefined,"win32"),probe=resolve(here,"🧫️fixtures/🟦️response-exit.ts");
+  const actual=spawnSync(wrapper,["rustc",data.prefix+"x".repeat(data.payloadLength-data.prefix.length)],{encoding:"utf8",env:{PATH:process.env.PATH??"",SEMIO_UNIT_CACHE_INNER:JSON.stringify([process.execPath,probe])}});
+  expect(actual.status,actual.stderr).toBe(7);const files=JSON.parse(actual.stdout) as {path:string;exists:boolean}[];expect(files.length).toBeGreaterThan(0);for(const file of files){expect(file.exists).toBe(true);expect(existsSync(file.path)).toBe(false);}
+ } finally {rmSync(root,{recursive:true,force:true});}
+},120000);
+
+test.skipIf(process.platform!=="win32")("a failed asynchronous compiler spawn retires its own response file", () => {
+ const root=scratch();
+ try {
+  const data=JSON.parse(readFileSync(resolve(here,"🧫️fixtures/nested-argv.json"),"utf8")),wrapper=ensureUnitCacheShimV1(join(root,"u"),process.execPath,undefined,"win32"),temporary=join(root,"temp");mkdirSync(temporary);
+  const actual=spawnSync(wrapper,["rustc",data.prefix+"x".repeat(data.payloadLength-data.prefix.length)],{encoding:"utf8",env:{PATH:process.env.PATH??"",TMP:temporary,TEMP:temporary,TMPDIR:temporary,SEMIO_UNIT_CACHE_INNER:JSON.stringify([join(root,"absent.exe")])}});
+  expect(actual.status).toBe(1);expect(actual.stderr).toContain("ENOENT");expect(readdirSync(temporary)).toEqual([]);
+ } finally {rmSync(root,{recursive:true,force:true});}
+},120000);
+
 /** 🪟️ Contract: Cargo executes `RUSTC_WRAPPER` directly with arguments that carry quotes; on Windows that has to be a native executable (a batch file cannot take them), and a claim release in a `finally` never throws on a sharing violation. The native wrapper is built and run for real on every host (the `.exe` name is only a name there); the Windows-only facts are injected. */
 const here=fileURLToPath(new URL(".",import.meta.url)),base=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir());mkdirSync(base,{recursive:true});
 const scratch=()=>mkdtempSync(join(base,"ucw-"));

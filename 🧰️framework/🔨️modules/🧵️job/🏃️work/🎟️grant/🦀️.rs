@@ -1,4 +1,4 @@
-//! 🎟️ Caller-funded retained work has independent currencies and exact cumulative receipts; a step context quotes them over its own remaining retained grant ([`crate::StepContext::retained_work_can_enter`]).
+//! 🎟️ See `README.md`.
 use semio_framework_value_retained_clone::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress},RetirementDemand,ValueError,ValueRefusalKind};
 #[derive(Clone,Copy,Debug,PartialEq,Eq,semio_framework_value_derive::RetireOwned)]
 #[value(crate="::semio_framework_value_retained_clone")]

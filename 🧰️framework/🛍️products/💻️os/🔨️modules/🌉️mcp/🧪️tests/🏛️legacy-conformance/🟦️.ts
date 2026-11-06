@@ -21,7 +21,8 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { LATEST_PROTOCOL_VERSION, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { requireMcpBinary, spawnRawMcp } from "../../🟦️.ts";
+import { spawnRawMcp } from "../../🟦️.ts";
+import { requireMcpBinary } from "../../📦️binary/🟦️.ts";
 import { isValidJsonSchema2020_12 } from "../../🧬️schema-validation/🟦️.ts";
 import { findWorkspaceRoot } from "@semio-tech/process/routing";
 

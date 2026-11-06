@@ -1,0 +1,1 @@
+{"schema":"s.puzzle5d.lifecycle.v1","boardWindow":"puzzle5d-2d","worldWindow":"puzzle5d-3d","boardDrag":[60,30],"worldDrag":[80,0],"grid":[0.3,0.4,0.5,0.6,0.7],"background":[[0.05,0.08],[0.05,0.9],[0.9,0.9]],"minimumMovement":0.5}

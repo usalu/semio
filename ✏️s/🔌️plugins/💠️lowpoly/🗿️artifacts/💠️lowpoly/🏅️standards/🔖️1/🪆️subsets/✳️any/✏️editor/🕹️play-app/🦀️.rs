@@ -90,8 +90,8 @@ fn lowpoly_render(
 pub struct LowpolyPlayApp;
 
 impl ArtifactEditor for LowpolyPlayApp {
-    fn fault_notices()->&'static [(&'static str,semio_framework_ui_locale::LocalizedLabel)] {
-        static NOTICES:std::sync::LazyLock<[(&str,semio_framework_ui_locale::LocalizedLabel);3]>=std::sync::LazyLock::new(||[("lowpoly.paint.invalid-texture",semio_framework_ui_locale::LocalizedLabel::native("The paint layer must be empty or contain exactly 256 × 256 RGBA pixels.","Die Malebene muss leer sein oder genau 256 × 256 RGBA-Pixel enthalten.")),("lowpoly.snapshot-json.capacity",semio_framework_ui_locale::LocalizedLabel::native("Snapshot JSON must be at most 2 MiB.","Snapshot-JSON darf höchstens 2 MiB groß sein.")),("lowpoly.snapshot-json.invalid",semio_framework_ui_locale::LocalizedLabel::native("The snapshot JSON is invalid.","Das Snapshot-JSON ist ungültig."))]);
+    fn fault_notices()->&'static [(&'static str,semio_ui_locale::LocalizedLabel)] {
+        static NOTICES:std::sync::LazyLock<[(&str,semio_ui_locale::LocalizedLabel);3]>=std::sync::LazyLock::new(||[("lowpoly.paint.invalid-texture",semio_ui_locale::LocalizedLabel::native("The paint layer must be empty or contain exactly 256 × 256 RGBA pixels.","Die Malebene muss leer sein oder genau 256 × 256 RGBA-Pixel enthalten.")),("lowpoly.snapshot-json.capacity",semio_ui_locale::LocalizedLabel::native("Snapshot JSON must be at most 2 MiB.","Snapshot-JSON darf höchstens 2 MiB groß sein.")),("lowpoly.snapshot-json.invalid",semio_ui_locale::LocalizedLabel::native("The snapshot JSON is invalid.","Das Snapshot-JSON ist ungültig."))]);
         &*NOTICES
     }
     /// 📶️ Live operation controls appear in both editing windows.
@@ -202,7 +202,7 @@ impl ArtifactEditor for LowpolyPlayApp {
             _ => false,
         };
         if oversized_snapshot_json {
-            return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("lowpoly.snapshot-json.capacity"), "Snapshot JSON exceeds its declared UTF-8 input budget").into());
+            return Err(semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("lowpoly.snapshot-json.capacity"), "Snapshot JSON exceeds its declared UTF-8 input budget").into());
         }
         if !lowpoly_command_admitted(&original.command, &original.snapshot, &original.config) {
             return Err(Fault::from("lowpoly-retained-command-capacity").into());
@@ -265,8 +265,8 @@ impl ArtifactEditor for LowpolyPlayApp {
         }
     }
 
-    fn original_action_command_producer() -> Option<&'static dyn semio_framework_plugin::tool_contract::ArtifactOriginalCommandProducerFactory<LowpolyCommand>> {
-        Some(&semio_framework_plugin::tool_contract::OriginalActionCommandBridge::<LowpolyCommand>(<Self as ArtifactEditor>::command_from_action, lowpoly_command_maximum_raw_bytes))
+    fn original_action_command_producer() -> Option<&'static dyn semio_plugin::tool_contract::ArtifactOriginalCommandProducerFactory<LowpolyCommand>> {
+        Some(&semio_plugin::tool_contract::OriginalActionCommandBridge::<LowpolyCommand>(<Self as ArtifactEditor>::command_from_action, lowpoly_command_maximum_raw_bytes))
     }
 
     fn command_id(command: &LowpolyCommand) -> &'static str {

@@ -1,0 +1,15 @@
+# Two-Human Browser Policy Repair
+
+Root and Low independently inspected the current official two-human runner and shared repository browser owner. The runner prepared the managed browser path but then forced --use-angle=metal/--ignore-gpu-blocklist regardless of platform. The shared owner already defines a schema-authored portable software WebGPU launch policy and executable/host-library readiness checks. No new platform policy was needed.
+
+Root changed only the existing shared import to include browserLaunchOptionsV1 and the two-human launch call to chromium.launch(browserLaunchOptionsV1()). Managed path preparation and lazy Playwright module loading remain before launch. Existing sessions, run options, CLI and journeys were preserved by unique exact replacements while Engine works on the same file. Engine independently reviewed the two-line repair and fresh owned argument-array behavior. No dependency or third-party API type was added. Other logical drivers were not rewritten.
+
+The existing shared browser corpus covers portable policy arguments, Windows and Unix executable paths, missing headless shell, stale revision, missing host libraries and explicit browser-path controls. Root inspected those existing fixtures/tests and started their normal repository-admitted Bun regression53321, output generated/browser-policy-regression.log. Actual result remains pending. The worker/offline behavior oracles are separate and must execute through the same managed setup/policy; source review and policy tests do not prove browser rendering, socket behavior or native macOS/Linux/devcontainer execution.
+
+## Actual Policy Regression GREEN and Provisioning Gap
+
+Root tool53321 completed exit0:10tests passed, none failed,24expect calls. Root independently read the full retained summary. This validates the existing canonical policy, registry-module resolution and authored path-control test cases. It does not validate that real browser executables exist.
+
+Corrected combined local socket oracle49714 actually reports0passed/2failed before socket behavior: launch cannot find node_modules/.cache/ms-playwright/chromium_headless_shell-1248/chrome-headless-shell-win64/chrome-headless-shell.exe under this workspace. The managed setup/policy correction is distinct from provisioning the pinned executable. Engine owns inspection of the normal repo-owned tool/bootstrap installation route, preserving explicit path controls and avoiding manual npx dependency setup. No unsupported socket behavior, native-platform or end-to-end pass is claimed.
+
+Actual repository chromium verification also returned exit1 for missing pinned revision1248. The supported CLI exposes repo tools setup toolchains rather than a targeted chromium form; Engine started that normal setup as58231 with generated/toolchains-browser-setup.log, while checking exact selected tools and canonical cache mapping versus inherited tool-exec path. No environment control was overridden; installer/readiness outcome remains pending.

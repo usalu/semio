@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"command":["test","--manifest-path","🧰️framework/🔨️modules/🎒️pack/🔤️json/🎟️source/📦️packages/🦀️rust/Cargo.toml","-p","semio-framework-pack-json-source","--lib","source_json_progresses_after_birth_with_one_item_per_epoch"],"configuration":"prototype","store":"shared","parallelism":1,"language":"en","agent":"semio-source-json-one-item"}}

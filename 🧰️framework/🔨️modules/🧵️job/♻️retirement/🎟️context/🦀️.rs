@@ -2,7 +2,7 @@
 use crate::{InteractiveJobCloseStep,OriginalTurnFailure,RetainedCloneProgress,StepContext};
 use semio_framework_value_retained_clone::{RetainedCloneGrant,RetainedCloneStep,RetirementDemand,RetainedWorkOutcome,ValueError,ValueRefusalKind};
 
-/// 🪙️ One quoted original cursor action records its actual physical effects and independent CPU once.
+/// 🪙️ See `README.md`.
 pub fn close_original_retained_step(cx:&mut StepContext<'_>,demand:RetirementDemand,advance:impl FnOnce(RetainedCloneGrant)->RetainedWorkOutcome)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
  close_original_retained_turn(cx,demand,|grant|{let turn=advance(grant);RetainedWorkOutcome{result:turn.result.map_err(Into::into),work:turn.work}})
 }
@@ -14,25 +14,25 @@ fn receive_original_work<T:Copy,E:Into<crate::OriginalTurnPrimary>>(cx:&mut Step
   Ok(value)=>match(receipt_refusal,context_refusal){(None,None)=>Ok(value),(Some(primary),context_refusal)=>Err(OriginalTurnFailure{effects:progress,primary:primary.into(),receipt_refusal:None,context_refusal}),(None,Some(primary))=>Err(OriginalTurnFailure{effects:progress,primary:primary.into(),receipt_refusal:None,context_refusal:None})}
  }
 }
-/// 📊️ Receives one actual grant-only outcome without losing its primary, posting refusal or independent CPU.
+/// 📊️ See `README.md`.
 pub fn receive_original_retained_work<E:Into<crate::OriginalTurnPrimary>>(cx:&mut StepContext<'_>,turn:RetainedWorkOutcome<RetainedCloneStep,E>)->Result<RetainedCloneStep,OriginalTurnFailure>{receive_original_work(cx,turn,|step|step.progress())}
 fn fold_original_close(cx:&mut StepContext<'_>,turn:RetainedWorkOutcome<InteractiveJobCloseStep,crate::OriginalTurnPrimary>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{receive_original_work(cx,turn,|step|step.progress())}
 
-/// 🧳️ The original diagnostic, receipt and source-context refusals retain complete owned fields.
+/// 🧳️ See `README.md`.
 pub fn close_original_retained_turn(cx:&mut StepContext<'_>,demand:RetirementDemand,advance:impl FnOnce(RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,crate::OriginalTurnPrimary>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
  cx.original_source_parent()?.validate_borrowed_context(cx)?;
  let remaining=cx.retained_grant();if cx.retirement_should_yield()||remaining.maximum_items==0||remaining.maximum_copy_bytes<demand.copy_bytes||remaining.maximum_capacity_bytes<demand.capacity_bytes||remaining.maximum_release_bytes<demand.release_bytes||remaining.maximum_depth<demand.depth{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
  let turn=advance(RetainedCloneGrant{maximum_items:1,..remaining});fold_original_close(cx,RetainedWorkOutcome{result:turn.result.map(|step|InteractiveJobCloseStep::Pending{progress:step.progress()}),work:turn.work})
 }
 
-/// 🎫️ A grant-shaped close returns its full actual CPU witness, including denial and failure.
+/// 🎫️ See `README.md`.
 pub fn close_original_granted_step(cx:&mut StepContext<'_>,close:impl FnOnce(RetainedCloneGrant)->RetainedWorkOutcome<InteractiveJobCloseStep>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
  cx.original_source_parent()?.validate_borrowed_context(cx)?;
  if cx.retirement_should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
  let turn=close(cx.retained_grant());fold_original_close(cx,RetainedWorkOutcome{result:turn.result.map_err(Into::into),work:turn.work})
 }
 
-/// 🪆️ Context-aware children post their own actual CPU; only unposted success effects are reconciled.
+/// 🪆️ See `README.md`.
 pub fn close_original_nested_step(cx:&mut StepContext<'_>,close:impl FnOnce(&mut StepContext<'_>,RetainedCloneGrant)->Result<InteractiveJobCloseStep,OriginalTurnFailure>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
  cx.original_source_parent()?.validate_borrowed_context(cx)?;
  if cx.retirement_should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}

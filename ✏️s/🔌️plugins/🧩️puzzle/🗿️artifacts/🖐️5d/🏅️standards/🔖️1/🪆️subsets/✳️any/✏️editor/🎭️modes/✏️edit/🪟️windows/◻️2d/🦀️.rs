@@ -75,26 +75,26 @@ pub fn board_camera_value(camera: &Puzzle5dCamera2d) -> Value {
 }
 
 fn board_node_value(part: &Puzzle5dPart) -> Value {
-    let shape = if part.part_2d.shape.is_empty() { "circle" } else { part.part_2d.shape.as_str() };
+    let shape = part.part_2d.shape.as_deref().filter(|shape| !shape.is_empty()).unwrap_or("circle");
     let handles: Vec<Value> = part
         .grips
         .iter()
         .map(|grip| {
             json!({
                 "id": puzzle5d_grip_full_id(&part.id, &grip.id),
-                "handleKind": if grip.grip_kind.is_empty() { grip.grip_2d.grip_kind.clone() } else { grip.grip_kind.clone() },
+                "handleKind": grip.grip_kind.as_deref().filter(|kind| !kind.is_empty()).or(grip.grip_2d.grip_kind.as_deref()).unwrap_or_default(),
                 "angle": grip.grip_2d.angle,
-                "radius": if grip.grip_2d.radius > 0.0 { grip.grip_2d.radius } else { 3.0 },
+                "radius": grip.grip_2d.radius.filter(|radius| *radius > 0.0).unwrap_or(3.0),
             })
         })
         .collect();
     let mut node = json!({
         "id": part.id,
-        "nodeKind": part.part_kind,
+        "nodeKind": part.part_kind.as_deref().unwrap_or_default(),
         "shape": shape,
         "x": part.part_2d.x,
         "y": part.part_2d.y,
-        "text": part.part_2d.text,
+        "text": part.part_2d.text.as_deref().unwrap_or_default(),
         "handles": handles,
     });
     if let Some(object) = node.as_object_mut() {
@@ -102,7 +102,7 @@ fn board_node_value(part: &Puzzle5dPart) -> Value {
             object.insert("width", json!(part.part_2d.width.unwrap_or(48.0)));
             object.insert("height", json!(part.part_2d.height.unwrap_or(48.0)));
         } else {
-            object.insert("radius", json!(if part.part_2d.radius > 0.0 { part.part_2d.radius } else { PUZZLE5D_DEFAULT_PART_RADIUS }));
+            object.insert("radius", json!(part.part_2d.radius.filter(|radius| *radius > 0.0).unwrap_or(PUZZLE5D_DEFAULT_PART_RADIUS)));
         }
         if let Some(icon) = part.part_2d.icon_kind.as_ref() {
             object.insert("iconKind", json!(icon));

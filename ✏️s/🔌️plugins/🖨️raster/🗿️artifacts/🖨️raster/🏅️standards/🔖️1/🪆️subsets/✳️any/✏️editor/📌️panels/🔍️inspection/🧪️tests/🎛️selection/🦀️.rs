@@ -11,7 +11,7 @@ fn inspector_stages_every_filter_with_its_authoritative_amount_bounds() {
         for row in fixture["cases"].as_array().unwrap() {
             let config = RasterConfig { filter_kind: row["filter"].as_str().unwrap().into(), filter_amount: row["amount"].as_f64().unwrap(), ..Default::default() };
             let tree = render(&document, &config, &[id.clone()], labels).unwrap();
-            let text = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).unwrap();
+            let text = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(tree)).unwrap();
             let projection: serde_json::Value = serde_json::from_str(&text).unwrap();
             let mut pending = vec![&projection];
             let mut amount_found = false;
@@ -58,7 +58,7 @@ fn inspector_pixel_actions_match_the_neutral_semantic_contract() {
             for target in ["pixels", "mask"] {
                 let config = RasterConfig { paint_target: target.into(), ..Default::default() };
                 let tree = render(&document, &config, &[id.clone()], labels).unwrap();
-                let text = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).unwrap();
+                let text = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(tree)).unwrap();
                 let projection: serde_json::Value = serde_json::from_str(&text).unwrap();
                 for row in fixture["actions"].as_array().unwrap() {
                     let key = format!("raster-inspector.{}", row["key"].as_str().unwrap());

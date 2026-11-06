@@ -1,0 +1,23 @@
+# Native Preparation Observation
+
+Root independently read the newest180000bytes of the retained native22389 log after original-owner output recovery. The inspected tail contained no retry/refusal/error/compiler/test markers, but this is only a tail observation; earlier explicitly omitted historical bytes remain unknown. The saved tail showed Store ownership frontier1751744 and `javascript-preserving-source:323`, followed by current-input replay. No target success is inferred.
+
+The `javascript-preserving-source` activity comes from `readJavascriptDependencyPreservationSourceV1` in repository bootstrap dependency storage, not the descriptor-backed publication writer. Root read its authoritative implementation: the activity suffix is `rows.length`; it observes physical Source ancestry and selected endpoint stamps/raw link targets, performs final replay, then returns DATA explicitly marked `authority:false` and `contentsObserved:false`. Thus323 is an observed endpoint-row count, not323successful Source publications or proof that the qualified Generic preservation repair ran in production.
+
+The current declared native route is retained. Actual producer readiness/publication, fresh graph/native coverage, Rust compilation and nonzero named IO/full37results remain required. No code or guard changed based on this observation.
+
+## Physical Pause Observation
+
+At1793874725085 `repo doctor --only=processes --facts --lang=en` successfully reported native29656 under34296, both physically alive, CPU0at that sample, resident1787MB/72MB respectively, no captured child of29656 and an empty capacity-waiter list. This does not establish a deadlock, failure or terminal result. A later authoritative lease1793874880947 still identified29656 progressing in store-input-replay, silence54seconds and held13905seconds, without cycles/violations. Its progress timestamp had advanced since the earlier silent61second observation. No process was restarted, canceled or modified and no speculative capacity/Source workaround was introduced.
+
+## Meaning Of The Store Frontier Counter
+
+Root traced the actual producer progress callback in bootstrap dependency storage and the first-party Bun ownership adapter/CJS implementation. `dependencies:store-ownership:<operation>:<completedOperations>` forwards a cumulative counter retained across initial ownership discovery, manifest checks, publication and subsequent full custody rechecks. The frontier operation increments that same counter while replaying the retained physical decision frontier. It is not a count of distinct files, packages, successful publications or a precomputed total.
+
+`replayCurrentMembershipV1` checks path kind/device/inode/mode, qualified directory stamps/listings and exact manifest text, then performs a synchronous final physical replay after the awaited continuation. Drift rederives equivalent membership and authenticates the refreshed candidate. The ordinary callback performs these rechecks throughout the held installation custody. This explains why the counter can continue climbing across repeated store-input-replay activity; it does not establish a performance defect, completion percentage or remaining duration. No bound, guard or continuation was removed. Current-source inspection alone does not prove which future target result the live command will produce.
+
+The separate `dependencies:store-input-replay` label is emitted by `verifyJavascriptDependencyDescriptorGroupV1`. That function reopens the retained immutable input group through the bounded input-parent trie, verifies directory/file identities and descriptor/name equality, reads complete bytes with EOF/SHA checks, and retains the existing semantic work ceiling. Its label omits a work counter and publishes at bounded work intervals. It is distinct from Bun membership frontier replay and from Source publication; alternating labels do not by themselves prove an installer restart or repeated failure. No such failure was found in the inspected returned output.
+
+## Publication Fence Batching Already Present
+
+Root read the complete current producer loop around staging/install/provider/ready/publication. The Source-binding publication loop already invokes the full fence only at the authored fullFenceInterval; other bindings receive the specific endpoint fence. It does not unconditionally replay every immutable group after every binding. The build-only phase returns before this Source publication loop. Therefore the inspected code does not support diagnosing an unbatched per-binding whole-replay defect, and no policy interval, guard or source was changed.

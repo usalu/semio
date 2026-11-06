@@ -23,8 +23,8 @@ path = "../../🦀️.rs"
 doctest = false
 
 [dependencies]
+semio-framework-pack-json-source = { workspace = true }
 semio-framework-actor = { workspace = true }
-semio-framework-job = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 

@@ -6,11 +6,12 @@ pub use value::*;
 pub use serde;
 pub use serde_json;
 pub use semio_framework_io_base64::{base64_standard_encode,base64_standard_decode};
-pub use semio_framework_value_derive::{CanonicalJsonTree, FromValue, NativeReceive, RetainedClone, RetainedEquality, RetireOwned, SnapshotProjection, ToValue};
+pub use semio_framework_value_derive::{native_json_codec, CanonicalJsonTree, FromValue, NativeJsonBorrow, NativeReceive, RetainedClone, RetainedEquality, RetireOwned, SnapshotProjection, ToValue};
 
 pub use semio_framework_value_retirement::retirement;
 pub use semio_framework_value_retirement::retirement::RetireOwned;
 pub use semio_framework_value_native_owned::native_decoding;
+pub use native_decoding::OriginalReceivingPrimary;
 pub use semio_framework_value_native_owned::{NativeReceive,NativeReceiver};
 pub use semio_framework_value_retirement::{RetainedWorkOutcome,ErasedSnapshotRetirement,RetirementDemand,factory_ticket_demands,close_factory_ticket,close_factory_ticket_original,owned_retirement_birth_bytes,admit_owned_retirement,shared_retirement_birth_bytes,shared_retirement_allocation_bytes,admit_shared_retirement,artifact_retire_leaf,artifact_retirement_sequence,artifact_retire_struct,OriginalRetirementControl,RetirementSelection,select_retirement_cursor,select_factory_ticket,close_factory_ticket_controlled};
 #[path = "../../🧬️retained-clone/🦀️.rs"]

@@ -9,7 +9,7 @@ use crate::unit_tests::context::{app, dispatch, raster_view_state, RasterAppFixt
 use semio_s_artifact_raster_raster_editor::*;
 use semio_s_artifact_raster_raster_editor::commands::paint_stroke::{paint_stroke_leaf, PaintStroke, RASTER_PAINT_TOOL_ID};
 use semio_s_artifact_raster_raster_mutations::text::apply_raster_mutation;
-use semio_framework_plugin::PluginApp;
+use semio_plugin::PluginApp;
 
 fn press(layer: &str, phase: Option<&str>, gesture: &str, xs: &[f64], ys: &[f64]) -> RasterCommand {
     RasterCommand::PaintStroke(PaintStroke { layer_id: layer.into(), tool: "brush".into(), xs: xs.to_vec(), ys: ys.to_vec(), phase: phase.map(str::to_string), reason: None, gesture: Some(gesture.into()) })
@@ -17,12 +17,12 @@ fn press(layer: &str, phase: Option<&str>, gesture: &str, xs: &[f64], ys: &[f64]
 
 /// 📨️ The host forwarding `kind` for the Composite test window.
 async fn host_event(app: &mut RasterAppFixture, kind: &str) {
-    let under = semio_framework_plugin::ActionMeta { view_state: Some(semio_framework_plugin::artifact_app_laws::receive_view_fixture(raster_view_state(), semio_framework_plugin::artifact_app_laws::OriginalWorkFixture::stock())), ..semio_framework_plugin::artifact_app_laws::meta("local") };
+    let under = semio_plugin::ActionMeta { view_state: Some(semio_plugin::artifact_app_laws::receive_view_fixture(raster_view_state(), semio_plugin::artifact_app_laws::OriginalWorkFixture::stock())), ..semio_plugin::artifact_app_laws::meta("local") };
     let window = raster_view_state().window_id.expect("the composite test window");
     let args = semio_framework_value::DslValue::from(&serde_json::json!({ "windowId": window, "kind": kind }));
-    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::HOST_EVENT_ACTION_ID, Some(args.clone()), &under, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("hostEvent {kind}: {fault:?}"));
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.unwrap_or_else(|fault| panic!("hostEvent {kind} settles: {fault:?}"));
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("hostEvent {kind} answer settles: {fault:?}"));
+    let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::HOST_EVENT_ACTION_ID, Some(args.clone()), &under, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("hostEvent {kind}: {fault:?}"));
+    semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.unwrap_or_else(|fault| panic!("hostEvent {kind} settles: {fault:?}"));
+    semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, semio_plugin::artifact_app_laws::meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("hostEvent {kind} answer settles: {fault:?}"));
 }
 
 #[semio_framework_async_macros::async_test]

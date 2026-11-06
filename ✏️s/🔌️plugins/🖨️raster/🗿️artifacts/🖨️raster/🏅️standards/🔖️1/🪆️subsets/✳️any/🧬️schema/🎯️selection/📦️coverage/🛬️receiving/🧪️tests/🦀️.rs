@@ -1,6 +1,6 @@
 //! 🧪️ Flat original span arrays retain their wire order across packed page boundaries.
 use super::*;
-use semio_framework_plugin::artifact_app_laws::OriginalWorkFixture;
+use semio_plugin::artifact_app_laws::OriginalWorkFixture;
 
 #[test]
 fn original_flat_coverage_receives_packed_pages(){

@@ -1,0 +1,4 @@
+import path from "node:path";import fs from "node:fs";import {pathToFileURL} from "node:url";
+const {readRustSourceClosureV1}=await import(pathToFileURL(path.resolve("🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts")).href);
+const dir=path.resolve(process.argv[2]??"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app"),manifest=path.join(dir,"📦️packages/🦀️rust");
+for(const cfg of [[],["test"]]){const xs=await readRustSourceClosureV1([path.join(dir,"🦀️.rs")],path.resolve("."),cfg,async p=>{try{return await fs.promises.readFile(p)}catch(e){if(e.code==="ENOENT")return null;throw e}},{manifestDirectory:manifest,generated:()=>undefined});console.log(JSON.stringify({cfg,files:xs.length,bytes:xs.reduce((s,x)=>s+x.bytes,0),lines:xs.reduce((s,x)=>s+x.activeLines,0),paths:xs.map(x=>x.path)}))}

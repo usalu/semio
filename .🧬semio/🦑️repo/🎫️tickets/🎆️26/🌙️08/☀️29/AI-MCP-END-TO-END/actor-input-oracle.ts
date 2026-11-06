@@ -1,0 +1,15 @@
+import { readFileSync } from "node:fs";
+import { strict as assert } from "node:assert";
+import Ajv from "ajv";
+const bytes={type:"array",items:{type:"integer",minimum:0,maximum:255}};
+const nullableBytes={anyOf:[bytes,{type:"null"}]};
+const object=(properties:Record<string,unknown>)=>({type:"object",properties,required:Object.keys(properties),additionalProperties:false});
+const natural={type:"integer",minimum:0};
+const grant=object({maximumItems:natural,maximumCopyBytes:natural,maximumCapacityBytes:natural,maximumReleaseBytes:natural,maximumDepth:natural});
+const limits=object({retainedPolicy:grant,workFuel:natural,fuel:natural,deadlineUs:natural,maxEffects:natural,maxPatchBytes:natural,maxFrames:natural});
+const inputs={Job:object({job:natural,kind:{type:"string"},input:nullableBytes,checkpoint:nullableBytes}),Poll:object({events:{type:"array"},command_page:{type:"null"},cold_pair_page:{type:"null"},limits}),Codec:object({artifact_schema:{type:"string"},document_id:{type:"string"},pack:bytes,spr:bytes,ops:bytes}),Restore:object({state:bytes})};
+const schema={oneOf:Object.entries(inputs).map(([tag,payload])=>object({[tag]:payload}))};
+const validate=new Ajv({strict:true}).compile(schema);
+const rows=JSON.parse(readFileSync("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🔁️persistent-local/📊️actor-input.json","utf8"));
+for(const row of rows)assert.equal(validate(row.wire),row.valid,JSON.stringify(row.wire));
+console.log(`actor input: ${rows.length} independent Ajv cases passed`);

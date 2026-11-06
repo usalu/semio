@@ -3,6 +3,7 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+    "🔨️modules/🧵️job/📬️outcome/📤️publication/🪙️escrow/📦️packages/🦀️rust",
     "🔨️modules/🗣️dsl/🧬️schema/📐️model/🧳️ownership/📦️packages/🦀️rust",
     "🔨️modules/🎒️pack/🔤️json/🛫️encode/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🔄️full-operation/📃️/📦️packages/🦀️rust",
@@ -1216,6 +1217,9 @@ semio-framework-value-original-slot = { path = "🔨️modules/🌱️value/🧬
 
     [workspace.dependencies.semio-framework-job-payload]
     path = "🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-job-return-escrow-publication]
+    path = "🔨️modules/🧵️job/📬️outcome/📤️publication/🪙️escrow/📦️packages/🦀️rust"
 
     [workspace.dependencies.semio-framework-job-native-decode]
     path = "🔨️modules/🧵️job/⏱️context/🛬️decode/📦️packages/🦀️rust"

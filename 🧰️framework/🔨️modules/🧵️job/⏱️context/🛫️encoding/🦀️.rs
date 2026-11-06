@@ -8,7 +8,7 @@ impl EncodingEffectReceipt<'_>{
 }
 impl Drop for EncodingEffectReceipt<'_>{fn drop(&mut self){if !self.settled{self.settle();}}}
 impl StepContext<'_>{
- /// 🎟️ Encodes one measured flat byte backing; the receiver retains partial bytes on every refusal.
+ /// 🎟️ See `README.md`.
  pub fn with_native_encoding(&mut self,output:&mut Option<Vec<u8>>,encode:impl FnOnce(&mut NativeEncodeControl<'_>,&mut Option<Vec<u8>>)->Result<(),ValueError>)->Result<(),OriginalTurnFailure>{
   self.original_source_parent()?.validate_borrowed_context(self)?;if output.is_some(){return Err(encoding_refusal("Source encoding requires an empty original byte receiver").into())}if self.should_yield()||self.is_cancelled()||self.fuel_remaining()<2||self.retained_grant().maximum_items<2||self.retained_grant().maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"Source encoding requires its funded live work and receiver metadata").into())}
   let start=self.retained_progress();let identity=OriginalSourceBinding::borrow(self);self.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;self.consume_fuel(1);

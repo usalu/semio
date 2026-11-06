@@ -19,31 +19,7 @@ impl GatewayBackend for HeadlessWorkspace {
         self.catalog.current().get(capability_id).map(|capability| serde_json::to_value(capability).unwrap_or(serde_json::Value::Null)).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("no such capability: {capability_id}")))
     }
 
-    /// 🎬️ `action.prepare`/`action.invoke`'s real 2-phase mutation protocol (revision checks, undo
-    /// tokens) already lives at `🔀️dispatch`'s `ActionAdapter` — and, per that packet's own doc,
-    /// `MockArtifactChannel`/`PluginArtifactChannel` are its only two real implementors, ONE of which
-    /// (`PluginArtifactChannel`) this file owns. Rather than half-reimplement `ActionAdapter`'s
-    /// prepare/preview/commit/audit bookkeeping a second time in this struct, these two methods
-    /// genuinely DELEGATE to a real, workspace-owned `ActionAdapter` (`Self::action_adapter`) — see
-    /// that method's own doc for why it is a SEPARATE instance from `🦀️.rs`'s root-owned
-    /// one rather than a shared reference. Every real 6-verb exchange this now drives is implemented
-    /// for real at `PluginArtifactChannel::exchange` above; whether it SUCCEEDS today depends on
-    /// that arm's own honest gap note (`PureCommand`'s guest-side handler unconditionally rejects
-    /// for every currently-compiled plugin) — this is a real, non-fabricated round trip either way,
-    /// never a synthesized `PLUGIN_UNAVAILABLE` short-circuit before even trying.
-    ///
-    /// 🧭️ Resolved BEFORE the adapter ever runs — `ActionAdapter::prepare` issues a bare
-    /// `ReadHistory` (no capability id) before its `PureCommand`, so `RoutingArtifactChannel` must
-    /// already be able to decode the target plugin from `instance` alone; `plugin_instance_slot`
-    /// is the SAME deterministic function it decodes with, so passing its result here (never the
-    /// old bare `0`) is what makes that first `ReadHistory` land on the right plugin.
-    ///
-    /// 🔀️ `ActionAdapter::prepare` has no `expected_revision` parameter of its own — it always
-    /// captures a fresh baseline (`report.expected_revision`) via a real `ReadHistory`. This
-    /// trait's own `expected_revision` is the CALLER's assertion of what revision it expected to
-    /// still be current; checking it here (rather than silently ignoring it) surfaces a real
-    /// `REVISION_CONFLICT` the moment a caller's assumption is already stale, instead of only at
-    /// `invoke_action` — matches `ActionAdapter::invoke_uncached`'s own revision-conflict shape.
+    /// 🎬️ `action.prepare`/`action.invoke`'s real 2-phase mutation protocol (revision checks, undo [Design notes](README.md#source-notes-22).
     fn prepare_action(&self, capability_id: &str, input: serde_json::Value, expected_revision: Option<RevisionStamp>) -> Result<PreparedActionReport, GatewayError> {
         self.resolve_plugin_for_capability(capability_id)?;
         let catalog = self.catalog.current();
@@ -59,12 +35,7 @@ impl GatewayBackend for HeadlessWorkspace {
         Ok(report)
     }
 
-    /// 🧭️ The trailing `0` here is `ActionAdapter::invoke`'s `instance` PARAMETER, which
-    /// `invoke_uncached` only reads on its "prepare inline" branch (`request.capability_id` set,
-    /// no `prepared_handle`) — never this one, since `prepared_handle` is always `Some` below.
-    /// Every real command this call issues instead reuses `record.instance`, captured on the
-    /// resolved handle back when `prepare_action` minted it from `plugin_instance_slot` — so the
-    /// correct plugin routing already travels with the handle, not through this parameter.
+    /// 🧭️ The trailing `0` here is `ActionAdapter::invoke`'s `instance` PARAMETER, which [Design notes](README.md#source-notes-62).
     fn invoke_action(&self, prepared_handle: &str, idempotency_key: Option<&str>) -> Result<InvocationReport, GatewayError> {
         let request = InvokeRequest { prepared_handle: Some(prepared_handle.to_string()), capability_id: None, input: None, expected_revision: None, idempotency_key: idempotency_key.map(str::to_string), approval_handle: None, context: None };
         self.action_adapter()?.invoke(&self.catalog.current(), &self.agent_principal(), &SessionHandle(self.session_id.clone()), request, 0, now_ms())

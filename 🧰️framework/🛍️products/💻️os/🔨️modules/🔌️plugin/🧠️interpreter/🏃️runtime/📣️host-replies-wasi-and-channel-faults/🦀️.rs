@@ -14,8 +14,7 @@ pub(super) fn owned_wasi_monotonic_clock() -> Result<Value, PluginHostError> {
     Ok(Value::I64(i64::from_ne_bytes(nanoseconds.to_ne_bytes())))
 }
 
-/// 🕰️ `wasi:clocks/wall-clock.now`'s `datetime` record (`seconds: u64` at 0, `nanoseconds: u32` at 8,
-/// padded to 16), read from the host's real wall clock — a guest Store stamps history with it.
+/// 🕰️ WASI wall-clock output uses the declared datetime layout.
 fn owned_wasi_wall_clock() -> Result<[u8; 16], PluginHostError> {
     let since_epoch = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_err(|_| PluginHostError::Plugin("owned WASI wall clock reads before the Unix epoch".to_string()))?;
     let mut datetime = [0u8; 16];
@@ -165,9 +164,7 @@ const OWNED_CHANNEL_VERSION_FUEL: u64 = 1_000_000;
 
 const OWNED_CHANNEL_VERSION_DEADLINE_MS: u32 = 5_000;
 
-/// 🔖️ Reads a fresh owned instance's `semio_owned_channel_version_v1` once and admits it through the one kernel admission
-/// ([`semio_os_kernel::admit_guest_channel_version`]) before the instance serves anything — an actor turn or a codec call —
-/// so a guest of another channel is refused as `PluginHostError::Refused` (`plugin.channel-mismatch`).
+/// 🔖️ Reads and admits the guest channel version.
 pub(super) fn admit_owned_channel(state: &mut OwnedGuestInstance) -> Result<(), TurnFault> {
     begin_owned_operation(state, OwnedOperation::ChannelVersion, None)?;
     let invocation = resume_owned_operation(state, OwnedOperation::ChannelVersion, OWNED_CHANNEL_VERSION_FUEL, u64::from(OWNED_CHANNEL_VERSION_DEADLINE_MS)*1000)?;

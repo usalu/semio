@@ -9,13 +9,15 @@ import { posix, win32 } from "node:path";
 import vectors from "./🧫️fixtures/🔣️.json";
 
 const mcp = readFileSync(new URL("../../../../🟦️.ts", import.meta.url), "utf8");
+const binary = readFileSync(new URL("../../../../📦️binary/🟦️.ts", import.meta.url), "utf8");
 const producer = readFileSync(new URL("../../../../📦️packages/🦀️rust/📜️script.ts", import.meta.url), "utf8");
 const projection = readFileSync(new URL("../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📤️published/🟦️.ts", import.meta.url), "utf8");
 const ast = ts.createSourceFile("mcp.ts", mcp, ts.ScriptTarget.Latest, true);
 const buildAst = ts.createSourceFile("build.ts", producer, ts.ScriptTarget.Latest, true);
 const declarations = (names: readonly string[]) => ast.statements.filter(node => ts.isFunctionDeclaration(node) ? names.includes(node.name?.text ?? "") : ts.isVariableStatement(node) && node.declarationList.declarations.some(value => ts.isIdentifier(value.name) && names.includes(value.name.text)));
 const compile = (text: string) => ts.transpileModule(text.replace(/^export /gmu, ""), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } }).outputText;
-const binaryCode = compile(declarations(["MCP_ARTIFACT_REL", "MCP_BINARY_NAME", "pathApi", "resolveMcpBinaryPath"]).map(node => node.getText(ast)).join("\n"));
+const binaryAst = ts.createSourceFile("binary.ts", binary, ts.ScriptTarget.Latest, true);
+const binaryCode = compile(binaryAst.statements.filter(node => ts.isFunctionDeclaration(node) ? ["pathApi", "resolveMcpBinaryPath"].includes(node.name?.text ?? "") : ts.isVariableStatement(node) && node.declarationList.declarations.some(value => ts.isIdentifier(value.name) && ["MCP_ARTIFACT_REL", "MCP_BINARY_NAME"].includes(value.name.text))).map(node => node.getText(binaryAst)).join("\n"));
 const publicationAst = ts.createSourceFile("published.ts", projection, ts.ScriptTarget.Latest, true);
 const publication = publicationAst.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === "publishedCargoArtifactDirectoryV1");
 if (!publication) throw Error("Actual publication projection required");
@@ -58,9 +60,9 @@ test("closed publication vectors agree with the independent SQLite path oracle",
 });
 
 for (const row of vectors.cases) test("normal MCP consumer selects its producer publication on " + row.id, () => {
- const selected = declarations(["MCP_BINARY_NAME", "pathApi", "resolvePublishedMcpBinaryPathV1"]);
+ const selected = binaryAst.statements.filter(node => ts.isFunctionDeclaration(node) ? ["pathApi", "resolvePublishedMcpBinaryPathV1"].includes(node.name?.text ?? "") : ts.isVariableStatement(node) && node.declarationList.declarations.some(value => ts.isIdentifier(value.name) && value.name.text === "MCP_BINARY_NAME"));
  expect(selected).toHaveLength(3);
- const resolveConsumer = new Function("posix", "win32", "process", compile(selected.map(node => node.getText(ast)).join("\n")) + ";return resolvePublishedMcpBinaryPathV1;")(posix, win32, {platform:row.platform});
+ const resolveConsumer = new Function("posix", "win32", "process", compile(selected.map(node => node.getText(binaryAst)).join("\n")) + ";return resolvePublishedMcpBinaryPathV1;")(posix, win32, {platform:row.platform});
  const api = row.platform === "win32" ? win32 : posix;
  expect(resolveConsumer(row.publication, row.platform)).toBe(api.join(row.publication, row.binary));
 });
@@ -133,8 +135,5 @@ test("native audit and schema capture retain full output, exact status and reade
   const run=async(_binary:unknown,args:string[],_cwd:unknown,_label:unknown,_budget:unknown,options:{signal:AbortSignal;stdout:string;outputConsumer:(bytes:Uint8Array,stream:string)=>void})=>{expect(args).toEqual(row.arguments);expect(options.stdout).toBe("ignore");expect(options.signal).toBe(controller.signal);const chunk=Buffer.from(expected);options.outputConsumer(chunk,"stdout");chunk.fill(0);options.outputConsumer(Buffer.from("diagnostic"),"stderr");trace.push("run");if(row.status)throw new Failure();};
   const actual=new Function("BundleScript","withAdmittedPublishedCargoExecutableV1","readBuildMode","MCP_MANIFEST_REL","MCP_BINARY_NAME","MCP_STDIO_BUILD_MODE_V1","withIssuedResourceControlV1","runOwnedCommand","OwnedCommandFailure","scriptInvocationBudget","scriptInvocationEnvironment","process",compile(source)+";return new(class extends PublishedMcpScript{run(args){return this.capturePublished(args,60000);}})();")(Bundle,reader,(mode:string)=>mode,"owner/Cargo.toml","semio-os-mcp","prototype",(_inv:unknown,_label:unknown,_time:unknown,consume:(control:unknown)=>Promise<unknown>)=>consume({}),run,Failure,()=>60000,(_invocation:unknown,env:object)=>env,{env:{},platform:"linux"});
   const result=await actual.run(row.arguments);expect(result).toEqual({stdout:expected,stderr:"diagnostic",status:row.status});expect(trace).toEqual(["reader-enter","run","reader-leave"]);const db=new Database(":memory:");try{expect(db.query("select length(?) bytes").get(result.stdout)).toEqual({bytes:row.bytes});}finally{db.close();}
- }
-});
-ose();}
  }
 });

@@ -81,12 +81,7 @@ impl TextProps {
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
 #[derive(semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
 pub struct ButtonProps {
-    /// 🖼️ Icon key. The old `IconName` is generated per-consuming-crate via a `#[path]` mount (see
-    /// `🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🪪️icon-name/🦀️.rs`), not a publishable
-    /// dependency this crate's `Cargo.toml` — which this packet is forbidden from editing — could
-    /// take on. A plain `String` icon key is the only viable choice here; flagged as a
-    /// registrar-request in `📓️terra-contract-doc-report.md` in case a shared icon crate should
-    /// exist instead.
+    /// 🖼️ Icon key. The old `IconName` is generated per-consuming-crate via a `#[path]` mount (see [Design notes](README.md#source-notes-84).
     pub icon: crate::UiText,
     pub label: Label,
 }

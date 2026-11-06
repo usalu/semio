@@ -473,8 +473,8 @@ async fn registry_wired_app_dispatches_add_primitive() {
 
 #[semio_framework_async_macros::async_test]
 async fn every_registered_failed_load_body_uses_the_requested_locale() {
-    use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView};
-    use semio_framework_ui_locale::{Locale, Terminology};
+    use semio_plugin::{ArtifactView, ConfigView, HistoryView};
+    use semio_ui_locale::{Locale, Terminology};
     let contract: serde_json::Value = serde_json::from_str(include_str!("../../🎭️modes/✏️edit/🧪️tests/🔬️unit/locales.json")).expect("neutral locale cases");
     let mut snapshot = semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     snapshot.objects[0].mesh_state = None;
@@ -499,8 +499,8 @@ async fn every_registered_failed_load_body_uses_the_requested_locale() {
             (paint_mode::windows::uv::LOWPOLY_PLAY_BODY_UV, case["expect"]["failedUv"].as_str().unwrap()),
             (LOWPOLY_PLAY_BODY_ARTIFACT, case["expect"]["failedModel"].as_str().unwrap()),
         ] {
-            let tree = LowpolyPlayApp::render(body, &doc, &cfg, &semio_framework_plugin::ViewModel::new(locale, Terminology::Native)).expect("failure renders");
-            let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("project and retire exact tree");
+            let tree = LowpolyPlayApp::render(body, &doc, &cfg, &semio_plugin::ViewModel::new(locale, Terminology::Native)).expect("failure renders");
+            let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("project and retire exact tree");
             let projected: serde_json::Value = serde_json::from_str(&json).expect("independent failure-tree parser");
             assert!(has_text(&projected, expected), "{body} must render requested locale: {projected}");
         }

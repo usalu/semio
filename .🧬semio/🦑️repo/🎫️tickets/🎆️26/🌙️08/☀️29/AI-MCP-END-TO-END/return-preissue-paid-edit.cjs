@@ -1,0 +1,6 @@
+const fs=require('fs'),f='🧰️framework/🔨️modules/🧵️job/⏱️context/📦️return/🎟️place/🦀️.rs',s=fs.readFileSync(f,'utf8'),needle=' pub fn settle_return(';const text=` /// 📮️ Pays and retains the capture witness before the physical return can occur.
+ pub fn preissue_capture(&mut self,cx:&mut StepContext<'_>,destination:usize,copy_bytes:usize)->Result<bool,OriginalTurnFailure>{
+  self.qualify_sized(cx,destination,copy_bytes)?;let(items,bytes,work)=Self::preissue_demand();let progress=semio_framework_value_retained_clone::RetainedCloneProgress{copied_items:items,copied_bytes:bytes,..Default::default()};
+  if !progress.fits(cx.retained_grant())||cx.fuel_remaining()<work{return Ok(false)}cx.retained_progress().checked_add(progress)?;self.record_sized_return(destination,copy_bytes)?;cx.consume_fuel(work);cx.consume_retained(progress)?;Ok(true)
+ }
+`;if(s.split(needle).length!==2)throw Error('anchor');let t=s.replace(needle,text+needle),p=f+'.preissue-paid';fs.writeFileSync(p,t,{flag:'wx'});if(fs.readFileSync(f,'utf8')!==s){fs.unlinkSync(p);throw Error('concurrent change')}fs.renameSync(p,f);

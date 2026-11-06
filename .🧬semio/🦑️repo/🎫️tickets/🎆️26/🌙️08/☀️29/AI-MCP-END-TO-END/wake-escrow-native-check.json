@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"command":["check","--manifest-path","🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔔️wake/📦️packages/🦀️rust/Cargo.toml","-p","semio-plugin-host-wake","--lib"],"configuration":"prototype","store":"shared","parallelism":1,"language":"en","agent":"semio-wake-escrow-native"}}

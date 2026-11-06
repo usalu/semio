@@ -41,7 +41,7 @@ use original_crossing::GuestRelayNativeResponse;
 
 #[path="🏠️native/🦀️.rs"]
 mod native_home;
-pub use native_home::{GuestRelayNativeHome,GuestRelayNativeOrigin,GuestRelayNativeResolver,GuestRelayNativeState,NativeInstanceHome,NativeInstanceRetirement};
+pub use native_home::{GuestRelayNativeHome,GuestRelayNativeOrigin,GuestRelayNativeResolver,GuestRelayNativeCustody,GuestRelayNativeState,NativeInstanceHome,NativeInstanceRetirement};
 
 #[path = "🥶️cold-relay-job/🦀️.rs"]
 mod cold_relay_job;

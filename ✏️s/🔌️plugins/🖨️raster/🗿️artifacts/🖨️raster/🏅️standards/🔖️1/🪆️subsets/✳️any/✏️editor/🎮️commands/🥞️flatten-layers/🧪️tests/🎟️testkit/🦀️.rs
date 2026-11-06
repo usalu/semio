@@ -1,5 +1,5 @@
 //! 🎟️ Bake fixtures retain one genuine source across private work, handoff and retirement.
-use semio_framework_plugin::{Emit,artifact_app_laws::OriginalWorkFixture};
+use semio_plugin::{Emit,artifact_app_laws::OriginalWorkFixture};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneStep,RetainedWorkOutcome};
 use semio_s_artifact_raster_raster_editor::{RasterCommand,RasterConfigMutation,commands::flatten_layers::LayerBakeOwner};
 use semio_s_artifact_raster_raster_model::{RasterLayerNode,SemioImageSnapshot,snapshot::RasterSnapshot};

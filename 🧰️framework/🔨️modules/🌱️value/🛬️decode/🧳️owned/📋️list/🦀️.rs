@@ -1,6 +1,6 @@
+//! 🧳️ Original typed list children become persistent native rows through mandatory receiving and funded ownership transfers.
 use crate::OriginalReceivingPrimary;
 use crate::RetainedWorkOutcome;
-//! 🧳️ Original typed list children become persistent native rows through mandatory receiving and funded ownership transfers.
 use super::{NativeReceive,NativeReceiver,receiving_child_body_budget};
 use crate::{DslValue,NativeDecodeControl,RetirementDemand,ValueError,ValueRefusalKind,list::persistent::{PersistentList,PersistentListBuilder},retained_clone::{RetainedCloneBinding,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,retained_clone_grant_admits},shared_issuance::{SealedShared,SharedIssuer}};
 use std::mem::ManuallyDrop;

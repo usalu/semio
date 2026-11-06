@@ -34,7 +34,7 @@ impl HeadlessWorkspace {
             None => {
                 let kind = self.installed_artifact_kinds()?.into_iter().find(|kind| kind.schema == schema).ok_or_else(|| GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("no owner codec is installed for artifact schema {schema}")).retryable())?;
                 let channel = open_plugin_artifact_channel_scoped(self.plugin_components().as_ref(), &kind.plugin_id, Some(&kind.app_id), &self.actor_label(), scope, self.host_driver_policy, self.operation_policy)?;
-                semio_framework_async::block_on(channel.runtime.codec_print_mirror(&channel.compiled, schema, pack, spr, &semio_framework_plugin_host::GUEST_CODEC_BUDGET)).map(|_| ()).map_err(|error| error.to_string())
+                semio_framework_async::block_on(channel.runtime.codec_print_mirror(&channel.compiled, schema, pack, spr, &semio_plugin_host::GUEST_CODEC_BUDGET)).map(|_| ()).map_err(|error| error.to_string())
             }
         };
         scope.checkpoint().map_err(activation_fault)?;

@@ -1,0 +1,9 @@
+const fs=require('fs');function edit(f,changes){const before=fs.readFileSync(f,'utf8');let s=before;for(const[a,b]of changes){if(s.split(a).length!==2)throw Error(f+': '+a);s=s.replace(a,b)}if(fs.readFileSync(f,'utf8')!==before)throw Error('changed');let t=f+'.guest-reclaim.tmp';fs.writeFileSync(t,s);if(fs.readFileSync(f,'utf8')!==before){fs.unlinkSync(t);throw Error('changed before rename')}fs.renameSync(t,f)}
+edit('🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust/🦀️.rs',[['ORIGINAL_RETURN_ESCROW_HEADER_BYTES,ORIGINAL_RETURN_ESCROW_ROW_BYTES','ORIGINAL_RETURN_ESCROW_HEADER_BYTES,ORIGINAL_RETURN_ESCROW_ROW_BYTES,ORIGINAL_RETURN_ESCROW_RECLAIM_COPY_BYTES']]);
+edit('🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/🎟️source/🦀️.rs',[
+ ['OriginalReturnEscrowIdentity,OriginalReturnEscrowAmounts};','OriginalReturnEscrowIdentity,OriginalReturnEscrowAmounts,ORIGINAL_RETURN_ESCROW_RECLAIM_COPY_BYTES};'],
+ ['if table.has_reclaimable(){if grant.maximum_items==0||grant.maximum_depth==0','if table.has_reclaimable(){if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<ORIGINAL_RETURN_ESCROW_RECLAIM_COPY_BYTES'],
+ ['RetainedCloneStep::Progress(P{copied_items:1,..Default::default()})),work:1}}let bytes=','RetainedCloneStep::Progress(P{copied_items:1,copied_bytes:ORIGINAL_RETURN_ESCROW_RECLAIM_COPY_BYTES,..Default::default()})),work:1}}let bytes='],
+ ['if !reclaim{return Ok(false)}let table=cx.return_budget','if !reclaim||cx.retained_grant().maximum_copy_bytes<ORIGINAL_RETURN_ESCROW_RECLAIM_COPY_BYTES{return Ok(false)}let table=cx.return_budget'],
+ ['let posted=cx.consume_retained(P{copied_items:1,..Default::default()});cx.consume_fuel(1);posted?;return Ok(false)}let row_copy=','let posted=cx.consume_retained(P{copied_items:1,copied_bytes:ORIGINAL_RETURN_ESCROW_RECLAIM_COPY_BYTES,..Default::default()});cx.consume_fuel(1);posted?;return Ok(false)}let row_copy=']
+]);

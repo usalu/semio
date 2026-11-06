@@ -21,6 +21,7 @@ path = "../../🦀️.rs"
 reserved-producer-testing = ["dep:serde_json", "dep:semio-framework-trace"]
 
 [dependencies]
+semio-framework-tool-typing-edit = { path = "../../../../../../../../../🔨️modules/🛠️tool-machine/⌨️typing/✍️edit/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }

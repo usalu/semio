@@ -1,0 +1,7 @@
+import {Database} from "bun:sqlite";
+import {readFileSync} from "node:fs";
+import Ajv2020 from "ajv/dist/2020";
+const root=import.meta.dirname, cases=JSON.parse(readFileSync(`${root}/issuer-history-cases.json`,"utf8"));
+const valid=new Ajv2020({strict:true}).compile(JSON.parse(readFileSync(`${root}/issuer-history-cases.schema.json`,"utf8")));if(!valid(cases))throw Error(JSON.stringify(valid.errors));
+for(const c of cases){const db=new Database(":memory:");db.run("create table history(epoch integer,producer integer,settled integer,purpose text)");for(const h of c.history)db.query("insert into history values(?,?,?,?)").run(h.epoch,h.producer,Number(h.settled),h.purpose);const rows=db.query("select producer,settled,purpose from history where epoch=?").all(c.epoch) as {producer:number,settled:number,purpose:string}[];const sql=rows.length===1&&rows[0].producer===c.producer&&(c.epoch===c.current||rows[0].settled===1)?rows[0].purpose:"reject";let found:typeof rows[number]|undefined,ambiguous=false;for(const h of c.history)if(h.epoch===c.epoch){if(found)ambiguous=true;found={producer:h.producer,settled:Number(h.settled),purpose:h.purpose}}const scan=!ambiguous&&found&&found.producer===c.producer&&(c.epoch===c.current||found.settled===1)?found.purpose:"reject";if(sql!==c.expected||scan!==sql)throw Error(JSON.stringify({name:c.name,sql,scan,expected:c.expected}));db.close()}
+console.log(`SQLite issuer-history oracle passed ${cases.length} cases`);

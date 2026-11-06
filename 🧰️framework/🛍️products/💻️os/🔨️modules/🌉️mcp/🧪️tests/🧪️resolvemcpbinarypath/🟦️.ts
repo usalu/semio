@@ -1,4 +1,4 @@
-import * as ModuleUnderTest from "../../🟦️.ts";
+import * as ModuleUnderTest from "../../📦️binary/🟦️.ts";
 import * as Dep0 from "node:fs";
 import * as Dep1 from "node:path";
 import * as Dep2 from "node:os";
@@ -10,7 +10,7 @@ type TestSource = { readonly directory: string; readonly url: string };
 export async function registerTests1(
   vitest: NonNullable<ImportMeta["vitest"]>,
   dependencies: Pick<
-    typeof import("../../🟦️.ts"),
+    typeof import("../../📦️binary/🟦️.ts"),
     "ensureMcpBinary" | "mcpBinaryFreshness" | "requireMcpBinary" | "resolveBuiltMcpBinaryPath" | "resolveMcpBinarySourcesPath" | "resolveMcpBinaryPath"
   > &
     Pick<typeof import("node:fs"), "chmodSync" | "copyFileSync" | "mkdirSync" | "mkdtempSync" | "readFileSync" | "rmSync" | "utimesSync" | "writeFileSync"> &
@@ -163,7 +163,7 @@ export async function registerTests1(
   });
 }
 
-const moduleUnderTestUrl = pathToFileURL(resolve(import.meta.dirname, "../../🟦️.ts")).href;
+const moduleUnderTestUrl = pathToFileURL(resolve(import.meta.dirname, "../../📦️binary/🟦️.ts")).href;
 const moduleUnderTestDirectory = resolve(import.meta.dirname, "../..");
 const vitestApi = await import("vitest");
 await registerTests1(vitestApi, { chmodSync: Dep0.chmodSync, copyFileSync: Dep0.copyFileSync, ensureMcpBinary: ModuleUnderTest.ensureMcpBinary, join: Dep1.join, mcpBinaryFreshness: ModuleUnderTest.mcpBinaryFreshness, mkdirSync: Dep0.mkdirSync, mkdtempSync: Dep0.mkdtempSync, readFileSync: Dep0.readFileSync, requireMcpBinary: ModuleUnderTest.requireMcpBinary, resolveBuiltMcpBinaryPath: ModuleUnderTest.resolveBuiltMcpBinaryPath, resolveMcpBinarySourcesPath: ModuleUnderTest.resolveMcpBinarySourcesPath, resolveMcpBinaryPath: ModuleUnderTest.resolveMcpBinaryPath, rmSync: Dep0.rmSync, tmpdir: Dep2.tmpdir, utimesSync: Dep0.utimesSync, writeFileSync: Dep0.writeFileSync }, { directory: moduleUnderTestDirectory, url: moduleUnderTestUrl });

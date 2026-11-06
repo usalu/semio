@@ -20,12 +20,7 @@ pub enum PatchRejection {
         expected: crate::UiRevision,
         actual: crate::UiRevision,
     },
-    /// 🕳️ An op named a [`crate::UiNodeId`] that has no record in the receiver's current state — only
-    /// possible for ops that mutate an existing node ([`crate::UiPatchOp::SetComponent`]/
-    /// [`crate::UiPatchOp::SetLayout`]/[`crate::UiPatchOp::SetActivity`]/
-    /// [`crate::UiPatchOp::SetChildren`]/[`crate::UiPatchOp::SetStyle`]/
-    /// [`crate::UiPatchOp::SetAccessibility`]/[`crate::UiPatchOp::SetBindings`]/
-    /// [`crate::UiPatchOp::SetMenu`]); `Upsert`/`Remove`/`SetRoot` never fail this way.
+    /// 🕳️ An op named a [`crate::UiNodeId`] that has no record in the receiver's current state — only [Design notes](README.md#source-notes-23).
     UnknownNode {
         id: crate::UiNodeId,
     },
@@ -118,14 +113,7 @@ pub(super) struct UiPatchApplyArena {
     close_cursor: usize,
 }
 
-/// 🧊️ `const`, not `Default` — and the static below is a `const`-initialised `Mutex`, not a
-/// `LazyLock`. One slot is ~11.7 KiB (its `UiPatchRetirement` carries the validation `seen` matrix),
-/// so the arena is ~93.5 KiB; at `opt-level = 0` the old `std::array::from_fn` initialiser
-/// materialised that array once per frame of the `from_fn → try_from_fn → try_from_fn_erased` chain
-/// plus the `LazyLock` closure's return temporary — ~654 KiB of shadow stack to zero a static, which
-/// is most of a guest's tape and overflowed the whole thing during `Event::InstanceOpen`
-/// (ticket 26/09/18 slice A2). A `const` initialiser is laid down in the image instead: zero frames,
-/// zero copies, zero first-touch cost.
+/// 🧊️ `const`, not `Default` — and the static below is a `const`-initialised `Mutex`, not a [Design notes](README.md#source-notes-121).
 impl UiPatchApplyArena {
     const EMPTY: Self = Self { slots: [const { UiPatchApplySlot::EMPTY }; UI_PATCH_APPLY_SLOTS], close_cursor: 0 };
 }

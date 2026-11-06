@@ -3,15 +3,15 @@ use super::*;
 use semio_framework_value_retained_clone::RetainedWorkOutcome;
 use std::mem::{MaybeUninit};
 
-/// 🚦️ Semantic absence carries no invented empty payload carrier.
+/// 🚦️ See `README.md`.
 #[derive(Debug,Clone,Copy,PartialEq,Eq)]
 pub enum JobOutcomeKind{Yield,PreviewReady,CheckpointReady{applied_progress:u64},Complete,Cancelled,Fault}
 
-/// 💼️ Owns the original admission and immutable native payload addresses until a paid acknowledgement.
+/// 💼️ See `README.md`.
 #[derive(Debug)]
 pub struct JobOutcomeDescriptor{kind:JobOutcomeKind,admission:JobOutcomeAdmission,original:[Option<usize>;2],acknowledged:bool}
 
-/// 🤝️ Borrows the same descriptor admission and the exact original producer payloads without another grant.
+/// 🤝️ See `README.md`.
 #[derive(Debug)]
 pub enum JobOutcomeView<'a>{
  Yield{admission:&'a JobOutcomeAdmission},
@@ -37,7 +37,7 @@ impl JobOutcomeDescriptor{
  pub fn complete<'a>(&'a self,state:Option<&'a RetainedJobPayload>,output:Option<&'a RetainedJobPayload>)->Result<JobOutcomeView<'a>,ValueError>{self.matches(JobOutcomeKind::Complete,[state,output])?;Ok(JobOutcomeView::Complete{state,output,admission:&self.admission})}
  pub fn cancelled(&self)->Result<JobOutcomeView<'_>,ValueError>{self.matches(JobOutcomeKind::Cancelled,[None,None])?;Ok(JobOutcomeView::Cancelled{admission:&self.admission})}
  pub fn fault<'a>(&'a self,detail:&'a RetainedJobPayload)->Result<JobOutcomeView<'a>,ValueError>{self.matches(JobOutcomeKind::Fault,[Some(detail),None])?;Ok(JobOutcomeView::Fault{detail,admission:&self.admission})}
- /// 🔔️ The exclusive result loan ends before its original semantic descriptor acknowledges one metadata unit.
+ /// 🔔️ See `README.md`.
  pub fn acknowledge(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{if self.acknowledged{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}if grant.maximum_items==0||grant.maximum_depth==0{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.acknowledged=true;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:0,..Default::default()})),work:1}}
 }
 impl Drop for JobOutcomeDescriptor{fn drop(&mut self){assert!(std::thread::panicking()||self.acknowledged,"original semantic descriptor requires funded acknowledgement before resumption or closure");}}
@@ -46,7 +46,7 @@ impl JobOutcomeView<'_>{
  pub fn is_terminal(&self)->bool{matches!(self,Self::Complete{..}|Self::Cancelled{..}|Self::Fault{..})}
 }
 
-/// 📬️ The exclusive worker result slot acknowledges its child before a separate metadata removal.
+/// 📬️ See `README.md`.
 pub struct JobOutcomeDescriptorSlot{original:MaybeUninit<JobOutcomeDescriptor>,present:bool}
 impl JobOutcomeDescriptorSlot{
  pub unsafe fn initialize_empty(target:*mut Self){unsafe{std::ptr::addr_of_mut!((*target).present).write(false);}}

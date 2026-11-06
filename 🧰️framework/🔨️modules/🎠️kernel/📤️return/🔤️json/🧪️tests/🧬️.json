@@ -1,0 +1,1 @@
+{"type":"object","required":["cases"],"additionalProperties":false,"properties":{"cases":{"type":"array","minItems":5,"items":{"type":"object","required":["kind","input","expected"],"additionalProperties":false,"properties":{"kind":{"enum":["turn","uiMap","uiComponent","patch","decimal","numberBound","rowAction"]},"input":{},"expected":{"type":"string"}}}}}}

@@ -51,15 +51,7 @@ pub struct HeadlessWorkspace {
     /// `artifact_snapshot` can read a document as the agent just left it.
     #[cfg(not(target_arch = "wasm32"))]
     pub(crate) root_actions: OnceLock<Arc<ActionAdapter>>,
-    /// 🗂️ `artifact_id` → the plugin-typed binding [`HeadlessWorkspace::create_plugin_artifact`]
-    /// minted for it. The probe lane (`open_probes`) covers this crate's own generic document; this
-    /// covers every artifact created for a REAL plugin artifact kind, and is what finally gives
-    /// `artifact_export`/`semio://artifact/{id}/schema` an artifact → plugin mapping instead of the
-    /// "exactly one registered plugin or bust" guess they used to make.
-    ///
-    /// 🗿️ Shared with this workspace's [`RoutingArtifactChannel`] (`Arc`, one map, never a copy):
-    /// the channel needs the INVERSE lookup — which artifact a plugin's live session document is —
-    /// so `AppFrame::HistorySnapshot` can stamp the artifact rather than the plugin id.
+    /// 🗂️ `artifact_id` → the plugin-typed binding [`HeadlessWorkspace::create_plugin_artifact`] [Design notes](README.md#source-notes-54).
     pub(crate) plugin_artifacts: Arc<Mutex<HashMap<String, PluginArtifactBinding>>>,
     /// 🐚️ The session's channel decision, published once by `server_for_workspace_options`. The
     /// artifact-level verbs that open a channel of their OWN (`create_plugin_artifact`,
@@ -75,14 +67,7 @@ pub struct HeadlessWorkspace {
     pub(crate) plugin_components: Option<PluginComponentSource>,
 }
 
-/// 🚪️ Real teardown for a `--folder`/`--hub`-bound `semio-os-mcp` process (and every test that opens
-/// a real probe): drains every store `open_probes` still owns to `ArtifactStore::drop`'s
-/// terminal-empty witness instead of leaving that to `HashMap`'s own field drop, which would hit the
-/// witness assert with nothing ever drained. `artifact_host.close` runs first for each id so the
-/// backbone's remote side (the actor this workspace itself opened via `ArtifactHost::open`) releases
-/// its shared queue reference before `close_probe_store_to_terminal` needs to `Arc::try_unwrap` it —
-/// the same "release the other side before draining" order `store::sync::ArtifactHost`'s own `Drop`
-/// already follows for its actor runners.
+/// 🚪️ Real teardown for a `--folder`/`--hub`-bound `semio-os-mcp` process (and every test that opens [Design notes](README.md#source-notes-78).
 impl Drop for HeadlessWorkspace {
     /// 🧵️ Bound hub documents close FIRST, before the driver: their actors hold the socket-grant
     /// source the driver owns, and a document that is still dialling when its grant source
@@ -156,32 +141,11 @@ impl HeadlessWorkspace {
         }))
     }
 
-    /// 🗿️ The body and the schema are both answerable for a hub document: the body from the
-    /// authenticated binding's own verified canonical pair, the schema from the descriptor
-    /// the binding already published (`DocumentDescriptor.artifact_schema` — the hub's own
-    /// authority over what this document IS, never a guess). Validation decodes the canonical
-    /// pair with its owner codec; remote history requires a revision-bound history surface.
-    ///
-    /// 🪢 Two vocabularies, both published, neither collapsed into the other. `schema` is
-    /// the declared pack schema — what the bytes are. `artifactKind` is the owning
-    /// app's canonical `<domain>.<plugin>.<artifact>` identity, whose declaring owner
-    /// `DocumentIndexEntryV1::validate` enforces — what a capability's `artifactKind`
-    /// filter and `capabilities_search` match on. Publishing only the schema is what made
-    /// an agent unable to match ANY verb to a hub document (M8 §5.4(1), measured live).
-    ///
-    /// 🧯️ Real answer when this workspace genuinely knows the schema (an open probe
-    /// artifact — `PROBE_SCHEMA` is this crate's own, real, no fabrication needed), a typed,
-    /// retryable gap otherwise: the real wire protocol (`store::AppCommand`, enumerated
-    /// exhaustively at `PluginArtifactChannel::exchange`'s own doc) has no
-    /// schema/describe/manifest QUERY command at all — nothing to "ask the guest" through yet
-    /// for an arbitrary plugin-backed artifact, so this names precisely what's missing rather
-    /// than fabricating a schema this workspace cannot see.
-    ///
-    /// 🔎️ Validation decodes the live canonical pair through its installed owner codec.
+    /// 🗿️ The body and the schema are both answerable for a hub document: the body from the [Design notes](README.md#source-notes-159).
     pub(crate) fn read_artifact_resource(&self, artifact_id: &str, suffix: Option<&str>, uri: &str) -> Result<Vec<ResourceContent>, GatewayError> {
         #[cfg(not(target_arch = "wasm32"))]
         if suffix == Some("validation") {
-            let body = self.validate_artifact(artifact_id, &semio_framework_os_mcp_port::channel_port::ActivationScope::detached())?;
+            let body = self.validate_artifact(artifact_id, &semio_os_mcp_port::channel_port::ActivationScope::detached())?;
             return Ok(vec![ResourceContent { uri: uri.to_string(), mime_type: Some("application/json".to_string()), text: Some(body.to_string()), blob: None }]);
         }
 

@@ -43,8 +43,8 @@ impl OriginalFixedStoreInitial for RasterDocumentGenesis{
  fn initial_state_demands()->Result<RetirementDemand,ValueError>{let bytes=RASTER_DOCUMENT_SCHEMA.len()+"raster".len()+"Untitled".len();Ok(RetirementDemand{copy_bytes:2*size_of::<State>()+bytes,capacity_bytes:bytes,depth:1,..Default::default()})}
  fn initial_state(grant:RetainedCloneGrant)->Result<(State,RetainedCloneProgress),ValueError>{let d=Self::initial_state_demands()?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"Raster authored initial state is unfunded"))}let state=semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot();let capacity=state.schema.capacity()+state.id.capacity()+state.title.as_ref().map_or(0,String::capacity);Ok((state,RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:capacity,..Default::default()}))}
 }
-impl semio_framework_plugin::OriginalArtifactEditorBirth for RasterPlayApp{
- type DocumentGenesis=RasterDocumentGenesis;type ConfigGenesis=RasterConfigGenesis;type DraftGenesis=semio_framework_plugin::NoDraftGenesisOwner;
+impl semio_plugin::OriginalArtifactEditorBirth for RasterPlayApp{
+ type DocumentGenesis=RasterDocumentGenesis;type ConfigGenesis=RasterConfigGenesis;type DraftGenesis=semio_plugin::NoDraftGenesisOwner;
 }
 
 #[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;

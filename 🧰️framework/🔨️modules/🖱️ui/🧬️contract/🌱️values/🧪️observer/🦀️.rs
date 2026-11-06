@@ -3,7 +3,7 @@ use super::*;
 pub struct UiValueObservation{roots:Vec<UiCollectionHandle>}
 impl UiValueObservation{
     pub fn capture(value:&UiValue)->Result<Self,&'static str>{
-        let arena=UI_VALUE_ARENA.try_lock().map_err(|_|"value observation arena unavailable")?;
+        let arena=ui_value_arena_registry().borrow().map_err(|_|"value observation arena unavailable")?.ok_or("value observation arena borrowed")?;
         let handle=|value:&UiValue|match value{UiValue::List(value)=>value.handle,UiValue::Map(value)=>value.handle,_=>None};
         let mut pending:Vec<_>=handle(value).into_iter().collect();let mut roots=Vec::new();let mut pages=0;
         while let Some(root)=pending.pop(){
@@ -19,8 +19,8 @@ impl UiValueObservation{
         }
         Ok(Self{roots})
     }
-    pub fn all_retired(&self)->Result<bool,&'static str>{let arena=UI_VALUE_ARENA.try_lock().map_err(|_|"value observation arena unavailable")?;Ok(self.roots.iter().all(|root|arena.collection(*root).is_none()))}
-    pub fn all_live(&self)->Result<bool,&'static str>{let arena=UI_VALUE_ARENA.try_lock().map_err(|_|"value observation arena unavailable")?;Ok(self.roots.iter().all(|root|arena.collection(*root).is_some()))}
+    pub fn all_retired(&self)->Result<bool,&'static str>{let arena=ui_value_arena_registry().borrow().map_err(|_|"value observation arena unavailable")?.ok_or("value observation arena borrowed")?;Ok(self.roots.iter().all(|root|arena.collection(*root).is_none()))}
+    pub fn all_live(&self)->Result<bool,&'static str>{let arena=ui_value_arena_registry().borrow().map_err(|_|"value observation arena unavailable")?.ok_or("value observation arena borrowed")?;Ok(self.roots.iter().all(|root|arena.collection(*root).is_some()))}
 }
 /// 🔒️ Holds the actual private arena while a native law observes a nonblocking refusal.
-pub fn with_value_arena_held<R>(run:impl FnOnce()->R)->R{let _held=UI_VALUE_ARENA.lock().expect("actual fixture arena available");run()}
+pub fn with_value_arena_held<R>(run:impl FnOnce()->R)->R{let _held=ui_value_arena_registry().borrow_blocking().expect("actual fixture arena available");run()}

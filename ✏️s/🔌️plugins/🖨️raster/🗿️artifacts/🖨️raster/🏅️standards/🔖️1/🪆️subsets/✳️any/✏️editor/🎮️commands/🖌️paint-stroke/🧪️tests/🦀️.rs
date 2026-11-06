@@ -4,7 +4,7 @@
 //! with zero trace by a cancel, and deaf to the late ticks of a closed press.
 
 use semio_s_artifact_raster_raster_editor::config::RasterConfig;
-use semio_framework_plugin::artifact_app_laws::OriginalWorkFixture;
+use semio_plugin::artifact_app_laws::OriginalWorkFixture;
 
 fn receive_persistent_fixture(value:semio_framework_value::DslValue,grant:semio_framework_value::RetainedCloneGrant)->semio_s_artifact_raster_raster_model::RasterSelectionSpans{
  let mut caller=OriginalWorkFixture::new();let output=caller.receive_native(value,grant);caller.finish();output

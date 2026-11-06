@@ -1,0 +1,9 @@
+# Borrowed Turn Output Design
+
+The outstanding guest Poll output cannot use `return_json` or a detached serde byte vector. Root owns the missing borrowed output projection and Source-owned encoded capsule lane; Guest owns the actual macro/entry connection and Server owns UI registry cutover and Host Poll.
+
+The planned long-term implementation is a neutral borrowed value port, implemented by a derive over existing value wire declarations and manual ports for explicit scalar/registry types. A projection borrows actual typed fields and indexed children; it never constructs a DslValue/serde tree. JSON remains a consumer through a JsonWriteSource adapter and the existing bounded sink. Enum body modes retain the same owner reference rather than synthesizing short-lived field owners. Scalar decimal strings use the new fixed 41-byte atom.
+
+UI values need a borrowed context because their exact strings/lists/maps live in an arena. A neutral fixed opaque context key resolves through an actually borrowed registered UI backing for the duration of one paid slice. A borrowed reference can represent a typed owner, an immediate scalar, or a context key. Context resolution must check generation, expose bounded indexed access, preserve the registered backing identity and prevent interior mutation while encoding. No temporary lock guard may be dropped while returned string references survive. This requires a Source-funded scoped provider at the guest output owner.
+
+Implementation must preserve optional/skip/rename/tag/transparent wire declarations, use the same full UI and kernel shared corpora with serde as independent native oracle, and retire every cursor/output/captured result on success, cancellation and failure. There is no arbitrary JsonWriteSource mutation fallback. This design is not implemented yet and is not end-to-end readiness evidence.

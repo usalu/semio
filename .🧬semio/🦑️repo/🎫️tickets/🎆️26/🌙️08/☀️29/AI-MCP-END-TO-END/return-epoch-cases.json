@@ -1,0 +1,1 @@
+{"cases":[{"watermark":0,"epoch":0,"birth":false,"valid":false,"next":0,"copy":0},{"watermark":0,"epoch":2,"birth":false,"valid":true,"next":0,"copy":0},{"watermark":0,"epoch":2,"birth":true,"valid":true,"next":2,"copy":8},{"watermark":2,"epoch":3,"birth":false,"valid":true,"next":2,"copy":0},{"watermark":2,"epoch":1,"birth":false,"valid":false,"next":2,"copy":0}]}

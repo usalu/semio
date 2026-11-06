@@ -1,0 +1,228 @@
+{
+  "type": "array",
+  "minItems": 12,
+  "maxItems": 12,
+  "uniqueItems": true,
+  "items": {
+    "type": "object",
+    "required": [
+      "id",
+      "description"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "enum": [
+          "identity",
+          "locales-and-modes",
+          "examples",
+          "import-images",
+          "import-video",
+          "import-cancel",
+          "run-controls-and-abort",
+          "reconstruct-and-finalize",
+          "undo-redo",
+          "windows-and-viewer",
+          "cold-reopen",
+          "mesh-and-qc-export"
+        ]
+      },
+      "description": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 240
+      },
+      "assets": {
+        "type": "array",
+        "minItems": 3,
+        "maxItems": 3,
+        "uniqueItems": true,
+        "items": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      }
+    },
+    "allOf": [
+      {
+        "if": {
+          "properties": {
+            "id": {
+              "const": "import-images"
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "then": {
+          "properties": {
+            "assets": {}
+          },
+          "required": [
+            "assets"
+          ]
+        }
+      }
+    ]
+  },
+  "allOf": [
+    {
+      "contains": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "const": "identity"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "contains": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "const": "locales-and-modes"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "contains": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "const": "examples"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "contains": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "const": "import-images"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "contains": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "const": "import-video"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "contains": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "const": "import-cancel"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "contains": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "const": "run-controls-and-abort"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "contains": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "const": "reconstruct-and-finalize"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "contains": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "const": "undo-redo"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "contains": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "const": "windows-and-viewer"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "contains": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "const": "cold-reopen"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "contains": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "const": "mesh-and-qc-export"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  ]
+}

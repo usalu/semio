@@ -6,7 +6,7 @@ use semio_s_artifact_raster_raster_editor::{RasterConfig,RasterConfigMutation};
 use semio_s_artifact_raster_raster_editor::selection::RasterPixelSelection;
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneStep,RetirementDemand};
 use protocol::{ColdMutation,Mutation};
-use semio_framework_plugin::artifact_app_laws::OriginalWorkFixture;
+use semio_plugin::artifact_app_laws::OriginalWorkFixture;
 use semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan;
 use semio_framework_value::ToValue;
 use semio_s_artifact_raster_raster_editor::selection::RasterSelectionSpans;
@@ -72,7 +72,7 @@ fn close(work:&mut MaskSelectionWork) {
     }
     assert!(work.terminal_is_empty());
 }
-fn finish(command:&MaskFromSelection,document:&RasterSnapshot,config:&RasterConfig)->semio_framework_plugin::Emit<semio_s_artifact_raster_raster_mutations::RasterMutation,RasterConfigMutation> {
+fn finish(command:&MaskFromSelection,document:&RasterSnapshot,config:&RasterConfig)->semio_plugin::Emit<semio_s_artifact_raster_raster_mutations::RasterMutation,RasterConfigMutation> {
     let quoted=grant(MaskSelectionWork::begin_demands(command,document,config).unwrap());
     let (mut work,receipt)=MaskSelectionWork::begin(command,document,config,quoted).unwrap().unwrap();assert!(receipt.fits(quoted));
     for turn in 0..100_000 {
@@ -102,12 +102,12 @@ fn selection_mask_preserves_soft_coverage_and_round_trips_history() {
     let before=document.clone();let emit=finish(&command,&document,&config);let mut inverses=Vec::new();
     for mutation in &emit.artifact_mutations {
         inverses.push(mutation.inverse(&document).unwrap());
-        let (next,messages)=semio_framework_os_kernel::apply_mutation(&document,mutation).unwrap();assert!(messages.is_empty());retire(std::mem::replace(&mut document,next));
+        let (next,messages)=semio_os_kernel::apply_mutation(&document,mutation).unwrap();assert!(messages.is_empty());retire(std::mem::replace(&mut document,next));
     }
     let RasterLayerNode::Pixel {mask:Some(mask),image_key,..}=&document.layers[0] else{panic!("mask must be attached")};assert!(image_key.is_none());
     let image=document.assets.get(mask.image_key.as_ref().unwrap()).unwrap().local_owner::<semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot>().unwrap();
     assert_eq!((image.width,image.height),(3,2));assert_eq!(serde_json::to_value(&image.frames[0].rgba8).unwrap(),fixture["expectedRgba"]);
-    for inverse in inverses.into_iter().rev().flatten(){let (next,messages)=semio_framework_os_kernel::apply_mutation(&document,&inverse).unwrap();assert!(messages.is_empty());retire(std::mem::replace(&mut document,next));inverse.retire_cold();}
+    for inverse in inverses.into_iter().rev().flatten(){let (next,messages)=semio_os_kernel::apply_mutation(&document,&inverse).unwrap();assert!(messages.is_empty());retire(std::mem::replace(&mut document,next));inverse.retire_cold();}
     assert_eq!(document,before);for mutation in emit.artifact_mutations{mutation.retire_cold();}retire(document);retire(before);
 }
 
@@ -121,7 +121,7 @@ fn persistent_spans_preserve_sparse_adjacent_and_paged_prefix_coverage() {
             spans((0..pattern["count"].as_u64().unwrap()).map(|index|RasterSelectionSpan {start:(pattern["start"].as_u64().unwrap()+index*pattern["stride"].as_u64().unwrap()) as u32,length:pattern["length"].as_u64().unwrap() as u32,coverage:cycle[index as usize%cycle.len()].as_u64().unwrap() as u32}).collect())
         }else{decoded_spans(&case["spans"]).unwrap()};
         let emit=finish(&command,&document,&config);
-        for mutation in emit.artifact_mutations {let (next,messages)=semio_framework_os_kernel::apply_mutation(&document,&mutation).unwrap();assert!(messages.is_empty());retire(std::mem::replace(&mut document,next));mutation.retire_cold();}
+        for mutation in emit.artifact_mutations {let (next,messages)=semio_os_kernel::apply_mutation(&document,&mutation).unwrap();assert!(messages.is_empty());retire(std::mem::replace(&mut document,next));mutation.retire_cold();}
         let RasterLayerNode::Pixel {mask:Some(mask),..}=&document.layers[0] else{panic!("regression mask must be attached")};
         let image=document.assets.get(mask.image_key.as_ref().unwrap()).unwrap().local_owner::<semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot>().unwrap();
         let expected:Vec<u8>=case["expectedAlpha"].as_array().unwrap().iter().flat_map(|value|[255,255,255,value.as_u64().unwrap() as u8]).collect();
@@ -190,11 +190,11 @@ fn mask_replacement_preserves_referenced_children_and_reuses_full_asset_capacity
         let before=document.clone();let emit=finish(&command,&document,&config);let mut inverses=Vec::new();
         for mutation in &emit.artifact_mutations {
             inverses.push(mutation.inverse(&document).unwrap());
-            let (next,messages)=semio_framework_os_kernel::apply_mutation(&document,mutation).unwrap();assert!(messages.is_empty());retire(std::mem::replace(&mut document,next));assert!(document.assets.len()<=64);
+            let (next,messages)=semio_os_kernel::apply_mutation(&document,mutation).unwrap();assert!(messages.is_empty());retire(std::mem::replace(&mut document,next));assert!(document.assets.len()<=64);
         }
         assert_eq!(document.assets.len(),64);assert_eq!(document.assets.contains_key("retained-0"),shared);
         if shared {let other=semio_s_artifact_raster_raster_model::layer_node_id(&document.layers[1]);assert!(matches!(semio_s_artifact_raster_raster_model::find_layer(&document.layers,other),Some(RasterLayerNode::Pixel {image_key:Some(key),..}) if key=="retained-0"));}
-        for inverse in inverses.into_iter().rev().flatten(){let (next,messages)=semio_framework_os_kernel::apply_mutation(&document,&inverse).unwrap();assert!(messages.is_empty());retire(std::mem::replace(&mut document,next));inverse.retire_cold();}
+        for inverse in inverses.into_iter().rev().flatten(){let (next,messages)=semio_os_kernel::apply_mutation(&document,&inverse).unwrap();assert!(messages.is_empty());retire(std::mem::replace(&mut document,next));inverse.retire_cold();}
         assert_eq!(document,before);for mutation in emit.artifact_mutations{mutation.retire_cold();}retire(document);retire(before);
     }
 }
@@ -208,12 +208,12 @@ fn full_asset_capacity_with_shared_prior_mask_refuses_without_publication() {
 #[test]
 fn full_asset_capacity_reuses_an_existing_mask_destination() {
     let (mut document,config,command)=source(3,2);let first=finish(&command,&document,&config);
-    for mutation in first.artifact_mutations {let (next,messages)=semio_framework_os_kernel::apply_mutation(&document,&mutation).unwrap();assert!(messages.is_empty());retire(std::mem::replace(&mut document,next));mutation.retire_cold();}
+    for mutation in first.artifact_mutations {let (next,messages)=semio_os_kernel::apply_mutation(&document,&mutation).unwrap();assert!(messages.is_empty());retire(std::mem::replace(&mut document,next));mutation.retire_cold();}
     if let RasterLayerNode::Pixel {mask:Some(mask),..}=&mut document.layers[0]{mask.enabled=false;}
     let image=semio_s_artifact_raster_raster_model::semio_image_from_rgba8(3,2,vec![255;24]);
     for index in 1..64 {let key=format!("spare-{index}");document.assets.insert(key.clone(),semio_s_artifact_raster_raster_model::mint_raster_image_child(&key,&image)).unwrap();}
     let emit=finish(&command,&document,&config);
-    for mutation in emit.artifact_mutations {let (next,messages)=semio_framework_os_kernel::apply_mutation(&document,&mutation).unwrap();assert!(messages.is_empty());retire(std::mem::replace(&mut document,next));mutation.retire_cold();}
+    for mutation in emit.artifact_mutations {let (next,messages)=semio_os_kernel::apply_mutation(&document,&mutation).unwrap();assert!(messages.is_empty());retire(std::mem::replace(&mut document,next));mutation.retire_cold();}
     assert_eq!(document.assets.len(),64);assert!(matches!(&document.layers[0],RasterLayerNode::Pixel {mask:Some(mask),..} if mask.enabled));retire(document);
 }
 

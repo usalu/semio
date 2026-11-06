@@ -1,0 +1,4 @@
+const fs=require('fs'),path='🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/🎟️source/🦀️.rs',before=fs.readFileSync(path,'utf8');
+const old='let total=cx.original_total_retained_grant();if total.maximum_items<1+usize::from(!bound)';
+const value='let total=if bound{cx.return_budget.as_ref().ok_or_else(||refused("original return budget disappeared"))?.get().remaining()?.0}else{super::super::retained_remaining(cx.original_total_retained_grant(),super::super::retained_delta(cx.retained_progress(),cx.original_total_retained_start))};if total.maximum_items<1+usize::from(!bound)';
+if(before.split(old).length!==2)throw Error('unexpected table budget');const tmp=path+'.guest-table-remaining';fs.writeFileSync(tmp,before.replace(old,value),{flag:'wx'});if(fs.readFileSync(path,'utf8')!==before){fs.unlinkSync(tmp);throw Error('concurrent change')}fs.renameSync(tmp,path);

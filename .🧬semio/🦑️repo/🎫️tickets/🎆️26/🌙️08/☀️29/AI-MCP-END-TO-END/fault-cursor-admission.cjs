@@ -1,0 +1,5 @@
+const fs=require('node:fs');const file='🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🦀️.rs';const before=fs.readFileSync(file,'utf8');
+const marker=" pub fn admit_fault(cx:&mut StepContext<'_>,detail:&'a RetainedJobPayload)->Result<Option<Self>,ValueError>{Ok(Self::admit(cx)?.map(|admission|Self::Fault{detail,admission}))}\n";
+if(before.split(marker).length!==2)throw Error('fault admission changed');
+const extra=" /// 📤️ Funds the exact caller-owned descriptor cursor with the same fault loan.\n pub fn admit_fault_with_cursor(cx:&mut StepContext<'_>,detail:&'a RetainedJobPayload,cursor_copy_bytes:usize)->Result<Option<Self>,ValueError>{Ok(Self::admit_with_cursor(cx,cursor_copy_bytes)?.map(|admission|Self::Fault{detail,admission}))}\n";
+const temp='.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/AI-MCP-END-TO-END/🗑️generated/fault-cursor-admission.tmp';fs.writeFileSync(temp,before.replace(marker,marker+extra));if(fs.readFileSync(file,'utf8')!==before)throw Error('shared loan changed');fs.renameSync(temp,file);

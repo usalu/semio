@@ -131,7 +131,7 @@ pub(super) fn pump_process_worker_pool() -> bool {
 }
 
 /// 🧊️ Accepts the inbound cold document pair page, begins its document load and steps the pending load; returns the ingress status this turn answers.
-pub(super) async fn drive_cold_pair_ingress<PA: semio_plugin_reactor_app::PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, cold_pair_page: Option<semio_framework::kernel::ColdDocumentPairPage>, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework::kernel::ColdPairIngressStatus {
+pub(super) async fn drive_cold_pair_ingress<PA: semio_plugin_reactor_app::PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, cold_pair_page: Option<&semio_framework::kernel::ColdDocumentPairPage>, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework::kernel::ColdPairIngressStatus {
     let mut cold_pair_ingress = semio_framework::kernel::ColdPairIngressStatus::Idle;
     let cold_pair_page_lifetime = cold_pair_page.as_ref().map(|page| page.header.lifetime);
     if let Some(page) = cold_pair_page {

@@ -1,7 +1,6 @@
 //! 🧮️ Numeric execution: the numeric instruction dispatch and the unary, binary and comparison helpers. See [`super`].
 
 use super::*;
-/// 🧮️ Numeric failures remain fixed scalar facts until an ordinary caller chooses diagnostic text.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub(super) enum NumericError{Arity,Type,Division,Overflow,Conversion,Unsupported}
 impl NumericError{fn message(self)->&'static str{match self{Self::Arity=>"numeric operand stack underflow",Self::Type=>"numeric operand type mismatch",Self::Division=>"integer divide by zero",Self::Overflow=>"integer overflow",Self::Conversion=>"invalid conversion to integer",Self::Unsupported=>"unsupported numeric opcode"}}}
@@ -12,7 +11,6 @@ fn pop(machine:&mut NumericMachine)->Result<Value,NumericError>{machine.values.p
 trait NumericScalar{fn numeric_i32(self)->Result<i32,NumericError>;fn numeric_i64(self)->Result<i64,NumericError>;fn numeric_f32(self)->Result<f32,NumericError>;fn numeric_f64(self)->Result<f64,NumericError>;}
 impl NumericScalar for Value{fn numeric_i32(self)->Result<i32,NumericError>{match self{Value::I32(value)=>Ok(value),_=>Err(NumericError::Type)}}fn numeric_i64(self)->Result<i64,NumericError>{match self{Value::I64(value)=>Ok(value),_=>Err(NumericError::Type)}}fn numeric_f32(self)->Result<f32,NumericError>{match self{Value::F32(value)=>Ok(f32::from_bits(value)),_=>Err(NumericError::Type)}}fn numeric_f64(self)->Result<f64,NumericError>{match self{Value::F64(value)=>Ok(f64::from_bits(value)),_=>Err(NumericError::Type)}}}
 pub(super) fn numeric_arity(opcode:u8)->Result<usize,NumericError>{if !(0x45..=0xc4).contains(&opcode){return Err(NumericError::Unsupported)}Ok(if matches!(opcode,0x46..=0x4f|0x51..=0x66|0x6a..=0x78|0x7c..=0x8a|0x92..=0x98|0xa0..=0xa6){2}else{1})}
-/// 🔢️ The shared numeric evaluator uses two stack scalars and returns a fixed failure without heap effects.
 pub(super) fn execute_numeric_fixed(opcode:u8,operands:&[Value])->Result<Value,NumericError>{if operands.len()!=numeric_arity(opcode)?{return Err(NumericError::Arity)}let mut machine=NumericMachine{values:NumericValues{items:[Value::I64(0);2],count:0}};for value in operands{machine.values.push(*value)}dispatch_numeric(opcode,&mut machine)?;if machine.values.count!=1{return Err(NumericError::Arity)}Ok(machine.values.items[0])}
 pub(super) fn execute_numeric(opcode:u8,machine:&mut Machine)->Result<(),CoreError>{let count=numeric_arity(opcode).map_err(|error|CoreError::Trap(error.message().into()))?;let start=machine.values.len().checked_sub(count).ok_or_else(||CoreError::Trap(NumericError::Arity.message().into()))?;let value=execute_numeric_fixed(opcode,&machine.values[start..]).map_err(|error|CoreError::Trap(error.message().into()))?;machine.values.truncate(start);machine.values.push(value);Ok(())}
 pub(super) fn map_top(machine:&mut Machine,operation:impl FnOnce(Value)->Result<Value,CoreError>)->Result<(),CoreError>{let input=super::pop(machine)?;let output=operation(input)?;machine.values.push(output);Ok(())}
@@ -355,7 +353,6 @@ mod original_numeric_tests{
  fn clock()->Option<u64>{Some(1000)}
  fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:10000,maximum_copy_bytes:2_000_000,maximum_capacity_bytes:2_000_000,maximum_release_bytes:2_000_000,maximum_depth:64}}
  fn binary(opcode:u8,count:usize)->Vec<u8>{let mut bytes=b"\0asm\x01\0\0\0".to_vec();let mut section=|id:u8,payload:Vec<u8>|{bytes.push(id);bytes.push(payload.len()as u8);bytes.extend(payload)};let mut ty=vec![1,0x60,count as u8];ty.extend(std::iter::repeat_n(0x7f,count));ty.extend([1,0x7f]);section(1,ty);section(3,vec![1,0]);section(7,vec![1,3,b'r',b'u',b'n',0,0]);let mut body=vec![0];for index in 0..count{body.extend([0x20,index as u8])}body.extend([opcode,0x0b]);let mut code=vec![1,body.len()as u8];code.extend(body);section(10,code);bytes}
- /// 🧮️ The independent VM agrees with the shared fixed evaluator and actual original instruction machine, including zero-heap traps.
  #[test]
  fn original_numeric_primitives_preserve_measured_heap_and_match_independent_vm(){
   let fixture:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🔣️.json")).unwrap();

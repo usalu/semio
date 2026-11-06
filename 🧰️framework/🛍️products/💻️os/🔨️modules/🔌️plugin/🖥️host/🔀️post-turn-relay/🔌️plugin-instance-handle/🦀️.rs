@@ -2,11 +2,11 @@
 
 use super::*;
 
-/// 🧬️ A selected plugin handle dispatches its declared cold jobs.
+/// 🧬️ See `README.md`.
 pub struct PluginInstanceHandle {
     pub actor: RuntimeActorId,
     pub runtime: Arc<GuestRuntimes>,
-    pub(super) compiled:semio_framework_plugin_host_guest_runtime::CompiledHandle,
+    pub(super) compiled:semio_plugin_host_guest_runtime::CompiledHandle,
     pub instance: Arc<Mutex<GuestInstanceSlot>>,
     pub(super) instance_gate: Arc<semio_framework_async_sync::Semaphore>,
     relay_registry: Arc<GuestRelayMountedRegistry>,
@@ -14,7 +14,7 @@ pub struct PluginInstanceHandle {
 }
 
 impl PluginInstanceHandle {
-    pub async fn new(actor: RuntimeActorId, runtime: Arc<GuestRuntimes>, compiled:semio_framework_plugin_host_guest_runtime::CompiledHandle,instance: GuestInstance,wake_authority:GuestRelayWakeAuthority) -> Self {
+    pub async fn new(actor: RuntimeActorId, runtime: Arc<GuestRuntimes>, compiled:semio_plugin_host_guest_runtime::CompiledHandle,instance: GuestInstance,wake_authority:GuestRelayWakeAuthority) -> Self {
         Self {
             actor,
             runtime,
@@ -26,7 +26,7 @@ impl PluginInstanceHandle {
         }
     }
 
-    /// 🧵️ One mounted registry owns each admitted relay until physical close.
+    /// 🧵️ See `README.md`.
     async fn run_job_on_worker(&self, kind: &str, input: Vec<u8>, cancel: semio_framework_async::CancelToken) -> Result<Vec<u8>, PluginHostError> {
         self.run_job_on_registry(kind, input, cancel, &self.relay_registry).await
     }
@@ -54,7 +54,7 @@ impl PluginInstanceHandle {
         GuestRelayMountedFuture { registry: Arc::clone(registry), index, generation: mounted_generation, complete: false }.await
     }
 
-    /// 🌉️ Executes one declared local IO mechanism.
+    /// 🌉️ See `README.md`.
     pub async fn io_run(&self, from: &str, into: &str, payload: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
         #[derive(ToValue)]
         struct IoRunInputWire<'a>{source:&'a str,target:&'a str,payload:semio_framework::io_schema::IoPayload}
@@ -64,7 +64,7 @@ impl PluginInstanceHandle {
         self.run_job_on_worker("semio.io-run", input, semio_framework_job::root_cancel_token()).await
     }
 
-    /// 🔍️ Reads the declared IO mechanism confidence.
+    /// 🔍️ See `README.md`.
     pub async fn io_sniff(&self, from: &str, into: &str, payload: &[u8]) -> Result<u8, PluginHostError> {
         #[derive(ToValue)]
         struct IoRunInputWire<'a>{source:&'a str,target:&'a str,payload:semio_framework::io_schema::IoPayload}
@@ -75,18 +75,18 @@ impl PluginInstanceHandle {
         result.first().copied().ok_or_else(|| PluginHostError::Plugin("semio.io-sniff job returned an empty result".to_string()))
     }
 
-    /// 💡️ Executes the declared inference job under its supplied request funding.
+    /// 💡️ See `README.md`.
     pub async fn infer(&self, request: &[u8], cancel: &semio_framework_async::CancelToken, funding: &GuestRelayWakeAuthority) -> Result<Vec<u8>, PluginHostError> {
         let registry = Arc::new(GuestRelayMountedRegistry::new(funding.clone()));
         self.run_job_on_registry("semio.infer", request.to_vec(), cancel.child_now(), &registry).await
     }
 
-    /// 🧬️ Executes the declared artifact mutation planner.
+    /// 🧬️ See `README.md`.
     pub async fn mutation_plan(&self, request: &[u8]) -> Result<Vec<u8>, PluginHostError> {
         self.run_job_on_worker("semio.mutation-plan", request.to_vec(), semio_framework_job::root_cancel_token()).await
     }
 
-    /// 🔀️ Executes a declared versioned re-encode.
+    /// 🔀️ See `README.md`.
     pub async fn migrate(&self, from: &str, to: &str, pack: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
         #[derive(serde::Serialize, ToValue)]
         struct MigrateInputWire<'a>{from:&'a str,to:&'a str,pack:Vec<u8>}
@@ -94,7 +94,7 @@ impl PluginInstanceHandle {
         self.run_job_on_worker("semio.migrate", input, semio_framework_job::root_cancel_token()).await
     }
 
-    /// 🧩️ Executes the declared artifact composer.
+    /// 🧩️ See `README.md`.
     pub async fn compose(&self, key_bytes: &[u8], sources_bytes: &[u8]) -> Result<Vec<u8>, PluginHostError> {
         #[derive(serde::Serialize, ToValue)]
         struct ComposeInput{key:Vec<u8>,sources:Vec<u8>}
@@ -113,7 +113,7 @@ impl std::fmt::Debug for PluginInstanceHandle {
 pub fn test_relay_wake_authority()->GuestRelayWakeAuthority{
     GuestRelayWakeAuthority{drive_policy:serde_json::from_value(serde_json::from_str::<serde_json::Value>(include_str!("../../⚡️effects/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()["driveGrant"].clone()).unwrap(),policy:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64},issuer:semio_framework_job_worker::admit_original_thread_worker_wake,receiver:Arc::new(GuestRelayWakeDriver::new(semio_framework_pack_json::from_json_str::<semio_plugin_host_wake::GuestRelayDriverPolicy>(include_str!("../../🔔️wake/📃️policy/🧪️tests/🧫️fixtures/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(),semio_framework_job::default_now_us,Box::new(||false)).unwrap())}
 }
-/// 🎟️ The supplied retained turn that a mounted test handle keeps for its instance.
+/// 🎟️ See `README.md`.
 #[cfg(any(test, feature = "testkit"))]
 pub fn test_relay_original_input()->semio_framework_actor::RetainedTurnInput{
     semio_framework_actor::RetainedTurnInput{operation:71,generation:3,epoch:19,work:semio_framework_actor::OriginalActorTurnWork{clock_binding:1871,absolute_deadline_us:1_000_000,fuel:64},grant:test_relay_wake_authority().drive_policy}

@@ -1,0 +1,33 @@
+[
+  {
+    "args": [
+      "runtime-lifecycle"
+    ],
+    "expected": {
+      "packages": [
+        "semio-s-artifact-puzzle-3d-editor"
+      ],
+      "args": [
+        "--offline",
+        "--test",
+        "editor-surface",
+        "--",
+        "edited_document_survives_export_pack_and_history",
+        "--nocapture"
+      ]
+    }
+  },
+  {
+    "args": [
+      "runtime-lifecycle",
+      "extra"
+    ],
+    "expected": null
+  },
+  {
+    "args": [
+      "import-acceptance"
+    ],
+    "expected": null
+  }
+]

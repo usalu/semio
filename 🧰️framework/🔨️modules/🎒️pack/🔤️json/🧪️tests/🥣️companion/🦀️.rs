@@ -41,6 +41,8 @@ pub fn bytes(relative: &str) -> &'static [u8] {
 //#region 🔖️Tests
 #[path = "../🔬️unit/🦀️.rs"]
 mod tests;
+#[path = "🔢️quoted-unsigned/🦀️.rs"]
+mod quoted_unsigned_tests;
 #[path = "../🧩️members/🦀️.rs"]
 mod member_tests;
 //#endregion 🔖️Tests

@@ -2,7 +2,6 @@
 use super::{Result,invalid,overflow,sum,bound,ValueRef,serial,varint,value_size,read_varint,field_length,put_u16,put_u32,u16_at,u32_at,local_payload,PAGE_SIZE,SqliteDatabase,SqliteTable,SqliteRow,SqliteValue,SqliteSnapshotPhase,SqliteSnapshotProgress,SQLITE_SNAPSHOT_APPLICATION_ID,SQLITE_SNAPSHOT_USER_VERSION};
 use crate::artifact::receiving::{Port,ReceivingWallet,Direction};
 use semio_framework_value::{RetireOwned,ValueError,ValueRefusalKind};
-use semio_framework_value::retirement::RetireOwned;
 use std::cmp::Ordering;
 
 fn grow<T:RetireOwned+'static,W:ReceivingWallet>(values:&mut Vec<T>,old:&mut Vec<Vec<T>>,port:&mut Port<'_,'_,'_,W>,depth:usize)->Result<()>{

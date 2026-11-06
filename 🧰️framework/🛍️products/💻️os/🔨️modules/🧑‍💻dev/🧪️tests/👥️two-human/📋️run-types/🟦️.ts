@@ -4,7 +4,7 @@ import type { Human } from "../🔑️sessions/🟦️.ts";
 //#region 🔖️TwoHuman
 /** 🧭️ The per-kind journey of a run: both humans author (`edit`), B is a Spectator (`viewer`), or both author and undo/redo
  * across each other's edits (`cross-undo`). */
-export type TwoHumanJourney = "edit" | "viewer" | "cross-undo";
+export type TwoHumanJourney = "edit" | "viewer" | "cross-undo" | "reconnect";
 
 /** 🎛️ One two-human run. */
 export type TwoHumanOptions = Readonly<{
@@ -32,4 +32,7 @@ export type KindRow = { kindId: string; label: string; plugin?: string; artifact
 
 /** 📊️ The run's report, rewritten after every kind. */
 export type TwoHumanReport = { tag: string; journey: TwoHumanJourney; hub: string; serves: readonly string[]; locale: string; startedAt: string; finishedAt?: string; spaceId: string | null; kinds: string[]; rows: KindRow[]; misses: unknown[]; fatal?: string; cancelled?: boolean };
+
+/** ✅️ Required journey checks must each occur exactly once and pass. */
+export function requiredJourneyChecksPass(required:readonly string[],checks:Readonly<Record<string,{pass:boolean}>>,duplicates:ReadonlySet<string>):boolean{return new Set(required).size===required.length&&required.every(name=>checks[name]?.pass===true&&!duplicates.has(name));}
 //#endregion 🔖️TwoHuman

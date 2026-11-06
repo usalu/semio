@@ -1,0 +1,7 @@
+const fs=require('fs'),crypto=require('crypto'),base='🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/';function edit(q,fn){let p=base+q,s=fs.readFileSync(p,'utf8'),n=fn(s),t=p+'.edit-'+crypto.randomBytes(4).toString('hex');if(n===s)throw Error('unchanged '+q);fs.writeFileSync(t,n,{flag:'wx'});if(fs.readFileSync(p,'utf8')!==s){fs.unlinkSync(t);throw Error('concurrent '+q)}fs.renameSync(t,p)}
+const b='⚛️reactor/🎟️context/🌉️call/📤️receipt/';
+for(const p of ['🧪️tests/🧫️fixtures/🔣️.json','🧬️schema/🔣️.json'])edit(b+p,s=>s.replace('b80b000010000000','b80b000030000000'));
+edit(b+'🧪️tests/🟦️.ts',s=>s.replace('bytes.writeUInt32LE(16,140)','bytes.writeUInt32LE(48,140)'));
+edit(b+'🧪️tests/turn-output.test.ts',s=>s.replace('bytes.writeUInt32LE(16,140)','bytes.writeUInt32LE(48,140)'));
+edit(b+'🧪️tests/🦀️.rs',s=>s.replace('pointer:3000,length:16','pointer:3000,length:48').replace('vec![0u8;16+rows.len()*136]','vec![0u8;48+rows.len()*136]').replace('bytes[8..16].copy_from_slice(&fixture["revision"].as_u64().unwrap().to_le_bytes());','for(i,value)in [101u64,1,202,fixture["revision"].as_u64().unwrap(),6].into_iter().enumerate(){bytes[8+i*8..16+i*8].copy_from_slice(&value.to_le_bytes())}').replaceAll('16+i*136+j*8..24+i*136+j*8','48+i*136+j*8..56+i*136+j*8').replaceAll('16+6*8..24+6*8','48+6*8..56+6*8').replaceAll('16+136+11*8..24+136+11*8','48+136+11*8..56+136+11*8'));
+edit('🖥️host/🔁️poll/🧪️tests/🦀️.rs',s=>s.replaceAll('(3200,16)','(3200,48)'));

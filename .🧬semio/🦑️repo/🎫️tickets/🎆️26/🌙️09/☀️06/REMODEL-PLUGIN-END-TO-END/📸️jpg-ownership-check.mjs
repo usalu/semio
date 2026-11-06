@@ -12,7 +12,7 @@ assert.equal(vocabulary.package.name,fixture.vocabulary.package);
 assert.deepEqual(Object.keys(vocabulary.dependencies).sort(),fixture.vocabulary.runtimeOwners.slice().sort());
 for(const name of fixture.vocabulary.forbiddenModules)assert(!new RegExp("pub mod "+name+"\\b").test(pure));
 assert.equal(authoring.package.name,fixture.authoring.package);
-assert(authoring.dependencies["semio-framework-ui-contract"]);
+assert(authoring.dependencies["semio-ui-contract"]);
 assert.equal((app.match(/pub mod main;/g)||[]).length,fixture.authoring.frameWindows);
 assert(Buffer.byteLength(app)<=fixture.authoring.maximumSourceBytes);
 assert(!facade.includes("semio_s_artifact_stdio_jpg_schema_2::editor::"));

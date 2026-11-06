@@ -43,7 +43,11 @@ pub fn puzzle3d_import_value(args: &Value) -> Result<Value, Puzzle3dImportFault>
     match args.get(IMPORT_ARGUMENT_PAYLOAD).and_then(Value::as_str) {
         Some(text) if text.len() > PUZZLE_IMPORT_TOTAL_BYTES => Err(Puzzle3dImportFault::Capacity),
         Some(text) => parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().filter(|value| value.as_object().is_some()).ok_or(Puzzle3dImportFault::Payload),
-        None => args.get(IMPORT_ARGUMENT_PAYLOAD).cloned().filter(|value| value.as_object().is_some()).ok_or(Puzzle3dImportFault::Payload),
+        None => {
+            let payload = args.get(IMPORT_ARGUMENT_PAYLOAD).filter(|value| value.as_object().is_some()).ok_or(Puzzle3dImportFault::Payload)?;
+            if semio_framework_pack_json::bounded_json_len(payload, PUZZLE_IMPORT_TOTAL_BYTES).is_none() { return Err(Puzzle3dImportFault::Capacity); }
+            Ok(payload.clone())
+        },
     }
 }
 

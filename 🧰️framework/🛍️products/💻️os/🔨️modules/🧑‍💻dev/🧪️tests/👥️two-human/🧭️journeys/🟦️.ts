@@ -8,10 +8,25 @@ import { type DirectorySpaceRole } from "@semio-tech/framework/directory/schema"
 import { boot, clickRowAction, faultsSince, type Human, pause, type Session, short, until, waitRow } from "../🔑️sessions/🟦️.ts";
 import { arrivalMs, awaitMounted, awaitText, docText, edit, hubHead, openSpace, seenText, SETTLE_MS, undo, watchText } from "../🏠️space-creation-and-edits/🟦️.ts";
 import type { KindTimings, TwoHumanJourney, TwoHumanOptions } from "../📋️run-types/🟦️.ts";
+import type {createDocumentTransportControl} from "../📡️transport/🟦️.ts";
+import reconnectPolicy from "./🧬️reconnect.json";
 
 //#region 🔖️Journeys
 /** 🧭️ What one kind's journey gets once A created and opened the document and B opened it from the Space index. */
-type JourneyContext = Readonly<{ A: Session; B: Session; check: (name: string, pass: boolean, detail: unknown) => void; time: (name: keyof KindTimings, ms: number | null) => void; plugin: string; pins: ReturnType<typeof readMatrixPins>; options: TwoHumanOptions; spaceId: string; artifactId: string; misses: unknown[] }>;
+type JourneyContext = Readonly<{ A: Session; B: Session; check: (name: string, pass: boolean, detail: unknown) => void; time: (name: keyof KindTimings, ms: number | null) => void; plugin: string; pins: ReturnType<typeof readMatrixPins>; options: TwoHumanOptions; spaceId: string; artifactId: string; misses: unknown[]; transport?:Awaited<ReturnType<typeof createDocumentTransportControl>> }>;
+
+/** 🔌️ Witnesses a short Hub transport loss, same-artifact catch-up and a subsequent real edit. */
+async function reconnectJourney({A,B,check,plugin,pins,options,artifactId,transport}:JourneyContext):Promise<void>{
+ if(!transport)throw Error("Reconnect requires its owned context transport");
+ const baseline=await until(async()=>{const a=await docText(A),b=await docText(B);return a===b?a:null},30000);if(baseline===null)throw Error("Same artifact did not converge before disconnect");
+ const offline=await transport.duringDisconnect(async signal=>{const abort=()=>{void A.context.close().catch(()=>undefined);void B.context.close().catch(()=>undefined)};signal.addEventListener("abort",abort,{once:true});try{signal.throwIfAborted();await A.page.locator('[data-slot="window-body"]').last().click({timeout:2000});const responsive=await docText(A);signal.throwIfAborted();const peer=await edit(B,plugin,pins);signal.throwIfAborted();await pause(A,1000);const isolated=await docText(A);signal.throwIfAborted();return{responsive,peer,isolated}}finally{signal.removeEventListener("abort",abort)}},options.signal);
+ check("A responsive during outage",offline.responsive===baseline,{artifactId,view:short(offline.responsive)});
+ check("B edits while A disconnected",offline.peer.applied&&offline.peer.after!==baseline&&offline.isolated===baseline,{artifactId,verb:offline.peer.verb,b:short(offline.peer.after),a:short(offline.isolated)});
+ const caught=await until(async()=>{const a=await docText(A),b=await docText(B);return a===b&&b===offline.peer.after?a:null},45000);
+ check("same artifact catches up",caught!==null,{artifactId,a:short(await docText(A)),b:short(await docText(B))});
+ const after=await edit(A,plugin,pins),seen=await awaitText(B,value=>value===after.after&&value!==offline.peer.after,30000);
+ check("A edits after reconnect",after.applied&&typeof seen==="string",{artifactId,verb:after.verb,a:short(after.after),b:short(seenText(seen))});
+}
 
 /** ✏️ Both humans author: A edits → B sees, B edits → A sees, A undoes their OWN edit (B's stays), B undoes theirs (both back
  * to the start), B redoes (both see it again), both reload and reopen and converge. */
@@ -299,9 +314,10 @@ export async function seedSharedSpaceThroughHub(hub: string, owner: Human, membe
 
 /** 🗺️ The journeys a run can drive: how the shared space is set up (the Home dialogs, or the hub's directory commands), the
  * role B is invited with, and how many checks a kind passes with. */
-export const JOURNEYS: Readonly<Record<TwoHumanJourney, Readonly<{ run: (context: JourneyContext) => Promise<void>; seed: "ui" | "hub"; shareRole: RegExp; memberRole: DirectorySpaceRole; checks: number; check: string }>>> = {
+export const JOURNEYS: Readonly<Record<TwoHumanJourney, Readonly<{ run: (context: JourneyContext) => Promise<void>; seed: "ui" | "hub"; shareRole: RegExp; memberRole: DirectorySpaceRole; checks: number; check: string; required?:readonly string[] }>>> = {
   edit: { run: editJourney, seed: "ui", shareRole: /author|autor/iu, memberRole: "author", checks: 10, check: "two-human" },
   viewer: { run: viewerJourney, seed: "hub", shareRole: /spectator|betrachter/iu, memberRole: "spectator", checks: 10, check: "two-human-viewer" },
   "cross-undo": { run: crossUndoJourney, seed: "hub", shareRole: /author|autor/iu, memberRole: "author", checks: 12, check: "two-human-cross-undo" },
+  reconnect: { run: reconnectJourney, seed: "hub", shareRole: /author|autor/iu, memberRole: "author", checks: 8, check: "two-human", required:reconnectPolicy.requiredChecks },
 };
 //#endregion 🔖️Journeys

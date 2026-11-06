@@ -1,0 +1,3 @@
+/** 🛡️ Unknown or unavailable Source ownership never grants an allocator fallback. */
+import { expect,test } from "bun:test";import { Database } from "bun:sqlite";
+test("the exact preborn header range stays protected even before a loan",()=>{const db=new Database(":memory:");try{for(const [pointer,expected]of [[999,0],[1000,1],[1183,1],[1184,0]])expect(db.query("SELECT ?>=1000 AND ?-1000<184 AS guarded").get(pointer,pointer)).toEqual({guarded:expected});expect(db.query("SELECT NOT ? AS allow_fallback").get(0)).toEqual({allow_fallback:1});expect(db.query("SELECT NOT ? AS allow_fallback").get(1)).toEqual({allow_fallback:0})}finally{db.close()}});

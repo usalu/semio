@@ -1,6 +1,6 @@
 //! 🧭️ Norm edit vocabulary, typed mutation boundaries and selector-aware payload resolution.
 
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as protocol;
 use semio_s_plugin_norm_app_surface_foundation::{get_value_at_path, object_id_field, parse_path, resolve_list_index, set_value_at_path, PathSegment};
 
 #[path = "🎒️payload-arguments/🦀️.rs"]

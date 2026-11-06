@@ -1,0 +1,10 @@
+const fs = require('node:fs');
+const path = '🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🔁️persistent-local/🦀️.rs';
+const before = fs.readFileSync(path, 'utf8');
+const old = '    #[value(rename_all = "camelCase")]\n    pub struct PollRequestLimits {';
+if (before.split(old).length !== 2) throw Error('limits declaration changed');
+const after = before.replace(old, '    #[value(rename_all = "camelCase", deny_unknown_fields)]\n    pub struct PollRequestLimits {');
+const temporary = '.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/AI-MCP-END-TO-END/🗑️generated/poll-limits-strict.tmp';
+fs.writeFileSync(temporary, after);
+if (fs.readFileSync(path, 'utf8') !== before) throw Error('shared schema changed');
+fs.renameSync(temporary, path);

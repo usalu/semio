@@ -1,0 +1,47 @@
+[
+  {
+    "name": "prior semantic hold redeemed in small infrastructure loan",
+    "aggregate": 50,
+    "semantic": 48,
+    "infrastructure": 0,
+    "grant": 2,
+    "expected": "accept",
+    "fresh": 2
+  },
+  {
+    "name": "mixed origin redemptions",
+    "aggregate": 13,
+    "semantic": 5,
+    "infrastructure": 4,
+    "grant": 4,
+    "expected": "accept",
+    "fresh": 4
+  },
+  {
+    "name": "aggregate cannot cover actual redemptions",
+    "aggregate": 8,
+    "semantic": 5,
+    "infrastructure": 4,
+    "grant": 3,
+    "expected": "reject",
+    "fresh": 0
+  },
+  {
+    "name": "fresh exceeds current grant",
+    "aggregate": 12,
+    "semantic": 5,
+    "infrastructure": 3,
+    "grant": 3,
+    "expected": "reject",
+    "fresh": 4
+  },
+  {
+    "name": "no redemptions",
+    "aggregate": 2,
+    "semantic": 0,
+    "infrastructure": 0,
+    "grant": 2,
+    "expected": "accept",
+    "fresh": 2
+  }
+]

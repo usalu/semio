@@ -1,0 +1,9 @@
+const fs=require('node:fs');const file='🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/🎭️exports/🦀️.rs';
+const before=fs.readFileSync(file,'utf8');let after=before;
+const marker='/// 🧹️ Acknowledges and retires the actual resident output through the same guest context and funded cleanup policy.';
+const helper=`/// ♻️ Retires the captured input only after its actual host wire has returned.\nfn close_actor_input_step(cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{ORIGINAL_OWNED_INPUT.with(|slot|{let mut slot=slot.try_borrow_mut().map_err(|_|busy())?;let Some(owner)=slot.as_mut()else{return Ok(true)};if !owner.input_returned(){return Ok(false)}if !owner.begin_close(None,cx)?{return Ok(false)}if !owner.terminal_is_empty(){owner.advance(None,cx)?;return Ok(false)}let grant=cx.retained_grant();let bytes=std::mem::size_of::<Option<crate::original_input::OriginalActorInputReceiving>>();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);slot.take();Ok(true)})}\n`;
+if(after.split(marker).length!==2)throw Error('output close marker changed');after=after.replace(marker,helper+marker);
+const old='cx.with_original_retirement(|cx|ORIGINAL_OWNED_OUTPUT.with(|output|output.borrow_mut().close_step(cx)))';
+const next='cx.with_original_retirement(|cx|{if !ORIGINAL_OWNED_OUTPUT.with(|output|output.borrow_mut().close_step(cx))?{return Ok(false)}close_actor_input_step(cx)})';
+if(after.split(old).length!==2)throw Error('output close call changed');after=after.replace(old,next);
+const temp='.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/AI-MCP-END-TO-END/🗑️generated/close-actor-input.tmp';fs.writeFileSync(temp,after);if(fs.readFileSync(file,'utf8')!==before)throw Error('shared exports changed');fs.renameSync(temp,file);

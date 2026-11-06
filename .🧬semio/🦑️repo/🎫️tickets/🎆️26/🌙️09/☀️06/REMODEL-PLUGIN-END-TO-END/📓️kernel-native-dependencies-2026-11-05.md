@@ -1,0 +1,9 @@
+# Kernel Native Derive Dependencies
+
+Image50893 actually failed compilation with four E0433 errors from kernel identity NativeReceive derives missing semio_framework_value_native_owned. Engine added that canonical direct dependency. Root independently validated its package/path through two TOML parsers. No image law passed.
+
+Low then performed a bounded owned-source/cfg audit of five nearby kernel packages. Root independently read the relevant production declarations and macro path selection. ClipboardFragment,Effect and JobPlacement in kernel base and seven icon/video media-job types use NativeReceive without a native_owned/crate override. The macro selects an explicit native-owned path, then explicit crate path, otherwise the canonical direct native-owned crate. Kernel base had that exact binding only in dev dependencies; media-jobs lacked it. These two additional findings are source-preflight evidence, not additional observed compiler failures.
+
+Root promoted the unchanged kernel-base native-owned binding to production and removed its redundant dev entry, then added the canonical media-jobs production path. Both existing TOML parsers agreed on each complete manifest, and parsed content was asserted identical except those exact dependency changes. All targets resolve to semio-framework-value-native-owned and paths fit256characters. Engine independently reviewed both repairs. Rust sources, derives, fields, wire formats, feature values and source caps were unchanged; no external runtime library, alias or compatibility API was added. Actual current native compiler success remains required.
+
+Image50893 subsequently completed with actual exit1/Cargo101. One exact normal replacement73144 uses generated/image-identity-current.log against the reviewed current manifests. No image codec law result has been claimed.

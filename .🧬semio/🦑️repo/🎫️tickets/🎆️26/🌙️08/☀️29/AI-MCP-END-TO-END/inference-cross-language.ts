@@ -1,0 +1,6 @@
+import fs from"node:fs";import{spawnSync}from"node:child_process";
+const root="🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin";
+const result=spawnSync("repo",["tools","exec","--light","git","--","-c","core.quotepath=false","ls-files","-z",root],{encoding:"utf8",shell:process.platform==="win32",maxBuffer:16777216});if(result.status!==0)throw Error(result.stderr);
+const paths=result.stdout.split("\0").filter(p=>/\.(ts|tsx|wit|json)$/.test(p)&&fs.existsSync(p));
+let rows=[];for(const p of paths){const lines=fs.readFileSync(p,"utf8").split("\n");for(let i=0;i<lines.length;i++)if(/artifact-inference-(request|result)|WireArtifactInference(Request|Result)|ArtifactInference(Request|Result)V1|documentSchema/.test(lines[i]))rows.push({p,line:i+1,text:lines[i].slice(0,320)});}
+fs.writeFileSync(import.meta.dir+"/inference-cross-language-2026-11-05.md","# Inference Cross-Language Consumers\n\nScanned "+paths.length+" tracked plugin TypeScript/JSON/WIT files. This is reference discovery, not a compilation result.\n\n"+rows.map(r=>"- `"+r.p+":"+r.line+"`: "+r.text).join("\n")+"\n");console.log(JSON.stringify({scanned:paths.length,matches:rows.length,rows:rows.slice(0,18)}));

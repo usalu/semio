@@ -1,0 +1,11 @@
+const fs = require('node:fs');
+const assert = require('node:assert/strict');
+const schema = fs.readFileSync('🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🔁️persistent-local/🦀️.rs', 'utf8');
+const macro = fs.readFileSync('🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📣️macros/⚛️wp4-reactor/🦀️.rs', 'utf8');
+assert.match(schema, /pub struct PollRequestLimits\s*\{/);
+assert.match(schema, /pub limits:\s*PollRequestLimits/);
+assert.doesNotMatch(schema, /pub unsafe fn take_actor_poll_input/);
+const poll = macro.match(/fn semio_owned_poll_v1\(([^)]*)\)\s*->\s*u64/);
+assert.ok(poll);
+assert.equal((poll[1].match(/:u64/g) || []).length, 19);
+console.log('poll scalar contract passed');

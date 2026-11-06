@@ -1,7 +1,7 @@
 //! 🧵️ Granted selection validation, raw mask construction, hashing and atomic adoption.
 use super::*;
 use std::mem::size_of;
-use semio_framework_os_kernel as store;
+use semio_os_kernel as store;
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};
 use semio_s_artifact_stdio_semio_image::schema::snapshot::{SemioImageSnapshot,SemioImageFrame,SemioColorspace,STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
 use semio_s_artifact_raster_raster_model::{RasterImageContentHash,RasterImagePayload,raster_image_key,RASTER_IMAGE_KEY_BYTES};
@@ -222,7 +222,7 @@ impl Drop for MaskSelectionWork {fn drop(&mut self){assert!(std::thread::panicki
 pub struct MaskFromSelectionWork {candidate:Option<MaskSelectionWork>,complete:bool}
 impl<A:RasterWorkApp> ArtifactCommandWork<A> for MaskFromSelectionWork {
     fn tool_id(&self)->&'static str{"maskFromSelection"}
-    fn extent(&self,command:&RasterCommand,_snapshot:&RasterSnapshot,_interaction:&protocol::InteractionState,_context:Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<A>>)->Option<usize>{matches!(command,RasterCommand::MaskFromSelection(_)).then_some(1)}
+    fn extent(&self,command:&RasterCommand,_snapshot:&RasterSnapshot,_interaction:&protocol::InteractionState,_context:Option<&semio_plugin::app::ArtifactOwnedToolJobContext<A>>)->Option<usize>{matches!(command,RasterCommand::MaskFromSelection(_)).then_some(1)}
     fn work_demands(&self,input:&ArtifactCommandInputs<'_,A>,body:usize)->Result<RetirementDemand,ValueError>{if let Some(candidate)=&self.candidate{return candidate.demands(body);}let RasterCommand::MaskFromSelection(command)=input.command else{return Err(refused("raster.mask-work-mismatch"));};MaskSelectionWork::begin_demands(command,input.snapshot,input.config)}
     fn step(&mut self,input:&ArtifactCommandInputs<'_,A>,cx:&mut semio_framework_job::StepContext<'_>)->Result<ArtifactCommandWorkStep<A>,semio_framework_job::OriginalTurnFailure>{
         if cx.is_cancelled(){return Err(refused("raster.mask-cancelled").into());}if self.complete{return Err(refused("raster.mask-work-complete").into());}if cx.should_yield(){return Ok(ArtifactCommandWorkStep::Pending {stage:"mask-yield",preview:b""});}

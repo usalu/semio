@@ -6,13 +6,13 @@ use super::*;
 /// 🔌️ Owns real guest sessions, prepared transactions, history and explicit caller context.
 #[cfg(not(target_arch = "wasm32"))]
 pub struct PluginArtifactChannel {
-    pub host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy,
-    pub operation_policy:semio_framework_os_mcp_port::channel_port::HostOperationPolicy,
-    pub(super) startup_instance_custody:Option<(semio_framework_plugin_host::GuestInstance,Arc<semio_framework_plugin_host::GuestRelayWakeDriver>)>,
-    pub(super) startup_custody:Option<(semio_framework_plugin_host::GuestActorOpening,Arc<semio_framework_plugin_host::GuestRelayWakeDriver>)>,
-    pub(super) startup_failure:Option<semio_framework_plugin_host::GuestRelayAdmissionFailure>,
-    pub(super) operation_refusal:Option<(Arc<semio_framework_plugin_host::GuestRelayWakeDriver>,semio_framework_plugin_host::GuestRelayAdmissionFailure,Option<Fault>)>,
-    pub(super) host_driver:Arc<semio_framework_plugin_host::GuestRelayWakeDriver>,
+    pub host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy,
+    pub operation_policy:semio_os_mcp_port::channel_port::HostOperationPolicy,
+    pub(super) startup_instance_custody:Option<(semio_plugin_host::GuestInstance,Arc<semio_plugin_host::GuestRelayWakeDriver>)>,
+    pub(super) startup_custody:Option<(semio_plugin_host::GuestActorOpening,Arc<semio_plugin_host::GuestRelayWakeDriver>)>,
+    pub(super) startup_failure:Option<semio_plugin_host::GuestRelayAdmissionFailure>,
+    pub(super) operation_refusal:Option<(Arc<semio_plugin_host::GuestRelayWakeDriver>,semio_plugin_host::GuestRelayAdmissionFailure,Option<Fault>)>,
+    pub(super) host_driver:Arc<semio_plugin_host::GuestRelayWakeDriver>,
     /// 🐎️ The process-wide compiled runtime ([`shared_plugin_runtime`]), held as the `GuestRuntimes`
     /// enum rather than a bare `WasmtimeRuntime` because the inference lane's
     /// `PluginInstanceHandle` takes exactly that `Arc` — and it MUST be the same one: a
@@ -33,26 +33,14 @@ pub struct PluginArtifactChannel {
     pub(super) pending_command_closes: semio_framework::kernel::CommandDriverRegistry<1>,
     pub(super) rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry<1>,
     pub(super) next_seq: u64,
-    /// 🗿️ The artifact id this channel's ONE live guest session document is, when the owning
-    /// workspace has bound exactly one artifact to this plugin. Every `RevisionStamp` this channel
-    /// answers names it.
-    ///
-    /// 🐛️ Before ticket 26/09/18 slice M8 the stamp carried `entry.plugin_id`, so the headless
-    /// lane's `expectedRevision` named `"note"` while `artifact_create`/`artifact_snapshot` named
-    /// `"…-typed"` — two ids for one document, and `artifact_snapshot(revisionAfter.artifactId)`
-    /// answered `no such artifact: note` (`📓️ce1-client-e2e-pinning-and-puzzle-bound.md` §8 gap 4).
+    /// 🗿️ The artifact id this channel's ONE live guest session document is, when the owning [Design notes](README.md#source-notes-36).
     pub(super) session_artifact_id: Option<String>,
     /// 📥️ Per guest instance, the artifact id whose canonical pair that guest's session document
     /// currently IS — see [`Self::load_session_document`]. Empty for a guest still sitting on the
     /// plugin's own genesis document, which is every folder-lane guest and was, before ticket
     /// 26/09/18 slice M10, every hub-lane one as well.
     pub(crate) session_documents: HashMap<u32, String>,
-    /// 🧵️ Document-backbone messages this guest published and this channel has not handed on yet —
-    /// the `Effect::SendMessage { target: Backbone { uri } }` payloads addressed at this channel's
-    /// own actor uri. They used to be dropped on the floor: `exchange_one_turn` named every effect
-    /// for diagnostics and admitted only the `Shell{instance}` reply lane, so a committed
-    /// transaction's envelopes — the ONE thing that has to leave the process for anyone else to see
-    /// the edit — went nowhere at all.
+    /// 🧵️ Document-backbone messages this guest published and this channel has not handed on yet — [Design notes](README.md#source-notes-50).
     pub(super) backbone_egress: Vec<Vec<u8>>,
     /// 🧵️ The instances whose document backbone this channel has bound — see
     /// [`Self::ensure_document_backbone`]. Cleared per instance by [`Self::discard_instance`],

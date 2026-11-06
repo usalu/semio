@@ -1,0 +1,39 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-kernel-json"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Borrowed Source output projection over native kernel and UI graphs."
+
+[package.metadata.semio]
+role = "framework"
+id = "kernel-json"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[dependencies]
+semio-framework-kernel = { path = "../../../../📦️packages/🦀️rust" }
+semio-framework-kernel-identity = { path = "../../../../🪪️identity/📦️packages/🦀️rust" }
+semio-framework-kernel-ui = { path = "../../../../🖼️ui/📦️packages/🦀️rust" }
+semio-framework-kernel-media-jobs = { path = "../../../../🎞️media-jobs/📦️packages/🦀️rust" }
+semio-framework-manifest-media = { path = "../../../../../🛂️manifest/🎞️media/📦️packages/🦀️rust" }
+semio-framework-actor = { path = "../../../../../🎭️actor/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-ui-contract = { path = "../../../../../🖱️ui/🧬️contract/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-ui-contract-values = { path = "../../../../../🖱️ui/🧬️contract/🌱️values/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-trace = { workspace = true }
+serde_json = { workspace = true }

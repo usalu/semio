@@ -3,7 +3,7 @@ use super::UiText;
 use semio_framework_value::{NativeDecodeControl,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,ValueError};
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementStep};
 use semio_framework_value::retained_clone::{RetainedCloneBinding,RetainedCloneClose,RetainedCloneRef,retained_clone_grant_admits};
-use semio_framework_value_native_decoding::{NativeReceive,NativeReceiver,OriginalReceivingPrimary,owned::{NativeDefault,NativeDefaultValue,NativeDefaultValueCursor,tree::{NativeValueSource,fixed,receipt,invalid}}};
+use semio_framework_value_native_owned::{NativeReceive,NativeReceiver,OriginalReceivingPrimary,owned::{NativeDefault,NativeDefaultValue,NativeDefaultValueCursor,tree::{NativeValueSource,fixed,receipt,invalid}}};
 use std::mem::ManuallyDrop;
 
 struct TextRetirement(Option<UiText>);
@@ -35,7 +35,7 @@ impl<I:NativeValueSource+?Sized> NativeReceiver<I,UiText> for UiTextNativeReceiv
   let mut work=0;let result=(||{
    let d=self.demands(input,body)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}control.checkpoint()?;
    let bound=input.bind(&mut self.binding,g);work=bound.work;if let Some(p)=bound.result?{return Ok(RetainedCloneStep::Progress(p))}
-   work=1;let text=input.get().text()?;if text.len()>semio_framework_ui_contract_budget::UI_TEXT_MAX_BYTES{return Err(invalid().into())}
+   work=1;let text=input.get().text()?;if text.len()>semio_ui_contract_budget::UI_TEXT_MAX_BYTES{return Err(invalid().into())}
    if self.output.is_none(){*self.output=Some(UiText::default());work=1;return Ok(RetainedCloneStep::Progress(receipt(d)))}
    if self.offset<text.len(){if d.copy_bytes==0{return Ok(RetainedCloneStep::Progress(Default::default()))}let end=self.offset+d.copy_bytes;self.output.as_mut().unwrap().bytes[self.offset..end].copy_from_slice(&text.as_bytes()[self.offset..end]);self.offset=end;work=1;return Ok(RetainedCloneStep::Progress(receipt(d)))}
    self.output.as_mut().unwrap().len=text.len()as u16;self.ready=true;work=1;Ok(RetainedCloneStep::Complete(receipt(d)))

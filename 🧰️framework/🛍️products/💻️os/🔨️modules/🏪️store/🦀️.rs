@@ -17,7 +17,7 @@
 #![allow(async_fn_in_trait)]
 
 use semio_framework_composition_admission::{ChildRestoreProjection,ChildRestoreProjectionError,CHILD_RESTORE_MAXIMUM_FIELD_BYTES};
-use semio_framework_os_store_text_io::ArtifactStoreSnapshot as _;
+use semio_os_store_text_io::ArtifactStoreSnapshot as _;
 use genesis_pack_admission::ArtifactGenesisPackCapture;
 use semio_framework_os_store_owned_schema_decode::genesis_pack_admission;
 use semio_framework_os_vcs::io::binary::genesis::{AdmittedArtifactGenesis, ArtifactGenesisProducer};
@@ -165,7 +165,7 @@ use semio_framework_value::retirement::frame::admit_retirement_frame as admit_ar
 use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
 
 //#endregion 🧬️OpaqueSnapshotRead
-use semio_framework_os_store_text_io::operation_identity;
+use semio_os_store_text_io::operation_identity;
 use semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
 use semio_framework_os_vcs::io::binary::entity_identity::{content_addressed_entity_id, edit_scoped_id, mint_alternative_id, mint_change_id, mint_edit_id, mint_mutation_id, mint_child_id, mint_invocation_id, operation_list_fingerprint, mint_space_checkpoint_id, mint_space_alternative_id};
 use semio_framework_os_vcs::io::binary::checkpoint_identity::{content_addressed_checkpoint_id, content_addressed_checkpoint_id_with_pending_change};
@@ -220,7 +220,7 @@ pub use semio_framework_os_store_presence as presence;
 //#region 🔖️Text
 //#region 🔖️Text
 pub mod serialization {
-    pub use semio_framework_os_store_text_io::*;
+    pub use semio_os_store_text_io::*;
     pub use semio_framework_os_store_space_history::lifted_serialization::*;
 }
 use serialization::{ArtifactCodec, ArtifactNativeSnapshotIdentity, ArtifactPackFiles, ArtifactSqliteSnapshotHost, ArtifactSqliteSnapshotCodec, decode_document_pack_bytes, encode_document_pack_bytes, text_error_to_pack_error};
@@ -356,8 +356,8 @@ use semio_framework_os_store_engine_core::lifted_document_materialize::uncommitt
 //#endregion 🔖️Materialize
 //#region 🔖️TextFormat
 //#region 🔖️TextFormat
-pub use semio_framework_os_store_text_io::text_format;
-pub use semio_framework_os_store_text_io::{field_set_mutations_binary, field_set_mutations_text};
+pub use semio_os_store_text_io::text_format;
+pub use semio_os_store_text_io::{field_set_mutations_binary, field_set_mutations_text};
 use text_format::{ArtifactTextFiles, ParsedDocumentText, append_history_events_to_spr, empty_document_spr, genesis_member_envelope_pack, parse_decoded_document_spr, parse_document_pack, parse_document_spr, parse_document_text, print_document_pack, print_document_spr, print_document_text, print_edit_lines, stamp_document_spr_identity};
 use text_format::{adopt_loaded_replay, apply_history_composition, canonical_conflict_actors, common_address, conflict_from_history_conflict, conflict_messages_for_edits, discard_parsed_envelope, expected_mutation_message_level, fill_supersession_targets, history_composition_from_envelope, history_conflict_from_conflict, history_edit_from_edit, history_message_from_mutation_message, history_op_meta_from_operation_meta, history_op_payloads, loaded_history_replay, mutation_ids, mutation_message_from_history_message, mutation_meta_from_history_op_meta, operation_ids, ops_line_from_transition, parse_clock, print_clock, print_ops_log, project_envelope_history, protocol_undo_policy_from_ordinal, protocol_undo_policy_ordinal, replay_loaded_history, replay_ops, settle_parsed_envelope, stable_mutation_ids_for_edit, supersession_address, take_loaded_replay, transition_from_ops_line, validate_durable_history, validate_history_lanes, validate_persisted_conflicts, validate_persisted_message};
 //#region 🔖️OpsHeaderGrammar

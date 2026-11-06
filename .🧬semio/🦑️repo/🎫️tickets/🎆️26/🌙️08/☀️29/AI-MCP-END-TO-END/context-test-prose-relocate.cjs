@@ -1,0 +1,6 @@
+const fs=require('fs'),f='🧰️framework/🔨️modules/🧵️job/⏱️context/🦀️.rs';const before=fs.readFileSync(f,'utf8');let s=before;
+for(const[a,b]of[
+ ['/// 🔬️ Thin accessors for the companion white-box laws; they borrow the private operation ledger, its context constructor and the writer\'s custody without granting any new authority.','/// 🔬️ White-box Source laws; see `🧪️testing/README.md`.'],
+ ['/// 🔁️ Opens the next fixture turn on one long-lived context: production builds a fresh context, with a fresh one-page payload grant, for every reactor turn.','/// 🔁️ Opens the next fixture turn; see `🧪️testing/README.md`.'],
+ ['/// 🔁️ Opens the next fixture turn on the one long-lived source: fresh per-turn fuel, payload grant and retained grant on top of the receipts already posted, like the reactor\'s fresh context per turn on its long-lived source parent; a bound return source restores its admitting lifetime stock and is refused while a claim holds currencies.','/// 🔁️ Opens the next Source turn; see `🧪️testing/README.md`.']]){if(s.split(a).length!==2)throw Error(a);s=s.replace(a,b)}
+if(fs.readFileSync(f,'utf8')!==before)throw Error('changed');let t=f+'.guest-prose.tmp';fs.writeFileSync(t,s);if(fs.readFileSync(f,'utf8')!==before){fs.unlinkSync(t);throw Error('changed before rename')}fs.renameSync(t,f);

@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "header",
+      "items",
+      "copy",
+      "work",
+      "availableItems",
+      "availableCopy",
+      "availableWork",
+      "expected"
+    ],
+    "properties": {
+      "header": {
+        "enum": [
+          144,
+          152,
+          184
+        ]
+      },
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "copy": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "work": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "availableItems": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "availableCopy": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "availableWork": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "expected": {
+        "type": "boolean"
+      }
+    }
+  }
+}

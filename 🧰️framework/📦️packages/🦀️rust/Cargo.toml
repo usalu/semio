@@ -18,7 +18,7 @@ path = "🦀️.rs"
 
 [dependencies]
 semio-framework-pack-json-native-input = { path = "../../🔨️modules/🎒️pack/🔤️json/📥️decode/🪪️native-input/📦️packages/🦀️rust" }
-semio-framework-ui-declaration = { path = "../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-ui-declaration = { path = "../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-mesh-engine = { path = "../../🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust", package = "semio-framework-mesh-engine" }
@@ -50,9 +50,11 @@ semio-framework-onboarding = { path = "../../🔨️modules/🎓️onboarding/�
 semio-framework-source-projection = { path = "../../🔨️modules/📁️filesystem/📷️snapshot/📦️packages/🦀️rust" }
 semio-framework-time-travel-actions = { path = "../../🔨️modules/⏪️time-travel/🕹️actions/📦️packages/🦀️rust" }
 semio-framework-tool-run-actions = { path = "../../🔨️modules/⏯️tool-run/🕹️actions/📦️packages/🦀️rust" }
-semio-framework-ui-locale = { path = "../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-ui-locale = { path = "../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-testing-admission = { path = "../../🔨️modules/🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 semio-framework-job = { path = "../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
@@ -62,3 +64,7 @@ base64 = "0.22.1"
 [[test]]
 name="original_kernel_retirement"
 path="../../🔨️modules/🎠️kernel/♻️retirement/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "kernel-event-receiving"
+path = "../../🔨️modules/🎠️kernel/📥️events/🧪️tests/🦀️.rs"

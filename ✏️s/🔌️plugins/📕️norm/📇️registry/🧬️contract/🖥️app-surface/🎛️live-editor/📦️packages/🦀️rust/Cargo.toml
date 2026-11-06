@@ -22,7 +22,7 @@ compliance-testing = ["dep:semio-framework-hash", "dep:serde", "dep:serde_json",
 semio-s-plugin-norm-inspector-forms = { path = "../../../🪺️inspector-forms/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-hash = { path = "../../../../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", optional = true }
-semio-framework-plugin-decl-staged-form = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/staged-form/📦️packages/🦀️rust" }
+semio-plugin-decl-staged-form = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/staged-form/📦️packages/🦀️rust" }
 semio-s-plugin-norm-app-surface-entity-editing = { workspace = true }
 pack = { workspace = true }
 semio-framework = { workspace = true }

@@ -64,7 +64,13 @@ pub fn puzzle5d_import_value(args: &Value) -> Result<Value, Puzzle5dImportFault>
         Some(text) => puzzle5d_decode_document(text),
         None => {
             let inline = args.get(IMPORT_ARGUMENT_PAYLOAD).ok_or(Puzzle5dImportFault::Payload)?;
-            Some(inline.clone()).filter(is_document).ok_or(Puzzle5dImportFault::Payload)
+            if !is_document(inline) {
+                return Err(Puzzle5dImportFault::Payload);
+            }
+            if semio_framework_pack_json::bounded_json_len(inline, PUZZLE_IMPORT_TOTAL_BYTES).is_none() {
+                return Err(Puzzle5dImportFault::Capacity);
+            }
+            Ok(inline.clone())
         }
     }
 }

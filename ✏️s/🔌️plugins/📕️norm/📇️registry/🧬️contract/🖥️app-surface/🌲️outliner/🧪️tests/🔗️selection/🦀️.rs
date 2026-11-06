@@ -10,7 +10,7 @@ fn entity(id: &str, name: Option<&str>) -> DslValue {
 }
 
 fn project(node: BuiltNode) -> String {
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(node)).expect("projection")
+    semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::ComponentTree::new(node)).expect("projection")
 }
 
 #[test]

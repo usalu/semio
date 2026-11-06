@@ -1,0 +1,5 @@
+const fs=require('fs'),crypto=require('crypto'),base='🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/';function edit(q,fn){const p=base+q,s=fs.readFileSync(p,'utf8'),n=fn(s),t=p+'.edit-'+crypto.randomBytes(4).toString('hex');if(n===s)throw Error('unchanged '+q);fs.writeFileSync(t,n,{flag:'wx'});if(fs.readFileSync(p,'utf8')!==s){fs.unlinkSync(t);throw Error('concurrent '+q)}fs.renameSync(t,p)}
+edit('⚛️reactor/🎟️context/🌉️call/📤️receipt/🦀️.rs',s=>s.replaceAll('escrow.length<16','escrow.length<48').replace('16..=4368','48..=4400'));
+edit('🧠️interpreter/🏃️runtime/🎟️call/🧮️unit/🦀️.rs',s=>s.replace('16..=4368','48..=4400'));
+edit('🖥️host/🎭️guest-runtime/🪙️escrow/🦀️.rs',s=>s.replace('escrow.len()<16','escrow.len()<48').replace('escrow[8..16].try_into()','escrow[32..40].try_into()'));
+edit('🧠️interpreter/🏃️runtime/🦀️.rs',s=>s.replace('let escrow=[128,12,0,0,16,0,0,0]','let escrow=[128,12,0,0,48,0,0,0]').replace('uleb(16,&mut data);data.extend(b"SRE1");data.extend([0;4]);data.extend(1u64.to_le_bytes());','uleb(48,&mut data);data.extend(b"SRE1");data.extend([0;4]);for v in [101u64,1,202,1,0]{data.extend(v.to_le_bytes());}'));

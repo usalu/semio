@@ -196,7 +196,7 @@ impl semio_framework::ToolJobFactory for RasterPixelEditJobFactory{
  fn payload_schema_id(&self)->&str{RASTER_RETAINED_PAYLOAD_SCHEMA}
  fn classification(&self)->InteractiveJobClassification{InteractiveJobClassification::Migrated}
  fn execution_contract(&self)->ToolExecutionContract{raster_pixel_edit_contract()}
- semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes:RASTER_PIXEL_EDIT_RAW_BYTES,checkpoint_resume:false);
+ semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes:RASTER_PIXEL_EDIT_RAW_BYTES,checkpoint_resume:false);
 }
 impl ArtifactOwnedToolJobFactory for RasterPixelEditJobFactory{
  type Owner=EditorApp<RasterPlayApp>;
@@ -220,7 +220,7 @@ impl semio_framework::ToolJobFactory for RasterSelectPixelsJobFactory {
     fn payload_schema_id(&self)->&str{RASTER_RETAINED_PAYLOAD_SCHEMA}
     fn classification(&self)->InteractiveJobClassification{InteractiveJobClassification::Migrated}
     fn execution_contract(&self)->ToolExecutionContract{raster_select_pixels_contract()}
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes:RASTER_SELECT_PIXELS_RAW_BYTES,checkpoint_resume:false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes:RASTER_SELECT_PIXELS_RAW_BYTES,checkpoint_resume:false);
 }
 impl ArtifactOwnedToolJobFactory for RasterSelectPixelsJobFactory {
     type Owner=EditorApp<RasterPlayApp>;
@@ -238,7 +238,7 @@ impl semio_framework::ToolJobFactory for RasterMaskSelectionJobFactory {
     fn payload_schema_id(&self)->&str{RASTER_RETAINED_PAYLOAD_SCHEMA}
     fn classification(&self)->InteractiveJobClassification{InteractiveJobClassification::Migrated}
     fn execution_contract(&self)->ToolExecutionContract{raster_mask_selection_contract()}
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes:RASTER_MASK_SELECTION_RAW_BYTES,checkpoint_resume:false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes:RASTER_MASK_SELECTION_RAW_BYTES,checkpoint_resume:false);
 }
 impl ArtifactOwnedToolJobFactory for RasterMaskSelectionJobFactory {
     type Owner=EditorApp<RasterPlayApp>;
@@ -256,7 +256,7 @@ impl semio_framework::ToolJobFactory for RasterLayerBakeJobFactory {
     fn payload_schema_id(&self)->&str{RASTER_RETAINED_PAYLOAD_SCHEMA}
     fn classification(&self)->InteractiveJobClassification{InteractiveJobClassification::Migrated}
     fn execution_contract(&self)->ToolExecutionContract{raster_layer_bake_contract()}
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes:RASTER_RETAINED_RAW_BYTES,checkpoint_resume:false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes:RASTER_RETAINED_RAW_BYTES,checkpoint_resume:false);
 }
 impl ArtifactOwnedToolJobFactory for RasterLayerBakeJobFactory {
     type Owner=EditorApp<RasterPlayApp>;

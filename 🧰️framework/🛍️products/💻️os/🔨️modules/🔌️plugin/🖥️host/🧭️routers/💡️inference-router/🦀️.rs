@@ -107,7 +107,7 @@ pub(super) struct InferenceRouteResult {
     pub(super) cancellation_id: String,
     pub(super) previous_state: Option<Vec<u8>>,
     pub(super) requested_cache_mode: InferenceRouteCacheMode,
-    pub(super) canonical_payload: Vec<u8>,
+    pub(super) canonical_payload: Option<Vec<u8>>,
     pub(super) dependencies: Vec<(String, Vec<u8>)>,
     pub(super) complete: bool,
     pub(super) actual_cache_mode: InferenceRouteCacheMode,
@@ -370,8 +370,6 @@ pub(super) async fn validate_inference_echo(request: &InferenceRouteRequest, res
         || result.artifact_kind != request.artifact_kind
         || result.artifact_schema != request.artifact_schema
         || result.artifact_schema_version != request.artifact_schema_version
-        || result.artifact_schema != request.artifact_schema
-        || result.artifact_schema_version != request.artifact_schema_version
         || result.inference_schema != request.inference_schema
         || result.inference_schema_version != request.inference_schema_version
         || result.algorithm_version != request.algorithm_version
@@ -389,6 +387,9 @@ pub(super) async fn validate_inference_echo(request: &InferenceRouteRequest, res
         || result.actual_cache_mode != request.requested_cache_mode
     {
         return Err(PluginHostError::Plugin("guest inference result did not exactly echo its request metadata".into()));
+    }
+    if result.complete && result.canonical_payload.is_none() {
+        return Err(PluginHostError::Plugin("complete guest inference result has no canonical payload".into()));
     }
     Ok(())
 }

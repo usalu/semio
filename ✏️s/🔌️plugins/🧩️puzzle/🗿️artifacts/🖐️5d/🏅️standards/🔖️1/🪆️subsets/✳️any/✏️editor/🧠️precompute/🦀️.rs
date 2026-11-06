@@ -116,24 +116,25 @@ pub fn puzzle3d_kind_catalogs(document: &Puzzle5dDocument, authored: Option<crat
     let mut grip_kinds = std::collections::BTreeSet::new();
     for part in &document.parts {
         grip_kinds.extend(part.grips.iter().map(engine_grip_kind).filter(|kind| !kind.is_empty()));
-        if !kinds.insert(part.part_kind.clone()) {
+        let kind = part.part_kind.as_deref().unwrap_or_default();
+        if !kinds.insert(kind.to_string()) {
             continue;
         }
         catalogs.objects.push(Puzzle3dCatalogObjectKind {
-            id: part.part_kind.clone(),
-            name: part.part_kind.clone(),
-            label: part.part_kind.clone(),
+            id: kind.to_string(),
+            name: kind.to_string(),
+            label: kind.to_string(),
             description: String::new(),
             icon: String::new(),
             image: String::new(),
             unit: String::new(),
             is_abstract: false,
             base_kinds: Vec::new(),
-            representations: resolve_part_mesh_url(part, document.kind_catalogs.as_ref()).map(|url| Puzzle3dRepresentation { id: format!("{}:rep0", part.part_kind), name: "default".into(), url, mime: String::new(), tags: Vec::new(), lod: None, description: String::new() }).into_iter().collect(),
+            representations: resolve_part_mesh_url(part, document.kind_catalogs.as_ref()).map(|url| Puzzle3dRepresentation { id: format!("{kind}:rep0"), name: "default".into(), url, mime: String::new(), tags: Vec::new(), lod: None, description: String::new() }).into_iter().collect(),
             vortices: part
                 .grips
                 .iter()
-                .map(|grip| Puzzle3dCatalogVortexTemplate { id: grip.id.clone(), name: grip.id.clone(), label: grip.id.clone(), description: String::new(), icon: String::new(), vortex_kind: Some(engine_grip_kind(grip)).filter(|kind| !kind.is_empty()), point: grip.grip_3d.position, direction: grip.grip_3d.direction.unwrap_or([0.0, 0.0, -1.0]), t: None, mandatory: None, radius: (grip.grip_3d.radius > 0.0).then_some(grip.grip_3d.radius) })
+                .map(|grip| Puzzle3dCatalogVortexTemplate { id: grip.id.clone(), name: grip.id.clone(), label: grip.id.clone(), description: String::new(), icon: String::new(), vortex_kind: Some(engine_grip_kind(grip)).filter(|kind| !kind.is_empty()), point: grip.grip_3d.position, direction: grip.grip_3d.direction.unwrap_or([0.0, 0.0, -1.0]), t: None, mandatory: None, radius: grip.grip_3d.radius.filter(|radius| *radius > 0.0) })
                 .collect(),
             attributes: Vec::new(),
             authors: Vec::new(),
@@ -174,7 +175,7 @@ pub fn puzzle3d_object(part: &Puzzle5dPart, kind_catalogs: Option<&semio_framewo
     Puzzle3dObject {
         id: part.id.clone(),
         label: None,
-        object_kind: Some(part.part_kind.clone()),
+        object_kind: part.part_kind.clone(),
         anchor: Default::default(),
         origin: part.part_3d.origin,
         orientation: part.part_3d.orientation,
@@ -183,7 +184,7 @@ pub fn puzzle3d_object(part: &Puzzle5dPart, kind_catalogs: Option<&semio_framewo
         vortices: part
             .grips
             .iter()
-            .map(|grip| Puzzle3dVortex { id: grip.id.clone(), vortex_kind: Some(engine_grip_kind(grip)), label: None, position: grip.grip_3d.position, direction: grip.grip_3d.direction, radius: (grip.grip_3d.radius > 0.0).then_some(grip.grip_3d.radius), hidden: false, locked: false })
+            .map(|grip| Puzzle3dVortex { id: grip.id.clone(), vortex_kind: Some(engine_grip_kind(grip)), label: None, position: grip.grip_3d.position, direction: grip.grip_3d.direction, radius: grip.grip_3d.radius.filter(|radius| *radius > 0.0), hidden: false, locked: false })
             .collect(),
         hidden: false,
         locked: false,
@@ -266,14 +267,15 @@ impl Puzzle5dPlannerBoard {
 
     fn push(&mut self, part: &Puzzle5dPart) {
         let index = self.parts.len();
-        let radius = if part.part_2d.radius > 0.0 { part.part_2d.radius } else { PUZZLE5D_DEFAULT_PART_RADIUS };
+        let radius = part.part_2d.radius.filter(|radius| *radius > 0.0).unwrap_or(PUZZLE5D_DEFAULT_PART_RADIUS);
         let grips: Vec<(String, f64, [f64; 3])> = part.grips.iter().map(|grip| (puzzle5d_grip_full_id(&part.id, &grip.id), grip.grip_2d.angle, world_grip_position(part, grip))).collect();
         for (grip_index, (full_id, angle, world)) in grips.iter().enumerate() {
             self.grips.insert(full_id.clone(), (index, *angle));
             self.grid.insert(*world, (index as u32, grip_index as u32));
         }
-        self.kinds.entry(part.part_kind.clone()).or_insert(index);
-        self.parts.push(Puzzle5dPlannerBoardPart { part_kind: part.part_kind.clone(), center: [part.part_2d.x, part.part_2d.y], radius, grips, templates: part.grips.iter().map(|grip| grip.grip_2d.clone()).collect() });
+        let kind = part.part_kind.clone().unwrap_or_default();
+        self.kinds.entry(kind.clone()).or_insert(index);
+        self.parts.push(Puzzle5dPlannerBoardPart { part_kind: kind, center: [part.part_2d.x, part.part_2d.y], radius, grips, templates: part.grips.iter().map(|grip| grip.grip_2d.clone()).collect() });
     }
 
     /// 🪚️ Keeps the committed parts and the first `placements` provisional ones.
@@ -333,9 +335,9 @@ impl Puzzle5dPlannerBoard {
             .enumerate()
             .map(|(index, vortex)| Puzzle5dGrip {
                 id: vortex.id.clone(),
-                grip_kind: vortex.vortex_kind.clone().unwrap_or_else(|| "grip".into()),
+                grip_kind: Some(vortex.vortex_kind.clone().unwrap_or_else(|| "grip".into())),
                 grip_2d: templates.get(index).cloned().unwrap_or_default(),
-                grip_3d: Puzzle5dGrip3d { position: vortex.position, direction: vortex.direction, radius: vortex.radius.unwrap_or(0.36), label: vortex.label.clone() },
+                grip_3d: Puzzle5dGrip3d { position: vortex.position, direction: vortex.direction, radius: Some(vortex.radius.unwrap_or(0.36)), label: vortex.label.clone() },
             })
             .collect();
         let own = |grip: &str| grip.split_once(':').is_some_and(|(part, _)| part == object.id);
@@ -344,9 +346,9 @@ impl Puzzle5dPlannerBoard {
         let label = object.label.clone().filter(|label| !label.is_empty()).unwrap_or_else(|| self.next_label(&part_kind));
         let part = Puzzle5dPart {
             id: object.id.clone(),
-            part_kind: part_kind.clone(),
+            part_kind: Some(part_kind.clone()),
             anchor: Default::default(),
-            part_2d: Puzzle5dPart2d { x: center[0], y: center[1], shape: "circle".into(), radius: PUZZLE5D_DEFAULT_PART_RADIUS, width: None, height: None, text: part_kind, icon_kind: None, hidden: None, locked: None },
+            part_2d: Puzzle5dPart2d { x: center[0], y: center[1], shape: Some("circle".into()), radius: Some(PUZZLE5D_DEFAULT_PART_RADIUS), width: None, height: None, text: Some(part_kind), icon_kind: None, hidden: None, locked: None },
             part_3d: Puzzle5dPart3d {
                 origin: object.origin,
                 mesh_url: object.mesh_url.clone(),

@@ -1,0 +1,1 @@
+{"name":"cargo","arguments":{"command":["test","--manifest-path","🧰️framework/🔨️modules/🎠️kernel/📤️return/🔤️json/📦️packages/🦀️rust/Cargo.toml","-p","semio-framework-kernel-json","--lib"],"configuration":"prototype","store":"shared","parallelism":1,"language":"en","agent":"semio-mcp-output-native"}}

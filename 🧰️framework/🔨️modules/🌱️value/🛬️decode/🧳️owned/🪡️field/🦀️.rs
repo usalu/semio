@@ -1,6 +1,6 @@
+//! 🪡️ Original-bound field copying seals only the authored typed child and retains every partial owner for closure.
 use crate::OriginalReceivingPrimary;
 use crate::RetainedWorkOutcome;
-//! 🪡️ Original-bound field copying seals only the authored typed child and retains every partial owner for closure.
 use crate::{NativeDecodeControl,RetirementDemand,ValueError,ValueRefusalKind,shared_issuance::{SealedShared,SharedIssuer},retained_clone::{RetainedClone,RetainedCloneBinding,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,RetainedFieldCursor,RetainedCloneCursor,retained_clone_grant_admits}};
 use std::mem::ManuallyDrop;
 pub struct NativeIntrinsicSharedField<T:RetainedClone+Send+Sync+'static>{binding:Option<RetainedCloneBinding>,cursor:RetainedFieldCursor<T>,raw:ManuallyDrop<Option<T>>,output:ManuallyDrop<Option<SealedShared<T>>>,retirement:RetainedCloneClose,phase:u8,closing:bool}

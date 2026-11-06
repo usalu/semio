@@ -125,13 +125,7 @@ impl From<TableRowBuilder> for BuiltNode {
 }
 //#endregion 📊️Table
 
-//#region 🖼️Image
-/// 📍️ Typestate marker: [`ImageBuilder::alt`]/[`ImageBuilder::decorative`] not yet called. An
-/// `ImageBuilder<NoAlt>` has no `build()` at all — there is no inherent `build` on this state, and the
-/// blanket [`Buildable`] impl only applies to `T: Into<BuiltNode>`, which `ImageBuilder<NoAlt>` is not
-/// (only `ImageBuilder<HasAlt>` implements [`From`] into [`BuiltNode`]). Calling `.build()` on this
-/// state is therefore a COMPILE error (`E0599: no method named build`), never a runtime panic — see
-/// this module's own accessible-UI mandate in [`crate`]'s docs and the compile-fail example below.
+/// 📍️ Typestate marker: [`ImageBuilder::alt`]/[`ImageBuilder::decorative`] not yet called. An [Design notes](README.md#source-notes-128).
 pub struct NoAlt;
 
 /// 📌️ Typestate marker: [`ImageBuilder::alt`] or [`ImageBuilder::decorative`] was called, so the image
@@ -149,13 +143,7 @@ enum ImageAlt {
     Decorative,
 }
 
-/// 💿️ An image — `Component::Image`. Build with [`image`], which returns `ImageBuilder<NoAlt>`; call
-/// [`ImageBuilder::alt`] or [`ImageBuilder::decorative`] to obtain an `ImageBuilder<HasAlt>` before
-/// [`Buildable::try_build`] is even callable — CLAUDE.md's accessible-UI mandate
-/// makes an image's accessible name non-optional, and a **typestate**, not a runtime panic, is the
-/// cheapest place to hold that line: a plugin that forgets `.alt(..)`/`.decorative()` fails to compile,
-/// it never reaches a running actor to crash.
-///
+/// 💿️ An image — `Component::Image`. Build with [`image`], which returns `ImageBuilder<NoAlt>`; call [Design notes](README.md#source-notes-152).
 #[doc = concat!("```compile_fail\n", include_str!("../../🧪️tests/🚫️image-description-required/🦀️.rs"), "\n```\n\n")]
 #[doc = concat!("```\n", include_str!("../../🧪️tests/🖼️image-described/🦀️.rs"), "\n```")]
 pub struct ImageBuilder<State = NoAlt> {
@@ -229,12 +217,7 @@ impl HasBase for SurfaceBuilder {
     }
 }
 
-/// 👶️ A surface's children are NOT rendered chrome — a renderer draws `props` and nothing else. They
-/// are the surface's own out-of-doc payload carriers: `SurfaceDoc.bytes` is [`crate::UiFixedBytes`], a
-/// hard [`crate::UI_FIXED_BYTES`] ceiling that cannot page, so a scene whose payload scales with its
-/// document (a world of 10 000 instances, say) can only publish by leaving that payload OUTSIDE the
-/// doc, as retained text-leaf subtrees the reconciler pages and diffs per node like any other subtree.
-/// The layout stays [`crate::LayoutSpec::Leaf`] precisely because these children occupy no space.
+/// 👶️ A surface's children are NOT rendered chrome — a renderer draws `props` and nothing else. They [Design notes](README.md#source-notes-232).
 impl HasChildren for SurfaceBuilder {}
 
 impl From<SurfaceBuilder> for BuiltNode {

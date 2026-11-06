@@ -208,10 +208,10 @@ impl TypedCopy for UiValue {
             Self::Bool(value) => Self::Bool(*value),
             Self::Number(value) => Self::Number(*value),
             Self::List(_) | Self::Map(_) => {
-                let mut arena = match UI_VALUE_ARENA.try_lock() {
-                    Ok(arena) => arena,
-                    Err(std::sync::TryLockError::WouldBlock) => return Ok(Default::default()),
-                    Err(std::sync::TryLockError::Poisoned(_)) => return Err(error("typed copy value arena is poisoned")),
+                let mut arena = match ui_value_arena_registry().borrow() {
+                    Ok(Some(arena)) => arena,
+                    Ok(None) => return Ok(Default::default()),
+                    Err(_) => return Err(error("typed copy value arena is poisoned")),
                 };
                 arena.try_clone_value(self).ok_or_else(|| error("typed copy exact value alias admission failed"))?
             }
@@ -234,10 +234,10 @@ impl TypedCopy for UiMap {
         if work < size_of::<Self>() {
             return Ok(Default::default());
         }
-        let mut arena = match UI_VALUE_ARENA.try_lock() {
-            Ok(arena) => arena,
-            Err(std::sync::TryLockError::WouldBlock) => return Ok(Default::default()),
-            Err(std::sync::TryLockError::Poisoned(_)) => return Err(error("typed copy value arena is poisoned")),
+        let mut arena = match ui_value_arena_registry().borrow() {
+            Ok(Some(arena)) => arena,
+            Ok(None) => return Ok(Default::default()),
+            Err(_) => return Err(error("typed copy value arena is poisoned")),
         };
         *candidate = self.try_clone_in(&mut arena).ok_or_else(|| error("typed copy exact map alias admission failed"))?;
         Ok(UiComponentCopyProgress { complete: true, ..progress(size_of::<Self>()) })

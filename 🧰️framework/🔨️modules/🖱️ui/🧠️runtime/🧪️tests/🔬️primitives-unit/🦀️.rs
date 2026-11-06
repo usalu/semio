@@ -12,6 +12,7 @@ fn ui_map(entries: impl IntoIterator<Item = (String, ui_contract::UiValue)>) -> 
 //#region ⏭️ResumableCursor
 #[test]
 fn retained_map_page_advances_each_key_once_without_rewalking_prior_entries() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let _guard = testkit::registry_guard();
     let value = ui_contract::UiValue::Map(ui_map([("a".to_owned(), ui_contract::UiValue::Null), ("b".to_owned(), ui_contract::UiValue::Null), ("c".to_owned(), ui_contract::UiValue::Null)]));
     let mut cursor = SurfaceSemanticCensusCursor::default();

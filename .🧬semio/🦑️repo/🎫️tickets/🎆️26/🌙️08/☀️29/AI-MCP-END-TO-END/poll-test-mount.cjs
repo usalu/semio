@@ -1,0 +1,10 @@
+const fs = require('node:fs');
+const path = '🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🔁️persistent-local/🦀️.rs';
+const before = fs.readFileSync(path, 'utf8');
+const marker = '    pub fn return_json<T: Serialize>(value: &T) -> u64 {';
+if (before.split(marker).length !== 2) throw Error('test mount marker changed');
+const after = before.replace(marker, '    #[cfg(test)]\n    mod poll_limits_tests { include!("🧪️poll-limits/🦀️.rs"); }\n\n' + marker);
+const temporary = '.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/AI-MCP-END-TO-END/🗑️generated/poll-test-mount.tmp';
+fs.writeFileSync(temporary, after);
+if (fs.readFileSync(path, 'utf8') !== before) throw Error('shared schema changed');
+fs.renameSync(temporary, path);

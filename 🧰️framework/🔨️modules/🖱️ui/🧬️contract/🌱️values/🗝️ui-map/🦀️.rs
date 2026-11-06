@@ -155,14 +155,7 @@ impl UiMapBuilder {
         with_ui_value_arena(|arena| arena.search_map_key(handle, key).is_ok())
     }
 
-    /// 🗂️ Admits one entry at its SORTED position instead of requiring the caller to arrive in order.
-    ///
-    /// ⚖️ A `UiMap`'s wire form is a JSON object, and object key order carries no meaning: the wgpu
-    /// bridge hands the guest's document to `JSON.stringify`, and every ECMAScript engine emits
-    /// array-index-like keys first in numeric order and the remaining string keys after. Decoding
-    /// through [`Self::push`] therefore refused whole documents on the wgpu renderer while React's
-    /// reader — which sorts the object's keys itself — read the same bytes. One displaced page is
-    /// spliced into the arena-backed chain rather than buffered into a vector.
+    /// 🗂️ Admits one entry at its SORTED position instead of requiring the caller to arrive in order. [Design notes](README.md#source-notes-158).
     #[expect(clippy::result_large_err, reason = "Map admission preserves the original key allocation and value owner for retry when duplication or credits reject them.")]
     pub fn try_insert(&mut self, key: String, value: UiValue) -> Result<(), (String, UiValue)> {
         let Some(handle) = self.handle else { return Err((key, value)) };

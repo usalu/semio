@@ -2,7 +2,8 @@
 import { mkdtempSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { requireMcpBinary, spawnRawMcp, type RawMcpProcess } from "../../🟦️.ts";
+import { spawnRawMcp, type RawMcpProcess } from "../../🟦️.ts";
+import { requireMcpBinary } from "../../📦️binary/🟦️.ts";
 import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import Ajv from "ajv/dist/2020.js";
 import { CallToolResultSchema, ReadResourceResultSchema } from "@modelcontextprotocol/sdk/types.js";

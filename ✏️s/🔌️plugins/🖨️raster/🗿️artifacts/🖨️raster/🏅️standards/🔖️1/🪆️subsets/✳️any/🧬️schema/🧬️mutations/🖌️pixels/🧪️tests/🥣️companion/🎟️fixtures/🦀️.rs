@@ -1,5 +1,5 @@
 //! 🎟️ Pixel laws receive flat fixture rows through genuine original construction and retain every resulting root.
-use semio_framework_plugin::artifact_app_laws::OriginalWorkFixture;
+use semio_plugin::artifact_app_laws::OriginalWorkFixture;
 use semio_framework_value::{DslValue,FromValue,ToValue,retirement::RetireOwned};
 use semio_s_artifact_raster_raster_model::{RasterSelectionSpans,RasterSelectionSpan,snapshot::RasterSnapshot};
 use semio_s_artifact_raster_raster_mutations::RasterMutation;

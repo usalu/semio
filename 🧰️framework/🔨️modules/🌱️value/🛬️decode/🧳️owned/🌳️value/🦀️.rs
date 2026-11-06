@@ -1,6 +1,6 @@
+//! 🌳️ Native receiving projects genuine heterogeneous children without constructing an intermediate wire owner.
 use crate::OriginalReceivingPrimary;
 use crate::RetainedWorkOutcome;
-//! 🌳️ Native receiving projects genuine heterogeneous children without constructing an intermediate wire owner.
 use crate::{DslValue,Number,NativeDecodeControl,RetirementDemand,ValueError,ValueRefusalKind,retirement::RetireOwned,retained_clone::{RetainedCloneBinding,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,RetainedFieldCursor,RetainedCloneCursor,retained_clone_grant_admits}};
 use super::{NativeReceive,NativeReceiver};
 use std::mem::{ManuallyDrop,size_of};

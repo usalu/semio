@@ -46,8 +46,8 @@
           },
           "body": {
             "type": "array",
-            "minItems": 5,
-            "maxItems": 5,
+            "minItems": 4,
+            "maxItems": 4,
             "items": {
               "type": "integer",
               "minimum": 0,

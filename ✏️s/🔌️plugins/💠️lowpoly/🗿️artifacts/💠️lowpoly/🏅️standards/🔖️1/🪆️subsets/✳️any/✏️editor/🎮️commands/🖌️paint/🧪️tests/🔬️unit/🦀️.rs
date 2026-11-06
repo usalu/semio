@@ -102,10 +102,10 @@ async fn eyedropper_updates_paint_color_without_operations() {
     assert_eq!(committed_edits(&mut a).await, edits_before, "sampling a colour commits no document edit");
 }
 
-fn paint_context(transient: semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::session::LowpolyTransient) -> semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<semio_s_artifact_lowpoly_lowpoly_editor::LowpolyPlayApp>> {
-    semio_framework_plugin::app::ArtifactOwnedToolJobContext::new(7, None, [17; 32], 0, 0, semio_framework_plugin::app::ArtifactOwnedToolJobSnapshots {
-        children: std::sync::Arc::new(semio_framework_plugin::ChildContentView::EMPTY),
-        draft: std::sync::Arc::new(semio_framework_plugin::NoDraft::default()),
+fn paint_context(transient: semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::session::LowpolyTransient) -> semio_plugin::app::ArtifactOwnedToolJobContext<semio_plugin::EditorApp<semio_s_artifact_lowpoly_lowpoly_editor::LowpolyPlayApp>> {
+    semio_plugin::app::ArtifactOwnedToolJobContext::new(7, None, [17; 32], 0, 0, semio_plugin::app::ArtifactOwnedToolJobSnapshots {
+        children: std::sync::Arc::new(semio_plugin::ChildContentView::EMPTY),
+        draft: std::sync::Arc::new(semio_plugin::NoDraft::default()),
         transient: std::sync::Arc::new(transient),
         window_config: None,
         window_transient: None,
@@ -114,14 +114,14 @@ fn paint_context(transient: semio_s_artifact_lowpoly_lowpoly_view::editor::lowpo
 
 #[semio_framework_async_macros::async_test]
 async fn terminal_paint_phase_settles_after_switching_to_eyedropper() {
-    use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
+    use semio_plugin::retained_command::ArtifactCommandWorkStep;
     use semio_s_artifact_lowpoly_lowpoly_config::LowpolyConfig;
     use semio_s_artifact_lowpoly_lowpoly_editor::lowpoly_paint_step;
     use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::session::{LowpolyTransient, LowpolyTransientMutation};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/terminal.json")).unwrap();
     let snapshot = semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     let point = [(fixture["point"][0].as_f64().unwrap() as f32, fixture["point"][1].as_f64().unwrap() as f32)];
-    let operation = semio_framework_plugin::AppOperationContext { app_instance_id: 7, parent_document_id: "paint-terminal-test".into(), operation_id: 11, generation: 13, canonical_base_revision: [17; 32], retained: semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance, authoring_seed: "paint-terminal-test".into() };
+    let operation = semio_plugin::AppOperationContext { app_instance_id: 7, parent_document_id: "paint-terminal-test".into(), operation_id: 11, generation: 13, canonical_base_revision: [17; 32], retained: semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance, authoring_seed: "paint-terminal-test".into() };
     for case in fixture["cases"].as_array().unwrap() {
         let brush = LowpolyConfig { paint_utility: fixture["initialUtility"].as_str().unwrap().into(), ..Default::default() };
         let started = lowpoly_paint_step(Some("stream"), None, None, &point, true, &snapshot, &brush, &paint_context(LowpolyTransient::default()), &operation).unwrap();

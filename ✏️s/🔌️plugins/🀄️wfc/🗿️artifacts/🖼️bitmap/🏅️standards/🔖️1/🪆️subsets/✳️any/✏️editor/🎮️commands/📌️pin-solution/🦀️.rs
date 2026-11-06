@@ -72,12 +72,12 @@ pub fn solution_operations(snapshot: &BitmapSnapshot, payload: &PinSolution) -> 
 //#endregion 🧪️Tests
 
 /// 🪟️ Keeping a preview is an action of an addressed output pane.
-pub fn require_preview_window(view: Option<&semio_framework_plugin::ViewModel>, output_window_kind: &str) -> Result<(), Fault> {
-    let view = view.ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.output.window-required"), "wfc.bitmap.output.window-required"))?;
-    let id = view.window_id.as_deref().ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.output.window-required"), "wfc.bitmap.output.window-required"))?;
-    let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.window.stale"), "wfc.bitmap.window.stale"))?;
+pub fn require_preview_window(view: Option<&semio_plugin::ViewModel>, output_window_kind: &str) -> Result<(), Fault> {
+    let view = view.ok_or_else(|| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("wfc.bitmap.output.window-required"), "wfc.bitmap.output.window-required"))?;
+    let id = view.window_id.as_deref().ok_or_else(|| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("wfc.bitmap.output.window-required"), "wfc.bitmap.output.window-required"))?;
+    let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("wfc.bitmap.window.stale"), "wfc.bitmap.window.stale"))?;
     if kind != output_window_kind {
-        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.output.window-kind-required"), "wfc.bitmap.output.window-kind-required"));
+        return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("wfc.bitmap.output.window-kind-required"), "wfc.bitmap.output.window-kind-required"));
     }
     Ok(())
 }
@@ -85,13 +85,13 @@ pub fn require_preview_window(view: Option<&semio_framework_plugin::ViewModel>, 
 /// 🩺 Localized refusals shared by preview validation and the retained command route.
 pub fn preview_fault(reason: &str) -> Fault {
     let code = format!("wfc.bitmap.preview.{reason}");
-    Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code.clone()), code)
+    Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new(code.clone()), code)
 }
 
 /// 🧷️ Pins only a finished preview of this exact canonical source through the existing pin operations.
 pub fn preview_operations(snapshot: &BitmapSnapshot, transient: &crate::editor::bitmap::transient::BitmapTransient, revision: &[u8; 32]) -> Result<Vec<BitmapMutation>, Fault> {
     if transient.contradiction {
-        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.solution.contradiction"), "wfc.bitmap.solution.contradiction"));
+        return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("wfc.bitmap.solution.contradiction"), "wfc.bitmap.solution.contradiction"));
     }
     let pixels = preview_pixels(snapshot, transient, revision)?;
     solution_operations(snapshot, &PinSolution { pixels: pixels.to_string(), contradiction: false })
@@ -100,7 +100,7 @@ pub fn preview_operations(snapshot: &BitmapSnapshot, transient: &crate::editor::
 /// 🧮️ Quotes the full canonical pin loop to retained preflight before any pixel is materialized.
 pub fn pin_work_items(snapshot: &BitmapSnapshot) -> Option<usize> {
     pin_cells(snapshot)?;
-    semio_framework_plugin::retained_command::ArtifactRetainedWorkCapacity::for_invertible_items(1).rows_for_items(1)
+    semio_plugin::retained_command::ArtifactRetainedWorkCapacity::for_invertible_items(1).rows_for_items(1)
 }
 
 #[path = "🧵️cursor/🦀️.rs"]
@@ -126,7 +126,7 @@ pub fn revision_matches(source: &str, revision: &[u8; 32]) -> bool {
 
 /// 🖼️ Borrows the exact completed cache only while its source and extent are current.
 pub fn preview_pixels<'a>(snapshot: &BitmapSnapshot, transient: &'a crate::editor::bitmap::transient::BitmapTransient, revision: &[u8; 32]) -> Result<&'a str, Fault> {
-    if transient.contradiction { return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.solution.contradiction"), "wfc.bitmap.solution.contradiction")); }
+    if transient.contradiction { return Err(Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("wfc.bitmap.solution.contradiction"), "wfc.bitmap.solution.contradiction")); }
     let pixels = transient.output_pixels.as_deref().filter(|pixels| !pixels.is_empty()).ok_or_else(|| preview_fault("unavailable"))?;
     if transient.output_width != snapshot.output.width || transient.output_height != snapshot.output.height { return Err(preview_fault("extent")); }
     if !revision_matches(&transient.source_revision, revision) { return Err(preview_fault("stale")); }

@@ -3,14 +3,13 @@
 use super::*;
 
 //#region 🔀️PostTurnRelay
-/// ⛽️ Every cold relay turn stays inside the user-visible interactive slice. The guest job owns its
-/// persistent state; the host grants one `step-job` call per shared-pool closure.
+/// ⛽️ See `README.md`.
 pub const RELAY_JOB_BUDGET: JobBudget = JobBudget { fuel: semio_framework_job::USER_VISIBLE_LANE_FUEL, deadline_ms: (semio_framework_job::USER_VISIBLE_LANE_WALL_US / 1_000) as u32 };
 
-/// 🧮️ The logical work units one relay request may spend across its crossings.
+/// 🧮️ See `README.md`.
 pub(super) const RELAY_JOB_WORK_FUEL: u64 = 1 << 24;
 
-/// 🔁️ One retained-waker future polled once per finite shared-pool turn.
+/// 🔁️ See `README.md`.
 type GuestRelayFailureHandler = Box<dyn FnOnce(GuestRelayPoolFailure) + Send + 'static>;
 
 pub(super) struct GuestRelayPoolFuture {
@@ -199,12 +198,7 @@ impl GuestRelayCompletionSender {
     }
 }
 
-/// 🏃️ One relay request. Its first poll runs on the thread that owns the relay — the caller's own
-/// poll of the mounted future — so a crossing that completes inside that poll (every `step-job`
-/// that does not suspend) pays no pool queue and no hop back to the caller. A request that suspends
-/// (the instance gate is held, the guest yields, the step waits on the caller's cancel) is resumed by
-/// the pool exactly as before, so an abandoned or detached relay still finishes and releases the
-/// instance on its own.
+/// 🏃️ See `README.md`.
 pub(super) struct GuestRelayInlineRequest {
     pub(super) future: std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send + 'static>>,
     pub(super) failure: Option<GuestRelayFailureHandler>,
@@ -285,14 +279,12 @@ impl GuestRelayCompletionSlot {
         Self { value: Mutex::new(None), wake: AtomicBool::new(false), signal: Arc::new(GuestRelayDriveSignal { state: Mutex::new(GuestRelayDriveState::Idle), owner: Mutex::new(None), pool }) }
     }
 
-    /// 🎟️ Retains the request this slot answers; it owes its first poll to the owner.
+    /// 🎟️ See `README.md`.
     pub(crate) fn admit(&self, request: GuestRelayInlineRequest) {
         *self.signal.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = GuestRelayDriveState::Owed(request);
     }
 
-    /// 🏃️ Gives an owed request its first poll on the calling thread. A panic reaches the request's
-    /// own recovery exactly as the pool-hosted future's did, so the instance is restored or
-    /// quarantined and the owner still receives one completion.
+    /// 🏃️ See `README.md`.
     pub(crate) fn drive(&self) {
         let mut request = {
             let mut state = self.signal.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -330,8 +322,7 @@ impl GuestRelayCompletionSlot {
         }
     }
 
-    /// 🧺️ An owner that goes away before the first poll hands the request to the pool, so nothing
-    /// it would have admitted is lost.
+    /// 🧺️ See `README.md`.
     pub(super) fn abandon(&self) {
         let owed = {
             let mut state = self.signal.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);

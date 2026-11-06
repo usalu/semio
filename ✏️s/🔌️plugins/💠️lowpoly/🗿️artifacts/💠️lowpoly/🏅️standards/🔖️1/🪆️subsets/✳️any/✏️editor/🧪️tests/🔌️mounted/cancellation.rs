@@ -1,7 +1,7 @@
 //! 🧯️ The mounted host cancels one visible retained operation with exact authority and no document edit.
 use super::{context, mounted};
-use semio_framework_plugin::{PluginApp, artifact_app_laws};
-use semio_framework_plugin::app::TypedOperationResultLane;
+use semio_plugin::{PluginApp, artifact_app_laws};
+use semio_plugin::app::TypedOperationResultLane;
 use serde_json::Value;
 
 fn cancellation_binding(value: &Value, action: &str) -> Option<Value> {
@@ -28,7 +28,7 @@ fn cancellation_control<'a>(value: &'a Value, action: &str, args: &Value) -> Opt
 
 async fn tick(app: &mut context::LowpolyApp) {
     semio_framework_async::yield_once().await;
-    app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();
+    app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();
     app.0.advance_typed_operation_publication(&mut artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
 }
 
@@ -42,7 +42,7 @@ async fn visible_operation_cancel_rejects_stale_generation_and_preserves_documen
     let edits_before = context::committed_edits(&mut app).await;
     let meta = context::action_meta();
     let args = semio_framework_value::DslValue::from(&fixture["arguments"]);
-    artifact_app_laws::dispatch_fixture_action(&mut app.0, fixture["action"].as_str().unwrap(), Some(args), &meta, &mut artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
+    artifact_app_laws::dispatch_fixture_action(&mut app.0, fixture["action"].as_str().unwrap(), Some(args), &meta, &mut artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
     assert!(app.has_pending_typed_operations());
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(20);
     let binding = loop {
@@ -61,7 +61,7 @@ async fn visible_operation_cancel_rejects_stale_generation_and_preserves_documen
     let generation = u64::from_str_radix(exact["generation"].as_str().unwrap(), 16).unwrap();
     let mut stale = exact.clone();
     stale["generation"] = Value::String(format!("{:016x}", generation ^ u64::from_str_radix(fixture["staleGenerationXor"].as_str().unwrap(), 16).unwrap()));
-    let stale_rejected = artifact_app_laws::dispatch_fixture_action(&mut app.0, fixture["cancelAction"].as_str().unwrap(), Some(semio_framework_value::DslValue::from(&stale)), &meta, &mut artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.is_err();
+    let stale_rejected = artifact_app_laws::dispatch_fixture_action(&mut app.0, fixture["cancelAction"].as_str().unwrap(), Some(semio_framework_value::DslValue::from(&stale)), &meta, &mut artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.is_err();
     assert!(stale_rejected);
     let after_stale: Value = serde_json::from_str(&context::render(&mut app, fixture["body"].as_str().unwrap()).await).unwrap();
     let control = cancellation_control(&after_stale, fixture["cancelAction"].as_str().unwrap(), &exact).expect("stale rejection preserves the same live control");
@@ -69,7 +69,7 @@ async fn visible_operation_cancel_rejects_stale_generation_and_preserves_documen
     assert!(app.has_pending_typed_operations());
     assert_eq!(app.snapshot().unwrap(), before);
     assert_eq!(context::committed_edits(&mut app).await, edits_before);
-    artifact_app_laws::dispatch_fixture_action(&mut app.0, fixture["cancelAction"].as_str().unwrap(), Some(semio_framework_value::DslValue::from(&exact)), &meta, &mut artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
+    artifact_app_laws::dispatch_fixture_action(&mut app.0, fixture["cancelAction"].as_str().unwrap(), Some(semio_framework_value::DslValue::from(&exact)), &meta, &mut artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
     let mut terminal = false;
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(20);
     while app.has_pending_typed_operations() {

@@ -138,8 +138,8 @@ async fn folder_create_uses_owner_spr_schema_instead_of_requested_kind_alias() {
     assert_ne!(owner.schema, kinds[0].schema);
 }
 
-fn folder_declared_kinds(row: &serde_json::Value) -> Vec<semio_framework_os_mcp_routing::hub_relay::InstalledArtifactKind> {
-    row["declarations"].as_array().expect("declarations").iter().map(|value| semio_framework_os_mcp_routing::hub_relay::InstalledArtifactKind {
+fn folder_declared_kinds(row: &serde_json::Value) -> Vec<semio_os_mcp_routing::hub_relay::InstalledArtifactKind> {
+    row["declarations"].as_array().expect("declarations").iter().map(|value| semio_os_mcp_routing::hub_relay::InstalledArtifactKind {
         schema: value[0].as_str().unwrap().into(), plugin_id: value[1].as_str().unwrap().into(), app_id: value[2].as_str().unwrap().into(), media_out_ports: Vec::new(), export_formats: Vec::new(),
     }).collect()
 }

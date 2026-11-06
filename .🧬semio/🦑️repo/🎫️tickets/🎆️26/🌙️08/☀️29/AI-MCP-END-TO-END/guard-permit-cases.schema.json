@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "table",
+      "expectedTable",
+      "token",
+      "expectedToken",
+      "pointer",
+      "expectedPointer",
+      "held",
+      "redeemed",
+      "expected",
+      "heldItems",
+      "heldCopy"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "table": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "expectedTable": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "token": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "expectedToken": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "pointer": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "expectedPointer": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "held": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "redeemed": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "expected": {
+        "type": "boolean"
+      },
+      "heldItems": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "heldCopy": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  }
+}

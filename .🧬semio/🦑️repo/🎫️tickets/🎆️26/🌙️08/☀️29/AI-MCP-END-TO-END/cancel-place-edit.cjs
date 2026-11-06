@@ -1,0 +1,6 @@
+const fs=require('fs'),f='🧰️framework/🔨️modules/🧵️job/⏱️context/📦️return/🎟️place/🦀️.rs',s=fs.readFileSync(f,'utf8'),x=' pub fn settle_return(';const body=` pub const fn cancel_preissue_demand()->(usize,usize,u64){(4,std::mem::size_of::<OriginalReturnPhase>()+std::mem::size_of::<usize>()+2,4)}
+ pub fn cancel_preissued_capture(&mut self,cx:&mut StepContext<'_>,destination:usize,copy_bytes:usize)->Result<bool,OriginalTurnFailure>{
+  self.qualify_sized(cx,destination,copy_bytes)?;let(items,bytes,work)=Self::cancel_preissue_demand();let p=crate::RetainedCloneProgress{copied_items:items,copied_bytes:bytes,..Default::default()};if !p.fits(cx.retained_grant())||cx.fuel_remaining()<work{return Ok(false)}cx.retained_progress().checked_add(p)?;
+  self.credit.as_mut().ok_or_else(||ValueError::invariant("credit absent"))?.cancel_preissued(self.witness.as_mut().ok_or_else(||ValueError::invariant("witness absent"))?)?;cx.consume_fuel(work);cx.consume_retained(p)?;self.qualify_sized(cx,destination,copy_bytes)?;Ok(true)
+ }
+`;if(s.split(x).length!==2)throw Error('anchor');let p=f+'.cancel-place';fs.writeFileSync(p,s.replace(x,body+x),{flag:'wx'});if(fs.readFileSync(f,'utf8')!==s){fs.unlinkSync(p);throw Error('concurrent change')}fs.renameSync(p,f);

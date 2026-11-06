@@ -1,0 +1,23 @@
+[
+  {
+    "name": "temporarily unavailable",
+    "demand": 128,
+    "turn": 0,
+    "total": 256,
+    "expected": "pending"
+  },
+  {
+    "name": "actual total cannot fund phase",
+    "demand": 128,
+    "turn": 0,
+    "total": 127,
+    "expected": "refuse"
+  },
+  {
+    "name": "funded cursor phase",
+    "demand": 128,
+    "turn": 128,
+    "total": 256,
+    "expected": "advance"
+  }
+]

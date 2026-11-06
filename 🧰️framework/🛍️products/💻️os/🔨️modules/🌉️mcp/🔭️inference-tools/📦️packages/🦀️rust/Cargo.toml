@@ -45,7 +45,7 @@ semio-os-mcp-dispatch = { path = "../../../🪝️action-dispatch/📦️package
 semio-os-mcp-workspace = { path = "../../../🪟️workspace-host/📦️packages/🦀️rust" }
 
 [dev-dependencies]
-semio-framework-os-mcp-workspace = { path = "../../../🪟️workspace-host/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-mcp-workspace = { path = "../../../🪟️workspace-host/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-test-fixtures = { path = "../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio-ui-locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }

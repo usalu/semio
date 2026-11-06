@@ -6,6 +6,7 @@ use std::mem::size_of;
 fn fixture()->serde_json::Value{serde_json::from_str(fixture_text!("../../../../../⚖️compare/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 #[test]
 fn retained_component_compare_frame_storage_matches_exact_bounded_domains() {
+    let _arena = UiArenaFixture::new();
     let fixture = fixture();
     let frame = &fixture["frame"];
     assert_eq!(UI_VALUE_NESTING_DEPTH, frame["logicalDepth"].as_u64().unwrap() as usize);

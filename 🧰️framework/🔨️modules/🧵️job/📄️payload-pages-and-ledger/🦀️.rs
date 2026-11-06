@@ -199,6 +199,8 @@ pub struct RetainedJobPayload {
 }
 
 impl RetainedJobPayload {
+    /// 🪪️ Identifies the original funded payload stream.
+    pub fn stream(&self)->JobPayloadStream{self.stream}
     pub fn empty(stream: JobPayloadStream) -> Self {
         Self { stream, pages: [const {MaybeUninit::uninit()}; JOB_PAYLOAD_OPERATION_PAGES], page_count: 0, length: 0, ledger: ManuallyDrop::new(None) }
     }

@@ -26,7 +26,19 @@
         "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
         "command": "repo ./📜️script.ts verify import-acceptance",
         "forwardAllArgs": true
-      }
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "native",
+            "scope": "test"
+          }
+        }
+      },
+      "dependsOn": [
+        "graph-generate"
+      ]
     },
     "build": {
       "executor": "repo:script",
@@ -197,6 +209,46 @@
       "options": {
         "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
         "command": "repo ./📜️script.ts verify original-fill-fixture native"
+      }
+    },
+    "verify-runtime-lifecycle": {
+      "executor": "repo:script",
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify runtime-lifecycle",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "native",
+            "scope": "test"
+          }
+        }
+      },
+      "dependsOn": [
+        "graph-generate"
+      ]
+    },
+    "test-browser-lifecycle": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
+          }
+        }
+      },
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify time-travel --scenario ✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🧊️3d-lifecycle/🟦️.ts --renderer react --locales en,de",
+        "forwardAllArgs": true
       }
     }
   }

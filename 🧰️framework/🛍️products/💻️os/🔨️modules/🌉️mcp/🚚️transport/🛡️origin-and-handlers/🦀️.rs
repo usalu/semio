@@ -88,13 +88,7 @@ fn json_rpc_error_response(status: StatusCode, id: JsonRpcId, code: i64, message
     (status, axum::Json(response)).into_response()
 }
 
-/// 📮️ `POST /mcp` — the single endpoint for every JSON-RPC request/notification, either era. Modern
-/// requests (a body carrying `_meta.protocolVersion`) additionally require the `MCP-Protocol-Version`
-/// header to be PRESENT and to MATCH the body value (`400 HeaderMismatch` otherwise, per the spec page
-/// fetched for this packet — see this file's module doc); legacy requests (`initialize`, or any
-/// already-negotiated legacy call) pass straight through to [`McpServer::dispatch`], exactly as stdio
-/// does. A JSON-RPC notification (absent `id`) is `202 Accepted` with no body; a request gets `200 OK`
-/// `application/json`.
+/// 📮️ `POST /mcp` — the single endpoint for every JSON-RPC request/notification, either era. Modern [Design notes](README.md#source-notes-91).
 #[cfg(test)]
 pub(crate) async fn handle_post(State(state): State<HttpState>, headers: HeaderMap, body: axum::body::Bytes) -> Response {
     if let Some(response) = reject_by_origin(&headers, &state) {

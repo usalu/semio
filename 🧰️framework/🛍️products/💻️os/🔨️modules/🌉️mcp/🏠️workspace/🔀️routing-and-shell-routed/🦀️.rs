@@ -150,14 +150,14 @@ fn routing_fault(error: GatewayError) -> Fault {
 /// → committed descriptor → editor app → real `PluginArtifactChannel`) for a bare `plugin_id`,
 /// differing only in where `repo_root`/`actor_label` come from.
 #[cfg(not(target_arch = "wasm32"))]
-pub fn open_plugin_artifact_channel(source: Option<&PluginComponentSource>, plugin_id: &str, app_id: Option<&str>, actor_label: &str, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy, operation_policy:semio_framework_os_mcp_port::channel_port::HostOperationPolicy) -> Result<PluginArtifactChannel, GatewayError> {
+pub fn open_plugin_artifact_channel(source: Option<&PluginComponentSource>, plugin_id: &str, app_id: Option<&str>, actor_label: &str, host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy, operation_policy:semio_os_mcp_port::channel_port::HostOperationPolicy) -> Result<PluginArtifactChannel, GatewayError> {
     open_plugin_artifact_channel_scoped(source, plugin_id, app_id, actor_label, &ActivationScope::detached(), host_driver_policy, operation_policy)
 }
 
 /// 🔌️ [`open_plugin_artifact_channel`] under a caller's progress and cancel. `app_id` names the app
 /// the guest instance hosts; `None` is the plugin's first editor app.
 #[cfg(not(target_arch = "wasm32"))]
-pub fn open_plugin_artifact_channel_scoped(source: Option<&PluginComponentSource>, plugin_id: &str, app_id: Option<&str>, actor_label: &str, scope: &ActivationScope, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy, operation_policy:semio_framework_os_mcp_port::channel_port::HostOperationPolicy) -> Result<PluginArtifactChannel, GatewayError> {
+pub fn open_plugin_artifact_channel_scoped(source: Option<&PluginComponentSource>, plugin_id: &str, app_id: Option<&str>, actor_label: &str, scope: &ActivationScope, host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy, operation_policy:semio_os_mcp_port::channel_port::HostOperationPolicy) -> Result<PluginArtifactChannel, GatewayError> {
     scope.enter(ActivationPhase::ResolvingComponent).map_err(activation_fault)?;
     let runtime = shared_plugin_runtime()?;
     let (compiled, descriptor) = match source.ok_or_else(|| {
@@ -278,8 +278,8 @@ fn selected_package_key(snapshot: &AuthorizedCatalogSnapshot) -> String {
 /// 🚦️ `crate::actions::ArtifactChannel` implementor that picks the plugin from the CALL instead of See [design notes](README.md).
 #[cfg(not(target_arch = "wasm32"))]
 pub struct RoutingArtifactChannel {
-    pub host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy,
-    pub operation_policy:semio_framework_os_mcp_port::channel_port::HostOperationPolicy,
+    pub host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy,
+    pub operation_policy:semio_os_mcp_port::channel_port::HostOperationPolicy,
     pub catalog: Arc<WorkspaceCatalog>,
     pub components: Option<PluginComponentSource>,
     pub actor_label: String,
@@ -302,7 +302,7 @@ pub struct RoutingArtifactChannel {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl RoutingArtifactChannel {
-    pub fn new(catalog: Arc<WorkspaceCatalog>, components: Option<PluginComponentSource>, actor_label: String, plugin_artifacts: Arc<Mutex<HashMap<String, PluginArtifactBinding>>>, hub: Option<Arc<HubRemoteBinding>>, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy, operation_policy:semio_framework_os_mcp_port::channel_port::HostOperationPolicy) -> Self {
+    pub fn new(catalog: Arc<WorkspaceCatalog>, components: Option<PluginComponentSource>, actor_label: String, plugin_artifacts: Arc<Mutex<HashMap<String, PluginArtifactBinding>>>, hub: Option<Arc<HubRemoteBinding>>, host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy, operation_policy:semio_os_mcp_port::channel_port::HostOperationPolicy) -> Self {
         Self { catalog, components, actor_label, host_driver_policy, operation_policy, channels: Mutex::new(HashMap::new()), default_apps: Mutex::new(HashMap::new()), plugin_artifacts, hub, selected: Mutex::new(HashMap::new()), folder: None, seeded: Mutex::new(HashMap::new()) }
     }
 
@@ -604,7 +604,7 @@ impl ArtifactChannel for RoutingArtifactChannel {
                 if let Err(fault) = self.persist_folder_guest(instance, &artifact_id, channel) {
                     return match frames {
                         Ok(frames) if frames.iter().any(|frame| matches!(frame, AppFrame::TransactionCommitted { .. })) => Ok(frames.into_iter().map(|frame| match frame {
-                            AppFrame::TransactionCommitted { txn_id, edit_id, output, .. } => AppFrame::TransactionCommitted { txn_id, edit_id, output, relay: Some(semio_framework_os_mcp_port::channel_port::HubRelayOutcome { acknowledged: false, detail: fault.message.clone(), refused: Some(fault.code.clone()) }) },
+                            AppFrame::TransactionCommitted { txn_id, edit_id, output, .. } => AppFrame::TransactionCommitted { txn_id, edit_id, output, relay: Some(semio_os_mcp_port::channel_port::HubRelayOutcome { acknowledged: false, detail: fault.message.clone(), refused: Some(fault.code.clone()) }) },
                             other => other,
                         }).collect()),
                         _ => Err(fault),
@@ -671,14 +671,7 @@ impl ArtifactChannel for RoutingArtifactChannel {
 
 //#endregion 🔖️Routing
 
-// 🔀️ dedyn-fw-os-misc, O1/R11: closes `crate::actions::ArtifactChannel`'s implementor set
-// (`UnboundArtifactChannel` in `🔀️dispatch`, `PluginArtifactChannel`/`RoutingArtifactChannel` above)
-// — defined here (not in `🔀️dispatch`, where `ActionAdapter` actually stores it) because this is the
-// one module every implementor is jointly nameable from; `🔀️dispatch` imports `ArtifactChannels`
-// back in. Replaces `Box<dyn ArtifactChannel>`. The enum is spelled twice under complementary
-// `cfg`s because `dyn_enum_close!` carries no per-variant attributes: the scripted
-// `MockArtifactChannel` exists ONLY in a test build, so no production path can reach it
-// (`📓️g7-mcp-agent-and-collaboration-audit.md` §6 P0.3).
+// 🔀️ dedyn-fw-os-misc, O1/R11: closes `crate::actions::ArtifactChannel`'s implementor set [Design notes](README.md#source-notes-674).
 #[cfg(not(any(test, feature = "testkit")))]
 dyn_enum_close! {
     pub enum ArtifactChannels: ArtifactChannel {

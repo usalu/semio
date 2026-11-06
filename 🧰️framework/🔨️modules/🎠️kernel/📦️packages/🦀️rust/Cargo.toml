@@ -21,6 +21,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-value-native-owned = { path = "../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-manifest-address = { path = "../../../🛂️manifest/🧭️address/📦️packages/🦀️rust" }
 semio-framework-kernel-history = { path = "../../📜️history/📦️packages/🦀️rust" }
 semio-framework-kernel-identity = { path = "../../🪪️identity/📦️packages/🦀️rust" }
@@ -39,7 +40,6 @@ serde = { workspace = true }
 semio-ui-declaration = { path = "../../../🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 
 [dev-dependencies]
-semio-framework-value-native-owned = { path = "../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 base64 = "0.22.1"
 semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }

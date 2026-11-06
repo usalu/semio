@@ -1,0 +1,10 @@
+const fs = require('node:fs');
+const path = '🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️guest-contract/📦️packages/🦀️rust/Cargo.toml';
+const before = fs.readFileSync(path, 'utf8');
+const old = 'semio-framework-ui-contract = { workspace = true }';
+if (before.split(old).length !== 2) throw Error('expected one old UI dependency');
+const after = before.replace(old, 'semio-ui-contract = { path = "../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }');
+const temp = '.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/AI-MCP-END-TO-END/🗑️generated/guest-ui-dependency.tmp';
+fs.writeFileSync(temp, after);
+if (fs.readFileSync(path, 'utf8') !== before) throw Error('shared manifest changed');
+fs.renameSync(temp, path);

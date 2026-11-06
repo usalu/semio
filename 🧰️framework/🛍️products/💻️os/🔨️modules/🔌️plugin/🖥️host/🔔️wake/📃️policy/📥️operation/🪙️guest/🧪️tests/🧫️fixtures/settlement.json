@@ -1,0 +1,47 @@
+[
+  {
+    "serial": 1,
+    "epoch": 3,
+    "items": 1,
+    "copy": 2,
+    "work": 4,
+    "producer": 7,
+    "accepted": true
+  },
+  {
+    "serial": 1,
+    "epoch": 4,
+    "items": 1,
+    "copy": 2,
+    "work": 4,
+    "producer": 7,
+    "accepted": false
+  },
+  {
+    "serial": 1,
+    "epoch": 3,
+    "items": 1,
+    "copy": 2,
+    "work": 4,
+    "producer": 8,
+    "accepted": false
+  },
+  {
+    "serial": 1,
+    "epoch": 3,
+    "items": 1,
+    "copy": 3,
+    "work": 4,
+    "producer": 7,
+    "accepted": false
+  },
+  {
+    "serial": 2,
+    "epoch": 3,
+    "items": 1,
+    "copy": 2,
+    "work": 4,
+    "producer": 7,
+    "accepted": false
+  }
+]

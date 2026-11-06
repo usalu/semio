@@ -8,7 +8,8 @@
     "generation",
     "maximumPayloadBytes",
     "cases",
-    "version"
+    "version",
+    "startCases"
   ],
   "properties": {
     "job": {
@@ -74,7 +75,13 @@
                     "failure-chunk",
                     "failure-chunk-acknowledged",
                     "failure-output-closed",
-                    "failure-acknowledged"
+                    "failure-acknowledged",
+                    "close-jobs-pending",
+                    "close-jobs-closed",
+                    "close-output-pending",
+                    "close-output-closed",
+                    "chunk-ack-pending",
+                    "failure-chunk-ack-pending"
                   ]
                 },
                 "next": {
@@ -94,7 +101,9 @@
                     "read-failure",
                     "borrow-failure-chunk",
                     "acknowledge-failure-chunk",
-                    "acknowledge-failure"
+                    "acknowledge-failure",
+                    "close-jobs",
+                    "close-actor-output"
                   ]
                 },
                 "offset": {
@@ -113,6 +122,38 @@
     },
     "version": {
       "const": 26
+    },
+    "startCases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "admitted",
+          "returnedSource",
+          "refusal",
+          "next"
+        ],
+        "properties": {
+          "admitted": {
+            "type": "boolean"
+          },
+          "returnedSource": {
+            "type": "boolean"
+          },
+          "refusal": {
+            "type": "boolean"
+          },
+          "next": {
+            "enum": [
+              "start",
+              "step",
+              "publish-failure",
+              "refused"
+            ]
+          }
+        }
+      }
     }
   }
 }

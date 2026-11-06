@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_plugin::artifact_app_laws::OriginalWorkFixture;
+use semio_plugin::artifact_app_laws::OriginalWorkFixture;
 use semio_framework_job::{admit_original_construction,OriginalConstructionDemand,receive_original_retained_work};
 
 fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:4096,maximum_release_bytes:4096,maximum_depth:128}}

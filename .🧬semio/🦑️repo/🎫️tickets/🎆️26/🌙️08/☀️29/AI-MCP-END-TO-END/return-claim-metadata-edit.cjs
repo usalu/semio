@@ -1,0 +1,4 @@
+const fs=require('fs'),path='🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/🎟️source/🦀️.rs';const before=fs.readFileSync(path,'utf8');
+const old='pub fn original_return_claim_copy_bytes()->usize{std::mem::size_of::<OriginalReturnEscrowRow>()+std::mem::size_of::<OriginalReturnClaimCredit>()}';
+const value='pub fn original_return_claim_copy_bytes()->usize{std::mem::size_of::<OriginalReturnEscrowRow>()+std::mem::size_of::<Option<OriginalReturnClaimCredit>>()+2*std::mem::size_of::<u64>()+4*std::mem::size_of::<u8>()+std::mem::size_of::<usize>()}';
+if(before.split(old).length!==2)throw Error('unexpected claim quote');const tmp=path+'.guest-claim-quote';fs.writeFileSync(tmp,before.replace(old,value),{flag:'wx'});if(fs.readFileSync(path,'utf8')!==before){fs.unlinkSync(tmp);throw Error('concurrent change')}fs.renameSync(tmp,path);

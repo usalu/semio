@@ -39,13 +39,7 @@ pub fn action_input_arguments(input: &serde_json::Value) -> Result<std::collecti
 
 //#region 🔖️Port
 
-/// 📦️ One op payload set, split by store lane — matches `📓️luna-channel-audit.md` §4's recommended
-/// `TransactionPrepare.prepared_ops` shape (`Vec<Vec<u8>>`, one element per complete op payload,
-/// never a single stream). `Emit` returns this from `PureCommand`; `TransactionPrepare` sends the
-/// SAME bytes back unmodified — this adapter never decodes an individual op's contents.
-/// `children` is the composing guest's owned-child share of the same gesture (`AppFrame::Emit.child_ops`, the guest's
-/// `ChildEmit` wire pack) — carried from `Emit` to `TransactionPrepare` byte for byte, never decoded here; empty when the
-/// gesture touches no owned child. The shell route's deferred plan never produces it.
+/// 📦️ One op payload set, split by store lane — matches `📓️luna-channel-audit.md` §4's recommended [Design notes](README.md#source-notes-42).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 pub struct PreparedOps {
     pub document: Vec<Vec<u8>>,
@@ -83,13 +77,7 @@ pub enum MutationOrigin {
     Agent { principal: String, invocation_id: String },
 }
 
-/// 📤️ Commands this adapter sends — a deliberate, minimal subset of the real channel's `AppCommand`
-/// (`📓️luna-channel-audit.md` §9: every variant here survives channel v12). No `seq`/batching: this
-/// port's contract is ONE command per [`ArtifactChannel::exchange`] call, always exactly one reply
-/// frame — simpler to implement and test than the real channel's batched duplex; P7's real
-/// implementation is responsible for wrapping each call in a one-element batch (or its own
-/// seq/in_reply_to bookkeeping) against the real channel underneath.
-/// 🎯️ Closed caller selectors resolved against live channel ownership.
+/// 📤️ Commands this adapter sends — a deliberate, minimal subset of the real channel's `AppCommand` [Design notes](README.md#source-notes-86).
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ActionTarget {
@@ -121,15 +109,7 @@ pub enum AppCommand {
     ReadArtifact,
 }
 
-/// 💡️ One plugin-declared inference execution — the `Infer` command's whole payload, kept as its own
-/// struct so the variant stays readable and so a caller that already resolved a declared inference
-/// row (`crate::inference::DeclaredInference`) can build it field-for-field. `plugin_id` is the
-/// plugin whose guest actually owns the route (the row's `contributor`, which equals `owner` for an
-/// owner-authored inference): `RoutingArtifactChannel` reads it directly rather than decoding a
-/// plugin out of `instance`, because an inference carries no capability id. Every remaining field is
-/// exactly what `semio_plugin_host::ArtifactInferenceRouter::infer`'s own request wire
-/// carries — this port never invents one of its own.
-/// 🧹️ Explicit server-configured cleanup data for one funded native operation.
+/// 💡️ One plugin-declared inference execution — the `Infer` command's whole payload, kept as its own [Design notes](README.md#source-notes-124).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct HostOperationReserve {
@@ -147,7 +127,7 @@ pub struct HostOperationTransit{pub retained:semio_framework_value::RetainedClon
 /// 🏗️ Guest allocator and protocol work consume a separate explicit infrastructure grant.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
-pub struct HostOperationInfrastructure{pub retained:semio_framework_value::RetainedCloneGrant,pub work_fuel:u64}
+pub struct HostOperationInfrastructure{pub retained:semio_framework_value::RetainedCloneGrant,pub work_fuel:u64,pub maximum_cleanup_microseconds:u64}
 
 /// 🎚️ A configured server may issue fresh finite requests only in its explicitly declared scope.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -171,12 +151,7 @@ pub struct InferCommand {
     pub work_units: u64,
     pub maximum_elapsed_milliseconds: u64,
     pub canonical_payload: Vec<u8>,
-    /// 🔗️ The artifact this inference is being run ON, and its canonical pair. An inference over an
-    /// artifact is not expressible as a hand-typed payload — nobody types 4 096 bitmap cells into a
-    /// tool call — so the caller names an artifact and this command carries the document the
-    /// guest reads its own snapshot out of. Empty for an inference whose published contract
-    /// declares no artifact binding (`semio_framework::InferenceArtifactBinding`), which is the
-    /// only case where a bare `canonical_payload` is the whole request.
+    /// 🔗️ The artifact this inference is being run ON, and its canonical pair. An inference over an [Design notes](README.md#source-notes-174).
     pub artifact_id: String,
     pub artifact_document: Option<ArtifactDocumentBinding>,
     pub cancel: InferenceCancel,
@@ -207,12 +182,7 @@ impl PartialEq for InferenceCancel {
     }
 }
 
-/// 🧭️ One phase of activating a plugin session and reading its document — `SessionActivationPhaseV1`
-/// in `🏠️workspace/🧬️schema`. The session's component is resolved, read, content-hashed, loaded or
-/// compiled, its guest opened, a bound hub document loaded into it (the stepped archive load, whose
-/// polled `completed / total` is this phase's fraction), then its document is read. Every job that
-/// activates a session (`inference_run`'s artifact binding, `artifact_create`) reports these, and a
-/// session that already passed a phase skips it rather than reporting it again.
+/// 🧭️ One phase of activating a plugin session and reading its document — `SessionActivationPhaseV1` [Design notes](README.md#source-notes-210).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ActivationPhase {
     ResolvingComponent,
@@ -434,23 +404,7 @@ pub const AGENT_LANE_UNCARRIED_REMEDY: (&str, &str) = (
     "Diese Aktion läuft nur in der semio-Oberfläche; bitte deinen Menschen, sie dort auszuführen.",
 );
 
-/// 🧯️ `Fault.code` → `GatewayErrorCode` — `📋️master.md` §3.3's Fault code table, plus this crate's
-/// own `"budget.exceeded"` addition (`GatewayErrorCode::BudgetExceeded`, retryable) and W8's
-/// `"capability.not-found"`/`"plugin.unavailable"` (`🏠️workspace/🦀️.rs`'s `RoutingArtifactChannel`
-/// — a caller-supplied bad capability id vs. a plugin that genuinely cannot be reached right now).
-/// Three plugin answers are not gateway defects and say so: a verb whose interactive-job
-/// classification keeps it out of the agent lane (`interactive-job.not-ui-safe`, e.g.
-/// `BatchOnlyPendingRewrite`) is a non-retryable `PLUGIN_UNAVAILABLE`; a preview whose ops exceed the
-/// verb's declared output cap (`interactive-job.preview-output`) is `INPUT_INVALID`; a mutation the
-/// document's own state refuses (`transaction.member-rejected`, e.g. a target that is not there) is
-/// `PRECONDITION_FAILED`. A hub session's edit that could not reach the hub is refused by name: a spectator's is
-/// `PERMISSION_DENIED` ([`VIEWER_READ_ONLY_FAULT_CODE`]), one with no live hub document `PRECONDITION_FAILED`
-/// ([`HUB_EDIT_UNBOUND_FAULT_CODE`]), one the hub did not acknowledge a retryable `PLUGIN_UNAVAILABLE`
-/// ([`HUB_RELAY_UNACKNOWLEDGED_FAULT_CODE`]). A verb whose emit publishes a lane an agent transaction cannot carry
-/// ([`AGENT_LANE_UNCARRIED_FAULT_CODE`]) is a non-retryable `PLUGIN_UNAVAILABLE` whose `details` name the
-/// fault and tell the agent, in en and de, to hand the action to its human; a verb that changes nothing in the
-/// document's state ([`COMMAND_NO_EFFECT_FAULT_CODE`]) is a non-retryable `PRECONDITION_FAILED` with its own en + de
-/// remedy. An unrecognised code is `Internal` (never silently swallowed).
+/// 🧯️ `Fault.code` → `GatewayErrorCode` — `📋️master.md` §3.3's Fault code table, plus this crate's [Design notes](README.md#source-notes-437).
 pub fn map_fault(fault: &Fault) -> GatewayError {
     match fault.code.as_str() {
         VIEWER_READ_ONLY_FAULT_CODE => GatewayError::new(GatewayErrorCode::PermissionDenied, fault.message.clone())
@@ -479,11 +433,7 @@ pub fn map_fault(fault: &Fault) -> GatewayError {
     }
 }
 
-/// 🧮️ The input an action runs with: the caller's own values, plus the declared `default` of every argument the caller
-/// left out — the ONE effective-args rule the shells apply before dispatch (`manifest::effective_action_args`), because the
-/// guest SDK no longer fills defaults (an agent's `{}` for forms `addBlock` failed "missing field `kind`" though `kind`
-/// defaults to `text`). A key the caller sent is never replaced or dropped, declared or not, so the capability's schema
-/// still refuses an undeclared one.
+/// 🧮️ The input an action runs with: the caller's own values, plus the declared `default` of every argument the caller [Design notes](README.md#source-notes-482).
 pub fn declared_effective_input(capability: &CapabilityDefinition, input: serde_json::Value) -> serde_json::Value {
     let mut given = match input {
         serde_json::Value::Object(given) => given,
@@ -515,12 +465,7 @@ pub fn unacknowledged_relay_error(edit_id: &str, relay: &HubRelayOutcome) -> Gat
 
 //#region 🔖️UnboundArtifactChannel
 
-/// 🚫️ The channel a gateway with NO `--folder`/`--hub` binding runs on: every command answers the
-/// same typed, retryable `workspace.unbound` fault naming exactly which flag closes the gap, so a
-/// mutation-protocol call against an unbound session can never be mistaken for a real edit. It
-/// replaces the scripted [`MockArtifactChannel`] that used to occupy this slot in the live binary —
-/// a caller could not tell a mock commit from a real one from the result alone
-/// (`📓️g7-mcp-agent-and-collaboration-audit.md` §6 P0.3).
+/// 🚫️ The channel a gateway with NO `--folder`/`--hub` binding runs on: every command answers the [Design notes](README.md#source-notes-518).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct UnboundArtifactChannel;
 
@@ -579,15 +524,7 @@ impl MockInstanceState {
         RevisionStamp { artifact_id: self.artifact_id.clone(), head_edit_id: format!("edit-{}", self.head_edit_id), cursor: format!("gen-{}", self.generation) }
     }
 
-    /// 💡️ Scripted exactly like every other arm of this in-memory store: an inference on an
-    /// instance whose generation has moved past the request's is a real staleness rejection
-    /// (the same `validate_commit` rule the real router enforces); otherwise the request's own
-    /// canonical payload comes back as the result payload, so a test can assert the request
-    /// really travelled the port without this double ever claiming to have computed anything.
-    ///
-    /// 📤️🆕️ This double owns no guest, so it can neither run a media port nor mint a plugin's
-    /// genesis document. It says so with the SAME typed fault a real unreachable plugin uses,
-    /// never a synthesised export or an empty pack that a caller could mistake for real bytes.
+    /// 💡️ Scripted exactly like every other arm of this in-memory store: an inference on an [Design notes](README.md#source-notes-582).
     pub fn handle(&mut self, command: AppCommand) -> AppFrame {
         match command {
             AppCommand::ReadHistory => AppFrame::HistorySnapshot(self.revision()),
@@ -670,13 +607,7 @@ struct MockChannelState {
     pub log: Vec<(u32, AppCommand)>,
 }
 
-/// 🧪️ A fully-scripted in-memory artifact store — every generation/revision/prepared-transaction
-/// invariant is REAL (not stubbed): `TransactionCommit` genuinely checks the generation captured at
-/// `TransactionPrepare` time, a second `TransactionPrepare` on a still-pending instance genuinely
-/// returns `transaction.instance-busy`. `Clone` shares the SAME underlying state (`Arc<Mutex<..>>`) —
-/// a test keeps one handle for scripting/assertions while handing a clone to `ActionAdapter` (which
-/// takes ownership of a `Box<ArtifactChannels>` (was `Box<dyn ArtifactChannel>`, see the
-/// `dyn_enum_close!` note above the trait).
+/// 🧪️ A fully-scripted in-memory artifact store — every generation/revision/prepared-transaction [Design notes](README.md#source-notes-673).
 #[cfg(any(test, feature = "testkit"))]
 #[derive(Clone)]
 pub struct MockArtifactChannel {

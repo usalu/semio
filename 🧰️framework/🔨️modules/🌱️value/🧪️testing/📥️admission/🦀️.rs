@@ -18,6 +18,7 @@ pub fn receive<T,E:From<crate::ValueError>>(control:&mut crate::NativeDecodeCont
 
 pub struct Wallet{left:RetainedCloneGrant,work:u64}
 impl Wallet{
+ pub fn remaining(&self)->RetainedCloneGrant{self.left}
  pub fn work_loan(&self,maximum:u64)->WorkLoan<'_>{WorkLoan::new(&self.work,maximum)}
  pub fn from_profile(profile:&serde_json::Value)->Self{Self{left:RetainedCloneGrant{maximum_items:profile["items"].as_u64().unwrap().try_into().unwrap(),maximum_copy_bytes:profile["copyBytes"].as_u64().unwrap().try_into().unwrap(),maximum_capacity_bytes:profile["capacityBytes"].as_u64().unwrap().try_into().unwrap(),maximum_release_bytes:profile["releaseBytes"].as_u64().unwrap().try_into().unwrap(),maximum_depth:profile["depth"].as_u64().unwrap().try_into().unwrap()},work:profile["fuel"].as_u64().unwrap()}}
  pub fn loan(&self,items:usize,copy:usize)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:if self.work==0{0}else{self.left.maximum_items.min(items)},maximum_copy_bytes:self.left.maximum_copy_bytes.min(copy),..self.left}}

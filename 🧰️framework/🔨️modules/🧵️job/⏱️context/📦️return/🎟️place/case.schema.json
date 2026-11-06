@@ -54,7 +54,7 @@
       "const": 2
     },
     "boundSourceWork": {
-      "const": 1
+      "const": 0
     },
     "claimWork": {
       "const": 1
@@ -74,19 +74,19 @@
           "name": "returned",
           "recordReturn": true,
           "cancel": false,
-          "finalDebit": 4
+          "finalDebit": 3
         },
         {
           "name": "cancelled-return",
           "recordReturn": true,
           "cancel": true,
-          "finalDebit": 4
+          "finalDebit": 3
         },
         {
           "name": "cancelled-unused",
           "recordReturn": false,
           "cancel": true,
-          "finalDebit": 3
+          "finalDebit": 2
         }
       ]
     },

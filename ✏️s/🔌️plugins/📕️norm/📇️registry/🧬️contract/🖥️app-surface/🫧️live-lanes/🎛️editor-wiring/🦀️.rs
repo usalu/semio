@@ -510,7 +510,7 @@ pub fn live_check_focus_effects<A: NormLiveEditor>(document: &A::Snapshot, check
 }
 
 /// 🎹️ A check step publishes the same canonical interaction check identity as clicking its row.
-pub fn live_view_focus_effects<A: NormLiveEditor>(command: &A::Command, document: &A::Snapshot, transient: &A::Transient, interaction: &protocol::InteractionState, domain: &str) -> Vec<semio_framework_plugin::Effect>
+pub fn live_view_focus_effects<A: NormLiveEditor>(command: &A::Command, document: &A::Snapshot, transient: &A::Transient, interaction: &protocol::InteractionState, domain: &str) -> Vec<semio_plugin::Effect>
 where
     A::Transient: LaneTransient<Mutation = A::TransientMutation>,
 {

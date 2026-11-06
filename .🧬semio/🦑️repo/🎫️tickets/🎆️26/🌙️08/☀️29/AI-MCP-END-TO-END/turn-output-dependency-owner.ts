@@ -1,0 +1,7 @@
+import{readFileSync,writeFileSync,renameSync}from"node:fs";import{resolve,relative}from"node:path";
+const root="🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin",ticket=import.meta.dir;
+function edit(path:string,change:(s:string)=>string){const old=readFileSync(path,"utf8"),next=change(old);if(next===old)throw Error("unchanged "+path);if(readFileSync(path,"utf8")!==old)throw Error("concurrent "+path);const temp=ticket+"/🗑️generated/turn-output-owner.tmp";writeFileSync(temp,next);renameSync(temp,path)}
+edit(root+"/⚛️reactor/🎟️context/📦️packages/🦀️rust/Cargo.toml",s=>s.split(/\r?\n/).filter(line=>!/^semio-framework-(?:kernel-json|pack-json-source|trace)\s*=/.test(line)&&!/^semio-ui-contract-values\s*=/.test(line)).join("\n"));
+const pkg=root+"/🧬️guest-contract/📦️packages/🦀️rust",valuePath=relative(resolve(pkg),resolve("🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/📦️packages/🦀️rust")).replaceAll("\\","/");
+edit(pkg+"/Cargo.toml",s=>{for(const name of["semio-framework-kernel-json","semio-framework-pack-json-source"]){if(new RegExp("^"+name+"\\s*=","m").test(s))throw Error("dependency already exists "+name);s=s.replace("[dependencies]","[dependencies]\n"+name+" = { workspace = true }")}if(/^semio-ui-contract-values\s*=/m.test(s))throw Error("fixture dep already exists");return s.replace("[dev-dependencies]",'[dev-dependencies]\nsemio-ui-contract-values = { path = "'+valuePath+'", features = ["testkit"] }')});
+console.log("Moved turn-output runtime/test dependencies to actual guest-contract Source owner");

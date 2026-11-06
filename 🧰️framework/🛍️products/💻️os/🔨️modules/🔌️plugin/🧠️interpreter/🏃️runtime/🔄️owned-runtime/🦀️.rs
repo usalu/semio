@@ -31,9 +31,7 @@ impl OwnedRuntime {
         Ok(state)
     }
 
-    /// 🧊️ `owned`'s codec origin for one call ([`OwnedCodecOriginUse`]). While another call assembles it, this one waits,
-    /// relays that assembly's fuel through `progress` and observes `cancellation`; if that assembly ends without an origin,
-    /// this call assembles it.
+    /// 🧊️ Retains codec origin assembly and its reported fuel.
     pub(super) fn codec_origin(&self, owned: &OwnedCompiledGuest, budget: Budget, progress: &mut impl FnMut(u64, std::time::Duration), cancellation: Option<&GuestCallCancellation>) -> Result<OwnedCodecOriginUse, TurnFault> {
         let cell: &OwnedCodecOriginCell = &owned.codec_origin;
         let started = std::time::Instant::now();
@@ -98,8 +96,7 @@ impl OwnedRuntime {
         OwnedGuestInstance { original_job_clock:None, artifact: Arc::clone(&owned.artifact), actor:Some(origin.actor.clone()),original_core:std::mem::ManuallyDrop::new(None),original_source:std::mem::ManuallyDrop::new(None),original_startup_input:None,original_call:None,original_unit:None,original_host:None, pending: None, original_receipt: None, poisoned: false, diagnostics: origin.diagnostics.clone(), context: origin.context, next_resource: origin.next_resource, instance_id }
     }
 
-    /// 🧬️ A throwaway instance of `compiled` in its codec origin's state, for a caller that drives its own codec operation on
-    /// it (a retained SQLite snapshot call), with the fuel this call spent assembling the origin ([`Self::codec_origin`]).
+    /// 🧬️ Opens a temporary codec-origin instance.
     pub fn codec_instance(&self, compiled: &OwnedCompiledGuest, budget: Budget, progress: &mut impl FnMut(u64, std::time::Duration), cancellation: Option<&GuestCallCancellation>) -> Result<(OwnedGuestInstance, u64), TurnFault> {
         let used = self.codec_origin(compiled, budget, progress, cancellation)?;
         Ok((self.origin_instance(compiled, &used.origin), used.spent_fuel))
@@ -235,9 +232,7 @@ impl OwnedRuntime {
         self.codec_call_authored(compiled, OwnedOperation::ApplyOps, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops }, budget, progress, Some(cancellation), identity)
     }
 
-    /// 📜️ `codec.replay-envelopes` — the hub's Check In fold, with the same stall-bound fuel
-    /// observations as [`Self::codec_genesis_observed`]: a long ledger tail is the longest guest call
-    /// a Check In makes, so its fuel progress is what its stall bound watches.
+    /// 📜️ Replays envelopes under observed fuel and cancellation.
     pub async fn codec_replay_envelopes_observed(&self, compiled: &OwnedCompiledGuest, artifact_schema: &str, pack: &[u8], spr: &[u8], envelopes: &[u8], budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation) -> Result<GuestDocumentPair, TurnFault> {
         self.codec_call(compiled, OwnedOperation::ReplayEnvelopes, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops: envelopes }, budget, progress, Some(cancellation))
     }
@@ -254,7 +249,7 @@ impl OwnedRuntime {
     /// ♻️ Runs one closing step of the original actor context of `state`.
     pub fn close_context(&self,state:&mut OwnedGuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_context::OriginalActorCloseReply,TurnFault>{let call=self.actor_context_call(state,OwnedOperation::CloseActorContext,input,budget,identity)?;match call.kind{original_actor_context::OriginalActorFixedKind::Close{complete,blocked,refusal}=>Ok(semio_framework_actor::retained_context::OriginalActorCloseReply{input:call.input,spent:call.spent,work_units_spent:call.work_units_spent,complete,blocked,refusal}),_=>Err(TurnFault::ActorCall(call))}}
 
-    /// 🛰️ Drives one owned job export to its resident fixed receipt, reporting the instructions it spent even when it fails.
+    /// 🛰️ Drives a job export and reports its actual instruction spend.
     fn drive_job(&self,state:&mut OwnedGuestInstance,operation:OwnedOperation,json:Option<Vec<u8>>,arguments:Vec<Value>,fuel:u64,deadline_us:u64)->Result<(Vec<u8>,u64),OwnedJobFailure>{
         let began=match json{Some(bytes)=>begin_owned_operation(state,operation,Some(bytes)),None=>begin_owned_scalar_operation(state,operation,arguments)};
         if let Err(fault)=began{return Err(OwnedJobFailure{fault,submitted:false,spent:0})}
@@ -264,7 +259,7 @@ impl OwnedRuntime {
         }
     }
 
-    /// 🧾️ One owned job crossing: validates its actual execution authorization, drives the export and reads its fixed receipt.
+    /// 🧾️ Validates and executes one owned job crossing.
     fn job_call<T>(&self,state:&mut OwnedGuestInstance,operation:OwnedOperation,json:Option<Vec<u8>>,arguments:Vec<Value>,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget,source:Option<OriginalJobSource>,reply:impl FnOnce(OriginalOwnedJobCall,Option<OriginalJobSource>)->Result<T,TurnFault>)->OriginalGuestJobCall<T>{
         if let Err(error)=execution.validate_for(budget){return OriginalGuestJobCall::unsubmitted(execution,source,identity_turn_fault(error))}
         if state.original_job_clock.is_none(){state.original_job_clock=Some((budget.input.work.clock_binding,self.original_clock));}
@@ -296,7 +291,7 @@ impl OwnedRuntime {
         })
     }
 
-    /// 📦️ Reads one bounded output page: the page is borrowed from guest memory, copied, and handed back inside the same crossing.
+    /// 📦️ Borrows, copies and returns one bounded guest output page.
     pub fn read_actor_job_output(&self,state:&mut OwnedGuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobOutputReply>{
         if let Err(error)=execution.validate_for(budget){return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(error))}
         let Some(read_budget)=reserve_handback(budget)else{return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original output page read cannot fund its handback")))};

@@ -1,6 +1,6 @@
 //! 📥️ Public chunk staging and typed admission publish one complete mesh replacement.
 use super::context;
-use semio_framework_plugin::{PluginApp,artifact_app_laws};
+use semio_plugin::{PluginApp,artifact_app_laws};
 use semio_framework::kernel::{Effect,import_payload_chunks,import_chunk_arguments};
 use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use pack::snapshot::ArtifactPack;
@@ -17,7 +17,7 @@ async fn chunked_large_mesh_import_publishes_exactly_one_complete_load_document(
   assert!(payload.len()>16_384&&payload.len()<semio_s_artifact_lowpoly_lowpoly_commands::media::LOWPOLY_MESH_FILE_BYTES);
   let chunks=import_payload_chunks(&payload);assert!(chunks.len()>1);let mut app=context::app_with_registry().await;let before=app.snapshot().unwrap();let edits=context::committed_edits(&mut app).await;let mut effects=Vec::new();
   for chunk in &chunks{
-   artifact_app_laws::dispatch_fixture_action(&mut app.0,fixture["action"].as_str().unwrap(),Some(import_chunk_arguments(fixture["name"].as_str().unwrap(),chunk,None)),&context::action_meta(),&mut artifact_app_laws::fixture_identity(),app.1.cx(),semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
+   artifact_app_laws::dispatch_fixture_action(&mut app.0,fixture["action"].as_str().unwrap(),Some(import_chunk_arguments(fixture["name"].as_str().unwrap(),chunk,None)),&context::action_meta(),&mut artifact_app_laws::fixture_identity(),app.1.cx(),semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
    let published=collect(&mut app).await;if chunk.chunk+1<chunk.chunk_count{assert!(published.is_empty(),"partial input must not publish a replacement");}effects.extend(published);assert_eq!(app.snapshot().unwrap(),before);assert_eq!(context::committed_edits(&mut app).await,edits);
   }
   assert_eq!(effects.len(),fixture["expected"]["loadEffects"].as_u64().unwrap()as usize);let Effect::LoadDocument{pack,..}=&effects[0]else{panic!("expected one complete document load")};let loaded=LowpolySnapshot::decode_pack(pack).unwrap();assert_eq!(loaded.objects.len(),fixture["expected"]["objects"].as_u64().unwrap()as usize);let mesh=loaded.objects[0].mesh_state.as_ref().unwrap().clone().into_mesh().unwrap();assert_eq!(mesh.face_count(),fixture["expected"]["faces"].as_u64().unwrap()as usize);

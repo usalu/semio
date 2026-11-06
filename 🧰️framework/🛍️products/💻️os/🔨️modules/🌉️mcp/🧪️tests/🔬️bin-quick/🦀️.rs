@@ -91,7 +91,7 @@ fn parse_test_http_args(argv: &mut impl Iterator<Item = String>) -> Result<crate
 fn the_host_policy_is_explicit_and_matches_the_independent_json_decoder() {
     assert!(parse_stdio_args(&mut std::iter::empty()).unwrap_err().contains("--host-driver-policy is required"));
     assert!(parse_http_args(&mut std::iter::empty()).unwrap_err().contains("--host-driver-policy is required"));
-    let expected: semio_framework_plugin_host::GuestRelayDriverPolicy = serde_json::from_str(include_str!("../🧫️fixtures/host-driver-policy.json")).unwrap();
+    let expected: semio_plugin_host::GuestRelayDriverPolicy = serde_json::from_str(include_str!("../🧫️fixtures/host-driver-policy.json")).unwrap();
     let options = parse_test_stdio_args(&mut std::iter::empty()).unwrap();
     assert_eq!(options.host_driver_policy, expected);
     assert_eq!(parse_test_http_args(&mut std::iter::empty()).unwrap().host_driver_policy, expected);

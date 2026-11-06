@@ -9,7 +9,7 @@ fn final_tick_admission_controls_the_actual_completion_port() {
         for pending in [false, true] {
             let snapshot = BitmapSnapshot::reference_scene();
             let identity = ToolRunIdentity::new(semio_framework_tool_run::ToolRunId { app_instance_id: 1, run: 7 }, [7;32]);
-            let port = semio_framework_plugin::ToolRunJobPort::default();
+            let port = semio_plugin::ToolRunJobPort::default();
             let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), snapshot.seed);
             let mut job = BitmapFillRunJob::new(identity, port.clone(), snapshot, operation);
             let previous = payload_from_assignment(1, 1, &[(0, 1)], false, false);

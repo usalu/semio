@@ -165,11 +165,11 @@ fn a_catalogue_less_document_offers_the_kinds_it_already_names() {
         .enumerate()
         .map(|(index, kind)| crate::editor::puzzle5d::entities::Puzzle5dPart {
             id: format!("part-{index}"),
-            part_kind: (*kind).into(),
+            part_kind: Some((*kind).into()),
             anchor: Default::default(),
-            part_2d: crate::editor::puzzle5d::entities::Puzzle5dPart2d { radius: 12.0, ..Default::default() },
+            part_2d: crate::editor::puzzle5d::entities::Puzzle5dPart2d { radius: Some(12.0), ..Default::default() },
             part_3d: Default::default(),
-            grips: vec![crate::editor::puzzle5d::entities::Puzzle5dGrip { id: "g0".into(), grip_kind: "socket".into(), grip_2d: Default::default(), grip_3d: Default::default() }],
+            grips: vec![crate::editor::puzzle5d::entities::Puzzle5dGrip { id: "g0".into(), grip_kind: Some("socket".into()), grip_2d: Default::default(), grip_3d: Default::default() }],
         })
         .collect();
     assert!(document.kind_catalogs.is_none(), "this law measures the catalogue-less path");
@@ -195,7 +195,7 @@ fn an_authored_catalogue_slice_wins_over_the_inference() {
     let mut scene = scaled_scene(3);
     scene.document.parts = vec![crate::editor::puzzle5d::entities::Puzzle5dPart {
         id: "part-0".into(),
-        part_kind: "not-in-the-catalogue".into(),
+        part_kind: Some("not-in-the-catalogue".into()),
         anchor: Default::default(),
         part_2d: Default::default(),
         part_3d: Default::default(),

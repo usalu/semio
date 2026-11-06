@@ -1,0 +1,13 @@
+{
+  "value": {
+    "bytes": [
+      0,
+      13,
+      34,
+      255
+    ],
+    "text": "Source\nµ🙂"
+  },
+  "expected": "{\"bytes\":[0,13,34,255],\"text\":\"Source\\nµ🙂\"}",
+  "maximumSlices": 2000
+}

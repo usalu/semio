@@ -1,0 +1,7 @@
+# Surface Gate Recovery — 2026-11-05
+
+The retained surface-jpg-fresh-45038.json ends at 3971 seconds with a running heartbeat, after cargo workspace selection and resource-directory admission. It records no terminal outcome. The parent independently observed no remaining Remodel/JPEG native process subtree; therefore the selected JPEG tests have no recovered passing or failing result. The earlier JPEG attempt 50619 failed on Original resource loan deadline and cannot establish this later result.
+
+Read-only cargo-preparation inspection found a resource lease database and queue entries, not a test-result ledger; its only SQLite table is semio_resource_lease. Repository fleet reported the storage reader timed out; cache status remained at source capture. No test success may be inferred from either. Current capacity was occupied by other active work; no retry or server was launched. A coordinated fresh focused native gate remains required.
+
+Read-only JPEG facade and manifest audit: applicable s and stdio AGENTS were read. Facade routes editor/viewer windows, assembly and IO to the authoring owner, baseline schema to schema-2 and mutation leaves to mutations, consistent with the prior neutral fixture. No new concrete defect was identified. This is source review, not a compiler or runtime result. Parent directed holding fresh JPEG while the engine owner investigates shared Windows uv_spawn ENAMETOOLONG.

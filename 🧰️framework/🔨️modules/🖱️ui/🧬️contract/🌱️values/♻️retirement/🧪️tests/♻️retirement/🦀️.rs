@@ -59,6 +59,7 @@ fn close(owner: &mut UiValueRetirement, grant: usize) -> (usize, usize) {
 
 #[test]
 fn instance_lifetime_ui_value_retirement_preserves_every_descendant_and_byte_grant() {
+    let _arena = UiArenaFixture::new();
     let fixture = fixture();
     for grant in fixture["grants"].as_array().unwrap() {
         for row in fixture["cases"].as_array().unwrap() {
@@ -78,6 +79,7 @@ fn instance_lifetime_ui_value_retirement_preserves_every_descendant_and_byte_gra
 
 #[test]
 fn instance_lifetime_ui_value_retirement_releases_alias_without_touching_other_roots() {
+    let _arena = UiArenaFixture::new();
     let fixture = fixture();
     let value: UiValue = serde_json::from_value(fixture["cases"][0]["value"].clone()).unwrap();
     let mut alias = UiValueRetirement::new(value.credited_clone().unwrap());
@@ -94,6 +96,7 @@ fn instance_lifetime_ui_value_retirement_releases_alias_without_touching_other_r
 
 #[test]
 fn instance_lifetime_ui_value_retirement_epoch_reuse_and_terminal_guard() {
+    let _arena = UiArenaFixture::new();
     let mut arena = UiValueArena::default();
     let handbacks = UiArenaHandbacks::<UI_VALUE_ADMISSION_SLOTS, UI_VALUE_HANDBACK_WORDS>::new();
     let original = arena.reserve_collection(UiCollectionKind::List).unwrap();
@@ -118,6 +121,7 @@ fn instance_lifetime_ui_value_retirement_epoch_reuse_and_terminal_guard() {
 
 #[test]
 fn instance_lifetime_ui_value_retirement_nested_shared_alias_keeps_external_payload() {
+    let _arena = UiArenaFixture::new();
     let fixture = fixture();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"] == "shared-child").unwrap();
     let child: UiValue = serde_json::from_value(row["value"].clone()).unwrap();
@@ -144,6 +148,7 @@ fn instance_lifetime_ui_value_retirement_nested_shared_alias_keeps_external_payl
 
 #[test]
 fn instance_lifetime_ui_value_retirement_caught_drop_keeps_exact_arena_owner() {
+    let _arena = UiArenaFixture::new();
     for started in [false, true] {
         let value: UiValue = serde_json::from_value(serde_json::json!([{ "child": ["retained"] }])).unwrap();
         let root = value_handle(&value).unwrap();
@@ -162,6 +167,7 @@ fn instance_lifetime_ui_value_retirement_caught_drop_keeps_exact_arena_owner() {
 
 #[test]
 fn instance_lifetime_ui_value_retirement_global_drain_cannot_consume_claimed_root() {
+    let _arena = UiArenaFixture::new();
     let value: UiValue = serde_json::from_value(serde_json::json!(["exact"])).unwrap();
     let handle = value_handle(&value).unwrap();
     let mut owner = UiValueRetirement::new(value);
@@ -178,6 +184,7 @@ fn instance_lifetime_ui_value_retirement_global_drain_cannot_consume_claimed_roo
 
 #[test]
 fn instance_lifetime_ui_value_retirement_unwind_guard_is_not_waived() {
+    let _arena = UiArenaFixture::new();
     if std::env::var_os("SEMIO_UI_VALUE_RETIREMENT_UNWIND_CHILD").is_some() {
         let _owner = UiValueRetirement::new(UiValue::Text(UiText::try_from_str("live during unwind").unwrap()));
         panic!("intentional retained value unwind");
@@ -197,6 +204,7 @@ fn instance_lifetime_ui_value_retirement_unwind_guard_is_not_waived() {
 
 #[test]
 fn instance_lifetime_ui_value_retirement_contention_preserves_owner_without_waiting() {
+    let _arena = UiArenaFixture::new();
     for started in [false, true] {
         let value: UiValue = serde_json::from_value(serde_json::json!(["contended"])).unwrap();
         let mut owner = UiValueRetirement::new(value);
@@ -206,7 +214,7 @@ fn instance_lifetime_ui_value_retirement_contention_preserves_owner_without_wait
         let (ready_tx, ready_rx) = std::sync::mpsc::channel();
         let (release_tx, release_rx) = std::sync::mpsc::channel();
         let holder = std::thread::spawn(move || {
-            let _guard = UI_VALUE_ARENA.lock().unwrap();
+            let _guard = ui_value_arena_registry().borrow_blocking().unwrap();
             ready_tx.send(()).unwrap();
             let _ = release_rx.recv_timeout(std::time::Duration::from_millis(200));
         });
@@ -238,7 +246,7 @@ fn drop_waits_for_value_arena(mode: u8) -> bool {
     let released = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
     let holder_released = released.clone();
     let holder = std::thread::spawn(move || {
-        let _guard = UI_VALUE_ARENA.lock().unwrap();
+        let _guard = ui_value_arena_registry().borrow_blocking().unwrap();
         ready_tx.send(()).unwrap();
         let _ = release_rx.recv_timeout(std::time::Duration::from_millis(200));
         holder_released.store(true, std::sync::atomic::Ordering::Release);
@@ -258,15 +266,18 @@ fn drop_waits_for_value_arena(mode: u8) -> bool {
 
 #[test]
 fn instance_lifetime_ui_value_drop_hands_back_without_waiting_for_arena() {
+    let _arena = UiArenaFixture::new();
     assert_eq!(drop_waits_for_value_arena(0), fixture()["ownership"]["dropWaitsForArena"].as_bool().unwrap());
 }
 
 #[test]
 fn instance_lifetime_ui_value_unstarted_guard_hands_back_without_waiting_for_arena() {
+    let _arena = UiArenaFixture::new();
     assert_eq!(drop_waits_for_value_arena(1), fixture()["ownership"]["dropWaitsForArena"].as_bool().unwrap());
 }
 
 #[test]
 fn instance_lifetime_ui_value_claimed_guard_hands_back_without_waiting_for_arena() {
+    let _arena = UiArenaFixture::new();
     assert_eq!(drop_waits_for_value_arena(2), fixture()["ownership"]["dropWaitsForArena"].as_bool().unwrap());
 }

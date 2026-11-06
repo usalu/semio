@@ -1,0 +1,40 @@
+{
+  "type": "array",
+  "minItems": 4,
+  "maxItems": 4,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "events",
+      "outcome"
+    ],
+    "properties": {
+      "name": {
+        "enum": [
+          "success",
+          "refusal",
+          "pre-abort",
+          "during-preparation"
+        ]
+      },
+      "events": {
+        "type": "array",
+        "items": {
+          "enum": [
+            "prepare",
+            "serve"
+          ]
+        }
+      },
+      "outcome": {
+        "enum": [
+          "served",
+          "refused",
+          "cancelled"
+        ]
+      }
+    }
+  }
+}

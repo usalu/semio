@@ -1,6 +1,6 @@
 //! 🧪️ Raster document genesis retains one original caller through native Pack creation and cleanup.
 use super::*;
-use semio_framework_plugin::artifact_app_laws::OriginalWorkFixture;
+use semio_plugin::artifact_app_laws::OriginalWorkFixture;
 #[test]
 fn original_document_genesis_matches_authored_empty_shell_and_closes(){
  let fixture=semio_framework_pack_json::parse(include_str!("genesis.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let mut caller=OriginalWorkFixture::new();let grant=OriginalWorkFixture::stock();let actor=store::ActorId("raster-genesis-law".into());let mut owner=None;

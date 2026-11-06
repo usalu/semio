@@ -40,17 +40,17 @@ pub fn lowpoly_paint_tick(projection: &LowpolySnapshot, config: &LowpolyConfig, 
     let Some(&(u, v)) = points.first() else { return Ok(LowpolyPaintTick::Nothing) };
     let layer_index = config.active_paint_layer as usize;
     let color = [config.paint_color_r, config.paint_color_g, config.paint_color_b, config.paint_color_a];
-    for layer in &object.paint_layers { layer.validate_pixels().map_err(|error|Fault::new(semio_framework_plugin::FaultOrigin::App,semio_framework_plugin::FaultCode::new("lowpoly.paint.invalid-texture"),error.to_string()))?; }
+    for layer in &object.paint_layers { layer.validate_pixels().map_err(|error|Fault::new(semio_plugin::FaultOrigin::App,semio_plugin::FaultCode::new("lowpoly.paint.invalid-texture"),error.to_string()))?; }
     Ok(match config.paint_utility.as_str() {
         "eyedropper" => {
-            let sampled = sample_pixel_from(&composite_layer_pixels(&object.paint_layers).map_err(|error|Fault::new(semio_framework_plugin::FaultOrigin::App,semio_framework_plugin::FaultCode::new("lowpoly.paint.invalid-texture"),error.to_string()))?, unit(u), unit(v)).map_err(|error|Fault::new(semio_framework_plugin::FaultOrigin::App,semio_framework_plugin::FaultCode::new("lowpoly.paint.invalid-texture"),error.to_string()))?;
+            let sampled = sample_pixel_from(&composite_layer_pixels(&object.paint_layers).map_err(|error|Fault::new(semio_plugin::FaultOrigin::App,semio_plugin::FaultCode::new("lowpoly.paint.invalid-texture"),error.to_string()))?, unit(u), unit(v)).map_err(|error|Fault::new(semio_plugin::FaultOrigin::App,semio_plugin::FaultCode::new("lowpoly.paint.invalid-texture"),error.to_string()))?;
             LowpolyPaintTick::Sample(LowpolyConfigMutation::SetPaintColor(SetPaintColorEdit { r: sampled[0], g: sampled[1], b: sampled[2], a: sampled[3] }))
         }
         "fill" => {
             let Some(layer) = object.paint_layers.get(layer_index) else { return Ok(LowpolyPaintTick::Nothing) };
-            let base = layer.materialized_pixels().map_err(|error|Fault::new(semio_framework_plugin::FaultOrigin::App,semio_framework_plugin::FaultCode::new("lowpoly.paint.invalid-texture"),error.to_string()))?;
+            let base = layer.materialized_pixels().map_err(|error|Fault::new(semio_plugin::FaultOrigin::App,semio_plugin::FaultCode::new("lowpoly.paint.invalid-texture"),error.to_string()))?;
             let mut filled = base.clone();
-            flood_fill(&mut filled, unit(u), unit(v), color).map_err(|error|Fault::new(semio_framework_plugin::FaultOrigin::App,semio_framework_plugin::FaultCode::new("lowpoly.paint.invalid-texture"),error.to_string()))?;
+            flood_fill(&mut filled, unit(u), unit(v), color).map_err(|error|Fault::new(semio_plugin::FaultOrigin::App,semio_plugin::FaultCode::new("lowpoly.paint.invalid-texture"),error.to_string()))?;
             let runs: Vec<PixelRun> = pixel_runs_from_diff(&base, &filled).into_iter().map(|(offset, bytes)| PixelRun { offset, bytes }).collect();
             if runs.is_empty() {
                 LowpolyPaintTick::Nothing
@@ -314,8 +314,8 @@ pub mod paint_sample {
         let Some((uu, vv)) = paint_uv_from_command(payload.u, payload.v, payload.x, payload.y) else { return Ok(Emit::default()) };
         let object_id = payload.object_id.clone().unwrap_or_else(|| resolve_active_object_id(doc.snapshot, cfg.snapshot));
         let Some(object) = doc.snapshot.objects.iter().find(|object| object.id == object_id) else { return Ok(Emit::default()) };
-        let composite = composite_layer_pixels(&object.paint_layers).map_err(|error|Fault::new(semio_framework_plugin::FaultOrigin::App,semio_framework_plugin::FaultCode::new("lowpoly.paint.invalid-texture"),error.to_string()))?;
-        let color = sample_pixel_from(&composite, uu, vv).map_err(|error|Fault::new(semio_framework_plugin::FaultOrigin::App,semio_framework_plugin::FaultCode::new("lowpoly.paint.invalid-texture"),error.to_string()))?;
+        let composite = composite_layer_pixels(&object.paint_layers).map_err(|error|Fault::new(semio_plugin::FaultOrigin::App,semio_plugin::FaultCode::new("lowpoly.paint.invalid-texture"),error.to_string()))?;
+        let color = sample_pixel_from(&composite, uu, vv).map_err(|error|Fault::new(semio_plugin::FaultOrigin::App,semio_plugin::FaultCode::new("lowpoly.paint.invalid-texture"),error.to_string()))?;
         Ok(Emit::config(vec![LowpolyConfigMutation::SetPaintColor(SetPaintColorEdit { r: color[0], g: color[1], b: color[2], a: color[3] })]))
     }
 }

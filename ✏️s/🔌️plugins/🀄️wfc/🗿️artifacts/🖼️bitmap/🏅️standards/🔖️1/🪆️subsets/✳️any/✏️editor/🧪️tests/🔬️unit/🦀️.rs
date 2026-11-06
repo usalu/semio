@@ -250,7 +250,7 @@ fn solve_starts_the_fill_run_instead_of_writing_set_solve() {
     use semio_plugin::{AppOperationContext, Effect, HistoryView};
     let snapshot = <BitmapEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     let history = HistoryView::empty();
-    let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "wfc-bitmap-fill".into(), operation_id: 1, generation: 0, canonical_base_revision: [0; 32], retained: semio_framework_plugin::artifact_app_laws::fixture_retained_turn().grant, authoring_seed: "authoring-seed-test".into() };
+    let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "wfc-bitmap-fill".into(), operation_id: 1, generation: 0, canonical_base_revision: [0; 32], retained: semio_plugin::artifact_app_laws::fixture_retained_turn().grant, authoring_seed: "authoring-seed-test".into() };
     let config = NoConfig {};
     let emit = BitmapEditor::dispatch(&BitmapEditorCommand::Solve, &ArtifactView::with_operation(&snapshot, &history, operation), &ConfigView { snapshot: &config, window: None }, None).expect("solve dispatches");
     assert!(emit.effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == semio_framework_tool_run::TOOL_RUN_START_ACTION_ID)));

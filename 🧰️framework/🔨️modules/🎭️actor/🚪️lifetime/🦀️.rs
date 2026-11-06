@@ -10,37 +10,37 @@ pub const ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES: usize = 44;
 pub(crate) const REQUEST_SEQUENCE_MAXIMUM: u64 = 9_007_199_254_740_991;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
-#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase", deny_unknown_fields)]
 pub struct ActorInstanceLifetime {
-    #[cfg_attr(test, serde(with = "decimal_generation"))]
+    #[serde(with = "decimal_generation")]
     #[value(with = "decimal_generation")]
     pub activation_generation: u64,
     pub instance_id: u32,
-    #[cfg_attr(test, serde(with = "decimal_generation"))]
+    #[serde(with = "decimal_generation")]
     #[value(with = "decimal_generation")]
     pub guest_lifetime: u64,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
-#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase", deny_unknown_fields)]
 pub struct ActorInstanceOpenRequest {
-    #[cfg_attr(test, serde(with = "decimal_generation"))]
+    #[serde(with = "decimal_generation")]
     #[value(with = "decimal_generation")]
     pub activation_generation: u64,
     pub instance_id: u32,
-    #[cfg_attr(test, serde(with = "request_sequence"))]
+    #[serde(with = "request_sequence")]
     #[value(with = "request_sequence")]
     pub request_sequence: u64,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
-#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase", deny_unknown_fields)]
 pub struct ActorInstanceCloseRequest {
     pub lifetime: ActorInstanceLifetime,
-    #[cfg_attr(test, serde(with = "request_sequence"))]
+    #[serde(with = "request_sequence")]
     #[value(with = "request_sequence")]
     pub request_sequence: u64,
 }
@@ -49,25 +49,25 @@ pub struct ActorInstanceCloseRequest {
 // named field is deliberately unsupported by `#[derive(ToValue, FromValue)]` (a `compile_error!`
 // naming the field) — `request_sequence`/`close_generation` here are exactly that case.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase", deny_unknown_fields))]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase", deny_unknown_fields)]
 pub enum ActorInstanceLifecycleReceipt {
     Captured {
         lifetime: ActorInstanceLifetime,
-        #[cfg_attr(test, serde(with = "request_sequence"))]
+        #[serde(with = "request_sequence")]
         request_sequence: u64,
     },
     Accepted {
         lifetime: ActorInstanceLifetime,
-        #[cfg_attr(test, serde(with = "request_sequence"))]
+        #[serde(with = "request_sequence")]
         request_sequence: u64,
-        #[cfg_attr(test, serde(with = "decimal_generation"))]
+        #[serde(with = "decimal_generation")]
         close_generation: u64,
     },
     Retired {
         lifetime: ActorInstanceLifetime,
-        #[cfg_attr(test, serde(with = "request_sequence"))]
+        #[serde(with = "request_sequence")]
         request_sequence: u64,
-        #[cfg_attr(test, serde(with = "decimal_generation"))]
+        #[serde(with = "decimal_generation")]
         close_generation: u64,
     },
 }
@@ -121,7 +121,7 @@ impl ::semio_framework_value::FromValue for ActorInstanceLifecycleReceipt {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
-#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase", deny_unknown_fields)]
 pub struct ActorInstanceLifecycleAck {
     pub receipt: ActorInstanceLifecycleReceipt,
@@ -328,21 +328,14 @@ pub fn actor_instance_close_receipt_matches(request: ActorInstanceCloseRequest, 
 }
 
 pub(crate) mod decimal_generation {
-    #[cfg(test)]
     use serde::{Deserializer, Serializer};
-
-    #[cfg(test)]
     pub fn serialize<S: Serializer>(value: &u64, serializer: S) -> Result<S::Ok, S::Error> {
         if *value == 0 {
             return Err(serde::ser::Error::custom("zero lifecycle generation"));
         }
         serializer.collect_str(value)
     }
-
-    #[cfg(test)]
     struct DecimalVisitor;
-
-    #[cfg(test)]
     impl<'de> serde::de::Visitor<'de> for DecimalVisitor {
         type Value = u64;
         fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -355,8 +348,6 @@ pub(crate) mod decimal_generation {
             value.parse().map_err(E::custom)
         }
     }
-
-    #[cfg(test)]
     pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<u64, D::Error> {
         deserializer.deserialize_str(DecimalVisitor)
     }
@@ -380,18 +371,13 @@ pub(crate) mod decimal_generation {
 }
 
 pub(crate) mod request_sequence {
-    #[cfg(test)]
     use serde::{Deserialize, Deserializer, Serializer};
-
-    #[cfg(test)]
     pub fn serialize<S: Serializer>(value: &u64, serializer: S) -> Result<S::Ok, S::Error> {
         if !super::valid_request(*value) {
             return Err(serde::ser::Error::custom("invalid lifecycle request"));
         }
         serializer.serialize_u64(*value)
     }
-
-    #[cfg(test)]
     pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<u64, D::Error> {
         let value = u64::deserialize(deserializer)?;
         if !super::valid_request(value) {

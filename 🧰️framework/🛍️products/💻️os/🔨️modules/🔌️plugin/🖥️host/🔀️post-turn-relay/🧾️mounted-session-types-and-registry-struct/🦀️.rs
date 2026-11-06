@@ -7,7 +7,7 @@ pub(super) const GUEST_RELAY_MOUNTED_SLOTS: usize = 16;
 
 pub(super) const GUEST_RELAY_REAPER_FALLBACK_MS: u64 = 8;
 
-/// 🚪️ Births one session across separately funded registry turns from the original driver's own context; a refusal keeps the exact job and parameters for their paid close.
+/// 🚪️ See `README.md`.
 pub(super) struct GuestRelayAdmission<J: semio_framework_job::InteractiveJob + 'static> {
     job: Option<J>,
     params: Option<semio_framework_job_worker_authority::BatchJobParams>,
@@ -36,7 +36,7 @@ impl<J: semio_framework_job::InteractiveJob + 'static> GuestRelayAdmission<J> {
         }
     }
 
-    /// 🌱️ Advances at most one real admission action on the driver's context; true once the born session is ready to be taken.
+    /// 🌱️ See `README.md`.
     pub(super) fn advance(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         if self.session.is_some() {
             return Ok(true);
@@ -52,7 +52,7 @@ impl<J: semio_framework_job::InteractiveJob + 'static> GuestRelayAdmission<J> {
         self.admission.advance(&mut self.job, &mut self.params, &mut self.session, cx)
     }
 
-    /// 🤝️ Hands over the born session once nothing of the admission itself remains.
+    /// 🤝️ See `README.md`.
     pub(super) fn take_born(&mut self) -> Option<semio_framework_job_worker::WorkerJobSession<J>> {
         if self.job.is_none() && self.params.is_none() && self.alias.is_none() && self.alias_return.is_none() && self.admission.terminal_is_empty() {
             self.session.take()
@@ -120,7 +120,7 @@ impl<J: semio_framework_job::InteractiveJob + 'static> GuestRelayAdmission<J> {
     }
 }
 
-/// 🪢️ Returns the session's cancellation alias through the driver's original root before its physical close.
+/// 🪢️ See `README.md`.
 pub(super) fn close_relay_session<J: semio_framework_job::InteractiveJob + 'static>(session: &mut semio_framework_job_worker::WorkerJobSession<J>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_job_worker_authority::WorkerJobCloseStep, semio_framework_job::OriginalTurnFailure> {
     use semio_framework_job_worker::WorkerJobDemandError;
     use semio_framework_job_worker_authority::WorkerJobCloseStep as W;
@@ -156,7 +156,7 @@ pub(super) enum GuestRelayMountedOwner {
     Empty,
 }
 
-/// 🚦️ Required first-party issuer and receipt receiver belong to the actual Host embedding.
+/// 🚦️ See `README.md`.
 #[derive(Clone)]
 pub struct GuestRelayWakeAuthority{pub drive_policy:semio_framework_value::retained_clone::RetainedCloneGrant,pub policy:semio_framework_value::retained_clone::RetainedCloneGrant,pub issuer:semio_framework_job_worker::OriginalWorkerWakeIssuer,pub receiver:Arc<GuestRelayWakeDriver>}
 
@@ -180,7 +180,7 @@ pub(super) struct GuestRelayMountedSession {
     pub(super) lifecycle: GuestRelayMountedLifecycle,
 }
 
-/// 🚦️ Where the checked-out semantic outcome of a mounted relay is: its pages are read once, then acknowledged, then handed back.
+/// 🚦️ See `README.md`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum GuestRelayOutcomeStage {
     Idle,
@@ -188,7 +188,7 @@ pub(super) enum GuestRelayOutcomeStage {
     Acknowledging,
 }
 
-/// 🏁️ What the lent outcome means for the relay: it goes on, or it is the terminal result the caller drains.
+/// 🏁️ See `README.md`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum GuestRelayOutcomeKind {
     Continues,
