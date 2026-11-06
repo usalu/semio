@@ -20,7 +20,7 @@ impl<T:RetireOwned+Sync> LeaseView for ReadLease<T> {
 pub struct ErasedReadLease {lease:ManuallyDrop<Option<Box<dyn LeaseView>>>}
 impl ErasedReadLease {
     pub fn terminal_is_empty(&self)->bool {self.lease.is_none()}
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value_retirement::OriginalRetirementOutcome {ErasedSnapshotRetirement::close_step(self,grant)}
+    pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->semio_framework_value_retirement::OriginalRetirementOutcome {let grant=effect.grant();ErasedSnapshotRetirement::close_step(self,&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"))}
     pub fn next_depth_demand(&self)->Result<usize,ValueError> {Ok(self.demands(0)?.depth)}
     pub const fn constructor_capacity_bytes<T:RetireOwned+Sync>()->usize {size_of::<ReadLease<T>>()}
     pub fn admit<T:RetireOwned+Sync>(lease:ReadLease<T>,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(ValueError,ReadLease<T>)> {
@@ -47,7 +47,7 @@ impl ErasedReadLease {
     }
 }
 impl ErasedSnapshotRetirement for ErasedReadLease {
-    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value_retirement::OriginalRetirementOutcome {
+    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->semio_framework_value_retirement::OriginalRetirementOutcome {let grant=effect.grant();
         let Some(lease)=self.lease.as_mut()else{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}};
         if grant.maximum_items==0{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
         if lease.terminal_is_empty(){
@@ -55,7 +55,7 @@ impl ErasedSnapshotRetirement for ErasedReadLease {
             let bytes=size_of_val(lease.as_ref());if grant.maximum_release_bytes<bytes{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
             drop(self.lease.take());return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()})),work:1}
         }
-        let turn=lease.close_step(grant);let result=turn.result.and_then(|step|crate::retained_clone::admit_retained_clone_close(grant,step,lease.terminal_is_empty(),"erased read lease")).map(|step|RetainedCloneStep::Progress(step.progress()));
+        let turn=lease.close_step(&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"));let result=turn.result.and_then(|step|crate::retained_clone::admit_retained_clone_close(grant,step,lease.terminal_is_empty(),"erased read lease")).map(|step|RetainedCloneStep::Progress(step.progress()));
         RetainedWorkOutcome{result,work:turn.work}
     }
     fn terminal_is_empty(&self)->bool {self.lease.is_none()}
@@ -67,7 +67,7 @@ impl ErasedSnapshotRetirement for ErasedReadLease {
 }
 impl RetirementCursor for ErasedReadLease {
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.demands(body)}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {let turn=ErasedSnapshotRetirement::close_step(self,grant);match turn.result{Ok(RetainedCloneStep::Complete(p))if p==RetainedCloneProgress::default()=>RetirementStep::Complete(turn.work),Ok(step)=>RetirementStep::Progress(step.progress(),turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}
+    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();let turn=ErasedSnapshotRetirement::close_step(self,&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"));match turn.result{Ok(RetainedCloneStep::Complete(p))if p==RetainedCloneProgress::default()=>RetirementStep::Complete(turn.work),Ok(step)=>RetirementStep::Progress(step.progress(),turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}
     fn terminal_is_empty(&self)->bool {ErasedSnapshotRetirement::terminal_is_empty(self)}
     fn next_work_byte_demand(&self)->Result<usize,ValueError> {self.next_copy_byte_demand()}
     fn next_birth_bytes(&self,copy:usize)->Option<usize> {self.next_capacity_byte_demand(copy).ok()}

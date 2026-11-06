@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "allocation",
+          "work",
+          "construction",
+          "sourceTurn",
+          "accepted",
+          "transaction",
+          "capturedTurn",
+          "authorityTurn"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "allocation": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "work": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "construction": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "sourceTurn": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "transaction": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "capturedTurn": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "authorityTurn": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    }
+  }
+}

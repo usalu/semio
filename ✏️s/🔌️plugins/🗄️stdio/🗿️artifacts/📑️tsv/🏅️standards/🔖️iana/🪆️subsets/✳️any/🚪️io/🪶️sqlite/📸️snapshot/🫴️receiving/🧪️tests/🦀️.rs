@@ -39,8 +39,8 @@ macro_rules! original{
  }
  };
 }
-original!(decode,NativeDecodeControl,NativeSnapshotDecodeOwner,semio_framework_value_native_owned,native_decoding,NativeDecodeProgress,NativeDecodeAllocation,NativeDecodeRetirementRecipient);
-original!(encode,NativeEncodeControl,NativeSnapshotEncodeOwner,semio_framework_value,native_encoding,NativeEncodeProgress,NativeEncodeAllocation,NativeEncodeRetirementRecipient);
+original!(decode,NativeDecodeControl,NativeSnapshotDecodeOwner,semio_framework_value_native_owned,native_decoding,NativeDecodeProgress,NativeAllocationRequest,NativeDecodeRetirementRecipient);
+original!(encode,NativeEncodeControl,NativeSnapshotEncodeOwner,semio_framework_value,native_encoding,NativeEncodeProgress,NativeAllocationRequest,NativeEncodeRetirementRecipient);
 #[test]
 fn sqlite_snapshot_tsv_receiving_original_bounded_schema_interior_cancellation(){let law=policy();let source=snapshot(&law["cases"][0]);let full=grant(&law["bodyGrant"]);let scan=&law["tokenScanning"];for span in scan["spans"].as_array().unwrap(){let mut database=input(&source);let declaration=&mut database.tables[0].sql;let bytes=scan["bytes"].as_u64().unwrap()as usize;*declaration=match span.as_str().unwrap(){"whitespace"=>" ".repeat(bytes)+declaration,"identifier"=>"x".repeat(bytes),"quotedLiteral"=>"'".to_string()+&"x".repeat(bytes)+"'","escapedQuotedLiteral"=>"'".to_string()+&"''".repeat(bytes/2)+"'",_=>unreachable!()};let calls=Cell::new(0usize);let stop=scan["cancelAt"].as_u64().unwrap()as usize;let error=encode(&law,full,&mut |_|{calls.set(calls.get()+1);calls.get()<stop},&mut |_|true,Default::default(),|control,owner|TsvSnapshot::from_sqlite_database_receiving(&database,control,owner)).unwrap_err();assert_eq!(error.kind,ValueRefusalKind::Canceled);assert_eq!(calls.get(),stop);}}
 #[test]

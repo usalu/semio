@@ -1,6 +1,7 @@
 //! 🎯️ Each authored action selects its actual leaf receiver while retaining the original argument source.
+use semio_framework_value_native_receiving_original::NativeReceivingOriginal;
 use semio_framework_value::{DslValue,NativeDecodeControl,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,ValueError,retained_clone::RetainedCloneSource};
-use semio_framework_value_native_owned::{NativeReceive,owned::NativeReceivingOriginal,native_decoding::OriginalReceivingPrimary};
+use semio_framework_value_native_owned::{NativeReceive,native_decoding::OriginalReceivingPrimary};
 use std::{marker::PhantomData,mem::size_of};
 /// 🏭️ Static authored leaf authority quotes and constructs only its own concrete receiving frame.
 pub struct NativeActionFactory<M>{pub birth:fn()->RetirementDemand,pub admit:fn(RetainedCloneGrant)->Result<(Box<dyn NativeActionReceiving<M>>,RetainedCloneProgress),ValueError>}

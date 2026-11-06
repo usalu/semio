@@ -1,3 +1,17 @@
+<!-- io-full-failure-typescript-parity-checkpoint -->
+Latest TypeScript IO checkpoint: [Full IO Failure TypeScript Parity](🔍️audits/io-full-failure-typescript-parity.md). Genuine runtime red repaired:4tests295assertions pass; final strict closure85991 passes including public exports. Native IO, retirement and full norms acceptance remain pending.
+
+<!-- resident-failure-birth-member-lifecycle-checkpoint -->
+Latest Root checkpoint: [Resident Failure Birth and Member Source Lifecycle](🔍️audits/resident-failure-birth-member-lifecycle.md). Core complete successor77387 passed23/23; Birth/Member neutral6tests31assertions and cursor-seed neutral2tests5assertions passed. Compiled retirement23913 exposed8 physical-marker failures out of16. Concrete failure/storage Cursor seeds and18 native laws are authored, awaiting the common trait/producer migration; Member native remains unverified.
+
+<!-- retirement-allocation-custody-checkpoint -->
+Current root checkpoint: [Original Retirement Allocation Custody](🔍️audits/retirement-allocation-custody.md). Native control custody2/2, actual failure-storage16/16 and independent oracle1/4 pass in their captured snapshots; selected native decoder production40942 passes. Receiving-envelope readiness and original Member source-loan law remain pending, as does end-to-end norm evidence.
+
+<!-- history-resident-birth-checkpoint -->
+## Current Resident Receiving Checkpoint
+
+Goal active; ticket open. See [Original History Source Birth and Resident Receiving](🔍️audits/history-resident-birth-checkpoint.md) for latest Root source changes, scoped oracle results, the History compiler prerequisite, current static bounds and remaining exact ownership work. Older notes below are historical captured snapshots.
+
 <!-- replay-history-work-checkpoint -->
 ## Current Replay and History Checkpoint
 

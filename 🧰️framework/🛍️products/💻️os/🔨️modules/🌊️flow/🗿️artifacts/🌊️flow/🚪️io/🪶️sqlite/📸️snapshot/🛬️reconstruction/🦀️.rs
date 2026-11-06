@@ -203,7 +203,7 @@ impl<'a, 'c, 'p> Read<'a, 'c, 'p> {
 
                         self.control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,checkpoint,allocation|{
                             let mut callback=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);
-                            let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
+                            let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeAllocationRequest|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
                             let prior=builder.dictionary().len();
                             let result=builder.insert_controlled(key,value.into_inner(),&mut native).and_then(|_|if builder.dictionary().len()==prior{Err(ValueError::new(ValueRefusalKind::InvalidValue,"Flow dictionary key repeated"))}else{Ok(())});
                             (result,native.owned_bytes())
@@ -346,7 +346,7 @@ impl<'a, 'c, 'p> Read<'a, 'c, 'p> {
         let value=Owned::new(value,retire);
         self.control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,checkpoint,allocation|{
             let mut callback=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);
-            let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
+            let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeAllocationRequest|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
             let result=(||->Result<(),ValueError>{
                 native.charge(size_of::<String>()+size_of::<V>()+4*size_of::<usize>())?;
                 let mut cursor=map.begin_set(key,value.take());

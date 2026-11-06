@@ -80,14 +80,19 @@ impl IndexedEditPlan{
  })();crate::RetainedWorkOutcome{result,work}}
  pub fn begin_close(&mut self){self.closing=true;}
  pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Err(invalid());}self.retirement.next_owner_demands::<Vec<IndexedEditEntry>>(self.orders.iter().any(Option::is_some),&None,body)}
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{let mut work=0;let result=(||{
-  if !self.closing{return Err(invalid());}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
+ pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.closing{return Err(invalid())}self.retirement.next_owner_work::<Vec<IndexedEditEntry>>(self.orders.iter().any(Option::is_some),&None,body)}
+ pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let grant=effect.grant();let mut work=0;let result:Result<RetainedCloneStep,crate::OriginalRetirementFailure>=(||{
+  if !self.closing{return Err(invalid().into());}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
   let demand=self.close_demand(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
-  if !self.retirement.is_empty(){let turn=self.retirement.step_granted(grant);work+=turn.work;return turn.result.map(|s|RetainedCloneStep::Progress(s.progress()));}
-  for order in self.orders.iter_mut(){let turn=self.retirement.begin_granted(order,grant);work+=turn.work;if let Some(step)=turn.result?{return Ok(RetainedCloneStep::Progress(step.progress()));}}
+  if !self.retirement.is_empty(){let turn=self.retirement.step_granted(effect);work+=turn.work;return turn.result.map(|s|RetainedCloneStep::Progress(s.progress()));}
+  for order in self.orders.iter_mut(){let turn=self.retirement.begin_granted(order,effect);work+=turn.work;if let Some(step)=turn.result?{return Ok(RetainedCloneStep::Progress(step.progress()));}}
   Ok(RetainedCloneStep::Complete(Default::default()))
  })();crate::RetainedWorkOutcome{result,work}}
 
+ pub fn requires_original_birth(&self)->bool{self.retirement.requires_original_birth()}
+ pub fn close_original_birth_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome{self.retirement.step_original_birth(original,grant)}
+ pub fn requires_original_control(&self)->bool{self.retirement.requires_original_control()}
+ pub fn close_original_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{if self.requires_original_birth(){return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"settle original birth first").into()),work:0}}if self.requires_original_control(){return self.retirement.step_original(original,effect)}self.close_step(effect)}
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.orders.iter().all(Option::is_none)&&self.retirement.is_empty()}
 }
 impl Drop for IndexedEditPlan{fn drop(&mut self){let empty=self.orders.iter().all(Option::is_none)&&self.retirement.is_empty();assert!(std::thread::panicking()||empty,"indexed edit directories require funded original closure");if empty{unsafe{ManuallyDrop::drop(&mut self.orders);}}}}

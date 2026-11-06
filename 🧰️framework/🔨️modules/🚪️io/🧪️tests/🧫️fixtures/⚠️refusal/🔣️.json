@@ -12,9 +12,26 @@
     "expected": "required",
     "expectedWire": {
       "cause": {
-        "kind": "invalidValue",
-        "message": "canceled ownershipLimit invalidValue spoofed prose",
-        "retainedProgress": {
+        "cause": {
+          "type": "value",
+          "value": {
+            "kind": "invalidValue",
+            "message": "canceled ownershipLimit invalidValue spoofed prose",
+            "retainedProgress": {
+              "copiedItems": 0,
+              "copiedBytes": 0,
+              "retainedCapacityBytes": 0,
+              "releasedBytes": 0
+            }
+          }
+        },
+        "allocation": null,
+        "encodeEffect": null,
+        "receiptRefusal": null,
+        "contextRefusal": null,
+        "workRefusal": null,
+        "settlementRefusal": null,
+        "progress": {
           "copiedItems": 0,
           "copiedBytes": 0,
           "retainedCapacityBytes": 0,
@@ -37,9 +54,26 @@
     "expected": "required",
     "expectedWire": {
       "cause": {
-        "kind": "invalidValue",
-        "message": "canceled ownershipLimit invalidValue spoofed prose",
-        "retainedProgress": {
+        "cause": {
+          "type": "value",
+          "value": {
+            "kind": "invalidValue",
+            "message": "canceled ownershipLimit invalidValue spoofed prose",
+            "retainedProgress": {
+              "copiedItems": 0,
+              "copiedBytes": 0,
+              "retainedCapacityBytes": 0,
+              "releasedBytes": 0
+            }
+          }
+        },
+        "allocation": null,
+        "encodeEffect": null,
+        "receiptRefusal": null,
+        "contextRefusal": null,
+        "workRefusal": null,
+        "settlementRefusal": null,
+        "progress": {
           "copiedItems": 0,
           "copiedBytes": 0,
           "retainedCapacityBytes": 0,
@@ -81,9 +115,26 @@
     "expected": "required",
     "expectedWire": {
       "cause": {
-        "kind": "canceled",
-        "message": "canceled ownershipLimit invalidValue spoofed prose",
-        "retainedProgress": {
+        "cause": {
+          "type": "value",
+          "value": {
+            "kind": "canceled",
+            "message": "canceled ownershipLimit invalidValue spoofed prose",
+            "retainedProgress": {
+              "copiedItems": 0,
+              "copiedBytes": 0,
+              "retainedCapacityBytes": 0,
+              "releasedBytes": 0
+            }
+          }
+        },
+        "allocation": null,
+        "encodeEffect": null,
+        "receiptRefusal": null,
+        "contextRefusal": null,
+        "workRefusal": null,
+        "settlementRefusal": null,
+        "progress": {
           "copiedItems": 0,
           "copiedBytes": 0,
           "retainedCapacityBytes": 0,
@@ -106,9 +157,26 @@
     "expected": "required",
     "expectedWire": {
       "cause": {
-        "kind": "canceled",
-        "message": "canceled ownershipLimit invalidValue spoofed prose",
-        "retainedProgress": {
+        "cause": {
+          "type": "value",
+          "value": {
+            "kind": "canceled",
+            "message": "canceled ownershipLimit invalidValue spoofed prose",
+            "retainedProgress": {
+              "copiedItems": 0,
+              "copiedBytes": 0,
+              "retainedCapacityBytes": 0,
+              "releasedBytes": 0
+            }
+          }
+        },
+        "allocation": null,
+        "encodeEffect": null,
+        "receiptRefusal": null,
+        "contextRefusal": null,
+        "workRefusal": null,
+        "settlementRefusal": null,
+        "progress": {
           "copiedItems": 0,
           "copiedBytes": 0,
           "retainedCapacityBytes": 0,
@@ -150,9 +218,26 @@
     "expected": "required",
     "expectedWire": {
       "cause": {
-        "kind": "ownershipLimit",
-        "message": "canceled ownershipLimit invalidValue spoofed prose",
-        "retainedProgress": {
+        "cause": {
+          "type": "value",
+          "value": {
+            "kind": "ownershipLimit",
+            "message": "canceled ownershipLimit invalidValue spoofed prose",
+            "retainedProgress": {
+              "copiedItems": 0,
+              "copiedBytes": 0,
+              "retainedCapacityBytes": 0,
+              "releasedBytes": 0
+            }
+          }
+        },
+        "allocation": null,
+        "encodeEffect": null,
+        "receiptRefusal": null,
+        "contextRefusal": null,
+        "workRefusal": null,
+        "settlementRefusal": null,
+        "progress": {
           "copiedItems": 0,
           "copiedBytes": 0,
           "retainedCapacityBytes": 0,
@@ -175,9 +260,26 @@
     "expected": "required",
     "expectedWire": {
       "cause": {
-        "kind": "ownershipLimit",
-        "message": "canceled ownershipLimit invalidValue spoofed prose",
-        "retainedProgress": {
+        "cause": {
+          "type": "value",
+          "value": {
+            "kind": "ownershipLimit",
+            "message": "canceled ownershipLimit invalidValue spoofed prose",
+            "retainedProgress": {
+              "copiedItems": 0,
+              "copiedBytes": 0,
+              "retainedCapacityBytes": 0,
+              "releasedBytes": 0
+            }
+          }
+        },
+        "allocation": null,
+        "encodeEffect": null,
+        "receiptRefusal": null,
+        "contextRefusal": null,
+        "workRefusal": null,
+        "settlementRefusal": null,
+        "progress": {
           "copiedItems": 0,
           "copiedBytes": 0,
           "retainedCapacityBytes": 0,
@@ -219,9 +321,26 @@
     "expected": "required",
     "expectedWire": {
       "cause": {
-        "kind": "allocationFailed",
-        "message": "canceled ownershipLimit invalidValue spoofed prose",
-        "retainedProgress": {
+        "cause": {
+          "type": "value",
+          "value": {
+            "kind": "allocationFailed",
+            "message": "canceled ownershipLimit invalidValue spoofed prose",
+            "retainedProgress": {
+              "copiedItems": 0,
+              "copiedBytes": 0,
+              "retainedCapacityBytes": 0,
+              "releasedBytes": 0
+            }
+          }
+        },
+        "allocation": null,
+        "encodeEffect": null,
+        "receiptRefusal": null,
+        "contextRefusal": null,
+        "workRefusal": null,
+        "settlementRefusal": null,
+        "progress": {
           "copiedItems": 0,
           "copiedBytes": 0,
           "retainedCapacityBytes": 0,
@@ -244,9 +363,26 @@
     "expected": "required",
     "expectedWire": {
       "cause": {
-        "kind": "allocationFailed",
-        "message": "canceled ownershipLimit invalidValue spoofed prose",
-        "retainedProgress": {
+        "cause": {
+          "type": "value",
+          "value": {
+            "kind": "allocationFailed",
+            "message": "canceled ownershipLimit invalidValue spoofed prose",
+            "retainedProgress": {
+              "copiedItems": 0,
+              "copiedBytes": 0,
+              "retainedCapacityBytes": 0,
+              "releasedBytes": 0
+            }
+          }
+        },
+        "allocation": null,
+        "encodeEffect": null,
+        "receiptRefusal": null,
+        "contextRefusal": null,
+        "workRefusal": null,
+        "settlementRefusal": null,
+        "progress": {
           "copiedItems": 0,
           "copiedBytes": 0,
           "retainedCapacityBytes": 0,
@@ -288,9 +424,26 @@
     "expected": "required",
     "expectedWire": {
       "cause": {
-        "kind": "workLimit",
-        "message": "canceled ownershipLimit invalidValue spoofed prose",
-        "retainedProgress": {
+        "cause": {
+          "type": "value",
+          "value": {
+            "kind": "workLimit",
+            "message": "canceled ownershipLimit invalidValue spoofed prose",
+            "retainedProgress": {
+              "copiedItems": 0,
+              "copiedBytes": 0,
+              "retainedCapacityBytes": 0,
+              "releasedBytes": 0
+            }
+          }
+        },
+        "allocation": null,
+        "encodeEffect": null,
+        "receiptRefusal": null,
+        "contextRefusal": null,
+        "workRefusal": null,
+        "settlementRefusal": null,
+        "progress": {
           "copiedItems": 0,
           "copiedBytes": 0,
           "retainedCapacityBytes": 0,
@@ -313,9 +466,26 @@
     "expected": "required",
     "expectedWire": {
       "cause": {
-        "kind": "workLimit",
-        "message": "canceled ownershipLimit invalidValue spoofed prose",
-        "retainedProgress": {
+        "cause": {
+          "type": "value",
+          "value": {
+            "kind": "workLimit",
+            "message": "canceled ownershipLimit invalidValue spoofed prose",
+            "retainedProgress": {
+              "copiedItems": 0,
+              "copiedBytes": 0,
+              "retainedCapacityBytes": 0,
+              "releasedBytes": 0
+            }
+          }
+        },
+        "allocation": null,
+        "encodeEffect": null,
+        "receiptRefusal": null,
+        "contextRefusal": null,
+        "workRefusal": null,
+        "settlementRefusal": null,
+        "progress": {
           "copiedItems": 0,
           "copiedBytes": 0,
           "retainedCapacityBytes": 0,
@@ -357,9 +527,26 @@
     "expected": "required",
     "expectedWire": {
       "cause": {
-        "kind": "depthLimit",
-        "message": "canceled ownershipLimit invalidValue spoofed prose",
-        "retainedProgress": {
+        "cause": {
+          "type": "value",
+          "value": {
+            "kind": "depthLimit",
+            "message": "canceled ownershipLimit invalidValue spoofed prose",
+            "retainedProgress": {
+              "copiedItems": 0,
+              "copiedBytes": 0,
+              "retainedCapacityBytes": 0,
+              "releasedBytes": 0
+            }
+          }
+        },
+        "allocation": null,
+        "encodeEffect": null,
+        "receiptRefusal": null,
+        "contextRefusal": null,
+        "workRefusal": null,
+        "settlementRefusal": null,
+        "progress": {
           "copiedItems": 0,
           "copiedBytes": 0,
           "retainedCapacityBytes": 0,
@@ -382,9 +569,26 @@
     "expected": "required",
     "expectedWire": {
       "cause": {
-        "kind": "depthLimit",
-        "message": "canceled ownershipLimit invalidValue spoofed prose",
-        "retainedProgress": {
+        "cause": {
+          "type": "value",
+          "value": {
+            "kind": "depthLimit",
+            "message": "canceled ownershipLimit invalidValue spoofed prose",
+            "retainedProgress": {
+              "copiedItems": 0,
+              "copiedBytes": 0,
+              "retainedCapacityBytes": 0,
+              "releasedBytes": 0
+            }
+          }
+        },
+        "allocation": null,
+        "encodeEffect": null,
+        "receiptRefusal": null,
+        "contextRefusal": null,
+        "workRefusal": null,
+        "settlementRefusal": null,
+        "progress": {
           "copiedItems": 0,
           "copiedBytes": 0,
           "retainedCapacityBytes": 0,
@@ -426,9 +630,26 @@
     "expected": "required",
     "expectedWire": {
       "cause": {
-        "kind": "unsupportedOwner",
-        "message": "canceled ownershipLimit invalidValue spoofed prose",
-        "retainedProgress": {
+        "cause": {
+          "type": "value",
+          "value": {
+            "kind": "unsupportedOwner",
+            "message": "canceled ownershipLimit invalidValue spoofed prose",
+            "retainedProgress": {
+              "copiedItems": 0,
+              "copiedBytes": 0,
+              "retainedCapacityBytes": 0,
+              "releasedBytes": 0
+            }
+          }
+        },
+        "allocation": null,
+        "encodeEffect": null,
+        "receiptRefusal": null,
+        "contextRefusal": null,
+        "workRefusal": null,
+        "settlementRefusal": null,
+        "progress": {
           "copiedItems": 0,
           "copiedBytes": 0,
           "retainedCapacityBytes": 0,
@@ -451,9 +672,26 @@
     "expected": "required",
     "expectedWire": {
       "cause": {
-        "kind": "unsupportedOwner",
-        "message": "canceled ownershipLimit invalidValue spoofed prose",
-        "retainedProgress": {
+        "cause": {
+          "type": "value",
+          "value": {
+            "kind": "unsupportedOwner",
+            "message": "canceled ownershipLimit invalidValue spoofed prose",
+            "retainedProgress": {
+              "copiedItems": 0,
+              "copiedBytes": 0,
+              "retainedCapacityBytes": 0,
+              "releasedBytes": 0
+            }
+          }
+        },
+        "allocation": null,
+        "encodeEffect": null,
+        "receiptRefusal": null,
+        "contextRefusal": null,
+        "workRefusal": null,
+        "settlementRefusal": null,
+        "progress": {
           "copiedItems": 0,
           "copiedBytes": 0,
           "retainedCapacityBytes": 0,
@@ -495,9 +733,26 @@
     "expected": "required",
     "expectedWire": {
       "cause": {
-        "kind": "invariantViolated",
-        "message": "canceled ownershipLimit invalidValue spoofed prose",
-        "retainedProgress": {
+        "cause": {
+          "type": "value",
+          "value": {
+            "kind": "invariantViolated",
+            "message": "canceled ownershipLimit invalidValue spoofed prose",
+            "retainedProgress": {
+              "copiedItems": 0,
+              "copiedBytes": 0,
+              "retainedCapacityBytes": 0,
+              "releasedBytes": 0
+            }
+          }
+        },
+        "allocation": null,
+        "encodeEffect": null,
+        "receiptRefusal": null,
+        "contextRefusal": null,
+        "workRefusal": null,
+        "settlementRefusal": null,
+        "progress": {
           "copiedItems": 0,
           "copiedBytes": 0,
           "retainedCapacityBytes": 0,
@@ -520,9 +775,26 @@
     "expected": "required",
     "expectedWire": {
       "cause": {
-        "kind": "invariantViolated",
-        "message": "canceled ownershipLimit invalidValue spoofed prose",
-        "retainedProgress": {
+        "cause": {
+          "type": "value",
+          "value": {
+            "kind": "invariantViolated",
+            "message": "canceled ownershipLimit invalidValue spoofed prose",
+            "retainedProgress": {
+              "copiedItems": 0,
+              "copiedBytes": 0,
+              "retainedCapacityBytes": 0,
+              "releasedBytes": 0
+            }
+          }
+        },
+        "allocation": null,
+        "encodeEffect": null,
+        "receiptRefusal": null,
+        "contextRefusal": null,
+        "workRefusal": null,
+        "settlementRefusal": null,
+        "progress": {
           "copiedItems": 0,
           "copiedBytes": 0,
           "retainedCapacityBytes": 0,
@@ -596,9 +868,26 @@
     },
     "expectedWire": {
       "cause": {
-        "kind": "workLimit",
-        "message": "original retained physical effects",
-        "retainedProgress": {
+        "cause": {
+          "type": "value",
+          "value": {
+            "kind": "workLimit",
+            "message": "original retained physical effects",
+            "retainedProgress": {
+              "copiedItems": 2,
+              "copiedBytes": 7,
+              "retainedCapacityBytes": 32,
+              "releasedBytes": 4
+            }
+          }
+        },
+        "allocation": null,
+        "encodeEffect": null,
+        "receiptRefusal": null,
+        "contextRefusal": null,
+        "workRefusal": null,
+        "settlementRefusal": null,
+        "progress": {
           "copiedItems": 2,
           "copiedBytes": 7,
           "retainedCapacityBytes": 32,

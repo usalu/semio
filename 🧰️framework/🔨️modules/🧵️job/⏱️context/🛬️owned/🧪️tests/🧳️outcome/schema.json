@@ -1,0 +1,41 @@
+{
+  "type": "array",
+  "minItems": 4,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "output",
+      "operation",
+      "context",
+      "nativeReceipt",
+      "returnReceipt",
+      "owners"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "output": {
+        "type": "boolean"
+      },
+      "operation": {
+        "type": "boolean"
+      },
+      "context": {
+        "type": "boolean"
+      },
+      "nativeReceipt": {
+        "type": "boolean"
+      },
+      "returnReceipt": {
+        "type": "boolean"
+      },
+      "owners": {
+        "type": "integer",
+        "minimum": 1
+      }
+    }
+  }
+}

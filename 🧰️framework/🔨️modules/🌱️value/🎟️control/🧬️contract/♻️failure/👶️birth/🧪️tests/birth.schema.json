@@ -1,0 +1,202 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "workQuote",
+    "physicalAttemptWork",
+    "order",
+    "cases",
+    "resume",
+    "quoteResume",
+    "foreignGrant",
+    "refusalOrder",
+    "performedGuard",
+    "layout",
+    "partial",
+    "partialUnwind",
+    "settlementRetry"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "workQuote": {
+      "const": 1
+    },
+    "physicalAttemptWork": {
+      "const": 1
+    },
+    "order": {
+      "const": [
+        "prepare",
+        "quote",
+        "allocate",
+        "publish",
+        "commit",
+        "post",
+        "finish"
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "prepare",
+          "quote",
+          "node",
+          "post",
+          "work",
+          "callbacks"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "prepare": {
+            "type": "boolean"
+          },
+          "quote": {
+            "type": "boolean"
+          },
+          "node": {
+            "enum": [
+              "none",
+              "zero",
+              "positive"
+            ]
+          },
+          "post": {
+            "enum": [
+              "none",
+              "pending",
+              "complete"
+            ]
+          },
+          "work": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "callbacks": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "prepare",
+                "quote",
+                "allocate",
+                "publish",
+                "commit",
+                "post",
+                "finish",
+                "cancel-work"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "resume": {
+      "const": {
+        "allocatorCalls": 0,
+        "reportedWork": 0,
+        "proofRemainsUntilFinish": true,
+        "reportsOriginalCapacity": true
+      }
+    },
+    "quoteResume": {
+      "const": {
+        "prepareCalls": 1,
+        "quoteCalls": 1,
+        "firstWork": 0,
+        "firstCapacity": 0,
+        "resumedWork": 1,
+        "allocationAttempts": 1
+      }
+    },
+    "foreignGrant": {
+      "const": {
+        "work": 0,
+        "allocationAttempts": 0,
+        "preservesRequest": true
+      }
+    },
+    "refusalOrder": {
+      "const": [
+        "original work refusal",
+        "later cancellation refusal"
+      ]
+    },
+    "performedGuard": {
+      "const": {
+        "quoted": 1,
+        "performed": 1,
+        "scopeAtUnwind": 1,
+        "physical": null,
+        "sourceChecks": 1,
+        "events": [
+          "perform",
+          "mutate",
+          "unwind",
+          "claim",
+          "partial",
+          "commit",
+          "finish"
+        ]
+      }
+    },
+    "layout": {
+      "const": [
+        {
+          "pointerBits": 32,
+          "markerBytes": 8,
+          "nodeBytes": 4,
+          "headBytes": 4,
+          "directCopyBytes": 20,
+          "pooledCopyBytes": 28
+        },
+        {
+          "pointerBits": 64,
+          "markerBytes": 16,
+          "nodeBytes": 8,
+          "headBytes": 8,
+          "directCopyBytes": 40,
+          "pooledCopyBytes": 56
+        }
+      ]
+    },
+    "partial": {
+      "const": {
+        "performed": 1,
+        "allocatorCalls": 1,
+        "firstWork": 1,
+        "resumeWork": 0,
+        "checks": 1,
+        "recoveryCalls": 1
+      }
+    },
+    "partialUnwind": {
+      "const": {
+        "refusal": "actual partial Source refusal 源",
+        "scopeAtUnwind": 1,
+        "reportedOnResume": 1,
+        "receiveCalls": 1,
+        "recoverCalls": 0,
+        "allocatorReplay": 0
+      }
+    },
+    "settlementRetry": {
+      "const": {
+        "firstWork": 1,
+        "secondWork": 0,
+        "lastWork": 0,
+        "commits": 2,
+        "finishes": 2,
+        "allocations": 1
+      }
+    }
+  }
+}

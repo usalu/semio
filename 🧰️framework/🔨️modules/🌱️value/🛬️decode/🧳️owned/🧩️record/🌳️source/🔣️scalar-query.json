@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "queries",
+    "events",
+    "calls",
+    "work",
+    "preserveError"
+  ],
+  "properties": {
+    "queries": {
+      "const": [
+        "kind",
+        "null",
+        "boolean",
+        "number",
+        "enumOrdinal",
+        "recordLength",
+        "sequenceLength"
+      ]
+    },
+    "events": {
+      "const": [
+        "receive",
+        "performed",
+        "recordError",
+        "unwind",
+        "recoverRecorded",
+        "recordOuter",
+        "transfer"
+      ]
+    },
+    "calls": {
+      "const": 1
+    },
+    "work": {
+      "const": 2
+    },
+    "preserveError": {
+      "const": true
+    }
+  }
+}

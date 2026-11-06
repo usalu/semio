@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "admitted",
+          "failAllocator",
+          "work",
+          "actual"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "denied",
+              "born",
+              "null"
+            ]
+          },
+          "admitted": {
+            "type": "boolean"
+          },
+          "failAllocator": {
+            "type": "boolean"
+          },
+          "work": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "actual": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "const": 0
+              },
+              {
+                "const": "positive"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

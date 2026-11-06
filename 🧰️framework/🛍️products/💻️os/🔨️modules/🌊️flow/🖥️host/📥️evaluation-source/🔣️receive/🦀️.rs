@@ -1,7 +1,8 @@
 //! 🔣️ Original borrowed JSON becomes typed Flow fields under the initiating native decoder.
+use semio_framework_value_native_receiving_original::NativeReceivingOriginal;
 use semio_framework_value::{DslValue,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneSource,RetainedCloneSourceAdmission,RetainedCloneClose,retained_clone_grant_admits};
-use semio_framework_value_native_owned::native_decoding::owned::{NativeReceive,NativeReceivingOriginal};
+use semio_framework_value_native_owned::native_decoding::owned::NativeReceive;
 use semio_framework_pack_json::{JsonGrammarCursor,JsonMemberPolicy,JsonReadSource,JsonError};
 use semio_framework_job::{StepContext,OriginalTurnFailure};
 use std::mem::{ManuallyDrop,size_of};

@@ -20,7 +20,7 @@ impl RetireOwned for SharedAuthority{
 }
 impl RetirementCursor for QueryCursor{
  fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{if self.control.armed.swap(false,Ordering::AcqRel){self.control.entered.store(true,Ordering::Release);let deadline=Instant::now()+Duration::from_secs(5);while !self.control.released.load(Ordering::Acquire){assert!(Instant::now()<deadline,"shared query release timed out");std::thread::yield_now();}}self.value.set(self.value.get());Ok(RetirementDemand{depth:usize::from(!self.empty),..Default::default()})}
- fn close_step(&mut self,g:RetainedCloneGrant)->RetirementStep{if self.empty{return RetirementStep::Complete(0)}if g.maximum_items==0||g.maximum_depth==0{return RetirementStep::BudgetExhausted;}assert_eq!(self.value.get(),7);self.empty=true;RetirementStep::Complete(1)}
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let g=effect.grant();if self.empty{return RetirementStep::Complete(0)}if g.maximum_items==0||g.maximum_depth==0{return RetirementStep::BudgetExhausted;}assert_eq!(self.value.get(),7);self.empty=true;RetirementStep::Complete(1)}
  fn terminal_is_empty(&self)->bool{self.empty}
  fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
  fn next_close_byte_demand(&self)->Option<usize>{Some(0)}

@@ -1,0 +1,29 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "layouts"
+  ],
+  "properties": {
+    "layouts": {
+      "const": [
+        {
+          "value": 16,
+          "output": 24,
+          "live": 8,
+          "taken": 1,
+          "phase": 1,
+          "copy": 50
+        },
+        {
+          "value": 16,
+          "output": 20,
+          "live": 4,
+          "taken": 1,
+          "phase": 1,
+          "copy": 42
+        }
+      ]
+    }
+  }
+}

@@ -18,8 +18,8 @@ fn original_job_receiving_restores_continuation_and_construction_issuer(){
  let panic=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||owner.receive(grant,&mut callback,&mut construction,|control|->Result<(),ValueError>{identity=Some(control.ledger_identity());recipient=control.retirement_recipient_identity();panic!("original Job operation unwound")})));
  assert!(panic.is_err());assert!(owner.receiving_identity().is_some());assert_eq!(owner.owned_bytes(),0);
  struct Work{remaining:u64,committed:u64}
- impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for Work{fn admits(&mut self,_:u64,additional:u64)->Result<bool,ValueError>{Ok(additional<=self.remaining)}fn committed(&mut self,actual:u64)->Result<(),ValueError>{self.remaining-=actual;self.committed+=actual;Ok(())}}
- let mut work=Work{remaining:fixture["expectedWork"].as_u64().unwrap(),committed:0};let mut work_issuer=semio_framework_value_native_owned::native_decoding::NativeDecodeWorkIssuer::new();
+ impl semio_framework_value_native_owned::native_decoding::OriginalWorkRecipient for Work{fn admits<'a>(&mut self,quote:semio_framework_value_native_owned::native_decoding::OriginalWorkQuote<'a>,_:u64,additional:u64)->semio_framework_value_native_owned::native_decoding::OriginalWorkQuoteComplete<'a>{quote.complete((||{Ok(additional<=self.remaining)})())}fn committed(&mut self,actual:u64)->Result<(),ValueError>{self.remaining-=actual;self.committed+=actual;Ok(())}}
+ let mut work=Work{remaining:fixture["expectedWork"].as_u64().unwrap(),committed:0};let mut work_issuer=semio_framework_value_native_owned::native_decoding::OriginalWorkActionIssuer::new();
  let mut frame=NativeReceivingEffect::<ValueError>::default();
  owner.receive(grant,&mut callback,&mut construction,|control|{let mut work_loan=work_issuer.loan(&mut work);control.with_work_recipient(&mut work_loan,|control|{
   assert_eq!(Some(control.ledger_identity()),identity);assert_eq!(control.retirement_recipient_identity(),recipient);

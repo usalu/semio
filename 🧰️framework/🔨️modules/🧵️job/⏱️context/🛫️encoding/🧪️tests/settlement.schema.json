@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "request",
+          "actual",
+          "sourceValid",
+          "grantValid",
+          "pending",
+          "spent",
+          "sourceRefusal",
+          "budgetRefusal"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "request": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "actual": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sourceValid": {
+            "type": "boolean"
+          },
+          "grantValid": {
+            "type": "boolean"
+          },
+          "pending": {
+            "type": "boolean"
+          },
+          "spent": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sourceRefusal": {
+            "type": "boolean"
+          },
+          "budgetRefusal": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

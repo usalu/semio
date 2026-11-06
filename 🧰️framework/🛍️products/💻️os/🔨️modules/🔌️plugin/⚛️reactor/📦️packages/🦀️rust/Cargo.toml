@@ -25,6 +25,7 @@ path = "../../🦀️.rs"
 artifact-app-testing = []
 
 [dependencies]
+semio-framework-value-native-receiving-original = { path = "../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/📦️packages/🦀️rust" }
 semio-plugin-actor-host = { path = "../../../🌐host/📦️packages/🦀️rust" }
 semio-plugin-decl-emission = { path = "../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
 semio-plugin-reactor-app = { path = "../../🔌️app/📦️packages/🦀️rust" }

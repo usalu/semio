@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "reserved",
+          "actual",
+          "expectedActual",
+          "scope",
+          "issuer",
+          "admitted",
+          "valid"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "reserved": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "actual": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "expectedActual": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "scope": {
+            "enum": [
+              "original",
+              "replacement"
+            ]
+          },
+          "issuer": {
+            "enum": [
+              "original",
+              "replacement"
+            ]
+          },
+          "admitted": {
+            "type": "boolean"
+          },
+          "valid": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

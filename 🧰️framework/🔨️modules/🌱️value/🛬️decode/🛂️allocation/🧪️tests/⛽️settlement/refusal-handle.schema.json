@@ -1,0 +1,28 @@
+{
+  "type": "array",
+  "minItems": 4,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "occupied",
+      "sameOwner",
+      "sameGeneration",
+      "canTransfer"
+    ],
+    "properties": {
+      "occupied": {
+        "type": "boolean"
+      },
+      "sameOwner": {
+        "type": "boolean"
+      },
+      "sameGeneration": {
+        "type": "boolean"
+      },
+      "canTransfer": {
+        "type": "boolean"
+      }
+    }
+  }
+}

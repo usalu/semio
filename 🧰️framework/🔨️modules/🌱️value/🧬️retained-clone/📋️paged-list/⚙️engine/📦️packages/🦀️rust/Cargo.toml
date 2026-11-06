@@ -1,0 +1,38 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-value-paged-clone"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Original fixed-page clone traversal, element protocol and retirement custody."
+
+[package.metadata.semio]
+role = "framework"
+id = "value-paged-clone"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_value_paged_clone"
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-value-control-contract = { path = "../../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-retirement = { path = "../../../../../♻️retirement/📦️packages/🦀️rust" }
+semio-framework-value-clone-source = { path = "../../../../🔗️source/📦️packages/🦀️rust" }
+semio-framework-value-paged-list = { path = "../../../../../📋️list/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+semio-framework-value-retained-clone = { path = "../../../../🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-clone-source-testing = { path = "../../../../🔗️source/🧪️testing/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../✨️derive/📦️packages/🦀️rust" }
+semio-framework-test-fixtures = { path = "../../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

@@ -67,7 +67,7 @@ pub(crate) fn reconstruct(database: &SqliteDatabase, control: &mut SqliteSnapsho
     let package = reconstruct_opc_package(database, OPC, control)?;
     let opc = control.allocation_stage(PHASE, |remaining, progress,allocation|{
         let mut callback = |event: NativeDecodeProgress| progress(event.completed, event.total);
-        let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
+        let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeAllocationRequest|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
         let result = RetainedOpcPackage::try_from_package_controlled(package, &mut native);
         (result, native.owned_bytes())
     })??;
@@ -86,7 +86,7 @@ pub(crate) fn reconstruct(database: &SqliteDatabase, control: &mut SqliteSnapsho
         let source = std::mem::take(&mut document.doc);
         let part = control.allocation_stage(PHASE, |remaining, progress,allocation|{
             let mut callback = |event: NativeDecodeProgress| progress(event.completed, event.total);
-            let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
+            let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeAllocationRequest|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
             let result = DocxXmlPart::try_from_document_controlled(path, content_type, source, &mut native);
             (result, native.owned_bytes())
         })??;
@@ -94,7 +94,7 @@ pub(crate) fn reconstruct(database: &SqliteDatabase, control: &mut SqliteSnapsho
     }
     let xml_parts = control.allocation_stage(PHASE, |remaining, progress,allocation|{
         let mut callback = |event: NativeDecodeProgress| progress(event.completed, event.total);
-        let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
+        let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeAllocationRequest|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
         let result = docx_xml_parts_from_iter_controlled(std::mem::take(&mut parts.0), &mut native);
         (result, native.owned_bytes())
     })??;

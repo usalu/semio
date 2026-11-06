@@ -26,7 +26,7 @@ where
         if maximum_work_units==0{return Ok(Default::default())}Ok(if self.source.is_none(){RetirementDemand{copy_bytes:source.binding_copy_bytes().max(size_of::<T>()),depth:1,..Default::default()}}else if self.value.is_none(){RetirementDemand{copy_bytes:size_of::<T>(),depth:1,..Default::default()}}else{Default::default()})
     }
     fn advance_work_demand(&self,source:RetainedCloneRef<'_,T>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{self.advance_demands(source,body,maximum_work_units)?;Ok(u64::from(maximum_work_units>0&&(self.source.is_none()||self.value.is_none())))}
-    fn advance(&mut self, source: RetainedCloneRef<'_, T>, body: usize, maximum_work_units:u64, grant: RetainedCloneGrant) ->crate::OriginalRetirementOutcome{let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
+    fn advance(&mut self, source: RetainedCloneRef<'_, T>, body: usize, maximum_work_units:u64, effect:&mut crate::RetainedAllocationEffect<'_>) ->crate::OriginalRetirementOutcome{let grant=effect.grant();let maximum_work_units=maximum_work_units.min(effect.maximum_work_units());let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
         if self.closing {
             return Err((ValueError::literal(ValueRefusalKind::InvariantViolated, "retained scalar clone cursor is closing")).into());
         }
@@ -49,30 +49,26 @@ where
 
     fn take_work_demand(&self)->Result<u64,ValueError>{Ok(u64::from(self.output_ready()))}
     fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.closing{return Ok(0)}self.close.next_owner_work::<T>(self.value.is_some(),&self.source,body)}
-    fn take_demand(&self)->Result<RetirementDemand,ValueError>{Ok(retained_clone_take_demand())}
-    fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(T,RetainedCloneProgress)>>{if !self.output_ready(){return RetainedWorkOutcome{result:Ok(None),work:0}}let turn=take_retained_clone_output(&mut self.value,grant);if matches!(&turn.result,Ok(Some(_))){self.spent = true;}turn}
+    fn take_demand(&self)->Result<RetirementDemand,ValueError>{crate::retained_clone::retained_clone_cursor_take_demand::<T,bool>()}
+    fn take<'reply>(&mut self,output:&mut Option<T>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalEffectReply<'reply,RetainedCloneStep,ValueError>)->Result<crate::retained_clone::OriginalEffectReplyComplete<'reply,RetainedCloneStep,ValueError>,ValueError>{crate::retained_clone::take_retained_clone_cursor_output!(self.output_ready(),self.value,output,self.spent,true,effect,reply,T,bool)}
 
-    fn begin_close(&mut self) -> bool {
-        if self.closing {
-            return false;
-        }
-        self.closing = true;
-        true
-    }
+    
+    fn close_started(&self)->bool{self.closing}
     fn begin_close_work_demand(&self)->Result<u64,ValueError>{Ok(u64::from(!self.closing))}
-    fn begin_close_paid(&mut self)->RetainedWorkOutcome<(),ValueError>{if self.closing{return RetainedWorkOutcome{result:Ok(()),work:0}}self.closing=true;RetainedWorkOutcome{result:Ok(()),work:1}}
+    fn begin_close_demand(&self)->Result<crate::RetirementDemand,crate::ValueError>{let flags=usize::from(!self.closing);Ok(crate::RetirementDemand{copy_bytes:flags*std::mem::size_of::<bool>(),depth:usize::from(flags!=0),..Default::default()})}
+fn begin_close_paid(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<crate::RetainedCloneProgress,crate::ValueError>{crate::retained_clone::start_retained_close(&mut self.closing,effect)}
 
     
 
     fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Ok(Default::default());}self.close.next_owner_demands::<T>(self.value.is_some(),&self.source,body)}
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) ->crate::OriginalRetirementOutcome{let mut work=0;let result=(||{
+    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let grant=effect.grant();let mut work=0;let result=(||{
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !self.closing { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "clone cursor must begin close before granted retirement").into()); }
         if !retained_clone_grant_admits(grant,self.close_demands(grant.maximum_copy_bytes)?){return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if !self.close.is_empty() { let turn=self.close.step_granted(grant);work+=turn.work;return turn.result; }
-        {let turn=self.close.begin_granted(&mut self.value, grant);work+=turn.work;if let Some(step)=turn.result?{return Ok(step)}}
-        {let turn=close_retained_binding(&mut self.source, grant);work+=turn.work;turn.result}
+        if !self.close.is_empty() { let turn=self.close.step_granted(effect);work+=turn.work;return turn.result; }
+        {let turn=self.close.begin_granted(&mut self.value,effect);work+=turn.work;if let Some(step)=turn.result?{return Ok(step)}}
+        {let turn=close_retained_binding(&mut self.source,effect);work+=turn.work;turn.result}
     })();RetainedWorkOutcome{result,work}}
 
     fn next_close_depth_demand(&self)->Result<usize,ValueError>{if !self.closing {return Ok(0);} self.close.next_owner_depth_with_binding(self.value.is_some(),&self.source)}

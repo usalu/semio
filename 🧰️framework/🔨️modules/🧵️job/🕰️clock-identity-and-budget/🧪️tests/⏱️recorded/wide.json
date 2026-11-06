@@ -1,0 +1,44 @@
+[
+  {
+    "name": "beyond machine word",
+    "now": [
+      1,
+      0,
+      0
+    ],
+    "deadline": [
+      0,
+      4294967295,
+      4294967295
+    ],
+    "yield": true
+  },
+  {
+    "name": "future wide deadline",
+    "now": [
+      1,
+      0,
+      0
+    ],
+    "deadline": [
+      1,
+      0,
+      1
+    ],
+    "yield": false
+  },
+  {
+    "name": "same wide instant",
+    "now": [
+      1,
+      2,
+      3
+    ],
+    "deadline": [
+      1,
+      2,
+      3
+    ],
+    "yield": true
+  }
+]

@@ -22,6 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-value-native-receiving-original = { path = "../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/📦️packages/🦀️rust" }
 semio-os-spr = { path = "../../../../../../📡️spr/📦️packages/🦀️rust" }
 semio-os-store-document = { path = "../../../../../🧾️document/📦️packages/🦀️rust" }
 semio-os-store-engine = { path = "../../../../../⚙️engine/📦️packages/🦀️rust" }

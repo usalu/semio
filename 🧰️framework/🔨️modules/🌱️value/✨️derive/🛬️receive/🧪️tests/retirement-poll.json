@@ -1,0 +1,23 @@
+{
+  "cases": [
+    {
+      "family": "record",
+      "source": "struct PollRecord { value:u64 }"
+    },
+    {
+      "family": "enum",
+      "source": "#[value(tag=\"kind\")] enum PollChoice { Value{value:u64}, Empty }"
+    }
+  ],
+  "ports": [
+    "close_step",
+    "close_original_birth_step",
+    "close_original_step"
+  ],
+  "output": "OriginalRetirementPoll",
+  "pending": {
+    "completed": false,
+    "keepsOriginalAction": true,
+    "replaysChild": false
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "stock",
+    "body",
+    "calls",
+    "recoveries",
+    "work",
+    "probe",
+    "trace"
+  ],
+  "properties": {
+    "stock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth",
+        "fuel"
+      ],
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "fuel": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "body": {
+      "type": "string",
+      "minLength": 1
+    },
+    "calls": {
+      "const": 1
+    },
+    "recoveries": {
+      "const": 0
+    },
+    "work": {
+      "const": [
+        1,
+        0
+      ]
+    },
+    "probe": {
+      "const": 73
+    },
+    "trace": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "phase",
+          "output",
+          "recorded",
+          "interrupted"
+        ],
+        "properties": {
+          "phase": {
+            "enum": [
+              "prepare",
+              "recover"
+            ]
+          },
+          "output": {
+            "const": true
+          },
+          "recorded": {
+            "const": true
+          },
+          "interrupted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

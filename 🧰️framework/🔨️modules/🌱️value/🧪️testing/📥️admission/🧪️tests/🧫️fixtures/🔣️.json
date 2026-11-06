@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "stock",
+    "work",
+    "unwindIndex",
+    "allocationAttempts",
+    "rejectChangedGrant",
+    "zero"
+  ],
+  "properties": {
+    "stock": {
+      "const": {
+        "items": 10,
+        "copyBytes": 128,
+        "capacityBytes": 128,
+        "releaseBytes": 128,
+        "depth": 8,
+        "fuel": 5
+      }
+    },
+    "work": {
+      "const": [
+        2,
+        1,
+        2
+      ]
+    },
+    "unwindIndex": {
+      "const": 1
+    },
+    "allocationAttempts": {
+      "const": 0
+    },
+    "rejectChangedGrant": {
+      "const": true
+    },
+    "zero": {
+      "const": {
+        "performed": 0,
+        "sourceChecks": 1,
+        "remainingWork": 5
+      }
+    }
+  }
+}

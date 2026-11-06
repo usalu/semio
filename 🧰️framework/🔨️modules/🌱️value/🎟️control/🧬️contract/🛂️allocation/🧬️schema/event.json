@@ -1,0 +1,173 @@
+{
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "request"
+      ],
+      "properties": {
+        "kind": {
+          "const": "admit"
+        },
+        "request": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "ownedBytes",
+            "nextOwnedBytes",
+            "maximumBytes"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "ownedBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "nextOwnedBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maximumBytes": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "request"
+      ],
+      "properties": {
+        "kind": {
+          "const": "quote"
+        },
+        "request": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "ownedBytes",
+            "nextOwnedBytes",
+            "maximumBytes"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "ownedBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "nextOwnedBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maximumBytes": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "request",
+        "actual"
+      ],
+      "properties": {
+        "kind": {
+          "const": "post"
+        },
+        "request": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "ownedBytes",
+            "nextOwnedBytes",
+            "maximumBytes"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "ownedBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "nextOwnedBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maximumBytes": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "actual": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "request"
+      ],
+      "properties": {
+        "kind": {
+          "const": "cancel"
+        },
+        "request": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "ownedBytes",
+            "nextOwnedBytes",
+            "maximumBytes"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "ownedBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "nextOwnedBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maximumBytes": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    }
+  ]
+}

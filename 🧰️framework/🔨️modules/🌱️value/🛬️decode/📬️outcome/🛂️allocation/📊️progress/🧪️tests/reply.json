@@ -1,0 +1,16 @@
+{
+  "events": [
+    "quote",
+    "unwind",
+    "recover",
+    "cancel",
+    "unwind",
+    "recover",
+    "finish"
+  ],
+  "quotes": 1,
+  "cancels": 1,
+  "producerRecoveries": 0,
+  "admittedBytes": 0,
+  "actual": null
+}

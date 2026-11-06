@@ -7,3 +7,5 @@ The forwarding callback distinguishes Quote, Post and Cancel. It holds the exact
 Schema/corpus and an independent SQLite/Ajv test were authored first; a Rust port-state law is mounted in the existing owner tests. Original Member native work/retirement laws now carry the resident allocation state. Neither native law has run against these changes, and the new neutral test is not yet executed.
 
 Remaining work includes paid original source lifetime custody across interrupted callbacks (the binding alone is a scalar witness), a lossless forwarded-control continuation/unwind result, recovery while old grants remain pending, and migration of the separate public SPR receiving adapter. This source is not end-to-end acceptance and does not introduce extra physical or CPU credit.
+
+Current canonical request/event/budget now lives in the first-party control contract; Member and SPR explicitly reexport/import canonical names and retain their own work issuers. Eleven-case SQLite/Ajv oracle passed1/12assertions, including budget-only Admit without physical spending and malformed cumulative requests. Native laws remain unexecuted; see history-resident-birth-checkpoint.md.

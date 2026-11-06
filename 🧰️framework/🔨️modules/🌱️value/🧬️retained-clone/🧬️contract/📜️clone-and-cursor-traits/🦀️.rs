@@ -1,6 +1,7 @@
 //! 📜️ Clone and cursor traits of the retained clone contract: the retained clone trait with its bitwise hooks, the bulk page bytes, the bulk run helpers, the clone cursor trait, the close record and the binding close helper. See [`super`].
 
 use super::*;
+pub use semio_framework_value_control_contract::{OriginalEffectReply,OriginalEffectReplyComplete};
 
 pub trait RetainedClone: RetireOwned + Send + Sync + Sized + 'static {
     type Cursor: RetainedCloneCursor<Self>;
@@ -29,7 +30,7 @@ pub fn bulk_run_progress(elements: usize, width: usize) -> RetainedCloneProgress
 
 /// 🧷️ Transfers one native owner once; after `take`, callers must close the spent cursor before dropping it.
 /// 🎟️ Borrows the actual selected child closure quote without advancing its typed owner.
-pub fn clone_cursor_close_demand<T:RetainedClone>(cursor:&impl RetainedCloneCursor<T>,body:usize)->Result<RetirementDemand,ValueError>{if cursor.terminal_is_empty(){return Ok(RetirementDemand{depth:1,..Default::default()})}cursor.close_demands(body)}
+pub fn clone_cursor_close_demand<T:RetainedClone>(cursor:&impl RetainedCloneCursor<T>,body:usize)->Result<RetirementDemand,ValueError>{if cursor.terminal_is_empty(){return Ok(RetirementDemand{depth:1,..Default::default()})}if cursor.close_started(){cursor.close_demands(body)}else{cursor.begin_close_demand()}}
 
 pub trait RetainedCloneCursor<T: RetainedClone>: Send {
     fn output_ready(&self)->bool{false}
@@ -43,18 +44,20 @@ pub trait RetainedCloneCursor<T: RetainedClone>: Send {
     }
     /// ⛽️ Quotes actual selected work without exceeding the supplied original limit.
     fn advance_work_demand(&self,_source:RetainedCloneRef<'_,T>,_body:usize,_maximum_work_units:u64)->Result<u64,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"clone cursor lacks an original work quote"))}
-    fn advance(&mut self,source:RetainedCloneRef<'_,T>,body:usize,maximum_work_units:u64,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome;
+    fn advance(&mut self,source:RetainedCloneRef<'_,T>,body:usize,maximum_work_units:u64,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome;
     /// 📤️ Quotes the original ready-owner transfer work before handoff.
     fn take_work_demand(&self)->Result<u64,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"clone cursor lacks an original take work quote"))}
     /// ♻️ Quotes the selected child retirement work before closure.
     fn close_work_demand(&self,_body:usize)->Result<u64,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"clone cursor lacks an original close work quote"))}
     fn take_demand(&self)->Result<RetirementDemand,ValueError>;
-    fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(T,RetainedCloneProgress)>>;
-    fn begin_close(&mut self) -> bool;
+    fn take<'reply>(&mut self,output:&mut Option<T>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,ValueError>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,ValueError>,ValueError>;
+    fn recover_take<'reply>(&mut self,_output:&mut Option<T>,_effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,ValueError>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,ValueError>,ValueError>{Ok(reply.pending())}
+    
     /// ⛽️ Quotes the selected original close-start action before effects.
     fn begin_close_work_demand(&self)->Result<u64,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"clone cursor lacks an original close-start work quote"))}
     /// 🚦️ Performs the admitted close-start action and reports actual work.
-    fn begin_close_paid(&mut self)->RetainedWorkOutcome<(),ValueError>{RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"clone cursor lacks an original close-start action")),work:0}}
+    fn begin_close_demand(&self)->Result<crate::RetirementDemand,crate::ValueError>{Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"cursor lacks an original close-start physical quote"))}
+fn begin_close_paid(&mut self,_effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<crate::RetainedCloneProgress,ValueError>{RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"clone cursor lacks an original close-start action")),work:0}}
     
     fn terminal_is_empty(&self) -> bool;
     /// 🪜️ Observes the depth of the next controlled close transition without changing ownership.
@@ -72,12 +75,12 @@ pub trait RetainedCloneCursor<T: RetainedClone>: Send {
         Err(ValueError::new(ValueRefusalKind::UnsupportedOwner, "clone cursor has no controlled close release demand"))
     }
     /// 🎯️ Executes the same body-selected close only after every granted axis admits its fixed quote.
-    fn close_selected(&mut self,body:usize,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome{
+    fn close_selected(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let grant=effect.grant();
         if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
         let selected=(||{let demand=self.close_demands(body)?;if !retained_clone_grant_admits(grant,demand){return Ok(None)}if self.close_demands(demand.copy_bytes)?!=demand{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"selected retirement quote changes under its exact admitted copy frontier"))}Ok(Some(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}))})();
-        match selected{Ok(Some(grant))=>self.close_step(grant),Ok(None)=>RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0},Err(error)=>RetainedWorkOutcome{result:Err(error.into()),work:0}}
+        match selected{Ok(Some(grant))=>match effect.reborrow(grant,effect.maximum_work_units()){Ok(mut child)=>self.close_step(&mut child),Err(error)=>RetainedWorkOutcome{result:Err(error.into()),work:0}},Ok(None)=>RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0},Err(error)=>RetainedWorkOutcome{result:Err(error.into()),work:0}}
     }
-    fn close_step(&mut self,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome{
+    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let grant=effect.grant();
         RetainedWorkOutcome{result:if grant.maximum_items==0{Ok(RetainedCloneStep::Progress(Default::default()))}else{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"clone cursor has no capacity-bearing close authority").into())},work:0}
     }
 }
@@ -85,10 +88,6 @@ pub trait RetainedCloneCursor<T: RetainedClone>: Send {
 pub use semio_framework_value_clone_source::{RetainedCloneClose,RetainedEmptyOwner,RetainedCloseSelection,close_retained_binding};
 
 
-/// 📤️ Quotes one ownership transition without creating another retained payload.
-pub fn retained_clone_take_demand()->RetirementDemand{RetirementDemand{depth:1,..Default::default()}}
-/// 🧳️ Moves the actual ready output slot once and reports its defining work.
-pub fn take_retained_clone_output<T>(output:&mut Option<T>,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(T,RetainedCloneProgress)>>{
- if output.is_none()||!retained_clone_grant_admits(grant,retained_clone_take_demand()){return RetainedWorkOutcome{result:Ok(None),work:0}}
- let value=match output.take(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("output absent").into()),work:0}};RetainedWorkOutcome{result:Ok(Some((value,RetainedCloneProgress{copied_items:1,..Default::default()}))),work:1}
-}
+pub use semio_framework_value_control_contract::{retained_clone_take_demand,take_retained_clone_output};
+
+pub use semio_framework_value_control_contract::{retained_clone_cursor_take_demand,take_retained_clone_cursor_output};

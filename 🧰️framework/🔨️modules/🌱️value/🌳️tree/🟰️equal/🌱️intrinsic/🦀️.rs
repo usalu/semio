@@ -19,7 +19,7 @@ impl<T:RetainedEquality> RetainedEqualityCursor<DslValue> for ValueField<T>{
  fn advance(&mut self,left:&DslValue,right:&DslValue,g:RetainedCloneGrant)->RetainedWorkOutcome<crate::RetainedEqualityStep>{match((self.project)(left),(self.project)(right)){(Some(left),Some(right))=>self.cursor.advance(left,right,g),_=>RetainedWorkOutcome{result:Err(invalid()),work:0}}}
  fn begin_close(&mut self){self.cursor.begin_close()}
  fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.cursor.close_demand(body)}
- fn close_step(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{self.cursor.close_step(g)}
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome{let g=effect.grant();self.cursor.close_step(&mut effect.reborrow(g,effect.maximum_work_units()).expect("retirement child exceeds original effect"))}
  fn terminal_is_empty(&self)->bool{self.cursor.terminal_is_empty()}
 }
 fn field<T:RetainedEquality>(project:fn(&DslValue)->Option<&T>,g:RetainedCloneGrant)->RetainedWorkOutcome<Option<(Box<dyn RetainedEqualityCursor<DslValue>>,RetainedCloneProgress)>>{
@@ -60,25 +60,29 @@ impl OriginalValueEquality{
  }
  pub fn begin_close(&mut self){self.closing=true;self.cursor.begin_close()}
  pub fn next_close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Err(invalid())}if !self.cursor.terminal_is_empty(){return self.cursor.close_demand(body)}Ok(if self.binding.is_some(){RetirementDemand{copy_bytes:size_of::<(usize,usize)>(),depth:1,..Default::default()}}else{Default::default()})}
- pub fn close_step(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{
+ pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome{let g=effect.grant();
   if !self.closing{return RetainedWorkOutcome{result:Err(invalid()),work:0}}if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
   let d=match self.next_close_demands(g.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};if !permits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
-  if !self.cursor.terminal_is_empty(){return self.cursor.close_step(g)}self.binding=None;self.result=None;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:1}
+  if !self.cursor.terminal_is_empty(){return self.cursor.close_step(&mut effect.reborrow(g,effect.maximum_work_units()).expect("retirement child exceeds original effect"))}self.binding=None;self.result=None;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:1}
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.binding.is_none()&&self.cursor.terminal_is_empty()}
 }
 impl Drop for OriginalValueEquality{fn drop(&mut self){assert!(self.terminal_is_empty(),"original intrinsic equality requires complete funded closure")}}
 #[cfg(test)]#[path="🧪️tests.rs"]mod tests;
 
-struct EqualityRetirement(OriginalValueEquality);
+/// 🧳️ Inline retirement keeps the already closing original equality owner.
+#[doc(hidden)]
+pub struct EqualityRetirement(OriginalValueEquality);
 impl crate::retirement::RetireOwned for OriginalValueEquality{
- fn retirement(mut self)->Box<dyn crate::retirement::RetirementCursor>{self.begin_close();Box::new(EqualityRetirement(self))}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<EqualityRetirement>())}
+ type RetirementCursor=EqualityRetirement;
+ fn retirement_seed(self)->Self::RetirementCursor{EqualityRetirement(self)}
+ fn retirement_ready(&self)->bool{self.closing}
+ fn retirement_birth_bytes(&self)->Option<usize>{self.closing.then_some(size_of::<EqualityRetirement>())}
  fn controlled_retirement_supported()->bool{true}
 }
 impl crate::retirement::RetirementCursor for EqualityRetirement{
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.0.next_close_demands(body)}
- fn close_step(&mut self,g:RetainedCloneGrant)->crate::retirement::RetirementStep{use crate::retirement::RetirementStep;let turn=self.0.close_step(g);match turn.result{Err(error)=>RetirementStep::Failure(error.into(),turn.work),Ok(RetainedCloneStep::Complete(p))if p==RetainedCloneProgress::default()=>RetirementStep::Complete(turn.work),Ok(step)if step.progress()!=RetainedCloneProgress::default()||turn.work!=0=>RetirementStep::Progress(step.progress(),turn.work),Ok(_)=>RetirementStep::BudgetExhausted}}
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::retirement::RetirementStep{let g=effect.grant();use crate::retirement::RetirementStep;let turn=self.0.close_step(&mut effect.reborrow(g,effect.maximum_work_units()).expect("retirement child exceeds original effect"));match turn.result{Err(error)=>RetirementStep::Failure(error.into(),turn.work),Ok(RetainedCloneStep::Complete(p))if p==RetainedCloneProgress::default()=>RetirementStep::Complete(turn.work),Ok(step)if step.progress()!=RetainedCloneProgress::default()||turn.work!=0=>RetirementStep::Progress(step.progress(),turn.work),Ok(_)=>RetirementStep::BudgetExhausted}}
  fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.next_close_demands(0)?.copy_bytes)}
  fn allows_admitted_narrow_work(&self)->bool{true}

@@ -1,0 +1,23 @@
+{
+  "queries": [
+    "kind",
+    "null",
+    "boolean",
+    "number",
+    "enumOrdinal",
+    "recordLength",
+    "sequenceLength"
+  ],
+  "events": [
+    "receive",
+    "performed",
+    "recordError",
+    "unwind",
+    "recoverRecorded",
+    "recordOuter",
+    "transfer"
+  ],
+  "calls": 1,
+  "work": 2,
+  "preserveError": true
+}

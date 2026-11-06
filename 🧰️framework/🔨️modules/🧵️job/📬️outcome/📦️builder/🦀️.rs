@@ -11,9 +11,9 @@ pub struct JobPayloadAuthority{original:ManuallyDrop<Option<Arc<JobPayloadOperat
 impl JobPayloadAuthority{
  pub fn admission_demand()->RetirementDemand{RetirementDemand{capacity_bytes:semio_framework_value_retirement::retirement::allocation_return::shared_allocation_bytes::<JobPayloadOperationLedger>(),depth:1,..Default::default()}}
  fn permits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
- pub fn admit(operation:OperationId,generation:Generation,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(Self,RetainedCloneProgress)>>{
+ pub fn admit(operation:OperationId,generation:Generation,grant:RetainedCloneGrant,actual:&mut Option<usize>)->crate::RetainedWorkOutcome<Option<(Self,RetainedCloneProgress)>>{
   if !Self::permits(grant,Self::admission_demand()){return crate::RetainedWorkOutcome{result:Ok(None),work:0}}
-  let turn=semio_framework_value_retirement::retirement::allocation_return::admit_shared_allocation(JobPayloadOperationLedger::new(operation,generation),grant);
+  let turn=semio_framework_value_retirement::retirement::allocation_return::admit_shared_allocation(JobPayloadOperationLedger::new(operation,generation),grant,actual);
   let result=match turn.result{Ok((original,p))=>Ok(Some((Self{original:ManuallyDrop::new(Some(original))},p))),Err((error,original))=>{drop(original);Err(error)}};
   crate::RetainedWorkOutcome{result,work:turn.work}
  }
@@ -23,6 +23,8 @@ impl JobPayloadAuthority{
  pub fn accounted_capacity_bytes(&self)->usize{self.original().map_or(0,|ledger|ledger.process_share_bytes())}
  pub fn terminal_is_empty(&self)->bool{self.original.is_none()}
  pub fn retirement_demands(&self)->RetirementDemand{if self.terminal_is_empty(){return Default::default()}RetirementDemand{copy_bytes:Self::admission_demand().copy_bytes,release_bytes:semio_framework_value_retirement::retirement::allocation_return::shared_allocation_bytes::<JobPayloadOperationLedger>(),depth:1,..Default::default()}}
+ /// ⛽️ The selected ledger return is one action; an empty authority performs none.
+ pub fn retirement_work_demand(&self)->u64{u64::from(!self.terminal_is_empty())}
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{close_ledger(&mut self.original,grant)}
 }
 impl Drop for JobPayloadAuthority{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original payload authority reached Drop before separate paid ledger closure");}}

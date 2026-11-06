@@ -7,6 +7,6 @@ impl NativeRecordField{pub fn matches(self,key:NativeRecordKey<'_>)->bool{match 
 #[path="🔎️schema/🦀️.rs"]mod schema;
 pub use schema::{NativeSchemaLeaf,NativeSchemaKeySource,NativeRecordSchema,NativeFieldMatch,NativeRecordMatcher};
 
-#[path="📦️storage/🦀️.rs"]mod storage;
-pub use storage::NativeRecordStorage;
+pub use semio_framework_value_native_storage::NativeRecordStorage;
+
 

@@ -181,12 +181,12 @@ impl OriginalFloatWord{
     3=>{self.phase=4;let output=self.output.take();self.issued=output.map(|value|value.map(f64::to_bits));return Ok(output)},
     _=>return Err(invalid()),
    }Ok(None)
-  })();RetainedWorkOutcome{result:result.map_err(|error|error.with_retained_progress(self.progress)),work}
+  })();RetainedWorkOutcome{result:result.map_err(|error|error.with_retained_progress(self.progress)),work:u128::from(work)}
  }
  pub fn restore_output(&mut self,output:Option<f64>){assert_eq!(self.phase,4);assert_eq!(self.issued,Some(output.map(f64::to_bits)));self.issued=None;self.output=Some(output);self.phase=3}
  pub fn begin_close(&mut self){self.closing=true}
  pub fn close_demands(&self,_copy:usize)->Result<RetirementDemand,ValueError>{Ok(if self.binding.is_some()||self.output.is_some()||self.issued.is_some(){RetirementDemand{copy_bytes:size_of::<Option<(usize,usize)>>()+size_of::<Option<Option<f64>>>()+size_of::<Option<Option<u64>>>(),..fixed()}}else{Default::default()})}
- pub fn close_step(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{
+ pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome{let g=effect.grant();
   self.progress=Default::default();if !self.closing{return RetainedWorkOutcome{result:Err(invalid()),work:0}}if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
   let d=match self.close_demands(g.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};if !permits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.binding=None;self.output=None;self.issued=None;self.progress=RetainedCloneProgress{copied_bytes:d.copy_bytes,..unit()};RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(self.progress)),work:1}
  }

@@ -1,0 +1,84 @@
+{
+  "cases": [
+    {
+      "authority": 1,
+      "turn": 1,
+      "completed": 4,
+      "total": 8,
+      "owned": 16,
+      "entered": false,
+      "reply": "none",
+      "expected": "invoke"
+    },
+    {
+      "authority": 1,
+      "turn": 1,
+      "completed": 4,
+      "total": 8,
+      "owned": 16,
+      "entered": true,
+      "reply": "none",
+      "expected": "pending"
+    },
+    {
+      "authority": 1,
+      "turn": 1,
+      "completed": 4,
+      "total": 8,
+      "owned": 16,
+      "entered": true,
+      "reply": "continue",
+      "expected": "continue"
+    },
+    {
+      "authority": 1,
+      "turn": 1,
+      "completed": 4,
+      "total": 8,
+      "owned": 16,
+      "entered": true,
+      "reply": "cancel",
+      "expected": "cancel"
+    },
+    {
+      "authority": 2,
+      "turn": 1,
+      "completed": 4,
+      "total": 8,
+      "owned": 16,
+      "entered": true,
+      "reply": "cancel",
+      "expected": "foreign"
+    },
+    {
+      "authority": 1,
+      "turn": 2,
+      "completed": 4,
+      "total": 8,
+      "owned": 16,
+      "entered": true,
+      "reply": "continue",
+      "expected": "foreign"
+    },
+    {
+      "authority": 1,
+      "turn": 1,
+      "completed": 5,
+      "total": 8,
+      "owned": 16,
+      "entered": true,
+      "reply": "continue",
+      "expected": "foreign"
+    },
+    {
+      "authority": 1,
+      "turn": 1,
+      "completed": 4,
+      "total": 8,
+      "owned": 16,
+      "entered": false,
+      "reply": "continue",
+      "expected": "invalid"
+    }
+  ]
+}

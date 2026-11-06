@@ -1,5 +1,10 @@
 //! 🕰️ Clock, identity and budget: the synchronous poll, the cancel tokens, the millisecond and microsecond clocks, the revision and operation identities, the commit validation and the step budget with its lane constants. The owning job context consumes these scalar values.
 
+pub use semio_framework_job_recorded_clock::{OriginalClockAction,OriginalClockObservation,OriginalClockDeadline,OriginalClockDecisionFrame,OriginalClockDecisionStatus,OriginalClockAuthority,OriginalClockProducer,OriginalClockReply,OriginalClockReplyComplete};
+pub use semio_framework_job_recorded_clock::{admit_original_host_clock,OriginalErasedHostClock,OriginalHostClock,OriginalHostClockProducer,OriginalSystemClockContext};
+#[cfg(any(not(target_arch="wasm32"),target_env="p2"))]
+pub use semio_framework_job_recorded_clock::OriginalSystemClock;
+
 #[path="🪜️stride/🦀️.rs"]
 mod stride;
 pub use stride::ClockStride;

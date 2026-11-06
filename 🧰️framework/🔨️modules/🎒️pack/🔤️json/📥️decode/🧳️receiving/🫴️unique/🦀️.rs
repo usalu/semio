@@ -1,7 +1,8 @@
 //! 🫴️ A borrowed original JSON output becomes one unique typed owner while every partial parser and receiver remains funded.
 use semio_framework_pack_json::{JsonGrammarCursor,JsonSourceCursor,JsonReadLimits,JsonMemberPolicy,JsonError};
 use semio_framework_value::{DslValue,NativeDecodeControl,OriginalRetirementControl,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneSource,RetainedCloneSourceAdmission,RetainedCloneClose,retained_clone_grant_admits}};
-use semio_framework_value_native_owned::{NativeReceive,OriginalReceivingPrimary,owned::NativeReceivingOriginal};
+use semio_framework_value_native_owned::{NativeReceive,OriginalReceivingPrimary};
+use semio_framework_value_native_receiving_original::NativeReceivingOriginal;
 use std::mem::{ManuallyDrop,size_of};
 #[derive(Clone,Copy,PartialEq,Eq)]
 enum Phase{Parse,Bind,Source,Receiver,Receive,Take,CloseReceiver,CloseParser,Ready}

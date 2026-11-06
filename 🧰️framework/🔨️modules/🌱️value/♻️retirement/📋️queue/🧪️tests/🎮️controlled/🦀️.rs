@@ -11,9 +11,9 @@ fn original_retirement_queue_keeps_actual_controlled_child_failure_receipt(){
     struct FailedChild { original:ControlledRetirement<String>,failed:bool,source_pointer:usize }
     impl ErasedSnapshotRetirement for FailedChild {
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.original.next_demand(body)}
-        fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{let result=(||{
+        fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome{let grant=effect.grant();let result=(||{
             if !self.failed { self.failed=true;let quote=self.original.next_capacity_byte_demand(grant.maximum_copy_bytes)?;let result=self.original.reserve_cursor_slot(quote,|list,grant|list.reserve_one_using::<ExcessAllocation>(grant));assert_eq!(self.original.original().unwrap().as_ptr()as usize,self.source_pointer);return result; }
-            self.original.step(grant)
+            self.original.step(&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"))
         })();crate::RetainedWorkOutcome{result,work:self.original.last_turn_work()}}
         fn next_copy_byte_demand(&self)->Result<usize,ValueError>{self.original.next_copy_byte_demand()}
         fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{self.original.next_capacity_byte_demand(copy)}

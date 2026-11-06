@@ -5,7 +5,8 @@ use serde::{Deserialize, Serialize};
 
 //#region 🔖️Span
 /// 📍️ 1-based line/column position with a length, covering a run of source text.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::NativeReceive)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[serde(rename_all = "camelCase")]
 pub struct TextSpan {
     pub line: u32,

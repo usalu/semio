@@ -1,0 +1,3 @@
+/** 🪢️ Nested effect authority follows the neutral grant partial order. */
+import {test,expect} from "bun:test";import Ajv from "ajv";import law from "./cases.json";
+test("nested effect authority cannot widen its original payer",()=>{expect(new Ajv().validate({type:"array",items:{type:"object",required:["name","capacity","work","admitted"],properties:{name:{type:"string"},capacity:{type:"integer",minimum:0},work:{type:"integer",minimum:0},admitted:{type:"boolean"}},additionalProperties:false}},law.cases)).toBe(true);for(const row of law.cases)expect(row.capacity<=law.parent.maximumCapacityBytes&&row.work<=law.maximumWorkUnits).toBe(row.admitted);});

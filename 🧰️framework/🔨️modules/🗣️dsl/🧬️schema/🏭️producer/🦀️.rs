@@ -75,9 +75,9 @@ pub fn boxed<C:NativeSchemaControl>(shape:super::Shape,control:&mut C)->Result<B
 #[cfg(test)]
 mod work_tests{
  use super::*;
- use semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient;
+ use semio_framework_value_native_owned::native_decoding::{OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete};
  struct Loan(u64);
- impl NativeDecodeWorkRecipient for Loan{fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=self.0))}}
+ impl OriginalWorkRecipient for Loan{fn admits<'a>(&mut self,quote:OriginalWorkQuote<'a>,observed:u64,additional:u64)->OriginalWorkQuoteComplete<'a>{quote.complete((||{Ok(observed.checked_add(additional).is_some_and(|total|total<=self.0))})())}}
  #[test]
  fn original_schema_field_selection_obeys_real_work_loan(){
   let f:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🏭️producer/🎟️work.json")).unwrap();

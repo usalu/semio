@@ -56,7 +56,7 @@ export async function encodeValueErrorControlled(error: ValueError, control: Val
     const kindName = await copyText("kind", control); await control.step();
     const message = await copyText(error.message, control); await control.charge(64);
     const messageName = await copyText("message", control); await control.step();
-    const receipt = await encodeRetainedProgress(error.retainedProgress, control);
+    const receipt = await encodeRetainedProgressControlled(error.retainedProgress, control);
     const receiptName = await copyText("retainedProgress", control); await control.step();
     return { kind: "object", members: [{ name: kindName, value: kindValue }, { name: messageName, value: { kind: "text", value: message } }, { name: receiptName, value: receipt }] };
   });
@@ -80,13 +80,14 @@ export async function decodeValueErrorControlled(value: IntrinsicValue, control:
     if (messageValue?.kind !== "text") throw new ValueError("invalidValue", "expected refusal message text");
     await control.charge(64);
     if (retainedValue === undefined) throw new ValueError("invalidValue", "missing refusal retained receipt");
-    const receipt = await decodeRetainedProgress(retainedValue, control);
+    const receipt = await decodeRetainedProgressControlled(retainedValue, control);
     return new ValueError(valueKind, await copyText(messageValue.value, control)).withRetainedProgress(receipt);
   });
 }
 
 const retainedAxes = ["copiedItems", "copiedBytes", "retainedCapacityBytes", "releasedBytes"] as const;
-async function encodeRetainedProgress(receipt: ValueErrorRetainedProgress, control: ValueRefusalCodecControl): Promise<IntrinsicValue> {
+/** 🧊️ Encodes the original receipt axes under caller admission; see {@link ValueErrorRetainedProgress}. */
+export async function encodeRetainedProgressControlled(receipt: ValueErrorRetainedProgress, control: ValueRefusalCodecControl): Promise<IntrinsicValue> {
   return control.scopedStage(async () => {
     await control.beginStage(4); await control.charge(64 + 4 * 64);
     const members: { name: string; value: IntrinsicValue }[] = [];
@@ -99,7 +100,8 @@ async function encodeRetainedProgress(receipt: ValueErrorRetainedProgress, contr
     return { kind: "object", members };
   });
 }
-async function decodeRetainedProgress(value: IntrinsicValue, control: ValueRefusalCodecControl): Promise<ValueErrorRetainedProgress> {
+/** 🎛️ Receives exact closed receipt axes; see {@link ValueErrorRetainedProgress}. */
+export async function decodeRetainedProgressControlled(value: IntrinsicValue, control: ValueRefusalCodecControl): Promise<ValueErrorRetainedProgress> {
   return control.scopedStage(async () => {
     await control.beginStage(4);
     if (value.kind !== "object" || value.members.length !== 4) throw new ValueError("invalidValue", "refusal retained receipt requires four axes");

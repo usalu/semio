@@ -108,21 +108,6 @@ impl RetirementCursor for ValueRetirement {
     fn next_depth_demand(&self)->Result<usize,ValueError> {Self::next_depth_demand(self)}
     fn terminal_release_bytes(&self)->Option<usize> {self.terminal_is_empty().then_some(size_of::<Self>())}
 }
-impl RetireOwned for Dictionary {
-    fn retirement(self)->Box<dyn RetirementCursor> {RetireOwned::retirement(self.pairs)}
-    fn retirement_birth_bytes(&self)->Option<usize> {RetireOwned::retirement_birth_bytes(&self.pairs)}
-    fn controlled_retirement_supported()->bool {true}
-}
-impl RetireOwned for Value {
-    fn retirement(self)->Box<dyn RetirementCursor> {match self {Value::Atom(value)=>RetireOwned::retirement(value),Value::Dictionary(value)=>RetireOwned::retirement(value)}}
-    fn retirement_birth_bytes(&self)->Option<usize> {match self {Value::Atom(value)=>RetireOwned::retirement_birth_bytes(value),Value::Dictionary(value)=>RetireOwned::retirement_birth_bytes(value)}}
-    fn controlled_retirement_supported()->bool {true}
-}
-impl RetireOwned for Atom {
-    fn retirement(self)->Box<dyn RetirementCursor> {match self {Atom::String(value)=>RetireOwned::retirement(value),Atom::Null|Atom::Boolean(_)|Atom::Integer(_)|Atom::Decimal(_)=>RetireOwned::retirement(())}}
-    fn retirement_birth_bytes(&self)->Option<usize> {match self {Atom::String(value)=>RetireOwned::retirement_birth_bytes(value),Atom::Null|Atom::Boolean(_)|Atom::Integer(_)|Atom::Decimal(_)=>RetireOwned::retirement_birth_bytes(&())}}
-    fn controlled_retirement_supported()->bool {true}
-}
 semio_framework_value::artifact_retire_struct!(FieldSpec {key,value,default,label});
 semio_framework_value::artifact_retire_struct!(Schema {id,module,name,icon,summary,fields});
 semio_framework_value::artifact_retire_struct!(ChannelSpec {code,abbreviation,name,full_name,operators,value_types,item_types,default,label,cardinality});

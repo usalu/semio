@@ -1,5 +1,5 @@
 //! 📽️ Original snapshot projection contracts and owned-field cursors share one neutral owner.
-pub use semio_framework_value_control_contract::{RetainedWorkOutcome, ValueError, ValueRefusalKind};
+pub use semio_framework_value_control_contract::{RetainedWorkOutcome, ValueError, ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetainedAllocationEffect};
 pub use semio_framework_value_retirement::{retirement, RetirementDemand,OriginalRetirementFailure,OriginalRetirementOutcome};
 pub use semio_framework_value_retained_clone::retained_clone;
 pub use semio_framework_value_shared_issuance as shared_issuance;

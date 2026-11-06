@@ -1,7 +1,8 @@
 //! 🛬️ Original Arc construction refuses before birth and retains every born root through cancellation or receipt refusal.
+use semio_framework_value_native_receiving_original::NativeReceivingOriginal;
 use super::*;
 use semio_framework_job::{OriginalTurnFailure,OriginalTurnPrimary};
-use semio_framework_value_native_owned::{OriginalReceivingPrimary,owned::NativeReceivingOriginal};
+use semio_framework_value_native_owned::{OriginalReceivingPrimary};
 
 fn advance(caller:&mut OriginalWorkFixture,owner:&mut NativeReceivingOriginal<semio_framework_value::DslValue,RasterImagePayload>)->Result<(),OriginalTurnFailure>{caller.turn(loan(),|cx|{let issued=cx.retained_grant();let mut work=0;let result=cx.with_native_receiving::<_,OriginalReceivingPrimary>(|control|{let turn=owner.advance(control,issued.maximum_copy_bytes,issued);work=turn.work;turn.result});let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};let receipt=cx.consume_receiving_retained(issued,progress);cx.consume_fuel(work);match result{Ok(_)=>{receipt?;Ok(())},Err(primary)=>Err(OriginalTurnFailure{effects:progress,primary:OriginalTurnPrimary::Receiving(primary),receipt_refusal:receipt.err(),context_refusal:None,work_refusal:None})}})}
 fn close(caller:&mut OriginalWorkFixture,owner:&mut NativeReceivingOriginal<semio_framework_value::DslValue,RasterImagePayload>){owner.begin_close();for turn in 0..100_000{if owner.terminal_is_empty(){return}caller.turn(loan(),|cx|{let demand=owner.close_demands(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.close_step(grant))?;Ok(())}).unwrap();assert!(turn<99_999);}panic!("native payload fixture close did not settle")}

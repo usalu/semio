@@ -3,7 +3,7 @@ use super::*;
 
 #[test]
 fn local_control_keeps_the_caller_ceiling_across_zero_capacity_turns(){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../🧪️tests/🚦️turn-ceiling/🧫️fixtures/🔣️.json")).unwrap();
     let ceiling=fixture["ceilingBytes"].as_u64().unwrap()as usize;let funded=fixture["fundedTurnBytes"].as_u64().unwrap()as usize;let refused=fixture["refusedBytes"].as_u64().unwrap()as usize;
     let mut admitted=|_:NativeEncodeProgress|true;let mut control=NativeEncodeControl::new(ceiling,&mut admitted);
     for _ in 0..fixture["zeroCapacityTurns"].as_u64().unwrap(){control.admit_turn_capacity(0).unwrap();assert_eq!(control.maximum_bytes(),0);}
@@ -13,13 +13,13 @@ fn local_control_keeps_the_caller_ceiling_across_zero_capacity_turns(){
 
 #[test]
 fn iterative_depth_observes_original_source_and_enclosing_scope(){
- let mut observer=|_:NativeEncodeProgress|true;let mut allocation=|_:NativeEncodeAllocationEvent|Ok(());let mut work=|_:usize,_:usize|Ok(());let mut allocation_loan_issuer=crate::native_encoding::NativeEncodeAllocationIssuer::new();let mut allocation_loan=allocation_loan_issuer.scoped_loan(&mut allocation);let mut control=NativeEncodeControl::new_scoped_source(0,2,&mut observer,&mut allocation_loan,&mut work);
+ let mut observer=|_:NativeEncodeProgress|true;let mut allocation=|_:NativeAllocationEvent|Ok(());let mut work=|_:usize,_:usize|Ok(());let mut allocation_loan_issuer=crate::native_encoding::NativeEncodeAllocationIssuer::new();let mut allocation_loan=allocation_loan_issuer.scoped_loan(&mut allocation);let mut control=NativeEncodeControl::new_scoped_source(0,2,&mut observer,&mut allocation_loan,&mut work);
  assert!(control.check_additional_depth(2).is_ok());assert_eq!(control.check_additional_depth(3).unwrap_err().kind,ValueRefusalKind::DepthLimit);
  control.scoped_depth(2,|same|->Result<(),ValueError>{assert!(same.check_additional_depth(1).is_ok());assert_eq!(same.check_additional_depth(2).unwrap_err().kind,ValueRefusalKind::DepthLimit);Ok(())}).unwrap();assert!(control.check_additional_depth(2).is_ok());assert_eq!(control.check_additional_depth(usize::MAX).unwrap_err().kind,ValueRefusalKind::DepthLimit);
 }
 
 #[test]
 fn iterative_scope_checks_enclosing_depth_and_restores_after_refusal(){
- let mut observer=|_:NativeEncodeProgress|true;let mut allocation=|_:NativeEncodeAllocationEvent|Ok(());let mut work=|_:usize,_:usize|Ok(());let mut allocation_loan_issuer=crate::native_encoding::NativeEncodeAllocationIssuer::new();let mut allocation_loan=allocation_loan_issuer.scoped_loan(&mut allocation);let mut control=NativeEncodeControl::new_scoped_source(0,2,&mut observer,&mut allocation_loan,&mut work);
+ let mut observer=|_:NativeEncodeProgress|true;let mut allocation=|_:NativeAllocationEvent|Ok(());let mut work=|_:usize,_:usize|Ok(());let mut allocation_loan_issuer=crate::native_encoding::NativeEncodeAllocationIssuer::new();let mut allocation_loan=allocation_loan_issuer.scoped_loan(&mut allocation);let mut control=NativeEncodeControl::new_scoped_source(0,2,&mut observer,&mut allocation_loan,&mut work);
  let result=control.scoped_additional_depth(2,|same|->Result<(),ValueError>{assert_eq!(same.check_additional_depth(1).unwrap_err().kind,ValueRefusalKind::DepthLimit);Err(ValueError::literal(ValueRefusalKind::Canceled,"fixture refusal"))});assert_eq!(result.unwrap_err().kind,ValueRefusalKind::Canceled);assert!(control.check_additional_depth(2).is_ok());let result=control.scoped_additional_depth(3,|_|->Result<(),ValueError>{panic!("denied depth executed effect")});assert_eq!(result.unwrap_err().kind,ValueRefusalKind::DepthLimit);assert!(control.check_additional_depth(2).is_ok());
 }

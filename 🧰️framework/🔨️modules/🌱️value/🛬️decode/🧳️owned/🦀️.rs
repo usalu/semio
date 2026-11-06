@@ -1,12 +1,9 @@
 //! 🧳️ Native receiving constructs retained owners from genuine original input under explicit physical grants.
 //! 🗒️ See [ownership and unsafe contracts](README.md).
 use crate::{RetainedWorkOutcome,OriginalReceivingPrimary,NativeDecodeControl,RetirementDemand,ValueError,retirement::RetireOwned,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep}};
-#[path="🪡️field/🦀️.rs"]mod field;
-pub use field::NativeIntrinsicSharedField;
-#[path="🧩️record/🦀️.rs"]pub mod record;
+pub use semio_framework_value_native_shared_engine::NativeIntrinsicSharedField;
+pub use semio_framework_value_native_schema_engine::record;
 pub use record::{NativeRecordKey,NativeRecordField,NativeSchemaLeaf,NativeSchemaKeySource,NativeRecordSchema,NativeFieldMatch,NativeRecordMatcher,NativeRecordStorage};
-#[path="🧳️original/🦀️.rs"]mod original;
-pub use original::NativeReceivingOriginal;
 #[path="📋️list/🦀️.rs"]mod list;
 pub use list::{NativeListSource,NativePersistentListReceiver};
 
@@ -18,62 +15,39 @@ pub use semio_framework_value_native_default::{NativeDefault,NativeDefaultCursor
 #[path="🗂️map/🦀️.rs"]pub mod map;
 #[path="🧺️set/🦀️.rs"]pub mod set;
 
-fn receiving_child_body_budget(body:usize,metadata:usize)->usize{body.saturating_sub(metadata)}
-pub fn receiving_capacity(control:&NativeDecodeControl<'_>,bytes:usize)->Result<(),ValueError>{if control.owned_bytes().checked_add(bytes).is_none_or(|next|next>control.maximum_bytes()){Err(ValueError::literal(crate::ValueRefusalKind::OwnershipLimit,"native decoding ownership exceeds caller limit"))}else{Ok(())}}
+use semio_framework_value_native_receiver_protocol::receiving_child_body_budget;
+pub use semio_framework_value_native_receiver_protocol::receiving_capacity;
 
 pub trait NativeReceive<I:?Sized>:RetireOwned+Sized{
  type Receiver:NativeReceiver<I,Self>;
+ /// 🌱️ Produces only the inline original seed without allocating, releasing, calling out or unwinding.
  fn receiver()->Self::Receiver;
+ /// 🌱️ Produces the optional inline original subset seed with the same pure contract.
  fn record_subset_receiver()->Option<Self::Receiver>{None}
 }
 
-pub struct NativeReceivingBatch{left:RetainedCloneGrant,progress:RetainedCloneProgress,work:u64}
-impl NativeReceivingBatch{
- pub fn new(left:RetainedCloneGrant)->Self{Self{left,progress:Default::default(),work:0}}
- pub fn grant(&self)->RetainedCloneGrant{self.left}
- pub fn finish(self)->RetainedWorkOutcome<RetainedCloneStep,OriginalReceivingPrimary>{RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(self.progress)),work:self.work}}
- pub fn refuse(self,e:ValueError)->RetainedWorkOutcome<RetainedCloneStep,OriginalReceivingPrimary>{RetainedWorkOutcome{result:Err(e.with_retained_progress(self.progress).into()),work:self.work}}
- pub fn record(mut self,turn:RetainedWorkOutcome<RetainedCloneStep,OriginalReceivingPrimary>,unposted:bool,complete:bool)->Result<Self,RetainedWorkOutcome<RetainedCloneStep,OriginalReceivingPrimary>>{
-  self.work+=turn.work;let step=match turn.result{Ok(s)=>s,Err(mut e)=>{e.progress=self.progress.saturating_add(e.progress);return Err(RetainedWorkOutcome{result:Err(e),work:self.work})}};let p=step.progress();self.progress=match self.progress.checked_add(p){Ok(total)=>total,Err(error)=>return Err(self.refuse(error))};if complete{return Err(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(self.progress)),work:self.work})}if !unposted||p==RetainedCloneProgress::default(){return Err(self.finish())}
-  self.left.maximum_items-=p.copied_items;self.left.maximum_copy_bytes-=p.copied_bytes;self.left.maximum_capacity_bytes-=p.retained_capacity_bytes;self.left.maximum_release_bytes-=p.released_bytes;if self.left.maximum_items==0{Err(self.finish())}else{Ok(self)}
- }
-}
+pub use semio_framework_value_native_receiver_protocol::NativeReceivingBatch;
 
 pub trait NativeRecordFields{
  fn native_schema_count()->usize;
  fn native_schema_field(index:usize)->Option<NativeRecordSchema>;
 }
 
-pub trait NativeReceiver<I:?Sized,T>:Send+'static{
- fn demands(&self,original:RetainedCloneRef<'_,I>,body:usize)->Result<RetirementDemand,ValueError>;
- fn advance(&mut self,original:RetainedCloneRef<'_,I>,control:&mut NativeDecodeControl<'_>,body:usize,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,OriginalReceivingPrimary>;
- fn output_ready(&self)->bool;
- fn take_demand(&self)->Result<RetirementDemand,ValueError>;
- fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(T,RetainedCloneProgress)>>;
- fn begin_close(&mut self);
- fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
- fn close_step(&mut self,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome;
- fn terminal_is_empty(&self)->bool;
-}
+pub use semio_framework_value_native_receiver_protocol::{NativeAdvanceSelection,NativeReceiver};
 
 
 
 
-#[path="🔐️shared-slots/🦀️.rs"]
-pub mod shared_slots;
-pub use shared_slots::NativeSharedSlots;
+pub use semio_framework_value_native_shared_engine::NativeSharedSlots;
 
 #[path="🔄️map/🦀️.rs"]
 pub mod mapped;
-pub use mapped::{NativeReceiveMap,NativeMappedReceiver};
+pub use mapped::{NativeReceiveMap,NativeMappedReceiver,NativeReceiveTryMap,NativeTryMappedReceiver};
 
 
 
-fn native_receiver_backing_demands<I:?Sized,T,C:NativeReceiver<I,T>>(storage:&semio_framework_value_native_storage::NativeOwnedStorage<C>,retired:&Option<Box<C>>,body:usize)->Result<RetirementDemand,ValueError>{
- if let Some(cursor)=retired.as_ref(){if !cursor.terminal_is_empty(){return Err(tree::invalid())}return Ok(RetirementDemand{release_bytes:std::alloc::Layout::new::<C>().size(),depth:1,..Default::default()})}if let Some(cursor)=storage.get(){if !cursor.terminal_is_empty(){return tree::nested(cursor.close_demands(body)?,0)}return Ok(semio_framework_value_native_storage::NativeOwnedStorage::<C>::move_demand())}Ok(storage.release_demand())
-}
-fn close_native_receiver_backing<I:?Sized,T,C:NativeReceiver<I,T>>(storage:&mut semio_framework_value_native_storage::NativeOwnedStorage<C>,retired:&mut Option<Box<C>>,g:RetainedCloneGrant)->crate::OriginalRetirementOutcome{
- let d=match native_receiver_backing_demands::<I,T,C>(storage,retired,g.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0}};if !crate::retained_clone::retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}if retired.is_some(){let layout=std::alloc::Layout::new::<C>();let pointer=Box::into_raw(match retired.take(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("retired absent").into()),work:0}});if layout.size()!=0{unsafe{std::alloc::dealloc(pointer.cast(),layout)}}return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:d.release_bytes,..Default::default()})),work:1}}if let Some(cursor)=storage.get_mut(){if !cursor.terminal_is_empty(){let turn=cursor.close_step(tree::child_grant(g,0));return RetainedWorkOutcome{result:turn.result.map(|s|RetainedCloneStep::Progress(s.progress())),work:turn.work}}let turn=storage.take_box(g);let work=turn.work;let result=turn.result.map(|value|if let Some((owner,p))=value{*retired=Some(owner);RetainedCloneStep::Progress(p)}else{RetainedCloneStep::Progress(Default::default())}).map_err(Into::into);return RetainedWorkOutcome{result,work}}let turn=storage.release(g);RetainedWorkOutcome{result:turn.result.map_err(Into::into),work:turn.work}
-}
+pub use semio_framework_value_native_receiver_protocol::{native_receiver_backing_demands,close_native_receiver_backing};
 
 #[cfg(test)]#[path="♻️header/🎟️work/🧪️tests/🦀️.rs"]mod header_retirement_tests;
+
+pub use semio_framework_value_native_receiver_protocol::{native_output_demand,native_output_take,native_record_pure_take};

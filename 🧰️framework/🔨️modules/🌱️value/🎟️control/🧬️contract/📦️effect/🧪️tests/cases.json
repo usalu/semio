@@ -1,0 +1,37 @@
+{
+  "parent": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 8,
+    "maximumCapacityBytes": 73,
+    "maximumReleaseBytes": 9,
+    "maximumDepth": 2
+  },
+  "maximumWorkUnits": 3,
+  "cases": [
+    {
+      "name": "same",
+      "capacity": 73,
+      "work": 3,
+      "admitted": true
+    },
+    {
+      "name": "narrow",
+      "capacity": 32,
+      "work": 1,
+      "admitted": true
+    },
+    {
+      "name": "capacity-widened",
+      "capacity": 74,
+      "work": 1,
+      "admitted": false
+    },
+    {
+      "name": "work-widened",
+      "capacity": 73,
+      "work": 4,
+      "admitted": false
+    }
+  ],
+  "attemptBytes": 17
+}

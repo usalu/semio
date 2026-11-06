@@ -1,0 +1,33 @@
+{
+  "quote": 1,
+  "cases": [
+    {
+      "name": "unperformed",
+      "work": null,
+      "primary": null,
+      "charged": 0,
+      "overrun": false
+    },
+    {
+      "name": "attempted zero",
+      "work": 0,
+      "primary": "source failed",
+      "charged": 0,
+      "overrun": false
+    },
+    {
+      "name": "one actual unit",
+      "work": 1,
+      "primary": null,
+      "charged": 1,
+      "overrun": false
+    },
+    {
+      "name": "source failure and overrun",
+      "work": 3,
+      "primary": "source failed",
+      "charged": 3,
+      "overrun": true
+    }
+  ]
+}

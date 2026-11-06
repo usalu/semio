@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "stock",
+    "table",
+    "held",
+    "pending",
+    "received",
+    "deniedAxes"
+  ],
+  "properties": {
+    "stock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth",
+        "fuel"
+      ],
+      "properties": {
+        "items": {
+          "const": 32
+        },
+        "copy": {
+          "const": 65536
+        },
+        "capacity": {
+          "const": 65536
+        },
+        "release": {
+          "const": 65536
+        },
+        "depth": {
+          "const": 8
+        },
+        "fuel": {
+          "const": 32
+        }
+      }
+    },
+    "table": {
+      "$ref": "#/$defs/amount"
+    },
+    "held": {
+      "$ref": "#/$defs/amount"
+    },
+    "pending": {
+      "$ref": "#/$defs/remaining"
+    },
+    "received": {
+      "$ref": "#/$defs/remaining"
+    },
+    "deniedAxes": {
+      "const": [
+        "items",
+        "copy",
+        "release",
+        "depth"
+      ]
+    }
+  },
+  "$defs": {
+    "amount": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "work"
+      ],
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "work": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "remaining": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "fuel"
+      ],
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fuel": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

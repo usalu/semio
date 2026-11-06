@@ -1,0 +1,26 @@
+[
+  {
+    "id": "same-original",
+    "sameIssuer": true,
+    "sameDispatch": true,
+    "accepted": true
+  },
+  {
+    "id": "new-dispatch",
+    "sameIssuer": true,
+    "sameDispatch": false,
+    "accepted": false
+  },
+  {
+    "id": "foreign-same-sequence",
+    "sameIssuer": false,
+    "sameDispatch": true,
+    "accepted": false
+  },
+  {
+    "id": "foreign-new-dispatch",
+    "sameIssuer": false,
+    "sameDispatch": false,
+    "accepted": false
+  }
+]

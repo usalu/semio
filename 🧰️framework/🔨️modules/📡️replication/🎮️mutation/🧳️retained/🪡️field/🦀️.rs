@@ -71,22 +71,29 @@ impl<T: RetainedClone> RetainedFieldPreparation<T> {
     }
 
     /// 🛑️ Starts typed cleanup before retiring a candidate or displaced field.
-    pub fn begin_close(&mut self) { self.closing = true; self.cursor.begin_close(); }
+    pub fn begin_close(&mut self) { self.closing = true; }
+    /// 🚦️ Quotes the local field flag before touching the nested clone cursor.
+    pub fn begin_close_demand(&self)->RetirementDemand{if self.closing{RetirementDemand::default()}else{RetirementDemand{copy_bytes:std::mem::size_of::<bool>(),depth:1,..Default::default()}}}
+    pub fn begin_close_work_demand(&self)->u64{u64::from(!self.closing)}
+    pub fn close_started(&self)->bool{self.closing}
+    pub fn begin_close_paid(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress,ValueError>{let demand=self.begin_close_demand();if self.closing{return semio_framework_value::RetainedWorkOutcome{result:Ok(Default::default()),work:0}}if !super::retained_mutation_demand_fits(demand,grant){return semio_framework_value::RetainedWorkOutcome{result:Ok(Default::default()),work:0}}self.closing=true;semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}),work:1}}
 
     /// ♻️ Quotes the next original field or source alias retirement without an eager drop.
     pub fn close_demand(&self, maximum_body_bytes: usize) -> Result<RetirementDemand, ValueError> {
         if !self.retirement.is_empty() || self.value.is_some() { return self.retirement.next_owner_demands::<T>(self.value.is_some(), &None, maximum_body_bytes); }
+        if !self.cursor.close_started(){return self.cursor.begin_close_demand()}
         self.cursor.close_demands(maximum_body_bytes)
     }
 
     /// ⛽️ Quotes the selected field owner or source-alias close work.
-    pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"retained field closure was not started"))}self.close_demand(body)?;if !self.retirement.is_empty()||self.value.is_some(){self.retirement.next_owner_work::<T>(self.value.is_some(),&None,body)}else{self.cursor.close_work_demand(body)}}
+    pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"retained field closure was not started"))}self.close_demand(body)?;if !self.retirement.is_empty()||self.value.is_some(){self.retirement.next_owner_work::<T>(self.value.is_some(),&None,body)}else if !self.cursor.close_started(){self.cursor.begin_close_work_demand()}else{self.cursor.close_work_demand(body)}}
 
     /// 🪜️ Returns displaced ownership and immutable source aliases under separate physical grants.
     pub fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{
         let mut work=0;let result:Result<_,semio_framework_value::OriginalRetirementFailure>=(||{
             if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"retained field closure was not started").into())}let demand=self.close_demand(grant.maximum_copy_bytes)?;if !super::retained_mutation_demand_fits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}
             if !self.retirement.is_empty(){let turn=self.retirement.step_granted(grant);work=turn.work;return Ok(RetainedCloneStep::Progress(turn.result?.progress()))}let turn=self.retirement.begin_granted(&mut self.value,grant);work=turn.work;if let Some(step)=turn.result?{return Ok(step)}
+            if !self.cursor.close_started(){let turn=self.cursor.begin_close_paid(grant);work=turn.work;return Ok(RetainedCloneStep::Progress(turn.result?))}
             let turn=self.cursor.close_step(grant);work+=turn.work;let step=turn.result?;Ok(admit_retained_clone_close(grant,step,self.cursor.terminal_is_empty(),"retained field source closure")?)
         })();semio_framework_value::RetainedWorkOutcome{result,work}
     }

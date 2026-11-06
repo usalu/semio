@@ -1,0 +1,90 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "quoted",
+    "performed",
+    "reply",
+    "events",
+    "expected",
+    "recipientClose",
+    "controlledBirth",
+    "failureBirth"
+  ],
+  "properties": {
+    "quoted": {
+      "const": 2
+    },
+    "performed": {
+      "const": 2
+    },
+    "reply": {
+      "type": "string",
+      "minLength": 1
+    },
+    "events": {
+      "const": [
+        "receive",
+        "performed",
+        "reply",
+        "unwind",
+        "partial",
+        "transfer",
+        "receipt"
+      ]
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receiveCalls",
+        "recoverCalls",
+        "committedBeforeRecovery",
+        "partialChecks",
+        "replyAddressPreserved"
+      ],
+      "properties": {
+        "receiveCalls": {
+          "const": 1
+        },
+        "recoverCalls": {
+          "const": 0
+        },
+        "committedBeforeRecovery": {
+          "const": 2
+        },
+        "partialChecks": {
+          "const": 1
+        },
+        "replyAddressPreserved": {
+          "const": true
+        }
+      }
+    },
+    "recipientClose": {
+      "const": {
+        "work": 1,
+        "copyBytes": 1
+      }
+    },
+    "controlledBirth": {
+      "const": {
+        "deniedCopyBytes": 0,
+        "selectedWork": 1,
+        "copiedBytes": 1,
+        "sameDecoder": true,
+        "denial": "completedNoProgress",
+        "deniedWork": 0
+      }
+    },
+    "failureBirth": {
+      "const": {
+        "work": 1,
+        "partialChecks": 1,
+        "releaseWork": 1,
+        "nodesAfterBirth": 1,
+        "nodesAfterRelease": 0
+      }
+    }
+  }
+}

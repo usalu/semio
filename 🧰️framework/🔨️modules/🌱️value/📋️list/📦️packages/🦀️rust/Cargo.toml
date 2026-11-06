@@ -26,6 +26,15 @@ semio-framework-value-control-contract = { path="../../../🎟️control/🧬️
 semio-framework-value-allocation-return = { path="../../../♻️retirement/📦️allocation-return/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-testing-effect-bank = { path="../../../🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 semio-framework-value-native-encoding = { path="../../../🛫️encode/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 semio-framework-value-testing-allocator = { path = "../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+
+[[test]]
+name = "original-allocation-attempt"
+path = "../../🎟️reservation/🧪️tests/attempt.rs"
+
+[[test]]
+name = "plain-tail-discard"
+path = "../../📤️discard/🧪️tests/native.rs"

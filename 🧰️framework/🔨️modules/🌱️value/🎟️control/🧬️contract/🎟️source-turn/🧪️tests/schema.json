@@ -1,0 +1,28 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "sameIssuer",
+      "sameDispatch",
+      "accepted"
+    ],
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "sameIssuer": {
+        "type": "boolean"
+      },
+      "sameDispatch": {
+        "type": "boolean"
+      },
+      "accepted": {
+        "type": "boolean"
+      }
+    }
+  },
+  "minItems": 4
+}

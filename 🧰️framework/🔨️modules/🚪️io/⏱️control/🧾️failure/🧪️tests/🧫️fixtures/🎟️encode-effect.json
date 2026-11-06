@@ -12,6 +12,16 @@
         "releasedBytes": 0
       }
     },
+    "context": {
+      "kind": "canceled",
+      "message": "encode context refusal",
+      "retainedProgress": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      }
+    },
     "invariant": {
       "kind": "canceled",
       "message": "effect invariant",
@@ -42,9 +52,29 @@
         "releasedBytes": 0
       }
     },
+    "markerFailure": {
+      "kind": "canceled",
+      "message": "actual marker mismatch",
+      "retainedProgress": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      }
+    },
     "work": {
       "kind": "canceled",
       "message": "work refusal",
+      "retainedProgress": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      }
+    },
+    "workOverrun": {
+      "kind": "canceled",
+      "message": "actual work overrun",
       "retainedProgress": {
         "copiedItems": 0,
         "copiedBytes": 0,

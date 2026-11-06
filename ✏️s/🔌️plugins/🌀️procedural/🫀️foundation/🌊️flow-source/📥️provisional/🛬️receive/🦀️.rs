@@ -1,8 +1,9 @@
 //! 🛬️ Provisional native receiving consumes genuine field projections under the original decoder.
+use semio_framework_value_native_receiving_original::NativeReceivingOriginal;
 use semio_framework_job::{StepContext,OriginalTurnFailure,OriginalTurnPrimary,OriginalConstructionDemand,admit_original_construction};
 use semio_framework_value::{DslValue,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedOwnedProjection,retained_clone_grant_admits};
-use semio_framework_pack_json::native_decoding::owned::{NativeReceive,NativeReceivingOriginal};
+use semio_framework_pack_json::native_decoding::owned::NativeReceive;
 use std::mem::ManuallyDrop;
 pub struct ProvisionalFieldWork<T:NativeReceive<DslValue>>{receiver:ManuallyDrop<Option<NativeReceivingOriginal<DslValue,T>>>,original_caller:semio_framework_job::OriginalSourceBinding,operation:(u64,u64),closing:bool}
 impl<T:NativeReceive<DslValue>> ProvisionalFieldWork<T>{

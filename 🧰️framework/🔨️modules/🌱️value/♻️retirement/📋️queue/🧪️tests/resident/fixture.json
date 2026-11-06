@@ -1,0 +1,19 @@
+{
+  "refusals": [
+    {
+      "work": 0,
+      "copyAllowed": true
+    },
+    {
+      "work": 1,
+      "copyAllowed": true
+    },
+    {
+      "work": 2,
+      "copyAllowed": false
+    }
+  ],
+  "admissionWork": 2,
+  "nullWork": 1,
+  "placementHeaderWords": 8
+}

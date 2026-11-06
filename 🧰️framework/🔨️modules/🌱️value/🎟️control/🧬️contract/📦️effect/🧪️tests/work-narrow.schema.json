@@ -1,0 +1,61 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "parent",
+          "spent",
+          "child",
+          "admitted",
+          "receipt",
+          "base",
+          "remaining"
+        ],
+        "properties": {
+          "parent": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "spent": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "child": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "admitted": {
+            "type": "boolean"
+          },
+          "receipt": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "base": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "remaining": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

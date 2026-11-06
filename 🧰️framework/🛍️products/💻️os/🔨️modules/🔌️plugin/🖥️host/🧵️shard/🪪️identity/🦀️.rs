@@ -1,7 +1,7 @@
 //! 🪪️ A shard retains the original caller's receiving ledger, allocation port and return slot.
 use semio_plugin_host_guest_runtime::{GuestInstance, GuestRuntime, GuestRuntimes};
 use semio_framework_plugin_guest_contract::{PluginHostError,TurnFault};
-use semio_framework_value::{ValueError,ValueRefusalKind,ErasedSnapshotRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},native_encoding::{NativeEncodeControl,NativeEncodeAllocation,NativeEncodeAllocationPort,NativeEncodeProgress,NativeEncodeRetirementRecipient,NativeForwardedEncodeReceipt}};
+use semio_framework_value::{ValueError,ValueRefusalKind,ErasedSnapshotRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},native_encoding::{NativeEncodeControl,NativeAllocationRequest,NativeEncodeAllocationPort,NativeEncodeProgress,NativeEncodeRetirementRecipient,NativeForwardedEncodeReceipt}};
 use semio_os_vcs::io::binary::entity_identity::control::{EntityIdentityAuthority,Observer};
 use std::pin::Pin;
 
@@ -90,8 +90,8 @@ fn receive_actor_admission<T>(original:&mut semio_framework_actor::retained_turn
 pub fn native_identity_issuer(policy:ShardIdentityPolicy,mut observer_issuer:impl FnMut(semio_framework_actor::ActorId)->Box<Observer<'static>>+Send+'static)->OriginalShardIdentityIssuer{
  Box::new(move |actor|{
   let observer=observer_issuer(actor);
-  let allocate=Box::new(move |request:NativeEncodeAllocation|{
-   if policy.grant.maximum_items==0||policy.grant.maximum_copy_bytes<size_of::<NativeEncodeAllocation>()||policy.grant.maximum_capacity_bytes<request.bytes||policy.grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original caller shard policy refuses physical receiving frontier"))}
+  let allocate=Box::new(move |request:NativeAllocationRequest|{
+   if policy.grant.maximum_items==0||policy.grant.maximum_copy_bytes<size_of::<NativeAllocationRequest>()||policy.grant.maximum_capacity_bytes<request.bytes||policy.grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original caller shard policy refuses physical receiving frontier"))}
    Ok(())
   });
   OriginalShardIdentity::issue(policy,observer,allocate)

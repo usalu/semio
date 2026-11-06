@@ -32,6 +32,7 @@ semio-framework-value-native-owned = { path = "../../../../../../../../../../../
 test-support = ["dep:serde", "semio-s-artifact-norm-en1990-diff/test-support", "semio-s-artifact-norm-en1990-model/test-support"]
 
 [dev-dependencies]
+semio-framework-value-native-receiving-original = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/📦️packages/🦀️rust" }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 serde = { workspace = true }
 semio-framework-job = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }

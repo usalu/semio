@@ -24,9 +24,9 @@ impl<W:RetireOwned+Sync> StagedLease<W>{
   if let Some(lease)=self.lease.as_ref(){return lease.next_close_demand(body)}
   self.admission.as_ref().map_or_else(||Ok(Default::default()),RetainedCloneBorrowAuthorityAdmission::next_return_demand)
  }
- pub(super) fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
-  if let Some(retiring)=self.retiring.as_mut(){let result=retiring.step(grant);let work=retiring.last_turn_work();if retiring.terminal_is_empty(){self.retiring=None;}return RetainedWorkOutcome{result,work}}
-  if let Some(lease)=self.lease.as_mut(){return lease.close_step(grant)}
+ pub(super) fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome{let grant=effect.grant();
+  if let Some(retiring)=self.retiring.as_mut(){let result=retiring.step(&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"));let work=retiring.last_turn_work();if retiring.terminal_is_empty(){self.retiring=None;}return RetainedWorkOutcome{result,work}}
+  if let Some(lease)=self.lease.as_mut(){return lease.close_step(&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"))}
   let Some(admission)=self.admission.as_mut()else{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}};
   let published=admission.take_output(&mut self.lease,grant);
   if self.lease.is_some(){if admission.terminal_is_empty(){self.admission=None;}return published}

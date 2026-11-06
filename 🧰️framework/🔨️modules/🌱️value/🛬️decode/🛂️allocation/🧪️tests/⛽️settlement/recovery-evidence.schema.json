@@ -1,0 +1,32 @@
+{
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "originalPort",
+      "matchingEvent",
+      "recordedVerdict",
+      "callerClaim",
+      "canResolve"
+    ],
+    "properties": {
+      "originalPort": {
+        "type": "boolean"
+      },
+      "matchingEvent": {
+        "type": "boolean"
+      },
+      "recordedVerdict": {
+        "type": "boolean"
+      },
+      "callerClaim": {
+        "type": "boolean"
+      },
+      "canResolve": {
+        "type": "boolean"
+      }
+    }
+  }
+}

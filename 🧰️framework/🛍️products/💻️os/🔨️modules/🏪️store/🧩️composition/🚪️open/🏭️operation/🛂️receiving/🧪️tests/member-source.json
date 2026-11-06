@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "admissionWork": 2,
+  "closeStages": [
+    "nativeOwners",
+    "receipt",
+    "authority",
+    "alias",
+    "slot",
+    "frame"
+  ],
+  "cases": [
+    {
+      "budget": 0,
+      "sourceRetained": false,
+      "parentCanRetire": true
+    },
+    {
+      "budget": 1,
+      "sourceRetained": false,
+      "parentCanRetire": true
+    },
+    {
+      "budget": 2,
+      "sourceRetained": true,
+      "parentCanRetire": false
+    }
+  ],
+  "validation": [
+    {
+      "source": "same",
+      "sameOperation": true,
+      "sameGeneration": true,
+      "valid": true
+    },
+    {
+      "source": "foreign",
+      "sameOperation": true,
+      "sameGeneration": true,
+      "valid": false
+    }
+  ],
+  "authorityWork": 2,
+  "receiptWork": 1,
+  "authorityCases": [
+    {
+      "budget": 0,
+      "copyAllowed": true,
+      "transferred": false
+    },
+    {
+      "budget": 1,
+      "copyAllowed": true,
+      "transferred": false
+    },
+    {
+      "budget": 2,
+      "copyAllowed": false,
+      "transferred": false
+    },
+    {
+      "budget": 2,
+      "copyAllowed": true,
+      "transferred": true
+    }
+  ],
+  "receiptCases": [
+    {
+      "budget": 0,
+      "copyAllowed": true,
+      "transferred": false
+    },
+    {
+      "budget": 1,
+      "copyAllowed": false,
+      "transferred": false
+    },
+    {
+      "budget": 1,
+      "copyAllowed": true,
+      "transferred": true
+    }
+  ]
+}

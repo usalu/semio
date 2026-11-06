@@ -23,6 +23,7 @@ name = "semio_framework_job_receiving"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value-call = { path = "../../../../🌱️value/♻️retirement/📦️call/📦️packages/🦀️rust" }
 semio-framework-value-retained-clone = { path = "../../../../🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { workspace = true }
 

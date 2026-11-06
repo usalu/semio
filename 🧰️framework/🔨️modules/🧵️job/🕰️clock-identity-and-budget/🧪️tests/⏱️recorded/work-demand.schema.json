@@ -1,0 +1,40 @@
+{
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "fuel",
+      "work",
+      "capacity",
+      "requested",
+      "admitted"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "fuel": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "work": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "capacity": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "requested": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "admitted": {
+        "type": "boolean"
+      }
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "events",
+    "quotes",
+    "cancels",
+    "producerRecoveries",
+    "admittedBytes",
+    "actual"
+  ],
+  "properties": {
+    "events": {
+      "const": [
+        "quote",
+        "unwind",
+        "recover",
+        "cancel",
+        "unwind",
+        "recover",
+        "finish"
+      ]
+    },
+    "quotes": {
+      "const": 1
+    },
+    "cancels": {
+      "const": 1
+    },
+    "producerRecoveries": {
+      "const": 0
+    },
+    "admittedBytes": {
+      "const": 0
+    },
+    "actual": {
+      "const": null
+    }
+  }
+}

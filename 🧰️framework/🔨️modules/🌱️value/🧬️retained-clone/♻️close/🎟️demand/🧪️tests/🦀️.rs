@@ -96,3 +96,20 @@ fn retained_clone_erased_copy_demand_propagates_original_owner_refusal(){
     let demand=crate::factory_ticket_demands(ticket.as_ref().unwrap(),0).unwrap();assert_eq!(demand.depth,1);
     let grant=RetainedCloneGrant{maximum_items:1,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth,..Default::default()};let(step,heap)=observe_retirement_allocations(||crate::close_factory_ticket(&mut ticket,grant).unwrap());assert_eq!(heap,(0,step.progress().released_bytes));assert!(ticket.is_none());assert!(matches!(step,RetainedCloneStep::Progress(_)));assert!(matches!(crate::close_factory_ticket(&mut ticket,Default::default()).unwrap(),RetainedCloneStep::Complete(_)));
 }
+
+#[test]
+fn selected_close_start_denies_zero_copy_and_repeats_without_work(){
+ use crate::retained_clone::{RetainedClone,RetainedCloneCursor,RetainedCloneGrant};
+ let law:serde_json::Value=serde_json::from_str(include_str!("close-start.json")).unwrap();
+ for row in law["cases"].as_array().unwrap(){
+  let mut cursor=u8::retained_clone_cursor();
+  if row["started"].as_bool().unwrap(){let demand=cursor.begin_close_demand().unwrap();cursor.begin_close_paid(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_depth:demand.depth,..Default::default()}).result.unwrap();}
+  let grant=RetainedCloneGrant{maximum_items:row["items"].as_u64().unwrap()as usize,maximum_copy_bytes:row["copy"].as_u64().unwrap()as usize,maximum_depth:row["depth"].as_u64().unwrap()as usize,..Default::default()};
+  let(turn,heap)=crate::observe_retirement_allocations(||cursor.begin_close_paid(grant));
+  assert_eq!(heap,(0,0));assert_eq!(turn.work,row["work"].as_u64().unwrap());assert_eq!(turn.result.unwrap().copied_bytes,row["bytes"].as_u64().unwrap()as usize);
+  assert_eq!(cursor.close_started(),row["started"].as_bool().unwrap()||row["changed"].as_bool().unwrap());
+  let demand=cursor.begin_close_demand().unwrap();cursor.begin_close_paid(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_depth:demand.depth,..Default::default()}).result.unwrap();
+  assert!(cursor.terminal_is_empty());
+  let turn=cursor.begin_close_paid(Default::default());assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap(),Default::default());
+ }
+}

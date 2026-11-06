@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "phase",
+          "actual",
+          "output",
+          "work"
+        ],
+        "properties": {
+          "phase": {
+            "enum": [
+              "denied",
+              "allocator-failed",
+              "allocated"
+            ]
+          },
+          "actual": {
+            "enum": [
+              "none",
+              "zero",
+              "positive"
+            ]
+          },
+          "output": {
+            "type": "boolean"
+          },
+          "work": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    }
+  }
+}

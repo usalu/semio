@@ -1,0 +1,41 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pageItems",
+    "input",
+    "maximumItems",
+    "remaining",
+    "workPerTurn"
+  ],
+  "properties": {
+    "pageItems": {
+      "const": 2
+    },
+    "input": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "maximumItems": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "remaining": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "workPerTurn": {
+      "const": "1"
+    }
+  }
+}

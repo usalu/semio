@@ -1,0 +1,19 @@
+{
+  "extends": "../../../../../../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false
+  },
+  "include": [],
+  "exclude": [],
+  "files": [
+    "../../../../../../../🧰️framework/🔨️modules/🚪️io/⏱️failure-owner/🟦️.ts",
+    "../../../../../../../🧰️framework/🔨️modules/🚪️io/⏱️failure-owner/🔁️codec/🟦️.ts",
+    "../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/⚠️refusal/🟦️.ts",
+    "../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/⚠️refusal/🧪️tests/🟦️.ts",
+    "../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts",
+    "../../../../../../../🧰️framework/🔨️modules/🌱️value/⚠️refusal/🔁️codec/🟦️.ts",
+    "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/⚠️refusal/🔁️codec/🟦️.ts",
+    "../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🟦️typescript/🟦️.ts"
+  ]
+}

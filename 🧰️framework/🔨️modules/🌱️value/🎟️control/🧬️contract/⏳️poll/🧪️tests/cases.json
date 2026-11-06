@@ -1,0 +1,74 @@
+{
+  "cases": [
+    {
+      "input": {
+        "type": "pending",
+        "work": "2"
+      },
+      "expected": {
+        "pending": true,
+        "work": "2",
+        "publish": false
+      }
+    },
+    {
+      "input": {
+        "type": "pending",
+        "work": "0"
+      },
+      "expected": {
+        "pending": true,
+        "work": "0",
+        "publish": false
+      }
+    },
+    {
+      "input": {
+        "type": "complete",
+        "turn": {
+          "result": {
+            "ok": "original"
+          },
+          "work": "1"
+        }
+      },
+      "expected": {
+        "pending": false,
+        "work": "1",
+        "publish": true
+      }
+    },
+    {
+      "input": {
+        "type": "complete",
+        "turn": {
+          "result": {
+            "error": "original refusal"
+          },
+          "work": "0"
+        }
+      },
+      "expected": {
+        "pending": false,
+        "work": "0",
+        "publish": false
+      }
+    },
+    {
+      "input": {
+        "type": "pending",
+        "work": "18446744073709551617"
+      },
+      "expected": {
+        "pending": true,
+        "work": "18446744073709551617",
+        "publish": false
+      }
+    }
+  ],
+  "invalidWork": [
+    "340282366920938463463374607431768211456",
+    "01",
+    "-1"
+  ]
+}

@@ -32,22 +32,32 @@ impl AdmittedNamedKeyIndex{
  })();crate::RetainedWorkOutcome{result,work}}
  pub fn begin_close(&mut self){self.closing=true;}
  pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Err(invalid());}if self.directory.is_some()||!self.retirement.is_empty(){return self.retirement.next_owner_demands::<SealedShared<Vec<usize>>>(self.directory.is_some(),&None,body);}RetainedCloneBinding::close_demand(&self.original,body)}
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{let mut work=0;let result=(||{
+ pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.closing{return Err(invalid())}if self.directory.is_some()||!self.retirement.is_empty(){return self.retirement.next_owner_work::<SealedShared<Vec<usize>>>(self.directory.is_some(),&None,body)}RetainedCloneBinding::close_work_demand(&self.original,body)}
+ pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let grant=effect.grant();let mut work=0;let result:Result<RetainedCloneStep,crate::OriginalRetirementFailure>=(||{
   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
   let d=self.close_demand(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
-  if !self.retirement.is_empty(){let step=take_work!(work,self.retirement.step_granted(grant));return Ok(RetainedCloneStep::Progress(step.progress()))}
-  if let Some(step)=take_work!(work,self.retirement.begin_granted(&mut self.directory,grant)){return Ok(RetainedCloneStep::Progress(step.progress()))}
-  let step=take_work!(work,RetainedCloneBinding::close_one(&mut self.original,grant));Ok(step)
+  if !self.retirement.is_empty(){let step=take_work!(work,self.retirement.step_granted(effect));return Ok(RetainedCloneStep::Progress(step.progress()))}
+  if let Some(step)=take_work!(work,self.retirement.begin_granted(&mut self.directory,effect)){return Ok(RetainedCloneStep::Progress(step.progress()))}
+  let step=take_work!(work,RetainedCloneBinding::close_one(&mut self.original,effect));Ok(step)
  })();crate::RetainedWorkOutcome{result,work}}
+ pub fn requires_original_birth(&self)->bool{self.retirement.requires_original_birth()}
+ pub fn close_original_birth_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome{self.retirement.step_original_birth(original,grant)}
+ pub fn requires_original_control(&self)->bool{self.retirement.requires_original_control()}
+ pub fn close_original_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{if self.requires_original_birth(){return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"settle original birth first").into()),work:0}}if self.requires_original_control(){return self.retirement.step_original(original,effect)}self.close_step(effect)}
  pub fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.directory.is_none()&&self.retirement.is_empty()}
 }
 impl Drop for AdmittedNamedKeyIndex{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"immutable named key index requires original funded closure");if empty{unsafe{ManuallyDrop::drop(&mut self.original);ManuallyDrop::drop(&mut self.directory);}}}}
-struct IndexRetirement{index:AdmittedNamedKeyIndex}
-impl RetireOwned for AdmittedNamedKeyIndex{fn retirement(mut self)->Box<dyn RetirementCursor>{self.begin_close();Box::new(IndexRetirement{index:self})}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<IndexRetirement>())}fn controlled_retirement_supported()->bool{true}}
+#[doc(hidden)]pub struct IndexRetirement{index:AdmittedNamedKeyIndex,started:bool}
+impl RetireOwned for AdmittedNamedKeyIndex{type RetirementCursor=IndexRetirement;fn retirement_seed(self)->Self::RetirementCursor{IndexRetirement{index:self,started:false}}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<IndexRetirement>())}fn controlled_retirement_supported()->bool{true}}
 impl RetirementCursor for IndexRetirement{
- fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.index.close_demand(body)}
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete(0)}let turn=self.index.close_step(grant);match turn.result{Ok(s)=>RetirementStep::Progress(s.progress(),turn.work),Err(e)=>RetirementStep::Failure(e,turn.work)}}
- fn terminal_is_empty(&self)->bool{self.index.terminal_is_empty()}
+ fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.started{return Ok(fixed(0))}self.index.close_demand(body)}
+ fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{if !self.started{return Ok(1)}self.index.close_work_demand(body)}
+ fn requires_original_birth(&self)->bool{self.started&&self.index.retirement.requires_original_birth()}
+ fn close_original_birth_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->RetirementStep{let turn=self.index.retirement.step_original_birth(original,grant);match turn.result{Ok(s)=>RetirementStep::Progress(s.progress(),turn.work),Err(e)=>RetirementStep::Failure(e,turn.work)}}
+ fn requires_original_control(&self)->bool{self.started&&self.index.retirement.requires_original_control()}
+ fn close_original_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let turn=self.index.retirement.step_original(original,effect);match turn.result{Ok(s)=>RetirementStep::Progress(s.progress(),turn.work),Err(e)=>RetirementStep::Failure(e,turn.work)}}
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();if !self.started{if effect.maximum_work_units()==0||!retained_clone_grant_admits(grant,fixed(0)){return RetirementStep::BudgetExhausted}self.index.begin_close();self.started=true;return RetirementStep::Progress(paid(fixed(0)),1)}if self.terminal_is_empty(){return RetirementStep::Complete(0)}let turn=self.index.close_step(&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"));match turn.result{Ok(s)=>RetirementStep::Progress(s.progress(),turn.work),Err(e)=>RetirementStep::Failure(e,turn.work)}}
+ fn terminal_is_empty(&self)->bool{self.started&&self.index.terminal_is_empty()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.next_demand(0)?.copy_bytes)}
  fn next_birth_bytes(&self,body:usize)->Option<usize>{self.next_demand(body).ok().map(|d|d.capacity_bytes)}
  fn next_close_byte_demand(&self)->Option<usize>{self.next_demand(0).ok().map(|d|d.release_bytes)}
@@ -83,16 +93,21 @@ impl NamedKeyIndexPreparation{
  pub fn take(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(AdmittedNamedKeyIndex,RetainedCloneProgress)>>{let mut work=0;let result=(||{let d=self.take_demand()?;if !retained_clone_grant_admits(grant,d){return Ok(None);}work=1;let index=AdmittedNamedKeyIndex{original:ManuallyDrop::new(self.original.take()),directory:ManuallyDrop::new(self.directory.take()),retirement:Default::default(),len:self.len,projection:self.projection,closing:false};self.phase=7;Ok(Some((index,paid(d))))})();crate::RetainedWorkOutcome{result,work}}
  pub fn begin_close(&mut self){self.closing=true;if let Some(plan)=self.plan.as_mut(){plan.begin_close();}}
  pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Err(invalid());}if let Some(plan)=self.plan.as_ref(){return if plan.terminal_is_empty(){Ok(fixed(size_of::<NamedEditPlan>()*2))}else{plan.close_demand(body)};}if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<Vec<usize>>(false,&None,body);}if self.order.is_some(){return self.retirement.next_owner_demands::<Vec<usize>>(true,&None,body);}if self.directory.is_some(){return self.retirement.next_owner_demands::<SealedShared<Vec<usize>>>(true,&None,body);}RetainedCloneBinding::close_demand(&self.original,body)}
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{let mut work=0;let result=(||{
+ pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.closing{return Err(invalid())}if let Some(plan)=self.plan.as_ref(){return if plan.terminal_is_empty(){Ok(1)}else{plan.close_work_demand(body)}}if !self.retirement.is_empty(){return self.retirement.next_owner_work::<Vec<usize>>(false,&None,body)}if self.order.is_some(){return self.retirement.next_owner_work::<Vec<usize>>(true,&None,body)}if self.directory.is_some(){return self.retirement.next_owner_work::<SealedShared<Vec<usize>>>(true,&None,body)}RetainedCloneBinding::close_work_demand(&self.original,body)}
+ pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let grant=effect.grant();let mut work=0;let result:Result<RetainedCloneStep,crate::OriginalRetirementFailure>=(||{
   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
   let d=self.close_demand(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
-  if let Some(plan)=self.plan.as_mut(){if plan.terminal_is_empty(){self.plan=None;work+=1;return Ok(RetainedCloneStep::Progress(paid(d)))}let step=take_work!(work,plan.close_step(grant));return Ok(RetainedCloneStep::Progress(step.progress()))}
-  if !self.retirement.is_empty(){let step=take_work!(work,self.retirement.step_granted(grant));return Ok(RetainedCloneStep::Progress(step.progress()))}
-  if let Some(step)=take_work!(work,self.retirement.begin_granted(&mut self.order,grant)){return Ok(RetainedCloneStep::Progress(step.progress()))}
-  if let Some(step)=take_work!(work,self.retirement.begin_granted(&mut self.directory,grant)){return Ok(RetainedCloneStep::Progress(step.progress()))}
-  let step=take_work!(work,RetainedCloneBinding::close_one(&mut self.original,grant));Ok(step)
+  if let Some(plan)=self.plan.as_mut(){if plan.terminal_is_empty(){self.plan=None;work+=1;return Ok(RetainedCloneStep::Progress(paid(d)))}let step=take_work!(work,plan.close_step(&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect")));return Ok(RetainedCloneStep::Progress(step.progress()))}
+  if !self.retirement.is_empty(){let step=take_work!(work,self.retirement.step_granted(effect));return Ok(RetainedCloneStep::Progress(step.progress()))}
+  if let Some(step)=take_work!(work,self.retirement.begin_granted(&mut self.order,effect)){return Ok(RetainedCloneStep::Progress(step.progress()))}
+  if let Some(step)=take_work!(work,self.retirement.begin_granted(&mut self.directory,effect)){return Ok(RetainedCloneStep::Progress(step.progress()))}
+  let step=take_work!(work,RetainedCloneBinding::close_one(&mut self.original,effect));Ok(step)
  })();crate::RetainedWorkOutcome{result,work}}
 
+ pub fn requires_original_birth(&self)->bool{if let Some(plan)=self.plan.as_ref(){return !plan.terminal_is_empty()&&plan.requires_original_birth()}self.retirement.requires_original_birth()}
+ pub fn close_original_birth_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome{if let Some(plan)=self.plan.as_mut(){return plan.close_original_birth_step(original,grant)}self.retirement.step_original_birth(original,grant)}
+ pub fn requires_original_control(&self)->bool{if let Some(plan)=self.plan.as_ref(){return !plan.terminal_is_empty()&&plan.requires_original_control()}self.retirement.requires_original_control()}
+ pub fn close_original_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{if self.requires_original_birth(){return crate::RetainedWorkOutcome{result:Err(invalid().into()),work:0}}if let Some(plan)=self.plan.as_mut(){if !plan.terminal_is_empty()&&plan.requires_original_control(){return plan.close_original_step(original,effect)}}else if self.retirement.requires_original_control(){return self.retirement.step_original(original,effect)}self.close_step(effect)}
  pub fn terminal_is_empty(&self)->bool{self.plan.is_none()&&self.original.is_none()&&self.order.is_none()&&self.directory.is_none()&&self.retirement.is_empty()}
 }
 impl Drop for NamedKeyIndexPreparation{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"named key admission requires original funded closure");if empty{unsafe{ManuallyDrop::drop(&mut self.original);ManuallyDrop::drop(&mut self.order);ManuallyDrop::drop(&mut self.directory);}}}}

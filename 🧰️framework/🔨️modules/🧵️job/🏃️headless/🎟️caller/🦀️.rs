@@ -7,6 +7,7 @@ use std::sync::atomic::{AtomicU64,Ordering};
 static NEXT_CLOCK_BINDING:AtomicU64=AtomicU64::new(1);
 
 pub(super) struct HeadlessCaller {
+    authority_actual:Option<usize>,
     parent:Option<OriginalCallerSourceParent>,
     authority:Option<semio_framework_job_payload::JobPayloadAuthority>,
     cancel:Option<CancelToken>,
@@ -42,7 +43,7 @@ impl HeadlessCaller {
         let binding=NEXT_CLOCK_BINDING.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).map_err(|_|format!("{}-clock-binding-exhausted",site.label))?;
         let stock=site.retained_stock;
         let reserve=RetainedCloneGrant { maximum_items:stock.maximum_items/2, maximum_copy_bytes:stock.maximum_copy_bytes/2, maximum_capacity_bytes:stock.maximum_capacity_bytes/2, maximum_release_bytes:stock.maximum_release_bytes/2, ..stock };
-        Ok(Self { parent:None,authority:None,cancel:None,cancel_retirement:None,operation,now_us,deadline,binding,sequence:operation.preview_sequence,stride:ClockStride::new(),stock,spent:Default::default(),fuel:site.lifetime_fuel,reserve_fuel:site.lifetime_fuel/2,reserve })
+        Ok(Self { authority_actual:None,parent:None,authority:None,cancel:None,cancel_retirement:None,operation,now_us,deadline,binding,sequence:operation.preview_sequence,stride:ClockStride::new(),stock,spent:Default::default(),fuel:site.lifetime_fuel,reserve_fuel:site.lifetime_fuel/2,reserve })
     }
 
     pub(super) fn receipt(&self)->RetainedCloneProgress { self.spent }
@@ -54,11 +55,11 @@ impl HeadlessCaller {
         RetainedCloneGrant { maximum_items:left.maximum_items.min(1),maximum_copy_bytes:left.maximum_copy_bytes.min(HEADLESS_GRANT.maximum_copy_bytes),..left }
     }
     pub(super) fn pay(&mut self,progress:RetainedCloneProgress,work:u64)->Result<(),ValueError> {
-        let enough=self.fuel>=work;
+        if self.authority_actual.is_some_and(|actual|actual!=progress.retained_capacity_bytes){return Err(refusal("original headless authority attempt differs from its receipt"))}let enough=self.fuel>=work;
         self.fuel=self.fuel.saturating_sub(work);
         self.spent=self.spent.checked_add(progress)?;
         if !self.spent.fits(self.stock)||!enough { return Err(refusal("headless original lifetime receipt exceeded its source")); }
-        Ok(())
+        self.authority_actual=None;Ok(())
     }
 
     pub(super) fn admit_step(&mut self)->Result<bool,ValueError> { self.admit_step_inner(false) }
@@ -77,7 +78,7 @@ impl HeadlessCaller {
             return Ok(false);
         }
         if self.authority.is_none() {
-            let turn=semio_framework_job_payload::JobPayloadAuthority::admit(self.operation.operation,self.operation.generation,grant);
+            let turn=semio_framework_job_payload::JobPayloadAuthority::admit(self.operation.operation,self.operation.generation,grant,&mut self.authority_actual);
             match turn.result {
                 Ok(Some((authority,progress)))=>{self.authority=Some(authority);self.pay(progress,turn.work)?;}
                 Ok(None)=>{self.pay(Default::default(),turn.work)?;return Err(refusal("headless payload source birth refused"));}
@@ -87,7 +88,7 @@ impl HeadlessCaller {
         }
         let authority=self.authority.take().expect("retained original payload source");
         let cancel=self.cancel.take().expect("retained original cancellation root");
-        let turn=OriginalCallerSourceParent::admit(authority,cancel,grant);
+        let turn=OriginalCallerSourceParent::admit(authority,cancel,grant,&mut self.authority_actual);
         match turn.result {
             Ok((parent,progress))=>{self.parent=Some(parent);self.pay(progress,turn.work)?;Ok(true)}
             Err((error,authority,cancel))=>{self.authority=Some(authority);self.cancel=Some(cancel);self.pay(error.retained_progress(),turn.work)?;Err(error)}

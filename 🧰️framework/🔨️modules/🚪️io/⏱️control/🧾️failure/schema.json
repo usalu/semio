@@ -89,14 +89,18 @@
                 "allocationRefusal",
                 "progress",
                 "nativeAllocation",
+                "retirementFailure",
                 "allocationFailure",
                 "receiptRefusal",
-                "workRefusal"
+                "workRefusal",
+                "workOverrun"
               ],
               "properties": {
+                "retirementFailure": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/OriginalRetirementFailure"}]},
                 "type": {
                   "const": "receiving"
                 },
+                "workOverrun": {"$ref": "#/properties/receiptRefusal"},
                 "primary": {
                   "anyOf": [
                     {
@@ -1026,16 +1030,22 @@
           "additionalProperties": false,
           "required": [
             "primary",
+            "context",
             "invariant",
             "physicalInvariant",
             "capacityInvariant",
+            "markerFailure",
             "work",
+            "workOverrun",
             "local",
             "physical",
             "allocation"
           ],
           "properties": {
             "primary": {
+              "$ref": "#/properties/receiptRefusal"
+            },
+            "context": {
               "$ref": "#/properties/receiptRefusal"
             },
             "invariant": {
@@ -1047,7 +1057,13 @@
             "capacityInvariant": {
               "$ref": "#/properties/receiptRefusal"
             },
+            "markerFailure": {
+              "$ref": "#/properties/receiptRefusal"
+            },
             "work": {
+              "$ref": "#/properties/receiptRefusal"
+            },
+            "workOverrun": {
               "$ref": "#/properties/receiptRefusal"
             },
             "local": {
@@ -1165,10 +1181,12 @@
         "primary",
         "workRefusal",
         "receiptRefusal",
+        "allocationRefusal",
         "progressOverride",
         "child"
       ],
       "properties": {
+        "allocationRefusal": { "$ref": "#/$defs/OriginalRetirementFailure/properties/primary" },
         "primary": {
           "anyOf": [
             {

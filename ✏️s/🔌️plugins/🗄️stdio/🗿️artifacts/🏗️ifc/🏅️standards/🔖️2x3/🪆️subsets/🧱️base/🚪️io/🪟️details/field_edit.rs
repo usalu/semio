@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::{StagedSourceAdmission,RetainedCloneSource,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneClose,retained_clone_grant_admits};
-use semio_framework_value_native_owned::owned::NativeReceivingOriginal;
+use semio_framework_value_native_receiving_original::NativeReceivingOriginal;
 use std::mem::size_of;
 type Input=RetainedCloneSource<DslValue>;
 type Admission=StagedSourceAdmission<DslValue,DslValue>;

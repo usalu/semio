@@ -20,9 +20,11 @@ path = "🦀️.rs"
 [dependencies]
 semio-framework-value.workspace = true
 semio-framework-value-native-owned.workspace = true
+semio-framework-io-failure-owner = { path = "../../../⏱️failure-owner/📦️packages/🦀️rust" }
+semio-framework-value-control-contract = { path = "../../../../🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust" }
 
 [dev-dependencies]
-semio-framework-value-control-contract = { path = "../../../../🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-testing-admission = { path = "../../../../🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-trace.workspace = true
 semio-framework-trace-memory-testing = { path = "../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }

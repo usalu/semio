@@ -1,0 +1,32 @@
+{
+  "type": "array",
+  "minItems": 5,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "phase",
+      "sameIssuer",
+      "canResolve"
+    ],
+    "properties": {
+      "phase": {
+        "enum": [
+          "idle",
+          "admitStarted",
+          "quoteStarted",
+          "quoteAccepted",
+          "postStarted",
+          "cancelStarted",
+          "settled"
+        ]
+      },
+      "sameIssuer": {
+        "type": "boolean"
+      },
+      "canResolve": {
+        "type": "boolean"
+      }
+    }
+  }
+}

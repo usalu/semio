@@ -19,7 +19,7 @@ pub(crate) fn receive_native_work(control:&mut NativeDecodeControl<'_>,loan:Reta
 
 #[path="../../../📦️storage/🧪️tests/📖️initializers/🦀️.rs"]mod initializer_laws;
 
-#[path="../../../🧪️tests/📥️admission/🦀️.rs"]pub(crate) mod source_fixture;
+pub(crate) use semio_framework_value_testing_admission as source_fixture;
 
 #[test]fn actual_native_batch_retains_real_move_work_when_the_next_owned_release_refuses(){
  let f:serde_json::Value=serde_json::from_str(include_str!("../../../📋️list/🧪️tests/🧫️fixtures/📐️.json")).unwrap();let law=&f["controlBatch"]["compositionLaw"];let mut bank=source_fixture::Wallet::from_profile(&f["stock"]);let mut storage=semio_framework_value_native_storage::NativeOwnedStorage::<u64>::empty();let g=bank.loan(1,4096);let(turn,h)=observe_retirement_allocations(||storage.reserve(g));source_fixture::post_step(&mut bank,turn,g,h,ValueError::retained_progress).unwrap();let pointer=storage.address();let mut input=Some(law["value"].as_u64().unwrap());let probe_grant=bank.loan(1,4096);assert_eq!(probe_grant.maximum_items,1);let mut callback=|_|true;let mut native=NativeDecodeControl::new(probe_grant.maximum_capacity_bytes,&mut callback);let mut zero=bank.work_loan(0);native.with_work_recipient(&mut zero,|native|{assert!(!native.prepare_work(1)?);Ok::<_,ValueError>(())}).unwrap();assert_eq!(native.actual_work(),0);drop(zero);let mut one=bank.work_loan(1);native.with_work_recipient(&mut one,|native|{assert!(native.prepare_work(1)?);let bytes=input.as_ref().unwrap().to_le_bytes();assert!(std::str::from_utf8(&bytes).is_ok());native.commit_work(1)?;Ok::<_,ValueError>(())}).unwrap();drop(one);assert_eq!(native.actual_work(),law["independentProbeWork"].as_u64().unwrap());bank.post(Default::default(),native.actual_work(),probe_grant,(0,0));

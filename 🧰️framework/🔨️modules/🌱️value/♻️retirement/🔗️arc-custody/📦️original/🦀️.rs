@@ -18,7 +18,7 @@ impl<T:Send+Sync+'static> SharedOriginalPublication<'_,T>{
 impl<T:Send+Sync+'static> SharedOriginalBirth<T>{
  pub fn publication(&mut self,grant:RetainedCloneGrant)->Result<Option<SharedOriginalPublication<'_,T>>,ValueError>{if self.source.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original birth storage already transferred"))}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}Ok(Some(SharedOriginalPublication{birth:self}))}
  pub fn next_close_demand(&self)->crate::RetirementDemand{if self.source.is_none(){Default::default()}else{crate::RetirementDemand{release_bytes:SharedOriginalStorage::<T>::allocation_bytes(),depth:1,..Default::default()}}}
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{if self.source.is_none(){return crate::RetainedWorkOutcome{result:Ok(crate::RetainedCloneStep::Complete(Default::default())),work:0}}let d=self.next_close_demand();if !crate::retained_clone::retained_clone_grant_admits(grant,d){return crate::RetainedWorkOutcome{result:Ok(crate::RetainedCloneStep::Progress(Default::default())),work:0}}drop(self.source.take());crate::RetainedWorkOutcome{result:Ok(crate::RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes:d.release_bytes,..Default::default()})),work:1}}
+ pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome{let grant=effect.grant();if self.source.is_none(){return crate::RetainedWorkOutcome{result:Ok(crate::RetainedCloneStep::Complete(Default::default())),work:0}}let d=self.next_close_demand();if !crate::retained_clone::retained_clone_grant_admits(grant,d){return crate::RetainedWorkOutcome{result:Ok(crate::RetainedCloneStep::Progress(Default::default())),work:0}}drop(self.source.take());crate::RetainedWorkOutcome{result:Ok(crate::RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes:d.release_bytes,..Default::default()})),work:1}}
  pub fn terminal_is_empty(&self)->bool{self.source.is_none()}
 }
 impl<T:Send+Sync+'static> Drop for SharedOriginalBirth<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"empty original birth requires granted publication or release");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.source)}}}}
@@ -41,10 +41,15 @@ impl<T:Send+Sync+'static> SharedOriginalStorage<T>{
  pub fn aliases(&self)->usize{self.source.as_ref().expect("live original alias").aliases.load(Ordering::Acquire)}
  /// 🔍️ A unique original requires both logical and physical strong counts to be one.
  pub fn physically_unique(&self)->bool{self.source.as_ref().is_some_and(|source|source.aliases.load(Ordering::Acquire)==1&&Arc::strong_count(source)==1)}
- pub fn duplicate(&self)->crate::RetainedWorkOutcome<Self>{
-  let source=match self.source.as_ref(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("live original alias").into()),work:0}};
-  let result=source.aliases.try_update(Ordering::AcqRel,Ordering::Acquire,|count|(count>0).then(||count.checked_add(1)).flatten()).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original alias space exhausted")).map(|_|Self{source:ManuallyDrop::new(Some(Arc::clone(source)))});
-  crate::RetainedWorkOutcome{result,work:1}
+ /// ⛽️ Quotes the defining live alias increment without mutating either count.
+ pub fn duplicate_work_demand(&self)->Result<u64,ValueError>{if self.source.is_none(){return Err(ValueError::invariant("live original alias"))}Ok(1)}
+ pub const fn duplicate_copy_bytes()->usize{2*std::mem::size_of::<usize>()+std::mem::size_of::<Self>()}
+ pub fn duplicate(&self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<Self>{
+  let source=match self.source.as_ref(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("live original alias")),work:0}};
+  let grant=effect.grant();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<Self::duplicate_copy_bytes()||effect.maximum_work_units()<1{return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original alias increment is not funded")),work:0}}
+  let before=effect.performed_work();match effect.performed(1){Ok(true)=>{},Ok(false)=>return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original alias exceeds its work action")),work:effect.performed_work()-before},Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work:effect.performed_work()-before}}
+  let count=source.aliases.load(Ordering::Acquire);let result=count.checked_add(1).filter(|_|count>0).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original alias space exhausted")).and_then(|next|source.aliases.compare_exchange(count,next,Ordering::AcqRel,Ordering::Acquire).map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"original alias counter changed during bounded duplication"))).map(|_|Self{source:ManuallyDrop::new(Some(Arc::clone(source)))});
+  crate::RetainedWorkOutcome{result,work:effect.performed_work()-before}
  }
 
  /// 🔗️ Adds one counted alias without allocating: the shared strong count is the only state touched.

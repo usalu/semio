@@ -1,3 +1,4 @@
+use semio_framework_value_native_receiving_original::NativeReceivingOriginal;
 use super::Recipient;
 use super::drain;
 use super::funded;
@@ -7,7 +8,7 @@ use super::super::NATIVE_MATERIAL_COUNT;
 use crate::patch::NativeMaterialPatch;
 use crate::patch::NativeMaterialPatchCursor;
 use semio_framework_value::{DslValue, RetirementDemand, ToValue, retained_clone::{RetainedCloneSource, RetainedCloneGrant}, retirement::RetireOwned};
-use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::owned::NativeReceivingOriginal};
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 #[derive(semio_framework_value::RetireOwned)]
 struct Patch{name:Option<String>,numbers:[Option<f64>;NATIVE_MATERIAL_COUNT]}

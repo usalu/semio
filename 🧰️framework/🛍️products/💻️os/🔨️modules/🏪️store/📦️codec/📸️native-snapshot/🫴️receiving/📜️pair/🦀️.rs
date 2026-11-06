@@ -24,7 +24,7 @@ impl From<OriginalReceivingPrimary> for OriginalArtifactPairFailure { fn from(er
 /// 🫴️ Actual source buffers outlive typed output, receiving metadata and cancellation cleanup.
 pub struct OriginalArtifactPairReceiving<P:OriginalArtifactPackReceiving> {
  source:[(usize,usize);2],control:(u64,Option<u64>),pack_limits:PackLimits,history_limits:HistoryReadLimits,
- snapshot:ManuallyDrop<Option<Box<P::Receiving>>>,history:ManuallyDrop<Option<RetainedHistorySourceDecode>>,
+ snapshot:ManuallyDrop<Option<Box<P::Receiving>>>,history:ManuallyDrop<Option<RetainedHistorySourceDecode>>,history_source_birth:ManuallyDrop<semio_framework_value_native_owned::native_decoding::NativeReceivingEffect<ValueError>>,
  pack_scanned:usize,pack_hasher:semio_framework_hash::Hasher,pack_digest:Option<[u8;32]>,snapshot_output:OwnedSlot<P>,history_output:OwnedSlot<HistoryLog>,history_partial:OwnedSlot<RetainedHistorySourcePartial>,history_fault:OwnedSlot<RetainedHistoryOpMetaFault>,phase:u8,closing:bool,closed:bool,
 }
 fn invalid(message:&'static str)->ValueError { ValueError::literal(ValueRefusalKind::InvariantViolated,message) }
@@ -40,7 +40,7 @@ impl<P:OriginalArtifactPackReceiving> OriginalArtifactPairReceiving<P> {
   if pack.len()as u64>pack_limits.max_file_len||spr.len()>history_limits.file_bytes as usize{return Err(invalid("original artifact pair exceeds declared source policies").into())}
   Ok(Some((Self::from_source(pack,spr,pack_limits,history_limits,native),receipt(demand))))
  }
- fn from_source(pack:&[u8],spr:&[u8],pack_limits:PackLimits,history_limits:HistoryReadLimits,native:&NativeDecodeControl<'_>)->Self{Self { source:[(pack.as_ptr()as usize,pack.len()),(spr.as_ptr()as usize,spr.len())],control:(native.ledger_identity(),native.retirement_recipient_identity()),pack_limits,history_limits,snapshot:ManuallyDrop::new(None),history:ManuallyDrop::new(None),pack_scanned:0,pack_hasher:semio_framework_hash::Hasher::new(),pack_digest:None,snapshot_output:Default::default(),history_output:Default::default(),history_partial:Default::default(),history_fault:Default::default(),phase:0,closing:false,closed:false }}
+ fn from_source(pack:&[u8],spr:&[u8],pack_limits:PackLimits,history_limits:HistoryReadLimits,native:&NativeDecodeControl<'_>)->Self{Self { source:[(pack.as_ptr()as usize,pack.len()),(spr.as_ptr()as usize,spr.len())],control:(native.ledger_identity(),native.retirement_recipient_identity()),pack_limits,history_limits,snapshot:ManuallyDrop::new(None),history:ManuallyDrop::new(None),history_source_birth:ManuallyDrop::new(Default::default()),pack_scanned:0,pack_hasher:semio_framework_hash::Hasher::new(),pack_digest:None,snapshot_output:Default::default(),history_output:Default::default(),history_partial:Default::default(),history_fault:Default::default(),phase:0,closing:false,closed:false }}
  /// 📏️ Prices a fresh original pair header written directly into its separately owned allocation.
  pub fn boxed_birth_demands()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Self>()+2*size_of::<Box<Self>>(),capacity_bytes:size_of::<Self>(),depth:1,..Default::default()}}
  /// 🧳️ Receives the same source identities in a fresh boxed header before any snapshot child exists.
@@ -98,18 +98,25 @@ impl<P:OriginalArtifactPackReceiving> OriginalArtifactPairReceiving<P> {
  /// 📦️ Transfers the same genesis and History owners; it does not settle, fold or discard supplied edits.
  pub fn take_into(&mut self,output:&mut Option<(P,HistoryLog)>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> { let demand=self.take_demand();if output.is_some()||!self.is_ready()||!funds(grant,demand){return Ok(Default::default())}*output=Some((self.snapshot_output.value.take().unwrap(),self.history_output.value.take().unwrap()));self.phase=9;Ok(receipt(demand)) }
  /// 👁️ Transfers the exact received History into its actual original shared source while genesis stays resident.
- pub fn admit_history_source(&mut self,pack:&[u8],spr:&[u8],output:&mut Option<semio_os_spr::history::OriginalHistorySource>,native:&mut NativeDecodeControl<'_>)->semio_framework_value_native_owned::native_decoding::NativeConstructionStepOutcome<bool,semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary>{
-  if let Err(error)=self.validate(pack,spr,native){return semio_framework_value_native_owned::native_decoding::NativeConstructionStepOutcome{result:Some(Err(error.into())),receipt_refusal:None,progress:Default::default(),work:0}}
-  if !self.is_ready(){return semio_framework_value_native_owned::native_decoding::NativeConstructionStepOutcome{result:None,receipt_refusal:None,progress:Default::default(),work:0}}
-  let outcome=semio_os_spr::history::OriginalHistorySource::admit(&mut self.history_output.value,output,native);
+ pub fn admit_history_source(&mut self,pack:&[u8],spr:&[u8],output:&mut Option<semio_os_spr::history::OriginalHistorySource>,native:&mut NativeDecodeControl<'_>)->Result<NativeConstructionStepResult<bool,semio_framework_value_native_owned::native_decoding::NativeReceivingEffectFailure<ValueError>>,OriginalReceivingPrimary>{
+  self.validate(pack,spr,native)?;
+  let pending=self.history_source_birth.phase()!=semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase::Empty;
+  if !pending&&!self.is_ready(){return Ok(NativeConstructionStepResult{result:Ok(false),progress:Default::default(),work:0})}
+  let result=semio_os_spr::history::OriginalHistorySource::admit(&mut self.history_output.value,output,&mut self.history_source_birth,native);
   if self.history_output.value.is_none(){self.phase=10;}
-  outcome
+  result
+ }
+ /// 🪪️ Reborrows pending source-birth callbacks only under the same original sources and native owner.
+ pub fn history_source_birth_original(&mut self,pack:&[u8],spr:&[u8],native:&dyn NativeDecodeCloseControl)->Result<&mut semio_framework_value_native_owned::native_decoding::NativeReceivingEffect<ValueError>,ValueError>{
+  self.validate(pack,spr,native)?;
+  if self.history_source_birth.phase()==semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase::Empty{return Err(invalid("original History source has no pending birth callbacks"))}
+  Ok(&mut self.history_source_birth)
  }
  /// 📸️ Separately hands off genesis only after its same original History source has been installed.
  pub fn take_genesis_into(&mut self,pack:&[u8],spr:&[u8],output:&mut Option<P>,native:&dyn NativeDecodeCloseControl,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
   self.validate(pack,spr,native)?;
   let demand=metadata::<P>();
-  if self.phase!=10||self.closing||self.closed||output.is_some()||!funds(grant,demand){return Ok(Default::default())}
+  if self.phase!=10||self.history_source_birth.phase()!=semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase::Empty||self.closing||self.closed||output.is_some()||!funds(grant,demand){return Ok(Default::default())}
   *output=self.snapshot_output.value.take();
   self.phase=9;
   Ok(receipt(demand))
@@ -118,6 +125,7 @@ impl<P:OriginalArtifactPackReceiving> OriginalArtifactPairReceiving<P> {
  /// ♻️ Original byte sources remain borrowed until all typed outputs and parser children are terminal.
  pub fn close_demands(&self,pack:&[u8],spr:&[u8],native:&dyn NativeDecodeCloseControl,body:usize)->Result<RetirementDemand,OriginalArtifactPairFailure> {
   self.validate(pack,spr,native)?;if self.closed{return Ok(Default::default())}
+  if self.history_source_birth.phase()!=semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase::Empty{return Err(invalid("original History source birth must resolve before pair retirement").into())}
   if let Some(cursor)=self.snapshot.as_ref(){return Ok(if cursor.terminal_is_empty(){Self::snapshot_release_demands()}else{nested(cursor.close_demands(body)?)?})}if let Some(cursor)=self.history.as_ref(){if cursor.terminal_is_empty(){return Ok(metadata::<Option<RetainedHistorySourceDecode>>())}if cursor.fault().is_some(){return Ok(nested(metadata::<RetainedHistoryOpMetaFault>())?)}if cursor.partial_is_receivable(){return Ok(nested(metadata::<RetainedHistorySourcePartial>())?)}return Ok(nested(cursor.demands(spr,native,body)?)?)}if !self.snapshot_output.terminal_is_empty(){return Ok(nested(self.snapshot_output.close_demands(body)?)?)}if !self.history_output.terminal_is_empty(){return Ok(nested(self.history_output.close_demands(body)?)?)}if !self.history_partial.terminal_is_empty(){return Ok(nested(self.history_partial.close_demands(body)?)?)}if !self.history_fault.terminal_is_empty(){return Ok(nested(self.history_fault.close_demands(body)?)?)}Ok(RetirementDemand { depth:1,..Default::default() })
  }
  pub fn close_step(&mut self,pack:&[u8],spr:&[u8],native:&mut dyn NativeDecodeCloseControl,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,OriginalArtifactPairFailure>{let mut work=0;let result=self.close_turn(pack,spr,native,grant,&mut work);RetainedWorkOutcome{result,work}}
@@ -128,6 +136,6 @@ impl<P:OriginalArtifactPackReceiving> OriginalArtifactPairReceiving<P> {
   native.charge(demand.capacity_bytes)?;
   if !self.snapshot_output.terminal_is_empty(){let turn=self.snapshot_output.close_step(child);*work=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}if !self.history_output.terminal_is_empty(){let turn=self.history_output.close_step(child);*work=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}if !self.history_partial.terminal_is_empty(){let turn=self.history_partial.close_step(child);*work=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}if !self.history_fault.terminal_is_empty(){let turn=self.history_fault.close_step(child);*work=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}self.closed=true;Ok(RetainedCloneStep::Complete(receipt(demand)))
  }
- pub fn terminal_is_empty(&self)->bool { self.closed&&self.snapshot.is_none()&&self.history.is_none()&&self.snapshot_output.terminal_is_empty()&&self.history_output.terminal_is_empty()&&self.history_partial.terminal_is_empty()&&self.history_fault.terminal_is_empty() }
+ pub fn terminal_is_empty(&self)->bool { self.closed&&self.history_source_birth.phase()==semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase::Empty&&self.snapshot.is_none()&&self.history.is_none()&&self.snapshot_output.terminal_is_empty()&&self.history_output.terminal_is_empty()&&self.history_partial.terminal_is_empty()&&self.history_fault.terminal_is_empty() }
 }
-impl<P:OriginalArtifactPackReceiving> Drop for OriginalArtifactPairReceiving<P> { fn drop(&mut self) { assert!(std::thread::panicking()||self.terminal_is_empty(),"original artifact pair abandoned source-dependent receivers or typed outputs");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.snapshot);ManuallyDrop::drop(&mut self.history)}} } }
+impl<P:OriginalArtifactPackReceiving> Drop for OriginalArtifactPairReceiving<P> { fn drop(&mut self) { assert!(std::thread::panicking()||self.terminal_is_empty(),"original artifact pair abandoned source-dependent receivers or typed outputs");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.snapshot);ManuallyDrop::drop(&mut self.history);ManuallyDrop::drop(&mut self.history_source_birth)}} } }

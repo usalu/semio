@@ -1,6 +1,6 @@
 //! 🐎️ Synchronous guest imports suspend around a scalar request while the original caller stays borrowed.
 use super::{OriginalOperationReceiving,slot::{OperationSlot,OperationRequest,OperationReply,OperationReturnAllocation}};
-use semio_framework_value::{ValueError,ValueRefusalKind,native_encoding::{NativeEncodeProgress,NativeEncodeAllocation}};
+use semio_framework_value::{ValueError,ValueRefusalKind,native_encoding::{NativeEncodeProgress,NativeAllocationRequest}};
 use std::{future::{Future,poll_fn},task::{Context,Poll}};
 use semio_plugin_host_engine::wasm;
 use wasm::component::{Accessor,Linker};
@@ -23,7 +23,7 @@ fn resolve(receiver:&mut dyn OriginalOperationReceiving,request:OperationRequest
  match request{
   OperationRequest::Begin=>OperationReply::Begin(receiver.begin().map(|maximum|maximum as u64).map_err(|error|semio_plugin_guest_contract::operation_authority::refusal_code(error.kind))),
   OperationRequest::Progress{completed,total,owned}=>code((||receiver.progress(NativeEncodeProgress{completed:count(completed)?,total:count(total)?,owned_bytes:count(owned)?}))()),
-  OperationRequest::Allocation{bytes,owned,next,maximum}=>code((||receiver.allocation(NativeEncodeAllocation{bytes:count(bytes)?,owned_bytes:count(owned)?,next_owned_bytes:count(next)?,maximum_bytes:count(maximum)?}))()),
+  OperationRequest::Allocation{bytes,owned,next,maximum}=>code((||receiver.allocation(NativeAllocationRequest{bytes:count(bytes)?,owned_bytes:count(owned)?,next_owned_bytes:count(next)?,maximum_bytes:count(maximum)?}))()),
   OperationRequest::ReserveReturn{kind,count:amount}=>code((||allocation_bytes(kind,count(amount)?).and_then(|bytes|receiver.reserve_return(bytes)))()),
   OperationRequest::Finish{owned}=>code(count(owned).and_then(|owned|receiver.finish(owned)))
  }

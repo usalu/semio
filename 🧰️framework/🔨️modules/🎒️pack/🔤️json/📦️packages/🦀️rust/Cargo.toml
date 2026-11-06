@@ -22,6 +22,7 @@ path = "../../🦀️.rs"
 testkit = ["semio-framework-pack-json-canonical/testkit"]
 
 [dependencies]
+semio-framework-value-native-receiving-original = { path = "../../../../🌱️value/🛬️decode/🧳️owned/🧳️original/📦️packages/🦀️rust" }
 semio-framework-pack-json-canonical = { path = "../../🛫️encode/📦️packages/🦀️rust" }
 semio-framework-pack-json-float = { path = "../../🎯️float-writer/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }

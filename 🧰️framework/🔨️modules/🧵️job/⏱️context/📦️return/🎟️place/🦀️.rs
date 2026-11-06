@@ -21,14 +21,14 @@ pub const fn empty()->Self{Self{credit:None,witness:None,identity:None,destinati
  pub fn terminal_is_empty(&self)->bool{self.credit.is_none()&&self.witness.is_none()&&self.identity.is_none()&&self.destination.is_none()}
  pub fn is_admitted(&self)->bool{self.credit.is_some()}
  /// 🔎️ See `README.md`.
- pub fn qualify_sized(&self,cx:&StepContext<'_>,destination:usize,copy_bytes:usize)->Result<(),OriginalTurnFailure>{let credit=self.credit.as_ref().ok_or_else(||ValueError::invariant("return credit absent"))?;credit.qualify_source(cx,self.identity.ok_or_else(||ValueError::invariant("identity absent"))?)?;if self.destination!=Some((destination,copy_bytes)){return Err(ValueError::invariant("sized return destination changed").into())}Ok(())}
+ pub fn qualify_sized(&self,cx:&StepContext<'_>,destination:usize,copy_bytes:usize)->Result<(),OriginalTurnFailure>{let credit=self.credit.as_ref().ok_or_else(||ValueError::invariant("return credit absent"))?;crate::original_job_continuation::source::qualify_original_return_source(credit,cx,self.identity.ok_or_else(||ValueError::invariant("identity absent"))?)?;if self.destination!=Some((destination,copy_bytes)){return Err(ValueError::invariant("sized return destination changed").into())}Ok(())}
  pub fn admit(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{let destination=self as *mut Self as usize;self.admit_sized(cx,destination,0)}
  pub fn admit_sized(&mut self,cx:&mut StepContext<'_>,destination:usize,copy_bytes:usize)->Result<bool,OriginalTurnFailure>{self.admit_sized_inner(cx,destination,copy_bytes,None)}
  /// ⏱️ See `README.md`.
  pub fn admit_sized_with_epoch(&mut self,cx:&mut StepContext<'_>,destination:usize,copy_bytes:usize,watermark:&mut u64)->Result<bool,OriginalTurnFailure>{let epoch=cx.original_source_epoch().filter(|epoch|*epoch>0&&*epoch>=*watermark).ok_or_else(||ValueError::invariant("return admission changed its Source epoch"))?;self.admit_sized_inner(cx,destination,copy_bytes,Some((watermark,epoch)))}
  fn admit_sized_inner(&mut self,cx:&mut StepContext<'_>,destination:usize,copy_bytes:usize,watermark:Option<(&mut u64,u64)>)->Result<bool,OriginalTurnFailure>{
   if destination==0{return Err(ValueError::invariant("sized return requires its exact nonzero preborn destination and extent").into())}
-  if let Some(credit)=self.credit.as_ref(){credit.qualify_source(cx,self.identity.ok_or_else(||ValueError::invariant("identity absent"))?)?;if self.destination!=Some((destination,copy_bytes)){return Err(ValueError::invariant("sized return destination changed").into())}return Ok(credit.has_unused_capture()&&self.witness.is_none())}
+  if let Some(credit)=self.credit.as_ref(){crate::original_job_continuation::source::qualify_original_return_source(credit,cx,self.identity.ok_or_else(||ValueError::invariant("identity absent"))?)?;if self.destination!=Some((destination,copy_bytes)){return Err(ValueError::invariant("sized return destination changed").into())}return Ok(credit.has_unused_capture()&&self.witness.is_none())}
   if !cx.admit_original_return_table()?{return Ok(false)}
   let identity=OriginalSourceBinding::borrow(cx);let result=claim_original_sized_return(cx,&mut self.credit,destination,copy_bytes,std::mem::size_of::<Option<OriginalSourceBinding>>()+std::mem::size_of::<Option<(usize,usize)>>() + if watermark.is_some(){std::mem::size_of::<u64>()}else{0});
   if self.credit.is_some(){self.identity=Some(identity);self.destination=Some((destination,copy_bytes));if let Some((watermark,epoch))=watermark{*watermark=epoch}}result
@@ -54,7 +54,7 @@ pub const fn preissue_demand()->(usize,usize,u64){(2,std::mem::size_of::<Option<
   self.credit.as_mut().ok_or_else(||ValueError::invariant("credit absent"))?.cancel_preissued(self.witness.as_mut().ok_or_else(||ValueError::invariant("witness absent"))?)?;cx.consume_fuel(work);cx.consume_retained(p)?;self.qualify_sized(cx,destination,copy_bytes)?;Ok(true)
  }
  pub fn settle_return(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  let Some(credit)=self.credit.as_ref()else{return Ok(true)};credit.qualify_source(cx,self.identity.ok_or_else(||ValueError::invariant("identity absent"))?)?;
+  let Some(credit)=self.credit.as_ref()else{return Ok(true)};crate::original_job_continuation::source::qualify_original_return_source(credit,cx,self.identity.ok_or_else(||ValueError::invariant("identity absent"))?)?;
   let captured=self.witness.is_some();let copy_bytes=self.destination.ok_or_else(||ValueError::invariant("destination absent"))?.1;
   if !captured{let credit=self.credit.as_mut().ok_or_else(||ValueError::invariant("credit absent"))?;self.witness=Some(if credit.has_unused_capture(){credit.issue_success_return(copy_bytes)?}else{credit.issue_return(OriginalReturnPhase::Receive,copy_bytes)?})}
   receive_original_return_witness(cx,self.credit.as_mut().ok_or_else(||ValueError::invariant("credit absent"))?,&mut self.witness)?;

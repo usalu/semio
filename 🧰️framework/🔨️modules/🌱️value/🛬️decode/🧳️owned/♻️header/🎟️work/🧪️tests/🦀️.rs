@@ -16,7 +16,8 @@ impl NativeReceiver<crate::DslValue,()> for PoisonHeader{
  fn take(&mut self,_:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<((),RetainedCloneProgress)>>{panic!("closed header output called")}
  fn begin_close(&mut self){}
  fn close_demands(&self,_:usize)->Result<RetirementDemand,ValueError>{panic!("closed child cursor called")}
- fn close_step(&mut self,_:RetainedCloneGrant)->crate::RetainedWorkOutcome{panic!("closed child cursor called")}
+ fn close_work_demand(&self,_:usize)->Result<u64,ValueError>{panic!("closed child cursor called")}
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let _=effect.grant();panic!("closed child cursor called")}
  fn terminal_is_empty(&self)->bool{true}
 }
 #[test]fn actual_closed_receiver_header_moves_its_existing_allocation_and_skips_poison_drop(){

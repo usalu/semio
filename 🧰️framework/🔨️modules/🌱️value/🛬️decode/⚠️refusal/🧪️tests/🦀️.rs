@@ -11,8 +11,8 @@ fn original_native_refusal_forwarded_cause_moves_the_exact_original_backing(){
   let mut control=$control::new_forwarded(law["maximumBytes"].as_u64().unwrap()as usize,&mut callback,&mut allocation);let(result,physical)=crate::allocation_testing::observe_retirement_allocations(||control.charge(law["chargeBytes"].as_u64().unwrap()as usize));
   assert_eq!(physical,(0,0));assert_eq!(control.owned_bytes(),0);let error=result.unwrap_err();assert_eq!(error.kind.as_str(),law["kind"].as_str().unwrap());assert_eq!(error.message,law["message"].as_str().unwrap());assert_eq!(error.message.as_ptr(),pointer);assert!(matches!(error.message,std::borrow::Cow::Owned(_)));assert_eq!(error.retained_progress(),RetainedCloneProgress::default());drop(control);assert!(original.is_none());
  };}
- direction!(NativeDecodeControl,crate::native_decoding::NativeDecodeAllocation);
- direction!(NativeEncodeControl,crate::native_encoding::NativeEncodeAllocation);
+ direction!(NativeDecodeControl,crate::native_decoding::NativeAllocationRequest);
+ direction!(NativeEncodeControl,crate::native_encoding::NativeAllocationRequest);
 }
 
 #[test]

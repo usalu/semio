@@ -22,5 +22,7 @@
   "receipt": "outer receipt",
   "priorAdmittedBytes": 5,
   "requestedBytes": 73,
-  "maximumBytes": 1024
+  "maximumBytes": 1024,
+  "workRefusal": "receiving original work",
+  "workOverrun": "receiving original overrun"
 }

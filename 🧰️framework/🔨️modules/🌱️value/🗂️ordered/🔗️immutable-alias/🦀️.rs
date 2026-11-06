@@ -23,6 +23,21 @@ impl<T> SharedOwner<T> {
     /// 🎟️ Admits one complete allocation before moving the original inline payload into it.
     pub fn admit(value:T,grant:RetainedCloneGrant,actual:&mut Option<usize>)->crate::RetainedWorkOutcome<(Self,RetainedCloneProgress),(ValueError,T)>{let turn=crate::retirement::arc_custody::admit_shared_allocation(value,grant,actual);crate::RetainedWorkOutcome{result:turn.result.map(|(value,progress)|(Self{value:ManuallyDrop::new(Some(value))},progress)),work:turn.work}}
 
+    /// 📐️ Quotes the same original input and empty output before its shared allocation.
+    pub fn admission_demand(input:&Option<T>,output:&Option<Self>)->Result<crate::RetirementDemand,ValueError>{if input.is_none()||output.is_some(){return Err(ValueError::invariant("shared admission requires its original occupied input and empty output"))}let copy_bytes=std::mem::size_of::<Option<T>>().checked_add(std::mem::size_of::<T>()).and_then(|n|n.checked_add(2*std::mem::size_of::<usize>())).and_then(|n|n.checked_add(std::mem::size_of::<Option<Self>>())).ok_or_else(||ValueError::invariant("shared admission header extent overflow"))?;Ok(crate::RetirementDemand{copy_bytes,capacity_bytes:Self::allocation_bytes(),depth:1,..Default::default()})}
+    /// ⏱️ Quotes the actual one-step shared allocation producer.
+    pub fn admission_work(input:&Option<T>,output:&Option<Self>)->Result<u64,ValueError>{Self::admission_demand(input,output).map(|_|1)}
+    /// 📥️ Publishes the actual shared owner into its original slot after the real allocator succeeds.
+    pub fn admit_into(input:&mut Option<T>,output:&mut Option<Self>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<Option<RetainedCloneProgress>>{
+        let demand=match Self::admission_demand(input,output){Ok(demand)=>demand,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work:0}};
+        let grant=effect.grant();if !crate::retained_clone::retained_clone_grant_admits(grant,demand)||effect.maximum_work_units()==0{return crate::RetainedWorkOutcome{result:Ok(None),work:0}}
+        if effect.actual().is_some(){return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("shared admission requires the original empty actual marker")),work:0}}
+        let performed=match effect.performed(1){Ok(performed)=>performed,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work:1}};if !performed{return crate::RetainedWorkOutcome{result:Ok(None),work:1}}
+        *effect.actual()=Some(0);let mut storage=match crate::retirement::arc_custody::try_uninitialized_arc::<T>(){Ok(storage)=>storage,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work:1}};
+        *effect.actual()=Some(Self::allocation_bytes());let slot=Arc::get_mut(&mut storage).expect("new shared storage is uniquely owned");slot.write(input.take().expect("checked original shared input remains resident"));*output=Some(Self{value:ManuallyDrop::new(Some(unsafe{storage.assume_init()}))});
+        crate::RetainedWorkOutcome{result:Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:Self::allocation_bytes(),..Default::default()})),work:1}
+    }
+
     /// 🧊️ Constructs one shared allocation at an explicitly synchronous boundary.
     pub fn from_cold(value: T) -> Self { Self {value:ManuallyDrop::new(Some(Arc::new(value)))} }
 

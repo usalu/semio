@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "name": "producer has not replied",
+      "stored": null,
+      "available": false
+    },
+    {
+      "name": "original acceptance recorded",
+      "stored": "accepted",
+      "available": true
+    },
+    {
+      "name": "original refusal recorded",
+      "stored": "refused",
+      "available": true
+    }
+  ]
+}

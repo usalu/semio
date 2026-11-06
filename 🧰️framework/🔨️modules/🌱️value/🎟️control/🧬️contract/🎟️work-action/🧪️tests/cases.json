@@ -1,0 +1,54 @@
+{
+  "cases": [
+    {
+      "name": "same-source",
+      "reserved": 2,
+      "actual": 1,
+      "expectedActual": 1,
+      "scope": "original",
+      "issuer": "original",
+      "admitted": true,
+      "valid": true
+    },
+    {
+      "name": "different-scope",
+      "reserved": 2,
+      "actual": 1,
+      "expectedActual": 1,
+      "scope": "replacement",
+      "issuer": "original",
+      "admitted": true,
+      "valid": false
+    },
+    {
+      "name": "different-issuer",
+      "reserved": 2,
+      "actual": 1,
+      "expectedActual": 1,
+      "scope": "original",
+      "issuer": "replacement",
+      "admitted": true,
+      "valid": false
+    },
+    {
+      "name": "different-work",
+      "reserved": 2,
+      "actual": 1,
+      "expectedActual": 2,
+      "scope": "original",
+      "issuer": "original",
+      "admitted": true,
+      "valid": false
+    },
+    {
+      "name": "actual-overrun-retained",
+      "reserved": 1,
+      "actual": 2,
+      "expectedActual": 2,
+      "scope": "original",
+      "issuer": "original",
+      "admitted": false,
+      "valid": true
+    }
+  ]
+}

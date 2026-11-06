@@ -19,7 +19,9 @@ impl<T:RetireOwned> OriginalVectorCursor<T>{
  /// 🤝️ Returns the exact next native owner only under the unchanged independent caller grant.
  pub fn take_front(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(T,RetainedCloneProgress)>>{if self.closing||self.active.is_some()||self.remaining().is_empty(){return RetainedWorkOutcome{result:Ok(None),work:0}}let d=self.next_take_demand();if !permits(d,grant){return RetainedWorkOutcome{result:Ok(None),work:0}}let Some(original)=self.original.as_mut()else{return RetainedWorkOutcome{result:Err(ValueError::invariant("original vector remains resident").into()),work:0}};let Some(value)=original.next()else{return RetainedWorkOutcome{result:Err(ValueError::invariant("original vector has its quoted next row").into()),work:0}};RetainedWorkOutcome{result:Ok(Some((value,RetainedCloneProgress{copied_items:1,..Default::default()}))),work:1}}
  /// 🛑️ Switches to original payload closure while retaining the same vector allocation.
- pub fn begin_close(&mut self){self.closing=true;}
+ pub fn begin_close_demand(&self)->RetirementDemand{crate::retained_close_start_demand(self.closing)}
+ pub fn begin_close_work_demand(&self)->u64{u64::from(!self.closing)}
+ pub fn begin_close_paid(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress,ValueError>{crate::start_retained_close(&mut self.closing,effect)}
  /// 👁️ Reports whether the original close election has already been retained.
  pub fn close_started(&self)->bool{self.closing}
  /// 🔜️ Quotes the actual next child, native payload handoff, or final backing release.
@@ -33,22 +35,23 @@ impl<T:RetireOwned> OriginalVectorCursor<T>{
  /// ⛽️ Quotes the selected native row, retained child, or backing release.
  pub fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{if self.terminal_is_empty()||!self.closing{return Ok(0)}if let Some(active)=self.active.as_ref(){if !active.terminal_is_empty(){return crate::ErasedSnapshotRetirement::next_computational_work(active,body)}}Ok(1)}
  /// 🧹️ Performs one preadmitted child or separately funded final backing release.
- pub fn step(&mut self,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome{self.step_with(grant,|active,grant|{let result=active.step(grant);RetainedWorkOutcome{result,work:active.last_turn_work()}})}
+ pub fn step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{self.step_with(effect,|active,effect|active.step(effect))}
  /// 🪢️ Delegates one selected child to its actual original control without a parent settlement.
- pub fn step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn crate::OriginalRetirementControl)->crate::OriginalRetirementOutcome{if !self.requires_original_control(){return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"vector has no selected original child").into()),work:0}}self.step_with(grant,|active,grant|crate::ErasedSnapshotRetirement::close_step_controlled(active,grant,control))}
+ pub fn step_controlled(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn crate::OriginalRetirementControl)->crate::OriginalRetirementPoll{let grant=effect.grant();if !self.requires_original_control(){return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"vector has no selected original child").into()),work:0})}self.step_with(effect,|active,effect|crate::ErasedSnapshotRetirement::close_step_controlled(active,effect,control))}
  /// 🧷️ Delegates the selected child through the original retirement loan.
- pub fn step_original(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome{if !self.requires_original_control(){return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"vector has no selected original child").into()),work:0}}self.step_with(grant,|active,grant|crate::ErasedSnapshotRetirement::close_original_step(active,original,grant))}
+ pub fn step_original(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let grant=effect.grant();if !self.requires_original_control(){return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"vector has no selected original child").into()),work:0})}self.step_with(effect,|active,effect|crate::ErasedSnapshotRetirement::close_original_step(active,original,effect))}
  fn requires_original_control(&self)->bool{self.closing&&self.active.as_ref().is_some_and(|active|!active.terminal_is_empty()&&crate::ErasedSnapshotRetirement::requires_original_control(active))}
- fn step_with(&mut self,grant:RetainedCloneGrant,invoke:impl FnOnce(&mut ControlledRetirement<T>,RetainedCloneGrant)->crate::OriginalRetirementOutcome)->crate::OriginalRetirementOutcome{
+ fn step_with(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,invoke:impl FnOnce(&mut ControlledRetirement<T>,&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll)->crate::OriginalRetirementPoll{let grant=effect.grant();
   let mut work=0;
-  let result=(||{
+  let result=(||->Result<RetainedCloneStep,crate::retirement_contract::RetirementPollExit>{
    if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
    if !self.closing{return Ok(RetainedCloneStep::Progress(Default::default()))}
+   if self.next_computational_work(grant.maximum_copy_bytes)?>effect.maximum_work_units(){return Ok(RetainedCloneStep::Progress(Default::default()))}
    let d=self.next_demand(grant.maximum_copy_bytes)?;
    if !permits(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}
    let p=if let Some(active)=self.active.as_mut(){
     if active.terminal_is_empty(){*self.active=None;work=1;RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}}
-    else{let turn=invoke(active,RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant});work=turn.work;turn.result?.progress()}
+    else{let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let mut child=effect.reborrow(child,effect.maximum_work_units())?;let turn=crate::retirement_contract::RetirementPollExit::settled(invoke(active,&mut child))?;work=turn.work;turn.result?.progress()}
    }else if let Some(original)=self.pending.take(){
     work=1;match ControlledRetirement::new(original){Ok(active)=>{*self.active=Some(active)},Err((error,original))=>{*self.pending=Some(original);return Err(error.into())}}
     RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}
@@ -62,20 +65,20 @@ impl<T:RetireOwned> OriginalVectorCursor<T>{
    if !p.fits(grant){return Err(refuse("original vector child receipt exceeds caller grant").with_retained_progress(p).into())}
    Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})
   })();
-  RetainedWorkOutcome{result,work}
+  crate::retirement_contract::RetirementPollExit::finish(result,work)
  }
  /// ✅️ Requires both payload and physical original backing custody to be empty.
  pub fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.pending.is_none()&&self.active.is_none()&&self.backing_bytes==0}
 }
 impl<T:RetireOwned> Drop for OriginalVectorCursor<T>{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"original vector abandoned its native backing custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.original);ManuallyDrop::drop(&mut self.pending);ManuallyDrop::drop(&mut self.active);}}}}
-impl<T:RetireOwned> RetireOwned for OriginalVectorCursor<T>{fn retirement(mut self)->Box<dyn RetirementCursor>{self.begin_close();Box::new(self)}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Self>())}fn controlled_retirement_supported()->bool{crate::retirement::support::controlled_retirement_supported::<Self>()}fn controlled_retirement_supported_in(path:&crate::retirement::RetirementSupport<'_>)->bool{path.supports::<T>()}}
+impl<T:RetireOwned> RetireOwned for OriginalVectorCursor<T>{type RetirementCursor=OriginalVectorRetirementSeed<T>;fn retirement_seed(self)->Self::RetirementCursor{OriginalVectorRetirementSeed{owner:self}}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<OriginalVectorRetirementSeed<T>>())}fn controlled_retirement_supported()->bool{crate::retirement::support::controlled_retirement_supported::<Self>()}fn controlled_retirement_supported_in(path:&crate::retirement::RetirementSupport<'_>)->bool{path.supports::<T>()}}
 impl<T:RetireOwned> RetirementCursor for OriginalVectorCursor<T>{
   fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{OriginalVectorCursor::next_computational_work(self,body)}
  fn requires_original_control(&self)->bool{OriginalVectorCursor::requires_original_control(self)}
- fn close_step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn crate::OriginalRetirementControl)->RetirementStep{super::erased_cursor_turn(self.step_controlled(grant,control))}
- fn close_original_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->RetirementStep{super::erased_cursor_turn(self.step_original(original,grant))}
+ fn close_step_controlled(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn crate::OriginalRetirementControl)->RetirementStep{let grant=effect.grant();super::erased_cursor_turn(self.step_controlled(effect,control))}
+ fn close_original_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();super::erased_cursor_turn(self.step_original(original,effect))}
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{OriginalVectorCursor::next_demand(self,body)}
- fn close_step(&mut self,g:RetainedCloneGrant)->RetirementStep{let turn=self.step(g);match turn.result{Err(error)=>RetirementStep::Failure(error,turn.work),Ok(RetainedCloneStep::Complete(p))if p==RetainedCloneProgress::default()=>RetirementStep::Complete(turn.work),Ok(RetainedCloneStep::Progress(p)|RetainedCloneStep::Complete(p))=>RetirementStep::Progress(p,turn.work)}}
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{super::erased_cursor_turn(self.step(effect))}
  fn terminal_is_empty(&self)->bool{Self::terminal_is_empty(self)}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.next_demand(0)?.copy_bytes)}
  fn next_birth_bytes(&self,body:usize)->Option<usize>{self.next_demand(body).ok().map(|d|d.capacity_bytes)}
@@ -87,3 +90,16 @@ impl<T:RetireOwned> RetirementCursor for OriginalVectorCursor<T>{
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
+
+#[doc(hidden)]
+pub struct OriginalVectorRetirementSeed<T:RetireOwned>{owner:OriginalVectorCursor<T>}
+impl<T:RetireOwned> RetirementCursor for OriginalVectorRetirementSeed<T>{
+ fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{if self.owner.closing{self.owner.next_computational_work(body)}else{Ok(1)}}
+ fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.owner.closing{self.owner.next_demand(body)}else{Ok(crate::retained_close_start_demand(false))}}
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{if !self.owner.closing{if effect.maximum_work_units()==0{return RetirementStep::BudgetExhausted}let turn=crate::start_retained_close(&mut self.owner.closing,effect);return match turn.result{Ok(progress)=>RetirementStep::Progress(progress,turn.work),Err(error)=>RetirementStep::Failure(error.into(),turn.work)}}RetirementCursor::close_step(&mut self.owner,effect)}
+ fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()}
+ fn requires_original_control(&self)->bool{self.owner.requires_original_control()}
+ fn close_original_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{RetirementCursor::close_original_step(&mut self.owner,original,effect)}
+ fn close_step_controlled(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn crate::OriginalRetirementControl)->RetirementStep{RetirementCursor::close_step_controlled(&mut self.owner,effect,control)}
+ fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
+}

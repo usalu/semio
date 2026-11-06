@@ -1,0 +1,114 @@
+{
+  "cause": {
+    "type": "retirement",
+    "value": {
+      "primary": {
+        "kind": "invalidValue",
+        "message": "outer primary",
+        "retainedProgress": {
+          "copiedItems": 2,
+          "copiedBytes": 3,
+          "retainedCapacityBytes": 4,
+          "releasedBytes": 5
+        }
+      },
+      "workRefusal": {
+        "kind": "workLimit",
+        "message": "outer work",
+        "retainedProgress": {
+          "copiedItems": 2,
+          "copiedBytes": 3,
+          "retainedCapacityBytes": 4,
+          "releasedBytes": 5
+        }
+      },
+      "receiptRefusal": {
+        "kind": "canceled",
+        "message": "outer receipt",
+        "retainedProgress": {
+          "copiedItems": 2,
+          "copiedBytes": 3,
+          "retainedCapacityBytes": 4,
+          "releasedBytes": 5
+        }
+      },
+      "allocationRefusal": {
+        "kind": "allocationFailed",
+        "message": "outer allocation",
+        "retainedProgress": {
+          "copiedItems": 2,
+          "copiedBytes": 3,
+          "retainedCapacityBytes": 4,
+          "releasedBytes": 5
+        }
+      },
+      "progressOverride": {
+        "copiedItems": 2,
+        "copiedBytes": 3,
+        "retainedCapacityBytes": 4,
+        "releasedBytes": 5
+      },
+      "child": {
+        "primary": {
+          "kind": "invalidValue",
+          "message": "inner primary",
+          "retainedProgress": {
+            "copiedItems": 2,
+            "copiedBytes": 3,
+            "retainedCapacityBytes": 4,
+            "releasedBytes": 5
+          }
+        },
+        "workRefusal": {
+          "kind": "workLimit",
+          "message": "inner work",
+          "retainedProgress": {
+            "copiedItems": 2,
+            "copiedBytes": 3,
+            "retainedCapacityBytes": 4,
+            "releasedBytes": 5
+          }
+        },
+        "receiptRefusal": {
+          "kind": "canceled",
+          "message": "inner receipt",
+          "retainedProgress": {
+            "copiedItems": 2,
+            "copiedBytes": 3,
+            "retainedCapacityBytes": 4,
+            "releasedBytes": 5
+          }
+        },
+        "allocationRefusal": {
+          "kind": "allocationFailed",
+          "message": "inner allocation",
+          "retainedProgress": {
+            "copiedItems": 2,
+            "copiedBytes": 3,
+            "retainedCapacityBytes": 4,
+            "releasedBytes": 5
+          }
+        },
+        "progressOverride": {
+          "copiedItems": 2,
+          "copiedBytes": 3,
+          "retainedCapacityBytes": 4,
+          "releasedBytes": 5
+        },
+        "child": null
+      }
+    }
+  },
+  "allocation": null,
+  "encodeEffect": null,
+  "receiptRefusal": null,
+  "contextRefusal": null,
+  "workRefusal": null,
+  "settlementRefusal": null,
+  "progress": {
+    "copiedItems": 2,
+    "copiedBytes": 3,
+    "retainedCapacityBytes": 4,
+    "releasedBytes": 5
+  }
+}

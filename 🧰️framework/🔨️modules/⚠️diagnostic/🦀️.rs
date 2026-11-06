@@ -81,7 +81,7 @@ impl TextError {
 }
 
 /// 🏷️ Stable dotted fault/diagnostic code (e.g. `module.pack.checksum-mismatch`).
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::NativeReceive)]
 pub struct FaultCode(pub String);
 
 impl FaultCode {
@@ -134,7 +134,8 @@ impl From<DiagnosticCode> for FaultCode {
 /// 🚦️ Declaration order is the level order: `#[derive(PartialOrd, Ord)]` makes `Info < Warning <
 /// Error < Fatal` a structural fact, not a hand-maintained comparator. `as_u8`/`from_u8` (0..3)
 /// give a stable wire-compatible numeric mirror for TS/WIT twins.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, semio_framework_value::NativeReceive)]
+#[value(rename_all = "camelCase")]
 pub enum Severity {
     Info,
     Warning,
@@ -359,7 +360,8 @@ pub enum FaultOrigin {
 }
 
 /// 🎯️ Optional ids locating a fault/diagnostic to a plugin app surface.
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::NativeReceive)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct FaultScope {
     pub plugin_id: Option<String>,
     pub app_id: Option<String>,
@@ -957,3 +959,7 @@ mod fault_wire_cursor_tests;
 #[path="🏭️message/🦀️.rs"]
 mod message_construction;
 pub use message_construction::FaultMessageOwner;
+
+#[cfg(test)]
+#[path="🧪️tests/🛬️receiving/🦀️.rs"]
+mod native_receiving_tests;

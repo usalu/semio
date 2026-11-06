@@ -10,7 +10,10 @@
       "quoteRefused": true,
       "settlementRefused": false,
       "spent": 0,
-      "pending": false
+      "pending": false,
+      "owned": 0,
+      "next": 5,
+      "ceiling": 100
     },
     {
       "name": "actual post",
@@ -21,7 +24,10 @@
       "quoteRefused": false,
       "settlementRefused": false,
       "spent": 5,
-      "pending": false
+      "pending": false,
+      "owned": 0,
+      "next": 5,
+      "ceiling": 100
     },
     {
       "name": "performed allocator failure",
@@ -32,7 +38,10 @@
       "quoteRefused": false,
       "settlementRefused": false,
       "spent": 0,
-      "pending": false
+      "pending": false,
+      "owned": 0,
+      "next": 5,
+      "ceiling": 100
     },
     {
       "name": "pre-effect cancellation",
@@ -43,7 +52,10 @@
       "quoteRefused": false,
       "settlementRefused": false,
       "spent": 0,
-      "pending": false
+      "pending": false,
+      "owned": 0,
+      "next": 5,
+      "ceiling": 100
     },
     {
       "name": "physical excess",
@@ -54,7 +66,10 @@
       "quoteRefused": false,
       "settlementRefused": true,
       "spent": 8,
-      "pending": false
+      "pending": false,
+      "owned": 0,
+      "next": 5,
+      "ceiling": 100
     },
     {
       "name": "foreign settlement",
@@ -65,7 +80,10 @@
       "quoteRefused": false,
       "settlementRefused": true,
       "spent": 0,
-      "pending": true
+      "pending": true,
+      "owned": 0,
+      "next": 5,
+      "ceiling": 100
     },
     {
       "name": "duplicate quote",
@@ -76,7 +94,66 @@
       "quoteRefused": false,
       "settlementRefused": true,
       "spent": 0,
-      "pending": true
+      "pending": true,
+      "owned": 0,
+      "next": 5,
+      "ceiling": 100
+    },
+    {
+      "name": "noncanonical ledger quote",
+      "maximum": 5,
+      "bytes": 5,
+      "owned": 3,
+      "next": 9,
+      "ceiling": 100,
+      "action": "post",
+      "actual": 5,
+      "quoteRefused": true,
+      "settlementRefused": false,
+      "spent": 0,
+      "pending": false
+    },
+    {
+      "name": "cumulative ceiling refusal",
+      "maximum": 5,
+      "bytes": 5,
+      "owned": 3,
+      "next": 8,
+      "ceiling": 7,
+      "action": "post",
+      "actual": 5,
+      "quoteRefused": true,
+      "settlementRefused": false,
+      "spent": 0,
+      "pending": false
+    },
+    {
+      "name": "budget-only admission",
+      "maximum": 5,
+      "bytes": 5,
+      "owned": 0,
+      "next": 5,
+      "ceiling": 100,
+      "action": "admit",
+      "actual": null,
+      "quoteRefused": false,
+      "settlementRefused": false,
+      "spent": 0,
+      "pending": false
+    },
+    {
+      "name": "budget-only malformed request",
+      "maximum": 5,
+      "bytes": 5,
+      "owned": 3,
+      "next": 9,
+      "ceiling": 100,
+      "action": "admit",
+      "actual": null,
+      "quoteRefused": true,
+      "settlementRefused": false,
+      "spent": 0,
+      "pending": false
     }
   ]
 }

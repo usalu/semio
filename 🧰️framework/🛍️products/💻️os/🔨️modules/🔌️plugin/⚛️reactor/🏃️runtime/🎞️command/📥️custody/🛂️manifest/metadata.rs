@@ -1,7 +1,8 @@
 //! 🧷️ Original view bytes and typed metadata remain in one caller-bound receiving continuation.
+use semio_framework_value_native_receiving_original::NativeReceivingOriginal;
 use super::*;
 use semio_framework_value::{RetirementDemand,SharedUtf8,retained_clone::{RetainedCloneSource,RetainedCloneSourceAdmission,RetainedCloneClose,retained_clone_grant_admits}};
-use semio_framework_value_native_owned::{NativeReceive,native_decoding::{NativeDecodeControl,NativeConstructionStepFailure},owned::NativeReceivingOriginal};
+use semio_framework_value_native_owned::{NativeReceive,native_decoding::{NativeDecodeControl,NativeConstructionStepFailure}};
 use semio_framework_job::{OriginalSourceBinding,OriginalConstructionDemand,admit_original_construction};
 use crate::{built,built_with,retired};
 

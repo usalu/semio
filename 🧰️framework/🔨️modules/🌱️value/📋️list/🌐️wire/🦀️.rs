@@ -1,16 +1,8 @@
 //! 🌐️ Paged-list canonical value conversion is owned by its genuine wire traits.
 use crate::{DslValue,ToValue,FromValue,ValueShape,ValueEdit,ValueError,ValueRefusalKind};
 use semio_framework_value_paged_list::PagedList;
-pub fn append_paged_cold<T, const N: usize>(values: &mut PagedList<T, N>, value: T) -> Result<(), ValueError> {
-    while !values.has_reserved_slot() {
-        let required = values.next_allocation_bytes().map_err(ValueError::from)?;
-        let progress = values.reserve_one(required).map_err(|error| ValueError::from(error.refusal()))?;
-        if !progress.progressed {
-            return Err(ValueError::new(crate::ValueRefusalKind::InvariantViolated, "paged owner exact cold allocation did not progress"));
-        }
-    }
-    values.push_reserved(value).map_err(|_| ValueError::new(crate::ValueRefusalKind::InvariantViolated, "paged owner rejected its reserved slot"))
-}
+/// 🧊️ Uses the defining fallible cold constructor; native receipt-aware producers use selected reservation ports.
+pub fn append_paged_cold<T,const N:usize>(values:&mut PagedList<T,N>,value:T)->Result<(),ValueError>{values.try_push(value).map_err(ValueError::from)}
 
 pub fn paged_value_index(segment: &str, length: usize) -> Result<usize, ValueError> {
     if segment.is_empty() || (segment.len() > 1 && segment.starts_with('0')) || !segment.bytes().all(|byte| byte.is_ascii_digit()) {

@@ -249,8 +249,8 @@ macro_rules! original_native_caller{
   }
  };
 }
-original_native_caller!(with_original_decode, semio_framework_value_native_owned, native_decoding,NativeDecodeControl,NativeSnapshotDecodeOwner,NativeDecodeRetirementRecipient,NativeDecodeAllocation,NativeDecodeProgress);
-original_native_caller!(with_original_encode, semio_framework_value, native_encoding,NativeEncodeControl,NativeSnapshotEncodeOwner,NativeEncodeRetirementRecipient,NativeEncodeAllocation,NativeEncodeProgress);
+original_native_caller!(with_original_decode, semio_framework_value_native_owned, native_decoding,NativeDecodeControl,NativeSnapshotDecodeOwner,NativeDecodeRetirementRecipient,NativeAllocationRequest,NativeDecodeProgress);
+original_native_caller!(with_original_encode, semio_framework_value, native_encoding,NativeEncodeControl,NativeSnapshotEncodeOwner,NativeEncodeRetirementRecipient,NativeAllocationRequest,NativeEncodeProgress);
 /** ♻️ Settles successful caller-owned native output under its separate authored close turns. */
 fn retire_original_output<T:semio_framework_value::retirement::RetireOwned>(source:T,law:&serde_json::Value){
  let close=serde_json::from_value::<semio_framework_value::RetainedCloneGrant>(law["closeGrant"].clone()).unwrap();let mut owner=semio_framework_value::retirement::controlled::ControlledRetirement::new(source).map_err(|(error,_)|error).unwrap();

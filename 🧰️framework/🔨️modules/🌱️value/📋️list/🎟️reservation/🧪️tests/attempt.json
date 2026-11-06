@@ -1,0 +1,57 @@
+{
+  "cases": [
+    {
+      "name": "denied",
+      "grant": "none",
+      "allocator": "normal",
+      "work": 0,
+      "actual": null
+    },
+    {
+      "name": "born",
+      "grant": "quoted",
+      "allocator": "normal",
+      "work": 1,
+      "actual": "observed"
+    },
+    {
+      "name": "null",
+      "grant": "quoted",
+      "allocator": "refuseOnce",
+      "work": 1,
+      "actual": 0
+    },
+    {
+      "name": "copyDenied",
+      "grant": "copyNone",
+      "allocator": "normal",
+      "work": 0,
+      "actual": null
+    },
+    {
+      "name": "depthDenied",
+      "grant": "depthNone",
+      "allocator": "normal",
+      "work": 0,
+      "actual": null
+    }
+  ],
+  "workSource": "sameOriginalEffect",
+  "copyReceipt": "selectedPageHeaders",
+  "failureOwners": [
+    "work",
+    "allocation",
+    "copiedBytes"
+  ],
+  "stock": {
+    "items": 1000,
+    "copyBytes": 1048576,
+    "capacityBytes": 1048576,
+    "releaseBytes": 1048576,
+    "depth": 64,
+    "fuel": 1000
+  },
+  "denial": "completedNoProgress",
+  "pending": "unresolvedOriginalAction",
+  "releaseCopyReceipt": "selectedPageHeaders"
+}

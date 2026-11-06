@@ -31,11 +31,11 @@ type IdentityObserver<'a> = semio_os_kernel::os_vcs::io::binary::entity_identity
 /// 🌉️ Carries one original host allocation port through all synchronous retained authoring hops.
 pub fn with_operation_authority<T>(operation: impl FnOnce(&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<T, crate::Fault>) -> Result<T, crate::Fault> {
     use crate::component::wasip2::semio::framework::pure;
-    use semio_framework_value::native_encoding::{NativeEncodeAllocation, NativeEncodeProgress};
+    use semio_framework_value::native_encoding::{NativeAllocationRequest, NativeEncodeProgress};
     let fault = |error: ValueError| crate::Fault::from(error.to_string());
     let maximum = usize::try_from(pure::operation_begin().map_err(refusal).map_err(fault)?).map_err(|_| fault(refusal(2)))?;
     let mut observer = |next: NativeEncodeProgress| pure::operation_progress(next.completed as u64, next.total as u64, next.owned_bytes as u64) == 0;
-    let mut allocate = |next: NativeEncodeAllocation| admitted(pure::operation_allocation(next.bytes as u64, next.owned_bytes as u64, next.next_owned_bytes as u64, next.maximum_bytes as u64));
+    let mut allocate = |next: NativeAllocationRequest| admitted(pure::operation_allocation(next.bytes as u64, next.owned_bytes as u64, next.next_owned_bytes as u64, next.maximum_bytes as u64));
     let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new_forwarded(maximum, &mut observer as &mut IdentityObserver<'_>, &mut allocate).map_err(fault)?;
     let result = operation(&mut identity);
     let receipt = identity.pause_forwarded().map_err(fault)?;
@@ -47,11 +47,11 @@ pub fn with_operation_authority<T>(operation: impl FnOnce(&mut semio_os_kernel::
 /// 📤️ Returns original refused scalars before constructing any diagnostic or owned JSON result.
 pub fn with_owned_operation_authority<T>(operation:impl FnOnce(&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<T,crate::Fault>)->Result<Result<T,crate::Fault>,ValueError>{
     use crate::component::wasip2::semio::framework::pure;
-    use semio_framework_value::native_encoding::{NativeEncodeAllocation,NativeEncodeProgress};
+    use semio_framework_value::native_encoding::{NativeAllocationRequest,NativeEncodeProgress};
     let maximum=usize::try_from(pure::operation_begin().map_err(refusal)?).map_err(|_|refusal(2))?;
     let rejected=std::cell::Cell::new(0);
     let mut observer=|next:NativeEncodeProgress|{let code=pure::operation_progress(next.completed as u64,next.total as u64,next.owned_bytes as u64);if code!=0{rejected.set(code);}code==0};
-    let mut allocate=|next:NativeEncodeAllocation|{let code=pure::operation_allocation(next.bytes as u64,next.owned_bytes as u64,next.next_owned_bytes as u64,next.maximum_bytes as u64);if code!=0{rejected.set(code);}admitted(code)};
+    let mut allocate=|next:NativeAllocationRequest|{let code=pure::operation_allocation(next.bytes as u64,next.owned_bytes as u64,next.next_owned_bytes as u64,next.maximum_bytes as u64);if code!=0{rejected.set(code);}admitted(code)};
     let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new_forwarded(maximum,&mut observer as &mut IdentityObserver<'_>,&mut allocate)?;
     let result=operation(&mut identity);
     if rejected.get()!=0{return Err(refusal(rejected.get()));}
@@ -64,12 +64,12 @@ pub fn with_owned_operation_authority<T>(operation:impl FnOnce(&mut semio_os_ker
 /// 📤️ Reserves actual native return fields before finishing the original guest authoring phase.
 pub fn with_wit_operation_authority<T>(operation:impl FnOnce(&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<T,crate::Fault>,walk:impl FnOnce(&T,&mut dyn FnMut(return_types::pure::OperationReturnAllocation,usize)->Result<(),ValueError>)->Result<(),ValueError>)->Result<T,return_types::types::PluginError>{
     use return_types::{pure,types::PluginError};
-    use semio_framework_value::native_encoding::{NativeEncodeAllocation,NativeEncodeProgress};
+    use semio_framework_value::native_encoding::{NativeAllocationRequest,NativeEncodeProgress};
     let rejected=|error:ValueError|PluginError::OperationRefusal(refusal_code(error.kind));
     let maximum=usize::try_from(pure::operation_begin().map_err(|code|rejected(refusal(code)))?).map_err(|_|rejected(refusal(2)))?;
     let rejected_code=std::cell::Cell::new(0);
     let mut observer=|next:NativeEncodeProgress|{let code=pure::operation_progress(next.completed as u64,next.total as u64,next.owned_bytes as u64);if code!=0{rejected_code.set(code);}code==0};
-    let mut allocate=|next:NativeEncodeAllocation|{let code=pure::operation_allocation(next.bytes as u64,next.owned_bytes as u64,next.next_owned_bytes as u64,next.maximum_bytes as u64);if code!=0{rejected_code.set(code);}admitted(code)};
+    let mut allocate=|next:NativeAllocationRequest|{let code=pure::operation_allocation(next.bytes as u64,next.owned_bytes as u64,next.next_owned_bytes as u64,next.maximum_bytes as u64);if code!=0{rejected_code.set(code);}admitted(code)};
     let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new_forwarded(maximum,&mut observer as &mut IdentityObserver<'_>,&mut allocate).map_err(rejected)?;
     let result=operation(&mut identity);
     if rejected_code.get()!=0{return Err(rejected(refusal(rejected_code.get())));}
@@ -87,11 +87,11 @@ pub fn with_wit_operation_authority<T>(operation:impl FnOnce(&mut semio_os_kerne
 /// 🎭️ The actor caller retains its original semantic output before this scalar-only identity return.
 pub fn with_actor_operation_authority(operation:impl FnOnce(&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<(),ValueError>)->Result<(),ValueError>{
     use return_types::pure;
-    use semio_framework_value::native_encoding::{NativeEncodeAllocation,NativeEncodeProgress};
+    use semio_framework_value::native_encoding::{NativeAllocationRequest,NativeEncodeProgress};
     let maximum=usize::try_from(pure::operation_begin().map_err(refusal)?).map_err(|_|refusal(2))?;
     let rejected=std::cell::Cell::new(0);
     let mut observer=|next:NativeEncodeProgress|{let code=pure::operation_progress(next.completed as u64,next.total as u64,next.owned_bytes as u64);if code!=0{rejected.set(code);}code==0};
-    let mut allocate=|next:NativeEncodeAllocation|{let code=pure::operation_allocation(next.bytes as u64,next.owned_bytes as u64,next.next_owned_bytes as u64,next.maximum_bytes as u64);if code!=0{rejected.set(code);}admitted(code)};
+    let mut allocate=|next:NativeAllocationRequest|{let code=pure::operation_allocation(next.bytes as u64,next.owned_bytes as u64,next.next_owned_bytes as u64,next.maximum_bytes as u64);if code!=0{rejected.set(code);}admitted(code)};
     let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new_forwarded(maximum,&mut observer as &mut IdentityObserver<'_>,&mut allocate)?;
     let result=operation(&mut identity);
     let receipt=identity.pause_forwarded()?;

@@ -1,0 +1,40 @@
+{
+  "cases": [
+    {
+      "parent": 2,
+      "spent": 1,
+      "child": 1,
+      "admitted": true,
+      "receipt": 1,
+      "base": 0,
+      "remaining": 0
+    },
+    {
+      "parent": 2,
+      "spent": 1,
+      "child": 2,
+      "admitted": false,
+      "receipt": 5,
+      "base": 0,
+      "remaining": 1
+    },
+    {
+      "parent": 2,
+      "spent": 2,
+      "child": 0,
+      "admitted": true,
+      "receipt": 5,
+      "base": 0,
+      "remaining": 0
+    },
+    {
+      "parent": 2,
+      "spent": 3,
+      "child": 0,
+      "admitted": false,
+      "receipt": 5,
+      "base": 0,
+      "remaining": null
+    }
+  ]
+}

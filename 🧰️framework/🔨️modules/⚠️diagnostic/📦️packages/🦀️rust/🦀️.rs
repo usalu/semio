@@ -6,3 +6,7 @@ mod component;
 pub use component::*;
 #[path = "../../🧬️retirement/🦀️.rs"]
 mod retirement;
+
+#[doc(hidden)]
+#[path="../../🛬️receiving/🦀️.rs"]
+pub mod native_receiving;

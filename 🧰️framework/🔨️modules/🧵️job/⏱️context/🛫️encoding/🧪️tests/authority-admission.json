@@ -1,0 +1,25 @@
+{
+  "cases": [
+    {
+      "name": "posted owner",
+      "published": true,
+      "receipt": true,
+      "usable": true,
+      "retained": true
+    },
+    {
+      "name": "refused receipt retains born owner",
+      "published": true,
+      "receipt": false,
+      "usable": false,
+      "retained": true
+    },
+    {
+      "name": "no birth",
+      "published": false,
+      "receipt": false,
+      "usable": false,
+      "retained": false
+    }
+  ]
+}

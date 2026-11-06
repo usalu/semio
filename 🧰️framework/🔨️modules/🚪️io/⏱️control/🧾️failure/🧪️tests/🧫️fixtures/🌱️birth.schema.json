@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "action",
+          "actual",
+          "pool",
+          "source",
+          "child",
+          "work",
+          "raw"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "action": {
+            "enum": [
+              "deny",
+              "failed",
+              "birth",
+              "post-refused",
+              "attach",
+              "raw-birth"
+            ]
+          },
+          "actual": {
+            "enum": [
+              "none",
+              "zero",
+              "positive"
+            ]
+          },
+          "pool": {
+            "type": "boolean"
+          },
+          "source": {
+            "type": "boolean"
+          },
+          "child": {
+            "type": "boolean"
+          },
+          "work": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "raw": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

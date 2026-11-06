@@ -24,7 +24,10 @@
           "quoteRefused",
           "settlementRefused",
           "spent",
-          "pending"
+          "pending",
+          "owned",
+          "next",
+          "ceiling"
         ],
         "properties": {
           "name": {
@@ -44,7 +47,8 @@
               "post",
               "cancel",
               "foreign",
-              "duplicate"
+              "duplicate",
+              "admit"
             ]
           },
           "actual": {
@@ -70,6 +74,18 @@
           },
           "pending": {
             "type": "boolean"
+          },
+          "owned": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "next": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "ceiling": {
+            "type": "integer",
+            "minimum": 0
           }
         }
       }

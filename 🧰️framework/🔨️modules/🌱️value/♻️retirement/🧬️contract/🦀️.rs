@@ -1,8 +1,19 @@
 //! ♻️ Neutral retained-owner retirement and typed factories.
-use crate::{ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
-pub use semio_framework_value_control_contract::{RetirementDemand,RetainedWorkOutcome,OriginalRetirementFailure,OriginalFailureStorage};
+pub use semio_framework_value_control_contract::{ValueError,ValueRefusalKind,RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
+pub use semio_framework_value_control_contract::{OriginalFailureStorageBirth,OriginalFailureStorageBirthPhase,OriginalFailureStorageStep,OriginalFailureFunding,refill_original_failure_storage,NativeAllocationRefusal,RetirementDemand,RetainedWorkOutcome,RetainedWorkPoll,OriginalRetirementFailure,OriginalFailureStorage};
 /// ♻️ Retains original retirement progress, work and independently owned failures.
 pub type OriginalRetirementOutcome<T=RetainedCloneStep>=RetainedWorkOutcome<T,OriginalRetirementFailure>;
+/// ⏳️ Retains an unfinished original effect without inventing a physical receipt.
+pub type OriginalRetirementPoll<T=RetainedCloneStep>=RetainedWorkPoll<T,OriginalRetirementFailure>;
+/// 🚦️ Internal producer control flow preserves Pending separately from genuine owned failures.
+#[doc(hidden)]
+pub enum RetirementPollExit{Pending(u128),Failed(OriginalRetirementFailure)}
+impl From<ValueError> for RetirementPollExit{fn from(error:ValueError)->Self{Self::Failed(error.into())}}
+impl From<OriginalRetirementFailure> for RetirementPollExit{fn from(error:OriginalRetirementFailure)->Self{Self::Failed(error)}}
+impl RetirementPollExit{
+ pub fn settled(poll:OriginalRetirementPoll)->Result<OriginalRetirementOutcome,Self>{match poll{RetainedWorkPoll::Pending{work}=>Err(Self::Pending(work)),RetainedWorkPoll::Complete(turn)=>Ok(turn)}}
+ pub fn finish<T>(result:Result<T,Self>,work:u128)->OriginalRetirementPoll<T>{match result{Ok(value)=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(value),work}),Err(Self::Failed(error))=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error),work}),Err(Self::Pending(child))=>RetainedWorkPoll::Pending{work:work.checked_add(child).expect("bounded original retirement invocation work")}}}
+}
 /// 🧾️ Retains both independently owned errors and the actual physical receipt after work settlement.
 pub fn settle_original_retirement_work(turn:RetainedWorkOutcome,settlement:Result<(),ValueError>)->RetainedWorkOutcome<RetainedCloneStep,OriginalRetirementFailure>{
  let work=turn.work;let receipt=turn.result.as_ref().map(|step|step.progress()).unwrap_or_else(|error|error.retained_progress());
@@ -27,34 +38,50 @@ pub fn run_original_retirement_loan(original:&mut semio_framework_value_control_
 }
 /// 🪪️ Original decoding custody supplies its unchanged identity and funded cleanup allocations.
 pub trait OriginalRetirementControl {
+ fn failure_storage_birth(&mut self)->&mut OriginalFailureStorageBirth;
+ fn failure_storage_performed_scope(&mut self)->Result<semio_framework_value_control_contract::OriginalFailurePerformedScope<'_>,ValueError>;
+ fn settle_failure_storage_performed(&mut self)->OriginalFailureStorageStep<(),ValueError>;
+ fn prepare_failure_storage_work(&mut self,work:u64)->OriginalFailureStorageStep<bool,ValueError>;
+ fn commit_failure_storage_work(&mut self,work:u128)->Result<(),ValueError>;
+ fn cancel_failure_storage_work(&mut self)->Result<(),ValueError>;
+ fn finish_failure_storage_work(&mut self)->Result<(),ValueError>;
+
     /// ⛽️ Admits original caller work before a selected retirement effect.
     fn prepare_work(&mut self,additional:u64)->Result<bool,ValueError>;
     /// 🧾️ Posts the actual selected work to that same loan.
-    fn commit_work(&mut self,actual:u64)->Result<(),ValueError>;
+    fn commit_work(&mut self,actual:u128)->Result<(),ValueError>;
     /// ⏪️ Releases an unused pending work reservation without posting effects.
     fn cancel_prepared_work(&mut self);
-    fn ledger_identity(&self) -> u64;
+    fn ledger_identity(&self) -> semio_framework_value_control_contract::NativeAllocationIdentity;
     fn retirement_recipient_identity(&self) -> Option<u64>;
     fn charge(&mut self, bytes: usize) -> Result<(), ValueError>;
-    fn quote_failure_storage(&mut self,demand:RetirementDemand,grant:RetainedCloneGrant)->Result<RetainedCloneGrant,ValueError>;
-    fn post_failure_storage(&mut self,grant:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),ValueError>;
-    fn cancel_failure_storage(&mut self)->Result<(),ValueError>;
+    fn quote_failure_storage(&mut self,demand:RetirementDemand,grant:RetainedCloneGrant)->OriginalFailureStorageStep<RetainedCloneGrant>;
+    fn post_failure_storage(&mut self,grant:RetainedCloneGrant,progress:RetainedCloneProgress)->OriginalFailureStorageStep<()>;
+    fn cancel_failure_storage(&mut self)->OriginalFailureStorageStep<()>;
     fn failure_storage_pool(&mut self)->&mut semio_framework_value_control_contract::OriginalFailureStoragePool;
 }
 impl OriginalRetirementControl for semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>{
+ fn failure_storage_birth(&mut self)->&mut OriginalFailureStorageBirth{self.failure_storage_birth()}
+ fn failure_storage_performed_scope(&mut self)->Result<semio_framework_value_control_contract::OriginalFailurePerformedScope<'_>,ValueError>{self.failure_storage_performed_scope()}
+ fn settle_failure_storage_performed(&mut self)->OriginalFailureStorageStep<(),ValueError>{self.settle_failure_storage_performed()}
+ fn prepare_failure_storage_work(&mut self,work:u64)->OriginalFailureStorageStep<bool,ValueError>{self.prepare_failure_storage_work(work)}
+ fn commit_failure_storage_work(&mut self,work:u128)->Result<(),ValueError>{self.commit_failure_storage_work(work)}
+ fn cancel_failure_storage_work(&mut self)->Result<(),ValueError>{self.cancel_failure_storage_work()}
+ fn finish_failure_storage_work(&mut self)->Result<(),ValueError>{self.finish_failure_storage_work()}
+
  fn prepare_work(&mut self,work:u64)->Result<bool,ValueError>{self.prepare_work(work)}
- fn commit_work(&mut self,work:u64)->Result<(),ValueError>{self.commit_work(work)}
+ fn commit_work(&mut self,work:u128)->Result<(),ValueError>{self.commit_work(work)}
  fn cancel_prepared_work(&mut self){self.cancel_prepared_work()}
- fn ledger_identity(&self)->u64{self.ledger_identity()}
+ fn ledger_identity(&self)->semio_framework_value_control_contract::NativeAllocationIdentity{self.ledger_identity()}
  fn retirement_recipient_identity(&self)->Option<u64>{self.retirement_recipient_identity()}
  fn charge(&mut self,bytes:usize)->Result<(),ValueError>{self.charge(bytes)}
- fn quote_failure_storage(&mut self,d:RetirementDemand,g:RetainedCloneGrant)->Result<RetainedCloneGrant,ValueError>{self.quote_failure_storage(d,g)}
- fn post_failure_storage(&mut self,g:RetainedCloneGrant,p:RetainedCloneProgress)->Result<(),ValueError>{self.post_failure_storage(g,p)}
- fn cancel_failure_storage(&mut self)->Result<(),ValueError>{self.cancel_failure_storage()}
+ fn quote_failure_storage(&mut self,d:RetirementDemand,g:RetainedCloneGrant)->OriginalFailureStorageStep<RetainedCloneGrant>{self.quote_failure_storage(d,g)}
+ fn post_failure_storage(&mut self,g:RetainedCloneGrant,p:RetainedCloneProgress)->OriginalFailureStorageStep<()>{self.post_failure_storage(g,p)}
+ fn cancel_failure_storage(&mut self)->OriginalFailureStorageStep<()>{self.cancel_failure_storage()}
  fn failure_storage_pool(&mut self)->&mut semio_framework_value_control_contract::OriginalFailureStoragePool{self.failure_storage_pool()}
 }
 /// 📏️ Quotes the physical birth of one prepaid original failure node.
-pub fn original_failure_storage_birth_demand()->RetirementDemand{RetirementDemand{capacity_bytes:OriginalFailureStorage::birth_bytes(),depth:1,..Default::default()}}
+pub fn original_failure_storage_birth_demand()->RetirementDemand{OriginalFailureStorage::birth_demand()}
 /// ⛽️ Quotes the allocator attempt for one selected original failure node.
 pub const fn original_failure_storage_birth_work_demand()->u64{1}
 /// 📤️ Quotes the actual selected spare node release.
@@ -62,51 +89,33 @@ pub fn original_failure_storage_release_demand(pool:&semio_framework_value_contr
 /// ⛽️ Quotes the selected spare-node release action.
 pub fn original_failure_storage_release_work_demand(pool:&semio_framework_value_control_contract::OriginalFailureStoragePool)->u64{u64::from(!pool.is_empty())}
 /// 🎟️ Refills one original failure node as its own paid, physically posted turn.
-pub trait OriginalFailureFunding{
- fn quote(&mut self,demand:RetirementDemand,grant:RetainedCloneGrant)->Result<RetainedCloneGrant,ValueError>;
- fn post(&mut self,grant:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),ValueError>;
- fn cancel(&mut self)->Result<(),ValueError>;
- fn pool(&mut self)->&mut semio_framework_value_control_contract::OriginalFailureStoragePool;
- fn prepare(&mut self,work:u64)->Result<bool,ValueError>;
- fn commit(&mut self,work:u64)->Result<(),ValueError>;
-}
-impl OriginalFailureFunding for semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>{
- fn quote(&mut self,d:RetirementDemand,g:RetainedCloneGrant)->Result<RetainedCloneGrant,ValueError>{self.quote_failure_storage(d,g)}
- fn post(&mut self,g:RetainedCloneGrant,p:RetainedCloneProgress)->Result<(),ValueError>{self.post_failure_storage(g,p)}
- fn cancel(&mut self)->Result<(),ValueError>{self.cancel_failure_storage()}
+impl OriginalFailureFunding for dyn OriginalRetirementControl+'_{
+ fn birth(&mut self)->&mut OriginalFailureStorageBirth{self.failure_storage_birth()}
+ fn performed_scope(&mut self)->Result<semio_framework_value_control_contract::OriginalFailurePerformedScope<'_>,ValueError>{self.failure_storage_performed_scope()}
+ fn settle_performed(&mut self)->OriginalFailureStorageStep<(),ValueError>{self.settle_failure_storage_performed()}
+ fn quote(&mut self,d:RetirementDemand,g:RetainedCloneGrant)->OriginalFailureStorageStep<RetainedCloneGrant>{self.quote_failure_storage(d,g)}
+ fn post(&mut self,g:RetainedCloneGrant,p:RetainedCloneProgress)->OriginalFailureStorageStep<()>{self.post_failure_storage(g,p)}
+ fn cancel(&mut self)->OriginalFailureStorageStep<()>{self.cancel_failure_storage()}
  fn pool(&mut self)->&mut semio_framework_value_control_contract::OriginalFailureStoragePool{self.failure_storage_pool()}
- fn prepare(&mut self,w:u64)->Result<bool,ValueError>{self.prepare_work(w)}
- fn commit(&mut self,w:u64)->Result<(),ValueError>{self.commit_work(w)}
-}
-impl OriginalFailureFunding for dyn OriginalRetirementControl+'_ {
- fn quote(&mut self,d:RetirementDemand,g:RetainedCloneGrant)->Result<RetainedCloneGrant,ValueError>{self.quote_failure_storage(d,g)}
- fn post(&mut self,g:RetainedCloneGrant,p:RetainedCloneProgress)->Result<(),ValueError>{self.post_failure_storage(g,p)}
- fn cancel(&mut self)->Result<(),ValueError>{self.cancel_failure_storage()}
- fn pool(&mut self)->&mut semio_framework_value_control_contract::OriginalFailureStoragePool{self.failure_storage_pool()}
- fn prepare(&mut self,w:u64)->Result<bool,ValueError>{self.prepare_work(w)}
- fn commit(&mut self,w:u64)->Result<(),ValueError>{self.commit_work(w)}
-}
-pub fn refill_original_failure_storage(funding:&mut (impl OriginalFailureFunding+?Sized),grant:RetainedCloneGrant)->OriginalRetirementOutcome{
- let bytes=OriginalFailureStorage::birth_bytes();let demand=RetirementDemand{capacity_bytes:bytes,depth:1,..Default::default()};
- if !semio_framework_value_control_contract::retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
- let quoted=match funding.quote(demand,grant){Ok(quoted)=>quoted,Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0}};
- if !semio_framework_value_control_contract::retained_clone_grant_admits(quoted,demand){return match funding.cancel(){Ok(())=>RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0},Err(error)=>RetainedWorkOutcome{result:Err(OriginalRetirementFailure::from_causes(None,None,Some(error))),work:0}}}
- match funding.prepare(1){Ok(true)=>{},Ok(false)=>return match funding.cancel(){Ok(())=>RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0},Err(error)=>RetainedWorkOutcome{result:Err(OriginalRetirementFailure::from_causes(None,None,Some(error))),work:0}},Err(error)=>{let receipt=funding.cancel().err();return RetainedWorkOutcome{result:Err(OriginalRetirementFailure::from_causes(None,Some(error),receipt)),work:0}}}
- let turn=OriginalFailureStorage::admit(quoted.maximum_capacity_bytes);let (primary,progress)=match turn.result{Ok((node,progress))=>{funding.pool().put(node);(None,progress)},Err(error)=>(Some(error),RetainedCloneProgress::default())};
- let receipt=funding.post(quoted,progress).err();let work_refusal=funding.commit(turn.work).err();
- let result=if primary.is_none()&&receipt.is_none()&&work_refusal.is_none(){Ok(RetainedCloneStep::Progress(progress))}else{Err(OriginalRetirementFailure::from_causes(primary,work_refusal,receipt).with_retained_progress(progress))};RetainedWorkOutcome{result,work:turn.work}
+ fn prepare(&mut self,work:u64)->OriginalFailureStorageStep<bool,ValueError>{self.prepare_failure_storage_work(work)}
+ fn commit(&mut self,work:u128)->Result<(),ValueError>{self.commit_failure_storage_work(work)}
+ fn cancel_work(&mut self)->Result<(),ValueError>{self.cancel_failure_storage_work()}
+ fn finish_work(&mut self)->Result<(),ValueError>{self.finish_failure_storage_work()}
 }
 pub trait ErasedSnapshotRetirement: Send {
+    /// 👶️ Selects a real source-owned birth separately from ordinary closure effects.
+    fn requires_original_birth(&self)->bool{false}
+    fn close_original_birth_step(&mut self,_original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,_grant:RetainedCloneGrant)->OriginalRetirementPoll{RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"retirement owner has no selected original birth").into()),work:0})}
     /// 🪪️ Visits a checked original receiving frame without moving its retained owner.
     fn visit_original(&mut self,_identity:std::any::TypeId,_visitor:&mut dyn FnMut(&mut dyn std::any::Any))->bool{false}
     /// ⛽️ Quotes actual original closure work before the selected action.
     fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{Err(ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"original retirement lacks a work quote"))}
     /// 🧷️ Native owners override this port to preserve the caller's actual decoder ledger and recipient.
-    fn close_original_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->OriginalRetirementOutcome{let d=match self.next_demand(grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0}};if !semio_framework_value_control_contract::retained_clone_grant_admits(grant,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}if let Err(error)=original.charge(d.capacity_bytes){return RetainedWorkOutcome{result:Err(error.into()),work:0}}self.close_step(grant)}
+    fn close_original_step(&mut self,_original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->OriginalRetirementPoll{self.close_step(effect)}
     fn requires_original_control(&self) -> bool { false }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> OriginalRetirementOutcome;
+    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->OriginalRetirementPoll;
     /// 🧵️ Composite owners forward actual caller decoding custody to decoder-bound children.
-    fn close_step_controlled(&mut self, grant: RetainedCloneGrant, _control: &mut dyn OriginalRetirementControl) -> OriginalRetirementOutcome { self.close_step(grant) }
+    fn close_step_controlled(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>, _control: &mut dyn OriginalRetirementControl)->OriginalRetirementPoll {let grant=effect.grant(); self.close_step(effect) }
     fn terminal_is_empty(&self) -> bool;
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError>;
     fn next_capacity_byte_demand(&self, maximum_body_bytes: usize) -> Result<usize, ValueError>;
@@ -118,3 +127,15 @@ pub trait ErasedSnapshotRetirement: Send {
     }
 }
 
+
+#[cfg(test)]
+#[path="🧪️tests/🦀️.rs"]
+mod poll_tests;
+
+pub use semio_framework_value_control_contract as retained_clone;
+#[path="../🎟️tickets/🦀️.rs"]
+pub mod tickets;
+pub use tickets::*;
+
+/// ⏱️ Records the defining bounded operation through its original performed receipt.
+pub fn record_retirement_work(effect:&mut crate::RetainedAllocationEffect<'_>,delta:u64)->Result<u128,(crate::ValueError,u128)>{let before=effect.performed_work();let result=effect.performed(delta);let work=effect.performed_work()-before;match result{Ok(true)=>Ok(work),Ok(false)=>Err((crate::ValueError::literal(crate::ValueRefusalKind::WorkLimit,"retirement operation exceeded its original work action"),work)),Err(error)=>Err((error,work))}}

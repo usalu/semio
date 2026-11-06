@@ -21,6 +21,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value-paged-clone = { path = "../../../📋️paged-list/⚙️engine/📦️packages/🦀️rust" }
 semio-framework-value-intrinsic = { path="../../../../🌳️intrinsic/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path="../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-clone-source = { path="../../../🔗️source/📦️packages/🦀️rust" }

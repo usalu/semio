@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "quoteWork": 3,
+  "cases": [
+    {
+      "kind": "physical denied",
+      "grant": false,
+      "allocated": false,
+      "attempted": false,
+      "input": true,
+      "output": false,
+      "work": 0
+    },
+    {
+      "kind": "work denied",
+      "grant": true,
+      "allocated": false,
+      "attempted": false,
+      "input": true,
+      "output": false,
+      "work": 0
+    },
+    {
+      "kind": "allocator refused",
+      "grant": true,
+      "allocated": false,
+      "attempted": true,
+      "input": true,
+      "output": false,
+      "work": 3
+    },
+    {
+      "kind": "success",
+      "grant": true,
+      "allocated": true,
+      "attempted": true,
+      "input": false,
+      "output": true,
+      "work": 3
+    }
+  ],
+  "layoutCases": [
+    {
+      "sourceHeader": 8,
+      "historyHeader": 256,
+      "quote": 512,
+      "success": 272,
+      "refused": 512
+    },
+    {
+      "sourceHeader": 256,
+      "historyHeader": 8,
+      "quote": 520,
+      "success": 520,
+      "refused": 16
+    }
+  ]
+}

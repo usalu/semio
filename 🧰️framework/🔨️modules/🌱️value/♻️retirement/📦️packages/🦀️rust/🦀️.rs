@@ -2,13 +2,12 @@
 pub use semio_framework_value_control_contract::*;
 pub use semio_framework_value_control_contract as retained_clone;
 pub use semio_framework_value_paged_list::list;
-#[path="../../🧬️contract/🦀️.rs"]
-mod retirement_contract;
+pub use semio_framework_value_retirement_contract as retirement_contract;
 pub use retirement_contract::*;
 pub use retirement_contract::{OriginalRetirementFailure,OriginalRetirementOutcome,settle_original_retirement_work,run_original_retirement_work,run_original_retirement_loan};
 #[path="../../🦀️.rs"]
 pub mod retirement;
-pub use retirement::{RetireOwned,owned_retirement_birth_bytes,admit_owned_retirement};
+pub use retirement::{RetireOwned,admit_retirement_cursor,retirement_cursor_birth_demand,owned_retirement_birth_bytes,admit_owned_retirement};
 
 pub use retirement::turn::{advance_retirement_turn,RetirementReceipt,RetirementTurnError};
 pub use retirement::arc_custody::{shared_retirement_birth_bytes,shared_retirement_allocation_bytes,admit_shared_retirement};
@@ -18,6 +17,8 @@ artifact_retire_leaf!(RetainedCloneGrant);
 artifact_retire_leaf!(RetirementDemand);
 artifact_retire_leaf!(RetainedCloneProgress);
 artifact_retire_leaf!(RetainedCloneStep);
+artifact_retire_leaf!(NativeAllocationRequest);
+artifact_retire_leaf!(NativeAllocationProgress);
 artifact_retire_leaf!(ValueRefusalKind);
 
 #[cfg(test)]
@@ -25,11 +26,12 @@ use semio_framework_value_testing_allocator as allocation_testing;
 #[cfg(test)]
 pub(crate) use allocation_testing::observe_retirement_allocations;
 
-#[path="../../🎟️tickets/🦀️.rs"]
-mod tickets;
-pub use tickets::{factory_ticket_demands,factory_ticket_controlled_demands,factory_ticket_original_demands,close_factory_ticket,close_factory_ticket_original,RetirementSelection,select_retirement_cursor,select_factory_ticket,close_factory_ticket_controlled};
+pub use retirement_contract::tickets;
+
 
 #[cfg(test)]
-pub use semio_framework_value_factory::{FactoryPayloadRetirement,FactoryRetirement,FactoryAuthority,FactoryChildTickets,FactoryChildSlot,FactoryRetirementTicket,FactoryRetirementAdmissionError,factory_arc_birth_bytes,factory_retirement_frame_bytes,factory_constructor_birth_bytes};
+pub use semio_framework_value_factory::{FactoryPayloadRetirement,FactoryRetirement,FactoryAuthority,FactoryChildTickets,FactoryChildSlot,FactoryRetirementTicket,FactoryProducerReply,FactoryProducerReplyComplete,factory_arc_birth_bytes,factory_retirement_frame_bytes,factory_constructor_birth_bytes};
 #[cfg(test)]
 pub use semio_framework_value_factory::owned::FactoryOwnedRetirement;
+
+

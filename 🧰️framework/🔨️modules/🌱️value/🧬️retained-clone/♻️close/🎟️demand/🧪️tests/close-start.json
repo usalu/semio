@@ -1,0 +1,70 @@
+{
+  "cases": [
+    {
+      "name": "zero-copy",
+      "started": false,
+      "copy": 0,
+      "items": 1,
+      "depth": 1,
+      "changed": false,
+      "work": 0,
+      "bytes": 0,
+      "maximumWork": 1
+    },
+    {
+      "name": "zero-work",
+      "started": false,
+      "copy": 1,
+      "items": 1,
+      "depth": 1,
+      "changed": false,
+      "work": 0,
+      "bytes": 0,
+      "maximumWork": 0
+    },
+    {
+      "name": "one-copy",
+      "started": false,
+      "copy": 1,
+      "items": 1,
+      "depth": 1,
+      "changed": true,
+      "work": 1,
+      "bytes": 1,
+      "maximumWork": 1
+    },
+    {
+      "name": "zero-items",
+      "started": false,
+      "copy": 1,
+      "items": 0,
+      "depth": 1,
+      "changed": false,
+      "work": 0,
+      "bytes": 0,
+      "maximumWork": 1
+    },
+    {
+      "name": "zero-depth",
+      "started": false,
+      "copy": 1,
+      "items": 1,
+      "depth": 0,
+      "changed": false,
+      "work": 0,
+      "bytes": 0,
+      "maximumWork": 1
+    },
+    {
+      "name": "repeated",
+      "started": true,
+      "copy": 0,
+      "items": 0,
+      "depth": 0,
+      "changed": false,
+      "work": 0,
+      "bytes": 0,
+      "maximumWork": 1
+    }
+  ]
+}

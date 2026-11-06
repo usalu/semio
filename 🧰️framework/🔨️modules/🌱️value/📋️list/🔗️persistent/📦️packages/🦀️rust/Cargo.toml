@@ -23,6 +23,7 @@ name = "semio_framework_value_persistent"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value-original-vector = { path = "../../../../♻️retirement/📋️original-vector/📦️packages/🦀️rust" }
 semio-framework-value-retained-work = { path = "../../🎟️work/📦️packages/🦀️rust" }
 semio-framework-value-equality = { path = "../../../../🌳️tree/🟰️equal/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path = "../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }

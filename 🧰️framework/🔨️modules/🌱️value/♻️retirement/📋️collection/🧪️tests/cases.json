@@ -1,0 +1,20 @@
+{
+  "owners": [
+    "vector",
+    "deque"
+  ],
+  "values": [
+    11,
+    23,
+    37
+  ],
+  "maximumItems": 1,
+  "maximumWork": 1,
+  "body": 64,
+  "remaining": [
+    2,
+    1,
+    0
+  ],
+  "releaseItems": 1
+}

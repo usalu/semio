@@ -1,0 +1,32 @@
+{
+  "value": 42,
+  "cases": [
+    {
+      "name": "zero-copy",
+      "items": 1,
+      "copy": false,
+      "depth": 1,
+      "maximumWork": 1,
+      "moved": false,
+      "work": 0
+    },
+    {
+      "name": "zero-work",
+      "items": 1,
+      "copy": true,
+      "depth": 1,
+      "maximumWork": 0,
+      "moved": false,
+      "work": 0
+    },
+    {
+      "name": "funded",
+      "items": 1,
+      "copy": true,
+      "depth": 1,
+      "maximumWork": 1,
+      "moved": true,
+      "work": 1
+    }
+  ]
+}

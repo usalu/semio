@@ -1,0 +1,56 @@
+{
+  "type": "array",
+  "minItems": 5,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "entered",
+      "reply",
+      "sameAction",
+      "work",
+      "ceiling",
+      "next",
+      "overrun"
+    ],
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1
+      },
+      "entered": {
+        "type": "boolean"
+      },
+      "reply": {
+        "enum": [
+          "none",
+          "ok",
+          "error"
+        ]
+      },
+      "sameAction": {
+        "type": "boolean"
+      },
+      "work": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "ceiling": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "next": {
+        "enum": [
+          "reject",
+          "receive",
+          "recover",
+          "consume"
+        ]
+      },
+      "overrun": {
+        "type": "boolean"
+      }
+    }
+  }
+}

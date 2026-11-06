@@ -34,6 +34,8 @@ impl CancelTokenRetirement{
         RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}
     }
     /// 🎟️ Releases one actual original frontier and retains every blocked original alias and ancestor.
+    /// ⛽️ Quotes one original node inspection, buffer release or parent transition.
+    pub fn retirement_work_demand(&self)->u64{u64::from(!self.terminal_is_empty())}
     pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,CancelTokenRetirementError>{
         if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0};}
         let demand=match self.retirement_demands(){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(CancelTokenRetirementError::Refused(error)),work:0}};
@@ -57,19 +59,21 @@ impl CancelTokenRetirement{
 }
 impl Drop for CancelTokenRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"cancellation retirement abandoned its original node");}}
 /// 🪜️ Erases original cancellation custody behind the typed retirement ladder of owning containers.
-struct Cursor(CancelTokenRetirement);
+#[doc(hidden)]
+pub struct CancelTokenRetirementCursor(CancelTokenRetirement);
 impl RetireOwned for CancelToken{
-    fn retirement(self)->Box<dyn RetirementCursor>{Box::new(Cursor(CancelTokenRetirement::from_token(self)))}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Cursor>())}
+    type RetirementCursor=CancelTokenRetirementCursor;
+    fn retirement_seed(self)->Self::RetirementCursor{CancelTokenRetirementCursor(CancelTokenRetirement::from_token(self))}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<CancelTokenRetirementCursor>())}
     fn controlled_retirement_supported()->bool{true}
     fn retirement_element_copy_bytes()->usize{size_of::<Self>()}
 }
-impl RetirementCursor for Cursor{
-    fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{Ok(u64::from(!self.0.terminal_is_empty()))}
+impl RetirementCursor for CancelTokenRetirementCursor{
+    fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{Ok(self.0.retirement_work_demand())}
     fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.0.retirement_demands()}
 
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
-        let turn=self.0.close_step(grant);
+    fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{
+        if effect.maximum_work_units()<self.0.retirement_work_demand(){return RetirementStep::BudgetExhausted}let turn=self.0.close_step(effect.grant());
         match turn.result{
             Ok(step)=>{let progress=step.progress();if progress!=RetainedCloneProgress::default()||turn.work!=0{RetirementStep::Progress(progress,turn.work)}else if self.0.terminal_is_empty(){RetirementStep::Complete(turn.work)}else{RetirementStep::BudgetExhausted}}
             Err(CancelTokenRetirementError::Blocked(blocked))=>RetirementStep::Failure(ValueError::literal(ValueRefusalKind::UnsupportedOwner,match blocked{CancelTokenRetirementBlocked::SharedAlias=>"original cancellation node retains a shared alias",CancelTokenRetirementBlocked::WeakAlias=>"original cancellation node retains a weak alias",CancelTokenRetirementBlocked::RegisteredWaiter=>"original cancellation node retains a registered wake owner",CancelTokenRetirementBlocked::WaiterContention=>"original cancellation waiter guard is occupied"}).into(),turn.work),

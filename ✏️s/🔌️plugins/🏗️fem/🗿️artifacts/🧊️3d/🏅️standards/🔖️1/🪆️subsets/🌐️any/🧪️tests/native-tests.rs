@@ -1,9 +1,9 @@
 use super::*;
 use semio_framework_value::RetainedCloneStep;
-use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient, NativeDecodeWorkRecipient};
+use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient, OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete};
 /// 🎟️ These finite lower-level loans do not stand in for job authority.
 struct Loan { remaining:u64 }
-impl NativeDecodeWorkRecipient for Loan {fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=self.remaining))}}
+impl OriginalWorkRecipient for Loan {fn admits<'a>(&mut self,quote:OriginalWorkQuote<'a>,observed:u64,additional:u64)->OriginalWorkQuoteComplete<'a>{quote.complete((||{Ok(observed.checked_add(additional).is_some_and(|total|total<=self.remaining))})())}}
 struct EncodeLoan { remaining:u64, posted:u64 }
 impl semio_framework_value::native_encoding::NativeEncodeWorkRecipient for EncodeLoan {fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=self.remaining))}fn committed(&mut self,actual:u64)->Result<(),ValueError>{self.posted=self.posted.checked_add(actual).filter(|total|*total<=self.remaining).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"finite encoder test loan exhausted"))?;Ok(())}}
 fn checked<T>(turn:semio_framework_value::RetainedWorkOutcome<T,store::NativeSnapshotFailure>,fuel:&mut u64)->Result<T,store::NativeSnapshotFailure>{*fuel=fuel.checked_sub(turn.work).expect("finite test work loan");turn.result}

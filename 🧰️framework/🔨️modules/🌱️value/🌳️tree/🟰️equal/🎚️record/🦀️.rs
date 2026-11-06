@@ -42,10 +42,10 @@ impl<T:RetainedEqualityFields> RetainedEqualityCursor<T> for RetainedRecordEqual
 
  fn begin_close(&mut self){self.closing=true;if let Some(active)=self.active.as_mut(){active.begin_close();}}
  fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Err(invalid("typed record close has not begun"));}if let Some(active)=self.active.as_ref(){if !active.terminal_is_empty(){let mut d=active.close_demand(body.saturating_sub(Self::fixed()))?;d.copy_bytes+=Self::fixed();d.depth+=1;return Ok(d);}return Ok(RetirementDemand{release_bytes:self.bytes,..scalar(Self::fixed())});}Ok(Default::default())}
- fn close_step(&mut self,g:RetainedCloneGrant)->crate::RetainedWorkOutcome{let mut work=0;let result=(||{
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome{let g=effect.grant();let mut work=0;let result=(||{
   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
   let d=self.close_demand(g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
-  if let Some(active)=self.active.as_mut(){if !active.terminal_is_empty(){let turn=active.close_step(RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-Self::fixed(),maximum_depth:g.maximum_depth-1,..g});work=turn.work;let mut p=turn.result?.progress();p.copied_bytes+=Self::fixed();return Ok(RetainedCloneStep::Progress(p))}drop(self.active.take());work=1;self.bytes=0;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))}
+  if let Some(active)=self.active.as_mut(){if !active.terminal_is_empty(){let turn=active.close_step(&mut effect.reborrow(RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-Self::fixed(),maximum_depth:g.maximum_depth-1,..g},effect.maximum_work_units()).expect("retirement child exceeds original effect"));work=turn.work;let mut p=turn.result?.progress();p.copied_bytes+=Self::fixed();return Ok(RetainedCloneStep::Progress(p))}drop(self.active.take());work=1;self.bytes=0;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))}
   Ok(RetainedCloneStep::Complete(Default::default()))
  })();crate::RetainedWorkOutcome{result,work}}
 

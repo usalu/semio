@@ -1,0 +1,45 @@
+{
+  "type": "array",
+  "minItems": 5,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "performed",
+      "capacity",
+      "actual",
+      "canCancel",
+      "canPost"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "performed": {
+        "type": "boolean"
+      },
+      "capacity": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "actual": {
+        "anyOf": [
+          {
+            "type": "integer",
+            "minimum": 0
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "canCancel": {
+        "type": "boolean"
+      },
+      "canPost": {
+        "type": "boolean"
+      }
+    }
+  }
+}

@@ -1,11 +1,11 @@
 //! 🧪️ Real UI leaf receivers conserve original source custody through refusal, cancellation and paid retirement.
 use crate::*;
-use semio_framework_value::{DslValue,NativeDecodeControl,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,ValueError,native_decoding::{NativeReceive,NativeReceiver,NativeDecodeConstructionRecipient,NativeDecodeWorkRecipient},retirement::controlled::ControlledRetirement};
+use semio_framework_value::{DslValue,NativeDecodeControl,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,ValueError,native_decoding::{NativeReceive,NativeReceiver,NativeDecodeConstructionRecipient,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete},retirement::controlled::ControlledRetirement};
 use semio_framework_value_testing_allocator::observe_retirement_allocations as observe;
 struct Construction(RetainedCloneGrant,RetainedCloneProgress);
 impl NativeDecodeConstructionRecipient for Construction{fn submitted(&self)->RetainedCloneProgress{self.1}fn grant(&mut self,d:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{assert!(semio_framework_value::retained_clone::retained_clone_grant_admits(self.0,d));Ok(self.0)}fn accept(&mut self,g:RetainedCloneGrant,p:RetainedCloneProgress)->Result<(),ValueError>{self.1=self.1.checked_add(p)?;assert!(p.fits(g)&&p.fits(self.0));Ok(())}}
 struct Work<'a>(&'a u64);
-impl NativeDecodeWorkRecipient for Work<'_>{fn admits(&mut self,seen:u64,next:u64)->Result<bool,ValueError>{Ok(seen.checked_add(next).is_some_and(|n|n<=(*self.0).min(1)))}}
+impl OriginalWorkRecipient for Work<'_>{fn admits<'a>(&mut self,quote:OriginalWorkQuote<'a>,seen:u64,next:u64)->OriginalWorkQuoteComplete<'a>{quote.complete((||{Ok(seen.checked_add(next).is_some_and(|n|n<=(*self.0).min(1)))})())}}
 pub(crate) fn run<T:NativeReceive<DslValue>+serde::Serialize+serde::de::DeserializeOwned>(row:&serde_json::Value,cut:Option<usize>,profile:&serde_json::Value){
  let wire=row["wire"].as_str().unwrap();let accepted=row["accepted"].as_bool().unwrap();let oracle=serde_json::from_str::<T>(wire);assert_eq!(oracle.is_ok(),accepted);let expected:serde_json::Value=serde_json::from_str(wire).unwrap();if let Ok(value)=oracle{assert_eq!(serde_json::to_value(value).unwrap(),expected);}
  let s=&profile["stock"];let mut bank=RetainedCloneGrant{maximum_items:s["items"].as_u64().unwrap()as usize,maximum_copy_bytes:s["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:s["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:s["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:s["depth"].as_u64().unwrap()as usize};let mut fuel=s["fuel"].as_u64().unwrap();

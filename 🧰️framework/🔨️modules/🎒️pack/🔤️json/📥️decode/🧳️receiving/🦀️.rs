@@ -1,7 +1,8 @@
 //! 🧳️ Original JSON operation bytes become typed native projections without a cold conversion.
 use crate::{ArtifactCanonicalJsonTree,ArtifactCanonicalJsonTreeCursor,JsonGrammarCursor,JsonMemberPolicy,JsonError};
 use semio_framework_value::{DslValue, RetainedWorkOutcome, RetirementDemand, ValueError, ValueRefusalKind, ArtifactOwnedValueRetirementFactory, FactoryAuthority, retained_clone::{RetainedCloneSource, RetainedCloneSourceAdmission, RetainedOwnedProjection, RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, retained_clone_grant_admits}};
-use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeReceive, native_decoding::OriginalReceivingPrimary, native_decoding::owned::NativeReceivingOriginal};
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeReceive, native_decoding::OriginalReceivingPrimary};
+use semio_framework_value_native_receiving_original::NativeReceivingOriginal;
 use semio_framework_value_factory::owned::FactoryOwnedSourceAuthority;
 use std::{mem::{ManuallyDrop,size_of},sync::Arc};
 

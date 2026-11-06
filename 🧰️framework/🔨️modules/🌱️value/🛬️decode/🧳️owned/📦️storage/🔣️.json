@@ -6,20 +6,29 @@
     "value",
     "bytes",
     "deniedWork",
+    "preflight",
     "reserveWork",
     "initializeWork",
     "releaseWork",
+    "releaseFields",
     "nullWork",
     "cachedWork",
     "stock",
     "pureInitializers",
-    "initializeCopyBytes",
     "takeIntoWork",
     "liveReleaseWork",
     "opaqueConstructors",
     "moveText",
     "occupiedOutputWork",
-    "nullKind"
+    "nullKind",
+    "reserveFields",
+    "zeroSizedAttempt",
+    "seedFields",
+    "boxPublicationFields",
+    "occupiedMarkerWork",
+    "overrunActual",
+    "overrunKind",
+    "moveFields"
   ],
   "properties": {
     "value": {
@@ -31,6 +40,9 @@
     "bytes": {
       "const": 16
     },
+    "preflight": {
+      "const": "completedNoProgress"
+    },
     "deniedWork": {
       "const": 0
     },
@@ -39,6 +51,11 @@
     },
     "initializeWork": {
       "const": 1
+    },
+    "releaseFields": {
+      "const": [
+        "backingPointer"
+      ]
     },
     "releaseWork": {
       "const": 1
@@ -71,9 +88,6 @@
         "tuple"
       ]
     },
-    "initializeCopyBytes": {
-      "const": 0
-    },
     "takeIntoWork": {
       "const": 1
     },
@@ -91,6 +105,43 @@
     },
     "nullKind": {
       "const": "AllocationFailed"
+    },
+    "reserveFields": {
+      "const": [
+        "backingPointer"
+      ]
+    },
+    "zeroSizedAttempt": {
+      "const": false
+    },
+    "seedFields": {
+      "const": [
+        "receiverHeader",
+        "initializedFlag"
+      ]
+    },
+    "boxPublicationFields": {
+      "const": [
+        "backingPointer",
+        "initializedFlag",
+        "outputBoxOption"
+      ]
+    },
+    "occupiedMarkerWork": {
+      "const": 0
+    },
+    "overrunActual": {
+      "const": 2
+    },
+    "overrunKind": {
+      "const": "WorkLimit"
+    },
+    "moveFields": {
+      "const": [
+        "optionSlot",
+        "typedBody",
+        "initializedFlag"
+      ]
     }
   }
 }

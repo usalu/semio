@@ -478,24 +478,24 @@ fn decode_wire_node(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>) -> Result
 #[cfg(test)]
 mod tag_work_tests{
  use super::*;
- use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,NativeDecodeWorkRecipient};
+ use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete};
  struct Loan(u64);
- impl NativeDecodeWorkRecipient for Loan{fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=self.0))}}
+ impl OriginalWorkRecipient for Loan{type Context<'turn,'source>=() where 'source:'turn;fn validate_context<'turn,'source>(&self,_:&())->Result<(),ValueError>where 'source:'turn{Ok(())}fn admits<'a,'turn,'source>(&mut self,_:&mut (),quote:OriginalWorkQuote<'a>,observed:u64,additional:u64)->OriginalWorkQuoteComplete<'a>where 'source:'turn{quote.complete(Ok(observed.checked_add(additional).is_some_and(|total|total<=self.0)))}}
  #[test]
  fn original_record_tag_work_follows_the_actual_reader_position(){
   let f:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🎟️work.json")).unwrap();
   for case in f["cases"].as_array().unwrap(){
    let bytes=case["bytes"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as u8).collect::<Vec<_>>();
-   let mut observer=|_|true;let mut native=NativeDecodeControl::new(0,&mut observer);let mut loan=Loan(case["allowance"].as_u64().unwrap());
-   native.with_work_recipient(&mut loan,|native|{
+   let mut observer=|_|true;let mut native=NativeDecodeControl::new(0,&mut observer);let mut authority=semio_framework_value_native_owned::native_decoding::OriginalWorkAuthority::new(Loan(case["allowance"].as_u64().unwrap()));
+   authority.with_loan(&mut (),|loan|native.with_work_recipient(loan,|native|{
     let mut reader=ByteReader::new(&bytes);
     let materialization=ControlledMaterialization{control:std::cell::RefCell::new(native),maximum:0};
     let result=read_tag(&mut reader,&materialization);let actual=materialization.control.borrow().actual_work();
-    let kind=match result{Ok(_)=>"success",Err(error)=>{let kind=error.kind().as_str();let grant=serde_json::from_value(f["close"].clone()).unwrap();let mut owner=semio_framework_value::retirement::controlled::ControlledRetirement::new(error).ok().unwrap();for _ in 0..4096{if owner.terminal_is_empty(){break}owner.step(grant).unwrap();}assert!(owner.terminal_is_empty());kind}};
+    let kind=match result{Ok(_)=>"success",Err(error)=>{let kind=error.kind().as_str();let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(f["close"].clone()).unwrap();let mut owner=semio_framework_value::retirement::controlled::ControlledRetirement::new(error).ok().unwrap();for _ in 0..4096{if owner.terminal_is_empty(){break}let work=owner.next_computational_work(grant.maximum_copy_bytes).unwrap();let mut actual=None;owner.step(&mut semio_framework_value::RetainedAllocationEffect::new(grant,work,&mut actual)).unwrap();}assert!(owner.terminal_is_empty());kind}};
     assert_eq!(serde_json::json!({"bytes":case["bytes"],"allowance":case["allowance"],"position":reader.position(),"work":actual,"kind":kind}),*case);
     if bytes.is_empty(){let retry=[7u8];let mut reader=ByteReader::new(&retry);assert_eq!(read_tag(&mut reader,&materialization).unwrap(),7);assert_eq!(materialization.control.borrow().actual_work(),1);}
     Ok::<(),ValueError>(())
-   }).unwrap();
+   })).unwrap().unwrap();
   }
  }
 }

@@ -1,14 +1,5 @@
-# Original Job API
+# Paid Semantic Outcome Borrowing
 
-🎟️ A semantic loan's actual receipt cannot be manufactured or cloned by a consumer.
+This domain owns semantic result admission, borrowed payload views and original descriptor acknowledgement. JobOutcomeContext borrows the real caller's retained and computational recipients. A descriptor preserves the original payload addresses until funded acknowledgement; moving the descriptor does not move its payloads.
 
-📬️ Every reference borrows the original job for the complete consumer lifetime.
-
-📤️ Preserves the consumer's original cursor write in the same semantic admission receipt.
-
-📤️ Funds the exact caller-owned descriptor cursor with the same fault loan.
-
-⚠️ Binds the same pre-admitted fault to its original caller wallet even when no temporal step can be entered.
-
-🧲️ Transfers only the original paid semantic admission and native reference witnesses into exclusive worker custody.
-
+StepContext implements the port in the context domain. The package has no dependency on context, native source issuance or continuation transport.

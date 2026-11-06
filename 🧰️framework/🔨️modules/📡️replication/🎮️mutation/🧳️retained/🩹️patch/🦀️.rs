@@ -37,6 +37,10 @@ pub trait RetainedRowPatchFields<R,P:RetainedRowPatch<R>>:Send+'static{
  fn advance(&mut self,patch:RetainedCloneRef<'_,P>,row:RetainedCloneRef<'_,R>,body:usize,maximum_work_units:u64,grant:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome;
  fn take(&mut self,grant:RetainedCloneGrant)->Result<(Option<P>,RetainedCloneProgress),ValueError>;
  fn begin_close(&mut self);
+ fn close_started(&self)->bool;
+ fn begin_close_demand(&self)->RetirementDemand;
+ fn begin_close_work_demand(&self)->u64;
+ fn begin_close_paid(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress,ValueError>;
  fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>;
  fn close_work_demand(&self,body:usize)->Result<u64,ValueError>;
  fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome;
@@ -104,19 +108,23 @@ macro_rules! retained_row_patch{
      let value=self.result.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"sparse inverse ownership already transferred"))?;
      Ok((Some(value),RetainedCloneProgress{copied_items:1,copied_bytes:copy_bytes,..Default::default()}))
     }
-    fn begin_close(&mut self){self.closing=true;$(if let Some(field)=self.$field.as_mut(){field.begin_close();})+}
+    fn begin_close(&mut self){self.closing=true;}
+    fn close_started(&self)->bool{self.closing}
+    fn begin_close_demand(&self)->RetirementDemand{if self.closing{Default::default()}else{RetirementDemand{copy_bytes:std::mem::size_of::<bool>(),depth:1,..Default::default()}}}
+    fn begin_close_work_demand(&self)->u64{u64::from(!self.closing)}
+    fn begin_close_paid(&mut self,grant:RetainedCloneGrant)->$crate::value::RetainedWorkOutcome<RetainedCloneProgress,ValueError>{let demand=self.begin_close_demand();if self.closing||!retained_mutation_demand_fits(demand,grant){return $crate::value::RetainedWorkOutcome{result:Ok(Default::default()),work:0}}self.closing=true;$crate::value::RetainedWorkOutcome{result:Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}),work:1}}
     fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
-     $(if let Some(field)=self.$field.as_ref(){return if field.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:2*std::mem::size_of::<Option<Box<RetainedFieldPreparation<$field_ty>>>>(),release_bytes:std::mem::size_of::<RetainedFieldPreparation<$field_ty>>(),depth:1,..Default::default()})}else{field.close_demand(body)};})+
+     $(if let Some(field)=self.$field.as_ref(){return if field.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:2*std::mem::size_of::<Option<Box<RetainedFieldPreparation<$field_ty>>>>(),release_bytes:std::mem::size_of::<RetainedFieldPreparation<$field_ty>>(),depth:1,..Default::default()})}else if !field.close_started(){Ok(field.begin_close_demand())}else{field.close_demand(body)};})+
      if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<$patch>(false,&None,body);}
      if self.result.is_some(){return Ok(self.retirement.next_owner_demands::<$patch>(true,&None,body)?);}
      let binding=if self.row.is_some(){&self.row}else{&self.payload};
      RetainedCloneBinding::close_demand(binding,body)
     }
-    fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{self.close_demand(body)?;$(if let Some(field)=self.$field.as_ref(){return if field.terminal_is_empty(){Ok(1)}else{field.close_work_demand(body)}})+if !self.retirement.is_empty()||self.result.is_some(){return self.retirement.next_owner_work::<$patch>(self.result.is_some(),&None,body)}let binding=if self.row.is_some(){&self.row}else{&self.payload};RetainedCloneBinding::close_work_demand(binding,body)}
+    fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{self.close_demand(body)?;$(if let Some(field)=self.$field.as_ref(){return if field.terminal_is_empty(){Ok(1)}else if !field.close_started(){Ok(field.begin_close_work_demand())}else{field.close_work_demand(body)}})+if !self.retirement.is_empty()||self.result.is_some(){return self.retirement.next_owner_work::<$patch>(self.result.is_some(),&None,body)}let binding=if self.row.is_some(){&self.row}else{&self.payload};RetainedCloneBinding::close_work_demand(binding,body)}
     fn close_step(&mut self,grant:RetainedCloneGrant)->$crate::value::OriginalRetirementOutcome{let mut work=0;let result:Result<_,$crate::value::OriginalRetirementFailure>=(||{
      if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"sparse inverse closure not started").into());}
      if !retained_mutation_demand_fits(self.close_demand(grant.maximum_copy_bytes)?,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
-     $(if let Some(field)=self.$field.as_mut(){if field.terminal_is_empty(){work+=1;drop(self.$field.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:2*std::mem::size_of::<Option<Box<RetainedFieldPreparation<$field_ty>>>>(),released_bytes:std::mem::size_of::<RetainedFieldPreparation<$field_ty>>(),..Default::default()}));}let turn=field.close_step(grant);work+=turn.work;return Ok(RetainedCloneStep::Progress(turn.result?.progress()));})+
+     $(if let Some(field)=self.$field.as_mut(){if field.terminal_is_empty(){work+=1;drop(self.$field.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:2*std::mem::size_of::<Option<Box<RetainedFieldPreparation<$field_ty>>>>(),released_bytes:std::mem::size_of::<RetainedFieldPreparation<$field_ty>>(),..Default::default()}));}if !field.close_started(){let turn=field.begin_close_paid(grant);work+=turn.work;return Ok(RetainedCloneStep::Progress(turn.result?));}let turn=field.close_step(grant);work+=turn.work;return Ok(RetainedCloneStep::Progress(turn.result?.progress()));})+
      if !self.retirement.is_empty(){let turn=self.retirement.step_granted(grant);work+=turn.work;return Ok(RetainedCloneStep::Progress(turn.result?.progress()));}
      let turn=self.retirement.begin_granted(&mut self.result,grant);work+=turn.work;if let Some(step)=turn.result?{return Ok(RetainedCloneStep::Progress(step.progress()));}
      let turn=RetainedCloneBinding::close_one(if self.row.is_some(){&mut self.row}else{&mut self.payload},grant);work+=turn.work;let step=turn.result?;

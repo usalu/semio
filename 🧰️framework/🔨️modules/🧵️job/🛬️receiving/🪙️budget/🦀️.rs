@@ -9,7 +9,7 @@ pub fn retained_min(a:RetainedCloneGrant,b:RetainedCloneGrant)->RetainedCloneGra
 /// 🔎️ Checks that a physical child grant stays within its initiating caller.
 pub fn retained_is_subset(a:RetainedCloneGrant,b:RetainedCloneGrant)->bool{retained_min(a,b)==a}
 /// 🧳️ Retains a native receiving refusal without manufacturing an operation result.
-pub fn native_call_context<T,E>(error:ValueError)->semio_framework_value_native_owned::native_decoding::NativeDecodeCallFailure<T,E>{semio_framework_value_native_owned::native_decoding::NativeDecodeCallFailure{output:None,operation:None,context:Some(error),receipt_refusal:None}}
+pub fn native_call_context<T,E>(error:ValueError)->semio_framework_value_call::NativeCallFailure<T,E>{semio_framework_value_call::NativeCallFailure{output:None,operation:None,context:Some(error),receipt_refusal:None}}
 
 /// 🫴️ The actual Job ledger receives every original physical effect once.
 pub struct OriginalJobConstructionRecipient<'a>{original:RetainedCloneGrant,start:RetainedCloneProgress,spent:&'a mut RetainedCloneProgress,receiving_spent:&'a mut RetainedCloneProgress,submitted:RetainedCloneProgress}

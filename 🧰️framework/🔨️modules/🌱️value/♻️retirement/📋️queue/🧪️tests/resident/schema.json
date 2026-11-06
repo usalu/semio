@@ -1,0 +1,44 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "refusals",
+    "admissionWork",
+    "nullWork",
+    "placementHeaderWords"
+  ],
+  "properties": {
+    "refusals": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "work",
+          "copyAllowed"
+        ],
+        "properties": {
+          "work": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2
+          },
+          "copyAllowed": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "admissionWork": {
+      "const": 2
+    },
+    "nullWork": {
+      "const": 1
+    },
+    "placementHeaderWords": {
+      "const": 8
+    }
+  }
+}

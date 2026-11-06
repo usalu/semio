@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "issuer",
+          "producer",
+          "source",
+          "reply",
+          "allowed",
+          "recovered"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "issuer": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "producer": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "source": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "reply": {
+            "enum": [
+              null,
+              "accepted",
+              "denied",
+              "refused"
+            ]
+          },
+          "allowed": {
+            "type": "boolean"
+          },
+          "recovered": {
+            "enum": [
+              "pending",
+              "accepted",
+              "denied",
+              "refused"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -16,6 +16,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value-native-receiving-original = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/📦️packages/🦀️rust" }
 semio-ui-contract.workspace = true
 semio-framework-job.workspace = true
 semio-framework-tool-machine.workspace = true

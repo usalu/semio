@@ -56,15 +56,20 @@ impl RasterSelectionSpansBuilder{
         if self.refused.is_some(){return self.retirement.next_owner_demands::<PersistentList<RasterSpanPage>>(true,&None,body);}
         Ok(if self.page.is_some(){fixed(size_of::<Option<RasterSpanPage>>())}else{Default::default()})
     }
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
-        let mut work=0;let result=(||{if !self.closing{return Err(fault());}let d=self.close_demands(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()));}
-            if !self.builder.terminal_is_empty(){let turn=self.builder.close_step(grant);work=turn.work;return turn.result;}
-            if !self.retirement.is_empty(){let turn=self.retirement.step_granted(grant);work=turn.work;return turn.result;}
-            if self.sealed.is_some(){let turn=self.retirement.begin_granted(&mut self.sealed,grant);work=turn.work;return turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default())));}
-            if self.output.is_some(){let turn=self.retirement.begin_granted(&mut self.output,grant);work=turn.work;return turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default())));}
-            if self.refused.is_some(){let turn=self.retirement.begin_granted(&mut self.refused,grant);work=turn.work;return turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default())));}
+    pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.builder.terminal_is_empty(){return self.builder.close_work_demand(body)}if !self.retirement.is_empty(){return self.retirement.next_owner_work::<RasterSelectionSpans>(false,&None,body)}if self.sealed.is_some(){return self.retirement.next_owner_work::<SealedShared<RasterSpanPage>>(true,&None,body)}if self.output.is_some(){return self.retirement.next_owner_work::<RasterSelectionSpans>(true,&None,body)}if self.refused.is_some(){return self.retirement.next_owner_work::<PersistentList<RasterSpanPage>>(true,&None,body)}Ok(u64::from(self.page.is_some()))}
+    pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementOutcome{let grant=effect.grant();
+        let mut work=0;let result:Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>=(||{if !self.closing{return Err(fault().into());}let d=self.close_demands(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()));}
+            if !self.builder.terminal_is_empty(){let turn=self.builder.close_step(effect);work=turn.work;return turn.result;}
+            if !self.retirement.is_empty(){let turn=self.retirement.step_granted(effect);work=turn.work;return turn.result;}
+            if self.sealed.is_some(){let turn=self.retirement.begin_granted(&mut self.sealed,effect);work=turn.work;return turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into);}
+            if self.output.is_some(){let turn=self.retirement.begin_granted(&mut self.output,effect);work=turn.work;return turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into);}
+            if self.refused.is_some(){let turn=self.retirement.begin_granted(&mut self.refused,effect);work=turn.work;return turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into);}
             work=u64::from(self.page.is_some());self.page=None;Ok(RetainedCloneStep::Complete(if work==0{Default::default()}else{posted(d.copy_bytes)}))})();RetainedWorkOutcome{result,work}
     }
+    pub fn requires_original_birth(&self)->bool{if !self.builder.terminal_is_empty(){return self.builder.requires_original_birth()}self.retirement.requires_original_birth()}
+    pub fn close_original_birth_step(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{if !self.builder.terminal_is_empty(){return self.builder.close_original_birth_step(original,grant)}self.retirement.step_original_birth(original,grant)}
+    pub fn requires_original_control(&self)->bool{if !self.builder.terminal_is_empty(){return self.builder.requires_original_control()}self.retirement.requires_original_control()}
+    pub fn close_original_step(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementOutcome{if self.requires_original_birth(){return RetainedWorkOutcome{result:Err(fault().into()),work:0}}if !self.builder.terminal_is_empty()&&self.builder.requires_original_control(){return self.builder.close_original_step(original,effect)}if self.builder.terminal_is_empty()&&self.retirement.requires_original_control(){return self.retirement.step_original(original,effect)}self.close_step(effect)}
     pub fn terminal_is_empty(&self)->bool{self.builder.terminal_is_empty()&&self.page.is_none()&&self.sealed.is_none()&&self.output.is_none()&&self.refused.is_none()&&self.retirement.is_empty()}
 }
 impl Drop for RasterSelectionSpansBuilder{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"packed selection builder retains unfinished pages until funded closure");}}

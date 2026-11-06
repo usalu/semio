@@ -42,7 +42,7 @@ pub(super) fn reply_owned_host<'loan,'source>(state: &mut OwnedGuestInstance, ca
                 let number = |index:usize| match call.arguments.get(index) { Some(Value::I64(value)) => usize::try_from(u64::from_ne_bytes(value.to_ne_bytes())).map_err(|_|operation_authority::refusal(2)), _ => Err(operation_authority::refusal(4)) };
                 match call.name.as_str() {
                     "operation-progress" => receiver.progress(semio_framework_value::native_encoding::NativeEncodeProgress{completed:number(0)?,total:number(1)?,owned_bytes:number(2)?}),
-                    "operation-allocation" => receiver.allocation(semio_framework_value::native_encoding::NativeEncodeAllocation{bytes:number(0)?,owned_bytes:number(1)?,next_owned_bytes:number(2)?,maximum_bytes:number(3)?}),
+                    "operation-allocation" => receiver.allocation(semio_framework_value::native_encoding::NativeAllocationRequest{bytes:number(0)?,owned_bytes:number(1)?,next_owned_bytes:number(2)?,maximum_bytes:number(3)?}),
                     "operation-finish" => receiver.finish(number(0)?),
                     _ => Err(operation_authority::refusal(4)),
                 }

@@ -104,10 +104,10 @@ impl DslValueRetainedCloneCursor {
         if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"dynamic clone requires admitted original depth"));}
         Ok(demand.copy_bytes<=grant.maximum_copy_bytes&&demand.capacity_bytes<=grant.maximum_capacity_bytes&&demand.release_bytes<=grant.maximum_release_bytes)
     }
-    fn close_child(&mut self,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome{let mut work=0;let result=(||{
+    fn close_child(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let grant=effect.grant();let mut work=0;let result=(||{
         let child=self.state.child.as_mut().unwrap();
-        if child.begin_close(){work+=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..Default::default()}));}
-        if !child.terminal_is_empty(){let step={let turn=child.close_step(RetainedCloneGrant {maximum_depth:grant.maximum_depth-1,..grant});work+=turn.work;turn.result}?;return Ok(RetainedCloneStep::Progress(step.progress()));}
+        if !child.close_started(){let turn=child.begin_close_paid(grant);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
+        if !child.terminal_is_empty(){let step={let turn=child.close_step(&mut effect.reborrow(RetainedCloneGrant {maximum_depth:grant.maximum_depth-1,..grant},effect.maximum_work_units().saturating_sub(work))?);work+=turn.work;turn.result}?;return Ok(RetainedCloneStep::Progress(step.progress()));}
         self.state.child.take();work+=1;self.state.draining=false;self.state.index+=usize::from(!self.state.closing);
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:size_of::<Self>(),..Default::default()}))
     })();RetainedWorkOutcome{result,work}}
@@ -124,18 +124,22 @@ impl RetainedCloneDemandCursor<DslValue> for DslValueRetainedCloneCursor {
 
 impl RetainedCloneCursor<DslValue> for DslValueRetainedCloneCursor {
     fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{DslValueRetainedCloneCursor::close_demands(self,body)}
-    fn output_ready(&self)->bool{self.state.phase==2&&self.state.target.is_some()}
-    fn advance_demands(&self,source:RetainedCloneRef<'_,DslValue>,body:usize)->Result<RetirementDemand,ValueError>{self.demands(source,body)}
-    fn advance(&mut self,source:RetainedCloneRef<'_,DslValue>,body: usize, grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome{let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
+    fn begin_close_demand(&self)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::retained_clone::retained_close_start_demand(self.state.closing))}
+fn begin_close_work_demand(&self)->Result<u64,crate::ValueError>{Ok(crate::retained_clone::retained_close_start_work_demand(self.state.closing))}
+fn begin_close_paid(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<crate::retained_clone::RetainedCloneProgress>{crate::retained_clone::start_retained_close(&mut self.state.closing,effect)}
+fn close_started(&self)->bool{self.state.closing}
+fn output_ready(&self)->bool{self.state.phase==2&&self.state.target.is_some()}
+    fn advance_demands(&self,source:RetainedCloneRef<'_,DslValue>,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{self.demands(source,body)}
+    fn advance(&mut self,source:RetainedCloneRef<'_,DslValue>,body: usize,maximum_work_units:u64, effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let grant=effect.grant();let maximum_work_units=maximum_work_units.min(effect.maximum_work_units());let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         let demand=self.demands(source,body)?;
         if !Self::admitted(demand,grant)?{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if self.state.phase==2{return Ok(RetainedCloneStep::Complete(Default::default()));}
         if let Some(progress)={let turn=source.bind(&mut self.state.source,grant);work+=turn.work;turn.result}?{return Ok(RetainedCloneStep::Progress(progress));}
-        if self.state.draining{return {let turn=self.close_child(grant);work+=turn.work;turn.result};}
+        if self.state.draining{return {let turn=self.close_child(&mut effect.reborrow(grant,effect.maximum_work_units().saturating_sub(work))?);work+=turn.work;turn.result};}
         if self.state.child_value.is_some(){let state:&mut State=&mut self.state;let value=state.child_value.take().unwrap();match state.target.as_mut().unwrap(){DslValue::Array(values)=>values.push(value),DslValue::Object(values)=>values.push((state.key.take().unwrap(),value)),_=>unreachable!()}state.draining=true;work+=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
         if let Some(child)=self.state.child.as_mut(){
-            if !child.output_ready() {let projected=self.child_source(source)?;let step={let turn=self.state.child.as_mut().unwrap().advance(projected,body,RetainedCloneGrant {maximum_depth:grant.maximum_depth-1,..grant});work+=turn.work;turn.result}?;return Ok(RetainedCloneStep::Progress(step.progress()));}
+            if !child.output_ready() {let projected=self.child_source(source)?;let step={let turn=self.state.child.as_mut().unwrap().advance(projected,body,maximum_work_units,&mut effect.reborrow(RetainedCloneGrant {maximum_depth:grant.maximum_depth-1,..grant},maximum_work_units)?);work+=turn.work;turn.result}?;return Ok(RetainedCloneStep::Progress(step.progress()));}
             let nested=nested_retained_clone_grant(grant)?;let turn=child.take(nested);work+=turn.work;let Some((value,progress))=turn.result? else{return Ok(RetainedCloneStep::Progress(Default::default()))};self.state.child_value=Some(value);
             return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested,progress,"dynamic child take")?));
         }
@@ -167,27 +171,27 @@ impl RetainedCloneCursor<DslValue> for DslValueRetainedCloneCursor {
         let progress=RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,released_bytes:demand.release_bytes};
         Ok(if self.state.phase==2{RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
     })();RetainedWorkOutcome{result,work}}
-    fn take_demand(&self)->Result<crate::RetirementDemand,crate::ValueError>{Ok(retained_clone_take_demand())}
-    fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(DslValue,RetainedCloneProgress)>>{if !self.output_ready(){return RetainedWorkOutcome{result:Ok(None),work:0}}let turn=take_retained_clone_output(&mut self.state.target,grant);if matches!(&turn.result,Ok(Some(_))){self.state.spent = true;}turn}
-    fn begin_close(&mut self)->bool {if self.state.closing{return false;}self.state.closing=true;true}
+    fn take_demand(&self)->Result<crate::RetirementDemand,crate::ValueError>{crate::retained_clone::retained_clone_cursor_take_demand::<DslValue,bool>()}
+    fn take<'reply>(&mut self,output:&mut Option<DslValue>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalEffectReply<'reply,RetainedCloneStep,ValueError>)->Result<crate::retained_clone::OriginalEffectReplyComplete<'reply,RetainedCloneStep,ValueError>,ValueError>{crate::retained_clone::take_retained_clone_cursor_output!(self.output_ready(),self.state.target,output,self.state.spent,true,effect,reply,DslValue,bool)}
+    
     fn terminal_is_empty(&self)->bool {self.state.closing&&self.empty()}
     fn next_close_depth_demand(&self)->Result<usize,ValueError> {Ok(self.close_demands(0)?.depth)}
     fn next_close_copy_byte_demand(&self)->Result<usize,ValueError> {Ok(self.close_demands(0)?.copy_bytes)}
     fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {Ok(self.close_demands(copy)?.capacity_bytes)}
     fn next_close_release_byte_demand(&self)->Result<usize,ValueError> {Ok(self.close_demands(0)?.release_bytes)}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome{let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
+    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let grant=effect.grant();let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if !self.state.closing{return Err(Self::refusal("dynamic clone must retain custody through begin_close").into());}
         let demand=self.close_demands(grant.maximum_copy_bytes)?;
         if !Self::admitted(demand,grant)?{return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if self.state.child.is_some(){return {let turn=self.close_child(grant);work+=turn.work;turn.result};}
+        if self.state.child.is_some(){return {let turn=self.close_child(&mut effect.reborrow(grant,effect.maximum_work_units().saturating_sub(work))?);work+=turn.work;turn.result};}
         let s:&mut State=&mut self.state;
-        if !s.close.is_empty(){return {let turn=s.close.step_granted(grant);work+=turn.work;turn.result};}
-        if let Some(step)={let turn=s.close.begin_granted(&mut s.bytes,grant);work+=turn.work;turn.result}?{return Ok(step);}
-        if let Some(step)={let turn=s.close.begin_granted(&mut s.key,grant);work+=turn.work;turn.result}?{return Ok(step);}
-        if let Some(step)={let turn=s.close.begin_granted(&mut s.child_value,grant);work+=turn.work;turn.result}?{return Ok(step);}
-        if let Some(step)={let turn=s.close.begin_granted(&mut s.target,grant);work+=turn.work;turn.result}?{return Ok(step);}
-        {let turn=close_retained_binding(&mut s.source,grant);work+=turn.work;turn.result}
+        if !s.close.is_empty(){return {let turn=s.close.step_granted(effect);work+=turn.work;turn.result};}
+        if let Some(step)={let turn=s.close.begin_granted(&mut s.bytes,effect);work+=turn.work;turn.result}?{return Ok(step);}
+        if let Some(step)={let turn=s.close.begin_granted(&mut s.key,effect);work+=turn.work;turn.result}?{return Ok(step);}
+        if let Some(step)={let turn=s.close.begin_granted(&mut s.child_value,effect);work+=turn.work;turn.result}?{return Ok(step);}
+        if let Some(step)={let turn=s.close.begin_granted(&mut s.target,effect);work+=turn.work;turn.result}?{return Ok(step);}
+        {let turn=close_retained_binding(&mut s.source,effect);work+=turn.work;turn.result}
     })();RetainedWorkOutcome{result,work}}
 }
 

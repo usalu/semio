@@ -1,0 +1,22 @@
+{
+  "cases": [
+    {
+      "phase": "denied",
+      "actual": "none",
+      "output": false,
+      "work": 0
+    },
+    {
+      "phase": "allocator-failed",
+      "actual": "zero",
+      "output": false,
+      "work": 1
+    },
+    {
+      "phase": "allocated",
+      "actual": "positive",
+      "output": true,
+      "work": 1
+    }
+  ]
+}

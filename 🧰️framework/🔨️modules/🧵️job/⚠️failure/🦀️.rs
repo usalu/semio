@@ -74,13 +74,13 @@ impl From<Fault> for OriginalTurnFailure{fn from(primary:Fault)->Self{Self{effec
 impl From<OriginalRetirementFailure> for OriginalTurnFailure{fn from(primary:OriginalRetirementFailure)->Self{Self::from(OriginalTurnPrimary::Retirement(primary))}}
 impl From<semio_framework_value_native_owned::native_decoding::NativeConstructionStepFailure<ValueError>> for OriginalTurnFailure {
  fn from(failure:semio_framework_value_native_owned::native_decoding::NativeConstructionStepFailure<ValueError>)->Self {
-  let primary=OriginalReceivingPrimary {retirement_failure:None,work_refusal:None, primary:failure.primary,quote_refusal:None,allocation_refusal:None,allocation_failure:None,native_allocation:None,receipt_refusal:None,progress:failure.progress };
+  let primary=OriginalReceivingPrimary {retirement_failure:None,work_refusal:None,work_overrun:None, primary:failure.primary,quote_refusal:None,allocation_refusal:None,allocation_failure:None,native_allocation:None,receipt_refusal:None,progress:failure.progress };
   Self { effects:failure.progress,primary:OriginalTurnPrimary::Receiving(primary),receipt_refusal:failure.receipt_refusal,context_refusal:None,work_refusal:None }
  }
 }
 impl From<semio_framework_value_native_owned::native_decoding::NativeConstructionStepFailure<OriginalReceivingPrimary>> for OriginalTurnFailure {
  fn from(failure:semio_framework_value_native_owned::native_decoding::NativeConstructionStepFailure<OriginalReceivingPrimary>)->Self {
-  let mut primary=failure.primary.unwrap_or(OriginalReceivingPrimary {retirement_failure:None,work_refusal:None, primary:None,quote_refusal:None,allocation_refusal:None,allocation_failure:None,native_allocation:None,receipt_refusal:None,progress:failure.progress });primary.progress=failure.progress;
+  let mut primary=failure.primary.unwrap_or(OriginalReceivingPrimary {retirement_failure:None,work_refusal:None,work_overrun:None, primary:None,quote_refusal:None,allocation_refusal:None,allocation_failure:None,native_allocation:None,receipt_refusal:None,progress:failure.progress });primary.progress=failure.progress;
   Self { effects:failure.progress,primary:OriginalTurnPrimary::Receiving(primary),receipt_refusal:failure.receipt_refusal,context_refusal:None,work_refusal:None }
  }
 }

@@ -1,0 +1,38 @@
+{
+  "type": "array",
+  "minItems": 4,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "same",
+      "start",
+      "end",
+      "allowed",
+      "delta"
+    ],
+    "properties": {
+      "same": {
+        "type": "boolean"
+      },
+      "start": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "end": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "allowed": {
+        "type": "boolean"
+      },
+      "delta": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "minimum": 0
+      }
+    }
+  }
+}

@@ -145,6 +145,6 @@ fn reconstruct(database:&SqliteDatabase,control:&mut NativeDecodeControl<'_>)->R
 pub(super) fn read(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Ifc2x3Snapshot,ValueError>{
     control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,progress,allocation|{
         let mut callback=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|progress(event.completed,event.total);
-        let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);let result=reconstruct(database,&mut native);(result,native.owned_bytes())
+        let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeAllocationRequest|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);let result=reconstruct(database,&mut native);(result,native.owned_bytes())
     })?
 }

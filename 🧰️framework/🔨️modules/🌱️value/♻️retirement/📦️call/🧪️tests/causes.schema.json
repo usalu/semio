@@ -1,0 +1,93 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "channels",
+    "readyBefore",
+    "readyAfter",
+    "deniedWork",
+    "deniedAllocation",
+    "record"
+  ],
+  "properties": {
+    "channels": {
+      "const": [
+        "output",
+        "operation",
+        "context",
+        "receiptRefusal"
+      ]
+    },
+    "readyBefore": {
+      "const": false
+    },
+    "readyAfter": {
+      "const": true
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "deniedAllocation": {
+      "const": 0
+    },
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "label",
+        "secret",
+        "operation",
+        "context",
+        "receiptRefusal",
+        "sourceDenials",
+        "childDenials",
+        "ownedStrings",
+        "utf8Bytes"
+      ],
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "secret": {
+          "type": "string",
+          "minLength": 1
+        },
+        "operation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "context": {
+          "type": "string",
+          "minLength": 1
+        },
+        "receiptRefusal": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceDenials": {
+          "const": [
+            "work",
+            "copy",
+            "capacity"
+          ]
+        },
+        "childDenials": {
+          "const": [
+            "work",
+            "copy",
+            "capacity"
+          ]
+        },
+        "ownedStrings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "utf8Bytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

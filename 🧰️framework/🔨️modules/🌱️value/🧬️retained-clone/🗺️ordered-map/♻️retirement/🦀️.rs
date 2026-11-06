@@ -13,7 +13,7 @@ trait EditOwner:Send+'static {
 struct EditRetirement<C:EditOwner>{cursor:ManuallyDrop<C>}
 impl<C:EditOwner> RetirementCursor for EditRetirement<C> {
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{self.cursor.demand(body)}
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{let turn=self.cursor.close(grant);match turn.result{Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete(turn.work),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();let turn=self.cursor.close(grant);match turn.result{Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete(turn.work),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}
  fn terminal_is_empty(&self)->bool{self.cursor.empty()}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.cursor.demand(0)?.depth)}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.cursor.demand(0)?.copy_bytes)}

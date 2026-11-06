@@ -1,0 +1,49 @@
+{
+  "stock": {
+    "items": 64,
+    "copyBytes": 4096,
+    "capacityBytes": 4096,
+    "releaseBytes": 4096,
+    "depth": 32,
+    "fuel": 64
+  },
+  "initialize": {
+    "work": 1,
+    "copyBytes": 1
+  },
+  "values": {
+    "left": 7,
+    "right": 19
+  },
+  "layouts": [
+    {
+      "word": 4,
+      "field": 4,
+      "fieldOption": 8,
+      "value": 8,
+      "output": 12,
+      "placement": 16,
+      "publication": 26,
+      "releaseCopy": 5
+    },
+    {
+      "word": 8,
+      "field": 4,
+      "fieldOption": 8,
+      "value": 8,
+      "output": 12,
+      "placement": 20,
+      "publication": 30,
+      "releaseCopy": 9
+    }
+  ],
+  "flow": {
+    "work": 6,
+    "allocationAttempts": 1,
+    "releaseAttempts": 1
+  },
+  "denied": {
+    "work": 0,
+    "retainsOriginal": true
+  }
+}

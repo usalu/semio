@@ -1,0 +1,38 @@
+{
+  "type": "array",
+  "minItems": 4,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "finished",
+      "active",
+      "mayTransferOwner",
+      "mayBegin",
+      "phase"
+    ],
+    "properties": {
+      "finished": {
+        "type": "boolean"
+      },
+      "active": {
+        "type": "boolean"
+      },
+      "mayTransferOwner": {
+        "type": "boolean"
+      },
+      "mayBegin": {
+        "type": "boolean"
+      },
+      "phase": {
+        "enum": [
+          "callbackStarted",
+          "quoteAccepted",
+          "settledVerdictPresent",
+          "verdictTaken",
+          "finished"
+        ]
+      }
+    }
+  }
+}

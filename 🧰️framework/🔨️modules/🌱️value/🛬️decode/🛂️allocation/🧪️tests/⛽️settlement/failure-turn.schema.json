@@ -1,0 +1,32 @@
+{
+  "type": "array",
+  "minItems": 4,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "sameIssuer",
+      "sameAction",
+      "sameGrant",
+      "withinSpent",
+      "canResume"
+    ],
+    "properties": {
+      "sameIssuer": {
+        "type": "boolean"
+      },
+      "sameAction": {
+        "type": "boolean"
+      },
+      "sameGrant": {
+        "type": "boolean"
+      },
+      "withinSpent": {
+        "type": "boolean"
+      },
+      "canResume": {
+        "type": "boolean"
+      }
+    }
+  }
+}

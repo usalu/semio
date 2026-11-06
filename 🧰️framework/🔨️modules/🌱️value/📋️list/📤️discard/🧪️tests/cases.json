@@ -1,0 +1,17 @@
+{
+  "pageItems": 2,
+  "input": [
+    11,
+    23,
+    37
+  ],
+  "maximumItems": [
+    1,
+    2
+  ],
+  "remaining": [
+    2,
+    0
+  ],
+  "workPerTurn": "1"
+}

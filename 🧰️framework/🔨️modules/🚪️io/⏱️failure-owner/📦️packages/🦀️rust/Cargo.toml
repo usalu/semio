@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-io-failure-owner"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Original native IO failure ownership and borrowed projection."
+
+[package.metadata.semio]
+role = "framework"
+id = "io-failure-owner"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_io_failure_owner"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value.workspace = true
+semio-framework-value-native-owned.workspace = true
+semio-framework-value-control-contract = { path = "../../../../🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust" }

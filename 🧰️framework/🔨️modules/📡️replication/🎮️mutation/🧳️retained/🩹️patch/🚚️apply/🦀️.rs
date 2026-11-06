@@ -68,20 +68,24 @@ impl<R,P:RetainedRowPatch<R>> RetainedRowPatchApply<R,P>{
  /// ✅️ Original source ownership remains closeable after the final field exchange.
  pub fn complete(&self)->bool{self.phase==4&&!self.closing}
  /// 🛑️ Cancellation stops staging and exchange before child-first typed closure.
- pub fn begin_close(&mut self){self.closing=true;if let Some(fields)=self.fields.as_mut(){fields.begin_close();}}
+ pub fn begin_close(&mut self){self.closing=true;}
+ pub fn close_started(&self)->bool{self.closing}
+ pub fn begin_close_demand(&self)->RetirementDemand{if self.closing{Default::default()}else{scalar(size_of::<bool>())}}
+ pub fn begin_close_work_demand(&self)->u64{u64::from(!self.closing)}
+ pub fn begin_close_paid(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress,ValueError>{let demand=self.begin_close_demand();if self.closing||!retained_mutation_demand_fits(demand,grant){return semio_framework_value::RetainedWorkOutcome{result:Ok(Default::default()),work:0}}self.closing=true;semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}),work:1}}
  /// ♻️ Original field cursors close before the displaced sparse patch is physically retired.
  pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if !self.closing{return Err(invalid());}
-  if let Some(fields)=self.fields.as_ref(){if !fields.terminal_is_empty(){return nested(fields.close_demand(body.saturating_sub(META))?);}return Ok(RetirementDemand{release_bytes:size_of::<P::Fields>(),..scalar(size_of::<Option<Box<P::Fields>>>()+META)});}
+  if let Some(fields)=self.fields.as_ref(){if !fields.terminal_is_empty(){if !fields.close_started(){return Ok(fields.begin_close_demand())}return nested(fields.close_demand(body.saturating_sub(META))?);}return Ok(RetirementDemand{release_bytes:size_of::<P::Fields>(),..scalar(size_of::<Option<Box<P::Fields>>>()+META)});}
   if self.patch.is_some()||!self.retirement.is_empty(){return nested(self.retirement.next_owner_demands::<P>(self.patch.is_some(),&None,body.saturating_sub(META))?);}
   Ok(Default::default())
  }
  /// 🪜️ Each returned child and physical backing release is paid before its original owner disappears.
  /// ⛽️ Quotes the selected sparse-field or displaced-patch close work.
- pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{self.close_demand(body)?;if let Some(fields)=self.fields.as_ref(){return if fields.terminal_is_empty(){Ok(1)}else{fields.close_work_demand(body.saturating_sub(META))}}self.retirement.next_owner_work::<P>(self.patch.is_some(),&None,body.saturating_sub(META))}
+ pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{self.close_demand(body)?;if let Some(fields)=self.fields.as_ref(){return if fields.terminal_is_empty(){Ok(1)}else if !fields.close_started(){Ok(fields.begin_close_work_demand())}else{fields.close_work_demand(body.saturating_sub(META))}}self.retirement.next_owner_work::<P>(self.patch.is_some(),&None,body.saturating_sub(META))}
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{let mut work=0;let result:Result<_,semio_framework_value::OriginalRetirementFailure>=(||{
   let demand=self.close_demand(grant.maximum_copy_bytes)?;if !retained_mutation_demand_fits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
-  if let Some(fields)=self.fields.as_mut(){if !fields.terminal_is_empty(){let turn=fields.close_step(child(grant));work+=turn.work;let step=turn.result.map_err(|error|if turn.work==0{error}else{let mut p=error.retained_progress();p.copied_bytes=p.copied_bytes.saturating_add(META);error.with_retained_progress(p)})?;return Ok(RetainedCloneStep::Progress(receipt(step.progress())?));}work+=1;drop(self.fields.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}));}
+  if let Some(fields)=self.fields.as_mut(){if !fields.terminal_is_empty(){if !fields.close_started(){let turn=fields.begin_close_paid(grant);work+=turn.work;return Ok(RetainedCloneStep::Progress(turn.result?))}let turn=fields.close_step(child(grant));work+=turn.work;let step=turn.result.map_err(|error|if turn.work==0{error}else{let mut p=error.retained_progress();p.copied_bytes=p.copied_bytes.saturating_add(META);error.with_retained_progress(p)})?;return Ok(RetainedCloneStep::Progress(receipt(step.progress())?));}work+=1;drop(self.fields.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}));}
   if !self.retirement.is_empty(){let turn=self.retirement.step_granted(child(grant));work+=turn.work;let step=turn.result.map_err(|error|if turn.work==0{error}else{let mut p=error.retained_progress();p.copied_bytes=p.copied_bytes.saturating_add(META);error.with_retained_progress(p)})?;return Ok(RetainedCloneStep::Progress(receipt(step.progress())?));}
   if self.patch.is_some(){let turn=self.retirement.begin_granted(&mut self.patch,child(grant));work+=turn.work;if let Some(step)=turn.result?{return Ok(RetainedCloneStep::Progress(receipt(step.progress())?));}}
   Ok(RetainedCloneStep::Complete(Default::default()))

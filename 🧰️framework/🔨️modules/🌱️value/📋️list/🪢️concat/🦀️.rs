@@ -1,5 +1,6 @@
+use semio_framework_value_original_vector::OriginalVectorCursor;
 //! 🪢️ Original vectors stream into one funded output directory without cloning payloads.
-use crate::{RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind,list::{PagedList,PagedListError},retirement::{RetireOwned,original_vector::OriginalVectorCursor},retained_clone::{RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
+use crate::{RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind,list::{PagedList,PagedListError},retirement::{RetireOwned},retained_clone::{RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
 use std::mem::{ManuallyDrop,size_of};
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original vector concatenation lost its declared ownership frontier")}
 fn mapped<T>(result:Result<T,PagedListError>)->Result<T,ValueError>{result.map_err(|error|ValueError::literal(ValueRefusalKind::OwnershipLimit,error.reason))}
@@ -44,7 +45,7 @@ impl<T:RetireOwned> OriginalVectorConcat<T>{
   if self.closing||!matches!(self.phase,1|4){return Err(invalid().into())}if self.phase==4{return Ok(Self::scalar())}
   if self.returned.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<T>(),..Self::scalar()})}
   let Some(chunk)=self.chunks.get(self.index)else{return Ok(Self::scalar())};
-  let mut d=if !chunk.remaining().is_empty(){Self::nested(chunk.next_take_demand())?}else if chunk.terminal_is_empty()||!chunk.close_started(){Self::scalar()}else{Self::nested(chunk.next_demand(body)?)?};d.depth=d.depth.max(mapped(self.chunks.next_get_depth_demand(self.index))?);Ok(d)
+  let mut d=if !chunk.remaining().is_empty(){Self::nested(chunk.next_take_demand())?}else if chunk.terminal_is_empty(){Self::scalar()}else if !chunk.close_started(){Self::nested(chunk.begin_close_demand())?}else{Self::nested(chunk.next_demand(body)?)?};d.depth=d.depth.max(mapped(self.chunks.next_get_depth_demand(self.index))?);Ok(d)
  }
  pub fn advance(&mut self,grant:RetainedCloneGrant)->semio_framework_value_retirement::OriginalRetirementOutcome{
   let mut work=0;let result=(||{
@@ -53,7 +54,7 @@ impl<T:RetireOwned> OriginalVectorConcat<T>{
    if self.returned.is_some(){let output=self.output.as_mut().ok_or_else(invalid)?;if output.len()==output.capacity(){return Err(invalid().into())}output.push(self.returned.take().ok_or_else(||ValueError::invariant("returned absent"))?);work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_bytes:size_of::<T>(),..Self::moved()}))}
    let Some(chunk)=self.chunks.get_mut(self.index)else{self.phase=2;work=1;return Ok(RetainedCloneStep::Complete(Self::moved()))};
    if !chunk.remaining().is_empty(){let turn=chunk.take_front(Self::child(grant));work=turn.work;let(value,p)=turn.result?.ok_or_else(invalid)?;*self.returned=Some(value);return Ok(RetainedCloneStep::Progress(p))}
-   if !chunk.terminal_is_empty(){if !chunk.close_started(){chunk.begin_close();work=1;return Ok(RetainedCloneStep::Progress(Self::moved()))}let turn=chunk.step(Self::child(grant));work=turn.work;return turn.result.map(|s|RetainedCloneStep::Progress(s.progress()))}
+   if !chunk.terminal_is_empty(){if !chunk.close_started(){let turn=chunk.begin_close_paid(Self::child(grant));work=turn.work;return turn.result.map(|p|RetainedCloneStep::Progress(Self::receipt(p)))}let turn=chunk.step(Self::child(grant));work=turn.work;return turn.result.map(|s|RetainedCloneStep::Progress(s.progress()))}
    self.index+=1;work=1;Ok(RetainedCloneStep::Progress(Self::moved()))
   })();RetainedWorkOutcome{result,work}
  }
@@ -66,20 +67,20 @@ impl<T:RetireOwned> OriginalVectorConcat<T>{
  pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if !self.closing{return Err(invalid().into())}
   if !self.retirement.is_empty(){return Self::nested(self.retirement.demands(body)?)}
-  if let Some(chunk)=self.pending.as_ref(){return if chunk.terminal_is_empty()||!chunk.close_started(){Ok(Self::scalar())}else{Self::nested(chunk.next_demand(body)?)}}
+  if let Some(chunk)=self.pending.as_ref(){return if chunk.terminal_is_empty(){Ok(Self::scalar())}else if !chunk.close_started(){Self::nested(chunk.begin_close_demand())}else{Self::nested(chunk.next_demand(body)?)}}
   if self.returned.is_some(){return Self::nested(self.retirement.next_owner_demands::<T>(true,&None,body)?)}
-  if let Some(chunk)=self.chunks.last(){let mut d=if chunk.terminal_is_empty(){RetirementDemand{depth:mapped(self.chunks.next_pop_depth_demand())?.max(1),..Default::default()}}else if !chunk.close_started(){Self::scalar()}else{Self::nested(chunk.next_demand(body)?)?};d.depth=d.depth.max(mapped(self.chunks.next_get_depth_demand(self.chunks.len()-1))?);return Ok(d)}
+  if let Some(chunk)=self.chunks.last(){let mut d=if chunk.terminal_is_empty(){RetirementDemand{depth:mapped(self.chunks.next_pop_depth_demand())?.max(1),..Default::default()}}else if !chunk.close_started(){Self::nested(chunk.begin_close_demand())?}else{Self::nested(chunk.next_demand(body)?)?};d.depth=d.depth.max(mapped(self.chunks.next_get_depth_demand(self.chunks.len()-1))?);return Ok(d)}
   if self.chunks.allocated_bytes()!=0{return Ok(RetirementDemand{release_bytes:mapped(self.chunks.next_release_allocation_bytes())?,depth:mapped(self.chunks.next_release_depth_demand())?.max(1),..Default::default()})}
   if self.output.is_some(){return Self::nested(self.retirement.next_owner_demands::<Vec<T>>(true,&None,body)?)}
   Ok(Default::default())
  }
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value_retirement::OriginalRetirementOutcome{
+ pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->semio_framework_value_retirement::OriginalRetirementOutcome{let grant=effect.grant();
   let mut work=0;let result=(||{
    if !self.closing{return Err(invalid().into())}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let d=self.close_demand(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
    if !self.retirement.is_empty(){let turn=self.retirement.step_granted(Self::child(grant));work=turn.work;return turn.result.map(|s|RetainedCloneStep::Progress(s.progress()))}
-   if let Some(chunk)=self.pending.as_mut(){if chunk.terminal_is_empty(){*self.pending=None;work=1;return Ok(RetainedCloneStep::Progress(Self::moved()))}if !chunk.close_started(){chunk.begin_close();work=1;return Ok(RetainedCloneStep::Progress(Self::moved()))}let turn=chunk.step(Self::child(grant));work=turn.work;return turn.result.map(|s|RetainedCloneStep::Progress(s.progress()))}
+   if let Some(chunk)=self.pending.as_mut(){if chunk.terminal_is_empty(){*self.pending=None;work=1;return Ok(RetainedCloneStep::Progress(Self::moved()))}if !chunk.close_started(){chunk.begin_close();work=1;return Ok(RetainedCloneStep::Progress(Self::moved()))}let turn=chunk.step(&mut effect.reborrow(Self::child(grant),effect.maximum_work_units()).expect("retirement child exceeds original effect"));work=turn.work;return turn.result.map(|s|RetainedCloneStep::Progress(s.progress()))}
    if self.returned.is_some(){let turn=self.retirement.begin_granted(&mut self.returned,Self::child(grant));work=turn.work;return turn.result?.ok_or_else(invalid).map(|s|RetainedCloneStep::Progress(s.progress()))}
-   if let Some(chunk)=self.chunks.last_mut(){if chunk.terminal_is_empty(){self.chunks.pop();work=1;return Ok(RetainedCloneStep::Progress(Self::moved()))}if !chunk.close_started(){chunk.begin_close();work=1;return Ok(RetainedCloneStep::Progress(Self::moved()))}let turn=chunk.step(Self::child(grant));work=turn.work;return turn.result.map(|s|RetainedCloneStep::Progress(s.progress()))}
+   if let Some(chunk)=self.chunks.last_mut(){if chunk.terminal_is_empty(){self.chunks.pop();work=1;return Ok(RetainedCloneStep::Progress(Self::moved()))}if !chunk.close_started(){chunk.begin_close();work=1;return Ok(RetainedCloneStep::Progress(Self::moved()))}let turn=chunk.step(&mut effect.reborrow(Self::child(grant),effect.maximum_work_units()).expect("retirement child exceeds original effect"));work=turn.work;return turn.result.map(|s|RetainedCloneStep::Progress(s.progress()))}
    if self.chunks.allocated_bytes()!=0{let p=mapped(self.chunks.release_empty_page(grant.maximum_release_bytes))?;work=p.work;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(p.progressed),copied_bytes:p.placed_bytes,retained_capacity_bytes:p.allocated_bytes,released_bytes:p.released_allocation_bytes}))}
    let turn=self.retirement.begin_granted(&mut self.output,Self::child(grant));work=turn.work;turn.result?.ok_or_else(invalid).map(|s|RetainedCloneStep::Progress(s.progress()))
   })();RetainedWorkOutcome{result,work}

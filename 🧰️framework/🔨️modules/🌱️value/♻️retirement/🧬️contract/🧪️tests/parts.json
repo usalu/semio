@@ -10,5 +10,66 @@
     "receipt": "parent receipt"
   },
   "attachAllocatedBytes": 0,
-  "attachReleasedBytes": 0
+  "attachReleasedBytes": 0,
+  "cursorBirth": [
+    {
+      "maximumWork": 0,
+      "capacity": "exact",
+      "allocator": "none",
+      "attempts": 0,
+      "reportedWork": 0,
+      "marker": false,
+      "sourceRetained": true,
+      "copy": "exact"
+    },
+    {
+      "maximumWork": 1,
+      "capacity": "exact",
+      "copy": "short",
+      "allocator": "none",
+      "attempts": 0,
+      "reportedWork": 0,
+      "marker": false,
+      "sourceRetained": true
+    },
+    {
+      "maximumWork": 1,
+      "capacity": "short",
+      "allocator": "none",
+      "attempts": 0,
+      "reportedWork": 0,
+      "marker": false,
+      "sourceRetained": true,
+      "copy": "exact"
+    },
+    {
+      "maximumWork": 1,
+      "capacity": "exact",
+      "allocator": "null",
+      "attempts": 1,
+      "reportedWork": 1,
+      "marker": true,
+      "sourceRetained": true,
+      "copy": "exact"
+    }
+  ],
+  "spareSeed": {
+    "allocatedBytes": 0,
+    "deniedWork": 0,
+    "releaseWork": 1
+  },
+  "allocationRetirementCauses": [
+    "primary",
+    "admission",
+    "forwardedAdmission",
+    "scopedAdmission",
+    "forwardedQuote",
+    "scopedQuote",
+    "forwardedPost",
+    "scopedPost",
+    "forwardedCancel",
+    "scopedCancel",
+    "receipt",
+    "extent"
+  ]
 }

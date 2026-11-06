@@ -1,7 +1,7 @@
 //! 🔗️ Immutable original source/ref/binding/projection custody owns every native alias.
 pub use semio_framework_value_control_contract::*;
 pub use semio_framework_value_control_contract as retained_clone;
-pub use semio_framework_value_retirement::{OriginalRetirementOutcome,RetainedWorkOutcome,ErasedSnapshotRetirement,retirement,factory_ticket_demands,close_factory_ticket,RetirementSelection,select_factory_ticket,owned_retirement_birth_bytes,admit_owned_retirement};
+pub use semio_framework_value_retirement::{OriginalRetirementOutcome,OriginalRetirementPoll,OriginalRetirementControl,RetainedWorkOutcome,ErasedSnapshotRetirement,retirement,factory_ticket_demands,close_factory_ticket,RetirementSelection,select_factory_ticket,owned_retirement_birth_bytes,admit_owned_retirement};
 pub use semio_framework_value_shared_issuance as shared_issuance;
 use semio_framework_value_retirement::{RetireOwned,retirement::controlled::RetainedOwnerGate};
 use std::{mem::ManuallyDrop,sync::atomic::AtomicU64};
@@ -32,39 +32,42 @@ impl<'a,T:?Sized> RetainedCloneRef<'a,T>{
  pub fn project<U:?Sized,F>(self,discriminator:usize,project:F)->RetainedCloneRef<'a,U>where F:for<'source>FnOnce(&'source T)->&'source U{let value=project(self.value);RetainedCloneRef{value,lease:self.lease,projection:RetainedCloneProjection{parent:self.projection.address,address:value as*const U as*const()as usize,discriminator}}}
  /// 🪤️ Projects through a fallible accessor so an absent original child refuses instead of aborting.
  pub fn try_project<U:?Sized,E,F>(self,discriminator:usize,project:F)->Result<RetainedCloneRef<'a,U>,E>where F:for<'source>FnOnce(&'source T)->Result<&'source U,E>{let value=project(self.value)?;Ok(RetainedCloneRef{value,lease:self.lease,projection:RetainedCloneProjection{parent:self.projection.address,address:value as*const U as*const()as usize,discriminator}})}
- pub fn binding_copy_bytes(self)->usize{0}
+ pub fn binding_copy_bytes(self)->usize{RetainedCloneBinding::alias_copy_bytes()}
  /// ✅️ Checks the original issued source and exact projected path without granting a new alias.
  pub fn check_binding(self,binding:&Option<RetainedCloneBinding>)->Result<bool,ValueError>{self.binding_demand(binding).map(|demand|demand.is_none())}
  /// 🔒️ Validates one original lease and projected path without exposing private custody.
  pub fn matches_binding(self,binding:&RetainedCloneBinding)->bool{binding.lease.as_ref().is_some_and(|lease|lease.get().id==self.lease.get().id)&&binding.projection==self.projection}
  pub fn binding_demand(self,binding:&Option<RetainedCloneBinding>)->Result<Option<RetirementDemand>,ValueError>{if let Some(expected)=binding{if expected.lease.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"projected source binding already closing"))?.get().id!=self.lease.get().id||expected.projection!=self.projection{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original clone source or projected path changed"));}Ok(None)}else{Ok(Some(RetirementDemand{copy_bytes:self.binding_copy_bytes(),depth:1,..Default::default()}))}}
- pub fn bind(self,binding:&mut Option<RetainedCloneBinding>,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<RetainedCloneProgress>>{let mut work=0;let result=(||{
+ /// ⛽️ Validates the original binding before borrowing its defining alias increment quote.
+ pub fn binding_work_demand(self,binding:&Option<RetainedCloneBinding>)->Result<u64,ValueError>{if self.binding_demand(binding)?.is_none(){Ok(0)}else{self.lease.duplicate_work_demand()}}
+ pub fn bind(self,binding:&mut Option<RetainedCloneBinding>,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<Option<RetainedCloneProgress>>{let grant=effect.grant();let mut work=0;let result=(||{
   if let Some(expected)=binding{if expected.lease.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"projected source binding already closing"))?.get().id!=self.lease.get().id||expected.projection!=self.projection{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original clone source or projected path changed"));}return Ok(None);}
-  if grant.maximum_items==0||grant.maximum_copy_bytes<self.binding_copy_bytes()||grant.maximum_depth==0{return Ok(Some(Default::default()));}
-  let turn=self.lease.try_duplicate(grant);work=turn.work;let(alias,progress)=turn.result?;*binding=Some(RetainedCloneBinding::new(alias,self.projection));Ok(Some(progress))
+  if effect.maximum_work_units()<1||grant.maximum_items==0||grant.maximum_copy_bytes<self.binding_copy_bytes()||grant.maximum_depth==0{return Ok(Some(Default::default()));}
+  let turn=self.lease.try_duplicate(effect);work=turn.work;let(alias,mut progress)=turn.result?;*binding=Some(RetainedCloneBinding::new(alias,self.projection));progress.copied_bytes=self.binding_copy_bytes();Ok(Some(progress))
  })();RetainedWorkOutcome{result,work}}
 }
 impl<T:?Sized+Sync> RetainedCloneRef<'_,T>{
  /// 🧷️ Retains this exact issued source and projected path for resumed immutable work.
- pub fn retain_owned(self,grant:RetainedCloneGrant)->RetainedWorkOutcome<(RetainedOwnedProjection<T>,RetainedCloneProgress)>{unsafe{RetainedOwnedProjection::from_source(self,grant)}}
+ pub fn retain_owned(self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<(RetainedOwnedProjection<T>,RetainedCloneProgress)>{unsafe{RetainedOwnedProjection::from_source(self,effect)}}
 }
 fn close_query_busy()->ValueError{ValueError::literal(ValueRefusalKind::WorkLimit,"original close query already holds exclusive cursor custody")}
 pub struct RetainedCloneBinding{lease:ManuallyDrop<Option<shared_issuance::SealedShared<RetainedCloneLeaseOwner>>>,close:ManuallyDrop<Option<RetainedOwnerGate<retirement::controlled::ControlledRetirement<shared_issuance::SealedShared<RetainedCloneLeaseOwner>>>>>,projection:RetainedCloneProjection}
 impl RetainedCloneBinding{
- pub fn alias_copy_bytes()->usize{0}
+ pub fn alias_copy_bytes()->usize{shared_issuance::SealedShared::<RetainedCloneLeaseOwner>::duplicate_copy_bytes()+std::mem::size_of::<Self>()+std::mem::size_of::<Option<Self>>()}
  fn new(lease:shared_issuance::SealedShared<RetainedCloneLeaseOwner>,projection:RetainedCloneProjection)->Self{Self{lease:ManuallyDrop::new(Some(lease)),close:ManuallyDrop::new(None),projection}}
- pub fn close_one(binding:&mut Option<Self>,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome{
-  let Some(owner)=binding.as_mut()else{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}};if grant.maximum_items==0||grant.maximum_depth==0{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
-  if owner.close.is_none(){if let Some(lease)=owner.lease.take(){*owner.close=Some(RetainedOwnerGate::new(retirement::controlled::ControlledRetirement::new(lease).unwrap_or_else(|_|unreachable!("sealed projection retains its typed issuer"))));return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}}
-  let close=match owner.close.as_mut(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("close absent").into()),work:0}}.get_mut();if close.terminal_is_empty(){*owner.close=None;*binding=None;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}let result=close.step(grant);RetainedWorkOutcome{result,work:close.last_turn_work()}
+ pub fn close_one(binding:&mut Option<Self>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{
+  if binding.is_none(){return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0})}let grant=effect.grant();let demand=match Self::close_demand(binding,grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})};let work=match Self::close_work_demand(binding,grant.maximum_copy_bytes){Ok(work)=>work,Err(error)=>return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})};if effect.maximum_work_units()<work||!retained_clone::retained_clone_grant_admits(grant,demand){return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}
+  let Some(owner)=binding.as_mut()else{return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0})};if grant.maximum_items==0||grant.maximum_depth==0{return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}
+  if owner.close.is_none()&&owner.lease.is_some(){match effect.performed(1){Ok(true)=>{},Ok(false)=>return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original binding close exceeded its work authority").into()),work:1}),Err(error)=>return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:1})}let lease=owner.lease.take().expect("original lease checked");*owner.close=Some(RetainedOwnerGate::new(retirement::controlled::ControlledRetirement::new(lease).unwrap_or_else(|_|unreachable!("sealed projection retains its typed issuer"))));return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1})}
+  let close=match owner.close.as_mut(){Some(v)=>v,None=>return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::invariant("close absent").into()),work:0})}.get_mut();if close.terminal_is_empty(){match effect.performed(1){Ok(true)=>{},Ok(false)=>return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original binding close exceeded its work authority").into()),work:1}),Err(error)=>return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:1})}*owner.close=None;*binding=None;return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1})}close.step(effect)
  }
  /// ⛽️ Quotes the actual original binding closure action.
  pub fn close_work_demand(binding:&Option<Self>,body:usize)->Result<u64,ValueError>{binding.as_ref().map_or(Ok(0),|owner|owner.close.as_ref().map_or(Ok(1),|gate|{let owner=gate.try_lock().map_err(|_|close_query_busy())?;if owner.terminal_is_empty(){Ok(1)}else{owner.next_computational_work(body)}}))}
- pub fn copy_demand(binding:&Option<Self>)->Result<usize,ValueError>{binding.as_ref().and_then(|owner|owner.close.as_ref()).map_or(Ok(0),|owner|owner.try_lock().map_err(|_|close_query_busy())?.next_copy_byte_demand())}
+ pub fn copy_demand(binding:&Option<Self>)->Result<usize,ValueError>{Self::close_demand(binding,0).map(|demand|demand.copy_bytes)}
  pub fn capacity_demand(binding:&Option<Self>,body:usize)->Result<usize,ValueError>{binding.as_ref().and_then(|owner|owner.close.as_ref()).map_or(Ok(0),|owner|owner.try_lock().map_err(|_|close_query_busy())?.next_capacity_byte_demand(body))}
  pub fn release_demand(binding:&Option<Self>)->Result<usize,ValueError>{binding.as_ref().and_then(|owner|owner.close.as_ref()).map_or(Ok(0),|owner|owner.try_lock().map_err(|_|close_query_busy())?.next_release_byte_demand())}
  pub fn depth_demand(binding:&Option<Self>)->Result<usize,ValueError>{binding.as_ref().map_or(Ok(0),|owner|owner.close.as_ref().map_or(Ok(1),|owner|{let owner=owner.try_lock().map_err(|_|close_query_busy())?;if owner.terminal_is_empty(){Ok(1)}else{owner.next_depth_demand()}}))}
- pub fn close_demand(binding:&Option<Self>,body:usize)->Result<RetirementDemand,ValueError>{binding.as_ref().map_or(Ok(Default::default()),|owner|owner.close.as_ref().map_or(Ok(RetirementDemand{depth:1,..Default::default()}),|owner|{let owner=owner.try_lock().map_err(|_|close_query_busy())?;if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{owner.selected_demand(body)}}))}
+ pub fn close_demand(binding:&Option<Self>,body:usize)->Result<RetirementDemand,ValueError>{binding.as_ref().map_or(Ok(Default::default()),|owner|owner.close.as_ref().map_or(Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<shared_issuance::SealedShared<RetainedCloneLeaseOwner>>>()+std::mem::size_of::<Option<RetainedOwnerGate<retirement::controlled::ControlledRetirement<shared_issuance::SealedShared<RetainedCloneLeaseOwner>>>>>(),depth:1,..Default::default()}),|gate|{let current=gate.try_lock().map_err(|_|close_query_busy())?;if current.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<RetainedOwnerGate<retirement::controlled::ControlledRetirement<shared_issuance::SealedShared<RetainedCloneLeaseOwner>>>>>()+std::mem::size_of::<Option<Self>>(),depth:1,..Default::default()})}else{current.selected_demand(body)}}))}
  pub fn terminal_is_empty(&self)->bool{self.lease.is_none()&&self.close.is_none()}
 }
 impl Drop for RetainedCloneBinding{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"projected original source requires genuine alias closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.lease);ManuallyDrop::drop(&mut self.close);}}}}
@@ -76,19 +79,22 @@ impl<A:RetireOwned+Sync> RetainedCloneBorrowAuthority<A>{
  pub fn admission(authority:A)->RetainedCloneBorrowAuthorityAdmission<A>{RetainedCloneBorrowAuthorityAdmission{source:RetainedCloneSource::admission_owned(authority,())}}
  pub fn borrow<T:?Sized,F>(&self,discriminator:usize,project:F)->RetainedCloneRef<'_,T>where F:for<'source>FnOnce(&'source A)->&'source T{self.source.borrow().project(discriminator,project)}
  /// 🧾️ Borrows the one actual source close quote with every independent physical currency.
+ /// ⛽️ Quotes the same original source owner's selected computational work.
+ pub fn next_close_work_demand(&self,body:usize)->Result<u64,ValueError>{self.source.next_close_work_demand(body)}
  pub fn next_close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.source.next_close_demand(body)}
  pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{self.source.next_close_copy_byte_demand()}
  pub fn next_close_capacity_byte_demand(&self,work:usize)->Result<usize,ValueError>{self.source.next_close_capacity_byte_demand(work)}
  pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{self.source.next_close_release_byte_demand()}
  pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{self.source.next_close_depth_demand()}
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome{self.source.close_step(grant)}
+ pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let grant=effect.grant();self.source.close_step(&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"))}
+ pub fn next_take_work_demand(&self,body:usize)->Result<u64,ValueError>{self.source.next_take_work_demand(body)}
  pub fn next_take_copy_byte_demand(&self)->Result<usize,ValueError>{self.source.next_take_copy_byte_demand()}
  pub fn next_take_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{self.source.next_take_capacity_byte_demand(body)}
  pub fn next_take_release_byte_demand(&self)->Result<usize,ValueError>{self.source.next_take_release_byte_demand()}
  pub fn next_take_depth_demand(&self)->Result<usize,ValueError>{self.source.next_take_depth_demand()}
  /// 🎯️ Quotes the one actual original-authority return with every independent physical currency.
  pub fn next_take_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.source.next_take_demand(body)}
- pub fn take_authority(&mut self,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome<RetainedCloneSourceTake<A>>{self.source.take_authority(grant)}
+ pub fn take_authority(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll<RetainedCloneSourceTake<A>>{self.source.take_authority(effect)}
  pub fn try_authority(&self)->Result<&A,ValueError>{self.source.try_authority()}
  pub fn terminal_is_empty(&self)->bool{self.source.terminal_is_empty()}
 }
@@ -122,11 +128,13 @@ pub use clone_close::{RetainedCloneClose,RetainedEmptyOwner,RetainedCloseSelecti
 pub struct RetainedCloneBorrowAuthorityAdmission<A:RetireOwned+Sync>{source:RetainedCloneSourceAdmission<A,A>}
 impl<A:RetireOwned+Sync> RetainedCloneBorrowAuthorityAdmission<A>{
  pub fn next_demand(&self)->Result<RetirementDemand,ValueError>{self.source.next_demand()}
+ /// ⛽️ Borrows the actual current source handback work quote.
+ pub fn return_work_demand(&self)->Result<u64,ValueError>{self.source.return_work_demand()}
  pub fn next_return_demand(&self)->Result<RetirementDemand,ValueError>{self.source.next_return_demand()}
  /// 🪙️ Writes actual allocator extent into the caller's retained marker before publishing the outcome.
- pub fn advance(&mut self,g:RetainedCloneGrant,actual:&mut Option<usize>)->RetainedWorkOutcome{self.source.advance(g,actual)}
+ pub fn advance(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{self.source.advance(effect)}
  pub fn take_output(&mut self,output:&mut Option<RetainedCloneBorrowAuthority<A>>,g:RetainedCloneGrant)->RetainedWorkOutcome{if output.is_some(){return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original authority output place is occupied")),work:0}}let mut source=None;let turn=self.source.take_output(&mut source,g);if let Some(source)=source{*output=Some(RetainedCloneBorrowAuthority{source});}turn}
- pub fn return_inputs(&mut self,output:&mut Option<(A,())>,g:RetainedCloneGrant)->RetainedWorkOutcome{self.source.return_inputs(output,g)}
+ pub fn return_inputs(&mut self,output:&mut Option<(A,())>,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome{self.source.return_inputs(output,effect)}
  pub fn terminal_is_empty(&self)->bool{self.source.terminal_is_empty()}
 }
 

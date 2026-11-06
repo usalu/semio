@@ -5,7 +5,7 @@ use std::mem::ManuallyDrop;
 struct OwnedTurnWallet{fuel:u64,deadline:u64,grant:RetainedCloneGrant,clock:fn()->Option<u64>,clock_binding:Option<u64>,epoch:u64,clock_observation:ClockStride,payload_page_granted:bool,stage:&'static str}
 
 /// 🧳️ See `README.md`.
-pub struct OriginalOwnedCallerTurn{binding:OriginalSourceBinding,parent_identity:usize,active:bool,ready:bool,source:ManuallyDrop<Option<OriginalCallerSourceParent>>,loan:ManuallyDrop<Option<OriginalCallerSourceLoan>>,wallet:Option<OwnedTurnWallet>,sequence:u64,recipient:RetainedCloneProgress,issued:bool,initial_fuel:u64,work_units_spent:u128,receiving_valid:bool,initial_grant:RetainedCloneGrant,deadline:u64,epoch:u64,clock:fn()->Option<u64>}
+pub struct OriginalOwnedCallerTurn{dispatch:super::OriginalSourceTurn,binding:OriginalSourceBinding,parent_identity:usize,active:bool,ready:bool,source:ManuallyDrop<Option<OriginalCallerSourceParent>>,loan:ManuallyDrop<Option<OriginalCallerSourceLoan>>,wallet:Option<OwnedTurnWallet>,sequence:u64,recipient:RetainedCloneProgress,issued:bool,initial_fuel:u64,work_units_spent:u128,receiving_valid:bool,initial_grant:RetainedCloneGrant,deadline:u64,epoch:u64,clock:fn()->Option<u64>}
 
 impl OriginalCallerSourceParent{
     /// 🎟️ See `README.md`.
@@ -24,7 +24,7 @@ impl OriginalCallerSourceParent{
 }
 
 impl OriginalOwnedCallerTurn{
-    pub(crate) fn from_admitted_source(source:OriginalCallerSourceParent,cx:&StepContext<'_>,parent_identity:usize,epoch:u64)->Self{Self{binding:OriginalSourceBinding::borrow(cx),parent_identity,active:true,ready:false,source:ManuallyDrop::new(Some(source)),loan:ManuallyDrop::new(None),wallet:None,sequence:0,recipient:Default::default(),issued:false,initial_fuel:0,work_units_spent:0,receiving_valid:true,initial_grant:RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0},deadline:cx.deadline_us(),epoch,clock:cx.clock_source()}}
+    pub(crate) fn from_admitted_source(source:OriginalCallerSourceParent,cx:&StepContext<'_>,parent_identity:usize,epoch:u64,dispatch:super::OriginalSourceTurn)->Self{Self{dispatch,binding:OriginalSourceBinding::borrow(cx),parent_identity,active:true,ready:false,source:ManuallyDrop::new(Some(source)),loan:ManuallyDrop::new(None),wallet:None,sequence:0,recipient:Default::default(),issued:false,initial_fuel:0,work_units_spent:0,receiving_valid:true,initial_grant:RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0},deadline:cx.deadline_us(),epoch,clock:cx.clock_source()}}
     fn post_control(cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{receive_original_retained_work(cx,semio_framework_value_retained_clone::RetainedWorkOutcome::<_,ValueError>{result:Ok(super::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1})?;Ok(())}
     pub fn admission_is_ready(&self)->bool{self.ready}
     pub fn admission_is_empty(&self)->bool{!self.active&&self.source.is_none()&&self.loan.is_none()}
@@ -32,6 +32,8 @@ impl OriginalOwnedCallerTurn{
     /// ♻️ See `README.md`.
     pub fn close_admission_step(&mut self,parent:&OriginalCallerSourceParent,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{parent.validate_borrowed_context(cx)?;if self.parent_identity!=parent.source_identity()?||!self.binding.matches(cx){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"partial owned async return requires its actual source").into())}self.close_source(parent,cx)}
     /// 📏️ See `README.md`.
+    /// 🎫️ Lends this actual parked dispatch while its original Source and escrow remain owned.
+    pub fn source_turn_witness(&self)->Result<super::OriginalSourceTurnWitness<'_>,ValueError>{if !self.active{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original owned dispatch has already returned"))}Ok(self.dispatch.witness())}
     pub fn original_grant(&self)->RetainedCloneGrant{self.initial_grant}
     pub fn original_fuel(&self)->u64{self.initial_fuel}
     pub fn original_deadline_us(&self)->u64{self.deadline}
@@ -43,7 +45,7 @@ impl OriginalOwnedCallerTurn{
         let original=if self.issued||!self.ready{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"owned original turn cannot issue its wallet twice").into())}else{
             self.issued=true;let wallet=self.wallet.take().expect("one sealed original wallet remains before its only issue");let budget=StepBudget{fuel:wallet.fuel,deadline_us:wallet.deadline,retained:wallet.grant};
             let source=self.source.as_ref().expect("paid original source remains owned through its context");
-            match source.borrow_context(budget,wallet.clock,&mut self.sequence,&mut self.recipient){
+            match source.borrow_context_for_turn(&self.dispatch,budget,wallet.clock,&mut self.sequence,&mut self.recipient){
                 Err(error)=>{self.wallet=Some(wallet);Err(error.into())}
                 Ok(mut cx)=>{
                     cx.clock.set(wallet.clock_observation);cx.payload_page_granted=wallet.payload_page_granted;cx.stage=wallet.stage;let bound=cx.bind_original_source_epoch(wallet.epoch).and_then(|()|wallet.clock_binding.map_or(Ok(()),|binding|cx.bind_original_clock_binding(binding)));let identity=OriginalRetainedLoanIdentity::capture(&cx);let cancel=cx.original_cancel_token()as*const _ as usize;

@@ -20,7 +20,7 @@ impl<'de, T: Deserialize<'de>, const N: usize> Visitor<'de> for ListVisitor<T, N
         while let Some(value) = sequence.next_element()? {
             while !output.has_reserved_slot() {
                 let bytes = output.next_allocation_bytes().map_err(A::Error::custom)?;
-                output.reserve_one(bytes).map_err(|error| A::Error::custom(error.refusal()))?;
+                output.reserve_page(bytes).map_err(|error| A::Error::custom(error.refusal()))?;
             }
             output.push_reserved(value).map_err(|_| A::Error::custom("paged array rejected its admitted slot"))?;
         }

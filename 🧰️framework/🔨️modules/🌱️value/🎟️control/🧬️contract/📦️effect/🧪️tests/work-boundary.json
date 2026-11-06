@@ -1,0 +1,30 @@
+[
+  {
+    "same": true,
+    "start": 0,
+    "end": 3,
+    "allowed": true,
+    "delta": 3
+  },
+  {
+    "same": true,
+    "start": 1,
+    "end": 3,
+    "allowed": true,
+    "delta": 2
+  },
+  {
+    "same": false,
+    "start": 1,
+    "end": 3,
+    "allowed": false,
+    "delta": null
+  },
+  {
+    "same": true,
+    "start": 3,
+    "end": 1,
+    "allowed": false,
+    "delta": null
+  }
+]

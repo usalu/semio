@@ -1,6 +1,6 @@
 //! 🧪️ The original record helper publishes only after admitted physical retirement.
 use super::*;
-use semio_framework_value::native_encoding::{NativeEncodeControl,NativeEncodeRetirementRecipient,NativeEncodeAllocation,NativeEncodeWorkRecipient};
+use semio_framework_value::native_encoding::{NativeEncodeControl,NativeEncodeRetirementRecipient,NativeAllocationRequest,NativeEncodeWorkRecipient};
 use semio_framework_dsl_record::{RecordSpec,RecordLayout,FieldSpec,Shape,FieldValue,NativeSchemaControl,RecordFields};
 struct Loan(u64);
 impl NativeEncodeWorkRecipient for Loan{fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=self.0))}fn committed(&mut self,_actual:u64)->Result<(),ValueError>{Ok(())}}
@@ -14,7 +14,7 @@ fn original_record_helper_preserves_grant_output_and_pending_retirement(){
  let neutral:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🚪️control/🔣️.json")).unwrap();let literal=neutral["literal"].as_str().unwrap();let source=literal.as_ptr();
  for row in neutral["cases"].as_array().unwrap(){
   let mut grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(neutral["grant"].clone()).unwrap();grant.maximum_release_bytes=row["release"].as_u64().unwrap()as usize;
-  let mut recipient=NativeEncodeRetirementRecipient::new();let ledger=std::sync::atomic::AtomicUsize::new(0);let mut allocation=|request:NativeEncodeAllocation|{assert_eq!(request.owned_bytes,ledger.load(std::sync::atomic::Ordering::Relaxed));ledger.store(request.next_owned_bytes,std::sync::atomic::Ordering::Relaxed);Ok(())};let mut progress=|_|true;let mut native=NativeEncodeControl::new_forwarded(neutral["nativeBytes"].as_u64().unwrap()as usize,&mut progress,&mut allocation);native.install_retirement_recipient(&mut recipient).unwrap();let mut loan=Loan(row["work"].as_u64().unwrap_or_else(||neutral["workLimit"].as_u64().unwrap()));let mut callback=|_|true;let mut sql=SqliteSnapshotControl::new(&mut callback,semio_framework_io_sqlite_snapshot::SqliteDatabaseLimits::default());let producer=RecordSpecProducer{ordinary,decoding:decode_schema,encoding:encode_schema};
+  let mut recipient=NativeEncodeRetirementRecipient::new();let ledger=std::sync::atomic::AtomicUsize::new(0);let mut allocation=|request:NativeAllocationRequest|{assert_eq!(request.owned_bytes,ledger.load(std::sync::atomic::Ordering::Relaxed));ledger.store(request.next_owned_bytes,std::sync::atomic::Ordering::Relaxed);Ok(())};let mut progress=|_|true;let mut native=NativeEncodeControl::new_forwarded(neutral["nativeBytes"].as_u64().unwrap()as usize,&mut progress,&mut allocation);native.install_retirement_recipient(&mut recipient).unwrap();let mut loan=Loan(row["work"].as_u64().unwrap_or_else(||neutral["workLimit"].as_u64().unwrap()));let mut callback=|_|true;let mut sql=SqliteSnapshotControl::new(&mut callback,semio_framework_io_sqlite_snapshot::SqliteDatabaseLimits::default());let producer=RecordSpecProducer{ordinary,decoding:decode_schema,encoding:encode_schema};
   native.with_work_recipient(&mut loan,|native|{
    let mut owner=semio_framework_io_control::NativeSnapshotEncodeOwner::new(native,grant);
    let result=encode_sqlite_snapshot_record_native(SnapshotEncoding::Text,neutral["envelope"].as_str().unwrap(),producer,&mut |output,owner|{

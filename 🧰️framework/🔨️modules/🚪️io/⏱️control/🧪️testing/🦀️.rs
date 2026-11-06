@@ -4,7 +4,7 @@ use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,Na
 
 /// 🧾️ Original identity and actual cleanup effects of a completed test scope.
 #[derive(Clone,Copy,Debug)]
-pub struct DecodeScopeReceipt{pub ledger:u64,pub recipient:u64,pub semantic_owned_bytes:usize,pub retirement_steps:usize,pub retirement:RetainedCloneProgress}
+pub struct DecodeScopeReceipt{pub ledger:semio_framework_value_control_contract::NativeAllocationIdentity,pub recipient:u64,pub semantic_owned_bytes:usize,pub retirement_steps:usize,pub retirement:RetainedCloneProgress}
 
 struct Scope<'a>{control:Option<NativeDecodeControl<'a>>,grant:RetainedCloneGrant,receipt:DecodeScopeReceipt}
 impl Scope<'_>{

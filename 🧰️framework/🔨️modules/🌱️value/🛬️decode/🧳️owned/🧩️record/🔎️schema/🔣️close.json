@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "denied",
+    "deniedWork",
+    "cleared",
+    "clearedWork",
+    "stock",
+    "startWork"
+  ],
+  "properties": {
+    "denied": {
+      "const": "completedNoProgress"
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "cleared": {
+      "const": "backingFrame"
+    },
+    "clearedWork": {
+      "const": 1
+    },
+    "stock": {
+      "const": {
+        "items": 64,
+        "copyBytes": 4096,
+        "capacityBytes": 4096,
+        "releaseBytes": 4096,
+        "depth": 16,
+        "fuel": 64,
+        "maximumTurns": 64
+      }
+    },
+    "startWork": {
+      "const": 1
+    }
+  }
+}

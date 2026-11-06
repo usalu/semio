@@ -6,8 +6,8 @@
     "cases",
     "cancelCuts",
     "stock",
-    "ownershipCopyBytes",
-    "deniedWork"
+    "deniedWork",
+    "publicationFields"
   ],
   "properties": {
     "cases": {
@@ -60,11 +60,14 @@
         "fuel": 100000
       }
     },
-    "ownershipCopyBytes": {
-      "const": 0
-    },
     "deniedWork": {
       "const": 0
+    },
+    "publicationFields": {
+      "const": [
+        "mapOption",
+        "setOption"
+      ]
     }
   }
 }

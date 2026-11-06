@@ -1,0 +1,114 @@
+{
+  "cases": [
+    {
+      "name": "before producer entry",
+      "authority": 1,
+      "turn": 1,
+      "units": 3,
+      "owned": 8,
+      "entered": false,
+      "reply": "none",
+      "expected": "invoke",
+      "slot": 1
+    },
+    {
+      "name": "entered before reply",
+      "authority": 1,
+      "turn": 1,
+      "units": 3,
+      "owned": 8,
+      "entered": true,
+      "reply": "none",
+      "expected": "pending",
+      "slot": 1
+    },
+    {
+      "name": "recorded acceptance",
+      "authority": 1,
+      "turn": 1,
+      "units": 3,
+      "owned": 8,
+      "entered": true,
+      "reply": "accepted",
+      "expected": "accepted",
+      "slot": 1
+    },
+    {
+      "name": "recorded refusal",
+      "authority": 1,
+      "turn": 1,
+      "units": 3,
+      "owned": 8,
+      "entered": true,
+      "reply": "refused",
+      "expected": "refused",
+      "slot": 1
+    },
+    {
+      "name": "foreign producer",
+      "authority": 2,
+      "turn": 1,
+      "units": 3,
+      "owned": 8,
+      "entered": true,
+      "reply": "refused",
+      "expected": "foreign",
+      "slot": 1
+    },
+    {
+      "name": "foreign dispatch",
+      "authority": 1,
+      "turn": 2,
+      "units": 3,
+      "owned": 8,
+      "entered": false,
+      "reply": "none",
+      "expected": "foreign",
+      "slot": 1
+    },
+    {
+      "name": "changed work",
+      "authority": 1,
+      "turn": 1,
+      "units": 4,
+      "owned": 8,
+      "entered": false,
+      "reply": "none",
+      "expected": "foreign",
+      "slot": 1
+    },
+    {
+      "name": "changed physical snapshot",
+      "authority": 1,
+      "turn": 1,
+      "units": 3,
+      "owned": 9,
+      "entered": false,
+      "reply": "none",
+      "expected": "foreign",
+      "slot": 1
+    },
+    {
+      "name": "reply without producer entry",
+      "authority": 1,
+      "turn": 1,
+      "units": 3,
+      "owned": 8,
+      "entered": false,
+      "reply": "accepted",
+      "expected": "invalid",
+      "slot": 1
+    },
+    {
+      "name": "replacement slot between original producer actions",
+      "authority": 1,
+      "turn": 1,
+      "units": 3,
+      "owned": 8,
+      "entered": false,
+      "reply": "none",
+      "expected": "foreign",
+      "slot": 2
+    }
+  ]
+}

@@ -77,7 +77,7 @@ pub fn reconstruct(d:&SqliteDatabase,tables:&Tables,c:&mut SqliteSnapshotControl
  let maximum=c.reconstruction_remaining_bytes()?;let mut owned=0;
  let result=c.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,checkpoint,allocation|{
   let mut progress=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);
-  let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(maximum.min(remaining),&mut progress,&mut native_allocation);
+  let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeAllocationRequest|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(maximum.min(remaining),&mut progress,&mut native_allocation);
   let result=(||{
    let bitmaps=&d.table(tables.bitmap)?.rows;let pixels=&d.table(tables.pixel)?.rows;let literals=&d.table(tables.literal)?.rows;
    let mut owners=native.allocate_vec(bitmaps.len())?;native.begin_stage(bitmaps.len())?;for row in bitmaps{owners.push(row.rowid);native.step()?;}sort(&mut owners,|owner|*owner,&mut native)?;

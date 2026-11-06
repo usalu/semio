@@ -22,23 +22,23 @@ async fn a_log_without_composition_writes_no_composition_record() {
 }
 
 struct FlaggedTurn {
-    yielding: std::cell::Cell<bool>,
-    cancelled: std::cell::Cell<bool>,
-    work: std::cell::Cell<u64>,
+    yielding: std::sync::atomic::AtomicBool,
+    cancelled: std::sync::atomic::AtomicBool,
+    work: std::sync::atomic::AtomicU64,
 }
 
 impl FlaggedTurn {
     fn new() -> Self {
-        Self { yielding: std::cell::Cell::new(false), cancelled: std::cell::Cell::new(false), work: std::cell::Cell::new(1_000_000) }
+        Self { yielding: std::sync::atomic::AtomicBool::new(false), cancelled: std::sync::atomic::AtomicBool::new(false), work: std::sync::atomic::AtomicU64::new(1_000_000) }
     }
 }
 
 impl RetainedHistoryTurn for FlaggedTurn {
     fn should_yield(&self) -> bool {
-        self.yielding.get()
+        self.yielding.load(std::sync::atomic::Ordering::Relaxed)
     }
     fn is_cancelled(&self) -> bool {
-        self.cancelled.get()
+        self.cancelled.load(std::sync::atomic::Ordering::Relaxed)
     }
 }
 
@@ -53,10 +53,10 @@ fn retained_corpus() -> (serde_json::Value, protocol::codec::HistoryReadLimits, 
 
 struct TurnWork(u64);
 impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for TurnWork{fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|work|work<=self.0.min(4096)))}}
-fn settle_work(turn:&FlaggedTurn,work:u64){assert!(work<=turn.work.get().min(4096));turn.work.set(turn.work.get()-work)}
+fn settle_work(turn:&FlaggedTurn,work:u64){assert!(work<=turn.work.load(std::sync::atomic::Ordering::Relaxed).min(4096));turn.work.store(turn.work.load(std::sync::atomic::Ordering::Relaxed)-work,std::sync::atomic::Ordering::Relaxed)}
 
 fn paid_turn(decode: &mut RetainedHistoryDecode, bytes: &[u8], turn: &FlaggedTurn, grant: RetainedCloneGrant, history: &mut Option<HistoryLog>) -> RetainedHistorySourceStep {
-    let outcome = decode.step(bytes, turn, grant, history, &mut TurnWork(turn.work.get()));
+    let outcome = decode.step(bytes, turn, grant, history, &mut TurnWork(turn.work.load(std::sync::atomic::Ordering::Relaxed)));
     settle_work(turn,outcome.work);
     if turn.should_yield()||turn.is_cancelled(){assert_eq!(outcome.work,0)}
     let step=outcome.result.expect("advance retained decode");
@@ -85,7 +85,7 @@ fn close_all(decode: &mut RetainedHistoryDecode, bytes: &[u8], grant: RetainedCl
         if decode.terminal_is_empty() {
             return;
         }
-        let outcome = decode.close_step(bytes, &RetainedHistoryUninterrupted, grant, &mut TurnWork(turn.work.get()));
+        let outcome = decode.close_step(bytes, &RetainedHistoryUninterrupted, grant, &mut TurnWork(turn.work.load(std::sync::atomic::Ordering::Relaxed)));
         settle_work(turn,outcome.work);
         let step=outcome.result.expect("close retained decode");
         assert!(step.progress().fits(grant), "every close receipt fits the supplied grant");
@@ -108,11 +108,11 @@ async fn retained_history_decode_yields_across_granted_turns_and_returns_the_exa
         turns += 1;
         assert!(turns < 1_000_000, "retained history decode did not settle");
         if turns % 3 == 0 {
-            turn.yielding.set(true);
+            turn.yielding.store(true,std::sync::atomic::Ordering::Relaxed);
             let before = decode.consumed_end();
             assert_eq!(paid_turn(&mut decode, &bytes, &turn, grant, &mut history), RetainedHistorySourceStep::Blocked);
             assert_eq!(decode.consumed_end(), before, "a yielded turn consumes no original byte");
-            turn.yielding.set(false);
+            turn.yielding.store(false,std::sync::atomic::Ordering::Relaxed);
             yielded += 1;
         }
         match paid_turn(&mut decode, &bytes, &turn, grant, &mut history) {
@@ -142,7 +142,7 @@ async fn retained_history_decode_closes_every_original_owner_after_a_cancelled_t
                 break;
             }
         }
-        turn.cancelled.set(true);
+        turn.cancelled.store(true,std::sync::atomic::Ordering::Relaxed);
         if !decode.terminal_is_empty() && history.is_none() {
             assert_eq!(paid_turn(&mut decode, &bytes, &turn, grant, &mut history), RetainedHistorySourceStep::Blocked, "a cancelled turn admits no further original work");
         }

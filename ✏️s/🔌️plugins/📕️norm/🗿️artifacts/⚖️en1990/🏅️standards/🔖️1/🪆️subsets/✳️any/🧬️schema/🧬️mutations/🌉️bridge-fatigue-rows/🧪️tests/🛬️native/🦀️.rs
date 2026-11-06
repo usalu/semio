@@ -1,9 +1,10 @@
 //! 🛬️ The real bridge SLS leaf receives its committed payload under original decoding custody.
+use semio_framework_value_native_receiving_original::NativeReceivingOriginal;
 use crate::insert_bridge_sls::InsertBridgeSls;
 use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation};
 use semio_framework_value::{DslValue,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome};
 use semio_framework_value::retained_clone::{RetainedCloneSource,RetainedCloneSourceAdmission,RetainedCloneClose};
-use semio_framework_value_native_owned::{OriginalReceivingPrimary,native_decoding::owned::NativeReceivingOriginal};
+use semio_framework_value_native_owned::{OriginalReceivingPrimary};
 
 #[global_allocator]
 static ALLOCATOR:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

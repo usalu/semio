@@ -7,7 +7,7 @@ macro_rules! field{($owner:ident,$ty:ident,$index:tt)=>{impl<A:RetainedEquality,
  fn advance(&mut self,l:&(A,B),r:&(A,B),g:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedEqualityStep>{<<$ty as RetainedEquality>::Equality as RetainedEqualityCursor<$ty>>::advance(&mut self.cursor,&l.$index,&r.$index,g)}
  fn begin_close(&mut self){<<$ty as RetainedEquality>::Equality as RetainedEqualityCursor<$ty>>::begin_close(&mut self.cursor)}
  fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{<<$ty as RetainedEquality>::Equality as RetainedEqualityCursor<$ty>>::close_demand(&self.cursor,body)}
- fn close_step(&mut self,g:RetainedCloneGrant)->crate::RetainedWorkOutcome{<<$ty as RetainedEquality>::Equality as RetainedEqualityCursor<$ty>>::close_step(&mut self.cursor,g)}
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome{let g=effect.grant();<<$ty as RetainedEquality>::Equality as RetainedEqualityCursor<$ty>>::close_step(&mut self.cursor,&mut effect.reborrow(g,effect.maximum_work_units()).expect("retirement child exceeds original effect"))}
  fn terminal_is_empty(&self)->bool{<<$ty as RetainedEquality>::Equality as RetainedEqualityCursor<$ty>>::terminal_is_empty(&self.cursor)}
 }};}
 field!(First,A,0);field!(Second,B,1);

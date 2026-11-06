@@ -36,9 +36,9 @@ impl<T:RetireOwned+Sync> RetireOwned for SnapshotReadSourceStaging<T>{
 }
 impl<T:RetireOwned+Sync> RetirementCursor for StagingCursor<T>{
  fn next_demand(&self,_body:usize)->Result<RetirementDemand,ValueError>{if self.staging.is_staged(){self.staging.next_demand()}else{Ok(RetirementDemand{depth:usize::from(!self.terminal_is_empty()),..Default::default()})}}
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();
   if self.staging.is_staged(){
-   let turn=self.staging.close_step(&mut self.base,&mut self.source,grant);
+   let turn=self.staging.close_step(&mut effect.reborrow(&mut self.base,&mut self.source,grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"));
    return match turn.result{Ok(step)=>RetirementStep::Progress(step.progress(),turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)};
   }
   if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}

@@ -1,0 +1,34 @@
+[
+  {
+    "name": "no items",
+    "items": 0,
+    "capacity": 64,
+    "required": 64,
+    "work": 1,
+    "admitted": false
+  },
+  {
+    "name": "short capacity",
+    "items": 1,
+    "capacity": 63,
+    "required": 64,
+    "work": 1,
+    "admitted": false
+  },
+  {
+    "name": "no work",
+    "items": 1,
+    "capacity": 64,
+    "required": 64,
+    "work": 0,
+    "admitted": false
+  },
+  {
+    "name": "full grant",
+    "items": 1,
+    "capacity": 64,
+    "required": 64,
+    "work": 1,
+    "admitted": true
+  }
+]

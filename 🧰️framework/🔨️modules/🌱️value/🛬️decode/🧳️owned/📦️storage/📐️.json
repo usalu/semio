@@ -5,9 +5,13 @@
   ],
   "bytes": 16,
   "deniedWork": 0,
+  "preflight": "completedNoProgress",
   "reserveWork": 1,
   "initializeWork": 1,
   "releaseWork": 1,
+  "releaseFields": [
+    "backingPointer"
+  ],
   "nullWork": 1,
   "cachedWork": 0,
   "stock": {
@@ -28,11 +32,31 @@
     "derived",
     "tuple"
   ],
-  "initializeCopyBytes": 0,
   "takeIntoWork": 1,
   "liveReleaseWork": 0,
   "opaqueConstructors": false,
   "moveText": "original🧳",
   "occupiedOutputWork": 0,
-  "nullKind": "AllocationFailed"
+  "nullKind": "AllocationFailed",
+  "reserveFields": [
+    "backingPointer"
+  ],
+  "zeroSizedAttempt": false,
+  "seedFields": [
+    "receiverHeader",
+    "initializedFlag"
+  ],
+  "boxPublicationFields": [
+    "backingPointer",
+    "initializedFlag",
+    "outputBoxOption"
+  ],
+  "occupiedMarkerWork": 0,
+  "overrunActual": 2,
+  "overrunKind": "WorkLimit",
+  "moveFields": [
+    "optionSlot",
+    "typedBody",
+    "initializedFlag"
+  ]
 }

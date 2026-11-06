@@ -73,4 +73,6 @@ export function parseIoRoute(value: unknown): IoRoute {
 }
 
 /** ⚠️ Exposes the single controlled IO cause owner through the neutral vocabulary. */
-export {IoError,encodeIoErrorControlled,decodeIoErrorControlled} from "./⚠️refusal/🟦️.ts";
+export {IoError,NativeSnapshotFailure,encodeIoErrorControlled,decodeIoErrorControlled} from "./⚠️refusal/🟦️.ts";
+
+export type {NativeSnapshotCause,NativeSnapshotAllocationFailure,NativeSnapshotFailureParts,NativeEncodeAllocationOutcome,NativeEncodeEffectFailure,NativeAllocationFailure,NativeAllocationRequest,NativeDecodeAllocationOutcome,OriginalReceivingPrimary,OriginalReceivingRetirementFailure,ValueErrorRetainedProgress} from "./⚠️refusal/🟦️.ts";

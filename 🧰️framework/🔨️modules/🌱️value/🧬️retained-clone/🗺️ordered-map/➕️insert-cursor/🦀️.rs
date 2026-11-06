@@ -353,20 +353,20 @@ impl<K: BoundedOrd + RetireOwned, V: RetireOwned+Sync> RetainedOrderedMapInsertC
     pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
     pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.release_bytes)}
     pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.depth)}
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> crate::RetainedWorkOutcome<RetainedCloneStep, ValueError> {let mut work=0;let result=(||{
+    pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<RetainedCloneStep, ValueError> {let grant=effect.grant();let mut work=0;let result=(||{
         if !retained_clone_grant_admits(grant,self.close_demands(grant.maximum_copy_bytes)?) {return Ok(RetainedCloneStep::Progress(Default::default()));}
         let state=&mut *self.state;
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !state.closing { return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "ordered-map insertion must begin close before retiring ownership")); }
-        if !state.lookup.terminal_is_empty(){state.lookup.begin_close();return {let turn=state.lookup.close_step(grant);work+=turn.work;turn.result};}
-        if !state.close.is_empty() { return {let turn=state.close.step_granted(grant);work+=turn.work;turn.result}; }
-        if let Some(step) = {let turn=state.close.begin_granted(&mut state.key, grant);work+=turn.work;turn.result}? { return Ok(step); }
-        if let Some(step) = {let turn=state.close.begin_granted(&mut state.value, grant);work+=turn.work;turn.result}? { return Ok(step); }
-        if let Some(step) = {let turn=state.close.begin_granted(&mut state.old_directory, grant);work+=turn.work;turn.result}? { return Ok(step); }
-        if let Some(step) = {let turn=state.close.begin_granted(&mut state.new_directory, grant);work+=turn.work;turn.result}? { return Ok(step); }
-        if let Some(step) = {let turn=state.close.begin_granted(&mut state.map, grant);work+=turn.work;turn.result}? { return Ok(step); }
-        if let Some(step) = {let turn=state.close.begin_granted(&mut state.output, grant);work+=turn.work;turn.result}? { return Ok(step); }
-        {let turn=state.lookup_lease.close_step(grant);work+=turn.work;turn.result}
+        if !state.lookup.terminal_is_empty(){state.lookup.begin_close();return {let turn=state.lookup.close_step(&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"));work+=turn.work;turn.result};}
+        if !state.close.is_empty() { return {let turn=state.close.step_granted(effect);work+=turn.work;turn.result}; }
+        if let Some(step) = {let turn=state.close.begin_granted(&mut state.key,effect);work+=turn.work;turn.result}? { return Ok(step); }
+        if let Some(step) = {let turn=state.close.begin_granted(&mut state.value,effect);work+=turn.work;turn.result}? { return Ok(step); }
+        if let Some(step) = {let turn=state.close.begin_granted(&mut state.old_directory,effect);work+=turn.work;turn.result}? { return Ok(step); }
+        if let Some(step) = {let turn=state.close.begin_granted(&mut state.new_directory,effect);work+=turn.work;turn.result}? { return Ok(step); }
+        if let Some(step) = {let turn=state.close.begin_granted(&mut state.map,effect);work+=turn.work;turn.result}? { return Ok(step); }
+        if let Some(step) = {let turn=state.close.begin_granted(&mut state.output,effect);work+=turn.work;turn.result}? { return Ok(step); }
+        {let turn=state.lookup_lease.close_step(&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"));work+=turn.work;turn.result}
     })();crate::RetainedWorkOutcome{result,work}}
 
     pub fn terminal_is_empty(&self) -> bool { let state=&*self.state;

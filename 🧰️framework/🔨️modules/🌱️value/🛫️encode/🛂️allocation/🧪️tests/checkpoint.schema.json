@@ -1,0 +1,67 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "authority",
+          "turn",
+          "completed",
+          "total",
+          "owned",
+          "entered",
+          "reply",
+          "expected"
+        ],
+        "properties": {
+          "authority": {
+            "type": "integer"
+          },
+          "turn": {
+            "type": "integer"
+          },
+          "completed": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "owned": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "entered": {
+            "type": "boolean"
+          },
+          "reply": {
+            "enum": [
+              "none",
+              "continue",
+              "cancel"
+            ]
+          },
+          "expected": {
+            "enum": [
+              "foreign",
+              "invoke",
+              "pending",
+              "continue",
+              "cancel",
+              "invalid"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

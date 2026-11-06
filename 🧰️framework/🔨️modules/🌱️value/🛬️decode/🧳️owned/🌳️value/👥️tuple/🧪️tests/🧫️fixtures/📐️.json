@@ -45,7 +45,6 @@
     "depth": 64,
     "fuel": 100000
   },
-  "ownershipCopyBytes": 0,
   "deniedWork": 0,
   "bindingObservation": {
     "foreignEveryActivePhase": true,
@@ -53,5 +52,10 @@
     "refusalWork": 0,
     "refusalHeapBytes": 0,
     "unchangedBothInputs": true
-  }
+  },
+  "publicationFields": [
+    "fieldOptions",
+    "outputOption",
+    "phase"
+  ]
 }

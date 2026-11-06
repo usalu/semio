@@ -3,12 +3,12 @@ use semio_framework_value::retirement::RetireOwned;
 use super::*;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::{FemLoad, FemLoadCase};
 use semio_framework_value::{NativeDecodeControl, RetainedCloneGrant};
-use semio_framework_value_native_owned::native_decoding::{NativeDecodeRetirementRecipient,NativeDecodeWorkRecipient};
+use semio_framework_value_native_owned::native_decoding::{NativeDecodeRetirementRecipient,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete};
 
 /// 🎟️ Lower-level finite work loan; genuine job authority is tested separately.
 struct Loan { limit:u64 }
-impl NativeDecodeWorkRecipient for Loan {
- fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=self.limit))}
+impl OriginalWorkRecipient for Loan {
+ fn admits<'a>(&mut self,quote:OriginalWorkQuote<'a>,observed:u64,additional:u64)->OriginalWorkQuoteComplete<'a>{quote.complete((||{Ok(observed.checked_add(additional).is_some_and(|total|total<=self.limit))})())}
 }
 
 /// 🪙️ Finite lower-level encoding work loan.

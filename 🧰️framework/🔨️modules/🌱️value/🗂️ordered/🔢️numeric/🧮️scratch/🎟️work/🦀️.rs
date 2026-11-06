@@ -1,7 +1,7 @@
 //! 🎟️ One original ledger admits numeric key search, real paged nodes, links and AVL repair.
 use super::{NumericIndex,Node,Ordering};
 use semio_framework_value_persistent::work::RetainedWorkLedger;
-use crate::RetirementDemand;
+use crate::{RetirementDemand,ValueError};
 use crate::retirement::{RetireOwned,RetirementCursor};
 fn repair_one<K:Copy+Ord,V>(index:&mut NumericIndex<K,V>,current:usize)->Option<usize>{
  index.update(current);let(left,right)={let node=index.node(current);(node.left,node.right)};let balance=index.height(left)as i16-index.height(right)as i16;
@@ -21,20 +21,20 @@ impl<K:Copy+Ord,V> NumericWorkInsertCursor<K,V>{
  pub fn last_turn_work(&self)->u64{self.last_turn_work}
  pub fn last_turn_semantic_work(&self)->u64{self.last_turn_semantic_work}
  pub fn take_previous(&mut self)->Option<V>{assert!(self.is_complete());self.previous.take()}
- fn step(&mut self,index:&mut NumericIndex<K,V>,work:&mut RetainedWorkLedger)->Result<NumericWorkStep,&'static str>{
+ fn step(&mut self,index:&mut NumericIndex<K,V>,work:&mut RetainedWorkLedger)->Result<NumericWorkStep,ValueError>{
   match self.phase{
    0=>{self.current=index.root;self.phase=1;},
    1=>{if let Some(current)=self.current{match self.key.cmp(&index.node(current).key){
-    Ordering::Equal=>{let generation=index.generation;let node=index.node_mut(current);self.previous=node.value.replace(self.value.take().ok_or("value absent")?);node.generation=generation;self.phase=3;},
+    Ordering::Equal=>{let generation=index.generation;let node=index.node_mut(current);self.previous=node.value.replace(self.value.take().ok_or_else(||ValueError::invariant("value absent"))?);node.generation=generation;self.phase=3;},
     order=>{self.parent=Some(current);self.current=if order==Ordering::Less{index.node(current).left}else{index.node(current).right};},
    }}else{self.phase=2;}},
-   2=>{if !work.slot(&mut index.nodes)?{return Ok(NumericWorkStep::Pending);}let placed=index.nodes.len();let node=Node{key:self.key,value:self.value.take(),generation:index.generation,count_generation:index.generation,count:1,height:1,left:None,right:None,parent:self.parent};work.push(&mut index.nodes,node).map_err(|(error,_)|error)?;if let Some(parent)=self.parent{if self.key<index.node(parent).key{index.node_mut(parent).left=Some(placed)}else{index.node_mut(parent).right=Some(placed)}}else{index.root=Some(placed)}self.current=self.parent;self.phase=3;},
+   2=>{if !work.slot(&mut index.nodes)?{return Ok(NumericWorkStep::Pending);}let placed=index.nodes.len();let node=Node{key:self.key,value:self.value.take(),generation:index.generation,count_generation:index.generation,count:1,height:1,left:None,right:None,parent:self.parent};work.push(&mut index.nodes,node).map_err(|(error,_)|ValueError::invariant(error))?;if let Some(parent)=self.parent{if self.key<index.node(parent).key{index.node_mut(parent).left=Some(placed)}else{index.node_mut(parent).right=Some(placed)}}else{index.root=Some(placed)}self.current=self.parent;self.phase=3;},
    3=>{if let Some(current)=self.current{self.current=repair_one(index,current);}else{self.phase=4;}},
    _=>return Ok(NumericWorkStep::Pending),
   }Ok(if self.phase==4{NumericWorkStep::Complete}else{NumericWorkStep::Progress})
  }
- pub fn advance(&mut self,index:&mut NumericIndex<K,V>,items:usize,work:&mut RetainedWorkLedger)->Result<bool,&'static str>{
-  self.last_turn_work=0;self.last_turn_semantic_work=0;if items==0{return Err("numeric original work requires positive items");}let d=self.pending;
+ pub fn advance(&mut self,index:&mut NumericIndex<K,V>,items:usize,work:&mut RetainedWorkLedger)->Result<bool,ValueError>{
+  self.last_turn_work=0;self.last_turn_semantic_work=0;if items==0{return Err(ValueError::invariant("numeric original work requires positive items"));}let d=self.pending;
   if !work.admits_absolute(d){work.require_absolute(d);return Ok(self.is_complete());}
   let Some(root)=work.enter()else{self.pending=work.next_demand();return Ok(self.is_complete());};
   let result=(||{for _ in 0..items{if self.is_complete()||!work.can_step(){break;}let before=work.receipt();let result=self.step(index,work);let semantic=matches!(&result,Ok(NumericWorkStep::Complete)|Err(_));let actual=!matches!(&result,Ok(NumericWorkStep::Pending))||work.receipt()!=before;if actual{work.note_source(root);self.last_turn_work+=1;}if semantic{self.last_turn_semantic_work+=1;}self.pending=work.next_demand();result?;if work.blocked(){break;}}Ok(self.is_complete())})();work.exit();result
@@ -54,7 +54,7 @@ impl<K:Copy+Ord,V> NumericWorkRemoveCursor<K,V>{
  pub fn last_turn_work(&self)->u64{self.last_turn_work}
  pub fn last_turn_semantic_work(&self)->u64{self.last_turn_semantic_work}
  pub fn take_value(&mut self)->Option<V>{assert!(self.is_complete());self.value.take()}
- fn step(&mut self,index:&mut NumericIndex<K,V>,_work:&mut RetainedWorkLedger)->Result<NumericWorkStep,&'static str>{
+ fn step(&mut self,index:&mut NumericIndex<K,V>,_work:&mut RetainedWorkLedger)->Result<NumericWorkStep,ValueError>{
   match self.phase{
    0=>{self.current=index.root;self.phase=1;},
    1=>{if let Some(current)=self.current{match self.key.cmp(&index.node(current).key){Ordering::Equal=>self.phase=2,order=>self.current=if order==Ordering::Less{index.node(current).left}else{index.node(current).right}}}else{self.phase=4;}},
@@ -63,7 +63,7 @@ impl<K:Copy+Ord,V> NumericWorkRemoveCursor<K,V>{
    _=>return Ok(NumericWorkStep::Pending),
   }Ok(if self.phase==4{NumericWorkStep::Complete}else{NumericWorkStep::Progress})
  }
- pub fn advance(&mut self,index:&mut NumericIndex<K,V>,items:usize,work:&mut RetainedWorkLedger)->Result<bool,&'static str>{
+ pub fn advance(&mut self,index:&mut NumericIndex<K,V>,items:usize,work:&mut RetainedWorkLedger)->Result<bool,ValueError>{
   self.last_turn_work=0;self.last_turn_semantic_work=0;if items==0{return Err("numeric original removal requires positive items");}let d=self.pending;
   if !work.admits_absolute(d){work.require_absolute(d);return Ok(self.is_complete());}
   let Some(root)=work.enter()else{self.pending=work.next_demand();return Ok(self.is_complete());};

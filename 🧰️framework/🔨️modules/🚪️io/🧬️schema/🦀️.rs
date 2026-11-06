@@ -2,7 +2,6 @@
 
 use semio_framework_diagnostic::Diagnostic;
 pub use semio_framework_io_control::{NativeSnapshotFailure,NativeSnapshotCause};
-#[path="⚠️refusal/🛬️receiving/🦀️.rs"]mod error_receiving;
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework_value::{FromValue as _,ToValue as _,ValueError,ValueRefusalKind};
 
@@ -78,7 +77,8 @@ impl IoFidelity {
 
 //#region 🔖️Result
 /// 🚫️ A failed io operation: routing, running a hop, or (de)serializing one payload.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, semio_framework_value::NativeReceive)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct IoError {
     pub cause: NativeSnapshotFailure,
     pub diagnostics: Vec<Diagnostic>,

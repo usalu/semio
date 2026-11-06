@@ -26,6 +26,10 @@ path = "🦀️.rs"
 testkit = ["semio-framework-async/testkit"]
 
 [dependencies]
+semio-framework-job-return-book = { path = "../../../📬️outcome/⏸️continuation/🎟️source/📒️book/📦️packages/🦀️rust" }
+semio-framework-value-control-contract = { path = "../../../../🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-call = { path = "../../../../🌱️value/♻️retirement/📦️call/📦️packages/🦀️rust" }
+semio-framework-job-outcome-borrow = { path = "../../../📬️outcome/🤝️loan/📦️packages/🦀️rust" }
 semio-framework-job-failure = { workspace = true }
 semio-framework-value-derive = { path = "../../../../🌱️value/✨️derive/📦️packages/🦀️rust" }
 semio-framework-job-receiving = { workspace = true }
@@ -91,3 +95,7 @@ name = "original-native-parent-retirement"
 required-features = ["testkit"]
 path = "../../🎟️source/🏠️native/🧪️tests/🦀️.rs"
 
+
+[[test]]
+name = "original_source_dispatch"
+path = "../../🎟️source/🧪️tests/dispatch.rs"

@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "published",
+          "receipt",
+          "usable",
+          "retained"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "published": {
+            "type": "boolean"
+          },
+          "receipt": {
+            "type": "boolean"
+          },
+          "usable": {
+            "type": "boolean"
+          },
+          "retained": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

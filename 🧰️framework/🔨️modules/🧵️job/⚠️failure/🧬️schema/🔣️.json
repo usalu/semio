@@ -662,6 +662,7 @@
         "primary": {"$ref": "#/$defs/ValueError"},
         "workRefusal": {"$ref": "#/$defs/ValueError"},
         "receiptRefusal": {"$ref": "#/$defs/ValueError"},
+        "allocationRefusal": {"$ref": "#/$defs/ValueError"},
         "child": {"$ref": "#/$defs/ReceivingRetirementFailure"},
         "progressOverride": {"anyOf": [{"$ref": "#/$defs/RetainedProgress"}, {"type": "null"}]},
         "retainedProgress": {"$ref": "#/$defs/RetainedProgress"}
@@ -694,6 +695,20 @@
         },
         "allocationFailure": {
           "$ref": "https://semio.tech/schema/value/control/allocation/failure#/$defs/allocationFailure"
+        },
+        "nativeAllocation": {
+          "type":"object","additionalProperties":false,
+          "required":["type","request","admitted","primary","quoteRefusal","extentRefusal","settlementRefusal","actual"],
+          "properties":{
+            "type":{"const":"decode"},
+            "request":{"anyOf":[{"type":"null"},{"type":"object","additionalProperties":false,"required":["bytes","ownedBytes","nextOwnedBytes","maximumBytes"],"properties":{"bytes":{"type":"integer","minimum":0},"ownedBytes":{"type":"integer","minimum":0},"nextOwnedBytes":{"type":"integer","minimum":0},"maximumBytes":{"type":"integer","minimum":0}}}]},
+            "admitted":{"type":"boolean"},
+            "primary":{"anyOf":[{"type":"null"},{"$ref":"#/$defs/ValueError"}]},
+            "quoteRefusal":{"anyOf":[{"type":"null"},{"$ref":"#/$defs/ValueError"}]},
+            "extentRefusal":{"anyOf":[{"type":"null"},{"$ref":"#/$defs/ValueError"}]},
+            "settlementRefusal":{"anyOf":[{"type":"null"},{"$ref":"#/$defs/ValueError"}]},
+            "actual":{"anyOf":[{"type":"null"},{"type":"integer","minimum":0}]}
+          }
         },
         "receiptRefusal": {
           "$ref": "#/$defs/ValueError"

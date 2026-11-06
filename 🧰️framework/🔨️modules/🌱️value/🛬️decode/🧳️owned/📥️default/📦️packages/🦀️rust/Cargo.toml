@@ -23,6 +23,7 @@ name = "semio_framework_value_native_default"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value-native-receiver-protocol = { path = "../../../🧬️protocol/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path = "../../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-native-decoding = { path = "../../../../📦️packages/🦀️rust" }
 semio-framework-value-retained-clone = { path = "../../../../../🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }

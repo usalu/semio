@@ -9,7 +9,8 @@
     "admitWork",
     "releaseWork",
     "cachedWork",
-    "stock"
+    "stock",
+    "birthFields"
   ],
   "properties": {
     "value": {
@@ -40,6 +41,15 @@
         "fuel": 100000,
         "maximumTurns": 100000
       }
+    },
+    "birthFields": {
+      "const": [
+        "sourceOption",
+        "payload",
+        "strongCounter",
+        "weakCounter",
+        "destinationOption"
+      ]
     }
   }
 }

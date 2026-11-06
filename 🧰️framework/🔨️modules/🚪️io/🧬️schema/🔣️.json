@@ -164,14 +164,18 @@
                     "allocationRefusal",
                     "progress",
                     "nativeAllocation",
+                    "retirementFailure",
                     "allocationFailure",
                     "receiptRefusal",
-                    "workRefusal"
+                    "workRefusal",
+                    "workOverrun"
                   ],
                   "properties": {
+                    "retirementFailure": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/OriginalRetirementFailure"}]},
                     "type": {
                       "const": "receiving"
                     },
+                    "workOverrun": {"$ref": "#/$defs/NativeSnapshotFailure/properties/receiptRefusal"},
                     "primary": {
                       "anyOf": [
                         {
@@ -1101,16 +1105,22 @@
               "additionalProperties": false,
               "required": [
                 "primary",
+                "context",
                 "invariant",
                 "physicalInvariant",
                 "capacityInvariant",
+                "markerFailure",
                 "work",
+                "workOverrun",
                 "local",
                 "physical",
                 "allocation"
               ],
               "properties": {
                 "primary": {
+                  "$ref": "#/$defs/NativeSnapshotFailure/properties/receiptRefusal"
+                },
+                "context": {
                   "$ref": "#/$defs/NativeSnapshotFailure/properties/receiptRefusal"
                 },
                 "invariant": {
@@ -1122,7 +1132,13 @@
                 "capacityInvariant": {
                   "$ref": "#/$defs/NativeSnapshotFailure/properties/receiptRefusal"
                 },
+                "markerFailure": {
+                  "$ref": "#/$defs/NativeSnapshotFailure/properties/receiptRefusal"
+                },
                 "work": {
+                  "$ref": "#/$defs/NativeSnapshotFailure/properties/receiptRefusal"
+                },
+                "workOverrun": {
                   "$ref": "#/$defs/NativeSnapshotFailure/properties/receiptRefusal"
                 },
                 "local": {
@@ -1240,10 +1256,12 @@
         "primary",
         "workRefusal",
         "receiptRefusal",
+        "allocationRefusal",
         "progressOverride",
         "child"
       ],
       "properties": {
+        "allocationRefusal": { "$ref": "#/$defs/OriginalRetirementFailure/properties/primary" },
         "primary": {
           "anyOf": [
             {

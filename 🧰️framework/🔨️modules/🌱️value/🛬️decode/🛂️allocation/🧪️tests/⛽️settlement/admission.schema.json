@@ -1,0 +1,57 @@
+{
+  "type": "array",
+  "minItems": 4,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "prior",
+      "requested",
+      "accepted",
+      "settled",
+      "admitted",
+      "physical",
+      "forwarded",
+      "scoped"
+    ],
+    "properties": {
+      "prior": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "requested": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "accepted": {
+        "type": "boolean"
+      },
+      "settled": {
+        "type": "boolean"
+      },
+      "admitted": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "physical": {
+        "const": 0
+      },
+      "forwarded": {
+        "enum": [
+          "absent",
+          "accepted",
+          "refused",
+          "pending"
+        ]
+      },
+      "scoped": {
+        "enum": [
+          "absent",
+          "accepted",
+          "refused",
+          "pending"
+        ]
+      }
+    }
+  }
+}

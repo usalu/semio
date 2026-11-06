@@ -5,9 +5,26 @@
       [
         "cause",
         {
-          "kind": "workLimit",
-          "message": "canceled spoofed prose",
-          "retainedProgress": {
+          "cause": {
+            "type": "value",
+            "value": {
+              "kind": "workLimit",
+              "message": "canceled spoofed prose",
+              "retainedProgress": {
+                "copiedItems": 0,
+                "copiedBytes": 0,
+                "retainedCapacityBytes": 0,
+                "releasedBytes": 0
+              }
+            }
+          },
+          "allocation": null,
+          "encodeEffect": null,
+          "receiptRefusal": null,
+          "contextRefusal": null,
+          "workRefusal": null,
+          "settlementRefusal": null,
+          "progress": {
             "copiedItems": 0,
             "copiedBytes": 0,
             "retainedCapacityBytes": 0,
@@ -27,9 +44,26 @@
       [
         "cause",
         {
-          "kind": "workLimit",
-          "message": "canceled spoofed prose",
-          "retainedProgress": {
+          "cause": {
+            "type": "value",
+            "value": {
+              "kind": "workLimit",
+              "message": "canceled spoofed prose",
+              "retainedProgress": {
+                "copiedItems": 0,
+                "copiedBytes": 0,
+                "retainedCapacityBytes": 0,
+                "releasedBytes": 0
+              }
+            }
+          },
+          "allocation": null,
+          "encodeEffect": null,
+          "receiptRefusal": null,
+          "contextRefusal": null,
+          "workRefusal": null,
+          "settlementRefusal": null,
+          "progress": {
             "copiedItems": 0,
             "copiedBytes": 0,
             "retainedCapacityBytes": 0,
@@ -40,9 +74,26 @@
       [
         "cause",
         {
-          "kind": "workLimit",
-          "message": "canceled spoofed prose",
-          "retainedProgress": {
+          "cause": {
+            "type": "value",
+            "value": {
+              "kind": "workLimit",
+              "message": "canceled spoofed prose",
+              "retainedProgress": {
+                "copiedItems": 0,
+                "copiedBytes": 0,
+                "retainedCapacityBytes": 0,
+                "releasedBytes": 0
+              }
+            }
+          },
+          "allocation": null,
+          "encodeEffect": null,
+          "receiptRefusal": null,
+          "contextRefusal": null,
+          "workRefusal": null,
+          "settlementRefusal": null,
+          "progress": {
             "copiedItems": 0,
             "copiedBytes": 0,
             "retainedCapacityBytes": 0,
@@ -62,9 +113,26 @@
       [
         "cause",
         {
-          "kind": "workLimit",
-          "message": "canceled spoofed prose",
-          "retainedProgress": {
+          "cause": {
+            "type": "value",
+            "value": {
+              "kind": "workLimit",
+              "message": "canceled spoofed prose",
+              "retainedProgress": {
+                "copiedItems": 0,
+                "copiedBytes": 0,
+                "retainedCapacityBytes": 0,
+                "releasedBytes": 0
+              }
+            }
+          },
+          "allocation": null,
+          "encodeEffect": null,
+          "receiptRefusal": null,
+          "contextRefusal": null,
+          "workRefusal": null,
+          "settlementRefusal": null,
+          "progress": {
             "copiedItems": 0,
             "copiedBytes": 0,
             "retainedCapacityBytes": 0,
@@ -88,9 +156,26 @@
       [
         "cause",
         {
-          "kind": "workLimit",
-          "message": "canceled spoofed prose",
-          "retainedProgress": {
+          "cause": {
+            "type": "value",
+            "value": {
+              "kind": "workLimit",
+              "message": "canceled spoofed prose",
+              "retainedProgress": {
+                "copiedItems": 0,
+                "copiedBytes": 0,
+                "retainedCapacityBytes": 0,
+                "releasedBytes": 0
+              }
+            }
+          },
+          "allocation": null,
+          "encodeEffect": null,
+          "receiptRefusal": null,
+          "contextRefusal": null,
+          "workRefusal": null,
+          "settlementRefusal": null,
+          "progress": {
             "copiedItems": 0,
             "copiedBytes": 0,
             "retainedCapacityBytes": 0,
@@ -114,9 +199,26 @@
       [
         "cause",
         {
-          "kind": "workLimit",
-          "message": "canceled spoofed prose",
-          "retainedProgress": {
+          "cause": {
+            "type": "value",
+            "value": {
+              "kind": "workLimit",
+              "message": "canceled spoofed prose",
+              "retainedProgress": {
+                "copiedItems": 0,
+                "copiedBytes": 0,
+                "retainedCapacityBytes": 0,
+                "releasedBytes": 0
+              }
+            }
+          },
+          "allocation": null,
+          "encodeEffect": null,
+          "receiptRefusal": null,
+          "contextRefusal": null,
+          "workRefusal": null,
+          "settlementRefusal": null,
+          "progress": {
             "copiedItems": 0,
             "copiedBytes": 0,
             "retainedCapacityBytes": 0,
@@ -140,9 +242,26 @@
       [
         "cause",
         {
-          "kind": "workLimit",
-          "message": "canceled spoofed prose",
-          "retainedProgress": {
+          "cause": {
+            "type": "value",
+            "value": {
+              "kind": "workLimit",
+              "message": "canceled spoofed prose",
+              "retainedProgress": {
+                "copiedItems": 0,
+                "copiedBytes": 0,
+                "retainedCapacityBytes": 0,
+                "releasedBytes": 0
+              }
+            }
+          },
+          "allocation": null,
+          "encodeEffect": null,
+          "receiptRefusal": null,
+          "contextRefusal": null,
+          "workRefusal": null,
+          "settlementRefusal": null,
+          "progress": {
             "copiedItems": 0,
             "copiedBytes": 0,
             "retainedCapacityBytes": 0,
@@ -166,9 +285,26 @@
       [
         "cause",
         {
-          "kind": "workLimit",
-          "message": "canceled spoofed prose",
-          "retainedProgress": {
+          "cause": {
+            "type": "value",
+            "value": {
+              "kind": "workLimit",
+              "message": "canceled spoofed prose",
+              "retainedProgress": {
+                "copiedItems": 0,
+                "copiedBytes": 0,
+                "retainedCapacityBytes": 0,
+                "releasedBytes": 0
+              }
+            }
+          },
+          "allocation": null,
+          "encodeEffect": null,
+          "receiptRefusal": null,
+          "contextRefusal": null,
+          "workRefusal": null,
+          "settlementRefusal": null,
+          "progress": {
             "copiedItems": 0,
             "copiedBytes": 0,
             "retainedCapacityBytes": 0,
@@ -192,8 +328,25 @@
       [
         "cause",
         {
-          "kind": "workLimit",
-          "message": "original retained physical effects"
+          "cause": {
+            "type": "value",
+            "value": {
+              "kind": "workLimit",
+              "message": "original retained physical effects"
+            }
+          },
+          "allocation": null,
+          "encodeEffect": null,
+          "receiptRefusal": null,
+          "contextRefusal": null,
+          "workRefusal": null,
+          "settlementRefusal": null,
+          "progress": {
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
         }
       ],
       [
@@ -212,9 +365,27 @@
       [
         "cause",
         {
-          "kind": "workLimit",
-          "message": "original retained physical effects",
-          "retainedProgress": {
+          "cause": {
+            "type": "value",
+            "value": {
+              "kind": "workLimit",
+              "message": "original retained physical effects",
+              "retainedProgress": {
+                "copiedItems": 0,
+                "copiedBytes": 0,
+                "retainedCapacityBytes": 0,
+                "releasedBytes": 0,
+                "surprise": 0
+              }
+            }
+          },
+          "allocation": null,
+          "encodeEffect": null,
+          "receiptRefusal": null,
+          "contextRefusal": null,
+          "workRefusal": null,
+          "settlementRefusal": null,
+          "progress": {
             "copiedItems": 0,
             "copiedBytes": 0,
             "retainedCapacityBytes": 0,
@@ -239,9 +410,26 @@
       [
         "cause",
         {
-          "kind": "workLimit",
-          "message": "original retained physical effects",
-          "retainedProgress": {
+          "cause": {
+            "type": "value",
+            "value": {
+              "kind": "workLimit",
+              "message": "original retained physical effects",
+              "retainedProgress": {
+                "copiedItems": 0,
+                "copiedBytes": -1,
+                "retainedCapacityBytes": 0,
+                "releasedBytes": 0
+              }
+            }
+          },
+          "allocation": null,
+          "encodeEffect": null,
+          "receiptRefusal": null,
+          "contextRefusal": null,
+          "workRefusal": null,
+          "settlementRefusal": null,
+          "progress": {
             "copiedItems": 0,
             "copiedBytes": -1,
             "retainedCapacityBytes": 0,

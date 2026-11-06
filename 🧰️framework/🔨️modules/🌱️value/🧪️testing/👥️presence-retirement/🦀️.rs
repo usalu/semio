@@ -60,7 +60,7 @@ impl<P: CountedPresence> Retirement<P> {
 }
 
 impl<P: CountedPresence> ErasedSnapshotRetirement for Retirement<P> {
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
+    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome {let grant=effect.grant();
         let mut work = 0;
         let result = self.close(grant, &mut work);
         RetainedWorkOutcome { result, work }

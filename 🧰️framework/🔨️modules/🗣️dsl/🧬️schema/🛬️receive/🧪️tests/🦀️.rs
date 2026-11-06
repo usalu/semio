@@ -1,6 +1,7 @@
+use semio_framework_value_native_receiving_original::NativeReceivingOriginal;
 use super::*;
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneStep,RetirementDemand,retirement::RetireOwned,shared_issuance::SealedShared};
-use semio_framework_value_native_owned::{NativeDecodeControl,NativeReceive,OriginalReceivingPrimary,owned::NativeReceivingOriginal};
+use semio_framework_value_native_owned::{NativeDecodeControl,NativeReceive,OriginalReceivingPrimary};
 #[path="../../🫴️receiving/🎟️work/🧪️tests/📥️bank/🦀️.rs"]mod funding;
 use funding::{Bank,observe};
 fn bank()->Bank{let row:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::repo_text!("🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🫴️receiving/📥️owned/🎟️work/📐️.json")).unwrap();Bank::new(&row["stock"])}

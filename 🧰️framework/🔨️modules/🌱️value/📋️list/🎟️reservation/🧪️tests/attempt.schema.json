@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases",
+    "workSource",
+    "copyReceipt",
+    "failureOwners",
+    "stock",
+    "denial",
+    "pending",
+    "releaseCopyReceipt"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "grant",
+          "allocator",
+          "work",
+          "actual"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "grant": {
+            "enum": [
+              "none",
+              "quoted",
+              "copyNone",
+              "depthNone"
+            ]
+          },
+          "allocator": {
+            "enum": [
+              "normal",
+              "refuseOnce"
+            ]
+          },
+          "work": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "actual": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "const": "observed"
+              },
+              {
+                "type": "integer",
+                "minimum": 0
+              }
+            ]
+          }
+        }
+      }
+    },
+    "workSource": {
+      "const": "sameOriginalEffect"
+    },
+    "copyReceipt": {
+      "const": "selectedPageHeaders"
+    },
+    "failureOwners": {
+      "const": [
+        "work",
+        "allocation",
+        "copiedBytes"
+      ]
+    },
+    "stock": {
+      "const": {
+        "items": 1000,
+        "copyBytes": 1048576,
+        "capacityBytes": 1048576,
+        "releaseBytes": 1048576,
+        "depth": 64,
+        "fuel": 1000
+      }
+    },
+    "denial": {
+      "const": "completedNoProgress"
+    },
+    "pending": {
+      "const": "unresolvedOriginalAction"
+    },
+    "releaseCopyReceipt": {
+      "const": "selectedPageHeaders"
+    }
+  }
+}

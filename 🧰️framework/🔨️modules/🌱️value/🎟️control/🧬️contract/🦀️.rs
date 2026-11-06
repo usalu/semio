@@ -1,164 +1,35 @@
-//! 🎟️ Original physical grant, progress and typed refusal contracts.
-#[path="🛂️allocation/🦀️.rs"]
-pub mod allocation;
-pub use allocation::{NativeAllocationFailure,NativeAllocationProgress};
-/// 📃️ The largest payload one bulk vector copy turn moves, equal to the ABI page so a bitwise run is never longer than one page of work.
-pub const RETAINED_CLONE_BULK_PAGE_BYTES: usize = 64 * 1024;
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct RetainedCloneGrant {
-    pub maximum_items: usize,
-    /// 🧮️ Bounds payload copying within one clone turn.
-    pub maximum_copy_bytes: usize,
-    pub maximum_capacity_bytes: usize,
-    /// ♻️ Bounds physical owner and scaffold release independently of copying.
-    pub maximum_release_bytes: usize,
-    pub maximum_depth: usize,
-}
-impl RetainedCloneGrant {
-    /// 🧭️ Keeps only physical authority supplied by both the caller and its genuine source.
-    pub fn restricted_by(self,source:Self)->Self{Self{maximum_items:self.maximum_items.min(source.maximum_items),maximum_copy_bytes:self.maximum_copy_bytes.min(source.maximum_copy_bytes),maximum_capacity_bytes:self.maximum_capacity_bytes.min(source.maximum_capacity_bytes),maximum_release_bytes:self.maximum_release_bytes.min(source.maximum_release_bytes),maximum_depth:self.maximum_depth.min(source.maximum_depth)}}
-    pub fn wire_fields(self)->[(&'static str,usize);5]{[("maximumItems",self.maximum_items),("maximumCopyBytes",self.maximum_copy_bytes),("maximumCapacityBytes",self.maximum_capacity_bytes),("maximumReleaseBytes",self.maximum_release_bytes),("maximumDepth",self.maximum_depth)]}
-}
-impl RetainedCloneGrant {
-    /// 🦜️ Admits one structural allocation while reserving no payload-copy credit.
-    pub fn one_capacity_turn(maximum_bytes: usize, maximum_depth: usize) -> Self {
-        Self { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: maximum_bytes, maximum_release_bytes: 0, maximum_depth }
-    }
-
-    /// 🎒️ Admits one payload turn while reserving no allocation-capacity credit.
-    pub fn one_payload_turn(maximum_bytes: usize, maximum_depth: usize) -> Self {
-        Self { maximum_items: 1, maximum_copy_bytes: maximum_bytes, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth }
-    }
-    /// 📦️ Admits one release turn without copy or allocation credit.
-    pub fn one_release_turn(maximum_bytes: usize, maximum_depth: usize) -> Self {
-        Self { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: maximum_bytes, maximum_depth }
-    }
-}
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct RetainedCloneProgress {
-    pub copied_items: usize,
-    pub copied_bytes: usize,
-    pub retained_capacity_bytes: usize,
-    pub released_bytes: usize,
-}
-impl RetainedCloneProgress {
-    pub fn wire_fields(self)->[(&'static str,usize);4]{[("copiedItems",self.copied_items),("copiedBytes",self.copied_bytes),("retainedCapacityBytes",self.retained_capacity_bytes),("releasedBytes",self.released_bytes)]}
-}
-impl RetainedCloneProgress {
-    /// ➕️ Error-path accounting saturates: an overflowed total fits no grant, so it fails closed without a second error channel; success paths keep `checked_add`.
-    pub fn saturating_add(self, other: Self) -> Self {
-        Self { copied_items: self.copied_items.saturating_add(other.copied_items), copied_bytes: self.copied_bytes.saturating_add(other.copied_bytes), retained_capacity_bytes: self.retained_capacity_bytes.saturating_add(other.retained_capacity_bytes), released_bytes: self.released_bytes.saturating_add(other.released_bytes) }
-    }
-
-    pub fn checked_add(self, other: Self) -> Result<Self, ValueError> {
-        Ok(Self {
-            copied_items: self.copied_items.checked_add(other.copied_items).ok_or_else(|| ValueError::literal(ValueRefusalKind::WorkLimit, "retained clone item progress overflow"))?,
-            copied_bytes: self.copied_bytes.checked_add(other.copied_bytes).ok_or_else(|| ValueError::literal(ValueRefusalKind::WorkLimit, "retained clone byte progress overflow"))?,
-            released_bytes: self.released_bytes.checked_add(other.released_bytes).ok_or_else(|| ValueError::literal(ValueRefusalKind::WorkLimit, "retained clone release progress overflow"))?,
-            retained_capacity_bytes: self.retained_capacity_bytes.checked_add(other.retained_capacity_bytes).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "retained clone capacity progress overflow"))?,
-        })
-    }
-
-    pub fn fits(self, grant: RetainedCloneGrant) -> bool {
-        self.copied_items <= grant.maximum_items && self.copied_bytes <= grant.maximum_copy_bytes && self.retained_capacity_bytes <= grant.maximum_capacity_bytes && self.released_bytes <= grant.maximum_release_bytes
-    }
-}
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum RetainedCloneStep {
-    Progress(RetainedCloneProgress),
-    Complete(RetainedCloneProgress),
-}
-impl RetainedCloneStep {
-    pub fn progress(self) -> RetainedCloneProgress {
-        match self {
-            Self::Progress(progress) | Self::Complete(progress) => progress,
-        }
-    }
-}
-#[derive(Clone,Copy,Debug,PartialEq,Eq)]
-pub struct RetainedCloneBirthDemand {pub capacity_bytes:usize,pub depth:usize}
-impl RetainedCloneBirthDemand {
-    pub fn admit(self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
-        if grant.maximum_items==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"constructor requires one admitted item"));}
-        if grant.maximum_depth<self.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"constructor exceeds admitted depth"));}
-        if grant.maximum_capacity_bytes<self.capacity_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"constructor exceeds admitted capacity"));}
-        Ok(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:self.capacity_bytes,..Default::default()})
-    }
-}
-pub const RETAINED_CLONE_GRANT_SCHEMA: &str = include_str!("../../🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json");
-pub const RETAINED_CLONE_PROGRESS_SCHEMA:&str=include_str!("../../🧬️retained-clone/🌐️wire/🧬️schema/🧾️progress.json");
-pub fn admit_retained_clone_progress(grant: RetainedCloneGrant, progress: RetainedCloneProgress, _scope: &str) -> Result<RetainedCloneProgress, ValueError> {
-    if progress.fits(grant) { Ok(progress) } else { Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "original retained turn exceeded its item, copy, capacity, or release grant").with_retained_progress(progress)) }
-}
-pub fn admit_retained_clone_close(grant: RetainedCloneGrant, step: RetainedCloneStep, terminal: bool, scope: &str) -> Result<RetainedCloneStep, ValueError> {
-    admit_retained_clone_progress(grant, step.progress(), scope)?;
-    if matches!(step, RetainedCloneStep::Complete(_)) && !terminal {
-        return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "original retained turn completed with retained owners").with_retained_progress(step.progress()));
-    }
-    Ok(step)
-}
-/// ⚠️ Refusal identity and explicit prose ownership survive controlled codec boundaries.
-/// 🏷️ Stable semantic failure identity declared by the refusal schema.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ValueRefusalKind { InvalidValue, Canceled, OwnershipLimit, AllocationFailed, WorkLimit, DepthLimit, UnsupportedOwner, InvariantViolated }
-
-impl ValueRefusalKind {
-    /// 🔎️ Reads only the original closed schema spelling without allocating or classifying prose.
-    pub fn from_wire(value:&str)->Option<Self>{match value{"invalidValue"=>Some(Self::InvalidValue),"canceled"=>Some(Self::Canceled),"ownershipLimit"=>Some(Self::OwnershipLimit),"allocationFailed"=>Some(Self::AllocationFailed),"workLimit"=>Some(Self::WorkLimit),"depthLimit"=>Some(Self::DepthLimit),"unsupportedOwner"=>Some(Self::UnsupportedOwner),"invariantViolated"=>Some(Self::InvariantViolated),_=>None}}
-    /// 🔤️ Returns the schema spelling without allocating or inspecting error prose.
-    pub const fn as_str(self) -> &'static str {
-        match self { Self::InvalidValue => "invalidValue", Self::Canceled => "canceled", Self::OwnershipLimit => "ownershipLimit", Self::AllocationFailed => "allocationFailed", Self::WorkLimit => "workLimit", Self::DepthLimit => "depthLimit", Self::UnsupportedOwner => "unsupportedOwner", Self::InvariantViolated => "invariantViolated" }
-    }
-}
-/// 🚨️ An owned typed refusal with its complete dotted display path.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ValueError { pub kind: ValueRefusalKind, pub message: std::borrow::Cow<'static, str>, retained_progress: RetainedCloneProgress }
-impl ValueError {
-    /// 🧭️ Constructs one refusal with an explicit authority at its actual failure site.
-    pub fn new(kind: ValueRefusalKind, message: impl Into<String>) -> Self { Self { kind, message: std::borrow::Cow::Owned(message.into()), retained_progress: Default::default() } }
-    /// 🧱️ Returns immutable refusal prose without spending denied allocation credit.
-    pub const fn literal(kind: ValueRefusalKind, message: &'static str) -> Self { Self { kind, message: std::borrow::Cow::Borrowed(message), retained_progress: RetainedCloneProgress { copied_items: 0, copied_bytes: 0, retained_capacity_bytes: 0, released_bytes: 0 } } }
-    /// 🧷️ Refuses a state machine whose own phase promised a payload that is absent, without spending credit.
-    pub const fn invariant(message: &'static str) -> Self { Self::literal(ValueRefusalKind::InvariantViolated, message) }
-    /// 🧾️ Borrows actual retained effects carried by the original failed turn.
-    pub fn retained_progress(&self) -> RetainedCloneProgress { self.retained_progress }
-    /// 📥️ Attaches the original producer receipt before its failure leaves custody.
-    pub fn with_retained_progress(mut self, progress: RetainedCloneProgress) -> Self { self.retained_progress = progress; self }
-    /// 🪆️ Adds a parent field or ordinal while retaining the original refusal authority.
-    pub fn under(self, segment: impl std::fmt::Display) -> Self { Self::new(self.kind, format!("{segment}.{}", self.message)).with_retained_progress(self.retained_progress) }
-    /// 🗣️ Moves the prose at a declared terminal text-only boundary.
-    pub fn into_message(self) -> String { self.message.into_owned() }
-}
-impl std::fmt::Display for ValueError { fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { formatter.write_str(&self.message) } }
-impl std::error::Error for ValueError {}
-
-
-#[path="../../⚠️refusal/🔤️utf8/🦀️.rs"]
-mod utf8;
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub struct RetirementDemand {
-    pub copy_bytes: usize,
-    pub capacity_bytes: usize,
-    pub release_bytes: usize,
-    pub depth: usize,
-}
-
-/// 🎬️ Preserves the exact admitted original action across its enclosing clone frame.
-pub fn retained_clone_grant_admits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool {
-    grant.maximum_items>0 && grant.maximum_copy_bytes>=demand.copy_bytes && grant.maximum_capacity_bytes>=demand.capacity_bytes && grant.maximum_release_bytes>=demand.release_bytes && grant.maximum_depth>=demand.depth
-}
-
+//! 🎟️ Original construction, performed work and failure custody use the shared physical contract.
+pub use semio_framework_value_control_physical::{RETAINED_CLONE_BULK_PAGE_BYTES,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneBirthDemand,RETAINED_CLONE_GRANT_SCHEMA,RETAINED_CLONE_PROGRESS_SCHEMA,admit_retained_clone_progress,admit_retained_clone_close,ValueRefusalKind,ValueError,RetirementDemand,retained_clone_grant_admits,RetainedWorkOutcome,RetainedWorkPoll};
+#[path="🏭️construction/🦀️.rs"]
+pub mod construction;
+pub use construction::{OriginalConstructionIssuerIdentity,OriginalConstructionActionIdentity,OriginalConstructionPhase,OriginalConstructionAction,OriginalConstructionGrant,OriginalConstructionGrantComplete,OriginalConstructionAccept,OriginalConstructionAcceptComplete,OriginalConstructionRecipient,OriginalConstructionAuthority,OriginalConstructionLoan};
+pub use semio_framework_value_control_physical::allocation;
+#[path="📦️effect/🦀️.rs"]
+mod allocation_effect;
+pub use allocation_effect::{OriginalWorkPerformedBoundary,RetainedAllocationEffect};
+pub use allocation::{NATIVE_ALLOCATION_SCHEMA,NativeAllocationAuthority,NativeAllocationAuthorityLoan,NativeAllocationAuthorityPort,NativeAllocationReply,NativeAllocationReplyComplete,NativeAllocationInvocation,NativeAllocationInvocationResult,NativeAllocationLoan,NativeSendAllocationLoan,NativeAllocationSendCallback,NativeAllocationTransaction,NativeAllocationTransactionPhase,NativeAllocationBudget,NativeAllocationEvent,NativeAllocationIdentity,NativeAllocationRefusal,NativeAllocationRefusalHandle,NativeAllocationRefusalVault,NativeAllocationFailure,NativeAllocationProgress,NativeAllocationRequest};
 #[path="♻️failure/🦀️.rs"]mod original_failure;
-pub use original_failure::{OriginalRetirementFailure,OriginalFailureStorage,OriginalFailureStoragePool,run_with_failure_storage,run_with_failure_storage_transaction};
+pub use original_failure::{OriginalFailureStorageBirth,OriginalFailureStorageBirthPhase,OriginalFailurePerformedScope,OriginalFailureStorageStep,OriginalFailureFunding,refill_original_failure_storage,OriginalRetirementFailure,OriginalFailureStorage,OriginalFailureStoragePool,run_with_failure_storage,run_with_failure_storage_transaction};
 #[path="♻️original-close/🦀️.rs"]mod original_close;
 pub use original_close::{OriginalRetirementCloseLoan,OriginalRetirementClosePort};
 #[path="../../📦️paged/📖️read/🎟️.rs"]
 mod byte_source;
 pub use byte_source::{ByteReadSource,ByteReadRange};
 
-/// 📫️ One original retained-work invocation owns its full result and independent actual CPU.
-#[derive(Debug)]
-pub struct RetainedWorkOutcome<T=RetainedCloneStep,E=ValueError>{pub result:Result<T,E>,pub work:u64}
+#[path="📤️output/🦀️.rs"]
+mod output_slot;
+pub use output_slot::{retained_clone_cursor_take_demand,retained_clone_take_demand,take_retained_clone_output};
+
+#[path="♻️close-start/🦀️.rs"]
+mod close_start;
+pub use close_start::{retained_close_start_demand,retained_close_start_work_demand,start_retained_close};
+
+#[path="🎟️work-action/🦀️.rs"]
+mod work_action;
+pub use work_action::{OriginalWork,OriginalWorkState,OriginalWorkTurn,OriginalWorkQuote,OriginalWorkQuoteComplete,OriginalWorkAuthority,OriginalWorkLoan,OriginalWorkRecipient,OriginalWorkScope,OriginalWorkScopeIdentity,OriginalWorkIssuerIdentity,OriginalWorkActionIdentity,OriginalWorkActionReservation,OriginalWorkActionProof,OriginalWorkActionIssuer,OriginalWorkPerformedReceipt,OriginalWorkPerformedIdentity,OriginalWorkSink,OriginalWorkPartialOutcome,OriginalWorkPartialCheck,OriginalWorkPartialCheckComplete};
+
+pub use semio_framework_value_source_turn::{OriginalSourceTurnIssuerIdentity,OriginalSourceTurnIdentity,OriginalSourceTurnError,OriginalSourceTurnIssuer,OriginalSourceTurn,OriginalSourceTurnWitness};
+
+#[path="📨️reply/🦀️.rs"]
+mod borrowed_reply;
+pub use borrowed_reply::{OriginalEffectReply,OriginalEffectReplyComplete};

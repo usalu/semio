@@ -19,7 +19,7 @@ pub trait RetainedEqualityCursor<T:?Sized>:Send+'static{
  fn advance(&mut self,left:&T,right:&T,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedEqualityStep>;
  fn begin_close(&mut self);
  fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>;
- fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome;
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome;
  fn terminal_is_empty(&self)->bool;
 }
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
@@ -33,7 +33,7 @@ impl<T:RetainedEqualityElement+Send+Sync+'static> RetainedEqualityCursor<T> for 
  fn advance(&mut self,left:&T,right:&T,g:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedEqualityStep>{let mut work=0;let result=(||{if self.result.is_some(){return Ok(RetainedEqualityStep{equal:self.result,progress:Default::default()})}let d=self.demand(left,right,g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedEqualityStep{equal:None,progress:Default::default()});}self.result=Some(T::inline_eq(left,right));work=1;Ok(RetainedEqualityStep{equal:self.result,progress:RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}})})();crate::RetainedWorkOutcome{result,work}}
  fn begin_close(&mut self){}
  fn close_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{Ok(Default::default())}
- fn close_step(&mut self,_:RetainedCloneGrant)->crate::RetainedWorkOutcome{crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome{let _=effect.grant();crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
  fn terminal_is_empty(&self)->bool{true}
 }
 macro_rules! inline{($($ty:ty),*)=>{$(impl RetainedEquality for $ty{
@@ -57,7 +57,7 @@ impl RetainedEqualityCursor<String> for RetainedStringEquality{
  fn advance(&mut self,left:&String,right:&String,g:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedEqualityStep>{let turn=self.cursor.advance(left.as_bytes(),right.as_bytes(),g);crate::RetainedWorkOutcome{work:turn.work,result:turn.result.map(|step|RetainedEqualityStep{equal:self.cursor.equal(),progress:step.progress()})}}
  fn begin_close(&mut self){}
  fn close_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{Ok(Default::default())}
- fn close_step(&mut self,_:RetainedCloneGrant)->crate::RetainedWorkOutcome{crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome{let _=effect.grant();crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
  fn terminal_is_empty(&self)->bool{true}
 }
 
@@ -82,10 +82,10 @@ impl<T:RetainedEquality> RetainedEqualityOwner<T>{
 
  pub fn begin_close(&mut self){self.closing=true;self.cursor.begin_close();}
  pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Err(invalid("original typed comparison close has not begun"));}if !self.cursor.terminal_is_empty(){return self.cursor.close_demand(body);}RetainedCloneBinding::close_demand(if self.right.is_some(){&self.right}else{&self.left},body)}
- pub fn close_step(&mut self,g:RetainedCloneGrant)->crate::OriginalRetirementOutcome{let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
+ pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let g=effect.grant();let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
   let d=self.close_demand(g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
-  if !self.cursor.terminal_is_empty(){let turn=self.cursor.close_step(g);work=turn.work;return turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(Into::into)}
+  if !self.cursor.terminal_is_empty(){let turn=self.cursor.close_step(&mut effect.reborrow(g,effect.maximum_work_units()).expect("retirement child exceeds original effect"));work=turn.work;return turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(Into::into)}
   let turn=RetainedCloneBinding::close_one(if self.right.is_some(){&mut self.right}else{&mut self.left},g);work=turn.work;let step=turn.result?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
  })();crate::RetainedWorkOutcome{result,work}}
 

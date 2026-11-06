@@ -1,4 +1,5 @@
 //! 📝️ Original semantic UTF8 and inline text own exact physical payload admission.
+#[cfg(test)] extern crate self as semio_framework_value_paged_text;
 pub use semio_framework_value_control_contract::*;
 pub use semio_framework_value_control_contract as retained_clone;
 pub use semio_framework_value_retirement::{ErasedSnapshotRetirement,retirement};
@@ -12,6 +13,9 @@ pub use paged_text::*;
 use semio_framework_value_testing_allocator as allocation_testing;
 #[cfg(test)]
 pub(crate) use allocation_testing::observe_retirement_allocations;
+#[cfg(test)]
+#[path="../../🧪️tests/native-rig.rs"]
+mod staged_rig;
 #[cfg(test)]
 #[path="../../../../🛫️encode/🧪️tests/📋️paged/🦀️.rs"]
 mod original_paged_encoding_tests;

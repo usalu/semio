@@ -1,11 +1,11 @@
 //! 🧰️ Real paged collection construction matches independent wire decoding and conserves every physical owner.
 use super::*;
-use semio_framework_value::{DslValue,native_decoding::{NativeDecodeConstructionRecipient,NativeDecodeWorkRecipient,NativeReceiver},retirement::controlled::ControlledRetirement};
+use semio_framework_value::{DslValue,native_decoding::{NativeDecodeConstructionRecipient,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete,NativeReceiver},retirement::controlled::ControlledRetirement};
 use semio_framework_value_testing_allocator::observe_retirement_allocations as observe;
 struct Construction(RetainedCloneGrant,RetainedCloneProgress);
 impl NativeDecodeConstructionRecipient for Construction{fn submitted(&self)->RetainedCloneProgress{self.1}fn grant(&mut self,d:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{assert!(semio_framework_value::retained_clone::retained_clone_grant_admits(self.0,d));Ok(self.0)}fn accept(&mut self,g:RetainedCloneGrant,p:RetainedCloneProgress)->Result<(),ValueError>{self.1=self.1.checked_add(p)?;assert!(p.fits(g)&&p.fits(self.0));Ok(())}}
 struct Work<'a>(&'a u64);
-impl NativeDecodeWorkRecipient for Work<'_>{fn admits(&mut self,seen:u64,next:u64)->Result<bool,ValueError>{Ok(seen.checked_add(next).is_some_and(|n|n<=(*self.0).min(1)))}}
+impl OriginalWorkRecipient for Work<'_>{fn admits<'a>(&mut self,quote:OriginalWorkQuote<'a>,seen:u64,next:u64)->OriginalWorkQuoteComplete<'a>{quote.complete((||{Ok(seen.checked_add(next).is_some_and(|n|n<=(*self.0).min(1)))})())}}
 pub(crate) fn run<T:NativeReceive<DslValue>+Serialize>(row:&serde_json::Value,cut:Option<usize>,profile:&serde_json::Value){
  let s=&profile["stock"];let mut bank=RetainedCloneGrant{maximum_items:s["items"].as_u64().unwrap()as usize,maximum_copy_bytes:s["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:s["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:s["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:s["depth"].as_u64().unwrap()as usize};let mut fuel=s["fuel"].as_u64().unwrap();
  let input=if row["entries"].is_array(){DslValue::Object(row["entries"].as_array().unwrap().iter().map(|pair|(pair[0].as_str().unwrap().to_owned(),DslValue::from(pair[1].clone()))).collect())}else{DslValue::from(serde_json::from_str::<serde_json::Value>(row["wire"].as_str().unwrap()).unwrap())};let(mut source,_,_)=semio_framework_value::testing::admit_owned_source(input,());let identity=std::ptr::from_ref(source.borrow().get());let mut receiver=T::receiver();let mut allow=|_|true;let mut control=NativeDecodeControl::new_retained(&mut allow);let mut output=None;let mut refused=false;

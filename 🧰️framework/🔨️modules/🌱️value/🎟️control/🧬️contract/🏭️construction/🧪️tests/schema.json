@@ -1,0 +1,62 @@
+{
+  "type": "array",
+  "minItems": 6,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "phase",
+      "recorded",
+      "sameIssuer",
+      "sameAction",
+      "firstTake",
+      "secondTake",
+      "expected",
+      "sameContext"
+    ],
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1
+      },
+      "phase": {
+        "enum": [
+          "grant",
+          "accept"
+        ]
+      },
+      "recorded": {
+        "enum": [
+          "none",
+          "accepted",
+          "refused"
+        ]
+      },
+      "sameIssuer": {
+        "type": "boolean"
+      },
+      "sameAction": {
+        "type": "boolean"
+      },
+      "firstTake": {
+        "type": "boolean"
+      },
+      "secondTake": {
+        "type": "boolean"
+      },
+      "expected": {
+        "enum": [
+          "pending",
+          "accepted",
+          "refused",
+          "foreign",
+          "consumed"
+        ]
+      },
+      "sameContext": {
+        "type": "boolean"
+      }
+    }
+  }
+}

@@ -1,6 +1,7 @@
 //! 🔺️ Indexed and named collection edit plans over persistent lists — wiring only. Domain lives at the owner `🦀️.rs` files.
 
-pub use semio_framework_value_control_contract::RetainedWorkOutcome;
+pub use semio_framework_value_control_contract::{RetainedWorkOutcome,RetainedAllocationEffect,OriginalRetirementCloseLoan,OriginalRetirementFailure};
+pub use semio_framework_value_retirement::OriginalRetirementOutcome;
 use semio_framework_value_control_contract::{ValueError, ValueRefusalKind};
 use semio_framework_value_intrinsic::{DslValue, Number};
 pub use semio_framework_value_native_decoding::OriginalReceivingPrimary;

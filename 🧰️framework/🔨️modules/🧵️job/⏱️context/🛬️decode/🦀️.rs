@@ -1,7 +1,7 @@
 //! 🛬️ A paid original source lends actual native decode imports and receives the concrete producer's effects.
 use semio_framework_job::{OriginalCallerSourceLoan,OriginalTurnFailure,StepContext};
 use semio_framework_value::{ErasedSnapshotRetirement, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind};
-use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::{NativeDecodeRetirementRecipient,NativeDecodeWorkIssuer}};
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::{NativeDecodeRetirementRecipient,OriginalWorkActionIssuer}};
 use semio_framework_value_native_owned::{native_decoding::{NativeDecodeAllocation,NativeDecodeAllocationEvent,NativeDecodeAllocationIssuer}, native_decoding::NativeForwardedDecodeFrame};
 use semio_framework_value_native_owned::native_decoding::allocation::NativeForwardedDecodeReceipt;
 use std::{cell::UnsafeCell,mem::ManuallyDrop,sync::atomic::{AtomicBool,Ordering}};
@@ -30,17 +30,17 @@ impl<'a,'source> ActualTurn<'a,'source>{
 struct ActualDecodeFrame<'slot,'control,'turn,'call,'source>{frame:NativeForwardedDecodeFrame<'slot,'control>,turn:&'turn ActualTurn<'call,'source>,before:u64}
 impl Drop for ActualDecodeFrame<'_,'_,'_,'_,'_>{fn drop(&mut self){if std::thread::panicking(){let work=self.frame.control().actual_work().saturating_sub(self.before);self.turn.with(|cx,_|cx.consume_fuel(work)).expect("original decoder work return requires its same unborrowed caller")}}}
 struct ActualWork<'a,'turn,'source>{turn:&'a ActualTurn<'turn,'source>,closing:bool}
-impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for ActualWork<'_,'_,'_>{
- fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{
+impl semio_framework_value_native_owned::native_decoding::OriginalWorkRecipient for ActualWork<'_,'_,'_>{
+ fn admits<'a>(&mut self,quote:semio_framework_value_native_owned::native_decoding::OriginalWorkQuote<'a>,observed:u64,additional:u64)->semio_framework_value_native_owned::native_decoding::OriginalWorkQuoteComplete<'a>{quote.complete((||{
   self.turn.with(|cx,_|!paused(cx,self.closing)&&(self.closing||!cx.is_cancelled())&&observed.checked_add(additional).is_some_and(|work|work<=cx.fuel_remaining()))
- }
+ })())}
 }
 fn refusal(reason:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,reason)}
 fn paused(cx:&StepContext<'_>,closing:bool)->bool{if closing{cx.retirement_should_yield()}else{cx.should_yield()}}
 fn metadata(cx:&mut StepContext<'_>,closing:bool)->Result<bool,OriginalTurnFailure>{if paused(cx,closing)||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);Ok(true)}
 
 /// 🎟️ Owns the genuine source loan, original retirement recipient and consuming forwarded decoder receipt.
-pub struct OriginalNativeDecodeSource{policy:OriginalNativeDecodePolicy,source:ManuallyDrop<Option<OriginalCallerSourceLoan>>,original_recipient:ManuallyDrop<Option<NativeDecodeRetirementRecipient>>,receipt:Option<NativeForwardedDecodeReceipt>,allocation_issuer:ManuallyDrop<Option<NativeDecodeAllocationIssuer>>,issuer_admitted:bool,work_issuer:ManuallyDrop<Option<NativeDecodeWorkIssuer>>,work_admitted:bool,allocation:AllocationLedger,closing:bool,returning:bool,closed:bool}
+pub struct OriginalNativeDecodeSource{policy:OriginalNativeDecodePolicy,source:ManuallyDrop<Option<OriginalCallerSourceLoan>>,original_recipient:ManuallyDrop<Option<NativeDecodeRetirementRecipient>>,receipt:Option<NativeForwardedDecodeReceipt>,allocation_issuer:ManuallyDrop<Option<NativeDecodeAllocationIssuer>>,issuer_admitted:bool,work_issuer:ManuallyDrop<Option<OriginalWorkActionIssuer>>,work_admitted:bool,allocation:AllocationLedger,closing:bool,returning:bool,closed:bool}
 impl OriginalNativeDecodeSource{
  /// 🪹️ Keeps only an authored declaration; no source, recipient, controller or allocation is minted here.
  pub const fn empty(policy:OriginalNativeDecodePolicy)->Self{Self{policy,source:ManuallyDrop::new(None),original_recipient:ManuallyDrop::new(None),receipt:None,allocation_issuer:ManuallyDrop::new(None),issuer_admitted:false,work_issuer:ManuallyDrop::new(None),work_admitted:false,allocation:AllocationLedger{pending:None,actual:0},closing:false,returning:false,closed:false}}
@@ -50,7 +50,7 @@ impl OriginalNativeDecodeSource{
   if let Some(source)=self.source.as_ref(){source.validate_context(cx)?}else{cx.original_source_parent()?.admit_loan(&mut self.source,cx)?;return Ok(false)}
   if self.allocation_issuer.is_none(){let bytes=NativeDecodeAllocationIssuer::birth_bytes();let grant=cx.retained_grant();if paused(cx,false)||cx.is_cancelled()||cx.fuel_remaining()==0||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}*self.allocation_issuer=Some(NativeDecodeAllocationIssuer::new());let receipt=cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()});cx.consume_fuel(1);receipt?;self.issuer_admitted=true;return Ok(false)}
   if !self.issuer_admitted{return Ok(false)}
-  if self.work_issuer.is_none(){let bytes=NativeDecodeWorkIssuer::birth_bytes();let grant=cx.retained_grant();if paused(cx,false)||cx.is_cancelled()||cx.fuel_remaining()==0||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}*self.work_issuer=Some(NativeDecodeWorkIssuer::new());let receipt=cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()});cx.consume_fuel(1);receipt?;self.work_admitted=true;return Ok(false)}if !self.work_admitted{return Ok(false)}
+  if self.work_issuer.is_none(){let bytes=OriginalWorkActionIssuer::birth_bytes();let grant=cx.retained_grant();if paused(cx,false)||cx.is_cancelled()||cx.fuel_remaining()==0||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}*self.work_issuer=Some(OriginalWorkActionIssuer::new());let receipt=cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()});cx.consume_fuel(1);receipt?;self.work_admitted=true;return Ok(false)}if !self.work_admitted{return Ok(false)}
   if self.original_recipient.is_none(){if !metadata(cx,false)?{return Ok(false)}*self.original_recipient=Some(NativeDecodeRetirementRecipient::new());return Ok(false)}
   if self.receipt.is_none(){if !metadata(cx,false)?{return Ok(false)}let _=self.with_control(cx,false,|_|())?;return Ok(false)}
   Ok(true)
@@ -125,7 +125,7 @@ impl OriginalNativeDecodeSource{
   }
   if self.receipt.is_some(){if !metadata(cx,true)?{return Ok(RetainedCloneStep::Progress(Default::default()))}self.receipt.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
   if self.original_recipient.is_some(){if !metadata(cx,true)?{return Ok(RetainedCloneStep::Progress(Default::default()))}self.original_recipient.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
-  if self.work_issuer.is_some(){if self.work_issuer.as_ref().is_some_and(NativeDecodeWorkIssuer::has_pending_work){return Err(refusal("original native work issuer retains a pending quote").into())}let grant=cx.retained_grant();if cx.retirement_should_yield()||cx.fuel_remaining()==0||grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()))}self.work_issuer.take();self.work_admitted=false;let progress=RetainedCloneProgress{copied_items:1,..Default::default()};let receipt=cx.consume_retained(progress);cx.consume_fuel(1);receipt?;return Ok(RetainedCloneStep::Progress(progress))}
+  if self.work_issuer.is_some(){if self.work_issuer.as_ref().is_some_and(OriginalWorkActionIssuer::has_pending_work){return Err(refusal("original native work issuer retains a pending quote").into())}let grant=cx.retained_grant();if cx.retirement_should_yield()||cx.fuel_remaining()==0||grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()))}self.work_issuer.take();self.work_admitted=false;let progress=RetainedCloneProgress{copied_items:1,..Default::default()};let receipt=cx.consume_retained(progress);cx.consume_fuel(1);receipt?;return Ok(RetainedCloneStep::Progress(progress))}
   if self.allocation_issuer.is_some(){let grant=cx.retained_grant();if cx.retirement_should_yield()||cx.fuel_remaining()==0||grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()))}self.allocation_issuer.take();self.issuer_admitted=false;let progress=RetainedCloneProgress{copied_items:1,..Default::default()};let receipt=cx.consume_retained(progress);cx.consume_fuel(1);receipt?;return Ok(RetainedCloneStep::Progress(progress))}
   if let Some(source)=self.source.as_mut(){self.returning=true;let parent=cx.original_source_parent()?;let before=cx.retained_progress();source.close_step(parent,cx)?;if source.terminal_is_empty(){self.source.take();}let after=cx.retained_progress();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes}))}
   if !metadata(cx,true)?{return Ok(RetainedCloneStep::Progress(Default::default()))}self.closed=true;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))

@@ -31,3 +31,7 @@ serde = { workspace = true }
 [dev-dependencies]
 serde_json = { workspace = true }
 semio-framework-value-testing-allocator = { path = "../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+
+[[test]]
+name = "owned-entry-effects"
+path = "../../✍️owned-entry/🧪️tests/effect.rs"

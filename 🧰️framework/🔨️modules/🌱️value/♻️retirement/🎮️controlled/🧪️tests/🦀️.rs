@@ -76,3 +76,21 @@ fn retained_unsupported_original_stays_inline_through_demand_and_step_refusal(){
  struct Unsupported(String);impl RetireOwned for Unsupported{fn retirement(self)->Box<dyn RetirementCursor>{panic!("unsupported original must never construct a cursor")}fn controlled_retirement_supported()->bool{false}}
  let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/📥️root/🔣️.json")).unwrap();let original=Unsupported(law["source"].as_str().unwrap().to_owned());let pointer=original.0.as_ptr();let(mut owner,heap)=crate::allocation_testing::observe_retirement_allocations(||ControlledRetirement::retain(original));assert_eq!(heap,(0,0));assert_eq!(owner.original().unwrap().0.as_ptr(),pointer);let(error,heap)=crate::allocation_testing::observe_retirement_allocations(||owner.next_demand(4096).unwrap_err());assert_eq!(error.kind,ValueRefusalKind::UnsupportedOwner);assert_eq!(heap,(0,0));let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64};let(error,heap)=crate::allocation_testing::observe_retirement_allocations(||owner.step(grant).unwrap_err());assert_eq!(error.kind,ValueRefusalKind::UnsupportedOwner);assert_eq!(error.retained_progress(),Default::default());assert_eq!(heap,(0,0));assert!(owner.original_is_untouched());let(recovered,heap)=crate::allocation_testing::observe_retirement_allocations(||owner.take_original().unwrap());assert_eq!(heap,(0,0));assert_eq!(recovered.0.as_ptr(),pointer);assert!(owner.terminal_is_empty());drop(owner);drop(recovered);
 }
+
+mod actual_attempt{
+use super::*;
+#[test]
+fn controlled_frontier_forwards_its_original_effect_to_the_physical_allocator(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("attempt.json")).unwrap();
+ let(probe,heap)=crate::allocation_testing::observe_retirement_allocations(||std::hint::black_box(vec![0u8;73]));assert_eq!(heap.0,73);drop(probe);
+ for row in law["cases"].as_array().unwrap(){
+  let mut owner=ControlledRetirement::new(7u64).unwrap();let quote=owner.next_capacity_byte_demand(4096).unwrap();let mut actual=None;let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:if row["admitted"].as_bool().unwrap(){quote}else{0},maximum_release_bytes:262144,maximum_depth:64};
+  let mut effect=crate::RetainedAllocationEffect::new(grant,1,&mut actual);
+  let(turn,heap)=crate::allocation_testing::observe_retirement_allocations(||if row["failAllocator"].as_bool().unwrap(){let(result,attempts)=crate::allocation_testing::refuse_one_allocation_on_this_thread(||owner.step(&mut effect));assert_eq!(attempts,1);result}else{owner.step(&mut effect)});
+  assert_eq!(owner.last_turn_work(),row["work"].as_u64().unwrap());assert_eq!(heap.1,0);match row["actual"].as_str(){Some("positive")=>{assert_eq!(actual,Some(heap.0));assert!(heap.0>0)},_ if row["actual"].is_null()=>{assert_eq!(actual,None);assert_eq!(heap.0,0)},_=>{assert_eq!(actual,Some(0));assert_eq!(heap.0,0)}}
+  if row["failAllocator"].as_bool().unwrap(){assert!(turn.is_err())}else{assert!(turn.is_ok())}assert_eq!(*owner.original().unwrap(),7);
+  for _ in 0..64{if owner.terminal_is_empty(){break}let mut actual=None;let mut effect=crate::RetainedAllocationEffect::new(RetainedCloneGrant{maximum_capacity_bytes:262144,..grant},1,&mut actual);owner.step(&mut effect).unwrap();}assert!(owner.terminal_is_empty());
+ }
+}
+
+}

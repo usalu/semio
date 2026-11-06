@@ -85,7 +85,7 @@ impl<'borrow,'observer,O:FnMut(NativeEncodeProgress)->bool+?Sized> OriginalOpera
     /// 📈️ Observes genuine guest progress with the original caller's cancellation authority.
     pub fn progress(&mut self,next:NativeEncodeProgress)->Result<(),ValueError>{self.active()?;if next.owned_bytes!=self.receipt.owned{return Err(Self::invariant());}self.identity.encode(|control|{control.begin_stage(next.total)?;control.advance(next.completed)})}
     /// 🧮️ Admits an exact preallocation request before either ownership ledger advances.
-    pub fn allocation(&mut self,next:semio_framework_value::native_encoding::NativeEncodeAllocation)->Result<(),ValueError>{let maximum=self.active()?;if next.maximum_bytes>maximum||next.owned_bytes!=self.receipt.owned||self.receipt.owned.checked_add(next.bytes)!=Some(next.next_owned_bytes){return Err(Self::invariant());}if next.next_owned_bytes>next.maximum_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"foreign allocation exceeds original remaining admission"));}self.identity.encode(|control|control.charge(next.bytes))?;self.receipt.owned=next.next_owned_bytes;Ok(())}
+    pub fn allocation(&mut self,next:semio_framework_value::native_encoding::NativeAllocationRequest)->Result<(),ValueError>{let maximum=self.active()?;if next.maximum_bytes>maximum||next.owned_bytes!=self.receipt.owned||self.receipt.owned.checked_add(next.bytes)!=Some(next.next_owned_bytes){return Err(Self::invariant());}if next.next_owned_bytes>next.maximum_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"foreign allocation exceeds original remaining admission"));}self.identity.encode(|control|control.charge(next.bytes))?;self.receipt.owned=next.next_owned_bytes;Ok(())}
     /// 📬️ Returns the exact admitted guest ledger before the original caller can publish.
     pub fn finish(&mut self,owned:usize)->Result<(),ValueError>{self.active()?;if owned!=self.receipt.owned{return Err(Self::invariant());}self.identity.encode(|control|control.checkpoint())?;self.receipt.finished=true;Ok(())}
     /// 📤️ Reserves native host return storage before canonical lifting can allocate it.
@@ -127,7 +127,7 @@ impl Drop for OriginalOperationHostIo<'_, '_>{fn drop(&mut self){self.settle();}
 pub trait OriginalOperationReceiving {
  fn begin(&mut self)->Result<usize,ValueError>;
  fn progress(&mut self,next:NativeEncodeProgress)->Result<(),ValueError>;
- fn allocation(&mut self,next:semio_framework_value::native_encoding::NativeEncodeAllocation)->Result<(),ValueError>;
+ fn allocation(&mut self,next:semio_framework_value::native_encoding::NativeAllocationRequest)->Result<(),ValueError>;
  fn finish(&mut self,owned:usize)->Result<(),ValueError>;
  fn reserve_return(&mut self,bytes:usize)->Result<(),ValueError>;
  fn reserved_return_bytes(&self)->usize;
@@ -138,7 +138,7 @@ pub trait OriginalOperationReceiving {
 impl<O:FnMut(NativeEncodeProgress)->bool+?Sized> OriginalOperationReceiving for OriginalOperationReceiver<'_, '_, O> {
  fn begin(&mut self)->Result<usize,ValueError>{self.begin()}
  fn progress(&mut self,next:NativeEncodeProgress)->Result<(),ValueError>{self.progress(next)}
- fn allocation(&mut self,next:semio_framework_value::native_encoding::NativeEncodeAllocation)->Result<(),ValueError>{self.allocation(next)}
+ fn allocation(&mut self,next:semio_framework_value::native_encoding::NativeAllocationRequest)->Result<(),ValueError>{self.allocation(next)}
  fn finish(&mut self,owned:usize)->Result<(),ValueError>{self.finish(owned)}
  fn reserve_return(&mut self,bytes:usize)->Result<(),ValueError>{self.reserve_return(bytes)}
  fn reserved_return_bytes(&self)->usize{self.reserved_return_bytes()}

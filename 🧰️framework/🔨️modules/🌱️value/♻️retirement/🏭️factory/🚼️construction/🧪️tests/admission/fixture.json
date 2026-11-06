@@ -1,0 +1,53 @@
+{
+  "cases": [
+    {
+      "id": "denied",
+      "events": [
+        "deny"
+      ],
+      "attempts": 0,
+      "sourceRetained": true,
+      "ticketRetained": false
+    },
+    {
+      "id": "null",
+      "events": [
+        "enter",
+        "attempt",
+        "record"
+      ],
+      "attempts": 1,
+      "sourceRetained": true,
+      "ticketRetained": false
+    },
+    {
+      "id": "recorded-unwind",
+      "events": [
+        "enter",
+        "attempt",
+        "publish",
+        "record",
+        "unwind",
+        "recover"
+      ],
+      "attempts": 1,
+      "sourceRetained": true,
+      "ticketRetained": true
+    },
+    {
+      "id": "paid-transfer",
+      "events": [
+        "enter",
+        "attempt",
+        "publish",
+        "record",
+        "transfer"
+      ],
+      "attempts": 1,
+      "sourceRetained": false,
+      "ticketRetained": true
+    }
+  ],
+  "producerCalls": 1,
+  "transferWork": 1
+}

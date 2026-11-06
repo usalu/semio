@@ -1,0 +1,168 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "bytes",
+    "work",
+    "events",
+    "expected",
+    "cleanup",
+    "workOverrun",
+    "pendingQuote"
+  ],
+  "properties": {
+    "bytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "work": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "child",
+          "commit",
+          "post",
+          "recover",
+          "receipt",
+          "finish"
+        ]
+      },
+      "minItems": 6,
+      "maxItems": 6
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "childCalls",
+        "committedAtPost",
+        "capacityAtPost",
+        "posts",
+        "recoveries",
+        "proofLiveAfterInterruption",
+        "proofReturnedAfterReceipt"
+      ],
+      "properties": {
+        "childCalls": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "committedAtPost": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capacityAtPost": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "posts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "recoveries": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "proofLiveAfterInterruption": {
+          "type": "boolean"
+        },
+        "proofReturnedAfterReceipt": {
+          "type": "boolean"
+        }
+      }
+    },
+    "cleanup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "observer",
+        "expectedRelease",
+        "work",
+        "posts"
+      ],
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "observer": {
+          "const": false
+        },
+        "expectedRelease": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "work": {
+          "const": 3
+        },
+        "posts": {
+          "const": 3
+        }
+      }
+    },
+    "workOverrun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "quoted",
+        "performed",
+        "childError",
+        "workError",
+        "retainedCauses",
+        "effectCalls"
+      ],
+      "properties": {
+        "quoted": {
+          "const": 1
+        },
+        "performed": {
+          "const": 3
+        },
+        "childError": {
+          "type": "string"
+        },
+        "workError": {
+          "type": "string"
+        },
+        "retainedCauses": {
+          "const": 3
+        },
+        "effectCalls": {
+          "const": 1
+        }
+      }
+    },
+    "pendingQuote": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bytes",
+        "work",
+        "quoteCalls",
+        "effectCallsBeforeRecovery",
+        "effectCallsAfterRecovery"
+      ],
+      "properties": {
+        "bytes": {
+          "const": 5
+        },
+        "work": {
+          "const": 1
+        },
+        "quoteCalls": {
+          "const": 1
+        },
+        "effectCallsBeforeRecovery": {
+          "const": 0
+        },
+        "effectCallsAfterRecovery": {
+          "const": 1
+        }
+      }
+    }
+  }
+}

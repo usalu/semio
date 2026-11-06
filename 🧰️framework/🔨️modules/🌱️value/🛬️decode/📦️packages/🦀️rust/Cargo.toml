@@ -21,6 +21,10 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value-receiving = { path = "../../../🫴️receiving/📦️packages/🦀️rust" }
+semio-framework-value-call = { path = "../../../♻️retirement/📦️call/📦️packages/🦀️rust" }
+semio-framework-value-native-outcome = { path = "../../📬️outcome/📦️packages/🦀️rust" }
+semio-framework-value-native-number = { path = "../../🔢️number/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path="../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-retirement = { path="../../../♻️retirement/📦️packages/🦀️rust" }
 semio-framework-value-native-encoding = { path="../../../🛫️encode/📦️packages/🦀️rust" }

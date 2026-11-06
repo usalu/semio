@@ -1,0 +1,54 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "staged",
+          "entered",
+          "recorded",
+          "expected",
+          "validation"
+        ],
+        "properties": {
+          "staged": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "entered": {
+            "type": "boolean"
+          },
+          "recorded": {
+            "enum": [
+              "none",
+              "accepted",
+              "refused"
+            ]
+          },
+          "expected": {
+            "enum": [
+              "first",
+              "pending",
+              "accepted",
+              "refused",
+              "context"
+            ]
+          },
+          "validation": {
+            "enum": [
+              "ok",
+              "refused"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

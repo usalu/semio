@@ -4,7 +4,7 @@
   "additionalProperties": false,
   "required": ["roles", "retirement", "outer", "effects"],
   "properties": {
-    "roles": {"const": ["primary", "workRefusal", "receiptRefusal"]},
+    "roles": {"const": ["primary", "workRefusal", "receiptRefusal", "allocationRefusal"]},
     "retirement": {"$ref": "#/$defs/retirement"},
     "outer": {
       "type": "object", "additionalProperties": false,
@@ -27,7 +27,7 @@
     "retirement": {
       "type": "object", "additionalProperties": false,
       "required": ["progressOverride", "retainedProgress"],
-      "properties": {"primary": {"$ref": "#/$defs/value"}, "workRefusal": {"$ref": "#/$defs/value"}, "receiptRefusal": {"$ref": "#/$defs/value"}, "child": {"$ref": "#/$defs/retirement"}, "progressOverride": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/progress"}]}, "retainedProgress": {"$ref": "#/$defs/progress"}}
+      "properties": {"primary": {"$ref": "#/$defs/value"}, "workRefusal": {"$ref": "#/$defs/value"}, "receiptRefusal": {"$ref": "#/$defs/value"}, "allocationRefusal": {"$ref": "#/$defs/value"}, "child": {"$ref": "#/$defs/retirement"}, "progressOverride": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/progress"}]}, "retainedProgress": {"$ref": "#/$defs/progress"}}
     }
   }
 }

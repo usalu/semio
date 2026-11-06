@@ -1,0 +1,27 @@
+import fs from "node:fs/promises";import path from "node:path";import {createHash} from "node:crypto";
+const {readRustSourceClosureV1}=await import(path.join(process.cwd(),"🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts"));
+const targets=["🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/Cargo.toml","🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust/Cargo.toml","🧰️framework/🔨️modules/🌱️value/🛬️decode/📬️outcome/📦️packages/🦀️rust/Cargo.toml","🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust/Cargo.toml","🧰️framework/🔨️modules/🌱️value/📋️list/📦️packages/🦀️rust/Cargo.toml","🧰️framework/🔨️modules/🌱️value/🛬️decode/📦️packages/🦀️rust/Cargo.toml","🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust/Cargo.toml","🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/⚙️engine/📦️packages/🦀️rust/Cargo.toml","🧰️framework/🔨️modules/🧵️job/⏱️context/📦️packages/🦀️rust/Cargo.toml","🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/📦️packages/🦀️rust/Cargo.toml","🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust/Cargo.toml","🧰️framework/🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust/Cargo.toml","🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📦️packages/🦀️rust/Cargo.toml"];
+targets.push("🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧬️protocol/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧱️bulk/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔐️shared-slots/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️original-vector/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/📝️text/📦️paged/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/🎟️source/📒️book/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/🛫️encode/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/🫴️receiving/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️contract/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📏️physical/📦️packages/🦀️rust/Cargo.toml");
+const selected=new Set(process.argv.slice(2));const out=[];
+for(const manifest of targets){const doc=Bun.TOML.parse(await fs.readFile(manifest,"utf8")) as any;if(selected.size&&!selected.has(doc.package.name))continue;for(const os of ["linux","windows","macos"]){const cfg=["test","debug_assertions","target_arch=x86_64","target_os="+os,"target_family="+(os==="windows"?"windows":"unix"),os==="windows"?"windows":"unix","target_env="+(os==="linux"?"gnu":os==="windows"?"msvc":""),"target_pointer_width=64","target_endian=little","target_has_atomic=8","target_has_atomic=16","target_has_atomic=32","target_has_atomic=64","target_has_atomic=ptr"];const rows=await readRustSourceClosureV1([path.resolve(path.dirname(manifest),doc.lib.path)],process.cwd(),cfg,async file=>{try{return new Uint8Array(await fs.readFile(file))}catch(e){if((e as any).code==="ENOENT")return null;throw e}},{manifestDirectory:path.resolve(path.dirname(manifest)),generated:()=>{}});const bytes=rows.reduce((n,r)=>n+r.bytes,0),lines=rows.reduce((n,r)=>n+r.activeLines,0),limits=doc.package.metadata?.semio?.["rust-source-boundary"];out.push({package:doc.package.name,os,files:rows.length,bytes,lines,limits,admitted:limits?rows.length<=limits.maxSourceFiles&&bytes<=limits.maxSourceBytes&&lines<=limits.maxActiveLines:null,hashes:await Promise.all(rows.map(async r=>({path:r.path,sha:createHash("sha256").update(await fs.readFile(path.resolve(r.path))).digest("hex")})))});}}
+await fs.writeFile("/home/deck/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/NORM-COMPLETE-VISUAL-EUROCODE-PLUGINS/🗑️generated/"+(selected.size?"native-value-selected-census.json":"native-value-source-census.json"),JSON.stringify(out,null,2));console.log(JSON.stringify(out.map(({hashes,...r})=>r),null,2));

@@ -1,0 +1,39 @@
+{
+  "cases": [
+    {
+      "staged": 2,
+      "entered": false,
+      "recorded": "none",
+      "expected": "first",
+      "validation": "ok"
+    },
+    {
+      "staged": 2,
+      "entered": true,
+      "recorded": "none",
+      "expected": "pending",
+      "validation": "ok"
+    },
+    {
+      "staged": 2,
+      "entered": true,
+      "recorded": "accepted",
+      "expected": "accepted",
+      "validation": "ok"
+    },
+    {
+      "staged": 2,
+      "entered": true,
+      "recorded": "refused",
+      "expected": "refused",
+      "validation": "ok"
+    },
+    {
+      "staged": 2,
+      "entered": false,
+      "recorded": "none",
+      "validation": "refused",
+      "expected": "context"
+    }
+  ]
+}

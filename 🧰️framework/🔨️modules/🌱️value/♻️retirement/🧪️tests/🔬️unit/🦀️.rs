@@ -669,7 +669,7 @@ fn owned_retirement_rejects_false_terminal_and_preserves_shared_roots() {
     struct Hostile {mode:Option<Arc<std::sync::atomic::AtomicU8>>}
     impl RetirementCursor for Hostile {
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{depth:usize::from(self.mode.is_some()),..Default::default()})}
-        fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {
+        fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();
             match self.mode.as_ref().unwrap().load(std::sync::atomic::Ordering::Relaxed) {1=>RetirementStep::Bytes(grant.maximum_release_bytes+1),2=>{drop(self.mode.take());RetirementStep::Advanced},_=>RetirementStep::Complete}
         }
         fn terminal_is_empty(&self)->bool {self.mode.is_none()}

@@ -45,6 +45,7 @@ impl<I:NativeValueSource+?Sized,S:Send+'static> NativeReceiver<I,ArtifactChild<S
     }
     fn begin_close(&mut self) { self.header.begin_close(); }
     fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError> { self.header.close_demands(body) }
+    fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{self.header.close_work_demand(body)}
     fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome { self.header.close_step(grant) }
     fn terminal_is_empty(&self)->bool { self.header.terminal_is_empty() }
 }

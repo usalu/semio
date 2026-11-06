@@ -1,7 +1,8 @@
 //! 🌳️ The exact intrinsic source and native receiver remain in real funded storage through publication and cancellation.
+use semio_framework_value_native_receiving_original::NativeReceivingOriginal;
 use super::*;
 use semio_framework_value::{DslValue,retained_clone::{RetainedCloneSource,RetainedCloneSourceAdmission}};
-use semio_framework_value_native_owned::native_decoding::{NativeReceive,owned::NativeReceivingOriginal};
+use semio_framework_value_native_owned::native_decoding::{NativeReceive};
 use semio_framework_value_native_storage::NativeOwnedStorage;
 /// 🧬️ The declaration identifies the original intrinsic field without allocating a metadata roster.
 pub trait NativeIntrinsicRecord:NativeReceive<DslValue>+Sync{const INTRINSIC_FIELD_ID:u16;}

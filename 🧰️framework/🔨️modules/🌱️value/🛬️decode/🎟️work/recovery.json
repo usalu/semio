@@ -4,5 +4,6 @@
   "grantCalls": 1,
   "foreignRejected": true,
   "quotePending": true,
-  "parallelReservations": 2
+  "parallelReservations": 2,
+  "replyWrittenBeforeUnwind": true
 }

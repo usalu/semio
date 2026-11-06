@@ -1,0 +1,13 @@
+{
+  "flagBytes": 1,
+  "denied": {
+    "work": 0,
+    "copy": 0,
+    "started": false
+  },
+  "admitted": {
+    "work": 1,
+    "copy": 1,
+    "started": true
+  }
+}

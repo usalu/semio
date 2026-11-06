@@ -91,10 +91,18 @@ pub fn nested_retained_clone_demands<T:RetainedClone>(child:&impl RetainedCloneC
 
 /// 🎬️ Preserves the exact admitted original action across its enclosing clone frame.
 pub fn nested_retained_clone_close_demands<T:RetainedClone>(child:&impl RetainedCloneCursor<T>,maximum_body_bytes:usize)->Result<RetirementDemand,ValueError> {
-    let mut demand=child.close_demands(maximum_body_bytes)?;
+    let mut demand=if child.close_started(){child.close_demands(maximum_body_bytes)?}else{child.begin_close_demand()?};
     demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"nested clone close depth overflow"))?;
     Ok(demand)
 }
 
 /// 📤️ Quotes the actual child output move under one enclosing cursor frame.
 pub fn nested_retained_clone_take_demands<T:RetainedClone>(child:&impl RetainedCloneCursor<T>)->Result<RetirementDemand,ValueError>{let mut demand=child.take_demand()?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"nested clone take depth overflow"))?;Ok(demand)}
+
+fn allocate_clone_storage<T>(effect:&mut RetainedAllocationEffect<'_>)->Result<Box<std::mem::MaybeUninit<T>>,ValueError>{
+ let layout=std::alloc::Layout::new::<T>();if layout.size()==0{return Ok(Box::new(std::mem::MaybeUninit::uninit()))}if effect.actual().is_some(){return Err(ValueError::invariant("original allocation attempt is occupied"))}let pointer=unsafe{std::alloc::alloc(layout)};*effect.actual()=Some(if pointer.is_null(){0}else{layout.size()});if pointer.is_null(){return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"retained clone storage allocation failed"))}Ok(unsafe{Box::from_raw(pointer.cast::<std::mem::MaybeUninit<T>>())})
+}
+
+fn child_close_start_demand<T:RetainedClone>(child:&impl RetainedCloneCursor<T>)->Result<RetirementDemand,ValueError>{if child.close_started(){Ok(RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()})}else{child.begin_close_demand()}}
+fn child_close_start_work<T:RetainedClone>(child:&impl RetainedCloneCursor<T>)->Result<u64,ValueError>{if child.close_started(){Ok(1)}else{child.begin_close_work_demand()}}
+fn start_child_close<T:RetainedClone>(child:&mut impl RetainedCloneCursor<T>,started:&mut bool,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress>{if !child.close_started(){return child.begin_close_paid(effect)}crate::start_retained_close(started,effect)}

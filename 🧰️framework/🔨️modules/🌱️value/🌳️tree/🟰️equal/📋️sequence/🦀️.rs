@@ -22,10 +22,10 @@ impl<T:RetainedEquality> RetainedSequenceEquality<T>{
 
  pub fn begin_close(&mut self){self.closing=true;if let Some(active)=self.active.as_mut(){active.begin_close();}}
  pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if let Some(active)=self.active.as_ref(){if !active.terminal_is_empty(){let mut d=active.close_demand(body.saturating_sub(Self::fixed()))?;d.copy_bytes+=Self::fixed();d.depth+=1;return Ok(d);}return Ok(RetirementDemand{release_bytes:size_of::<T::Equality>(),..scalar(Self::fixed())});}Ok(Default::default())}
- pub fn close_step(&mut self,g:RetainedCloneGrant)->crate::RetainedWorkOutcome{let mut work=0;let result=(||{
+ pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome{let g=effect.grant();let mut work=0;let result=(||{
   if !self.closing{return Err(invalid("typed sequence close has not begun"))}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
   let d=self.close_demand(g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
-  if let Some(active)=self.active.as_mut(){if !active.terminal_is_empty(){let turn=active.close_step(RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-Self::fixed(),maximum_depth:g.maximum_depth-1,..g});work=turn.work;let mut p=turn.result?.progress();p.copied_bytes+=Self::fixed();return Ok(RetainedCloneStep::Progress(p))}drop(self.active.take());work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))}
+  if let Some(active)=self.active.as_mut(){if !active.terminal_is_empty(){let turn=active.close_step(&mut effect.reborrow(RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-Self::fixed(),maximum_depth:g.maximum_depth-1,..g},effect.maximum_work_units()).expect("retirement child exceeds original effect"));work=turn.work;let mut p=turn.result?.progress();p.copied_bytes+=Self::fixed();return Ok(RetainedCloneStep::Progress(p))}drop(self.active.take());work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))}
   Ok(RetainedCloneStep::Complete(Default::default()))
  })();crate::RetainedWorkOutcome{result,work}}
 
@@ -43,7 +43,7 @@ impl<T:RetainedEquality> RetainedEqualityCursor<Vec<T>> for RetainedSequenceEqua
  fn advance(&mut self,l:&Vec<T>,r:&Vec<T>,g:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedEqualityStep>{RetainedSequenceEquality::advance(self,l.as_slice(),r.as_slice(),g)}
  fn begin_close(&mut self){self.begin_close()}
  fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close_demand(body)}
- fn close_step(&mut self,g:RetainedCloneGrant)->crate::RetainedWorkOutcome{self.close_step(g)}
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome{let g=effect.grant();self.close_step(&mut effect.reborrow(g,effect.maximum_work_units()).expect("retirement child exceeds original effect"))}
  fn terminal_is_empty(&self)->bool{self.terminal_is_empty()}
 }
 impl<T:RetainedEquality,const N:usize> RetainedEquality for [T;N]{
@@ -57,7 +57,7 @@ impl<T:RetainedEquality,const N:usize> RetainedEqualityCursor<[T;N]> for Retaine
  fn advance(&mut self,l:&[T;N],r:&[T;N],g:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedEqualityStep>{RetainedSequenceEquality::advance(self,l.as_slice(),r.as_slice(),g)}
  fn begin_close(&mut self){self.begin_close()}
  fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close_demand(body)}
- fn close_step(&mut self,g:RetainedCloneGrant)->crate::RetainedWorkOutcome{self.close_step(g)}
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome{let g=effect.grant();self.close_step(&mut effect.reborrow(g,effect.maximum_work_units()).expect("retirement child exceeds original effect"))}
  fn terminal_is_empty(&self)->bool{self.terminal_is_empty()}
 }
 
@@ -72,7 +72,7 @@ impl<T:RetainedEquality> RetainedEqualityCursor<Option<T>> for RetainedSequenceE
  fn advance(&mut self,l:&Option<T>,r:&Option<T>,g:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedEqualityStep>{RetainedSequenceEquality::advance(self,l.as_slice(),r.as_slice(),g)}
  fn begin_close(&mut self){RetainedSequenceEquality::begin_close(self)}
  fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{RetainedSequenceEquality::close_demand(self,body)}
- fn close_step(&mut self,g:RetainedCloneGrant)->crate::RetainedWorkOutcome{RetainedSequenceEquality::close_step(self,g)}
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome{let g=effect.grant();RetainedSequenceEquality::close_step(self,&mut effect.reborrow(g,effect.maximum_work_units()).expect("retirement child exceeds original effect"))}
  fn terminal_is_empty(&self)->bool{RetainedSequenceEquality::terminal_is_empty(self)}
 }
 impl<T:RetainedEquality> RetainedEquality for Box<T>{
@@ -86,6 +86,6 @@ impl<T:RetainedEquality> RetainedEqualityCursor<Box<T>> for RetainedSequenceEqua
  fn advance(&mut self,l:&Box<T>,r:&Box<T>,g:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedEqualityStep>{RetainedSequenceEquality::advance(self,std::slice::from_ref(&**l),std::slice::from_ref(&**r),g)}
  fn begin_close(&mut self){RetainedSequenceEquality::begin_close(self)}
  fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{RetainedSequenceEquality::close_demand(self,body)}
- fn close_step(&mut self,g:RetainedCloneGrant)->crate::RetainedWorkOutcome{RetainedSequenceEquality::close_step(self,g)}
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome{let g=effect.grant();RetainedSequenceEquality::close_step(self,&mut effect.reborrow(g,effect.maximum_work_units()).expect("retirement child exceeds original effect"))}
  fn terminal_is_empty(&self)->bool{RetainedSequenceEquality::terminal_is_empty(self)}
 }

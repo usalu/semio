@@ -1,0 +1,32 @@
+{
+  "stock": {
+    "items": 32,
+    "copy": 65536,
+    "capacity": 65536,
+    "release": 65536,
+    "depth": 8,
+    "fuel": 32
+  },
+  "table": {
+    "items": 1,
+    "work": 1
+  },
+  "held": {
+    "items": 2,
+    "work": 2
+  },
+  "pending": {
+    "items": 29,
+    "fuel": 29
+  },
+  "received": {
+    "items": 30,
+    "fuel": 30
+  },
+  "deniedAxes": [
+    "items",
+    "copy",
+    "release",
+    "depth"
+  ]
+}

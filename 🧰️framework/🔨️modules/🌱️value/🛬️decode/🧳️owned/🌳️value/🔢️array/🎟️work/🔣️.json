@@ -5,7 +5,7 @@
   "required": [
     "stock",
     "cases",
-    "takeCopyBytes",
+    "publicationFields",
     "cancelCuts"
   ],
   "properties": {
@@ -40,9 +40,6 @@
         }
       ]
     },
-    "takeCopyBytes": {
-      "const": 0
-    },
     "cancelCuts": {
       "const": [
         0,
@@ -53,6 +50,12 @@
         12,
         20,
         31
+      ]
+    },
+    "publicationFields": {
+      "const": [
+        "sourceOption",
+        "outputOption"
       ]
     }
   }

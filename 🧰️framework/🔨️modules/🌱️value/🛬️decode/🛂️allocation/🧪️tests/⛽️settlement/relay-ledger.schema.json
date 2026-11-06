@@ -1,0 +1,32 @@
+{
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "sameAuthority",
+      "sameLedger",
+      "equalValue",
+      "allowed",
+      "sameBinding"
+    ],
+    "properties": {
+      "sameAuthority": {
+        "type": "boolean"
+      },
+      "sameLedger": {
+        "type": "boolean"
+      },
+      "equalValue": {
+        "type": "boolean"
+      },
+      "allowed": {
+        "type": "boolean"
+      },
+      "sameBinding": {
+        "type": "boolean"
+      }
+    }
+  }
+}

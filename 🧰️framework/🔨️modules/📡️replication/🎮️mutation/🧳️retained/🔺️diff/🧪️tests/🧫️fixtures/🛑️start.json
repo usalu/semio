@@ -1,0 +1,82 @@
+{
+  "flagBytes": 1,
+  "cases": [
+    {
+      "name": "parent-denied",
+      "parent": false,
+      "child": false,
+      "grant": 0,
+      "work": 0,
+      "copy": 0,
+      "nextParent": false,
+      "nextChild": false,
+      "maximumWork": 1
+    },
+    {
+      "name": "parent-work-denied",
+      "parent": false,
+      "child": false,
+      "grant": 1,
+      "maximumWork": 0,
+      "work": 0,
+      "copy": 0,
+      "nextParent": false,
+      "nextChild": false
+    },
+    {
+      "name": "parent-admitted",
+      "parent": false,
+      "child": false,
+      "grant": 1,
+      "work": 1,
+      "copy": 1,
+      "nextParent": true,
+      "nextChild": false,
+      "maximumWork": 1
+    },
+    {
+      "name": "child-denied",
+      "parent": true,
+      "child": false,
+      "grant": 0,
+      "work": 0,
+      "copy": 0,
+      "nextParent": true,
+      "nextChild": false,
+      "maximumWork": 1
+    },
+    {
+      "name": "child-work-denied",
+      "parent": true,
+      "child": false,
+      "grant": 1,
+      "maximumWork": 0,
+      "work": 0,
+      "copy": 0,
+      "nextParent": true,
+      "nextChild": false
+    },
+    {
+      "name": "child-admitted",
+      "parent": true,
+      "child": false,
+      "grant": 1,
+      "work": 1,
+      "copy": 1,
+      "nextParent": true,
+      "nextChild": true,
+      "maximumWork": 1
+    },
+    {
+      "name": "repeat",
+      "parent": true,
+      "child": true,
+      "grant": 0,
+      "work": 0,
+      "copy": 0,
+      "nextParent": true,
+      "nextChild": true,
+      "maximumWork": 1
+    }
+  ]
+}

@@ -15,7 +15,10 @@
     "scalarCopyBytes",
     "deniedWork",
     "ownedTransferWork",
-    "pureInitializerHeapBytes"
+    "pureInitializerHeapBytes",
+    "slotIdentityFields",
+    "slotCaptureWork",
+    "publicationReply"
   ],
   "properties": {
     "before": {
@@ -152,6 +155,24 @@
     },
     "pureInitializerHeapBytes": {
       "const": 0
+    },
+    "slotIdentityFields": {
+      "const": [
+        "source",
+        "projectionParent",
+        "projectionAddress",
+        "discriminator"
+      ]
+    },
+    "slotCaptureWork": {
+      "const": 1
+    },
+    "publicationReply": {
+      "const": [
+        "originalReceiver",
+        "recordBeforeReturn",
+        "recoverSameProducer"
+      ]
     }
   }
 }

@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "owner": "none",
+      "wire": "null",
+      "unchanged": true
+    },
+    {
+      "owner": "owned",
+      "wire": "error",
+      "unchanged": true
+    },
+    {
+      "owner": "retained",
+      "wire": "refused",
+      "unchanged": true
+    }
+  ]
+}

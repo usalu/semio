@@ -16,7 +16,7 @@ fn genuine_scalar_projection_preserves_binding_copy_and_take_work_under_one_bank
   let quoted=cursor.advance_work_demand(source.borrow(),stock.maximum_copy_bytes).unwrap();let turn=cursor.advance(source.borrow(),stock.maximum_copy_bytes,g);assert_eq!(quoted,turn.work);assert_eq!(turn.work,law["expected"][key].as_u64().unwrap());cpu-=turn.work;let p=turn.result.unwrap().progress();assert!(p.fits(g));stock.maximum_items-=p.copied_items;stock.maximum_copy_bytes-=p.copied_bytes;stock.maximum_capacity_bytes-=p.retained_capacity_bytes;stock.maximum_release_bytes-=p.released_bytes;
  }
  assert!(cursor.ready());let d=cursor.take_demand().unwrap();let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_depth:d.depth,..Default::default()};let quoted=cursor.take_work_demand().unwrap();let turn=cursor.take(g);assert_eq!(quoted,turn.work);assert_eq!(turn.work,law["expected"]["takeCpu"].as_u64().unwrap());cpu-=turn.work;let(output,p)=turn.result.unwrap().unwrap();assert_eq!(output,*oracle);stock.maximum_items-=p.copied_items;stock.maximum_copy_bytes-=p.copied_bytes;
- let quoted=cursor.begin_close_work_demand().unwrap();assert_eq!(quoted,law["expected"]["closeStartCpu"].as_u64().unwrap());let turn=cursor.begin_close_paid();assert_eq!(turn.work,quoted);turn.result.unwrap();cpu=cpu.checked_sub(turn.work).unwrap();let repeated=cursor.begin_close_paid();assert_eq!(repeated.work,law["expected"]["repeatedCloseStartCpu"].as_u64().unwrap());repeated.result.unwrap();
+ let quoted=cursor.begin_close_work_demand().unwrap();assert_eq!(quoted,law["expected"]["closeStartCpu"].as_u64().unwrap());let start=cursor.begin_close_demand().unwrap();let turn=cursor.begin_close_paid(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:start.copy_bytes,maximum_depth:start.depth,..Default::default()});assert_eq!(turn.work,quoted);let start_receipt=turn.result.unwrap();stock.maximum_items-=start_receipt.copied_items;stock.maximum_copy_bytes-=start_receipt.copied_bytes;cpu=cpu.checked_sub(turn.work).unwrap();let repeated=cursor.begin_close_paid(Default::default());assert_eq!(repeated.work,law["expected"]["repeatedCloseStartCpu"].as_u64().unwrap());repeated.result.unwrap();
  for _ in 0..law["maximumTurns"].as_u64().unwrap(){
   if cursor.terminal_is_empty(){break}
   let d=cursor.close_demands(stock.maximum_copy_bytes).unwrap();let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};
@@ -53,7 +53,7 @@ impl SnapshotProjectionCursor<RefusingProjectionSource> for RefusingProjectionCu
  fn begin_close(&mut self){self.closing=true}
  fn close_demands(&self,_:usize)->Result<RetirementDemand,ValueError>{Ok(Default::default())}
  fn close_work_demand(&self,_:usize)->Result<u64,ValueError>{Ok(0)}
- fn close_step(&mut self,_:RetainedCloneGrant)->crate::OriginalRetirementOutcome{crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let _=effect.grant();crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
  fn terminal_is_empty(&self)->bool{self.closing}
 }
 #[test]

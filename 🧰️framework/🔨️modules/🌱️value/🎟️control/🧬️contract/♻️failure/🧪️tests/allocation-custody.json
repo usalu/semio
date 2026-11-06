@@ -1,0 +1,32 @@
+[
+  {
+    "name": "owned",
+    "primary": "allocator",
+    "work": "payer",
+    "receipt": "physical receipt",
+    "allocation": "owned",
+    "child": true,
+    "override": 11,
+    "selected": 3
+  },
+  {
+    "name": "retained",
+    "primary": null,
+    "work": "payer",
+    "receipt": "physical receipt",
+    "allocation": "retained",
+    "child": true,
+    "override": 11,
+    "selected": 3
+  },
+  {
+    "name": "allocation only",
+    "primary": null,
+    "work": null,
+    "receipt": null,
+    "allocation": "owned",
+    "child": false,
+    "override": null,
+    "selected": 7
+  }
+]

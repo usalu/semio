@@ -1,7 +1,7 @@
 //! 🔗️ Persistent paged lists — wiring only. Domain lives at the owner `🦀️.rs` files.
 
 use semio_framework_value_control_contract::{ValueError, ValueRefusalKind};
-pub use semio_framework_value_control_contract::{RetainedWorkOutcome,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
+pub use semio_framework_value_control_contract::{RetainedWorkOutcome,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedAllocationEffect,OriginalRetirementCloseLoan};
 use semio_framework_value_derive::{RetainedEquality, RetireOwned, ToValue};
 use semio_framework_value_intrinsic::{DslValue, FromValue, ToValue, ValueShape};
 use semio_framework_value_retained_clone::retained_clone;

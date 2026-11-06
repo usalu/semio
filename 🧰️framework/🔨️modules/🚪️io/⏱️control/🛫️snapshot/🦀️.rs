@@ -152,14 +152,14 @@ fn publish_output<T:RetireOwned,O:RetireOwned,N:SnapshotAdmission>(frame:&mut Na
 fn report_work(result:Result<(),super::NativeSnapshotFailure>,work:&mut u64,units:u64)->Result<(),super::NativeSnapshotFailure>{
  if let Some(total)=work.checked_add(units){*work=total;return result}
  let refusal=||ValueError::literal(ValueRefusalKind::WorkLimit,"native snapshot work report exceeds its original counter");
- match result{Ok(())=>Err(super::NativeSnapshotFailure::context(refusal())),Err(mut error)=>{if error.context_refusal.is_none(){error.context_refusal=Some(refusal())}Err(error)}}
+ match result{Ok(())=>Err(super::NativeSnapshotFailure::context(refusal())),Err(error)=>{if error.has_direct_context_refusal(){Err(error)}else{Err(error.with_context_refusal(refusal()))}}}
 }
 fn post(result:Result<(),super::NativeSnapshotFailure>,driver:&mut NativeSnapshotBodyWallet,performed:&mut RetainedCloneProgress,progress:RetainedCloneProgress)->Result<(),super::NativeSnapshotFailure>{
- if result.as_ref().err().is_some_and(|error|error.receipt_refusal.is_some()){
+ if result.as_ref().err().is_some_and(|error|error.has_direct_receipt_refusal()){
   driver.progress=driver.progress.checked_add(progress).expect("actual original physical receipts fit address space");*performed=driver.progress();return result
  }
  let receipt=driver.record_progress(progress);*performed=driver.progress();
- match(result,receipt){(result,Ok(()))=>result,(Ok(()),Err(error))=>Err(super::NativeSnapshotFailure::receipt(error)),(Err(mut primary),Err(error))=>{primary.receipt_refusal=Some(error);Err(primary)}}
+ match(result,receipt){(result,Ok(()))=>result,(Ok(()),Err(error))=>Err(super::NativeSnapshotFailure::receipt(error)),(Err(primary),Err(error))=>Err(primary.with_receipt_refusal(error))}
 }
 fn post_frame_birth<N:SnapshotAdmission>(native:&mut N,driver:&mut NativeSnapshotBodyWallet,performed:&mut RetainedCloneProgress,grant:RetainedCloneGrant,bytes:usize)->Result<(),super::NativeSnapshotFailure>{
  let progress=RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,..Default::default()};let action=native.commit_action();let local=driver.record_progress(progress);*performed=driver.progress();let receipt=native.submit_frame(grant,progress);let mut failure=action.err().map(super::NativeSnapshotFailure::work_post);

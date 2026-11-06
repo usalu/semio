@@ -5,7 +5,10 @@
     "leaf",
     "parent",
     "attachAllocatedBytes",
-    "attachReleasedBytes"
+    "attachReleasedBytes",
+    "cursorBirth",
+    "spareSeed",
+    "allocationRetirementCauses"
   ],
   "properties": {
     "leaf": {
@@ -27,6 +30,85 @@
     },
     "attachReleasedBytes": {
       "const": 0
+    },
+    "cursorBirth": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "maximumWork",
+          "capacity",
+          "allocator",
+          "attempts",
+          "reportedWork",
+          "marker",
+          "sourceRetained",
+          "copy"
+        ],
+        "properties": {
+          "maximumWork": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "capacity": {
+            "enum": [
+              "short",
+              "exact"
+            ]
+          },
+          "allocator": {
+            "enum": [
+              "none",
+              "null"
+            ]
+          },
+          "attempts": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "reportedWork": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "marker": {
+            "type": "boolean"
+          },
+          "sourceRetained": {
+            "type": "boolean"
+          },
+          "copy": {
+            "enum": [
+              "short",
+              "exact"
+            ]
+          }
+        }
+      }
+    },
+    "spareSeed": {
+      "const": {
+        "allocatedBytes": 0,
+        "deniedWork": 0,
+        "releaseWork": 1
+      }
+    },
+    "allocationRetirementCauses": {
+      "const": [
+        "primary",
+        "admission",
+        "forwardedAdmission",
+        "scopedAdmission",
+        "forwardedQuote",
+        "scopedQuote",
+        "forwardedPost",
+        "scopedPost",
+        "forwardedCancel",
+        "scopedCancel",
+        "receipt",
+        "extent"
+      ]
     }
   }
 }

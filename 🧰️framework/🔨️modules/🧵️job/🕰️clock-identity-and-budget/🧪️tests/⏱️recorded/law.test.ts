@@ -1,0 +1,6 @@
+import {test,expect} from "bun:test";
+import Ajv from "ajv";
+import {Database} from "bun:sqlite";
+import cases from "./cases.json";
+import schema from "./schema.json";
+test("only the original clock action can recover its recorded decision",()=>{expect(new Ajv({strict:true}).validate(schema,cases)).toBe(true);const db=new Database(":memory:");try{for(const c of cases){const row=db.query("select case when not ? then 'reject' when ? then 'refusal' when ? then 'consume' when ? then 'recover' when ? = 0 then 'fuel' else 'receive' end next, case when ? and (? or (not ? and ? = 0)) and not ? then (? = 0 or ? is null or ? >= ? or (? is not null and ? < ?)) else null end yielded, case when ? and not ? and not ? and ? <> 0 then 1 else 0 end reads").get(Number(c.same),Number(c.refusal),Number(c.recorded),Number(c.entered),c.fuel,Number(c.same),Number(c.recorded),Number(c.entered),c.fuel,Number(c.refusal),c.fuel,c.now,c.now,c.deadline,c.previous,c.now,c.previous,Number(c.same),Number(c.recorded),Number(c.entered),c.fuel) as {next:string,yielded:number|null,reads:number};expect(row.next).toBe(c.next);expect(row.reads).toBe(c.reads);expect(row.yielded===null?null:Boolean(row.yielded)).toBe(c.yield)}}finally{db.close()}});

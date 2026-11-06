@@ -1,0 +1,50 @@
+{
+  "cause": {
+    "type": "receiving",
+    "primary": null,
+    "quoteRefusal": null,
+    "allocationRefusal": null,
+    "workRefusal": {
+      "kind": "workLimit",
+      "message": "original work refusal",
+      "retainedProgress": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      }
+    },
+    "workOverrun": {
+      "kind": "workLimit",
+      "message": "original actual work overrun",
+      "retainedProgress": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      }
+    },
+    "nativeAllocation": null,
+    "retirementFailure": null,
+    "allocationFailure": null,
+    "receiptRefusal": null,
+    "progress": {
+      "copiedItems": 0,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0
+    }
+  },
+  "receiptRefusal": null,
+  "contextRefusal": null,
+  "workRefusal": null,
+  "progress": {
+    "copiedItems": 0,
+    "copiedBytes": 0,
+    "retainedCapacityBytes": 0,
+    "releasedBytes": 0
+  },
+  "settlementRefusal": null,
+  "allocation": null,
+  "encodeEffect": null
+}

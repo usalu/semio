@@ -1,0 +1,32 @@
+{
+  "stock": {
+    "items": 1024,
+    "copyBytes": 1048576,
+    "capacityBytes": 1048576,
+    "releaseBytes": 1048576,
+    "depth": 32,
+    "fuel": 1024
+  },
+  "body": "original factory payload",
+  "calls": 1,
+  "recoveries": 0,
+  "work": [
+    1,
+    0
+  ],
+  "probe": 73,
+  "trace": [
+    {
+      "phase": "prepare",
+      "output": true,
+      "recorded": true,
+      "interrupted": true
+    },
+    {
+      "phase": "recover",
+      "output": true,
+      "recorded": true,
+      "interrupted": false
+    }
+  ]
+}

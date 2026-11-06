@@ -1,0 +1,31 @@
+{
+  "channels": [
+    "output",
+    "operation",
+    "context",
+    "receiptRefusal"
+  ],
+  "readyBefore": false,
+  "readyAfter": true,
+  "deniedWork": 0,
+  "deniedAllocation": 0,
+  "record": {
+    "label": "output α",
+    "secret": "private 🧵",
+    "operation": "operation Ω",
+    "context": "context θ",
+    "receiptRefusal": "receipt φ",
+    "sourceDenials": [
+      "work",
+      "copy",
+      "capacity"
+    ],
+    "childDenials": [
+      "work",
+      "copy",
+      "capacity"
+    ],
+    "ownedStrings": 5,
+    "utf8Bytes": 53
+  }
+}

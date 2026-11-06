@@ -1,8 +1,9 @@
 //! 🫴️ A selected member receives its typed snapshot directly from the original sealed Pack pages.
+use semio_framework_value_native_receiving_original::NativeReceivingOriginal;
 use super::{MemberSnapshotOpenOperation,MemberSnapshotOpenStep,MemberSnapshotOpenProgress};
 use semio_framework_os_store_member_open::{MemberOpenRequest,MemberOpenAdmissionError,MemberOpenDiagnostic,MemberOpenProgress,MemberOpenPhase,MemberOpenInputStep};
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,ErasedSnapshotRetirement,retirement::{RetireOwned,controlled::ControlledRetirement},retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneSource,RetainedCloneSourceAdmission,RetainedCloneStep,retained_clone_grant_admits}};
-use semio_framework_value_native_owned::native_decoding::{owned::{NativeReceive,NativeReceivingOriginal}};
+use semio_framework_value_native_owned::native_decoding::{owned::NativeReceive};
 use semio_framework_dsl_record::{RecordValue,BorrowedDslRecord};
 use semio_framework_job::{StepContext,OriginalTurnFailure};
 use protocol::codec::RetainedWireByteSource;

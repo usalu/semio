@@ -4,7 +4,7 @@
   "deniedWork": 0,
   "nullWork": 1,
   "birthWork": 1,
-  "nullOwnedBytes": 0,
+  "nullOwnedBytes": 16,
   "stock": {
     "items": 100000,
     "copyBytes": 33554432,

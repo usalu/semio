@@ -1,0 +1,145 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "admissionWork",
+    "closeStages",
+    "cases",
+    "validation",
+    "authorityWork",
+    "receiptWork",
+    "authorityCases",
+    "receiptCases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "admissionWork": {
+      "const": 2
+    },
+    "closeStages": {
+      "const": [
+        "nativeOwners",
+        "receipt",
+        "authority",
+        "alias",
+        "slot",
+        "frame"
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "budget",
+          "sourceRetained",
+          "parentCanRetire"
+        ],
+        "properties": {
+          "budget": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sourceRetained": {
+            "type": "boolean"
+          },
+          "parentCanRetire": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "validation": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source",
+          "sameOperation",
+          "sameGeneration",
+          "valid"
+        ],
+        "properties": {
+          "source": {
+            "enum": [
+              "same",
+              "foreign"
+            ]
+          },
+          "sameOperation": {
+            "const": true
+          },
+          "sameGeneration": {
+            "const": true
+          },
+          "valid": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "authorityWork": {
+      "const": 2
+    },
+    "receiptWork": {
+      "const": 1
+    },
+    "authorityCases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "budget",
+          "copyAllowed",
+          "transferred"
+        ],
+        "properties": {
+          "budget": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "copyAllowed": {
+            "type": "boolean"
+          },
+          "transferred": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "receiptCases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "budget",
+          "copyAllowed",
+          "transferred"
+        ],
+        "properties": {
+          "budget": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "copyAllowed": {
+            "type": "boolean"
+          },
+          "transferred": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

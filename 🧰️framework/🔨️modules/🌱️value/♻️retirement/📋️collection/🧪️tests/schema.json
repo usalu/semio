@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "owners",
+    "values",
+    "maximumItems",
+    "maximumWork",
+    "body",
+    "remaining",
+    "releaseItems"
+  ],
+  "properties": {
+    "owners": {
+      "const": [
+        "vector",
+        "deque"
+      ]
+    },
+    "values": {
+      "const": [
+        11,
+        23,
+        37
+      ]
+    },
+    "maximumItems": {
+      "const": 1
+    },
+    "maximumWork": {
+      "const": 1
+    },
+    "body": {
+      "const": 64
+    },
+    "remaining": {
+      "const": [
+        2,
+        1,
+        0
+      ]
+    },
+    "releaseItems": {
+      "const": 1
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "started",
+          "copy",
+          "items",
+          "depth",
+          "changed",
+          "work",
+          "bytes",
+          "maximumWork"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "started": {
+            "type": "boolean"
+          },
+          "copy": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "depth": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "changed": {
+            "type": "boolean"
+          },
+          "work": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "maximumWork": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

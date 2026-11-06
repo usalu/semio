@@ -1,0 +1,96 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "quoteWork",
+    "cases",
+    "layoutCases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "quoteWork": {
+      "const": 3
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "grant",
+          "allocated",
+          "attempted",
+          "input",
+          "output",
+          "work"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "grant": {
+            "type": "boolean"
+          },
+          "allocated": {
+            "type": "boolean"
+          },
+          "attempted": {
+            "type": "boolean"
+          },
+          "input": {
+            "type": "boolean"
+          },
+          "output": {
+            "type": "boolean"
+          },
+          "work": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "layoutCases": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sourceHeader",
+          "historyHeader",
+          "quote",
+          "success",
+          "refused"
+        ],
+        "properties": {
+          "sourceHeader": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "historyHeader": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "quote": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "success": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "refused": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}

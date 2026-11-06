@@ -3,7 +3,7 @@
   "innerWork": "inner work post",
   "kind": "Canceled",
   "nodes": 2,
-  "causes": 4,
+  "causes": 5,
   "outerWork": "outer retirement receipt 雪",
   "innerReceipt": "inner receipt post",
   "sourceDepthCases": [
@@ -33,5 +33,6 @@
       "depth": 3,
       "accepted": true
     }
-  ]
+  ],
+  "innerAllocation": "inner allocation refusal"
 }

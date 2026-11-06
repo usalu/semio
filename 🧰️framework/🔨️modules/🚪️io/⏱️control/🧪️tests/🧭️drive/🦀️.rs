@@ -57,13 +57,13 @@ fn snapshot_cursor_rich_outcome_conserves_original_work_causes_and_custody(){
   let g=super::fixture_grant();let mut caller=OriginalJobFixtureCaller::admit(OperationId(897),Generation(19),g,||Some(1),u64::MAX,1<<20);let mut decoder=OriginalJobDecodeOwner::empty();
   let mut cursor=Some(vec![1u8,2,3,4,5,6,7]);let pointer=cursor.as_ref().unwrap().as_ptr();
   let last=row["steps"].as_array().unwrap().last().unwrap();let errors=last["errors"].as_array().unwrap();let error=|name:&str|errors.iter().any(|value|value==name).then(||ValueError::new(ValueRefusalKind::InvalidValue,format!("original {name}")));
-  let mut original=(!errors.is_empty()).then(||OriginalReceivingPrimary{retirement_failure:None,work_refusal:None,primary:error("primary"),quote_refusal:error("quote"),allocation_refusal:error("allocation"),allocation_failure:None,native_allocation:None,receipt_refusal:None,progress:Default::default()});
+  let mut original=(!errors.is_empty()).then(||OriginalReceivingPrimary{retirement_failure:None,work_refusal:None,work_overrun:None,primary:error("primary"),quote_refusal:error("quote"),allocation_refusal:error("allocation"),allocation_failure:None,native_allocation:None,receipt_refusal:None,progress:Default::default()});
   let pointers=original.as_ref().map(|failure|[failure.primary.as_ref(),failure.quote_refusal.as_ref(),failure.allocation_refusal.as_ref()].map(|error|error.map(|error|error.message.as_ptr())));
   let calls=Cell::new(0usize);let probes=Cell::new(0u64);let mut owner_grant=g;if !row["admitted"].as_bool().unwrap(){owner_grant.maximum_items=0}
   let outcome=turn(&mut caller,&mut decoder,owner_grant,|owner|owner.drive_cursor::<Vec<u8>,(),OriginalReceivingPrimary>(&mut cursor,&mut |cursor,native,_|{
    assert_eq!(cursor.as_ptr(),pointer);let index=calls.get();calls.set(index+1);let event=&row["steps"][index];let units=event["work"].as_u64().unwrap();native.prepare_work(units).unwrap();for at in 0..units{std::hint::black_box(cursor[at as usize%cursor.len()]);probes.set(probes.get()+1)}native.commit_work(units).unwrap();
    let progress=RetainedCloneProgress{copied_items:event["items"].as_u64().unwrap()as usize,..Default::default()};
-   let result=match event["result"].as_str().unwrap(){"pending"=>Ok((None,progress)),"ready"=>Ok((Some(()),progress)),"failed"=>{let mut error=original.take().unwrap();error.progress=progress;Err(error)},_=>unreachable!()};RetainedWorkOutcome{result,work:units}
+   let result=match event["result"].as_str().unwrap(){"pending"=>Ok((None,progress)),"ready"=>Ok((Some(()),progress)),"failed"=>{let error=original.take().unwrap().with_retained_progress(progress);Err(error)},_=>unreachable!()};RetainedWorkOutcome{result,work:units}
   }));
   assert_eq!(calls.get(),row["expected"]["calls"].as_u64().unwrap()as usize);assert_eq!(probes.get(),row["expected"]["producerWork"].as_u64().unwrap());assert!(outcome.work>=probes.get());
   if !row["admitted"].as_bool().unwrap(){assert_eq!(outcome.work,0);assert_eq!(cursor.as_ref().unwrap().as_ptr(),pointer);}

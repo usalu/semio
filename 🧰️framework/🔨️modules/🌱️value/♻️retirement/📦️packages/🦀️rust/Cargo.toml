@@ -25,6 +25,7 @@ name = "original-selected-retirement"
 path = "../../🧪️tests/🎯️selected/owning.rs"
 
 [dependencies]
+semio-framework-value-retirement-contract = { path="../../🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path="../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-allocation-return = { path="../../📦️allocation-return/📦️packages/🦀️rust" }
 semio-framework-value-paged-list = { path="../../../📋️list/📦️packages/🦀️rust" }
@@ -36,3 +37,7 @@ semio-framework-value-factory = { path="../../🏭️factory/📦️packages/�
 serde_json = { workspace = true }
 semio-framework-value-derive = { path="../../../✨️derive/📦️packages/🦀️rust" }
 semio-framework-value-testing-allocator = { path = "../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+
+[[test]]
+name = "scalar-collection-grants"
+path = "../../📋️collection/🧪️tests/native.rs"

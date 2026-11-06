@@ -1,0 +1,43 @@
+{
+  "type": "array",
+  "minItems": 5,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "same",
+      "entered",
+      "reply",
+      "next",
+      "spans"
+    ],
+    "properties": {
+      "same": {
+        "type": "boolean"
+      },
+      "entered": {
+        "type": "boolean"
+      },
+      "reply": {
+        "enum": [
+          "none",
+          "accept",
+          "cancel"
+        ]
+      },
+      "next": {
+        "enum": [
+          "receive",
+          "recover",
+          "accept",
+          "cancel",
+          "reject"
+        ]
+      },
+      "spans": {
+        "type": "integer",
+        "const": 0
+      }
+    }
+  }
+}

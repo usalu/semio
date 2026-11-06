@@ -2,7 +2,7 @@
 pub use semio_framework_value_control_contract::*;
 pub use semio_framework_value_control_contract as retained_clone;
 pub use semio_framework_value_shared_issuance as shared_issuance;
-pub use semio_framework_value_retirement::{ErasedSnapshotRetirement,factory_ticket_demands,close_factory_ticket,close_factory_ticket_original};
+pub use semio_framework_value_retirement::{ErasedSnapshotRetirement,OriginalRetirementPoll,factory_ticket_demands,close_factory_ticket,close_factory_ticket_original};
 pub use semio_framework_value_retirement::retirement;
 pub use semio_framework_value_native_encoding::{native_encoding,NativeEncodeControl,NativeEncodeContinuation};
 #[path="../../🦀️.rs"]
@@ -12,3 +12,5 @@ pub use native_decoding::*;
 use semio_framework_value_testing_allocator as allocation_testing;
 #[cfg(test)]
 pub(crate) use allocation_testing::observe_retirement_allocations;
+
+pub use semio_framework_value_receiving::span::effect::{OriginalEffectAction,OriginalEffectAuthority,OriginalEffectCallbackMode,OriginalEffectProducer,OriginalEffectReply,OriginalEffectReplyComplete};

@@ -7,7 +7,7 @@ test("original Member allocation quotes and actual physical settlements remain s
  expect(semioSchemaAjvV1({strict:true}).validate(schema,law)).toBe(true);
  const db=new Database(":memory:");
  try{for(const row of law.cases){
-  const result=db.query("SELECT ?1>?2 AS quoteRefused,CASE WHEN ?1>?2 THEN 0 WHEN ?3 IN ('foreign','duplicate') THEN 1 WHEN ?3='post' AND (?4>?1 OR ?4>?2) THEN 1 ELSE 0 END AS settlementRefused,CASE WHEN ?1<=?2 AND ?3='post' THEN ?4 ELSE 0 END AS spent,?1<=?2 AND ?3 IN ('foreign','duplicate') AS pending").get(row.bytes,row.maximum,row.action,row.actual);
+  const result=db.query("WITH quote AS (SELECT ?1>?2 OR ?5+?1!=?6 OR ?6>?7 AS refused) SELECT refused AS quoteRefused,CASE WHEN refused THEN 0 WHEN ?3 IN ('foreign','duplicate') THEN 1 WHEN ?3='post' AND (?4>?1 OR ?4>?2) THEN 1 ELSE 0 END AS settlementRefused,CASE WHEN NOT refused AND ?3='post' THEN ?4 ELSE 0 END AS spent,NOT refused AND ?3 IN ('foreign','duplicate') AS pending FROM quote").get(row.bytes,row.maximum,row.action,row.actual,row.owned,row.next,row.ceiling);
   expect(result).toEqual({quoteRefused:Number(row.quoteRefused),settlementRefused:Number(row.settlementRefused),spent:row.spent,pending:Number(row.pending)});
  }}finally{db.close()}
 });

@@ -1,0 +1,49 @@
+{
+  "cases": [
+    {
+      "name": "same producer and source",
+      "issuer": 1,
+      "producer": 1,
+      "source": 1,
+      "reply": "accepted",
+      "allowed": true,
+      "recovered": "accepted"
+    },
+    {
+      "name": "foreign producer",
+      "issuer": 1,
+      "producer": 2,
+      "source": 1,
+      "reply": "accepted",
+      "allowed": false,
+      "recovered": "pending"
+    },
+    {
+      "name": "foreign source turn",
+      "issuer": 1,
+      "producer": 1,
+      "source": 2,
+      "reply": "denied",
+      "allowed": false,
+      "recovered": "pending"
+    },
+    {
+      "name": "unanswered original action",
+      "issuer": 1,
+      "producer": 1,
+      "source": 1,
+      "reply": null,
+      "allowed": true,
+      "recovered": "pending"
+    },
+    {
+      "name": "foreign issuer",
+      "issuer": 2,
+      "producer": 1,
+      "source": 1,
+      "reply": "refused",
+      "allowed": false,
+      "recovered": "pending"
+    }
+  ]
+}

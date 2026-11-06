@@ -2,19 +2,20 @@
 use super::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement};
 use crate::{ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
 
-struct Cursor<T:RetireOwned>{owner:ControlledRetirement<T>}
+#[doc(hidden)]
+pub struct Cursor<T:RetireOwned>{owner:ControlledRetirement<T>}
 impl<T:RetireOwned> RetireOwned for std::sync::Mutex<T>{
- fn retirement(self)->Box<dyn RetirementCursor>{let original=self.into_inner().unwrap_or_else(|poisoned|poisoned.into_inner());Box::new(Cursor{owner:ControlledRetirement::new(original).unwrap_or_else(|_|panic!("admitted original mutex payload refused typed custody"))})}
+ type RetirementCursor=Cursor<T>;fn retirement_seed(self)->Self::RetirementCursor{let original=self.into_inner().unwrap_or_else(|poisoned|poisoned.into_inner());Cursor{owner:ControlledRetirement::retain(original)}}
  fn retirement_birth_bytes(&self)->Option<usize>{T::controlled_retirement_supported().then_some(size_of::<Cursor<T>>())}
  fn controlled_retirement_supported()->bool{crate::retirement::support::controlled_retirement_supported::<Self>()}fn controlled_retirement_supported_in(path:&crate::retirement::RetirementSupport<'_>)->bool{path.supports::<T>()}
 }
 impl<T:RetireOwned> RetirementCursor for Cursor<T>{
  fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.owner.next_computational_work(body)}
  fn requires_original_control(&self)->bool{crate::ErasedSnapshotRetirement::requires_original_control(&self.owner)}
- fn close_step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn crate::OriginalRetirementControl)->RetirementStep{super::erased_cursor_turn(crate::ErasedSnapshotRetirement::close_step_controlled(&mut self.owner,grant,control))}
- fn close_original_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->RetirementStep{super::erased_cursor_turn(crate::ErasedSnapshotRetirement::close_original_step(&mut self.owner,original,grant))}
+ fn close_step_controlled(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn crate::OriginalRetirementControl)->RetirementStep{let grant=effect.grant();super::erased_cursor_turn(crate::ErasedSnapshotRetirement::close_step_controlled(&mut self.owner,&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"),control))}
+ fn close_original_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();super::erased_cursor_turn(crate::ErasedSnapshotRetirement::close_original_step(&mut self.owner,original,&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect")))}
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{self.owner.next_demand(body)}
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.owner.step(grant){Ok(step)if step.progress()==RetainedCloneProgress::default()&&self.owner.terminal_is_empty()=>RetirementStep::Complete(self.owner.last_turn_work()),Ok(step)=>RetirementStep::Progress(step.progress(),self.owner.last_turn_work()),Err(error)=>RetirementStep::Failure(error,self.owner.last_turn_work())}}
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{super::erased_cursor_turn(self.owner.step(effect))}
  fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{self.owner.next_copy_byte_demand()}
  fn next_birth_bytes(&self,body:usize)->Option<usize>{self.owner.next_capacity_byte_demand(body).ok()}

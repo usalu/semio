@@ -1,0 +1,81 @@
+{
+  "cases": [
+    {
+      "name": "same pending effect",
+      "allocation": 1,
+      "work": 1,
+      "construction": 1,
+      "sourceTurn": 1,
+      "accepted": true,
+      "transaction": 1,
+      "capturedTurn": 1,
+      "authorityTurn": 1
+    },
+    {
+      "name": "foreign allocation",
+      "allocation": 2,
+      "work": 1,
+      "construction": 1,
+      "sourceTurn": 1,
+      "accepted": false,
+      "transaction": 1,
+      "capturedTurn": 1,
+      "authorityTurn": 1
+    },
+    {
+      "name": "foreign work",
+      "allocation": 1,
+      "work": 2,
+      "construction": 1,
+      "sourceTurn": 1,
+      "accepted": false,
+      "transaction": 1,
+      "capturedTurn": 1,
+      "authorityTurn": 1
+    },
+    {
+      "name": "foreign construction",
+      "allocation": 1,
+      "work": 1,
+      "construction": 2,
+      "sourceTurn": 1,
+      "accepted": false,
+      "transaction": 1,
+      "capturedTurn": 1,
+      "authorityTurn": 1
+    },
+    {
+      "name": "different dispatch",
+      "allocation": 1,
+      "work": 1,
+      "construction": 1,
+      "sourceTurn": 2,
+      "accepted": false,
+      "transaction": 1,
+      "capturedTurn": 1,
+      "authorityTurn": 1
+    },
+    {
+      "name": "different active transaction",
+      "allocation": 1,
+      "work": 1,
+      "construction": 1,
+      "sourceTurn": 1,
+      "accepted": false,
+      "transaction": 2,
+      "capturedTurn": 1,
+      "authorityTurn": 1
+    },
+    {
+      "name": "foreign initial Source token",
+      "allocation": 1,
+      "work": 1,
+      "construction": 1,
+      "sourceTurn": 2,
+      "capturedTurn": 2,
+      "authorityTurn": 1,
+      "transaction": 1,
+      "accepted": false
+    }
+  ]
+}

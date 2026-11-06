@@ -457,5 +457,505 @@
       "otherwiseEligible": false,
       "allowed": false
     }
+  ],
+  "budgetAdmissionCases": [
+    {
+      "prior": 3,
+      "requested": 5,
+      "accepted": true,
+      "settled": true,
+      "admitted": 8,
+      "physical": 0,
+      "forwarded": "accepted",
+      "scoped": "absent"
+    },
+    {
+      "prior": 3,
+      "requested": 5,
+      "accepted": false,
+      "settled": true,
+      "admitted": 3,
+      "physical": 0,
+      "forwarded": "refused",
+      "scoped": "absent"
+    },
+    {
+      "prior": 3,
+      "requested": 5,
+      "accepted": false,
+      "settled": false,
+      "admitted": 3,
+      "physical": 0,
+      "forwarded": "pending",
+      "scoped": "absent"
+    },
+    {
+      "prior": 0,
+      "requested": 0,
+      "accepted": true,
+      "settled": true,
+      "admitted": 0,
+      "physical": 0,
+      "forwarded": "accepted",
+      "scoped": "absent"
+    },
+    {
+      "prior": 3,
+      "requested": 5,
+      "accepted": true,
+      "settled": true,
+      "admitted": 8,
+      "physical": 0,
+      "forwarded": "accepted",
+      "scoped": "refused"
+    },
+    {
+      "prior": 3,
+      "requested": 5,
+      "accepted": true,
+      "settled": true,
+      "admitted": 8,
+      "physical": 0,
+      "forwarded": "refused",
+      "scoped": "accepted"
+    },
+    {
+      "prior": 3,
+      "requested": 5,
+      "accepted": false,
+      "settled": true,
+      "admitted": 3,
+      "physical": 0,
+      "forwarded": "refused",
+      "scoped": "refused"
+    }
+  ],
+  "allocationEventCases": [
+    {
+      "kind": "admit",
+      "request": {
+        "bytes": 5,
+        "ownedBytes": 3,
+        "nextOwnedBytes": 8,
+        "maximumBytes": 8
+      }
+    },
+    {
+      "kind": "quote",
+      "request": {
+        "bytes": 5,
+        "ownedBytes": 3,
+        "nextOwnedBytes": 8,
+        "maximumBytes": 8
+      }
+    },
+    {
+      "kind": "post",
+      "request": {
+        "bytes": 5,
+        "ownedBytes": 3,
+        "nextOwnedBytes": 8,
+        "maximumBytes": 8
+      },
+      "actual": 0
+    },
+    {
+      "kind": "post",
+      "request": {
+        "bytes": 5,
+        "ownedBytes": 3,
+        "nextOwnedBytes": 8,
+        "maximumBytes": 8
+      },
+      "actual": 5
+    },
+    {
+      "kind": "cancel",
+      "request": {
+        "bytes": 5,
+        "ownedBytes": 3,
+        "nextOwnedBytes": 8,
+        "maximumBytes": 8
+      }
+    }
+  ],
+  "mediatorCases": [
+    {
+      "phase": "admitStarted",
+      "sameIssuer": true,
+      "canResolve": true
+    },
+    {
+      "phase": "quoteStarted",
+      "sameIssuer": true,
+      "canResolve": true
+    },
+    {
+      "phase": "postStarted",
+      "sameIssuer": true,
+      "canResolve": true
+    },
+    {
+      "phase": "cancelStarted",
+      "sameIssuer": true,
+      "canResolve": true
+    },
+    {
+      "phase": "quoteStarted",
+      "sameIssuer": false,
+      "canResolve": false
+    },
+    {
+      "phase": "quoteAccepted",
+      "sameIssuer": true,
+      "canResolve": false
+    },
+    {
+      "phase": "settled",
+      "sameIssuer": true,
+      "canResolve": false
+    },
+    {
+      "phase": "idle",
+      "sameIssuer": true,
+      "canResolve": false
+    }
+  ],
+  "mediatorOutcomeCases": [
+    {
+      "name": "successfulOwner",
+      "owner": "owner",
+      "operationError": null,
+      "observerError": null,
+      "parentError": null,
+      "childError": null,
+      "failed": false,
+      "ownerRetained": true
+    },
+    {
+      "name": "ownerAndObserverRefusal",
+      "owner": "owner",
+      "operationError": null,
+      "observerError": "observer",
+      "parentError": null,
+      "childError": null,
+      "failed": true,
+      "ownerRetained": true
+    },
+    {
+      "name": "operationAndBothPorts",
+      "owner": null,
+      "operationError": "operation",
+      "observerError": null,
+      "parentError": "parent",
+      "childError": "child",
+      "failed": true,
+      "ownerRetained": false
+    },
+    {
+      "name": "everyIndependentOutcome",
+      "owner": "owner",
+      "operationError": "operation",
+      "observerError": "observer",
+      "parentError": "parent",
+      "childError": "child",
+      "failed": true,
+      "ownerRetained": true
+    }
+  ],
+  "refusalHandleCases": [
+    {
+      "occupied": true,
+      "sameOwner": true,
+      "sameGeneration": true,
+      "canTransfer": true
+    },
+    {
+      "occupied": true,
+      "sameOwner": false,
+      "sameGeneration": true,
+      "canTransfer": false
+    },
+    {
+      "occupied": true,
+      "sameOwner": true,
+      "sameGeneration": false,
+      "canTransfer": false
+    },
+    {
+      "occupied": false,
+      "sameOwner": true,
+      "sameGeneration": true,
+      "canTransfer": false
+    }
+  ],
+  "verdictObservationCases": [
+    {
+      "kind": "accepted"
+    },
+    {
+      "kind": "ownedRefusal"
+    },
+    {
+      "kind": "retainedRefusal"
+    }
+  ],
+  "authorityCustodyCases": [
+    {
+      "phase": "callbackStarted",
+      "finished": false,
+      "active": true,
+      "mayTransferOwner": false,
+      "mayBegin": false
+    },
+    {
+      "phase": "quoteAccepted",
+      "finished": false,
+      "active": true,
+      "mayTransferOwner": false,
+      "mayBegin": false
+    },
+    {
+      "phase": "settledVerdictPresent",
+      "finished": false,
+      "active": true,
+      "mayTransferOwner": false,
+      "mayBegin": false
+    },
+    {
+      "phase": "verdictTaken",
+      "finished": false,
+      "active": true,
+      "mayTransferOwner": false,
+      "mayBegin": false
+    },
+    {
+      "phase": "finished",
+      "finished": true,
+      "active": false,
+      "mayTransferOwner": true,
+      "mayBegin": true
+    }
+  ],
+  "failureTurnCases": [
+    {
+      "sameIssuer": true,
+      "sameAction": true,
+      "sameGrant": true,
+      "withinSpent": true,
+      "canResume": true
+    },
+    {
+      "sameIssuer": false,
+      "sameAction": true,
+      "sameGrant": true,
+      "withinSpent": true,
+      "canResume": false
+    },
+    {
+      "sameIssuer": true,
+      "sameAction": false,
+      "sameGrant": true,
+      "withinSpent": true,
+      "canResume": false
+    },
+    {
+      "sameIssuer": true,
+      "sameAction": true,
+      "sameGrant": false,
+      "withinSpent": true,
+      "canResume": false
+    },
+    {
+      "sameIssuer": true,
+      "sameAction": true,
+      "sameGrant": true,
+      "withinSpent": false,
+      "canResume": false
+    }
+  ],
+  "relayLedgerCases": [
+    {
+      "sameAuthority": true,
+      "sameLedger": true,
+      "sameBinding": true,
+      "equalValue": true,
+      "allowed": true
+    },
+    {
+      "sameAuthority": true,
+      "sameLedger": false,
+      "sameBinding": true,
+      "equalValue": true,
+      "allowed": false
+    },
+    {
+      "sameAuthority": false,
+      "sameLedger": true,
+      "sameBinding": true,
+      "equalValue": true,
+      "allowed": false
+    },
+    {
+      "sameAuthority": true,
+      "sameLedger": true,
+      "sameBinding": false,
+      "equalValue": true,
+      "allowed": false
+    },
+    {
+      "sameAuthority": true,
+      "sameLedger": false,
+      "sameBinding": false,
+      "equalValue": false,
+      "allowed": false
+    }
+  ],
+  "recoveryEvidenceCases": [
+    {
+      "originalPort": true,
+      "matchingEvent": true,
+      "recordedVerdict": true,
+      "callerClaim": true,
+      "canResolve": true
+    },
+    {
+      "originalPort": true,
+      "matchingEvent": true,
+      "recordedVerdict": false,
+      "callerClaim": true,
+      "canResolve": false
+    },
+    {
+      "originalPort": true,
+      "matchingEvent": false,
+      "recordedVerdict": true,
+      "callerClaim": true,
+      "canResolve": false
+    },
+    {
+      "originalPort": false,
+      "matchingEvent": true,
+      "recordedVerdict": true,
+      "callerClaim": true,
+      "canResolve": false
+    },
+    {
+      "originalPort": true,
+      "matchingEvent": true,
+      "recordedVerdict": true,
+      "callerClaim": false,
+      "canResolve": true
+    }
+  ],
+  "budgetSettlementCases": [
+    {
+      "event": "post",
+      "sameRequest": true,
+      "sameGrant": true,
+      "actual": 3,
+      "pending": false,
+      "spent": 3,
+      "refused": false
+    },
+    {
+      "event": "post",
+      "sameRequest": true,
+      "sameGrant": false,
+      "actual": 3,
+      "pending": false,
+      "spent": 3,
+      "refused": true
+    },
+    {
+      "event": "post",
+      "sameRequest": false,
+      "sameGrant": true,
+      "actual": 3,
+      "pending": true,
+      "spent": 0,
+      "refused": true
+    },
+    {
+      "event": "cancel",
+      "sameRequest": true,
+      "sameGrant": true,
+      "actual": 0,
+      "pending": false,
+      "spent": 0,
+      "refused": false
+    },
+    {
+      "event": "cancel",
+      "sameRequest": true,
+      "sameGrant": false,
+      "actual": 0,
+      "pending": false,
+      "spent": 0,
+      "refused": true
+    },
+    {
+      "event": "cancel",
+      "sameRequest": false,
+      "sameGrant": true,
+      "actual": 0,
+      "pending": true,
+      "spent": 0,
+      "refused": true
+    }
+  ],
+  "spendArithmeticCases": [
+    {
+      "priorHigh": 0,
+      "priorLow": 3,
+      "actual": 4,
+      "resultHigh": 0,
+      "resultLow": 7
+    },
+    {
+      "priorHigh": 4294967295,
+      "priorLow": 4294967294,
+      "actual": 4,
+      "resultHigh": 4294967296,
+      "resultLow": 2
+    }
+  ],
+  "dualMediatorCases": [
+    {
+      "forwardedQuote": "accepted",
+      "scopedQuote": "accepted",
+      "forwardedSettlement": "accepted",
+      "scopedSettlement": "accepted",
+      "owner": "born",
+      "failureCount": 0,
+      "ownerRetained": true
+    },
+    {
+      "forwardedQuote": "accepted",
+      "scopedQuote": "refused",
+      "forwardedSettlement": "refused",
+      "scopedSettlement": "absent",
+      "owner": "none",
+      "failureCount": 2,
+      "ownerRetained": false
+    },
+    {
+      "forwardedQuote": "accepted",
+      "scopedQuote": "accepted",
+      "forwardedSettlement": "refused",
+      "scopedSettlement": "refused",
+      "owner": "born",
+      "failureCount": 2,
+      "ownerRetained": true
+    },
+    {
+      "forwardedQuote": "refused",
+      "scopedQuote": "refused",
+      "forwardedSettlement": "absent",
+      "scopedSettlement": "absent",
+      "owner": "none",
+      "failureCount": 2,
+      "ownerRetained": false
+    }
   ]
 }

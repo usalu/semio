@@ -1,0 +1,62 @@
+{
+  "cases": [
+    {
+      "name": "one pending then completion",
+      "reserved": 5,
+      "partials": [
+        2
+      ],
+      "final": 4,
+      "expectedActual": 4,
+      "expectedAdmitted": true,
+      "valid": true
+    },
+    {
+      "name": "multiple turns no double debit",
+      "reserved": 8,
+      "partials": [
+        2,
+        3
+      ],
+      "final": 7,
+      "expectedActual": 7,
+      "expectedAdmitted": true,
+      "valid": true
+    },
+    {
+      "name": "actual exceeds original quote",
+      "reserved": 4,
+      "partials": [
+        3,
+        2
+      ],
+      "final": 6,
+      "expectedActual": 6,
+      "expectedAdmitted": false,
+      "valid": true
+    },
+    {
+      "name": "final cannot erase partial work",
+      "reserved": 8,
+      "partials": [
+        3,
+        2
+      ],
+      "final": 4,
+      "expectedActual": 5,
+      "expectedAdmitted": false,
+      "valid": false
+    },
+    {
+      "name": "zero work pending then done",
+      "reserved": 1,
+      "partials": [
+        0
+      ],
+      "final": 0,
+      "expectedActual": 0,
+      "expectedAdmitted": true,
+      "valid": true
+    }
+  ]
+}

@@ -30,6 +30,7 @@ impl<I:NativeValueSource+?Sized> NativeReceiver<I,PropertyBag> for PropertyBagRe
  fn take(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome<Option<(PropertyBag,RetainedCloneProgress)>>{let turn=self.child.take(g);RetainedWorkOutcome{result:turn.result.map(|value|value.map(|(value,p)|{let PropertyValue::Object(bag)=value else{unreachable!("qualified original object retains its native object kind")};(bag,p)})),work:turn.work}}
  fn begin_close(&mut self){self.child.begin_close();}
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.child.close_demands(body)}
+ fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{self.child.close_work_demand(body)}
  fn close_step(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{self.child.close_step(g)}
  fn terminal_is_empty(&self)->bool{self.child.terminal_is_empty()}
 }

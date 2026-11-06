@@ -1,0 +1,59 @@
+{
+  "type": "array",
+  "minItems": 4,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "owner",
+      "operationError",
+      "observerError",
+      "parentError",
+      "childError",
+      "failed",
+      "ownerRetained"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "owner": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "operationError": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "observerError": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "parentError": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "childError": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "failed": {
+        "type": "boolean"
+      },
+      "ownerRetained": {
+        "type": "boolean"
+      }
+    }
+  }
+}

@@ -1,0 +1,154 @@
+{
+  "version": 1,
+  "workQuote": 1,
+  "physicalAttemptWork": 1,
+  "order": [
+    "prepare",
+    "quote",
+    "allocate",
+    "publish",
+    "commit",
+    "post",
+    "finish"
+  ],
+  "cases": [
+    {
+      "name": "work denied",
+      "prepare": false,
+      "quote": true,
+      "node": "none",
+      "post": "none",
+      "work": 0,
+      "callbacks": [
+        "prepare"
+      ]
+    },
+    {
+      "name": "quote denied",
+      "prepare": true,
+      "quote": false,
+      "node": "none",
+      "post": "none",
+      "work": 0,
+      "callbacks": [
+        "prepare",
+        "quote",
+        "cancel-work"
+      ]
+    },
+    {
+      "name": "allocator failed",
+      "prepare": true,
+      "quote": true,
+      "node": "zero",
+      "post": "complete",
+      "work": 1,
+      "callbacks": [
+        "prepare",
+        "quote",
+        "allocate",
+        "publish",
+        "commit",
+        "post",
+        "finish"
+      ]
+    },
+    {
+      "name": "post pending",
+      "prepare": true,
+      "quote": true,
+      "node": "positive",
+      "post": "pending",
+      "work": 1,
+      "callbacks": [
+        "prepare",
+        "quote",
+        "allocate",
+        "publish",
+        "commit",
+        "post"
+      ]
+    }
+  ],
+  "resume": {
+    "allocatorCalls": 0,
+    "reportedWork": 0,
+    "proofRemainsUntilFinish": true,
+    "reportsOriginalCapacity": true
+  },
+  "quoteResume": {
+    "prepareCalls": 1,
+    "quoteCalls": 1,
+    "firstWork": 0,
+    "firstCapacity": 0,
+    "resumedWork": 1,
+    "allocationAttempts": 1
+  },
+  "foreignGrant": {
+    "work": 0,
+    "allocationAttempts": 0,
+    "preservesRequest": true
+  },
+  "refusalOrder": [
+    "original work refusal",
+    "later cancellation refusal"
+  ],
+  "performedGuard": {
+    "quoted": 1,
+    "performed": 1,
+    "scopeAtUnwind": 1,
+    "physical": null,
+    "sourceChecks": 1,
+    "events": [
+      "perform",
+      "mutate",
+      "unwind",
+      "claim",
+      "partial",
+      "commit",
+      "finish"
+    ]
+  },
+  "layout": [
+    {
+      "pointerBits": 32,
+      "markerBytes": 8,
+      "nodeBytes": 4,
+      "headBytes": 4,
+      "directCopyBytes": 20,
+      "pooledCopyBytes": 28
+    },
+    {
+      "pointerBits": 64,
+      "markerBytes": 16,
+      "nodeBytes": 8,
+      "headBytes": 8,
+      "directCopyBytes": 40,
+      "pooledCopyBytes": 56
+    }
+  ],
+  "partial": {
+    "performed": 1,
+    "allocatorCalls": 1,
+    "firstWork": 1,
+    "resumeWork": 0,
+    "checks": 1,
+    "recoveryCalls": 1
+  },
+  "partialUnwind": {
+    "refusal": "actual partial Source refusal 源",
+    "scopeAtUnwind": 1,
+    "reportedOnResume": 1,
+    "receiveCalls": 1,
+    "recoverCalls": 0,
+    "allocatorReplay": 0
+  },
+  "settlementRetry": {
+    "firstWork": 1,
+    "secondWork": 0,
+    "lastWork": 0,
+    "commits": 2,
+    "finishes": 2,
+    "allocations": 1
+  }
+}

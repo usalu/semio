@@ -35,26 +35,28 @@ pub trait SnapshotProjection:RetireOwned+Sync+Sized{
  type Projection:SnapshotProjectionCursor<Self>;
  fn projection_birth_demand()->RetirementDemand;
  fn projection_birth_work_demand()->Result<u64,ValueError>;
- fn begin_projection(grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Self::Projection,RetainedCloneProgress),ValueError>;
+ fn begin_projection(effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<(Self::Projection,RetainedCloneProgress),ValueError>;
 }
 /// 🧳️ Original-bound cursors own every staged candidate through refusal, transfer and cancellation.
 pub trait SnapshotProjectionCursor<S:SnapshotProjection>:Send+'static{
- fn demands(&self,original:RetainedCloneRef<'_,S>,body:usize)->Result<RetirementDemand,ValueError>;
+ fn demands(&self,original:RetainedCloneRef<'_,S>,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>;
  /// ⛽️ Quotes the actual selected immutable-source action before it moves.
- fn advance_work_demand(&self,original:RetainedCloneRef<'_,S>,body:usize)->Result<u64,ValueError>;
- fn advance(&mut self,original:RetainedCloneRef<'_,S>,body:usize,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedCloneStep,crate::OriginalRetirementFailure>;
+ fn advance_work_demand(&self,original:RetainedCloneRef<'_,S>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>;
+ fn advance(&mut self,original:RetainedCloneRef<'_,S>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<RetainedCloneStep,crate::OriginalRetirementFailure>;
  fn ready(&self)->bool;
  fn take_demand(&self)->Result<RetirementDemand,ValueError>;
  fn take_work_demand(&self)->Result<u64,ValueError>;
  fn take(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(S::Output,RetainedCloneProgress)>,ValueError>;
- fn begin_close(&mut self);
+ 
  /// ⛽️ Quotes the selected close-start action before changing cursor ownership.
+ fn close_started(&self)->bool;
  fn begin_close_work_demand(&self)->Result<u64,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"projection cursor lacks an original close-start work quote"))}
  /// 🚦️ Starts the quoted closure and reports the actual original work.
- fn begin_close_paid(&mut self)->crate::RetainedWorkOutcome<(),ValueError>{crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"projection cursor lacks an original close-start action")),work:0}}
+ fn begin_close_demand(&self)->Result<crate::RetirementDemand,crate::ValueError>{Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"cursor lacks an original close-start physical quote"))}
+fn begin_close_paid(&mut self,_grant:crate::RetainedCloneGrant)->crate::RetainedWorkOutcome<crate::RetainedCloneProgress,ValueError>{crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"projection cursor lacks an original close-start action")),work:0}}
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
  fn close_work_demand(&self,body:usize)->Result<u64,ValueError>;
- fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedCloneStep,crate::OriginalRetirementFailure>;
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<RetainedCloneStep,crate::OriginalRetirementFailure>;
  fn terminal_is_empty(&self)->bool;
 }
 /// 🌳️ Fixed immutable roots project original authorities without traversing or cloning variable payloads.
@@ -71,17 +73,17 @@ impl<S:ImmutableRootProjection> SnapshotProjection for S{
  type Projection=ImmutableRootCursor<S>;
  fn projection_birth_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Self::Projection>()*2,depth:1,..Default::default()}}
  fn projection_birth_work_demand()->Result<u64,ValueError>{Ok(1)}
- fn begin_projection(grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Self::Projection,RetainedCloneProgress),ValueError>{let mut work=0;let result=(||{let d=Self::projection_birth_demand();if !retained_clone_grant_admits(grant,d){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"immutable projection cursor birth is not funded"));}work+=1;Ok((ImmutableRootCursor{binding:None,output:ManuallyDrop::new(None),retirement:Default::default(),projected:false,admitted:false,closing:false},RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))})();crate::RetainedWorkOutcome{result,work}}
+ fn begin_projection(effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<(Self::Projection,RetainedCloneProgress),ValueError>{let grant=effect.grant();let mut work=0;let result=(||{if effect.maximum_work_units()==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"immutable projection birth requires original work"))}let d=Self::projection_birth_demand();if !retained_clone_grant_admits(grant,d){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"immutable projection cursor birth is not funded"));}work+=1;Ok((ImmutableRootCursor{binding:None,output:ManuallyDrop::new(None),retirement:Default::default(),projected:false,admitted:false,closing:false},RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))})();crate::RetainedWorkOutcome{result,work}}
 }
 impl<S:ImmutableRootProjection> SnapshotProjectionCursor<S> for ImmutableRootCursor<S>{
- fn demands(&self,original:RetainedCloneRef<'_,S>,_body:usize)->Result<RetirementDemand,ValueError>{
+ fn demands(&self,original:RetainedCloneRef<'_,S>,_body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{
   if self.closing||self.projected{return Err(invalid("immutable projection is closing or already prepared"));}
   if !original.check_binding(&self.binding)?{return Ok(RetirementDemand{copy_bytes:original.binding_copy_bytes(),depth:1,..Default::default()});}
   S::root_projection_demand(original)
  }
- fn advance_work_demand(&self,original:RetainedCloneRef<'_,S>,body:usize)->Result<u64,ValueError>{self.demands(original,body)?;if !original.check_binding(&self.binding)?{return Ok(1)}S::root_projection_work_demand(original)}
- fn advance(&mut self,original:RetainedCloneRef<'_,S>,body:usize,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedCloneStep,crate::OriginalRetirementFailure>{let mut work=0;let result:Result<_,crate::OriginalRetirementFailure>=(||{
-  let d=self.demands(original,body)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()));}
+ fn advance_work_demand(&self,original:RetainedCloneRef<'_,S>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{self.demands(original,body,maximum_work_units)?;if !original.check_binding(&self.binding)?{return Ok(1)}S::root_projection_work_demand(original)}
+ fn advance(&mut self,original:RetainedCloneRef<'_,S>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<RetainedCloneStep,crate::OriginalRetirementFailure>{let grant=effect.grant();let maximum_work_units=effect.maximum_work_units();let mut work=0;let result:Result<_,crate::OriginalRetirementFailure>=(||{
+  let selected=self.advance_work_demand(original,body,maximum_work_units)?;if selected==0||selected>maximum_work_units{return Ok(RetainedCloneStep::Progress(Default::default()))}let d=self.demands(original,body,maximum_work_units)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()));}
   if let Some(progress)={let turn=original.bind(&mut self.binding,grant);work+=turn.work;turn.result}?{return Ok(RetainedCloneStep::Progress(progress));}
   let Some((output,progress))={let turn=S::project_root(original,grant);work+=turn.work;turn.result}?else{return Err(invalid("funded original root issuer omitted its candidate").into());};
   *self.output=Some(output);self.projected=true;
@@ -93,15 +95,17 @@ impl<S:ImmutableRootProjection> SnapshotProjectionCursor<S> for ImmutableRootCur
  fn take_demand(&self)->Result<RetirementDemand,ValueError>{if !self.ready(){return Err(invalid("immutable projection has no admitted output"));}Ok(RetirementDemand{copy_bytes:size_of::<S>()*2,depth:1,..Default::default()})}
  fn take_work_demand(&self)->Result<u64,ValueError>{self.take_demand()?;Ok(1)}
  fn take(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(S,RetainedCloneProgress)>,ValueError>{let mut work=0;let result=(||{let d=self.take_demand()?;if !retained_clone_grant_admits(grant,d){return Ok(None);}work+=1;Ok(Some((self.output.take().ok_or_else(||invalid("immutable original output disappeared"))?,RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))})();crate::RetainedWorkOutcome{result,work}}
- fn begin_close(&mut self){self.closing=true;}
+ 
+ fn close_started(&self)->bool{self.closing}
  fn begin_close_work_demand(&self)->Result<u64,ValueError>{Ok(u64::from(!self.closing))}
- fn begin_close_paid(&mut self)->crate::RetainedWorkOutcome<(),ValueError>{if self.closing{return crate::RetainedWorkOutcome{result:Ok(()),work:0}}self.closing=true;crate::RetainedWorkOutcome{result:Ok(()),work:1}}
+ fn begin_close_demand(&self)->Result<crate::RetirementDemand,crate::ValueError>{let flags=usize::from(!self.closing);Ok(crate::RetirementDemand{copy_bytes:flags*std::mem::size_of::<bool>(),depth:usize::from(flags!=0),..Default::default()})}
+fn begin_close_paid(&mut self,grant:crate::RetainedCloneGrant)->crate::RetainedWorkOutcome<crate::RetainedCloneProgress,crate::ValueError>{let mut work=0;let result=(||{let demand=self.begin_close_demand()?;if demand.copy_bytes==0||!crate::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(Default::default())}self.closing=true;work=1;Ok(crate::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})})();crate::RetainedWorkOutcome{result,work}}
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Err(invalid("immutable projection closure has not begun"));}self.retirement.next_owner_demands::<S>(self.output.is_some(),&self.binding,body)}
  fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.closing{return Err(invalid("immutable projection closure has not begun"))}self.retirement.next_owner_work::<S>(self.output.is_some(),&self.binding,body)}
- fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedCloneStep,crate::OriginalRetirementFailure>{let mut work=0;let result:Result<_,crate::OriginalRetirementFailure>=(||{
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<RetainedCloneStep,crate::OriginalRetirementFailure>{let grant=effect.grant();let mut work=0;let result:Result<_,crate::OriginalRetirementFailure>=(||{
   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
   let d=self.close_demands(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()));}
-  let step=if !self.retirement.is_empty(){{let turn=self.retirement.step_granted(grant);work+=turn.work;turn.result}?}else if let Some(step)={let turn=self.retirement.begin_granted(&mut self.output,grant);work+=turn.work;turn.result}?{step}else{{let turn=crate::retained_clone::close_retained_binding(&mut self.binding,grant);work+=turn.work;turn.result}?};
+  let step=if !self.retirement.is_empty(){{let turn=self.retirement.step_granted(effect);work+=turn.work;turn.result}?}else if let Some(step)={let turn=self.retirement.begin_granted(&mut self.output,effect);work+=turn.work;turn.result}?{step}else{{let turn=crate::retained_clone::close_retained_binding(&mut self.binding,effect);work+=turn.work;turn.result}?};
   Ok(admit_retained_clone_close(grant,step,self.terminal_is_empty(),"original immutable projection closure")?)
  })();crate::RetainedWorkOutcome{result,work}}
  fn terminal_is_empty(&self)->bool{self.closing&&self.output.is_none()&&self.binding.is_none()&&self.retirement.is_empty()}

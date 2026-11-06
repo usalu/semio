@@ -1,0 +1,64 @@
+{
+  "cases": [
+    {
+      "name": "work-denied",
+      "action": "deny",
+      "actual": "none",
+      "pool": false,
+      "source": true,
+      "child": true,
+      "work": 0,
+      "raw": false
+    },
+    {
+      "name": "allocator-failed",
+      "action": "failed",
+      "actual": "zero",
+      "pool": false,
+      "source": true,
+      "child": true,
+      "work": 1,
+      "raw": false
+    },
+    {
+      "name": "raw-unpublished",
+      "action": "raw-birth",
+      "actual": "positive",
+      "pool": false,
+      "raw": true,
+      "source": true,
+      "child": true,
+      "work": 1
+    },
+    {
+      "name": "born-unattached",
+      "action": "birth",
+      "actual": "positive",
+      "pool": true,
+      "source": true,
+      "child": true,
+      "work": 1,
+      "raw": false
+    },
+    {
+      "name": "post-refused",
+      "action": "post-refused",
+      "actual": "positive",
+      "pool": true,
+      "source": true,
+      "child": true,
+      "work": 1,
+      "raw": false
+    },
+    {
+      "name": "attached",
+      "action": "attach",
+      "actual": "none",
+      "pool": false,
+      "source": false,
+      "child": false,
+      "work": 1,
+      "raw": false
+    }
+  ]
+}

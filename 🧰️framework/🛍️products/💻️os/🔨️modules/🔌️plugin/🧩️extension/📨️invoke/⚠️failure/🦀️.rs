@@ -130,7 +130,7 @@ mod original_retirement_projection_tests{
  fn original_retirement_domain_and_all_outer_refusals_are_borrowed(){
   let nested=semio_framework_value::OriginalRetirementFailure::from_primary(ValueError::new(ValueRefusalKind::WorkLimit,"nested"));
   let nested_pointer=nested.primary().unwrap().message.as_ptr();
-  let original=semio_framework_value::OriginalRetirementFailure::from_owned_parts(Some(ValueError::new(ValueRefusalKind::InvalidValue,"inner")),Some(ValueError::new(ValueRefusalKind::WorkLimit,"inner work")),Some(ValueError::new(ValueRefusalKind::OwnershipLimit,"inner receipt")),Some(Box::new(nested)),None);
+  let original=semio_framework_value::OriginalRetirementFailure::from_owned_parts(Some(ValueError::new(ValueRefusalKind::InvalidValue,"inner")),Some(ValueError::new(ValueRefusalKind::WorkLimit,"inner work")),Some(ValueError::new(ValueRefusalKind::OwnershipLimit,"inner receipt")),None,Some(Box::new(nested)),None);
   let failure=OriginalTurnFailure{effects:RetainedCloneProgress::default(),primary:semio_framework_job::OriginalTurnPrimary::Retirement(original),receipt_refusal:Some(ValueError::new(ValueRefusalKind::InvalidValue,"receipt")),context_refusal:Some(ValueError::new(ValueRefusalKind::InvalidValue,"context")),work_refusal:Some(ValueError::new(ValueRefusalKind::WorkLimit,"work"))};
   let loan=OriginalCauseLoan::Turn(&failure);let domain=field(loan,&[],"domain");let causes=field(loan,&[],"causes");
   assert!(matches!(loan.view_at(&[causes]).unwrap(),V::IntrinsicArray(3)));
@@ -141,7 +141,7 @@ mod original_retirement_projection_tests{
  #[test]
  fn original_receiving_work_refusal_projects_the_same_owner(){
   let law:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🌱️value/🛬️decode/🏭️construction/🧪️tests/🧫️fixtures/effect-frame.json")).unwrap();let work=ValueError::new(ValueRefusalKind::WorkLimit,law["work"].as_str().unwrap());let pointer=work.message.as_ptr();
-  let original=semio_framework_job::OriginalReceivingPrimary{retirement_failure:None,primary:Some(ValueError::literal(ValueRefusalKind::InvalidValue,"primary")),quote_refusal:None,allocation_refusal:None,allocation_failure:None,native_allocation:None,receipt_refusal:None,work_refusal:Some(work),progress:RetainedCloneProgress::default()};
+  let original=semio_framework_job::OriginalReceivingPrimary{retirement_failure:None,primary:Some(ValueError::literal(ValueRefusalKind::InvalidValue,"primary")),quote_refusal:None,allocation_refusal:None,allocation_failure:None,native_allocation:None,receipt_refusal:None,work_refusal:Some(work),work_overrun:None,progress:RetainedCloneProgress::default()};
   let failure=OriginalTurnFailure::from(semio_framework_job::OriginalTurnPrimary::Receiving(original));
   let lifecycle=semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(failure);let failure=OriginalTurnFailure::from(lifecycle);
   let loan=OriginalCauseLoan::Turn(&failure);let domain=field(loan,&[],"domain");let work=field(loan,&[domain],"workRefusal");let message=field(loan,&[domain,work],"message");

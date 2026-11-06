@@ -1,0 +1,40 @@
+{
+  "quoted": 2,
+  "performed": 2,
+  "reply": "original producer refusal 源",
+  "events": [
+    "receive",
+    "performed",
+    "reply",
+    "unwind",
+    "partial",
+    "transfer",
+    "receipt"
+  ],
+  "expected": {
+    "receiveCalls": 1,
+    "recoverCalls": 0,
+    "committedBeforeRecovery": 2,
+    "partialChecks": 1,
+    "replyAddressPreserved": true
+  },
+  "recipientClose": {
+    "work": 1,
+    "copyBytes": 1
+  },
+  "controlledBirth": {
+    "deniedCopyBytes": 0,
+    "selectedWork": 1,
+    "copiedBytes": 1,
+    "sameDecoder": true,
+    "denial": "completedNoProgress",
+    "deniedWork": 0
+  },
+  "failureBirth": {
+    "work": 1,
+    "partialChecks": 1,
+    "releaseWork": 1,
+    "nodesAfterBirth": 1,
+    "nodesAfterRelease": 0
+  }
+}

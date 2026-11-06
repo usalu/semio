@@ -9,7 +9,7 @@ impl RetireOwned for Payload{
 }
 impl RetirementCursor for PayloadCursor{
  fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:if self.text.is_some(){size_of::<Option<String>>()}else{0},release_bytes:self.text.as_ref().map_or(0,String::capacity),depth:usize::from(self.text.is_some()),..Default::default()})}
- fn close_step(&mut self,g:RetainedCloneGrant)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete(0)}let d=self.next_demand(g.maximum_copy_bytes).unwrap();if !crate::retained_clone::retained_clone_grant_admits(g,d){return RetirementStep::BudgetExhausted;}drop(self.text.take());RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()},1)}
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let g=effect.grant();if self.terminal_is_empty(){return RetirementStep::Complete(0)}let d=self.next_demand(g.maximum_copy_bytes).unwrap();if !crate::retained_clone::retained_clone_grant_admits(g,d){return RetirementStep::BudgetExhausted;}drop(self.text.take());RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()},1)}
  fn terminal_is_empty(&self)->bool{self.text.is_none()}
  fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }

@@ -36,6 +36,7 @@ semio-s-artifact-stdio-semio-image = { workspace = true }
 semio-framework-pack = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-native-receiving-original = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 serde_json = { workspace = true }
 semio-framework-async-macros = { workspace = true }

@@ -26,7 +26,6 @@
       "values": "allTrue"
     }
   ],
-  "takeCopyBytes": 0,
   "cancelCuts": [
     0,
     1,
@@ -36,5 +35,9 @@
     12,
     20,
     31
+  ],
+  "publicationFields": [
+    "sourceOption",
+    "outputOption"
   ]
 }

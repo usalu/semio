@@ -1,0 +1,46 @@
+[
+  {
+    "name": "unperformed",
+    "performed": false,
+    "items": 0,
+    "copied": 0,
+    "capacity": 0,
+    "actual": null,
+    "primary": "refused",
+    "submitted": 0,
+    "mismatch": false
+  },
+  {
+    "name": "actual allocator failure",
+    "performed": true,
+    "items": 0,
+    "copied": 0,
+    "capacity": 0,
+    "actual": 0,
+    "primary": "allocator",
+    "submitted": 0,
+    "mismatch": false
+  },
+  {
+    "name": "born owner and failure",
+    "performed": true,
+    "items": 1,
+    "copied": 8,
+    "capacity": 8,
+    "actual": 8,
+    "primary": "source",
+    "submitted": 8,
+    "mismatch": false
+  },
+  {
+    "name": "actual physical extent differs",
+    "performed": true,
+    "items": 1,
+    "copied": 8,
+    "capacity": 8,
+    "actual": 12,
+    "primary": "source",
+    "submitted": 12,
+    "mismatch": true
+  }
+]

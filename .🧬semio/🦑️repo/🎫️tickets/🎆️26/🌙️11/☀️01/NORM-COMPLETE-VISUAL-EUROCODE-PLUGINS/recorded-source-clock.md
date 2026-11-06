@@ -1,0 +1,9 @@
+# Recorded Source Clock
+
+The existing Source deadline path reads a raw `fn() -> Option<u64>` through `ClockStride`. A raw provider may unwind after entering, so a later caller cannot infer its actual reply or safely replay it. Existing trace-clock instrumentation remains a separate domain; no global registry was changed.
+
+The new Job clock owner holds the real producer, action, optional reading, independent refusal, and Source provenance. A typed deadline derives from the same original clock owner's latest authenticated observation. Native and WASI P2 use a resident monotonic clock with a lazily sampled real origin; bare wasm must receive a real first-party host producer. Readings and deadlines retain u128 microseconds; requested duration and fuel remain u64. Backward and unavailable real readings yield, and foreign or stale observations cannot authorize a deadline. Zero fuel produces a retained yield decision without a clock callback.
+
+The decision frame retains its actual action and result across interruption and requires the same Source context when finishing. The schema corpus and SQLite/Ajv decision oracle pass 1 test / 34 assertions; the wide-limb oracle passes 1 / 4. Native clock capture 92782 stopped on concurrent retained-work/original-vector migration; successor 41965 stopped on concurrent PagedList migration. No clock native acceptance is claimed yet.
+
+Remaining integration requires a resident clock authority and dispatch-bound decision frame in the actual SourceRoots/owned caller turn, paid retirement of that producer, conversion of Source deadlines to the same clock epoch, and removal of raw-clock Source entry paths. The current synchronous Source should-yield API cannot truthfully express an interrupted Pending clock action. The Job and encoder Source callers and bare-wasm actual producer remain to be migrated; no end-to-end Norm acceptance is claimed.

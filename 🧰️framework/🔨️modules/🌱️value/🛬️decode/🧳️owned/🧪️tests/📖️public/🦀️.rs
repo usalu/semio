@@ -10,4 +10,4 @@ pub fn observe_retirement_allocations<R>(run:impl FnOnce()->R)->(R,(usize,usize)
 #[path="../🦀️.rs"]mod fields;
 #[path="../../../../✨️derive/🛬️receive/🔀️enum/🧪️tests/🦀️.rs"]mod payloads;
 
-#[path="../📥️admission/🦀️.rs"]pub(crate) mod source_fixture;
+pub(crate) use semio_framework_value_testing_admission as source_fixture;

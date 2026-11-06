@@ -1,6 +1,12 @@
 import type { ValueError } from "../../../⚠️refusal/🟦️.ts";
 export type { ValueError } from "../../../⚠️refusal/🟦️.ts";
 
+/** 📦️ Describes cumulative requested admission before a physical effect. */
+export interface NativeAllocationRequest { readonly bytes: number; readonly ownedBytes: number; readonly nextOwnedBytes: number; readonly maximumBytes: number; }
+
+/** 🧾️ Separates budget admission, physical quote, post, and cancellation. */
+export type NativeAllocationEvent = { readonly kind: "admit" | "quote" | "cancel"; readonly request: NativeAllocationRequest; } | { readonly kind: "post"; readonly request: NativeAllocationRequest; readonly actual: number; };
+
 /** 📏️ Separates cumulative admission from an optional performed allocation. */
 export type NativeAllocationProgress = { readonly admittedBytes: number; readonly actualCapacityBytes: number | null; } & ({ readonly priorAdmittedBytes: number; readonly requestedBytes: number; readonly maximumBytes: number; } | { readonly priorAdmittedBytes: null; readonly requestedBytes: null; readonly maximumBytes: null; });
 

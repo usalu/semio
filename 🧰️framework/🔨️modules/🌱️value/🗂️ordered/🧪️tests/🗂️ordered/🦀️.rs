@@ -14,7 +14,7 @@ impl crate::retirement::RetireOwned for MixedReceiptPayload {
 }
 impl crate::retirement::RetirementCursor for MixedReceiptPayload {
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{copy_bytes:usize::from(self.source.is_some()),capacity_bytes:if self.source.is_some(){self.replacement_capacity}else{0},release_bytes:self.source.as_ref().or(self.replacement.as_ref()).map_or(0,Vec::capacity),depth:usize::from(!self.terminal_is_empty())})}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->crate::retirement::RetirementStep {
+    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::retirement::RetirementStep{let grant=effect.grant();
         use crate::{retirement::RetirementStep as Step,retained_clone::RetainedCloneProgress};
         if self.complete{return Step::Complete(0);}
         if grant.maximum_items==0{return Step::BudgetExhausted;}

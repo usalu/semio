@@ -23,6 +23,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-value-native-receiving-original = { path = "../../../../../../🌱️value/🛬️decode/🧳️owned/🧳️original/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-pack-json-source-sink = { path = "../../../../🛫️encode/🫳️borrowed/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

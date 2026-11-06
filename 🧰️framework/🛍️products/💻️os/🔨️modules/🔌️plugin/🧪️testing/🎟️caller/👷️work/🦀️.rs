@@ -3,7 +3,7 @@ use semio_framework_job::{OriginalJobFixtureCaller,OriginalTurnFailure,StepConte
 use semio_framework_value::RetainedCloneGrant;
 use semio_framework_value::{RetainedCloneStep,RetainedWorkOutcome};
 use semio_framework_value_native_owned::{NativeReceive,OriginalReceivingPrimary};
-use semio_framework_value_native_owned::owned::NativeReceivingOriginal;
+use semio_framework_value_native_receiving_original::NativeReceivingOriginal;
 /// 🎟️ One finite original fixture stock is held from initial work through terminal close.
 pub struct OriginalWorkFixture{caller:OriginalJobFixtureCaller,decoder:semio_framework_job::OriginalJobDecodeOwner,source_stock:RetainedCloneGrant}
 impl OriginalWorkFixture{

@@ -1,10 +1,11 @@
+use semio_framework_value_native_receiving_original::NativeReceivingOriginal;
 use super::FemMaterial;
 use super::FemMaterialValue;
 use super::NATIVE_MATERIAL_DIMENSION;
 #[path="../📋️table/🧪️tests/🦀️.rs"]mod table;
 #[path="../🩹️patch/🧪️tests/🦀️.rs"]mod patch;
 use semio_framework_value::{DslValue, FromValue, ToValue, RetirementDemand, retirement::{RetireOwned, controlled::ControlledRetirement}, retained_clone::{RetainedCloneSource, RetainedCloneGrant}};
-use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeReceive, native_decoding::owned::NativeRecordSource, native_decoding::owned::NativeReceivingOriginal};
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeReceive, native_decoding::owned::NativeRecordSource};
 fn funded(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096.max(d.copy_bytes),maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 #[derive(Default)]
 #[derive(Default)] struct Recipient(semio_framework_value::RetainedCloneProgress);

@@ -23,6 +23,7 @@ name = "semio_framework_value_edit"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value-original-vector = { path = "../../../../♻️retirement/📋️original-vector/📦️packages/🦀️rust" }
 semio-framework-value-sort = { path = "../../../../📶️sort/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path = "../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../✨️derive/📦️packages/🦀️rust" }
@@ -35,6 +36,7 @@ semio-framework-value-retirement = { path = "../../../../♻️retirement/📦�
 semio-framework-value-shared-issuance = { path = "../../../../♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-native-receiving-original = { path = "../../../../🛬️decode/🧳️owned/🧳️original/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value-testing-allocator = { path = "../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 serde_json = { workspace = true }

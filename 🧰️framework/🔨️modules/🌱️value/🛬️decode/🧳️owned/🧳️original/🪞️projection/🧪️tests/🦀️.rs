@@ -23,8 +23,8 @@ fn native_receiving_retained_projection_preserves_parent_and_exact_cancellation_
   for _ in 0..10000{
    if owner.terminal_is_empty(){break}
    let d=owner.close_demands(4096).unwrap();let g=bank.quoted(d);
-   for denied in denied(d,g){let(turn,heap)=observe(||owner.close_step(denied));assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap().progress(),Default::default());assert_eq!(heap,(0,0));assert_eq!(owner.close_demands(4096).unwrap(),d);}
-   let(turn,heap)=observe(||owner.close_step(g));let work=turn.work;let p=turn.result.unwrap().progress();account(&mut bank,p,work,g,heap);
+   for denied in denied(d,g){let(turn,heap)=observe(||{let mut actual=None;owner.close_step(&mut crate::RetainedAllocationEffect::new(denied,u64::MAX,&mut actual))});assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap().progress(),Default::default());assert_eq!(heap,(0,0));assert_eq!(owner.close_demands(4096).unwrap(),d);}
+   let(turn,heap)=observe(||{let mut actual=None;owner.close_step(&mut crate::RetainedAllocationEffect::new(g,u64::MAX,&mut actual))});let work=turn.work;let p=turn.result.unwrap().progress();account(&mut bank,p,work,g,heap);
    assert_eq!(std::ptr::from_ref(source.borrow().get()),pointer);
   }
   assert!(owner.terminal_is_empty());assert_eq!(std::ptr::from_ref(source.borrow().get()),pointer);drain(source,&mut bank);

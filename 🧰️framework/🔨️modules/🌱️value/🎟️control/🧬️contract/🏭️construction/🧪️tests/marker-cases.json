@@ -1,0 +1,42 @@
+[
+  {
+    "name": "no effect can cancel",
+    "performed": false,
+    "capacity": 0,
+    "actual": null,
+    "canCancel": true,
+    "canPost": true
+  },
+  {
+    "name": "failed allocation posts zero",
+    "performed": true,
+    "capacity": 0,
+    "actual": 0,
+    "canCancel": false,
+    "canPost": true
+  },
+  {
+    "name": "physical owner posts actual",
+    "performed": true,
+    "capacity": 8,
+    "actual": 8,
+    "canCancel": false,
+    "canPost": true
+  },
+  {
+    "name": "mismatched marker refuses",
+    "performed": true,
+    "capacity": 8,
+    "actual": 7,
+    "canCancel": false,
+    "canPost": false
+  },
+  {
+    "name": "unmarked physical owner refuses",
+    "performed": true,
+    "capacity": 8,
+    "actual": null,
+    "canCancel": false,
+    "canPost": false
+  }
+]

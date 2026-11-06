@@ -7,7 +7,7 @@ struct ProbeCursor{present:bool}
 impl RetireOwned for Probe{fn retirement(self)->Box<dyn RetirementCursor>{Box::new(ProbeCursor{present:true})}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<ProbeCursor>())}fn controlled_retirement_supported()->bool{true}}
 impl RetirementCursor for ProbeCursor{
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{let copy_bytes=self.next_work_byte_demand()?;self.next_birth_bytes(body).unwrap();Ok(RetirementDemand{copy_bytes,depth:usize::from(self.present),..Default::default()})}
- fn close_step(&mut self,g:RetainedCloneGrant)->RetirementStep{if g.maximum_items==0||g.maximum_copy_bytes<1||g.maximum_depth==0{return RetirementStep::BudgetExhausted;}self.present=false;RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()})}
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let g=effect.grant();if g.maximum_items==0||g.maximum_copy_bytes<1||g.maximum_depth==0{return RetirementStep::BudgetExhausted;}self.present=false;RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()})}
  fn terminal_is_empty(&self)->bool{!self.present}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{VISITS.with(|n|n.set(n.get()+1));Ok(usize::from(self.present))}
  fn next_birth_bytes(&self,body:usize)->Option<usize>{HINT.with(|expected|if body!=expected.get(){FOREIGN_HINTS.with(|n|n.set(n.get()+1));});Some(0)}

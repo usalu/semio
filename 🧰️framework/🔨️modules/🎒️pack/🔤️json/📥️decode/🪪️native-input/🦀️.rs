@@ -3,7 +3,7 @@ use semio_framework_pack_json::{JsonGrammarCursor,JsonMemberPolicy,JsonReadLimit
 use semio_framework_value::{DslValue,RetirementDemand,RetainedWorkOutcome,ValueError,ValueRefusalKind,OriginalRetirementControl};
 use semio_framework_value::retained_clone::{RetainedCloneSource,RetainedCloneSourceAdmission,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits};
 use semio_framework_value_native_owned::{NativeReceive,NativeDecodeControl,OriginalReceivingPrimary};
-use semio_framework_value_native_owned::owned::NativeReceivingOriginal;
+use semio_framework_value_native_receiving_original::NativeReceivingOriginal;
 use std::mem::{ManuallyDrop,size_of};
 #[derive(Clone,Copy)]
 enum Phase{Parse,Source,Shell,Receive,Ready}

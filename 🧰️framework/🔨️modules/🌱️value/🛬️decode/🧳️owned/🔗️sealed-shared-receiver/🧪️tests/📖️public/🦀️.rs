@@ -7,7 +7,7 @@ pub use semio_framework_value_intrinsic::{ToValue,NativeEncodeControl,ValueShape
 pub fn observe_retirement_allocations<R>(run:impl FnOnce()->R)->(R,(usize,usize)){semio_framework_value_testing_allocator::observe_retirement_allocations(run)}
 pub use semio_framework_value_native_owned::shared_issuance::SealedShared;
 use semio_framework_test_fixtures::fixture_text;
-#[path="../../../🧪️tests/📥️admission/🦀️.rs"]pub(crate) mod source_fixture;
+pub(crate) use semio_framework_value_testing_admission as source_fixture;
 #[path="../📥️driver/🦀️.rs"]mod driver;
 use driver::*;
 #[derive(crate::RetireOwned,crate::NativeReceive)]#[value(crate="crate")]

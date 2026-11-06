@@ -1,0 +1,38 @@
+[
+  {
+    "name": "successful output with outer receipt refusal",
+    "output": true,
+    "operation": false,
+    "context": false,
+    "nativeReceipt": false,
+    "returnReceipt": true,
+    "owners": 2
+  },
+  {
+    "name": "output with both receipt refusals",
+    "output": true,
+    "operation": false,
+    "context": false,
+    "nativeReceipt": true,
+    "returnReceipt": true,
+    "owners": 3
+  },
+  {
+    "name": "operation and independent context and receipt",
+    "output": false,
+    "operation": true,
+    "context": true,
+    "nativeReceipt": true,
+    "returnReceipt": true,
+    "owners": 4
+  },
+  {
+    "name": "output with work context refusal",
+    "output": true,
+    "operation": false,
+    "context": true,
+    "nativeReceipt": false,
+    "returnReceipt": false,
+    "owners": 2
+  }
+]

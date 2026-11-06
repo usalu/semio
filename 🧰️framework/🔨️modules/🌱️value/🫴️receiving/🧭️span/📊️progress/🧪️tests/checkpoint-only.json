@@ -1,0 +1,37 @@
+[
+  {
+    "same": true,
+    "entered": false,
+    "reply": "none",
+    "next": "receive",
+    "spans": 0
+  },
+  {
+    "same": true,
+    "entered": true,
+    "reply": "none",
+    "next": "recover",
+    "spans": 0
+  },
+  {
+    "same": true,
+    "entered": true,
+    "reply": "accept",
+    "next": "accept",
+    "spans": 0
+  },
+  {
+    "same": true,
+    "entered": true,
+    "reply": "cancel",
+    "next": "cancel",
+    "spans": 0
+  },
+  {
+    "same": false,
+    "entered": true,
+    "reply": "accept",
+    "next": "reject",
+    "spans": 0
+  }
+]

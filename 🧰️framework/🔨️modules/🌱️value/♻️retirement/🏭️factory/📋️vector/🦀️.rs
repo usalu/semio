@@ -1,127 +1,33 @@
-//! 📋️ Original vector rows keep their allocation and borrowed exact issuer through bounded retirement.
-use crate::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, RetirementDemand, ValueError, ValueRefusalKind, factory_ticket_demands, close_factory_ticket};
-use crate::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use std::mem::{ManuallyDrop, size_of};
-#[path="🔑️identity/🦀️.rs"] mod identity;
-pub use identity::FactoryIssuerIdentity;
-
-/// 🧺️ The original vector allocation remains owned until every row and child ticket settles.
-pub struct FactoryVectorRetirement<T: Send + 'static> {
-    remaining: ManuallyDrop<Option<std::vec::IntoIter<T>>>,
-    pending: ManuallyDrop<Option<T>>,
-    active: ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
-    allocation_bytes: usize,
-    allocation_address: usize,
-    issuer: Option<FactoryIssuerIdentity<T>>,
+//! 📋️ Original rows and their actual captured factory remain resident through every producer reply.
+use crate::{ArtifactOwnedValueRetirementFactory,ErasedSnapshotRetirement,FactoryAuthority,RetirementDemand,ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetainedWorkPoll,OriginalRetirementPoll,RetainedAllocationEffect,OriginalRetirementCloseLoan,OriginalRetirementControl};
+use std::{mem::ManuallyDrop,sync::Arc};
+/// 🧺️ The iterator retains its original backing while one common owned row producer settles.
+pub struct FactoryVectorRetirement<T:Send+'static>{remaining:ManuallyDrop<Option<std::vec::IntoIter<T>>>,active:ManuallyDrop<Option<crate::owned::FactoryOwnedRetirement<T>>>,factory:ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>>,allocation_bytes:usize,allocation_address:usize}
+fn done(result:Result<RetainedCloneStep,crate::OriginalRetirementFailure>,work:u128)->OriginalRetirementPoll{RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work})}
+impl<T:Send+'static> FactoryVectorRetirement<T>{
+ pub const fn constructor_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Option<Vec<T>>>()+size_of::<Self>()+size_of::<Option<Self>>(),capacity_bytes:0,release_bytes:0,depth:1}}
+ pub fn admit(original:&mut Option<Vec<T>>,output:&mut Option<Self>,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkPoll{
+  if output.is_some(){return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::invariant("vector retirement output is occupied")),work:0})}let Some(value)=original.as_ref()else{return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0})};let Some(allocation_bytes)=value.capacity().checked_mul(size_of::<T>())else{return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::invariant("vector allocation extent overflow")),work:0})};let demand=Self::constructor_demand();if effect.maximum_work_units()==0||!crate::retained_clone_grant_admits(effect.grant(),demand){return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}let work=match crate::retirement::record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error),work})};let value=original.take().expect("funded original vector");let allocation_address=value.as_ptr()as usize;*output=Some(Self{remaining:ManuallyDrop::new(Some(value.into_iter())),active:ManuallyDrop::new(None),factory:ManuallyDrop::new(None),allocation_bytes,allocation_address});RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work})
+ }
+ pub fn pending(&self)->Option<&T>{self.active.as_ref().and_then(|owner|owner.original())}
+ pub fn allocation_address(&self)->usize{self.allocation_address}
+ pub fn allocation_bytes(&self)->usize{self.allocation_bytes}
+ fn check_factory(&self,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<T>>)->Result<(),ValueError>{if self.factory.as_ref().is_some_and(|original|!Arc::ptr_eq(original,factory)){return Err(ValueError::invariant("vector original factory changed"))}Ok(())}
+ pub fn demands(&self,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<T>>,body:usize)->Result<RetirementDemand,ValueError>{self.check_factory(factory)?;if self.terminal_is_empty(){return Ok(Default::default())}if self.factory.is_none()&&self.remaining.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>>()+2*size_of::<usize>(),depth:1,..Default::default()})}if let Some(owner)=self.active.as_ref(){if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<crate::owned::FactoryOwnedRetirement<T>>>(),depth:1,..Default::default()})}return owner.demands(body)}if self.remaining.as_ref().is_some_and(|rows|rows.len()!=0){return Ok(RetirementDemand{copy_bytes:size_of::<std::vec::IntoIter<T>>()+size_of::<T>()+size_of::<Option<crate::owned::FactoryOwnedRetirement<T>>>()+2*size_of::<usize>(),depth:1,..Default::default()})}if self.remaining.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<std::vec::IntoIter<T>>>(),release_bytes:self.allocation_bytes,depth:1,..Default::default()})}if self.factory.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>>()+size_of::<Option<crate::owned::FactoryOwnedRetirement<T>>>(),depth:1,..Default::default()})}Ok(Default::default())}
+ pub fn close_work_demand(&self,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<T>>,body:usize)->Result<u64,ValueError>{self.demands(factory,body)?;if let Some(owner)=self.active.as_ref(){if !owner.terminal_is_empty(){return owner.next_computational_work(body)}}Ok(u64::from(!self.terminal_is_empty()))}
+ pub fn requires_original_birth(&self)->bool{self.active.as_ref().is_some_and(|owner|owner.requires_original_birth())}
+ pub fn close_original_birth_step(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->OriginalRetirementPoll{self.active.as_mut().map_or_else(||done(Err(ValueError::invariant("vector has no original birth").into()),0),|owner|owner.close_original_birth_step(original,grant))}
+ pub fn requires_original_control(&self)->bool{self.active.as_ref().is_some_and(|owner|owner.requires_original_control())}
+ pub fn close_step_controlled(&mut self,effect:&mut RetainedAllocationEffect<'_>,control:&mut dyn OriginalRetirementControl)->OriginalRetirementPoll{self.active.as_mut().map_or_else(||done(Err(ValueError::invariant("vector has no original control").into()),0),|owner|owner.close_step_controlled(effect,control))}
+ pub fn close_original_step(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{self.active.as_mut().map_or_else(||done(Err(ValueError::invariant("vector has no original control").into()),0),|owner|owner.close_original_step(original,effect))}
+ pub fn close_step(&mut self,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<T>>,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+  let demand=match self.demands(factory,effect.grant().maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return done(Err(error.into()),0)};if self.terminal_is_empty(){return done(Ok(RetainedCloneStep::Complete(Default::default())),0)}let work=match self.close_work_demand(factory,effect.grant().maximum_copy_bytes){Ok(work)=>work,Err(error)=>return done(Err(error.into()),0)};if effect.maximum_work_units()<work||!crate::retained_clone_grant_admits(effect.grant(),demand){return done(Ok(RetainedCloneStep::Progress(Default::default())),0)}if let Some(owner)=self.active.as_mut(){if !owner.terminal_is_empty(){return owner.close_step(effect)}}let work=match crate::retirement::record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return done(Err(error.into()),work)};let mut released_bytes=0;
+  if self.active.is_some(){self.active.take();}else if self.factory.is_none()&&self.remaining.is_some(){*self.factory=Some(Arc::clone(factory));}else if self.remaining.as_ref().is_some_and(|rows|rows.len()!=0){let row=self.remaining.as_mut().expect("resident vector iterator").next().expect("quoted original row");*self.active=Some(crate::owned::FactoryOwnedRetirement::from_captured(Some(row),Arc::clone(self.factory.as_ref().expect("captured actual factory"))));}else if self.remaining.is_some(){drop(self.remaining.take());released_bytes=self.allocation_bytes;}else{let factory=self.factory.take().expect("resident original factory");*self.active=Some(crate::owned::FactoryOwnedRetirement::from_captured(None,factory));}
+  done(Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes,..Default::default()})}else{RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes,..Default::default()})}),work)
+ }
+ pub fn terminal_is_empty(&self)->bool{self.remaining.is_none()&&self.active.is_none()&&self.factory.is_none()}
 }
-
-fn fits(demand: RetirementDemand, grant: RetainedCloneGrant) -> bool {
-    grant.maximum_items != 0 && grant.maximum_copy_bytes >= demand.copy_bytes && grant.maximum_capacity_bytes >= demand.capacity_bytes && grant.maximum_release_bytes >= demand.release_bytes && grant.maximum_depth >= demand.depth
-}
-
-impl<T: Send + 'static> FactoryVectorRetirement<T> {
-    /// 🌱️ Capturing original vector headers constructs no child or copied row.
-    pub const fn constructor_demand() -> RetirementDemand { RetirementDemand { copy_bytes: size_of::<Self>(), capacity_bytes: 0, release_bytes: 0, depth: 1 } }
-
-    /// 🎟️ Returns the untouched original on insufficient capture admission.
-    pub fn admit(original: Vec<T>, grant: RetainedCloneGrant) -> Result<(Self, RetainedCloneProgress), (ValueError, Vec<T>)> {
-        let demand = Self::constructor_demand();
-        if !fits(demand, grant) { return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"original vector capture requires its complete fixed-header grant"),original)); }
-        let Some(allocation_bytes) = original.capacity().checked_mul(size_of::<T>()) else { return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"original vector allocation extent overflow"),original)); };
-        let allocation_address = original.as_ptr() as usize;
-        Ok((Self { remaining: ManuallyDrop::new(Some(original.into_iter())), pending: ManuallyDrop::new(None), active: ManuallyDrop::new(None), allocation_bytes, allocation_address, issuer: None }, RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
-    }
-
-    /// 👁️ Borrows a refused original row without moving or recreating it.
-    pub fn pending(&self) -> Option<&T> { self.pending.as_ref() }
-
-    /// 🧷️ Retains the original allocation address independently of the iterator's advancing slice.
-    pub fn allocation_address(&self) -> usize { self.allocation_address }
-
-    /// 📐️ Retains the precise native allocation extent through every row frontier.
-    pub fn allocation_bytes(&self) -> usize { self.allocation_bytes }
-
-    /// 📏️ Quotes one next row capture, exact provider birth, child close or paid backing release.
-    pub fn demands(&self, factory: &dyn ArtifactOwnedValueRetirementFactory<T>, maximum_copy_bytes: usize) -> Result<RetirementDemand, ValueError> {
-        self.check_issuer(factory)?;
-        if self.issuer.is_none()&&!self.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:FactoryIssuerIdentity::<T>::capture_copy_bytes(),depth:1,..Default::default()})}
-        self.owner_demands(factory,maximum_copy_bytes)
-    }
-
-    /// ⛽️ Quotes the selected issuer capture, original row, child, or backing release.
-    pub fn close_work_demand(&self, factory: &dyn ArtifactOwnedValueRetirementFactory<T>, body: usize) -> Result<u64, ValueError> {
-        self.check_issuer(factory)?;
-        if self.issuer.is_none() && !self.terminal_is_empty() { return Ok(1); }
-        if let Some(active) = self.active.as_ref() { return if active.terminal_is_empty() { Ok(1) } else { active.next_computational_work(body) }; }
-        if let Some(row) = self.pending.as_ref() { return factory.retire_owned_work_demand(row); }
-        Ok(u64::from(self.remaining.is_some()))
-    }
-
-    fn owner_demands(&self, factory: &dyn ArtifactOwnedValueRetirementFactory<T>, maximum_copy_bytes: usize) -> Result<RetirementDemand, ValueError> {
-        self.check_issuer(factory)?;
-        if let Some(active) = self.active.as_ref() {
-            let mut demand = factory_ticket_demands(active, maximum_copy_bytes)?;
-            demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit,"original vector child depth overflow"))?;
-            return Ok(demand);
-        }
-        if let Some(row) = self.pending.as_ref() { return Ok(RetirementDemand { copy_bytes: size_of::<T>().saturating_mul(2), capacity_bytes: factory.retirement_birth_bytes(row), release_bytes: 0, depth: 2 }); }
-        if self.remaining.as_ref().is_some_and(|rows| rows.len() != 0) { return Ok(RetirementDemand { copy_bytes: size_of::<T>().saturating_mul(2), depth: 1, ..Default::default() }); }
-        if self.remaining.is_some() { return Ok(RetirementDemand { release_bytes: self.allocation_bytes, depth: 1, ..Default::default() }); }
-        Ok(Default::default())
-    }
-
-    /// 🪜️ Reads original row order once, restores provider refusals and releases only empty paid backing.
-    pub fn close_step(&mut self, factory: &dyn ArtifactOwnedValueRetirementFactory<T>, grant: RetainedCloneGrant) ->crate::OriginalRetirementOutcome{let mut work=0;let result=(||{
-        let demand = self.demands(factory, grant.maximum_copy_bytes)?;
-        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
-        if !fits(demand, grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if self.issuer.is_none(){self.issuer=Some(FactoryIssuerIdentity::capture(factory));work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
-        let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        if self.active.is_some() { let turn=close_factory_ticket(&mut self.active,child);work=turn.work;return turn.result.map(|step|RetainedCloneStep::Progress(step.progress())); }
-        if let Some(row) = self.pending.take() {
-            let child = RetainedCloneGrant { maximum_copy_bytes: child.maximum_copy_bytes - demand.copy_bytes, ..child };
-            let turn=factory.retire_owned(row,child);work=turn.work;return match turn.result {
-                Ok((active, mut progress)) => {
-                    *self.active = Some(active);
-                    progress.copied_bytes = progress.copied_bytes.checked_add(demand.copy_bytes).ok_or_else(|| ValueError::literal(ValueRefusalKind::WorkLimit,"original vector provider copy receipt overflow"))?;
-                    if !progress.fits(grant) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original vector provider exceeded its admitted capture or constructor").with_retained_progress(progress).into()); }
-                    Ok(RetainedCloneStep::Progress(progress))
-                }
-                Err((error, row)) => {
-                    *self.pending = Some(row);
-                    let mut progress = error.retained_progress();
-                    progress.copied_items = progress.copied_items.max(1);
-                    progress.copied_bytes = progress.copied_bytes.checked_add(demand.copy_bytes).ok_or_else(|| ValueError::literal(ValueRefusalKind::WorkLimit,"original vector refusal copy receipt overflow"))?;
-                    Err(error.with_retained_progress(progress).into())
-                },
-            };
-        }
-        let remaining = self.remaining.as_mut().expect("original vector backing retained");
-        if let Some(row) = remaining.next() {
-            *self.pending = Some(row);work=1;
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
-        }
-        drop(self.remaining.take());work=1;
-        Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: self.allocation_bytes, ..Default::default() }))
-    })();crate::RetainedWorkOutcome{result,work}}
-
-    /// 🫙️ No hidden iterator capacity, original row or child ticket remains at terminal.
-    pub fn terminal_is_empty(&self) -> bool { self.remaining.is_none() && self.pending.is_none() && self.active.is_none() }
-
-    fn check_issuer(&self, factory: &dyn ArtifactOwnedValueRetirementFactory<T>) -> Result<(), ValueError> {
-        if self.issuer.is_some_and(|original| !original.matches(factory)) { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original vector disposal issuer changed")); }
-        Ok(())
-    }
-}
-
-impl<T: Send + 'static> Drop for FactoryVectorRetirement<T> {
-    fn drop(&mut self) {
-        let empty = self.terminal_is_empty();
-        assert!(empty || std::thread::panicking(),"original vector factory retirement requires complete funded closure");
-        if empty { unsafe { ManuallyDrop::drop(&mut self.remaining); ManuallyDrop::drop(&mut self.pending); ManuallyDrop::drop(&mut self.active); } }
-    }
-}
-
+impl<T:Send+'static> Drop for FactoryVectorRetirement<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"vector retirement retains original custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.remaining);ManuallyDrop::drop(&mut self.active);ManuallyDrop::drop(&mut self.factory)}}}}
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;

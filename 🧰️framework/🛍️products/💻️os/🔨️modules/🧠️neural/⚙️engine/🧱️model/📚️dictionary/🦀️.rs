@@ -17,7 +17,7 @@ use super::*;
 /// crate boundary, so it stays invisible when `replication` is pulled in as this crate's ordinary
 /// (non-test) dependency, even while THIS crate's tests run. The oracle `Serialize` below is
 /// hand-written instead, over `Value: Serialize` (local to this crate, genuinely test-cfg'd here).
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]
 pub struct Dictionary {
     #[doc(hidden)] pub pairs: OrderedMap<Value>,
 }
@@ -204,7 +204,7 @@ impl FromValue for Dictionary {
 pub type Key = String;
 
 /// 💎️ Atom or nested dictionary. `serde` is TEST-ONLY — see `Dictionary`'s docstring above.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]
 #[cfg_attr(any(test, feature = "testkit"), derive(Serialize, Deserialize))]
 #[cfg_attr(any(test, feature = "testkit"), serde(untagged))]
 pub enum Value {
@@ -275,7 +275,7 @@ impl FromValue for Value {
 }
 
 /// ⚛️ Immutable non-dictionary value. `serde` is TEST-ONLY — see `Dictionary`'s docstring above.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]
 #[cfg_attr(any(test, feature = "testkit"), derive(Serialize, Deserialize))]
 #[cfg_attr(any(test, feature = "testkit"), serde(untagged))]
 pub enum Atom {

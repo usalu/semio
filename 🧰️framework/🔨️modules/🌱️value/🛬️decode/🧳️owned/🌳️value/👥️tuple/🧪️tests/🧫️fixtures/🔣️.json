@@ -8,7 +8,7 @@
     "cases",
     "refusals",
     "stock",
-    "ownershipCopyBytes",
+    "publicationFields",
     "deniedWork",
     "bindingObservation"
   ],
@@ -69,9 +69,6 @@
         "fuel": 100000
       }
     },
-    "ownershipCopyBytes": {
-      "const": 0
-    },
     "deniedWork": {
       "const": 0
     },
@@ -83,6 +80,13 @@
         "refusalHeapBytes": 0,
         "unchangedBothInputs": true
       }
+    },
+    "publicationFields": {
+      "const": [
+        "fieldOptions",
+        "outputOption",
+        "phase"
+      ]
     }
   }
 }

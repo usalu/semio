@@ -2,15 +2,7 @@
 use super::*;
 use std::mem::{size_of,ManuallyDrop};
 
-mod empty_owner{
- pub trait Sealed:Sized{fn take_empty(&mut self)->Self;fn already_empty(&self)->bool;}
- impl<T> Sealed for Vec<T>{fn take_empty(&mut self)->Self{std::mem::take(self)}fn already_empty(&self)->bool{self.is_empty()&&(size_of::<T>()==0||self.capacity()==0)}}
- impl<T,const N:usize> Sealed for semio_framework_value_retirement::list::PagedList<T,N>{fn take_empty(&mut self)->Self{std::mem::take(self)}fn already_empty(&self)->bool{self.terminal_is_empty()}}
-}
-/// 🥡️ Only defining zero-allocation empty Vec and paged owners can transfer without an arbitrary Default callback. [Design notes](README.md#source-notes-10).
-pub trait RetainedEmptyOwner:RetireOwned+empty_owner::Sealed{}
-impl<T:RetireOwned> RetainedEmptyOwner for Vec<T>{}
-impl<T:RetireOwned,const N:usize> RetainedEmptyOwner for semio_framework_value_retirement::list::PagedList<T,N>{}
+pub use semio_framework_value_retirement::retirement::controlled::RetainedEmptyOwner;
 
 #[derive(Default)]
 pub struct RetainedCloneClose {pub(super) retirement:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>}
@@ -27,7 +19,7 @@ impl RetainedCloneClose {
     pub fn select(&mut self,body:usize)->Result<RetainedCloseSelection<'_>,ValueError>{select_factory_ticket(&mut self.retirement,body)}
     /// ⛽️ Quotes the selected original ticket, typed admission or binding close.
     pub fn next_owner_work<T:RetireOwned>(&self,present:bool,binding:&Option<RetainedCloneBinding>,body:usize)->Result<u64,ValueError>{if let Some(owner)=self.retirement.as_ref(){return if owner.terminal_is_empty(){Ok(1)}else{owner.next_computational_work(body)}}if present{if !T::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"typed clone owner lacks controlled close authority"))}return Ok(1)}RetainedCloneBinding::close_work_demand(binding,body)}
-    pub fn next_owner_demands<T:RetireOwned>(&self,present:bool,binding:&Option<RetainedCloneBinding>,body:usize)->Result<RetirementDemand,ValueError>{if let Some(owner)=self.retirement.as_ref(){return factory_ticket_demands(owner,body);}if present{if !T::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"typed clone owner lacks controlled close authority"));}return Ok(RetirementDemand{capacity_bytes:owned_retirement_birth_bytes::<T>(),depth:1,..Default::default()});}RetainedCloneBinding::close_demand(binding,body)}
+    pub fn next_owner_demands<T:RetireOwned>(&self,present:bool,binding:&Option<RetainedCloneBinding>,body:usize)->Result<RetirementDemand,ValueError>{if let Some(owner)=self.retirement.as_ref(){return factory_ticket_demands(owner,body);}if present{if !T::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"typed clone owner lacks controlled close authority"));}return Ok(RetirementDemand{copy_bytes:size_of::<Option<T>>()+owned_retirement_birth_bytes::<T>(),capacity_bytes:owned_retirement_birth_bytes::<T>(),depth:1,..Default::default()});}RetainedCloneBinding::close_demand(binding,body)}
     pub fn next_owner_depth_with_binding(&self,present:bool,binding:&Option<RetainedCloneBinding>)->Result<usize,ValueError>{if !self.is_empty(){self.next_depth_demand()}else if present{Ok(1)}else{RetainedCloneBinding::depth_demand(binding)}}
     pub fn next_copy_with_binding(&self,binding:&Option<RetainedCloneBinding>)->Result<usize,ValueError>{if self.is_empty(){RetainedCloneBinding::copy_demand(binding)}else{self.next_copy_byte_demand()}}
     pub fn next_release_with_binding(&self,binding:&Option<RetainedCloneBinding>)->Result<usize,ValueError>{if self.is_empty(){RetainedCloneBinding::release_demand(binding)}else{self.next_release_byte_demand()}}
@@ -41,27 +33,31 @@ impl RetainedCloneClose {
         if present&&!T::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"typed owner has no controlled close birth authority"));}
         Ok(if present{owned_retirement_birth_bytes::<T>()}else{0})
     }
-    pub fn begin_granted<T:RetireOwned>(&mut self,value:&mut Option<T>,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<RetainedCloneStep>>{
+    pub fn begin_granted<T:RetireOwned>(&mut self,value:&mut Option<T>,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<Option<RetainedCloneStep>>{
         if !self.is_empty()||value.is_none(){return RetainedWorkOutcome{result:Ok(None),work:0}}
-        let bytes=owned_retirement_birth_bytes::<T>();if grant.maximum_items==0||grant.maximum_depth==0||bytes>grant.maximum_capacity_bytes{return RetainedWorkOutcome{result:Ok(Some(RetainedCloneStep::Progress(Default::default()))),work:0}}
-        let turn=admit_owned_retirement(match value.take(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("value absent").into()),work:0}},grant);let result=match turn.result{Ok((owner,progress))=>{*self.retirement=Some(owner);Ok(Some(RetainedCloneStep::Progress(progress)))},Err((error,owner))=>{*value=Some(owner);Err(error)}};RetainedWorkOutcome{result,work:turn.work}
+        let turn=admit_owned_retirement(value,effect);let result=match turn.result{Ok(Some((owner,progress)))=>{*self.retirement=Some(owner);Ok(Some(RetainedCloneStep::Progress(progress)))},Ok(None)=>Ok(Some(RetainedCloneStep::Progress(Default::default()))),Err(error)=>Err(error.into())};RetainedWorkOutcome{result,work:turn.work}
     }
-    pub fn begin_empty_granted<T:RetainedEmptyOwner>(&mut self,value:&mut T,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<RetainedCloneStep>>{
-        if !self.is_empty()||empty_owner::Sealed::already_empty(value){return RetainedWorkOutcome{result:Ok(None),work:0}}
-        let bytes=owned_retirement_birth_bytes::<T>();if grant.maximum_items==0||grant.maximum_depth==0||bytes>grant.maximum_capacity_bytes{return RetainedWorkOutcome{result:Ok(Some(RetainedCloneStep::Progress(Default::default()))),work:0}}
-        let mut owner=Some(empty_owner::Sealed::take_empty(value));let turn=self.begin_granted(&mut owner,grant);if let Some(owner)=owner{*value=owner;}turn
+    pub fn begin_empty_granted<T:RetainedEmptyOwner>(&mut self,value:&mut T,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<Option<RetainedCloneStep>>{if !self.is_empty()||semio_framework_value_retirement::retirement::controlled::empty_retirement_is_terminal(value){return RetainedWorkOutcome{result:Ok(None),work:0}}let turn=semio_framework_value_retirement::retirement::controlled::admit_empty_controlled_retirement(value,effect);let result=match turn.result{Ok(Some((owner,progress)))=>{*self.retirement=Some(owner);Ok(Some(RetainedCloneStep::Progress(progress)))},Ok(None)=>Ok(Some(RetainedCloneStep::Progress(Default::default()))),Err(error)=>Err(error.into())};RetainedWorkOutcome{result,work:turn.work}}
+    pub fn step_granted(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let grant=effect.grant();
+        if let Some(owner)=self.retirement.as_ref(){let demand=match factory_ticket_demands(owner,grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})};if grant.maximum_items>0&&grant.maximum_depth<demand.depth{return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::DepthLimit,"clone retirement exceeds admitted depth").into()),work:0})}if !retained_clone_grant_admits(grant,demand){return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}}
+        close_factory_ticket(&mut self.retirement,effect).and_then(|step|{let progress=step.progress();if !progress.fits(grant){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"clone retirement exceeded admitted full grant").with_retained_progress(progress).into())}Ok(step)})
     }
-    pub fn step_granted(&mut self,grant:RetainedCloneGrant)->crate::OriginalRetirementOutcome{
-        if let Some(owner)=self.retirement.as_ref(){let demand=match factory_ticket_demands(owner,grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0}};if grant.maximum_items>0&&grant.maximum_depth<demand.depth{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::DepthLimit,"clone retirement exceeds admitted depth").into()),work:0}}if !retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}}
-        let turn=close_factory_ticket(&mut self.retirement,grant);let result=turn.result.and_then(|step|{let progress=step.progress();if !progress.fits(grant){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"clone retirement exceeded admitted full grant").with_retained_progress(progress).into())}Ok(step)});RetainedWorkOutcome{result,work:turn.work}
-    }
+    /// 👶️ Borrows the actual child birth selector without opening another effect.
+    pub fn requires_original_birth(&self)->bool{self.retirement.as_ref().is_some_and(|owner|owner.requires_original_birth())}
+    pub fn step_original_birth(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->crate::OriginalRetirementPoll{match self.retirement.as_mut(){Some(owner)=>owner.close_original_birth_step(original,grant),None=>crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0})}}
+    /// 🪪️ Borrows the actual selected child original-control requirement.
+    /// 🧭️ Relays the actual controller and same producer effect into the resident original owner.
+    pub fn step_controlled(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn semio_framework_value_retirement::OriginalRetirementControl)->crate::OriginalRetirementPoll{semio_framework_value_retirement::close_factory_ticket_controlled(&mut self.retirement,effect,control)}
+    pub fn requires_original_control(&self)->bool{self.retirement.as_ref().is_some_and(|owner|!owner.terminal_is_empty()&&owner.requires_original_control())}
+    /// 🧵️ Closes through the same original decoder loan and defining allocation effect.
+    pub fn step_original(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{semio_framework_value_retirement::close_factory_ticket_original(&mut self.retirement,original,effect)}
     pub fn is_empty(&self)->bool {self.retirement.is_none()}
 }
 
 impl Drop for RetainedCloneClose {fn drop(&mut self){assert!(std::thread::panicking()||self.is_empty(),"clone retirement abandoned original ownership");if self.is_empty(){unsafe{ManuallyDrop::drop(&mut self.retirement);}}}}
 
-pub fn close_retained_binding(binding: &mut Option<RetainedCloneBinding>, grant: RetainedCloneGrant) -> crate::OriginalRetirementOutcome {
-    RetainedCloneBinding::close_one(binding, grant)
+pub fn close_retained_binding(binding:&mut Option<RetainedCloneBinding>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{
+    RetainedCloneBinding::close_one(binding,effect)
 }
 
 #[cfg(test)]

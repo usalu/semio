@@ -1,123 +1,35 @@
-//! 🔤️ The private byte owner copies only the bound immutable String and becomes a String after the whole original byte sequence is retained.
-
+//! 🔤️ Bound immutable bytes become a complete String in a separately paid native-header phase.
 use super::*;
-
 #[derive(Default)]
-pub struct StringCursor {
-    output: Option<Vec<u8>>,
-    source: Option<RetainedCloneBinding>,
-    phase: u8,
-    closing: bool,
-    close: RetainedCloneClose,
+pub struct StringCursor{bytes:Option<Vec<u8>>,output:Option<String>,source:Option<RetainedCloneBinding>,phase:u8,closing:bool,close:RetainedCloneClose}
+impl StringCursor{
+ fn conversion_copy()->usize{size_of::<Option<Vec<u8>>>()+size_of::<String>()+size_of::<Option<String>>()+size_of::<u8>()}
+ fn birth_copy()->usize{size_of::<Vec<u8>>()+size_of::<Option<Vec<u8>>>()+size_of::<u8>()}
 }
-
-impl RetainedCloneCursor<String> for StringCursor {
-    fn output_ready(&self)->bool{!self.closing&&self.phase==2&&self.output.is_some()}
-    fn advance_demands(&self,source:RetainedCloneRef<'_,String>,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{let binding=source.binding_demand(&self.source)?;if self.closing||self.phase==3{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"string original clone is closing or spent"))}if maximum_work_units==0{return Ok(Default::default())}if let Some(demand)=binding{return Ok(demand)}let original=source.get();let(copy,capacity)=match self.phase{0=>(0,original.len()),1=>{let start=self.output.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"string original output absent"))?.len();if start>original.len(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"string original offset changed"))}((original.len()-start).min(body).min(RETAINED_CLONE_BULK_PAGE_BYTES).min(usize::try_from(maximum_work_units).unwrap_or(usize::MAX)),0)},_=>(0,0)};Ok(RetirementDemand{copy_bytes:copy,capacity_bytes:capacity,depth:1,..Default::default()})}
-
-    fn advance_work_demand(&self,source:RetainedCloneRef<'_,String>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{let demand=self.advance_demands(source,body,maximum_work_units)?;if maximum_work_units==0{return Ok(0)}if self.source.is_none()||self.phase==0{return Ok(1)}if self.phase==1{if demand.copy_bytes>0{return Ok(demand.copy_bytes as u64)}let done=self.output.as_ref().ok_or_else(||ValueError::invariant("string original output absent"))?.len()==source.get().len();return Ok(u64::from(done))}Ok(0)}
-    fn advance(&mut self, source: RetainedCloneRef<'_, String>, body: usize, maximum_work_units:u64, grant: RetainedCloneGrant) ->crate::OriginalRetirementOutcome{let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
-        let demand = self.advance_demands(source,body,maximum_work_units)?;
-        if maximum_work_units==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
-        if !retained_clone_grant_admits(grant,demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if self.closing {
-            return Err((ValueError::literal(ValueRefusalKind::InvariantViolated, "retained string clone cursor is closing")).into());
-        }
-        if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if let Some(progress)={let turn=source.bind(&mut self.source,grant);work+=turn.work;turn.result}?{return Ok(RetainedCloneStep::Progress(progress));}
-        let source = source.get();
-        match self.phase {
-            0 => {
-                let planned = source.len();
-                let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: 0, retained_capacity_bytes: planned, released_bytes: 0 };
-                if !progress.fits(grant) {
-                    return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
-                }
-                let mut output = Vec::new();
-                work+=1;output.try_reserve_exact(planned).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "retained string clone capacity allocation failed"))?;
-                let actual = output.capacity();
-                if actual > grant.maximum_capacity_bytes {
-                    self.output=Some(output);return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"retained string clone allocator exceeded its admitted capacity").with_retained_progress(RetainedCloneProgress{retained_capacity_bytes:actual,..progress})).into());
-                }
-                self.output = Some(output);
-                self.phase = 1;
-                Ok(RetainedCloneStep::Progress(RetainedCloneProgress { retained_capacity_bytes: actual, ..progress }))
-            }
-            1 => {
-                let output = self.output.as_mut().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "retained string clone output owner is missing"))?;
-                let start = output.len();
-                let remaining = source.len().checked_sub(start).ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "retained string clone source changed"))?;
-                if remaining == 0 {
-                    if grant.maximum_items == 0 {
-                        return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
-                    }
-                    self.phase = 2;work+=1;
-                    return Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
-                }
-                let end = start + remaining.min(demand.copy_bytes);
-                if end == start {
-                    return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
-                }
-                output.extend_from_slice(&source.as_bytes()[start..end]);work+=(end-start) as u64;
-                let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: end - start, retained_capacity_bytes: 0, released_bytes: 0 };
-                Ok(RetainedCloneStep::Progress(progress))
-            }
-            2 => Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())),
-            3 => Err((ValueError::literal(ValueRefusalKind::InvariantViolated, "retained string clone cursor is spent")).into()),
-            _ => Err((ValueError::literal(ValueRefusalKind::InvariantViolated, "retained string clone state is invalid")).into()),
-        }
-    })();RetainedWorkOutcome{result,work}}
-
-    fn take_work_demand(&self)->Result<u64,ValueError>{Ok(u64::from(self.output_ready()))}
-    fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.closing{return Ok(0)}self.close.next_owner_work::<Vec<u8>>(self.output.is_some(),&self.source,body)}
-    fn take_demand(&self)->Result<RetirementDemand,ValueError>{Ok(retained_clone_take_demand())}
-    fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(String,RetainedCloneProgress)>>{if !self.output_ready(){return RetainedWorkOutcome{result:Ok(None),work:0}}let turn=take_retained_clone_output(&mut self.output,grant);let result=turn.result.map(|value|value.map(|(bytes,progress)|{self.phase=3;(unsafe{String::from_utf8_unchecked(bytes)},progress)}));RetainedWorkOutcome{result,work:turn.work}}
-
-    fn begin_close(&mut self) -> bool {
-        if self.closing {
-            return false;
-        }
-        self.closing = true;
-        true
-    }
-    fn begin_close_work_demand(&self)->Result<u64,ValueError>{Ok(u64::from(!self.closing))}
-    fn begin_close_paid(&mut self)->RetainedWorkOutcome<(),ValueError>{if self.closing{return RetainedWorkOutcome{result:Ok(()),work:0}}self.closing=true;RetainedWorkOutcome{result:Ok(()),work:1}}
-
-    
-
-    fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Ok(Default::default());}self.close.next_owner_demands::<Vec<u8>>(self.output.is_some(),&self.source,body)}
-
-    fn close_step(&mut self, grant: RetainedCloneGrant) ->crate::OriginalRetirementOutcome{let mut work=0;let result=(||{
-        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if !self.closing { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "clone cursor must begin close before granted retirement").into()); }
-        if !self.close.is_empty() { let turn=self.close.step_granted(grant);work+=turn.work;return turn.result; }
-        {let turn=self.close.begin_granted(&mut self.output, grant);work+=turn.work;if let Some(step)=turn.result?{return Ok(step)}}
-        {let turn=close_retained_binding(&mut self.source, grant);work+=turn.work;turn.result}
-    })();RetainedWorkOutcome{result,work}}
-
-    fn next_close_depth_demand(&self)->Result<usize,ValueError>{if !self.closing {return Ok(0);} self.close.next_owner_depth_with_binding(self.output.is_some(),&self.source)}
-    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
-        if !self.closing { return Ok(0); }
-        self.close.next_copy_with_binding(&self.source)
-    }
-    fn next_close_capacity_byte_demand(&self, maximum_release_bytes: usize) -> Result<usize, ValueError> {
-        if !self.closing { return Ok(0); }
-        self.close.next_owner_capacity_with_binding::<Vec<u8>>(self.output.is_some(), maximum_release_bytes,&self.source)
-    }
-
-    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> {
-        if !self.closing { return Ok(0); }
-        self.close.next_release_with_binding(&self.source)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.output.is_none() && self.close.is_empty() && self.source.is_none()
-    }
+impl RetainedCloneCursor<String> for StringCursor{
+ fn output_ready(&self)->bool{!self.closing&&self.phase==2&&self.output.is_some()}
+ fn advance_demands(&self,source:RetainedCloneRef<'_,String>,body:usize,maximum:u64)->Result<RetirementDemand,ValueError>{let binding=source.binding_demand(&self.source)?;if self.closing||self.phase==3{return Err(ValueError::invariant("string cursor is closing or spent"))}if maximum==0{return Ok(Default::default())}if let Some(demand)=binding{return Ok(demand)}match self.phase{0=>Ok(RetirementDemand{copy_bytes:Self::birth_copy(),capacity_bytes:source.get().len(),depth:1,..Default::default()}),1=>{let start=self.bytes.as_ref().ok_or_else(||ValueError::invariant("string byte owner absent"))?.len();let remaining=source.get().len().checked_sub(start).ok_or_else(||ValueError::invariant("string source length changed"))?;let copy=if remaining==0{Self::conversion_copy()}else{remaining.min(body).min(RETAINED_CLONE_BULK_PAGE_BYTES).min(usize::try_from(maximum).unwrap_or(usize::MAX)).checked_add(size_of::<usize>()).ok_or_else(||ValueError::invariant("string byte extent overflow"))?};Ok(RetirementDemand{copy_bytes:copy,depth:1,..Default::default()})},_=>Ok(Default::default())}}
+ fn advance_work_demand(&self,source:RetainedCloneRef<'_,String>,body:usize,maximum:u64)->Result<u64,ValueError>{self.advance_demands(source,body,maximum)?;if maximum==0||self.output_ready(){return Ok(0)}if self.source.is_none()||self.phase==0{return Ok(1)}let remaining=source.get().len().checked_sub(self.bytes.as_ref().ok_or_else(||ValueError::invariant("string bytes absent"))?.len()).ok_or_else(||ValueError::invariant("string source length changed"))?;if remaining==0{Ok(1)}else{Ok(u64::try_from(remaining.min(body).min(RETAINED_CLONE_BULK_PAGE_BYTES)).unwrap_or(u64::MAX).min(maximum))}}
+ fn advance(&mut self,source:RetainedCloneRef<'_,String>,body:usize,maximum:u64,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{
+  let mut work=0;let result=(||->Result<RetainedCloneStep,crate::OriginalRetirementFailure>{let maximum=maximum.min(effect.remaining_work_units()?);let demand=self.advance_demands(source,body,maximum)?;if maximum==0||!retained_clone_grant_admits(effect.grant(),demand){return Ok(RetainedCloneStep::Progress(Default::default()))}let turn=source.bind(&mut self.source,effect);work+=turn.work;if let Some(progress)=turn.result?{return Ok(RetainedCloneStep::Progress(progress))}if self.output_ready(){return Ok(RetainedCloneStep::Complete(Default::default()))}
+   if self.phase==0{if source.get().len()!=0&&effect.actual().is_some(){return Err(ValueError::invariant("string allocation marker occupied").into())}work+=retirement::record_retirement_work(effect,1).map_err(|(error,_)|error)?;self.bytes=Some(Vec::new());let bytes=self.bytes.as_mut().expect("resident string byte owner");let capacity=source.get().len();if capacity!=0{*effect.actual()=Some(0)}if bytes.try_reserve_exact(capacity).is_err(){return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"string byte allocation failed").with_retained_progress(RetainedCloneProgress{copied_items:1,copied_bytes:Self::birth_copy()-size_of::<u8>(),..Default::default()}).into())}if capacity!=0{*effect.actual()=Some(bytes.capacity())}let actual=bytes.capacity();self.phase=1;let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:actual,..Default::default()};if actual>effect.grant().maximum_capacity_bytes{return Err(ValueError::invariant("string byte allocator exceeded original capacity").with_retained_progress(progress).into())}return Ok(RetainedCloneStep::Progress(progress))}
+   let start=self.bytes.as_ref().ok_or_else(||ValueError::invariant("string byte owner absent"))?.len();let remaining=source.get().len().checked_sub(start).ok_or_else(||ValueError::invariant("string source length changed"))?;if remaining==0{work+=retirement::record_retirement_work(effect,1).map_err(|(error,_)|error)?;let bytes=self.bytes.take().expect("complete original UTF8 byte sequence");self.output=Some(unsafe{String::from_utf8_unchecked(bytes)});self.phase=2;return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}let count=remaining.min(body).min(RETAINED_CLONE_BULK_PAGE_BYTES).min(usize::try_from(maximum).unwrap_or(usize::MAX));if count==0{return Ok(RetainedCloneStep::Progress(Default::default()))}work+=retirement::record_retirement_work(effect,u64::try_from(count).expect("bounded original byte work")).map_err(|(error,_)|error)?;self.bytes.as_mut().expect("resident byte buffer").extend_from_slice(&source.get().as_bytes()[start..start+count]);Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:count+size_of::<usize>(),..Default::default()}))
+  })();RetainedWorkOutcome{result,work}
+ }
+ fn take_work_demand(&self)->Result<u64,ValueError>{Ok(u64::from(self.output_ready()))}
+ fn take_demand(&self)->Result<RetirementDemand,ValueError>{retained_clone_cursor_take_demand::<String,u8>()}
+ fn take<'reply>(&mut self,output:&mut Option<String>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,ValueError>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,ValueError>,ValueError>{take_retained_clone_cursor_output!(self.output_ready(),self.output,output,self.phase,3,effect,reply,String,u8)}
+ fn close_started(&self)->bool{self.closing}
+ fn begin_close_work_demand(&self)->Result<u64,ValueError>{Ok(u64::from(!self.closing))}
+ fn begin_close_demand(&self)->Result<RetirementDemand,ValueError>{Ok(crate::retained_close_start_demand(self.closing))}
+ fn begin_close_paid(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress>{crate::start_retained_close(&mut self.closing,effect)}
+ fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Ok(Default::default())}if self.bytes.is_some(){self.close.next_owner_demands::<Vec<u8>>(true,&self.source,body)}else{self.close.next_owner_demands::<String>(self.output.is_some(),&self.source,body)}}
+ fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.closing{return Ok(0)}if self.bytes.is_some(){self.close.next_owner_work::<Vec<u8>>(true,&self.source,body)}else{self.close.next_owner_work::<String>(self.output.is_some(),&self.source,body)}}
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{if !self.closing{return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::invariant("string cursor must begin close").into()),work:0})}if !self.close.is_empty(){return self.close.step_granted(effect)}if self.bytes.is_some(){let turn=self.close.begin_granted(&mut self.bytes,effect);return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into),work:turn.work})}if self.output.is_some(){let turn=self.close.begin_granted(&mut self.output,effect);return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into),work:turn.work})}close_retained_binding(&mut self.source,effect)}
+ fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.depth)}
+ fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
+ fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
+ fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.release_bytes)}
+ fn terminal_is_empty(&self)->bool{self.closing&&self.bytes.is_none()&&self.output.is_none()&&self.close.is_empty()&&self.source.is_none()}
 }
-
-impl RetainedClone for String {
-    type Cursor = StringCursor;
-    fn retained_clone_cursor() -> Self::Cursor {
-        StringCursor::default()
-    }
-}
+impl RetainedClone for String{type Cursor=StringCursor;fn retained_clone_cursor()->Self::Cursor{StringCursor::default()}}

@@ -1,0 +1,41 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases",
+    "ports",
+    "output",
+    "pending"
+  ],
+  "properties": {
+    "cases": {
+      "const": [
+        {
+          "family": "record",
+          "source": "struct PollRecord { value:u64 }"
+        },
+        {
+          "family": "enum",
+          "source": "#[value(tag=\"kind\")] enum PollChoice { Value{value:u64}, Empty }"
+        }
+      ]
+    },
+    "ports": {
+      "const": [
+        "close_step",
+        "close_original_birth_step",
+        "close_original_step"
+      ]
+    },
+    "output": {
+      "const": "OriginalRetirementPoll"
+    },
+    "pending": {
+      "const": {
+        "completed": false,
+        "keepsOriginalAction": true,
+        "replaysChild": false
+      }
+    }
+  }
+}

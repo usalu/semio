@@ -42,9 +42,10 @@ fn field_demand<T:RetainedClone>(field:&Option<Box<RetainedFieldPreparation<T>>>
  let Some(field)=field else{return Ok(field_birth::<T>())};
  if field.value().is_some(){let mut d=field.exchange_demand()?;d.copy_bytes=d.copy_bytes.checked_add(take_extra).ok_or_else(invalid)?;Ok(d)}else{field.demand(source,body,maximum_work_units)}
 }
-fn field_close_demand<T:RetainedClone>(field:&RetainedFieldPreparation<T>,body:usize)->Result<RetirementDemand,ValueError>{if field.terminal_is_empty(){Ok(field_release::<T>())}else{field.close_demand(body)}}
+fn field_close_demand<T:RetainedClone>(field:&RetainedFieldPreparation<T>,body:usize)->Result<RetirementDemand,ValueError>{if !field.close_started(){return Ok(field.begin_close_demand())}if field.terminal_is_empty(){Ok(field_release::<T>())}else{field.close_demand(body)}}
 fn field_close_step<T:RetainedClone>(slot:&mut Option<Box<RetainedFieldPreparation<T>>>,d:RetirementDemand,g:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{
  let Some(field)=slot.as_mut()else{return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}};
+ if !field.close_started(){let turn=field.begin_close_paid(g);return semio_framework_value::RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress).map_err(Into::into),work:turn.work}}
  if field.terminal_is_empty(){drop(slot.take());return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(receipt(d))),work:1};}
  let turn=field.close_step(g);semio_framework_value::RetainedWorkOutcome{result:turn.result.map(|s|RetainedCloneStep::Progress(s.progress())),work:turn.work}
 }
@@ -124,7 +125,11 @@ impl<L,R,P,M> RetainedMutationLeafPreparation<R,M,L> for RetainedSetFieldLeaf<L,
   if self.inverse_phase!=4||self.closing{return Vec::new();}
   self.inverse_phase=5;self.inverse.take().unwrap_or_default()
  }
- fn begin_close(&mut self){self.closing=true;if let Some(f)=self.authored.as_mut(){f.begin_close();}if let Some(f)=self.displaced.as_mut(){f.begin_close();}}
+ fn begin_close(&mut self){self.closing=true;}
+ fn close_started(&self)->bool{self.closing}
+ fn begin_close_demand(&self)->RetirementDemand{if self.closing{RetirementDemand::default()}else{scalar(size_of::<bool>())}}
+ fn begin_close_work_demand(&self)->u64{u64::from(!self.closing)}
+ fn begin_close_paid(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress,ValueError>{let d=self.begin_close_demand();if self.closing||!retained_mutation_demand_fits(d,grant){return semio_framework_value::RetainedWorkOutcome{result:Ok(Default::default()),work:0}}self.closing=true;semio_framework_value::RetainedWorkOutcome{result:Ok(receipt(d)),work:1}}
  fn close_demand(&self,context:RetainedMutationCloseContext<'_,M>,body:usize)->Result<RetirementDemand,ValueError>{
   if !self.closing{return Err(invalid());}
   if let Some(f)=self.authored.as_ref(){return field_close_demand(f.as_ref(),body);}
@@ -135,8 +140,8 @@ impl<L,R,P,M> RetainedMutationLeafPreparation<R,M,L> for RetainedSetFieldLeaf<L,
   RetainedCloneBinding::close_demand(self.first_binding(),body)
  }
  fn close_work_demand(&self,context:RetainedMutationCloseContext<'_,M>,body:usize)->Result<u64,ValueError>{self.close_demand(context,body)?;
-  if let Some(f)=self.authored.as_ref(){return if f.terminal_is_empty(){Ok(1)}else{f.close_work_demand(body)}}
-  if let Some(f)=self.displaced.as_ref(){return if f.terminal_is_empty(){Ok(1)}else{f.close_work_demand(body)}}
+  if let Some(f)=self.authored.as_ref(){return if !f.close_started(){Ok(f.begin_close_work_demand())}else if f.terminal_is_empty(){Ok(1)}else{f.close_work_demand(body)}}
+  if let Some(f)=self.displaced.as_ref(){return if !f.close_started(){Ok(f.begin_close_work_demand())}else if f.terminal_is_empty(){Ok(1)}else{f.close_work_demand(body)}}
   if let Some(close)=self.inverse_close.as_ref(){return close.close_work_demand(context.mutations,body)}
   if self.inverse.is_some(){return Ok(1)}
   if !self.retirement.is_empty(){return self.retirement.next_owner_work::<P>(false,&None,body)}
@@ -233,6 +238,10 @@ impl<R,P,M> super::RetainedMutationPreparation<R,M> for RetainedRootMutation<R,P
  fn inverse(&mut self,m:RetainedCloneRef<'_,M>,o:RetainedCloneRef<'_,R>,d:RetainedCloneRef<'_,P>,body:usize,maximum_work_units:u64,g:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedMutationAdvance,semio_framework_value::OriginalRetirementFailure>{self.leaf.inverse(m,o,d,body,maximum_work_units,g)}
  fn take_inverse(&mut self)->Vec<M>{self.leaf.take_inverse()}
  fn begin_close(&mut self){self.leaf.begin_close()}
+ fn close_started(&self)->bool{self.leaf.close_started()}
+ fn begin_close_demand(&self)->RetirementDemand{self.leaf.begin_close_demand()}
+ fn begin_close_work_demand(&self)->u64{self.leaf.begin_close_work_demand()}
+ fn begin_close_paid(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress,ValueError>{self.leaf.begin_close_paid(grant)}
  fn close_demand(&self,c:RetainedMutationCloseContext<'_,M>,body:usize)->Result<RetirementDemand,ValueError>{self.leaf.close_demand(c,body)}
  fn close_work_demand(&self,c:RetainedMutationCloseContext<'_,M>,body:usize)->Result<u64,ValueError>{self.leaf.close_work_demand(c,body)}
  fn close_step(&mut self,c:RetainedMutationCloseContext<'_,M>,g:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{self.leaf.close_step(c,g)}

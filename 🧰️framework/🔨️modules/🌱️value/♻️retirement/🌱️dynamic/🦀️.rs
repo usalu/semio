@@ -1,65 +1,13 @@
-//! 🌱️ Original intrinsic value retirement remains at its actual type owner.
-use crate::RetainedCloneGrant;
+//! 🌱️ Intrinsic values retain concrete inline retirement seeds.
 use crate::retirement::{RetireOwned,RetirementCursor,RetirementStep};
-use std::mem::{ManuallyDrop,size_of};
-struct ValueRetirement(ManuallyDrop<Option<crate::DslValue>>);
-impl RetirementCursor for ValueRetirement {
-    fn next_demand(&self, body: usize) -> Result<crate::RetirementDemand, crate::ValueError> {
-        Ok(crate::RetirementDemand {
-            capacity_bytes: self.next_birth_bytes(body).ok_or_else(|| crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner, "original dynamic child lacks a birth quote"))?,
-            release_bytes: self.next_close_byte_demand().unwrap_or(0),
-            depth: self.next_depth_demand()?,
-            ..Default::default()
-        })
-    }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
-        if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
-        match self.0.take() {
-            None => RetirementStep::Complete(0),
-            Some(crate::DslValue::Null) => RetirementStep::Complete(1),
-            Some(crate::DslValue::Bool(value)) => RetirementStep::Child(value.retirement()),
-            Some(crate::DslValue::Number(value)) => RetirementStep::Child(match value {
-                crate::Number::UInt(value) => value.retirement(),
-                crate::Number::Int(value) => value.retirement(),
-                crate::Number::Float(value) => value.retirement(),
-            }),
-            Some(crate::DslValue::String(value)) => RetirementStep::Child(value.retirement()),
-            Some(crate::DslValue::Bytes(value)) => RetirementStep::Child(value.retirement()),
-            Some(crate::DslValue::Array(value)) => RetirementStep::Child(value.retirement()),
-            Some(crate::DslValue::Object(value)) => RetirementStep::Child(value.retirement()),
-        }
-    }
-    fn terminal_is_empty(&self) -> bool {
-        self.0.is_none()
-    }
-    fn next_close_byte_demand(&self) -> Option<usize> { Some(0) }
-    fn next_birth_bytes(&self, _: usize) -> Option<usize> {
-        match self.0.as_ref() {
-            None | Some(crate::DslValue::Null) => Some(0),
-            Some(crate::DslValue::Bool(value)) => value.retirement_birth_bytes(),
-            Some(crate::DslValue::Number(value)) => match value {
-                crate::Number::UInt(value) => value.retirement_birth_bytes(),
-                crate::Number::Int(value) => value.retirement_birth_bytes(),
-                crate::Number::Float(value) => value.retirement_birth_bytes(),
-            },
-            Some(crate::DslValue::String(value)) => value.retirement_birth_bytes(),
-            Some(crate::DslValue::Bytes(value)) => value.retirement_birth_bytes(),
-            Some(crate::DslValue::Array(value)) => value.retirement_birth_bytes(),
-            Some(crate::DslValue::Object(value)) => value.retirement_birth_bytes(),
-        }
-    }
-    fn terminal_release_bytes(&self) -> Option<usize> { self.terminal_is_empty().then_some(size_of::<Self>()) }
+#[doc(hidden)]
+pub enum ValueRetirement{Null(<() as RetireOwned>::RetirementCursor),Bool(<bool as RetireOwned>::RetirementCursor),UInt(<u64 as RetireOwned>::RetirementCursor),Int(<i64 as RetireOwned>::RetirementCursor),Float(<f64 as RetireOwned>::RetirementCursor),String(<String as RetireOwned>::RetirementCursor),Bytes(<Vec<u8> as RetireOwned>::RetirementCursor),Array(<Vec<crate::DslValue> as RetireOwned>::RetirementCursor),Object(<Vec<(String,crate::DslValue)> as RetireOwned>::RetirementCursor)}
+impl ValueRetirement{fn active(&self)->&dyn RetirementCursor{match self{Self::Null(cursor)=>cursor,Self::Bool(cursor)=>cursor,Self::UInt(cursor)=>cursor,Self::Int(cursor)=>cursor,Self::Float(cursor)=>cursor,Self::String(cursor)=>cursor,Self::Bytes(cursor)=>cursor,Self::Array(cursor)=>cursor,Self::Object(cursor)=>cursor}}fn active_mut(&mut self)->&mut dyn RetirementCursor{match self{Self::Null(cursor)=>cursor,Self::Bool(cursor)=>cursor,Self::UInt(cursor)=>cursor,Self::Int(cursor)=>cursor,Self::Float(cursor)=>cursor,Self::String(cursor)=>cursor,Self::Bytes(cursor)=>cursor,Self::Array(cursor)=>cursor,Self::Object(cursor)=>cursor}}}
+impl RetirementCursor for ValueRetirement{
+ fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.active().next_demand(body)}
+ fn next_computational_work(&self,body:usize)->Result<u64,crate::ValueError>{self.active().next_computational_work(body)}
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{self.active_mut().close_step(effect)}
+ fn terminal_is_empty(&self)->bool{self.active().terminal_is_empty()}
+ fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
-impl Drop for ValueRetirement {
-    fn drop(&mut self) {
-        assert!(std::thread::panicking() || self.0.is_none(), "dynamic value retired before terminal-empty");
-    }
-}
-impl RetireOwned for crate::DslValue {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        Box::new(ValueRetirement(ManuallyDrop::new(Some(self))))
-    }
-    fn retirement_birth_bytes(&self) -> Option<usize> { Some(size_of::<ValueRetirement>()) }
-    fn controlled_retirement_supported() -> bool { true }
-}
-
+impl RetireOwned for crate::DslValue{type RetirementCursor=ValueRetirement;fn retirement_seed(self)->Self::RetirementCursor{match self{crate::DslValue::Null=>ValueRetirement::Null(<() as RetireOwned>::retirement_seed(())),crate::DslValue::Bool(value)=>ValueRetirement::Bool(<bool as RetireOwned>::retirement_seed(value)),crate::DslValue::Number(crate::Number::UInt(value))=>ValueRetirement::UInt(<u64 as RetireOwned>::retirement_seed(value)),crate::DslValue::Number(crate::Number::Int(value))=>ValueRetirement::Int(<i64 as RetireOwned>::retirement_seed(value)),crate::DslValue::Number(crate::Number::Float(value))=>ValueRetirement::Float(<f64 as RetireOwned>::retirement_seed(value)),crate::DslValue::String(value)=>ValueRetirement::String(<String as RetireOwned>::retirement_seed(value)),crate::DslValue::Bytes(value)=>ValueRetirement::Bytes(<Vec<u8> as RetireOwned>::retirement_seed(value)),crate::DslValue::Array(value)=>ValueRetirement::Array(<Vec<crate::DslValue> as RetireOwned>::retirement_seed(value)),crate::DslValue::Object(value)=>ValueRetirement::Object(<Vec<(String,crate::DslValue)> as RetireOwned>::retirement_seed(value))}}fn controlled_retirement_supported()->bool{true}}

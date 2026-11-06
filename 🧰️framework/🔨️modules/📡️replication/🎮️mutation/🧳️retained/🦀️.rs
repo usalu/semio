@@ -48,6 +48,10 @@ pub trait RetainedMutationPreparation<P,M:Mutation<P,Diff:RetainedDiff<P>>>:Send
  fn inverse(&mut self,mutation:RetainedCloneRef<'_,M>,original:RetainedCloneRef<'_,P>,diff:RetainedCloneRef<'_,M::Diff>,body:usize,maximum_work_units:u64,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedMutationAdvance,semio_framework_value::OriginalRetirementFailure>;
  fn take_inverse(&mut self)->Vec<M>;
  fn begin_close(&mut self);
+ fn close_started(&self)->bool;
+ fn begin_close_demand(&self)->RetirementDemand;
+ fn begin_close_work_demand(&self)->u64;
+ fn begin_close_paid(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress,ValueError>;
  fn close_demand(&self,context:RetainedMutationCloseContext<'_,M>,body:usize)->Result<RetirementDemand,ValueError>;
  fn close_work_demand(&self,context:RetainedMutationCloseContext<'_,M>,body:usize)->Result<u64,ValueError>;
  fn close_step(&mut self,context:RetainedMutationCloseContext<'_,M>,grant:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome;
@@ -69,6 +73,10 @@ pub trait RetainedMutationLeafPreparation<P,M:Mutation<P,Diff:RetainedDiff<P>>,L
  fn inverse(&mut self,payload:RetainedCloneRef<'_,L>,original:RetainedCloneRef<'_,P>,diff:RetainedCloneRef<'_,M::Diff>,body:usize,maximum_work_units:u64,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedMutationAdvance,semio_framework_value::OriginalRetirementFailure>;
  fn take_inverse(&mut self)->Vec<M>;
  fn begin_close(&mut self);
+ fn close_started(&self)->bool;
+ fn begin_close_demand(&self)->RetirementDemand;
+ fn begin_close_work_demand(&self)->u64;
+ fn begin_close_paid(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress,ValueError>;
  fn close_demand(&self,context:RetainedMutationCloseContext<'_,M>,body:usize)->Result<RetirementDemand,ValueError>;
  fn close_work_demand(&self,context:RetainedMutationCloseContext<'_,M>,body:usize)->Result<u64,ValueError>;
  fn close_step(&mut self,context:RetainedMutationCloseContext<'_,M>,grant:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome;
@@ -121,7 +129,11 @@ impl<P,M:RetainedMutation<P>> RetainedMutationOwner<P,M>{
  /// ⛽️ Quotes the exact inverse binding, child or result handoff.
  pub fn inverse_work_demand(&self,mutation:RetainedCloneRef<'_,M>,admission:&RetainedDiffAdmission<'_,P,M::Diff>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{self.inverse_demand(mutation,admission,body,maximum_work_units)?;if maximum_work_units==0{return Ok(0)}if self.diff_source.is_none()||self.phase==4{return Ok(1)}self.preparation.as_ref().expect("original inverse preparation").inverse_work_demand(mutation,admission.original(),admission.diff(),body,maximum_work_units)}
  /// 🛑️ Typed child closure precedes source and fixed body release.
- pub fn begin_close(&mut self){self.closing=true;if let Some(p)=self.preparation.as_mut(){p.begin_close();}}
+ pub fn begin_close(&mut self){self.closing=true;}
+ pub fn close_started(&self)->bool{self.closing}
+ pub fn begin_close_demand(&self)->RetirementDemand{if self.closing{RetirementDemand::default()}else{RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()}}}
+ pub fn begin_close_work_demand(&self)->u64{u64::from(!self.closing)}
+ pub fn begin_close_paid(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress,ValueError>{let d=self.begin_close_demand();if self.closing||!retained_mutation_demand_fits(d,grant){return semio_framework_value::RetainedWorkOutcome{result:Ok(Default::default()),work:0}}self.closing=true;semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}),work:1}}
  /// ♻️ Untransferred D uses its explicitly registered intrinsic issuer; inverse M uses exact caller context.
  pub fn close_demand(&self,context:RetainedMutationCloseContext<'_,M>,body:usize)->Result<RetirementDemand,ValueError>{
   if self.inverse_issuer.is_some_and(|issuer|!issuer.matches(context.mutations)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original inverse issuer changed"));}
@@ -130,10 +142,10 @@ impl<P,M:RetainedMutation<P>> RetainedMutationOwner<P,M>{
  fn issuer_capture_bytes(&self)->usize{if self.inverse_issuer.is_none()&&!self.terminal_is_empty(){FactoryIssuerIdentity::<M>::capture_copy_bytes()}else{0}}
  fn owner_close_demand(&self,context:RetainedMutationCloseContext<'_,M>,body:usize)->Result<RetirementDemand,ValueError>{
   let Some(p)=self.preparation.as_ref()else{return Ok(Default::default());};
-  if !p.terminal_is_empty(){return p.close_demand(context,body);}
+  if !p.terminal_is_empty(){return if p.close_started(){p.close_demand(context,body)}else{Ok(p.begin_close_demand())};}
   if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<M::Diff>(false,&None,body);}
   if self.decision.is_some(){return Ok(self.retirement.next_owner_demands::<M::Diff>(true,&None,body)?);}
-  if let Some(m)=self.messages.as_ref(){return semio_framework_value::ErasedSnapshotRetirement::next_demand(m,body);}
+  if let Some(m)=self.messages.as_ref(){return if m.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of_val(&*self.messages),depth:1,..Default::default()})}else{semio_framework_value::ErasedSnapshotRetirement::next_demand(m,body)};}
   if self.diff_source.is_some(){return binding_demand(&self.diff_source,body);}
   if self.original_source.is_some(){return binding_demand(&self.original_source,body);}
   if self.mutation_source.is_some(){return binding_demand(&self.mutation_source,body);}
@@ -143,7 +155,7 @@ impl<P,M:RetainedMutation<P>> RetainedMutationOwner<P,M>{
  pub fn close_work_demand(&self,context:RetainedMutationCloseContext<'_,M>,body:usize)->Result<u64,ValueError>{
   if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"semantic closure not started"));}
   self.close_demand(context,body)?;let Some(p)=self.preparation.as_ref()else{return Ok(0)};if self.issuer_capture_bytes()>0{return Ok(1)}
-  let child=if !p.terminal_is_empty(){p.close_work_demand(context,body)?}
+  let child=if !p.terminal_is_empty(){if p.close_started(){p.close_work_demand(context,body)?}else{p.begin_close_work_demand()}}
   else if !self.retirement.is_empty(){self.retirement.next_owner_work::<M::Diff>(false,&None,body)?}
   else if self.decision.is_some(){self.retirement.next_owner_work::<M::Diff>(true,&None,body)?}
   else if self.messages.is_some(){1}
@@ -163,10 +175,11 @@ impl<P,M:RetainedMutation<P>> RetainedMutationOwner<P,M>{
   if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"semantic closure not started").into());}
   if self.inverse_issuer.is_some_and(|i|!i.matches(context.mutations)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original inverse issuer changed").into());}
   let d=self.owner_close_demand(context,grant.maximum_copy_bytes)?;if self.preparation.is_none(){return Ok(RetainedCloneStep::Complete(Default::default()));}if !retained_mutation_demand_fits(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
-  let p=self.preparation.as_mut().expect("original preparation");if !p.terminal_is_empty(){let turn=p.close_step(context,grant);work+=turn.work;let step=admit_retained_clone_close(grant,turn.result?,p.terminal_is_empty(),"original semantic child closure")?;return Ok(RetainedCloneStep::Progress(step.progress()));}
+  let p=self.preparation.as_mut().expect("original preparation");if !p.terminal_is_empty()&&!p.close_started(){let turn=p.begin_close_paid(grant);work=turn.work;return Ok(RetainedCloneStep::Progress(turn.result?))}if !p.terminal_is_empty(){let turn=p.close_step(context,grant);work+=turn.work;let step=admit_retained_clone_close(grant,turn.result?,p.terminal_is_empty(),"original semantic child closure")?;return Ok(RetainedCloneStep::Progress(step.progress()));}
   if !self.retirement.is_empty(){let turn=self.retirement.step_granted(grant);work+=turn.work;return Ok(RetainedCloneStep::Progress(turn.result?.progress()));}
   let turn=self.retirement.begin_granted(&mut self.decision,grant);work+=turn.work;if let Some(step)=turn.result?{return Ok(RetainedCloneStep::Progress(step.progress()));}
-  if let Some(m)=self.messages.as_mut(){let turn=m.close_step(grant);work+=m.last_turn_work();let s=turn?;if m.terminal_is_empty(){*self.messages=None;}return Ok(RetainedCloneStep::Progress(s.progress()));}
+  if self.messages.as_ref().is_some_and(MutationMessageLedgerRetirement::terminal_is_empty){self.messages.take();work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
+  if let Some(m)=self.messages.as_mut(){let turn=m.close_step(grant);work+=m.last_turn_work();let s=turn?;return Ok(RetainedCloneStep::Progress(s.progress()));}
   if self.diff_source.is_some(){let turn=RetainedCloneBinding::close_one(&mut self.diff_source,grant);work+=turn.work;return Ok(RetainedCloneStep::Progress(turn.result?.progress()));}
   if self.original_source.is_some(){let turn=RetainedCloneBinding::close_one(&mut self.original_source,grant);work+=turn.work;return Ok(RetainedCloneStep::Progress(turn.result?.progress()));}
   if self.mutation_source.is_some(){let turn=RetainedCloneBinding::close_one(&mut self.mutation_source,grant);work+=turn.work;return Ok(RetainedCloneStep::Progress(turn.result?.progress()));}

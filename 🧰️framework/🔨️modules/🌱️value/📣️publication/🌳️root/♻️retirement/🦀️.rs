@@ -25,7 +25,7 @@ impl<T:RetireOwned> RootRetirement<T>{
 }
 impl<T:RetireOwned> RetirementCursor for RootRetirement<T>{
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.demand(body)}
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{let turn=self.step(grant);match turn.result{Ok(RetainedCloneStep::Complete(p))if p==Default::default()=>RetirementStep::Complete(turn.work),Ok(step)=>RetirementStep::Progress(step.progress(),turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();let turn=self.step(&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"));match turn.result{Ok(RetainedCloneStep::Complete(p))if p==Default::default()=>RetirementStep::Complete(turn.work),Ok(step)=>RetirementStep::Progress(step.progress(),turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}
  fn terminal_is_empty(&self)->bool{self.root.original.is_none()&&self.root.candidate.is_none()&&self.active.is_none()&&self.decision.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demand(0)?.copy_bytes)}
  fn next_birth_bytes(&self,body:usize)->Option<usize>{self.demand(body).ok().map(|d|d.capacity_bytes)}

@@ -1,9 +1,9 @@
 use super::*;
 use semio_framework_value::{NativeDecodeControl, RetainedCloneGrant};
-use semio_framework_value_native_owned::native_decoding::{NativeDecodeRetirementRecipient,NativeDecodeWorkRecipient};
+use semio_framework_value_native_owned::native_decoding::{NativeDecodeRetirementRecipient,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete};
 /// 🎟️ Finite lower-level work loan; job caller behavior is tested separately.
 struct Loan;
-impl NativeDecodeWorkRecipient for Loan {fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=10_000_000))}}
+impl OriginalWorkRecipient for Loan {fn admits<'a>(&mut self,quote:OriginalWorkQuote<'a>,observed:u64,additional:u64)->OriginalWorkQuoteComplete<'a>{quote.complete((||{Ok(observed.checked_add(additional).is_some_and(|total|total<=10_000_000))})())}}
 fn checked<T>(turn:semio_framework_value::RetainedWorkOutcome<T,store::NativeSnapshotFailure>,fuel:&mut u64)->Result<T,store::NativeSnapshotFailure>{*fuel=fuel.checked_sub(turn.work).expect("finite test work loan");turn.result}
 fn failure_kind(error:store::NativeSnapshotFailure)->ValueRefusalKind{let kind=error.kind();drain(error);kind}
 use semio_s_fem_node::volumetric::FemNodeValue;

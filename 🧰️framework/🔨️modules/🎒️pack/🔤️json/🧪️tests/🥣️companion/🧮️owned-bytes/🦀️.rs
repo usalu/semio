@@ -3,7 +3,7 @@ use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneSource};
 use semio_framework_value::{DslValue,Number,RetirementDemand,ValueError};
 use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,NativeDecodeControl,NativeReceive};
-use semio_framework_value_native_owned::native_decoding::owned::NativeReceivingOriginal;
+use semio_framework_value_native_receiving_original::NativeReceivingOriginal;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 
 fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:64}}

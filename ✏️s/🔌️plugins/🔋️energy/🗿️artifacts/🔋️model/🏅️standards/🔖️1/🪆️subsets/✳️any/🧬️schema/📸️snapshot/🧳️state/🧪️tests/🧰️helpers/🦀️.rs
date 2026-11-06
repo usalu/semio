@@ -7,7 +7,7 @@ pub(crate) use post_fixture::PostFixture;
 pub(crate) fn corpus()->serde_json::Value{serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧳️state/🔣️.json")).unwrap()}
 pub(crate) fn grant(d:RetirementDemand)->RetainedCloneGrant{assert!(d.copy_bytes<=4096,"actual original Energy frontier exceeds4096: {d:?}");RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 struct OriginalWork;
-impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for OriginalWork{fn admits(&mut self,observed:u64,additional:u64)->Result<bool,semio_framework_value::ValueError>{Ok(observed.checked_add(additional).is_some_and(|work|work<=1<<40))}}
+impl semio_framework_value_native_owned::native_decoding::OriginalWorkRecipient for OriginalWork{fn admits<'a>(&mut self,quote:semio_framework_value_native_owned::native_decoding::OriginalWorkQuote<'a>,observed:u64,additional:u64)->semio_framework_value_native_owned::native_decoding::OriginalWorkQuoteComplete<'a>{quote.complete((||{Ok(observed.checked_add(additional).is_some_and(|work|work<=1<<40))})())}}
 struct OriginalConstruction{submitted:RetainedCloneProgress,grant:RetainedCloneGrant,issued:bool}
 impl semio_framework_value_native_owned::native_decoding::NativeDecodeConstructionRecipient for OriginalConstruction{
  fn submitted(&self)->RetainedCloneProgress{self.submitted}fn grant(&mut self,d:RetirementDemand)->Result<RetainedCloneGrant,semio_framework_value::ValueError>{assert!(semio_framework_value::retained_clone::retained_clone_grant_admits(self.grant,d));self.issued=true;Ok(self.grant)}

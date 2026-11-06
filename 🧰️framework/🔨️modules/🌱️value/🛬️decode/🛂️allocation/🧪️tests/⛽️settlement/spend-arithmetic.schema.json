@@ -1,0 +1,37 @@
+{
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "priorHigh",
+      "priorLow",
+      "actual",
+      "resultHigh",
+      "resultLow"
+    ],
+    "properties": {
+      "priorHigh": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "priorLow": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "actual": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "resultHigh": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "resultLow": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  }
+}

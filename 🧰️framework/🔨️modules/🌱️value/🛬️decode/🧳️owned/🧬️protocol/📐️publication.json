@@ -1,0 +1,16 @@
+{
+  "source": "original-owned-value",
+  "denied": "completedNoProgress",
+  "deniedWork": 0,
+  "published": "complete",
+  "publishedWork": 1,
+  "stock": {
+    "items": 64,
+    "copyBytes": 4096,
+    "capacityBytes": 4096,
+    "releaseBytes": 4096,
+    "depth": 16,
+    "fuel": 64,
+    "maximumTurns": 64
+  }
+}

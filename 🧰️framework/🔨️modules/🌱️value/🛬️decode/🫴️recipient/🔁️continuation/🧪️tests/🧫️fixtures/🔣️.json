@@ -51,5 +51,6 @@
     "context": "native decode continuation lacks valid cumulative accounting",
     "output": "original completed value",
     "receipt": "original final receipt refusal"
-  }
+  },
+  "maximumCloseWork": 4096
 }

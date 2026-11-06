@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "name": "unanswered",
+      "written": false,
+      "verdict": "accepted",
+      "recovered": "pending"
+    },
+    {
+      "name": "accepted",
+      "written": true,
+      "verdict": "accepted",
+      "recovered": "accepted"
+    },
+    {
+      "name": "denied",
+      "written": true,
+      "verdict": "denied",
+      "recovered": "denied"
+    },
+    {
+      "name": "refused",
+      "written": true,
+      "verdict": "refused",
+      "recovered": "refused"
+    }
+  ]
+}

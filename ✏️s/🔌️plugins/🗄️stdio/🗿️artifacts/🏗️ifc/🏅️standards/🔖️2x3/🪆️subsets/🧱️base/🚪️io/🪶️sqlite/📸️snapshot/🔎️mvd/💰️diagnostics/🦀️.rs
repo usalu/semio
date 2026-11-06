@@ -18,7 +18,7 @@ impl MvdDiagnostics{
         let bytes=self.bytes.checked_add(measure.0).and_then(|bytes|bytes.checked_add(code.len())).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"IFC2x3 diagnostic semantic bytes overflow"))?;control.check_value_bytes(bytes)?;
         control.allocation_stage(SqliteSnapshotPhase::ProjectSnapshot,|remaining,progress,allocation|{
             let mut callback=|event:semio_framework_value::native_encoding::NativeEncodeProgress|progress(event.completed,event.total);
-            let mut native_allocation=|request:semio_framework_value::native_encoding::NativeEncodeAllocation|allocation(request.bytes);let mut native=NativeEncodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
+            let mut native_allocation=|request:semio_framework_value::native_encoding::NativeAllocationRequest|allocation(request.bytes);let mut native=NativeEncodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
             let result=(||{
                 native.begin_stage(0)?;
                 if self.values.len()==self.values.capacity(){

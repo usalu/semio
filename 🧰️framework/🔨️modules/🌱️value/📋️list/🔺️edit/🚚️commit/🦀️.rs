@@ -1,5 +1,6 @@
+use semio_framework_value_original_vector::OriginalVectorCursor;
 //! 🚚️ Admitted collection edits move original headers through their actual iterator and clone only authored additions.
-use crate::{IndexedEditPlan,IndexedEditKind,IndexedOutputCursor,IndexedOutputWork,RetirementDemand,ValueError,ValueRefusalKind,retirement::original_vector::OriginalVectorCursor,retained_clone::{RetainedClone,RetainedCloneCursor,RetainedFieldCursor,RetainedCloneClose,RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits,retained_clone_close_demands}};
+use crate::{IndexedEditPlan,IndexedEditKind,IndexedOutputCursor,IndexedOutputWork,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedClone,RetainedCloneCursor,RetainedFieldCursor,RetainedCloneClose,RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits,retained_clone_close_demands}};
 use std::mem::{ManuallyDrop,size_of};
 #[derive(Clone,Copy,PartialEq,Eq)]
 enum PendingKind{Original,Removed,Added}
@@ -63,11 +64,11 @@ impl<T:RetainedClone> IndexedCollectionCommit<T>{
   if let Some(original)=self.original.as_ref(){return if original.terminal_is_empty(){Ok(Self::scalar())}else{Self::nested(original.next_demand(body.saturating_sub(Self::fixed()))?)};}
   Ok(Default::default())
  }
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{let mut work=0;let result=(||{
+ pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome{let grant=effect.grant();let mut work=0;let result=(||{
   if !self.closing{return Err(invalid());}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
   let demand=self.close_demand(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
   let child=Self::child(grant);
-  if !self.field.terminal_is_empty(){return {let turn=self.field.close_step(child);work+=turn.work;turn.result}.map(|step|RetainedCloneStep::Progress(Self::receipt(step.progress())));}
+  if !self.field.terminal_is_empty(){return {let turn=self.field.close_step(&mut effect.reborrow(child,effect.maximum_work_units()).expect("retirement child exceeds original effect"));work+=turn.work;turn.result}.map(|step|RetainedCloneStep::Progress(Self::receipt(step.progress())));}
   if !self.retirement.is_empty(){return {let turn=self.retirement.step_granted(child);work+=turn.work;turn.result}.map(|step|RetainedCloneStep::Progress(Self::receipt(step.progress())));}
   if let Some(step)={let turn=self.retirement.begin_granted(&mut self.pending,child);work+=turn.work;turn.result}?{return Ok(RetainedCloneStep::Progress(Self::receipt(step.progress())));}
   if let Some(step)={let turn=self.retirement.begin_granted(&mut self.output,child);work+=turn.work;turn.result}?{return Ok(RetainedCloneStep::Progress(Self::receipt(step.progress())));}

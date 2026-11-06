@@ -22,6 +22,7 @@ name = "semio_framework_dsl_record"
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-value-native-receiving-original = { path = "../../../../🌱️value/🛬️decode/🧳️owned/🧳️original/📦️packages/🦀️rust" }
 semio-framework-dsl-record-emission = { path="../../🖨️printing/📦️packages/🦀️rust" }
 semio-framework-dsl-notation = { path="../../🖋️notation/📦️packages/🦀️rust" }
 semio-framework-io-control = { path = "../../../../🚪️io/⏱️control/📦️packages/🦀️rust" }

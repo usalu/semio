@@ -12,7 +12,7 @@ pub fn reconstruct<T>(control: &mut semio_framework_io_sqlite_snapshot::SqliteSn
     let mut owned = 0;
     let result = control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot, |remaining,checkpoint,allocation| {
         let mut progress = |event: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| checkpoint(event.completed,event.total);
-        let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(maximum.min(remaining),&mut progress,&mut native_allocation);
+        let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeAllocationRequest|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(maximum.min(remaining),&mut progress,&mut native_allocation);
         let result = operation(&mut native);
         owned = native.owned_bytes();
         (result,owned)

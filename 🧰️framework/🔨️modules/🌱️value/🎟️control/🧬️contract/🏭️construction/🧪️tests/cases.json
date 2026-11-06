@@ -1,0 +1,90 @@
+[
+  {
+    "name": "grant interrupted before reply",
+    "phase": "grant",
+    "recorded": "none",
+    "sameIssuer": true,
+    "sameAction": true,
+    "firstTake": false,
+    "secondTake": false,
+    "expected": "pending",
+    "sameContext": true
+  },
+  {
+    "name": "grant accepted before interruption",
+    "phase": "grant",
+    "recorded": "accepted",
+    "sameIssuer": true,
+    "sameAction": true,
+    "firstTake": true,
+    "secondTake": false,
+    "expected": "accepted",
+    "sameContext": true
+  },
+  {
+    "name": "grant refusal preserved",
+    "phase": "grant",
+    "recorded": "refused",
+    "sameIssuer": true,
+    "sameAction": true,
+    "firstTake": true,
+    "secondTake": false,
+    "expected": "refused",
+    "sameContext": true
+  },
+  {
+    "name": "accept refusal preserved",
+    "phase": "accept",
+    "recorded": "refused",
+    "sameIssuer": true,
+    "sameAction": true,
+    "firstTake": true,
+    "secondTake": false,
+    "expected": "refused",
+    "sameContext": true
+  },
+  {
+    "name": "foreign issuer rejected",
+    "phase": "accept",
+    "recorded": "accepted",
+    "sameIssuer": false,
+    "sameAction": true,
+    "firstTake": false,
+    "secondTake": false,
+    "expected": "foreign",
+    "sameContext": true
+  },
+  {
+    "name": "foreign action rejected",
+    "phase": "grant",
+    "recorded": "accepted",
+    "sameIssuer": true,
+    "sameAction": false,
+    "firstTake": false,
+    "secondTake": false,
+    "expected": "foreign",
+    "sameContext": true
+  },
+  {
+    "name": "reply cannot be consumed twice",
+    "phase": "accept",
+    "recorded": "accepted",
+    "sameIssuer": true,
+    "sameAction": true,
+    "firstTake": true,
+    "secondTake": true,
+    "expected": "consumed",
+    "sameContext": true
+  },
+  {
+    "name": "foreign borrowed context rejected",
+    "phase": "grant",
+    "recorded": "accepted",
+    "sameIssuer": true,
+    "sameAction": true,
+    "sameContext": false,
+    "firstTake": false,
+    "secondTake": false,
+    "expected": "foreign"
+  }
+]

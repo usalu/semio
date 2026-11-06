@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "owner",
+          "wire",
+          "unchanged"
+        ],
+        "properties": {
+          "owner": {
+            "enum": [
+              "none",
+              "owned",
+              "retained"
+            ]
+          },
+          "wire": {
+            "enum": [
+              "null",
+              "error",
+              "refused"
+            ]
+          },
+          "unchanged": {
+            "const": true
+          }
+        }
+      }
+    }
+  }
+}

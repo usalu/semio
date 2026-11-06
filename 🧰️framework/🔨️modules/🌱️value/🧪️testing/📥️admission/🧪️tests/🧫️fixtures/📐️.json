@@ -1,0 +1,23 @@
+{
+  "stock": {
+    "items": 10,
+    "copyBytes": 128,
+    "capacityBytes": 128,
+    "releaseBytes": 128,
+    "depth": 8,
+    "fuel": 5
+  },
+  "work": [
+    2,
+    1,
+    2
+  ],
+  "unwindIndex": 1,
+  "allocationAttempts": 0,
+  "rejectChangedGrant": true,
+  "zero": {
+    "performed": 0,
+    "sourceChecks": 1,
+    "remainingWork": 5
+  }
+}

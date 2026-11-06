@@ -26,6 +26,10 @@ path = "🦀️.rs"
 testkit = []
 
 [dependencies]
+semio-framework-value-native-receiver-protocol = { path = "../../🧬️protocol/📦️packages/🦀️rust" }
+semio-framework-value-native-tree-engine = { path = "../../🌳️value/🧱️bulk/📦️packages/🦀️rust" }
+semio-framework-value-native-schema-engine = { path = "../../🧩️record/📦️packages/🦀️rust" }
+semio-framework-value-native-shared-engine = { path = "../../🔐️shared-slots/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../✨️derive/📦️packages/🦀️rust" }
 semio-framework-value-native-storage = { path = "../../📦️storage/📦️packages/🦀️rust" }
 semio-framework-value-native-default = { path = "../../📥️default/📦️packages/🦀️rust" }

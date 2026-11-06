@@ -1,10 +1,11 @@
 //! 🎞️ Original reserved media stays in its request while typed parameters and private publications receive funded closure.
+use semio_framework_value_native_receiving_original::NativeReceivingOriginal;
 use neural_engine::Dictionary;
 use semio_plugin::{DslValue,Emit,MediaPayload,NoConfigMutation,ArtifactReservedToolInput,ArtifactReservedToolJobRequest,EditorApp};
 use semio_plugin::tool_contract::ArtifactReservedWork;
 use semio_framework_job::{StepContext,OriginalTurnFailure,OriginalConstructionDemand,InteractiveJobStep,InteractiveJobCloseStep,JobOutcomeBorrow,admit_original_construction,receive_original_retained_work,close_original_retained_step};
 use semio_framework_value::{RetirementDemand,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneSource,RetainedCloneSourceAdmission,RetainedCloneClose}};
-use semio_framework_value_native_owned::{OriginalReceivingPrimary,owned::NativeReceivingOriginal};
+use semio_framework_value_native_owned::{OriginalReceivingPrimary};
 use crate::mutations::SequenceMutation;
 use crate::{SequenceStep,SequenceWorkingScene,StepParams};
 use crate::editor::sequence::{edit_rules,app::SequencePlayApp,host::max_serial_in_snapshot,editor_vocabulary::{sequence_child_leaves_emit,sequence_host_snapshot_from_children}};

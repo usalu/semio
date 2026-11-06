@@ -1,0 +1,43 @@
+{
+  "bytes": 5,
+  "work": 1,
+  "events": [
+    "child",
+    "commit",
+    "post",
+    "recover",
+    "receipt",
+    "finish"
+  ],
+  "expected": {
+    "childCalls": 1,
+    "committedAtPost": 1,
+    "capacityAtPost": 5,
+    "posts": 1,
+    "recoveries": 1,
+    "proofLiveAfterInterruption": true,
+    "proofReturnedAfterReceipt": true
+  },
+  "cleanup": {
+    "text": "original cleanup 源",
+    "observer": false,
+    "expectedRelease": 20,
+    "work": 3,
+    "posts": 3
+  },
+  "workOverrun": {
+    "quoted": 1,
+    "performed": 3,
+    "childError": "original source refusal 源",
+    "workError": "original work context refusal 原",
+    "retainedCauses": 3,
+    "effectCalls": 1
+  },
+  "pendingQuote": {
+    "bytes": 5,
+    "work": 1,
+    "quoteCalls": 1,
+    "effectCallsBeforeRecovery": 0,
+    "effectCallsAfterRecovery": 1
+  }
+}

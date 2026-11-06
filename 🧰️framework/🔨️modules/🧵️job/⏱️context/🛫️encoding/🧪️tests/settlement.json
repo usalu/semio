@@ -1,0 +1,48 @@
+{
+  "cases": [
+    {
+      "name": "matching source and grant",
+      "request": 1,
+      "actual": 4,
+      "sourceValid": true,
+      "grantValid": true,
+      "pending": false,
+      "spent": 4,
+      "sourceRefusal": false,
+      "budgetRefusal": false
+    },
+    {
+      "name": "source and grant independently refuse",
+      "request": 1,
+      "actual": 4,
+      "sourceValid": false,
+      "grantValid": false,
+      "pending": false,
+      "spent": 4,
+      "sourceRefusal": true,
+      "budgetRefusal": true
+    },
+    {
+      "name": "source refuses physical post",
+      "request": 1,
+      "actual": 4,
+      "sourceValid": false,
+      "grantValid": true,
+      "pending": false,
+      "spent": 4,
+      "sourceRefusal": true,
+      "budgetRefusal": false
+    },
+    {
+      "name": "foreign request retains quote",
+      "request": 2,
+      "actual": 4,
+      "sourceValid": true,
+      "grantValid": true,
+      "pending": true,
+      "spent": 0,
+      "sourceRefusal": false,
+      "budgetRefusal": true
+    }
+  ]
+}

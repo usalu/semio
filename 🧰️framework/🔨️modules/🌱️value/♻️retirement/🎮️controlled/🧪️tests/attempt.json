@@ -1,0 +1,25 @@
+{
+  "cases": [
+    {
+      "name": "denied",
+      "admitted": false,
+      "failAllocator": false,
+      "work": 0,
+      "actual": null
+    },
+    {
+      "name": "born",
+      "admitted": true,
+      "failAllocator": false,
+      "work": 1,
+      "actual": "positive"
+    },
+    {
+      "name": "null",
+      "admitted": true,
+      "failAllocator": true,
+      "work": 1,
+      "actual": 0
+    }
+  ]
+}

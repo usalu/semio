@@ -98,7 +98,7 @@ fn original_lifecycle_retirement_roundtrip_preserves_nested_owners(){
  let primary=ValueError::new(ValueRefusalKind::InvalidValue,"outer original");
  let child=ValueError::new(ValueRefusalKind::WorkLimit,"nested original");
  let child_pointer=child.message.as_ptr();
- let nested=semio_framework_value::OriginalRetirementFailure::from_owned_parts(Some(primary),None,None,Some(Box::new(semio_framework_value::OriginalRetirementFailure::from_primary(child))),None);
+ let nested=semio_framework_value::OriginalRetirementFailure::from_owned_parts(Some(primary),None,None,None,Some(Box::new(semio_framework_value::OriginalRetirementFailure::from_primary(child))),None);
  let outer_pointer=nested.primary().unwrap().message.as_ptr();
  let lifecycle:PluginLifecycleFailure=nested.into();
  let(job,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job::OriginalTurnFailure::from(lifecycle));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));

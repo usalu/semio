@@ -12,17 +12,17 @@ fn quote(demand: RetirementDemand) -> RetainedCloneGrant {
 
 fn source(text: String) -> RetainedCloneSource<String> {
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 4096 };
-    let mut admission = RetainedCloneSource::admission_owned(text, ()); let mut output = None; for _ in 0..64 { if admission.terminal_is_empty() { break; } if admission.phase() == "ready" { admission.take_output(&mut output, grant).result.unwrap(); } else { admission.advance(grant).result.unwrap(); } } output.expect("original field source admitted")
+    let mut admission = RetainedCloneSource::admission_owned(text, ()); let mut output = None;let mut actual=None; for _ in 0..64 { if admission.terminal_is_empty() { break; } if admission.phase() == "ready" { admission.take_output(&mut output, grant).result.unwrap(); } else { admission.advance(grant,&mut actual).result.unwrap();actual=None; } } output.expect("original field source admitted")
 }
 
 fn close(field: &mut RetainedFieldPreparation<String>, source: &mut RetainedCloneSource<String>) {
-    field.begin_close();
+    let turn=field.begin_close_paid(quote(field.begin_close_demand()));assert_eq!(turn.work,1);turn.result.unwrap();
     while !field.terminal_is_empty() {
         let demand = field.close_demand(4096).unwrap();
-        let (step, heap) = observe(|| field.close_step(Default::default()).unwrap());
+        let (step, heap) = observe(|| field.close_step(Default::default()).result.unwrap());
         assert_eq!(step.progress(), Default::default()); assert_eq!(heap,(0,0));
         let grant = quote(demand);
-        let (step, heap) = observe(|| field.close_step(grant).unwrap());
+        let (step, heap) = observe(|| field.close_step(grant).result.unwrap());
         assert!(step.progress().fits(grant));
         assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));
     }
@@ -31,6 +31,8 @@ fn close(field: &mut RetainedFieldPreparation<String>, source: &mut RetainedClon
         assert!(source.close_step(grant).result.unwrap().progress().fits(grant));
     }
 }
+
+fn field_test_work(body:usize)->u64{body.max(2) as u64}
 
 /// 🪡️ SQLite-verified Unicode and empty setters use bounded original field custody and owned exchange.
 #[test]
@@ -41,11 +43,11 @@ fn retained_field_exchange_matches_neutral_strings_and_physical_receipts() {
         let mut field = RetainedFieldPreparation::<String>::default();
         let mut unpublished = vector["before"].as_str().unwrap().to_owned();
         loop {
-            let demand = field.demand(original.borrow(), 4).unwrap();
+            let demand = field.demand(original.borrow(), 4, field_test_work(4)).unwrap();
             let grant = quote(demand);
-            let (denied,heap) = observe(|| field.advance(original.borrow(), 4, Default::default()).unwrap());
+            let (denied,heap) = observe(|| field.advance(original.borrow(), 4, field_test_work(4), Default::default()).result.unwrap());
             assert_eq!(denied.progress(),Default::default()); assert_eq!(heap,(0,0));
-            let (step,heap) = observe(|| field.advance(original.borrow(),4,grant).unwrap());
+            let (step,heap) = observe(|| field.advance(original.borrow(),4,field_test_work(4),grant).result.unwrap());
             assert!(step.progress().fits(grant));
             assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));
             if matches!(step,RetainedCloneStep::Complete(_)) { break; }
@@ -69,8 +71,8 @@ fn retained_field_cancellation_closes_every_typed_frontier() {
         let mut original = source("Feldgröße 🧱️".into());
         let mut field = RetainedFieldPreparation::<String>::default();
         for _ in 0..frontier {
-            let grant = quote(field.demand(original.borrow(),4).unwrap());
-            let _ = field.advance(original.borrow(),4,grant).unwrap();
+            let grant = quote(field.demand(original.borrow(),4,field_test_work(4)).unwrap());
+            let _ = field.advance(original.borrow(),4,field_test_work(4),grant).result.unwrap();
             if field.value().is_some() { break; }
         }
         close(&mut field,&mut original);
@@ -89,12 +91,12 @@ fn retained_field_logical_body_survives_expanded_physical_headers() {
         let mut field=RetainedFieldPreparation::<String>::default();
         let mut turns=0;
         while field.value().is_none() {
-            let demand=field.demand(original.borrow(),body).unwrap();
+            let demand=field.demand(original.borrow(),body,field_test_work(body)).unwrap();
             let exact=quote(demand);
             let grant=RetainedCloneGrant{maximum_copy_bytes:row["physical"].as_u64().unwrap() as usize,..exact};
-            let (denied,heap)=observe(||field.advance(original.borrow(),body,RetainedCloneGrant{maximum_items:0,..grant}).unwrap());
+            let (denied,heap)=observe(||field.advance(original.borrow(),body,field_test_work(body),RetainedCloneGrant{maximum_items:0,..grant}).result.unwrap());
             assert_eq!(denied.progress(),Default::default());assert_eq!(heap,(0,0));
-            let (step,heap)=observe(||field.advance(original.borrow(),body,grant).unwrap());
+            let (step,heap)=observe(||field.advance(original.borrow(),body,field_test_work(body),grant).result.unwrap());
             assert!(step.progress().fits(exact));
             assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));
             turns+=1;assert!(turns<10000);
@@ -105,3 +107,6 @@ fn retained_field_logical_body_survives_expanded_physical_headers() {
         assert_eq!(observe(||drop(field)).1,(0,0));
     }
 }
+
+#[test]
+fn field_child_start_denies_zero_copy_then_posts_original_flag_once(){let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🛑️start.json")).unwrap();let mut field=RetainedFieldPreparation::<String>::default();let parent=field.begin_close_demand();let denied=field.begin_close_paid(RetainedCloneGrant::default());assert_eq!(denied.work,0);assert!(!field.close_started());let started=field.begin_close_paid(quote(parent));assert_eq!(started.work,1);assert_eq!(started.result.unwrap().copied_bytes,parent.copy_bytes);let repeat=field.begin_close_paid(quote(parent));assert_eq!(repeat.work,0);assert_eq!(repeat.result.unwrap(),RetainedCloneProgress::default());let demand=field.close_demand(4096).unwrap();assert_eq!(demand.copy_bytes,law["flagBytes"].as_u64().unwrap()as usize);assert_eq!(field.close_work_demand(4096).unwrap(),1);let mut denied=quote(demand);denied.maximum_copy_bytes=0;let turn=field.close_step(denied);assert_eq!(turn.work,law["denied"]["work"].as_u64().unwrap());assert_eq!(turn.result.unwrap().progress(),RetainedCloneProgress::default());assert!(!field.cursor.close_started());let turn=field.close_step(quote(demand));assert_eq!(turn.work,law["admitted"]["work"].as_u64().unwrap());assert_eq!(turn.result.unwrap().progress().copied_bytes,demand.copy_bytes);assert!(field.cursor.close_started());assert!(field.terminal_is_empty());}

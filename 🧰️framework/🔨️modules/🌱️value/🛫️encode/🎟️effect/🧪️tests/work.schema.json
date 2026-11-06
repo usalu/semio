@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "quote",
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "quote": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "work",
+          "primary",
+          "charged",
+          "overrun"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "work": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "primary": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "charged": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "overrun": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

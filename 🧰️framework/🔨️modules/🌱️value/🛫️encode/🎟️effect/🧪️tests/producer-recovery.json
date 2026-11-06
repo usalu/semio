@@ -1,0 +1,52 @@
+[
+  {
+    "name": "before entry",
+    "entered": false,
+    "reply": "none",
+    "sameAction": true,
+    "work": 0,
+    "ceiling": 1,
+    "next": "receive",
+    "overrun": false
+  },
+  {
+    "name": "interrupted before reply",
+    "entered": true,
+    "reply": "none",
+    "sameAction": true,
+    "work": 1,
+    "ceiling": 1,
+    "next": "recover",
+    "overrun": false
+  },
+  {
+    "name": "reply recorded before unwind",
+    "entered": true,
+    "reply": "ok",
+    "sameAction": true,
+    "work": 1,
+    "ceiling": 1,
+    "next": "consume",
+    "overrun": false
+  },
+  {
+    "name": "owned error and overrun",
+    "entered": true,
+    "reply": "error",
+    "sameAction": true,
+    "work": 3,
+    "ceiling": 1,
+    "next": "consume",
+    "overrun": true
+  },
+  {
+    "name": "foreign action rejected",
+    "entered": true,
+    "reply": "ok",
+    "sameAction": false,
+    "work": 1,
+    "ceiling": 1,
+    "next": "reject",
+    "overrun": false
+  }
+]
