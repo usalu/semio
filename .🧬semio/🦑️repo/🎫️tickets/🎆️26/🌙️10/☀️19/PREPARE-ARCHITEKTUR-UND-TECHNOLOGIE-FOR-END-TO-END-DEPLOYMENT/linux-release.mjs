@@ -28,16 +28,25 @@ export function readLinuxReleasePlanV1(value){
  return value;
 }
 
+export function physicalDirectoryV1(path){
+ const actual=realpathSync(path),expected=resolve(path),normalize=value=>process.platform==="win32"?value.toLowerCase():value;
+ if(normalize(actual)!==normalize(expected))throw Error("Physical directory ancestry required");
+ const stat=lstatSync(path);if(!stat.isDirectory()||stat.isSymbolicLink())throw Error("Physical directory required");return {dev:stat.dev,ino:stat.ino};
+}
+
+const directories=new Map();
+function checkDirectory(directory){const before=directories.get(directory),after=physicalDirectoryV1(directory);if(!before||before.dev!==after.dev||before.ino!==after.ino)throw Error("Preparation directory identity changed");}
+
 function outputDirectory(){
  const generated=join(ticket,"🗑️generated"),directory=join(generated,"linux-preparation");
- mkdirSync(generated,{recursive:true});if(lstatSync(generated).isSymbolicLink())throw Error("Physical generated root required");
- mkdirSync(directory,{recursive:true});if(lstatSync(directory).isSymbolicLink())throw Error("Physical preparation directory required");
- if(realpathSync(dirname(directory))!==realpathSync(generated))throw Error("Preparation parent changed");
+ physicalDirectoryV1(ticket);try{mkdirSync(generated);}catch(error){if(error.code!=="EEXIST")throw error;}
+ physicalDirectoryV1(generated);try{mkdirSync(directory);}catch(error){if(error.code!=="EEXIST")throw error;}
+ physicalDirectoryV1(generated);directories.set(directory,physicalDirectoryV1(directory));
  return directory;
 }
 
 function artifactPath(directory,name){
- const path=join(directory,name),inside=relative(directory,path);
+ checkDirectory(directory);const path=join(directory,name),inside=relative(directory,path);
  if(!inside||isAbsolute(inside)||inside.startsWith("..")||path.length>256)throw Error("Bounded artifact path required");
  return path;
 }
@@ -45,19 +54,19 @@ function artifactPath(directory,name){
 async function verifyArtifact(path,spec,signal){
  signal.throwIfAborted();let before;try{before=lstatSync(path);}catch(error){if(error.code==="ENOENT")return false;throw error;}
  if(!before.isFile()||before.isSymbolicLink()||before.size>(spec.maximumBytes??spec.bytes)||spec.bytes!==undefined&&before.size!==spec.bytes)throw Error("Occupied artifact does not match its declaration");
- const hash=createHash("sha256");for await(const bytes of createReadStream(path)){signal.throwIfAborted();hash.update(bytes);}
+ const hash=createHash("sha256");for await(const bytes of createReadStream(path,{signal})){signal.throwIfAborted();hash.update(bytes);}
  const after=lstatSync(path);
  if(before.dev!==after.dev||before.ino!==after.ino||before.size!==after.size||before.mtimeMs!==after.mtimeMs||hash.digest("hex")!==spec.sha256)throw Error("Artifact digest or identity mismatch");
  return true;
 }
 
 function publishArtifact(stage,target){
- linkSync(stage,target);unlinkSync(stage);
+ checkDirectory(dirname(target));linkSync(stage,target);unlinkSync(stage);
 }
 
 async function downloadArtifact(directory,spec,signal){
  const target=artifactPath(directory,spec.file);if(await verifyArtifact(target,spec,signal)){console.log("[DEBUG] Verified existing",spec.id);return target;}
- const stage=artifactPath(directory,spec.file+"."+randomUUID()+".partial"),headers={};
+ const stage=artifactPath(directory,spec.file+"."+randomUUID()+".partial"),headers=spec.id==="wsl"?{"User-Agent":"semio-repo","Accept":"application/octet-stream"}:{};
  if(spec.id==="debian-rootfs"){
   const response=await fetch("https://auth.docker.io/token?service=registry.docker.io&scope=repository:library/debian:pull",{signal});if(!response.ok)throw Error("Public Debian registry token request failed");const token=await response.json();if(typeof token.token!=="string")throw Error("Public registry token required");headers.Authorization="Bearer "+token.token;
  }
@@ -75,10 +84,10 @@ async function downloadArtifact(directory,spec,signal){
 
 async function unpackRootfs(directory,source,spec,signal){
  const target=artifactPath(directory,spec.file);if(await verifyArtifact(target,spec,signal)){console.log("[DEBUG] Verified existing uncompressed rootfs");return;}
- const stage=artifactPath(directory,spec.file+"."+randomUUID()+".partial"),hash=createHash("sha256");let count=0,created=false,identity;
+ const stage=artifactPath(directory,spec.file+"."+randomUUID()+".partial"),hash=createHash("sha256");let count=0,created=false,identity,last=0;
  const output=createWriteStream(stage,{flags:"wx"});output.once("open",()=>{created=true;identity=lstatSync(stage);});
  try{
-  await pipeline(createReadStream(source),createGunzip(),new Transform({transform(bytes,encoding,done){count+=bytes.length;if(count>spec.maximumBytes)return done(Error("Rootfs exceeded its admitted bytes"));hash.update(bytes);done(null,bytes);}}),output,{signal});
+  await pipeline(createReadStream(source),createGunzip(),new Transform({transform(bytes,encoding,done){count+=bytes.length;if(count>spec.maximumBytes)return done(Error("Rootfs exceeded its admitted bytes"));hash.update(bytes);if(Date.now()-last>=5000){console.log("[DEBUG] Unpack rootfs",count,"/",spec.maximumBytes);last=Date.now();}done(null,bytes);}}),output,{signal});
   if(hash.digest("hex")!==spec.sha256)throw Error("Uncompressed rootfs checksum mismatch");signal.throwIfAborted();publishArtifact(stage,target);created=false;console.log("[DEBUG] Uncompressed rootfs verified",count);
  }finally{if(created){try{const current=lstatSync(stage);if(current.dev===identity.dev&&current.ino===identity.ino)unlinkSync(stage);}catch(error){if(error.code!=="ENOENT")throw error;}}}
 }
@@ -86,7 +95,7 @@ async function unpackRootfs(directory,source,spec,signal){
 async function prepare(){
  if(process.arch!=="x64")throw Error("Prepared Linux release requires an x64 execution environment");
  const plan=readLinuxReleasePlanV1(JSON.parse(readFileSync(new URL("linux-release.json",import.meta.url),"utf8"))),directory=outputDirectory(),controller=new AbortController(),abort=()=>controller.abort(Error("Linux preparation cancelled"));process.once("SIGINT",abort);process.once("SIGTERM",abort);
- try{for(const spec of plan.artifacts)await downloadArtifact(directory,spec,controller.signal);await unpackRootfs(directory,artifactPath(directory,plan.artifacts.find(row=>row.id==="debian-rootfs").file),plan.rootfs,controller.signal);console.log("[DEBUG] Pinned artifacts prepared; no installer, distribution or daemon started");}finally{process.removeListener("SIGINT",abort);process.removeListener("SIGTERM",abort);}
+ try{const rootfs=plan.artifacts.find(row=>row.id==="debian-rootfs");await downloadArtifact(directory,rootfs,controller.signal);await unpackRootfs(directory,artifactPath(directory,rootfs.file),plan.rootfs,controller.signal);await downloadArtifact(directory,plan.artifacts.find(row=>row.id==="wsl"),controller.signal);console.log("[DEBUG] Pinned artifacts prepared; no installer, distribution or daemon started");}finally{process.removeListener("SIGINT",abort);process.removeListener("SIGTERM",abort);}
 }
 
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){

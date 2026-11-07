@@ -1,6 +1,7 @@
-import { existsSync, mkdirSync, mkdtempSync, realpathSync, rmdirSync, statSync, symlinkSync } from "node:fs";
+import { mkdirSync, mkdtempSync, realpathSync, rmdirSync, statSync, symlinkSync } from "node:fs";
 import { isAbsolute, join, relative, sep } from "node:path";
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
+import { runtimeNativeSystemV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🧲️native/🟦️.ts";
 
 export type NativeTemporaryLeaseV1 = Readonly<{ path: string; close(): void }>;
 export type NativeTemporaryPlanV1 = Readonly<{ kind: "direct"; root: string }> | Readonly<{ kind: "junction"; roots: readonly string[] }> | Readonly<{ kind: "drive" }>;
@@ -9,6 +10,45 @@ export interface NativeTemporaryPortV1 {
   sameDirectory(first: string, second: string): boolean;
   junction(root: string, target: string): NativeTemporaryLeaseV1 | undefined;
   drive(target: string): NativeTemporaryLeaseV1 | undefined;
+}
+
+/** 🪟️ Acquires an exclusive cooperative Windows DOS-device lease without replacing existing mappings. */
+export function nativeTemporaryWindowsDosDeviceV1(devices: readonly string[] = Array.from({ length: 23 }, (_, index) => String.fromCharCode(90 - index) + ":")): (target: string) => NativeTemporaryLeaseV1 | undefined {
+  return target => {
+    if (process.platform !== "win32" || !isAbsolute(target)) return undefined;
+    const { dlopen, FFIType: f } = runtimeNativeSystemV1();
+    const library = dlopen("kernel32.dll", {
+      CreateMutexW: { args: [f.ptr, f.i32, f.ptr], returns: f.ptr },
+      WaitForSingleObject: { args: [f.ptr, f.u32], returns: f.u32 },
+      ReleaseMutex: { args: [f.ptr], returns: f.i32 },
+      CloseHandle: { args: [f.ptr], returns: f.i32 },
+      QueryDosDeviceW: { args: [f.ptr, f.ptr, f.u32], returns: f.u32 },
+      DefineDosDeviceW: { args: [f.u32, f.ptr, f.ptr], returns: f.i32 },
+      GetLastError: { args: [], returns: f.u32 },
+    });
+    const api = library.symbols, wide = (value: string) => Buffer.from(value + "\0", "utf16le");
+    const canonical = target.replaceAll("/", "\\"), ntTarget = canonical.startsWith("\\\\") ? "\\??\\UNC\\" + canonical.slice(2) : "\\??\\" + canonical;
+    for (const device of devices) {
+      if (!/^[D-Z]:$/u.test(device)) continue;
+      const name = wide(device), mutex = api.CreateMutexW(null, 0, wide("Local\\Semio.NativeTemporary." + device[0]));
+      if (!mutex) continue;
+      const wait = Number(api.WaitForSingleObject(mutex, 0));
+      if (wait !== 0 && wait !== 128) { api.CloseHandle(mutex); continue; }
+      const release = () => { api.ReleaseMutex(mutex); api.CloseHandle(mutex); };
+      const buffer = Buffer.alloc(65536), length = Number(api.QueryDosDeviceW(name, buffer, buffer.length / 2));
+      if (length !== 0 || Number(api.GetLastError()) !== 2 || Number(api.DefineDosDeviceW(1, name, wide(ntTarget))) !== 1) { release(); continue; }
+      const alias = device + "\\";
+      return { path: alias, close() {
+        try {
+          const current = Number(api.QueryDosDeviceW(name, buffer, buffer.length / 2));
+          if (!current || buffer.toString("utf16le").split("\0", 1)[0] !== ntTarget) throw Error("Native temporary DOS-device ownership changed");
+          if (Number(api.DefineDosDeviceW(7, name, wide(ntTarget))) !== 1) throw Error("Native temporary DOS-device cleanup failed");
+        } finally { release(); library.close(); }
+      } };
+    }
+    library.close();
+    return undefined;
+  };
 }
 
 const policy = schema.definitions.TemporaryPolicy.const;
@@ -27,7 +67,8 @@ export function nativeTemporaryPlanV1(target: string, candidates: readonly strin
 }
 
 /** 🧵️ Retains an ASCII alias of the exact ticket-owned physical directory until its installer exits. */
-export function withNativeTemporaryDirectoryV1<T>(request: Readonly<{ target: string; candidates: readonly string[]; ticket?: string }>, port: NativeTemporaryPortV1, body: (path: string) => T): T {
+function acquireNativeTemporaryDirectoryV1(request: Readonly<{ target: string; candidates: readonly string[]; ticket?: string; signal?: AbortSignal }>, port: NativeTemporaryPortV1): NativeTemporaryLeaseV1 {
+  request.signal?.throwIfAborted();
   let target = port.realpath(request.target);
   if (request.ticket) {
     const ticket = port.realpath(request.ticket), generated = port.realpath(join(ticket, "🗑️generated"));
@@ -39,14 +80,25 @@ export function withNativeTemporaryDirectoryV1<T>(request: Readonly<{ target: st
   const plan = nativeTemporaryPlanV1(request.target, request.candidates);
   const lease = plan.kind === "direct" ? { path: plan.root, close() {} } : (plan.kind === "junction" ? plan.roots.map(root => () => port.junction(root, target)).reduce<NativeTemporaryLeaseV1 | undefined>((held, open) => held ?? open(), undefined) : undefined) ?? port.drive(target);
   if (!lease) throw Error("No owned ASCII Windows temporary alias is available");
-  try {
-    if (!ascii(lease.path) || lease.path.length > policy.maximumRootLength || !port.sameDirectory(lease.path, target)) throw Error("Native temporary alias must name the exact bounded physical target");
-    return body(lease.path);
-  } finally { lease.close(); }
+  try { if (!ascii(lease.path) || lease.path.length > policy.maximumRootLength || !port.sameDirectory(lease.path, target)) throw Error("Native temporary alias must name the exact bounded physical target"); }
+  catch (error) { lease.close(); throw error; }
+  return lease;
 }
 
-/** 🗝️ Uses native directory junctions and subst without copying or deleting the physical target. */
-export function nativeTemporarySystemPortV1(runDosDevice: (args: string[]) => number): NativeTemporaryPortV1 {
+/** 🧵️ Retains an ASCII alias through a synchronous operation. */
+export function withNativeTemporaryDirectoryV1<T>(request: Readonly<{ target: string; candidates: readonly string[]; ticket?: string; signal?: AbortSignal }>, port: NativeTemporaryPortV1, body: (path: string) => T): T {
+  const lease = acquireNativeTemporaryDirectoryV1(request, port);
+  try { return body(lease.path); } finally { lease.close(); }
+}
+
+/** ⏳️ Retains an ASCII alias until asynchronous work and its children settle. */
+export async function withNativeTemporaryDirectoryAsyncV1<T>(request: Readonly<{ target: string; candidates: readonly string[]; ticket?: string; signal?: AbortSignal }>, port: NativeTemporaryPortV1, body: (path: string) => Promise<T>): Promise<T> {
+  const lease = acquireNativeTemporaryDirectoryV1(request, port);
+  try { return await body(lease.path); } finally { lease.close(); }
+}
+
+/** 🗝️ Uses native directory junctions and a supplied DOS-device lease without copying or deleting the physical target. */
+export function nativeTemporarySystemPortV1(drive: (target: string) => NativeTemporaryLeaseV1 | undefined): NativeTemporaryPortV1 {
   const sameDirectory = (first: string, second: string): boolean => {
     const a = statSync(first, { bigint: true }), b = statSync(second, { bigint: true });
     return a.isDirectory() && b.isDirectory() && a.ino !== 0n && a.dev === b.dev && a.ino === b.ino;
@@ -67,16 +119,6 @@ export function nativeTemporarySystemPortV1(runDosDevice: (args: string[]) => nu
         rmdirSync(owner);
       } };
     },
-    drive(target) {
-      for (let code = 90; code >= 68; code--) {
-        const device = String.fromCharCode(code) + ":", alias = device + "\\";
-        if (existsSync(alias) || runDosDevice([device, target]) !== 0) continue;
-        return { path: alias, close() {
-          if (!sameDirectory(alias, target)) throw Error("Native temporary DOS-device ownership changed");
-          if (runDosDevice([device, "/d"]) !== 0) throw Error("Native temporary DOS-device cleanup failed");
-        } };
-      }
-      return undefined;
-    },
+    drive,
   };
 }

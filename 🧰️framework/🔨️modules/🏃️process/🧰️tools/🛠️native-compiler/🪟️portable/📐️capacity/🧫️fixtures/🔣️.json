@@ -1,0 +1,9 @@
+[
+  {"allocationBytes":4096,"accepted":true},
+  {"allocationBytes":8192,"accepted":true},
+  {"allocationBytes":16384,"accepted":true},
+  {"allocationBytes":32768,"accepted":false},
+  {"allocationBytes":0,"accepted":false},
+  {"allocationBytes":3,"accepted":false},
+  {"allocationBytes":-1,"accepted":false}
+]

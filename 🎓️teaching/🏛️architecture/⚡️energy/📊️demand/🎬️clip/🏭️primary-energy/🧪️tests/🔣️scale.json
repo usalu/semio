@@ -1,0 +1,53 @@
+{
+  "roomHeight": 0.9,
+  "roomMetres": 2.5,
+  "unit": 0.36,
+  "assets": [
+    {
+      "helper": "_stand",
+      "cast": "shared-person-winter",
+      "height": 1.69,
+      "asset": "standing-adult"
+    },
+    {
+      "helper": "_boiler",
+      "cast": "shared-boiler-heating-cycle",
+      "height": 0.72,
+      "asset": "gas-boiler"
+    },
+    {
+      "helper": "_derrick",
+      "cast": "demand-primary-energy-pumpjack",
+      "height": 5.57,
+      "asset": "oil-pumpjack"
+    },
+    {
+      "helper": "_power_plant",
+      "cast": "shared-diesel-generator-rated",
+      "height": 3.57,
+      "asset": "diesel-generator"
+    },
+    {
+      "helper": "_heat_pump",
+      "cast": "shared-heat-pump-heating-sweep",
+      "asset": "heat-pump-outdoor-unit",
+      "height": 1.45
+    }
+  ],
+  "mounting": {
+    "boilerOriginM": 0.7,
+    "bracketLocalM": 0.64,
+    "bracketHeightM": 1.34,
+    "radiatorOriginM": 0,
+    "cases": [
+      {
+        "floorY": -0.95,
+        "unit": 0.36
+      },
+      {
+        "floorY": -0.75,
+        "unit": 0.264
+      }
+    ]
+  }
+}

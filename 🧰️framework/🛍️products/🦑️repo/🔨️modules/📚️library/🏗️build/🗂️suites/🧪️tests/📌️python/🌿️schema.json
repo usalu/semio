@@ -1,0 +1,38 @@
+{
+  "type": "array",
+  "minItems": 2,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "platform",
+      "ambient",
+      "preference",
+      "root",
+      "alias"
+    ],
+    "properties": {
+      "platform": {
+        "enum": [
+          "win32",
+          "linux"
+        ]
+      },
+      "ambient": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        }
+      },
+      "preference": {
+        "type": "boolean"
+      },
+      "root": {
+        "type": "string"
+      },
+      "alias": {
+        "type": "boolean"
+      }
+    }
+  }
+}

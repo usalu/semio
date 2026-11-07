@@ -92,7 +92,7 @@ const snapshotRowsV1=()=>{
  const rows=[["entry.ts","export const a=1;",{"./h.ts":"h.ts","base64":"installed:base64@1.0.0","path":"h.ts"}],["h.ts","export const h=\"α🙂\";",{}],["🧪️dir/emoji🙂.ts","export const e=2;",{}],['we"ird,base64.ts',"export const w=3;",{}],["empty.txt","",{}],["bytes.bin",Buffer.from(Array.from({length:256},(_,at)=>at)),{}]] as const;
  return rows.map(([path,body,imports])=>{const bytes=typeof body==="string"?Buffer.from(body):body;return{path,sha256:createHash("sha256").update(bytes).digest("hex"),base64:bytes.toString("base64"),imports:imports as Record<string,string>};});
 };
-const limitsV1={maximumFileBytes:4194304,maximumSourceBytes:16777216},joinerV1={join:(...parts:string[])=>parts.join("/").replace(/\/+/gu,"/"),isAbsolute:(value:string)=>value.startsWith("/")};
+const limitsV1=schema.definitions.Policy.const,joinerV1={join:(...parts:string[])=>parts.join("/").replace(/\/+/gu,"/"),isAbsolute:(value:string)=>value.startsWith("/")};
 const admitV1=(files:{path:string;sha256:string;base64:string;imports:Record<string,string>}[],lazy:boolean,raw?:string)=>{
  const text=raw??JSON.stringify({version:1,root:"/r",entry:"entry.ts",files}),encoded=Buffer.from(text),split=lazy?splitCapturedSnapshotV1(encoded):undefined,value=JSON.parse(split?split.text:text);
  return{split,table:admitCapturedImagesV1(value,encoded,split?.spans,limitsV1,bytes=>createHash("sha256").update(bytes).digest("hex"),joinerV1,()=>{},closureRefusalV1),value,text};

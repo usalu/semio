@@ -233,7 +233,7 @@ fn drive(ui: &mut Ui, window_id: &str, body: Rect, atlas: &mut FontAtlas) {
     let mut draw = DrawList::default();
     let mut host = LawSceneHost;
     for _ in 0..131_072 {
-        match ui.frame_into_step(window_id, body, atlas, None, Some(&mut host), &mut draw) {
+        match ui.frame_into_step(window_id, body, atlas, None, Some(&mut host), &mut draw, ui_contract::UI_WORKER_RETIREMENT_POLICY).0 {
             UiFrameStep::Pending => {}
             UiFrameStep::Ready => return,
             step => panic!("{window_id}: retained paint answered {step:?} (phase {:?})", ui.paint_frame_phase(window_id)),

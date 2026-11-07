@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "parent",
+    "child",
+    "intersection"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "parent": {
+      "$ref": "#/$defs/rect"
+    },
+    "child": {
+      "$ref": "#/$defs/rect"
+    },
+    "intersection": {
+      "$ref": "#/$defs/rect"
+    }
+  },
+  "$defs": {
+    "rect": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 4,
+      "maxItems": 4
+    }
+  }
+}

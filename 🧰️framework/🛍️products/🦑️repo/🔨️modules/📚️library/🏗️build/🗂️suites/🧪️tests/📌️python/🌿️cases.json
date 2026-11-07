@@ -1,0 +1,24 @@
+[
+  {
+    "platform": "win32",
+    "ambient": {
+      "Uv_Python_Preference": "only-system",
+      "uv_python_install_dir": "C:/wrong",
+      "sEmIo_ToOl_Uv": "C:/wrong/uv"
+    },
+    "preference": false,
+    "root": "C:/managed",
+    "alias": false
+  },
+  {
+    "platform": "linux",
+    "ambient": {
+      "Uv_Python_Preference": "other",
+      "uv_python_install_dir": "/other",
+      "sEmIo_ToOl_Uv": "/other/uv"
+    },
+    "preference": true,
+    "root": "C:/managed",
+    "alias": true
+  }
+]

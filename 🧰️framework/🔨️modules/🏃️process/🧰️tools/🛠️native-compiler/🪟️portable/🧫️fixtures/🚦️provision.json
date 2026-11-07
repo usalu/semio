@@ -1,0 +1,1 @@
+{"version":1,"cases":[{"receipt":"absent","pending":false,"decision":"exclusive"},{"receipt":"ordinary","pending":false,"decision":"reader"},{"receipt":"ordinary","pending":true,"decision":"exclusive"},{"receipt":"other","pending":false,"decision":"exclusive"},{"receipt":"other","pending":true,"decision":"exclusive"}]}

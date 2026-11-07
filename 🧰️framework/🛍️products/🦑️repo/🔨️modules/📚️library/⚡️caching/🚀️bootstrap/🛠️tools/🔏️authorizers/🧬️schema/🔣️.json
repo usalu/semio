@@ -261,6 +261,28 @@
     "RuntimeDataCompanions": {
       "const": [
         {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🛠️native-compiler/🪟️windows/🟦️.ts",
+          "paths": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/acquire.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/archive.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/cabinet_windows.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/go.mod",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/locked_other.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/locked_windows.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/main_other.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/main_windows.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/manifest.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/msi_windows.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/path.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/plan_windows.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/preflight_windows.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/recipe.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/request.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/sdk.go",
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/system_windows.go"
+          ]
+        },
+        {
           "owner": "🧰️framework/🔨️modules/🖱️ui/🎚️axes/📥️source/🟦️.ts",
           "paths": [
             "🧰️framework/🔨️modules/🖱️ui/🎚️axes/🔣️.json"
@@ -618,6 +640,19 @@
         }
       }
     },
+    "SourceCensusPolicy": { "const": { "maximumFiles": 8192, "maximumSourceBytes": 67108864, "progressFiles": 16 } },
+    "SourceCensus": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "version", "entry", "files", "sourceBytes", "snapshotBytes", "sources"],
+      "properties": {
+        "kind": { "const": "source-census" }, "version": { "const": 1 },
+        "entry": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "files": { "type": "integer", "minimum": 1, "maximum": 8192 },
+        "sourceBytes": { "type": "integer", "minimum": 0, "maximum": 67108864 },
+        "snapshotBytes": { "type": "integer", "minimum": 0 },
+        "sources": { "type": "array", "maxItems": 8192, "items": { "type": "object", "additionalProperties": false, "required": ["path", "bytes", "origin", "importer"], "properties": { "path": { "type": "string", "minLength": 1, "maxLength": 256 }, "bytes": { "type": "integer", "minimum": 0, "maximum": 4194304 }, "origin": { "enum": ["entry", "import", "declared-companion", "discovered-data", "workspace-manifest", "unknown"] }, "importer": { "type": ["string", "null"] } } } }
+      }
+    },
     "SourceCapacityDiagnostic": {
       "type": "object",
       "additionalProperties": false,
@@ -645,6 +680,7 @@
             "import",
             "declared-companion",
             "discovered-data",
+            "workspace-manifest",
             "unknown"
           ]
         },
@@ -667,7 +703,7 @@
         "bytes": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 20971520
+          "maximum": 25165824
         },
         "largest": {
           "type": "array",

@@ -114,7 +114,7 @@ test("contains diagnostic output through an injected ticket authority", async ()
   };
   const selected = ticketOutput("/repo", ["--ticket", ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/ACTIVE"], {}, operations);
   expect(selected).toBe("/repo/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/ACTIVE/🗑️generated/nx");
-  expect(made).toEqual([selected]);
+  expect(made).toEqual([dirname(selected), selected]);
   expect(() => ticketOutput("/repo", ["--ticket", "../outside"], {}, operations)).toThrow(/existing repository ticket/);
   expect(() => ticketOutput("/repo", [], {}, operations)).toThrow(/Select the active ticket/);
 });

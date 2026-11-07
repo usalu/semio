@@ -1,0 +1,15 @@
+# Current Storybook Investigation
+
+The root catalog is configured in `.storybook/main.ts`; `.storybook/README.md` documents the canonical development, catalog-test, browser-test and build targets. Earlier reports in this ticket record UI and styling coverage, but do not establish the health of the current checkout or every scope.
+
+On 2026-11-05, `repo run workspace:test-storybook-catalog --lang=en` and `repo run workspace:dev-storybook --lang=en --output=stream` both queued at the capacity gate. Each requires 3584 MB above the host floor; observed spare memory was below that threshold. A catalog retry with `--parallel=1` had the same reservation. The queued commands were cancelled after waiting; no tests or server ran. No Storybook server was listening on port 6010 during the initial check. These commands must complete before current runtime health can be assessed.
+
+The connected repo MCP server resolved its repository root to the Codex installation directory rather than `D:\semio`: `repo://goals` was empty and reopening this ticket returned a path under that installation. The repository CLI was used to list goals and reopen this existing ticket in the correct checkout.
+
+On the next check, `repo doctor --only=dependencies --lang=en` reported no published dependency generation and six unfinished generations from dead builds. The root `node_modules` did not contain `storybook` or `@storybook/react-vite`. Started the prescribed `repo dependencies ensure --lang=en`; it advanced through source admission and recovery, and remains live while holding shared native image leases. The host has little spare memory, though the exact internal step on which this process is waiting has not been established. Its live execution handle is 79772. Do not start a second installation while it remains active. After it succeeds, run the catalog test, start the full development catalog and validate the actual browser stories and production build.
+
+The setup later reported an exclusive native-storage queue behind a holder marked progressing. A separate `repo dependencies sync --all` process also received a capacity grant. The dependency doctor still reported no published generation at that point; neither observation establishes that setup has succeeded.
+
+The live setup subsequently reached `build:dependencies` and requested a 6144 MB capacity grant. The host was below its 2035 MB free-memory floor, so the request remains queued. Do not install Visual Studio or another IDE for setup, per the developer's instruction.
+
+On resumption, handle 79772 was no longer available, so its outcome is unknown. The dependency doctor still found no published generation. Another session's `repo dependencies sync --all` remains alive and holds the exclusive JavaScript dependency-build lease; the repository labels its holder progressing. A separate `repo dependencies ensure` request remains queued for 6144 MB. A read-only scope-registry inspection was started through `repo tools exec` as handle 68263 and is still in repository initialization. Do not terminate another session's processes.

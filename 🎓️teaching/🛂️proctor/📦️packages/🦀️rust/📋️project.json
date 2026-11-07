@@ -106,6 +106,7 @@
     },
     "test": {
       "executor": "repo:script",
+      "dependsOn": ["test-launcher"],
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "repo ./📜️script.ts test",
@@ -115,6 +116,22 @@
       "inputs": [
         "cargoTests"
       ],
+      "outputs": []
+    },
+    "test-launcher": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts test-launcher"
+      },
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "execution": { "version": 1, "kind": "source" },
+          "cache": { "version": 1, "class": "live", "reason": "exercises-host-resources" }
+        }
+      },
+      "inputs": ["{workspaceRoot}/🎓️teaching/🛂️proctor/🏗️bootstrap/**/*"],
       "outputs": []
     },
     "dev": {

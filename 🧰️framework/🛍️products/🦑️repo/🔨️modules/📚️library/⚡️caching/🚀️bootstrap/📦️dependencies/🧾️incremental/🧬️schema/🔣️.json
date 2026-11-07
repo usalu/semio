@@ -32,8 +32,8 @@
             "mode"
           ],
           "childDigestUnits": 32,
-          "checkWork": 256,
-          "progressWork": 4096,
+          "checkWork": 1,
+          "progressWork": 32,
           "kinds": [
             "directory",
             "file",

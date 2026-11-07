@@ -1,0 +1,1 @@
+{"version":1,"cases":[{"name":"complete","mutation":"none","valid":true},{"name":"extra field","mutation":"extra","valid":false},{"name":"missing stage identity","mutation":"identity","valid":false},{"name":"foreign receipt shape","mutation":"receipt","valid":false}]}

@@ -1,12 +1,114 @@
 {
-  "fractional": { "parentWidth": 584, "parentHeight": 370.234375, "childWidth": 70.34375, "childHeight": 22.390625 },
-  "markerOnly": { "size": 100, "normalSeam": "M 100 1 L 100 99", "hoverSeam": "M 0 1 L 0 99", "releaseOrders": [["window", "frame"], ["frame", "window"]] },
-  "overlay": { "width": "100px", "height": "100px", "max-width": "none", "max-height": "none", "min-width": "0", "min-height": "0", "flex-shrink": "0" },
+  "fractional": {
+    "parentWidth": 584,
+    "parentHeight": 370.234375,
+    "childWidth": 70.34375,
+    "childHeight": 22.390625
+  },
+  "markerOnly": {
+    "size": 100,
+    "normalSeam": "M 100 1 L 100 99",
+    "hoverSeam": "M 0 1 L 0 99",
+    "releaseOrders": [
+      [
+        "window",
+        "frame"
+      ],
+      [
+        "frame",
+        "window"
+      ]
+    ]
+  },
+  "overlay": {
+    "width": "100px",
+    "height": "100px",
+    "max-width": "none",
+    "max-height": "none",
+    "min-width": "0",
+    "min-height": "0",
+    "flex-shrink": "0"
+  },
   "effects": [
-    { "attribute": "data-introduced", "value": "true", "state": "introduced" },
-    { "attribute": "data-celebrated", "value": "true", "state": "celebrated" },
-    { "attribute": "class", "value": "border-loading", "state": "loading" },
-    { "attribute": "class", "value": "border-waiting", "state": "waiting" }
+    {
+      "attribute": "data-introduced",
+      "value": "true",
+      "state": "introduced"
+    },
+    {
+      "attribute": "data-celebrated",
+      "value": "true",
+      "state": "celebrated"
+    },
+    {
+      "attribute": "class",
+      "value": "border-loading",
+      "state": "loading"
+    },
+    {
+      "attribute": "class",
+      "value": "border-waiting",
+      "state": "waiting"
+    }
   ],
-  "clippedOwner": { "left": 100, "top": 0, "width": 100, "height": 100, "viewportRight": 100, "expectedSegments": 0 }
+  "clippedOwner": {
+    "left": 100,
+    "top": 0,
+    "width": 100,
+    "height": 100,
+    "viewportRight": 100,
+    "expectedSegments": 0
+  },
+  "disabled": [
+    {
+      "attribute": "disabled",
+      "value": "",
+      "expected": "normal"
+    },
+    {
+      "attribute": "aria-disabled",
+      "value": "true",
+      "expected": "normal"
+    },
+    {
+      "attribute": "aria-disabled",
+      "value": "false",
+      "expected": "hover"
+    }
+  ],
+  "nativeSeams": [
+    {
+      "name": "active next RTL",
+      "orientation": "horizontal",
+      "dir": "rtl",
+      "first": "",
+      "second": "data-state=\"active\"",
+      "color": "rgb(255, 0, 0)"
+    },
+    {
+      "name": "loading beats active vertical",
+      "orientation": "vertical",
+      "dir": "ltr",
+      "first": "data-state=\"active\"",
+      "second": "class=\"border-loading\"",
+      "color": "rgb(0, 0, 255)"
+    },
+    {
+      "name": "introduced beats loading",
+      "orientation": "horizontal",
+      "dir": "ltr",
+      "first": "class=\"border-loading\"",
+      "second": "data-introduced=\"true\"",
+      "color": "rgb(0, 128, 0)"
+    },
+    {
+      "name": "nested pressed next",
+      "orientation": "horizontal",
+      "dir": "ltr",
+      "first": "",
+      "second": "",
+      "secondContent": "<span aria-pressed=\"true\"></span>",
+      "color": "rgb(255, 0, 0)"
+    }
+  ]
 }

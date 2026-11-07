@@ -1,3 +1,4 @@
+import{requirePinnedTestToolV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import{test,expect}from"bun:test";
 import{readFileSync}from"node:fs";
 import{posix,win32,join}from"node:path";
@@ -10,7 +11,7 @@ test("canonical compiler build directories compact Cargo's repeated generated pr
  for(const mode of fixture.rejected)expect(()=>repositoryCompilerLayoutV1(fixture.cases[0]!.root,mode,"posix")).toThrow();}finally{db.close();}const producer=readFileSync(join(import.meta.dir,"../../🟦️.ts"),"utf8");expect(producer).toContain("repositoryCompilerLayoutV1(opened.root,mode)");
 });
 test("every workspace inside one repository checkout shares the root host and its single Cargo registry home",async()=>{
- expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);const {repositoryCompilerHostV1,repositoryCompilerLayoutV1}=await import("../🟦️.ts"),{repositoryCachePartitionRootDataV1}=await import("../../../📦️budget/📂️paths/🟦️.ts"),python=process.env.SEMIO_PYTHON??(process.platform==="win32"?"python":"python3"),
+ expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);const {repositoryCompilerHostV1,repositoryCompilerLayoutV1}=await import("../🟦️.ts"),{repositoryCachePartitionRootDataV1}=await import("../../../📦️budget/📂️paths/🟦️.ts"),python=requirePinnedTestToolV1("python"),
  oracle=(row:{platform:string;repositoryRoot:string;workspace:string})=>{const run=Bun.spawnSync([python,"-I","-c","import json,sys\nrow=json.load(sys.stdin)\nif row['platform']=='win32':\n import ntpath as p\nelse:\n import posixpath as p\ntry:\n inside=p.normcase(p.commonpath([row['repositoryRoot'],row['workspace']]))==p.normcase(row['repositoryRoot'])\nexcept ValueError:\n inside=False\nprint(row['repositoryRoot'] if inside else row['workspace'])"],{stdin:new TextEncoder().encode(JSON.stringify(row))});expect(run.exitCode).toBe(0);return run.stdout.toString().replace(/\r?\n$/,"");};
  for(const row of fixture.hosts){const own=repositoryCompilerHostV1(row.repositoryRoot,row.workspace,row.platform as "posix"|"win32");expect(own).toBe(row.host);expect(own).toBe(oracle(row));}
  expect(()=>repositoryCompilerHostV1("relative","/absolute","posix")).toThrow();expect(()=>repositoryCompilerHostV1("/root/","/root/a","posix")).toThrow();

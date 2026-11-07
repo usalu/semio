@@ -3,7 +3,16 @@
   "project": "workspace",
   "tool": "python",
   "manager": "uv",
-  "query": ["python", "-I", "-c", "import sys;print(sys.executable)"],
+  "query": [
+    "python",
+    "find"
+  ],
   "maximumOutputBytes": 1024,
-  "maximumPathUnits": 256
+  "maximumPathUnits": 256,
+  "queryOptions": [
+    "--system",
+    "--managed-python",
+    "--no-project",
+    "--no-python-downloads"
+  ]
 }

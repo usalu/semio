@@ -129,13 +129,26 @@
         "childDepth": 2,
         "meter": {
           "intervalBytes": 16777216,
-          "intervalMilliseconds": 2000
+          "intervalMilliseconds": 2000,
+          "freshnessAnchor": "completion",
+          "observationKind": "completed-interval",
+          "admissionAccounting": "monotone-watermark"
         },
         "usage": {
-          "metadata": {"maximumExactInteger": 9007199254740991},
+          "metadata": {
+            "maximumExactInteger": 9007199254740991
+          },
           "entry": {
-            "platforms": ["linux", "darwin", "win32"],
-            "invalidNames": ["", ".", ".."],
+            "platforms": [
+              "linux",
+              "darwin",
+              "win32"
+            ],
+            "invalidNames": [
+              "",
+              ".",
+              ".."
+            ],
             "nul": "\u0000",
             "posixSeparator": "/",
             "windowsSeparator": "\\",
@@ -356,7 +369,8 @@
         },
         "requestBytes": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 9007199254740991
         }
       }
     },
@@ -370,11 +384,13 @@
       "properties": {
         "filesystemBytes": {
           "type": "integer",
-          "minimum": 1
+          "minimum": 1,
+          "maximum": 9007199254740991
         },
         "maximumPhysicalBytes": {
           "type": "integer",
-          "minimum": 1
+          "minimum": 1,
+          "maximum": 9007199254740991
         }
       }
     },

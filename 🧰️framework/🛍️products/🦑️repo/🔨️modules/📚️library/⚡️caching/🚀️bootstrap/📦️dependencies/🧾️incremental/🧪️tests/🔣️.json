@@ -918,7 +918,8 @@
      "status": "mismatch",
      "class": "directory-changed",
      "path": "d"
-    }
+    },
+    "unchangedModeExpect": {"status":"match"}
    },
    {
     "id": "settled-directory-became-a-file",

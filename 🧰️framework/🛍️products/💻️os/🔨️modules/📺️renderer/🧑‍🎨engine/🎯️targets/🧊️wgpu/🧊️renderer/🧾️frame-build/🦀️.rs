@@ -338,6 +338,22 @@ impl FrameBuildCursor {
     fn close_original_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure> {
         if cx.should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
         let grant=cx.retained_grant();
+        if let Some(draw) = self.previous_draw.as_mut() {
+            if !draw.retirement_is_empty() {
+                let demand = frame_draw_retirement_demand(draw).map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?;
+                return frame_original_primitive_close(cx, demand, |grant| { let step = draw.retire_granted(grant)?.admit(grant, draw.retirement_is_empty())?; Ok(match step { InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress }, other => other }) });
+            }
+            if let Some(step) = frame_inline_gate(grant, 0).map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))? { return Ok(step); }
+            self.previous_draw = None; return frame_receive_close(frame_inline_progress(0), cx);
+        }
+        if let Some(draw) = self.previous_overlay.as_mut() {
+            if !draw.retirement_is_empty() {
+                let demand = frame_draw_retirement_demand(draw).map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?;
+                return frame_original_primitive_close(cx, demand, |grant| { let step = draw.retire_granted(grant)?.admit(grant, draw.retirement_is_empty())?; Ok(match step { InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress }, other => other }) });
+            }
+            if let Some(step) = frame_inline_gate(grant, 0).map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))? { return Ok(step); }
+            self.previous_overlay = None; return frame_receive_close(frame_inline_progress(0), cx);
+        }
         if let Some(pages)=self.icon_pages.as_mut(){
             if !pages.terminal_is_empty(){return frame_receive_close(frame_child_step(pages.close_original_step(grant),grant,pages.terminal_is_empty()),cx)}
             if let Some(step)=frame_inline_gate(grant,0).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
@@ -374,6 +390,7 @@ impl FrameBuildCursor {
             let demand = self.engine_packets.backing_retirement_demands();
             return frame_original_primitive_close(cx,demand,|grant|self.engine_packets.close_backing_step(grant));
         }
+        if self.terminal_is_empty() { return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }); }
         frame_receive_close(frame_unpriced_child(),cx)
     }
 
@@ -508,6 +525,10 @@ pub fn frame_unpriced_child() -> Result<InteractiveJobCloseStep,semio_framework_
 }
 
 /// 🎟️ One quoted primitive debits the unchanged frame caller exactly once.
+fn frame_draw_retirement_demand(draw: &DrawList) -> Result<RetainedCloneGrant, semio_framework_value::ValueError> {
+    Ok(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: draw.next_retirement_copy_byte_demand()?, maximum_capacity_bytes: draw.next_retirement_capacity_byte_demand()?, maximum_release_bytes: draw.next_retirement_release_byte_demand()?, maximum_depth: draw.next_retirement_depth_demand()? })
+}
+
 fn frame_original_primitive_close(cx:&mut semio_framework_job::StepContext<'_>,quote:RetainedCloneGrant,advance:impl FnOnce(RetainedCloneGrant)->Result<InteractiveJobCloseStep,semio_framework_value::ValueError>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
     let demand=semio_framework_value::RetirementDemand{copy_bytes:quote.maximum_copy_bytes,capacity_bytes:quote.maximum_capacity_bytes,release_bytes:quote.maximum_release_bytes,depth:quote.maximum_depth};
     let mut blocked=false;

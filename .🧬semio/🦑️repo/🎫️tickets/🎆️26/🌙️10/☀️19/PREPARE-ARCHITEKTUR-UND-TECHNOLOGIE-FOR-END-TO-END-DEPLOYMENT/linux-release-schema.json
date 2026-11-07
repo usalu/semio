@@ -1,16 +1,185 @@
 {
-  "type":"object","additionalProperties":false,"required":["version","distribution","linux","artifacts","rootfs","provenance"],
-  "properties":{
-    "version":{"const":1},"distribution":{"const":"Semio-Debian12"},
-    "linux":{"const":{"distribution":"debian","version":"12","architecture":"x86_64","dockerMajor":25,"composeMajor":2,"composeMinor":24}},
-    "artifacts":{"type":"array","minItems":2,"maxItems":2,"items":{"$ref":"#/definitions/Artifact"}},
-    "rootfs":{"type":"object","additionalProperties":false,"required":["file","maximumBytes","sha256"],"properties":{"file":{"$ref":"#/definitions/File"},"maximumBytes":{"type":"integer","minimum":1,"maximum":268435456},"sha256":{"$ref":"#/definitions/Digest"}}},
-    "provenance":{"type":"object","additionalProperties":false,"required":["wslRelease","debianImage","debianIndex","debianManifest","debianConfig"],"properties":{"wslRelease":{"type":"string","pattern":"^https://api\\.github\\.com/repos/microsoft/WSL/releases/tags/[0-9.]+$"},"debianImage":{"const":"docker.io/library/debian:bookworm-slim"},"debianIndex":{"$ref":"#/definitions/OciDigest"},"debianManifest":{"$ref":"#/definitions/OciDigest"},"debianConfig":{"$ref":"#/definitions/OciDigest"}}}
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "distribution",
+    "linux",
+    "artifacts",
+    "rootfs",
+    "provenance"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "distribution": {
+      "const": "Semio-Debian12"
+    },
+    "linux": {
+      "const": {
+        "distribution": "debian",
+        "version": "12",
+        "architecture": "x86_64",
+        "dockerMajor": 25,
+        "composeMajor": 2,
+        "composeMinor": 24
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "anyOf": [
+          {
+            "const": {
+              "id": "wsl",
+              "file": "wsl.3.0.3.0.x64.msi",
+              "bytes": 367575040,
+              "sha256": "ae977286974255bd26bf925f00f40f5692c6b2084155cbc0563c09aea091f211",
+              "url": "https://api.github.com/repos/microsoft/WSL/releases/assets/620248546"
+            }
+          },
+          {
+            "const": {
+              "id": "debian-rootfs",
+              "file": "debian12.amd64.tar.gz",
+              "bytes": 28247437,
+              "sha256": "3c5439d0ae62993af4cc4e21b8c777297e81bc40e200d4633c85a3e0f977a3bc",
+              "url": "https://registry-1.docker.io/v2/library/debian/blobs/sha256:3c5439d0ae62993af4cc4e21b8c777297e81bc40e200d4633c85a3e0f977a3bc"
+            }
+          }
+        ]
+      }
+    },
+    "rootfs": {
+      "const": {
+        "file": "debian12.amd64.tar",
+        "maximumBytes": 268435456,
+        "sha256": "44a87794b739d471ec360bec56cc0ceac640d06bbf579ee7d9061a0b88d09818"
+      }
+    },
+    "provenance": {
+      "const": {
+        "wslRelease": "https://api.github.com/repos/microsoft/WSL/releases/tags/3.0.3",
+        "debianImage": "docker.io/library/debian:bookworm-slim",
+        "debianIndex": "sha256:99c0b25c46d0214d5a2091092e7908907dcaecd6a962cde0ac700acee222b6f3",
+        "debianManifest": "sha256:a3bba7dc7dbcc1f37c2856c51fc9a7fac96608f50cb87b1b4e4d8b8c85ae988e",
+        "debianConfig": "sha256:354cdc53abb843ea02e9a72c153b000c290014d8a90aba62897c143710a5667f"
+      }
+    }
   },
-  "definitions":{
-    "File":{"type":"string","pattern":"^[a-z0-9][a-z0-9.-]{0,79}$"},
-    "Digest":{"type":"string","pattern":"^[a-f0-9]{64}$"},"OciDigest":{"type":"string","pattern":"^sha256:[a-f0-9]{64}$"},
-    "Artifact":{"type":"object","additionalProperties":false,"required":["id","file","bytes","sha256","url"],"properties":{"id":{"enum":["wsl","debian-rootfs"]},"file":{"$ref":"#/definitions/File"},"bytes":{"type":"integer","minimum":1,"maximum":1073741824},"sha256":{"$ref":"#/definitions/Digest"},"url":{"type":"string","pattern":"^https://(github\\.com/microsoft/WSL/releases/download/[0-9.]+/wsl\\.[0-9.]+\\.x64\\.msi|registry-1\\.docker\\.io/v2/library/debian/blobs/sha256:[a-f0-9]{64})$"}}},
-    "Facts":{"type":"object","additionalProperties":false,"required":["platform","architecture","msvcPending","reboot","wsl","elevation","debian12","docker"],"properties":{"platform":{"enum":["win32","linux","darwin"]},"architecture":{"enum":["x64","arm64"]},"msvcPending":{"type":"boolean"},"reboot":{"enum":["yes","no","unknown"]},"wsl":{"type":["boolean","null"]},"elevation":{"enum":["elevated","not-elevated","unknown"]},"debian12":{"type":["boolean","null"]},"docker":{"type":["boolean","null"]}}}
+  "definitions": {
+    "File": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9.-]{0,79}$"
+    },
+    "Digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "OciDigest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "Artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "file",
+        "bytes",
+        "sha256",
+        "url"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "wsl",
+            "debian-rootfs"
+          ]
+        },
+        "file": {
+          "$ref": "#/definitions/File"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1073741824
+        },
+        "sha256": {
+          "$ref": "#/definitions/Digest"
+        },
+        "url": {
+          "type": "string",
+          "pattern": "^https://(github\\.com/microsoft/WSL/releases/download/[0-9.]+/wsl\\.[0-9.]+\\.x64\\.msi|registry-1\\.docker\\.io/v2/library/debian/blobs/sha256:[a-f0-9]{64})$"
+        }
+      }
+    },
+    "Facts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platform",
+        "architecture",
+        "msvcPending",
+        "reboot",
+        "wsl",
+        "elevation",
+        "debian12",
+        "docker"
+      ],
+      "properties": {
+        "platform": {
+          "enum": [
+            "win32",
+            "linux",
+            "darwin"
+          ]
+        },
+        "architecture": {
+          "enum": [
+            "x64",
+            "arm64"
+          ]
+        },
+        "msvcPending": {
+          "type": "boolean"
+        },
+        "reboot": {
+          "enum": [
+            "yes",
+            "no",
+            "unknown"
+          ]
+        },
+        "wsl": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "elevation": {
+          "enum": [
+            "elevated",
+            "not-elevated",
+            "unknown"
+          ]
+        },
+        "debian12": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "docker": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    }
   }
 }

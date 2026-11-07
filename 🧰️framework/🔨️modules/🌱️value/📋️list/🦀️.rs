@@ -942,3 +942,17 @@ mod original_exact_final_extent_tests;
 #[path="📤️discard/🦀️.rs"]
 mod tail_discard;
 pub use tail_discard::PagedListDiscardDemand;
+
+#[cfg(test)]
+mod partition_tests {
+    use super::*;
+    #[test]
+    fn partition_point_matches_language_neutral_cases() {
+        let cases: serde_json::Value = serde_json::from_str(include_str!("partition.cases.json")).unwrap();
+        for case in cases.as_array().unwrap() {
+            let values: PagedList<i64, 32> = case["values"].as_array().unwrap().iter().map(|value| value.as_i64().unwrap()).collect();
+            let limit = case["limit"].as_i64().unwrap();
+            assert_eq!(values.partition_point(|value| *value < limit), case["expected"].as_u64().unwrap() as usize);
+        }
+    }
+}

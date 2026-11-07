@@ -97,21 +97,22 @@ export type NativeDirectoryMeterV1=Readonly<{admit(request:unknown,signal?:Abort
 export function createNativeDirectoryMeterV1(input:Readonly<{root:string;filesystemBytes:number;maximumPhysicalBytes:number;measure?:(root:string,signal?:AbortSignal)=>number|Promise<number>;usage?:NativeDirectoryUsageV1;now?:()=>number}>):NativeDirectoryMeterV1{
  if(validateJsonSchemaSubset(schema.definitions.MeterLimits,{filesystemBytes:input.filesystemBytes,maximumPhysicalBytes:input.maximumPhysicalBytes},schema).length)throw Error("Closed directory meter limits required");
  const limits=protocol.meter,now=input.now??Date.now,usage=input.measure?undefined:input.usage??nativeDirectoryUsageV1(input.root,input.maximumPhysicalBytes),measure=(signal?:AbortSignal):Promise<number>=>usage?usage.fresh(signal):Promise.resolve(input.measure!(input.root,signal));
- let measured:number|undefined,measuredAt=0,admitted=0;
- const refresh=async(signal?:AbortSignal)=>{const startedAt=now(),before=admitted,bytes=await measure(signal);measured=bytes;measuredAt=startedAt;admitted=Math.max(0,admitted-before);return bytes;};
+ let measured:number|undefined,measuredAt=0,admitted=0n,covered=0n,requested=0n,observed=0n;
+ const retained=()=>admitted-covered;
+ const refresh=async(signal?:AbortSignal)=>{const before=admitted,order=++requested,bytes=await measure(signal);signal?.throwIfAborted();if(!Number.isSafeInteger(bytes)||bytes<0)throw Error("Finite exact measured directory bytes required");if(order>observed){measured=bytes;measuredAt=now();covered=before>covered?before:covered;observed=order;}return bytes;};
  const stale=()=>measured===undefined||now()-measuredAt>=limits.intervalMilliseconds;
- const gate=(used:number,requestBytes:number)=>admitNativeDirectoryCapacityV1({filesystemBytes:input.filesystemBytes,maximumPhysicalBytes:input.maximumPhysicalBytes,reservedBytes:0,usedBytes:used,requestBytes});
+ const gate=(requestBytes:number)=>{const used=BigInt(measured!)+retained();if(used>BigInt(input.maximumPhysicalBytes))throw Error(protocol.refusals.capacity);admitNativeDirectoryCapacityV1({filesystemBytes:input.filesystemBytes,maximumPhysicalBytes:input.maximumPhysicalBytes,reservedBytes:0,usedBytes:Number(used),requestBytes});};
  return Object.freeze({admit:async(value:unknown,signal?:AbortSignal)=>{
   if(validateJsonSchemaSubset(schema.definitions.MeterRequest,value,schema).length)throw Error("Closed directory meter request required");
-  const request=value as Readonly<{mode:"reserve"|"commit"|"recheck";requestBytes:number}>;
-  if(request.mode==="commit"){gate(await refresh(signal),0);return;}
-  if(request.mode==="recheck"){if(stale())await refresh(signal);gate(measured!+admitted,0);return;}
-  if(measured===undefined||admitted+request.requestBytes>=limits.intervalBytes||stale())await refresh(signal);
-  if(measured!+admitted+request.requestBytes>input.maximumPhysicalBytes)await refresh(signal);
-  gate(measured!+admitted,request.requestBytes);admitted+=request.requestBytes;
+  signal?.throwIfAborted();const request=value as Readonly<{mode:"reserve"|"commit"|"recheck";requestBytes:number}>;
+  if(request.mode==="commit"){await refresh(signal);gate(0);return;}
+  if(request.mode==="recheck"){if(stale())await refresh(signal);gate(0);return;}
+  const bytes=BigInt(request.requestBytes);
+  if(measured===undefined||retained()+bytes>=BigInt(limits.intervalBytes)||stale())await refresh(signal);
+  if(BigInt(measured!)+retained()+bytes>BigInt(input.maximumPhysicalBytes))await refresh(signal);
+  gate(request.requestBytes);admitted+=bytes;
  }});
 }
-
 /** 🪪️ The immutable partition anchor: its envelope, its empty placeholder and, only when the host cannot make the volume case sensitive, the declared case-folding mode. */
 export type NativeDirectoryAnchorV1=Readonly<{filesystemBytes:number;maximumPhysicalBytes:number;underlying:NativeDirectoryIdentityV1;caseFold?:"insensitive"}>;
 /** 📜️ Serializes the immutable partition anchor that stands in for the former image file and names its empty placeholder. */

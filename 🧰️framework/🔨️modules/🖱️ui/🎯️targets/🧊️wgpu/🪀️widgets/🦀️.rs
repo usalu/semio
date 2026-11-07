@@ -295,13 +295,13 @@ fn render_group<E: Clone>(id: &str, label: &str, default_open: bool, children: &
 fn render_scene_placeholder<E>(surface_id: &str, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     let _ = surface_id;
     ctx.draw.push_rounded([bounds.x, bounds.y, bounds.w, bounds.h], ctx.theme.panel, ctx.theme.border_radius);
-    semio_ui_wgpu_layout::chrome::push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, ctx.theme.panel);
+    semio_ui_wgpu_layout::chrome::push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, ctx.theme.panel, semio_ui_draw_contract::SharedBorderState::Normal);
 }
 
 /// 🔌️ A plugin body slot labelled by its `body_key`; the body itself is the host's concern.
 fn render_external_slot<E>(body_key: &str, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     ctx.draw.push_rounded([bounds.x, bounds.y, bounds.w, bounds.h], ctx.theme.panel, ctx.theme.border_radius);
-    semio_ui_wgpu_layout::chrome::push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, ctx.theme.panel);
+    semio_ui_wgpu_layout::chrome::push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, ctx.theme.panel, semio_ui_draw_contract::SharedBorderState::Normal);
     draw_text(ctx, body_key, bounds.x + ctx.theme.padding_standard, bounds.y + (bounds.h + ctx.theme.font_size_small) * 0.5 - 2.0, ctx.theme.font_size_small, ctx.theme.text_muted);
 }
 //#endregion 🧩️KitCompositeParity

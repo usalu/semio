@@ -28,6 +28,7 @@ import { PROCTOR_PACKAGE, TEACHING_WORKSPACE, buildProctor, developmentDataSettl
 import messages from "./💬️messages/🔣️.json" with { type: "json" };
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import declaredData from "./📥️inputs/🔣️.json" with { type: "json" };
+import {waitForProctorV1} from "./⏹️lifetime/🟦️.ts";
 
 /** 🗃️ Where the products of the modes live, relative to the repository root: the output directory `@teaching/proctor:build` declares. */
 export const PROCTOR_PRODUCT_DIRECTORY = ["🎓️teaching", "🛂️proctor", "📦️packages", "🦀️rust", "dist", "build"] as const;
@@ -526,18 +527,24 @@ export async function runProctor(repoRoot: string, invocation: ScriptInvocation,
   const interruption = new AbortController();
   let artifact: ProctorArtifact | undefined;
   let proctor: ProctorProcess | undefined;
-  const forward = (signal: NodeJS.Signals): void => {
-    interruption.abort();
+  const listeners = LAUNCHER_SIGNALS.map(signal => ({signal, forward: () => {
+    if (interruption.signal.aborted) return;
+    interruption.abort(new DOMException(`proctor interrupted by ${signal}`, "AbortError"));
     proctor?.interrupt(signal);
-  };
-  for (const signal of LAUNCHER_SIGNALS) process.on(signal, forward);
+  }}));
+  for (const {signal,forward} of listeners) process.on(signal, forward);
+  let failed = false, failure: unknown;
   try {
     artifact = await acquireProctor(repoRoot, invocation, env, interruption.signal);
+    interruption.signal.throwIfAborted();
     proctor = artifact.launch(args, env);
-    const status = await proctor.exited;
+    const status = await waitForProctorV1(proctor, interruption.signal);
     if (status !== 0) throw new Error(`proctor ${args.join(" ")} exited with status ${status}`);
+  } catch (error) {
+    failed = true; failure = error; throw error;
   } finally {
-    try { await artifact?.close(); } finally { for (const signal of LAUNCHER_SIGNALS) process.off(signal, forward); }
+    try { await artifact?.close(); } catch (error) { if (failed) throw new AggregateError([failure, error], "Proctor run and cleanup failed"); throw error; }
+    finally { for (const {signal,forward} of listeners) process.off(signal, forward); }
   }
 }
 

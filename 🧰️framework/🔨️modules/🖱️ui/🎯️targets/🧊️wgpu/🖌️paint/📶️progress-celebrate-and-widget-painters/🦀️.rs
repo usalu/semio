@@ -22,21 +22,21 @@ pub fn presence_overlay(draw: &mut DrawList, bounds: Rect, theme: &Theme, presen
     match presence.status {
         UiStatus::Loading => paint_loading_border(draw, bounds, ring_color, theme),
         UiStatus::Waiting => paint_waiting_border(draw, bounds, ring_color, theme),
-        UiStatus::Finished => draw.push_finished_border([bounds.x, bounds.y, bounds.w, bounds.h], ring_color, theme.border_radius, theme.stroke_hairline),
+        UiStatus::Finished => draw.push_shared_border_effect(bounds, ring_color, theme.border_radius, theme.stroke_hairline, semio_ui_draw_contract::SharedBorderState::Normal),
         UiStatus::Idle => {}
     }
     if selected {
         let ring = Rect::new(bounds.x - 1.0, bounds.y - 1.0, bounds.w + 2.0, bounds.h + 2.0);
-        push_chrome_border(draw, ring, theme.stroke_hairline, theme.accent, true, true, true, true);
+        push_chrome_border(draw, ring, theme.stroke_hairline, theme.accent, true, true, true, true, semio_ui_draw_contract::SharedBorderState::Active);
     } else if presence.state == UiState::Previewed {
-        push_chrome_border(draw, bounds, theme.stroke_hairline, theme.accent, true, true, true, true);
+        push_chrome_border(draw, bounds, theme.stroke_hairline, theme.accent, true, true, true, true, semio_ui_draw_contract::SharedBorderState::Focus);
     }
     if presence.state == UiState::Introducing {
-        draw.push_introducing_border([bounds.x, bounds.y, bounds.w, bounds.h], theme.accent, theme.border_radius, theme.stroke_hairline);
+        draw.push_shared_border_effect(bounds, theme.accent, theme.border_radius, theme.stroke_hairline, semio_ui_draw_contract::SharedBorderState::Introduced);
     }
     if presence.state == UiState::Celebrating {
         let turns = celebrate_turns(draw.clock_seconds(), theme.celebrate_duration_seconds);
-        draw.push_introducing_border([bounds.x, bounds.y, bounds.w, bounds.h], celebrate_color(theme, turns), theme.border_radius, celebrate_stroke(theme, turns));
+        draw.push_shared_border_effect(bounds, celebrate_color(theme, turns), theme.border_radius, celebrate_stroke(theme, turns), semio_ui_draw_contract::SharedBorderState::Celebrated);
     }
 }
 
@@ -151,14 +151,14 @@ pub fn paint_progress(node: &UiProgressNode, bounds: Rect, theme: &Theme, draw: 
 /// passes into that existing primitive, leaving only `color` (which varies with e.g. selected state)
 /// to the caller.
 pub fn paint_loading_border(draw: &mut DrawList, bounds: Rect, color: Rgba, theme: &Theme) {
-    draw.push_loading_border([bounds.x, bounds.y, bounds.w, bounds.h], color, theme.border_radius, theme.stroke_hairline);
+    draw.push_shared_border_effect(bounds, color, theme.border_radius, theme.stroke_hairline, semio_ui_draw_contract::SharedBorderState::Loading);
 }
 
 /// ⌛️ Shared "this node is waiting" affordance mirroring `paint_loading_border`: dashed, slower ring
 /// via `draw::DrawList::push_waiting_border` (`UI_SHADER`'s `kind == 7` branch). Callers dispatch
 /// `loading` before `waiting` so the more active state wins when both flags are set.
 pub fn paint_waiting_border(draw: &mut DrawList, bounds: Rect, color: Rgba, theme: &Theme) {
-    draw.push_waiting_border([bounds.x, bounds.y, bounds.w, bounds.h], color, theme.border_radius, theme.stroke_hairline);
+    draw.push_shared_border_effect(bounds, color, theme.border_radius, theme.stroke_hairline, semio_ui_draw_contract::SharedBorderState::Waiting);
 }
 
 /// 🎴️ A `Stack`'s `activate`/`selected` visual affordances, ported from
@@ -182,7 +182,7 @@ pub fn paint_stack_frame(stack: &UiStackNode, bounds: Rect, flags: NodeFlags, th
     }
     let hovered = flags.contains(NodeFlags::HOVERED);
     let bg = if hovered { theme.button_hover } else { theme.panel };
-    push_control_border(draw, bounds, theme, theme.border_normal, bg);
+    push_control_border(draw, bounds, theme, if hovered { theme.border_emphasized } else { theme.border_normal }, bg, if hovered { semio_ui_draw_contract::SharedBorderState::Hover } else { semio_ui_draw_contract::SharedBorderState::Normal });
 }
 
 /// ➖️ A `Separator`'s rule — one `--stroke-hairline` across the node's middle, the same weight
@@ -208,7 +208,7 @@ pub fn paint_checkbox(node: &semio_ui_declaration::ui::UiToggleNode, bounds: Rec
     let side = SIZE_TINY.min(bounds.h).min(bounds.w);
     let rect = Rect::new(if inline.is_rtl() { bounds.x + bounds.w - side } else { bounds.x }, bounds.y + (bounds.h - side) * 0.5, side, side);
     let border = if focus_ring_visible(flags) { theme.accent } else { theme.border_normal };
-    push_control_border(draw, rect, theme, border, if node.presence.selected { theme.text } else { theme.input_bg });
+    push_control_border(draw, rect, theme, border, if node.presence.selected { theme.text } else { theme.input_bg }, if node.presence.selected { semio_ui_draw_contract::SharedBorderState::Active } else if focus_ring_visible(flags) { semio_ui_draw_contract::SharedBorderState::Focus } else { semio_ui_draw_contract::SharedBorderState::Normal });
     if node.presence.selected {
         let color = theme.panel;
         draw.push_line(rect.x + side * 0.2, rect.y + side * 0.5, rect.x + side * 0.43, rect.y + side * 0.73, color, theme.stroke_hairline * 1.5);

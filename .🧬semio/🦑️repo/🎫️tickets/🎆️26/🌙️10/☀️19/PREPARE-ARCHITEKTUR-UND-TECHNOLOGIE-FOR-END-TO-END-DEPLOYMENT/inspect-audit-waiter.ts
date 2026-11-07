@@ -1,0 +1,4 @@
+import {join} from 'node:path';
+import {pathToFileURL} from 'node:url';
+const {runCmd}=await import(pathToFileURL(join(process.cwd(),'🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts')).href);
+runCmd('powershell.exe',['-NoProfile','-NonInteractive','-Command',"$id=24268; for($i=0;$i -lt 5 -and $id -gt 0;$i++){ $p=Get-CimInstance Win32_Process -Filter ('ProcessId='+$id) -OperationTimeoutSec 5; if(!$p){Write-Output ('absent '+$id);break}; [PSCustomObject]@{Id=$p.ProcessId;Parent=$p.ParentProcessId;Birth=$p.CreationDate.ToUniversalTime().ToString('o');Image=$p.ExecutablePath;Command=$p.CommandLine}|Format-List; $id=$p.ParentProcessId }; Get-CimInstance Win32_Process -Filter 'ParentProcessId=24268' -OperationTimeoutSec 5 | Select-Object ProcessId,ParentProcessId,CreationDate,ExecutablePath,CommandLine | Format-List"]);

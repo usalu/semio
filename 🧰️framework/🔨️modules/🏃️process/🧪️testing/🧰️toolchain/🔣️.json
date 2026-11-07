@@ -1,21 +1,49 @@
 {
   "version": 1,
-  "binding": {"maximumPathUnits": 256},
-  "languages": ["en", "de"],
+  "binding": {
+    "maximumPathUnits": 256
+  },
+  "languages": [
+    "en",
+    "de"
+  ],
   "tools": {
     "python": {
       "candidates": [
-        {"command": "python3"},
-        {"command": "python"},
-        {"command": "py", "arguments": ["-3"], "platforms": ["win32"]}
+        {
+          "command": "python3"
+        },
+        {
+          "command": "python"
+        },
+        {
+          "command": "py",
+          "arguments": [
+            "-3"
+          ],
+          "platforms": [
+            "win32"
+          ]
+        }
       ],
-      "probe": ["--version"],
+      "probe": [
+        "--version"
+      ],
       "pattern": "^Python 3\\.[0-9]+",
-      "locate": ["-c", "import sys;print(sys.executable)"]
+      "locate": [
+        "-c",
+        "import sys;print(sys.executable)"
+      ]
     },
     "ripgrep": {
-      "candidates": [{"command": "rg"}],
-      "probe": ["--version"],
+      "candidates": [
+        {
+          "command": "rg"
+        }
+      ],
+      "probe": [
+        "--version"
+      ],
       "pattern": "^ripgrep [0-9]+"
     }
   },
@@ -23,6 +51,10 @@
     "missing": {
       "en": "[toolchain] Test tool {tool} not found (tried {tried}). Every comparison that needs it is skipped here; install it or put it on PATH.",
       "de": "[toolchain] Test-Werkzeug {tool} nicht gefunden (versucht: {tried}). Jeder Vergleich, der es braucht, wird hier übersprungen; installieren oder in den PATH legen."
+    },
+    "bindingRequired": {
+      "en": "[toolchain] Managed test binding {binding} for {tool} is required and must pass its probe; run the canonical suite with its declared tool preparation.",
+      "de": "[toolchain] Verwaltete Test-Bindung {binding} für {tool} ist erforderlich und muss ihre Prüfung bestehen; kanonische Suite mit deklarierter Werkzeugvorbereitung ausführen."
     }
   }
 }

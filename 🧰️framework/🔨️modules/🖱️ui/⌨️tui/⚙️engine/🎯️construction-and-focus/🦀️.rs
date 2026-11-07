@@ -156,6 +156,13 @@ self.size = size;
     }
 
     pub(super) fn step_focus(&mut self, forward: bool, out: &mut Signals) {
+        if let Some(id) = self.focus() {
+            let count = self.scene.node(id).children().len().saturating_sub(1);
+            if let NodeContent::Axis(axis) = &mut self.scene.node_raw_mut(id).content {
+                if forward && axis.selected + 1 < count { axis.selected += 1; self.scene.mark_dirty(id, PAINT_DIRTY); return; }
+                if !forward && axis.selected > 0 { axis.selected -= 1; self.scene.mark_dirty(id, PAINT_DIRTY); return; }
+            }
+        }
         let ring = self.focus_ring();
         if ring.is_empty() {
             return;
@@ -167,7 +174,10 @@ self.size = size;
             (None, true) => 0,
             (None, false) => ring.len() - 1,
         };
-        self.focus_node(Some(ring[next]), out);
+        let target = ring[next];
+        let count = self.scene.node(target).children().len().saturating_sub(1);
+        if let NodeContent::Axis(axis) = &mut self.scene.node_raw_mut(target).content { axis.selected = if forward { 0 } else { count.saturating_sub(1) }; }
+        self.focus_node(Some(target), out);
     }
 
     pub fn focus_next(&mut self) {

@@ -1,4 +1,5 @@
 import * as React from "react";
+import { flushSync } from "react-dom";
 import { resolveBorderSegments, type BorderState } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
 import { sharedBorderAxisScale, sharedOutlineSegments, clipSharedOutlineSegments, visibleSharedOutlineSegments, createSharedBorderJunctionResolver, type SharedOutlineSegment } from "../🔲️WindowSilhouette/shared-border.ts";
 import { windowSilhouetteOutline, type WindowSilhouetteGeometry } from "../🔲️WindowSilhouette/🟦️.tsx";
@@ -54,11 +55,12 @@ export class BorderCompositor {
   private hovered: Element | null = null;
   private motion = new Map<Element, Set<string>>();
   constructor(readonly root: HTMLElement) {
+    root.setAttribute("data-shared-border-root", "");
     const view = root.ownerDocument.defaultView;
     this.observer = typeof MutationObserver === "undefined" ? null : new MutationObserver(records => {
       if (records.some(record => !(record.target instanceof Element && record.target.closest("[data-shared-border-overlay], [data-window-silhouette-border]")) && (record.type !== "childList" || [...record.addedNodes, ...record.removedNodes].some(node => !(node instanceof Element && node.hasAttribute("data-shared-border-overlay")))))) this.schedule();
     });
-    this.observer?.observe(root, { subtree: true, childList: true, attributes: true, attributeFilter: ["class", "style", "data-active", "data-state", "data-shared-border-state", "data-shared-border-frame", "data-shared-border-edges", "data-introduced", "data-celebrated"] });
+    this.observer?.observe(root, { subtree: true, childList: true, attributes: true, attributeFilter: ["class", "style", "data-active", "data-state", "aria-selected", "aria-pressed", "data-shared-border-state", "data-shared-border-frame", "data-shared-border-edges", "data-introduced", "data-celebrated", "disabled", "aria-disabled"] });
     this.resize = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(this.schedule);
     this.resize?.observe(root);
     root.addEventListener("pointerover", this.pointer);
@@ -90,13 +92,15 @@ export class BorderCompositor {
     this.schedule();
   };
   schedule = () => {
-    if (this.disposed || this.frame) return;
+    if (this.disposed) return;
+    this.root.setAttribute("data-shared-border-pending", "");
+    if (this.frame) return;
     const view = this.root.ownerDocument.defaultView;
     if (view?.requestAnimationFrame) this.frame = view.requestAnimationFrame(this.commit);
     else this.commit();
   };
   private state(element: HTMLElement, fallback: BorderState): BorderState {
-    if (this.hovered && element.contains(this.hovered)) return "hover";
+    if (this.hovered && element.contains(this.hovered) && !element.matches(":disabled") && !element.closest('[aria-disabled="true"]')) return "hover";
     const explicit = element.getAttribute("data-shared-border-state") as BorderState | null;
     const candidates: BorderState[] = [fallback];
     if (explicit && states.includes(explicit)) candidates.push(explicit);
@@ -104,7 +108,7 @@ export class BorderCompositor {
     if (element.hasAttribute("data-introduced") && element.getAttribute("data-introduced") !== "false") candidates.push("introduced");
     if (element.classList.contains("border-loading")) candidates.push("loading");
     if (element.classList.contains("border-waiting")) candidates.push("waiting");
-    if (element.getAttribute("data-active") === "true" || element.getAttribute("data-state") === "on") candidates.push("active");
+    if (element.getAttribute("data-active") === "true" || ["on", "active"].includes(element.getAttribute("data-state") ?? "") || element.getAttribute("aria-selected") === "true" || element.getAttribute("aria-pressed") === "true") candidates.push("active");
     if (element.contains(element.ownerDocument.activeElement)) candidates.push("focus");
     return candidates.reduce((winner, candidate) => states.indexOf(candidate) > states.indexOf(winner) ? candidate : winner);
   }
@@ -139,11 +143,12 @@ export class BorderCompositor {
   private commit = () => {
     this.frame = 0;
     let sources: SharedOutlineSegment[] = [];
+    const updates = new Map<Registration, readonly SharedBorderPaintSegment[]>();
     const frameSources = new Map<string, { element: HTMLElement; frame: Frame; width: number; height: number; sides: string }>();
     for (const [element, frame] of this.frames) if (!this.root.contains(element) || !element.matches(selector)) this.restore(element, frame);
     for (const [id, entry] of this.windows) {
       const rect = entry.element.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0 || entry.geometry.state !== "ready") { entry.update([]); continue; }
+      if (rect.width <= 0 || rect.height <= 0 || entry.geometry.state !== "ready") { updates.set(entry, []); continue; }
       const metrics = entry.geometry.metrics;
       sources.push(...this.visibleSources(entry.element, sharedOutlineSegments(id, entry.geometry.outline, windowSilhouetteOutline(metrics), this.state(entry.element, entry.state), { left: rect.left, top: rect.top, scaleX: sharedBorderAxisScale(rect.width, entry.element.offsetWidth), scaleY: sharedBorderAxisScale(rect.height, entry.element.offsetHeight) })));
     }
@@ -214,7 +219,7 @@ export class BorderCompositor {
       const sameState = won.length > 0 && won.every(segment => segment.state === won[0]!.state);
       const unclipped = owned.every(source => (source.from.x === source.logicalFrom.x && source.from.y === source.logicalFrom.y && source.to.x === source.logicalTo.x && source.to.y === source.logicalTo.y) || (source.to.x === source.logicalFrom.x && source.to.y === source.logicalFrom.y && source.from.x === source.logicalTo.x && source.from.y === source.logicalTo.y));
       const degenerate = entry.geometry.outline.length !== windowSilhouetteOutline(entry.geometry.metrics).length;
-      entry.update(degenerate ? [{ d: entry.geometry.borderPath, state: this.state(entry.element, entry.state) }] : complete && sameState && unclipped && !interacting.has(id) ? [{ d: entry.geometry.borderPath, state: won[0]!.state }] : output.get(id) ?? []);
+      updates.set(entry, degenerate ? [{ d: entry.geometry.borderPath, state: this.state(entry.element, entry.state) }] : complete && sameState && unclipped && !interacting.has(id) ? [{ d: entry.geometry.borderPath, state: won[0]!.state }] : output.get(id) ?? []);
     }
     for (const [id, { element, frame, width, height, sides }] of frameSources) {
       const computed = element.ownerDocument.defaultView?.getComputedStyle(element);
@@ -253,12 +258,16 @@ export class BorderCompositor {
       }
       if (element.getAttribute("data-shared-border-attached") !== sides) element.setAttribute("data-shared-border-attached", sides);
     }
+    if (updates.size) flushSync(() => { for (const [entry, segments] of updates) entry.update(segments); });
+    if (!this.frame) this.root.removeAttribute("data-shared-border-pending");
     for (const element of this.motion.keys()) if (!this.root.contains(element)) this.motion.delete(element);
     if (this.motion.size) this.schedule();
   };
   dispose() {
     if (this.disposed) return;
     this.disposed = true;
+    this.root.removeAttribute("data-shared-border-root");
+    this.root.removeAttribute("data-shared-border-pending");
     this.observer?.disconnect(); this.resize?.disconnect();
     const view = this.root.ownerDocument.defaultView;
     if (this.frame) view?.cancelAnimationFrame(this.frame);

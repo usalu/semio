@@ -1,0 +1,9 @@
+# Native Border Pipeline
+
+The wgpu draw list currently converts each border to ordinary solid instances as each widget paints. The resulting instances contain no edge owner, logical coordinate, interaction state, or relationship to the original frame. Native consolidation therefore needs explicit semantic border records rather than inference from existing solids.
+
+Each record must carry logical endpoints, owner and state, paint width and color, original layer and normal or overlay bucket, original insertion position, and its effective clip and scissor. Its producer must include disabled, focus, active, waiting, loading, introduced, celebrated and hover state rather than derive a priority from a color. The neutral border-presentation segment resolver supplies winner and contributor identity, including partial overlaps.
+
+Before an accepted retained candidate is published, a resumable bounded pass must group only compatible paint scopes, clip the original segments, resolve their coincident intervals, and insert split winning geometry at the correct original paint positions. That pass must reserve and account for every record, split and emitted instance through retained-output admission, yield and cancel under the existing opportunity budget, preserve backgrounds and overlays in order, and retire all candidate-owned records on cancellation. Immediate widgets require the same completed-frame boundary before submission. Window, control and stepper divider producers must all use that record API; changing only the control helper leaves other surfaces inconsistent.
+
+No native paint implementation was changed in this audit: the required compositor is a draw-contract and retained-frame lifecycle change, and a shortcut that rewrites accepted slots or appends a trailing overlay would break partial overlaps, clipping, paint order or retained accounting.

@@ -360,7 +360,7 @@ pub fn paint_overlay_backdrop(draw: &mut DrawList, viewport: Rect, theme: &Theme
 pub fn paint_overlay_surface(draw: &mut DrawList, bounds: Rect, theme: &Theme) {
     draw.push_solid_overlay([bounds.x + 1.0, bounds.y + 2.0, bounds.w, bounds.h], theme.overlay_shadow);
     draw.push_solid_overlay([bounds.x, bounds.y, bounds.w, bounds.h], theme.surface(Level::Menu));
-    push_chrome_border(draw, bounds, theme.stroke_hairline, theme.border_normal, true, true, true, true);
+    push_chrome_border(draw, bounds, theme.stroke_hairline, theme.border_normal, true, true, true, true, semio_ui_draw_contract::SharedBorderState::Normal);
 }
 
 /// 🎟️ How many quads one overlay's chrome step may emit: a backdrop, a drop shade, the surface

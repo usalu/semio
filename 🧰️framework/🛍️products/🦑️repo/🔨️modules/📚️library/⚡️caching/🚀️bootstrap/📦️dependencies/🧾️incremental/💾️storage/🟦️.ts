@@ -1,4 +1,5 @@
 import {lstatSync,readFileSync,readdirSync,readlinkSync,unlinkSync} from "node:fs";
+import {lstat,readdir} from "node:fs/promises";
 import {join} from "node:path";
 import type {ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
@@ -40,8 +41,8 @@ export function installedLedgerSinkV1(startedAtMs:number=Date.now()):InstalledLe
 export function installedPortsV1(root:string,control:IncrementalControlV1):InstalledPortsV1{
  const path=(portable:string)=>portable==="."?root:join(root,...portable.split("/"));
  return Object.freeze({control,
-  stat:(portable:string)=>{const facts=lstatSync(path(portable),{bigint:true,throwIfNoEntry:false});return facts?Object.freeze({kind:kindOf(facts),stamp:installedStampV1(facts)}):undefined;},
-  children:(portable:string)=>readdirSync(path(portable),{withFileTypes:true}).map(entry=>Object.freeze({name:entry.name,kind:kindOf(entry)})),
+  stat:async(portable:string)=>{try{const facts=await lstat(path(portable),{bigint:true});return Object.freeze({kind:kindOf(facts),stamp:installedStampV1(facts)});}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return undefined;throw error;}},
+  children:async(portable:string)=>(await readdir(path(portable),{withFileTypes:true})).map(entry=>Object.freeze({name:entry.name,kind:kindOf(entry)})),
  });
 }
 

@@ -54,6 +54,11 @@ export function testToolPathV1(tool:TestToolNameV1,port:TestToolchainPortV1=syst
  if(resolution.path===null)port.write(describeMissingTestToolV1(resolution,port.environment));
  return resolution.path;
 }
+/** 📌️ Requires the canonical runner's explicit probed binding without consulting host PATH. */
+export function requirePinnedTestToolV1(tool:TestToolNameV1,port:TestToolchainPortV1=systemPort):string{
+ const binding=pinnedTestToolVariableV1(tool),missing=()=>Error(noticeLanguagesV1(protocol.languages as readonly ("en"|"de")[],port.environment).map(language=>protocol.messages.bindingRequired[language].replaceAll("{tool}",tool).replaceAll("{binding}",binding)).join("\n"));
+ if(port.environment[binding]===undefined)throw missing();const result=resolveTestToolV1(tool,port);if(result.path===null)throw missing();return result.path;
+}
 /** 🐍️ The Python 3 interpreter for independent oracles: `python3`, `python` or `py -3`, whichever is a real Python 3, or null. */
 export const testPythonV1=():string|null=>testToolPathV1("python");
 /** 🧪️ The ripgrep program for scan oracles, or null. */

@@ -1,14 +1,21 @@
 import { constants } from "node:os";
-import { createToolAdmissionV1, findToolV1, resolveRegisteredToolV1, runToolV1, setDefaultToolAdmissionV1, toolLanguageV1, toolForCommandV1, toolMessageV1, toolRootV1, ToolErrorV1, TOOL_REGISTRY_V1, type ToolEntryV1, type ToolResolutionV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
+import { createToolAdmissionV1, findToolV1, resolveRegisteredToolV1, runToolV1, setDefaultToolAdmissionV1, toolLanguageV1, toolCommandNameV1, toolForCommandV1, toolMessageV1, toolRootV1, ToolErrorV1, TOOL_REGISTRY_V1, type ToolEntryV1, type ToolResolutionV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 import { BUILD_HOST_CAPACITY_POLICY_V1 } from "../../🌡️host-capacity/🟦️.ts";
+import{createRequestedIssuedResourceControlV1,type ScriptInvocation}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import type{ResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 
 /** 🔌️ What the tools command touches: output, environment, root and the cancellation signal; tests replace them. */
-export type ToolsCommandContextV1 = Readonly<{ environment: NodeJS.ProcessEnv; write: (line: string) => void; root?: string; signal?: AbortSignal }>;
+export type ToolsCommandContextV1 = Readonly<{ environment: NodeJS.ProcessEnv; write: (line: string) => void; root?: string; signal?: AbortSignal; issued?:Readonly<{original:ScriptInvocation;control:ResourceLeaseControl}> }>;
 
 const flag = (head: readonly string[], name: string): string | undefined => {
   for (let index = 0; index < head.length; index++) { const argument = head[index]!; if (argument === `--${name}`) return head[index + 1]; if (argument.startsWith(`--${name}=`)) return argument.slice(name.length + 3); }
   return undefined;
 };
+
+/** 🎯️ Selects native Windows compiler commands for issued toolchain custody. */
+export function requiresNativeToolchainScopeV1(args:readonly string[],platform:string):boolean{
+ if(platform!=="win32"||args[0]!=="exec")return false;const boundary=args.indexOf("--"),head=args.slice(1,boundary<0?undefined:boundary),id=head.find((word,index)=>!word.startsWith("--")&&head[index-1]!=="--cwd");if(!id)return false;const entry=findToolV1(id)??toolForCommandV1(id);return entry?.id==="cc"||entry?.id==="cargo"&&toolCommandNameV1(id)==="rustc";
+}
 
 const describe = (entry: ToolEntryV1, resolution: ToolResolutionV1): string => `${entry.id.padEnd(11)} ${(resolution.pin.version ?? resolution.pin.minimum ?? entry.pin.state).padEnd(26)} ${resolution.source.padEnd(15)} ${resolution.command === null ? "-" : [resolution.command, ...resolution.prefix].join(" ")}`;
 
@@ -33,17 +40,22 @@ async function exec(head: readonly string[], tail: readonly string[], context: T
   const language = toolLanguageV1(context.environment), id = head.find((word, index) => !word.startsWith("--") && head[index - 1] !== "--cwd"), entry = id === undefined ? undefined : findToolV1(id) ?? toolForCommandV1(id);
   if (id === undefined) throw new Error(toolMessageV1("execUsage", {}, language));
   if (entry === undefined) throw new ToolErrorV1("unknown-tool", id, toolMessageV1("unknownTool", { tool: id, known: TOOL_REGISTRY_V1.tools.map(tool => tool.id).join(", ") }, language));
-  const controller = new AbortController(), stop = (): void => controller.abort(), cwd = flag(head, "cwd") ?? process.cwd();
+  const controller = new AbortController(), stop = (): void => controller.abort(context.signal?.aborted?context.signal.reason:undefined), cwd = flag(head, "cwd") ?? process.cwd();
   process.once("SIGINT", stop);
   process.once("SIGTERM", stop);
   context.signal?.addEventListener("abort", stop, { once: true });
-  setDefaultToolAdmissionV1(createToolAdmissionV1(BUILD_HOST_CAPACITY_POLICY_V1, { environment: context.environment, write: line => process.stderr.write(line + "\n") }));
+  if(context.signal?.aborted)stop();
+  const managed=requiresNativeToolchainScopeV1(["exec",...head],process.platform);
+  if(!managed)setDefaultToolAdmissionV1(createToolAdmissionV1(BUILD_HOST_CAPACITY_POLICY_V1, { environment: context.environment, write: line => process.stderr.write(line + "\n") }));
   try {
-    const result = await runToolV1(entry.id, tail, { root, cwd, command: entry.id === id ? undefined : id, env: context.environment, signal: controller.signal, check: false, heavy: !head.includes("--light"), stdout: "inherit", trusted: true, onProgress: event => { if (event.phase === "admitting") process.stderr.write(toolMessageV1("admitting", { tool: event.tool }, language) + "\n"); } });
+    if(controller.signal.aborted)throw controller.signal.reason;
+    const run=(environment:Readonly<Record<string,string|undefined>>,signal:AbortSignal,owned:boolean)=>runToolV1(entry.id,tail,{root,cwd,command:entry.id===id?undefined:id,env:environment,signal,check:false,heavy:!head.includes("--light"),...(owned?{admission:false as const}:{}),stdout:"inherit",trusted:true,onProgress:event=>{if(event.phase==="admitting")process.stderr.write(toolMessageV1("admitting",{tool:event.tool},language)+"\n");}});
+    const result=managed?await(async()=>{if(!context.issued)throw Error("Original issued native toolchain invocation required");const control=createRequestedIssuedResourceControlV1(context.issued.control,0,controller.signal),{withRepositoryNativeToolchainV1}=await import("../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🛠️native-toolchain/🟦️.ts");return withRepositoryNativeToolchainV1(root,context.issued.original,control,context.environment,(scope,actual)=>run(scope.environment,actual.signal,true));})():await run(context.environment,controller.signal,false);
     return toolCommandExitStatusV1(result.status, result.signal, constants.signals);
   } finally {
     process.removeListener("SIGINT", stop);
     process.removeListener("SIGTERM", stop);
+    context.signal?.removeEventListener("abort",stop);
   }
 }
 

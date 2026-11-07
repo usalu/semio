@@ -8,6 +8,7 @@
 // #region 🔌️Adapters
 import { formatUiNumber } from "@semio-tech/ui-contract/presentation/number-format";
 import * as React from "react";
+import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { type UiLabel, uiDataLabel } from "../🎗️UiLabel/🟦️.tsx";
@@ -378,6 +379,7 @@ function Input({ className, type, lazy, value: externalValue, defaultValue, onCh
   const [isFocused, setIsFocused] = reactHostPort.useState(false);
   const inputRef = reactHostPort.useRef<HTMLInputElement>(null);
   const rootRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const borderRef = useSharedBorderFrameRef(rootRef);
   /** 🧾️ Enter key already runs {@link onLazyChange} + blur; skip duplicate commit on the subsequent blur event. */
   const skipLazyBlurCommitRef = reactHostPort.useRef(false);
   const commands = useInteractionCommands();
@@ -484,7 +486,7 @@ function Input({ className, type, lazy, value: externalValue, defaultValue, onCh
   const inputEmptyOpacity = isInPropertyValueColumn && !inputDisplayValue && !isFocused ? 0.6 : 1;
 
   const inputElement = (
-    <div ref={rootRef} data-slot="input-root" data-detail-panel-control="fill" data-dim className="flex min-w-0 w-full flex-1 items-stretch" style={{ opacity: inputEmptyOpacity, transition: "opacity 150ms" }}>
+    <div ref={borderRef} data-slot="input-root" data-shared-border-frame="" data-shared-border-edges="top right bottom left" aria-disabled={props.disabled || undefined} data-detail-panel-control="fill" data-dim className="relative flex min-w-0 w-full flex-1 items-stretch" style={{ opacity: inputEmptyOpacity, transition: "opacity 150ms" }}>
       {showCollapsedDisplay ? (
         <CollapsedFieldDisplay
           allowStackedOverflow={allowStackedOverflow}

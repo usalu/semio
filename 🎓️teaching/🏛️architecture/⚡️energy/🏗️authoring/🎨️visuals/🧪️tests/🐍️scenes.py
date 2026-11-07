@@ -9,7 +9,7 @@ from pathlib import Path
 from unittest import mock
 
 import numpy as np
-from manim import DOWN
+from manim import DOWN, Rectangle, UP
 
 BASE = "🎓️teaching.🏛️architecture.⚡️energy."
 CASES = json.loads(Path(__file__).with_name("🔣️scenes.json").read_text(encoding="utf-8"))
@@ -62,6 +62,70 @@ class SceneScaleTest(unittest.TestCase):
             self.assertAlmostEqual(radiator.height, radiator_m, delta=0.15 * radiator_m)
             self.assertLessEqual(radiator.width, scale * CASES["house"]["radiator_width_m"] + 1e-6)
             self.assertAlmostEqual(radiator.get_bottom()[1] - plant["floor_y"], 0.0, delta=0.08 * radiator_m)
+
+    def test_heating_plant_equipment_has_one_metre_and_connected_flue(self):
+        module = importlib.import_module(BASE + "🔥️heating.🎬️clip.🧮️calculation.🐍️")
+        case = CASES["plant"]
+        metre = 1.6 / CASES["house"]["storey_m"]
+        calls = {}
+        radiator_anchors = []
+        casts = {
+            "shared-boiler-heating-cycle": "boiler",
+            "shared-tank-charge-up": "tank",
+            "heating-calculation-thermostat": "thermostat",
+        }
+
+        def oracle(cast, **kwargs):
+            if cast not in casts:
+                if cast == "shared-radiator-thermostat":
+                    radiator_anchors.append(np.array(kwargs["anchor"]))
+                return Rectangle(width=0.3 * metre, height=metre).move_to(np.array(kwargs["anchor"]) + UP * metre / 2)
+            name = casts[cast]
+            calls[name] = kwargs["unit"]
+            width, height = (case[name + "_" + dimension + "_m"] * kwargs["unit"] for dimension in ("width", "height"))
+            shape = Rectangle(width=width, height=height).move_to(np.array(kwargs["anchor"]) + UP * (height / 2 if name != "thermostat" else case["thermostat_center_height_m"] * kwargs["unit"]))
+            shape.seek = lambda _: None
+            return shape
+
+        def height(cast):
+            return case[casts[cast] + "_height_m"] if cast in casts else 1.0
+
+        with mock.patch.object(module, "staffage_motion", side_effect=oracle), mock.patch.object(module, "staffage_height", side_effect=height), mock.patch.dict(os.environ, {"SEMIO_TEACHING_LANGUAGE": CASES["language"]}):
+            plant = module._plant_house()
+        for name, figure in (("boiler", plant["boiler"]), ("tank", plant["tank"]["frame"]), ("thermostat", plant["thermostat"])):
+            with self.subTest(equipment=name):
+                self.assertAlmostEqual(calls[name], metre, places=9)
+                expected = np.array(case[name + "_anchor"]) + (UP * case["thermostat_center_height_m"] * metre if name == "thermostat" else 0)
+                np.testing.assert_allclose(figure.get_center() if name == "thermostat" else figure.get_bottom(), expected, atol=1e-9)
+                self.assertAlmostEqual(figure.width, case[name + "_width_m"] * metre, places=9)
+                self.assertAlmostEqual(figure.height, case[name + "_height_m"] * metre, places=9)
+        for i, anchor in enumerate(radiator_anchors):
+            support = Rectangle(width=0.01, height=0.01).move_to(anchor + UP * case["radiator_support_height_m"] * metre)
+            np.testing.assert_allclose(support.get_center(), case["radiator_contacts"][i], atol=1e-9)
+            wall = plant["walls"][i]
+            self.assertAlmostEqual(support.get_center()[0], (wall.get_right() if i == 0 else wall.get_left())[0], places=9)
+        self.assertEqual(len(radiator_anchors), 2)
+        for path, expected in zip(plant["flow_paths"][1:], case["radiator_pipe_ends"]):
+            np.testing.assert_allclose(path.get_end(), expected, atol=1e-9)
+        np.testing.assert_allclose(plant["chimney"][0].get_bottom(), plant["boiler"].get_top(), atol=1e-9)
+        self.assertAlmostEqual(plant["chimney"][0].get_top()[1], case["chimney_top"], places=9)
+        np.testing.assert_allclose(plant["flow_paths"][0].get_start(), plant["boiler"].get_left(), atol=1e-9)
+        np.testing.assert_allclose(plant["flow_paths"][0].get_end(), plant["tank"]["frame"].get_right(), atol=1e-9)
+
+    def test_heating_pendant_uses_scene_metre(self):
+        module = importlib.import_module(BASE + "🔥️heating.🎬️clip.🧮️calculation.🐍️")
+        case = CASES["house"]
+        metre, top = 0.64, np.array([1.0, 2.0, 0.0])
+
+        def oracle(cast, *, unit):
+            self.assertEqual(cast, "shared-lamp-winter")
+            self.assertAlmostEqual(unit, metre, places=9)
+            return Rectangle(width=case["lamp_width_m"] * unit, height=case["lamp_height_m"] * unit)
+
+        with mock.patch.object(module, "staffage", side_effect=oracle), mock.patch.object(module, "staffage_height", return_value=case["lamp_height_m"]):
+            lamp = module._pendant(top, metre)["group"]
+        self.assertAlmostEqual(lamp.height, case["lamp_height_m"] * metre, places=9)
+        np.testing.assert_allclose(lamp.get_top(), top, atol=1e-9)
 
     def test_overview_emitters_scale_with_house(self):
         module = importlib.import_module(BASE + "📊️demand.🎬️clip.⚡️demand-power.🐍️")
@@ -118,7 +182,7 @@ class SceneScaleTest(unittest.TestCase):
         for dimension in ("width", "height"):
             self.assertAlmostEqual(getattr(plant["boiler"], dimension), metre * CASES["plant"]["boiler_" + dimension + "_m"], delta=0.25 * metre * CASES["plant"]["boiler_" + dimension + "_m"])
             self.assertAlmostEqual(getattr(plant["tank"]["frame"], dimension), metre * CASES["plant"]["tank_" + dimension + "_m"], delta=0.25 * metre * CASES["plant"]["tank_" + dimension + "_m"])
-        self.assertAlmostEqual(plant["boiler"].get_bottom()[1], plant["cellar"].get_bottom()[1], delta=0.06)
+        self.assertAlmostEqual(plant["boiler"].get_bottom()[1] - plant["cellar"].get_bottom()[1], CASES["plant"]["boiler_clearance_m"] * metre, delta=0.06)
         self.assertAlmostEqual(plant["tank"]["frame"].get_bottom()[1], plant["cellar"].get_bottom()[1], delta=0.06)
         for material in plant["walls"]:
             self.assertGreaterEqual(material.get_fill_opacity(), 0.7)

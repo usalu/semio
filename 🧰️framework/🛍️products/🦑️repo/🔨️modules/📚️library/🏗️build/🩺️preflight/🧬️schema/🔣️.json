@@ -1,6 +1,28 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
+    "FilesystemCase": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "failure", "trace"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "failure": {"enum": ["exchange", "case", "check", "none"]},
+        "trace": {"type": "array", "items": {"enum": ["check", "exchange", "case"]}}
+      }
+    },
+    "PhaseCase": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "facts", "observedTools", "scopeCalls", "cancelAt", "accepted", "allocations"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "facts": {"$ref": "#/definitions/Facts"},
+        "observedTools": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "scopeCalls": {"type": "integer", "minimum": 0, "maximum": 2},
+        "cancelAt": {"enum": ["none", "before", "observation", "after"]},
+        "accepted": {"type": "boolean"},
+        "allocations": {"type": "integer", "minimum": 0, "maximum": 1}
+      }
+    },
     "CaseProbe": {
       "type": "object", "additionalProperties": false,
       "required": ["id", "platform", "kind", "probe", "expected"],

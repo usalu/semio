@@ -1,0 +1,10 @@
+{
+  "cases": [
+    { "name": "complete", "mutation": "none", "accepted": true },
+    { "name": "missing file", "mutation": "missing", "accepted": false },
+    { "name": "changed file bytes", "mutation": "tamper", "accepted": false },
+    { "name": "unexpected file", "mutation": "extra", "accepted": false },
+    { "name": "linked ancestor", "mutation": "junction", "accepted": false },
+    { "name": "hard linked file", "mutation": "hardlink", "accepted": false }
+  ]
+}

@@ -13,6 +13,42 @@ const geometry = createWindowSilhouetteGeometry({ width: 100, height: 100, top: 
 
 describe("root border compositor", () => {
   test("neutral compositor schema", () => expect(new Ajv().validate(schema, cases)).toBe(true));
+  test("overview frame work remains pending until each scheduled compositor frame commits", () => {
+    const dom = new JSDOM('<div class="semio-scope"><div data-shared-border-frame></div></div>', { pretendToBeVisual: true });
+    const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
+    Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver });
+    const root = dom.window.document.querySelector<HTMLElement>(".semio-scope")!;
+    const queue = new Map<number, FrameRequestCallback>();
+    let next = 0;
+    dom.window.requestAnimationFrame = callback => { queue.set(++next, callback); return next; };
+    dom.window.cancelAnimationFrame = id => { queue.delete(id); };
+    const flush = () => { const callbacks = [...queue.values()]; queue.clear(); callbacks.forEach(callback => callback(0)); };
+    const lease = retainSharedBorderRoot(root);
+    try {
+      expect(root.hasAttribute("data-shared-border-root")).toBe(true);
+      expect(root.hasAttribute("data-shared-border-pending")).toBe(true);
+      flush();
+      expect(root.hasAttribute("data-shared-border-pending")).toBe(false);
+      lease.compositor.schedule();
+      expect(root.hasAttribute("data-shared-border-pending")).toBe(true);
+      flush();
+      expect(root.hasAttribute("data-shared-border-pending")).toBe(false);
+      for (let i = 0; i < 3; i++) {
+        flush();
+        expect(root.hasAttribute("data-shared-border-pending")).toBe(false);
+        expect(queue.size).toBe(0);
+      }
+      lease.compositor.schedule();
+      expect(root.hasAttribute("data-shared-border-pending")).toBe(true);
+    } finally {
+      lease.release();
+      expect(root.hasAttribute("data-shared-border-root")).toBe(false);
+      expect(root.hasAttribute("data-shared-border-pending")).toBe(false);
+      expect(queue.size).toBe(0);
+      Object.assign(globalThis, previous);
+      dom.window.close();
+    }
+  });
   test("marker-only sibling frames share ownership and independent participant lifetimes", () => {
     const dom = new JSDOM('<div class="semio-scope"><div id="left" data-shared-border-frame></div><div id="right" data-shared-border-frame></div></div><div id="other" class="semio-scope"></div>');
     const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
@@ -50,6 +86,48 @@ describe("root border compositor", () => {
       replacement.release();
     } finally {
       a.release(); b.release(); other.release(); Object.assign(globalThis, previous); dom.window.close();
+    }
+  });
+  test("disabled frames do not acquire hover paint", () => {
+    const dom = new JSDOM('<div class="semio-scope"><button data-shared-border-frame></button></div>');
+    const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
+    Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver });
+    const root = dom.window.document.querySelector<HTMLElement>(".semio-scope")!;
+    const button = root.querySelector<HTMLButtonElement>("button")!;
+    button.getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 100 }) as DOMRect;
+    const compositor = new BorderCompositor(root);
+    try {
+      for (const fixture of cases.disabled) {
+        button.removeAttribute("disabled"); button.removeAttribute("aria-disabled");
+        button.setAttribute(fixture.attribute, fixture.value);
+        if (fixture.attribute === "disabled") expect(button.matches(":disabled")).toBe(true);
+        button.dispatchEvent(new dom.window.MouseEvent("pointerover", { bubbles: true }));
+        expect(button.querySelector("path")?.getAttribute("data-shared-border-state")).toBe(fixture.expected);
+        button.dispatchEvent(new dom.window.MouseEvent("pointerout", { bubbles: true }));
+      }
+    } finally {
+      compositor.dispose(); Object.assign(globalThis, previous); dom.window.close();
+    }
+  });
+  test("disabled changes repaint an already hovered frame", async () => {
+    const dom = new JSDOM('<div class="semio-scope"><button data-shared-border-frame></button></div>');
+    const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
+    Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver });
+    const root = dom.window.document.querySelector<HTMLElement>(".semio-scope")!;
+    const button = root.querySelector<HTMLButtonElement>("button")!;
+    button.getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 100 }) as DOMRect;
+    const compositor = new BorderCompositor(root);
+    try {
+      button.dispatchEvent(new dom.window.MouseEvent("pointerover", { bubbles: true }));
+      expect(button.querySelector("path")?.getAttribute("data-shared-border-state")).toBe("hover");
+      button.disabled = true;
+      await Promise.resolve();
+      expect(button.querySelector("path")?.getAttribute("data-shared-border-state")).toBe("normal");
+      button.disabled = false;
+      await Promise.resolve();
+      expect(button.querySelector("path")?.getAttribute("data-shared-border-state")).toBe("hover");
+    } finally {
+      compositor.dispose(); Object.assign(globalThis, previous); dom.window.close();
     }
   });
   test("frame hooks preserve refs and either window/frame teardown order under StrictMode", async () => {

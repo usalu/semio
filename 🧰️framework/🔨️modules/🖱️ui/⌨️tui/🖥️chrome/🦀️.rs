@@ -2,7 +2,7 @@ use semio_ui_tui_core::cell::{Cell, CellBuffer};
 use crate::footer::paint_footer;
 use semio_ui_tui_core::geometry::{Pos, Rect};
 use crate::layout::{solve_window_layout, weight_of, WindowLayout};
-use semio_ui_tui_core::docking::{WindowStackCorner, WINDOW_GAP};
+use semio_ui_tui_core::docking::WindowStackCorner;
 use crate::navbar::paint_navbar;
 use crate::scene::{AxisState, Node, NodeContent, NodeId, Scene};
 use semio_ui_tui_core::text::{display_width, elide_end};
@@ -523,7 +523,7 @@ fn build_strip(entries: &[(usize, String)], w: &WindowState, x0: u16, x1: u16, f
     if entries.is_empty() || budget < chip_overhead + 3 {
         return Strip { chips: Vec::new() };
     }
-    let max_interior = TAB_CHIP_CELLS - chip_overhead;
+    let max_interior = TAB_CHIP_CELLS - 2;
     let has_status = |index: usize| w.stack_tabs.get(index).is_some_and(|tab| tab.status.is_some());
     let natural: Vec<(String, u16, Option<u16>, Option<u16>)> = entries.iter().filter_map(|(index, label)| tab_interior(label, w, has_status(*index), max_interior)).collect();
     if natural.len() != entries.len() {
@@ -619,7 +619,7 @@ pub fn window_chip_layout(w: &WindowState, rect: Rect) -> WindowChipLayout {
     let controls_width = controls.as_ref().map_or(0, |chip| chip.interior_width + 2);
     let mut groups = Vec::new();
     for (row_is_top, left, right) in [(true, 0usize, 1usize), (false, 2, 3)] {
-        let reserve = if row_is_top == controls_on_top { controls_width } else { 0 };
+        let reserve = if row_is_top == controls_on_top { controls_width.saturating_sub(1) } else { 0 };
         let avail = rect.width.saturating_sub(reserve);
         let (left_entries, right_entries) = (&by_corner[left], &by_corner[right]);
         let mid = rect.x + if left_entries.is_empty() || right_entries.is_empty() { avail } else { avail.div_ceil(2) };
@@ -632,7 +632,8 @@ pub fn window_chip_layout(w: &WindowState, rect: Rect) -> WindowChipLayout {
                 (false, _, true) => (rect.x, rect.x + avail),
                 (false, _, false) => (mid, rect.x + avail),
             };
-            let strip = build_strip(entries, w, x0, x1, from_left, 2);
+            let end = if from_left && !right_entries.is_empty() { x1 } else { x1.saturating_sub(1) };
+            let strip = build_strip(entries, w, x0, end, from_left, 1);
             if !strip.chips.is_empty() {
                 let corner = match (row_is_top, from_left) {
                     (true, true) => WindowStackCorner::TopLeft,
@@ -730,10 +731,10 @@ pub fn shell(scene: &mut Scene, navbar: NavbarState, footer: FooterState, layout
     let navbar_id = scene.add(root, Node::new(NodeContent::Chrome(ChromeState::Navbar(navbar))));
     let canvas_id = scene.add(root, Node::new(NodeContent::Chrome(ChromeState::Canvas)));
     let footer_id = scene.add(root, Node::new(NodeContent::Chrome(ChromeState::Footer(footer))));
-    scene.node_mut(root).set_constraint(Constraint { direction: Direction::Column, ..Default::default() });
-    scene.node_mut(navbar_id).set_constraint(Constraint { height: Dimension::Cells(2), ..Default::default() });
+    scene.node_mut(root).set_constraint(Constraint { direction: Direction::Column, shared: true, ..Default::default() });
+    scene.node_mut(navbar_id).set_constraint(Constraint { height: Dimension::Cells(1), ..Default::default() });
     scene.node_mut(canvas_id).set_constraint(Constraint { height: Dimension::Weight(1), direction: Direction::Stack, ..Default::default() });
-    scene.node_mut(footer_id).set_constraint(Constraint { height: Dimension::Cells(2), ..Default::default() });
+    scene.node_mut(footer_id).set_constraint(Constraint { height: Dimension::Cells(1), ..Default::default() });
     let mut windows = Vec::new();
     for measure in solve_window_layout(layout, Rect::default()) {
         let title = measure.title.clone().unwrap_or_else(|| measure.window_kind_id.clone());
@@ -750,7 +751,7 @@ fn window_constraint() -> crate::layout::Constraint {
 }
 
 /// 🪆 Mirrors `layout` into nested row/column/stack boxes under `canvas`, reparenting existing window nodes.
-/// Axes become splitter-bearing `Axis` nodes one gutter cell apart; a zoomed layout hides every other window.
+/// Axes share one splitter cell between adjacent children; a zoomed layout hides every other window.
 pub fn mount_window_layout(scene: &mut Scene, canvas: NodeId, layout: &WindowLayout, windows: &[(String, NodeId)], mount_root: &mut Option<NodeId>) {
     use crate::layout::{Constraint, Dimension, Direction, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode};
 
@@ -838,7 +839,6 @@ pub fn mount_window_layout(scene: &mut Scene, canvas: NodeId, layout: &WindowLay
                     direction: if is_row { Direction::Row } else { Direction::Column },
                     width: Dimension::Weight(weight),
                     height: Dimension::Weight(weight),
-                    gap: WINDOW_GAP,
                     ..Default::default()
                 });
                 for (i, c) in axis.children.iter().enumerate() {

@@ -29,6 +29,10 @@ async function sourceBytesOnceV1(root:string,path:string,original:ScriptInvocati
 
 declare global{interface ImportMeta{readonly semioCapturedPhysicalSources?:unknown;readonly semioCapturedSourceResolutions?:unknown}}
 const admittedSourcesV1:unknown=import.meta.semioCapturedPhysicalSources;
+/** 🔐️ Compares physical bytes with the Source selection held by this captured command. */
+export function requireAdmittedBuildSourceBytesV1(root:string,path:string,bytes:Uint8Array,original:ScriptInvocation):void{
+ requireIssuedScriptInvocationV1(original);if(validateJsonSchemaSubset(schema.definitions.AdmittedSources,admittedSourcesV1,schema).length)throw Error("Actual admitted parent Source selection required");const admitted=admittedSourcesV1 as{version:1;root:string;sources:readonly{path:string;sha256:string}[]},name=relative(root,path).split("\\").join("/");pathIn(root,name);const rows=admitted.sources.filter(row=>row.path===name);if(admitted.root!==root||rows.length!==1||rows[0]!.sha256!==hash(bytes))throw Error("Physical Source differs from admitted implementation: "+name);requireIssuedScriptInvocationV1(original);
+}
 function requireSourceSelectionDataV1(snapshot:BuildSourceClosureV1,selection:unknown):void{
  if(validateJsonSchemaSubset(schema,snapshot).length||validateJsonSchemaSubset(schema.definitions.AdmittedSources,selection,schema).length)throw Error("Actual admitted parent Source selection required");const value=selection as{version:1;root:string;sources:readonly{path:string;sha256:string}[]};if(!isAbsolute(value.root)||resolve(value.root)!==value.root||snapshot.root!==value.root)throw Error("Same admitted Source root required");const selected=new Map<string,string>();let previous="";for(const row of value.sources){pathIn(value.root,row.path);if(previous&&names(previous,row.path)>=0)throw Error("Canonical admitted Source order required");selected.set(row.path,row.sha256);previous=row.path;}for(const row of snapshot.files)if(selected.get(row.path)!==row.sha256)throw Error("Captured Source differs from admitted parent implementation");
 }

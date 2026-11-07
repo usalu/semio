@@ -13,7 +13,7 @@ pub const RETAINED_NODE_TEXT_MAX_BYTES: usize = 4 * 1024 * 1024;
 
 pub const RETAINED_NODE_COLLECTION_ITEMS: usize = 256;
 
-pub(super) const RETAINED_NODE_FIXED_OUTPUT_ITEMS: usize = 8;
+pub(super) const RETAINED_NODE_FIXED_OUTPUT_ITEMS: usize = 16;
 
 pub const RETAINED_NUMBER_STEPPER_CHROME_OUTPUT_ITEMS: usize = 8;
 

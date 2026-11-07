@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "values",
+      "limit",
+      "expected"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "values": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      },
+      "limit": {
+        "type": "integer"
+      },
+      "expected": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  }
+}

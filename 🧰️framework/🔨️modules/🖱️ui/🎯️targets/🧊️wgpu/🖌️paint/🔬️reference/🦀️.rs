@@ -258,8 +258,8 @@ pub fn paint_button(node: &UiButtonNode, bounds: Rect, flags: NodeFlags, theme: 
     let focused = !disabled && focus_ring_visible(flags);
     let dim = |color: Rgba| if disabled { color.with_alpha(color.a * 0.5) } else { color };
     let bg = dim(item_bg(theme, false, hovered));
-    let border = if focused { theme.accent } else { theme.border_normal };
-    push_control_border(draw, bounds, theme, dim(border), bg);
+    let border = if hovered { theme.border_emphasized } else if focused { theme.accent } else { theme.border_normal };
+    push_control_border(draw, bounds, theme, dim(border), bg, if hovered { semio_ui_draw_contract::SharedBorderState::Hover } else if focused { semio_ui_draw_contract::SharedBorderState::Focus } else { semio_ui_draw_contract::SharedBorderState::Normal });
     let mut text_x = bounds.x + theme.padding_standard;
     let icon_key = if node.icon_id == IconName::CircleDot { node.label.as_str() } else { node.icon_id.as_str() };
     if let Some(icons) = icons {
@@ -296,7 +296,7 @@ pub fn edit_selection_bounds(anchor: usize, caret: usize) -> (usize, usize) {
 pub fn paint_input(node: &UiInputNode, edit: Option<&EditState>, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     let focused = focus_ring_visible(flags);
     let border = if focused { theme.accent } else { theme.border_normal };
-    push_control_border(draw, bounds, theme, border, theme.input_bg);
+    push_control_border(draw, bounds, theme, border, theme.input_bg, if focused { semio_ui_draw_contract::SharedBorderState::Focus } else { semio_ui_draw_contract::SharedBorderState::Normal });
     let swatch = (node.input_kind == "color").then(|| color_input_swatch(bounds, edit.map_or(node.value.as_str(), |edit| edit.text.as_str()))).flatten();
     if let Some((swatch, color, _)) = swatch {
         draw.push_rounded([swatch.x, swatch.y, swatch.w, swatch.h], color, 2.0);
@@ -341,8 +341,8 @@ pub fn paint_select(node: &UiSelectNode, bounds: Rect, flags: NodeFlags, open: b
     let hovered = flags.contains(NodeFlags::HOVERED);
     let focused = focus_ring_visible(flags);
     let bg = if hovered { theme.button_hover } else { theme.input_bg };
-    let border = if focused { theme.accent } else { theme.border_normal };
-    push_control_border(draw, bounds, theme, border, bg);
+    let border = if hovered { theme.border_emphasized } else if focused { theme.accent } else { theme.border_normal };
+    push_control_border(draw, bounds, theme, border, bg, if hovered { semio_ui_draw_contract::SharedBorderState::Hover } else if focused { semio_ui_draw_contract::SharedBorderState::Focus } else { semio_ui_draw_contract::SharedBorderState::Normal });
     let label = node.items.iter().find(|item| item.value == node.value).map_or_else(|| node.placeholder.as_ref().map(Label::as_str).unwrap_or("Select…"), |item| item.label.as_str());
     draw_text_on(draw, atlas, label, bounds.x + theme.padding_standard, bounds.y + (bounds.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, theme.text);
     if let Some(icons) = icons {
@@ -377,8 +377,8 @@ pub fn paint_toggle(node: &UiToggleNode, bounds: Rect, flags: NodeFlags, theme: 
     let hovered = flags.contains(NodeFlags::HOVERED);
     let focused = focus_ring_visible(flags);
     let bg = item_bg(theme, pressed, hovered);
-    let border = if focused { theme.accent } else { theme.border_normal };
-    push_control_border(draw, bounds, theme, border, bg);
+    let border = if hovered { theme.border_emphasized } else if focused { theme.accent } else { theme.border_normal };
+    push_control_border(draw, bounds, theme, border, bg, if hovered { semio_ui_draw_contract::SharedBorderState::Hover } else if pressed { semio_ui_draw_contract::SharedBorderState::Active } else if focused { semio_ui_draw_contract::SharedBorderState::Focus } else { semio_ui_draw_contract::SharedBorderState::Normal });
     let mut content_x = bounds.x + theme.padding_standard;
     if let Some(icons) = icons {
         if icons.icon_uv(node.icon_id.as_str()).is_some() {
@@ -452,8 +452,8 @@ pub fn paint_ring(node: &UiRingNode, bounds: Rect, theme: &Theme, draw: &mut Dra
 pub fn paint_icon_select(node: &UiIconSelectNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     let hovered = flags.contains(NodeFlags::HOVERED);
     let focused = focus_ring_visible(flags);
-    let border = if focused { theme.accent } else { theme.border_normal };
-    push_control_border(draw, bounds, theme, border, chrome_item_bg(theme, false, hovered));
+    let border = if hovered { theme.border_emphasized } else if focused { theme.accent } else { theme.border_normal };
+    push_control_border(draw, bounds, theme, border, chrome_item_bg(theme, false, hovered), if hovered { semio_ui_draw_contract::SharedBorderState::Hover } else if focused { semio_ui_draw_contract::SharedBorderState::Focus } else { semio_ui_draw_contract::SharedBorderState::Normal });
     let content_x = bounds.x + theme.padding_standard;
     let has_icon = icons.and_then(|icons| icons.icon_uv(&node.value)).is_some();
     if let (true, Some(icons)) = (has_icon, icons) {
@@ -578,7 +578,7 @@ pub fn paint_tree_item(item: &UiTreeItemNode, x: f32, width: f32, y: f32, depth:
     match item.presence.status {
         UiStatus::Loading => paint_loading_border(draw, row, ring_color, theme),
         UiStatus::Waiting => paint_waiting_border(draw, row, ring_color, theme),
-        UiStatus::Finished => draw.push_finished_border([row.x, row.y, row.w, row.h], ring_color, theme.border_radius, theme.stroke_hairline),
+        UiStatus::Finished => draw.push_shared_border_effect(row, ring_color, theme.border_radius, theme.stroke_hairline, semio_ui_draw_contract::SharedBorderState::Normal),
         UiStatus::Idle => {}
     }
     if item.presence.state == UiState::Introducing || item.presence.state == UiState::Celebrating {
@@ -586,7 +586,7 @@ pub fn paint_tree_item(item: &UiTreeItemNode, x: f32, width: f32, y: f32, depth:
         let turns = if celebrating { celebrate_turns(draw.clock_seconds(), theme.celebrate_duration_seconds) } else { 0.0 };
         let ring = if celebrating { celebrate_color(theme, turns) } else { theme.accent };
         let stroke = if celebrating { celebrate_stroke(theme, turns) } else { theme.stroke_hairline };
-        draw.push_introducing_border([row.x, row.y, row.w, row.h], ring, theme.border_radius, stroke);
+        draw.push_shared_border_effect(row, ring, theme.border_radius, stroke, if celebrating { semio_ui_draw_contract::SharedBorderState::Celebrated } else { semio_ui_draw_contract::SharedBorderState::Introduced });
     }
     paint_tree_guides(draw, x, row.y, row.h, depth, is_last_at_level, theme);
     let indent = x + (depth - 1) as f32 * TREE_INDENT_PER_LEVEL + TREE_TOGGLE_WIDTH;
@@ -702,12 +702,12 @@ pub fn paint_image(node: &UiImageNode, bounds: Rect, theme: &Theme, atlas: &mut 
 /// purely the no-host fallback — "there's something visible in that rect" rather than nothing.
 pub fn paint_component_scene(node: &UiComponentSceneNode, bounds: Rect, theme: &Theme, draw: &mut DrawList) {
     let _ = &node.surface_id;
-    push_control_border(draw, bounds, theme, theme.border_normal, theme.panel);
+    push_control_border(draw, bounds, theme, theme.border_normal, theme.panel, semio_ui_draw_contract::SharedBorderState::Normal);
 }
 
 /// 🧩️ Same placeholder-chrome treatment as `paint_component_scene`: the plugin body itself is a host
 /// concern (`program_bridge`), out of scope here; label the slot with its `body_key` for now.
 pub fn paint_external_slot(node: &UiExternalSlotNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
-    push_control_border(draw, bounds, theme, theme.border_normal, theme.panel);
+    push_control_border(draw, bounds, theme, theme.border_normal, theme.panel, semio_ui_draw_contract::SharedBorderState::Normal);
     draw_text_on(draw, atlas, node.host_status.as_deref().unwrap_or(node.body_key.as_str()), bounds.x + theme.padding_standard, bounds.y + (bounds.h + theme.font_size_small) * 0.5 - 2.0, theme.font_size_small, theme.text_muted);
 }

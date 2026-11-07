@@ -93,6 +93,19 @@ self.hide_tooltip();
             return;
         }
         let Some(id) = target else { return };
+        if let NodeContent::Axis(axis) = &self.scene.node(id).content {
+            let delta = match (axis.horizontal, key.key) {
+                (true, Key::Left) | (false, Key::Up) => -1,
+                (true, Key::Right) | (false, Key::Down) => 1,
+                _ => return,
+            };
+            if axis.selected + 1 < self.scene.node(id).children().len() {
+                let mut path = axis.path.clone();
+                path.push(axis.selected);
+                out.push((id, WidgetSignal::SplitterDragged { path, delta }));
+            }
+            return;
+        }
         let signal = match &mut self.scene.node_raw_mut(id).content {
             NodeContent::Widget(widget) => widget.on_key(key),
             _ => None,

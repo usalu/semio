@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","definitions":{"Protocol":{"const":{"version":1,"workers":4,"maximumFileBytes":268435456,"maximumAllocationBytes":536870912,"replayChunkBytes":65536,"eofBytes":1,"progressEntries":256}}}}

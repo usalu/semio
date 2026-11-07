@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "entry": "import value from \"./part.ts\"; export default value;",
+  "firstEntry": "import value from \"./part.ts\"; import other from \"./other.ts\"; export default [value, other];",
+  "part": "export default 42;",
+  "other": "import value from \"./part.ts\"; export default value;",
+  "package": "import * as ts from \"typescript\"; export default ts;",
+  "unicodeEntry": "import wert from \"./ü.ts\"; export default wert;",
+  "unicodePart": "export default \"Grüße\";",
+  "cases": [
+    {
+      "id": "complete",
+      "cancel": false,
+      "accepted": true
+    },
+    {
+      "id": "cancelled",
+      "cancel": true,
+      "accepted": false
+    }
+  ]
+}

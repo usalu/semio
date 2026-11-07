@@ -127,8 +127,13 @@
     }
   ],
   "runtimeCompanions": {
-    "uniquePaths": 7,
+    "uniquePaths": 24,
     "cases": [
+      {
+        "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🛠️native-compiler/🪟️windows/🟦️.ts",
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/acquire.go",
+        "excluded": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go/acquire_test.go"
+      },
       {
         "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🟦️.ts",
         "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/📋️project.json",

@@ -3,7 +3,7 @@ import{spawnSync}from"node:child_process";
 import{existsSync,readFileSync}from"node:fs";
 import{join}from"node:path";
 import{fileURLToPath}from"node:url";
-import{testPythonV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
+import{requirePinnedTestToolV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 
 const root=fileURLToPath(new URL("../../../../../../../../../../../../",import.meta.url)),definition="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
 const files=():string[]=>spawnSync("git",["ls-files","-z","--cached","--others","--exclude-standard","--","🧰️framework/*.ts"],{cwd:root,encoding:"utf8",maxBuffer:1<<28}).stdout.split("\0").filter(path=>path&&existsSync(join(root,path))&&!/\/🧪️tests\//u.test(path));
@@ -17,7 +17,7 @@ names=subprocess.run(["git","ls-files","-z","--","🧰️framework/*.ts"],cwd=ro
 pattern=re.compile(r"\\bwithCompiler(WorkspaceWrite|InitialHeadroom)V1\\s*\\(")
 rows=sorted(p for p in names if p and os.path.exists(root+"/"+p) and "/🧪️tests/" not in p and p!=definition and pattern.search(open(root+"/"+p,encoding="utf8").read()))
 print(json.dumps(rows))`;
- const run=spawnSync(testPythonV1()??"python3",["-I","-c",program,root,definition],{encoding:"utf8",maxBuffer:1<<26});expect(run.status,run.stderr).toBe(0);
+ const run=spawnSync(requirePinnedTestToolV1("python"),["-I","-c",program,root,definition],{encoding:"utf8",maxBuffer:1<<26});expect(run.status,run.stderr).toBe(0);
  expect(paths.length).toBeGreaterThan(1000);
  expect(JSON.parse(run.stdout)).toEqual(actual);
  expect(actual).toEqual([]);

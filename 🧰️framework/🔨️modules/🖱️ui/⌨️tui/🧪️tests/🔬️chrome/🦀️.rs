@@ -8,6 +8,30 @@ use semio_ui_tui_core::signal::WidgetSignal;
 use ui_styling::appearance::AppearanceName;
 
 #[test]
+fn raised_tabs_share_one_wall_and_hover_has_priority() {
+    use semio_ui_tui_core::docking::WindowStackCorner;
+    use semio_ui_tui_frame::chrome::{WindowHit, WindowStackTabState};
+    let theme = Theme::new(AppearanceName::Dark);
+    for corner in [WindowStackCorner::TopLeft, WindowStackCorner::TopRight, WindowStackCorner::BottomLeft, WindowStackCorner::BottomRight] {
+        for active in [0, 1] {
+            let mut state = WindowState::new("host").with_stack_tab_states(vec![WindowStackTabState::new("first", corner), WindowStackTabState::new("second", corner)], active);
+            state.hover = Some(WindowHit::Tab(1 - active));
+            let rect = Rect::new(0, 0, 64, 12);
+            let layout = window_chip_layout(&state, rect);
+            let tabs = &layout.groups[0].tabs;
+            let x = tabs[0].x + tabs[0].interior_width + 1;
+            assert_eq!(x, tabs[1].x);
+            let (buf, _) = paint(state, 64, 12);
+            let outer = if corner.is_top() { 0 } else { 11 };
+            let middle = if corner.is_top() { 1 } else { 10 };
+            assert_eq!(buf.get(x, outer).unwrap().ch, if corner.is_top() { '┬' } else { '┴' });
+            assert_eq!(buf.get(x, middle).unwrap().ch, '│');
+            for y in [outer, middle] { assert_eq!(buf.get(x, y).unwrap().fg, theme.role(Role::BorderEmphasized)); }
+        }
+    }
+}
+
+#[test]
 fn chrome_emphasis_fixture_matches_independent_raster_outline_oracle() {
     use semio_ui_tui_frame::chrome::{WindowHit, WindowStackTabState};
     use semio_ui_tui_core::docking::WindowStackCorner;
@@ -51,7 +75,7 @@ fn chrome_emphasis_fixture_matches_independent_raster_outline_oracle() {
                         oracle.fill_rect(tiny_skia::Rect::from_xywh(x as f32, y as f32, w as f32, h as f32).unwrap(), &ink, Transform::identity(), None);
                     }
                     let body_rgb = theme.role(if focused { Role::ActiveBase } else { Role::BorderNormal });
-                    let seam_rgb = if tab.index == active { rgb } else { body_rgb };
+                    let seam_rgb = if tab.index == active || role == Role::BorderEmphasized { rgb } else { body_rgb };
                     ink.set_color_rgba8(seam_rgb[0], seam_rgb[1], seam_rgb[2], 255);
                     for x in [tab.x, tab.x + tab.interior_width + 1] {
                         oracle.fill_rect(tiny_skia::Rect::from_xywh(x as f32, seam_y as f32, 1.0, 1.0).unwrap(), &ink, Transform::identity(), None);
@@ -64,6 +88,25 @@ fn chrome_emphasis_fixture_matches_independent_raster_outline_oracle() {
                         assert_eq!(buf.get(x, text_y).unwrap().fg, theme.role(fg));
                         assert_eq!(buf.get(x, seam_y).unwrap().ch, if tab.index == active { ' ' } else if focused { '━' } else { '─' });
                         if tab.index != active { assert_eq!(buf.get(x, seam_y).unwrap().fg, body_rgb); }
+                    }
+                }
+                let tabs: Vec<_> = layout.groups.iter().flat_map(|group| &group.tabs).filter(|tab| tab.kind == TabKind::Tab).collect();
+                for pair in tabs.windows(2) {
+                    let (left, right) = (pair[0], pair[1]);
+                    let x = left.x + left.interior_width + 1;
+                    if x != right.x { continue; }
+                    let roles = case.get("roles").unwrap().as_array().unwrap();
+                    let rank = |index: usize| match roles[index].as_str().unwrap() { "emphasized" => 2, "active" => 1, _ => 0 };
+                    let rank = rank(left.index).max(rank(right.index));
+                    let outer_y = if corner.is_top() { 0 } else { height - 1 };
+                    let text_y = if corner.is_top() { 1 } else { height - 2 };
+                    let seam_y = if corner.is_top() { 2 } else { height - 3 };
+                    for (y, rank) in [(outer_y, rank), (text_y, rank), (seam_y, rank.max(u8::from(focused)))] {
+                        let rgb = theme.role(if rank == 2 { Role::BorderEmphasized } else if rank == 1 { Role::ActiveBase } else { Role::BorderNormal });
+                        let mut ink = Paint::default();
+                        ink.set_color_rgba8(rgb[0], rgb[1], rgb[2], 255);
+                        ink.anti_alias = false;
+                        oracle.fill_rect(tiny_skia::Rect::from_xywh(x as f32, y as f32, 1.0, 1.0).unwrap(), &ink, Transform::identity(), None);
                     }
                 }
                 for (index, pixel) in oracle.pixels().iter().enumerate().filter(|(_, pixel)| pixel.alpha() > 0) {
@@ -178,12 +221,11 @@ fn chrome_compact_active_tab_owns_both_shared_border_cells() {
 }
 
 #[test]
-fn chrome_compact_hovered_inactive_tab_owns_non_active_shared_border_cells() {
+fn chrome_compact_hovered_tab_owns_shared_border_cells() {
     use semio_ui_tui_frame::chrome::WindowHit;
     let theme = Theme::new(AppearanceName::Dark);
     for active in [0, 1, 2] {
         for hovered in [0, 1, 2] {
-            if hovered == active { continue; }
             let mut state = WindowState::new("host").with_stack_tabs(vec!["first".into(), "second".into(), "third".into()], active);
             state.compact = true;
             state.hover = Some(WindowHit::Tab(hovered));
@@ -191,11 +233,9 @@ fn chrome_compact_hovered_inactive_tab_owns_non_active_shared_border_cells() {
             let layout = window_chip_layout(&state, rect);
             let (buf, _) = paint(state, 64, 8);
             let tabs = &layout.groups[0].tabs;
-            let active_tab = tabs.iter().find(|tab| tab.index == active).unwrap();
             let hovered_tab = tabs.iter().find(|tab| tab.index == hovered).unwrap();
-            let active_ends = [active_tab.x, active_tab.x + active_tab.interior_width + 1];
             for x in [hovered_tab.x, hovered_tab.x + hovered_tab.interior_width + 1] {
-                let role = if active_ends.contains(&x) { Role::ActiveBase } else { Role::BorderEmphasized };
+                let role = Role::BorderEmphasized;
                 assert_eq!(buf.get(x, 0).unwrap().fg, theme.role(role), "active {active}, hovered {hovered}, column {x}");
             }
         }
@@ -232,25 +272,23 @@ fn chrome_narrow_overflow_chips_keep_independent_border_roles() {
             }
             assert_eq!(layout.mode, ChromeMode::Full);
             assert!(!chips.is_empty());
-            let overflow_width: u16 = chips.iter().filter(|tab| matches!(tab.kind, TabKind::OverflowPrev(_) | TabKind::OverflowNext(_))).map(|tab| tab.interior_width + 2).sum();
-            let tab_fits = width.saturating_sub(overflow_width) >= 7;
-            assert_eq!(chips.iter().any(|tab| tab.kind == TabKind::Tab && tab.index == active), tab_fits, "active {active}, width {width}, overflow {overflow_width}");
-            if !tab_fits {
-                assert!(chips.iter().all(|tab| matches!(tab.kind, TabKind::OverflowPrev(_) | TabKind::OverflowNext(_))));
-            }
-            for tab in chips {
-                let role = if tab.kind == TabKind::Tab && tab.index == active { Role::ActiveBase }
-                    else if Some(tab.x) == hovered { Role::BorderEmphasized }
-                    else { Role::BorderNormal };
-                assert_eq!(buf.get(tab.x, 0).unwrap().fg, theme.role(role));
-                assert_eq!(buf.get(tab.x + tab.interior_width + 1, 0).unwrap().fg, theme.role(role));
+            assert!(chips.iter().all(|tab| tab.x + tab.interior_width + 1 < width));
+            assert!(!chips.iter().any(|tab| tab.kind == TabKind::Tab) || chips.iter().any(|tab| tab.kind == TabKind::Tab && tab.index == active));
+            for tab in &chips {
+                for x in [tab.x, tab.x + tab.interior_width + 1] {
+                    let rank = chips.iter().filter(|candidate| candidate.x == x || candidate.x + candidate.interior_width + 1 == x).map(|candidate| {
+                        if Some(candidate.x) == hovered { 2 } else if candidate.kind == TabKind::Tab && candidate.index == active { 1 } else { 0 }
+                    }).max().unwrap();
+                    let role = if rank == 2 { Role::BorderEmphasized } else if rank == 1 { Role::ActiveBase } else { Role::BorderNormal };
+                    assert_eq!(buf.get(x, 0).unwrap().fg, theme.role(role));
+                }
             }
         }
     }
 }
 
 #[test]
-fn chrome_close_and_maximize_hover_keep_active_perimeter_and_emphasize_inactive_tabs() {
+fn chrome_close_and_maximize_hover_emphasize_tab_perimeters() {
     use semio_ui_tui_frame::chrome::WindowHit;
     for focused in [false, true] {
         for active in [0, 1] {
@@ -270,7 +308,7 @@ fn chrome_close_and_maximize_hover_keep_active_perimeter_and_emphasize_inactive_
                     let mut buf = CellBuffer::new(Size { width: 64, height: 12 }, Cell::blank([0, 0, 0], [0, 0, 0]));
                     chrome.paint_emphasized(&theme, rect, &mut buf, true);
                     for candidate in &tabs {
-                        let role = if candidate.index == active { Role::ActiveBase } else { Role::BorderEmphasized };
+                        let role = Role::BorderEmphasized;
                         for (x, y) in [(candidate.x, 0), (candidate.x, 1), (candidate.x, 2), (candidate.x + candidate.interior_width + 1, 2)] {
                             assert_eq!(buf.get(x, y).unwrap().fg, theme.role(role));
                         }

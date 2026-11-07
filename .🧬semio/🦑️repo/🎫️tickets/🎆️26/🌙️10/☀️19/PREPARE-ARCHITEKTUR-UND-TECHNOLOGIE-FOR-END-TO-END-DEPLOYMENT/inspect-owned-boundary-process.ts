@@ -1,0 +1,4 @@
+import{join}from"node:path";
+import{pathToFileURL}from"node:url";
+const{runCmd}=await import(pathToFileURL(join(process.cwd(),"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts")).href);
+runCmd("powershell.exe",["-NoProfile","-NonInteractive","-Command","$ErrorActionPreference='Stop'; $p=Get-CimInstance Win32_Process -Filter 'ProcessId = 24268' -OperationTimeoutSec 5; if($null -eq $p){Write-Output '[DEBUG] Process absent'; exit 0}; $parent=Get-CimInstance Win32_Process -Filter ('ProcessId = '+$p.ParentProcessId) -OperationTimeoutSec 5; Write-Output ('[DEBUG] PID='+$p.ProcessId+' Parent='+$p.ParentProcessId+' Born='+$p.CreationDate.ToUniversalTime().ToString('o')+' Executable='+$p.ExecutablePath+' Command='+$p.CommandLine); if($parent){Write-Output ('[DEBUG] ParentExecutable='+$parent.ExecutablePath+' ParentCommand='+$parent.CommandLine)}; exit 0"]);

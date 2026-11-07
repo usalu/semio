@@ -94,9 +94,12 @@ export function findToolV1(id: string, registry: ToolRegistryV1 = TOOL_REGISTRY_
   return registry.tools.find(tool => tool.id === id);
 }
 
-/** 🧯️ Answers the tool that owns an executable name (`bunx`, `cargo`, `python3`); directories and `.exe`/`.cmd` suffixes are ignored. */
+/** 🔤️ Extracts the registered command name from a path and platform suffix. */
+export function toolCommandNameV1(command:string):string{return command.replace(/\\/gu,"/").split("/").pop()!.replace(/\.(?:exe|cmd|bat)$/iu,"");}
+
+/** 🧯️ Answers the registry owner of a normalized executable name. */
 export function toolForCommandV1(command: string, registry: ToolRegistryV1 = TOOL_REGISTRY_V1): ToolEntryV1 | undefined {
-  const name = command.replace(/\\/gu, "/").split("/").pop()!.replace(/\.(?:exe|cmd|bat)$/iu, "");
+  const name = toolCommandNameV1(command);
   return registry.tools.find(tool => tool.commands.includes(name));
 }
 

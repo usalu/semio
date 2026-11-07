@@ -156,9 +156,9 @@ fn window_hairline_opens_only_under_the_active_tab() {
         let group = layout.groups.iter().find(|g| g.corner == semio_ui_tui_core::docking::WindowStackCorner::TopLeft).expect("top-left tabs");
         for tab in &group.tabs {
             let open = tab.index == active;
-                        let role = if open { Role::ActiveBase } else { Role::BorderNormal };
             for y in [0, 1] {
                 for x in [tab.x, tab.x + tab.interior_width + 1] {
+                    let role = if group.tabs.iter().any(|candidate| candidate.index == active && (candidate.x == x || candidate.x + candidate.interior_width + 1 == x)) { Role::ActiveBase } else { Role::BorderNormal };
                     assert_eq!(buf.get(x, y).unwrap().fg, theme.role(role), "tab {} perimeter at {x},{y}", tab.index);
                 }
             }
@@ -209,9 +209,9 @@ fn window_bottom_hairline_opens_only_under_the_active_tab() {
     assert!(group.tabs.len() >= 2, "two bottom tabs");
     for tab in &group.tabs {
         let open = tab.index == 1;
-                let role = if open { Role::ActiveBase } else { Role::BorderNormal };
         for yy in [y + 1, rect.height - 1] {
             for x in [tab.x, tab.x + tab.interior_width + 1] {
+                let role = if group.tabs.iter().any(|candidate| candidate.index == 1 && (candidate.x == x || candidate.x + candidate.interior_width + 1 == x)) { Role::ActiveBase } else { Role::BorderNormal };
                 assert_eq!(buf.get(x, yy).unwrap().fg, theme.role(role), "bottom tab {} perimeter at {x},{yy}", tab.index);
             }
         }

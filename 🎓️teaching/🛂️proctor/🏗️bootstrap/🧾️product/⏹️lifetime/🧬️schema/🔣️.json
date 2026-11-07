@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","type":"array","items":{"type":"object","additionalProperties":false,"required":["event","status","stops","outcome"],"properties":{"event":{"enum":["exit","abort"]},"status":{"type":"integer"},"stops":{"type":"integer","minimum":0,"maximum":1},"outcome":{"enum":["exit","abort"]}}},"minItems":2}

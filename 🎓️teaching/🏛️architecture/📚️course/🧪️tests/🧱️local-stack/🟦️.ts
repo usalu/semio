@@ -20,7 +20,7 @@
  * @see https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-custom-404-page-for-your-github-pages-site */
 import { createHash } from "node:crypto";
 import Ajv from "ajv";
-import { existsSync, mkdtempSync, realpathSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, realpathSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
 import { createServer } from "node:http";
@@ -35,6 +35,7 @@ import portCases from "../../🧫️fixtures/🔌️port/🔣️.json" with { ty
 import capacityCases from "../../🧫️fixtures/🏋️capacity/🔣️.json" with { type: "json" };
 import runtimeCases from "../../🧫️fixtures/🪁️runtime/🔣️.json" with { type: "json" };
 import outputCases from "../../🧫️fixtures/🎭️e2e-output/🔣️.json" with { type: "json" };
+import outputContainmentSchema from "../../🧫️fixtures/🎭️e2e-output/🧬️schema/🔣️.json" with { type: "json" };
 import proctorPathCases from "../../🧫️fixtures/🎭️e2e-proctor/🔣️.json" with { type: "json" };
 import proctorPathSchema from "../../🧫️fixtures/🎭️e2e-proctor/🧬️schema/🔣️.json" with { type: "json" };
 import viteStorageSchema from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/⚡️caching/🌐️vite/💾️storage/🧬️schema/🔣️json/🟦️.ts";
@@ -210,6 +211,23 @@ describe("the command line of the end-to-end gate", () => {
       else expect(endToEndWorkDirectory(root, environment)).toBe(resolve(root, row.suffix!));
     }
     expect(readFileSync(join(root, "outside/keep"), "utf8")).toBe("input");
+  });
+
+  it("keeps the generated directory physically within the selected ticket", () => {
+    expect(new Ajv({ strict: true }).validate(outputContainmentSchema, outputCases.physicalContainment)).toBe(true);
+    const ticket = ".🧬semio/🦑️repo/🎫️tickets/a";
+    for (const row of outputCases.physicalContainment) {
+      const root = directory({ [`${ticket}/🎫️ticket.json`]: "{}", "outside/keep": "input" });
+      if (row.link !== "none") {
+        const generated = join(root, ticket, "🗑️generated");
+        if (row.link === "nx") mkdirSync(generated);
+        symlinkSync(join(root, "outside"), row.link === "nx" ? join(generated, "nx") : generated, process.platform === "win32" ? "junction" : "dir");
+      }
+      const work = () => endToEndWorkDirectory(root, { SEMIO_TICKET_DIR: ticket });
+      if (row.accepted) expect(work()).toBe(join(root, ticket, "🗑️generated"));
+      else expect(work).toThrow("physical");
+      expect(readdirSync(join(root, "outside"))).toEqual(["keep"]);
+    }
   });
 
   it("gives the release rehearsal its own compiler mode while preserving inherited variables", () => {

@@ -13,6 +13,42 @@ ROOT = next(path for path in Path(__file__).resolve().parents if (path / "🧰�
 
 
 class BrowserLifecycleTest(unittest.TestCase):
+    def test_synthetic_scaled_adjacent_window_seam_matches_pixels(self):
+        from PIL import Image
+
+        runtime = importlib.import_module(PACKAGE + ".🎬️clip.⚙️runtime.🐍️")
+        browser = importlib.import_module(PACKAGE + ".🎬️clip.🪟️presentation.🌐️browser.🐍️")
+        output = Path(os.environ["SEMIO_TEACHING_OUTPUT_ROOT"]).resolve()
+        output.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix="seam-", dir=output) as directory:
+            work = Path(directory)
+            runtime.run_command([browser._repo(), "tools", "exec", "--light", "node", "--", str(Path(__file__).with_name("seam.mjs")), str(work)], cwd=ROOT, log=work / "run.log")
+            expected = json.loads(Path(__file__).with_name("seam.cases.json").read_text(encoding="utf-8"))["states"]
+            measured = json.loads((work / "seam.json").read_text(encoding="utf-8"))
+            self.assertEqual([entry["id"] for entry in measured], [entry["id"] for entry in expected])
+            for actual, case in zip(measured, expected, strict=True):
+                with self.subTest(state=case["id"]), Image.open(work / (case["id"] + ".png")) as source:
+                    pixels = source.convert("RGB")
+                    x, y = round(actual["x"]), round(actual["y"])
+                    samples = [pixels.getpixel((x + dx, y + dy)) for dx in range(-2, 3) for dy in range(-2, 3)]
+                    dominant = case["rgb"].index(max(case["rgb"]))
+                    self.assertTrue(any(pixel[dominant] >= 64 and all(pixel[dominant] >= channel + 40 for index, channel in enumerate(pixel) if index != dominant) for pixel in samples))
+                    losing = 1 - dominant
+                    self.assertFalse(any(pixel[losing] >= 64 and all(pixel[losing] >= channel + 40 for index, channel in enumerate(pixel) if index != losing) for pixel in samples))
+
+    def test_composited_silhouette_readiness(self):
+        runtime = importlib.import_module(PACKAGE + ".🎬️clip.⚙️runtime.🐍️")
+        browser = importlib.import_module(PACKAGE + ".🎬️clip.🪟️presentation.🌐️browser.🐍️")
+        output = Path(os.environ["SEMIO_TEACHING_OUTPUT_ROOT"]).resolve()
+        output.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix="settled-", dir=output) as directory:
+            log = Path(directory) / "run.log"
+            runtime.run_command([browser._repo(), "tools", "exec", "--light", "node", "--", str(Path(__file__).with_name("settled.mjs"))], cwd=ROOT, log=log)
+            transcript = log.read_text(encoding="utf-8")
+            for name in ("settled.cases.json", "settled-roots.cases.json"):
+                for case in json.loads(Path(__file__).with_name(name).read_text(encoding="utf-8")):
+                    self.assertIn("PASS " + case["id"], transcript)
+
     def test_registered_node_adapter_runs_all_portable_lifecycle_cases(self):
         runtime = importlib.import_module(PACKAGE + ".🎬️clip.⚙️runtime.🐍️")
         browser = importlib.import_module(PACKAGE + ".🎬️clip.🪟️presentation.🌐️browser.🐍️")

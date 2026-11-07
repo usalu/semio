@@ -415,7 +415,8 @@ function Install-CppBuildTools {
         $installer = Join-Path $scratch $plan.file
         Save-VerifiedDownload -Url $plan.url -Sha256 $plan.sha256 -Destination $installer
         Write-Step "Installing C++ Build Tools bootstrapper release $($plan.release)..."
-        Invoke-RepoCommand -FilePath $installer -ArgumentList @("--wait", "--quiet", "--norestart", "--add", $plan.workload, "--includeRecommended") -WorkingDirectory $repoRoot -SuccessCodes @(0, 3010)
+        $result = Start-Process -FilePath $installer -ArgumentList @("--wait", "--quiet", "--norestart", "--add", $plan.workload, "--includeRecommended") -WorkingDirectory $repoRoot -Wait -PassThru -WindowStyle Hidden
+        if ($result.ExitCode -ne 0 -and $result.ExitCode -ne 3010) { throw "C++ Build Tools bootstrapper failed with exit code $($result.ExitCode)" }
     } finally {
         Remove-ScratchDirectory -Path $scratch
     }

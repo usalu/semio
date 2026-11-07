@@ -30236,19 +30236,19 @@
           "inclusion": "ignored"
         },
         {
-          "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🔤️shortcodes/🔣️.json",
-          "inclusion": "ignored"
-        },
-        {
-          "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🔤️shortcodes/🦀️.rs",
-          "inclusion": "ignored"
-        },
-        {
           "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🔤️shortcodes/🔏️digest",
           "inclusion": "ignored"
         },
         {
+          "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🔤️shortcodes/🔣️.json",
+          "inclusion": "ignored"
+        },
+        {
           "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🔤️shortcodes/🟦️.ts",
+          "inclusion": "ignored"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🔤️shortcodes/🦀️.rs",
           "inclusion": "ignored"
         },
         {

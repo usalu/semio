@@ -1,0 +1,38 @@
+[
+  {
+    "id": "feature",
+    "action": "enable-vmp",
+    "program": "C:\\Windows\\System32\\dism.exe",
+    "args": [
+      "/Online",
+      "/Enable-Feature",
+      "/FeatureName:VirtualMachinePlatform",
+      "/All",
+      "/NoRestart"
+    ]
+  },
+  {
+    "id": "msi",
+    "action": "install-wsl",
+    "program": "C:\\Windows\\System32\\msiexec.exe",
+    "args": [
+      "/i",
+      "D:\\ticket\\generated\\wsl.3.0.3.0.x64.msi",
+      "/quiet",
+      "/norestart"
+    ]
+  },
+  {
+    "id": "import",
+    "action": "import-debian",
+    "program": "C:\\Windows\\System32\\wsl.exe",
+    "args": [
+      "--import",
+      "Semio-Debian12",
+      "C:\\Users\\Anna\\AppData\\Local\\Semio\\linux\\Semio-Debian12",
+      "D:\\ticket\\generated\\debian12.amd64.tar",
+      "--version",
+      "2"
+    ]
+  }
+]

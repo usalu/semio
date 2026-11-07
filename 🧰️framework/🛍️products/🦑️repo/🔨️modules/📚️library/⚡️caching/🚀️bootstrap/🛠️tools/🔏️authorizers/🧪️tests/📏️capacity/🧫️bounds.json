@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "cases": [
+    { "id": "files-before", "files": 2047, "sourceBytes": 0, "snapshotBytes": 0, "accepted": true },
+    { "id": "files-at", "files": 2048, "sourceBytes": 0, "snapshotBytes": 0, "accepted": true },
+    { "id": "files-over", "files": 2049, "sourceBytes": 0, "snapshotBytes": 0, "accepted": false },
+    { "id": "source-before", "files": 1, "sourceBytes": 20971519, "snapshotBytes": 0, "accepted": true },
+    { "id": "source-at", "files": 1, "sourceBytes": 20971520, "snapshotBytes": 0, "accepted": true },
+    { "id": "source-over", "files": 1, "sourceBytes": 20971521, "snapshotBytes": 0, "accepted": false },
+    { "id": "snapshot-before", "files": 1, "sourceBytes": 0, "snapshotBytes": 33554431, "accepted": true },
+    { "id": "snapshot-at", "files": 1, "sourceBytes": 0, "snapshotBytes": 33554432, "accepted": true },
+    { "id": "snapshot-over", "files": 1, "sourceBytes": 0, "snapshotBytes": 33554433, "accepted": false }
+  ],
+  "censusCases": [
+    { "id": "files-before", "files": 8191, "sourceBytes": 0, "accepted": true },
+    { "id": "files-at", "files": 8192, "sourceBytes": 0, "accepted": true },
+    { "id": "files-over", "files": 8193, "sourceBytes": 0, "accepted": false },
+    { "id": "source-before", "files": 1, "sourceBytes": 67108863, "accepted": true },
+    { "id": "source-at", "files": 1, "sourceBytes": 67108864, "accepted": true },
+    { "id": "source-over", "files": 1, "sourceBytes": 67108865, "accepted": false }
+  ]
+}

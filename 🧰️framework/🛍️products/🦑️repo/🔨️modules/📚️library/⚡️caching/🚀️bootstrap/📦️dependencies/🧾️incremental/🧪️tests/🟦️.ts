@@ -17,15 +17,16 @@ import {javascriptInstallSchemaV1 as installSchema} from "../../💾️storage/�
 
 const protocol=core.incrementalProtocolV1,idle={check:()=>{},tick:async()=>{}};
 const recipeBackends=()=>(installSchema.$defs.ProducerRecipeProtocol.const as unknown as {backends:Record<string,string>}).backends;
-const oracle=(args:string[],input?:string,raw=false):any=>{const run=spawnSync(testPythonV1()??"python3",["-I",fileURLToPath(new URL("./🐍️.py",import.meta.url)),...args],{encoding:"utf8",input,maxBuffer:1<<28});if(run.status!==0)throw Error("oracle failed: "+run.stderr);return raw?run.stdout.trim():JSON.parse(run.stdout);};
+const managedPython=():string=>{if(!process.env.SEMIO_TEST_PYTHON_BINARY)throw Error("Managed Python test interpreter binding required");const python=testPythonV1();if(!python)throw Error("Valid managed Python test interpreter required");return python;};
+const oracle=(args:string[],input?:string,raw=false):any=>{const run=spawnSync(managedPython(),["-I",fileURLToPath(new URL("./🐍️.py",import.meta.url)),...args],{encoding:"utf8",input,maxBuffer:1<<28});if(run.status!==0)throw Error("oracle failed: "+run.stderr);return raw?run.stdout.trim():JSON.parse(run.stdout);};
 const scratch=()=>realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"inc-")));
 const sleep=(ms:number)=>new Promise<void>(accept=>setTimeout(accept,ms));
 type Mutation={op:string;path:string;text?:string;target?:string;mode?:number};
 
-function build(root:string,tree:typeof fixture.installed.tree){
+function build(root:string,tree:typeof fixture.installed.tree,links=false){
  for(const dir of tree.dirs)mkdirSync(join(root,dir),{recursive:true});
  for(const[path,text]of Object.entries(tree.files)){mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),text);}
- for(const[path,target]of Object.entries(tree.links))symlinkSync(target,join(root,path));
+ if(links)for(const[path,target]of Object.entries(tree.links))symlinkSync(target,join(root,path),path==="d/ld"?"dir":"file");
 }
 function mutate(root:string,mutation:Mutation){
  const path=join(root,mutation.path);
@@ -103,21 +104,39 @@ test("incremental ledger rows equal the Python walk for settled and unsettled tr
 });
 
 /** 🔬️ Executes the closed mutation table against a sealed ledger: the verdict equals the fixture and an independent Python digest comparison, and a settled unchanged directory costs one lstat and no listing. */
-test("incremental ledger verification: every mutation is classified like the Python oracle",async()=>{
- for(const row of fixture.installed.cases){
+async function verifyMutationCases(cases:typeof fixture.installed.cases,links:boolean,comparePython=true){
+ for(const row of cases){
   const root=scratch();try{
-   build(root,fixture.installed.tree);
-   const offset=row.settled?fixture.installed.futureOffsetMs:fixture.installed.pastOffsetMs,rows=core.decodeInstalledLedgerV1(...(()=>{const encoded=core.encodeInstalledLedgerV1(collect(root,Date.now()+offset));return[encoded.bytes,encoded.evidence]as const;})()),{receipt}=receiptOf(rows,(row as {device?:string}).device);
-   for(const mutation of row.mutations)mutate(root,mutation as Mutation);
+   build(root,fixture.installed.tree,links);
+   if(row.settled){const latest=Math.max(...[".",...fixture.installed.tree.dirs].map(path=>{const facts=lstatSync(join(root,path));return Math.max(facts.mtimeMs,facts.ctimeMs);})),wait=Math.max(0,Math.ceil(latest+protocol.installed.settleMilliseconds-Date.now())+1);if(wait>protocol.installed.settleMilliseconds+2000)throw Error("Bounded settled fixture clock required");await sleep(wait);}
+   const start=row.settled?Date.now():Date.now()+fixture.installed.pastOffsetMs,rows=core.decodeInstalledLedgerV1(...(()=>{const encoded=core.encodeInstalledLedgerV1(collect(root,start));return[encoded.bytes,encoded.evidence]as const;})()),{receipt}=receiptOf(rows,(row as {device?:string}).device);
+   const modeMutation=row.mutations.find(mutation=>mutation.op==="chmod"),beforeMode=modeMutation?lstatSync(join(root,modeMutation.path),{bigint:true}).mode:undefined;for(const mutation of row.mutations)mutate(root,mutation as Mutation);const unchangedMode=modeMutation!==undefined&&lstatSync(join(root,modeMutation.path),{bigint:true}).mode===beforeMode,expected=unchangedMode?(row as {unchangedModeExpect:{status:string}}).unchangedModeExpect:row.expect;
    let listings=0;const ports=glue.installedPortsV1(root,idle),counted={...ports,children:(path:string)=>{listings++;return ports.children(path);}};
-   const result=await core.verifyInstalledLedgerV1(receipt,rows,counted),independent=oracle(["verify"],JSON.stringify({root,device:receipt.device,rows:rows.map(value=>({path:value.path,stamp:value.stamp,children:value.children}))}));
-   expect(result.status as string,row.id).toBe(row.expect.status);
-   if(result.status==="mismatch"){expect(result.class as string,row.id).toBe((row.expect as {class:string}).class);expect(result.path as string,row.id).toBe((row.expect as {path:string}).path);}
-   expect({status:result.status,...(result.status==="mismatch"?{class:result.class,path:result.path}:{})},row.id).toEqual(independent);
-   if("relisted" in row.expect){expect(result.status==="match"?result.relisted:-1,row.id).toBe((row.expect as {relisted:number}).relisted);expect(listings,row.id).toBe((row.expect as {relisted:number}).relisted);}
+   const result=await core.verifyInstalledLedgerV1(receipt,rows,counted);
+   expect(result.status as string,row.id).toBe(expected.status);
+   if(result.status==="mismatch"){expect(result.class as string,row.id).toBe((expected as {class:string}).class);expect(result.path as string,row.id).toBe((expected as {path:string}).path);}
+   if(comparePython){const independent=oracle(["verify"],JSON.stringify({root,device:receipt.device,rows:rows.map(value=>({path:value.path,stamp:value.stamp,children:value.children}))}));expect({status:result.status,...(result.status==="mismatch"?{class:result.class,path:result.path}:{})},row.id).toEqual(independent);}
+   if("relisted" in expected){expect(result.status==="match"?result.relisted:-1,row.id).toBe((expected as {relisted:number}).relisted);expect(listings,row.id).toBe((expected as {relisted:number}).relisted);}
   }finally{rmSync(root,{recursive:true,force:true});}
  }
+}
+
+test("incremental ledger verification: ordinary native mutation verdicts",async()=>{
+ await verifyMutationCases(fixture.installed.cases.filter(row=>!row.mutations.some(mutation=>mutation.op==="filetolink"||mutation.op==="retarget")),false,false);
 },120000);
+
+test("incremental ledger verification: ordinary mutations are classified like the Python oracle",async()=>{
+ await verifyMutationCases(fixture.installed.cases.filter(row=>!row.mutations.some(mutation=>mutation.op==="filetolink"||mutation.op==="retarget")),false);
+},120000);
+
+test("incremental ledger verification: real file links match the Python oracle when supported",async()=>{
+ const root=scratch();let unavailable=false;try{writeFileSync(join(root,"target"),"x");try{symlinkSync("target",join(root,"link"),"file");}catch(error){if(process.platform!=="win32"||(error as NodeJS.ErrnoException).code!=="EPERM")throw error;unavailable=true;}if(unavailable){console.warn("Native Windows file symlink unavailable: EPERM");expect(unavailable).toBe(true);return;}}finally{rmSync(root,{recursive:true,force:true});}
+ await verifyMutationCases(fixture.installed.cases.filter(row=>row.mutations.some(mutation=>mutation.op==="filetolink"||mutation.op==="retarget")),true);
+},120000);
+
+test("Windows junction and hardlink facts match Python",async()=>{
+ if(process.platform!=="win32")return;const root=scratch();try{mkdirSync(join(root,"target"));writeFileSync(join(root,"file"),"x");symlinkSync(join(root,"target"),join(root,"junction"),"junction");linkSync(join(root,"file"),join(root,"hardlink"));const ports=glue.installedPortsV1(root,idle),python=spawnSync(managedPython(),["-I","-c","import json,os,sys; p=sys.argv[1]; print(json.dumps({'junction':os.path.isjunction(os.path.join(p,'junction')),'nlink':os.lstat(os.path.join(p,'hardlink')).st_nlink}))",root],{encoding:"utf8"});if(python.status!==0)throw Error("oracle failed: "+python.stderr);const expected=JSON.parse(python.stdout),children=await ports.children(".");expect(expected).toEqual({junction:true,nlink:2});expect(children.find(row=>row.name==="junction")?.kind).toBe("link");expect(children.find(row=>row.name==="hardlink")?.kind).toBe("file");}finally{rmSync(root,{recursive:true,force:true});}
+});
 
 /** 🌊️ Bounds the relisting budget: more unsettled directories than the schema allows send the caller to the complete scan instead of an unbounded relist. */
 test("incremental ledger verification reports churn beyond the relist budget",async()=>{

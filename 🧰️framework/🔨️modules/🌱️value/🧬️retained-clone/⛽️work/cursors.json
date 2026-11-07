@@ -1,0 +1,75 @@
+{
+  "maximumWork": 8,
+  "deniedWork": 0,
+  "bodyBytes": 256,
+  "maximumTurns": 10000,
+  "cases": [
+    {
+      "cursor": "scalar",
+      "source": "7",
+      "minimumCompositeDenials": 0,
+      "minimumDelegatedDenials": 0
+    },
+    {
+      "cursor": "array",
+      "source": "[7,11]",
+      "minimumCompositeDenials": 0,
+      "minimumDelegatedDenials": 0
+    },
+    {
+      "cursor": "tuple",
+      "source": "[\"hé\",7]",
+      "minimumCompositeDenials": 1,
+      "minimumDelegatedDenials": 0
+    },
+    {
+      "cursor": "dynamic",
+      "source": "[\"hé\"]",
+      "minimumCompositeDenials": 0,
+      "minimumDelegatedDenials": 0
+    },
+    {
+      "cursor": "paged-list",
+      "source": "[\"hé\"]",
+      "minimumCompositeDenials": 1,
+      "minimumDelegatedDenials": 0
+    },
+    {
+      "cursor": "std-collections",
+      "source": "{\"hé\":7}",
+      "minimumCompositeDenials": 1,
+      "minimumDelegatedDenials": 0
+    },
+    {
+      "cursor": "issuance-clone",
+      "source": "7",
+      "minimumCompositeDenials": 0,
+      "minimumDelegatedDenials": 0
+    },
+    {
+      "cursor": "tuple-costed",
+      "source": "[7,11]",
+      "minimumCompositeDenials": 1,
+      "minimumDelegatedDenials": 1
+    },
+    {
+      "cursor": "paged-list-costed",
+      "source": "[7]",
+      "minimumCompositeDenials": 1,
+      "minimumDelegatedDenials": 1
+    },
+    {
+      "cursor": "std-collections-costed",
+      "source": "{\"7\":11}",
+      "minimumCompositeDenials": 1,
+      "minimumDelegatedDenials": 1
+    }
+  ],
+  "childWork": 3,
+  "failureWork": 3,
+  "failures": [
+    "tuple-costed",
+    "paged-list-costed",
+    "std-collections-costed"
+  ]
+}

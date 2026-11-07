@@ -1,0 +1,245 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Selected Retained Cursor Work",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "maximumWork",
+    "deniedWork",
+    "bodyBytes",
+    "maximumTurns",
+    "cases",
+    "childWork",
+    "failureWork",
+    "failures"
+  ],
+  "properties": {
+    "maximumWork": {
+      "const": 8
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "bodyBytes": {
+      "const": 256
+    },
+    "maximumTurns": {
+      "const": 10000
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "cursor",
+          "source",
+          "minimumCompositeDenials",
+          "minimumDelegatedDenials"
+        ],
+        "properties": {
+          "cursor": {
+            "enum": [
+              "scalar",
+              "array",
+              "tuple",
+              "dynamic",
+              "paged-list",
+              "std-collections",
+              "issuance-clone",
+              "tuple-costed",
+              "paged-list-costed",
+              "std-collections-costed"
+            ]
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minimumCompositeDenials": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "minimumDelegatedDenials": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      },
+      "allOf": [
+        {
+          "contains": {
+            "type": "object",
+            "required": [
+              "cursor"
+            ],
+            "properties": {
+              "cursor": {
+                "const": "scalar"
+              }
+            }
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": [
+              "cursor"
+            ],
+            "properties": {
+              "cursor": {
+                "const": "array"
+              }
+            }
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": [
+              "cursor"
+            ],
+            "properties": {
+              "cursor": {
+                "const": "tuple"
+              }
+            }
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": [
+              "cursor"
+            ],
+            "properties": {
+              "cursor": {
+                "const": "dynamic"
+              }
+            }
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": [
+              "cursor"
+            ],
+            "properties": {
+              "cursor": {
+                "const": "paged-list"
+              }
+            }
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": [
+              "cursor"
+            ],
+            "properties": {
+              "cursor": {
+                "const": "std-collections"
+              }
+            }
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": [
+              "cursor"
+            ],
+            "properties": {
+              "cursor": {
+                "const": "issuance-clone"
+              }
+            }
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": [
+              "cursor"
+            ],
+            "properties": {
+              "cursor": {
+                "const": "tuple-costed"
+              }
+            }
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": [
+              "cursor"
+            ],
+            "properties": {
+              "cursor": {
+                "const": "paged-list-costed"
+              }
+            }
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": [
+              "cursor"
+            ],
+            "properties": {
+              "cursor": {
+                "const": "std-collections-costed"
+              }
+            }
+          },
+          "minContains": 1,
+          "maxContains": 1
+        }
+      ]
+    },
+    "childWork": {
+      "const": 3
+    },
+    "failureWork": {
+      "const": 3
+    },
+    "failures": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "enum": [
+          "tuple-costed",
+          "paged-list-costed",
+          "std-collections-costed"
+        ]
+      }
+    }
+  }
+}

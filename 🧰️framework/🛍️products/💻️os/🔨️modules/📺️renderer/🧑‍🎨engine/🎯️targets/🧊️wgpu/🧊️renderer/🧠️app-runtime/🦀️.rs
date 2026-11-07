@@ -250,10 +250,14 @@ impl AppRuntime {
                     cursor.phase = FrameBuildPhase::TakeOverlay;
                     return FrameBuildBoundaryStep::Pending;
                 };
-                if previous.retire_step() {
-                    cursor.previous_draw = None;
-                    cursor.phase = FrameBuildPhase::TakeOverlay;
-                }
+                let grant = context.retained_grant();
+                let step = match previous.retire_granted(grant) {
+                    Ok(step) => step,
+                    Err(error) => return FrameBuildBoundaryStep::CloseFailure(semio_framework_job::OriginalTurnFailure::debit_original(error, context)),
+                };
+                if let Err(error) = context.consume_retained(step.progress()) { return FrameBuildBoundaryStep::CloseFailure(semio_framework_job::OriginalTurnFailure::from(error)); }
+                if step.progress().copied_items != 0 { context.consume_fuel(1); }
+                if matches!(step, semio_framework_job::InteractiveJobCloseStep::Complete { .. }) { cursor.previous_draw = None; cursor.phase = FrameBuildPhase::TakeOverlay; }
             }
             FrameBuildPhase::TakeOverlay => {
                 cursor.previous_overlay = Some(std::mem::take(&mut self.overlay));
@@ -264,10 +268,14 @@ impl AppRuntime {
                     cursor.phase = FrameBuildPhase::IconAtlas;
                     return FrameBuildBoundaryStep::Pending;
                 };
-                if previous.retire_step() {
-                    cursor.previous_overlay = None;
-                    cursor.phase = FrameBuildPhase::IconAtlas;
-                }
+                let grant = context.retained_grant();
+                let step = match previous.retire_granted(grant) {
+                    Ok(step) => step,
+                    Err(error) => return FrameBuildBoundaryStep::CloseFailure(semio_framework_job::OriginalTurnFailure::debit_original(error, context)),
+                };
+                if let Err(error) = context.consume_retained(step.progress()) { return FrameBuildBoundaryStep::CloseFailure(semio_framework_job::OriginalTurnFailure::from(error)); }
+                if step.progress().copied_items != 0 { context.consume_fuel(1); }
+                if matches!(step, semio_framework_job::InteractiveJobCloseStep::Complete { .. }) { cursor.previous_overlay = None; cursor.phase = FrameBuildPhase::IconAtlas; }
             }
             FrameBuildPhase::IconAtlas => {
                 if !cursor.icon_checked {

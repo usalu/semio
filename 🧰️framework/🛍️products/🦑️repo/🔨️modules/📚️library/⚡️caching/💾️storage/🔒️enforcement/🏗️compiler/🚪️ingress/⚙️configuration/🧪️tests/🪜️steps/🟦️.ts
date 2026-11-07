@@ -7,7 +7,7 @@ import {join} from "node:path";
 import {fileURLToPath} from "node:url";
 import ts from "typescript";
 import {cargoTestCompilerArgumentsV1,cargoTestExecutionArgumentsV1,cargoTestPlanV1,type CargoTestPolicyV1} from "../../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import {testPythonV1} from "../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
+import {requirePinnedTestToolV1} from "../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {cargoProfileInvocationArgumentsV1,renderCargoProfileConfigurationV1,type CargoProfileRenderedConfigurationV1} from "../../../../../../../../🏗️build/🎚️mode/🦀️profile/🟦️.ts";
 import {repositoryCargoStorageArgumentsV1,type RepositoryCargoStorageArgumentsV1} from "../../../📥️arguments/📋️policy/🟦️.ts";
 import policies from "../../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧪️tests/🧫️fixtures/🔣️.json" with {type:"json"};
@@ -38,5 +38,5 @@ test("every step of every Cargo test plan renders under the compiler view exactl
  }
  expect(Object.values(verdicts).filter(row=>row==="admitted").length).toBeGreaterThanOrEqual(5);
  expect(verdicts).toEqual(expected);
- const directory=mkdtempSync(join(tmpdir(),"steps-"));try{writeFileSync(join(directory,"rows.json"),JSON.stringify(rows));const oracle=spawnSync(testPythonV1()??"python3",["-I",fileURLToPath(new URL("./🐍️.py",import.meta.url)),join(directory,"rows.json")],{encoding:"utf8"});expect(oracle.status,oracle.stderr).toBe(0);expect(JSON.parse(oracle.stdout)).toEqual(verdicts);}finally{rmSync(directory,{recursive:true,force:true});}
+ const directory=mkdtempSync(join(tmpdir(),"steps-"));try{writeFileSync(join(directory,"rows.json"),JSON.stringify(rows));const oracle=spawnSync(requirePinnedTestToolV1("python"),["-I",fileURLToPath(new URL("./🐍️.py",import.meta.url)),join(directory,"rows.json")],{encoding:"utf8"});expect(oracle.status,oracle.stderr).toBe(0);expect(JSON.parse(oracle.stdout)).toEqual(verdicts);}finally{rmSync(directory,{recursive:true,force:true});}
 });

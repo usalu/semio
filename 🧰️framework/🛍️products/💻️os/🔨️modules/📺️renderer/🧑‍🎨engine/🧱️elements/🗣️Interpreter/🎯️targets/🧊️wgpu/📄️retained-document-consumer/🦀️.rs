@@ -317,7 +317,12 @@ pub fn render_ui_document_step(
                     world3d_states: &mut *hosts.world3d_states,
                     world_resources: &mut *hosts.world_resources,
                 };
-                let paint = engine.frame_into_step(window_id, semio_ui_theme::geometry::Rect { x: bounds.x, y: bounds.y, w: viewport_w, h: viewport_h }, ctx.atlas, ctx.icons, Some(&mut scene_host), ctx.draw);
+                let viewport = semio_ui_theme::geometry::Rect { x: bounds.x, y: bounds.y, w: viewport_w, h: viewport_h };
+                let demand = match engine.frame_into_next_retained_demand(window_id, viewport, ctx.draw) { Ok(demand) => demand, Err(_) => { cursor.phase = UiDocumentFramePhase::Fault; return; } };
+                let grant = step.retained_grant();
+                if demand.maximum_items > grant.maximum_items || demand.maximum_copy_bytes > grant.maximum_copy_bytes || demand.maximum_capacity_bytes > grant.maximum_capacity_bytes || demand.maximum_release_bytes > grant.maximum_release_bytes || demand.maximum_depth > grant.maximum_depth { return; }
+                let (paint, receipt) = engine.frame_into_step(window_id, viewport, ctx.atlas, ctx.icons, Some(&mut scene_host), ctx.draw, grant);
+                if step.consume_retained(receipt).is_err() { cursor.phase = UiDocumentFramePhase::Fault; return; }
                 match paint {
                     semio_ui_wgpu_engine_surface::UiFrameStep::Ready | semio_ui_wgpu_engine_surface::UiFrameStep::Missing => {
                         cursor.stalled = 0;

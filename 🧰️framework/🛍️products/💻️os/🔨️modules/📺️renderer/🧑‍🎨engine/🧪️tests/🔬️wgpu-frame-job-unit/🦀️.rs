@@ -28,6 +28,40 @@ fn fixture_frame_grant() -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: grant["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: grant["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: grant["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: grant["maximumReleaseBytes"].as_u64().unwrap() as usize, maximum_depth: grant["maximumDepth"].as_u64().unwrap() as usize }
 }
 
+#[test]
+fn frame_build_close_debits_and_retires_an_active_draw_append() {
+    let mut candidate = DrawList::default();
+    candidate.push_solid([1.0, 2.0, 3.0, 4.0], semio_ui_theme::Rgba::TRANSPARENT);
+    let mut target = DrawList::default();
+    let baseline = target.layers.len();
+    let (token, _) = target.begin_retained_append(&mut candidate);
+    let token = token.unwrap();
+    let mut needs_capacity = false;
+    for _ in 0..10_000 {
+        if target.layers.len() > baseline && target.next_retained_append_cancel_demand(token).unwrap().maximum_capacity_bytes > 0 { needs_capacity = true; break; }
+        let (step, _) = target.step_retained_append(token);
+        assert!(matches!(step.unwrap(), semio_ui_draw_contract::RetainedAppendStep::Pending));
+    }
+    assert!(needs_capacity, "source backing must be partially retired before cancellation");
+    let grant = fixture_frame_grant();
+    let presentation = RuntimePresentationWitness { scene_revision: 1, input_generation: 0 };
+    let mut cursor = FrameBuildCursor::new(presentation, grant);
+    cursor.previous_draw = Some(target);
+    let mut caller = semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::with_identity(grant, OperationId(188), Generation(188));
+    let short = RetainedCloneGrant { maximum_capacity_bytes: 0, ..grant };
+    assert!(matches!(caller.limited(short, |cx| cursor.close_step(cx)).unwrap(), InteractiveJobCloseStep::Pending { progress } if progress.copied_items == 0));
+    assert_eq!(caller.receipt(), RetainedCloneProgress::default());
+    assert!(cursor.previous_draw.as_ref().unwrap().active_retained_append_token().is_some());
+    let mut complete = false;
+    for _ in 0..262_144 {
+        let step = caller.limited(grant, |cx| cursor.close_step(cx)).unwrap();
+        assert_eq!(caller.receipt(), step.progress());
+        if matches!(step, InteractiveJobCloseStep::Complete { .. }) { complete = true; break; }
+    }
+    assert!(complete && cursor.terminal_is_empty());
+    caller.finish();
+}
+
 
 #[cfg(not(target_arch = "wasm32"))]
 #[test]

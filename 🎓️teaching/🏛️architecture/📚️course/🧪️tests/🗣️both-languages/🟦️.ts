@@ -4,7 +4,8 @@
  * and the results — no label is left unresolved, the course's texts are those of the chosen language, and every action
  * and heading the client itself words reads differently in the other language.
  * @see ../../🎭️e2e/🚶️learner/🟦️.ts — the learner these specs drive */
-import { COURSE, LOCALES, authorPreview, QUIZZES, activeOverview, openGrid, answerRun, arrive, card, expect, handle, openTask, pane, playQuiz, primary, quizOf, readIntroduction, screen, shownName, shownTask, test, unresolvedLabels, type Device, type Locale } from "../../🎭️e2e/🚶️learner/🟦️.ts";
+import { COURSE, LOCALES, authorPreview, QUIZZES, activeOverview, openGrid, answerRun, arrive, card, enter, expect, handle, openTask, pane, playQuiz, primary, quizOf, readIntroduction, screen, shownName, shownTask, test, unresolvedLabels, type Device, type Locale } from "../../🎭️e2e/🚶️learner/🟦️.ts";
+import course from "../../🔣️.json" with { type: "json" };
 
 const other = (locale: Locale): Locale => (locale === "en" ? "de" : "en");
 
@@ -78,6 +79,31 @@ async function expectBothLanguages(device: Device, locale: Locale, where: string
 }
 
 for (const locale of LOCALES) {
+  test(`a ${locale} learner receives every localized assignment as a published PDF`, async ({ device }) => {
+    const learner = await device(locale);
+    await enter(learner, { kind: "anonymous" });
+    await authorPreview(learner);
+    for (const assignment of course.assignments) {
+      await openGrid(learner, assignment.topic);
+      const document = assignment.documents[locale];
+      const link = pane(learner.page, assignment.topic).getByRole("link", { name: `${assignment.title[locale]} · PDF`, exact: true });
+      const href = `/assignments/${document.file}`;
+      await expect(link).toBeVisible();
+      await expect(link).toHaveAttribute("href", href);
+      await expect(link).toHaveAttribute("download", document.file);
+      const received = await learner.page.evaluate(async (path) => {
+        const answer = await fetch(path);
+        const bytes = new Uint8Array(await answer.arrayBuffer());
+        return { status: answer.status, type: answer.headers.get("content-type"), signature: Array.from(bytes.subarray(0, 5)), bytes: bytes.byteLength };
+      }, href);
+      expect(received.status).toBe(200);
+      expect(received.type).toMatch(/^application\/pdf(?:;|$)/u);
+      expect(received.signature).toEqual([37, 80, 68, 70, 45]);
+      expect(received.bytes).toBeGreaterThan(5);
+      expect(received.bytes).toBeLessThanOrEqual(16 * 1024 * 1024);
+    }
+  });
+
   test(`a ${locale} browser reads every screen in ${locale}, and each screen switches completely`, async ({ device }) => {
     const learner = await device(locale);
     const name = handle("Polyglot");

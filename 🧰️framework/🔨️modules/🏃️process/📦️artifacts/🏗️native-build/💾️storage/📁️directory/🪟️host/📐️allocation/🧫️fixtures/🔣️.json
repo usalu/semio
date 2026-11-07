@@ -1,0 +1,11 @@
+{
+  "cases": [
+    { "name": "small cluster", "sectors": 8, "sectorBytes": 512, "accepted": true },
+    { "name": "large cluster", "sectors": 128, "sectorBytes": 512, "accepted": true },
+    { "name": "zero sectors", "sectors": 0, "sectorBytes": 512, "accepted": false },
+    { "name": "zero sector bytes", "sectors": 8, "sectorBytes": 0, "accepted": false },
+    { "name": "non-power sectors", "sectors": 3, "sectorBytes": 512, "accepted": false },
+    { "name": "non-power sector bytes", "sectors": 8, "sectorBytes": 513, "accepted": false },
+    { "name": "excess unit", "sectors": 1048576, "sectorBytes": 65536, "accepted": false }
+  ]
+}

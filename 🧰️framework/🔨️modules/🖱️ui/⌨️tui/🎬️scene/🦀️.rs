@@ -14,17 +14,18 @@ pub struct NodeId {
     generation: u32,
 }
 
-/// 📏️ A tiling axis whose child gaps are draggable splitters; `path` names the axis inside its window layout.
+/// 📏️ A tiling axis whose shared child edges are draggable splitters; `path` names the axis inside its window layout.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct AxisState {
     pub horizontal: bool,
     pub path: Vec<usize>,
     pub hover: Option<usize>,
+    pub selected: usize,
 }
 
 impl AxisState {
     pub fn new(horizontal: bool, path: Vec<usize>) -> Self {
-        Self { horizontal, path, hover: None }
+        Self { horizontal, path, hover: None, selected: 0 }
     }
 }
 
@@ -278,6 +279,12 @@ impl Scene {
             let node = scene.node(id);
             if !node.visible || !node.hittable || !node.rect.contains(pos) {
                 return None;
+            }
+            if matches!(node.content, NodeContent::Axis(_)) && node.children.windows(2).any(|pair| {
+                let (a, b) = (scene.node(pair[0]), scene.node(pair[1]));
+                a.visible && b.visible && a.rect.contains(pos) && b.rect.contains(pos)
+            }) {
+                return Some(id);
             }
             for &child in node.children.iter().rev() {
                 if let Some(hit) = walk(scene, child, pos) {

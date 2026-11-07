@@ -70,3 +70,11 @@ test("making a tree writable needs no external program, skips links and equals c
   expect(()=>makeTestTreeWritableV1(join(base,"absent"))).not.toThrow();
  }finally{for(const name of["ours","twin","again"]){try{makeTestTreeWritableV1(join(base,name));}catch{}}rmSync(base,{recursive:true,force:true});}
 });
+
+import requiredBinding from"./🧫️fixtures/📌️required.json";
+import requiredBindingSchema from"./🧫️fixtures/📌️required-schema.json";
+import{Database}from"bun:sqlite";
+
+test("required managed Python binding agrees with SQLite and refuses PATH before effects",async()=>{
+ expect(new Ajv({strict:true}).validate(requiredBindingSchema,requiredBinding)).toBe(true);const api=await import("../🟦️.ts"),db=new Database(":memory:");try{for(const row of requiredBinding){let probes=0;const selected:TestToolchainPortV1={platform:row.platform as NodeJS.Platform,environment:{SEMIO_LANGUAGE:"en",...(row.binding===null?{}:{SEMIO_TEST_PYTHON_BINARY:row.binding})},which:()=>{throw Error("Required bindings must not search PATH");},run:()=>{probes++;return{status:row.status,stdout:row.stdout};},write:()=>{}},oracle=db.query("select ?1 is not null and (substr(?1,1,1)='/' or (?2='win32' and substr(?1,2,2)=':/')) and length(?1)<=256 and ?3=0 and ?4 like 'Python 3.%' accepted").get(row.binding,row.platform,row.status,row.stdout)as{accepted:number};expect(Boolean(oracle.accepted),row.id).toBe(row.accepted);if(row.accepted)expect(api.requirePinnedTestToolV1("python",selected)).toBe(row.binding);else expect(()=>api.requirePinnedTestToolV1("python",selected)).toThrow("Managed test binding");expect(probes,row.id).toBe(row.probes);}}finally{db.close();}
+});

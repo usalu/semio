@@ -1,7 +1,7 @@
 use crate::geometry::{Pos, Rect, Size};
 use crate::text::{char_cells, cluster_cells_in, clusters, scalar_cells_in, scalar_mark, WidthMode};
 use crate::theme::Rgb;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, OnceLock};
 
 /// 🎨️ Bitflags for cell text attributes.
@@ -73,12 +73,15 @@ pub struct CellBuffer {
     cells: Vec<Cell>,
     tails: Vec<u32>,
     mode: WidthMode,
+    borders: Option<HashMap<(u16, u16), Cell>>,
+    border_writes: HashSet<(u16, u16)>,
+    border_rect: Rect,
 }
 
 impl CellBuffer {
     pub fn new(size: Size, fill: Cell) -> Self {
         let count = usize::from(size.width) * usize::from(size.height);
-        Self { size, cells: vec![fill; count], tails: vec![0; count], mode: WidthMode::Cluster }
+        Self { size, cells: vec![fill; count], tails: vec![0; count], mode: WidthMode::Cluster, borders: None, border_writes: HashSet::new(), border_rect: Rect::default() }
     }
 
     pub fn resize(&mut self, size: Size, fill: Cell) {
@@ -176,6 +179,11 @@ impl CellBuffer {
 
     fn write(&mut self, x: u16, y: u16, cell: Cell, tail: u32) {
         let Some(i) = self.index(x, y) else { return };
+        let rect = self.border_rect;
+        if self.borders.is_some() && rect.contains(Pos { x, y }) && (x == rect.x || y == rect.y || x == rect.x + rect.width - 1 || y == rect.y + rect.height - 1) {
+            self.borders.as_mut().unwrap().remove(&(x, y));
+            self.border_writes.insert((x, y));
+        }
         let width = u16::from(cell.width);
         if width == 0 {
             if self.lead_of(x, y).is_some() {
@@ -210,6 +218,30 @@ impl CellBuffer {
     /// ✍️ Writes one cell; a wide lead claims its continuation cells and any wide cluster it cuts in half is blanked.
     pub fn put(&mut self, x: u16, y: u16, cell: Cell) {
         self.write(x, y, cell, 0);
+    }
+
+    /// 🧾️ Starts capturing explicitly marked border cells for one painter.
+    pub fn begin_borders(&mut self, rect: Rect) { self.borders = Some(HashMap::new()); self.border_writes.clear(); self.border_rect = rect; }
+
+    /// 📥️ Returns the final marked border cells from the current painter.
+    pub fn take_borders(&mut self) -> (HashMap<(u16, u16), Cell>, HashSet<(u16, u16)>) { (self.borders.take().unwrap_or_default(), std::mem::take(&mut self.border_writes)) }
+
+    /// 🖊️ Writes a semantic border cell, with later ordinary writes replacing it.
+    pub fn put_border(&mut self, x: u16, y: u16, cell: Cell) {
+        self.put(x, y, cell);
+        if cell.ch != ' ' && self.border_writes.contains(&(x, y)) {
+            if let Some(borders) = &mut self.borders { borders.insert((x, y), cell); }
+        }
+    }
+
+    /// ↔️ Writes a horizontal semantic border.
+    pub fn border_hline(&mut self, pos: Pos, len: u16, ch: char, fg: Rgb, bg: Rgb) {
+        for i in 0..len { self.put_border(pos.x + i, pos.y, Cell { ch, fg, bg, attrs: 0, width: 1 }); }
+    }
+
+    /// ↕️ Writes a vertical semantic border.
+    pub fn border_vline(&mut self, pos: Pos, len: u16, ch: char, fg: Rgb, bg: Rgb) {
+        for i in 0..len { self.put_border(pos.x, pos.y + i, Cell { ch, fg, bg, attrs: 0, width: 1 }); }
     }
 
     /// 🧩️ Writes one whole grapheme cluster at `at`; `template` supplies the colours, attributes and cell width, its character is replaced by the cluster's lead scalar.

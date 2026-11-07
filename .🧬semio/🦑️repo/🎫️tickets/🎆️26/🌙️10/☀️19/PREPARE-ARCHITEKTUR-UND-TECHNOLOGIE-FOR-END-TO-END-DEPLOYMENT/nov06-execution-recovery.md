@@ -1,0 +1,13 @@
+# Native Execution Recovery — November 6
+
+The execution/tool environment refreshed while the goal remained active. The exact cause of prior job exit is unknown. Their durable logs stopped without a terminal marker, and owner handles later returned Unknown process id; no successful completion is inferred. Native uptime and prior boot identity indicate the same OS boot, not a proved reboot.
+
+Root current native MCP capacity snapshot at1793971757736 reported no grants, waiters or sessions, available6453MiB. First owned-process audit22633 (normal768MiB, inner/outer0) found none of the expected old process IDs; its PowerShell observer matched literal search strings in its own query. The refined audit excluded its own PID and added managed UV/Python child detection. It completed inner/outer0, observed277 Win32 processes and returned zero matches. Exact retained input is revalidate-nov06-owned.ts; outputs are generated/nov06-owned-revalidation.log and generated/nov06-owned-revalidation-final.log. No process was killed and no lease/cache record manually changed.
+
+All old JS55996/Python15268/Tectonic18346/Cargo31904 attempts are incomplete with unknown exit code/cause. The old JS output did contain actual published epoch1 scope bindings. Recovery therefore uses one ordinary current-Source dependencies ensure, rather than assuming Ready or blindly repeating sync. Native_setup owns7612, normal2048MiB, generated/deps-nov06-recovery-ensure.log, admitted and source.served but no authenticated all-current/terminal result yet.
+
+Native_course_acceptance owns exactly one replacement Cargo warm-up4156 from teaching with unchanged3584MiB/one-job policy; it is genuinely admitted and source.served, no compilation or terminal receipt yet. Native_infra_acceptance owns one selective current-Source Tectonic recovery52371, normal2048MiB, currently queued. Existing pin verification runs before any provision in this normal route; no speculative provider Ready claim is made. No canonical run/ensure graph was started ahead of genuine JS acceptance.
+
+The tool rejected both a new TerraHigh successor and reactivation of a historical TerraHigh worker with agent thread limit reached. The existing maximum fleet was reused; no permission was requested or scope narrowed. Existing live owners must stay active to retain tool handles.
+
+After workers without live handles finished, released fleet slots allowed Terra Light independent reviews and Terra High native_infra_execution. Existing live owners were retained. The earlier agent thread limit was a real concurrency limit at that point, not a permanent model unavailability.

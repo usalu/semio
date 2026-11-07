@@ -15,7 +15,7 @@ use semio_ui_wgpu_input::{HitKind, HitTarget};
 use semio_ui_wgpu_widget_kit::{draw_text, WidgetContext};
 
 pub fn render_icon_select<E: Clone>(id: &str, value: &str, _uniform: bool, _classifier_kind: &str, on_change: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
-    push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, chrome_item_bg(ctx.theme, false, ctx.input.hovered_id.as_deref() == Some(id)));
+    push_control_border(ctx.draw, bounds, ctx.theme, if ctx.input.hovered_id.as_deref() == Some(id) { ctx.theme.border_emphasized } else { ctx.theme.border_normal }, chrome_item_bg(ctx.theme, false, ctx.input.hovered_id.as_deref() == Some(id)), if ctx.input.hovered_id.as_deref() == Some(id) { semio_ui_wgpu_layout::chrome::SharedBorderState::Hover } else { semio_ui_wgpu_layout::chrome::SharedBorderState::Normal });
     let content_x = bounds.x + ctx.theme.padding_standard;
     if let Some(icons) = ctx.icons {
         if icons.icon_uv(value).is_some() {

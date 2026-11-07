@@ -20,7 +20,7 @@ interface RibbonZoneProps extends React.ComponentProps<"div"> {
 
 function RibbonZone({ className, children, variableHeight = false, ...props }: RibbonZoneProps) {
   return (
-    <div data-slot="ribbon-zone" data-shared-border-group="" data-variable-height={variableHeight ? "true" : undefined} className={cn("flex shrink-0 items-center gap-single min-w-0", variableHeight ? "h-auto min-h-medium" : "h-medium", className)} {...props}>
+    <div data-slot="ribbon-zone" data-shared-border-group="" data-variable-height={variableHeight ? "true" : undefined} className={cn("flex shrink-0 items-center min-w-0", variableHeight ? "h-auto min-h-medium" : "h-medium", className)} {...props}>
       {children}
     </div>
   );
@@ -32,7 +32,7 @@ interface RibbonGroupProps extends React.ComponentProps<"div"> {
 
 function RibbonGroup({ className, children, ...props }: RibbonGroupProps) {
   return (
-    <div data-slot="ribbon-group" data-shared-border-group="" role="group" className={cn("flex shrink-0 items-center gap-single h-full", className)} {...props}>
+    <div data-slot="ribbon-group" data-shared-border-group="" role="group" className={cn("flex shrink-0 items-center h-full", className)} {...props}>
       {children}
     </div>
   );
@@ -80,7 +80,7 @@ export interface RibbonProps {
 function Ribbon({ id, direction, rows, className }: RibbonProps) {
   if (direction === "inline") {
     return (
-      <div role="toolbar" id={id} data-slot="ribbon" data-shared-border-group="" data-direction={direction} className={cn("pointer-events-auto flex w-fit max-w-full shrink-0 items-center justify-start gap-single", className)}>
+      <div role="toolbar" id={id} data-slot="ribbon" data-shared-border-group="" data-direction={direction} className={cn("pointer-events-auto flex w-fit max-w-full shrink-0 items-center justify-start", className)}>
         {rows.map((row) => (
           <RibbonZone key={row.key}>{row.content}</RibbonZone>
         ))}

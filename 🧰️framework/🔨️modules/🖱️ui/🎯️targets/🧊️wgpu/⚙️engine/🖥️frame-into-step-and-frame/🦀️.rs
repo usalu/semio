@@ -2,12 +2,34 @@
 
 use super::*;
 
+fn append_admitted(grant: semio_framework_job::RetainedCloneGrant, demand: semio_framework_job::RetainedCloneGrant) -> bool {
+    grant.maximum_items >= demand.maximum_items && grant.maximum_copy_bytes >= demand.maximum_copy_bytes && grant.maximum_capacity_bytes >= demand.maximum_capacity_bytes && grant.maximum_release_bytes >= demand.maximum_release_bytes && grant.maximum_depth >= demand.maximum_depth
+}
+
 // #region engine
 //#region 🔖️Ui
 impl Ui {
-    /// 🧱️ Advances one retained UI node into an engine-owned transaction and appends the balanced
-    /// candidate to the caller's unpublished frame only at the accepted Publish boundary.
-    pub fn frame_into_step<H: SceneHost>(&mut self, window_id: &str, viewport: semio_ui_theme::geometry::Rect, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, mut scene_host: Option<&mut H>, target: &mut DrawList) -> UiFrameStep {
+    /// 📋 Quotes retained append work before the caller admits the next frame step.
+    pub fn frame_into_next_retained_demand(&self, window_id: &str, viewport: semio_ui_theme::geometry::Rect, target: &DrawList) -> Result<semio_framework_job::RetainedCloneGrant, semio_ui_draw_contract::RetainedOutputError> {
+        let Some(window) = self.windows.get(window_id) else { return Ok(Default::default()); };
+        let Some(frame) = window.paint_frame.as_ref() else { return Ok(Default::default()); };
+        if let Some(token) = frame.append_token {
+            if target.active_retained_append_token() != Some(token) { return Ok(Default::default()); }
+            let fresh = frame.revision == window.revision && frame.theme_revision == window.theme_revision && frame.viewport_revision == window.viewport_revision && window.viewport == (viewport.w, viewport.h) && frame.viewport_origin == [viewport.x, viewport.y] && frame.interaction_epoch == window.presented_interaction_epoch;
+            return if !fresh || matches!(frame.phase, RetainedPaintPhase::Fault) { target.next_retained_append_cancel_demand(token) } else { target.next_retained_append_demand(token) };
+        }
+        if matches!(frame.phase, RetainedPaintPhase::Publish) { Ok(DrawList::retained_append_begin_demand()) } else { Ok(Default::default()) }
+    }
+
+    /// 🧱️ Advances a retained UI node or bounded append into the caller's unpublished frame builder.
+    /// The builder remains transaction-owned through `Pending`; only `Ready` permits publication.
+    pub fn frame_into_step<H: SceneHost>(&mut self, window_id: &str, viewport: semio_ui_theme::geometry::Rect, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, scene_host: Option<&mut H>, target: &mut DrawList, grant: semio_framework_job::RetainedCloneGrant) -> (UiFrameStep, semio_framework_job::RetainedCloneProgress) {
+        let mut progress = semio_framework_job::RetainedCloneProgress::default();
+        let step = self.frame_into_step_inner(window_id, viewport, atlas, icons, scene_host, target, grant, &mut progress);
+        (step, progress)
+    }
+
+    fn frame_into_step_inner<H: SceneHost>(&mut self, window_id: &str, viewport: semio_ui_theme::geometry::Rect, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, mut scene_host: Option<&mut H>, target: &mut DrawList, grant: semio_framework_job::RetainedCloneGrant, progress: &mut semio_framework_job::RetainedCloneProgress) -> UiFrameStep {
         let semio_ui_theme::geometry::Rect { x: offset_x, y: offset_y, w: viewport_width, h: viewport_height } = viewport;
         self.set_viewport(window_id, viewport_width, viewport_height);
         self.publish_overlay_origins(window_id);
@@ -31,6 +53,7 @@ impl Ui {
                 phase: RetainedPaintPhase::Synchronize,
                 walk: RetainedPaintWalk::new(&window.tree, root),
                 candidate,
+                append_token: None,
                 sync_node: None,
                 node_sync: RetainedInteractiveSyncCursor::default(),
                 paint_node: None,
@@ -63,7 +86,21 @@ impl Ui {
                     && frame.viewport_origin == [offset_x, offset_y]
                     && frame.interaction_epoch == window.presented_interaction_epoch
             });
+        if window.paint_frame.as_ref().and_then(|frame| frame.append_token).is_some_and(|token| target.active_retained_append_token() != Some(token)) {
+            window.paint_frame = None;
+            return UiFrameStep::Pending;
+        }
         if !fresh {
+            if let Some(frame) = window.paint_frame.as_mut() {
+                if let Some(token) = frame.append_token {
+                    let Ok(demand) = target.next_retained_append_cancel_demand(token) else { frame.phase = RetainedPaintPhase::Fault; return UiFrameStep::Fault; };
+                    if !append_admitted(grant, demand) { return UiFrameStep::Pending; }
+                    let (result, receipt) = target.cancel_retained_append_step(token); *progress = receipt;
+                    frame.note_progress();
+                    match result { Ok(semio_ui_draw_contract::RetainedAppendStep::Complete) => frame.append_token = None, Ok(semio_ui_draw_contract::RetainedAppendStep::Pending) => {}, Err(_) => { frame.phase = RetainedPaintPhase::Fault; return UiFrameStep::Fault; } }
+                    return UiFrameStep::Pending;
+                }
+            }
             if let Some(frame) = window.paint_frame.as_mut() {
                 frame.node_paint.cancel_draw_route(&mut frame.candidate);
             }
@@ -80,6 +117,14 @@ impl Ui {
         }
         let Some(frame) = window.paint_frame.as_mut() else { return UiFrameStep::Fault };
         if matches!(frame.phase, RetainedPaintPhase::Fault) {
+            if let Some(token) = frame.append_token {
+                let Ok(demand) = target.next_retained_append_cancel_demand(token) else { return UiFrameStep::Fault; };
+                if !append_admitted(grant, demand) { return UiFrameStep::Pending; }
+                let (result, receipt) = target.cancel_retained_append_step(token); *progress = receipt;
+                frame.note_progress();
+                match result { Ok(semio_ui_draw_contract::RetainedAppendStep::Complete) => frame.append_token = None, Ok(semio_ui_draw_contract::RetainedAppendStep::Pending) => {}, Err(_) => return UiFrameStep::Fault }
+                return UiFrameStep::Pending;
+            }
             frame.node_paint.cancel_draw_route(&mut frame.candidate);
             if !frame.node_sync.close_step() {
                 frame.note_progress();
@@ -307,7 +352,7 @@ impl Ui {
                 }
                 RetainedPaintWalkStep::Scalar => UiFrameStep::Pending,
                 RetainedPaintWalkStep::Complete => {
-                    frame.phase = RetainedPaintPhase::Publish;
+                    frame.phase = RetainedPaintPhase::Borders;
                     UiFrameStep::Pending
                 }
                 RetainedPaintWalkStep::DepthFault => {
@@ -316,11 +361,25 @@ impl Ui {
                     UiFrameStep::Fault
                 }
             },
+            RetainedPaintPhase::Borders => {
+                frame.phase = RetainedPaintPhase::Publish;
+                UiFrameStep::Pending
+            },
             RetainedPaintPhase::Publish => {
-                if target.append_retained_candidate(&mut frame.candidate).is_err() {
-                    frame.phase = RetainedPaintPhase::Fault;
-                    frame.fault_site = Some("publish-candidate");
-                    return UiFrameStep::Fault;
+                if let Some(token) = frame.append_token {
+                    let Ok(demand) = target.next_retained_append_demand(token) else { frame.phase = RetainedPaintPhase::Fault; frame.fault_site = Some("publish-candidate"); return UiFrameStep::Pending; };
+                    if !append_admitted(grant, demand) { return UiFrameStep::Pending; }
+                    let (result, receipt) = target.step_retained_append(token); *progress = receipt;
+                    match result {
+                        Ok(semio_ui_draw_contract::RetainedAppendStep::Pending) => { frame.note_progress(); return UiFrameStep::Pending; }
+                        Ok(semio_ui_draw_contract::RetainedAppendStep::Complete) => frame.append_token = None,
+                        Err(_) => { frame.phase = RetainedPaintPhase::Fault; frame.fault_site = Some("publish-candidate"); return UiFrameStep::Pending; }
+                    }
+                } else {
+                    if !append_admitted(grant, DrawList::retained_append_begin_demand()) { return UiFrameStep::Pending; }
+                    let (result, receipt) = target.begin_retained_append(&mut frame.candidate); *progress = receipt;
+                    match result { Ok(token) => { frame.append_token = Some(token); frame.note_progress(); }, Err(_) => { frame.phase = RetainedPaintPhase::Fault; frame.fault_site = Some("publish-candidate"); } }
+                    return UiFrameStep::Pending;
                 }
                 window.hit_registry = std::mem::take(&mut frame.hit_candidates);
                 window.paint_census = UiFramePaintCensus::of(target).since(frame.baseline);
@@ -360,6 +419,9 @@ impl Ui {
         }
         if let Some(tooltip) = retained_tooltip_paint(window, surface, atlas, &self.theme) {
             paint_retained_tooltip(&mut window.draw, atlas, tooltip, (0.0, 0.0), &self.theme);
+        }
+        loop {
+            match window.draw.finalize_shared_borders_step() { Ok(true) => break, Ok(false) => {}, Err(_) => return None }
         }
         Some(&window.draw)
     }

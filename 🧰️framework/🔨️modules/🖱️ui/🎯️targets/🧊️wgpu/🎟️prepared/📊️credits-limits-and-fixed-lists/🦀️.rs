@@ -346,6 +346,15 @@ impl PreparedRenderProcessPermit {
         true
     }
 
+    pub(super) fn release_growth_units(&mut self, units: usize) -> bool {
+        if !self.matches() || self.release_phase != 0 || units > self.pages || units > self.backing_units { return false; }
+        let Some(delta) = prepared_render_permit_delta(0, units, units) else { return false; };
+        PREPARED_RENDER_PROCESS_PERMITS.fetch_sub(delta, Ordering::AcqRel);
+        self.pages -= units;
+        self.backing_units -= units;
+        true
+    }
+
     pub(super) fn release_step(&mut self) -> bool {
         let delta = match self.release_phase {
             0 => prepared_render_permit_delta(0, 0, self.backing_units),

@@ -28,13 +28,13 @@
         {
           "label": "B",
           "corner": "top-left",
-          "x": 5,
+          "x": 4,
           "width": 5
         },
         {
           "label": "C",
           "corner": "top-left",
-          "x": 10,
+          "x": 8,
           "width": 5
         }
       ]
@@ -60,13 +60,13 @@
         {
           "label": "A",
           "corner": "top-right",
-          "x": 11,
+          "x": 13,
           "width": 5
         },
         {
           "label": "B",
           "corner": "top-right",
-          "x": 16,
+          "x": 17,
           "width": 5
         },
         {
@@ -104,13 +104,13 @@
         {
           "label": "B",
           "corner": "bottom-left",
-          "x": 5,
+          "x": 4,
           "width": 5
         },
         {
           "label": "C",
           "corner": "bottom-left",
-          "x": 10,
+          "x": 8,
           "width": 5
         }
       ]
@@ -136,13 +136,13 @@
         {
           "label": "A",
           "corner": "bottom-right",
-          "x": 11,
+          "x": 13,
           "width": 5
         },
         {
           "label": "B",
           "corner": "bottom-right",
-          "x": 16,
+          "x": 17,
           "width": 5
         },
         {
@@ -262,13 +262,13 @@
         {
           "label": "A",
           "corner": "top-right",
-          "x": 11,
+          "x": 13,
           "width": 5
         },
         {
           "label": "B",
           "corner": "top-right",
-          "x": 16,
+          "x": 17,
           "width": 5
         },
         {
@@ -482,14 +482,14 @@
         },
         {
           "corner": "top-left",
-          "x": 6,
+          "x": 5,
           "width": 5,
           "index": 5,
           "kind": "tab"
         },
         {
           "corner": "top-left",
-          "x": 11,
+          "x": 9,
           "width": 6,
           "index": null,
           "kind": "overflow-next"

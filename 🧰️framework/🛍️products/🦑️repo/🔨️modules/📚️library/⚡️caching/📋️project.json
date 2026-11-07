@@ -203,6 +203,7 @@
         "test-build-memory",
         "test-build-mode",
         "test-build-native-storage",
+        "test-build-native-tool-route",
         "test-build-nx-tool",
         "test-build-observation",
         "test-build-parsers",
@@ -6263,6 +6264,33 @@
               "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🕳️rings/🧪️tests/🔣️.json",
               "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🕳️rings/🧪️tests/🦀️.rs"
             ]
+          }
+        }
+      }
+    },
+    "test-build-native-tool-route": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites",
+        "command": "repo ./📜️script.ts test build-native-tool-route",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
           }
         }
       }

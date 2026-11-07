@@ -102,9 +102,17 @@
       "id": "build-preflight",
       "budgetMs": 300000,
       "typecheck": "none",
-      "trees": ["🩺️preflight"],
-      "platforms": ["darwin", "linux", "win32"],
-      "tools": ["python"]
+      "trees": [
+        "🩺️preflight"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ],
+      "tools": [
+        "python"
+      ]
     },
     {
       "id": "build-targets-selection",
@@ -192,6 +200,9 @@
         "darwin",
         "linux",
         "win32"
+      ],
+      "tools": [
+        "python"
       ]
     },
     {
@@ -459,6 +470,19 @@
       "platformCauses": [
         "python3-command",
         "permission-bits"
+      ]
+    },
+    {
+      "id": "build-native-tool-route",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🧰️tool-registry/⌨️command/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
       ]
     },
     {

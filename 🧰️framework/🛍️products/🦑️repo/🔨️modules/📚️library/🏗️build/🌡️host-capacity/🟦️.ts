@@ -50,7 +50,7 @@ export function buildCapacityLineageV1(args:readonly string[],kinds:readonly Hos
 
 /** 🎯️ Reads which operation, how many jobs and which kinds an already tool-stripped argument list asks for; answers undefined for light commands. */
 export function buildCapacityAskV1(args:readonly string[],environment:Readonly<Record<string,string|undefined>>,policy:HostCapacityPolicyV1=BUILD_HOST_CAPACITY_POLICY_V1):BuildCapacityAskV1|undefined{
- const command=args[0];
+ const command=args[0]==="preflight"||args[0]==="tools"&&(args[1]==="exec"||args[1]==="setup")?"command":args[0];
  if(command===undefined||!policy.operations.some(row=>row.name===command))return undefined;
  const head=args.slice(0,args.indexOf("--")<0?undefined:args.indexOf("--"));
  if(head.some(argument=>argument==="--help"||argument==="-h"))return undefined;

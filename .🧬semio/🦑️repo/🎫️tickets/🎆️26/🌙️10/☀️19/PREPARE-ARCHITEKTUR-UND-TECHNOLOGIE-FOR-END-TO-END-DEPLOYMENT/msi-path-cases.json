@@ -1,0 +1,11 @@
+{
+  "cases": [
+    { "name": "long destination names", "directories": [["root", "", "."], ["bin", "root", "SHORT|long"]], "directory": "bin", "file": "A.TXT|alpha.txt", "expected": "long/alpha.txt" },
+    { "name": "MSI target root", "directories": [["TARGETDIR", "", "SourceDir"], ["kits", "TARGETDIR", "Windows Kits"]], "directory": "kits", "file": "header.h", "expected": "Windows Kits/header.h" },
+    { "name": "source name after colon", "directories": [["root", "", "."], ["d", "root", "inc:source"]], "directory": "d", "file": "header.h", "expected": "inc/header.h" },
+    { "name": "directory traversal", "directories": [["root", "", "."], ["d", "root", ".."]], "directory": "d", "file": "x", "error": true },
+    { "name": "file separator", "directories": [["root", "", "."]], "directory": "root", "file": "../escape", "error": true },
+    { "name": "cycle", "directories": [["a", "b", "a"], ["b", "a", "b"]], "directory": "a", "file": "x", "error": true },
+    { "name": "missing directory", "directories": [["root", "", "."]], "directory": "missing", "file": "x", "error": true }
+  ]
+}

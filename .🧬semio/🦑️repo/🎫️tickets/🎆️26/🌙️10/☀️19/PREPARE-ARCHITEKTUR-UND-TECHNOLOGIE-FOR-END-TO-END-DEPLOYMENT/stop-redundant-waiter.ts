@@ -1,0 +1,4 @@
+import {join} from 'node:path';
+import {pathToFileURL} from 'node:url';
+const {runCmd}=await import(pathToFileURL(join(process.cwd(),'🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts')).href);
+runCmd('powershell.exe',['-NoProfile','-NonInteractive','-Command',"$ids=13676,2484; foreach($id in $ids){$p=Get-CimInstance Win32_Process -Filter ('ProcessId='+$id) -OperationTimeoutSec 5; if(!$p){Write-Output ('absent '+$id);continue}; if($p.CommandLine -notlike '*capacity run --memory=512 --cpu=1*' -or $p.CommandLine -notlike '*PREPARE-ARCHITEKTUR-UND-TECHNOLOGIE-FOR-END-TO-END-DEPLOYMENT*stop-owned-preflight.ts*'){throw ('identity mismatch '+$id)}; if($id -eq 13676 -and $p.ParentProcessId -ne 2484){throw 'parent mismatch'}; $process=Get-Process -Id $id -ErrorAction Stop; Stop-Process -InputObject $process -ErrorAction Stop; Wait-Process -InputObject $process -Timeout 10 -ErrorAction Stop; Write-Output ('stopped '+$id)}"]);

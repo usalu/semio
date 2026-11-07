@@ -1,4 +1,4 @@
-use semio_ui_tui_core::docking::{DockPlacement, WindowStackCorner, WINDOW_GAP};
+use semio_ui_tui_core::docking::{DockPlacement, WindowStackCorner};
 use semio_ui_tui_core::geometry::Rect;
 use crate::scene::{NodeContent, NodeId, Scene};
 
@@ -27,6 +27,8 @@ pub struct Constraint {
     pub width: Dimension,
     pub height: Dimension,
     pub gap: u16,
+    /// 🧲️ Share one boundary cell between neighboring children; dimensions describe their exclusive spans.
+    pub shared: bool,
     pub padding: [u16; 4],
 }
 
@@ -88,6 +90,11 @@ fn distribute(dims: &[Dimension], measured: &[u16], total: u16, gap: u16) -> Vec
     sizes
 }
 
+fn distribute_shared(dims: &[Dimension], measured: &[u16], extent: u16) -> Vec<u16> {
+    if extent == 0 { return vec![0; dims.len()]; }
+    distribute(dims, measured, extent - 1, 0).into_iter().map(|size| size + 1).collect()
+}
+
 /// 🧮️ Recomputes rects for the whole tree from `viewport` down (no-operation-safe to call every frame).
 pub fn solve(scene: &mut Scene, viewport: Rect) {
     layout_node(scene, scene.root(), viewport);
@@ -122,23 +129,25 @@ fn layout_node(scene: &mut Scene, id: NodeId, rect: Rect) {
         Direction::Row => {
             let dims: Vec<Dimension> = children.iter().map(|c| scene.node(*c).constraint.width).collect();
             let measured: Vec<u16> = children.iter().map(|c| measure(scene, *c).0).collect();
-            let sizes = distribute(&dims, &measured, inner.width, constraint.gap);
+            let shared = constraint.shared || matches!(scene.node(id).content, NodeContent::Axis(_));
+            let sizes = if shared { distribute_shared(&dims, &measured, inner.width) } else { distribute(&dims, &measured, inner.width, constraint.gap) };
             let mut x = inner.x;
             for (i, &child) in children.iter().enumerate() {
                 let w = sizes[i];
                 layout_node(scene, child, Rect::new(x, inner.y, w, inner.height));
-                x += w + constraint.gap;
+                x += if shared { w.saturating_sub(1) } else { w + constraint.gap };
             }
         }
         Direction::Column => {
             let dims: Vec<Dimension> = children.iter().map(|c| scene.node(*c).constraint.height).collect();
             let measured: Vec<u16> = children.iter().map(|c| measure(scene, *c).1).collect();
-            let sizes = distribute(&dims, &measured, inner.height, constraint.gap);
+            let shared = constraint.shared || matches!(scene.node(id).content, NodeContent::Axis(_));
+            let sizes = if shared { distribute_shared(&dims, &measured, inner.height) } else { distribute(&dims, &measured, inner.height, constraint.gap) };
             let mut y = inner.y;
             for (i, &child) in children.iter().enumerate() {
                 let h = sizes[i];
                 layout_node(scene, child, Rect::new(inner.x, y, inner.width, h));
-                y += h + constraint.gap;
+                y += if shared { h.saturating_sub(1) } else { h + constraint.gap };
             }
         }
     }
@@ -216,7 +225,7 @@ pub(crate) fn weight_of(size: Option<f64>) -> u16 {
 
 fn axis_cells(node: &WindowLayoutAxisNode, extent: u16) -> Vec<u16> {
     let dims: Vec<Dimension> = node.children.iter().map(|child| Dimension::Weight(weight_of(Some(axis_child_size(child))))).collect();
-    distribute(&dims, &vec![0; dims.len()], extent, WINDOW_GAP)
+    distribute_shared(&dims, &vec![0; dims.len()], extent)
 }
 
 fn solve_axis(node: &WindowLayoutAxisNode, area: Rect, out: &mut Vec<WindowMeasure>) {
@@ -229,7 +238,7 @@ fn solve_axis(node: &WindowLayoutAxisNode, area: Rect, out: &mut Vec<WindowMeasu
             WindowLayoutChild::Axis(a) => solve_axis(a, child_rect, out),
             WindowLayoutChild::Stack(s) => solve_stack(s, child_rect, out),
         }
-        offset += size + WINDOW_GAP;
+        offset += size.saturating_sub(1);
     }
 }
 
@@ -641,7 +650,7 @@ pub fn resize_split(layout: &mut WindowLayout, area: Rect, path: &[usize], delta
     for &step in axis_path {
         let is_row = axis.kind == "row";
         let sizes = axis_cells(axis, if is_row { rect.width } else { rect.height });
-        let before: u16 = sizes.iter().take(step).map(|s| s + WINDOW_GAP).sum();
+        let before: u16 = sizes.iter().take(step).map(|s| s.saturating_sub(1)).sum();
         let Some(size) = sizes.get(step).copied() else { return false };
         rect = if is_row { Rect::new(rect.x + before, rect.y, size, rect.height) } else { Rect::new(rect.x, rect.y + before, rect.width, size) };
         let Some(WindowLayoutChild::Axis(next)) = axis.children.get_mut(step) else { return false };
@@ -653,9 +662,9 @@ pub fn resize_split(layout: &mut WindowLayout, area: Rect, path: &[usize], delta
     if index + 1 >= sizes.len() {
         return false;
     }
-    let usable = f64::from(extent.saturating_sub(WINDOW_GAP * (sizes.len() as u16 - 1))).max(1.0);
+    let usable = f64::from(extent.saturating_sub(1)).max(1.0);
     let floor = ((usable * SPLIT_MIN_FRACTION).round() as i32).max(1);
-    let (a, b) = (i32::from(sizes[index]), i32::from(sizes[index + 1]));
+    let (a, b) = (i32::from(sizes[index].saturating_sub(1)), i32::from(sizes[index + 1].saturating_sub(1)));
     if a + b < 2 * floor {
         return false;
     }

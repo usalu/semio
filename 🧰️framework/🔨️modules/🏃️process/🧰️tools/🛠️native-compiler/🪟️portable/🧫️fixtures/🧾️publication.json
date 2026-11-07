@@ -1,0 +1,12 @@
+{
+  "cases": [
+    { "name": "matching metadata", "mutation": "none", "matches": true },
+    { "name": "foreign allocation", "mutation": "allocation", "matches": false },
+    { "name": "other catalog", "mutation": "catalog", "matches": false },
+    { "name": "other recipe", "mutation": "recipe", "matches": false },
+    { "name": "other inventory", "mutation": "inventory", "matches": false },
+    { "name": "replaced directory", "mutation": "inode", "matches": false },
+    { "name": "other filesystem", "mutation": "device", "matches": false },
+    { "name": "extra receipt field", "mutation": "extra", "matches": false }
+  ]
+}

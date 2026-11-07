@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["frames", "visibleEdges", "sharedPaint", "sharedColor", "suppressedPaint"],
+  "properties": {
+    "frames": { "type": "array", "minItems": 2, "items": { "type": "object", "additionalProperties": false, "required": ["rect", "state", "color"], "properties": { "rect": { "$ref": "#/$defs/vector" }, "state": { "enum": ["active", "hover"] }, "color": { "$ref": "#/$defs/vector" } } } },
+    "visibleEdges": { "type": "integer", "minimum": 1 },
+    "sharedPaint": { "$ref": "#/$defs/vector" },
+    "sharedColor": { "$ref": "#/$defs/vector" },
+    "suppressedPaint": { "$ref": "#/$defs/vector" }
+  },
+  "$defs": { "vector": { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 4 } }
+}

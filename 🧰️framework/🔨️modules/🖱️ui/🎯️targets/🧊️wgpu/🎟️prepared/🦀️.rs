@@ -79,3 +79,7 @@ extern crate self as semio_ui_prepared;
 #[cfg(any(test,feature="testkit"))]
 #[path="🧪️testing/🦀️.rs"]
 pub mod testing;
+
+#[cfg(test)]
+#[path = "🧪️tests/📏️shared-border/🦀️.rs"]
+mod shared_border_tests;

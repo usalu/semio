@@ -69,7 +69,6 @@ staffage_height = _manim_module.staffage_height
 sun_glyph = _manim_module.sun_glyph
 moon_glyph = _manim_module.moon_glyph
 thermometer_glyph = _manim_module.thermometer_glyph
-fitted_staffage = _manim_module.fitted_staffage
 
 # 🗣️ Timing follows German captions (reading floor in hold_for).
 set_vo_language("de")
@@ -207,12 +206,12 @@ def _cast(cast: str, height: float, *, motion: bool = False, **kwargs):
     return build(cast, unit=height / staffage_height(cast), **kwargs)
 
 
-def _pendant(top, drop: float):
-    """💡 Handcrafted pendant lamp hanging ``drop`` units below ``top`` with its bulb point.
+def _pendant(top, metre: float):
+    """💡 Handcrafted pendant lamp at the scene metre, hanging below ``top`` with its bulb point.
 
     https://github.com/ManimCommunity/manim
     """
-    lamp = _cast("shared-lamp-winter", drop)
+    lamp = _cast("shared-lamp-winter", staffage_height("shared-lamp-winter") * metre)
     lamp.move_to(np.array(top, dtype=float) + DOWN * lamp.height / 2)
     return {"group": lamp, "bulb": Dot(lamp.get_bottom() + UP * 0.1 * lamp.height, radius=0.001).set_opacity(0)}
 #endregion
@@ -691,8 +690,8 @@ class ReviewingHeatGains(Scene):
         floor_y, ceil_y = int_room["y_f"], int_room["y_c"]
         person = _cast("shared-person-winter", 0.7 * int_room["h"], motion=True,
                        anchor=np.array([-0.42, floor_y + 0.01, 0.0]))
-        lamp = _pendant(np.array([0.02, ceil_y, 0.0]), 0.34)
         metre = 0.7 * int_room["h"] / staffage_height("shared-person-winter")
+        lamp = _pendant(np.array([0.02, ceil_y, 0.0]), metre)
         desk_y = floor_y + DESK_SURFACE_M * metre
         desk_x = int_room["x_r"] - 0.04 - 1.65 * metre
         desk = _cast("shared-desk", staffage_height("shared-desk") * metre, color=PASTEL_WHITE,
@@ -1077,8 +1076,9 @@ class UltimateEnergyBalance(Scene):
         floor_y = house["bottom_left"][1]
         person = _cast("shared-person-winter", 0.7 * house["w_height"] / 2, motion=True,
                        anchor=np.array([0.0, floor_y + 0.02, 0.0]))
-        lamp = _pendant(np.array([0.4, 0.95, 0.0]), 0.55)
-        heater = _cast("shared-radiator-thermostat-front", 0.34 * house["w_height"] / 2, motion=True,
+        metre = 0.7 * house["w_height"] / 2 / staffage_height("shared-person-winter")
+        lamp = _pendant(np.array([0.4, 0.95, 0.0]), metre)
+        heater = _cast("shared-radiator-thermostat-front", staffage_height("shared-radiator-thermostat-front") * metre, motion=True,
                        anchor=np.array([0.82, floor_y + 0.05, 0.0]))
         scene_house = VGroup(house["group"], house["air"], sun, *[r["group"] for r in ray_sets], person,
                              lamp["group"], heater)
@@ -1198,7 +1198,7 @@ def _plant_house():
     WIN = (0.65, 1.25)
     room_h, wall = 1.6, 0.35 * 1.6 / 2.5
     metre = room_metre(room_h)
-    RAD_X, PIPE_Y, TANK_X = (-6.41, -1.59), -0.48, -4.9
+    RAD_X, PIPE_Y, TANK_X = (-6.65 + wall / 2, -1.35 - wall / 2), -0.48, -4.9
     RAD_Y = -0.15 + metre * (0.11 + 0.6 / 2)
     parts = {}
     parts["room"] = Rectangle(width=5.3 - wall, height=room_h, stroke_width=0, fill_color=PASTEL_ORANGE, fill_opacity=0.10
@@ -1218,20 +1218,19 @@ def _plant_house():
     parts["windows"] = VGroup(*[w["group"] for w in windows])
     parts["radiators"] = VGroup(*[_cast("shared-radiator-thermostat", staffage_height("shared-radiator-thermostat") * metre, motion=True, anchor=P(x, -0.15), mirror=mirror)
                                  for x, mirror in zip(RAD_X, (False, True))])
-    parts["thermostat"] = _cast("heating-calculation-thermostat", 0.11, motion=True, rate=0.0, anchor=P(-6.42, 0.5))
-    tank_h, boiler_h, boiler_w = 1.5 * metre, 1.0 * metre, 0.6 * metre
+    parts["thermostat"] = _cast("heating-calculation-thermostat", staffage_height("heating-calculation-thermostat") * metre, motion=True, rate=0.0, anchor=P(-6.42, -0.15))
     level = ValueTracker(0.9)
-    store = fitted_staffage("shared-tank-charge-up", width=0.65 * metre, height=tank_h, rate=0.0).move_to(P(TANK_X, -1.6 + tank_h / 2))
+    store = _cast("shared-tank-charge-up", staffage_height("shared-tank-charge-up") * metre, motion=True, rate=0.0, anchor=P(TANK_X, -1.6))
     store.add_updater(lambda m: m.seek(float(np.clip(level.get_value(), 0.0, 1.0)) * TANK_CHARGE_S))
     tank = {"group": store, "fill": VGroup(), "frame": store, "cap": store, "level": level}
     parts["tank"] = tank
     parts["store"] = VGroup(store)
-    parts["boiler"] = fitted_staffage("shared-boiler-heating-cycle", width=boiler_w, height=boiler_h, rate=BOILER_RATE
-                                      ).move_to(P(-2.85, -1.6 + boiler_h / 2))
-    flue_bottom, flue_top = -1.6 + boiler_h, 2.3
+    parts["boiler"] = _cast("shared-boiler-heating-cycle", staffage_height("shared-boiler-heating-cycle") * metre, motion=True, rate=BOILER_RATE, anchor=P(-2.85, -1.6 + 0.7 * metre))
+    flue_start = parts["boiler"].get_top()
+    flue_top = P(0, 2.3)[1]
     parts["chimney"] = VGroup(
-        section_material(Rectangle(width=0.14, height=flue_top - flue_bottom)).move_to(P(-2.85, (flue_top + flue_bottom) / 2)),
-        section_material(Rectangle(width=0.24, height=0.05)).move_to(P(-2.85, flue_top + 0.025)),
+        section_material(Rectangle(width=0.14, height=flue_top - flue_start[1])).move_to(np.array([flue_start[0], (flue_top + flue_start[1]) / 2, 0.0])),
+        section_material(Rectangle(width=0.24, height=0.05)).move_to(np.array([flue_start[0], flue_top + 0.025, 0.0])),
     )
     parts["material"] = section_assembly(parts["walls"], parts["roof"])
     rad_in = [P(x, RAD_Y - 0.1) for x in RAD_X]
@@ -1256,18 +1255,18 @@ def _plant_house():
         Line(tank_top, P(TANK_X, PIPE_Y), color=PASTEL_WHITE, stroke_width=11, stroke_opacity=0.55),
     )
     parts["labels"] = VGroup(
-        _label(tr("Store", "Speicher"), size=15, color=PASTEL_YELLOW).move_to(P(-4.2, -0.92)),
+        _label(tr("Store", "Speicher"), size=15, color=PASTEL_YELLOW).move_to(P(-4.2, -1.1)),
         VGroup(_label(tr("Heat", "Wärme-"), size=15, color=PASTEL_ORANGE), _label(tr("generator", "erzeuger"), size=15, color=PASTEL_ORANGE)
                ).arrange(DOWN, buff=0.04).next_to(parts["boiler"], RIGHT, buff=0.14),
         VGroup(_label(tr("unheated", "unbeheizter"), size=15, color=GREY_A), _label(tr("basement", "Keller"), size=15, color=GREY_A)
                ).arrange(DOWN, buff=0.06).move_to(P(-5.9, -1.15)),
         _label(f"{tr('heated', 'beheizt')}, {unit_text('20', '°C')}", size=15, color=PASTEL_ORANGE).move_to(P(-4.7, 0.95)),
     )
-    parts["thermo_label"] = _label("Thermostat", size=15, color=PASTEL_WHITE).next_to(parts["thermostat"], RIGHT, buff=0.32).shift(UP * 0.1)
+    parts["thermo_label"] = _label("Thermostat", size=15, color=PASTEL_WHITE).next_to(parts["thermostat"], RIGHT, buff=0.32).shift(DOWN * 0.2)
     parts["pipe_label"] = _label(tr("30 m pipe", "30 m Rohr"), size=12, color=PIPE).move_to(P(-5.62, -0.66))
     parts["floor_y"] = -0.15 + _HOUSE_DY
     parts["room_height"] = room_h
-    parts["person"] = _cast("shared-person-winter", 1.75 * metre, motion=True, anchor=P(-3.35, -0.15))
+    parts["person"] = _cast("shared-person-winter", staffage_height("shared-person-winter") * metre, motion=True, anchor=P(-3.35, -0.15))
     return parts
 
 

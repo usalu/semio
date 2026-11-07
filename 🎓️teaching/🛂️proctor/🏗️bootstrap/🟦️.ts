@@ -440,9 +440,8 @@ export async function proctorReady(origin: string, timeoutMs = 2_000): Promise<b
   }
 }
 
-/** 🧵️ A proctor this process launched: `exited` settles with its exit status once it ended and its private copy is
- * deleted; `interrupt` forwards an interrupt or termination where POSIX signals exist (on Windows the console delivers
- * Ctrl+C to the proctor itself); `stop` asks it to stop, waits up to `graceMs` and then ends its process. */
+/** 🧵️ A proctor this process launched: `exited` settles after its private copy is deleted; `interrupt` forwards a POSIX
+ * signal when available, and `stop` waits up to `graceMs` before ending the owned process tree on every platform. */
 export interface ProctorProcess {
   readonly pid: number | undefined;
   readonly exited: Promise<number>;

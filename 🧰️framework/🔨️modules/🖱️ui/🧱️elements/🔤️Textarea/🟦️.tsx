@@ -7,6 +7,7 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
+import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { PropertyValueColumnContext } from "../🌳️Tree/📏️row-alignment/🟦️.tsx";
@@ -44,6 +45,7 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
   const [isEditing, setIsEditing] = reactHostPort.useState(false);
   const [isFocused, setIsFocused] = reactHostPort.useState(false);
   const textareaRef = reactHostPort.useRef<HTMLTextAreaElement>(null);
+  const borderRef = useSharedBorderFrameRef<HTMLDivElement>();
   const skipLazyBlurCommitRef = reactHostPort.useRef(false);
   const placeholderIdLabel = useIdLabel(placeholderId);
   const computedPlaceholder: UiLabel | undefined = placeholderId ? placeholderIdLabel : placeholder !== undefined ? uiDataLabel(placeholder) : undefined;
@@ -106,7 +108,7 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
   const textareaEmptyOpacity = isInPropertyValueColumn && !displayValue && !isFocused ? 0.6 : 1;
 
   const textareaElement = (
-    <div data-slot="textarea-root" data-detail-panel-control="fill" className="flex min-w-0 w-full flex-1 items-stretch" style={{ opacity: textareaEmptyOpacity, transition: "opacity 150ms" }}>
+    <div ref={borderRef} data-slot="textarea-root" data-shared-border-frame="" data-shared-border-edges="top right bottom left" aria-disabled={props.disabled || undefined} data-detail-panel-control="fill" className="relative flex min-w-0 w-full flex-1 items-stretch" style={{ opacity: textareaEmptyOpacity, transition: "opacity 150ms" }}>
       {!showCollapsedDisplay ? (
         <textarea
           ref={textareaRef}

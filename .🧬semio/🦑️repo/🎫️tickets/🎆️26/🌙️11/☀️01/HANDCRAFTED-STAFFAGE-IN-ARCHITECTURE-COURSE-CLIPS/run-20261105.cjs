@@ -1,0 +1,10 @@
+const fs = require("node:fs");
+const path = require("node:path");
+const { spawn } = require("node:child_process");
+const generated = path.join(__dirname, "🗑️generated", "runtime");
+const base = process.env.SEMIO_TEST_PYTHON ?? (process.platform === "win32" ? path.join(process.env.APPDATA, "uv/python/cpython-3.12.16-windows-x86_64-none/python.exe") : "python3");
+const venv = path.join(generated, process.platform === "win32" ? "Scripts/python.exe" : "bin/python");
+const repo = process.env.SEMIO_TEST_REPO ?? (process.platform === "win32" ? path.join(process.env.LOCALAPPDATA, "semio/launcher/bin/repo.exe") : "repo");
+fs.mkdirSync(path.join(__dirname, "🗑️generated", "tmp"), { recursive: true });
+const child = spawn(repo, ["tools", "exec", "--light", "python", "--", "-X", "utf8", ...process.argv.slice(2)], { stdio: "inherit", windowsHide: true, env: { ...process.env, SEMIO_REPO_BINARY: repo, SEMIO_TEACHING_CACHE_ROOT: path.join(__dirname, "🗑️generated"), SEMIO_TEACHING_OUTPUT_ROOT: path.join(__dirname, "🗑️generated", "proof"), SEMIO_TOOL_PYTHON: fs.existsSync(venv) ? venv : base, PYTHONDONTWRITEBYTECODE: "1", PYTHONUTF8: "1", SEMIO_TEST_MANIM: "1", PIP_CACHE_DIR: path.join(__dirname, "🗑️generated", "pip-cache"), TEMP: path.join(__dirname, "🗑️generated", "tmp"), TMP: path.join(__dirname, "🗑️generated", "tmp") } });
+child.on("exit", code => { process.exitCode = code ?? 1; });

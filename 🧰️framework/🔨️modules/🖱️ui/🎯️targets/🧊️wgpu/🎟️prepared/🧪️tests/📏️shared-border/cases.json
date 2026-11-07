@@ -1,0 +1,10 @@
+{
+  "frames": [
+    { "rect": [0, 0, 10, 10], "state": "active", "color": [1, 0, 0, 1] },
+    { "rect": [10, 0, 10, 10], "state": "hover", "color": [0, 1, 0, 1] }
+  ],
+  "visibleEdges": 7,
+  "sharedPaint": [10, 0, 1, 10],
+  "sharedColor": [0, 1, 0, 1],
+  "suppressedPaint": [9, 0, 1, 10]
+}

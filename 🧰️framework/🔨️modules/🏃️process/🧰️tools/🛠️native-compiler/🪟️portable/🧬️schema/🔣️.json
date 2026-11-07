@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Portable Windows MSVC Provider",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "manifestSha256": "a8e854fa9f3fbaeac27d7304e297f1660d7137401389deb57cf7983f33c16fef",
+        "recipeSha256": "c9e7064fc494abbff8cc2ec4074fd791f2365e16005f68a78484c56f3b2f40b5",
+        "inventorySha256": "69cfa0b1437d32de989abad528e77ef5497bd0771e2d5b281d6385786520b6db",
+        "compilerVersion": "14.50.35717",
+        "sdkVersion": "10.0.26100.0",
+        "partition": ["native", "msvc", "14.50.35717", "win32-x64-a8e854fa9f3fbaea"],
+        "maximumInventoryBytes": 2097152,
+        "maximumReceiptBytes": 4096,
+        "owner": "repo:windows-msvc",
+        "leaseResource": "native:windows-msvc:14.50.35717:a8e854fa9f3fbaea",
+        "target": "x86_64-pc-windows-msvc",
+        "explicitEnvironment": ["CC", "CXX", "AR", "HOST_CC", "HOST_CXX", "HOST_AR", "TARGET_CC", "TARGET_CXX", "TARGET_AR", "INCLUDE", "LIB", "LIBPATH", "VCToolsInstallDir", "VCToolsVersion", "VCINSTALLDIR", "VSINSTALLDIR", "VisualStudioVersion", "WindowsSdkDir", "WindowsSDKVersion", "WindowsSDKLibVersion", "UniversalCRTSdkDir", "UCRTVersion", "VSCMD_ARG_HOST_ARCH", "VSCMD_ARG_TGT_ARCH", "SEMIO_TOOL_CC", "RUSTC", "RUSTC_LINKER", "CARGO", "CARGO_BUILD_TARGET", "RUSTFLAGS", "CARGO_BUILD_RUSTFLAGS", "CARGO_ENCODED_RUSTFLAGS", "CL", "_CL_", "LINK", "_LINK_"],
+        "explicitPatterns": ["CC_*", "CXX_*", "AR_*", "CARGO_TARGET_*_LINKER"]
+      }
+    },
+    "PublicationReceipt": {
+      "type": "object", "additionalProperties": false,
+      "required": ["version", "owner", "allocation", "catalogSha256", "recipeSha256", "inventorySha256", "directory"],
+      "properties": {
+        "version": { "const": 1 }, "owner": { "const": "repo:windows-msvc" },
+        "allocation": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "catalogSha256": { "const": "a8e854fa9f3fbaeac27d7304e297f1660d7137401389deb57cf7983f33c16fef" },
+        "recipeSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "inventorySha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "directory": {
+          "type": "object", "additionalProperties": false, "required": ["device", "inode"],
+          "properties": { "device": { "type": "string", "pattern": "^[0-9]+$" }, "inode": { "type": "string", "pattern": "^[0-9]+$" } }
+        }
+      }
+    },
+    "ProvisionObservation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["receipt", "pending"],
+      "properties": { "receipt": { "enum": ["absent", "ordinary", "other"] }, "pending": { "type": "boolean" } }
+    },
+    "PublicationIntent": {
+      "type": "object", "additionalProperties": false,
+      "required": ["version", "scratch", "directory", "receipt"],
+      "properties": {
+        "version": { "const": 1 }, "scratch": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "directory": {
+          "type": "object", "additionalProperties": false, "required": ["device", "inode"],
+          "properties": { "device": { "type": "string", "pattern": "^[0-9]+$" }, "inode": { "type": "string", "pattern": "^[0-9]+$" } }
+        },
+        "receipt": { "$ref": "#/definitions/PublicationReceipt" }
+      }
+    },
+    "EligibilityCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "platform", "architecture", "target", "environment", "reason"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "platform": { "type": "string", "minLength": 1 },
+        "architecture": { "type": "string", "minLength": 1 },
+        "target": { "type": ["string", "null"] },
+        "environment": { "type": "object", "additionalProperties": { "type": "string" } },
+        "reason": { "enum": ["eligible", "platform", "architecture", "target", "override"] }
+      }
+    }
+  }
+}

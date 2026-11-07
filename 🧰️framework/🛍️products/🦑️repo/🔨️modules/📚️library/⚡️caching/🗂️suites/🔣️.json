@@ -782,6 +782,9 @@
         "darwin",
         "linux",
         "win32"
+      ],
+      "tools": [
+        "python"
       ]
     },
     {
@@ -803,6 +806,9 @@
         "darwin",
         "linux",
         "win32"
+      ],
+      "tools": [
+        "python"
       ]
     },
     {

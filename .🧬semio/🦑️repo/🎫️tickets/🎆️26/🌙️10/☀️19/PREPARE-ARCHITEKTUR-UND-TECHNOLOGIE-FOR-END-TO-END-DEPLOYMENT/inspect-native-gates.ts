@@ -1,0 +1,3 @@
+import{readFileSync}from"node:fs";
+const terms=["storage-compiler","compiler-headroom","rustup-toolchain","tools-authorizers","build-host-capacity","build-source-closure","build-native-storage","tool-registry","native-toolchain"];
+for(const base of process.argv.slice(2))for await(const file of new Bun.Glob("**/*.{ts,json}").scan({cwd:base,onlyFiles:true})){let text:string;try{text=readFileSync(base+"/"+file,"utf8");}catch{continue;}const lines=text.split("\n").filter(line=>terms.some(term=>line.includes(term)));if(lines.length)console.log(base+"/"+file+"\n"+lines.map(line=>line.slice(0,450)).join("\n"));}

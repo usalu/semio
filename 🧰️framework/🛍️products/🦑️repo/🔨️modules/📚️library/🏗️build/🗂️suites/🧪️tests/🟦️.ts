@@ -15,6 +15,7 @@ import callerSchema from"../../🧬️schema/📥️caller.json"with{type:"json"
 import{withBuildTestInvocationV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import fixture from"./🧫️fixtures/🔣️.json"with{type:"json"};
 import preflightGate from"./🧫️fixtures/🩺️preflight.json"with{type:"json"};
+import nativeGate from"./🧫️fixtures/🛠️native.json"with{type:"json"};
 import pythonResults from"./🧫️fixtures/🐍️python.json"with{type:"json"};
 import{readWorkspaceTestPythonOutputV1}from"../🐍️python/🟦️.ts";
 import pythonQuery from"../🐍️python/🔣️.json"with{type:"json"};
@@ -30,6 +31,12 @@ const withFile=async<T>(value:unknown,use:(path:string)=>Promise<T>):Promise<T>=
 const spawns=(source:string):boolean=>fixture.spawnTokens.some(token=>source.includes(token));
 const levelOf=(suite:ProcessTestSuiteV1):string|undefined=>Object.entries(fixture.levels).find(([,budget])=>budget===suite.budgetMs)?.[0];
 const read=(path:string):unknown=>JSON.parse(readFileSync(path,"utf8"));
+
+test("native compiler routes have cross-platform canonical owners",()=>{
+ const build=readBuildTestTableV1(),suite=build.suites.find(row=>row.id===nativeGate.suite),caching=readCachingTestTableV1(),compiler=caching.suites.find(row=>row.id===nativeGate.compilerSuite),targets=(read(project)as{targets:Record<string,{options?:{command?:string}}>}).targets;
+ const actual={suite:suite?.id,target:targets[nativeGate.target]?.options?.command===`repo ./📜️script.ts test ${nativeGate.suite}`?nativeGate.target:undefined,file:suite?.files?.[0],platforms:suite?.platforms,compilerSuite:compiler?.id,compilerTree:compiler?.trees?.[0]};
+ expect(new Ajv({strict:true}).validate({const:nativeGate},actual)).toBe(true);expect(actual).toEqual(nativeGate);
+});
 
 test("the managed interpreter query admits exactly one absolute path inside its declared environment",()=>{
  for(const row of pythonResults){

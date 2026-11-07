@@ -5,7 +5,7 @@ import {expect,test,setDefaultTimeout} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {join} from "node:path";
 import Ajv from "ajv";
-import {requireTestToolV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
+import {requirePinnedTestToolV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {BUILD_HOST_CAPACITY_POLICY_V1,buildCapacityAskV1,createCapacityControlV1,grantedBuildArgumentsV1} from "../../🟦️.ts";
 import {runCapacityCommandV1} from "../../⌨️command/🟦️.ts";
 import {isRepoErrorV1,renderRepoErrorV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🚨️error/🟦️.ts";
@@ -16,7 +16,7 @@ import corpusSchema from "./🧬️schema/🔣️.json";
 
 setDefaultTimeout(60000);
 
-const python=requireTestToolV1("python"),oracleFile=join(import.meta.dir,"./🐍️oracle/🐍️.py"),workers=buildPolicy.workers,policy=buildPolicy.hostCapacity;
+const python=requirePinnedTestToolV1("python"),oracleFile=join(import.meta.dir,"./🐍️oracle/🐍️.py"),workers=buildPolicy.workers,policy=buildPolicy.hostCapacity;
 const ask=(request:object):any[]=>{const run=spawnSync(python,["-I",oracleFile],{input:JSON.stringify(request),encoding:"utf8",maxBuffer:128*1024*1024});expect(run.status,run.stderr).toBe(0);return JSON.parse(run.stdout);};
 
 test("the corpus is closed by its schema and the policy used is the authored one",()=>{

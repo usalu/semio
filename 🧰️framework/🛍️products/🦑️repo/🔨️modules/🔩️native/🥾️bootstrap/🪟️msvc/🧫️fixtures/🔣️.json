@@ -1,0 +1,28 @@
+{
+  "cases": [
+    { "name": "target root and long name", "directories": [["TARGETDIR", "", "SourceDir"], ["bin", "TARGETDIR", "SHORT|long"]], "directory": "bin", "file": "A.TXT|alpha.txt", "expected": "long/alpha.txt" },
+    { "name": "target before source", "directories": [["TARGETDIR", "", "SourceDir"], ["d", "TARGETDIR", "inc:source"]], "directory": "d", "file": "header.h", "expected": "inc/header.h" },
+    { "name": "disconnected root", "directories": [["root", "", "."]], "directory": "root", "file": "x", "error": true },
+    { "name": "directory traversal", "directories": [["TARGETDIR", "", "SourceDir"], ["d", "TARGETDIR", ".."]], "directory": "d", "file": "x", "error": true },
+    { "name": "file separator", "directories": [["TARGETDIR", "", "SourceDir"]], "directory": "TARGETDIR", "file": "../escape", "error": true },
+    { "name": "reserved name", "directories": [["TARGETDIR", "", "SourceDir"]], "directory": "TARGETDIR", "file": "NUL.txt", "error": true },
+    { "name": "superscript COM device", "directories": [["TARGETDIR", "", "SourceDir"]], "directory": "TARGETDIR", "file": "COM¹.txt", "error": true },
+    { "name": "superscript LPT device", "directories": [["TARGETDIR", "", "SourceDir"]], "directory": "TARGETDIR", "file": "LPT³", "error": true },
+    { "name": "cycle", "directories": [["a", "b", "a"], ["b", "a", "b"]], "directory": "a", "file": "x", "error": true },
+    { "name": "missing directory", "directories": [["root", "", "."]], "directory": "missing", "file": "x", "error": true }
+  ],
+  "sdkCases": [
+    { "name": "file to cabinet", "directories": [["TARGETDIR", "", "SourceDir"], ["kit", "TARGETDIR", "Windows Kits"], ["ten", "kit", "10"], ["inc", "ten", "Include"]], "components": [["c", "inc"]], "files": [["fil1", "c", "X.H|x.h", "12", "1"]], "media": [["1", "1", "0123456789abcdef0123456789abcdef.cab"]], "expectedPath": "sdk/Include/x.h", "expectedCabinet": "0123456789abcdef0123456789abcdef.cab", "valid": true },
+    { "name": "missing component", "directories": [["TARGETDIR", "", "SourceDir"]], "components": [], "files": [["fil1", "missing", "x.h", "12", "1"]], "media": [["1", "1", "0123456789abcdef0123456789abcdef.cab"]], "valid": false },
+    { "name": "invalid cabinet", "directories": [["TARGETDIR", "", "SourceDir"], ["kit", "TARGETDIR", "Windows Kits"], ["ten", "kit", "10"]], "components": [["c", "ten"]], "files": [["fil1", "c", "x.h", "12", "1"]], "media": [["1", "1", "../outside.cab"]], "valid": false }
+  ],
+  "archiveCases": [
+    { "name": "regular member", "path": "VC/Tools/cl.exe", "valid": true },
+    { "name": "traversal", "path": "VC/../escape", "valid": false },
+    { "name": "absolute", "path": "/outside", "valid": false },
+    { "name": "drive path", "path": "C:/outside", "valid": false },
+    { "name": "backslash", "path": "VC/..\\escape", "valid": false },
+    { "name": "reserved device", "path": "VC/NUL.txt", "valid": false },
+    { "name": "trailing dot", "path": "VC/trailing.", "valid": false }
+  ]
+}

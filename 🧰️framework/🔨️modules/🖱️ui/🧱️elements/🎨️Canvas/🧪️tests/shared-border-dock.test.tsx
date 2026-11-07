@@ -11,6 +11,12 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup, RESIZABLE_HIT_TAR
 import { computeModeSplitPreviewInBody } from "../🎯️drop/🟦️.ts";
 import { applyAxisGroupLayoutDelta, resolveJoinCornerResizeDeltas } from "../🔗️join-corners/🟦️.ts";
 import fixture from "./dock-cases.json";
+import controlBorders from "./control-border.cases.json";
+import controlBorderSchema from "./control-border.schema.json";
+import { Input } from "../../✏️Input/🟦️.tsx";
+import { Textarea } from "../../🔤️Textarea/🟦️.tsx";
+import { Stepper } from "../../🪜️Stepper/🟦️.tsx";
+import { Search } from "../../🔍️WindowSearch/🟦️.tsx";
 
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
@@ -25,6 +31,102 @@ function split(orientation: "horizontal" | "vertical", sizes = [50, 50], extent 
 }
 
 describe("flush dock boundaries", () => {
+  it("registers text fields and the stepper as shared frames with single internal seams", () => {
+    const validate = new Ajv().compile(controlBorderSchema);
+    expect(validate(controlBorders), JSON.stringify(validate.errors)).toBe(true);
+    const controls = { input: <Input id="field.input" />, textarea: <Textarea id="field.textarea" />, stepper: <Stepper id="field.stepper" aria-label="Value" unit="mm" /> };
+    for (const { control, slot } of controlBorders.frames) {
+      const { container, unmount } = render(controls[control as keyof typeof controls]);
+      const frame = container.querySelector(`[data-slot="${slot}"]`)!;
+      expect(frame.hasAttribute("data-shared-border-frame")).toBe(true);
+      expect(frame.getAttribute("data-shared-border-edges")).toBe(controlBorders.edges);
+      if (control === "stepper") expect(frame.querySelectorAll(":scope > [data-shared-border-cell]")).toHaveLength(controlBorders.stepperCells);
+      unmount();
+    }
+  });
+
+  it("keeps disabled and collapsed fields registered without advertising hoverable frames", () => {
+    for (const control of [<Input id="field.input" disabled showLabel />, <Textarea id="field.textarea" disabled showLabel />, <Stepper id="field.stepper" disabled />]) {
+      const { container, unmount } = render(control);
+      const frame = container.querySelector('[data-shared-border-frame]')!;
+      expect(frame.getAttribute("aria-disabled")).toBe("true");
+      if (frame.dataset.slot !== "stepper-group") expect(frame.querySelector('[data-collapsed="true"]')).not.toBeNull();
+      unmount();
+    }
+  });
+
+  it("paints one shared field seam and transfers its interaction state", async () => {
+    const { width, height, seamLength } = controlBorders.geometry;
+    vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(width);
+    vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(height);
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      const slot = this.dataset.slot;
+      return slot === "input-root" ? new DOMRect(0, 0, width, height) : slot === "textarea-root" ? new DOMRect(width, 0, width, height) : slot === "stepper-group" ? new DOMRect(2 * width, 0, width, height) : new DOMRect();
+    });
+    const { container, unmount, rerender } = render(<div><Input id="field.first" /><Textarea id="field.second" /><Stepper id="field.third" /></div>);
+    const frames = [...container.querySelectorAll<HTMLElement>('[data-shared-border-frame]')];
+    const seam = (seamX = width) => frames.flatMap((frame, index) => [...frame.querySelectorAll<SVGPathElement>('[data-shared-border-segment]')].flatMap(path => {
+      const points = [...(path.getAttribute("d") ?? "").matchAll(/[ML]\s*([\d.e+-]+)\s+([\d.e+-]+)/gi)].map(match => ({ x: Number(match[1]) + index * width, y: Number(match[2]) }));
+      return points.slice(1).flatMap((point, i) => point.x === seamX && points[i]!.x === seamX && point.y !== points[i]!.y ? [{ length: Math.abs(point.y - points[i]!.y), state: path.getAttribute("data-shared-border-state") }] : []);
+    }));
+    await waitFor(() => expect(new Decimal(seam().reduce((sum, part) => sum + part.length, 0)).toNumber()).toBe(seamLength));
+    await waitFor(() => expect(new Decimal(seam(2 * width).reduce((sum, part) => sum + part.length, 0)).toNumber()).toBe(seamLength));
+    const first = container.querySelector<HTMLInputElement>('[data-slot="input"]')!;
+    const second = container.querySelector<HTMLTextAreaElement>('[data-slot="textarea"]')!;
+    fireEvent.focusIn(first);
+    first.focus();
+    fireEvent.pointerOver(second);
+    await waitFor(() => expect(seam().every(part => part.state === "hover")).toBe(true));
+    fireEvent.pointerOut(second);
+    fireEvent.pointerOver(first);
+    await waitFor(() => expect(seam().every(part => part.state === "hover")).toBe(true));
+    fireEvent.pointerOut(first);
+    first.blur();
+    rerender(<div><Input id="field.first" /><Textarea id="field.second" disabled /><Stepper id="field.third" /></div>);
+    fireEvent.pointerOver(second);
+    await waitFor(() => expect(seam().every(part => part.state !== "hover")).toBe(true));
+    expect(frames.map(frame => frame.offsetWidth)).toEqual([width, width, width]);
+    unmount();
+    expect(document.querySelector('[data-shared-border-overlay]')).toBeNull();
+  });
+  it("shares the Search seam on hover and restores the input edge when suggestions disappear", async () => {
+    const { width, height, seamLength } = controlBorders.geometry;
+    vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockImplementation(function (this: HTMLElement) {
+      return this.dataset.slot === "search-possibles-toggle" ? height : width;
+    });
+    vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(height);
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      const row = this.closest<HTMLElement>('[data-slot="search-row"]');
+      const gap = row?.classList.contains("gap-half") ? 4 : 0;
+      if (this.dataset.slot === "input-root") return new DOMRect(0, 0, width, height);
+      if (this.dataset.slot === "search-possibles-toggle") return new DOMRect(width + gap, 0, height, height);
+      return new DOMRect();
+    });
+    const possibles = [{ id: "possible", label: "Possible" }];
+    const { container, rerender, unmount } = render(<Search input={{}} possibles={possibles} active />);
+    const inputFrame = container.querySelector<HTMLElement>('[data-slot="input-root"]')!;
+    const toggle = container.querySelector<HTMLElement>('[data-slot="search-possibles-toggle"]')!;
+    const vertical = (frame: HTMLElement, offset: number, x: number) => [...frame.querySelectorAll<SVGPathElement>('[data-shared-border-segment]')].flatMap(path => {
+      const points = [...(path.getAttribute("d") ?? "").matchAll(/[ML]\s*([\d.e+-]+)\s+([\d.e+-]+)/gi)].map(match => ({ x: Number(match[1]) + offset, y: Number(match[2]) }));
+      return points.slice(1).flatMap((point, i) => point.x === x && points[i]!.x === x && point.y !== points[i]!.y ? [{ length: Math.abs(point.y - points[i]!.y), state: path.getAttribute("data-shared-border-state") }] : []);
+    });
+    const seam = () => [...vertical(inputFrame, 0, width), ...vertical(toggle, toggle.getBoundingClientRect().left, width)];
+    expect(new Decimal(height).minus(2).toNumber()).toBe(seamLength);
+    await waitFor(() => expect(seam().reduce((sum, part) => sum + part.length, 0)).toBe(seamLength));
+    fireEvent.pointerOver(toggle);
+    await waitFor(() => {
+      const owned = vertical(toggle, toggle.getBoundingClientRect().left, width);
+      expect(owned.reduce((sum, part) => sum + part.length, 0)).toBe(seamLength);
+      expect(owned.every(part => part.state === "hover")).toBe(true);
+      expect(vertical(inputFrame, 0, width)).toHaveLength(0);
+    });
+    fireEvent.pointerOut(toggle);
+    rerender(<Search input={{}} possibles={[]} active />);
+    await waitFor(() => expect(container.querySelector('[data-slot="search-possibles-toggle"]')).toBeNull());
+    await waitFor(() => expect(vertical(inputFrame, 0, width - 1).reduce((sum, part) => sum + part.length, 0)).toBe(seamLength));
+    unmount();
+  });
+
   it("validates language-neutral flush layout vectors", () => {
     const validate = new Ajv().compile(schema);
     expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);

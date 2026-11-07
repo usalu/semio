@@ -155,21 +155,25 @@ function Get-CppBootstrap { return ($env:SEMIO_TEST_CPP_POLICY | ConvertFrom-Jso
 function New-ScratchDirectory { return 'C:\\ascii\\semio-00000000000000000000000000000000' }
 function Write-Step { param($Message) }
 function Save-VerifiedDownload { param($Url, $Sha256, $Destination) if ($env:SEMIO_TEST_FAIL -eq '1') { throw 'checksum failed' }; $script:verification = @{ url = $Url; sha256 = $Sha256; path = $Destination } }
-function Invoke-RepoCommand { param($FilePath, $ArgumentList, $WorkingDirectory, $SuccessCodes) $script:launched = $true; $script:launch = @{ path = $FilePath; arguments = $ArgumentList; successCodes = $SuccessCodes } }
+function Start-Process { param($FilePath, $ArgumentList, $WorkingDirectory, [switch]$Wait, [switch]$PassThru, $WindowStyle) $script:launched = $true; $script:launch = @{ path = $FilePath; arguments = $ArgumentList; waited = [bool]$Wait; passed = [bool]$PassThru; window = $WindowStyle }; return @{ ExitCode = [int]$env:SEMIO_TEST_EXIT } }
 function Remove-ScratchDirectory { param($Path) $script:removed = $true }
-try { Install-CppBuildTools } catch {}
-@{ launched = $script:launched; removed = $script:removed; verification = $script:verification; launch = $script:launch } | ConvertTo-Json -Compress -Depth 4
+$script:failed = $false
+try { Install-CppBuildTools } catch { $script:failed = $true }
+@{ launched = $script:launched; removed = $script:removed; failed = $script:failed; verification = $script:verification; launch = $script:launch } | ConvertTo-Json -Compress -Depth 4
 `;
     const policy = bootstrapSchema.definitions.MsvcBootstrap.const;
-    const result = spawnSync("powershell.exe", ["-NoProfile", "-Command", script], { encoding: "utf8", env: { ...process.env, SEMIO_TEST_CPP_POLICY: JSON.stringify(policy), SEMIO_TEST_FAIL: fail ? "1" : "0" } });
+    for (const code of [0, 3010, 42]) {
+    const result = spawnSync("powershell.exe", ["-NoProfile", "-Command", script], { encoding: "utf8", env: { ...process.env, SEMIO_TEST_CPP_POLICY: JSON.stringify(policy), SEMIO_TEST_FAIL: fail ? "1" : "0", SEMIO_TEST_EXIT: String(code) } });
     expect(result.status, result.stderr).toBe(0);
     const actual = JSON.parse(result.stdout);
     expect(actual.launched).toBe(!fail);
     expect(actual.removed).toBe(true);
+    expect(actual.failed).toBe(fail || !corpus.msvcBootstrap.successCodes.includes(code));
     if (!fail) {
       const path = join("C:/ascii/semio-00000000000000000000000000000000", corpus.msvcBootstrap.installer);
       expect(actual.verification).toEqual({ url: policy.url, sha256: policy.sha256, path });
-      expect(actual.launch).toEqual({ path, arguments: corpus.msvcBootstrap.arguments, successCodes: corpus.msvcBootstrap.successCodes });
+      expect(actual.launch).toEqual({ path, arguments: corpus.msvcBootstrap.arguments, waited: true, passed: true, window: "Hidden" });
+    }
     }
   }
 });

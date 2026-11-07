@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "parts": 10,
+  "parts": 12,
   "partBytes": 1800000,
-  "expectedFiles": 11,
+  "expectedFiles": 13,
   "maximumLargest": 8
 }

@@ -36,6 +36,7 @@ struct VertexOutput {
 @location(4) uv: vec2<f32>,
 @location(5) clip_ellipse: vec4<f32>,
 @location(6) logical_position: vec2<f32>,
+@location(7) border_clip: vec4<f32>,
 }
 
 @vertex
@@ -49,6 +50,7 @@ out.clip_position = vec4<f32>(ndc.x, -ndc.y, 0.0, 1.0);
 out.local = vertex.corner * instance.rect.zw;
 out.clip_ellipse = instance.clip_ellipse;
 out.logical_position = pos;
+out.border_clip = instance.uv_rect;
 out.size = instance.rect.zw;
 out.color = instance.color;
 out.params = instance.params;
@@ -165,14 +167,16 @@ return in.color;
 }
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+let kind = i32(in.params.z + 0.5);
 let color = paint_fragment(in);
+let clipped = kind >= 6 && kind <= 9 && in.params.w > 0.5 && (any(in.logical_position < in.border_clip.xy) || any(in.logical_position >= in.border_clip.zw));
 let radius = max(in.clip_ellipse.zw * 0.5, vec2<f32>(0.0001));
 let normalized = (in.logical_position - in.clip_ellipse.xy - radius) / radius;
 let distance = length(normalized) - 1.0;
 let antialias = max(fwidth(distance), 0.0001);
 let coverage = 1.0 - smoothstep(-antialias * 0.5, antialias * 0.5, distance);
 let enabled = in.clip_ellipse.z > 0.0 && in.clip_ellipse.w > 0.0;
-return vec4<f32>(color.rgb, color.a * select(1.0, coverage, enabled));
+return vec4<f32>(color.rgb, color.a * select(1.0, coverage, enabled) * select(1.0, 0.0, clipped));
 }
 "#;
 

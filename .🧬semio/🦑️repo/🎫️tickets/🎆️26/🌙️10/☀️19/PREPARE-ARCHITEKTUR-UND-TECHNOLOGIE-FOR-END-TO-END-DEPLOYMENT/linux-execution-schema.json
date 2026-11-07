@@ -1,0 +1,61 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "privilegedPending",
+    "reboot",
+    "elevation",
+    "vmp",
+    "wsl",
+    "distribution",
+    "docker"
+  ],
+  "properties": {
+    "privilegedPending": {
+      "type": "boolean"
+    },
+    "reboot": {
+      "enum": [
+        "yes",
+        "no",
+        "unknown"
+      ]
+    },
+    "elevation": {
+      "enum": [
+        "elevated",
+        "not-elevated",
+        "unknown"
+      ]
+    },
+    "vmp": {
+      "enum": [
+        "enabled",
+        "disabled",
+        "unknown"
+      ]
+    },
+    "wsl": {
+      "enum": [
+        "installed",
+        "absent",
+        "unknown"
+      ]
+    },
+    "distribution": {
+      "enum": [
+        "owned-debian12",
+        "absent",
+        "collision",
+        "unknown"
+      ]
+    },
+    "docker": {
+      "enum": [
+        "ready",
+        "absent",
+        "unknown"
+      ]
+    }
+  }
+}

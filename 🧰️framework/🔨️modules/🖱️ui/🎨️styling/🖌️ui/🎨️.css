@@ -6681,12 +6681,18 @@
 }
 /* First-layer important ownership/hover rules outrank active utilities and unlayered overrides. */
 @layer shared-border-priority {
+:is(.shared-border-cell, [data-shared-border-cell]):where(:focus-within, :has(+ :is(.shared-border-cell, [data-shared-border-cell]):focus-within)) { border-color: var(--active-base) !important; }
+:is(.shared-border-cell, [data-shared-border-cell]):where(:is([data-active="true"], [data-state="on"], [data-state="active"], [aria-selected="true"], [aria-pressed="true"]), :has(> :is([data-active="true"], [data-state="on"], [data-state="active"], [aria-selected="true"], [aria-pressed="true"])), :has(+ :is(.shared-border-cell, [data-shared-border-cell]):is([data-active="true"], [data-state="on"], [data-state="active"], [aria-selected="true"], [aria-pressed="true"])), :has(+ :is(.shared-border-cell, [data-shared-border-cell]) > :is([data-active="true"], [data-state="on"], [data-state="active"], [aria-selected="true"], [aria-pressed="true"]))) { border-color: var(--active-base) !important; }
+:is(.shared-border-cell, [data-shared-border-cell]):where(.border-waiting, :has(+ :is(.shared-border-cell, [data-shared-border-cell]).border-waiting)) { border-color: var(--waiting-border-color, var(--border-normal-color)) !important; }
+:is(.shared-border-cell, [data-shared-border-cell]):where(.border-loading, :has(+ :is(.shared-border-cell, [data-shared-border-cell]).border-loading)) { border-color: var(--loading-border-color, var(--border-normal-color)) !important; }
+:is(.shared-border-cell, [data-shared-border-cell]):where([data-introduced="true"], :has(+ :is(.shared-border-cell, [data-shared-border-cell])[data-introduced="true"])) { border-color: var(--introduced-border-color, var(--color-secondary)) !important; }
+:is(.shared-border-cell, [data-shared-border-cell]):where([data-celebrated="true"], :has(+ :is(.shared-border-cell, [data-shared-border-cell])[data-celebrated="true"])) { border-color: var(--border-normal-color) !important; }
 /* A seam belongs to the preceding cell but reflects either incident cell's hover. */
-:is(.shared-border-cell, [data-shared-border-cell]):hover,
-:is(.shared-border-cell, [data-shared-border-cell]):has(+ :is(.shared-border-cell, [data-shared-border-cell]):hover) {
+:is(.shared-border-cell, [data-shared-border-cell]):hover:not(:disabled, [aria-disabled="true"], [aria-disabled="true"] *),
+:is(.shared-border-cell, [data-shared-border-cell]):has(+ :is(.shared-border-cell, [data-shared-border-cell]):hover:not(:disabled, [aria-disabled="true"], [aria-disabled="true"] *)) {
   border-color: var(--border-emphasized-color) !important;
 }
-:is(.shared-border-frame, [data-shared-border-frame]):hover {
+:is(.shared-border-frame, [data-shared-border-frame]):hover:not(:disabled, [aria-disabled="true"], [aria-disabled="true"] *) {
   border-color: var(--border-emphasized-color) !important;
 }
 [data-shared-border-segment][data-shared-border-state="hover"] { stroke: var(--border-emphasized-color) !important; }
@@ -6695,9 +6701,10 @@
 }
 @media (forced-colors: active) {
   :is(.shared-border-cell, [data-shared-border-cell]) { border-color: CanvasText !important; }
-  :is(.shared-border-cell, [data-shared-border-cell]):hover,
-  :is(.shared-border-cell, [data-shared-border-cell]):has(+ :is(.shared-border-cell, [data-shared-border-cell]):hover),
-  :is(.shared-border-frame, [data-shared-border-frame]):hover {
+  :is(.shared-border-cell, [data-shared-border-cell]):where(:focus-within, :has(+ :is(.shared-border-cell, [data-shared-border-cell]):focus-within), :is([data-active="true"], [data-state="on"], [data-state="active"], [aria-selected="true"], [aria-pressed="true"]), :has(+ :is(.shared-border-cell, [data-shared-border-cell]):is([data-active="true"], [data-state="on"], [data-state="active"], [aria-selected="true"], [aria-pressed="true"]))) { border-color: Highlight !important; }
+  :is(.shared-border-cell, [data-shared-border-cell]):hover:not(:disabled, [aria-disabled="true"], [aria-disabled="true"] *),
+  :is(.shared-border-cell, [data-shared-border-cell]):has(+ :is(.shared-border-cell, [data-shared-border-cell]):hover:not(:disabled, [aria-disabled="true"], [aria-disabled="true"] *)),
+  :is(.shared-border-frame, [data-shared-border-frame]):hover:not(:disabled, [aria-disabled="true"], [aria-disabled="true"] *) {
     border-color: Highlight !important;
   }
   [data-slot="mode-dock-tabs"] > [data-slot="mode-dock-tab"]:is(:hover, :has(+ [data-slot="mode-dock-tab"]:hover)) {
@@ -6709,6 +6716,7 @@
 }
 /* Suppress only replaced paint, never border layout: measurement must remain stable. */
 @layer shared-border-ownership {
+[data-shared-border-attached] > :is([data-slot="input"], [data-slot="textarea"]) { border-color: transparent !important; }
 [data-shared-border-attached~="top"] { border-top-color: transparent !important; }
 [data-shared-border-attached~="right"] { border-right-color: transparent !important; }
 [data-shared-border-attached~="bottom"] { border-bottom-color: transparent !important; }

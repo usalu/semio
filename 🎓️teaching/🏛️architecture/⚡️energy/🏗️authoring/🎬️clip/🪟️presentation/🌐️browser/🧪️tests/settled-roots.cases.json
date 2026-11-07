@@ -1,0 +1,7 @@
+[
+  {"id":"no-compositor","pending":[],"ready":false},
+  {"id":"initial-or-rescheduled","pending":[true],"ready":false},
+  {"id":"overview-committed","pending":[false],"ready":true},
+  {"id":"one-root-still-pending","pending":[false,true],"ready":false},
+  {"id":"all-roots-committed","pending":[false,false],"ready":true}
+]

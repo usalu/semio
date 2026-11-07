@@ -45,7 +45,7 @@ fn retained_tree_action_rows_do_not_overpaint_their_labels() {
         drive_layout(&mut ui, "tree-paint", bounds.w, bounds.h, &mut atlas);
         let mut completed = false;
         for _ in 0..16_384 {
-            match ui.frame_into_step::<RecordingSceneHost>("tree-paint", bounds, &mut atlas, None, None, &mut draw) {
+            match ui.frame_into_step::<RecordingSceneHost>("tree-paint", bounds, &mut atlas, None, None, &mut draw, ui_contract::UI_WORKER_RETIREMENT_POLICY).0 {
                 UiFrameStep::Pending => {}
                 UiFrameStep::Ready => {
                     completed = true;

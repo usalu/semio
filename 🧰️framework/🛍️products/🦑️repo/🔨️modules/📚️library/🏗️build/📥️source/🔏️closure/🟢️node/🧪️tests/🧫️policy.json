@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "fields": ["maximumFiles", "maximumFileBytes", "maximumSourceBytes", "maximumSnapshotBytes", "readChunkBytes", "progressFiles"],
+  "mutations": ["missing", "mistyped", "oversized"],
+  "extraField": "unexpected"
+}

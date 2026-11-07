@@ -95,7 +95,7 @@ pub struct Tui {
 }
 
 fn focusable(scene: &Scene, id: NodeId) -> bool {
-    matches!(scene.try_node(id).map(|node| &node.content), Some(NodeContent::Widget(widget)) if widget.interactive()) && scene.shown(id)
+    scene.try_node(id).is_some_and(|node| match &node.content { NodeContent::Widget(widget) => widget.interactive(), NodeContent::Axis(_) => node.children().len() > 1, _ => false }) && scene.shown(id)
 }
 
 fn collect_focusables(scene: &Scene, id: NodeId, out: &mut Vec<NodeId>) {
@@ -103,7 +103,7 @@ fn collect_focusables(scene: &Scene, id: NodeId, out: &mut Vec<NodeId>) {
     if !node.visible {
         return;
     }
-    if matches!(&node.content, NodeContent::Widget(widget) if widget.interactive()) {
+    if focusable(scene, id) {
         out.push(id);
     }
     for &child in node.children() {

@@ -3,6 +3,18 @@
 use super::*;
 
 // #region draw_types
+#[derive(Clone, Copy)]
+pub(super) struct SharedBorderPaint {
+    pub segment: SharedBorderSegment,
+    pub layer: usize,
+    pub slot: usize,
+    pub overlay: bool,
+    pub stroke: f32,
+    pub color: Rgba,
+    pub effect: Option<UiInstance>,
+    pub side: u8,
+}
+
 #[derive(Clone, Default)]
 pub struct DrawLayer {
     pub scissor: Option<ScissorRect>,
@@ -14,13 +26,15 @@ pub struct DrawLayer {
     pub overlay_ui_instances: Vec<UiInstance>,
     pub overlay_raster_instances: Vec<(String, UiInstance)>,
     pub overlay_vector_vertices: Vec<VectorVertex>,
+    pub(super) shared_normal_finalized: bool,
+    pub(super) shared_overlay_finalized: bool,
 }
 
-#[derive(Clone)]
 pub struct DrawList {
-    pub scene_passes: Vec<ScenePass3d>,
-    pub layers: Vec<DrawLayer>,
-    pub glass_regions: Vec<GlassRegion>,
+    pub scene_passes: PagedVec<ScenePass3d>,
+    pub layers: PagedVec<DrawLayer>,
+    pub(super) shared_borders: PagedVec<SharedBorderPaint>,
+    pub glass_regions: PagedVec<GlassRegion>,
     pub(super) scissor_stack: Vec<ScissorRect>,
     pub(super) clip_stack: Vec<ClipRegion>,
     pub(super) glass_content_stack: Vec<usize>,
@@ -29,6 +43,11 @@ pub struct DrawList {
     pub(super) retained_output: Option<RetainedOutputGrant>,
     pub(super) prepared_items: usize,
     pub(super) prepared_bytes: usize,
+    pub(super) border_finalize: Option<BorderFinalize>,
+    pub(super) border_retained_bytes: usize,
+    pub(super) border_finalized: bool,
+    pub(super) retained_append: Option<Box<[RetainedAppendWork]>>,
+    pub(super) append_sequence: u64,
     /// 🪟️ How many nested `begin_overlay_route`/`end_overlay_route` pairs are open. While non-zero
     /// every ordinary `push_*` below routes into the layer's OVERLAY bucket instead of its normal
     /// one — the bucket `ui_overlay_pass` draws after the main and raster passes, so whatever is
@@ -38,6 +57,22 @@ pub struct DrawList {
     /// chrome landing on top of its own content (ticket 26/09/17 packet W15a). Nothing else changes
     /// bucket: a caller that never opens a pair paints exactly where it always did.
     pub(super) overlay_route: u32,
+}
+
+impl Clone for DrawList {
+    fn clone(&self) -> Self {
+        let layers = self.layers.clone();
+        let border_finalize = self.border_finalize.as_ref().map(|state| state.rebased_clone(layers.allocated_bytes()));
+        Self {
+            scene_passes: self.scene_passes.clone(), layers, shared_borders: self.shared_borders.clone(), glass_regions: self.glass_regions.clone(),
+            scissor_stack: self.scissor_stack.clone(), clip_stack: self.clip_stack.clone(), glass_content_stack: self.glass_content_stack.clone(),
+            screen_h: self.screen_h, clock_seconds: self.clock_seconds, retained_output: self.retained_output,
+            prepared_items: self.prepared_items, prepared_bytes: self.prepared_bytes, border_finalize,
+            border_retained_bytes: 0, border_finalized: self.border_finalized,
+            retained_append: self.retained_append.clone(), append_sequence: self.append_sequence,
+            overlay_route: self.overlay_route,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -67,9 +102,10 @@ pub(super) struct RetainedOutputGrant {
 impl Default for DrawList {
     fn default() -> Self {
         let mut list = Self {
-            scene_passes: Vec::new(),
-            layers: Vec::new(),
-            glass_regions: Vec::new(),
+            scene_passes: PagedVec::new(),
+            layers: PagedVec::new(),
+            shared_borders: PagedVec::new(),
+            glass_regions: PagedVec::new(),
             scissor_stack: Vec::new(),
             clip_stack: Vec::new(),
             glass_content_stack: Vec::new(),
@@ -78,6 +114,11 @@ impl Default for DrawList {
             retained_output: None,
             prepared_items: 0,
             prepared_bytes: 0,
+            border_finalize: None,
+            border_retained_bytes: 0,
+            border_finalized: false,
+            retained_append: None,
+            append_sequence: 0,
             overlay_route: 0,
         };
         list.layers.push(DrawLayer::default());
@@ -202,6 +243,9 @@ pub enum RetainedOutputError {
     AlreadyActive,
     NoActiveGrant,
     LimitExceeded,
+    Finalized,
+    AppendActive,
+    InvalidAppendToken,
 }
 
 impl std::fmt::Display for RetainedOutputError {
@@ -212,6 +256,9 @@ impl std::fmt::Display for RetainedOutputError {
             Self::AlreadyActive => "a retained output grant is already active",
             Self::NoActiveGrant => "no retained output grant is active",
             Self::LimitExceeded => "retained output exceeded its grant",
+            Self::Finalized => "shared border frame is finalized; clear or create a new frame",
+            Self::AppendActive => "retained append is already active",
+            Self::InvalidAppendToken => "retained append token is stale",
         })
     }
 }
@@ -222,9 +269,10 @@ impl DrawList {
     /// 🪣 Creates an allocation-free transfer slot for a later exact draw admission.
     pub fn empty() -> Self {
         Self {
-            scene_passes: Vec::new(),
-            layers: Vec::new(),
-            glass_regions: Vec::new(),
+            scene_passes: PagedVec::new(),
+            layers: PagedVec::new(),
+            shared_borders: PagedVec::new(),
+            glass_regions: PagedVec::new(),
             scissor_stack: Vec::new(),
             clip_stack: Vec::new(),
             glass_content_stack: Vec::new(),
@@ -233,6 +281,11 @@ impl DrawList {
             retained_output: None,
             prepared_items: 0,
             prepared_bytes: 0,
+            border_finalize: None,
+            border_retained_bytes: 0,
+            border_finalized: false,
+            retained_append: None,
+            append_sequence: 0,
             overlay_route: 0,
         }
     }
@@ -241,52 +294,34 @@ impl DrawList {
     /// boundary. Indices are rebased onto the caller's existing frame and the caller's active clip
     /// and glass context continues across the appended layers.
     pub fn append_retained_candidate(&mut self, candidate: &mut Self) -> Result<(), RetainedOutputError> {
-        if !candidate.scissor_stack.is_empty() || !candidate.clip_stack.is_empty() || !candidate.glass_content_stack.is_empty() || candidate.retained_output.is_some() || candidate.overlay_route != 0 {
-            return Err(RetainedOutputError::Capacity);
+        let (token, _) = self.begin_retained_append(candidate);
+        let token = token?;
+        loop {
+            match self.step_retained_append(token).0 {
+                Ok(RetainedAppendStep::Pending) => {},
+                Ok(RetainedAppendStep::Complete) => return Ok(()),
+                Err(error) => {
+                    loop {
+                        match self.cancel_retained_append_step(token).0 {
+                            Ok(RetainedAppendStep::Pending) => {},
+                            Ok(RetainedAppendStep::Complete) => return Err(error),
+                            Err(_) => return Err(error),
+                        }
+                    }
+                }
+            }
         }
-        if !self.claim_retained_output(candidate.prepared_items, candidate.prepared_bytes) {
-            return Err(RetainedOutputError::LimitExceeded);
-        }
-        let layer_offset = self.layers.len();
-        let glass_offset = self.glass_regions.len();
-        let inherited_scissor = self.scissor_stack.last().copied();
-        let inherited_clip = self.clip_stack.last().cloned();
-        let inherited_foreground = self.glass_content_stack.last().copied();
-        for pass in &mut candidate.scene_passes {
-            pass.layer_index = pass.layer_index.checked_add(layer_offset).ok_or(RetainedOutputError::Capacity)?;
-        }
-        for region in &mut candidate.glass_regions {
-            region.layer_index = region.layer_index.checked_add(layer_offset).ok_or(RetainedOutputError::Capacity)?;
-        }
-        for layer in &mut candidate.layers {
-            layer.scissor = match (layer.scissor, inherited_scissor) {
-                (Some(local), Some(parent)) => Some(local.intersect(&parent)),
-                (local, parent) => local.or(parent),
-            };
-            layer.clip = match (&layer.clip, &inherited_clip) {
-                (Some(local), Some(parent)) => Some(local.intersect(parent)),
-                (Some(local), None) => Some(local.clone()),
-                (None, Some(parent)) => Some(parent.clone()),
-                (None, None) => None,
-            };
-            layer.foreground_of = match layer.foreground_of {
-                Some(region) => Some(region.checked_add(glass_offset).ok_or(RetainedOutputError::Capacity)?),
-                None => inherited_foreground,
-            };
-        }
-        self.scene_passes.append(&mut candidate.scene_passes);
-        self.layers.append(&mut candidate.layers);
-        self.glass_regions.append(&mut candidate.glass_regions);
-        candidate.prepared_items = 0;
-        candidate.prepared_bytes = 0;
-        Ok(())
     }
 
     /// 🎟️ Pre-admits fixed candidate backing before a retained paint child transfers output.
     pub fn try_reserve_retained_items(&mut self, items: usize) -> Result<(), RetainedOutputError> {
         if self.layers.is_empty() {
-            self.layers.try_reserve_exact(1).map_err(|_| RetainedOutputError::Allocation)?;
-            self.layers.push(DrawLayer::default());
+            self.layers.try_push(DrawLayer::default()).map_err(|_| RetainedOutputError::Allocation)?;
+        }
+        let border_limit = self.shared_borders.len().checked_add(items).ok_or(RetainedOutputError::Capacity)?;
+        while self.shared_borders.capacity() < border_limit {
+            let bytes = self.shared_borders.next_capacity_allocation_bytes(border_limit).map_err(|_| RetainedOutputError::Capacity)?.ok_or(RetainedOutputError::Capacity)?;
+            self.shared_borders.reserve_capacity_one(border_limit, bytes).map_err(|_| RetainedOutputError::Allocation)?;
         }
         let vertices = items.checked_mul(6).ok_or(RetainedOutputError::Capacity)?;
         let layer = self.layers.last_mut().ok_or(RetainedOutputError::Capacity)?;
@@ -301,12 +336,21 @@ impl DrawList {
 
     /// 🎫️ Starts one exact retained output grant and pre-admits all fixed container backing.
     pub fn begin_retained_output(&mut self, item_limit: usize, byte_limit: usize) -> Result<(), RetainedOutputError> {
+        if self.retained_append.is_some() || self.border_finalize.is_some() { return Err(RetainedOutputError::AppendActive); }
         if self.retained_output.is_some() {
             return Err(RetainedOutputError::AlreadyActive);
         }
         self.try_reserve_retained_items(item_limit)?;
-        self.layers.try_reserve_exact(item_limit).map_err(|_| RetainedOutputError::Allocation)?;
-        self.glass_regions.try_reserve_exact(item_limit).map_err(|_| RetainedOutputError::Allocation)?;
+        let layer_limit = self.layers.len().checked_add(item_limit).ok_or(RetainedOutputError::Capacity)?;
+        while self.layers.capacity() < layer_limit {
+            let bytes = self.layers.next_capacity_allocation_bytes(layer_limit).map_err(|_| RetainedOutputError::Capacity)?.ok_or(RetainedOutputError::Capacity)?;
+            self.layers.reserve_capacity_one(layer_limit, bytes).map_err(|_| RetainedOutputError::Allocation)?;
+        }
+        let glass_limit = self.glass_regions.len().checked_add(item_limit).ok_or(RetainedOutputError::Capacity)?;
+        while self.glass_regions.capacity() < glass_limit {
+            let bytes = self.glass_regions.next_capacity_allocation_bytes(glass_limit).map_err(|_| RetainedOutputError::Capacity)?.ok_or(RetainedOutputError::Capacity)?;
+            self.glass_regions.reserve_capacity_one(glass_limit, bytes).map_err(|_| RetainedOutputError::Allocation)?;
+        }
         self.scissor_stack.try_reserve_exact(item_limit).map_err(|_| RetainedOutputError::Allocation)?;
         self.glass_content_stack.try_reserve_exact(item_limit).map_err(|_| RetainedOutputError::Allocation)?;
         self.retained_output = Some(RetainedOutputGrant { item_limit, byte_limit, items: 0, bytes: 0, faulted: false });
@@ -367,6 +411,9 @@ impl DrawList {
     pub fn next_retirement_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{
         fn bytes<T>(value:&Vec<T>)->Result<usize,semio_framework_value::ValueError>{value.capacity().checked_mul(size_of::<T>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"draw backing extent overflow"))}
         fn text(value:&String)->usize{if value.is_empty(){value.capacity()}else{0}}
+        fn page<T>(value:&PagedVec<T>)->Result<usize,semio_framework_value::ValueError>{value.next_release_allocation_bytes().map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"draw page retirement failed"))}
+        if let Some(token) = self.active_retained_append_token() { return self.next_retained_append_cancel_demand(token).map(|grant| grant.maximum_release_bytes).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "retained append retirement preflight failed")); }
+        if let Some(cursor) = &self.border_finalize { return cursor.next_release_bytes().map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"shared border retirement failed")); }
         if let Some(pass)=self.scene_passes.last(){
             if let Some(draw)=pass.textured_draws.last(){if let Some(instance)=draw.instances.last(){return Ok(text(&instance.texture_key))}return if draw.instances.capacity()!=0{bytes(&draw.instances)}else{Ok(0)}}
             if let Some(draw)=pass.material_draws.last(){
@@ -382,21 +429,58 @@ impl DrawList {
             if let Some(draw)=pass.shadow_draws.last(){if let Some(instance)=draw.instances.last(){return Ok(text(&instance.id))}if draw.instances.capacity()!=0{return bytes(&draw.instances)}return Ok(text(&draw.mesh_key))}
             if pass.textured_draws.capacity()!=0{return bytes(&pass.textured_draws)}if pass.material_draws.capacity()!=0{return bytes(&pass.material_draws)}if pass.translucent_draws.capacity()!=0{return bytes(&pass.translucent_draws)}if pass.line_draws.capacity()!=0{return bytes(&pass.line_draws)}if pass.draws.capacity()!=0{return bytes(&pass.draws)}if pass.shadow_draws.capacity()!=0{return bytes(&pass.shadow_draws)}return Ok(0)
         }
+        if !self.shared_borders.is_empty(){return Ok(0)}
+        if !self.shared_borders.terminal_is_empty(){return page(&self.shared_borders)}
         if let Some(layer)=self.layers.last(){
-            if let Some(clip)=layer.clip.as_ref(){return if !clip.scissors.is_empty(){Ok(0)}else{bytes(&clip.scissors)}}
+            if let Some(clip)=layer.clip.as_ref(){return if !clip.scissors.is_empty(){Ok(0)}else{page(&clip.scissors)}}
             if let Some((key,_))=layer.raster_instances.last(){return Ok(text(key))}if let Some((key,_))=layer.overlay_raster_instances.last(){return Ok(text(key))}
             if !layer.overlay_vector_vertices.is_empty()||!layer.overlay_ui_instances.is_empty()||!layer.vector_vertices.is_empty()||!layer.ui_instances.is_empty(){return Ok(0)}
             if layer.overlay_vector_vertices.capacity()!=0{return bytes(&layer.overlay_vector_vertices)}if layer.overlay_ui_instances.capacity()!=0{return bytes(&layer.overlay_ui_instances)}if layer.overlay_raster_instances.capacity()!=0{return bytes(&layer.overlay_raster_instances)}if layer.vector_vertices.capacity()!=0{return bytes(&layer.vector_vertices)}if layer.ui_instances.capacity()!=0{return bytes(&layer.ui_instances)}if layer.raster_instances.capacity()!=0{return bytes(&layer.raster_instances)}return Ok(0)
         }
         if !self.glass_regions.is_empty()||!self.scissor_stack.is_empty()||!self.glass_content_stack.is_empty(){return Ok(0)}
-        if let Some(clip)=self.clip_stack.last(){return if !clip.scissors.is_empty(){Ok(0)}else{bytes(&clip.scissors)}}
-        if self.scene_passes.capacity()!=0{return bytes(&self.scene_passes)}if self.layers.capacity()!=0{return bytes(&self.layers)}if self.glass_regions.capacity()!=0{return bytes(&self.glass_regions)}if self.scissor_stack.capacity()!=0{return bytes(&self.scissor_stack)}if self.clip_stack.capacity()!=0{return bytes(&self.clip_stack)}if self.glass_content_stack.capacity()!=0{return bytes(&self.glass_content_stack)}Ok(0)
+        if let Some(clip)=self.clip_stack.last(){return if !clip.scissors.is_empty(){Ok(0)}else{page(&clip.scissors)}}
+        if !self.scene_passes.terminal_is_empty(){return page(&self.scene_passes)}if !self.layers.terminal_is_empty(){return page(&self.layers)}if !self.glass_regions.terminal_is_empty(){return page(&self.glass_regions)}if self.scissor_stack.capacity()!=0{return bytes(&self.scissor_stack)}if self.clip_stack.capacity()!=0{return bytes(&self.clip_stack)}if self.glass_content_stack.capacity()!=0{return bytes(&self.glass_content_stack)}Ok(0)
     }
+    /// 🪜 Quotes the traversal depth needed by the next retained retirement step.
+    pub fn next_retirement_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        match self.active_retained_append_token() {
+            Some(token) => self.next_retained_append_cancel_demand(token).map(|demand| demand.maximum_copy_bytes).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "append cancellation copy preflight failed")),
+            None => Ok(0),
+        }
+    }
+
+    pub fn next_retirement_capacity_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        match self.active_retained_append_token() {
+            Some(token) => self.next_retained_append_cancel_demand(token).map(|demand| demand.maximum_capacity_bytes).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "append cancellation capacity preflight failed")),
+            None => Ok(0),
+        }
+    }
+
+    pub fn next_retirement_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        if let Some(token) = self.active_retained_append_token() { return self.next_retained_append_cancel_demand(token).map(|demand| demand.maximum_depth).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "append cancellation depth preflight failed")); }
+        fn depth<T>(values: &PagedVec<T>) -> Result<usize, semio_framework_value::ValueError> {
+            let demand = if !values.is_empty() { values.next_pop_depth_demand() }
+            else if !values.terminal_is_empty() { values.next_release_depth_demand() }
+            else { return Ok(0) };
+            demand.map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"draw retirement depth overflow"))
+        }
+        if let Some(cursor) = &self.border_finalize { return cursor.next_retirement_depth().map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"border retirement depth overflow")); }
+        let mut result = 1usize.max(depth(&self.scene_passes)?).max(depth(&self.shared_borders)?).max(depth(&self.layers)?).max(depth(&self.glass_regions)?);
+        if let Some(clip) = self.layers.last().and_then(|layer| layer.clip.as_ref()) { result = result.max(depth(&clip.scissors)?.saturating_add(1)); }
+        if let Some(clip) = self.clip_stack.last() { result = result.max(depth(&clip.scissors)?.saturating_add(1)); }
+        Ok(result)
+    }
+
     pub fn retire_granted(&mut self,grant:semio_framework_job::RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
         use semio_framework_job::{InteractiveJobCloseStep as Step,RetainedCloneProgress};
         let empty=RetainedCloneProgress::default();if self.retirement_is_empty(){return Ok(Step::Complete{progress:empty})}if grant.maximum_items==0{return Ok(Step::Pending{progress:empty})}
         let bytes=self.next_retirement_release_byte_demand()?;
-        if bytes>grant.maximum_release_bytes{return Ok(Step::Pending{progress:empty})}if grant.maximum_depth==0{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original draw close requires depth"))}
+        if bytes>grant.maximum_release_bytes||self.next_retirement_depth_demand()?>grant.maximum_depth||self.next_retirement_copy_byte_demand()?>grant.maximum_copy_bytes||self.next_retirement_capacity_byte_demand()?>grant.maximum_capacity_bytes{return Ok(Step::Pending{progress:empty})}
+        if let Some(token)=self.active_retained_append_token(){
+            let (result, progress)=self.cancel_retained_append_step(token);
+            result.map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"append cancellation failed").with_retained_progress(progress))?;
+            return Ok(if self.retirement_is_empty(){Step::Complete{progress}}else{Step::Pending{progress}})
+        }
         let complete=self.retire_step();let progress=RetainedCloneProgress{copied_items:1,copied_bytes:0,retained_capacity_bytes:0,released_bytes:bytes};
         Ok(if complete{Step::Complete{progress}}else{Step::Pending{progress}})
     }

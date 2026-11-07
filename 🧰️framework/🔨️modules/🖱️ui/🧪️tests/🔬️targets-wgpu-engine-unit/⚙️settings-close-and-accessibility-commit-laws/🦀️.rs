@@ -18,7 +18,7 @@ fn puzzle3d_settings_document_completes_retained_paint() {
     let mut draw = DrawList::default();
     let mut ready = false;
     for _ in 0..262_144 {
-        match ui.frame_into_step::<RecordingSceneHost>(window_id, body, &mut atlas, Some(&icons), None, &mut draw) {
+        match ui.frame_into_step::<RecordingSceneHost>(window_id, body, &mut atlas, Some(&icons), None, &mut draw, ui_contract::UI_WORKER_RETIREMENT_POLICY).0 {
             UiFrameStep::Pending => {}
             UiFrameStep::Ready => {
                 ready = true;

@@ -18,7 +18,7 @@ pub fn render_input<E: Clone>(id: &str, value: &str, placeholder: Option<&str>, 
     let focused = ctx.input.focused_id.as_deref() == Some(id);
     let border = if focused { ctx.theme.border_emphasized } else { ctx.theme.border_normal };
     if !centered {
-        push_control_border(ctx.draw, bounds, ctx.theme, border, ctx.theme.input_bg);
+        push_control_border(ctx.draw, bounds, ctx.theme, border, ctx.theme.input_bg, if focused { semio_ui_wgpu_layout::chrome::SharedBorderState::Focus } else { semio_ui_wgpu_layout::chrome::SharedBorderState::Normal });
     }
     let (display, muted) = if focused {
         (ctx.input.text_view().to_string(), false)

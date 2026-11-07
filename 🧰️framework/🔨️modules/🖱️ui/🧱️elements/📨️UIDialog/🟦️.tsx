@@ -132,7 +132,7 @@ export function UIDialog<Arg extends ActionArgDef>({ dialog, seedArgs, notice, c
         )}
         <div className="flex flex-wrap items-start justify-between gap-single">
           <Button id="ui.dialog.cancel" variant="ghost" icon="x" text={dialog.cancelLabel ? text(dialog.cancelLabel) : cancelLabel} onClick={onCancel} />
-          <div className="flex min-w-0 flex-1 flex-wrap items-start justify-end gap-single">
+          <div data-shared-border-group="" className="flex min-w-0 flex-1 flex-wrap items-start justify-end">
             {choices.map((choice) => {
               const chrome = dialogChoiceChrome(choice);
               return <div key={choice.id} data-dialog-choice-group={choice.id} className="flex min-w-0 flex-col items-end gap-tiny">

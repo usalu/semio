@@ -846,7 +846,7 @@ fn drive_window_to_painted(ui: &mut Ui, window_id: &str, viewport: semio_ui_them
             let _ = ui.step_layouts(&pool, atlas, &mut cx);
             continue;
         }
-        match ui.frame_into_step::<NoSceneHost>(window_id, viewport, atlas, None, None, &mut target) {
+        match ui.frame_into_step::<NoSceneHost>(window_id, viewport, atlas, None, None, &mut target, ui_contract::UI_WORKER_RETIREMENT_POLICY).0 {
             UiFrameStep::Ready | UiFrameStep::Missing => return Some(spent),
             UiFrameStep::Pending => {}
             UiFrameStep::Fault => panic!("the window's retained paint faulted at {}", ui.paint_stall_census(window_id)),

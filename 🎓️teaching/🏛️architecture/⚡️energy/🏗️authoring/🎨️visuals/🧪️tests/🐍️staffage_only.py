@@ -96,16 +96,63 @@ def object_noun_pattern():
 
 
 def primitive_objects(source):
-    """🧱 Functions named like a physical object that build it from primitives without any staffage call, as (name, line)."""
-    rule = CASES["rule_a"]
+    """🧱 Object factories built from primitives or physical pictograms without rendered staffage, as (name, line)."""
+    rule = {**CASES["rule_a"], **CASES["rule_c"]}
     noun = object_noun_pattern()
+    rendered = set(rule["staffage_calls"]) - set(rule["metadata_calls"])
     found = []
     for node in ast.walk(ast.parse(source)):
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and noun.search(node.name):
-            calls = called_names(node)
-            if calls & set(rule["primitives"]) and not calls & set(rule["staffage_calls"]):
-                found.append((node.name, node.lineno))
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) or not noun.search(node.name):
+            continue
+        units = composition_units(node, rule)
+        returns = [unit for unit in units if unit.startswith("<return@")]
+        def calls_from(unit):
+            calls, seen, pending = set(), {unit}, [unit]
+            while pending:
+                for expression in units[pending.pop()]:
+                    calls |= called_names(expression)
+                    refs = {target_key(item) for item in ast.walk(expression) if isinstance(item, (ast.Name, ast.Attribute))}
+                    new = refs & units.keys() - seen
+                    pending.extend(new)
+                    seen |= new
+            return calls
+        call_sets = map(calls_from, returns) if returns else [called_names(node)]
+        primitive = any(calls & set(rule["primitives"]) and not calls & rendered for calls in call_sets)
+        pictogram = any(
+            isinstance(call, ast.Call) and call_name(call) == "icon_glyph" and call.args
+            and isinstance(call.args[0], ast.Constant) and call.args[0].value in rule["physical_icons"]
+            for call in ast.walk(node)
+        )
+        if primitive or pictogram:
+            found.append((node.name, node.lineno))
     return found
+
+
+def physical_pictograms(source):
+    """🏭 Lines that render a physical-object icon, including module-level icon maps."""
+    tree = ast.parse(source)
+    constants = string_constants(tree)
+    mappings = {
+        target.id: {key.value: value.value for key, value in zip(node.value.keys, node.value.values)
+                    if isinstance(key, ast.Constant) and isinstance(value, ast.Constant) and isinstance(value.value, str)}
+        for node in tree.body if isinstance(node, ast.Assign) and isinstance(node.value, ast.Dict)
+        for target in node.targets if isinstance(target, ast.Name)
+    }
+    found = []
+    for call in (node for node in ast.walk(tree) if isinstance(node, ast.Call) and call_name(node) == "icon_glyph"):
+        arg = call.args[0] if call.args else next((keyword.value for keyword in call.keywords if keyword.arg == "kind"), None)
+        if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
+            values = {arg.value}
+        elif isinstance(arg, ast.Name):
+            values = {constants.get(arg.id)}
+        elif isinstance(arg, ast.Subscript) and isinstance(arg.value, ast.Name):
+            mapping = mappings.get(arg.value.id, {})
+            values = {mapping.get(arg.slice.value)} if isinstance(arg.slice, ast.Constant) else set(mapping.values())
+        else:
+            values = set()
+        if values & set(CASES["rule_a"]["physical_icons"]):
+            found.append(call.lineno)
+    return sorted(found)
 
 
 def call_name(call):
@@ -467,6 +514,16 @@ class StaffageOnlyTest(unittest.TestCase):
         for source, expected in CASES["rule_a"]["sources"].items():
             with self.subTest(source=source):
                 self.assertEqual([name for name, _ in primitive_objects(source)], expected)
+
+    def test_physical_pictograms_are_found_the_way_the_fixture_says(self):
+        for source, expected in CASES["rule_a"]["pictogram_sources"].items():
+            with self.subTest(source=source):
+                self.assertEqual(physical_pictograms(source), expected)
+
+    def test_no_clip_renders_physical_pictograms(self):
+        for path in clip_sources():
+            with self.subTest(path=clip_key(path)):
+                self.assertEqual(physical_pictograms(path.read_text(encoding="utf-8")), [])
 
     def test_rule_a_nouns_are_derived_from_the_catalog_slugs(self):
         spec = CASES["rule_a"]["object_nouns"]

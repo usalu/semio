@@ -18,10 +18,23 @@
     "reads": [
       "{workspaceRoot}/.storybook/📖️stories/**/*"
     ],
+    "borderTestVectors": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📋️list/partition.cases.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📋️list/partition.schema.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📏️shared-border-clip/*.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📥️retained-append/*.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/🧪️tests/📏️shared-border/*.json"
+    ],
     "testEnv": [
-      { "env": "SEMIO_TEST_LEVEL" },
-      { "env": "SEMIO_TEST_BUDGET_MS" },
-      { "env": "SEMIO_BUILD_BUDGET_MS" }
+      {
+        "env": "SEMIO_TEST_LEVEL"
+      },
+      {
+        "env": "SEMIO_TEST_BUDGET_MS"
+      },
+      {
+        "env": "SEMIO_BUILD_BUDGET_MS"
+      }
     ]
   },
   "targets": {
@@ -47,6 +60,7 @@
         "default",
         "^default",
         "testEnv",
+        "borderTestVectors",
         "reads"
       ],
       "outputs": [],
@@ -54,7 +68,11 @@
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
         "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
-      }
+      },
+      "dependsOn": [
+        "@semio-tech/ui-styling-tokens:generate",
+        "@semio-tech/assets:build"
+      ]
     },
     "typecheck": {
       "executor": "repo:script",

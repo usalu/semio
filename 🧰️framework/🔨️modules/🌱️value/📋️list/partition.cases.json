@@ -1,0 +1,27 @@
+[
+  {
+    "values": [],
+    "limit": 3,
+    "expected": 0
+  },
+  {
+    "values": [
+      1,
+      2,
+      2,
+      4
+    ],
+    "limit": 2,
+    "expected": 1
+  },
+  {
+    "values": [
+      1,
+      2,
+      2,
+      4
+    ],
+    "limit": 5,
+    "expected": 4
+  }
+]

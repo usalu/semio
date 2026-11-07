@@ -1,0 +1,6 @@
+import {existsSync} from "node:fs";
+import {workspaceTestPythonEnvironmentV1} from "D:/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites/🐍️python/🟦️.ts";
+import {repositoryCachePartitionRootV1} from "D:/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
+import {pythonEnvironmentOfProjectV1} from "D:/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
+const root=process.cwd(),plan=pythonEnvironmentOfProjectV1(root,"workspace",{dependencies:repositoryCachePartitionRootV1(root,"dependencies"),tools:repositoryCachePartitionRootV1(root,"tools")}),before=existsSync(plan.directory);
+try {const env=await workspaceTestPythonEnvironmentV1(root,{...process.env,Uv_Python_Preference:"only-system",uv_python_install_dir:"D:\\nonexistent-python-root"},new AbortController().signal);console.log(JSON.stringify({series:plan.series,interpreter:env.SEMIO_TOOL_PYTHON,environmentBefore:before,environmentAfter:existsSync(plan.directory)}));if(before!==existsSync(plan.directory))throw Error("Project environment changed");}catch(error){console.error(JSON.stringify({environmentBefore:before,environmentAfter:existsSync(plan.directory)}));throw error;}

@@ -1,7 +1,7 @@
 #!/usr/bin/env repo
 import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-/** 🛂️ `teaching-proctor` task router: `repo ./📜️script.ts <build|test [fundamental|quick|long|exhaustive] [args…]|dev|serve-release|check [catalog]|rebuild|health|backup [directory/|file|-]|restore <file|->|erase (--handle <handle>|--tag <tag>|--learner <id>) [--dry-run]|prune --older-than <age> [--dry-run]|capacity [--learners n] [--compression n] [--report file] [--executable proctor] [--hall-only]>`.
+/** 🛂️ `teaching-proctor` task router: `repo ./📜️script.ts <build|test [fundamental|quick|long|exhaustive] [args…]|test-launcher|dev|serve-release|check [catalog]|rebuild|health|backup [directory/|file|-]|restore <file|->|erase (--handle <handle>|--tag <tag>|--learner <id>) [--dry-run]|prune --older-than <age> [--dry-run]|capacity [--learners n] [--compression n] [--report file] [--executable proctor] [--hall-only]>`.
  *
  * `build` is the only verb that compiles: it leaves the executable as a cached product with a receipt (`../../🏗️bootstrap/🧾️product/🟦️.ts`).
  * Every other verb but `test` and `capacity` resolves that product and runs a private copy of it, so a running dev proctor never
@@ -47,6 +47,14 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     await runRepositoryCargoTests([PROCTOR_PACKAGE, ...PROCTOR_LIBRARY_PACKAGES], this.repoRoot, this.invocation, rest);
+  }
+}
+
+/** 🧪️ Runs the native launcher lifetime contract under the issued command owner. */
+class TestLauncherScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("test-launcher takes no arguments");
+    await runRepositoryCommand(this.invocation, process.execPath, ["test", join(this.repoRoot, "🎓️teaching/🛂️proctor/🏗️bootstrap/🧾️product/⏹️lifetime/🧪️tests/🟦️.ts")], this.repoRoot, "proctor:test-launcher", { version: 1, maximumElapsedMilliseconds: 300000, output: { maximumBytes: 1048576, maximumLines: 10000 } }, { env: process.env, stdout: "inherit" });
   }
 }
 
@@ -125,6 +133,6 @@ class CapacityScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("test", TestScript).register("dev", DevScript).register("serve-release", ServeReleaseScript).register("check", CheckScript).register("rebuild", RebuildScript).register("health", HealthScript).register("backup", BackupScript).register("restore", RestoreScript).register("erase", EraseScript).register("prune", PruneScript).register("capacity", CapacityScript);
+const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("test", TestScript).register("test-launcher", TestLauncherScript).register("dev", DevScript).register("serve-release", ServeReleaseScript).register("check", CheckScript).register("rebuild", RebuildScript).register("health", HealthScript).register("backup", BackupScript).register("restore", RestoreScript).register("erase", EraseScript).register("prune", PruneScript).register("capacity", CapacityScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

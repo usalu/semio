@@ -1,6 +1,7 @@
 go 1.26.9
 
 use (
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🪟️msvc/📦️packages/🐹️go
 	./🧰️framework/🔨️modules/📁️filesystem/🛡️durability/📦️packages/🐹️go
 	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧾️yaml/📦️packages/🐹️go
 	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/📦️packages/🐹️go

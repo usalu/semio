@@ -4,7 +4,7 @@ import{existsSync,mkdtempSync,readFileSync,rmSync,writeFileSync}from"node:fs";im
 import{join}from"node:path";
 import{fileURLToPath}from"node:url";
 import ts from"typescript";
-import{testPythonV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
+import{requirePinnedTestToolV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 
 const root=fileURLToPath(new URL("../../../../../../../../../../../../",import.meta.url));
 const scopes=["withCompilerCapacityConsumptionV1","withCompilerCapacityScopeV1"],acquire="acquireCompilerCapacityLeaseV1",writers=["withCompilerWorkspaceSharedWriteV1","withCompilerWorkspaceWriteV1","withCompilerWriterCustodyV1","withCompilerSharedHeadroomV1","withCompilerInitialHeadroomV1","withCompilerWorkspaceBorrowV1","acquireCargoBuildLeaseV1","acquireCargoTargetRecipeV1"];
@@ -55,7 +55,7 @@ for path in paths:
             for n in re.finditer(r"\\b"+w+r"\\s*(?:<[^>(]*>)?\\(",text):
                 if n.start()>end:out.append(path+": "+w+" after "+acquire)
 print(json.dumps(sorted(out)))`;
- const run=spawnSync(testPythonV1()??"python3",["-I","-c",program,root,JSON.stringify(paths)],{encoding:"utf8",maxBuffer:1<<26});expect(run.status,run.stderr).toBe(0);
+ const run=spawnSync(requirePinnedTestToolV1("python"),["-I","-c",program,root,JSON.stringify(paths)],{encoding:"utf8",maxBuffer:1<<26});expect(run.status,run.stderr).toBe(0);
  expect(paths.length).toBeGreaterThan(10);
  expect(JSON.parse(run.stdout)).toEqual(actual);
  expect(actual).toEqual([]);
@@ -99,7 +99,7 @@ for path in paths:
                 for n in re.finditer(r"\\b"+lease+r"\\s*(?:<[^>(]*>)?\\(",text):
                     if m.end()<n.start()<end:out.append(path+": "+lease+" inside "+name)
 print(json.dumps(sorted(out)))`;
- const run=spawnSync(testPythonV1()??"python3",["-I","-c",program,root,JSON.stringify(paths)],{encoding:"utf8",maxBuffer:1<<26});expect(run.status,run.stderr).toBe(0);
+ const run=spawnSync(requirePinnedTestToolV1("python"),["-I","-c",program,root,JSON.stringify(paths)],{encoding:"utf8",maxBuffer:1<<26});expect(run.status,run.stderr).toBe(0);
  expect(JSON.parse(run.stdout)).toEqual(actual);
  expect(actual).toEqual([]);
 },180000);
@@ -167,7 +167,7 @@ print(json.dumps(sorted(out)))`;
 
 test("the build lease is never taken inside an entered compiler writer (the writer an input scope offers through withWriter, or a port that holds it around its continuation: withBuildInputs, withCargoInputs; including the callbacks they receive by name): the build-directory custody follows the configuration and registry leases and precedes the writer on every test, lint and exact-law path",()=>{
  const paths=inputFiles(),actual=paths.flatMap(path=>leasesInsideInputScopes(path)).sort();
- const run=spawnSync(testPythonV1()??"python3",["-I","-c",inputScopeOracle,root,JSON.stringify(paths)],{encoding:"utf8",maxBuffer:1<<26});expect(run.status,run.stderr).toBe(0);
+ const run=spawnSync(requirePinnedTestToolV1("python"),["-I","-c",inputScopeOracle,root,JSON.stringify(paths)],{encoding:"utf8",maxBuffer:1<<26});expect(run.status,run.stderr).toBe(0);
  expect(paths.length).toBeGreaterThanOrEqual(2);
  expect(JSON.parse(run.stdout)).toEqual(actual);
  expect(actual).toEqual([]);
@@ -178,7 +178,7 @@ test("the writer detector flags a lease taken inside an entered writer, in the c
  expect(leasesInsideInputScopes("retired.ts",retired)).toEqual(["retired.ts: acquireCargoBuildLeaseV1 inside withWriter"]);
  expect(leasesInsideInputScopes("named.ts",named)).toEqual(["named.ts: acquireCargoBuildLeaseV1 inside withBuildInputs"]);
  expect(leasesInsideInputScopes("hoisted.ts",hoisted)).toEqual([]);
- const dir=mkdtempSync(join(tmpdir(),"input-scope-"));try{const rows={"retired.ts":retired,"named.ts":named,"hoisted.ts":hoisted};for(const[name,text]of Object.entries(rows))writeFileSync(join(dir,name),text);const run=spawnSync(testPythonV1()??"python3",["-I","-c",inputScopeOracle,dir,JSON.stringify(Object.keys(rows))],{encoding:"utf8"});expect(run.status,run.stderr).toBe(0);expect(JSON.parse(run.stdout)).toEqual(Object.keys(rows).flatMap(name=>leasesInsideInputScopes(name,rows[name as keyof typeof rows])).sort());}finally{rmSync(dir,{recursive:true,force:true});}
+ const dir=mkdtempSync(join(tmpdir(),"input-scope-"));try{const rows={"retired.ts":retired,"named.ts":named,"hoisted.ts":hoisted};for(const[name,text]of Object.entries(rows))writeFileSync(join(dir,name),text);const run=spawnSync(requirePinnedTestToolV1("python"),["-I","-c",inputScopeOracle,dir,JSON.stringify(Object.keys(rows))],{encoding:"utf8"});expect(run.status,run.stderr).toBe(0);expect(JSON.parse(run.stdout)).toEqual(Object.keys(rows).flatMap(name=>leasesInsideInputScopes(name,rows[name as keyof typeof rows])).sort());}finally{rmSync(dir,{recursive:true,force:true});}
 });
 
 test("the detector flags the retired order: a writer custody taken inside the cpu scope",()=>{

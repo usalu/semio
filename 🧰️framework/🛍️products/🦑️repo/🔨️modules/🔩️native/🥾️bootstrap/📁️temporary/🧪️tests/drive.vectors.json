@@ -1,0 +1,12 @@
+[
+  {
+    "id": "free",
+    "occupied": false,
+    "expected": true
+  },
+  {
+    "id": "dangling",
+    "occupied": true,
+    "expected": false
+  }
+]

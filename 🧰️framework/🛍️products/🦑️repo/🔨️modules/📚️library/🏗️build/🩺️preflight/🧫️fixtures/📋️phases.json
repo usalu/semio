@@ -1,0 +1,22 @@
+{
+  "requirements": {"architectures": ["x64"], "minimumAvailableBytes": 100, "tools": ["rust", "msvc-linker"], "exchange": true},
+  "filesystem": [
+    {"id": "exchange error retains identity", "failure": "exchange", "trace": ["check", "exchange"]},
+    {"id": "case error retains identity", "failure": "case", "trace": ["check", "exchange", "check", "case"]},
+    {"id": "cancellation precedes probes", "failure": "check", "trace": ["check"]},
+    {"id": "successful probes stay ordered", "failure": "none", "trace": ["check", "exchange", "check", "case", "check"]}
+  ],
+  "cases": [
+    {"id": "managed tools follow physical admission", "facts": {"platform": "win32", "architecture": "x64", "availableBytes": 100, "tools": [], "exchange": "supported", "caseSensitive": "fold-safe"}, "observedTools": ["rust", "msvc-linker"], "scopeCalls": 1, "cancelAt": "none", "accepted": true, "allocations": 1},
+    {"id": "architecture refuses before allocation", "facts": {"platform": "win32", "architecture": "arm64", "availableBytes": 100, "tools": [], "exchange": "supported", "caseSensitive": "fold-safe"}, "observedTools": ["rust", "msvc-linker"], "scopeCalls": 1, "cancelAt": "none", "accepted": false, "allocations": 0},
+    {"id": "space refuses before allocation", "facts": {"platform": "win32", "architecture": "x64", "availableBytes": 99, "tools": [], "exchange": "supported", "caseSensitive": "fold-safe"}, "observedTools": ["rust", "msvc-linker"], "scopeCalls": 1, "cancelAt": "none", "accepted": false, "allocations": 0},
+    {"id": "exchange refuses before allocation", "facts": {"platform": "win32", "architecture": "x64", "availableBytes": 100, "tools": [], "exchange": "unsupported", "caseSensitive": "fold-safe"}, "observedTools": ["rust", "msvc-linker"], "scopeCalls": 1, "cancelAt": "none", "accepted": false, "allocations": 0},
+    {"id": "case refuses before allocation", "facts": {"platform": "win32", "architecture": "x64", "availableBytes": 100, "tools": [], "exchange": "supported", "caseSensitive": "unprobed"}, "observedTools": ["rust", "msvc-linker"], "scopeCalls": 1, "cancelAt": "none", "accepted": false, "allocations": 0},
+    {"id": "missing linker cannot complete", "facts": {"platform": "win32", "architecture": "x64", "availableBytes": 100, "tools": ["msvc-linker"], "exchange": "supported", "caseSensitive": "fold-safe"}, "observedTools": ["rust"], "scopeCalls": 1, "cancelAt": "none", "accepted": false, "allocations": 1},
+    {"id": "scope must observe tools", "facts": {"platform": "win32", "architecture": "x64", "availableBytes": 100, "tools": [], "exchange": "supported", "caseSensitive": "fold-safe"}, "observedTools": ["rust", "msvc-linker"], "scopeCalls": 0, "cancelAt": "none", "accepted": false, "allocations": 1},
+    {"id": "scope must observe once", "facts": {"platform": "win32", "architecture": "x64", "availableBytes": 100, "tools": [], "exchange": "supported", "caseSensitive": "fold-safe"}, "observedTools": ["rust", "msvc-linker"], "scopeCalls": 2, "cancelAt": "none", "accepted": false, "allocations": 1},
+    {"id": "cancel before allocation", "facts": {"platform": "win32", "architecture": "x64", "availableBytes": 100, "tools": [], "exchange": "supported", "caseSensitive": "fold-safe"}, "observedTools": ["rust", "msvc-linker"], "scopeCalls": 1, "cancelAt": "before", "accepted": false, "allocations": 0},
+    {"id": "cancel before observation", "facts": {"platform": "win32", "architecture": "x64", "availableBytes": 100, "tools": [], "exchange": "supported", "caseSensitive": "fold-safe"}, "observedTools": ["rust", "msvc-linker"], "scopeCalls": 1, "cancelAt": "observation", "accepted": false, "allocations": 1},
+    {"id": "cancel after observation", "facts": {"platform": "win32", "architecture": "x64", "availableBytes": 100, "tools": [], "exchange": "supported", "caseSensitive": "fold-safe"}, "observedTools": ["rust", "msvc-linker"], "scopeCalls": 1, "cancelAt": "after", "accepted": false, "allocations": 1}
+  ]
+}

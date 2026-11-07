@@ -32,6 +32,7 @@ semio-ui-theme = { path = "../../../../../../🎨️styling/🎭️theme/📦️
 ui_styling = { path = "../../../../../../🎨️styling/📦️packages/🦀️rust", package = "semio-ui-styling" }
 semio-framework-job = { path = "../../../../../../../🧵️job/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-paged-list = { path = "../../../../../../../🌱️value/📋️list/📦️packages/🦀️rust" }
 bytemuck = { version = "1.24.0", features = ["derive", "extern_crate_alloc", "min_const_generics"] }
 
 [dev-dependencies]

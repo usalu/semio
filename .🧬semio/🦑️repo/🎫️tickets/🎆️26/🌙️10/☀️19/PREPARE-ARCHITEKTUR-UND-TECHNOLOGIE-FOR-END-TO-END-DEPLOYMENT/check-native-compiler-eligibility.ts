@@ -1,0 +1,7 @@
+import {strict as assert} from "node:assert";
+import {Database} from "bun:sqlite";
+import {portableMsvcEligibilityV1} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧰️tools/🛠️native-compiler/🪟️portable/🟦️.ts";
+import schema from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧰️tools/🛠️native-compiler/🪟️portable/🧬️schema/🔣️.json";
+import fixture from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧰️tools/🛠️native-compiler/🪟️portable/🧫️fixtures/🔣️.json";
+
+const db=new Database(":memory:"),policy=schema.definitions.Protocol.const;try{for(const row of fixture.cases){const matches=db.query("select count(*) n from json_each(?1) e where exists(select 1 from json_each(?2) n where lower(n.value)=lower(e.key)) or exists(select 1 from json_each(?3) n where lower(e.key) glob lower(n.value))").get(JSON.stringify(row.environment),JSON.stringify(policy.explicitEnvironment),JSON.stringify(policy.explicitPatterns)) as {n:number},expected=row.platform!=="win32"?"platform":row.architecture!=="x64"?"architecture":row.target!==null&&row.target!==policy.target?"target":matches.n?"override":"eligible";assert.equal(expected,row.reason,row.name);assert.equal(portableMsvcEligibilityV1(row.environment,{platform:row.platform,architecture:row.architecture,target:row.target}),row.reason,row.name);}console.log(JSON.stringify({cases:fixture.cases.length,oracle:"sqlite",readinessAuthority:false}));}finally{db.close();}

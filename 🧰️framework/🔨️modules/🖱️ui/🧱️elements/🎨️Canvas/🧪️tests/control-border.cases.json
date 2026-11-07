@@ -1,0 +1,1 @@
+{"frames":[{"control":"input","slot":"input-root"},{"control":"textarea","slot":"textarea-root"},{"control":"stepper","slot":"stepper-group"}],"edges":"top right bottom left","stepperCells":3,"geometry":{"width":100,"height":30,"seamLength":28}}

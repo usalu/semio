@@ -54,6 +54,7 @@ staffage_motion = _manim_module.staffage_motion
 staffage_height = _manim_module.staffage_height
 fitted_staffage = _manim_module.fitted_staffage
 BOILER_RATE = 60.0
+BOILER_CLEARANCE_M = 0.7
 sun_glyph = _manim_module.sun_glyph
 math_label = _manim_module.math_label
 math_row = _manim_module.math_row
@@ -128,11 +129,9 @@ def _din_ref(text: str):
 #region Shared visual motifs
 
 #region Buildings and people
-def _stand(floor_y, room_h, x):
-    """🧍 Breathing thermal occupant at true scale — 70 % of the inner room height, feet on the floor line at ``x``."""
-    cast = "shared-person-winter"
-    return staffage_motion(cast, unit=0.7 * room_h / staffage_height(cast), anchor=np.array([x, floor_y, 0.0]))
-
+def _stand(floor_y, unit, x):
+    """🧍 Breathing occupant at the room scale."""
+    return staffage_motion("shared-person-winter", unit=unit, anchor=np.array([x, floor_y, 0.0]))
 
 def _house(center_x, floor_y, s):
     """🏠 Physical Fundamentals house section standing on ``floor_y``."""
@@ -142,9 +141,10 @@ def _house(center_x, floor_y, s):
 def _furnish(hs, s, person_dx, rad_dx, *, person=True):
     """🛋️ Ground-floor occupant and radiator inside a ``house_section`` — returns both and their warm spot."""
     floor_y, cx = float(hs["bottom_left"][1]), float(hs["center"][0])
-    heater = staffage("shared-radiator-front-winter", unit=room_metre(hs["w_height"] / 2),
-                      anchor=np.array([cx + rad_dx, floor_y + 0.02, 0.0]))
-    figure = _stand(floor_y, 1.2 * s, cx + person_dx) if person else VGroup()
+    unit = room_metre(hs["w_height"] / 2)
+    heater = staffage("shared-radiator-front-winter", unit=unit,
+                      anchor=np.array([cx + rad_dx, floor_y, 0.0]))
+    figure = _stand(floor_y, unit, cx + person_dx) if person else VGroup()
     return {"person": figure, "radiator": heater, "warm": heater.get_top() + UP * 0.03,
             "group": VGroup(figure, heater)}
 
@@ -189,22 +189,19 @@ def _outline(*mobs, color=P_WHITE, width=1.8):
     return VGroup(*mobs)
 
 
-def _derrick(base, h=0.85):
-    """🛢️ Oil pumpjack on the ground at ``base``, ``h`` tall; its walking beam nods through scene time."""
-    rig = fitted_staffage("demand-primary-energy-pumpjack", width=1.6 * h, height=h, rate=1.0, loop=True)
-    return rig.move_to(_pt(base) + UP * rig.height / 2)
+def _derrick(base, unit):
+    """🛢️ Animated oil pumpjack at the supplied physical metre."""
+    return staffage_motion("demand-primary-energy-pumpjack", unit=unit, anchor=_pt(base), rate=1.0, loop=True)
 
 
-def _power_plant(base, w=0.9, h=0.5):
-    """🏭 Filled industrial elevation with sawtooth halls and tapered stacks."""
-    profile = _manim_module.icon_glyph("factory", color=P_WHITE, width=w)
-    profile.stretch_to_fit_height(h * 1.55)
-    return VGroup(profile.move_to(_pt(base) + UP * profile.height / 2))
+def _power_plant(base, unit):
+    """🏭 Container generator representing conversion at the supplied metre."""
+    return staffage("shared-diesel-generator-rated", unit=unit, anchor=_pt(base))
 
 
-def _pump(center):
-    """🌀 Circulation pump in front view, fitted into a 0.36 × 0.3 box; its rotor turns with scene time."""
-    return fitted_staffage("shared-pump-run-high", width=0.36, height=0.3, rate=1.0).move_to(_pt(center))
+def _pump(center, unit):
+    """🌀 Circulation pump at the building scale."""
+    return staffage_motion("shared-pump-run-high", unit=unit, rate=1.0).move_to(_pt(center))
 
 
 def _flame(center, h=0.5, color=P_ORANGE):
@@ -220,14 +217,14 @@ def _tree(base, h=0.5):
     return staffage(cast, unit=h / staffage_height(cast), anchor=_pt(base))
 
 
-def _boiler(base, h=0.36):
-    """⛽ Gas boiler in elevation, ``h`` tall (about half a person) with its foot on ``base``; its heating cycle plays through scene time."""
-    return fitted_staffage("shared-boiler-heating-cycle", width=0.806 * h, height=h, rate=BOILER_RATE).move_to(_pt(base) + UP * h / 2)
+def _boiler(floor, unit):
+    """⛽ Wall-hung boiler with its mounting clearance measured from the floor datum."""
+    return staffage_motion("shared-boiler-heating-cycle", unit=unit, anchor=_pt(floor) + UP * BOILER_CLEARANCE_M * unit, rate=BOILER_RATE)
 
 
-def _heat_pump(center):
-    """♻️ Air-source heat pump outdoor unit in winter air, fitted into a 0.8 × 0.8 box; it stands still until ``rate`` is raised."""
-    return fitted_staffage("shared-heat-pump-heating-sweep", width=0.8, height=0.8, rate=0.0).move_to(_pt(center))
+def _heat_pump(base, unit):
+    """♻️ Outdoor heat-pump unit at the supplied physical metre."""
+    return staffage_motion("shared-heat-pump-heating-sweep", unit=unit, anchor=_pt(base), rate=0.0)
 
 
 METER_CASTS = {"strom": "shared-electricity-meter-run", "gas": "shared-gas-meter-run"}
@@ -426,18 +423,23 @@ class Beat1_DreiBilanzgrenzen(Scene):
         y_pipe, y_ground = G + 0.2, G - 0.22
         meter_x = -1.5
 
-        ground = _ground(-6.8, 3.7, G)
+        ground = _ground(-2.2, 3.7, G)
+        metre = room_metre(hs["w_height"] / 2)
+        upstream_metre = 0.14
+        inset = RoundedRectangle(corner_radius=0.06, width=3.35, height=1.15, color=P_PRIMARY, stroke_width=1.2)
+        inset.move_to(np.array([-5.1, G + 0.45, 0.0]))
+        inset_label = body_text(tr("Upstream: separate scale", "Vorkette: eigener Maßstab"), font_size=LABEL_FONT_SIZE - 4, color=P_PRIMARY).move_to(np.array([-5.1, G - 0.28, 0.0]))
         annex = _outline(
             Line(np.array([wall_r, G + 0.95, 0.0]), np.array([wall_r + 1.05, G + 0.95, 0.0])),
             Line(np.array([wall_r + 1.05, G + 0.95, 0.0]), np.array([wall_r + 1.05, G, 0.0])),
         )
-        boiler = _boiler(np.array([annex_x, G + 0.01, 0.0]), 0.36)
+        boiler = _boiler(np.array([annex_x, G, 0.0]), metre)
         meter_glyph = fitted_staffage("shared-gas-meter-run", width=0.34, height=0.38, rate=1.0, loop=True).move_to(np.array([meter_x, y_ground, 0.0]))
-        derrick = _derrick(np.array([-5.9, G]))
-        plant = _power_plant(np.array([-4.3, G]), w=0.95, h=0.5)
-        pump = _pump(np.array([-2.75, y_pipe]))
+        derrick = _derrick(np.array([-6.1, G]), upstream_metre)
+        plant = _power_plant(np.array([-4.45, G]), upstream_metre)
+        pump = _pump(np.array([-2.75, y_pipe]), metre)
         names = [
-            body_text(text, font_size=LABEL_FONT_SIZE, color=PRIM_VIOLET).move_to(np.array([x, G + 1.1, 0.0]))
+            body_text(text, font_size=LABEL_FONT_SIZE, color=PRIM_VIOLET).move_to(np.array([x, G + 1.27, 0.0]))
             for text, x in ((tr("Extraction", "Gewinnung"), -5.9), (tr("Conversion", "Umwandlung"), -4.3), ("Transport", -2.75))
         ]
         loss_name = body_text(tr("System losses", "Anlagenverluste"), font_size=LABEL_FONT_SIZE, color=P_ORANGE).move_to(
@@ -448,7 +450,7 @@ class Beat1_DreiBilanzgrenzen(Scene):
         path_up = smooth_path([(-5.9, y_pipe, 0.0), (-4.3, y_pipe, 0.0), (-2.75, y_pipe, 0.0), (-2.3, y_pipe, 0.0),
                                (-1.95, y_ground, 0.0), (meter_x, y_ground, 0.0)])
         path_end = smooth_path([(meter_x, y_ground, 0.0), (HX + 0.4, y_ground, 0.0), (annex_x, y_ground, 0.0),
-                                (annex_x, G + 0.1, 0.0)])
+                                tuple(boiler.get_bottom())])
         path_use = smooth_path([(annex_x + 0.3, G + 0.18, 0.0), (wall_r, G + 0.18, 0.0),
                                 (inside["radiator"].get_right()[0] + 0.05, G + 0.18, 0.0)])
         pipe_up, pipe_end, pipe_use = (_pipes(p) for p in (path_up, path_end, path_use))
@@ -507,7 +509,7 @@ class Beat1_DreiBilanzgrenzen(Scene):
                    FadeOut(loss_name), FadeOut(loss_arrow), FadeOut(ring_room), FadeOut(ring_house)]),
             (1.4, [Create(ring_source), FadeIn(cards[2]["card"], shift=LEFT * 0.2)]))
 
-        say("gewinnung", (1.2, [FadeIn(derrick), FadeIn(names[0])]))
+        say("gewinnung", (1.2, [FadeIn(inset), FadeIn(inset_label), FadeIn(derrick), FadeIn(names[0])]))
 
         active.append(lambda rt: _heat([np.array([-4.3, G + 0.62, 0.0])], rt, 0.4))
         say("umwandlung", (1.2, [FadeIn(plant), FadeIn(names[1])]))
@@ -532,7 +534,7 @@ class Beat1_DreiBilanzgrenzen(Scene):
             ("fp", r"f_{p}", P_YELLOW), ("cap", tr(r"\;\text{← limited by the GEG}", r"\;\text{← vom GEG begrenzt}"), P_PRIMARY),
         ])
         rings = {}
-        scenery = (hs["group"], ground, inside["group"], meter_glyph, derrick, plant, pump, pipe_up, ring_source,
+        scenery = (hs["group"], ground, inside["group"], meter_glyph, inset, inset_label, derrick, plant, pump, pipe_up, ring_source,
                    cards[2]["card"], *names)
         say("geg",
             (1.0, [FadeOut(m) for m in scenery]),
@@ -627,7 +629,7 @@ class Beat2_Primaerenergiefaktor(Scene):
 
         def source_glyph(key, y):
             if key == "strom":
-                return _power_plant(np.array([X_SRC, y - 0.24, 0.0]), w=0.5, h=0.3)
+                return fitted_staffage("shared-diesel-generator-rated", width=0.5, height=0.48).move_to(np.array([X_SRC, y, 0.0]))
             if key == "gas":
                 return _flame(np.array([X_SRC, y, 0.0]), 0.5, color=GAS_AMBER)
             if key == "holz":
@@ -819,13 +821,16 @@ def _plant_panel(px, kind):
     head.move_to(np.array([px + 1.1, 1.5, 0.0]))
     fan = None
     if gas:
-        plant = _boiler(np.array([xs["plant"], G3 + 0.01, 0.0]), 0.3)
+        plant = _boiler(np.array([xs["plant"], G3, 0.0]), room_metre(hs["w_height"] / 2))
     else:
-        plant = fan = _heat_pump(np.array([xs["plant"], G3 + 0.40, 0.0]))
+        plant = fan = _heat_pump(np.array([xs["plant"], G3 + 0.01, 0.0]), room_metre(hs["w_height"] / 2))
     meter_glyph = fitted_staffage("shared-gas-meter-run" if gas else "shared-electricity-meter-run", width=0.28, height=0.32, rate=1.0, loop=True).move_to(np.array([xs["e"], y_b, 0.0]))
     p_up = Line(np.array([xs["q"], y_b, 0.0]), np.array([xs["e"] + 0.14, y_b, 0.0]))
-    p_end = smooth_path([(xs["e"] - 0.14, y_b, 0.0), (xs["plant"] + 0.2, y_b, 0.0), (xs["plant"] + 0.2, G3 + 0.04, 0.0)])
-    p_use = smooth_path([(xs["plant"] - 0.2, G3 + 0.04, 0.0), (xs["plant"] - 0.2, y_b, 0.0), (rad_x, y_b, 0.0),
+    metre = room_metre(hs["w_height"] / 2)
+    connection_in = plant.get_bottom() + RIGHT * 0.08 * metre if gas else np.array([xs["plant"] + 0.2, G3 + 0.04, 0.0])
+    connection_out = plant.get_bottom() + LEFT * 0.08 * metre if gas else np.array([xs["plant"] - 0.2, G3 + 0.04, 0.0])
+    p_end = smooth_path([(xs["e"] - 0.14, y_b, 0.0), (connection_in[0], y_b, 0.0), tuple(connection_in)])
+    p_use = smooth_path([tuple(connection_out), (connection_out[0], y_b, 0.0), (rad_x, y_b, 0.0),
                          (rad_x, G3 + 0.1, 0.0)])
     p_air = Line(np.array([xs["plant"], 0.72, 0.0]), np.array([xs["plant"], G3 + 0.62, 0.0]))
     sun = None if gas else sun_glyph(np.array([xs["plant"], 1.0, 0.0])).scale(0.3)

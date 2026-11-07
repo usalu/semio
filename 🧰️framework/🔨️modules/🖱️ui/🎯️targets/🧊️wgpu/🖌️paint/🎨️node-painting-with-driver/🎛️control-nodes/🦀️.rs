@@ -17,9 +17,9 @@ pub(super) fn paint_button_node_step(
 ) -> RetainedNodePaintStep {
     match cursor.phase {
         0 => {
-            let hovered = flags.contains(NodeFlags::HOVERED);
+            let hovered = presence.state != UiState::Disabled && flags.contains(NodeFlags::HOVERED);
             let result = retained_fixed_output(draw, |draw| {
-                push_control_border(draw, bounds, theme, if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, item_bg(theme, false, hovered));
+                push_control_border(draw, bounds, theme, if hovered { theme.border_emphasized } else if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, item_bg(theme, false, hovered), if hovered { semio_ui_draw_contract::SharedBorderState::Hover } else if focus_ring_visible(flags) { semio_ui_draw_contract::SharedBorderState::Focus } else { semio_ui_draw_contract::SharedBorderState::Normal });
                 if let Some(icons) = icons {
                     push_icon(draw, icons, button.icon_id.as_str(), bounds.x + theme.padding_standard, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, item_text(theme, false, hovered));
                 }
@@ -71,7 +71,7 @@ pub(super) fn paint_input_node_step(
     match cursor.phase {
         0 => {
             let result = retained_fixed_output(draw, |draw| {
-                push_control_border(draw, bounds, theme, if refused { theme.error } else if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, theme.input_bg);
+                push_control_border(draw, bounds, theme, if refused { theme.error } else if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, theme.input_bg, if focus_ring_visible(flags) { semio_ui_draw_contract::SharedBorderState::Focus } else { semio_ui_draw_contract::SharedBorderState::Normal });
                 if let Some((swatch, color, _)) = swatch {
                     draw.push_rounded([swatch.x, swatch.y, swatch.w, swatch.h], color, 2.0);
                 }
@@ -129,9 +129,9 @@ pub(super) fn paint_select_node_step(
     }
     match cursor.phase {
         0 => {
-            let hovered = flags.contains(NodeFlags::HOVERED);
+            let hovered = presence.state != UiState::Disabled && flags.contains(NodeFlags::HOVERED);
             let result = retained_fixed_output(draw, |draw| {
-                push_control_border(draw, bounds, theme, if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, if hovered { theme.button_hover } else { theme.input_bg });
+                push_control_border(draw, bounds, theme, if hovered { theme.border_emphasized } else if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, if hovered { theme.button_hover } else { theme.input_bg }, if hovered { semio_ui_draw_contract::SharedBorderState::Hover } else if focus_ring_visible(flags) { semio_ui_draw_contract::SharedBorderState::Focus } else { semio_ui_draw_contract::SharedBorderState::Normal });
                 if let Some(icons) = icons {
                     push_icon(draw, icons, "chevron-down", bounds.x + bounds.w - theme.padding_standard - ICON_TINY, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, foreground_on_fill(theme, theme.text_element, false, hovered));
                 }
@@ -170,7 +170,7 @@ pub(super) fn paint_select_node_step(
             let result = retained_fixed_output(draw, |draw| {
                 let glass = draw.push_glass([popup.menu.x, popup.menu.y, popup.menu.w, popup.menu.h], theme.border_radius, theme.glass(Level::Menu));
                 draw.begin_glass_content(glass);
-                push_chrome_border(draw, popup.menu, theme.stroke_hairline, theme.border_normal, true, true, true, true);
+                push_chrome_border(draw, popup.menu, theme.stroke_hairline, theme.border_normal, true, true, true, true, semio_ui_draw_contract::SharedBorderState::Normal);
                 draw.push_scissor(semio_ui_select_behavior::select_popup_viewport_rect(popup));
                 opened = true;
             });
@@ -291,13 +291,13 @@ pub(super) fn paint_toggle_node_step(
     match cursor.phase {
         0 => {
             let pressed = toggle.presence.selected;
-            let hovered = flags.contains(NodeFlags::HOVERED);
+            let hovered = presence.state != UiState::Disabled && flags.contains(NodeFlags::HOVERED);
             let result = retained_fixed_output(draw, |draw| {
                 if toggle.appearance == ui_contract::ToggleAppearance::Checkbox {
                     paint_checkbox(toggle, bounds, flags, theme, inline, draw);
                     return;
                 }
-                push_control_border(draw, bounds, theme, if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, item_bg(theme, pressed, hovered));
+                push_control_border(draw, bounds, theme, if hovered { theme.border_emphasized } else if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, item_bg(theme, pressed, hovered), if hovered { semio_ui_draw_contract::SharedBorderState::Hover } else if pressed { semio_ui_draw_contract::SharedBorderState::Active } else if focus_ring_visible(flags) { semio_ui_draw_contract::SharedBorderState::Focus } else { semio_ui_draw_contract::SharedBorderState::Normal });
                 if let Some(icons) = icons {
                     push_icon(draw, icons, toggle.icon_id.as_str(), bounds.x + theme.padding_standard, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, item_text(theme, pressed, hovered));
                 }
@@ -341,7 +341,7 @@ pub(super) fn paint_icon_select_node_step(
 ) -> RetainedNodePaintStep {
     match cursor.phase {
         0 => {
-            let result = retained_fixed_output(draw, |draw| push_control_border(draw, bounds, theme, theme.border_normal, theme.input_bg));
+            let result = retained_fixed_output(draw, |draw| push_control_border(draw, bounds, theme, theme.border_normal, theme.input_bg, semio_ui_draw_contract::SharedBorderState::Normal));
             cursor.advance(1);
             if result.is_err() {
                 RetainedNodePaintStep::Fault

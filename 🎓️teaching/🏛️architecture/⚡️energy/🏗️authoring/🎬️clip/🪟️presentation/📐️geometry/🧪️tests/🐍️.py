@@ -117,7 +117,7 @@ class ExactUIParityTests(unittest.TestCase):
                     self.assertAlmostEqual(actual,expected,delta=CASES["oracle"]["compositeChannelTolerance"])
 
     def test_production_browser_metadata_and_pixels_match_independent_real_ui_oracle(self):
-        from PIL import Image
+        from PIL import Image, ImageChops
 
         browser = importlib.import_module(PRESENTATION + ".🌐️browser.🐍️")
         hierarchy = importlib.import_module(PRESENTATION + ".🥞️hierarchy.🐍️")
@@ -128,12 +128,17 @@ class ExactUIParityTests(unittest.TestCase):
         expected = geometry.window_geometry(contract["focus"]["rect"], typography.text_metrics(video["title"]["de"], CASES["shell"]["fontSize"])["advance"] + CASES["shell"]["controlSize"] + CASES["shell"]["gap"])
         with tempfile.TemporaryDirectory(dir=os.environ["SEMIO_TEACHING_OUTPUT_ROOT"]) as directory:
             output = Path(directory) / "parity.png"
+            zoomed = Path(directory) / "zoomed.png"
             batch = {"schema":"semio-presentation-browser/v1","catalog":contract,"work_directory":directory,"language":"de",
                      "viewport":CASES["oracle"]["viewport"],"frames":[{"output":str(output),
                      "media":[],"hierarchy":{"opened_path":hierarchy.path(video["id"]),"revealed_path":[],"camera":{"x":0,"y":0}},
                      "cursor":{"point":None,"kind":"arrow","pressed":False}}]}
+            batch["frames"].append({**batch["frames"][0], "output":str(zoomed), "content_camera":{"video_id":video["id"],"progress":0.5}})
             result = browser.render_batch(batch)
-            self.assertEqual(result["outputs"],[str(output)])
+            self.assertEqual(result["outputs"],[str(output),str(zoomed)])
+            self.assertGreater(result["metadata"][1]["content_camera"]["scale"], 1)
+            self.assertTrue(result["metadata"][1]["border_compositor"]["pending_after_camera"])
+            self.assertTrue(result["metadata"][1]["border_compositor"]["ready_before_capture"])
             frame = result["metadata"][0]
             window = next(window for window in frame["windows"] if window["id"] == video["id"])
             self.assert_rect(window["rect"], expected["rect"])
@@ -151,7 +156,10 @@ class ExactUIParityTests(unittest.TestCase):
                 self.assertGreaterEqual(window["control_rect"][axis], window["title_chip_rect"][axis])
                 self.assertLessEqual(window["control_rect"][axis] + window["control_rect"][size], window["title_chip_rect"][axis] + window["title_chip_rect"][size])
             self.assert_rect(window["content_rect"], expected["body"])
-            self.assertTrue(window["border_path"].startswith("M1,1"))
+            self.assertTrue(window["border_segments"])
+            for segment in window["border_segments"]:
+                self.assertTrue(segment["path"].startswith("M"))
+                self.assertIn(segment["state"], ("normal", "focus", "active", "waiting", "loading", "introduced", "celebrated", "hover"))
             self.assertEqual(window["font_size"],"11.2px")
             self.assertEqual(window["line_height"],"11.2px")
             self.assertEqual(window["padding"],"3.2px")
@@ -163,6 +171,8 @@ class ExactUIParityTests(unittest.TestCase):
                 self.assertEqual(pixels.size,(1600,900))
                 self.assertEqual(pixels.getpixel((100,100)),tuple(CASES["window"]["bodyPixel"]))
                 self.assertEqual(pixels.getpixel((0,100)),tuple(CASES["window"]["gapPixel"]))
+                with Image.open(zoomed) as zoom:
+                    self.assertIsNotNone(ImageChops.difference(pixels, zoom.convert("RGB")).getbbox())
 
     def test_actual_typescript_silhouette_normalizes_small_gaps_and_title_caps(self):
         geometry = importlib.import_module(PRESENTATION + ".📐️geometry.🐍️")

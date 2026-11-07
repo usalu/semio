@@ -119,7 +119,7 @@ fn settle_layout(ui: &mut Ui, atlas: &mut FontAtlas, viewport: Rect) {
 fn settle_frame(ui: &mut Ui, atlas: &mut FontAtlas, viewport: Rect) -> DrawList {
     let mut draw = DrawList::default();
     for _ in 0..262_144 {
-        match ui.frame_into_step::<EmptySceneHost>("fixture", viewport, atlas, None, None, &mut draw) {
+        match ui.frame_into_step::<EmptySceneHost>("fixture", viewport, atlas, None, None, &mut draw, ui_contract::UI_WORKER_RETIREMENT_POLICY).0 {
             UiFrameStep::Pending => {}
             UiFrameStep::Ready => return draw,
             step => panic!("retained Select frame answered {step:?}: {}", ui.paint_stall_census("fixture")),

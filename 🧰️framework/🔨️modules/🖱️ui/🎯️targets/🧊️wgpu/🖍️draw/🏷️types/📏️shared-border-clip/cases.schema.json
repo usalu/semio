@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "scissor",
+    "pieces",
+    "expected"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "scissor": {
+      "$ref": "#/$defs/rect"
+    },
+    "pieces": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/rect"
+      }
+    },
+    "expected": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "prefixItems": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "number"
+          }
+        ],
+        "minItems": 2,
+        "maxItems": 2
+      }
+    }
+  },
+  "$defs": {
+    "rect": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 4,
+      "maxItems": 4
+    }
+  }
+}

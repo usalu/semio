@@ -12,6 +12,7 @@ import {Tree} from "@presentation/tree";
 import {Popover,PopoverTrigger,PopoverContent} from "@presentation/popover";
 import {interactiveActiveFillClass} from "@presentation/interaction";
 import {windowChromeControlButtonClass} from "@presentation/controls";
+import {presentationBordersSettled,presentationWindowSettled} from "./🟦️settled.ts";
 
 let config:any;
 const root=createRoot(document.getElementById("root")!);
@@ -20,7 +21,6 @@ const label=(value:string)=><span className="text-xs leading-none">{value}</span
 const words={en:{courses:"Courses",topics:"Topics",clips:"Clips",chapters:"Chapters",watch:"Watch",empty:"No videos available yet.",waiting:"Loading",failed:"Unable to load",restore:"Restore"},de:{courses:"Kurse",topics:"Themen",clips:"Clips",chapters:"Kapitel",watch:"Ansehen",empty:"Noch keine Videos verfügbar.",waiting:"Laden",failed:"Laden fehlgeschlagen",restore:"Wiederherstellen"}};
 const text=()=>({...words[config.language as "en"|"de"],...Object.fromEntries(["courses","topics","clips","chapters","empty","overview"].map(key=>[key,config.contract.labels[key][config.language]])),watch:config.contract.labels.view[config.language]});
 const title=(entry:any)=>entry.title[config.language];
-const sameGeometry=(actual:string|null|undefined,expected:string)=>{if(!actual)return false;const numbers=/-?\d+(?:\.\d+)?/g,a=actual.match(numbers)??[],b=expected.match(numbers)??[];return actual.replace(numbers,"#")===expected.replace(numbers,"#")&&a.length===b.length&&a.every((value,index)=>Math.abs(Number(value)-Number(b[index]))<.01)};
 function Icon({name}:{name:string}) {return <span data-presentation-icon={name} aria-hidden="true" style={{display:"contents"}} dangerouslySetInnerHTML={{__html:config.icons[name]}}/>}
 function Thumbnail({symbol}:{symbol:string}) {
   const muted="var(--color-light-5-7)",primary="var(--color-primary)";
@@ -92,6 +92,6 @@ function App({frame}:{frame:any}) {
     app.style.transform=`matrix(${scale},0,0,${scale},${translation[0]},${translation[1]})`;
     return {progress,scale,translation,target};
   },
-  debugGeometry(){return [...document.querySelectorAll("[data-presentation-window]")].map(stack=>{const measured=measureWindowSilhouetteMetrics(stack as HTMLElement),expected=createWindowSilhouetteGeometry(measured);return{id:stack.id,measured,expectedBorder:expected.borderPath,actualBorder:stack.querySelector("[data-window-silhouette-border] path")?.getAttribute("d"),expectedClip:expected.contentClipPath,actualClip:(stack.querySelector("[data-window-silhouette-content]") as HTMLElement)?.style.clipPath}})},
-  settled(){return [...document.querySelectorAll("[data-presentation-window]")].every(stack=>{const measured=measureWindowSilhouetteMetrics(stack as HTMLElement);if(!measured)return false;const expected=createWindowSilhouetteGeometry(measured),normalized=document.createElement("div").style;normalized.clipPath=expected.contentClipPath;return sameGeometry(stack.querySelector("[data-window-silhouette-border] path")?.getAttribute("d"),expected.borderPath)&&sameGeometry((stack.querySelector("[data-window-silhouette-content]") as HTMLElement)?.style.clipPath,normalized.clipPath)})}
+  debugGeometry(){return [...document.querySelectorAll("[data-presentation-window]")].map(stack=>{const measured=measureWindowSilhouetteMetrics(stack as HTMLElement),expected=createWindowSilhouetteGeometry(measured);return{id:stack.id,measured,expectedBorder:expected.borderPath,actualBorders:[...stack.querySelectorAll("[data-window-silhouette-border] path")].filter(path=>path.getAttribute("d")).map(path=>({path:path.getAttribute("d"),state:path.getAttribute("data-shared-border-state")??path.closest("[data-window-silhouette-border]")?.getAttribute("data-kind")})),expectedClip:expected.contentClipPath,actualClip:(stack.querySelector("[data-window-silhouette-content]") as HTMLElement)?.style.clipPath}})},
+  settled(){return presentationBordersSettled(document)&&[...document.querySelectorAll("[data-presentation-window]")].every(stack=>{const measured=measureWindowSilhouetteMetrics(stack as HTMLElement);return Boolean(measured&&presentationWindowSettled(stack,createWindowSilhouetteGeometry(measured).contentClipPath))})}
 };

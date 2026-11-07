@@ -165,7 +165,7 @@ impl ScissorRect {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ClipRegion {
-    pub scissors: Vec<ScissorRect>,
+    pub scissors: PagedVec<ScissorRect>,
 }
 
 impl ClipRegion {
@@ -176,7 +176,7 @@ impl ClipRegion {
     }
 
     pub(super) fn from_disjoint_rects(rects: &[semio_ui_theme::geometry::Rect], screen_h: f32) -> Self {
-        let mut scissors = Vec::new();
+        let mut scissors: Vec<ScissorRect> = Vec::new();
         for rect in rects {
             let candidate = ScissorRect::from_rect(*rect, screen_h);
             if candidate.w == 0 || candidate.h == 0 {
@@ -188,7 +188,7 @@ impl ClipRegion {
             }
             scissors.extend(pieces);
         }
-        Self { scissors }
+        Self { scissors: scissors.into_iter().collect() }
     }
 
     pub(super) fn source_pieces_overlap(rects: &[semio_ui_theme::geometry::Rect]) -> bool {

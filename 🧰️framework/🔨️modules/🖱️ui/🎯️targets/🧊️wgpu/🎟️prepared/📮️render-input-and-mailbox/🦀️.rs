@@ -43,7 +43,10 @@ impl PreparedRenderInputRejected {
 
     pub fn next_close_demands(&self,_copy:usize)->Result<RetainedCloneGrant,ValueError>{
         let release=if let Some(draw)=self.draw.as_ref(){draw.next_retirement_release_byte_demand()?}else if let Some(draw)=self.overlay.as_ref(){draw.next_retirement_release_byte_demand()?}else{0};
-        prepared_owner_demands(self.terminal_is_empty(),Ok(release))
+        let mut demand = prepared_owner_demands(self.terminal_is_empty(),Ok(release))?;
+        let draw = match self.draw.as_ref() { Some(draw) => (!draw.retirement_is_empty()).then_some(draw), None => self.overlay.as_ref().filter(|draw| !draw.retirement_is_empty()) };
+        if let Some(draw) = draw { demand.maximum_copy_bytes = draw.next_retirement_copy_byte_demand()?; demand.maximum_capacity_bytes = draw.next_retirement_capacity_byte_demand()?; demand.maximum_depth = draw.next_retirement_depth_demand()?; }
+        Ok(demand)
     }
 
     pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<CloseStep,ValueError>{
@@ -65,10 +68,19 @@ impl PreparedRenderInput {
         if let Some(upload) = self.uploads.get(self.uploads.len().saturating_sub(1)) { if !upload.terminal_is_empty() { return upload.next_close_demands(copy); } }
         let mut demand = prepared_owner_demands(self.terminal_is_empty(), self.next_close_release_byte_demand())?;
         demand.maximum_copy_bytes = self.next_close_copy_byte_demand()?;
+        if self.uploads.is_empty() && self.raster_producers.is_empty() && self.evictions.is_empty() {
+            let draw = if !self.draw.retirement_is_empty() { Some(&self.draw) } else { self.overlay.as_ref().filter(|draw| !draw.retirement_is_empty()) };
+            if let Some(draw) = draw { demand.maximum_capacity_bytes = draw.next_retirement_capacity_byte_demand()?; demand.maximum_depth = draw.next_retirement_depth_demand()?; }
+        }
         Ok(demand)
     }
 
-    pub(super) fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { self.uploads.get(self.uploads.len().saturating_sub(1)).map_or(Ok(0), PreparedRenderUpload::next_close_copy_byte_demand) }
+    pub(super) fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
+        if let Some(upload) = self.uploads.get(self.uploads.len().saturating_sub(1)) { return upload.next_close_copy_byte_demand(); }
+        if !self.raster_producers.is_empty() || !self.evictions.is_empty() { return Ok(0); }
+        if !self.draw.retirement_is_empty() { return self.draw.next_retirement_copy_byte_demand(); }
+        self.overlay.as_ref().filter(|draw| !draw.retirement_is_empty()).map_or(Ok(0), DrawList::next_retirement_copy_byte_demand)
+    }
 
     pub(super) fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> {
         if let Some(upload) = self.uploads.get(self.uploads.len().saturating_sub(1)) { return upload.next_close_release_byte_demand(); }

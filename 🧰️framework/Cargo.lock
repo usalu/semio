@@ -11469,6 +11469,7 @@ dependencies = [
  "bytemuck",
  "semio-framework-job",
  "semio-framework-value",
+ "semio-framework-value-paged-list",
  "semio-ui-scene-algebra",
  "semio-ui-scene-camera",
  "semio-ui-scene-mesh",

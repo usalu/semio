@@ -116,7 +116,7 @@ pub(super) fn paint_number_stepper_node_step(
         }
         1 => {
             let result = retained_fixed_output_budgeted(draw, RETAINED_NUMBER_STEPPER_CHROME_OUTPUT_ITEMS, |draw| {
-                push_stepper_chrome(draw, bounds, [decrement, value_segment, increment], inline, flags, node.state.stepper_hovered_segment, theme);
+                push_stepper_chrome(draw, bounds, [decrement, value_segment, increment], inline, flags, if presence.state == UiState::Disabled { None } else { node.state.stepper_hovered_segment }, theme);
             });
             cursor.advance(2);
             if result.is_err() {

@@ -3,7 +3,7 @@
   "emoji": "🧍",
   "status": "closed",
   "description": "Every clip of the architecture course must use only the handcrafted staffage archive (🎓️teaching/🏛️architecture/🧍️staffage) instead of the ad-hoc silhouettes, activity SVGs and glyphs it uses now. Extend the handcrafted staffage where assets are missing. Energy clips use the animated thermodynamic staffage views. Coordinator Opus 5.5 with a 20-agent fleet (Sonnet 5.5 execution, Haiku 5.5 audits).",
-  "summary": "Canonical staffage integration verified across the current course: 97 casts resolve against 152 assets. Fixed whole-animation uniform fitting, seasonal furniture lookup, catalog index consistency and long-lived media identity refresh. Added shared Python/TypeScript coverage and independent schema/geometry/media oracles. Final evidence: course coverage Python5 and TS59; course guard39; bridge61; physical-scale/invariance9; real video timing5; media freshness2; representative exports and visual QA. Generated output removed; reusable test inputs and detailed evidence retained in codex-result.md. No narrated full-course rebuild or non-Windows execution claimed.",
+  "summary": "Canonical staffage replaces factory pictograms; shared physical metres, boiler mounting, thermostat origin and radiator contact corrected. Guard41, final coverage5 (99 casts), primary5, heating2 plus contact1, and real glyph1 passed. Frozen-pose assemblies visually verified; final audit green. Evidence and boundaries in result-20261105.md. No full narrated rebuild claimed.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2778"
   },
@@ -11,7 +11,8 @@
   "sessions": [
     "e6c54651-a487-4869-b7d2-dcb047816ee7",
     "b2cdd4a0-74b4-4a21-b989-d3a5480cf219",
-    "338992fa-aeb6-426c-8fcb-96717bd48ff4"
+    "338992fa-aeb6-426c-8fcb-96717bd48ff4",
+    "dd07005d-2564-4ca7-86e7-ee82a46b34f9"
   ],
   "interactions": [
     {
@@ -426,6 +427,55 @@
         },
         {
           "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/HANDCRAFTED-STAFFAGE-IN-ARCHITECTURE-COURSE-CLIPS/codex-close.json"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-05 10:03:45",
+      "author": "",
+      "system": "windows",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Use only proper staffage in all clips instead of ad hoc pictograms and incorrectly scaled objects. Extend staffage if necessary. Actual fleet: GPT 6.1 Sol High planning, GPT 6.1 Terra High implementation, Terra low read-only audits because Light unavailable; four slots. Metadata llm uses codex because registry rejects gpt-6.1-sol. Preserve unrelated concurrent work.",
+      "llm": "codex",
+      "effort": "high"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-05 10:59:43",
+      "author": "ueli",
+      "system": "windows",
+      "client": "codex",
+      "checkpoint": "0454b0b6be918bd3fd7d637233bd05fcd1cb482d",
+      "summary": "Canonical staffage replaces factory pictograms; shared physical metres, boiler mounting, thermostat origin and radiator contact corrected. Guard41, final coverage5 (99 casts), primary5, heating2 plus contact1, and real glyph1 passed. Frozen-pose assemblies visually verified; final audit green. Evidence and boundaries in result-20261105.md. No full narrated rebuild claimed.",
+      "files": [
+        {
+          "path": "🗃️b🗃️360🗃️237🗃️216🗃️223🗃️357🗃️270🗃️217teaching🗃️360🗃️237🗃️217🗃️233🗃️357🗃️270🗃️217architecture🗃️342🗃️232🗃️241🗃️357🗃️270🗃️217energy🗃️360🗃️237🗃️217🗃️227🗃️357🗃️270🗃️217authoring🗃️360🗃️237🗃️216🗃️250🗃️357🗃️270🗃️217visuals🗃️360🗃️237🗃️247🗃️215🗃️357🗃️270🗃️217staffage🗃️360🗃️237🗃️224🗃️243🗃️357🗃️270💾217"
+        },
+        {
+          "path": "🗃️b🗃️360🗃️237🗃️216🗃️223🗃️357🗃️270🗃️217teaching🗃️360🗃️237🗃️217🗃️233🗃️357🗃️270🗃️217architecture🗃️342🗃️232🗃️241🗃️357🗃️270🗃️217energy🗃️360🗃️237🗃️217🗃️227🗃️357🗃️270🗃️217authoring🗃️360🗃️237🗃️216🗃️250🗃️357🗃️270🗃️217visuals🗃️360🗃️237🗃️247🗃️252🗃️357🗃️270🗃️217tests🗃️360🗃️237🗃️220🗃️215🗃️357🗃️270💾217scenes"
+        },
+        {
+          "path": "🗃️b🗃️360🗃️237🗃️216🗃️223🗃️357🗃️270🗃️217teaching🗃️360🗃️237🗃️217🗃️233🗃️357🗃️270🗃️217architecture🗃️342🗃️232🗃️241🗃️357🗃️270🗃️217energy🗃️360🗃️237🗃️217🗃️227🗃️357🗃️270🗃️217authoring🗃️360🗃️237🗃️216🗃️250🗃️357🗃️270🗃️217visuals🗃️360🗃️237🗃️247🗃️252🗃️357🗃️270🗃️217tests🗃️360🗃️237🗃️220🗃️215🗃️357🗃️270💾217staffageonly"
+        },
+        {
+          "path": "🗃️b🗃️360🗃️237🗃️216🗃️223🗃️357🗃️270🗃️217teaching🗃️360🗃️237🗃️217🗃️233🗃️357🗃️270🗃️217architecture🗃️342🗃️232🗃️241🗃️357🗃️270🗃️217energy🗃️360🗃️237🗃️217🗃️227🗃️357🗃️270🗃️217authoring🗃️360🗃️237🗃️216🗃️250🗃️357🗃️270🗃️217visuals🗃️360🗃️237🗃️247🗃️252🗃️357🗃️270🗃️217tests🗃️360🗃️237🗃️224🗃️243🗃️357🗃️270💾217scenes"
+        },
+        {
+          "path": "🗃️b🗃️360🗃️237🗃️216🗃️223🗃️357🗃️270🗃️217teaching🗃️360🗃️237🗃️217🗃️233🗃️357🗃️270🗃️217architecture🗃️342🗃️232🗃️241🗃️357🗃️270🗃️217energy🗃️360🗃️237🗃️217🗃️227🗃️357🗃️270🗃️217authoring🗃️360🗃️237🗃️216🗃️250🗃️357🗃️270🗃️217visuals🗃️360🗃️237🗃️247🗃️252🗃️357🗃️270🗃️217tests🗃️360🗃️237🗃️224🗃️243🗃️357🗃️270💾217staffageonly"
+        },
+        {
+          "path": "🗃️b🗃️360🗃️237🗃️216🗃️223🗃️357🗃️270🗃️217teaching🗃️360🗃️237🗃️217🗃️233🗃️357🗃️270🗃️217architecture🗃️342🗃️232🗃️241🗃️357🗃️270🗃️217energy🗃️360🗃️237🗃️223🗃️212🗃️357🗃️270🗃️217demand🗃️360🗃️237🗃️216🗃️254🗃️357🗃️270🗃️217clip🗃️360🗃️237🗃️217🗃️255🗃️357🗃️270🗃️217primaryenergy🗃️360🗃️237🗃️220🗃️215🗃️357🗃️270💾217"
+        },
+        {
+          "path": "🗃️b🗃️360🗃️237🗃️216🗃️223🗃️357🗃️270🗃️217teaching🗃️360🗃️237🗃️217🗃️233🗃️357🗃️270🗃️217architecture🗃️342🗃️232🗃️241🗃️357🗃️270🗃️217energy🗃️360🗃️237🗃️224🗃️245🗃️357🗃️270🗃️217heating🗃️360🗃️237🗃️216🗃️254🗃️357🗃️270🗃️217clip🗃️360🗃️237🗃️247🗃️256🗃️357🗃️270🗃️217calculation🗃️360🗃️237🗃️220🗃️215🗃️357🗃️270💾217"
+        },
+        {
+          "path": "🗃️b🗃️360🗃️237🗃️216🗃️223🗃️357🗃️270🗃️217teaching🗃️360🗃️237🗃️217🗃️233🗃️357🗃️270🗃️217architecture🗃️360🗃️237🗃️216🗃️257🗃️357🗃️270🗃️217optimization🗃️360🗃️237🗃️216🗃️254🗃️357🗃️270🗃️217clip🗃️342🗃️232🗃️226🗃️357🗃️270🗃️217index🗃️360🗃️237🗃️220🗃️215🗃️357🗃️270💾217"
+        },
+        {
+          "path": "🗃️b🗃️360🗃️237🗃️216🗃️223🗃️357🗃️270🗃️217teaching🗃️360🗃️237🗃️217🗃️233🗃️357🗃️270🗃️217architecture🗃️360🗃️237🗃️247🗃️215🗃️357🗃️270🗃️217staffage🗃️360🗃️237🗃️227🗃️202🗃️357🗃️270🗃️217catalog🗃️360🗃️237🗃️224🗃️214🗃️357🗃️270🗃️217appliances🗃️roomthermostat🗃️360🗃️237🗃️224🗃️243🗃️357🗃️270💾217"
         }
       ]
     }

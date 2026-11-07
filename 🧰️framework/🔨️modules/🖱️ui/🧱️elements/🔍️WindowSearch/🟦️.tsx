@@ -422,7 +422,7 @@ const Search: React.FC<SearchProps> = ({ sessionActive = false, input, possibles
           }}
         >
           <PopoverAnchor asChild>
-            <div data-slot="search-row" className="flex w-full min-w-0 items-stretch gap-half">
+            <div data-slot="search-row" className="flex w-full min-w-0 items-stretch">
               <div data-slot="search-input" className="relative grid min-w-0 flex-1 [&_[data-slot=input-root]]:col-start-1 [&_[data-slot=input-root]]:row-start-1 [&_[data-slot=input-root]]:min-w-0">
                 <Input
                   id={!input!.id || input!.id === "search-input" || isInternalChromeControlId(input!.id) ? UI_WINDOW_SEARCH.action : input!.id}

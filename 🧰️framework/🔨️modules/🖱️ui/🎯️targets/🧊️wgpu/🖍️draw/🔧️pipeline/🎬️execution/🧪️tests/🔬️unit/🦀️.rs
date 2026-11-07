@@ -31,9 +31,9 @@ fn draw_list_nests_and_restores_clip_regions() {
     let mut draw = DrawList::default();
     draw.begin_silhouette_clip(&[Rect::new(0.0, 0.0, 100.0, 100.0)]);
     draw.begin_silhouette_clip(&[Rect::new(25.0, 25.0, 100.0, 100.0)]);
-    assert_eq!(draw.layers.last().and_then(|layer| layer.clip.as_ref()).map(|clip| clip.scissors.as_slice()), Some([ScissorRect { x: 25, y: 25, w: 75, h: 75 }].as_slice()));
+    assert_eq!(draw.layers.last().and_then(|layer| layer.clip.as_ref()).map(|clip| clip.scissors.iter().copied().collect::<Vec<_>>()), Some(vec![ScissorRect { x: 25, y: 25, w: 75, h: 75 }]));
     draw.end_silhouette_clip();
-    assert_eq!(draw.layers.last().and_then(|layer| layer.clip.as_ref()).map(|clip| clip.scissors.as_slice()), Some([ScissorRect { x: 0, y: 0, w: 100, h: 100 }].as_slice()));
+    assert_eq!(draw.layers.last().and_then(|layer| layer.clip.as_ref()).map(|clip| clip.scissors.iter().copied().collect::<Vec<_>>()), Some(vec![ScissorRect { x: 0, y: 0, w: 100, h: 100 }]));
     draw.end_silhouette_clip();
     assert!(draw.layers.last().is_some_and(|layer| layer.clip.is_none()));
 }
@@ -73,7 +73,7 @@ fn silhouette_stencil_states_write_masks_then_require_equality() {
 #[test]
 fn silhouette_mask_reset_is_bounded_to_previous_and_current_unions() {
     let previous = Some(ScissorRect { x: 10, y: 10, w: 30, h: 20 });
-    let clip = ClipRegion { scissors: vec![ScissorRect { x: 80, y: 15, w: 20, h: 25 }] };
+    let clip = ClipRegion { scissors: vec![ScissorRect { x: 80, y: 15, w: 20, h: 25 }].into() };
     let (instances, current) = mask_instances(None, Some(&clip), previous, 500.0, 400.0);
     assert_eq!(instances[0].rect, [10.0, 10.0, 90.0, 30.0]);
     assert_eq!(instances[1].rect, [80.0, 15.0, 20.0, 25.0]);
@@ -82,7 +82,7 @@ fn silhouette_mask_reset_is_bounded_to_previous_and_current_unions() {
 
 #[test]
 fn empty_silhouette_clip_writes_no_visible_stencil_region() {
-    let empty = ClipRegion { scissors: Vec::new() };
+    let empty = ClipRegion { scissors: Vec::new().into() };
     let (instances, current) = mask_instances(None, Some(&empty), None, 500.0, 400.0);
     assert!(instances.is_empty(), "a cleared pass needs neither a reset nor a reference-one mask draw");
     assert_eq!(current, None);

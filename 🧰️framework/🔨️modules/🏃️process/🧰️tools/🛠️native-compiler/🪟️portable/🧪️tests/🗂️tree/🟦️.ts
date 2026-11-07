@@ -1,0 +1,23 @@
+import{expect,test}from"bun:test";
+import Ajv from"ajv";
+import{Database}from"bun:sqlite";
+import{mkdtemp,mkdir,writeFile,unlink,rename,symlink,link,rm}from"node:fs/promises";
+import{join,resolve}from"node:path";
+import{createHash}from"node:crypto";
+import{withBuildTestInvocationV1}from"../../../../../📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
+import{createIssuedResourceControlV1}from"../../../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{inspectPortableMsvcTreeV1}from"../../📦️inventory/🔎️verify/🟦️.ts";
+import fixture from"../../🧫️fixtures/🗂️tree.json" with{type:"json"};
+import schema from"../../🧬️schema/🗂️tree.json" with{type:"json"};
+
+test("untrusted tree inspection refuses missing, tampered, extra and linked content",()=>withBuildTestInvocationV1(async original=>{
+ const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Ticket-owned test artifacts required");await mkdir(artifacts,{recursive:true});const area=await mkdtemp(join(artifacts,"msvc-tree-")),db=new Database(":memory:"),control=createIssuedResourceControlV1(original,"test:msvc-tree",60000);try{expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);for(const row of fixture.cases){const parent=join(area,row.mutation),root=resolve(parent,"tree"),vc=join(root,"VC"),sdk=join(root,"sdk"),a=join(vc,"a.h"),b=join(sdk,"b.lib"),sha256=createHash("sha256").update("a").digest("hex"),inventory={version:1,recipeSha256:"a".repeat(64),files:[{path:"VC/a.h",bytes:1,sha256},{path:"sdk/b.lib",bytes:1,sha256}]};await mkdir(vc,{recursive:true});await mkdir(sdk,{recursive:true});await writeFile(a,"a");await writeFile(b,"a");if(row.mutation==="missing")await unlink(a);if(row.mutation==="tamper")await writeFile(a,"b");if(row.mutation==="extra")await writeFile(join(sdk,"extra"),"x");if(row.mutation==="junction"){const target=join(parent,"detached");await rename(vc,target);await symlink(target,vc,process.platform==="win32"?"junction":"dir");}if(row.mutation==="hardlink")await link(a,join(parent,"linked"));const oracle=db.query("select ?1='none' accepted").get(row.mutation) as{accepted:number};expect(Boolean(oracle.accepted),row.name).toBe(row.accepted);if(row.accepted){const observed=await inspectPortableMsvcTreeV1(root,inventory,control);expect(observed.files).toBe(2);expect(observed.bytes).toBe(2);expect(Object.hasOwn(observed,"ready")).toBe(false);}else await expect(inspectPortableMsvcTreeV1(root,inventory,control)).rejects.toThrow();}}finally{db.close();await rm(area,{recursive:true,force:true});}
+}),120000);
+
+test("tree inspection only recognizes the fixed inventory metadata name when requested",()=>withBuildTestInvocationV1(async original=>{
+ const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Ticket-owned test artifacts required");await mkdir(artifacts,{recursive:true});const root=resolve(await mkdtemp(join(artifacts,"msvc-marker-"))),control=createIssuedResourceControlV1(original,"test:msvc-marker",30000),sha256=createHash("sha256").update("a").digest("hex"),inventory={version:1,recipeSha256:"a".repeat(64),files:[{path:"VC/a.h",bytes:1,sha256}]};try{await mkdir(join(root,"VC"));await writeFile(join(root,"VC","a.h"),"a");await writeFile(join(root,".semio-inventory.json"),"not authority");await expect(inspectPortableMsvcTreeV1(root,inventory,control)).rejects.toThrow();const observed=await inspectPortableMsvcTreeV1(root,inventory,control,{inventoryFile:true});expect(observed.files).toBe(1);expect(Object.hasOwn(observed,"ready")).toBe(false);}finally{await rm(root,{recursive:true,force:true});}
+}),60000);
+
+test("tree observations distinguish replacement even with identical bytes",()=>withBuildTestInvocationV1(async original=>{
+ const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Ticket-owned test artifacts required");await mkdir(artifacts,{recursive:true});const area=await mkdtemp(join(artifacts,"msvc-identity-")),root=resolve(area,"tree"),control=createIssuedResourceControlV1(original,"test:msvc-tree-identity",30000),sha256=createHash("sha256").update("a").digest("hex"),inventory={version:1,recipeSha256:"a".repeat(64),files:[{path:"VC/a.h",bytes:1,sha256}]};try{await mkdir(join(root,"VC"),{recursive:true});await writeFile(join(root,"VC","a.h"),"a");const first=await inspectPortableMsvcTreeV1(root,inventory,control);await rename(join(root,"VC","a.h"),join(area,"old"));await writeFile(join(root,"VC","a.h"),"a");const second=await inspectPortableMsvcTreeV1(root,inventory,control);expect(first.sha256).toBe(second.sha256);expect(first.identitySha256).not.toBe(second.identitySha256);}finally{await rm(area,{recursive:true,force:true});}
+}),60000);

@@ -65,8 +65,8 @@
       "const": {
         "maximumFiles": 2048,
         "maximumFileBytes": 4194304,
-        "maximumSourceBytes": 16777216,
-        "maximumSnapshotBytes": 25165824,
+        "maximumSourceBytes": 20971520,
+        "maximumSnapshotBytes": 33554432,
         "readChunkBytes": 65536,
         "progressFiles": 16
       }
@@ -177,7 +177,7 @@
         "version": 1,
         "transport": "owned-auxiliary-pipe",
         "descriptor": 3,
-        "maximumSnapshotBytes": 25165824,
+        "maximumSnapshotBytes": 33554432,
         "digest": "sha256-exact-utf8-bytes",
         "loaderIdentity": "actual-single-eval-argument",
         "snapshot": null,
@@ -205,7 +205,7 @@
         "bytes": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 25165825
+          "maximum": 33554433
         },
         "digest": {
           "enum": [

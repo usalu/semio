@@ -251,7 +251,8 @@
       "typecheck": "strict-indexed",
       "files": [
         "🏗️build/🟦️typescript/🧪️tests/🟦️.ts",
-        "🏗️build/🟦️typescript/🧪️tests/🔁️incremental/🟦️.ts"
+        "🏗️build/🟦️typescript/🧪️tests/🔁️incremental/🟦️.ts",
+        "🧰️tools/🛠️native-compiler/🪟️portable/📦️inventory/🔎️verify/🧪️tests/🟦️.ts"
       ],
       "platforms": [
         "darwin",

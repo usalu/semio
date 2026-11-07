@@ -1,0 +1,154 @@
+{
+  "cases": [
+    {
+      "name": "native candidate",
+      "platform": "win32",
+      "architecture": "x64",
+      "target": null,
+      "environment": {},
+      "reason": "eligible"
+    },
+    {
+      "name": "same explicit target",
+      "platform": "win32",
+      "architecture": "x64",
+      "target": "x86_64-pc-windows-msvc",
+      "environment": {},
+      "reason": "eligible"
+    },
+    {
+      "name": "other target",
+      "platform": "win32",
+      "architecture": "x64",
+      "target": "aarch64-pc-windows-msvc",
+      "environment": {},
+      "reason": "target"
+    },
+    {
+      "name": "other architecture",
+      "platform": "win32",
+      "architecture": "arm64",
+      "target": null,
+      "environment": {},
+      "reason": "architecture"
+    },
+    {
+      "name": "other platform",
+      "platform": "linux",
+      "architecture": "x64",
+      "target": null,
+      "environment": {},
+      "reason": "platform"
+    },
+    {
+      "name": "compiler",
+      "platform": "win32",
+      "architecture": "x64",
+      "target": null,
+      "environment": {
+        "cC": "custom"
+      },
+      "reason": "override"
+    },
+    {
+      "name": "empty explicit compiler",
+      "platform": "win32",
+      "architecture": "x64",
+      "target": null,
+      "environment": {
+        "CC": ""
+      },
+      "reason": "override"
+    },
+    {
+      "name": "target compiler",
+      "platform": "win32",
+      "architecture": "x64",
+      "target": null,
+      "environment": {
+        "Cc_x86_64_pc_windows_msvc": "custom"
+      },
+      "reason": "override"
+    },
+    {
+      "name": "target archiver",
+      "platform": "win32",
+      "architecture": "x64",
+      "target": null,
+      "environment": {
+        "AR_x86_64_pc_windows_msvc": "custom"
+      },
+      "reason": "override"
+    },
+    {
+      "name": "host compiler",
+      "platform": "win32",
+      "architecture": "x64",
+      "target": null,
+      "environment": {
+        "HOST_CC": "custom"
+      },
+      "reason": "override"
+    },
+    {
+      "name": "cargo target linker",
+      "platform": "win32",
+      "architecture": "x64",
+      "target": null,
+      "environment": {
+        "cargo_target_x86_64_pc_windows_msvc_linker": "custom"
+      },
+      "reason": "override"
+    },
+    {
+      "name": "cargo target choice",
+      "platform": "win32",
+      "architecture": "x64",
+      "target": null,
+      "environment": {
+        "CARGO_BUILD_TARGET": "custom"
+      },
+      "reason": "override"
+    },
+    {
+      "name": "link flags",
+      "platform": "win32",
+      "architecture": "x64",
+      "target": null,
+      "environment": {
+        "RUSTFLAGS": "-C linker=custom"
+      },
+      "reason": "override"
+    },
+    {
+      "name": "SDK version",
+      "platform": "win32",
+      "architecture": "x64",
+      "target": null,
+      "environment": {
+        "windowssdkversion": "custom"
+      },
+      "reason": "override"
+    },
+    {
+      "name": "library path",
+      "platform": "win32",
+      "architecture": "x64",
+      "target": null,
+      "environment": {
+        "libpath": "custom"
+      },
+      "reason": "override"
+    },
+    {
+      "name": "caller PATH retained",
+      "platform": "win32",
+      "architecture": "x64",
+      "target": null,
+      "environment": {
+        "Path": "custom"
+      },
+      "reason": "eligible"
+    }
+  ]
+}

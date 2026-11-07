@@ -58,7 +58,13 @@ try{
   });
   const result={schema:fixture.schema,samples:[]};
   await page.evaluate(({ids,label})=>window.layeredOracle.render(ids,label,false),{ids:fixture.topics,label:fixture.labels.en});
+  const borderStatus=()=>page.evaluate(()=>[...document.querySelectorAll('[data-shared-border-root]')].map(root=>root.hasAttribute('data-shared-border-pending')));
+  const initialBorders=await borderStatus();assert(initialBorders.length>0);assert(initialBorders.some(Boolean));
   await page.clock.runFor(1200);await page.evaluate(()=>document.fonts.ready);
+  assert((await borderStatus()).every(pending=>!pending));
+  await page.evaluate(()=>document.querySelector('[data-shared-border-root]').dispatchEvent(new PointerEvent('pointerover',{bubbles:true})));
+  assert((await borderStatus()).some(Boolean));
+  await page.clock.runFor(100);assert((await borderStatus()).every(pending=>!pending));
   result.defaultChip=await measure();
   for(const card of result.defaultChip.cards){assert(card.chip.x<card.rect.x+card.rect.width/2);assert.deepEqual(card.icons,[fixture.sharedDefault.icon])}
   console.log('PASS layered-shared-default-chevron-left');

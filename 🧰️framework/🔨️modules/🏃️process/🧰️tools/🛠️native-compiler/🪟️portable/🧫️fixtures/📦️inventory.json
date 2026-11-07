@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "recipeSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "emptySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "cases": [
+    { "name": "sorted ordinary files", "paths": ["VC/a.h", "sdk/b.lib"], "accepted": true },
+    { "name": "descending files", "paths": ["sdk/b.lib", "VC/a.h"], "accepted": false },
+    { "name": "case-fold collision", "paths": ["VC/A.h", "VC/a.h"], "accepted": false },
+    { "name": "duplicate name", "paths": ["VC/a.h", "VC/a.h"], "accepted": false },
+    { "name": "parent traversal", "paths": ["VC/../escape"], "accepted": false },
+    { "name": "backslash separator", "paths": ["VC\\escape"], "accepted": false },
+    { "name": "reserved device", "paths": ["VC/CON.txt"], "accepted": false },
+    { "name": "trailing dot", "paths": ["VC/name."], "accepted": false },
+    { "name": "unexpected root", "paths": ["other/file"], "accepted": false }
+  ]
+}

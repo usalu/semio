@@ -7,6 +7,7 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
+import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 import { createPortal } from "react-dom";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { Slot } from "../../🔨️modules/🏷️class-name-composition/🪆️slot/🟦️.tsx";
@@ -433,6 +434,7 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(funct
   const callbacksRef = React.useRef({ onOpenAutoFocus, onCloseAutoFocus, onEscapeKeyDown, onPointerDownOutside, onFocusOutside, onInteractOutside });
   callbacksRef.current = { onOpenAutoFocus, onCloseAutoFocus, onEscapeKeyDown, onPointerDownOutside, onFocusOutside, onInteractOutside };
   const ref = React.useMemo(() => composedRef(forwardedRef, contentRef), [forwardedRef]);
+  const borderRef = useSharedBorderFrameRef(ref);
 
   useIsomorphicLayoutEffect(() => {
     const content = contentRef.current;
@@ -533,7 +535,7 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(funct
   const renderedContent = (
     <div
       {...props}
-      ref={ref}
+      ref={borderRef}
       id={context.contentId}
       role={props.role ?? "dialog"}
       aria-modal={props["aria-modal"] ?? (context.isolationRoot === null)}
@@ -541,6 +543,8 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(funct
       aria-describedby={describedBy}
       tabIndex={props.tabIndex ?? -1}
       data-slot="dialog-content"
+      data-shared-border-frame=""
+      data-shared-border-edges="top right bottom left"
       data-level="dialog"
       data-state="open"
       dir={flow.inline === "rtl" ? "rtl" : undefined}
@@ -589,7 +593,7 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
 
 /** 👥️ Groups dialog actions without changing semantics. */
 function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
-  return <div data-slot="dialog-footer" className={cn("flex flex-col-reverse gap-single sm:flex-row sm:justify-end", className)} {...props} />;
+  return <div data-slot="dialog-footer" data-shared-border-group="" className={cn("flex flex-col-reverse sm:flex-row sm:justify-end", className)} {...props} />;
 }
 
 /** 🏷️ Supplies the stable accessible name target owned by its dialog. */

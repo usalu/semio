@@ -1,0 +1,1 @@
+{"version":1,"cases":[{"name":"managed Rust path wins over caller casing","environment":{"Path":"caller","PATH":"managed-rust-bin;caller"},"suffix":"managed-rust-bin;caller"},{"name":"single casing","environment":{"Path":"existing"},"suffix":"existing"},{"name":"absent","environment":{},"suffix":""}]}

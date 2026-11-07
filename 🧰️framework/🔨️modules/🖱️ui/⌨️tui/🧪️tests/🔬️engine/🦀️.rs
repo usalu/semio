@@ -102,7 +102,19 @@ fn hidden_widgets_leave_the_ring_and_zoom_hides_the_other_windows() {
     let widgets: Vec<NodeId> = built.windows.iter().map(|(_, window)| tui.scene.add(*window, Node::new(NodeContent::Widget(list("x"))))).collect();
     built.remount(&mut tui.scene, &layout);
     tui.render_full();
-    assert_eq!(tui.focus_ring().len(), 3);
+    assert_eq!(tui.focus_ring().len(), 4);
+    let axis = tui.focus_ring()[0];
+    tui.focus_next();
+    assert_eq!(tui.focus(), Some(axis));
+    assert_eq!(tui.dispatch(&Event::Key(KeyEvent { key: Key::Right, mods: 0 })), vec![(axis, WidgetSignal::SplitterDragged { path: vec![0], delta: 1 })]);
+    tui.focus_next();
+    assert_eq!(tui.focus(), Some(axis));
+    assert_eq!(tui.dispatch(&Event::Key(KeyEvent { key: Key::Right, mods: 0 })), vec![(axis, WidgetSignal::SplitterDragged { path: vec![1], delta: 1 })]);
+    tui.focus_next();
+    assert_eq!(tui.focus(), Some(widgets[0]));
+    tui.focus_prev();
+    assert_eq!(tui.focus(), Some(axis));
+    assert_eq!(tui.dispatch(&Event::Key(KeyEvent { key: Key::Left, mods: 0 })), vec![(axis, WidgetSignal::SplitterDragged { path: vec![1], delta: -1 })]);
     zoom_window(&mut layout, Some("w2"));
     built.remount(&mut tui.scene, &layout);
     tui.render_full();
@@ -115,7 +127,7 @@ fn hidden_widgets_leave_the_ring_and_zoom_hides_the_other_windows() {
     zoom_window(&mut layout, None);
     built.remount(&mut tui.scene, &layout);
     tui.render_full();
-    assert_eq!(tui.focus_ring().len(), 3);
+    assert_eq!(tui.focus_ring().len(), 4);
 }
 
 //#endregion 🎯 Focus tree
@@ -341,6 +353,37 @@ fn dragging_a_tab_between_groups_previews_and_commits_a_docking_signal() {
 }
 
 #[test]
+fn shared_splitter_geometry_matches_language_neutral_fixture() {
+    use semio_framework_pack_json::{parse, JsonMemberPolicy};
+    use semio_ui_tui_core::geometry::Rect;
+    assert!(include_str!("../📏️shared-splitters/🥒️.feature").starts_with("@capability-tui-shared-splitters"));
+    let fixture = parse(include_str!("../🧫️fixtures/📏️shared-splitters/🔣️.json"), JsonMemberPolicy::Reject).unwrap();
+    for case in fixture.get("cases").unwrap().as_array().unwrap() {
+        let axis = case.get("axis").unwrap().as_str().unwrap();
+        let extent = case.get("extent").unwrap().as_u64().unwrap() as u16;
+        let count = case.get("count").unwrap().as_u64().unwrap() as usize;
+        let ids: Vec<String> = (0..count).map(|index| index.to_string()).collect();
+        let layout = create_default_layout(&ids, axis, None, None);
+        let area = if axis == "row" { Rect::new(0, 0, extent, 8) } else { Rect::new(0, 0, 8, extent) };
+        let measures = solve_window_layout(&layout, area);
+        let mut scene = semio_ui_tui_frame::scene::Scene::new();
+        let root = scene.root();
+        scene.node_mut(root).set_constraint(Constraint { direction: Direction::Stack, ..Default::default() });
+        let canvas = scene.add(root, Node::new(NodeContent::Box));
+        let windows: Vec<_> = ids.iter().map(|id| (id.clone(), scene.add(canvas, Node::new(NodeContent::Chrome(ChromeState::Window(Box::new(WindowState::new(id)))))))).collect();
+        semio_ui_tui_frame::chrome::mount_window_layout(&mut scene, canvas, &layout, &windows, &mut None);
+        semio_ui_tui_frame::layout::solve(&mut scene, area);
+        let starts = case.get("starts").unwrap().as_array().unwrap();
+        let sizes = case.get("sizes").unwrap().as_array().unwrap();
+        for (index, measure) in measures.iter().enumerate() {
+            let (start, size) = if axis == "row" { (measure.rect.x, measure.rect.width) } else { (measure.rect.y, measure.rect.height) };
+            assert_eq!((start, size), (starts[index].as_u64().unwrap() as u16, sizes[index].as_u64().unwrap() as u16));
+            assert_eq!(scene.rect(windows[index].1), measure.rect);
+        }
+    }
+}
+
+#[test]
 fn docking_preview_geometry_matches_the_independent_taffy_solver() {
     use semio_ui_tui_core::geometry::Rect;
     use semio_ui_tui_frame::layout::{dock_window};
@@ -354,14 +397,14 @@ fn docking_preview_geometry_matches_the_independent_taffy_solver() {
             let children: Vec<_> = (0..2).map(|_| oracle.new_leaf(Style { flex_grow: 1.0, flex_basis: taffy::style::Dimension::length(0.0), ..Default::default() }).unwrap()).collect();
             let root = oracle.new_with_children(Style {
                 flex_direction: if row { FlexDirection::Row } else { FlexDirection::Column },
-                size: taffy::geometry::Size { width: taffy::style::Dimension::length(f32::from(width)), height: taffy::style::Dimension::length(f32::from(height)) },
-                gap: taffy::geometry::Size { width: taffy::style::LengthPercentage::length(1.0), height: taffy::style::LengthPercentage::length(1.0) },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::length(f32::from(width - row as u16)), height: taffy::style::Dimension::length(f32::from(height - (!row) as u16)) },
+
                 ..Default::default()
             }, &children).unwrap();
             oracle.compute_layout(root, taffy::geometry::Size { width: AvailableSpace::Definite(f32::from(width)), height: AvailableSpace::Definite(f32::from(height)) }).unwrap();
             let expected = oracle.layout(children[usize::from(!first)]).unwrap();
             let area = Rect::new(10, 4, width, height);
-            let rect = Rect::new(10 + expected.location.x.round() as u16, 4 + expected.location.y.round() as u16, expected.size.width.round() as u16, expected.size.height.round() as u16);
+            let rect = Rect::new(10 + expected.location.x.round() as u16, 4 + expected.location.y.round() as u16, expected.size.width.round() as u16 + row as u16, expected.size.height.round() as u16 + (!row) as u16);
             let mut layout = create_default_layout(&["a".into()], "row", None, None);
             push_window_to_stack(&mut layout, "a", WindowLayoutWindowNode { window_kind_id: "b".into(), title: None, corner: None });
             assert!(dock_window(&mut layout, "a", "b", placement, None));
@@ -399,11 +442,44 @@ fn corner_tab_preview_geometry_matches_the_independent_taffy_solver() {
 }
 
 #[test]
+fn shared_splitter_composes_contours_and_accepts_keyboard_and_mouse() {
+    let (mut tui, built, _layout, windows) = two_stacks(false);
+    let (a, b) = (tui.scene.rect(windows[0]), tui.scene.rect(windows[1]));
+    let x = b.x;
+    let y = a.y + a.height - 1;
+    assert_eq!(x, a.x + a.width - 1);
+    let navbar = tui.scene.rect(built.navbar);
+    let footer = tui.scene.rect(built.footer);
+    assert_eq!(navbar.y + navbar.height - 1, a.y);
+    assert_eq!(footer.y, y);
+    assert_eq!(tui.frame().get(a.x, a.y).unwrap().ch, '┬');
+    assert_eq!(tui.frame().get(x, y).unwrap().ch, '┴');
+    let mut oracle = tiny_skia::Pixmap::new(3, 3).unwrap();
+    let mut ink = tiny_skia::Paint::default();
+    ink.set_color_rgba8(255, 255, 255, 255);
+    for (left, top, width, height) in [(0.0, 1.0, 2.0, 1.0), (1.0, 0.0, 1.0, 2.0), (1.0, 1.0, 2.0, 1.0)] {
+        oracle.fill_rect(tiny_skia::Rect::from_xywh(left, top, width, height).unwrap(), &ink, tiny_skia::Transform::identity(), None);
+    }
+    let edges: Vec<_> = [(1, 0), (2, 1), (1, 2), (0, 1)].into_iter().map(|(x, y)| oracle.pixels()[y * 3 + x].alpha() > 0).collect();
+    assert_eq!(edges, [true, true, false, true]);
+    let axis = tui.scene.node(windows[0]).parent().and_then(|p| tui.scene.node(p).parent()).unwrap();
+    tui.dispatch(&Event::Key(KeyEvent { key: Key::Tab, mods: 0 }));
+    assert_eq!(tui.focus(), Some(axis));
+    assert_eq!(tui.dispatch(&Event::Key(KeyEvent { key: Key::Right, mods: 0 })), vec![(axis, WidgetSignal::SplitterDragged { path: vec![0], delta: 1 })]);
+    assert_eq!(tui.dispatch(&Event::Key(KeyEvent { key: Key::Left, mods: 0 })), vec![(axis, WidgetSignal::SplitterDragged { path: vec![0], delta: -1 })]);
+    tui.render();
+    assert_eq!(tui.frame().get(x, y).unwrap().fg, tui.theme.role(semio_ui_tui_core::theme::Role::ActiveBase));
+    tui.dispatch(&mouse(MouseKind::Move, x, a.y + 8));
+    tui.render();
+    assert_eq!(tui.frame().get(x, y).unwrap().fg, tui.theme.role(semio_ui_tui_core::theme::Role::BorderEmphasized));
+}
+
+#[test]
 fn dragging_the_gutter_between_stacks_reports_splitter_deltas_the_layout_applies() {
     let (mut tui, mut built, mut layout, windows) = two_stacks(false);
     let (a, b) = (tui.scene.rect(windows[0]), tui.scene.rect(windows[1]));
-    assert_eq!(b.x, a.x + a.width + 1, "one gutter cell separates the stacks");
-    let gutter = a.x + a.width;
+    assert_eq!(b.x, a.x + a.width - 1, "the stacks share their splitter cell");
+    let gutter = a.x + a.width - 1;
     let y = a.y + 8;
     assert_eq!(tui.dispatch(&down(gutter, y)), vec![]);
     let signals = tui.dispatch(&mouse(MouseKind::Drag(MouseButton::Left), gutter + 3, y));

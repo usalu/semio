@@ -24,7 +24,11 @@ export function ticketOutput(
   const directory = operations.realpath(resolve(root, ticket));
   const tickets = operations.realpath(join(root, ".🧬semio/🦑️repo/🎫️tickets"));
   if (!directory.startsWith(`${tickets}${sep}`) || !operations.exists(join(directory, "🎫️ticket.json"))) throw new Error("Diagnostic output requires an existing repository ticket");
-  const output = join(directory, "🗑️generated", "nx");
+  const generated = join(directory, "🗑️generated");
+  operations.makeDirectory(generated);
+  if (operations.realpath(generated) !== generated) throw new Error("Diagnostic output requires a physical generated directory within the ticket");
+  const output = join(generated, "nx");
   operations.makeDirectory(output);
+  if (operations.realpath(output) !== output) throw new Error("Diagnostic output requires a physical output directory within the ticket");
   return output;
 }

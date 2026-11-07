@@ -172,6 +172,11 @@
       }
     ]
   },
+  "physicalContainment": [
+    { "name": "direct generated directory", "link": "none", "accepted": true },
+    { "name": "generated directory linked outside ticket", "link": "generated", "accepted": false },
+    { "name": "output directory linked outside ticket", "link": "nx", "accepted": false }
+  ],
   "cases": [
     {
       "ticket": null,

@@ -53,6 +53,42 @@
       "available": 2,
       "performed": 2,
       "effects": true
+    },
+    {
+      "phase": "advance",
+      "local": 1,
+      "child": 0,
+      "quoted": 1,
+      "available": 8,
+      "performed": 1,
+      "effects": true
+    },
+    {
+      "phase": "advance",
+      "local": 0,
+      "child": 3,
+      "quoted": 3,
+      "available": 8,
+      "performed": 3,
+      "effects": true
+    },
+    {
+      "phase": "advance",
+      "local": 0,
+      "child": 2,
+      "quoted": 2,
+      "available": 8,
+      "performed": 2,
+      "effects": true
+    },
+    {
+      "phase": "advance",
+      "local": 0,
+      "child": 2,
+      "quoted": 2,
+      "available": 1,
+      "performed": 0,
+      "effects": false
     }
   ]
 }

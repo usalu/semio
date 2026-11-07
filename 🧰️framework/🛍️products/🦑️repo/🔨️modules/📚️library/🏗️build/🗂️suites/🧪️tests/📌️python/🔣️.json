@@ -1,0 +1,1 @@
+{"type":"array","minItems":3,"items":{"type":"object","additionalProperties":false,"required":["id","owner","consumers"],"properties":{"id":{"type":"string"},"owner":{"enum":["cache","build"]},"consumers":{"type":"array","items":{"type":"string","minLength":1}}}}}

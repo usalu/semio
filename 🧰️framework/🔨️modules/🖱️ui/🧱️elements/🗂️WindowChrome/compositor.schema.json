@@ -1,10 +1,186 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema", "type": "object", "required": ["overlay", "effects", "clippedOwner", "markerOnly", "fractional"], "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "overlay",
+    "effects",
+    "clippedOwner",
+    "markerOnly",
+    "fractional",
+    "disabled",
+    "nativeSeams"
+  ],
+  "additionalProperties": false,
   "properties": {
-    "fractional": { "type": "object", "required": ["parentWidth", "parentHeight", "childWidth", "childHeight"], "additionalProperties": { "type": "number" } },
-    "markerOnly": { "type": "object", "required": ["size", "normalSeam", "hoverSeam", "releaseOrders"], "additionalProperties": false, "properties": { "size": { "type": "number", "exclusiveMinimum": 2 }, "normalSeam": { "type": "string" }, "hoverSeam": { "type": "string" }, "releaseOrders": { "type": "array", "items": { "type": "array", "items": { "enum": ["window", "frame"] }, "minItems": 2, "maxItems": 2, "uniqueItems": true } } } },
-    "overlay": { "type": "object", "additionalProperties": { "type": "string" } },
-    "effects": { "type": "array", "items": { "type": "object", "required": ["attribute", "value", "state"], "additionalProperties": false, "properties": { "attribute": { "type": "string" }, "value": { "type": "string" }, "state": { "enum": ["introduced", "celebrated", "loading", "waiting"] } } } },
-    "clippedOwner": { "type": "object", "required": ["left", "top", "width", "height", "viewportRight", "expectedSegments"], "additionalProperties": { "type": "number" } }
+    "fractional": {
+      "type": "object",
+      "required": [
+        "parentWidth",
+        "parentHeight",
+        "childWidth",
+        "childHeight"
+      ],
+      "additionalProperties": {
+        "type": "number"
+      }
+    },
+    "markerOnly": {
+      "type": "object",
+      "required": [
+        "size",
+        "normalSeam",
+        "hoverSeam",
+        "releaseOrders"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "size": {
+          "type": "number",
+          "exclusiveMinimum": 2
+        },
+        "normalSeam": {
+          "type": "string"
+        },
+        "hoverSeam": {
+          "type": "string"
+        },
+        "releaseOrders": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "window",
+                "frame"
+              ]
+            },
+            "minItems": 2,
+            "maxItems": 2,
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "overlay": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "effects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "attribute",
+          "value",
+          "state"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "attribute": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "introduced",
+              "celebrated",
+              "loading",
+              "waiting"
+            ]
+          }
+        }
+      }
+    },
+    "clippedOwner": {
+      "type": "object",
+      "required": [
+        "left",
+        "top",
+        "width",
+        "height",
+        "viewportRight",
+        "expectedSegments"
+      ],
+      "additionalProperties": {
+        "type": "number"
+      }
+    },
+    "disabled": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "attribute",
+          "value",
+          "expected"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "attribute": {
+            "enum": [
+              "disabled",
+              "aria-disabled"
+            ]
+          },
+          "value": {
+            "type": "string"
+          },
+          "expected": {
+            "enum": [
+              "normal",
+              "hover"
+            ]
+          }
+        }
+      }
+    },
+    "nativeSeams": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "orientation",
+          "dir",
+          "first",
+          "second",
+          "color"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "orientation": {
+            "enum": [
+              "horizontal",
+              "vertical"
+            ]
+          },
+          "dir": {
+            "enum": [
+              "ltr",
+              "rtl"
+            ]
+          },
+          "first": {
+            "type": "string"
+          },
+          "second": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          },
+          "secondContent": {
+            "type": "string"
+          }
+        }
+      }
+    }
   }
 }

@@ -204,38 +204,20 @@
    "id": "three-phase-native-guard-amplification",
    "guards": 4194305,
    "shortWrite": 65536,
-   "expected": [
-    9,
-    14,
-    10,
-    16,
-    16
-   ]
+   "expected": [9, 10, 10, 10, 10]
   },
   {
    "id": "three-phase-short-writes",
    "guards": 128,
    "shortWrite": 2,
-   "expected": [
-    13,
-    14,
-    10,
-    16,
-    16
-   ]
+   "expected": [13, 10, 10, 10, 10]
   },
   {
    "id": "three-phase-short-reads",
    "guards": 128,
    "shortWrite": 65536,
    "shortRead": 2,
-   "expected": [
-    9,
-    18,
-    14,
-    20,
-    20
-   ]
+   "expected": [9, 14, 14, 14, 14]
   },
   {
    "id": "empty-files-charge-terminal-probes",
@@ -244,18 +226,12 @@
    "empty": true,
    "capacityByTracker": [
     3,
-    5,
     4,
-    7,
-    7
+    4,
+    4,
+    4
    ],
-   "expected": [
-    3,
-    5,
-    4,
-    7,
-    7
-   ]
+   "expected": [3, 4, 4, 4, 4]
   },
   {
    "id": "terminal-probe-capacity-overrun",
@@ -264,13 +240,10 @@
    "empty": true,
    "capacityByTracker": [
     3,
-    4
+    3
    ],
    "refused": true,
-   "expected": [
-    3,
-    4
-   ]
+   "expected": [3, 3]
   },
   {
    "id": "representative-observed-stage-shape",
@@ -283,13 +256,7 @@
     "bytes": 3328255,
     "maximumDepth": 3
    },
-   "expected": [
-    3493,
-    5238,
-    3494,
-    5240,
-    5240
-   ]
+   "expected": [3493, 3494, 3494, 3494, 3494]
   },
   {
    "id": "directory-only-progress-cadence",
@@ -302,13 +269,7 @@
     "bytes": 0,
     "maximumDepth": 3
    },
-   "expected": [
-    2619,
-    4364,
-    2620,
-    4366,
-    4366
-   ],
+   "expected": [2619, 2620, 2620, 2620, 2620],
    "requireProgress": true
   },
   {
@@ -322,11 +283,7 @@
     "bytes": 0,
     "maximumDepth": 3
    },
-   "expected": [
-    2619,
-    4364,
-    64
-   ],
+   "expected": [2619, 2620, 64],
    "cancelOnPhase": "capture",
    "refused": true
   }

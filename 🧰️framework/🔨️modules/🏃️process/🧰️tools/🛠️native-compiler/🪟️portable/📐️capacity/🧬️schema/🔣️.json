@@ -1,0 +1,8 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Pinned Windows Compiler Capacity Estimate",
+  "definitions": {
+    "Policy": {"const": {"version": 1, "outputBytes": 1513389488, "outputFiles": 4947, "payloadBytes": 394016409, "payloadFiles": 47, "catalogBytes": 18343591, "metadataBytes": 802816, "metadataFiles": 3, "entryAllowance": 5120, "maximumBytes": 2147483648}},
+    "Case": {"type":"object","additionalProperties":false,"required":["allocationBytes","accepted"],"properties":{"allocationBytes":{"type":"integer"},"accepted":{"type":"boolean"}}}
+  }
+}

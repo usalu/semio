@@ -136,7 +136,7 @@ pub(super) fn retained_tree_node_step(
                 match item.presence.status {
                     UiStatus::Loading => paint_loading_border(draw, row, ring_color, theme),
                     UiStatus::Waiting => paint_waiting_border(draw, row, ring_color, theme),
-                    UiStatus::Finished => draw.push_finished_border([row.x, row.y, row.w, row.h], ring_color, theme.border_radius, theme.stroke_hairline),
+                    UiStatus::Finished => draw.push_shared_border_effect(row, ring_color, theme.border_radius, theme.stroke_hairline, semio_ui_draw_contract::SharedBorderState::Normal),
                     UiStatus::Idle => {}
                 }
                 if matches!(item.presence.state, UiState::Introducing | UiState::Celebrating) {
@@ -144,7 +144,7 @@ pub(super) fn retained_tree_node_step(
                     let turns = if celebrating { celebrate_turns(draw.clock_seconds(), theme.celebrate_duration_seconds) } else { 0.0 };
                     let ring = if celebrating { celebrate_color(theme, turns) } else { theme.accent };
                     let stroke = if celebrating { celebrate_stroke(theme, turns) } else { theme.stroke_hairline };
-                    draw.push_introducing_border([row.x, row.y, row.w, row.h], ring, theme.border_radius, stroke);
+                    draw.push_shared_border_effect(row, ring, theme.border_radius, stroke, if celebrating { semio_ui_draw_contract::SharedBorderState::Celebrated } else { semio_ui_draw_contract::SharedBorderState::Introduced });
                 }
                 let indent = bounds.x + (cursor.depth - 1) as f32 * TREE_INDENT_PER_LEVEL + TREE_TOGGLE_WIDTH;
                 if item.items.as_ref().is_some_and(|items| !items.is_empty()) {

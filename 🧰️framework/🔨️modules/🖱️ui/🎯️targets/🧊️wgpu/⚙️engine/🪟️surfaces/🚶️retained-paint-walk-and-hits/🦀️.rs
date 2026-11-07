@@ -150,6 +150,7 @@ pub enum RetainedPaintPhase {
     /// accumulated origin, the paint phase just drew from — one geometry for what is painted and
     /// what is hit (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     Hits,
+    Borders,
     Publish,
     Complete,
     Fault,
@@ -332,6 +333,7 @@ pub struct RetainedPaintFrame {
     pub phase: RetainedPaintPhase,
     pub walk: RetainedPaintWalk,
     pub candidate: DrawList,
+    pub append_token: Option<semio_ui_draw_contract::RetainedAppendToken>,
     pub sync_node: Option<NodeId>,
     pub node_sync: RetainedInteractiveSyncCursor,
     pub paint_node: Option<(NodeId, f32, f32)>,

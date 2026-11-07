@@ -7,6 +7,7 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
+import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { PropertyValueColumnContext } from "../🌳️Tree/📏️row-alignment/🟦️.tsx";
@@ -68,6 +69,7 @@ interface StepperProps extends ElementProps {
  * 🎛️ Numeric stepper with increment, decrement, and drag-to-adjust.
  **/
 export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, mixed, precision, onChange, onDelta, onPointerDown, onPointerUp, onPointerCancel, interactionId, id, showLabel, "aria-labelledby": labelledBy, "aria-label": ariaLabel, "aria-valuetext": ariaValueText, disabled = false, snapValues, displayFactor = null, unit = null, limits = null }) => {
+  const borderRef = useSharedBorderFrameRef<HTMLDivElement>();
   const isInPropertyValueColumn = reactHostPort.useContext(PropertyValueColumnContext);
   const mixedLabel = useLabel("ui.common.mixedValues");
   const decrementLabel = useLabel("ui.tableStepper.decrement");
@@ -246,13 +248,18 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
 
   const stepperGroup = (
     <div
+      ref={borderRef}
       data-slot="stepper-group"
+      data-shared-border-frame=""
+      data-shared-border-edges="top right bottom left"
+      aria-disabled={disabled || undefined}
       data-detail-panel-control="fill"
-      className={cn("flex h-medium w-full min-w-0 items-stretch overflow-hidden rounded-sm border transition-[border-color] focus-within:border-accent", borderClass)}
+      className={cn("relative flex h-medium w-full min-w-0 items-stretch border transition-[border-color] focus-within:border-accent", borderClass)}
       style={{ opacity: stepperEmptyOpacity, transition: "opacity 150ms" }}
     >
       <button
         data-slot="stepper-minus"
+        data-shared-border-cell=""
         aria-label={decrementLabel}
         type="button"
         onMouseDown={handleMouseDown(-step)}
@@ -261,10 +268,11 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
         onTouchStart={handleMouseDown(-step)}
         onTouchEnd={handleMouseUp}
         disabled={!canStepDown}
-        className={cn("flex h-medium w-medium shrink-0 cursor-pointer items-center justify-center border-e hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted", borderClass)}
+        className="flex h-medium w-medium shrink-0 cursor-pointer items-center justify-center hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted"
       >
         <RemoveIcon className="size-tiny" />
       </button>
+      <div data-shared-border-cell="" className="flex min-w-0 flex-1 items-stretch">
       <input
         type="number"
         data-slot="input"
@@ -329,8 +337,10 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
           {unit}
         </span>
       ) : null}
+      </div>
       <button
         data-slot="stepper-plus"
+        data-shared-border-cell=""
         aria-label={incrementLabel}
         type="button"
         onMouseDown={handleMouseDown(step)}
@@ -339,7 +349,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
         onTouchStart={handleMouseDown(step)}
         onTouchEnd={handleMouseUp}
         disabled={!canStepUp}
-        className={cn("flex h-medium w-medium shrink-0 cursor-pointer items-center justify-center border-s hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted", borderClass)}
+        className="flex h-medium w-medium shrink-0 cursor-pointer items-center justify-center hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted"
       >
         <AddIcon className="size-tiny" />
       </button>

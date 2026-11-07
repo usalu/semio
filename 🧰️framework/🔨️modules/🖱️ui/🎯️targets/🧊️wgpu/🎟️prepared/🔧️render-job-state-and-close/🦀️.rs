@@ -9,6 +9,7 @@ pub struct PreparedRenderJob {
     pub input: Option<PreparedRenderInput>,
     pub(super) usage: PreparedRenderUsage,
     pub(super) section: PreparationSection,
+    pub(super) border_reserved_units: usize,
     pub(super) draw_cursor: DrawMeasureCursor,
     pub(super) overlay_cursor: DrawMeasureCursor,
     pub(super) pipeline_cursor: DrawMeasureCursor,
@@ -31,6 +32,8 @@ pub struct PreparedRenderJob {
 
 #[derive(Clone, Copy)]
 pub(super) enum PreparationSection {
+    Borders,
+    OverlayBorders,
     Draw,
     Overlay,
     Uploads,
@@ -210,7 +213,8 @@ impl PreparedRenderJob {
             has_animated_primitives: false,
             input: Some(input),
             usage: PreparedRenderUsage::default(),
-            section: PreparationSection::Draw,
+            section: PreparationSection::Borders,
+            border_reserved_units: 0,
             draw_cursor: DrawMeasureCursor::default(),
             overlay_cursor: DrawMeasureCursor::default(),
             pipeline_cursor: DrawMeasureCursor::default(),

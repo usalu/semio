@@ -92,8 +92,13 @@ impl DrawList {
     }
 
     pub fn clear(&mut self) {
+        assert!(self.retained_append.is_none() && self.border_finalize.is_none(), "draw transaction is active");
+        self.border_finalize = None;
+        self.border_retained_bytes = 0;
+        self.border_finalized = false;
         self.overlay_route = 0;
         self.scene_passes.clear();
+        self.shared_borders.clear();
         self.layers.clear();
         self.layers.push(DrawLayer::default());
         self.glass_regions.clear();
@@ -192,6 +197,60 @@ impl DrawList {
             return;
         }
         self.active_ui_instances().push(UiInstance::solid(rect, color));
+    }
+
+    /// 📏 Records all four logical edges for shared ownership within the current paint scope.
+    pub fn push_shared_border(&mut self, rect: semio_ui_theme::geometry::Rect, stroke: f32, color: Rgba, state: SharedBorderState) {
+        self.push_shared_border_edges(rect, stroke, color, state, [true; 4]);
+    }
+
+    /// 🧭 Records selected top, right, bottom and left edges in paint order.
+    pub fn push_shared_border_edges(&mut self, rect: semio_ui_theme::geometry::Rect, stroke: f32, color: Rgba, state: SharedBorderState, edges: [bool; 4]) {
+        self.push_shared_border_records(rect, stroke, color, state, edges, None);
+    }
+
+    /// ✨ Records an animated border using the original surface geometry for its shader phase.
+    pub fn push_shared_border_effect(&mut self, rect: semio_ui_theme::geometry::Rect, color: Rgba, radius: f32, stroke: f32, state: SharedBorderState) {
+        let geometry = [rect.x, rect.y, rect.w, rect.h];
+        let effect = match state {
+            SharedBorderState::Normal => UiInstance::finished_border(geometry, color, radius, stroke),
+            SharedBorderState::Waiting => UiInstance::waiting_border(geometry, color, radius, stroke),
+            SharedBorderState::Loading => UiInstance::loading_border(geometry, color, radius, stroke),
+            SharedBorderState::Introduced | SharedBorderState::Celebrated => UiInstance::introducing_border(geometry, color, radius, stroke),
+            _ => return,
+        };
+        self.push_shared_border_records(rect, stroke, color, state, [true; 4], Some(effect));
+    }
+
+    fn push_shared_border_records(&mut self, rect: semio_ui_theme::geometry::Rect, stroke: f32, color: Rgba, state: SharedBorderState, edges: [bool; 4], effect: Option<UiInstance>) {
+        assert!(self.retained_append.is_none() && self.border_finalize.is_none(), "draw transaction is active");
+        assert!(!self.border_finalized, "Shared border frame is finalized; clear or create a new frame");
+        let [x, y, w, h] = [rect.x, rect.y, rect.w, rect.h];
+        if ![x, y, w, h, stroke, x + w, y + h].iter().all(|value| value.is_finite()) || w <= 0.0 || h <= 0.0 || stroke <= 0.0 {
+            return;
+        }
+        self.border_finalized = false;
+        let points = [([x, y], [x + w, y]), ([x + w, y], [x + w, y + h]), ([x, y + h], [x + w, y + h]), ([x, y], [x, y + h])];
+        for (side, (enabled, (from, to))) in edges.into_iter().zip(points).enumerate() {
+            if !enabled { continue; }
+            if !self.claim_retained_output(1, size_of::<UiInstance>() + size_of::<SharedBorderPaint>()) { return; }
+            let overlay = self.overlay_route > 0;
+            self.active_layer();
+            let layer_index = self.layers.len() - 1;
+            let id = self.shared_borders.len();
+            let layer = &mut self.layers[layer_index];
+            if overlay { layer.shared_overlay_finalized = false; } else { layer.shared_normal_finalized = false; }
+            let slot = if overlay { layer.overlay_ui_instances.len() } else { layer.ui_instances.len() };
+            let geometry = match side { 0 => [x, y, w, stroke], 1 => [x + w - stroke, y, stroke, h], 2 => [x, y + h - stroke, w, stroke], _ => [x, y, stroke, h] };
+            let record = SharedBorderPaint { segment: SharedBorderSegment { id, owner: id, from: [from[0] as f64, from[1] as f64], to: [to[0] as f64, to[1] as f64], state }, layer: layer_index, slot, overlay, stroke, color, effect, side: side as u8 };
+            if self.shared_borders.try_push(record).is_err() {
+                if let Some(grant) = self.retained_output.as_mut() { grant.faulted = true; }
+                return;
+            }
+            let layer = &mut self.layers[layer_index];
+            let lane = if overlay { &mut layer.overlay_ui_instances } else { &mut layer.ui_instances };
+            lane.push(UiInstance::solid(geometry, color));
+        }
     }
 
     pub fn push_rounded(&mut self, rect: [f32; 4], color: Rgba, radius: f32) {

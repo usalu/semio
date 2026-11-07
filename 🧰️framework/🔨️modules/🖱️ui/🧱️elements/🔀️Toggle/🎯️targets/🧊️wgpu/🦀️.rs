@@ -17,7 +17,7 @@ use semio_ui_declaration::IconName;
 pub fn render_toggle<E: Clone>(id: &str, icon_id: IconName, pressed: bool, text: Option<&str>, bounds: semio_ui_theme::geometry::Rect, ctx: &mut WidgetContext<'_, E>) {
     let hovered = ctx.input.hovered_id.as_deref() == Some(id);
     let bg = item_bg(ctx.theme, pressed, hovered);
-    push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, bg);
+    push_control_border(ctx.draw, bounds, ctx.theme, if hovered { ctx.theme.border_emphasized } else { ctx.theme.border_normal }, bg, if hovered { semio_ui_wgpu_layout::chrome::SharedBorderState::Hover } else if pressed { semio_ui_wgpu_layout::chrome::SharedBorderState::Active } else { semio_ui_wgpu_layout::chrome::SharedBorderState::Normal });
     let mut content_x = bounds.x + ctx.theme.padding_standard;
     if let Some(icons) = ctx.icons {
         if icons.icon_uv(icon_id.as_str()).is_some() {

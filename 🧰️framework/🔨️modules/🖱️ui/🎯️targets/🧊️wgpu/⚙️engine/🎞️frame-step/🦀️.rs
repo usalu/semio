@@ -61,6 +61,7 @@ impl Ui {
                 phase: RetainedPaintPhase::Synchronize,
                 walk: RetainedPaintWalk::new(&window.tree, root),
                 candidate: DrawList::default(),
+                append_token: None,
                 sync_node: None,
                 node_sync: RetainedInteractiveSyncCursor::default(),
                 paint_node: None,
@@ -320,13 +321,18 @@ impl Ui {
                 }
                 RetainedPaintWalkStep::Scalar => UiFrameStep::Pending,
                 RetainedPaintWalkStep::Complete => {
-                    frame.phase = RetainedPaintPhase::Publish;
+                    frame.phase = RetainedPaintPhase::Borders;
                     UiFrameStep::Pending
                 }
                 RetainedPaintWalkStep::DepthFault => {
                     frame.phase = RetainedPaintPhase::Fault;
                     UiFrameStep::Fault
                 }
+            },
+            RetainedPaintPhase::Borders => match frame.candidate.finalize_shared_borders_step() {
+                Ok(true) => { frame.phase = RetainedPaintPhase::Publish; UiFrameStep::Pending }
+                Ok(false) => UiFrameStep::Pending,
+                Err(_) => { frame.phase = RetainedPaintPhase::Fault; UiFrameStep::Fault }
             },
             RetainedPaintPhase::Publish => {
                 window.hit_registry = std::mem::take(&mut frame.hit_candidates);

@@ -86,7 +86,7 @@ export const parseInstalledReceiptV1=(bytes:Uint8Array):InstalledReceiptV1=>pars
 /** 🌡️ Is what one no-follow stat of an installed entry reports. */
 export interface InstalledFactsV1{readonly kind:string;readonly stamp:InstalledStampV1}
 /** 🔌️ Supplies the only filesystem operations a ledger verification performs; both must never follow links. */
-export interface InstalledPortsV1{readonly stat:(portable:string)=>InstalledFactsV1|undefined;readonly children:(portable:string)=>readonly InstalledChildV1[];readonly control:IncrementalControlV1}
+export interface InstalledPortsV1{readonly stat:(portable:string)=>Promise<InstalledFactsV1|undefined>;readonly children:(portable:string)=>Promise<readonly InstalledChildV1[]>;readonly control:IncrementalControlV1}
 /** 🚦️ Closes every reason a ledger no longer attests an installed generation. */
 export type InstalledMismatchClassV1="receipt-invalid"|"evidence-invalid"|"device-changed"|"directory-changed"|"listing-changed"|"churn";
 /** 🟢️ Is either the unchanged shape of the generation or a typed mismatch for the complete scan. */
@@ -99,15 +99,16 @@ export async function verifyInstalledLedgerV1(receipt:InstalledReceiptV1,rows:re
  try{counts=installedCountsV1(rows);}catch{return miss("evidence-invalid");}
  if(counts.entries!==receipt.shape.entries||counts.directories!==receipt.shape.directories||counts.files!==receipt.shape.files||counts.links!==receipt.shape.links)return miss("evidence-invalid");
  for(const row of rows){
-  if(++work%policy.checkWork===0)control.check();if(work%policy.progressWork===0)await control.tick(work);
-  let facts:InstalledFactsV1|undefined;try{facts=ports.stat(row.path);}catch{return miss("directory-changed",row.path);}
+  control.check();let facts:InstalledFactsV1|undefined,statFailed=false;try{facts=await ports.stat(row.path);}catch{statFailed=true;}control.check();if(statFailed)return miss("directory-changed",row.path);
   if(!facts||facts.kind!=="directory")return miss("directory-changed",row.path);
   if(facts.stamp[0]!==receipt.device)return miss("device-changed",row.path);
   if(policy.identityFields.some((_,index)=>facts.stamp[index]!==row.stamp[index]))return miss("directory-changed",row.path);
-  if(row.settled&&facts.stamp.every((value,index)=>value===row.stamp[index]))continue;
-  if(++relisted>policy.maximumRelist)return miss("churn",row.path);
-  let digest:string;try{digest=installedChildrenDigestV1(ports.children(row.path));}catch{return miss("listing-changed",row.path);}
-  if(digest!==row.children)return miss("listing-changed",row.path);
+  if(!row.settled||!facts.stamp.every((value,index)=>value===row.stamp[index])){
+   if(++relisted>policy.maximumRelist)return miss("churn",row.path);
+   control.check();let children:readonly InstalledChildV1[]|undefined,listingFailed=false;try{children=await ports.children(row.path);}catch{listingFailed=true;}control.check();if(listingFailed)return miss("listing-changed",row.path);
+   let digest:string;try{digest=installedChildrenDigestV1(children!);}catch{return miss("listing-changed",row.path);}if(digest!==row.children)return miss("listing-changed",row.path);
+  }
+  if(++work%policy.progressWork===0){await control.tick(work);control.check();}
  }
  control.check();return Object.freeze({status:"match",shape:receipt.shape,relisted});
 }

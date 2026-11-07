@@ -1,0 +1,6 @@
+import {strict as assert} from "node:assert";
+import {Database} from "bun:sqlite";
+import {portableMsvcInventoryV1} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧰️tools/🛠️native-compiler/🪟️portable/📦️inventory/🟦️.ts";
+import fixture from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧰️tools/🛠️native-compiler/🪟️portable/🧫️fixtures/📦️inventory.json";
+
+const db=new Database(":memory:");try{for(const row of fixture.cases){const value={version:1,recipeSha256:fixture.recipeSha256,files:row.paths.map(path=>({path,bytes:0,sha256:fixture.emptySha256}))},order=db.query("select count(*) n from json_each(?1) a join json_each(?1) b on cast(a.key as integer)<cast(b.key as integer) where a.value>=b.value collate binary or lower(a.value)=lower(b.value)").get(JSON.stringify(row.paths)) as {n:number};if(row.accepted){assert.equal(order.n,0,row.name);const result=portableMsvcInventoryV1(value);assert.equal(result.text,JSON.stringify(value)+"\n");assert.equal(result.files,row.paths.length);}else assert.throws(()=>portableMsvcInventoryV1(value),undefined,row.name);}assert.throws(()=>portableMsvcInventoryV1({version:1,recipeSha256:fixture.recipeSha256,files:[],ready:true}));console.log(JSON.stringify({cases:fixture.cases.length,oracle:"sqlite",readinessAuthority:false}));}finally{db.close();}

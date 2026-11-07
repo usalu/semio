@@ -56,7 +56,7 @@ pub fn render_select<E: Clone, T: SelectItemView>(id: &str, value: &str, items: 
     let open = *ctx.open_selects.get(id).unwrap_or(&false);
     let hovered = ctx.input.hovered_id.as_deref() == Some(id);
     let bg = if hovered { ctx.theme.button_hover } else { ctx.theme.input_bg };
-    push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, bg);
+    push_control_border(ctx.draw, bounds, ctx.theme, if hovered { ctx.theme.border_emphasized } else { ctx.theme.border_normal }, bg, if hovered { semio_ui_wgpu_layout::chrome::SharedBorderState::Hover } else { semio_ui_wgpu_layout::chrome::SharedBorderState::Normal });
     let label = items.iter().find(|item| item.value() == value).map_or(placeholder.unwrap_or("Select…"), |item| item.label());
     draw_text(ctx, label, bounds.x + ctx.theme.padding_standard, bounds.y + (bounds.h + ctx.theme.font_size_body) * 0.5 - 2.0, ctx.theme.font_size_body, ctx.theme.text);
     if let Some(icons) = ctx.icons {
@@ -97,7 +97,7 @@ pub fn render_select_menu<E: Clone, T: SelectItemView>(id: &str, value: &str, it
     let mut render_rows = |draw: &mut semio_ui_draw_contract::DrawList| {
         let glass = draw.push_glass([popup.menu.x, popup.menu.y, popup.menu.w, popup.menu.h], ctx.theme.border_radius, ctx.theme.glass(Level::Menu));
         draw.begin_glass_content(glass);
-        semio_ui_wgpu_layout::chrome::push_chrome_border(draw, popup.menu, ctx.theme.stroke_hairline, ctx.theme.border_normal, true, true, true, true);
+        semio_ui_wgpu_layout::chrome::push_chrome_border(draw, popup.menu, ctx.theme.stroke_hairline, ctx.theme.border_normal, true, true, true, true, semio_ui_wgpu_layout::chrome::SharedBorderState::Normal);
         draw.push_scissor(select_popup_viewport_rect(popup));
         for (index, item) in items.iter().enumerate().take(popup.last_row).skip(popup.first_row) {
             let row = select_popup_row_rect(bounds, index, popup, ctx.theme);

@@ -50,5 +50,5 @@ pub fn paint_navbar(n: &NavbarState, theme: &Theme, rect: Rect, buf: &mut CellBu
         let x = ideal.clamp(band_start, band_end - width);
         buf.put_str(Pos { x, y: content.y }, &text, theme.role(Role::MutedForeground), bg, 0, Rect::new(band_start, content.y, band, 1));
     }
-    buf.hline(Pos { x: hairline.x, y: hairline.y }, hairline.width, '\u{2500}', theme.role(if emphasized { Role::BorderEmphasized } else { Role::BorderNormal }), bg);
+    buf.border_hline(Pos { x: hairline.x, y: hairline.y }, hairline.width, '\u{2500}', theme.role(if emphasized { Role::BorderEmphasized } else { Role::BorderNormal }), bg);
 }

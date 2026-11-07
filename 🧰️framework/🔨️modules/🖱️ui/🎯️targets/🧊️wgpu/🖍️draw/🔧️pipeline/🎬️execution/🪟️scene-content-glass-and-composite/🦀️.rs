@@ -404,7 +404,7 @@ impl UiPipelines {
         view: &gpu_device::TextureView,
         scene: &SceneColorTarget,
         frame_buffers: &mut FrameBuffers,
-        regions: &[GlassRegion],
+        regions: &semio_ui_draw_contract::PagedVec<GlassRegion>,
         max_mip: u32,
         width: f32,
         height: f32,

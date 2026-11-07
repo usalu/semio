@@ -175,7 +175,7 @@ function NavbarBandBody({ normalItems, centeredItems, trailing }: { normalItems:
   }, [centeredItems.length, normalItems.length]);
   return (
     <>
-      <div ref={rowRef} data-shared-border-group="" className="p-[var(--padding-standard)] flex gap-[var(--padding-standard)] items-center min-w-0 h-full">
+      <div ref={rowRef} data-shared-border-group="" className="flex items-center min-w-0 h-full">
         {normalItems.map((item, index) => (
           <div key={item.key ?? index} className={cn("h-medium flex shrink-0 items-center min-w-0", item.className)}>
             {item.content}

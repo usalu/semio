@@ -102,21 +102,25 @@ fn window_contour_fixture_matches_connected_direction_graph_and_independent_rast
                 let is_top = text(tab, "corner").starts_with("top");
                 let seam = if mode == "compact" || is_top { top } else { bottom };
                 let outer = if mode == "compact" { top } else if is_top { 0 } else { size[1] - 1 };
-                let role = if index == Some(active) { Role::ActiveBase } else if emphasized { Role::BorderEmphasized } else { Role::BorderNormal };
+                let role = if emphasized { Role::BorderEmphasized } else if index == Some(active) { Role::ActiveBase } else { Role::BorderNormal };
                 if mode == "compact" {
                     for xx in x + 1..end { captions.insert((xx, top)); }
                     for xx in [x, end] {
                         if xx > left && xx < right { *graph.entry((xx, top)).or_default() |= DOWN; }
-                        if index == Some(active) || roles.get(&(xx, top)) != Some(&Role::ActiveBase) { roles.insert((xx, top), role); }
+                        if role == Role::BorderEmphasized || roles.get(&(xx, top)) != Some(&Role::BorderEmphasized) && (index == Some(active) || roles.get(&(xx, top)) != Some(&Role::ActiveBase)) { roles.insert((xx, top), role); }
                     }
                 } else {
                     horizontal(&mut graph, x, end, outer, false);
                     vertical(&mut graph, x, outer.min(seam), outer.max(seam));
                     vertical(&mut graph, end, outer.min(seam), outer.max(seam));
                     if index == Some(active) { horizontal(&mut graph, x, end, seam, true); }
-                    for xx in x..=end { roles.insert((xx, outer), role); }
+                    let rank = |role: Role| if role == Role::BorderEmphasized { 2 } else if role == Role::ActiveBase { 1 } else { 0 };
+                    for xx in x..=end { roles.entry((xx, outer)).and_modify(|old| { if rank(role) > rank(*old) { *old = role; } }).or_insert(role); }
                     for yy in outer.min(seam)..=outer.max(seam) {
-                        for xx in [x, end] { roles.insert((xx, yy), if yy == seam && index != Some(active) { body_role } else { role }); }
+                        for xx in [x, end] {
+                            let candidate = if yy == seam && rank(body_role) > rank(role) { body_role } else { role };
+                            roles.entry((xx, yy)).and_modify(|old| { if rank(candidate) > rank(*old) { *old = candidate; } }).or_insert(candidate);
+                        }
                     }
                 }
             }

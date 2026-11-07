@@ -45,13 +45,13 @@ fn layout_padding_and_gap() {
 }
 
 #[test]
-fn window_layout_row_of_stacks_tiles_with_one_gutter_cell() {
+fn window_layout_row_of_stacks_shares_one_border_cell() {
     let layout = create_default_layout(&["a".to_string(), "b".to_string()], "row", Some(&[1.0, 1.0]), None);
     let measures = solve_window_layout(&layout, Rect::new(0, 0, 100, 10));
     assert_eq!(measures.len(), 2);
-    assert_eq!(measures[0].rect.width + 1 + measures[1].rect.width, 100);
+    assert_eq!(measures[0].rect.width + measures[1].rect.width - 1, 100);
     assert_eq!(measures[0].rect.x, 0);
-    assert_eq!(measures[1].rect.x, measures[0].rect.width + 1, "the gutter is the splitter between the two stacks");
+    assert_eq!(measures[1].rect.x, measures[0].rect.width - 1, "the shared edge is the splitter between the two stacks");
 }
 
 #[test]

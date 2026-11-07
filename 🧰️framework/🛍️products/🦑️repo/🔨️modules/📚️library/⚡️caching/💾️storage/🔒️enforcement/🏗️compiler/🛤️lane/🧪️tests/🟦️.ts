@@ -5,7 +5,7 @@ import {spawnSync} from "node:child_process";
 import {mkdirSync,mkdtempSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
-import {requireTestToolV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
+import {requirePinnedTestToolV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {UNIT_CACHE_POLICY_V1} from "../../../../../🦀️cargo/🗃️unit-cache/🔏️key/🟦️.ts";
 import {unitCacheShimPathV1} from "../../../../../🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts";
 import {cacheLedgerV1,cacheRootDirectoryV1} from "../../../../🧾️ledger/🟦️.ts";
@@ -13,7 +13,7 @@ import machinePolicy from "../../../../🧾️ledger/🎚️machine/🔣️polic
 import {compilerLaneEnvironmentV1,compilerLaneQuotaBytesV1} from "../🟦️.ts";
 
 const GIB=1024**3,base=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir());mkdirSync(base,{recursive:true});
-const python=requireTestToolV1("python");
+const python=requirePinnedTestToolV1("python");
 const lane={id:"p1a2b3c",base:"/cache/u/l/p1a2b3c",target:"/cache/u/l/p1a2b3c/t",build:"/cache/u/l/p1a2b3c"};
 
 test("a lane view names the lane's directories and the unit cache chain with the crate set as focus",()=>{

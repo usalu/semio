@@ -1,0 +1,9 @@
+# Native memory attribution
+
+A bounded read-only Win32 process snapshot on 2026-11-06 at about 07:11 UTC completed with `INNER_EXIT=0`; its generated output is `🗑️generated/nov06-native-memory.log`. The live JavaScript synchronization chain was Bun PID 18168 (approximately 1,018 MiB working set and 1,222 MiB private), parent Bun 23380 (132 MiB working and 332 MiB private), and Bun 28336 (59 MiB working and 161 MiB private), with associated repo/pwsh wrappers. Those processes own active work and are not cleanup candidates. Working set and private commit are distinct measures and must not be summed as reclaimed admission capacity.
+
+The largest other listed Bun was PID 9332 (parent repo 28384 / pwsh 17180), approximately 73 MiB working and 195 MiB private; its command and ownership were not established by this bounded inventory. Node PID 1596 (parent 8144) was approximately 93 MiB working and 102 MiB private, also unclassified. Codex PID 8180 was approximately 540 MiB working and 489 MiB private and is application infrastructure. No unrelated process was stopped and no idle helper was identified as safe to retire. The memory inspection's own repo/Bun/PowerShell chain was transient and settled when the command returned. The simple command-text role classifier can mislabel the inspection's PowerShell as sync-all because its own script contains that literal; parent PID identifies it as inspection rather than writer.
+
+The parent correlated PID 9332 with the live teaching-proctor Cargo capacity waiter using MCP `capacity_status`; it is active owned work and must be preserved.
+
+At the contemporaneous reported capacity of 3,446 MB above the 2,035 MB floor, a 3,584 MB proctor request remained about 138 MB short. This process snapshot alone does not establish reclaimable capacity or prove that stopping an unclassified process would admit the request. Normal budgets and the floor remain unchanged.

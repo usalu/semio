@@ -1,0 +1,11 @@
+# Native Windows Publisher Interruption Coverage
+
+Finite source audit of the current publisher and adjacent compiler and process fixtures; no tests, jobs, provider mutations, or platform-guard changes were made.
+
+- `🧰️framework/🔨️modules/🏃️process/🧰️tools/🛠️native-compiler/🪟️portable/🧪️tests/🧾️publication/🟦️.ts` checks closed intent against Ajv and the repository validator, receipt matching against SQLite, and boolean recovery/provision decisions against SQLite. Its interrupted-publication test calls only `portableMsvcRecoveryV1` with neutral rows; it never invokes the publisher, renames a physical tree, writes a receipt, or acquires issued storage.
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🛠️native-compiler/🪟️windows/🧪️tests/🟦️.ts` uses received Original for a forged-store rejection and lifetime-loan checks. It does not invoke the publication writer or replay an intent.
+- The portable tree verification fixture checks physical bytes, membership, replacement and cancellation independently; it is not an issued-store publication recovery test.
+- The compiler capacity tests include physical image and headroom recovery, but their compact physical cases are explicitly Darwin-guarded and concern compiler workspace capacity, not Windows MSVC pending intent. Their guard must remain intact.
+- The real managed smoke documented in `nov06-native-publication.md` established successful normal publication and subsequent genuine Cargo/cc consumption. It did not interrupt publication at the intent, rename, or receipt boundaries. Direct C and Rust successes likewise verify consumers rather than interrupted publisher replay.
+
+No existing safe minimal genuine Windows fixture route for injecting those boundaries was identified in the bounded adjacent modules. Consequently before-rename resume, after-rename/before-receipt finish, and receipt-present/pending finish remain unproven under genuine issued storage. Do not repurpose or delete the valid provider, fabricate Original/store custody, or remove host guards to obtain such evidence. A forced crash before intent publication can leave a charged unreferenced scratch directory; it is not Ready and does not block publication, but bounded managed maintenance remains outstanding.

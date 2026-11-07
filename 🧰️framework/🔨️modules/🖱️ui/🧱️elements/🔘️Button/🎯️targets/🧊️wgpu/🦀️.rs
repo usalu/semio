@@ -18,7 +18,7 @@ pub fn render_button<'a, E: Clone>(id: Option<&String>, icon_id: Option<IconName
     let control_id = id.cloned().or_else(|| Some(label.to_string()));
     let hovered = ctx.input.hovered_id == control_id;
     let bg = item_bg(ctx.theme, false, hovered);
-    push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, bg);
+    push_control_border(ctx.draw, bounds, ctx.theme, if hovered { ctx.theme.border_emphasized } else { ctx.theme.border_normal }, bg, if hovered { semio_ui_wgpu_layout::chrome::SharedBorderState::Hover } else { semio_ui_wgpu_layout::chrome::SharedBorderState::Normal });
     let mut text_x = bounds.x + ctx.theme.padding_standard;
     let icon_key: &'a str = match icon_id.filter(|id| *id != IconName::CircleDot) {
         Some(icon) => icon.as_str(),

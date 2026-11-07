@@ -31,12 +31,8 @@ pub fn render_number_stepper<E: Clone>(id: &str, value: f64, step: f64, uniform:
     let segments @ [minus, center, plus] = semio_ui_wgpu_layout::layout::number_stepper_segments(bounds, ui_contract::FlowInline::Ltr, ctx.theme.stroke_hairline);
     ctx.draw.push_scissor(bounds);
     let flags = if ctx.input.focused_id.as_deref() == Some(&format!("{id}.input")) { NodeFlags::FOCUSED } else { NodeFlags::empty() };
-    push_stepper_chrome(ctx.draw, bounds, segments, ui_contract::FlowInline::Ltr, flags, None, ctx.theme);
-    for (segment, suffix) in [(minus, "minus"), (plus, "plus")] {
-        if ctx.input.hovered_id.as_deref() == Some(&format!("{id}.{suffix}")) {
-            ctx.draw.push_solid([segment.x, segment.y, segment.w, segment.h], ctx.theme.button_hover);
-        }
-    }
+    let hovered_segment = if ctx.input.hovered_id.as_deref() == Some(&format!("{id}.minus")) { Some(-1) } else if ctx.input.hovered_id.as_deref() == Some(&format!("{id}.plus")) { Some(1) } else { None };
+    push_stepper_chrome(ctx.draw, bounds, segments, ui_contract::FlowInline::Ltr, flags, hovered_segment, ctx.theme);
     push_stepper_icon(ctx.draw, ctx.icons, "minus", minus, ui_contract::FlowInline::Ltr, ctx.theme);
     let text = if uniform { ui_contract::format_ui_number(value) } else { String::new() };
     let placeholder = (!uniform).then_some(semio_ui_declaration::ui::UI_INSPECTOR_MIXED_PLACEHOLDER);
@@ -55,7 +51,7 @@ pub fn render_number_stepper<E: Clone>(id: &str, value: f64, step: f64, uniform:
 /// 🪜️ React Stepper outer chrome and the two logical side-button dividers.
 pub fn push_stepper_chrome(draw: &mut DrawList, bounds: Rect, segments: [Rect; 3], inline: ui_contract::FlowInline, flags: NodeFlags, hovered_segment: Option<i8>, theme: &Theme) {
     let border = if flags.contains(NodeFlags::FOCUSED) { theme.accent } else { theme.border_normal };
-    push_control_border(draw, bounds, theme, border, theme.input_bg);
+    push_control_border(draw, bounds, theme, border, theme.input_bg, if flags.contains(NodeFlags::FOCUSED) { semio_ui_wgpu_layout::chrome::SharedBorderState::Focus } else { semio_ui_wgpu_layout::chrome::SharedBorderState::Normal });
     let [minus, _, plus] = segments;
     if hovered_segment == Some(-1) {
         draw.push_solid([minus.x, minus.y, minus.w, minus.h], theme.button_hover);
@@ -63,10 +59,12 @@ pub fn push_stepper_chrome(draw: &mut DrawList, bounds: Rect, segments: [Rect; 3
         draw.push_solid([plus.x, plus.y, plus.w, plus.h], theme.button_hover);
     }
     let hair = theme.stroke_hairline;
-    let minus_x = if inline.is_rtl() { minus.x } else { minus.x + minus.w - hair };
-    let plus_x = if inline.is_rtl() { plus.x + plus.w - hair } else { plus.x };
-    draw.push_solid([minus_x, minus.y, hair, minus.h], theme.border_normal);
-    draw.push_solid([plus_x, plus.y, hair, plus.h], theme.border_normal);
+    for (segment, sign) in [(minus, -1), (plus, 1)] {
+        let hovered = hovered_segment == Some(sign);
+        let state = if hovered { semio_ui_wgpu_layout::chrome::SharedBorderState::Hover } else { semio_ui_wgpu_layout::chrome::SharedBorderState::Normal };
+        let left = (sign == -1) == inline.is_rtl();
+        draw.push_shared_border_edges(segment, hair, if hovered { theme.border_emphasized } else { theme.border_normal }, state, [false, !left, false, left]);
+    }
 }
 
 /// ➕️ Catalog glyph centered in the button content box after its inline divider.

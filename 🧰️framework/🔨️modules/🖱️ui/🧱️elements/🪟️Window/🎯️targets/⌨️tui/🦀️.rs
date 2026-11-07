@@ -80,9 +80,6 @@ fn chip_paint(w: &WindowState, theme: &Theme, tab: &WindowCornerTab, window_bg: 
 }
 
 fn chip_border_role(w: &WindowState, tab: &WindowCornerTab, emphasized: bool) -> Role {
-    if tab.kind == TabKind::Tab && tab.index == w.active_stack_tab {
-        return Role::ActiveBase;
-    }
     let hovered = match (w.hover, tab.kind) {
         (Some(WindowHit::Tab(i) | WindowHit::Close(i) | WindowHit::Maximize(i)), TabKind::Tab) => i == tab.index,
         (Some(WindowHit::OverflowPrev(i)), TabKind::OverflowPrev(target)) => i == target,
@@ -90,7 +87,7 @@ fn chip_border_role(w: &WindowState, tab: &WindowCornerTab, emphasized: bool) ->
         (Some(WindowHit::Maximize(_) | WindowHit::NewTab(_)), TabKind::Controls) => true,
         _ => false,
     };
-    if emphasized || hovered { Role::BorderEmphasized } else { Role::BorderNormal }
+    if emphasized || hovered { Role::BorderEmphasized } else if tab.kind == TabKind::Tab && tab.index == w.active_stack_tab { Role::ActiveBase } else { Role::BorderNormal }
 }
 
 fn chip_border(w: &WindowState, theme: &Theme, tab: &WindowCornerTab, emphasized: bool) -> Rgb {
@@ -164,7 +161,7 @@ pub fn paint_window_tab_preview(w: &WindowState, theme: &Theme, rect: Rect, buf:
                 let seam = if bottom { layout.bottom_body_y.unwrap() } else { layout.top_body_y };
                 let y = if bottom { seam } else { rect.y };
                 paint_corner_tab(buf, y, tab, bottom, &Frame { border: tab_border, ..frame }, &|buf, tab, text_y| paint_chip_text(buf, w, theme, tab, text_y, &paint));
-                paint_tab_seam(buf, &tab.as_window_tab(), seam, true, bottom, &frame, tab_border);
+                paint_tab_seam(buf, &tab.as_window_tab(), seam, true, bottom, &frame, tab_border, false);
             }
         }
     }
@@ -176,17 +173,17 @@ fn paint_corner_tab(buf: &mut CellBuffer, y: u16, tab: &WindowCornerTab, is_bott
     let width = tab.interior_width + 2;
     let text_y = y + 1;
     let outer_y = y + 2;
-    let wall = |buf: &mut CellBuffer, x: u16, yy: u16, ch: char| buf.put(x, yy, Cell { ch, fg: border, bg, attrs: 0, width: 1 });
+    let wall = |buf: &mut CellBuffer, x: u16, yy: u16, ch: char| buf.put_border(x, yy, Cell { ch, fg: border, bg, attrs: 0, width: 1 });
     if is_bottom {
         wall(buf, tab.x, text_y, g.v);
         paint_text(buf, tab, text_y);
         wall(buf, tab.x + width - 1, text_y, g.v);
         wall(buf, tab.x, outer_y, g.bl);
-        buf.hline(Pos { x: tab.x + 1, y: outer_y }, width.saturating_sub(2), g.h, border, bg);
+        buf.border_hline(Pos { x: tab.x + 1, y: outer_y }, width.saturating_sub(2), g.h, border, bg);
         wall(buf, tab.x + width - 1, outer_y, g.br);
     } else {
         wall(buf, tab.x, y, g.tl);
-        buf.hline(Pos { x: tab.x + 1, y }, width.saturating_sub(2), g.h, border, bg);
+        buf.border_hline(Pos { x: tab.x + 1, y }, width.saturating_sub(2), g.h, border, bg);
         wall(buf, tab.x + width - 1, y, g.tr);
         wall(buf, tab.x, text_y, g.v);
         paint_text(buf, tab, text_y);
@@ -195,7 +192,7 @@ fn paint_corner_tab(buf: &mut CellBuffer, y: u16, tab: &WindowCornerTab, is_bott
 }
 
 /// 🪡 Joins one tab to the body hairline. Inactive tabs keep that edge; only the active tab leaves it open.
-fn paint_tab_seam(buf: &mut CellBuffer, tab: &WindowTab, y: u16, active: bool, is_bottom: bool, frame: &Frame<'_>, tab_border: Rgb) {
+fn paint_tab_seam(buf: &mut CellBuffer, tab: &WindowTab, y: u16, active: bool, is_bottom: bool, frame: &Frame<'_>, tab_border: Rgb, hovered: bool) {
     let Frame { lines: g, border, bg, left: window_left, right: window_right, .. } = *frame;
     let left = tab.x;
     let right = tab.x + tab.interior_width + 1;
@@ -207,13 +204,13 @@ fn paint_tab_seam(buf: &mut CellBuffer, tab: &WindowTab, y: u16, active: bool, i
         (false, true) => (if at_left { g.v } else { g.br }, if at_right { g.v } else { g.bl }),
         (false, false) => (if at_left { g.right } else { g.up }, if at_right { g.left } else { g.up }),
     };
-    let junction = if active { tab_border } else { border };
-    buf.put(left, y, Cell { ch: left_ch, fg: junction, bg, attrs: 0, width: 1 });
+    let junction = if active || hovered { tab_border } else { border };
+    buf.put_border(left, y, Cell { ch: left_ch, fg: junction, bg, attrs: 0, width: 1 });
     if tab.interior_width > 0 {
         let ch = if active { ' ' } else { g.h };
-        buf.hline(Pos { x: left + 1, y }, tab.interior_width, ch, if active { bg } else { border }, bg);
+        buf.border_hline(Pos { x: left + 1, y }, tab.interior_width, ch, if active { bg } else { border }, bg);
     }
-    buf.put(right, y, Cell { ch: right_ch, fg: junction, bg, attrs: 0, width: 1 });
+    buf.put_border(right, y, Cell { ch: right_ch, fg: junction, bg, attrs: 0, width: 1 });
 }
 
 /// 🚪 Fills the union of the body and raised chips. Notches stay on the parent surface.
@@ -253,30 +250,30 @@ fn paint_compact(buf: &mut CellBuffer, rect: Rect, w: &WindowState, theme: &Them
     let Frame { lines: g, border, bg, .. } = *frame;
     let right_x = rect.x + rect.width - 1;
     let bottom_y = rect.y + rect.height - 1;
-    buf.hline(Pos { x: rect.x + 1, y: rect.y }, rect.width.saturating_sub(2), g.h, border, bg);
-    buf.hline(Pos { x: rect.x + 1, y: bottom_y }, rect.width.saturating_sub(2), g.h, border, bg);
-    buf.vline(Pos { x: rect.x, y: rect.y + 1 }, rect.height.saturating_sub(2), g.v, border, bg);
-    buf.vline(Pos { x: right_x, y: rect.y + 1 }, rect.height.saturating_sub(2), g.v, border, bg);
+    buf.border_hline(Pos { x: rect.x + 1, y: rect.y }, rect.width.saturating_sub(2), g.h, border, bg);
+    buf.border_hline(Pos { x: rect.x + 1, y: bottom_y }, rect.width.saturating_sub(2), g.h, border, bg);
+    buf.border_vline(Pos { x: rect.x, y: rect.y + 1 }, rect.height.saturating_sub(2), g.v, border, bg);
+    buf.border_vline(Pos { x: right_x, y: rect.y + 1 }, rect.height.saturating_sub(2), g.v, border, bg);
     for (x, y, ch) in [(rect.x, rect.y, g.tl), (right_x, rect.y, g.tr), (rect.x, bottom_y, g.bl), (right_x, bottom_y, g.br)] {
-        buf.put(x, y, Cell { ch, fg: border, bg, attrs: 0, width: 1 });
+        buf.put_border(x, y, Cell { ch, fg: border, bg, attrs: 0, width: 1 });
     }
     for group in &layout.groups {
         for tab in &group.tabs {
             let paint = chip_paint(w, theme, tab, bg);
             let tab_border = chip_border(w, theme, tab, frame.emphasized);
             let wall = if tab.x == rect.x { g.tl } else { g.down };
-            buf.put(tab.x, rect.y, Cell { ch: wall, fg: tab_border, bg, attrs: 0, width: 1 });
+            buf.put_border(tab.x, rect.y, Cell { ch: wall, fg: tab_border, bg, attrs: 0, width: 1 });
             paint_chip_text(buf, w, theme, tab, rect.y, &paint);
             let end = tab.x + tab.interior_width + 1;
             let end_ch = if end == right_x { g.tr } else { g.down };
-            buf.put(end, rect.y, Cell { ch: end_ch, fg: tab_border, bg, attrs: 0, width: 1 });
+            buf.put_border(end, rect.y, Cell { ch: end_ch, fg: tab_border, bg, attrs: 0, width: 1 });
         }
     }
-    for role in [Role::BorderEmphasized, Role::ActiveBase] {
+    for role in [Role::ActiveBase, Role::BorderEmphasized] {
         for tab in layout.groups.iter().flat_map(|group| &group.tabs).filter(|tab| chip_border_role(w, tab, frame.emphasized) == role) {
             for x in [tab.x, tab.x + tab.interior_width + 1] {
                 if let Some(cell) = buf.get(x, rect.y).copied() {
-                    buf.put(x, rect.y, Cell { fg: theme.role(role), ..cell });
+                    buf.put_border(x, rect.y, Cell { fg: theme.role(role), ..cell });
                 }
             }
         }
@@ -299,12 +296,12 @@ pub fn paint_window(w: &WindowState, theme: &Theme, rect: Rect, buf: &mut CellBu
     fill_silhouette(buf, rect, &layout, Cell::blank(fg, bg));
 
     if layout.mode == ChromeMode::Flat {
-        buf.hline(Pos { x: rect.x + 1, y: rect.y }, rect.width.saturating_sub(2), g.h, border, bg);
-        buf.hline(Pos { x: rect.x + 1, y: bottom_y }, rect.width.saturating_sub(2), g.h, border, bg);
-        buf.vline(Pos { x: rect.x, y: rect.y + 1 }, bottom_y.saturating_sub(rect.y + 1), g.v, border, bg);
-        buf.vline(Pos { x: right_x, y: rect.y + 1 }, bottom_y.saturating_sub(rect.y + 1), g.v, border, bg);
+        buf.border_hline(Pos { x: rect.x + 1, y: rect.y }, rect.width.saturating_sub(2), g.h, border, bg);
+        buf.border_hline(Pos { x: rect.x + 1, y: bottom_y }, rect.width.saturating_sub(2), g.h, border, bg);
+        buf.border_vline(Pos { x: rect.x, y: rect.y + 1 }, bottom_y.saturating_sub(rect.y + 1), g.v, border, bg);
+        buf.border_vline(Pos { x: right_x, y: rect.y + 1 }, bottom_y.saturating_sub(rect.y + 1), g.v, border, bg);
         for (x, y, ch) in [(rect.x, rect.y, g.tl), (right_x, rect.y, g.tr), (rect.x, bottom_y, g.bl), (right_x, bottom_y, g.br)] {
-            buf.put(x, y, Cell { ch, fg: border, bg, attrs: 0, width: 1 });
+            buf.put_border(x, y, Cell { ch, fg: border, bg, attrs: 0, width: 1 });
         }
         return;
     }
@@ -322,19 +319,19 @@ pub fn paint_window(w: &WindowState, theme: &Theme, rect: Rect, buf: &mut CellBu
     let wall_last = if has_bottom { bottom_body_y.saturating_sub(1) } else { bottom_y.saturating_sub(1) };
     if wall_last >= wall_top {
         let len = wall_last - wall_top + 1;
-        buf.vline(Pos { x: rect.x, y: wall_top }, len, g.v, border, bg);
-        buf.vline(Pos { x: right_x, y: wall_top }, len, g.v, border, bg);
+        buf.border_vline(Pos { x: rect.x, y: wall_top }, len, g.v, border, bg);
+        buf.border_vline(Pos { x: right_x, y: wall_top }, len, g.v, border, bg);
     }
 
     if !has_top {
-        buf.hline(Pos { x: rect.x + 1, y: rect.y }, rect.width.saturating_sub(2), g.h, border, bg);
-        buf.put(rect.x, rect.y, Cell { ch: g.tl, fg: border, bg, attrs: 0, width: 1 });
-        buf.put(right_x, rect.y, Cell { ch: g.tr, fg: border, bg, attrs: 0, width: 1 });
+        buf.border_hline(Pos { x: rect.x + 1, y: rect.y }, rect.width.saturating_sub(2), g.h, border, bg);
+        buf.put_border(rect.x, rect.y, Cell { ch: g.tl, fg: border, bg, attrs: 0, width: 1 });
+        buf.put_border(right_x, rect.y, Cell { ch: g.tr, fg: border, bg, attrs: 0, width: 1 });
     }
     if !has_bottom {
-        buf.hline(Pos { x: rect.x + 1, y: bottom_y }, rect.width.saturating_sub(2), g.h, border, bg);
-        buf.put(rect.x, bottom_y, Cell { ch: g.bl, fg: border, bg, attrs: 0, width: 1 });
-        buf.put(right_x, bottom_y, Cell { ch: g.br, fg: border, bg, attrs: 0, width: 1 });
+        buf.border_hline(Pos { x: rect.x + 1, y: bottom_y }, rect.width.saturating_sub(2), g.h, border, bg);
+        buf.put_border(rect.x, bottom_y, Cell { ch: g.bl, fg: border, bg, attrs: 0, width: 1 });
+        buf.put_border(right_x, bottom_y, Cell { ch: g.br, fg: border, bg, attrs: 0, width: 1 });
     }
 
     for group in &layout.groups {
@@ -350,40 +347,65 @@ pub fn paint_window(w: &WindowState, theme: &Theme, rect: Rect, buf: &mut CellBu
     let span = rect.width.saturating_sub(2);
     if has_top {
         if span > 0 {
-            buf.hline(Pos { x: rect.x + 1, y: top_body_y }, span, g.h, border, bg);
+            buf.border_hline(Pos { x: rect.x + 1, y: top_body_y }, span, g.h, border, bg);
         }
         let has_tr = layout.groups.iter().any(|g| g.corner == WindowStackCorner::TopRight);
         let has_tl = layout.groups.iter().any(|g| g.corner == WindowStackCorner::TopLeft);
         if !has_tl {
-            buf.put(rect.x, top_body_y, Cell { ch: g.tl, fg: border, bg, attrs: 0, width: 1 });
+            buf.put_border(rect.x, top_body_y, Cell { ch: g.tl, fg: border, bg, attrs: 0, width: 1 });
         }
         if !has_tr {
-            buf.put(right_x, top_body_y, Cell { ch: g.tr, fg: border, bg, attrs: 0, width: 1 });
+            buf.put_border(right_x, top_body_y, Cell { ch: g.tr, fg: border, bg, attrs: 0, width: 1 });
         }
         for group in layout.groups.iter().filter(|group| group.corner.is_top()) {
             for tab in &group.tabs {
                 let open = tab.kind == TabKind::Tab && tab.index == w.active_stack_tab;
-                paint_tab_seam(buf, &tab.as_window_tab(), top_body_y, open, false, &frame, chip_border(w, theme, tab, emphasized));
+                paint_tab_seam(buf, &tab.as_window_tab(), top_body_y, open, false, &frame, chip_border(w, theme, tab, emphasized), chip_border_role(w, tab, emphasized) == Role::BorderEmphasized);
             }
         }
     }
 
     if has_bottom {
         if span > 0 {
-            buf.hline(Pos { x: rect.x + 1, y: bottom_body_y }, span, g.h, border, bg);
+            buf.border_hline(Pos { x: rect.x + 1, y: bottom_body_y }, span, g.h, border, bg);
         }
         let has_br = layout.groups.iter().any(|g| g.corner == WindowStackCorner::BottomRight);
         let has_bl = layout.groups.iter().any(|g| g.corner == WindowStackCorner::BottomLeft);
         if !has_bl {
-            buf.put(rect.x, bottom_body_y, Cell { ch: g.bl, fg: border, bg, attrs: 0, width: 1 });
+            buf.put_border(rect.x, bottom_body_y, Cell { ch: g.bl, fg: border, bg, attrs: 0, width: 1 });
         }
         if !has_br {
-            buf.put(right_x, bottom_body_y, Cell { ch: g.br, fg: border, bg, attrs: 0, width: 1 });
+            buf.put_border(right_x, bottom_body_y, Cell { ch: g.br, fg: border, bg, attrs: 0, width: 1 });
         }
         for group in layout.groups.iter().filter(|group| !group.corner.is_top()) {
             for tab in &group.tabs {
                 let open = tab.kind == TabKind::Tab && tab.index == w.active_stack_tab;
-                paint_tab_seam(buf, &tab.as_window_tab(), bottom_body_y, open, true, &frame, chip_border(w, theme, tab, emphasized));
+                paint_tab_seam(buf, &tab.as_window_tab(), bottom_body_y, open, true, &frame, chip_border(w, theme, tab, emphasized), chip_border_role(w, tab, emphasized) == Role::BorderEmphasized);
+            }
+        }
+    }
+    for top in [true, false] {
+        let mut tabs: Vec<_> = layout.groups.iter().filter(|group| group.corner.is_top() == top).flat_map(|group| &group.tabs).collect();
+        tabs.sort_by_key(|tab| tab.x);
+        for pair in tabs.windows(2) {
+            let (left, right) = (pair[0], pair[1]);
+            let x = left.x + left.interior_width + 1;
+            if x != right.x { continue; }
+            let priority = |tab: &WindowCornerTab| match chip_border_role(w, tab, emphasized) { Role::BorderEmphasized => 2, Role::ActiveBase => 1, _ => 0 };
+            let rank = priority(left).max(priority(right));
+            let color = |rank| theme.role(if rank == 2 { Role::BorderEmphasized } else if rank == 1 { Role::ActiveBase } else { Role::BorderNormal });
+            let outer_y = if top { rect.y } else { bottom_y };
+            let text_y = if top { rect.y + 1 } else { bottom_y - 1 };
+            let seam_y = if top { top_body_y } else { bottom_body_y };
+            let left_active = left.kind == TabKind::Tab && left.index == w.active_stack_tab;
+            let right_active = right.kind == TabKind::Tab && right.index == w.active_stack_tab;
+            let seam = match (top, left_active, right_active) {
+                (true, true, _) => g.bl, (true, _, true) => g.br, (true, _, _) => g.up,
+                (false, true, _) => g.tl, (false, _, true) => g.tr, (false, _, _) => g.down,
+            };
+            let body_rank = if emphasized { 2 } else if w.focused { 1 } else { 0 };
+            for (y, ch, fg) in [(outer_y, if top { g.down } else { g.up }, color(rank)), (text_y, g.v, color(rank)), (seam_y, seam, color(rank.max(body_rank)))] {
+                buf.put_border(x, y, Cell { ch, fg, bg, attrs: 0, width: 1 });
             }
         }
     }

@@ -1,0 +1,11 @@
+# Native and TUI Border Coverage
+
+- wgpu Input renders its own full border using push_control_border (🧱️elements/✏️Input/🎯️targets/🧊️wgpu/🦀️.rs:17-21). Stepper independently draws a full border and two normal-colored seams (🧱️elements/🪜️Stepper/🎯️targets/🧊️wgpu/🦀️.rs:56-69). The helper emits four separate rectangles (🎯️targets/🧊️wgpu/🖥️chrome/🦀️.rs:40-48). These paths do not use the React segment compositor: adjoining wgpu controls lack shared ownership and state precedence; Stepper seams do not follow incident hover. This is a concrete target parity gap, though actual adjacency depends on layout. Stepper currently passes LTR to segment layout at line 31 despite its chrome helper accepting inline direction.
+- TUI Input and Textarea paint their text area without drawing a border (✏️Input/🎯️targets/⌨️tui/🦀️.rs:186-199, 🔤️Textarea/🎯️targets/⌨️tui/🦀️.rs:158-176), so the React frame registration has no direct duplicate seam to consolidate there. Terminal chrome does implement cell ownership for compact tabs and has explicit active/hover tests (⌨️tui/🧪️tests/🔬️chrome/🦀️.rs:161-181).
+- This was a targeted source audit. It does not establish all target layouts or run rendering tests.
+
+## Pipeline and Verification
+
+🎯️targets/🧊️wgpu/🪀️widgets/🦀️.rs lays out Stack child rectangles and paints them recursively. The chrome helper immediately emits solids into DrawList (🖍️draw/🏷️types/🦀️.rs, with implementation under 📋️draw-list-and-retained-output and 🖊️draw-list-queries-and-push); those solids lack border ownership and state metadata. Resolving arbitrary solids after emission risks merging backgrounds or changing draw order. A central solution needs explicit semantic border records and a flush at an appropriate shared paint scope.
+
+Existing language-neutral 🔨️modules/📏️border-presentation/cases.json is checked against a lodash-based interval oracle in segments.test.ts; a Rust fixture consumer can compare its implementation to the same expected output without a runtime dependency. Candidate test projects are @semio-tech/ui-wgpu-layout-rs, @semio-tech/ui-wgpu-controls-rs, and @semio-tech/ui-wgpu-widgets-rs. The checked target ancestors contain no additional AGENTS instructions beyond the UI module description.

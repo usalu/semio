@@ -5,6 +5,10 @@ use semio_ui_scene_pass::ScenePass3d;
 use semio_ui_theme::{GlassStyle, Rgba, Theme};
 use bytemuck::{Pod, Zeroable};
 
+#[path = "../../../../🔨️modules/📏️border-presentation/🦀️.rs"]
+mod shared_border;
+pub use shared_border::{resolve_shared_border_segments, ResolvedSharedBorderOwnership, ResolvedSharedBorderSegment, SharedBorderError, SharedBorderOwnershipCursor, SharedBorderOwnershipStep, SharedBorderResolutionCursor, SharedBorderResolutionStep, SharedBorderSegment, SharedBorderState};
+
 #[path = "🧱️instance-records-and-clip/🦀️.rs"]
 mod instance_records_and_clip;
 pub use instance_records_and_clip::{
@@ -19,12 +23,34 @@ pub use draw_list_and_retained_output::{
     DrawLayer, DrawList, RasterKeepCursorV1, RasterKeepStepV1, RetainedOutputError,
 };
 use draw_list_and_retained_output::prepared_scene_pass_usage;
+use draw_list_and_retained_output::SharedBorderPaint;
 
 #[path = "🗑️retained-retirement/🦀️.rs"]
 mod retained_retirement;
 
 #[path = "🖊️draw-list-queries-and-push/🦀️.rs"]
 mod draw_list_queries_and_push;
+
+pub use semio_framework_value_paged_list::{PagedList, PagedListError};
+/// 📚 Bounded draw-owned paged storage.
+pub type PagedVec<T> = PagedList<T, 262144>;
+
+#[path = "📥️retained-append/🦀️.rs"]
+mod retained_append;
+pub use retained_append::{RetainedAppendStep, RetainedAppendToken};
+use retained_append::RetainedAppendWork;
+
+#[path = "📏️shared-border-clip/🦀️.rs"]
+mod shared_border_clip;
+pub use shared_border_clip::{SharedBorderClipCursor, SharedBorderClipStep, SharedBorderSide};
+
+#[path = "📏️shared-border-finalize/🦀️.rs"]
+mod shared_border_finalize;
+use shared_border_finalize::BorderFinalize;
+
+#[cfg(test)]
+#[path = "📏️shared-border-tests/🦀️.rs"]
+mod shared_border_tests;
 
 #[path = "🎯️marquee-gizmo-and-icon-atlas/🦀️.rs"]
 mod marquee_gizmo_and_icon_atlas;

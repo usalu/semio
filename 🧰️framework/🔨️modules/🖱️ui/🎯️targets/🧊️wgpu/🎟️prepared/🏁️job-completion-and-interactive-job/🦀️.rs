@@ -6,6 +6,7 @@ use super::*;
 impl PreparedRenderJob {
     fn measure_next(&mut self) -> Option<PreparedRenderUsage> {
         match self.section {
+            PreparationSection::Borders | PreparationSection::OverlayBorders => None,
             PreparationSection::Draw => {
                 let input = self.input.as_ref()?;
                 self.has_animated_primitives |= Self::animated_primitive_at(&input.draw, self.draw_cursor);
@@ -266,6 +267,7 @@ impl Drop for PreparedRenderJob {
             input: self.input.take(),
             usage: std::mem::take(&mut self.usage),
             section: self.section,
+            border_reserved_units: self.border_reserved_units,
             draw_cursor: self.draw_cursor,
             overlay_cursor: self.overlay_cursor,
             pipeline_cursor: self.pipeline_cursor,
@@ -293,6 +295,25 @@ impl Drop for PreparedRenderJob {
 }
 
 impl PreparedRenderJob {
+    fn border_capacity_bytes(&self) -> Option<usize> {
+        let input = self.input()?;
+        input.draw.shared_border_retained_capacity_bytes().checked_add(input.overlay.as_ref().map_or(0, DrawList::shared_border_retained_capacity_bytes))
+    }
+
+    fn reserve_border_capacity(&mut self, bytes: usize) -> Result<bool, &'static str> {
+        let units = prepared_render_units(bytes).ok_or("prepared border backing extent overflowed")?;
+        let permit = self.input.as_mut().and_then(|input| input.permit.as_mut()).ok_or("prepared border process owner was missing")?;
+        if units > self.border_reserved_units {
+            let additional = units - self.border_reserved_units;
+            let backing = additional.checked_mul(PREPARED_RASTER_PAGE_BYTES).ok_or("prepared border backing extent overflowed")?;
+            if !permit.try_grow(additional, backing) { return Ok(false); }
+        } else if !permit.release_growth_units(self.border_reserved_units - units) {
+            return Err("prepared border process release was refused");
+        }
+        self.border_reserved_units = units;
+        Ok(true)
+    }
+
     fn step_callback<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         let grant = cx.retained_grant();
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(None); }
@@ -341,10 +362,63 @@ impl PreparedRenderJob {
             }
             return JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
-        let Some(usage) = self.measure_next() else {
+        let borders = matches!(self.section, PreparationSection::Borders | PreparationSection::OverlayBorders);
+        if borders {
+            let Some(input) = self.input() else { return self.fault_outcome("prepared border input was missing", cx) };
+            let draw = if matches!(self.section, PreparationSection::Borders) { Some(&input.draw) } else { input.overlay.as_ref() };
+            let (items, bytes) = match draw.map(DrawList::next_shared_border_finalization_allocation_demand).transpose() {
+                Ok(demand) => demand.unwrap_or((0, 0)),
+                Err(_) => return self.fault_outcome("prepared border allocation extent overflowed", cx),
+            };
+            let release = match draw.map(DrawList::next_shared_border_finalization_release_byte_demand).transpose() {
+                Ok(demand) => demand.unwrap_or(0),
+                Err(_) => return self.fault_outcome("prepared border release extent overflowed", cx),
+            };
+            let copied = match draw.map(DrawList::next_shared_border_finalization_copy_byte_demand).transpose() {
+                Ok(demand) => demand.unwrap_or(0),
+                Err(_) => return self.fault_outcome("prepared border copy extent overflowed", cx),
+            };
+            let depth = match draw.map(DrawList::next_shared_border_finalization_depth_demand).transpose() {
+                Ok(demand) => demand.unwrap_or(0),
+                Err(_) => return self.fault_outcome("prepared border depth extent overflowed", cx),
+            };
+            if items > grant.maximum_items || bytes > grant.maximum_capacity_bytes || release > grant.maximum_release_bytes || copied > grant.maximum_copy_bytes || depth > grant.maximum_depth { return Ok(None); }
+            let Some(reservation) = self.border_capacity_bytes().and_then(|held| held.checked_add(bytes)) else { return self.fault_outcome("prepared border backing extent overflowed", cx) };
+            if reservation > input.limits.max_draw_bytes { return self.fault_outcome("prepared border backing exceeded fixed credits", cx); }
+            match self.reserve_border_capacity(reservation) {
+                Ok(true) => {},
+                Ok(false) => return Ok(None),
+                Err(fault) => return self.fault_outcome(fault, cx),
+            }
+        }
+        let usage = if borders {
+            cx.consume_fuel(1);
+            let Some(input) = self.input.as_mut() else { return self.fault_outcome("prepared border input was missing", cx) };
+            let (result, progress) = if matches!(self.section, PreparationSection::Borders) {
+                input.draw.finalize_shared_borders_step_with_progress()
+            } else {
+                input.overlay.as_mut().map_or((Ok(true), RetainedCloneProgress::default()), DrawList::finalize_shared_borders_step_with_progress)
+            };
+            cx.consume_retained(progress).map_err(semio_framework_job::OriginalTurnFailure::from)?;
+            match result {
+                Ok(true) => self.section = if matches!(self.section, PreparationSection::Borders) { PreparationSection::OverlayBorders } else { PreparationSection::Draw },
+                Ok(false) => {},
+                Err(_) => return self.fault_outcome("prepared shared border finalization failed", cx),
+            }
+            Some(PreparedRenderUsage::default())
+        } else { self.measure_next() };
+        let Some(usage) = usage else {
             return self.complete(cx);
         };
-        cx.consume_fuel(1);
+        if !borders { cx.consume_fuel(1); }
+        if borders {
+            let Some(retained) = self.border_capacity_bytes() else { return self.fault_outcome("prepared border backing extent overflowed", cx) };
+            match self.reserve_border_capacity(retained) {
+                Ok(true) => {},
+                Ok(false) => return self.fault_outcome("prepared border backing exceeded its preflight", cx),
+                Err(fault) => return self.fault_outcome(fault, cx),
+            }
+        }
         if self.fault.is_some() || !self.include_usage(usage) {
             return self.fault_outcome("prepared render cumulative credits overflowed", cx);
         }

@@ -1,0 +1,109 @@
+[
+  {
+    "id": "pending",
+    "patch": {
+      "privilegedPending": true
+    },
+    "expected": "wait-privileged"
+  },
+  {
+    "id": "reboot",
+    "patch": {
+      "reboot": "yes"
+    },
+    "expected": "reboot-required"
+  },
+  {
+    "id": "reboot-unknown",
+    "patch": {
+      "reboot": "unknown"
+    },
+    "expected": "inspect-reboot"
+  },
+  {
+    "id": "vmp-unknown",
+    "patch": {
+      "vmp": "unknown"
+    },
+    "expected": "inspect-vmp"
+  },
+  {
+    "id": "elevation",
+    "patch": {
+      "vmp": "disabled",
+      "elevation": "not-elevated"
+    },
+    "expected": "elevation-required"
+  },
+  {
+    "id": "vmp",
+    "patch": {
+      "vmp": "disabled",
+      "elevation": "elevated"
+    },
+    "expected": "enable-vmp"
+  },
+  {
+    "id": "wsl-unknown",
+    "patch": {
+      "wsl": "unknown"
+    },
+    "expected": "inspect-wsl"
+  },
+  {
+    "id": "msi-elevation",
+    "patch": {
+      "wsl": "absent",
+      "elevation": "unknown"
+    },
+    "expected": "elevation-required"
+  },
+  {
+    "id": "msi",
+    "patch": {
+      "wsl": "absent",
+      "elevation": "elevated"
+    },
+    "expected": "install-wsl"
+  },
+  {
+    "id": "collision",
+    "patch": {
+      "distribution": "collision"
+    },
+    "expected": "distribution-collision"
+  },
+  {
+    "id": "distribution-unknown",
+    "patch": {
+      "distribution": "unknown"
+    },
+    "expected": "inspect-distribution"
+  },
+  {
+    "id": "import",
+    "patch": {
+      "distribution": "absent"
+    },
+    "expected": "import-debian"
+  },
+  {
+    "id": "docker-unknown",
+    "patch": {
+      "docker": "unknown"
+    },
+    "expected": "inspect-docker"
+  },
+  {
+    "id": "docker",
+    "patch": {
+      "docker": "absent"
+    },
+    "expected": "provision-docker"
+  },
+  {
+    "id": "ready",
+    "patch": {},
+    "expected": "ready"
+  }
+]

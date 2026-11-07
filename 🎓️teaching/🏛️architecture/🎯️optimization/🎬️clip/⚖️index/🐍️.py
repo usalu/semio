@@ -22,7 +22,7 @@ mn = importlib.import_module("manim")
 
 INK, MUTED, GOOD, WARN, BAD = _art.P_WHITE, _art.PASTEL_GREY, _art.P_GREEN, _art.P_ORANGE, _art.P_PRIMARY
 COLORS = {"electricity": _art.PASTEL_PURPLE, "cost": _art.P_ORANGE, "daylight": _art.P_YELLOW, "carbon": _art.PASTEL_GREY}
-GLYPHS = {"electricity": "lamp", "daylight": "sun", "carbon": "factory"}
+GLYPHS = {"electricity": "lamp", "daylight": "sun"}
 ORDER = [item["id"] for item in _model.criteria()]
 CRITERIA = {item["id"]: item for item in _model.criteria()}
 DIGITS = {"electricity": 2, "cost": 0, "daylight": 2, "carbon": 0}
@@ -125,11 +125,13 @@ def block(value, point=(0, 0, 0), *, size=S0, color=INK, width=None):
 
 
 def glyph(criterion, point=(0, 0, 0), width=0.34, color=None):
-    """🔣 The criterion's pictogram: handcrafted pendant lamp, coin, sun or factory icon."""
+    """🔣 The criterion's symbol: handcrafted lamp, coin, sun or curtain-wall bay."""
     color = color or COLORS[criterion]
     if criterion == "cost":
         return mn.VGroup(mn.Circle(radius=width / 2, color=color, stroke_width=2.2, fill_color=color, fill_opacity=.18),
                          mn.Circle(radius=width / 3.4, color=color, stroke_width=1.4)).move_to(point)
+    if criterion == "carbon":
+        return _art.fitted_staffage("optimization-carbon-curtain-wall", width=width).move_to(point)
     if GLYPHS[criterion] == "lamp":
         cast = "shared-lamp-neutral"
         return _art.staffage(cast, unit=1.4 * width / _art.staffage_height(cast)).move_to(point)

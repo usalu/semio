@@ -63,7 +63,7 @@ fn accepted_control_tooltip_reveals_after_dwell_paints_in_overlay_and_dismisses_
     let mut frame_draw = DrawList::default();
     let mut ready = false;
     for _ in 0..262_144 {
-        match ui.frame_into_step::<RecordingSceneHost>(window_id, Rect::new(0.0, 0.0, 240.0, 180.0), &mut atlas, None, None, &mut frame_draw) {
+        match ui.frame_into_step::<RecordingSceneHost>(window_id, Rect::new(0.0, 0.0, 240.0, 180.0), &mut atlas, None, None, &mut frame_draw, ui_contract::UI_WORKER_RETIREMENT_POLICY).0 {
             UiFrameStep::Pending => {}
             UiFrameStep::Ready => {
                 ready = true;

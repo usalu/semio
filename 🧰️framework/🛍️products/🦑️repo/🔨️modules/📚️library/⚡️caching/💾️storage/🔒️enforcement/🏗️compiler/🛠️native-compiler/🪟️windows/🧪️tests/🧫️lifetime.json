@@ -1,0 +1,6 @@
+{
+  "cases": [
+    { "name": "ordinary scope", "pending": false, "verifications": 2 },
+    { "name": "accepted background check drains", "pending": true, "verifications": 3 }
+  ]
+}
