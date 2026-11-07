@@ -141,7 +141,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
             return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "animate-presentation-command-tool-mismatch").into());
         }
         if animate_presentation_retained_extent(&original.command, &original.snapshot, &original.interaction_state).is_none() {
-            return Err(Fault::from("animate-presentation-command-payload-too-large"));
+            return Err(Fault::from("animate-presentation-command-payload-too-large").into());
         }
         let tool_id = original.command.command_id();
         semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, PresentationCommand::command_id, ANIMATE_PRESENTATION_RETAINED_RAW_BYTES, ANIMATE_PRESENTATION_RETAINED_WORK_ITEMS, false, |request| semio_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, animate_presentation_retained_reduce, animate_presentation_retained_extent))
@@ -149,8 +149,8 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
 
     /// 🎞️ `import-media` is the only reserved route presentation owns: every inbound `frames:in`
     /// delivery is routed through this builder (`dispatch_import_media` → `build_artifact_reserved_media_job`).
-    fn build_reserved_tool_job(source:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_framework_plugin::ArtifactReservedJob+Send>>,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        if body.is_some(){return semio_framework_plugin::tool_contract::admit_reserved_work::<EditorApp<Self>,PresentationImportJob>(source,body,cx)}
+    fn build_reserved_tool_job(source:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if body.is_some(){return semio_plugin::plugin_app_close_prelude::admit_reserved_work::<EditorApp<Self>,PresentationImportJob>(source,body,cx)}
         let request=source.as_ref().ok_or_else(||Fault::from("presentation import requires its original request"))?;
         if request.tool_id.as_str() != PRESENTATION_IMPORT_TOOL_ID {
             return Ok(false);
@@ -161,7 +161,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
         let Some(ArtifactReservedToolInput::Media { .. }) = request.input.as_ref() else {
             return Err(Fault::from("presentation import-media requires media input").into());
         };
-        semio_framework_plugin::tool_contract::admit_reserved_work::<EditorApp<Self>,PresentationImportJob>(source,body,cx)
+        semio_plugin::plugin_app_close_prelude::admit_reserved_work::<EditorApp<Self>,PresentationImportJob>(source,body,cx)
     }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {

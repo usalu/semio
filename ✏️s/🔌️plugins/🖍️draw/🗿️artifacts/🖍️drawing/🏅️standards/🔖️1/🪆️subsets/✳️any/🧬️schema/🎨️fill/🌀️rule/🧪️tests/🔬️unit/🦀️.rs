@@ -17,12 +17,14 @@ fn authored_fill_rules_survive_pack_and_reach_paint_picking_and_export() {
         let doc=semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot {id:"winding".into(),layers:vec![layer].into(),..Default::default()};
         let restored=semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot::decode_pack(&doc.encode_pack()).unwrap();
         assert_eq!(restored,doc);
-        let nodes=semio_s_artifact_draw_drawing_scene::flatten_drawing_document_to_scene_nodes(&doc);
+        let nodes=semio_s_artifact_draw_drawing_scene::preparation::testkit::scene_nodes(&doc);
         assert_eq!(nodes[0].fill_rule.as_deref(),Some(rule.as_str()));
         let mut cursor=semio_s_artifact_draw_drawing_geometry::picking::PathHitCursor::new([50.0,50.0],[1.0,0.0,0.0,1.0,0.0,0.0],0.0,0.001);
         while !cursor.step(&segments) {}
         assert_eq!(cursor.contains(true,false,rule==FillRule::Evenodd),row["hit"].as_bool().unwrap());
-        let (svg,_,_)=semio_s_artifact_draw_drawing_write::drawing_document_to_svg(&doc).unwrap();
+        let mut job=semio_s_artifact_draw_drawing_write::serializers::artifacts::svg::v1_1::any::write::SvgWriteJob::new(semio_s_artifact_draw_drawing_scene::preparation::testkit::scene_plan(&doc),semio_s_artifact_draw_drawing_write::serializers::artifacts::svg::v1_1::any::write::SvgWriteLimits{view_box:[0.0,0.0,100.0,100.0],max_output_bytes:1<<24,max_work:1_000_000_000});
+        while !job.advance(4096).unwrap().done {}
+        let svg=String::from_utf8(job.result().unwrap().iter().flatten().copied().collect()).unwrap();
         assert!(svg.contains(&format!("fill-rule=\"{}\"",rule.as_str())));
     }
 }

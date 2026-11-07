@@ -20,6 +20,10 @@ path = "../../🦀️.rs"
 name = "retirement_law"
 path = "../../🧪️tests/⚖️retirement-law/🦀️.rs"
 
+[[test]]
+name = "persisted_receiving_law"
+path = "../../🧪️tests/📥️persisted-receiving/🦀️.rs"
+
 [dependencies]
 semio-framework-pack = { path = "../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }

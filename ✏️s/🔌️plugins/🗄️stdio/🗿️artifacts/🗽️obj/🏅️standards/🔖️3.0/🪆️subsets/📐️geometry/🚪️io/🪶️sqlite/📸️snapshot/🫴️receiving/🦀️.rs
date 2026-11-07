@@ -70,16 +70,19 @@ impl<'a,'b> Settlement<'a,'b>{
  fn settle(&self,owned:usize)->Result<()>{settle(&mut self.control.borrow_mut(),self.remaining,self.before,owned)}
  pub fn finish_body(&self,owned:usize)->Result<()>{self.settle(owned)?;self.post_body.set(true);Ok(())}
  pub fn observe(&self,owned:usize,completed:usize,total:usize)->bool{if !self.post_body.get(){return true}match self.settle(owned).and_then(|_|self.control.borrow_mut().checkpoint(self.phase,completed,total)){Ok(())=>true,Err(error)=>{*self.cause.borrow_mut()=Some(error);false}}}
- fn refused(&self,owned:usize,error:ValueError)->ValueError{match self.settle(owned){Err(cause)=>cause,Ok(())=>self.cause.borrow_mut().take().unwrap_or(error)}}
+ fn refused(&self,owned:usize,failure:semio_os_kernel::NativeSnapshotFailure)->semio_os_kernel::NativeSnapshotFailure{match self.settle(owned){Err(cause)=>cause.into(),Ok(())=>self.cause.borrow_mut().take().map_or(failure,Into::into)}}
 }
 macro_rules! receive{
  ($name:ident,$owner:ident,$progress:path,$direction:ident,$phase:ident,$output:ty,$operation:expr,$publish:expr)=>{
- pub(super)fn $name(source:Option<&ObjSnapshot>,database:Option<&SqliteDatabase>,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::$owner<'_,'_>)->Result<$output>{
-  let result=(||{owner.native().checkpoint()?;let before=owner.native().owned_bytes();let maximum=add(before,control.allocation_remaining_bytes())?;let settlement=Settlement::new(control,before,SqliteSnapshotPhase::$phase);let mut observer=|event:$progress|settlement.observe(event.owned_bytes,event.completed,event.total);let result=owner.scoped_native(maximum,&mut observer,|owner|owner.receive::<Frame,$output>(|slot,native,body|{
-   let mut control=settlement.control.borrow_mut();let mut port=Paid{control:&mut **control,native:Direction::$direction(native),body};port.work(1,size_of::<Frame>())?;*slot=Some(Frame::new());let frame=slot.as_mut().unwrap();port.work(1,size_of::<$output>())?;frame.status=Some(($operation)(source,database,frame,&mut port));let owned=port.owned();drop(port);drop(control);settlement.finish_body(owned)?;frame.status.take().unwrap()?;($publish)(frame)
-  }));match result{Ok(output)=>Ok(output),Err(error)=>Err(settlement.refused(owner.native().owned_bytes(),error))}})();result.map_err(|error|error.with_retained_progress(owner.progress()))
+ pub(super)fn $name(source:Option<&ObjSnapshot>,database:Option<&SqliteDatabase>,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::$owner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<$output,semio_os_kernel::NativeSnapshotFailure>{
+  semio_os_kernel::native_snapshot_turn(|work|{
+   let result=(||->std::result::Result<$output,semio_os_kernel::NativeSnapshotFailure>{owner.native().checkpoint()?;let before=owner.native().owned_bytes();let maximum=add(before,control.allocation_remaining_bytes())?;let settlement=Settlement::new(control,before,SqliteSnapshotPhase::$phase);let mut observer=|event:$progress|settlement.observe(event.owned_bytes,event.completed,event.total);let outcome=owner.scoped_native(maximum,&mut observer,|owner|owner.receive::<Frame,$output,semio_os_kernel::NativeSnapshotFailure>(|slot,native,body|{
+    let result=(||->std::result::Result<$output,semio_os_kernel::NativeSnapshotFailure>{let mut control=settlement.control.borrow_mut();let mut port=Paid{control:&mut **control,native:Direction::$direction(native),body};port.work(1,size_of::<Frame>())?;*slot=Some(Frame::new());let frame=slot.as_mut().ok_or_else(invalid)?;port.work(1,size_of::<$output>())?;frame.status=Some(($operation)(source,database,frame,&mut port));let owned=port.owned();drop(port);drop(control);settlement.finish_body(owned)?;frame.status.take().ok_or_else(invalid)??;let published:std::result::Result<$output,ValueError>=($publish)(frame);published.map_err(Into::into)})();
+    semio_framework_value::RetainedWorkOutcome{result,work:1}
+   }));match work.take(outcome){Ok(output)=>Ok(output),Err(failure)=>Err(settlement.refused(owner.native().owned_bytes(),failure))}})();result.map_err(|failure|failure.with_retained_progress(owner.progress()))
+  })
  }
- };
+};
 }
 receive!(project_receiving,NativeSnapshotDecodeOwner,semio_framework_value_native_owned::native_decoding::NativeDecodeProgress,Decode,ProjectSnapshot,SqliteDatabase,|source:Option<&ObjSnapshot>,_:Option<&SqliteDatabase>,frame:&mut Frame,port:&mut Paid<'_,'_,'_>|project(source.unwrap(),frame,port),|frame:&mut Frame|Ok(std::mem::replace(&mut frame.projection.database,SqliteDatabase{tables:Vec::new()})));
 receive!(reconstruct_receiving,NativeSnapshotEncodeOwner,semio_framework_value::native_encoding::NativeEncodeProgress,Encode,ReconstructSnapshot,ObjSnapshot,|_:Option<&ObjSnapshot>,database:Option<&SqliteDatabase>,frame:&mut Frame,port:&mut Paid<'_,'_,'_>|read(database.unwrap(),frame,None,port),|frame:&mut Frame|Ok(std::mem::replace(&mut frame.snapshot,empty())));

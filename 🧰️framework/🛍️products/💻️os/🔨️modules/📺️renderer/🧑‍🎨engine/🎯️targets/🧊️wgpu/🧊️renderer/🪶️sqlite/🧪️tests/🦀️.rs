@@ -90,8 +90,8 @@ fn native_socket_sqlite_snapshot_original_raw_carriers_and_limits(){
 
 #[test]
 fn native_socket_sqlite_snapshot_original_native_ledgers_remain_cumulative(){
- let input=IoPayload::Text("λ🙂".into());let length=6;let mut cb=|_|true;let mut progress=|_|true;let mut c=Control::new(&mut progress,Limits::default());let mut native=NativeDecodeControl::new(length+3,&mut cb);native.charge(3).unwrap();let snapshot=NativeSocketProbeSnapshot::decode_sqlite_snapshot_native(&input,&mut c,&mut native).unwrap();assert_eq!(native.owned_bytes(),length+3);assert_eq!(c.allocation_remaining_bytes(),Limits::default().max_allocation_bytes-length);expected(NativeSocketProbeSnapshot::decode_sqlite_snapshot_native(&input,&mut c,&mut native).map(drop),Kind::OwnershipLimit);assert_eq!(native.owned_bytes(),length+3);
- for encoding in[SnapshotEncoding::Text,SnapshotEncoding::Binary]{let mut cb=|_|true;let mut c=Control::new(&mut progress,Limits::default());let mut native=NativeEncodeControl::new(length+3,&mut cb);native.charge(3).unwrap();assert_eq!(snapshot.encode_sqlite_snapshot_native(encoding,&mut c,&mut store::os_store::NativeSnapshotEncodeOwner::new(&mut native,native_grant())).unwrap(),payload(&snapshot.0,encoding));assert_eq!(native.owned_bytes(),length+3);expected(snapshot.encode_sqlite_snapshot_native(encoding,&mut c,&mut store::os_store::NativeSnapshotEncodeOwner::new(&mut native,native_grant())).map(drop),Kind::OwnershipLimit);
+ let input=IoPayload::Text("λ🙂".into());let length=6;let mut cb=|_|true;let mut progress=|_|true;let mut c=Control::new(&mut progress,Limits::default());let mut native=NativeDecodeControl::new(length+3,&mut cb);native.charge(3).unwrap();let snapshot=NativeSocketProbeSnapshot::decode_sqlite_snapshot_native(&input,&mut c,&mut native).result.unwrap();assert_eq!(native.owned_bytes(),length+3);assert_eq!(c.allocation_remaining_bytes(),Limits::default().max_allocation_bytes-length);expected(NativeSocketProbeSnapshot::decode_sqlite_snapshot_native(&input,&mut c,&mut native).map(drop),Kind::OwnershipLimit);assert_eq!(native.owned_bytes(),length+3);
+ for encoding in[SnapshotEncoding::Text,SnapshotEncoding::Binary]{let mut cb=|_|true;let mut c=Control::new(&mut progress,Limits::default());let mut native=NativeEncodeControl::new(length+3,&mut cb);native.charge(3).unwrap();assert_eq!(snapshot.encode_sqlite_snapshot_native(encoding,&mut c,&mut store::os_store::NativeSnapshotEncodeOwner::new(&mut native,native_grant())).result.unwrap(),payload(&snapshot.0,encoding));assert_eq!(native.owned_bytes(),length+3);expected(snapshot.encode_sqlite_snapshot_native(encoding,&mut c,&mut store::os_store::NativeSnapshotEncodeOwner::new(&mut native,native_grant())).map(drop),Kind::OwnershipLimit);
   let mut cb=|_|true;let mut native=NativeEncodeControl::new(length-1,&mut cb);expected(snapshot.encode_sqlite_snapshot_native(encoding,&mut Control::new(&mut progress,Limits::default()),&mut store::os_store::NativeSnapshotEncodeOwner::new(&mut native,native_grant())).map(drop),Kind::OwnershipLimit);
  }
  let mut cb=|_|true;let mut native=NativeDecodeControl::new(length-1,&mut cb);expected(NativeSocketProbeSnapshot::decode_sqlite_snapshot_native(&input,&mut Control::new(&mut progress,Limits::default()),&mut native).map(drop),Kind::OwnershipLimit);
@@ -139,7 +139,7 @@ fn native_socket_snapshot_encode_borrows_the_original_grant_and_native_receipt()
   assert_eq!(owner.native() as *const _,pointer);
   let mut progress=|_|true;
   let mut control=Control::new(&mut progress,Limits::default());
-  assert_eq!(snapshot.encode_sqlite_snapshot_native(encoding,&mut control,&mut owner).unwrap(),payload(&snapshot.0,encoding));
+  assert_eq!(snapshot.encode_sqlite_snapshot_native(encoding,&mut control,&mut owner).result.unwrap(),payload(&snapshot.0,encoding));
   assert_eq!(owner.grant(),grant);
   assert_eq!(owner.native() as *const _,pointer);
   assert_eq!(owner.native().owned_bytes(),3+snapshot.0.len());

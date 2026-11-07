@@ -3,9 +3,9 @@
 use super::*;
 
 impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<Process3dSnapshot, Process3dMutation> for Process3dEnvelopeOwnedFieldCatalog {
-    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Result<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<Process3dSnapshot, Process3dMutation>>, Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<Process3dSnapshot>>> {
+    fn begin_vcs(&self, replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Result<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<Process3dSnapshot, Process3dMutation>>, Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<Process3dSnapshot>>> {
         store::os_store::owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority::try_new(
-            self.begin_snapshot(operation, generation, path),
+            self.begin_snapshot(replacement, path),
             process3d_snapshot_value_factory(),
             process3d_mutation_value_factory(),
             self.edit_history_decoder(),
@@ -21,15 +21,15 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<Pro
         store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES
     }
 
-    fn begin_snapshot(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<Process3dSnapshot>> {
-        Box::new(Process3dSnapshotDecodeAuthority::new(operation, generation, path))
+    fn begin_snapshot(&self, replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<Process3dSnapshot>> {
+        Box::new(Process3dSnapshotDecodeAuthority::new(replacement, path))
     }
 
-    fn begin_mutation(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<Process3dMutation>> {
-        Box::new(Process3dMutationDecodeAuthority::new(operation, generation, path))
+    fn begin_mutation(&self, replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<Process3dMutation>> {
+        Box::new(Process3dMutationDecodeAuthority::new(replacement, path))
     }
 
-    fn begin_spr_conflict(&self, _operation: semio_framework_job::OperationId, _generation: semio_framework_job::Generation, _path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority> {
+    fn begin_spr_conflict(&self, _replacement: Option<semio_framework_job::ReplacementIdentity>, _path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority> {
         Box::new(Process3dRejectedConflictAuthority { terminal: false })
     }
 

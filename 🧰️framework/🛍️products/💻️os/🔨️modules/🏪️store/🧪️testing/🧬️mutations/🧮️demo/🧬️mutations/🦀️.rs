@@ -15,7 +15,7 @@ pub use add_n::AddN;
 mod assign_n;
 pub use assign_n::AssignN;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_os_dsl::Mutations, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value_derive::RetireOwned, semio_framework_value::NativeReceive, semio_framework_value::CanonicalJsonTree, semio_os_dsl::Mutations, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
@@ -26,3 +26,7 @@ pub enum DemoMutation {
     AddN(AddN),
     AssignN(AssignN),
 }
+
+semio_os_dsl::original_ordinal_operation_receiving!(DemoMutation);
+
+semio_os_store_one_item_publication::artifact_persisted_binary_operation!(DemoMutation);

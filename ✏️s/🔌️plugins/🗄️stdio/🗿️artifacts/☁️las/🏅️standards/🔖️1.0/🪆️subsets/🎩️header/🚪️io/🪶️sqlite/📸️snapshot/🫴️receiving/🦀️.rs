@@ -1,7 +1,7 @@
 //! ☁️ Complete LAS semantic receiving retains every original table and partial native field.
-use semio_os_kernel::sqlite_snapshot::receiving::{SqliteSnapshotDecodeReceiving,SqliteSnapshotEncodeReceiving};
+use semio_framework_os_kernel::sqlite_snapshot::receiving::{SqliteSnapshotDecodeReceiving,SqliteSnapshotEncodeReceiving};
 use super::{LasSnapshot,LasHeader,LasVlr,LasPoint};
-use semio_os_kernel::{io::control::{NativeSnapshotBodyWallet,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner},sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteRow,SqliteValue,SqliteSnapshotControl,artifact::receiving::{Port,Projection,Scalar,row,cell,text_cell,push_row,sort,integer,ordinal,identity_position,parent_range,validate_schema_sql,check_database}}};
+use semio_framework_os_kernel::{io::control::{NativeSnapshotBodyWallet,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner},sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteRow,SqliteValue,SqliteSnapshotControl,artifact::receiving::{Port,Projection,Scalar,row,cell,text_cell,push_row,sort,integer,ordinal,identity_position,parent_range,validate_schema_sql,check_database}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use std::mem::size_of;
 type Result<T>=std::result::Result<T,ValueError>;

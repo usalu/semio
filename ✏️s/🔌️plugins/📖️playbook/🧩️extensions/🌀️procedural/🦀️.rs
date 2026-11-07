@@ -124,7 +124,8 @@ mod embedded_flow;
 #[path = "🧵️embedded-evaluation/🦀️.rs"]
 mod embedded_evaluation;
 #[cfg(test)]
-use preview_and_params_body::{evaluated_preview_payload, render_question_control};
+use preview_and_params_body::evaluated_preview_payload;
+use preview_and_params_body::render_question_control;
 use preview_and_params_body::{embedded_payload, join_text_chunks, evaluated_preview_geometry_handles, render_params_body, render_preview_body};
 
 #[path = "💾️media-export-and-command/🦀️.rs"]
@@ -572,3 +573,5 @@ mod tests;
 
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;
+
+semio_plugin::retained_command::terminal_frame_bound!(ModuleGeometryCommandWork);

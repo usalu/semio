@@ -1,5 +1,6 @@
 //! 🧵️ Genuine Drawing plans borrow issued reads per turn and retain only funded numeric traversal state.
-use semio_framework_io_ports::{ChildAdmissionRead,OriginalChildVectorPreparation,VectorGraphSourceV1,VectorNodeSourceV1,VectorNodeRef,VectorContentRef,VectorShapeRef,VectorFillHead,VectorAssetRef,VectorGradientStop,VectorSceneGrant,VectorSceneReceipt,VectorSegment,VectorPoint2};
+use semio_framework_io_ports::{ChildAdmissionRead,OriginalChildVectorPreparation,VectorGraphSourceV1,VectorSceneGrant,VectorSceneReceipt,VectorSegment,VectorPoint2};
+use semio_framework_io_ports::admission::vector::{VectorNodeSourceV1,VectorNodeRef,VectorContentRef,VectorShapeRef,VectorFillHead,VectorAssetRef,VectorGradientStop};
 use semio_s_artifact_layout_layout_model::LayoutBounds;
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,retained_clone::retained_clone_grant_admits,paged::Utf8Text};
 use semio_framework_value_persistent::list::PagedList;

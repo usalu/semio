@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-plugin-decl-original-command"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Original command producers and typing folds an application declares"
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-decl-original-command"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework = { path = "../../../../../../../../../📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-tool-typing-edit = { path = "../../../../../../../../../🔨️modules/🛠️tool-machine/⌨️typing/✍️edit/📦️packages/🦀️rust" }

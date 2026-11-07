@@ -85,3 +85,23 @@ path = "../../🧪️tests/🏷️required-inline/🦀️.rs"
 [[test]]
 name = "scalar_enum_receiving"
 path = "../../🧪️tests/🎚️scalar-enum-receiving/🦀️.rs"
+
+[[test]]
+name = "scalar_newtype_receiving"
+path = "../../🧪️tests/🔗️scalar-newtype-receiving/🦀️.rs"
+
+[[test]]
+name = "paged_text_receiving"
+path = "../../🧪️tests/📝️paged-text-receiving/🦀️.rs"
+
+[[test]]
+name = "transparent_receiving"
+path = "../../🧪️tests/🪞️transparent-receiving/🦀️.rs"
+
+[[test]]
+name = "bounded_scalar_receiving"
+path = "../../🧪️tests/🧲️bounded-scalar-receiving/🦀️.rs"
+
+[[test]]
+name = "paged_text_old_receiving"
+path = "../../🧪️tests/📝️paged-text-old-receiving/🦀️.rs"

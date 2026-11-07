@@ -14,9 +14,9 @@ pub(crate) const CAD_WORLD_BODY_KEYS: [&str; 4] = [shape::BODY_KEY, building::BO
 
 /// 🎯️ `CadPlayApp::interaction_scope`'s pure body — see the method's doc. `None` hands a verb that
 /// touched a domain this app does not declare (or none) back to the framework's own answer.
-pub(crate) fn cad_interaction_scope(verb: semio_framework_plugin::InteractionVerb, domains: &[&str]) -> Option<semio_framework::kernel::UiDirtyScope> {
+pub(crate) fn cad_interaction_scope(verb: semio_plugin::InteractionVerb, domains: &[&str]) -> Option<semio_framework::kernel::UiDirtyScope> {
     use semio_framework::kernel::UiDirtyScope;
-    use semio_framework_plugin::InteractionVerb;
+    use semio_plugin::InteractionVerb;
     if domains.is_empty() || domains.iter().any(|domain| *domain != CAD_INTERACTION_DOMAIN) {
         return None;
     }
@@ -37,10 +37,10 @@ pub(crate) fn cad_interaction_scope(verb: semio_framework_plugin::InteractionVer
 }
 
 /// 📐️ Declares the owned CAD contribution text projection before payload production.
-static CAD_ORIGINAL_HOST_CONTRIBUTIONS: semio_framework_plugin::OriginalHostConfigurationDeclaration<CadConfigMutation> = semio_framework_plugin::OriginalHostConfigurationDeclaration {
+static CAD_ORIGINAL_HOST_CONTRIBUTIONS: semio_plugin::OriginalHostConfigurationDeclaration<CadConfigMutation> = semio_plugin::OriginalHostConfigurationDeclaration {
     maximum_input_bytes: usize::MAX,
     maximum_output_bytes: usize::MAX,
-    projection: semio_framework_plugin::OriginalHostConfigurationProjection::RawText,
+    projection: semio_plugin::OriginalHostConfigurationProjection::RawText,
     mutation: |json| CadConfigMutation::SetContributions(SetContributionsEdit { json }),
 };
 
@@ -48,7 +48,7 @@ impl ArtifactEditor for CadPlayApp {
     fn owned_mutation_batch_birth_bytes()->Option<usize>{Some(store::MemberStoreOwnedBatch::scaffold_byte_demand::<CadMutation>())}
     fn admit_owned_mutation_batch(values:&mut Option<Vec<CadMutation>>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<Option<(store::MemberStoreOwnedBatch,semio_framework_value::retained_clone::RetainedCloneProgress)>,semio_framework_value::ValueError>{store::MemberStoreOwnedBatch::admit(values,grant)}
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
-    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+    fn examples() -> Vec<semio_plugin::ExampleSource> {
         vec![semio_s_artifact_cad_cad_examples::source()]
     }
     type Snapshot = CadSnapshot;
@@ -59,8 +59,8 @@ impl ArtifactEditor for CadPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = semio_s_artifact_cad_cad_presence::CadPresence;
     type PresenceMutation = semio_s_artifact_cad_cad_presence::CadPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Transient = semio_plugin::NoTransient;
+    type TransientMutation = semio_plugin::NoTransientMutation;
     type Command = CadCommand;
     /// 🧩️ Every pane's model (and the forward-declared drawing) child is an `s.stdio.semio` member.
     type Members = semio_s_artifact_stdio_semio::SemioMembers;
@@ -85,7 +85,7 @@ impl ArtifactEditor for CadPlayApp {
         Some(std::sync::Arc::new(semio_s_artifact_cad_cad_presence::retirement::CadPresenceRetirementFactory))
     }
 
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
         Some(semio_s_artifact_cad_cad_presence::retirement::store_disposer())
     }
 
@@ -95,11 +95,11 @@ impl ArtifactEditor for CadPlayApp {
     /// world bodies alone (the four panes share the domain, and only their selection lanes read the
     /// hover); a selection change adds the two panels that render the selection (Inspection and the
     /// Artifact tree); a mode/granularity switch touches nothing this app renders differently.
-    fn interaction_scope(verb: semio_framework_plugin::InteractionVerb, domains: &[&str]) -> Option<semio_framework::kernel::UiDirtyScope> {
+    fn interaction_scope(verb: semio_plugin::InteractionVerb, domains: &[&str]) -> Option<semio_framework::kernel::UiDirtyScope> {
         cad_interaction_scope(verb, domains)
     }
 
-    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         registry.register::<shape::config::CadShapeWindowConfigOwner>()?;
         registry.register::<building::config::CadBuildingWindowConfigOwner>()?;
         registry.register::<energy::config::CadEnergyWindowConfigOwner>()?;
@@ -107,7 +107,7 @@ impl ArtifactEditor for CadPlayApp {
     }
 
     /// 🫧️ Every world window's engagement transient (design §17.4).
-    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_transient_owners(registry: &mut semio_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
         window_transient::register(registry)
     }
 
@@ -122,7 +122,7 @@ impl ArtifactEditor for CadPlayApp {
         Some(std::sync::Arc::new(CadConfigStorePreparationFactory))
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<CadPlayApp>,
         owner_file: "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.cad.cad@1/*#editor",
@@ -178,32 +178,32 @@ impl ArtifactEditor for CadPlayApp {
         registry.register(CadRetainedCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !CAD_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if original.command.command_id() != original.tool_id || cad_retained_extent(&original.command, &original.snapshot, &original.interaction_state) != Some(1) {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "CAD command does not match its exact retained tool registration").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "CAD command does not match its exact retained tool registration").into());
         }
         let tool_id = original.command.command_id();
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, CadCommand::command_id, cad_retained_raw_bytes(tool_id), CAD_RETAINED_WORK_ITEMS, false, |request| CadRetainedCommandWork { tool_id, consumed: false })
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, CadCommand::command_id, cad_retained_raw_bytes(tool_id), CAD_RETAINED_WORK_ITEMS, false, |request| CadRetainedCommandWork { tool_id, consumed: false })
     }
 
-    fn build_reserved_tool_job(request:&mut Option<semio_framework_plugin::ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_framework_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_reserved_tool_job(request:&mut Option<semio_plugin::ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if body.is_none()&&!request.as_ref().is_some_and(|request|request.tool_id=="import-media"){return Ok(false)}
-        semio_framework_plugin::tool_contract::admit_reserved_work::<EditorApp<Self>,CadMediaWork>(request,body,cx)
+        semio_plugin::plugin_app_close_prelude::admit_reserved_work::<EditorApp<Self>,CadMediaWork>(request,body,cx)
     }
 
     fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
         Some(semio_s_artifact_cad_cad_config::schema::app_schema_descriptor())
     }
 
-    fn reference_birth()->Option<fn()->Result<CadSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<CadSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(forest_play_scene())
     })}
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_plugin::AppIo> {
         Some(cad_io())
     }
 
@@ -275,7 +275,7 @@ impl ArtifactEditor for CadPlayApp {
         cad_command_from_action(action, args)
     }
 
-    fn original_host_configuration(action: &str) -> Option<&'static semio_framework_plugin::OriginalHostConfigurationDeclaration<Self::ConfigMutation>> {
+    fn original_host_configuration(action: &str) -> Option<&'static semio_plugin::OriginalHostConfigurationDeclaration<Self::ConfigMutation>> {
         (action == "setContributions").then_some(&CAD_ORIGINAL_HOST_CONTRIBUTIONS)
     }
 
@@ -284,7 +284,7 @@ impl ArtifactEditor for CadPlayApp {
         command: &CadCommand,
         doc: &ArtifactView<'_, CadSnapshot>,
         cfg: &ConfigView<'_, CadConfig>,
-        interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        interaction: &semio_plugin::app::InteractionView<'_>,
         view_state: Option<&ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
@@ -296,7 +296,7 @@ impl ArtifactEditor for CadPlayApp {
     /// 🕹️ Interaction-less twin of [`Self::render_with_request_context`] (exports, tests, the
     /// framework's own `render_with_request_context` default body): one render implementation
     /// ([`Self::render_body`]) against an empty `"cad"` domain.
-    fn render(body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         Self::render_body(body_key, doc, cfg, view_state, &CadWorldWindowTransient::default(), CadInteractionSnapshot::default())
     }
 
@@ -305,16 +305,16 @@ impl ArtifactEditor for CadPlayApp {
     /// the world scenes' selected/hovered instance flags and gumball, the engagement HUD's selected
     /// count, the inspection panel's selected-object fields and the document tree's marks.
     fn render_with_request_context(
-        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        _owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, CadSnapshot>,
         cfg: &ConfigView<'_, CadConfig>,
         view_state: &ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
-        interaction: &semio_framework_plugin::app::InteractionView<'_>,
-        cx:&mut semio_framework_plugin::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
-        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
+        transient: &semio_plugin::TransientView<'_, semio_plugin::NoTransient>,
+        interaction: &semio_plugin::app::InteractionView<'_>,
+        cx:&mut semio_plugin::StepContext<'_>,
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
+        let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
         Self::render_body(body_key, doc, cfg, view_state, &window_transient::current(transient), CadInteractionSnapshot::from_interaction(interaction))
 
         })();
@@ -334,8 +334,8 @@ impl ArtifactEditor for CadPlayApp {
         doc: &ArtifactView<'_, CadSnapshot>,
         cfg: &ConfigView<'_, CadConfig>,
         view_state: &ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
-        interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        transient: &semio_plugin::TransientView<'_, semio_plugin::NoTransient>,
+        interaction: &semio_plugin::app::InteractionView<'_>,
     ) -> HashMap<String, WindowEngagement> {
         Self::window_engagements_body(doc, cfg, view_state, &window_transient::current(transient), CadInteractionSnapshot::from_interaction(interaction))
     }

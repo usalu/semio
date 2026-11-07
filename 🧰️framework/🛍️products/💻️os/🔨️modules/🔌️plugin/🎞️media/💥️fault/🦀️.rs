@@ -57,7 +57,7 @@ impl MediaOutputProjection{
 pub fn receive_media_output(owner:&mut semio_os_kernel::io::control::NativeSnapshotEncodeOwner<'_, '_>,exporter:impl FnOnce(&mut semio_os_kernel::io::control::NativeSnapshotEncodeOwner<'_, '_>)->Result<MediaArtifact,MediaArtifactError>)->Result<MediaOutputProjection,MediaValueError>{
     let grant=owner.remaining_grant();
     if grant.maximum_items==0||grant.maximum_copy_bytes==0||grant.maximum_capacity_bytes==0||grant.maximum_release_bytes==0||grant.maximum_depth<4{return Err(media_frontier_error())}
-    let value=owner.receive_nested::<MediaArtifactError,MediaOutputValue>(|slot,original|{
+    let value=owner.receive_nested::<MediaArtifactError,MediaOutputValue,semio_os_kernel::io::control::NativeSnapshotFailure>(|slot,original|semio_os_kernel::io::control::native_snapshot_turn(|work|{work.performed();(||->Result<MediaOutputValue,MediaValueError>{
         match exporter(original){
             Ok(value)=>Ok(MediaOutputValue::Artifact(value)),
             Err(source)=>{
@@ -67,7 +67,7 @@ pub fn receive_media_output(owner:&mut semio_os_kernel::io::control::NativeSnaps
                 projection.fault.take_original().map(MediaOutputValue::Fault).ok_or_else(media_projection_error)
             }
         }
-    })?;
+    })().map_err(Into::into)})).result.map_err(semio_os_kernel::io::control::NativeSnapshotFailure::into_value_error)?;
     Ok(MediaOutputProjection{value:MediaControlled::new(value).ok().unwrap()})
 }
 struct MediaFaultTextExtent<'a, 'control> {
@@ -150,7 +150,7 @@ pub fn receive_media_artifact_fault(source: &mut Option<MediaArtifactError>, own
     });
     owner.record_progress(counting.progress())?;
     let extent = extent?;
-    let fault = owner.receive::<MediaFaultReceiving, Fault>(|slot, native, wallet| {
+    let fault = owner.receive::<MediaFaultReceiving, Fault, semio_os_kernel::io::control::NativeSnapshotFailure>(|slot, native, wallet| semio_os_kernel::io::control::native_snapshot_turn(|work| { work.performed(); (|| -> Result<Fault, MediaValueError> {
         let transfer = size_of::<Option<MediaArtifactError>>();
         wallet.admit_frontier(MediaGrant { maximum_items: 1, maximum_copy_bytes: transfer, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 2 })?;
         native.checkpoint()?;
@@ -215,6 +215,6 @@ pub fn receive_media_artifact_fault(source: &mut Option<MediaArtifactError>, own
         native.checkpoint()?;
         wallet.record_progress(MediaProgress { copied_items: 1, copied_bytes: transfer, ..Default::default() })?;
         state.fault.take().ok_or_else(media_projection_error)
-    })?;
+    })().map_err(Into::into) })).result.map_err(semio_os_kernel::io::control::NativeSnapshotFailure::into_value_error)?;
     Ok(MediaFaultProjection { fault: MediaControlled::new(fault).ok().unwrap() })
 }

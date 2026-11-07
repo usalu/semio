@@ -465,6 +465,9 @@ path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packa
 [workspace.dependencies.semio-framework-value-native-owned]
 path = "../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-framework-value-native-owned-try-map]
+path = "../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🛡️try-map/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-framework-value-persistent]
 path = "../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust"
 

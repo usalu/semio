@@ -1,16 +1,9 @@
-//! 🚪️ drawing -> png — foreign `Serializer<DrawingSnapshot>`: the document's flattened scene projected
-//! onto `s.stdio.semio/v1/drawing` (`drawing_document_to_semio_drawing`, the same projection the svg
-//! export uses) and written as an anti-aliased PNG raster of the artboard by that subset's own export leaf — the one png writer every
-//! owner shares.
-//!
-//! 🔖 `IoFidelity::Lossy`: gradients, blend modes and fill rules have no `SemioDrawingSnapshot`
-//! equivalent, and there is no png import (a png file carries no drawing layer model).
-use crate::drawing_document_to_semio_drawing;
+//! 🚪️ Drawing to PNG: bytes come only from the owned job-driven raster export (`DocumentRasterJob` then `PngEncodeJob`).
+
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
-use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
+use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use {semio_s_artifact_stdio_semio_drawing_export::encode_drawing, semio_s_artifact_stdio_semio_drawing::io::SemioDrawingFormat};
 
 pub const PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId::ANY };
 
@@ -20,10 +13,7 @@ impl Serializer<DrawingSnapshot> for DrawingIntoPng {
     const INTO: Dialect = PNG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
     const OWNED_FACTORY: Option<semio_os_kernel::io::io_mechanism::OwnedSerializerFactory> = Some(crate::owned::PNG_FACTORY);
-    async fn serialize(from: &DrawingSnapshot, _: &ArchiveChildren, control: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
-        let _ = control;
-        let error = |message: String| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("DrawingIntoPng: {message}")));
-        let bytes = encode_drawing(&drawing_document_to_semio_drawing(from).map_err(error)?, SemioDrawingFormat::Png).map_err(error)?;
-        Ok(IoOutcome::clean(IoPayload::Binary(bytes)))
+    async fn serialize(_: &DrawingSnapshot, _: &ArchiveChildren, _: &mut semio_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
+        Err(crate::owned_only_refusal("s.stdio.png"))
     }
 }

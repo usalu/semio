@@ -31,6 +31,7 @@ semio-framework-value-testing-presence-retirement = { path = "../../../../🧪�
 semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/🦀️rust", optional = true }
 
 [dev-dependencies]
+semio-framework-value-clone-source-testing = { path = "../../../../🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/🦀️rust" }
 semio-framework-trace-memory-testing = { path = "../../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }

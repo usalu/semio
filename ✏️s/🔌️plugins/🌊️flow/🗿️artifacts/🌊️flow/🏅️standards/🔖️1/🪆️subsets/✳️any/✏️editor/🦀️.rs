@@ -84,12 +84,19 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use semio_framework_2d_compute::EngineHandles;
 
-#[path = "🧵️retained/🦀️.rs"]
-pub mod retained;
+pub use semio_s_artifact_flow_flow_editor_retained::retained;
 
 #[cfg(test)]
 #[path = "🫧️transient/🧪️tests/🫧️transient/🦀️.rs"]
 mod transient_retirement_tests;
+
+#[cfg(test)]
+#[path = "🧵️retained/🧮️evaluation/🧪️mounted.rs"]
+mod retained_evaluation_mounted_tests;
+
+#[cfg(test)]
+#[path = "🧵️retained/📥️original/🧪️routes.rs"]
+mod retained_original_route_tests;
 
 //#region 🔖️Constants
 pub use catalogue_panel::FLOW_PLAY_BODY_CATALOGUE;
@@ -152,8 +159,9 @@ use graph_operation_route::{
 mod contributions_route_and_instance_owner;
 pub use contributions_route_and_instance_owner::{
     flow_contributions_registry_receipt, FlowContributionsJobFactory, FlowContributionsWork,
-    FlowInstanceOperationOwner, FLOW_CONTRIBUTIONS_TOOL_IDS,
+    FLOW_CONTRIBUTIONS_TOOL_IDS,
 };
+pub use semio_s_artifact_flow_flow_editor_retained::FlowInstanceOperationOwner;
 use contributions_route_and_instance_owner::{
     FlowContributionsJobFactoryProofs, FLOW_CONTRIBUTIONS_RAW_BYTES,
 };
@@ -169,62 +177,7 @@ pub use app_assembly::create_flow_app;
 //#endregion 🔖️Constants
 
 //#region 🔖️Commands
-semio_plugin::app_commands! {
-    /// 🎯️ `FlowPlayApp::Command` — the SOLE dispatch surface for flow's own behavior, assembled from the
-    /// `🎮️commands/*` payload modules. Each row states BOTH the manifest action id (`command_id()`, the
-    /// camelCase id declared in `🔖️Manifest` below) and the `dsl` wire keyword (the kebab-case
-    /// `#[dsl(key = ..)]` the binary/text codec uses) — they are genuinely different vocabularies, and
-    /// is safe, reordering is a wire-format break.**
-    ///
-    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `setSelection`/`clearSelection`/
-    /// `selectAll`/`selectNode`/`nodeGraphSelect`/`nodeGraphHover`/`graphPointerDown` are deleted — the
-    /// framework auto-injects `interactionSelect`/`interactionHover`/`clearSelection`/`selectAll`/
-    /// `setSelectionMode`/`setInteractionGranularity` for the declared "graph" domain instead (see
-    /// `🔖️Manifest`). `deleteSelection`/`focusSelection`/`nodeGraphEdit`/`spotlightCommit` read that
-    /// domain's live selection via `InteractionView` — `FlowPlayApp::handle` routes them through their
-    /// own `apply` (this macro's generated `dispatch(doc, cfg, session)` has no `interaction` slot).
-    pub enum FlowCommand for FlowSnapshot, FlowMutation, NoConfig, NoConfigMutation, ctx = FlowEvalSession {
-        "addWidget" as "add-widget" => add_widget::AddWidget,
-        "removeWidget" as "remove-widget" => remove_widget::RemoveWidget,
-        "duplicateWidget" as "duplicate-widget" => duplicate_widget::DuplicateWidget,
-        "deleteSelection" as "delete-selection" => delete_selection::DeleteSelection,
-        "disconnect" as "disconnect" => disconnect::Disconnect,
-        "connectMediaPorts" as "connect-media-ports" => connect_media_ports::ConnectMediaPorts,
-        "moveMediaNode" as "move-media-node" => move_media_node::MoveMediaNode,
-        "reorganize" as "reorganize" => reorganize::Reorganize,
-        "patchFlowWidgets" as "patch-flow-widgets" => patch_flow_widgets::PatchFlowWidgets,
-        "renameFlowWidget" as "rename-flow-widget" => rename_flow_widget::RenameFlowWidget,
-        "nodeGraphEdit" as "node-graph-edit" => node_graph_edit::NodeGraphEdit,
-        "spotlightCommit" as "spotlight-commit" => spotlight_commit::SpotlightCommit,
-        "runExtensionAction" as "run-extension-action" => run_extension_action::RunExtensionAction,
-        "setActiveExample" as "set-active-example" => set_active_example::SetActiveExample,
-        "evaluate" as "evaluate" => evaluate::Evaluate,
-        "focusSelection" as "focus-selection" => focus_selection::FocusSelection,
-        "nodeGraphViewport" as "node-graph-viewport" => node_graph_viewport::NodeGraphViewport,
-        "setLodMode" as "set-lod-mode" => set_lod_mode::SetLodMode,
-        "setProximityDistance" as "set-proximity-distance" => set_proximity_distance::SetProximityDistance,
-        "setGridVisible" as "set-grid-visible" => set_grid_visible::SetGridVisible,
-        "setGridSnapEnabled" as "set-grid-snap-enabled" => set_grid_snap_enabled::SetGridSnapEnabled,
-        "setGridFactor" as "set-grid-factor" => set_grid_factor::SetGridFactor,
-        "contextMenuAt" as "context-menu-at" => context_menu_at::ContextMenuAt,
-        "setPreviewOff" as "set-preview-off" => set_preview_off::SetPreviewOff,
-        "openSpotlight" as "open-spotlight" => open_spotlight::OpenSpotlight,
-        "replaceImage" as "replace-image" => replace_image::ReplaceImage,
-        "setCatalogueSections" as "set-catalogue-sections" => set_catalogue_sections::SetCatalogueSections,
-        "toggleExtension" as "toggle-extension" => toggle_extension::ToggleExtension,
-        "addGeneration" as "add-generation" => add_generation::AddGeneration,
-        "removeGeneration" as "remove-generation" => remove_generation::RemoveGeneration,
-        "selectGeneration" as "select-generation" => select_generation::SelectGeneration,
-        "renameGeneration" as "rename-generation" => rename_generation::RenameGeneration,
-        "updateGenerationValues" as "update-generation-values" => update_generation_values::UpdateGenerationValues,
-        "flowEvalTick" as "flow-eval-tick" => flow_eval_tick::FlowEvalTick,
-        "flowEvalResolve" as "flow-eval-resolve" => flow_eval_resolve::FlowEvalResolve,
-        "setContributions" as "set-contributions" => set_contributions::SetContributions,
-    }
-}
-
-// 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
-// payload module is imported at file top under its own flat name.
+pub use semio_s_artifact_flow_flow_editor_retained::FlowCommand;
 //#endregion 🔖️Commands
 
 //#region 🧵️HostOnlyRetainedRoutes
@@ -274,5 +227,4 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 }
 //#endregion 🧩️ArtifactItems5
 
-#[path="📤️child-publication/🦀️.rs"]
-mod child_publication;
+use semio_s_artifact_flow_flow_editor_publication as child_publication;

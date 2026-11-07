@@ -13,3 +13,25 @@ async fn verfolgen_pane_loads_applies_undoes_and_closes() {
     assert!(!loaded.positions.is_empty(), "the loaded demo carries its positions");
     assert_eq!(applied.positions.len(), loaded.positions.len() + 1);
 }
+
+/// 🌐️ LAW: the Verfolgen map body renders from the loaded demo in every locale of `🧫️cases.json` and carries each case's expected strings.
+#[semio_framework_async_macros::async_test]
+async fn verfolgen_pane_body_renders_in_every_locale() {
+    use semio_plugin::PluginApp as _;
+    use semio_ui_locale::{Locale, Terminology};
+    let spec: serde_json::Value = serde_json::from_str(include_str!("🧫️cases.json")).expect("case data parses");
+    let body_key = spec["bodyKey"].as_str().expect("body key");
+    let mut app = app().await;
+    let booted = app.0.document_text().await.expect("booted document text");
+    semio_plugin::artifact_app_laws::load_document_text(&mut app.0, &semio_os_kernel::os_store::text_format::ArtifactTextFiles { dsl: semio_s_artifact_gis_gismap_demo_asset::DEMO_DSL.into(), ops: booted.ops }, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the demo loads");
+    for case in spec["cases"].as_array().expect("cases") {
+        let locale = match case["locale"].as_str().expect("locale") { "en" => Locale::En, "de" => Locale::De, other => panic!("unknown locale {other}") };
+        let rendered = semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &semio_plugin::ViewModel::new(locale, Terminology::Native), app.1.cx()).await.unwrap_or_else(|fault| panic!("render {body_key} {locale:?}: {fault:?}"));
+        assert!(!rendered.is_empty());
+        for needle in case["contains"].as_array().expect("needles") {
+            let needle = needle.as_str().expect("needle");
+            assert!(rendered.contains(needle), "{locale:?} body lacks {needle:?}: {rendered}");
+        }
+    }
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("exact retained close");
+}

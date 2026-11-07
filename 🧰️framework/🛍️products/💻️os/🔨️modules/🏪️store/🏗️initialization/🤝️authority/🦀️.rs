@@ -26,6 +26,8 @@ where
     fn progress(&self) -> (u64, u64) {
         (0, 0)
     }
+    /// 🧷️ Binds the replacement slot identity this initializer belongs to, so its staleness is judged against the store's current slot; an initializer without staleness semantics ignores it.
+    fn bind_replacement(&mut self, _replacement: semio_framework_job::ReplacementIdentity) {}
     fn request_cancel(&mut self);
     fn take_candidate(&mut self) -> Option<ArtifactStore<P, M>>;
     #[inline(never)]

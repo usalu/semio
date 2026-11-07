@@ -169,4 +169,4 @@ pub fn handle(payload: &ExportScheduleCsv, doc: &ArtifactView<'_, ModelSnapshot>
     Ok(download(doc.snapshot, &id, semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::csv::codec::document_text(records.into_iter().map(semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::csv::codec::record).collect())))
 }
 
-
+semio_plugin::retained_command::terminal_frame_bound!(ScheduleCsvWork);

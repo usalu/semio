@@ -14,7 +14,7 @@ async fn export_qc_report_is_a_no_op_without_a_report() {
 /// 🧾️ Portable QC export cases preserve report JSON and never edit the document.
 #[test]
 fn export_qc_report_matches_the_portable_download_contract() {
-    use semio_framework_plugin::{ArtifactView, ConfigView, Effect, HistoryView, NoConfig};
+    use semio_plugin::{ArtifactView, ConfigView, Effect, HistoryView, NoConfig};
     use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️cases/🔣️.json")).expect("QC export cases");
     for case in fixture["cases"].as_array().expect("cases") {

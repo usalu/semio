@@ -21,7 +21,7 @@ pub const RASTER_IMAGE_TRANSFORMS: [&str; 4] = ["rotateClockwise", "rotateCounte
 /// 🧮️ The longest side a transformed image may have, as the payload schema bounds it.
 pub const RASTER_IMAGE_MAXIMUM_SIDE: u32 = 16_384;
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -152,6 +152,7 @@ pub fn inverse<Op: From<crate::add_layer_asset::mutation::AddLayerAsset> + From<
 
 //#region 🔖️Kind
 impl<Op> protocol::MutationKind<RasterSnapshot, Op> for TransformImage where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::add_layer_asset::mutation::AddLayerAsset> + From<crate::change_layer_mask::ChangeLayerMask> + From<crate::change_layer_pixels::ChangeLayerPixels> + From<crate::paint_stroke::PaintStroke> + From<crate::remove_layer_asset::mutation::RemoveLayerAsset> + From<crate::transform_image::TransformImage> + From<crate::write_pixel_region::WritePixelRegion> {
+
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "image", kind: "transform-image", record: "TransformedImage" };
 
     fn label(&self) -> semio_ui_locale::LocalizedLabel {

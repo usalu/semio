@@ -245,7 +245,7 @@ impl semio_plugin::retained_command::ArtifactCommandWork<EditorApp<HomeApp>> for
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
     fn checkpoint_byte(&self, index: usize) -> Option<u8> { (index == 0).then_some(u8::from(self.validated)) }
-    fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<HomeApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { apply_directory_event_page::home_work_step_demands::<EditorApp<HomeApp>>(size_of::<Self>()) }
+    fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<HomeApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { apply_directory_event_page::home_work_step_demands::<EditorApp<HomeApp>>() }
     fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> { self.validated = match checkpoint { [] | [0] => false, [1] => true, _ => return Err(Fault::from("s.home.create-studio.effect-checkpoint-invalid")) }; Ok(()) }
     fn begin_close(&mut self) { self.closing = true; }
     fn terminal_frame_release_bytes(&self) -> Option<usize> { self.terminal_is_empty().then_some(size_of::<Self>()) }
@@ -368,7 +368,7 @@ impl semio_plugin::retained_command::ArtifactCommandWork<EditorApp<HomeApp>> for
     }
 
     fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<HomeApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        apply_directory_event_page::home_work_step_demands::<EditorApp<HomeApp>>(size_of::<Self>())
+        apply_directory_event_page::home_work_step_demands::<EditorApp<HomeApp>>()
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
@@ -854,3 +854,5 @@ pub async fn declaration() -> Result<semio_plugin::ArtifactDeclaration, semio_pl
 //#endregion 🔖️Declaration
 }
 //#endregion 🧩️ArtifactItems4
+
+semio_plugin::retained_command::terminal_frame_bound!(HomeCreateStudioWork, HomeCatalogWork);

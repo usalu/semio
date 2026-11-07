@@ -734,12 +734,37 @@ impl<Mutation, ConfigMutation, DraftMutation> Emit<Mutation, ConfigMutation, Dra
 /// 🪪️ Per-invocation runtime metadata handed to the object-safe {@link PluginApp} — the local
 /// actor id, the instance id used to stamp operation handles, and optional host view context.
 /// Headless operations have no view; UI actions carry the addressed concrete window's projection.
-#[derive(Clone, Debug, Default, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default)]
 pub struct ActionMeta {
     pub actor: semio_framework_value::SharedUtf8,
     pub instance_id: u32,
     pub view_state: Option<std::sync::Arc<ViewModel>>,
     pub expected_document_revision: Option<[u8;32]>,
+}
+/// 🪟️ The host window owns the view model; every captured holder only borrows it, so closing a holder releases its one reference as a lease (the last holder pays the deep release) and never waits for sole ownership, which would deadlock holders that wait on each other.
+pub struct ViewLease(std::sync::Arc<ViewModel>);
+impl ViewLease {
+    pub fn new(view: std::sync::Arc<ViewModel>) -> Self { Self(view) }
+    pub fn into_arc(self) -> std::sync::Arc<ViewModel> { self.0 }
+}
+impl std::ops::Deref for ViewLease { type Target = ViewModel; fn deref(&self) -> &ViewModel { &self.0 } }
+impl semio_framework_value::retirement::RetireOwned for ViewLease {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> { Box::new(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(self.into_arc())) }
+    fn retirement_birth_bytes(&self) -> Option<usize> { Some(std::mem::size_of::<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<ViewModel>>()) }
+    fn controlled_retirement_supported() -> bool { <std::sync::Arc<ViewModel> as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported() }
+}
+impl semio_framework_value::retirement::RetireOwned for ActionMeta {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        let Self { actor, instance_id: _, view_state, expected_document_revision: _ } = self;
+        semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(actor), semio_framework_value::retirement::deferred(view_state.map(ViewLease::new))])
+    }
+    fn retirement_birth_bytes(&self) -> Option<usize> {
+        let lease = self.view_state.clone().map(ViewLease::new);
+        let bytes = semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.actor), semio_framework_value::retirement::deferred_birth_bytes_for(&lease)]);
+        drop(lease.map(ViewLease::into_arc));
+        bytes
+    }
+    fn controlled_retirement_supported() -> bool { true }
 }
 impl ActionMeta {
     /// 🔒️ The owning actor checks the complete captured document frontier before native preparation.

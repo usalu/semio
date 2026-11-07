@@ -105,7 +105,7 @@ fn space_bounded_reduce(
     if let SpaceCommand::PresenceHeartbeat(payload) = command {
         let identity = context
             .and_then(|context| context.view_state.as_ref())
-            .and_then(crate::home_session_identity)
+            .and_then(|view| crate::home_session_identity(view))
             .ok_or_else(|| Fault::from("s.space.session-identity-required"))?;
         return semio_hub_space_commands_media::presence_heartbeat::handle_with_identity(payload, identity, &doc, &ConfigView { snapshot: config, window: None });
     }
@@ -304,8 +304,15 @@ impl ArtifactApp for SpaceApp {
         semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, SpaceCommand::command_id, SPACE_BOUNDED_RAW_BYTES, SPACE_BOUNDED_WORK_ITEMS, false, |_original| BoundedArtifactCommandWork::new(tool_id, space_bounded_reduce, space_bounded_extent))
     }
 
-    async fn initial_snapshot() -> WorkflowSnapshot {
-        empty_workflow_snapshot().await
+    fn reference_birth() -> Option<semio_plugin::ReferenceArtifactAppBirth<WorkflowSnapshot>> {
+        Some(|| {
+            let mut birth = std::pin::pin!(empty_workflow_snapshot());
+            let mut context = std::task::Context::from_waker(std::task::Waker::noop());
+            match std::future::Future::poll(birth.as_mut(), &mut context) {
+                std::task::Poll::Ready(snapshot) => Ok(snapshot),
+                std::task::Poll::Pending => Err(Fault::from("s.space.reference-birth-pending")),
+            }
+        })
     }
 
     async fn command_id(command: &SpaceCommand) -> &'static str {
@@ -439,7 +446,7 @@ impl ArtifactApp for SpaceApp {
             SpaceCommand::OpenInstance(payload) => semio_hub_space_commands_authoring::open_instance::apply(payload, doc, cfg, interaction).await,
             SpaceCommand::PresenceHeartbeat(payload) => {
                 let identity = view_state
-                    .and_then(crate::home_session_identity)
+                    .and_then(|view| crate::home_session_identity(view))
                     .ok_or_else(|| Fault::from("s.space.session-identity-required"))?;
                 semio_hub_space_commands_media::presence_heartbeat::handle_with_identity(payload, identity, doc, cfg)
             }

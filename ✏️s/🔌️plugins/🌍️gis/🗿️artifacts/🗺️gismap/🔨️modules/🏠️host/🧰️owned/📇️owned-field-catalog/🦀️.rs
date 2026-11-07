@@ -6,9 +6,9 @@ use super::*;
 pub struct GisMapEnvelopeOwnedFieldCatalog;
 
 impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<GisMapSnapshot, GisMapMutation> for GisMapEnvelopeOwnedFieldCatalog {
-    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Result<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<GisMapSnapshot, GisMapMutation>>, Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<GisMapSnapshot>>> {
+    fn begin_vcs(&self, replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Result<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<GisMapSnapshot, GisMapMutation>>, Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<GisMapSnapshot>>> {
         store::os_store::owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority::try_new(
-            self.begin_snapshot(operation, generation, path),
+            self.begin_snapshot(replacement, path),
             std::sync::Arc::new(GisMapSnapshotRetirementFactory),
             std::sync::Arc::new(GisMapMutationRetirementFactory),
             self.edit_history_decoder(),
@@ -24,15 +24,15 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<Gis
         store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES
     }
 
-    fn begin_snapshot(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<GisMapSnapshot>> {
-        Box::new(GisMapSnapshotDecodeAuthority::new(operation, generation, path))
+    fn begin_snapshot(&self, replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<GisMapSnapshot>> {
+        Box::new(GisMapSnapshotDecodeAuthority::new(replacement, path))
     }
 
-    fn begin_mutation(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<GisMapMutation>> {
-        Box::new(GisMapMutationDecodeAuthority::new(operation, generation, path))
+    fn begin_mutation(&self, replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<GisMapMutation>> {
+        Box::new(GisMapMutationDecodeAuthority::new(replacement, path))
     }
 
-    fn begin_spr_conflict(&self, _operation: semio_framework_job::OperationId, _generation: semio_framework_job::Generation, _path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority> {
+    fn begin_spr_conflict(&self, _replacement: Option<semio_framework_job::ReplacementIdentity>, _path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority> {
         Box::new(GisMapRejectedConflictAuthority { terminal: false })
     }
 

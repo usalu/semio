@@ -593,3 +593,5 @@ impl Puzzle5dRetargetFastenerWork {
         Ok((work, semio_framework_value::RetainedCloneProgress { retained_capacity_bytes: capacity, ..Default::default() }))
     }
 }
+
+semio_plugin::retained_command::terminal_frame_bound!(Puzzle5dEditFastenerWork, Puzzle5dRetargetFastenerWork, Puzzle5dDeleteFastenerWork);

@@ -61,7 +61,7 @@ impl<M:RetireOwned+ArtifactCanonicalJsonTree+Send+Sync+'static> ArtifactStoreBat
   Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Box<Edit<M>>>(),..Default::default()}))
  }
  fn ready(&self)->bool{self.original.as_ref().is_some_and(ArtifactCanonicalEditSealCursor::is_ready)}
- fn take_edit(&mut self,grant:RetainedCloneGrant)->Result<Option<(Box<Edit<M>>,[u8;32],RetainedCloneProgress)>,ValueError>{if !admitted(self.next_digest_demand()?,grant){return Ok(None);}match self.original.as_mut(){Some(original)=>original.take_edit(child(grant)),None=>Ok(None)}}
+ fn take_edit(&mut self,grant:RetainedCloneGrant)->Result<Option<(Box<Edit<M>>,[u8;32],RetainedCloneProgress)>,ValueError>{if !admitted(self.next_digest_demand()?,grant){return Ok(None);}let Some(original)=self.original.as_mut() else{return Ok(None)};let taken=original.take_edit(child(grant))?;if original.terminal_is_empty(){self.original=None;}Ok(taken)}
  fn begin_close(&mut self){if let Some(original)=self.original.as_mut(){original.begin_close();}}
 }
 impl<M:RetireOwned+ArtifactCanonicalJsonTree+Send+Sync+'static> ErasedSnapshotRetirement for NativeBatchDigest<M>{

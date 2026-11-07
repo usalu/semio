@@ -67,7 +67,7 @@ impl RasterImageExportJob {
     fn advance(&mut self,cx:&mut StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure> {
         if self.rejected_download.is_some(){self.download.as_ref().unwrap().complete_download_original(&mut self.rejected_download,&mut self.completed,cx)?;return Ok(())}
         if self.chunks.is_none(){ArtifactOutputChunks::original_birth_admit(ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES,&mut self.chunks,cx)?;return Ok(())}
-        if self.pending_page.is_some()||self.page_published{if self.chunks.as_ref().unwrap().push_original(&mut self.pending_page,&mut self.page_published,cx)?{if let Some(credit)=self.credit.as_ref(){credit.credit_original(self.chunks.as_ref().unwrap().bytes()-self.credited)?;self.credited=self.chunks.as_ref().unwrap().bytes();}self.page_published=false;}return Ok(())}
+        if self.pending_page.is_some(){self.chunks.as_ref().unwrap().push_original(&mut self.pending_page,self.credit.as_ref(),cx)?;return Ok(())}
         if self.work.page_ready(){let turn=self.work.take_page(cx.retained_grant());let work=turn.work;let result=turn.result.map(|output|if let Some((page,progress))=output{*self.pending_page=Some(page);RetainedCloneStep::Progress(progress)}else{RetainedCloneStep::Progress(Default::default())});semio_framework_job::receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result,work})?;return Ok(())}
         if !self.work.done{let document=self.snapshot.as_deref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"raster.export-snapshot-missing"))?;semio_framework_job::receive_original_retained_work(cx,self.work.advance(document,cx.retained_grant()))?;return Ok(())}
         if !self.chunks.as_ref().unwrap().is_sealed(){self.chunks.as_ref().unwrap().seal_original(cx)?;return Ok(())}
@@ -111,7 +111,7 @@ impl RasterImageExportJob {
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(Default::default());}
         let item=RetainedCloneProgress {copied_items:1,..Default::default()};
         let child=RetainedCloneGrant {maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
-        if !self.publication.terminal_is_empty(){return self.publication.close_step(child).map(|step|step.progress());}
+        if !self.publication.terminal_is_empty(){let turn=self.publication.close_step(child);self.close_work=turn.work;return turn.result.map(|step|step.progress());}
         if self.delivered{self.delivered=false;return Ok(item);}
         if self.active.is_some(){let turn=store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active,grant);self.close_work=turn.work;return turn.result.map(|step|step.progress());}
         if self.rejected_download.is_some(){let turn=store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.rejected_download,&mut self.active,grant);self.close_work=turn.work;return turn.result.map(|step|step.progress());}
@@ -119,10 +119,10 @@ impl RasterImageExportJob {
         if self.pending_page.is_some(){let turn=store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_page,&mut self.active,grant);self.close_work=turn.work;return turn.result.map(|step|step.progress());}
         if self.output_metadata.is_some(){let turn=store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.output_metadata,&mut self.active,grant);self.close_work=turn.work;return turn.result.map(|step|step.progress());}
         if self.chunks.is_some(){let turn=store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.chunks,&mut self.active,grant);self.close_work=turn.work;return turn.result.map(|step|step.progress());}
-        if self.pending_result.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_result,&mut self.active,grant).map(|step|step.progress())}
-        if self.completion.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.completion,&mut self.active,grant).map(|step|step.progress())}
-        if self.download.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.download,&mut self.active,grant).map(|step|step.progress())}
-        if self.credit.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.credit,&mut self.active,grant).map(|step|step.progress())}
+        if self.pending_result.is_some(){let turn=store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_result,&mut self.active,grant);self.close_work=turn.work;return turn.result.map(|step|step.progress());}
+        if self.completion.is_some(){let turn=store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.completion,&mut self.active,grant);self.close_work=turn.work;return turn.result.map(|step|step.progress());}
+        if self.download.is_some(){let turn=store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.download,&mut self.active,grant);self.close_work=turn.work;return turn.result.map(|step|step.progress());}
+        if self.credit.is_some(){let turn=store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.credit,&mut self.active,grant);self.close_work=turn.work;return turn.result.map(|step|step.progress());}
         if let Some(snapshot)=self.snapshot.as_ref(){
             if !self.snapshot_close.as_ref().map_or_else(||Arc::strong_count(snapshot)>1,|lease|lease.can_release(snapshot)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"raster export snapshot has no live close witness"));}
             self.snapshot=None;return Ok(RetainedCloneProgress{copied_bytes:demand.copy_bytes,..item});
@@ -138,8 +138,7 @@ impl RasterImageExportJob {
 impl RasterImageExportJob {
     fn step_value<'a>(&'a mut self,context:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure> {
         if self.delivered {
-            let step=self.publication.close_step(context.retained_grant())?;
-            context.consume_retained(step.progress())?;
+            let step=semio_framework_job::receive_original_retained_work(context,self.publication.close_step(context.retained_grant()))?;
             if matches!(step,RetainedCloneStep::Complete(_)){self.delivered=false;}
             return Ok(None);
         }
@@ -177,7 +176,7 @@ impl InteractiveJob for RasterImageExportJob {
     fn next_close_depth_demand(&self)->Result<usize,ValueError> {Ok(self.close_demands(0)?.depth)}
     fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         self.begin_close();
-        if let Some(input)=self.raw_input.as_mut(){let step=input.close_step(cx)?;if input.terminal_is_empty(){self.raw_input=None}return Ok(InteractiveJobCloseStep::Pending{progress:step.progress()})}
+        if let Some(input)=self.raw_input.as_mut(){let step=input.close_step(cx.retained_grant())?;if input.terminal_is_empty(){self.raw_input=None}return Ok(InteractiveJobCloseStep::Pending{progress:step.progress()})}
         let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{let result=self.close_turn(grant).map(RetainedCloneStep::Progress);semio_framework_value::RetainedWorkOutcome{result,work:self.close_work}})?;
         Ok(if self.terminal_is_empty(){InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
     }

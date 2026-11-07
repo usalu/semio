@@ -22,7 +22,7 @@ use std::collections::{HashMap, HashSet};
 pub const S_COLLECTION_SCHEMA: &str = "os.collection";
 
 /// 📁️ One parent-linked folder in a collection's flat tree. `parent_id: None` means root.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct CollectionFolder {
     pub id: String,
@@ -48,6 +48,10 @@ pub enum ArtifactBody {
     Document { schema: String, document_id: String },
     Blob { blob: store::BlobRef },
 }
+
+#[path="📥️body-receiving/🦀️.rs"]
+mod body_receiving;
+pub use body_receiving::{ArtifactBodyBlobFields,ArtifactBodyDocumentFields,ArtifactBodyReceiving};
 
 fn artifact_body_document_borrowed()->semio_framework_dsl_record::BorrowedRecordSpec{
  use semio_framework_dsl_record::{BorrowedFieldSpec as F,BorrowedShape as H};
@@ -227,7 +231,7 @@ impl semio_framework_dsl_record::DslVariants for ArtifactBody {
 
 /// 🧾️ One addressable artifact placed in a collection folder tree. `id == artifact id ==
 /// ArtifactEnvelope.id` for document bodies (see `🔖️Addressing`). `folder_id: None` means root-level.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct CollectionEntry {
     pub id: String,
@@ -262,7 +266,7 @@ pub fn empty_collection_snapshot(name: &str) -> CollectionSnapshot {
 /// re-parenting is derivation rule 5's hierarchy verb (`move-to-<container>`, not `change-*` — SMO
 /// corrected DKM's first `ChangeFolderParent`/`ChangeEntryFolder` proposal on exactly this point), and
 /// `RenameCollection` replaces `SetName` since the target is the document root's identity field.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned)]
 pub enum CollectionMutation {
     RenameCollection {
         new_name: String,

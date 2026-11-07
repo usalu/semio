@@ -14,9 +14,9 @@ pub fn generation3d_envelope_decode_owner_bundle() -> store::os_store::owned_sch
 }
 
 impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<Generation3dSnapshot, Generation3dMutation> for Generation3dEnvelopeOwnedFieldCatalog {
-    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Result<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<Generation3dSnapshot, Generation3dMutation>>, Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<Generation3dSnapshot>>> {
+    fn begin_vcs(&self, replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Result<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<Generation3dSnapshot, Generation3dMutation>>, Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<Generation3dSnapshot>>> {
         store::os_store::owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority::try_new(
-            self.begin_snapshot(operation, generation, path),
+            self.begin_snapshot(replacement, path),
             std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Generation3dSnapshot>::default()),
             std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Generation3dMutation>::default()),
             self.edit_history_decoder(),
@@ -32,15 +32,15 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<Gen
         store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES
     }
 
-    fn begin_snapshot(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<Generation3dSnapshot>> {
-        Box::new(Generation3dPackSnapshotAuthority::new(operation, generation, path))
+    fn begin_snapshot(&self, replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<Generation3dSnapshot>> {
+        Box::new(Generation3dPackSnapshotAuthority::new(replacement, path))
     }
 
-    fn begin_mutation(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<Generation3dMutation>> {
-        Box::new(Generation3dMutationDecodeAuthority::new(operation, generation, path))
+    fn begin_mutation(&self, replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<Generation3dMutation>> {
+        Box::new(Generation3dMutationDecodeAuthority::new(replacement, path))
     }
 
-    fn begin_spr_conflict(&self, _operation: semio_framework_job::OperationId, _generation: semio_framework_job::Generation, _path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority> {
+    fn begin_spr_conflict(&self, _replacement: Option<semio_framework_job::ReplacementIdentity>, _path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority> {
         Box::new(Generation3dRejectedConflictAuthority { terminal: false })
     }
 

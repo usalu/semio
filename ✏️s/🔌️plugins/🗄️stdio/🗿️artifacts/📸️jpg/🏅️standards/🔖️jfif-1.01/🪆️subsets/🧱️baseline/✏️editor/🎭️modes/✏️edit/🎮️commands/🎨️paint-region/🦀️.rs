@@ -4,9 +4,8 @@ pub use semio_s_artifact_stdio_jpg_schema_2::editor::paint_region_declaration::{
 
 use super::{JpgBaselineEditCommand, JpgBaselineEditor};
 use semio_framework_job::InteractiveJobCloseStep;
-use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity};
-use semio_framework_plugin::{EditorApp, Emit, Fault, FaultCode, FaultOrigin};
-use super::main::MAXIMUM_INTERACTIVE_ROWS;
+use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity};
+use semio_plugin::{EditorApp, Emit, Fault, FaultCode, FaultOrigin};
 use crate::standards::v_jfif_1_01::subsets::baseline::schema::snapshot::JpgSnapshot as Snapshot;
 use crate::standards::v_jfif_1_01::subsets::document::schema::mutations::JpgMutation as Mutation;
 
@@ -91,7 +90,7 @@ impl PaintRegionWork {
 impl ArtifactCommandWork<EditorApp<JpgBaselineEditor>> for PaintRegionWork {
     fn tool_id(&self) -> &'static str { ACTION_ID }
 
-    fn extent(&self, command: &JpgBaselineEditCommand, snapshot: &Snapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<JpgBaselineEditor>>>) -> Option<usize> {
+    fn extent(&self, command: &JpgBaselineEditCommand, snapshot: &Snapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<JpgBaselineEditor>>>) -> Option<usize> {
         let JpgBaselineEditCommand::PaintRegion(command) = command else { return None };
         if command.width == 0 || command.height == 0 || snapshot.image.pixels.is_empty() { return None; }
         CAPACITY.rows_for_items(1)
@@ -153,3 +152,5 @@ impl ArtifactCommandWork<EditorApp<JpgBaselineEditor>> for PaintRegionWork {
         self.closing && self.revision.is_none() && self.samples.is_none() && self.rows == 0 && self.cursor == 0
     }
 }
+
+semio_plugin::retained_command::terminal_frame_bound!(PaintRegionWork);

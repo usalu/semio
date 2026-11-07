@@ -24,8 +24,8 @@ fn execute<T:RetainedClone+Serialize+DeserializeOwned>(row:&serde_json::Value,po
     let expected=serde_json::to_value(&original).unwrap();
     let demand=RetainedCloneSource::<T>::owned_constructor_demand::<()>();
     let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:RetainedCloneSource::<T>::constructor_copy_bytes(),maximum_capacity_bytes:demand.capacity_bytes,maximum_depth:demand.depth,..Default::default()};
-    let((source,progress),heap)=observe_retirement_allocations(||RetainedCloneSource::admit_owned(original,(),grant).map_err(|(error,..)|error).unwrap());
-    assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));assert!(progress.fits(grant));
+    let((source,progress),heap)=observe_retirement_allocations(||semio_framework_value_clone_source_testing::admit_owned(original,(),grant).result.map_err(|(error,..)|error).unwrap());
+    assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));
     let mut cursor=T::retained_clone_cursor();let mut output=None;let mut turns=0;
     let result:Result<(),ValueError>=(|| {
         for turn in 0..policy["maximumTurns"].as_u64().unwrap()as usize {
@@ -34,12 +34,12 @@ fn execute<T:RetainedClone+Serialize+DeserializeOwned>(row:&serde_json::Value,po
             let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
             let denied=[Some(RetainedCloneGrant{maximum_items:0,..grant}),(demand.copy_bytes>0).then_some(RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes.saturating_sub(1),..grant}),(demand.capacity_bytes>0).then_some(RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes.saturating_sub(1),..grant}),(demand.release_bytes>0).then_some(RetainedCloneGrant{maximum_release_bytes:demand.release_bytes.saturating_sub(1),..grant}),(demand.depth>0).then_some(RetainedCloneGrant{maximum_depth:demand.depth.saturating_sub(1),..grant})];
             for denied in denied.into_iter().flatten(){
-                let(result,heap)=observe_retirement_allocations(||cursor.advance(source.borrow(), policy["maximumCopyBytes"].as_u64().unwrap() as usize, denied));assert_eq!(heap,(0,0),"denied compound row={} cut={cut:?} turn={turn} demand={demand:?} granted={grant:?} denied={denied:?} result={:?}",row["name"],result.as_ref().map(|step|step.progress()).map_err(|error|(&error.kind,error.message.as_ref())));
+                let(result,heap)=observe_retirement_allocations(||cursor.advance(source.borrow(), policy["maximumCopyBytes"].as_u64().unwrap() as usize, denied).result);assert_eq!(heap,(0,0),"denied compound row={} cut={cut:?} turn={turn} demand={demand:?} granted={grant:?} denied={denied:?} result={:?}",row["name"],result.as_ref().map(|step|step.progress()).map_err(|error|(&error.kind,error.message.as_ref())));
                 match result{Ok(step)=>assert_eq!(step.progress(),Default::default(),"denied compound row={} cut={cut:?} turn={turn} demand={demand:?} grant={grant:?} denied={denied:?}",row["name"]),Err(error)=>assert_eq!(error.kind,ValueRefusalKind::DepthLimit)}
                 assert_eq!(cursor.advance_demands(source.borrow(),policy["maximumCopyBytes"].as_u64().unwrap()as usize)?,demand,"denied action keeps exact source-bound frontier");
             }
-            let(step,heap)=observe_retirement_allocations(||cursor.advance(source.borrow(), policy["maximumCopyBytes"].as_u64().unwrap() as usize, grant));let step=step?;assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));turns=turn+1;
-            if matches!(step,RetainedCloneStep::Complete(_)){output=cursor.take();break;}
+            let(step,heap)=observe_retirement_allocations(||cursor.advance(source.borrow(), policy["maximumCopyBytes"].as_u64().unwrap() as usize, grant).result);let step=step?;assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));turns=turn+1;
+            if matches!(step,RetainedCloneStep::Complete(_)){let take=cursor.take_demand()?;output=cursor.take(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:take.copy_bytes,maximum_capacity_bytes:take.capacity_bytes,maximum_release_bytes:take.release_bytes,maximum_depth:take.depth}).result?.map(|(value,_)|value);break;}
             assert_ne!(step.progress(),Default::default(),"exact quoted next action must progress");
         }
         Ok(())
@@ -50,7 +50,7 @@ fn execute<T:RetainedClone+Serialize+DeserializeOwned>(row:&serde_json::Value,po
     for turn in 0..100_000{
         if cursor.terminal_is_empty(){break;}let d=cursor.close_demands(4096).unwrap();
         let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};assert_eq!(cursor.close_demands(grant.maximum_copy_bytes).unwrap(),d);
-        let(step,heap)=observe_retirement_allocations(||cursor.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(step.progress()!=Default::default() || cursor.terminal_is_empty(),"exact close stalled: row={} cut={cut:?} turn={turn} grant={grant:?}",row["name"]);assert!(turn<99_999);
+        let(step,heap)=observe_retirement_allocations(||cursor.close_step(grant).result.unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(step.progress()!=Default::default() || cursor.terminal_is_empty(),"exact close stalled: row={} cut={cut:?} turn={turn} grant={grant:?}",row["name"]);assert!(turn<99_999);
     }
     assert!(cursor.terminal_is_empty());assert_eq!(observe_retirement_allocations(||drop(cursor)).1,(0,0));drain(source);result?;Ok((wire,turns))
 }

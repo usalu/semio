@@ -220,7 +220,6 @@ fn original_surface_read_resumes_across_genuine_actor_epochs_and_refuses_another
   let restored=pointers(selected(&registry,selected_surface).unwrap())==source_pointers&&selected(&registry,selected_surface).unwrap()as*const ViewModel as usize==source_address;
   actor.close_registry(&mut rig,&mut registry);actor.close_value(&mut rig,original);actor.finish(&mut rig);
   rig.finish();
-  println!("[DEBUG] actual actor view pin job aliases returned while pinned: {}",job_aliases_while_pinned);
   assert!(matched,"same genuine caller, decoder, clock and original view survive every issued epoch");
   assert_eq!(borrowed,case["expected"]["borrowed"].as_u64().unwrap());assert_eq!(usize::from(refused),case["expected"]["refused"].as_u64().unwrap()as usize);assert_eq!(restored,case["expected"]["restored"].as_bool().unwrap());
  }

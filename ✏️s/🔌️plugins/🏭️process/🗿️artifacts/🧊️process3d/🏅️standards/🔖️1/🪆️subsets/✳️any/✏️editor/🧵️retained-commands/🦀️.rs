@@ -12,7 +12,7 @@ use semio_s_artifact_process_process3d_kit::Process3dInteractionSnapshot;
 /// twenty-two ids that used to sit in a batch-only pending-rewrite list (the whole step timeline, the
 /// stock, the workshop, the cursor, the engagement line, the world pointer and both media round-trips)
 /// could not be invoked from the browser at all.
-const PROCESS3D_BOUNDED_TOOL_IDS: &[&str] = &[
+pub(crate) const PROCESS3D_BOUNDED_TOOL_IDS: &[&str] = &[
     "engagementAbort",
     "setCamera",
     "loadModelRequest",
@@ -39,11 +39,11 @@ const PROCESS3D_BOUNDED_TOOL_IDS: &[&str] = &[
     "stepCursorBack",
     "stepCursorForward",
 ];
-const PROCESS3D_RESUMABLE_TOOL_IDS: &[&str] = &["engagementInput", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setContributions"];
+pub(crate) const PROCESS3D_RESUMABLE_TOOL_IDS: &[&str] = &["engagementInput", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setContributions"];
 const PROCESS3D_RETAINED_PAYLOAD_SCHEMA: &str = "process.3d.tool-command.v1";
 pub(super) const PROCESS3D_RETAINED_RAW_BYTES: usize = 8_192;
-const PROCESS3D_RETAINED_WORK_ITEMS: usize = 64;
-const PROCESS3D_SCAN_BYTES: usize = 256;
+pub(crate) const PROCESS3D_RETAINED_WORK_ITEMS: usize = 64;
+pub(crate) const PROCESS3D_SCAN_BYTES: usize = 256;
 /// 📏️ Everything the retained config holds APART from the contributions pack — engagement text and
 /// the sun colour. Unchanged; the contributions lane is priced separately below.
 const PROCESS3D_CONFIG_FILTER_STORE_BYTES: usize = 16_384;
@@ -99,7 +99,7 @@ pub(super) fn process3d_command_disposition(tool_id: &str) -> Option<Process3dCo
     PROCESS3D_RESUMABLE_TOOL_IDS.contains(&tool_id).then_some(Process3dCommandDisposition::Config)
 }
 
-fn process3d_bounded_contract() -> ToolExecutionContract {
+pub(crate) fn process3d_bounded_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(PROCESS3D_RETAINED_RAW_BYTES, PROCESS3D_RETAINED_WORK_ITEMS, 1, 16_384, 7_500)
 }
 
@@ -143,7 +143,7 @@ pub(super) fn process3d_retained_reduce(
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
     let cfg = ConfigView { snapshot: config, window: None };
     let selection = interaction.selection.get(PROCESS3D_INTERACTION_DOMAIN);
-    let mut ctx = Process3dDispatchCtx { interaction: Process3dInteractionSnapshot { ids: selection.map(|selection| selection.ids.clone()).unwrap_or_default() }, view_state: context.and_then(|context| context.view_state.clone()) };
+    let mut ctx = Process3dDispatchCtx { interaction: Process3dInteractionSnapshot { ids: selection.map(|selection| selection.ids.clone()).unwrap_or_default() }, view_state: context.and_then(|context| context.view_state.as_deref().cloned()) };
     command.dispatch(&doc, &cfg, &mut ctx)
 }
 
@@ -403,3 +403,5 @@ impl ArtifactOwnedToolJobFactory for Process3dResumableCommandJobFactory {
     ];
 }
 //#endregion 🧵️RetainedCommands
+
+semio_plugin::retained_command::terminal_frame_bound!(Process3dResumableCommandWork);

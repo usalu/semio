@@ -180,7 +180,7 @@ fn rejected_child_preparation_remains_owned_until_bounded_flow_work_close(){
             match crate::self_funded_close(grant, |cx| work.close_step(cx)).expect("original fixture close turn"){
                 InteractiveJobCloseStep::Pending{progress}=>assert!(progress.fits(grant)),
                 InteractiveJobCloseStep::Complete{progress}=>{assert!(progress.fits(grant));assert!(work.terminal_is_empty());terminal=true;break;},
-                other=>panic!("[DEBUG] actual child owner did not close: {other:?}"),
+                other=>panic!("actual child owner did not close: {other:?}"),
             }
         }
         assert!(terminal);work.closing=false;work.completed=false;

@@ -74,7 +74,8 @@ impl GumballSelectionWork{
  pub fn step(&mut self,ids:&[String],cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(ids)?;if !self.original.matches(cx){return Err(invalid().into())}cx.original_source_parent()?.validate_borrowed_context(cx)?;if self.ready(){return Ok(true)}if cx.should_yield()||cx.is_cancelled(){return Ok(false)}
   let d=self.next_demands(ids,cx.retained_grant().maximum_copy_bytes)?;let mut accepted=None;
-  admit_original_construction(cx,&mut accepted,OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth},|g|{let turn=self.advance(ids,g);RetainedWorkOutcome{result:turn.result.map(|_|((),self.progress)),work:turn.work}})?;Ok(self.ready())
+  let grant=cx.retained_grant();
+  admit_original_construction(cx,&mut accepted,OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth},|_|{let g=grant;let turn=self.advance(ids,g);RetainedWorkOutcome{result:turn.result.map(|_|((),self.progress)),work:turn.work}})?;Ok(self.ready())
  }
  fn advance(&mut self,ids:&[String],g:RetainedCloneGrant)->RetainedWorkOutcome<bool>{
   self.progress=Default::default();self.work=0;let result=self.advance_inner(ids,g).map_err(|error|error.with_retained_progress(self.progress));RetainedWorkOutcome{result,work:self.work}

@@ -145,7 +145,7 @@ impl crate::tool_contract::ArtifactReservedWork<EditorApp<SurfaceEditorFixture>>
             if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return semio_framework_job::InteractiveJobStep::from_callback(Ok(None))}
             assert!(request.source_binding.matches(cx));assert!(!request.controller_id.is_empty()&&!request.tool_id.is_empty()&&!request.payload_schema_id.is_empty()&&!request.parent_document_id.is_empty()&&!request.authoring_seed.is_empty());
             self.input=request.input.take();assert!(self.input.is_some());self.consumed=true;cx.consume_fuel(1);
-            cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}).map(|_|None)
+            cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}).map(|_|None).map_err(Into::into)
         };
         semio_framework_job::InteractiveJobStep::from_callback(result)
     }

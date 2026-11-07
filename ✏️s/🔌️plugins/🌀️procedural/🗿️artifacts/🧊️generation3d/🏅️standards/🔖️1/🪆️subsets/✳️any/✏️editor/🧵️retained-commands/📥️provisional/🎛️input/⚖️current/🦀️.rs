@@ -89,7 +89,7 @@ impl ProvisionalInputComparison{
   self.binding=Some((CurrentIdentity::capture(current),InputIdentity::capture(input)));
   if let Some(close)=self.fields.close.as_mut(){
    if close.terminal_is_empty(){self.fields.close=None;self.phase=self.after;self.work=1;self.progress.copied_items=1}
-   else{let result=close.step(grant);self.work=close.last_turn_work();self.progress=close.step_progress();result?}return Ok(false)
+   else{let result=close.step(grant);self.work=close.last_turn_work();self.progress=close.step_progress();result?;}return Ok(false)
   }
   self.work=1;self.progress=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};
   match self.phase{
@@ -180,7 +180,7 @@ impl ProvisionalInputComparison{
  fn close_original(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   if !self.closing{return Err(invalid())}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
   if !retained_clone_grant_admits(grant,self.next_close_demands(grant.maximum_copy_bytes)?){return Ok(RetainedCloneStep::Progress(Default::default()))}
-  if let Some(close)=self.fields.close.as_mut(){if close.terminal_is_empty(){self.fields.close=None;self.work=1;self.progress.copied_items=1}else{let result=close.step(grant);self.work=close.last_turn_work();self.progress=close.step_progress();result?}}
+  if let Some(close)=self.fields.close.as_mut(){if close.terminal_is_empty(){self.fields.close=None;self.work=1;self.progress.copied_items=1}else{let result=close.step(grant);self.work=close.last_turn_work();self.progress=close.step_progress();result?;}}
   else{let cursor=self.fields.probe.take().or_else(||self.fields.part.take()).or_else(||self.fields.item.take()).ok_or_else(invalid)?;self.fields.close=Some(ControlledRetirement::new(cursor).unwrap_or_else(|_|unreachable!("original neural lookup declares controlled retirement")));self.work=1;self.progress.copied_items=1}
   Ok(RetainedCloneStep::Progress(self.progress))
  }

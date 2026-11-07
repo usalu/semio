@@ -1,10 +1,12 @@
+#[global_allocator]
+static HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;
 #[path = "../🧰️support/🦀️.rs"]
 mod context;
 
 use semio_s_artifact_process_process3d_editor::*;
-use semio_s_artifact_process_process3d_kit::builtin_installed_catalogs;
+use semio_s_artifact_process_process3d_kit::{axis_angle_from_up_to, builtin_installed_catalogs, catalog_machine, installable_contributions, installed_catalogs, process_json_envelope_is_bounded, PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES, PROCESS3D_EXAMPLE_CONCRETE_FOREST, PROCESS3D_EXAMPLE_PLATE, PROCESS3D_EXAMPLE_TIMBER, PROCESS_3D_PLAY_APP_ID, PROCESS_CONTRIBUTION_MAX_BYTES, PROCESS_CONTRIBUTION_MAX_DEPTH, PROCESS_CONTRIBUTION_MAX_ITEMS, PROCESS_CONTRIBUTION_MAX_STRING_BYTES};
 use semio_s_artifact_process_process3d_commands::{camera, contribution, cursor, document, engagement, inspector, media, step, stock, sun, workshop, world};
 use semio_s_artifact_process_process3d_config::{Process3dConfig, Process3dConfigMutation, PROCESS3D_DEFAULT_UTILITY, Process3dConfigSetCamera, Process3dConfigSetContributions, Process3dConfigSetCursor, Process3dConfigSetEngagementInput, Process3dConfigSetSun};
 use semio_s_artifact_process_process3d_modes;
@@ -80,7 +82,7 @@ use stock::set_stock;
 use sun::{set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
 use workshop::{add_workshop_machine, remove_workshop_machine, update_workshop_machine};
 use world::{world_face_drag_end, world_pointer_down};
-use crate::{context::action, context::app, context::app_with_registry, context::dispatch, context::dispatch_with_utility, context::main_window_measures, context::main_window_view, context::process3d_app_manifest_for_tests, context::published_a_document_mutation, context::render as render_body, context::settled_dispatch, context::settled_dispatch_with_utility};
+use self::{context::action, context::app, context::app_with_registry, context::dispatch, context::dispatch_with_utility, context::main_window_measures, context::main_window_view, context::process3d_app_manifest_for_tests, context::published_a_document_mutation, context::render as render_body, context::settled_dispatch, context::settled_dispatch_with_utility};
 use semio_plugin::{artifact_app_laws, ContextMenuRequest, ContextMenuSurfaceTarget, EditorApp, HistoryView, PluginApp, UiMenuRef, SET_ACTIVE_UTILITY_ACTION_ID};
 
 #[path = "🏭️production-envelope/🦀️.rs"]

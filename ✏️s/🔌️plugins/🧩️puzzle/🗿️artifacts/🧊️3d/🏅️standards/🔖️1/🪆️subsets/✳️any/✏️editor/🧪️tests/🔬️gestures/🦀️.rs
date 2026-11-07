@@ -1,6 +1,7 @@
 //! 🖐️ Puzzle3d editor gesture laws — example switching, mutation latency, gesture kinds, selection scale, the transform tool machine and the demo session asset.
 
 #![allow(clippy::result_large_err)]
+#![recursion_limit = "512"]
 
 include!("../🧰️prelude/🦀️.rs");
 

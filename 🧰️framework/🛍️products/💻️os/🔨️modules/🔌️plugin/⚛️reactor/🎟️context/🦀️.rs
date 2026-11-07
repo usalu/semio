@@ -11,6 +11,9 @@ pub mod original_failure_frame;
 
 use semio_framework_actor::retained_context::{OriginalActorAdmissionReply, OriginalActorCall, OriginalActorCloseReply};
 
+#[path="🎟️admitted-input/🦀️.rs"]
+pub mod admitted_input;
+
 #[cfg(all(target_arch="wasm32",target_env="p2"))]
 #[path="🌉️call/🎭️exports/🦀️.rs"]
 pub mod exports;

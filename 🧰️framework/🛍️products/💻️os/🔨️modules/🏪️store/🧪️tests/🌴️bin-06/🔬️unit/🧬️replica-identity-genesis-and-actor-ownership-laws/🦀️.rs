@@ -187,7 +187,10 @@ fn stored_genesis_capture_is_bounded_and_cancellable() {
             let mut original_retained_progress_11=semio_framework_value::RetainedCloneProgress::default();
         let mut stale = semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(2), semio_framework_job::StepBudget::new(fuel, u64::MAX, schema_test_close_grant()), cancel.clone(), semio_framework_job::default_now_us, &mut sequence, &mut original_retained_progress_11);
             let before = capture.bytes.len();
-            assert!(capture.step(&cursor, &mut stale).is_err());
+            capture.replacement = Some(semio_framework_job::ReplacementIdentity::new(1, semio_framework_job::OperationId(1), semio_framework_job::Generation(1)));
+            let advanced = semio_framework_job::ReplacementIdentity::new(1, semio_framework_job::OperationId(1), semio_framework_job::Generation(2));
+            assert!(stale.with_replacement_current(advanced, |stale| capture.step(&cursor, stale)).is_err());
+            capture.replacement = None;
             drop(stale);
             assert_eq!(capture.bytes.len(), before);
             cancel.cancel_now();

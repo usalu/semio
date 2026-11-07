@@ -73,19 +73,19 @@ fn native_retirement_encoding_receiver_keeps_one_original_ledger_and_hop(){
   assert_eq!(loan.ledger_identity(),ledger);assert_eq!(loan.retirement_recipient_identity(),identity);loan.charge(2)?;
   let(result,heap)=observe(||loan.with_encoding_receiver(|maximum,observer,allocation|{
    assert_eq!(maximum,6);let mut encoder=crate::native_encoding::NativeEncodeControl::new_forwarded(maximum,observer,allocation);encoder.copy_text("abc")
-  }));assert_eq!(heap,(3,0));outputs.push(result?);assert_eq!(loan.spent,5);
+  }));assert_eq!(heap,(3,0));outputs.push(result?);assert_eq!(loan.spent_bytes(),5);
   let(result,heap)=observe(||loan.with_encoding_receiver::<(),ValueError>(|maximum,observer,allocation|{
    assert_eq!(maximum,3);let mut encoder=crate::native_encoding::NativeEncodeControl::new_forwarded(maximum,observer,allocation);partial=Some(encoder.copy_text("xy")?);Err(ValueError::literal(ValueRefusalKind::InvalidValue,"retained encoding refusal"))
-  }));assert_eq!(heap,(2,0));assert_eq!(result.unwrap_err().kind,ValueRefusalKind::InvalidValue);assert_eq!(loan.spent,7);
+  }));assert_eq!(heap,(2,0));assert_eq!(result.unwrap_err().kind,ValueRefusalKind::InvalidValue);assert_eq!(loan.spent_bytes(),7);
   let panic=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||{
    let _=loan.with_encoding_receiver::<(),ValueError>(|maximum,observer,allocation|{
     assert_eq!(maximum,1);let mut encoder=crate::native_encoding::NativeEncodeControl::new_forwarded(maximum,observer,allocation);unwound=Some(encoder.copy_text("z")?);panic!("retirement encoding unwind");
    });
-  }));assert!(panic.is_err());assert_eq!(loan.spent,8);assert_eq!(loan.owned_bytes(),40);
+  }));assert!(panic.is_err());assert_eq!(loan.spent_bytes(),8);assert_eq!(loan.owned_bytes(),40);
   let before=calls.get();assert_eq!(loan.charge(1).unwrap_err().kind,ValueRefusalKind::OwnershipLimit);assert_eq!(calls.get(),before);
   let(result,heap)=observe(||loan.with_encoding_receiver(|maximum,observer,allocation|{
    assert_eq!(maximum,0);let mut encoder=crate::native_encoding::NativeEncodeControl::new_forwarded(maximum,observer,allocation);encoder.copy_text("denied")
-  }));assert_eq!(heap,(0,0));assert_eq!(result.unwrap_err().kind,ValueRefusalKind::OwnershipLimit);assert_eq!(loan.spent,8);Ok(())
+  }));assert_eq!(heap,(0,0));assert_eq!(result.unwrap_err().kind,ValueRefusalKind::OwnershipLimit);assert_eq!(loan.spent_bytes(),8);Ok(())
  }).unwrap();
  assert!(calls.get()>0);assert_eq!(owner.owned_bytes(),40);
  let mut refused=|_:NativeDecodeProgress|false;let before=owner.owned_bytes();let(result,heap)=observe(||owner.retire(grant(RetirementDemand{capacity_bytes:4,depth:1,..Default::default()}),&mut refused,|loan|loan.with_encoding_receiver(|maximum,observer,allocation|{

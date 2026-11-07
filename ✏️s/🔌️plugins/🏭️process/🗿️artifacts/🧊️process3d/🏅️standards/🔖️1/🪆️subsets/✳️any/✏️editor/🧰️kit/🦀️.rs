@@ -54,7 +54,7 @@ pub struct Process3dDispatchCtx {
 }
 impl Process3dDispatchCtx {
     pub fn view_state(&self) -> Result<&semio_framework_plugin::ViewModel, Fault> {
-        self.view_state.as_deref().ok_or_else(|| Fault::from("process3d command requires host view context"))
+        self.view_state.as_ref().ok_or_else(|| Fault::from("process3d command requires host view context"))
     }
 
     pub fn active_utility(&self) -> Result<&str, Fault> {
@@ -193,7 +193,7 @@ pub const PROCESS_CONTRIBUTION_MAX_ITEMS: usize = 4 * 1024;
 /// wood catalog — `contributed_machine_catalogs` returned nothing and the workshop showed built-ins
 /// only, whatever the host pushed.
 pub const PROCESS_CONTRIBUTION_MAX_STRING_BYTES: usize = 16 * 1024;
-fn process_json_envelope_is_bounded(input: &str) -> bool {
+pub fn process_json_envelope_is_bounded(input: &str) -> bool {
     if input.len() > PROCESS_CONTRIBUTION_MAX_BYTES {
         return false;
     }

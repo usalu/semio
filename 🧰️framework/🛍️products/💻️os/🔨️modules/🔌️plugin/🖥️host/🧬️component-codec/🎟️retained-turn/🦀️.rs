@@ -28,6 +28,50 @@ pub fn input_admission_from_wit(call:wit_reactor::ActorInputAdmissionCall)->Resu
 pub fn close_from_wit(call:wit_reactor::ActorContextCloseCall)->Result<semio_framework_actor::retained_context::OriginalActorCloseReply,TurnFault>{Ok(semio_framework_actor::retained_context::OriginalActorCloseReply{input:input_from_wit(call.input)?,spent:progress_from_wit(call.spent)?,work_units_spent:call.work_units_spent,complete:call.complete,blocked:call.blocked,refusal:call.refusal.map(cause_from_wit)})}
 /// 🧾️ Semantic failure is a scalar marker while the same typed Fault remains in guest custody.
 pub fn failure_from_wit(call:wit_reactor::ActorCallRefusal)->TurnFault{let original=(||Ok::<_,TurnFault>(semio_plugin_guest_contract::original_actor_context::OriginalActorFixedCall{input:input_from_wit(call.input)?,spent:progress_from_wit(call.spent)?,work_units_spent:call.work_units_spent,kind:semio_plugin_guest_contract::original_actor_context::OriginalActorFixedKind::Failure{authority:match call.failure{wit_reactor::ActorCallFailure::Authority(cause)=>Some(cause_from_wit(cause)),wit_reactor::ActorCallFailure::Semantic=>None}}}))();match original{Ok(call)=>TurnFault::ActorCall(call),Err(error)=>error}}
+/// 🎚️ One `actor-context-budget` crossing for a retained turn: the issued input, its policy, the funded work and the absolute deadline.
+pub fn context_budget(input:RetainedTurnInput,policy:RetainedCloneGrant,fuel:u64,deadline_us:u64)->wit_reactor::ActorContextBudget{wit_reactor::ActorContextBudget{input:input_to_wit(input),retained_policy:grant_to_wit(policy),fuel,deadline_us,cancelled:false}}
+/// 🏭️ The budget of a pure guest call (describe, checkpoint, restore, codec): its own self-issued operation, since those calls spend no kernel-issued retained turn.
+pub fn self_issued_context_budget(deadline_us:u64)->wit_reactor::ActorContextBudget{let grant=RetainedCloneGrant{maximum_items:1<<20,maximum_copy_bytes:64<<20,maximum_capacity_bytes:64<<20,maximum_release_bytes:64<<20,maximum_depth:64};let fuel=1u64<<24;context_budget(RetainedTurnInput{operation:1,generation:1,epoch:1,work:semio_framework_actor::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:deadline_us,fuel},grant},grant,fuel,deadline_us)}
+/// 🎟️ Encodes one actor input as the pack wire `reactor.admit-actor-input` admits.
+pub fn wire_bytes(wire:&semio_plugin_guest_contract::actor_input_wire::ActorInputWire)->Result<Vec<u8>,TurnFault>{Ok(wire.encode())}
+/// ✅️ A wire is admitted only when the guest retained it without refusal.
+pub fn input_admitted(call:&wit_reactor::ActorInputAdmissionCall)->Result<(),TurnFault>{if call.refusal.is_some()||!call.ready||matches!(call.disposition,wit_reactor::ActorInputDisposition::Returned){return Err(fault("the guest refused the admitted actor input"))}Ok(())}
+fn wire_surface(surface:&crate::wit_ui::SurfaceRef)->serde_json::Value{serde_json::json!({"instance":surface.instance,"surface":surface.surface})}
+fn wire_lifetime(lifetime:&crate::wit_lifetime::Lifetime)->serde_json::Value{serde_json::json!({"activationGeneration":lifetime.activation_generation,"instanceId":lifetime.instance_id,"guestLifetime":lifetime.guest_lifetime})}
+fn wire_patch_receipt(receipt:&crate::wit_lifetime::UiPatchReceipt)->serde_json::Value{serde_json::json!({"lifetime":wire_lifetime(&receipt.lifetime),"patchSequence":receipt.patch_sequence})}
+fn wire_endpoint(endpoint:&crate::wit_types::MessageEndpoint)->serde_json::Value{use crate::wit_types::MessageEndpoint as E;match endpoint{E::Shell(id)=>serde_json::json!({"tag":"shell","val":id}),E::Backbone(uri)=>serde_json::json!({"tag":"backbone","val":uri}),E::PluginInstance(id)=>serde_json::json!({"tag":"plugin-instance","val":id}),E::Extension(id)=>serde_json::json!({"tag":"extension","val":id}),E::Topic(name)=>serde_json::json!({"tag":"topic","val":name})}}
+fn wire_completion(result:&crate::wit_events::CompletionResult)->serde_json::Value{match result{crate::wit_events::CompletionResult::Ok(bytes)=>serde_json::json!({"tag":"ok","val":bytes}),crate::wit_events::CompletionResult::Fault(bytes)=>serde_json::json!({"tag":"fault","val":bytes})}}
+fn wire_grant(grant:&crate::wit_capabilities::CapabilityGrant)->serde_json::Value{serde_json::json!({"token":{"id":grant.token.id,"token":grant.token.token},"scope":grant.scope,"expiresMs":grant.expires_ms})}
+fn wire_activation(reason:&crate::wit_events::ActivationEvent)->serde_json::Value{use crate::wit_events::ActivationEvent as A;match reason{A::OnCommand(id)=>serde_json::json!({"tag":"on-command","val":id}),A::OnViewVisible(id)=>serde_json::json!({"tag":"on-view-visible","val":id}),A::OnFileType(ext)=>serde_json::json!({"tag":"on-file-type","val":ext}),A::OnArtifactKind(kind)=>serde_json::json!({"tag":"on-artifact-kind","val":kind}),A::OnExtensionRequest(point)=>serde_json::json!({"tag":"on-extension-request","val":point}),A::OnStartupFinished=>serde_json::json!({"tag":"on-startup-finished"})}}
+fn wire_capability_change(change:&crate::wit_capabilities::CapabilityChange)->serde_json::Value{use crate::wit_capabilities::CapabilityChange as C;match change{C::Granted(grant)=>serde_json::json!({"tag":"granted","val":wire_grant(grant)}),C::Revoked(id)=>serde_json::json!({"tag":"revoked","val":id}),C::Narrowed(grant)=>serde_json::json!({"tag":"narrowed","val":wire_grant(grant)})}}
+/// 🎟️ The lowered form of one WIT `event` (`{ tag, val }`, camelCase fields) that the guest lifts back into its generated type.
+pub fn event_to_wire(event:&wit_reactor::Event)->serde_json::Value{
+ use wit_reactor::Event as W;
+ match event{
+  W::InstanceOpen(open)=>serde_json::json!({"tag":"instance-open","val":{"instance":open.instance,"activationGeneration":open.activation_generation,"requestSequence":open.request_sequence,"appId":open.app_id,"actor":open.actor,"config":open.config,"assets":open.assets.iter().map(|(name,bytes)|serde_json::json!([name,bytes])).collect::<Vec<_>>(),"capabilities":open.capabilities.iter().map(wire_grant).collect::<Vec<_>>(),"quotas":open.quotas}}),
+  W::InstanceClose(close)=>serde_json::json!({"tag":"instance-close","val":{"lifetime":wire_lifetime(&close.lifetime),"requestSequence":close.request_sequence}}),
+  W::InstanceLifecycleAck(receipt)=>{use crate::wit_lifetime::Receipt as R;let (tag,lifetime,request_sequence,close_generation)=match receipt{R::Captured(value)=>("captured",&value.lifetime,value.request_sequence,None),R::Accepted(value)=>("accepted",&value.lifetime,value.request_sequence,Some(value.close_generation)),R::Retired(value)=>("retired",&value.lifetime,value.request_sequence,Some(value.close_generation))};serde_json::json!({"tag":"instance-lifecycle-ack","val":{"tag":tag,"val":{"lifetime":wire_lifetime(lifetime),"requestSequence":request_sequence,"closeGeneration":close_generation}}})}
+  W::Activate(activate)=>serde_json::json!({"tag":"activate","val":{"instance":activate.instance,"reason":wire_activation(&activate.reason)}}),
+  W::SuspendRequest(suspend)=>serde_json::json!({"tag":"suspend-request","val":{"instance":suspend.instance}}),
+  W::CapabilityChanged(changed)=>serde_json::json!({"tag":"capability-changed","val":{"instance":changed.instance,"change":wire_capability_change(&changed.change)}}),
+  W::QuotaChanged(changed)=>serde_json::json!({"tag":"quota-changed","val":{"instance":changed.instance,"quotas":changed.quotas}}),
+  W::UiIntent(intent)=>serde_json::json!({"tag":"ui-intent","val":{"instance":intent.instance,"intent":intent.intent}}),
+  W::SurfaceVisible(visible)=>serde_json::json!({"tag":"surface-visible","val":{"surface":wire_surface(&visible.surface),"bodyKey":visible.body_key,"viewState":visible.view_state}}),
+  W::StagedFormRequested(staged)=>serde_json::json!({"tag":"staged-form-requested","val":{"instance":staged.instance,"surface":staged.surface,"bodyKey":staged.body_key,"request":staged.request}}),
+  W::SurfaceHidden(hidden)=>serde_json::json!({"tag":"surface-hidden","val":{"surface":wire_surface(&hidden.surface)}}),
+  W::SurfaceResized(resized)=>serde_json::json!({"tag":"surface-resized","val":{"surface":wire_surface(&resized.surface),"width":resized.width,"height":resized.height}}),
+  W::PatchAck(ack)=>serde_json::json!({"tag":"patch-ack","val":{"receipt":wire_patch_receipt(&ack.receipt),"surface":wire_surface(&ack.surface),"revision":ack.revision}}),
+  W::PatchRejected(rejected)=>serde_json::json!({"tag":"patch-rejected","val":{"receipt":wire_patch_receipt(&rejected.receipt),"surface":wire_surface(&rejected.surface),"revision":rejected.revision,"reason":rejected.reason}}),
+  W::Completed(completed)=>serde_json::json!({"tag":"completed","val":{"req":completed.req,"outcome":wire_completion(&completed.outcome)}}),
+  W::HttpChunk(chunk)=>serde_json::json!({"tag":"http-chunk","val":{"req":chunk.req,"params":{"bytes":chunk.params.bytes,"done":chunk.params.done}}}),
+  W::JobProgress(progress)=>serde_json::json!({"tag":"job-progress","val":{"job":progress.job,"progress":progress.progress}}),
+  W::JobCompleted(completed)=>serde_json::json!({"tag":"job-completed","val":{"job":completed.job,"outcome":wire_completion(&completed.outcome)}}),
+  W::Message(message)=>serde_json::json!({"tag":"message","val":{"source":wire_endpoint(&message.source),"payload":message.payload}}),
+  W::Timer(timer)=>serde_json::json!({"tag":"timer","val":{"id":timer.id}}),
+  W::Wake=>serde_json::json!({"tag":"wake"}),
+  W::Request(request)=>serde_json::json!({"tag":"request","val":{"req":request.req,"params":{"origin":wire_endpoint(&request.params.origin),"capability":request.params.capability,"payload":request.params.payload}}}),
+ }
+}
 #[cfg(test)]
 mod input_tests{
  use super::*;

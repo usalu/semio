@@ -7,7 +7,7 @@ use std::sync::{Arc, Mutex};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_plugin_guest_contract::{IoEntryRouteConflict, IoRouteConflict, PluginHostError};
-use semio_plugin_host_post_turn_relay::PluginInstanceHandle;
+use semio_plugin_host_post_turn_relay::{GuestRelayWakeAuthority, PluginInstanceHandle};
 use semio_framework::PluginManifest;
 
 #[path = "🚪️io-router/🦀️.rs"]

@@ -60,12 +60,32 @@ fn orderings(items: &[usize]) -> Vec<Vec<usize>> {
 /// representative in this artifact's vocabulary at all (`📓️derivation-rules.md` rule 6), exactly as
 /// in `📐️cad`'s `reset_document_effect` and `🔱️trinity`'s. A freshly minted envelope has no edits,
 /// so its spr encode is infallible.
-fn load_document_effect(model: &crate::model::Model) -> semio_plugin::kernel::Effect {
-    let snapshot = EnergyModelSnapshot::from_model(model).expect("a registered engine model is an admissible native document");
+fn load_document_effect(model: &crate::model::Model) -> Result<semio_plugin::kernel::Effect, Fault> {
+    let refused = |error: semio_framework_value::ValueError| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), error.message.to_string());
+    let snapshot = EnergyModelSnapshot::from_model(model).map_err(refused)?;
     let pack = <EnergyModelSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot);
-    let envelope = store::os_store::document_materialize::create_document_envelope::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA, "model", snapshot, None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).into_owners();
-    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::print_document_spr(&envelope)).expect("energy model document spr encode is infallible for a fresh, edit-free envelope");
-    semio_plugin::kernel::Effect::LoadDocument { pack, spr }
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("model", ENERGY_MODEL_DOCUMENT_SCHEMA));
+    retire_temporary(snapshot).map_err(refused)?;
+    Ok(semio_plugin::kernel::Effect::LoadDocument { pack, spr })
+}
+
+/// ♻️ Retires a temporary native owner under its own quote to the terminal-empty witness, so a sealed share is never dropped without its paid handback; a refused retirement leaks the owner instead of panicking.
+fn retire_temporary<T: semio_framework_value::retirement::RetireOwned>(value: T) -> Result<(), semio_framework_value::ValueError> {
+    use semio_framework_value::{retained_clone::{RetainedCloneGrant, RetainedCloneProgress}, retirement::admit_owned_retirement, RetirementDemand};
+    const BODY_BYTES: usize = 4096;
+    let grant = |demand: RetirementDemand| RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(BODY_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+    let birth = grant(RetirementDemand { capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<T>(), ..Default::default() });
+    let (mut owner, _) = admit_owned_retirement(value, birth).result.map_err(|(error, value)| { std::mem::forget(value); error })?;
+    let mut idle = 0;
+    while !owner.terminal_is_empty() {
+        let demand = owner.next_demand(BODY_BYTES)?;
+        let progress = owner.close_step(grant(demand)).result?.progress();
+        idle = if progress == RetainedCloneProgress::default() { idle + 1 } else { 0 };
+        if idle > 4 {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "temporary document retirement stalled under its own quote"));
+        }
+    }
+    Ok(())
 }
 
 /// 🆔️ Mints the next free `EntityId` for a collection addressed by its own ids — `max + 1`, so an
@@ -254,7 +274,7 @@ fn reduce_rows(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, Energy
         }
         EnergyModelEditorCommand::SetActiveExample { example_id } => {
             let loaded = example_model(example_id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("mutation.target-missing"), format!("this artifact bundles no example {example_id:?}")))?;
-            return Ok(Emit { effects: vec![load_document_effect(&loaded)], ..Default::default() });
+            return Ok(Emit { effects: vec![load_document_effect(&loaded)?], ..Default::default() });
         }
         EnergyModelEditorCommand::SetSimulationSettings { zone_timestep_minutes, system_timestep_minutes, warmup_days } => {
             let settings = ChangeSimulationSettings { zone_timestep_minutes: *zone_timestep_minutes, system_timestep_minutes: *system_timestep_minutes, warmup_days: *warmup_days };

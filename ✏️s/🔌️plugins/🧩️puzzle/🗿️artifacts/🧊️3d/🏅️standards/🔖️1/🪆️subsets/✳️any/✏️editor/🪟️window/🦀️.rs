@@ -2,10 +2,10 @@
 
 #![allow(clippy::result_large_err)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as vcs;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as vcs;
 extern crate semio_framework_value_derive as value_derive;
 
 use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dCamera;
@@ -17,14 +17,14 @@ use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dRuntime;
 use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dSelectableKinds;
 
 use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dSuggestionMenu;
-use semio_framework_plugin::WorldSunConfig;
+use semio_plugin::WorldSunConfig;
 
 /// 🎚️ ONE exact Puzzle 3D window instance's persisted-local options. `WindowConfigOwner::State`
 /// requires `dsl::DslField`, which `#[derive(dsl::DslArtifact)]` emits alongside the `__dsl_*`
 /// helpers `ArtifactDsl`/`ArtifactPack` below are written against; `id`/`extension` are stated
 /// explicitly so the derived `__DSL_ENVELOPE_ID`/`__DSL_EXTENSION` reproduce the envelope identity
 /// this window kind already carried.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.puzzle.puzzle3d.windowconfig", extension = "puzzle3dwindowcfg")]
@@ -98,7 +98,7 @@ pub enum Puzzle3dWindowConfigMutation {
     Set(Puzzle3dWindowConfigMutationSet),
 }
 
-impl semio_framework_plugin::WindowConfigApplyMutation<Puzzle3dWindowConfig> for Puzzle3dWindowConfigMutation {
+impl semio_plugin::WindowConfigApplyMutation<Puzzle3dWindowConfig> for Puzzle3dWindowConfigMutation {
     fn exchange(self, post: &mut Puzzle3dWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
         let Self::Set(Puzzle3dWindowConfigMutationSet { mut patch }) = self;
         if let Some(value) = patch.lod_automatic.as_mut() {
@@ -214,7 +214,7 @@ pub struct Puzzle3dWindowTransient {
 /// 🏛️ The host activation this window is under: the mode-wide active tool wins, then the window's own
 /// active utility (`ViewModel::for_window_instance` stamps `active_utility_id` from the per-window
 /// map), else nothing. The two are mutually exclusive by the shell's own rule.
-pub fn host_activation(view: Option<&semio_framework_plugin::ViewModel>) -> String {
+pub fn host_activation(view: Option<&semio_plugin::ViewModel>) -> String {
     view.and_then(|view| view.active_tool_id.clone().or_else(|| view.active_utility_id.clone())).unwrap_or_default()
 }
 
@@ -257,8 +257,8 @@ macro_rules! json_store {
             fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> { semio_framework_value::ToValue::to_value(self).encode_pack_with(options) }
             fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> { let value = semio_framework_value::DslValue::decode_pack_with(bytes, options)?; semio_framework_value::FromValue::from_value(value).map_err(|error| store::PackError::from(error)) }
         }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $state {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $state {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -317,8 +317,8 @@ impl pack::snapshot::ArtifactPack for Puzzle3dWindowConfig {
     }
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> { Some(Self::__dsl_spec()) }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Puzzle3dWindowConfig {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Puzzle3dWindowConfig {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -622,32 +622,32 @@ fn puzzle3d_window_transient_transfer(mutation: Puzzle3dWindowTransientMutation)
 }
 
 pub struct Puzzle3dWindowConfigOwner;
-impl semio_framework_plugin::WindowConfigOwner for Puzzle3dWindowConfigOwner {
+impl semio_plugin::WindowConfigOwner for Puzzle3dWindowConfigOwner {
     const WINDOW_KIND_ID: &'static str = semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID;
     const SCHEMA: &'static str = "puzzle.3dwindowconfig";
     const MAXIMUM_PUBLICATION_BYTES: usize = 65_536;
     type State = Puzzle3dWindowConfig;
     type Mutation = Puzzle3dWindowConfigMutation;
-    type Edit = semio_framework_plugin::WindowConfigApplyEdit<Puzzle3dWindowConfig, Puzzle3dWindowConfigMutation>;
+    type Edit = semio_plugin::WindowConfigApplyEdit<Puzzle3dWindowConfig, Puzzle3dWindowConfigMutation>;
     const MAXIMUM_PREPARATION_DEPTH: usize = 64;
     fn initial_state_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:2*std::mem::size_of::<Self::State>(),depth:1,..Default::default()})}
     fn initial_state(grant:semio_framework_value::RetainedCloneGrant)->Result<(Self::State,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>{let d=Self::initial_state_demands()?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original Puzzle 3D window config birth is not funded"))}Ok((Self::State::default(),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
     fn initial_state_pack_source(state:&Self::State)->Result<(&dyn semio_framework_dsl_record::native_encoding::FieldProjectionSource,semio_framework_dsl_record::BorrowedRecordSpec),semio_framework_value::ValueError>{Ok((state,<Self::State as semio_framework_dsl_record::BorrowedDslRecord>::RECORD))}
-    fn build_retained_edit() -> std::sync::Arc<Self::Edit> { std::sync::Arc::new(semio_framework_plugin::WindowConfigApplyEdit::new()) }
-    fn preparation_source_birth()->semio_framework_value::retained_clone::RetainedCloneBirthDemand{semio_framework_plugin::bounded_window_config_preparation_source_birth::<Self>()}
-    fn build_store_owners(grant:semio_framework_value::RetainedCloneGrant)->Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State,Self::Mutation>,semio_framework_value::RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State,Self::Mutation>>{semio_framework_plugin::bounded_window_config_store_owners::<Self>(grant)}
-    fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_preparation_factory::<Self>() }
-    fn store_disposer_birth() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { semio_framework_plugin::bounded_window_config_store_disposer_birth::<Self>() }
-    fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_framework_plugin::bounded_window_config_store_disposer::<Self>() }
+    fn build_retained_edit() -> std::sync::Arc<Self::Edit> { std::sync::Arc::new(semio_plugin::WindowConfigApplyEdit::new()) }
+    fn preparation_source_birth()->semio_framework_value::retained_clone::RetainedCloneBirthDemand{semio_plugin::bounded_window_config_preparation_source_birth::<Self>()}
+    fn build_store_owners(grant:semio_framework_value::RetainedCloneGrant)->Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State,Self::Mutation>,semio_framework_value::RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State,Self::Mutation>>{semio_plugin::bounded_window_config_store_owners::<Self>(grant)}
+    fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_plugin::bounded_window_config_preparation_factory::<Self>() }
+    fn store_disposer_birth() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { semio_plugin::bounded_window_config_store_disposer_birth::<Self>() }
+    fn build_store_disposer() -> Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_plugin::bounded_window_config_store_disposer::<Self>() }
 }
 
 pub struct Puzzle3dWindowTransientOwner;
-impl semio_framework_plugin::WindowTransientOwner for Puzzle3dWindowTransientOwner {
+impl semio_plugin::WindowTransientOwner for Puzzle3dWindowTransientOwner {
     const WINDOW_KIND_ID: &'static str = semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID;
     type State = Puzzle3dWindowTransient;
     type Mutation = Puzzle3dWindowTransientMutation;
-    fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_framework_plugin::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
-    fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
+    fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_plugin::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
+    fn build_owners() -> semio_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
         let state = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::State>::default());
         let mutation = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::Mutation>::default());
         let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(
@@ -656,15 +656,15 @@ impl semio_framework_plugin::WindowTransientOwner for Puzzle3dWindowTransientOwn
             state.clone(),
             mutation.clone(),
         ));
-        semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
+        semio_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
     }
 }
 
-pub fn register_config(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), semio_framework_plugin::Fault> {
+pub fn register_config(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), semio_plugin::Fault> {
     registry.register::<Puzzle3dWindowConfigOwner>()
 }
 
-pub fn register_transient(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), semio_framework_plugin::Fault> {
+pub fn register_transient(registry: &mut semio_plugin::WindowTransientOwnerRegistry) -> Result<(), semio_plugin::Fault> {
     registry.register::<Puzzle3dWindowTransientOwner>()
 }
 
@@ -679,7 +679,7 @@ pub fn live_transient(transient: &Puzzle3dWindowTransient, activation: &str) -> 
     Puzzle3dWindowTransient { activation: activation.to_string(), ..Puzzle3dWindowTransient::default() }
 }
 
-pub fn runtime(shared: &Puzzle3dConfig, window: &Puzzle3dWindowConfig, transient: &Puzzle3dWindowTransient, view: Option<&semio_framework_plugin::ViewModel>) -> Puzzle3dRuntime {
+pub fn runtime(shared: &Puzzle3dConfig, window: &Puzzle3dWindowConfig, transient: &Puzzle3dWindowTransient, view: Option<&semio_plugin::ViewModel>) -> Puzzle3dRuntime {
     let transient = &live_transient(transient, &host_activation(view));
     Puzzle3dRuntime {
         fill_count: shared.fill_count,
@@ -718,30 +718,30 @@ pub fn shared(runtime: &Puzzle3dRuntime) -> Puzzle3dConfig {
 
 /// 🫧️ The scratch this turn wants to retain, stamped with the activation it belongs to — read back by
 /// [`live_transient`] on every later call.
-pub fn transient(runtime: &Puzzle3dRuntime, view: Option<&semio_framework_plugin::ViewModel>) -> Puzzle3dWindowTransient {
+pub fn transient(runtime: &Puzzle3dRuntime, view: Option<&semio_plugin::ViewModel>) -> Puzzle3dWindowTransient {
     Puzzle3dWindowTransient { suggestion_menu: runtime.suggestion_menu.clone(), engagement_input: runtime.engagement_input.clone(), brush_candidate_index: runtime.brush_candidate_index, activation: host_activation(view) }
 }
 
-pub fn config_from_view(view: &semio_framework_plugin::ConfigView<'_, Puzzle3dConfig>) -> Puzzle3dWindowConfig { view.window::<Puzzle3dWindowConfigOwner>().cloned().unwrap_or_default() }
-pub fn config_from_snapshot(snapshot: Option<&semio_framework_plugin::WindowConfigSnapshot>) -> Puzzle3dWindowConfig { snapshot.and_then(|value| value.get::<Puzzle3dWindowConfigOwner>()).cloned().unwrap_or_default() }
-pub fn transient_from_view(view: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>) -> Puzzle3dWindowTransient { view.window::<Puzzle3dWindowTransientOwner>().cloned().unwrap_or_default() }
-pub fn transient_from_snapshot(snapshot: Option<&semio_framework_plugin::WindowTransientSnapshot>) -> Puzzle3dWindowTransient { snapshot.and_then(|value| value.get::<Puzzle3dWindowTransientOwner>()).cloned().unwrap_or_default() }
+pub fn config_from_view(view: &semio_plugin::ConfigView<'_, Puzzle3dConfig>) -> Puzzle3dWindowConfig { view.window::<Puzzle3dWindowConfigOwner>().cloned().unwrap_or_default() }
+pub fn config_from_snapshot(snapshot: Option<&semio_plugin::WindowConfigSnapshot>) -> Puzzle3dWindowConfig { snapshot.and_then(|value| value.get::<Puzzle3dWindowConfigOwner>()).cloned().unwrap_or_default() }
+pub fn transient_from_view(view: &semio_plugin::TransientView<'_, semio_plugin::NoTransient>) -> Puzzle3dWindowTransient { view.window::<Puzzle3dWindowTransientOwner>().cloned().unwrap_or_default() }
+pub fn transient_from_snapshot(snapshot: Option<&semio_plugin::WindowTransientSnapshot>) -> Puzzle3dWindowTransient { snapshot.and_then(|value| value.get::<Puzzle3dWindowTransientOwner>()).cloned().unwrap_or_default() }
 
-pub fn addressed_config_for(window_id: &str, config: Puzzle3dWindowConfig) -> semio_framework_plugin::WindowConfigMutation {
-    semio_framework_plugin::WindowConfigMutation::of::<Puzzle3dWindowConfigOwner>(window_id, Puzzle3dWindowConfigMutation::Set(Puzzle3dWindowConfigMutationSet { patch: Puzzle3dWindowConfigDiff::of(&config) }))
+pub fn addressed_config_for(window_id: &str, config: Puzzle3dWindowConfig) -> semio_plugin::WindowConfigMutation {
+    semio_plugin::WindowConfigMutation::of::<Puzzle3dWindowConfigOwner>(window_id, Puzzle3dWindowConfigMutation::Set(Puzzle3dWindowConfigMutationSet { patch: Puzzle3dWindowConfigDiff::of(&config) }))
 }
 
-pub fn addressed_config(view: &semio_framework_plugin::ViewModel, config: Puzzle3dWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
-    let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("puzzle3d-window-required"))?;
+pub fn addressed_config(view: &semio_plugin::ViewModel, config: Puzzle3dWindowConfig) -> Result<semio_plugin::WindowConfigMutation, semio_plugin::Fault> {
+    let id = view.window_id.as_deref().ok_or_else(|| semio_plugin::Fault::from("puzzle3d-window-required"))?;
     Ok(addressed_config_for(id, config))
 }
 
-pub fn addressed_transient_for(window_id: &str, transient: Puzzle3dWindowTransient) -> semio_framework_plugin::WindowTransientMutation {
-    semio_framework_plugin::WindowTransientMutation::of::<Puzzle3dWindowTransientOwner>(window_id, Puzzle3dWindowTransientMutation::Snapshot { transient })
+pub fn addressed_transient_for(window_id: &str, transient: Puzzle3dWindowTransient) -> semio_plugin::WindowTransientMutation {
+    semio_plugin::WindowTransientMutation::of::<Puzzle3dWindowTransientOwner>(window_id, Puzzle3dWindowTransientMutation::Snapshot { transient })
 }
 
-pub fn addressed_transient(view: &semio_framework_plugin::ViewModel, transient: Puzzle3dWindowTransient) -> Result<semio_framework_plugin::WindowTransientMutation, semio_framework_plugin::Fault> {
-    let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("puzzle3d-window-required"))?;
+pub fn addressed_transient(view: &semio_plugin::ViewModel, transient: Puzzle3dWindowTransient) -> Result<semio_plugin::WindowTransientMutation, semio_plugin::Fault> {
+    let id = view.window_id.as_deref().ok_or_else(|| semio_plugin::Fault::from("puzzle3d-window-required"))?;
     Ok(addressed_transient_for(id, transient))
 }
 

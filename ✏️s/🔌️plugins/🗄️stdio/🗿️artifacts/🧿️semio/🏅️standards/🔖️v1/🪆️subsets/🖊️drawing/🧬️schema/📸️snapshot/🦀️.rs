@@ -50,7 +50,7 @@ pub enum PathSegment {
 /// `SvgNodeDiff` recursive-diff template per the master plan. `style` fields are a referential
 /// `Option<String>` into `SemioDrawingSnapshot.styles` by name (checked by `SemioDrawingValidator`
 /// — dangling references are a real referential-invariant breach, not silently tolerated).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_dsl_record_derive::DslEnum)]
 #[value(receive_recursive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase", deny_unknown_fields, deserialize_controlled_with="crate::schema::snapshot::native_binding::nodes::decode_node")]
@@ -91,7 +91,7 @@ impl Default for DrawNode {
 /// `triples::NamedTripleDiff<String, DrawStyleDiff, DrawStyle>`'s generated `Deserialize` impl
 /// (serde-derive's bound inference for `#[value(default)]` fields on a generic container reaches
 /// every type parameter, not just the immediately-defaulted field's own type).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", deny_unknown_fields, deserialize_controlled_with="crate::schema::snapshot::native_binding::nodes::decode_style")]
 pub struct DrawStyle {
     pub name: String,
@@ -111,7 +111,7 @@ pub struct DrawStyle {
 /// the diff facet — mirrors gif-frame ordering precedent).
 /// 🩹 `Default` derived for the same reason as `DrawStyle` above (needed as the `T` of
 /// `triples::IndexedTripleDiff<DrawLayerDiff, DrawLayer>`).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", deny_unknown_fields, deserialize_controlled_with="crate::schema::snapshot::native_binding::nodes::decode_layer")]
 pub struct DrawLayer {
     pub id: String,
@@ -167,7 +167,7 @@ pub const STDIO_SEMIODRAWING_DOCUMENT_SCHEMA: &str = "stdio.semio.drawing";
 //#endregion 🔖️Ids
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(layout = "lines")]
 #[value(rename_all = "camelCase", deny_unknown_fields, deserialize_controlled_with="crate::schema::snapshot::native_binding::nodes::decode_snapshot")]
 #[artifact_schema(id = "stdio.semio.drawing")]
@@ -357,3 +357,39 @@ pub use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
                                                                                                                                                                                                                                                                                                                                                                                                                                       
 #[path="🖼️canvas/🦀️.rs"]
 pub mod canvas_edit;
+
+/// 🛡️ Authored bounded decode port: a received generic value is validated by `decode_node` under the original control before it becomes `DrawNode`.
+impl semio_framework_value_native_owned_try_map::NativeReceiveTryMap<semio_framework_value::DslValue> for DrawNode {
+    fn try_from_native(value:&semio_framework_value::DslValue,control:&mut semio_framework_value::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{crate::schema::snapshot::native_binding::nodes::decode_node(value,control)}
+}
+impl<I:semio_framework_value::native_decoding::owned::tree::NativeValueSource+?Sized> semio_framework_value::native_decoding::NativeReceive<I> for DrawNode {
+    type Receiver=semio_framework_value_native_owned_try_map::NativeTryMappedReceiver<I,semio_framework_value::DslValue,Self>;
+    fn receiver()->Self::Receiver{Self::Receiver::new()}
+}
+
+/// 🛡️ Authored bounded decode port: a received generic value is validated by `decode_style` under the original control before it becomes `DrawStyle`.
+impl semio_framework_value_native_owned_try_map::NativeReceiveTryMap<semio_framework_value::DslValue> for DrawStyle {
+    fn try_from_native(value:&semio_framework_value::DslValue,control:&mut semio_framework_value::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{crate::schema::snapshot::native_binding::nodes::decode_style(value,control)}
+}
+impl<I:semio_framework_value::native_decoding::owned::tree::NativeValueSource+?Sized> semio_framework_value::native_decoding::NativeReceive<I> for DrawStyle {
+    type Receiver=semio_framework_value_native_owned_try_map::NativeTryMappedReceiver<I,semio_framework_value::DslValue,Self>;
+    fn receiver()->Self::Receiver{Self::Receiver::new()}
+}
+
+/// 🛡️ Authored bounded decode port: a received generic value is validated by `decode_layer` under the original control before it becomes `DrawLayer`.
+impl semio_framework_value_native_owned_try_map::NativeReceiveTryMap<semio_framework_value::DslValue> for DrawLayer {
+    fn try_from_native(value:&semio_framework_value::DslValue,control:&mut semio_framework_value::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{crate::schema::snapshot::native_binding::nodes::decode_layer(value,control)}
+}
+impl<I:semio_framework_value::native_decoding::owned::tree::NativeValueSource+?Sized> semio_framework_value::native_decoding::NativeReceive<I> for DrawLayer {
+    type Receiver=semio_framework_value_native_owned_try_map::NativeTryMappedReceiver<I,semio_framework_value::DslValue,Self>;
+    fn receiver()->Self::Receiver{Self::Receiver::new()}
+}
+
+/// 🛡️ Authored bounded decode port: a received generic value is validated by `decode_snapshot` under the original control before it becomes `SemioDrawingSnapshot`.
+impl semio_framework_value_native_owned_try_map::NativeReceiveTryMap<semio_framework_value::DslValue> for SemioDrawingSnapshot {
+    fn try_from_native(value:&semio_framework_value::DslValue,control:&mut semio_framework_value::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{crate::schema::snapshot::native_binding::nodes::decode_snapshot(value,control)}
+}
+impl<I:semio_framework_value::native_decoding::owned::tree::NativeValueSource+?Sized> semio_framework_value::native_decoding::NativeReceive<I> for SemioDrawingSnapshot {
+    type Receiver=semio_framework_value_native_owned_try_map::NativeTryMappedReceiver<I,semio_framework_value::DslValue,Self>;
+    fn receiver()->Self::Receiver{Self::Receiver::new()}
+}

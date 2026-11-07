@@ -5,6 +5,7 @@ import {join} from "node:path";
 import Ajv from "ajv";
 import {requireTestToolV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {CACHE_POLICY} from "../../../../🔍️discovery/📂️source/🟦️.ts";
+import {cacheAreaBudgetBytesV1,cacheLedgerV1} from "../../../../💾️storage/🧾️ledger/🟦️.ts";
 import {areaUnitRoot,scanCacheAreas} from "../../🟦️.ts";
 import corpus from "./🔣️.json";
 import corpusSchema from "./🧬️schema/🔣️.json";
@@ -34,7 +35,7 @@ test("the corpus is closed by its schema",()=>{
 });
 
 test("every layout is projected into the five authored areas with the right scanner calls and progress, like the Python derivation",async()=>{
- const expected=ask({op:"project",storage:CACHE_POLICY.storage,repoRoot:corpus.repoRoot,layouts:corpus.layouts});
+ const expected=ask({op:"project",storage:{...CACHE_POLICY.storage,cargo:{...CACHE_POLICY.storage.cargo,budgetBytes:cacheAreaBudgetBytesV1(cacheLedgerV1(),cacheLedgerV1().areas.find(area=>area.id==="cargo-store")!)!}},repoRoot:corpus.repoRoot,layouts:corpus.layouts});
  for(const[index,layout]of corpus.layouts.entries()){
   const calls:unknown[][]=[],progress:unknown[][]=[],areas=await scanCacheAreas(corpus.repoRoot,live(),(area,unit)=>{progress.push([area,unit.path]);},operations(layout,calls) as never);
   expect(JSON.parse(JSON.stringify(areas)),layout.name).toEqual(expected[index].areas);expect(calls,layout.name).toEqual(expected[index].calls);expect(progress,layout.name).toEqual(expected[index].progress);

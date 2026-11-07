@@ -136,6 +136,7 @@ test("compile slots never exceed their count and are granted first-in-first-out"
 },60000);
 
 const cargo=process.env.SEMIO_TEST_CARGO??"cargo";
+const pinnedToolchain=/^\s*channel\s*=\s*"([^"]+)"/mu.exec(readFileSync(resolve(import.meta.dir,"../../../../../../../../../rust-toolchain.toml"),"utf8"))![1]!;
 function writeCrate(root:string,name:string,manifest:string,source:string,extra:Record<string,string>={}){const directory=join(root,name);mkdirSync(join(directory,"src"),{recursive:true});writeFileSync(join(directory,"Cargo.toml"),manifest);writeFileSync(join(directory,"src",source.startsWith("fn main")||source.includes("fn main()")?"main.rs":"lib.rs"),source);for(const [file,text] of Object.entries(extra))writeFileSync(join(directory,file),text);}
 function writeWorkspace(root:string,libraries:readonly string[],full:boolean){
  mkdirSync(root,{recursive:true});
@@ -386,7 +387,7 @@ test("cache hits are reported to the build broker with the measurements recorded
  if(!existsSync(schedulerManifest)||!existsSync(brokerModule))return;
  const broker=await import(brokerModule);
  const directory=scratch(),workspace=join(directory,"ws"),cache=join(directory,"cache"),target=join(directory,"scheduler");writeWorkspace(workspace,[],true);
- const built=spawnSync(cargo,["build","--release","--manifest-path",schedulerManifest,"--bins"],{cwd:directory,env:{...process.env,CARGO_TARGET_DIR:target},encoding:"utf8"});expect(built.status,built.stderr).toBe(0);
+ const built=spawnSync(cargo,["build","--release","--manifest-path",schedulerManifest,"--bins"],{cwd:directory,env:{...process.env,CARGO_TARGET_DIR:target,RUSTUP_TOOLCHAIN:pinnedToolchain},encoding:"utf8"});expect(built.status,built.stderr).toBe(0);
  const scheduler=join(target,"release","semio-build-scheduler"),started=await (broker as any).startAdmissionBrokerV1({physicalBytes:64*2**30,history:new Map()}) as {endpoint:string;registerPass(row:object):void;units():readonly any[];close():Promise<void>};
  try{
   started.registerPass({id:"p1",profile:"dev",target:"host"});

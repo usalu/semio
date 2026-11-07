@@ -1,0 +1,14 @@
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { dirname, join, relative, resolve, sep } from "node:path";
+import ts from "/Users/ueli/Documents/semio/node_modules/typescript/lib/typescript.js";
+const root = resolve(process.argv[2]);
+const SUF = ["", ".ts", ".tsx", "/🟦️.ts", "/🟦️.tsx"];
+const walk = (d) => readdirSync(d).flatMap((n) => { if (n === "node_modules") return []; const p = join(d, n); return statSync(p).isDirectory() ? walk(p) : /\.tsx?$/u.test(n) && !n.endsWith(".d.ts") ? [p] : []; });
+const files = walk(root).map((f) => resolve(f));
+const known = new Set(files);
+const graph = new Map(files.map((f) => [f, ts.preProcessFile(readFileSync(f, "utf8"), true, true).importedFiles.map((e) => e.fileName).filter((n) => n.startsWith(".")).flatMap((n) => SUF.map((s) => resolve(dirname(f), n) + s).filter((t) => known.has(t)).slice(0, 1)).map((t, i) => t)]));
+const idx = new Map(), low = new Map(), on = new Set(), st = [], comp = new Map(); let c = 0, k = 0;
+const visit = (n) => { idx.set(n, c); low.set(n, c++); st.push(n); on.add(n); for (const m of graph.get(n)) { if (!idx.has(m)) { visit(m); low.set(n, Math.min(low.get(n), low.get(m))); } else if (on.has(m)) low.set(n, Math.min(low.get(n), idx.get(m))); } if (low.get(n) !== idx.get(n)) return; let x; do { x = st.pop(); on.delete(x); comp.set(x, k); } while (x !== n); k++; };
+for (const f of files) if (!idx.has(f)) visit(f);
+const p = (f) => relative(root, f).split(sep).join("/");
+for (const [a, ts2] of graph) for (const b of ts2) if (comp.get(a) === comp.get(b) && a !== b) console.log(p(a), "->", p(b));

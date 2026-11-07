@@ -135,9 +135,29 @@ export async function createActorApi(actorId, activationGeneration, originalAdmi
   const exclusive = (run) => { const work = sourceTail.then(run); sourceTail = work.then(() => {}, () => {}); return work; };
   const fundedJob = (budget, run) => exclusive(() => originalSourceJob(originalSource, (receipt) => originalReturn.receipt(receipt), originalJobWallUs(budget), run));
   let contextReady = false;
+  async function admitWire(value) {
+    const turn = originalSource.issue();
+    let call;
+    try { call = await reactor.admitActorInput(actorInputWire.encode(value), originalContextBudgetWit(turn)); }
+    catch (failure) { originalSource.holdNativeRefusal(failure); originalReturn.hold(failure); throw failure; }
+    receiveOriginal(call, call.workUnitsSpent);
+    if (optionValue(call.refusal) !== undefined || !call.ready || call.disposition === "returned") throw Object.assign(new Error("original-turn.input-refused"), { originalCall: call });
+  }
+  const unreceipted = (wire, call) => exclusive(async () => {
+    if (wire !== undefined) await admitWire(wire);
+    const turn = originalSource.issue();
+    try { return await call(originalContextBudgetWit(turn)); }
+    finally { const receipt = { input: turn.input, spent: { copiedItems: 0, copiedBytes: 0, retainedCapacityBytes: 0, releasedBytes: 0 }, workUnitsSpent: 0 }; originalSource.receive(receipt); originalReturn.receipt(receipt); }
+  });
+  const pairWire = (pair) => ({ pack: pair.pack, spr: pair.spr });
+  const codecExports = {
+    packSchemaHash: (artifactSchema) => unreceipted({ operation: "pack-schema-hash", artifactSchema }, (budget) => codec.packSchemaHash(budget)),
+    genesis: (artifactSchema, documentId) => unreceipted({ operation: "genesis", artifactSchema, documentId }, (budget) => codec.genesis(budget)),
+    printMirror: (artifactSchema, pair) => unreceipted({ operation: "print-mirror", artifactSchema, pair: pairWire(pair) }, (budget) => codec.printMirror(budget)),
+  };
   async function receiveContext(method) {
     const turn = originalSource.issue();
-    const call = await reactor[method](originalTurnWit(turn), originalGrantWit(turn.input.grant));
+    const call = await reactor[method](originalContextBudgetWit(turn));
     receiveOriginal(call, call.workUnitsSpent);
     if (optionValue(call.refusal) !== undefined) throw Object.assign(new Error("original-turn.context-refused"), { originalCall: call });
     return call;
@@ -173,13 +193,14 @@ export async function createActorApi(actorId, activationGeneration, originalAdmi
       await admitContext();
       if (events.length > 1) throw new Error("actor-poll.event-count: a reactor turn admits at most one event");
       const wireEvents = events.map(({ kind, payload }) => lifecycleEvent(kind, payload, activationGeneration));
+      await admitWire({ operation: "poll", events: wireEvents.map(actorInputWire.event), shape: { maxEffects: budget.maxEffects, maxPatchBytes: budget.maxPatchBytes, maxFrames: budget.maxFrames } });
       const turn = originalSource.issue();
       hostShim.__checkoutOriginal(turn);
       let result;
       try {
         if (commandPage) await reactor.stageCommandPage(commandPage.cursor, commandPage.bytes);
         if (coldPairPage) await reactor.stageColdPairPage(coldPairPage);
-        result = await reactor.poll(wireEvents, originalBudgetWit(turn, budget));
+        result = await reactor.poll(originalContextBudgetWit(turn));
       } catch (failure) {
         try {
           if (failure && failure.input && failure.spent && typeof failure.workUnitsSpent === "bigint") receiveOriginal(failure, failure.workUnitsSpent);
@@ -196,14 +217,14 @@ export async function createActorApi(actorId, activationGeneration, originalAdmi
       if (raw !== undefined) throw Object.assign(new Error("original-turn.producer-held"), { originalProducer: raw });
       return { ...result, nextWake: optionValue(result.nextWake) ?? null, lifecycleReceipt: lifecycleReceipt(result.lifecycleReceipt, activationGeneration), uiPatchReceipt: uiPatchReceipt(result, activationGeneration), commandIngress: normalizeCommandIngress(result.commandIngress) };
     }),
-    startJob: async (job, kind, input) => fundedJob(undefined, (funds) => funds.start(jobs, job, kind, input)),
+    startJob: async (job, kind, input) => fundedJob(undefined, (funds) => funds.start({ reactor, jobs }, job, kind, input)),
     stepJob: async (job, budget, control = {}) => fundedJob(budget, (funds) => funds.step(jobs, job, { ...control, held: heldOutput })),
     cancelJob: async (job) => fundedJob(undefined, (funds) => funds.cancel(jobs, job, { held: heldOutput })),
     takeSegmentedDownloadChunk: async (instanceId, operationId) => optionValue(await jobs.takeSegmentedDownloadChunk(instanceId, operationId)),
-    checkpoint: async () => checkpoint.checkpoint(),
-    restore: async (state) => checkpoint.restore(state),
-    describe: async () => describe.describe(),
-    codec: (request) => codecAnswer(codec, request),
+    checkpoint: () => unreceipted(undefined, (budget) => checkpoint.checkpoint(budget)),
+    restore: (state) => unreceipted({ operation: "restore", state }, (budget) => checkpoint.restore(budget)),
+    describe: () => unreceipted(undefined, (budget) => describe.describe(budget)),
+    codec: (request) => codecAnswer(codecExports, request),
     resolveEffect: (requestId, value) => hostShim.__resolveEffect(requestId, value),
     rejectEffect: (requestId, message) => hostShim.__rejectEffect(requestId, message),
   };

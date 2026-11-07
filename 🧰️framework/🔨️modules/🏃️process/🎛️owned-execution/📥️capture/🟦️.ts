@@ -6,6 +6,8 @@ import {routeRegisteredCommandV1} from "../../🧰️tools/🔌️funnel/🟦️
 import {StringDecoder} from "node:string_decoder";
 import {terminateOwnedChildTree} from "../../🪓️termination/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../🔒️leases/🟦️.ts";
+/** 🏁️ Admits a child that already terminated on its own: only cancellation still refuses it, because the deadline is enforced while the child runs and an expired loan must not discard a finished command (a 41 minute cargo build that exited 0 was refused after the fact). */
+export function requireCompletedCaptureAuthorityV1(control:ResourceLeaseControl|undefined,signal?:AbortSignal):void{control?.signal.throwIfAborted();signal?.throwIfAborted();}
 import {validateJsonSchemaSubset} from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import outputSchema from "../🧬️schema/📬️output.json" with {type:"json"};
@@ -106,7 +108,7 @@ async function captureOwnedCommandLiveV1(command:string,args:readonly string[],c
   if(options.control){const remaining=checkResourceLeaseControl(options.control);timer=setTimeout(()=>{publication=progress();},Math.min(remaining??1000,1000));}if(conversation){try{conversation.value=await conversation.body(channelToken!);}catch(error){stop(error);}finally{await channel!.close();if(!failed&&channel!.failures.length)stop(channel!.failures[0]);}}result=await terminal;
  }catch(error){stop(error);result=await terminal;}
  finally{if(release)release();clearTimeout(timer);signal?.removeEventListener("abort",abort);try{await inputPublication;}catch(error){stop(error);}if(channel){await channel.close();channel.accepting=false;channel.live=false;}await publication;}
- if(failed)throw stopped;if(options.control)checkResourceLeaseControl(options.control);signal?.throwIfAborted();if(!result)throw Error("Actual child terminal required");return{result:readOwnedCommandCaptureV1({version:1,...streams,...result}),tail};
+ if(failed)throw stopped;requireCompletedCaptureAuthorityV1(options.control,signal);if(!result)throw Error("Actual child terminal required");return{result:readOwnedCommandCaptureV1({version:1,...streams,...result}),tail};
  }finally{input?.fill(0);}
 }
 

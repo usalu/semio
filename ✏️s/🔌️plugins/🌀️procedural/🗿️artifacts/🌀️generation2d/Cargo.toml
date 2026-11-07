@@ -11,6 +11,8 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🔬️retained-source-laws/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained-provisional/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust",
@@ -137,6 +139,12 @@ features = [ "raw_value" ]
 
 [workspace.dependencies.semio-s-procedural-core-semantic-ui]
 path = "../../🫀️foundation/🖼️semantic-ui/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-2d-retained-provisional]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained-provisional/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-retained-source]
+path = "../../🫀️foundation/🧵️retained-source/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-procedural-core-generation-sqlite]
 path = "../../🫀️foundation/🧬️generation/🪶️sqlite/📦️packages/🦀️rust"

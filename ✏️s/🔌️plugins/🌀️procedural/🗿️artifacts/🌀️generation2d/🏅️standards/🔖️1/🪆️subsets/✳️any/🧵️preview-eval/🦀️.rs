@@ -187,10 +187,16 @@ pub fn extension_invocation(pending: semio_framework_artifact_flow_flow::neural:
 /// the evaluation text the caller already published, so an unmoved evaluation republishes nothing.
 pub fn evaluate_tick(window_id: &str, window_kind_id: &str, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &mut FlowEvalSession, retained_eval: Option<&str>, retained_grant: semio_framework_value::RetainedCloneGrant) -> Result<FlowEvalTickOutcome, semio_framework_value::ValueError> {
     session.begin_window_tick(window_id, retained_grant)?;
-    let mut host = host_with_session(host_snapshot, session, retained_grant)?;
+    let mut host = match host_with_session(host_snapshot, session, retained_grant) {
+        Ok(host) => host,
+        Err((error, host)) => {
+            semio_s_artifact_procedural_2d_model::close_host(host)?;
+            return Err(error);
+        }
+    };
     let more = session.tick_cold(&mut host, None);
     let pending_extension_evals = host.take_pending_extension_evals();
-    host.retire_cold()?;
+    semio_s_artifact_procedural_2d_model::close_host(host)?;
     let extension_invocations: Vec<ExtensionInvocation> = pending_extension_evals.into_iter().map(|pending| {
         let resume=session.has_evaluation_progress(pending.node_hash);
         let dependency=if resume{String::new()}else{semio_os_flow::flow_inference_dependency_json(host_snapshot,&pending.neuron_id)};

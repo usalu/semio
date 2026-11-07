@@ -21,6 +21,10 @@ mod laws {
         Ok(IoOutcome::clean(match payload { IoPayload::Binary(bytes) => IoPayload::Binary(control.encode().map_err(IoError::from_value_error)?.copy_bytes(bytes).map_err(IoError::from_value_error)?), IoPayload::Text(text) => IoPayload::Text(control.encode().map_err(IoError::from_value_error)?.copy_text(text).map_err(IoError::from_value_error)?) }))
     }
 
+    /// 🎟️ Admits every observed decode effect; the run's grants, not a job loan, bound these laws.
+    struct AdmittedLoan;
+    impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for AdmittedLoan{fn admits(&mut self,observed:u64,additional:u64)->Result<bool,semio_framework_value::ValueError>{Ok(observed.checked_add(additional).is_some())}}
+
     fn with_control<T>(operation:impl FnOnce(&mut IoRunControl<'_, '_>)->T)->T {
         let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⏱️control/🔣️.json")).unwrap();
         let maximum=fixture["nativeBytes"].as_u64().unwrap() as usize;
@@ -32,6 +36,7 @@ mod laws {
         let mut encode_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
         decode.install_retirement_recipient(&mut decode_recipient).expect("the run owns an explicit decode retirement slot");
         encode.install_retirement_recipient(&mut encode_recipient).expect("the run owns an explicit encode retirement slot");
+        let mut loan=AdmittedLoan;decode.install_work_recipient(&mut loan).expect("the run owns an explicit decode work loan");
         let result={let mut control=IoRunControl::new(&mut decode,&mut encode,grant);operation(&mut control)};
         while decode.has_retirement_owner(){decode.close_retirement_recipient(grant).result.expect("the decode recipient closes under the run grant");}
         while encode.has_retirement_owner(){encode.close_retirement_recipient(grant).result.expect("the encode recipient closes under the run grant");}

@@ -138,6 +138,7 @@ pub struct MemberOpenRequest {
     pub actor: ManuallyDrop<semio_os_spr::ActorId>,
     pub operation: OperationId,
     pub generation: Generation,
+    pub replacement: Option<semio_framework_job::ReplacementIdentity>,
     pub expires_at_us: u64,
     pub expected: ManuallyDrop<Option<ArtifactRef>>,
     pub owner: ManuallyDrop<Option<OwnerRef>>,
@@ -165,12 +166,12 @@ pub struct OriginalMemberSnapshotSource<'a>{pages:&'a OwnedSchemaDecodePages,sta
 impl protocol::codec::RetainedWireByteSource for OriginalMemberSnapshotSource<'_>{fn original_source_identity(&self)->protocol::codec::OriginalWireSourceIdentity{self.identity}fn byte_at(&self,index:usize)->Option<u8>{if index>=self.identity.extent{return None}self.pages.byte_at(self.start.checked_add(index)?)}}
 impl MemberOpenRequest {
     pub fn original_snapshot_source(&self,cx:&StepContext<'_>)->Result<OriginalMemberSnapshotSource<'_>,MemberOpenDiagnostic>{self.check_step_authority(cx)?;self.original_snapshot_close_source(cx)}
-    pub fn original_snapshot_close_source(&self,cx:&StepContext<'_>)->Result<OriginalMemberSnapshotSource<'_>,MemberOpenDiagnostic>{if !self.admitted||self.detached||cx.operation()!=self.operation||cx.generation()!=self.generation{return Err(MemberOpenDiagnostic::Stale)}let frame=self.framed.ok_or(MemberOpenDiagnostic::Malformed)?;let(start,extent)=frame.snapshot_range();let pages=self.pages.as_ref().ok_or(MemberOpenDiagnostic::Stale)?;if !pages.is_sealed()||start.checked_add(extent).is_none_or(|end|end>pages.byte_count()){return Err(MemberOpenDiagnostic::Malformed)}Ok(OriginalMemberSnapshotSource{pages,start,identity:protocol::codec::OriginalWireSourceIdentity{range_start:start,address:pages.slot_address(),extent,authority:Some((self.operation.0,self.generation.0))}})}
+    pub fn original_snapshot_close_source(&self,cx:&StepContext<'_>)->Result<OriginalMemberSnapshotSource<'_>,MemberOpenDiagnostic>{if !self.admitted||self.detached||cx.replacement_is_stale(self.replacement){return Err(MemberOpenDiagnostic::Stale)}let frame=self.framed.ok_or(MemberOpenDiagnostic::Malformed)?;let(start,extent)=frame.snapshot_range();let pages=self.pages.as_ref().ok_or(MemberOpenDiagnostic::Stale)?;if !pages.is_sealed()||start.checked_add(extent).is_none_or(|end|end>pages.byte_count()){return Err(MemberOpenDiagnostic::Malformed)}Ok(OriginalMemberSnapshotSource{pages,start,identity:protocol::codec::OriginalWireSourceIdentity{range_start:start,address:pages.slot_address(),extent,authority:Some((self.operation.0,self.generation.0))}})}
     pub fn original_history_source(&self,cx:&StepContext<'_>)->Result<OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
         self.check_step_authority(cx)?;self.original_history_close_source(cx)
     }
     pub fn original_history_close_source(&self,cx:&StepContext<'_>)->Result<OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
-        if !self.admitted||self.detached||cx.operation()!=self.operation||cx.generation()!=self.generation{return Err(MemberOpenDiagnostic::Stale)}
+        if !self.admitted||self.detached||cx.replacement_is_stale(self.replacement){return Err(MemberOpenDiagnostic::Stale)}
         let frame=self.framed.ok_or(MemberOpenDiagnostic::Malformed)?;let(start,extent)=frame.history_range();let pages=self.pages.as_ref().ok_or(MemberOpenDiagnostic::Stale)?;
         if !pages.is_sealed()||start.checked_add(extent).is_none_or(|end|end>pages.byte_count()){return Err(MemberOpenDiagnostic::Malformed)}
         Ok(OriginalMemberHistorySource{pages,start,identity:protocol::codec::OriginalWireSourceIdentity{range_start:start,address:pages.slot_address(),extent,authority:Some((self.operation.0,self.generation.0))}})
@@ -180,6 +181,7 @@ impl MemberOpenRequest {
             actor: ManuallyDrop::new(actor),
             operation,
             generation,
+            replacement: None,
             expires_at_us,
             expected: ManuallyDrop::new(Some(expected)),
             owner: ManuallyDrop::new(owner),
@@ -213,6 +215,14 @@ impl MemberOpenRequest {
 
     pub fn owner(&self) -> Option<&OwnerRef> {
         self.owner.as_ref()
+    }
+    /// 🧷️ Binds the request to the replacement slot identity it was admitted under; staleness is judged against the store's current slot, never against the stepping caller.
+    pub fn with_replacement(mut self, replacement: semio_framework_job::ReplacementIdentity) -> Self {
+        self.replacement = Some(replacement);
+        self
+    }
+    pub fn replacement(&self) -> Option<semio_framework_job::ReplacementIdentity> {
+        self.replacement
     }
     pub fn operation(&self) -> OperationId {
         self.operation
@@ -254,7 +264,7 @@ impl MemberOpenRequest {
 
     pub fn check_step_authority(&self, cx: &StepContext<'_>) -> Result<(), MemberOpenDiagnostic> {
         self.admitted_expected()?;
-        if cx.operation() != self.operation || cx.generation() != self.generation {
+        if cx.replacement_is_stale(self.replacement) {
             return Err(MemberOpenDiagnostic::Stale);
         }
         if cx.is_cancelled() {

@@ -93,10 +93,10 @@ test("a collection frees exactly down to the low-water mark when enough is colle
 });
 
 test("image pressure never evicts the protected newest share of the object store, however large the need, and agrees with a Python derivation",()=>{
- const random=(()=>{let state=20261024;return()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296;};})(),cases:Array<{capacityBytes:number;volumeBytes:number;freeBytes:number;objects:Array<{digest:string;bytes:number;lastUsedMs:number}>;protectedShare:number;highWaterShare:number;lowWaterShare:number}>=[],plans:string[][]=[];
+ const random=(()=>{let state=20261024;return()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296;};})(),cases:Array<{capacityBytes:number;volumeBytes:number;freeBytes:number;objects:Array<{digest:string;bytes:number;lastUsedMs:number}>;protectedShare:number;casShare:number;highWaterShare:number;lowWaterShare:number}>=[],plans:string[][]=[];
  for(let round=0;round<200;round++){
   const capacityBytes=1_000_000+Math.floor(random()*9_000_000),objects=Array.from({length:Math.floor(random()*40)},(_,index)=>({digest:index.toString(16).padStart(64,"0"),bytes:Math.floor(random()*300_000),lastUsedMs:1000+Math.floor(random()*100_000)})),input={capacityBytes,volumeBytes:capacityBytes,freeBytes:Math.floor(random()*capacityBytes*0.05),nowMs:2_000_000,lanes:[],objects};
-  plans.push([...planGcV1(input).removeObjects]);cases.push({capacityBytes,volumeBytes:input.volumeBytes,freeBytes:input.freeBytes,objects,protectedShare:schema.definitions.Policy.const.gc.casProtectedShare,highWaterShare:schema.definitions.Policy.const.gc.highWaterShare,lowWaterShare:schema.definitions.Policy.const.gc.lowWaterShare});
+  plans.push([...planGcV1(input).removeObjects]);cases.push({capacityBytes,volumeBytes:input.volumeBytes,freeBytes:input.freeBytes,objects,protectedShare:schema.definitions.Policy.const.gc.casProtectedShare,casShare:schema.definitions.Policy.const.gc.casShare,highWaterShare:schema.definitions.Policy.const.gc.highWaterShare,lowWaterShare:schema.definitions.Policy.const.gc.lowWaterShare});
  }
  const python=pythonOracle(`
 import json,sys
@@ -115,7 +115,7 @@ for c in cases:
         if freed>=need:break
         if o["digest"] in protected:continue
         removed.append(o["digest"]);freed+=o["bytes"]
-    share=int(c["capacityBytes"]*0.25);keep=0;over=False
+    share=int(c["capacityBytes"]*c["casShare"]);keep=0;over=False
     for o in sorted(c["objects"],key=lambda o:(-o["lastUsedMs"],o["digest"])):
         keep+=o["bytes"]
         if over or keep>share:

@@ -113,7 +113,7 @@ describe("text editor value source", () => {
     const scene = textEditorSceneFromLanes({ buffer: "", lanes: [], language: "json" }, new Map([["framework.scene.text.buffer", fixture.chunks.join("")]]));
     expect(scene.buffer).toBe(expected);
     expect(scene.buffer).toBe(fixture.source);
-    expect(new TextEncoder().encode(scene.buffer)).toEqual(new Uint8Array(Buffer.from(fixture.source)));
+    expect(Array.from(new TextEncoder().encode(scene.buffer))).toEqual(Array.from(Buffer.from(fixture.source)));
     expect(Buffer.byteLength(scene.buffer)).toBe(fixture.bytes);
   });
 

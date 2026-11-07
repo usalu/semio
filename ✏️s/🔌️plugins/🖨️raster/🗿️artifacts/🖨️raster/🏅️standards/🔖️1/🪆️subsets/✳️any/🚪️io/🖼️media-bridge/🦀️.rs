@@ -4,6 +4,7 @@
 #![allow(unexpected_cfgs)]
 extern crate semio_framework_schema as schema;
 use semio_s_artifact_raster_raster_model::RasterAssetChild;
+use semio_s_artifact_raster_raster_model::{layer_node_id, layer_visible};
 use semio_s_artifact_raster_raster_model::image_asset_child_handle;
 use semio_s_artifact_raster_raster_model::image_content_child_handle;
 use semio_s_artifact_raster_raster_model::RasterOwnedMap;

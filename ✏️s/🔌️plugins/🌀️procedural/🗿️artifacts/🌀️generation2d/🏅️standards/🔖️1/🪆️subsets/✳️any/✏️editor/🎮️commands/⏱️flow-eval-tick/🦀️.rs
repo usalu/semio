@@ -58,7 +58,7 @@ pub fn evaluate(window_id: &str, window_kind_id: &str, target: PreviewEvalTarget
             };
             let host = semio_s_artifact_procedural_2d_io_text::snapshot::generation_preview_host(&doc.snapshot.host_snapshot, &values);
             let outcome = preview_eval::evaluate_tick(window_id, window_kind_id, &host.host_snapshot, session, retained.as_deref(), retained_grant);
-            host.retire_cold().map_err(|error| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("flow.retained"), error.into_message()))?;
+            host.retire_cold_or_park().map_err(|error| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("flow.retained"), error.into_message()))?;
             outcome.map_err(|error| Fault::from(error.to_string()))?
         }
     };

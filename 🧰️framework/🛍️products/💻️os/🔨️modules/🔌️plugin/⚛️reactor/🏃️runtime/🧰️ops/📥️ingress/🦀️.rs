@@ -340,6 +340,3 @@ semio_framework_value::artifact_retire_leaf!(OriginalPublicationFamily);
 pub struct OriginalPublicationReceiving{pub family:Option<OriginalPublicationFamily>,pub before:RetainedCloneProgress,pub posted:RetainedCloneProgress,pub grant:RetainedCloneGrant,pub recipient:usize}
 semio_framework_value::artifact_retire_leaf!(OriginalPublicationReceiving);
 
-#[cfg(test)]
-#[path="../../🎞️command/📥️custody/🧪️tests/🦀️.rs"]
-mod original_media_command_custody_tests;

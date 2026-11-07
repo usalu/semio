@@ -1,6 +1,6 @@
 //! ♻️ An actual original caller funds cursor birth and keeps a failed partial release closeable.
 use super::*;
-use semio_framework_plugin::artifact_app_laws::OriginalWorkFixture;
+use semio_plugin::artifact_app_laws::OriginalWorkFixture;
 use semio_framework_value::retirement::{RetirementCursor,RetirementStep};
 #[global_allocator]
 static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

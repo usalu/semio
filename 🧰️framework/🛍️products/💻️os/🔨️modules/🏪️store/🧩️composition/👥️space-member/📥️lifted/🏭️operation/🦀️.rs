@@ -86,7 +86,7 @@ impl<M: Send> MemberOpenOperation for UnsupportedMemberFactoryOpen<M> {
         if self.snapshot.terminal_is_empty(){if let Some(loan)=self.source_loan.as_mut(){let step=loan.close_step(parent,cx)?;let progress=step.progress();if loan.terminal_is_empty(){self.source_loan.take();}return Ok(if self.source_loan.is_none(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})}return Ok(RetainedCloneStep::Complete(empty))}
         self.source_loan.as_ref().ok_or_else(||member_admission_diagnostic(MemberOpenDiagnostic::Stale))?.validate_context(cx)?;
         let request=self.snapshot.request.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"unsupported factory lost original request"))?;
-        if cx.operation()!=request.operation()||cx.generation()!=request.generation(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"unsupported factory close changed operation identity").into())}
+        if cx.replacement_is_stale(request.replacement()){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"unsupported factory close changed replacement identity").into())}
         let mut grant=cx.retained_grant();
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}
         if grant.maximum_depth<self.next_depth_demand()?{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"unsupported factory requires original child depth").into())}

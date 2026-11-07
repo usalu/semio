@@ -127,8 +127,8 @@ impl NativeClipboardJob {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl semio_framework_job::InteractiveJob for NativeClipboardJob {
-    fn step<'a>(&'a mut self, cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{
+impl NativeClipboardJob {
+    fn step_outcome<'a>(&'a mut self, cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{
         use semio_framework_job::JobOutcomeBorrow;
         let grant=cx.retained_grant();
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
@@ -148,10 +148,21 @@ impl semio_framework_job::InteractiveJob for NativeClipboardJob {
             return JobOutcomeBorrow::admit_complete(cx,None,None).map_err(Into::into)
         }
         let diagnostic=b"native clipboard read requires original bounded platform recipient";
-        if !self.fault.advance_initialization(cx)?{return Ok(None)}
-        if !self.fault.append_original(cx,diagnostic,&mut self.fault_cursor)?{return Ok(None)}
-        if !self.fault.seal(cx)?{return Ok(None)}
+        if !self.fault.is_initialized(){let turn=self.fault.advance_initialization(cx);semio_framework_job::receive_original_retained_work(cx,turn)?;return Ok(None)}
+        if self.fault_cursor<diagnostic.len(){let turn=self.fault.append_original(cx,diagnostic,&mut self.fault_cursor);semio_framework_job::receive_original_retained_work(cx,turn)?;return Ok(None)}
+        if self.fault.published().is_none(){let turn=self.fault.seal(cx);semio_framework_job::receive_original_retained_work(cx,turn)?;return Ok(None)}
         JobOutcomeBorrow::admit_fault(cx,self.fault.published().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original clipboard diagnostic was not sealed"))?).map_err(Into::into)
+    
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl semio_framework_job::InteractiveJob for NativeClipboardJob {
+    fn step<'a>(&'a mut self, cx:&mut semio_framework_job::StepContext<'_>, _return_claim:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{
+        match self.step_outcome(cx){
+            Ok(outcome)=>semio_framework_job::InteractiveJobStep::Outcome(outcome),
+            Err(failure)=>semio_framework_job::InteractiveJobStep::Continuation(failure),
+        }
     }
 
     fn borrow_outcome<'a>(&'a self, descriptor:&'a semio_framework_job::JobOutcomeDescriptor)->Result<semio_framework_job::JobOutcomeView<'a>,semio_framework_value::ValueError>{
@@ -180,7 +191,7 @@ impl semio_framework_job::InteractiveJob for NativeClipboardJob {
         let bytes=match self.operation.as_ref(){Some(NativeClipboardOperation::Write(text))=>text.capacity(),_=>0};
         let step=semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{release_bytes:bytes,depth:1,..Default::default()},|_|{
             *self.operation=None;
-            Ok(RetainedCloneStep::Complete(Progress{copied_items:1,released_bytes:bytes,..Progress::default()}))
+            semio_framework_value::RetainedWorkOutcome::<_,semio_framework_value::ValueError>{result:Ok(RetainedCloneStep::Complete(Progress{copied_items:1,released_bytes:bytes,..Progress::default()})),work:1}
         })?;
         Ok(if self.operation.is_none(){Close::Complete{progress:step.progress()}}else{step})
     }

@@ -174,7 +174,7 @@ impl MountedPreparedOperationBytes {
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if !plugin_grant_funds(self.retirement_demands()?, grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if !semio_plugin_ownership::bounded_ownership::plugin_grant_funds(self.retirement_demands()?,grant){ return Ok(RetainedCloneStep::Progress(Default::default())); }
         self.closing = true;
         if !self.cursor_closed {
             let progress = self.cursor.close(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }).map_err(|error| error.reason)?;
@@ -264,7 +264,7 @@ impl MountedPreparedOperationsBytes {
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if !plugin_grant_funds(self.retirement_demands()?, grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if !semio_plugin_ownership::bounded_ownership::plugin_grant_funds(self.retirement_demands()?,grant){ return Ok(RetainedCloneStep::Progress(Default::default())); }
         self.closing = true;
         if let Some(operation) = self.operation.as_mut() { let step = operation.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })?; if operation.terminal_is_empty() { self.operation = None; } return Ok(step); }
         if let Some(encoded) = self.encoded.as_ref() {

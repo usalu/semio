@@ -102,6 +102,7 @@ where
     commit_ready:bool,
     pub operation: OperationId,
     pub generation: Generation,
+    replacement: Option<semio_framework_job::ReplacementIdentity>,
     pub schema: &'static str,
     pub envelope: ManuallyDrop<Option<ArtifactEnvelope<P, M>>>,
     pub owners: ManuallyDrop<Option<DocumentStoreOwners<P, M>>>,
@@ -141,6 +142,12 @@ where
         owner
     }
 
+    /// 🪪️ Binds the replacement slot identity whose staleness the shared predicate judges on every turn.
+    pub fn with_replacement(mut self, replacement: Option<semio_framework_job::ReplacementIdentity>) -> Self {
+        self.replacement = replacement;
+        self
+    }
+
     /// 🧳️ Retains the real actor and initializer authority before its original envelope is constructed.
     fn awaiting_envelope(schema:&'static str,operation:OperationId,generation:Generation,actor:ActorId)->Self{
         Self {
@@ -149,6 +156,7 @@ where
             supersession_native:Default::default(),digest:Default::default(),effective_digest:Default::default(),commit_ready:false,
             operation,
             generation,
+            replacement: None,
             schema,
             envelope: ManuallyDrop::new(None),
             owners: ManuallyDrop::new(None),
@@ -268,7 +276,7 @@ where
 
     pub fn turn(&mut self, cx: &mut StepContext<'_>) -> Turn {
         let grant = cx.retained_grant();
-        let stale = cx.operation() != self.operation || cx.generation() != self.generation || cx.is_cancelled();
+        let stale = cx.is_cancelled() || cx.replacement_is_stale(self.replacement);
         let unclaimed = self.phase == Phase::Complete && !self.terminal_handoff && self.candidate.is_some();
         let closing = unclaimed && (self.cancel_requested || stale);
         if (!matches!(self.phase, Phase::Complete | Phase::Cancelled | Phase::Fault) || closing) && (cx.should_yield() || grant.maximum_items == 0 || grant.maximum_depth == 0) {
@@ -725,6 +733,9 @@ where
     M: RetireOwned + semio_framework_pack_json::ArtifactCanonicalJsonTree + semio_os_spr::StoreMutationFor<P>,
     C:DocumentStoreOwnerProducer<P,M>,
 {
+    fn bind_replacement(&mut self, replacement: semio_framework_job::ReplacementIdentity) {
+        self.replacement = Some(replacement);
+    }
     fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure> {
         let turn=self.turn(cx);if let Some(failure)=self.original_failure.take(){return Err(failure)}
         (match turn {

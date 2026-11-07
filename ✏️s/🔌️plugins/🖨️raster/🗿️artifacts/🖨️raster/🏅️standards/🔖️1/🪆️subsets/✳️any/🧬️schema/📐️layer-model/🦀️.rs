@@ -42,6 +42,49 @@ impl Default for RasterCamera {
     }
 }
 
+/// 🌱️ Pure `Default` records retain a genuine native default producer under the caller grant.
+#[macro_export]
+macro_rules! raster_native_default {
+    ($ty:ty) => {
+        impl ::semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValue for $ty {
+            fn default_demand() -> ::semio_framework_value::RetirementDemand {
+                ::semio_framework_value::RetirementDemand { copy_bytes: 2 * ::std::mem::size_of::<Self>(), depth: 1, ..Default::default() }
+            }
+            fn admit_default(output: &mut Option<Self>, grant: ::semio_framework_value::RetainedCloneGrant) -> ::semio_framework_value::RetainedWorkOutcome {
+                if output.is_some() {
+                    return ::semio_framework_value::RetainedWorkOutcome { result: Ok(::semio_framework_value::RetainedCloneStep::Complete(Default::default())), work: 0 };
+                }
+                let demand = <Self as ::semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValue>::default_demand();
+                if !::semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) {
+                    return ::semio_framework_value::RetainedWorkOutcome { result: Ok(::semio_framework_value::RetainedCloneStep::Progress(Default::default())), work: 0 };
+                }
+                *output = Some(Self::default());
+                let progress = ::semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() };
+                ::semio_framework_value::RetainedWorkOutcome { result: Ok(::semio_framework_value::RetainedCloneStep::Complete(progress)), work: 1 }
+            }
+        }
+        impl ::semio_framework_value_native_owned::native_decoding::owned::NativeDefault for $ty {
+            type Cursor = ::semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValueCursor<Self>;
+            fn default_cursor() -> Self::Cursor {
+                ::semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValueCursor::new()
+            }
+        }
+    };
+}
+
+raster_native_default!(RasterCamera);
+
+/// 🛡️ A received generic value becomes a layer tree only through the derived controlled decoder under the original control.
+impl semio_framework_value_native_owned_try_map::NativeReceiveTryMap<semio_framework_value::DslValue> for RasterLayerNode {
+    fn try_from_native(value:&semio_framework_value::DslValue,control:&mut semio_framework_value::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{
+        <Self as semio_framework_value::FromValue>::from_value_controlled(value,control)
+    }
+}
+impl<I:semio_framework_value::native_decoding::owned::tree::NativeValueSource+?Sized> semio_framework_value::native_decoding::NativeReceive<I> for RasterLayerNode {
+    type Receiver=semio_framework_value_native_owned_try_map::NativeTryMappedReceiver<I,semio_framework_value::DslValue,Self>;
+    fn receiver()->Self::Receiver{Self::Receiver::new()}
+}
+
 pub fn one_f32() -> f32 {
     1.0
 }
@@ -53,6 +96,7 @@ pub fn default_blend() -> String {
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_dsl_record_derive::DslOwnedReceiving)]
 pub struct RasterTransform {
     pub x: f64,
     pub y: f64,
@@ -78,6 +122,7 @@ impl RasterTransform {
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_dsl_record_derive::DslOwnedReceiving)]
 pub struct RasterLayerMask {
     #[value(default = "default_true")]
     pub enabled: bool,

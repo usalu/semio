@@ -185,7 +185,7 @@ mod peer_root_retirement_laws {
         let mut admit_decode = |_| { decoder_events += 1; true };
         let mut decode = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(0, &mut admit_decode);
         let mut original = semio_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut decode, grant);
-        let (value, heap) = observe(|| NoPresence::decode_presence_native(&[], &mut original).unwrap());
+        let (value, heap) = observe(|| NoPresence::decode_presence_native(&[], &mut original).result.unwrap());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert_eq!(original.progress(), RetainedCloneProgress { copied_items: 1, ..Default::default() });
         drop(original);
@@ -197,7 +197,7 @@ mod peer_root_retirement_laws {
         let mut admit_encode = |_| { encode_events += 1; true };
         let mut encode = semio_framework_value::NativeEncodeControl::new(0, &mut admit_encode);
         let mut original = semio_os_kernel::io::control::NativeSnapshotEncodeOwner::new(&mut encode, grant);
-        let (bytes, heap) = observe(|| value.encode_presence_native(&mut original).unwrap());
+        let (bytes, heap) = observe(|| value.encode_presence_native(&mut original).result.unwrap());
         assert_eq!(bytes, Vec::<u8>::new());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert_eq!(original.progress(), RetainedCloneProgress { copied_items: 1, ..Default::default() });
@@ -207,14 +207,14 @@ mod peer_root_retirement_laws {
         let mut reject = |_| false;
         let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(0, &mut reject);
         let mut original = semio_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
-        let (result, heap) = observe(|| NoPresence::decode_presence_native(&[], &mut original));
+        let (result, heap) = observe(|| NoPresence::decode_presence_native(&[], &mut original).result);
         assert!(result.is_err());
         assert_eq!(original.progress(), RetainedCloneProgress::default());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         let mut reject = |_| false;
         let mut native = semio_framework_value::NativeEncodeControl::new(0, &mut reject);
         let mut original = semio_os_kernel::io::control::NativeSnapshotEncodeOwner::new(&mut native, grant);
-        let (result, heap) = observe(|| value.encode_presence_native(&mut original));
+        let (result, heap) = observe(|| value.encode_presence_native(&mut original).result);
         assert!(result.is_err());
         assert_eq!(original.progress(), RetainedCloneProgress::default());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
@@ -222,7 +222,7 @@ mod peer_root_retirement_laws {
             let mut accept = |_| true;
             let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(0, &mut accept);
             let mut original = semio_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, denied);
-            let (result, heap) = observe(|| NoPresence::decode_presence_native(&[], &mut original));
+            let (result, heap) = observe(|| NoPresence::decode_presence_native(&[], &mut original).result);
             assert!(result.is_err());
             assert_eq!(original.progress(), RetainedCloneProgress::default());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
@@ -632,7 +632,7 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
                 }
                 if self.pending_presence.is_none() {
                     let (_, pack) = self.packs[self.packs_len - 1].as_ref().expect("original typed presence pack");
-                    let presence = <A::Presence as store::ArtifactPresenceSnapshot>::decode_presence_native(pack, original).map_err(refused)?;
+                    let presence = <A::Presence as store::ArtifactPresenceSnapshot>::decode_presence_native(pack, original).result.map_err(|failure| plugin_sdk_fault(failure.to_string()))?;
                     *self.pending_presence = Some(presence);
                     let (actor, _) = self.packs[self.packs_len - 1].as_mut().expect("original typed presence pack");
                     *self.pending_actor = Some(std::mem::take(actor));

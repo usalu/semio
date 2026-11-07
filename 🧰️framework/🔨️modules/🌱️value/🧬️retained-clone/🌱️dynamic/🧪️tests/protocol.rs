@@ -44,7 +44,7 @@ pub(super) fn close_cursor(cursor:&mut DslValueRetainedCloneCursor,copy:usize,bo
     panic!("Original dynamic cursor did not close its retained original graph");
 }
 
-pub(super) fn close_source(source:&mut crate::retained_clone::FixtureSource<DslValue>,copy:usize,born:&mut usize,freed:&mut usize){
+pub(super) fn close_source(source:&mut semio_framework_value_clone_source_testing::FixtureSource<DslValue>,copy:usize,born:&mut usize,freed:&mut usize){
     let mut stalled=0;
     for _ in 0..100000 {
         if source.terminal_is_empty(){return;}
@@ -55,12 +55,23 @@ pub(super) fn close_source(source:&mut crate::retained_clone::FixtureSource<DslV
     panic!("Original dynamic source graph remained live");
 }
 
+pub(super) fn close_plain_source(source:&mut RetainedCloneSource<DslValue>,copy:usize,born:&mut usize,freed:&mut usize){
+    let mut stalled=0;
+    for _ in 0..100000 {
+        if source.terminal_is_empty(){return;}
+        let demand=source.next_close_demand(copy).unwrap();let admitted=grant(demand,0);assert_eq!(source.next_close_demand(admitted.maximum_copy_bytes).unwrap(),demand);
+        if demand.release_bytes>8 {let denied=RetainedCloneGrant {maximum_release_bytes:8,..admitted};let(result,heap)=observe(||source.close_step(denied));check_denied(result,heap,denied,demand);}
+        let(result,heap)=observe(||source.close_step(admitted));let progress=check(result,heap,admitted);*born+=heap.0;*freed+=heap.1;stalled=if progress==Default::default(){stalled+1}else{0};assert!(stalled<=143,"Original dynamic source closure stalled copy={copy} demand={demand:?}");
+    }
+    panic!("Original dynamic source graph remained live");
+}
+
 pub(super) fn cases()->Vec<(String,serde_json::Value)>{
     let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../🌱️dynamic/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let mut cases=law["cases"].as_array().unwrap().iter().map(|row|(row["name"].as_str().unwrap().to_owned(),row["value"].clone())).collect::<Vec<_>>();
     for depth in law["depths"].as_array().unwrap(){let depth=depth.as_u64().unwrap()as usize;let mut value=serde_json::json!({"kind":"text","value":"ä日🌱"});for _ in 0..depth{value=serde_json::json!({"kind":"array","value":[value]});}cases.push((format!("depth-{depth}"),value));}cases
 }
-pub(super) fn admit_source(owner:DslValue)->(crate::retained_clone::FixtureSource<DslValue>,(usize,usize)){
-    use crate::retained_clone::FixtureSourceBirth;
+pub(super) fn admit_source(owner:DslValue)->(semio_framework_value_clone_source_testing::FixtureSource<DslValue>,(usize,usize)){
+    use semio_framework_value_clone_source_testing::FixtureSourceBirth;
     semio_framework_value_clone_source_testing::observe_fixture_source_allocations(||RetainedCloneSource::from_owner(owner))
 }
 pub(super) struct Advanced{pub complete:bool,pub turns:usize,pub born:usize,pub freed:usize}

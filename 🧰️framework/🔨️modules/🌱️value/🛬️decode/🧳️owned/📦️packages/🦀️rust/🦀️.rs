@@ -38,4 +38,4 @@ use semio_framework_value_testing_allocator as allocation_testing;
 #[cfg(test)]
 pub(crate) use allocation_testing::observe_retirement_allocations;
 
-#[cfg(test)]pub(crate) use semio_framework_value_testing_admission as source_fixture;
+#[cfg(test)]#[path="../../🧪️tests/📥️admission/🦀️.rs"]pub(crate) mod source_fixture;

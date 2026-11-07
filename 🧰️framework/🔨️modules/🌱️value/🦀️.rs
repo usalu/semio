@@ -26,8 +26,8 @@ pub use native_encoding::{NativeEncodeControl,NativeEncodeContinuation,NativeSco
 
 
 
-#[path = "⚠️refusal/🦀️.rs"]
-pub mod refusal;
+/// ⚠️ Canonical original refusal contracts, owned by the control contract.
+pub mod refusal{pub use semio_framework_value_control_contract::{ValueError,ValueRefusalKind};}
 pub use refusal::{ValueError, ValueRefusalKind};
 
 //#region 🔁️Codec

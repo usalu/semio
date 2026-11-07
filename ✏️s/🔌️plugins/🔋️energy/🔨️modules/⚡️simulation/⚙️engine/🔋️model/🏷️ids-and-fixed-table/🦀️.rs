@@ -64,6 +64,7 @@ impl semio_framework_dsl_record::DslField for EntityId {
 }
 
 semio_framework_value::artifact_retire_leaf!(EntityId);
+semio_framework_dsl_record::dsl_scalar_newtype_receiving!(EntityId,u32);
 
 impl semio_framework_pack_json::ArtifactCanonicalJsonTree for EntityId {
     fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, ValueError> {

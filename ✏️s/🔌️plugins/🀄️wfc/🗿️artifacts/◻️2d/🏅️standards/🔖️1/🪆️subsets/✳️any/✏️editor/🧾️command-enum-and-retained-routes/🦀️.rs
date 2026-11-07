@@ -332,3 +332,5 @@ mod completion_source_tests {
         }
     }
 }
+
+semio_plugin::retained_command::terminal_frame_bound!(Wfc2dCommandWork);

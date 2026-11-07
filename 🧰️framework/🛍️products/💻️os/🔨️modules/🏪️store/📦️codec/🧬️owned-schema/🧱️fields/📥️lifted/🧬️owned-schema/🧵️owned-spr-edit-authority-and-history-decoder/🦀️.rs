@@ -4,16 +4,14 @@ use super::*;
 
 impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactOwnedSprEditAuthority<P, Mutation> {
     pub fn new(
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
+        replacement: Option<semio_framework_job::ReplacementIdentity>,
         path: OwnedSchemaPath,
         catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
         mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
         retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
     ) -> Self {
         Self {
-            operation,
-            generation,
+            replacement,
             path,
             catalog: std::mem::ManuallyDrop::new(Some(catalog)),
             mutation_factory: std::mem::ManuallyDrop::new(Some(mutation_factory)),
@@ -50,12 +48,12 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactOwnedSprEditAut
             if !terminal {
                 return Err(self.diagnostic("artifact-spr.edit-string-scalar", token.start));
             }
-            let authority = OwnedSchemaStringAuthority::try_new(self.operation, self.generation, token, self.path).map_err(|token| self.diagnostic("artifact-spr.edit-string", token.start))?;
+            let authority = OwnedSchemaStringAuthority::try_new(self.replacement, token, self.path).map_err(|token| self.diagnostic("artifact-spr.edit-string", token.start))?;
             *self.active = Some(ArtifactOwnedSprEditActive::String { field_id, authority });
             return Ok(None);
         }
         if matches!(field_id, 3 | 4) {
-            let authority = ArtifactOwnedSprMutationArrayAuthority::try_new(self.operation, self.generation, self.path, self.catalog.as_ref().expect("live original edit catalog").clone(), self.mutation_factory.as_ref().expect("live original edit mutation factory").clone(), field_id == 4)?;
+            let authority = ArtifactOwnedSprMutationArrayAuthority::try_new(self.replacement, self.path, self.catalog.as_ref().expect("live original edit catalog").clone(), self.mutation_factory.as_ref().expect("live original edit mutation factory").clone(), field_id == 4)?;
             *self.active = Some(ArtifactOwnedSprEditActive::Mutations { field_id, authority });
             return Ok(None);
         }
@@ -218,7 +216,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactOwnedHistoryEnt
     fn next_close_release_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic> { self.close_demands(0).map(|demand| demand.release_bytes) }
     fn next_close_depth_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic> { self.close_demands(0).map(|demand| demand.depth) }
     fn accept_token(&mut self, token: OwnedSchemaToken, _terminal: bool, source: &OwnedSchemaRecordCursor, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic> {
-        if cx.operation() != self.operation || cx.generation() != self.generation {
+        if cx.replacement_is_stale(self.replacement) {
             return Err(self.diagnostic("artifact-spr.edit-stale", token.start));
         }
         if cx.is_cancelled() {
@@ -355,12 +353,11 @@ pub struct ArtifactOwnedSprEditDecoder<P, Mutation> {
 impl<P: Send + Sync + 'static, Mutation: Send + Sync + 'static> ArtifactOwnedHistoryEntryDecoder<Edit<Mutation>> for ArtifactOwnedSprEditDecoder<P, Mutation> {
     fn begin_entry(
         &self,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
+        replacement: Option<semio_framework_job::ReplacementIdentity>,
         path: OwnedSchemaPath,
         retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>,
     ) -> Box<dyn ArtifactOwnedHistoryEntryAuthority<Edit<Mutation>>> {
-        Box::new(ArtifactOwnedSprEditAuthority::new(operation, generation, path, self.catalog.clone(), self.mutation_factory.clone(), retirement_factory))
+        Box::new(ArtifactOwnedSprEditAuthority::new(replacement, path, self.catalog.clone(), self.mutation_factory.clone(), retirement_factory))
     }
 }
 
@@ -376,18 +373,16 @@ pub fn artifact_owned_spr_edit_history_decoder<P: Send + Sync + 'static, Mutatio
 impl<T: FromValue + Send + Sync + 'static> ArtifactOwnedHistoryEntryDecoder<T> for ArtifactRepositoryHistoryEntryDecoder<T> {
     fn begin_entry(
         &self,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
+        replacement: Option<semio_framework_job::ReplacementIdentity>,
         path: OwnedSchemaPath,
         retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<T>>,
     ) -> Box<dyn ArtifactOwnedHistoryEntryAuthority<T>> {
-        Box::new(ArtifactRepositoryHistoryEntryAuthority::new(operation, generation, path, retirement_factory))
+        Box::new(ArtifactRepositoryHistoryEntryAuthority::new(replacement, path, retirement_factory))
     }
 }
 
 pub struct ArtifactRepositoryHistoryEntryAuthority<T> {
-    pub operation: semio_framework_job::OperationId,
-    pub generation: semio_framework_job::Generation,
+    pub replacement: Option<semio_framework_job::ReplacementIdentity>,
     pub path: OwnedSchemaPath,
     pub raw: std::mem::ManuallyDrop<Option<Box<[u8; ARTIFACT_ENVELOPE_HISTORY_ENTRY_BYTES]>>>,
     pub(super) raw_len: usize,
@@ -399,8 +394,8 @@ pub struct ArtifactRepositoryHistoryEntryAuthority<T> {
 }
 
 impl<T> ArtifactRepositoryHistoryEntryAuthority<T> {
-    pub fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: OwnedSchemaPath, retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<T>>) -> Self {
-        Self { operation, generation, path, raw: std::mem::ManuallyDrop::new(Some(Box::new([0; ARTIFACT_ENVELOPE_HISTORY_ENTRY_BYTES]))), raw_len: 0, value: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None), retirement_factory: std::mem::ManuallyDrop::new(Some(retirement_factory)), factory_close: std::mem::ManuallyDrop::new(None), terminal: false }
+    pub fn new(replacement: Option<semio_framework_job::ReplacementIdentity>, path: OwnedSchemaPath, retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<T>>) -> Self {
+        Self { replacement, path, raw: std::mem::ManuallyDrop::new(Some(Box::new([0; ARTIFACT_ENVELOPE_HISTORY_ENTRY_BYTES]))), raw_len: 0, value: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None), retirement_factory: std::mem::ManuallyDrop::new(Some(retirement_factory)), factory_close: std::mem::ManuallyDrop::new(None), terminal: false }
     }
 
     pub fn close_demands(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {

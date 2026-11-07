@@ -15,8 +15,7 @@ pub(super) enum Generation2dPackSnapshotState {
 }
 
 pub(super) struct Generation2dPackSnapshotAuthority {
-    pub(super) operation: semio_framework_job::OperationId,
-    pub(super) generation: semio_framework_job::Generation,
+    pub(super) replacement: Option<semio_framework_job::ReplacementIdentity>,
     pub(super) path: store::os_store::owned_schema_decode::OwnedSchemaPath,
     pub(super) state: Generation2dPackSnapshotState,
     pub(super) token: Option<store::os_store::owned_schema_decode::OwnedSchemaToken>,
@@ -28,10 +27,9 @@ pub(super) struct Generation2dPackSnapshotAuthority {
 }
 
 impl Generation2dPackSnapshotAuthority {
-    pub(super) fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
+    pub(super) fn new(replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
         Self {
-            operation,
-            generation,
+            replacement,
             path,
             state: Generation2dPackSnapshotState::AwaitToken,
             token: None,
@@ -89,8 +87,7 @@ pub(super) enum Generation2dMutationDecodeState {
 }
 
 pub(super) struct Generation2dMutationDecodeAuthority {
-    pub(super) operation: semio_framework_job::OperationId,
-    pub(super) generation: semio_framework_job::Generation,
+    pub(super) replacement: Option<semio_framework_job::ReplacementIdentity>,
     pub(super) path: store::os_store::owned_schema_decode::OwnedSchemaPath,
     pub(super) state: Generation2dMutationDecodeState,
     pub(super) token: Option<store::os_store::owned_schema_decode::OwnedSchemaToken>,
@@ -103,10 +100,9 @@ pub(super) struct Generation2dMutationDecodeAuthority {
 }
 
 impl Generation2dMutationDecodeAuthority {
-    pub(super) fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
+    pub(super) fn new(replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
         Self {
-            operation,
-            generation,
+            replacement,
             path,
             state: Generation2dMutationDecodeState::AwaitToken,
             token: None,

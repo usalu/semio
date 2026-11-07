@@ -383,3 +383,5 @@ mod pin_retirement_tests {
     }
 
 }
+
+semio_plugin::retained_command::terminal_frame_bound!(BitmapCommandWork);

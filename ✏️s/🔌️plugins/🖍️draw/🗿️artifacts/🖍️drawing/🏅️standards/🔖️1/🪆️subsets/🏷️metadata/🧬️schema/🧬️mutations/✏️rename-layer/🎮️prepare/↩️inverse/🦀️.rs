@@ -51,34 +51,35 @@ impl DrawingRenameInverseCursor {
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
             2 => {
-                let step = self.identifier.advance(payload.project(1, |payload| &payload.layer_id), body, grant)?;
+                let step = self.identifier.advance(payload.project(1, |payload| &payload.layer_id), body, grant).result?;
                 if matches!(step, RetainedCloneStep::Complete(_)) { self.phase = 3; }
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
             3 => {
                 let state = &mut *self.state;
                 let source = state.plan.as_ref().ok_or_else(|| refusal("Drawing rename inverse has no retained plan"))?.inverse_name()?.ok_or_else(|| refusal("Drawing rename inverse has no original name"))?;
-                let step = state.name.advance(source, body, grant)?;
+                let step = state.name.advance(source, body, grant).result?;
                 if matches!(step, RetainedCloneStep::Complete(_)) { state.phase = 4; }
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
             4 => {
                 if grant.maximum_copy_bytes < size_of::<RenameLayer>() { return Ok(RetainedCloneStep::Progress(Default::default())); }
-                let layer_id = self.identifier.take().ok_or_else(|| refusal("Drawing rename inverse identifier has no completed owner"))?;
-                let new_name = self.name.take().expect("completed Drawing inverse name");
+                let (layer_id, identifier_progress) = self.identifier.take(grant).result?.ok_or_else(|| refusal("Drawing rename inverse identifier has no completed owner"))?;
+                let (new_name, name_progress) = self.name.take(grant).result?.ok_or_else(|| refusal("Drawing rename inverse name has no completed owner"))?;
                 self.pending = Some(RenameLayer { layer_id, new_name });
                 self.identifier.begin_close();
                 self.name.begin_close();
                 self.phase = 5;
-                Ok(payload_progress(size_of::<RenameLayer>()))
+                let payload = payload_progress(size_of::<RenameLayer>()).progress();
+                Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: payload.copied_items + identifier_progress.copied_items + name_progress.copied_items, copied_bytes: payload.copied_bytes + identifier_progress.copied_bytes + name_progress.copied_bytes, retained_capacity_bytes: payload.retained_capacity_bytes + identifier_progress.retained_capacity_bytes + name_progress.retained_capacity_bytes, released_bytes: payload.released_bytes + identifier_progress.released_bytes + name_progress.released_bytes }))
             }
             5 => {
-                let step = self.identifier.close_step(grant)?;
+                let step = self.identifier.close_step(grant).result?;
                 if self.identifier.terminal_is_empty() { self.phase = 6; }
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
             6 => {
-                let step = self.name.close_step(grant)?;
+                let step = self.name.close_step(grant).result?;
                 if self.name.terminal_is_empty() { self.phase = 7; }
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
@@ -117,8 +118,8 @@ impl DrawingRenameInverseCursor {
         if !self.closing { return Err(refusal("Drawing rename inverse closure was not begun")); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !self.preparation.terminal_is_empty() { return self.preparation.close_granted(grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
-        if !self.identifier.terminal_is_empty() { return self.identifier.close_step(grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
-        if !self.name.terminal_is_empty() { return self.name.close_step(grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if !self.identifier.terminal_is_empty() { return self.identifier.close_step(grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if !self.name.terminal_is_empty() { return self.name.close_step(grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(owner) = self.pending_close.as_mut() {
             let step = owner.step(grant)?;
             if owner.terminal_is_empty() { self.pending_close = None; }

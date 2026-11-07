@@ -13,7 +13,7 @@ use std::collections::BTreeMap;
 /// per-window options keyed by window-instance id" rule). Distinct from `semio_os::OsWorkflowCamera`
 /// (a plain, non-`dsl`-field data type this crate can't blanket-impl `dsl::DslField` for under the
 /// orphan rule) — converts to/from it 1:1 at the render boundary.
-#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SpaceWindowCamera {
@@ -169,7 +169,7 @@ store::config_diff! {
 //#region 🔖️ConfigOperations
 /// 🧮️ `SpaceConfig`'s operation enum — one variant per settled interaction, each setting only the slots (or keyed camera rows) of
 /// the fields it owns, with the same variant carrying the base values as its inverse. There is no whole-config variant.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum SpaceConfigMutation {
     #[dsl(key = "active-node")]
@@ -201,7 +201,7 @@ pub enum SpaceConfigMutation {
 }
 
 /// 🎯️ The active node a setting installs; its wire record is exactly the former variant's fields.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "active-node")]
@@ -210,7 +210,7 @@ pub struct ActiveNodeSetting {
 }
 
 /// 🎯️ The focused node a setting installs; its wire record is exactly the former variant's fields.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "focused-node")]
@@ -219,7 +219,7 @@ pub struct FocusedNodeSetting {
 }
 
 /// 📋️ The clipboard a setting installs; its wire record is exactly the former variant's fields.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "clipboard")]
@@ -228,7 +228,7 @@ pub struct ClipboardSetting {
 }
 
 /// 🗂️ The collapsed nodes a setting installs; its wire record is exactly the former variant's fields.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "collapsed")]
@@ -237,7 +237,7 @@ pub struct CollapsedSetting {
 }
 
 /// 🖼️ The preview-off nodes a setting installs; its wire record is exactly the former variant's fields.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "preview-off")]
@@ -246,7 +246,7 @@ pub struct PreviewOffSetting {
 }
 
 /// 🎥️ The window camera a setting installs; its wire record is exactly the former variant's fields.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "camera")]
@@ -257,7 +257,7 @@ pub struct CameraSetting {
 }
 
 /// 🎥️ The window whose camera row a removal drops; its wire record is exactly the former variant's fields.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "remove-camera")]
@@ -266,7 +266,7 @@ pub struct CameraRemoval {
 }
 
 /// ⌨️ The workflow engagement input a setting installs; its wire record is exactly the former variant's fields.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "workflow-engagement-input")]
@@ -275,7 +275,7 @@ pub struct WorkflowEngagementInputSetting {
 }
 
 /// ⌨️ The compiled DAG engagement input a setting installs; its wire record is exactly the former variant's fields.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "compiled-dag-engagement-input")]
@@ -284,7 +284,7 @@ pub struct CompiledDagEngagementInputSetting {
 }
 
 /// 📥️ The in-flight media-import target a setting installs; its wire record is exactly the former variant's fields.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "pending-import")]
@@ -294,7 +294,7 @@ pub struct PendingImportSetting {
 }
 
 /// 🌱️ The open studio's catalog id a setting installs; its wire record is exactly the former variant's fields.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "space-id")]
@@ -303,7 +303,7 @@ pub struct SpaceIdSetting {
 }
 
 /// 👁️ The active panel tab a setting installs; its wire record is exactly the former variant's fields.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "active-panel-tab")]
@@ -364,6 +364,7 @@ impl protocol::OpBinary for SpaceConfigMutation {
     }
 }
 
+semio_os_kernel::original_ordinal_operation_receiving!(SpaceConfigMutation);
 //#endregion 🔖️OpCodec
 
 impl protocol::Mutation<SpaceConfig> for SpaceConfigMutation {
@@ -589,7 +590,7 @@ impl protocol::Mutation<SpaceConfig> for SpaceConfigMutation {
 
 }
 
-impl protocol::protocol::ColdMutation<SpaceConfig> for SpaceConfigMutation {
+impl protocol::ColdMutation<SpaceConfig> for SpaceConfigMutation {
  type ReferenceDiff = SpaceConfigDiff;
 fn diff(&self, base: &SpaceConfig) -> protocol::MutationOutcome<SpaceConfigDiff> {
         protocol::MutationOutcome::new(match self {

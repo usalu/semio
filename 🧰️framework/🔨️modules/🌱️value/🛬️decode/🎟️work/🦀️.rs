@@ -72,3 +72,10 @@ impl NativeDecodeControl<'_>{
   let mut scope=Scope{control,maximum:&mut self.maximum_bytes,scope_maximum:&mut self.scope_maximum,ledger:&mut self.ledger,completed:&mut self.completed,total:&mut self.total,started:&mut self.started,stage:&mut self.stage,depth:&mut self.depth,actual:&mut self.work.actual,reserved:&mut self.work.reserved,reserved_issuer:&mut self.work.reserved_issuer,reserved_action:&mut self.work.reserved_action,quote_pending:&mut self.work.quote_pending};operation(&mut scope.control)
  }
 }
+impl<'a> NativeDecodeControl<'a>{
+ /// 🎟️ Installs one explicit caller work loan before any decoder effect is admitted, so a control that outlives one synchronous scope keeps the same loan like its retirement recipient.
+ pub fn install_work_recipient(&mut self,recipient:&'a mut NativeDecodeWorkLoan<'a>)->Result<(),ValueError>{
+  if self.work.recipient.is_some()||self.work.reserved_issuer.is_some()||self.work.quote_pending||self.work.actual!=self.work.baseline{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native decode requires one unused explicit work loan"))}
+  self.work.recipient=Some(recipient);Ok(())
+ }
+}

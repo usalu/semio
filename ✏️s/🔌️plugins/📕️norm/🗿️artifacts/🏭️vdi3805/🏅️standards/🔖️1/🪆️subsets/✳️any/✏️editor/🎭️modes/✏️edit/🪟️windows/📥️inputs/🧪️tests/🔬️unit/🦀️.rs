@@ -25,7 +25,7 @@ fn immutable_product_identity_is_visible_and_has_no_commit_control_in_either_loc
         assert!(view.read_only);
         let mut controls = field_controls(&view, &value, "norm-inputs.catalog.products[id=RAD-600].id", "s.norm.vdi3805@1/*#editor", locale).expect("identity value");
         assert_eq!(controls.len(), 1);
-        let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(controls.remove(0))).expect("identity projection");
+        let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::ComponentTree::new(controls.remove(0))).expect("identity projection");
         assert!(json.contains("RAD-600"), "{json}");
         assert!(json.contains(if locale == Locale::En { "Read only" } else { "Schreibgeschützt" }), "{json}");
         assert!(!json.contains("setField") && !json.contains(".input"), "{json}");

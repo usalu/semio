@@ -219,10 +219,11 @@ export async function verifyGenerationReceiptV1(input:GenerationVerifyInputV1):P
   const rows=decodeRows(input.readEvidence(receipt.membership.frontier.name,protocol.maximumEvidenceBytes),receipt.membership.frontier),flags=new Map<string,number>(),child=(parent:string,name:string)=>parent==="."?name:parent+"/"+name;
   for(const row of rows)if(row[0]==="d")flags.set(row[1]as string,row[10]as number);
   const settled=input.vouched?await input.vouched(rows.map(row=>row[1]as string)):new Set<string>();
-  const scan=(path:string):boolean=>{
+  const scan=async(path:string):Promise<boolean>=>{
    if(++scanned>protocol.maximumScan)return true;
-   let list:readonly Readonly<{name:string;kind:string}>[];try{list=input.project(path);}catch{return true;}
-   return list.some(entry=>entry.name==="package.json"||entry.kind==="symlink"||entry.kind==="directory"&&scan(join(path,entry.name)));
+   await advance();let list:readonly Readonly<{name:string;kind:string}>[];try{list=input.project(path);}catch{return true;}
+   for(const entry of list)if(entry.name==="package.json"||entry.kind==="symlink"||entry.kind==="directory"&&await scan(join(path,entry.name)))return true;
+   return false;
   };
   for(const row of rows){
    if(settled.has(row[1]as string)){if(++work%protocol.checkWork===0)control.check();if(work%protocol.progressWork===0)await control.tick(work);continue;}
@@ -232,7 +233,8 @@ export async function verifyGenerationReceiptV1(input:GenerationVerifyInputV1):P
    if(row[7]===1&&String(facts.dev)===row[2]&&String(facts.ino)===row[3]&&Number(facts.mode)===row[4]&&String(facts.mtimeNs)===row[5]&&String(facts.ctimeNs)===row[6])continue;
    if(++relisted>protocol.maximumRelist)return mismatch("membership-churn",row[1]as string);
    const live=input.project(path);if(generationProjectionDigestV1(live)===row[8])continue;
-   const pruned=live.filter(entry=>entry.kind!=="directory"||(flags.get(child(row[1]as string,entry.name))??(scan(join(path,entry.name))?1:0))===1);
+   const pruned:Readonly<{name:string;kind:string}>[]=[];
+   for(const entry of live)if(entry.kind!=="directory"||(flags.get(child(row[1]as string,entry.name))??(await scan(join(path,entry.name))?1:0))===1)pruned.push(entry);
    if(generationProjectionDigestV1(pruned)!==row[9])return mismatch("membership-changed",row[1]as string,"listing");
   }
   if(!input.recheck)for(const row of decodeRows(input.readEvidence(receipt.execution.evidence.name,protocol.maximumEvidenceBytes),receipt.execution.evidence)){

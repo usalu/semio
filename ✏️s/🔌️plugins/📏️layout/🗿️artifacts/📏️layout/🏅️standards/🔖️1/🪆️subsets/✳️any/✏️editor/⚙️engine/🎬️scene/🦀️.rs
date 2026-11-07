@@ -38,14 +38,10 @@ use text_fonts::install_native_text_fonts;
 pub mod layout_engine_and_views;
 use layout_engine_and_views::{LayoutEngine, build_display_list_for_page, default_paragraph, frame_layer_visible, layout_story_in_frame, outside_interactive_view};
 
-#[path = "✍️drawing-labels-and-rasters/🦀️.rs"]
-mod drawing_labels_and_rasters;
-use drawing_labels_and_rasters::{DrawingLabel, background_scene, fit_from_points, place_drawing_labels, place_drawing_rasters, push_drawing_raster, raw_drawing_labels, raw_drawing_rasters, shape_drawing_label, stroke_points, unshaped_drawing_label};
-
 #[path = "🖌️drawing-strokes-and-paths/🦀️.rs"]
 mod drawing_strokes_and_paths;
 pub use drawing_strokes_and_paths::drawing_kind;
-use drawing_strokes_and_paths::{drawing_strokes, paint_display_stroke, place_drawing_in_frame, raw_drawing_strokes};
+use drawing_strokes_and_paths::paint_display_stroke;
 
 #[path = "🧩️assemble-display-list/🦀️.rs"]
 mod display_list_assembly;

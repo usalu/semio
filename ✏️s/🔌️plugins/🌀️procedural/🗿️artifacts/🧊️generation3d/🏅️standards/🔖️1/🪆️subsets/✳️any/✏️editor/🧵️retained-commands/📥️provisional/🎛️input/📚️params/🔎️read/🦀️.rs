@@ -39,7 +39,7 @@ impl NativeParamReadWork{
  fn advance_original(&mut self,source:&Dictionary,grant:RetainedCloneGrant)->Result<bool,ValueError>{
   let d=self.next_demands(source,grant.maximum_copy_bytes)?;if self.ready{return Ok(true)}if !retained_clone_grant_admits(grant,d){return Ok(false)}
   self.binding=Some((source as*const Dictionary as usize,source.original_root_identity(),source.len()));
-  if let Some(close)=self.fields.close.as_mut(){if close.terminal_is_empty(){self.fields.close=None;self.phase=7;self.work=1;self.progress.copied_items=1}else{let result=close.step(grant);self.work=close.last_turn_work();self.progress=close.step_progress();result?}return Ok(false)}
+  if let Some(close)=self.fields.close.as_mut(){if close.terminal_is_empty(){self.fields.close=None;self.phase=7;self.work=1;self.progress.copied_items=1}else{let result=close.step(grant);self.work=close.last_turn_work();self.progress=close.step_progress();result?;}return Ok(false)}
   self.work=1;self.progress=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};
   match self.phase{
    0=>{let turn=source.pairs().admit_lookup_borrowed_original(self.key(),grant);self.work=turn.work;self.progress=Default::default();let(lookup,p)=turn.result?;self.fields.outer=Some(lookup);self.progress=p;self.phase=1},
@@ -61,7 +61,7 @@ impl NativeParamReadWork{
  }
  fn close_original(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   if !self.closing{return Err(invalid())}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}if !retained_clone_grant_admits(grant,self.next_close_demands(grant.maximum_copy_bytes)?){return Ok(RetainedCloneStep::Progress(Default::default()))}
-  if let Some(close)=self.fields.close.as_mut(){if close.terminal_is_empty(){self.fields.close=None;self.work=1;self.progress.copied_items=1}else{let result=close.step(grant);self.work=close.last_turn_work();self.progress=close.step_progress();result?}}
+  if let Some(close)=self.fields.close.as_mut(){if close.terminal_is_empty(){self.fields.close=None;self.work=1;self.progress.copied_items=1}else{let result=close.step(grant);self.work=close.last_turn_work();self.progress=close.step_progress();result?;}}
   else{let lookup=self.fields.inner.take().or_else(||self.fields.outer.take()).ok_or_else(invalid)?;self.fields.close=Some(ControlledRetirement::new(lookup).unwrap_or_else(|_|unreachable!("native parameter lookup supports controlled retirement")));self.work=1;self.progress.copied_items=1}
   Ok(RetainedCloneStep::Progress(self.progress))
  }

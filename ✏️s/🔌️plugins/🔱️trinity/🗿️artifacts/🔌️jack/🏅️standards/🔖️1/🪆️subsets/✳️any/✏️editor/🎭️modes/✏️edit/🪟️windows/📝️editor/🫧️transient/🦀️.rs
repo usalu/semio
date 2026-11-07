@@ -9,7 +9,7 @@ pub struct JackEditorSelection {
     pub end: u64,
 }
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_os_kernel::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "trinity.jackeditorwindowtransient")]
 #[dsl(layout = "lines")]
@@ -61,8 +61,8 @@ impl pack::snapshot::ArtifactPack for JackEditorWindowTransient {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for JackEditorWindowTransient {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for JackEditorWindowTransient {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -132,17 +132,17 @@ fn editor_window_transient_transfer(mutation: JackEditorWindowTransientMutation)
 
 pub struct JackEditorWindowTransientOwner;
 
-impl semio_framework_plugin::WindowTransientOwner for JackEditorWindowTransientOwner {
+impl semio_plugin::WindowTransientOwner for JackEditorWindowTransientOwner {
     const WINDOW_KIND_ID: &'static str = WINDOW_KIND_ID;
     type State = JackEditorWindowTransient;
     type Mutation = JackEditorWindowTransientMutation;
 
-    fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_framework_plugin::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
-    fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
+    fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_plugin::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
+    fn build_owners() -> semio_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
         let state = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::State>::default());
         let mutation = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::Mutation>::default());
         let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(editor_window_transient_footprint, editor_window_transient_transfer, state.clone(), mutation.clone()));
-        semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
+        semio_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
     }
 }
 

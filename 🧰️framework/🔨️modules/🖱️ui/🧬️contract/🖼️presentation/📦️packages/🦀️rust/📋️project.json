@@ -17,11 +17,11 @@
         "semio": {
           "execution": {
             "version": 1,
-            "kind": "source",
-            "runtimeSourceEntries": [
-              "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🛬️receive/🟦️.ts"
-            ]
-          }
+            "kind": "source"
+          },
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🛬️receive/🟦️.ts"
+          ]
         }
       },
       "options": {

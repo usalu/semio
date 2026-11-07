@@ -106,9 +106,9 @@ semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(ZipEditorComma
 #[derive(Default, Clone, Copy)]
 pub struct ZipIso21320Editor;
 
-fn require_iso21320(diagnostics: Vec<semio_framework_diagnostic::Diagnostic>) -> Result<(), semio_framework_plugin::MediaError> {
+fn require_iso21320(diagnostics: Vec<semio_framework_diagnostic::Diagnostic>) -> Result<(), semio_plugin::MediaError> {
     if let Some(issue) = diagnostics.into_iter().find(|issue| matches!(issue.severity, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
-        return Err(semio_framework_plugin::MediaError::Payload("artifact:natural".into(), issue.message));
+        return Err(semio_plugin::MediaError::Payload("artifact:natural".into(), issue.message));
     }
     Ok(())
 }
@@ -129,18 +129,18 @@ impl ArtifactEditor for ZipIso21320Editor {
     const DIALECT: Dialect = ZIP_ISO21320_EDITOR_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_ZIP_DOCUMENT_SCHEMA;
 
-    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
-        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.zip@2.0", extension: ".zip", media_type: "application/zip", binary: true })
+    fn natural_file_codec() -> Option<semio_plugin::NaturalFileCodec> {
+        Some(semio_plugin::NaturalFileCodec { format_kind: "s.stdio.zip@2.0", extension: ".zip", media_type: "application/zip", binary: true })
     }
 
-    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_plugin::MediaError> {
         require_iso21320(check_iso21320_conformance(snapshot))?;
-        crate::standards::v2_0::subsets::base::io::encode_zip(snapshot).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:natural".into(), error.to_string()))
+        crate::standards::v2_0::subsets::base::io::encode_zip(snapshot).map_err(|error| semio_plugin::MediaError::Payload("artifact:natural".into(), error.to_string()))
     }
 
-    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_plugin::MediaError> {
         require_iso21320(crate::standards::v2_0::subsets::iso21320::io::check_iso21320_wire_conformance(bytes))?;
-        let snapshot = crate::standards::v2_0::subsets::base::io::decode_zip(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:natural".into(), error.to_string()))?;
+        let snapshot = crate::standards::v2_0::subsets::base::io::decode_zip(bytes).map_err(|error| semio_plugin::MediaError::Payload("artifact:natural".into(), error.to_string()))?;
         require_iso21320(check_iso21320_conformance(&snapshot))?;
         Ok(snapshot)
     }

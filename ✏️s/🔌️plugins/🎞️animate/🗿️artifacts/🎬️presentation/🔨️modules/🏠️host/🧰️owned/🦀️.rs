@@ -70,9 +70,9 @@ pub fn presentation_envelope_decode_owner_bundle() -> store::os_store::owned_sch
 }
 
 impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<PresentationSnapshot, PresentationMutation> for PresentationEnvelopeOwnedFieldCatalog {
-    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Result<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<PresentationSnapshot, PresentationMutation>>, Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<PresentationSnapshot>>> {
+    fn begin_vcs(&self, replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Result<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<PresentationSnapshot, PresentationMutation>>, Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<PresentationSnapshot>>> {
         store::os_store::owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority::try_new(
-            self.begin_snapshot(operation, generation, path),
+            self.begin_snapshot(replacement, path),
             std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<PresentationSnapshot>::default()),
             std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<PresentationMutation>::default()),
             self.edit_history_decoder(),
@@ -88,15 +88,15 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<Pre
         store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES
     }
 
-    fn begin_snapshot(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<PresentationSnapshot>> {
-        Box::new(PresentationPackSnapshotAuthority::new(operation, generation, path))
+    fn begin_snapshot(&self, replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<PresentationSnapshot>> {
+        Box::new(PresentationPackSnapshotAuthority::new(replacement, path))
     }
 
-    fn begin_mutation(&self, _operation: semio_framework_job::OperationId, _generation: semio_framework_job::Generation, _path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<PresentationMutation>> {
+    fn begin_mutation(&self, _replacement: Option<semio_framework_job::ReplacementIdentity>, _path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<PresentationMutation>> {
         Box::new(PresentationRejectedNestedAuthority { terminal: false, code: "presentation-envelope.fresh-mutation-not-admitted" })
     }
 
-    fn begin_spr_conflict(&self, _operation: semio_framework_job::OperationId, _generation: semio_framework_job::Generation, _path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority> {
+    fn begin_spr_conflict(&self, _replacement: Option<semio_framework_job::ReplacementIdentity>, _path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority> {
         Box::new(PresentationRejectedConflictAuthority { terminal: false })
     }
 
@@ -118,8 +118,7 @@ enum PresentationPackSnapshotState {
 }
 
 pub struct PresentationPackSnapshotAuthority {
-    operation: semio_framework_job::OperationId,
-    generation: semio_framework_job::Generation,
+    replacement: Option<semio_framework_job::ReplacementIdentity>,
     path: store::os_store::owned_schema_decode::OwnedSchemaPath,
     state: PresentationPackSnapshotState,
     value: std::mem::ManuallyDrop<Option<PresentationSnapshot>>,
@@ -127,14 +126,14 @@ pub struct PresentationPackSnapshotAuthority {
 }
 
 impl PresentationPackSnapshotAuthority {
-    fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
-        Self { operation, generation, path, state: PresentationPackSnapshotState::AwaitToken, value: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None) }
+    fn new(replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
+        Self { replacement, path, state: PresentationPackSnapshotState::AwaitToken, value: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None) }
     }
 
     /// 🧪️ An authority that already holds one live owned snapshot, for the drop-during-panic law.
     #[cfg(any(test, feature = "testkit"))]
-    pub fn with_live_value(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath, value: PresentationSnapshot) -> Self {
-        let mut authority = Self::new(operation, generation, path);
+    pub fn with_live_value(replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath, value: PresentationSnapshot) -> Self {
+        let mut authority = Self::new(replacement, path);
         *authority.value = Some(value);
         authority
     }
@@ -174,7 +173,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
             if !terminal {
                 return Err(diagnostic("presentation-envelope.snapshot-pack-must-be-scalar", token.start));
             }
-            self.state = PresentationPackSnapshotState::Decode(store::os_store::owned_schema_decode::OwnedSchemaHexAuthority::try_new(self.operation, self.generation, token, self.path)?);
+            self.state = PresentationPackSnapshotState::Decode(store::os_store::owned_schema_decode::OwnedSchemaHexAuthority::try_new(self.replacement, token, self.path)?);
         }
         let PresentationPackSnapshotState::Decode(authority) = &mut self.state else {
             return Err(diagnostic("presentation-envelope.snapshot-pack-token-replayed", token.start));
@@ -246,7 +245,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
         if self.retirement.is_none() {
             if let Some(value) = self.value.take() {
                 let factory = semio_framework_value::OwnedValueRetirementFactory::<PresentationSnapshot>::default();
-                return match store::ArtifactOwnedValueRetirementFactory::retire_owned(&factory, value, grant) {
+                return match store::ArtifactOwnedValueRetirementFactory::retire_owned(&factory, value, grant).result {
                     Ok((retirement, progress)) => {
                         *self.retirement = Some(retirement);
                         self.state = PresentationPackSnapshotState::Closing;
@@ -265,7 +264,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
             self.state = PresentationPackSnapshotState::Complete;
             return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
         }
-        let step = self.retirement.as_mut().expect("Presentation snapshot retirement remains retained").close_step(grant).map_err(|error| self.diagnostic_from(error))?;
+        let step = self.retirement.as_mut().expect("Presentation snapshot retirement remains retained").close_step(grant).result.map_err(|error| self.diagnostic_from(error))?;
         if self.retirement.as_ref().is_some_and(|retirement| retirement.terminal_is_empty()) {
             drop(self.retirement.take());
             self.state = PresentationPackSnapshotState::Complete;

@@ -83,7 +83,7 @@ pub use crate::publication_fixture::presence::mutations::change_publication_pres
 pub use crate::publication_fixture::presence::mutations::{PublicationPresenceMutation, change_publication_presence};
 
 impl semio_os_kernel::ArtifactPresenceSnapshot for PublicationPresence {
-    fn decode_presence_native(bytes: &[u8], owner: &mut semio_os_kernel::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, semio_framework_value::ValueError> {
+    fn decode_presence_native(bytes: &[u8], owner: &mut semio_os_kernel::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> semio_framework_value::RetainedWorkOutcome<Self, semio_os_kernel::io::control::NativeSnapshotFailure> {
         semio_os_presence_native_snapshot::decode_presence_json(bytes, owner)
     }
 }
@@ -104,7 +104,7 @@ mod original_native_laws {
             let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1 << 20, &mut callback);
             native.install_retirement_recipient(&mut recipient).unwrap();
             let mut owner = semio_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
-            let (value, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| PublicationPresence::decode_presence_native(bytes, &mut owner).unwrap());
+            let (value, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| PublicationPresence::decode_presence_native(bytes, &mut owner).result.unwrap());
             let progress = owner.progress();
             assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
             let third: PublicationPresence = serde_json::from_slice(bytes).unwrap();
@@ -115,7 +115,7 @@ mod original_native_laws {
             let mut native = semio_framework_value::NativeEncodeControl::new(1 << 20, &mut callback);
             native.install_retirement_recipient(&mut recipient).unwrap();
             let mut owner = semio_os_kernel::io::control::NativeSnapshotEncodeOwner::new(&mut native, grant);
-            let (encoded, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| value.encode_presence_native(&mut owner).unwrap());
+            let (encoded, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| value.encode_presence_native(&mut owner).result.unwrap());
             let progress = owner.progress();
             assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
             assert_eq!(encoded, serde_json::to_vec(&third).unwrap());
@@ -127,7 +127,7 @@ mod original_native_laws {
             let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1 << 20, &mut callback);
             native.install_retirement_recipient(&mut recipient).unwrap();
             let mut owner = semio_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
-            assert!(PublicationPresence::decode_presence_native(bytes, &mut owner).is_err());
+            assert!(PublicationPresence::decode_presence_native(bytes, &mut owner).result.is_err());
             assert!(serde_json::from_slice::<PublicationPresence>(bytes).is_err());
         }
     }

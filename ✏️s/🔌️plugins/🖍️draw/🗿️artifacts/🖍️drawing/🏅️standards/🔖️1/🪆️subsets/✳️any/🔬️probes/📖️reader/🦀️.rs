@@ -412,7 +412,7 @@ fn compare_svg(expected: &[SvgNode], actual: &[SvgNode]) -> J {
 //#region 🏭️Fixtures
 /// 🏭️ Writes an SVG document directly with `quick-xml`'s own `Writer` — never by calling this
 /// repository's `write_svg_xml`. One `<g transform="matrix(...)">` per scene node (mirroring
-/// `drawing_document_to_svg`'s own one-group-per-node shape), wrapping one `<path>` or `<text>` leaf.
+/// the drawing SVG writer's own one-group-per-node shape), wrapping one `<path>` or `<text>` leaf.
 struct SceneNode<'a> {
     matrix: [f64; 6],
     kind: &'a str,

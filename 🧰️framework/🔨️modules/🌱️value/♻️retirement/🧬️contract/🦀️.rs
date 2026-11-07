@@ -102,6 +102,12 @@ impl OriginalFailureFunding for dyn OriginalRetirementControl+'_{
  fn cancel_work(&mut self)->Result<(),ValueError>{self.cancel_failure_storage_work()}
  fn finish_work(&mut self)->Result<(),ValueError>{self.finish_failure_storage_work()}
 }
+/// 🧷️ The borrowed original cleanup loan is itself the funded original decoding custody it was lent from.
+impl OriginalRetirementControl for semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_> {
+    fn ledger_identity(&self) -> u64 { semio_framework_value_control_contract::OriginalRetirementCloseLoan::ledger_identity(self) }
+    fn retirement_recipient_identity(&self) -> Option<u64> { semio_framework_value_control_contract::OriginalRetirementCloseLoan::retirement_recipient_identity(self) }
+    fn charge(&mut self, bytes: usize) -> Result<(), ValueError> { semio_framework_value_control_contract::OriginalRetirementCloseLoan::charge(self, bytes) }
+}
 pub trait ErasedSnapshotRetirement: Send {
     /// 👶️ Selects a real source-owned birth separately from ordinary closure effects.
     fn requires_original_birth(&self)->bool{false}

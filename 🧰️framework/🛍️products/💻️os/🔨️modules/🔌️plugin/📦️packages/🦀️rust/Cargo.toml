@@ -210,6 +210,7 @@ semio-plugin-reactor-wit-bridge = { path = "../../⚛️reactor/🧬️wit-bridg
 
 [dev-dependencies]
 semio-plugin-testing-caller = { path = "../../🧪️testing/🎟️caller/📦️packages/🦀️rust" }
+semio-framework-2d-compute = { path = "../../../../../../🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust" }
 semio-framework-value-registry = { path = "../../../../../../🔨️modules/🌱️value/📋️registry/📦️packages/🦀️rust" }
 semio-plugin-instance-surface = { path = "../../🧵️instance/🛬️lifted/🌳️tree/📦️packages/🦀️rust" }
 semio-plugin-surface-fixture = { path = "../../🧪️tests/🪟️surface-fixture/📦️packages/🦀️rust" }

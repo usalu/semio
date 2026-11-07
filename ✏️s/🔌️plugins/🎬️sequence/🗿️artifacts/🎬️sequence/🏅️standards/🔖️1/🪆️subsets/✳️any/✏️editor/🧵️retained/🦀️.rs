@@ -244,7 +244,7 @@ impl SequenceRetainedArtifactWork {
 
 impl semio_plugin::retained_command::ArtifactCommandWork<semio_plugin::EditorApp<SequencePlayApp>> for SequenceRetainedArtifactWork {
     fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, semio_plugin::EditorApp<SequencePlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self>(), depth: 1, ..Default::default() })
+        Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() })
     }
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
         self.terminal_is_empty().then_some(size_of::<Self>())
@@ -482,7 +482,7 @@ impl SequenceRetainedConfigWork {
 
 impl semio_plugin::retained_command::ArtifactCommandWork<semio_plugin::EditorApp<SequencePlayApp>> for SequenceRetainedConfigWork {
     fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, semio_plugin::EditorApp<SequencePlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self>(), depth: 1, ..Default::default() })
+        Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() })
     }
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
         self.terminal_is_empty().then_some(size_of::<Self>())
@@ -682,7 +682,7 @@ impl SequenceRetainedExampleWork {
 
 impl semio_plugin::retained_command::ArtifactCommandWork<semio_plugin::EditorApp<SequencePlayApp>> for SequenceRetainedExampleWork {
     fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, semio_plugin::EditorApp<SequencePlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self>(), depth: 1, ..Default::default() })
+        Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() })
     }
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
         self.terminal_is_empty().then_some(size_of::<Self>())
@@ -829,3 +829,5 @@ impl semio_plugin::ArtifactOwnedToolJobFactory for SequenceRetainedExampleJobFac
     const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = SEQUENCE_RETAINED_EXAMPLE_PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️RetainedExampleRoutes
+
+semio_plugin::retained_command::terminal_frame_bound!(SequenceRetainedArtifactWork, SequenceRetainedConfigWork, SequenceRetainedExampleWork);

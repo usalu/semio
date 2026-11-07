@@ -170,11 +170,11 @@ impl Drop for OuterPackField {
     }
 }
 
-fn outer_pack_record(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> store::os_store::owned_schema_decode::OwnedSchemaRecordCursor {
+fn outer_pack_record() -> store::os_store::owned_schema_decode::OwnedSchemaRecordCursor {
     let mut pages = store::os_store::owned_schema_decode::OwnedSchemaDecodePages::try_with_credits(store::os_store::owned_schema_decode::OwnedSchemaDecodeCredits { maximum_pages: 1, maximum_bytes: 2 }).expect("outer retained Pack record credits");
     pages.admit_page(store::os_store::owned_schema_decode::OwnedSchemaDecodePage::try_from_slice(b"{}").expect("outer retained Pack record page")).unwrap_or_else(|_| panic!("outer retained Pack page admission"));
     pages.seal().expect("outer retained Pack record seal");
-    store::os_store::owned_schema_decode::artifact_envelope_decode_record(operation, generation, pages).unwrap_or_else(|_| panic!("outer retained Pack record cursor"))
+    store::os_store::owned_schema_decode::artifact_envelope_decode_record(None, pages).unwrap_or_else(|_| panic!("outer retained Pack record cursor"))
 }
 
 #[test]
@@ -196,7 +196,7 @@ fn retained_pack_outer_cancellation_preserves_subexact_source_and_releases_exact
     let admitted_source_bytes = session.progress().expect("outer retained Pack source progress").allocated_bytes;
     assert!(admitted_source_bytes > store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
 
-    let mut snapshot = Generation2dPackSnapshotAuthority::new(operation, generation, store::os_store::owned_schema_decode::OwnedSchemaPath::field("initialPack").expect("outer retained Pack snapshot path"));
+    let mut snapshot = Generation2dPackSnapshotAuthority::new(None, store::os_store::owned_schema_decode::OwnedSchemaPath::field("initialPack").expect("outer retained Pack snapshot path"));
     *snapshot.session = Some(session);
     snapshot.state = Generation2dPackSnapshotState::Ingest;
     let vcs = store::os_store::owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority::try_new(
@@ -211,7 +211,7 @@ fn retained_pack_outer_cancellation_preserves_subexact_source_and_releases_exact
     let maximum_retained_close_bytes = vcs.maximum_retained_close_bytes();
     let registry = store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecoderRegistry::new();
     let fields = Box::new(OuterPackField { authority: Some(vcs), maximum_close_byte_demand, maximum_retained_close_bytes });
-    let mut job = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeAuthority::try_new(outer_pack_record(operation, generation), &registry, fields).unwrap_or_else(|_| panic!("outer retained Pack decode admission"));
+    let mut job = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeAuthority::try_new(outer_pack_record(), &registry, fields).unwrap_or_else(|_| panic!("outer retained Pack decode admission"));
     InteractiveJob::begin_close(&mut job);
 
     let mut refused_subexact = false;

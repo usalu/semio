@@ -11,6 +11,7 @@ pub(super) struct Puzzle3dConfigStorePreparation {
     completed_bytes: usize,
     pub(super) phase: u8,
     cancelled: bool,
+    last_work: u64,
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
@@ -51,6 +52,8 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzz
         use semio_framework_value::retained_clone::RetainedCloneProgress;
         use semio_framework_value::ValueError;
         use semio_framework_value::ValueRefusalKind;
+        self.last_work = 0;
+        {static N:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);let n=N.fetch_add(1,std::sync::atomic::Ordering::Relaxed);if n<20||n%50_000==0{eprintln!("[DEBUG] aggregator-gate PR n={} phase={} permits_one={} cancelled={} closing={} refused={} prepared={}",n,self.phase,grant.permits_one(),self.cancelled,self.owners.is_closing(),self.owners.refused.is_some(),self.owners.prepared.is_some());}}
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -62,6 +65,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzz
         }
         match self.phase {
             0 => {
+                self.last_work = 1;
                 let base = self.owners.base.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "Puzzle3d Config preparation lost its exact base root"))?;
                 let mutation = self.owners.mutation.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "Puzzle3d Config preparation lost its mutation owner"))?;
                 if puzzle3d_config_store_mutation_bytes(mutation).is_none() {
@@ -78,6 +82,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzz
                 Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, RetainedCloneProgress::default()))
             }
             1 => {
+                self.last_work = 1;
                 let Some(authority) = self.owners.authority.as_ref() else {
                     return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "Puzzle3d Config preparation lost its Store authority"));
                 };
@@ -96,6 +101,10 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzz
             }
             _ => Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default())),
         }
+    }
+
+    fn last_turn_work(&self) -> u64 {
+        self.last_work
     }
 
     fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
@@ -182,7 +191,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
             Ok(progress) => progress,
             Err(error) => return Err((error, request)),
         };
-        Ok((Box::new(Puzzle3dConfigStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), completed_bytes: 0, phase: 0, cancelled: false }), progress))
+        Ok((Box::new(Puzzle3dConfigStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), completed_bytes: 0, phase: 0, cancelled: false, last_work: 0 }), progress))
     }
 }
 
@@ -205,6 +214,7 @@ pub(super) struct Puzzle3dArtifactStorePreparation {
     completed_bytes: usize,
     pub(super) phase: u8,
     cancelled: bool,
+    last_work: u64,
 }
 
 impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Puzzle3dPlaySnapshot, Puzzle3dMutation> for Puzzle3dArtifactStorePreparationFactory {
@@ -252,7 +262,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
             Ok(progress) => progress,
             Err(error) => return Err((error, request)),
         };
-        Ok((Box::new(Puzzle3dArtifactStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), completed_bytes: 0, phase: 0, cancelled: false }), progress))
+        Ok((Box::new(Puzzle3dArtifactStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), completed_bytes: 0, phase: 0, cancelled: false, last_work: 0 }), progress))
     }
 }
 
@@ -264,6 +274,8 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzz
         use semio_framework_value::retained_clone::RetainedCloneProgress;
         use semio_framework_value::ValueError;
         use semio_framework_value::ValueRefusalKind;
+        self.last_work = 0;
+        {static N:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);let n=N.fetch_add(1,std::sync::atomic::Ordering::Relaxed);if n<20||n%50_000==0{eprintln!("[DEBUG] aggregator-gate PR n={} phase={} permits_one={} cancelled={} closing={} refused={} prepared={}",n,self.phase,grant.permits_one(),self.cancelled,self.owners.is_closing(),self.owners.refused.is_some(),self.owners.prepared.is_some());}}
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -275,6 +287,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzz
         }
         match self.phase {
             0 => {
+                self.last_work = 1;
                 let base = self.owners.base.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "Puzzle3d Artifact preparation lost its exact base root"))?;
                 let mutation = self.owners.mutation.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "Puzzle3d Artifact preparation lost its mutation owner"))?;
                 let inverse = mutation.inverse(base.get())?;
@@ -287,6 +300,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzz
                 Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, RetainedCloneProgress::default()))
             }
             1 => {
+                self.last_work = 1;
                 let Some(authority) = self.owners.authority.as_ref() else {
                     return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "Puzzle3d Artifact preparation lost its Store authority"));
                 };
@@ -305,6 +319,10 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzz
             }
             _ => Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default())),
         }
+    }
+
+    fn last_turn_work(&self) -> u64 {
+        self.last_work
     }
 
     fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {

@@ -2,7 +2,7 @@
 use super::*;
 #[test]
 fn paged_receiver_headers_are_allocation_free_and_denied_close_is_zero_work(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../📐️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str::<serde_json::Value>(include_str!("../../../🎮️append/🎟️work/📐️.json")).unwrap()["receiveLaw"].clone();
  assert_eq!(fixture["rules"]["ownershipCopyBytes"],0);
  let (mut text,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||<PagedUtf8<8> as NativeReceive<crate::DslValue>>::receiver());
  assert_eq!(heap,(0,0));assert!(!text.terminal_is_empty());text.begin_close();

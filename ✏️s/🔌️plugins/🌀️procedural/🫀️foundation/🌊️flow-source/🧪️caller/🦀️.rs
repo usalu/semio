@@ -2,9 +2,9 @@
 use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,StepContext,OriginalTurnFailure,OperationId,Generation,close_original_retained_step};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedWorkOutcome};
 use semio_framework_value::retirement::{RetireOwned,controlled::ControlledRetirement};
-pub(crate) fn clock()->Option<u64>{Some(1000)}
+pub fn clock()->Option<u64>{Some(1000)}
 fn delta(a:RetainedCloneProgress,b:RetainedCloneProgress)->RetainedCloneProgress{RetainedCloneProgress{copied_items:b.copied_items-a.copied_items,copied_bytes:b.copied_bytes-a.copied_bytes,retained_capacity_bytes:b.retained_capacity_bytes-a.retained_capacity_bytes,released_bytes:b.released_bytes-a.released_bytes}}
-pub(crate) struct ScratchCaller{pub calls:usize,caller:OriginalJobFixtureCaller,decoder:OriginalJobDecodeOwner,stock:RetainedCloneGrant,loan:RetainedCloneGrant,born:usize,released:usize,maximum_work:u64}
+pub struct ScratchCaller{pub calls:usize,caller:OriginalJobFixtureCaller,decoder:OriginalJobDecodeOwner,stock:RetainedCloneGrant,loan:RetainedCloneGrant,born:usize,released:usize,maximum_work:u64}
 impl ScratchCaller{
  pub fn new(policy:&serde_json::Value,items:usize,seed_bytes:usize)->Self{let stock:RetainedCloneGrant=serde_json::from_value(policy["grant"].clone()).unwrap();let caller=OriginalJobFixtureCaller::admit(OperationId(policy["operation"].as_u64().unwrap()),Generation(policy["generation"].as_u64().unwrap()),stock,clock,policy["deadlineUs"].as_u64().unwrap(),policy["fuel"].as_u64().unwrap());let born=caller.born_bytes()+seed_bytes;Self{calls:0,caller,decoder:OriginalJobDecodeOwner::empty(),stock,loan:RetainedCloneGrant{maximum_items:items.min(stock.maximum_items),..stock},born,released:0,maximum_work:0}}
  pub fn turn<R>(&mut self,run:impl FnOnce(&mut StepContext<'_>)->Result<R,OriginalTurnFailure>)->R{

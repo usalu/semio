@@ -128,7 +128,7 @@ fn record(pages: &[Vec<u8>]) -> OwnedSchemaRecordCursor {
         admitted.admit_page(page).unwrap_or_else(|_| panic!("valid full-nonterminal admission"));
     }
     admitted.seal().expect("seal exact pages");
-    artifact_envelope_decode_record(semio_framework_job::OperationId(66), semio_framework_job::Generation(1), admitted).unwrap_or_else(|_| panic!("unstarted actual envelope record"))
+    artifact_envelope_decode_record(None, admitted).unwrap_or_else(|_| panic!("unstarted actual envelope record"))
 }
 
 fn note(failures: &mut Vec<String>, label: &str, condition: bool, detail: impl std::fmt::Debug) {

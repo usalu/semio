@@ -11,6 +11,10 @@ extern crate semio_framework_value_derive as value_derive;
 pub use crate::editor::animate::config::artifact_items_3::{FigureTileDraft, FigureTileFrame, FigureTileSource};
 pub use crate::editor::animate::config::artifact_items_13::{FigureTileDraftPatch};
 
+#[path = "../../🔺️delta/🦀️.rs"]
+mod delta;
+pub use delta::*;
+
 #[path = "."]
 pub mod standards {
     #[path = "."]

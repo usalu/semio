@@ -29,6 +29,7 @@ pub struct SourcingCurationArtifactPreparation {
     pub checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     pub cancelled: bool,
     pub retained_bytes: usize,
+    pub last_work: u64,
 }
 
 /// 📏️ The retained footprint of one document base — rejected rather than truncated when the curated
@@ -115,16 +116,17 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
             checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
             cancelled: false,
             retained_bytes: 0,
+            last_work: 0,
         }), progress))
     }
 }
 
-impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<CurationSnapshot, SourcingMutation> for SourcingCurationArtifactPreparation {
-    fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, _receiving: &mut semio_framework_dsl::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
-        if !grant.permits_one() || self.cancelled || self.owners.is_closing() { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
+impl SourcingCurationArtifactPreparation {
+    fn advance_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         if self.owners.refused.is_some() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal")); }
         if self.owners.prepared.is_some() { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default())); }
         if self.owners.candidate.is_none() {
+            self.last_work = 1;
             let base = self.owners.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Sourcing Curation preparation lost its exact base root"))?.get();
             sourcing_curation_document_bytes(base).map_err(refusal_of)?;
             let bytes = SOURCING_CURATION_DOCUMENT_GRANT_BYTES;
@@ -138,6 +140,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Cura
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, Default::default()));
         }
         if grant.maximum_copy_bytes < self.retained_bytes { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
+        self.last_work = 1;
         let authority = self.owners.authority.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Sourcing Curation preparation lost its Store authority"))?;
         let (post, inverse, forward) = self.owners.candidate.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Sourcing Curation preparation lost its candidate"))?;
         let prepared = match authority.prepare_one_item(authority.next_edit(forward, inverse), std::sync::Arc::new(post)) {
@@ -148,7 +151,20 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Cura
         *self.owners.prepared = Some(prepared);
         Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()))
     }
+}
 
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<CurationSnapshot, SourcingMutation> for SourcingCurationArtifactPreparation {
+    fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, receiving: &mut semio_framework_dsl::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        self.last_work = 0;
+        if !grant.permits_one() || self.cancelled || self.owners.is_closing() { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
+        if self.owners.refused.is_some() || self.owners.prepared.is_some() { return self.advance_step(grant); }
+        if !receiving.prepare_work(1)? { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
+        let result = self.advance_step(grant);
+        receiving.commit_work(self.last_work)?;
+        result
+    }
+
+    fn last_turn_work(&self) -> u64 { self.last_work }
     fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint { self.checkpoint }
     fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<CurationSnapshot, SourcingMutation>> { self.owners.prepared.as_ref() }
     fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<CurationSnapshot, SourcingMutation>> { self.owners.prepared.take() }

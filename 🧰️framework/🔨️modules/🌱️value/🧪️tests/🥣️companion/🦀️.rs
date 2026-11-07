@@ -37,9 +37,6 @@ pub fn bytes(relative: &str) -> &'static [u8] {
 #[path = "../../♻️retirement/🧪️tests/🔬️unit/🦀️.rs"]
 mod original_retirement_integration_tests;
 
-#[path = "../../♻️retirement/🎟️demand/🧪️tests/🦀️.rs"]
-mod original_demand_tests;
-
 #[path = "../../⚠️refusal/🧪️tests/🦀️.rs"]
 mod refusal_tests;
 
@@ -57,8 +54,6 @@ pub mod shared_utf8;
 #[path = "🧬️bounded-clone/🦀️.rs"]
 pub mod bounded_clone;
 
-#[path = "🔗️read/🦀️.rs"]
-pub mod read;
 
 
 

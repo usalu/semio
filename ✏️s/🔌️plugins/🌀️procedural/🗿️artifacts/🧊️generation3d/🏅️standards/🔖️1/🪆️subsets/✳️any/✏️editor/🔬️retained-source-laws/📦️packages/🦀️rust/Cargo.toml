@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-procedural-3d-retained-source-laws"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Companion laws of semio-s-artifact-procedural-retained-source against the real generation3d mutations, snapshot and editor app"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dev-dependencies]
+semio-s-artifact-procedural-retained-source = { workspace = true, features = ["testkit"] }
+semio-s-artifact-procedural-3d-retained-commands = { workspace = true }
+semio-s-artifact-procedural-3d-mutations = { workspace = true }
+semio-s-artifact-procedural-3d-model = { workspace = true }
+semio-s-artifact-procedural-3d-editor = { path = "../../../📦️packages/🦀️rust" }
+semio-plugin = { workspace = true }
+semio-framework-value-snapshot-read = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
+semio-os-kernel = { workspace = true }
+semio-os-flow = { workspace = true }
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-trace = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
+semio-framework-artifact-flow-flow = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

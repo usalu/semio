@@ -25,7 +25,12 @@ pub struct SpacePresence {
     pub preview_off_node_ids: Vec<String>,
 }
 
-impl store::ArtifactPresenceSnapshot for SpacePresence {}
+impl store::ArtifactPresenceSnapshot for SpacePresence {
+    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> semio_framework_value::RetainedWorkOutcome<Self, store::io::control::NativeSnapshotFailure> {
+        let _ = (bytes, owner);
+        semio_framework_value::RetainedWorkOutcome { result: Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "space presence has no native decode until its camera map has an ordered-map receiver").into()), work: 0 }
+    }
+}
 
 store::sparse_record_diff! {
     record: SpacePresence,
@@ -93,7 +98,7 @@ impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Space
 //#region 🔖️PresenceMutation
 /// 👥️ `SpacePresence`'s operation enum — one variant per settled interaction, each setting only the slots (or keyed camera rows) of the fields it owns, with the same
 /// variant carrying the base values as its inverse. There is no whole-presence variant.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned)]
 pub enum SpacePresenceMutation {
     #[dsl(key = "active-node")]
     SetActiveNode { node_id: Option<String> },
@@ -231,6 +236,7 @@ impl protocol::OpBinary for SpacePresenceMutation {
         dsl::variants_binary::decode_op(bytes)
     }
 }
+semio_os_kernel::original_ordinal_operation_receiving!(SpacePresenceMutation);
 //#endregion 🔖️PresenceMutation
 
 #[cfg(test)]

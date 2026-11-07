@@ -3,6 +3,9 @@
 use crate::context::*;
 use super::*;
 
+/// 🔒️ The worker-job retirement slots are process-global: mounted laws of one binary run one at a time.
+static AGGREGATOR_SERIAL: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
 const AGGREGATOR_SEED_ID: &str = "seed-left-001";
 const AGGREGATOR_KIND_ID: &str = "Hexagonal Cut Concrete Forest Left";
 const AGGREGATOR_MESH_URL: &str = "hexagonal-cut-concrete-forest-left.glb";
@@ -37,6 +40,7 @@ async fn assert_every_pane_body_renders(app: &mut Puzzle3dApp, locale: semio_ui_
 /// 🧩️ LAW: the Aggregator pane loads the page's Concrete Forest fixture, renders every body in en and de, adds the catalogue kind into both views and the document, undoes, redoes and closes with the store drop witness satisfied.
 #[semio_framework_async_macros::async_test]
 async fn aggregator_pane_loads_applies_undoes_and_closes() {
+    let _serial = AGGREGATOR_SERIAL.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
     let mut app = app().await;
     let loaded = object_ids(&app);
     assert_eq!(loaded.len(), CONCRETE_FOREST_EXAMPLE_SNAPSHOT.objects.len(), "the booted document is the page fixture");
@@ -60,6 +64,19 @@ async fn aggregator_pane_loads_applies_undoes_and_closes() {
     let new_id = new_ids[0].clone();
     assert!(new_id.starts_with("puzzle3d.object."), "the new object id is minted by the document: {new_id}");
 
+    {
+        let composite = render_composite(&mut app).await;
+        let ids: Vec<String> = instances_of(&composite).iter().filter_map(|instance| instance.get("id").and_then(Value::as_str).map(str::to_string)).collect();
+        eprintln!("[DEBUG] aggregator-gate V composite ids={ids:?} objects={added:?}");
+        eprintln!("[DEBUG] aggregator-gate V composite raw count={} {}",instances_of(&composite).len(),instances_of(&composite).iter().map(|i|i.to_string().chars().take(300).collect::<String>()).collect::<Vec<_>>().join(" || "));
+        let window = render_window(&mut app, semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID).await;
+        let ids: Vec<String> = instances_of(&window).iter().filter_map(|instance| instance.get("id").and_then(Value::as_str).map(str::to_string)).collect();
+        eprintln!("[DEBUG] aggregator-gate V window ids={ids:?}");
+    }
+    for view_id in AGGREGATOR_VIEW_IDS {
+        let shown = view_instance_ids(&mut app, view_id).await;
+        eprintln!("[DEBUG] aggregator-gate V {view_id} ids={shown:?}");
+    }
     for view_id in AGGREGATOR_VIEW_IDS {
         assert_eq!(view_instance_ids(&mut app, view_id).await, added, "{view_id} shows the new instance");
         let node = render_window_refresh(&mut app, main::BODY_KEY, view_id).await;
@@ -70,6 +87,7 @@ async fn aggregator_pane_loads_applies_undoes_and_closes() {
     let row = render_panel_body(&mut app, artifact::BODY_KEY, Some(AGGREGATOR_VIEW_IDS[0])).await.to_string();
     assert!(row.contains(&new_id) && row.contains(AGGREGATOR_KIND_ID), "the document tree carries the new row");
 
+    eprintln!("[DEBUG] aggregator-gate U parent_before_undo={:?}", app.parts().1.original_source_parent().map(|_| ()).map_err(|e| e.into_message()));
     dispatch(&mut app, "undo", None, None).await.expect("undo");
     assert_eq!(object_ids(&app), loaded, "undo removes the added object");
     for (view_id, before) in AGGREGATOR_VIEW_IDS.iter().zip(&loaded_views) {
@@ -86,5 +104,28 @@ async fn aggregator_pane_loads_applies_undoes_and_closes() {
     let row = render_panel_body(&mut app, artifact::BODY_KEY, Some(AGGREGATOR_VIEW_IDS[0])).await.to_string();
     assert!(row.contains(&new_id), "the document tree restores the row on redo");
 
+    assert!(close_witness(&mut app).expect("original Puzzle3D app retirement"), "the app reaches terminal-empty ownership");
+}
+
+/// 🧩️ LAW: one catalogue add alone settles within the authored turn bound and grows the document by exactly one object, isolating the dispatch stall from every later smoke step.
+#[semio_framework_async_macros::async_test]
+async fn aggregator_catalogue_add_settles_alone() {
+    let _serial = AGGREGATOR_SERIAL.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    let mut app = app().await;
+    let loaded = object_ids(&app);
+    dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": AGGREGATOR_KIND_ID })), None).await.expect("catalogue add settles");
+    assert_eq!(object_ids(&app).len(), loaded.len() + 1, "the catalogue add created exactly one object");
+    assert!(close_witness(&mut app).expect("original Puzzle3D app retirement"), "the app reaches terminal-empty ownership");
+}
+
+/// ↩️ LAW: a framework-reserved verb admits under the fixture's original caller — undo after one catalogue add returns the document to its loaded objects.
+#[semio_framework_async_macros::async_test]
+async fn aggregator_reserved_undo_admits_under_the_original_caller() {
+    let _serial = AGGREGATOR_SERIAL.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    let mut app = app().await;
+    let loaded = object_ids(&app);
+    dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": AGGREGATOR_KIND_ID })), None).await.expect("catalogue add");
+    dispatch(&mut app, "undo", None, None).await.expect("undo admits under the original caller");
+    assert_eq!(object_ids(&app), loaded, "undo removes the added object");
     assert!(close_witness(&mut app).expect("original Puzzle3D app retirement"), "the app reaches terminal-empty ownership");
 }

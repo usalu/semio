@@ -2,7 +2,7 @@
 
 use protocol::Mutation;
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_os_kernel::DslArtifact)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_os_kernel::DslArtifact)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -41,8 +41,8 @@ impl pack::snapshot::ArtifactPack for Generation3dPreviewWindowTransient {
     }
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> { Some(Self::__dsl_spec()) }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Generation3dPreviewWindowTransient {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Generation3dPreviewWindowTransient {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -175,24 +175,24 @@ fn transfer(mutation: Generation3dPreviewWindowTransientMutation) -> Generation3
 
 pub struct Generation3dPreviewWindowTransientOwner;
 
-impl semio_framework_plugin::WindowTransientOwner for Generation3dPreviewWindowTransientOwner {
+impl semio_plugin::WindowTransientOwner for Generation3dPreviewWindowTransientOwner {
     const WINDOW_KIND_ID: &'static str = super::GENERATION_3D_PLAY_WINDOW_PREVIEW;
     type State = Generation3dPreviewWindowTransient;
     type Mutation = Generation3dPreviewWindowTransientMutation;
-    fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_framework_plugin::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
-    fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
+    fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_plugin::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
+    fn build_owners() -> semio_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
         let state = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::State>::default());
         let mutation = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::Mutation>::default());
         let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(preflight, transfer, state.clone(), mutation.clone()));
-        semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
+        semio_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
     }
 }
 
-pub fn addressed(snapshot: &semio_framework_plugin::WindowTransientSnapshot, eval_text: Option<String>) -> Result<semio_framework_plugin::WindowTransientMutation, semio_framework_plugin::Fault> {
+pub fn addressed(snapshot: &semio_plugin::WindowTransientSnapshot, eval_text: Option<String>) -> Result<semio_plugin::WindowTransientMutation, semio_plugin::Fault> {
     if snapshot.window_kind_id() != super::GENERATION_3D_PLAY_WINDOW_PREVIEW || snapshot.get::<Generation3dPreviewWindowTransientOwner>().is_none() {
-        return Err(semio_framework_plugin::Fault::from("generation3d-preview-window-transient-required"));
+        return Err(semio_plugin::Fault::from("generation3d-preview-window-transient-required"));
     }
-    Ok(semio_framework_plugin::WindowTransientMutation::of::<Generation3dPreviewWindowTransientOwner>(snapshot.window_id(), Generation3dPreviewWindowTransientMutation::SetPreviewEval { eval_text }))
+    Ok(semio_plugin::WindowTransientMutation::of::<Generation3dPreviewWindowTransientOwner>(snapshot.window_id(), Generation3dPreviewWindowTransientMutation::SetPreviewEval { eval_text }))
 }
 
 //#region 🧬️Schema

@@ -27,9 +27,9 @@ const playDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../.
 /** 🚫️ Keep wasm-pack engine packages out of Vite's dep optimizer — their `pkg/` entries are produced by `buildEngineWasm`. */
 const FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE = [
   "@semio-tech/framework-surface-rs",
+  "@semio-tech/framework-os-node-graph-rs",
   "@semio-tech/framework-editor-rs",
-  "@semio-tech/framework-surface-node-graph-rs",
-  "@semio-tech/framework-surface-board-2d-rs",
+  "@semio-tech/puzzle-wasm",
   "@semio-tech/flow-core",
 ];
 

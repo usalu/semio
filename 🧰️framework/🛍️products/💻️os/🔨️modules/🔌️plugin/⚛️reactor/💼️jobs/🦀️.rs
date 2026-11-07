@@ -670,7 +670,8 @@ struct JobIoReceiving {
 /// 🌉️ Retains the original parsed request and exact hop result inside its admitted native recipient.
 async fn run_io_run(input: &[u8], original: &mut IoRunControl<'_, '_>, snapshot: &mut SqliteSnapshotControl<'_>) -> Result<Vec<u8>, semio_framework::Fault> {
     use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
-    original.receive_nested::<JobIoReceiving, Result<Vec<u8>, semio_framework::Fault>>(|slot, run| {
+    original.receive_nested::<JobIoReceiving, Result<Vec<u8>, semio_framework::Fault>, _>(|slot, run| semio_os_kernel::io::control::native_snapshot_turn(|work| {
+        work.performed();
         *slot = Some(JobIoReceiving { input: None, source: None, target: None, route: None, payload: None, outcome: None });
         let frame = slot.as_mut().unwrap();
         Ok(settle_in_step("job.io-run", async {
@@ -688,10 +689,10 @@ async fn run_io_run(input: &[u8], original: &mut IoRunControl<'_, '_>, snapshot:
             frame.outcome = Some(semio_os_kernel::io::io_mechanism::io_run_with_snapshot_control(frame.route.as_ref().unwrap(), &mut frame.payload, run, snapshot).await);
             match frame.outcome.as_ref().unwrap() {
                 Ok(outcome) => Ok(semio_framework_pack_json::to_json_string(&outcome.value).into_bytes()),
-                Err(error) => Err(fault("job.io-run", error.cause.message.as_ref())),
+                Err(error) => Err(fault("job.io-run", error.cause.message())),
             }
         }))
-    }).map_err(|error| semio_framework_diagnostic::FaultFrom::to_fault(&error))?
+    })).result.map_err(|error| fault("job.io-run", error.message()))?
 }
 
 /// 🔍️ Body unchanged from the pre-rewrite `run_io_sniff` — `Ok` carries a single-byte `Vec<u8>` of

@@ -39,8 +39,8 @@ impl pack::snapshot::ArtifactPack for WriterMainWindowTransient {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for WriterMainWindowTransient {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for WriterMainWindowTransient {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -121,33 +121,33 @@ pub struct WriterMainWindowTransientOwner;
 #[path = "📢️publication/🦀️.rs"]
 pub mod publication;
 
-impl semio_framework_plugin::WindowTransientOwner for WriterMainWindowTransientOwner {
+impl semio_plugin::WindowTransientOwner for WriterMainWindowTransientOwner {
     const WINDOW_KIND_ID: &'static str = super::WRITER_PLAY_WINDOW_KIND;
     type State = WriterMainWindowTransient;
     type Mutation = WriterMainWindowTransientMutation;
 
-    fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_framework_plugin::owners_factory_birth_demands::<Self::State,Self::Mutation,store::ArtifactEphemeralTaskPreparationFactory<Self::State,Self::Mutation>>()}
-    fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
+    fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_plugin::owners_factory_birth_demands::<Self::State,Self::Mutation,store::ArtifactEphemeralTaskPreparationFactory<Self::State,Self::Mutation>>()}
+    fn build_owners() -> semio_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
         publication::owners()
     }
 }
 
 
 
-pub fn current<'a, T>(view: &'a semio_framework_plugin::TransientView<'_, T>) -> Option<&'a WriterMainWindowTransient> {
+pub fn current<'a, T>(view: &'a semio_plugin::TransientView<'_, T>) -> Option<&'a WriterMainWindowTransient> {
     view.window::<WriterMainWindowTransientOwner>()
 }
 
-pub fn addressed(view: &semio_framework_plugin::ViewModel, mutation: WriterMainWindowTransientMutation) -> Result<semio_framework_plugin::WindowTransientMutation, semio_framework_plugin::Fault> {
+pub fn addressed(view: &semio_plugin::ViewModel, mutation: WriterMainWindowTransientMutation) -> Result<semio_plugin::WindowTransientMutation, semio_plugin::Fault> {
     let window_id = view
         .window_id
         .as_deref()
-        .ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("writer.main-window-required"), "Writer editor state requires a concrete main window"))?;
+        .ok_or_else(|| semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("writer.main-window-required"), "Writer editor state requires a concrete main window"))?;
     let kind = view.window_instances.iter().find(|window| window.id == window_id).map(|window| window.window_kind_id.as_str());
     if kind != Some(super::WRITER_PLAY_WINDOW_KIND) {
-        return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("writer.main-window-required"), "Writer editor state requires a main editor window"));
+        return Err(semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("writer.main-window-required"), "Writer editor state requires a main editor window"));
     }
-    Ok(semio_framework_plugin::WindowTransientMutation::of::<WriterMainWindowTransientOwner>(window_id, mutation))
+    Ok(semio_plugin::WindowTransientMutation::of::<WriterMainWindowTransientOwner>(window_id, mutation))
 }
 
 #[path = "🚪️io/🦀️.rs"]

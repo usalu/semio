@@ -44,7 +44,7 @@ impl semio_plugin::retained_command::ArtifactCommandWork<EditorApp<LayoutPlayApp
 
     fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<LayoutPlayApp>>, maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         if self.page_drawing.active(){return self.page_drawing.demand(maximum_copy_bytes)}
-        Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self>(), depth: 1, ..Default::default() })
+        Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() })
     }
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
         self.terminal_is_empty().then_some(size_of::<Self>())
@@ -274,3 +274,5 @@ impl LayoutExportProofs {
 }
 //#endregion 🧾️ProofCatalogs
 //#endregion 🧵️RetainedCommands
+
+semio_plugin::retained_command::terminal_frame_bound!(LayoutWindowWork);

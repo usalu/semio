@@ -39,6 +39,7 @@ pub use semio_s_artifact_puzzle_5d_mut_any_5::standards::v1::subsets::any::schem
                 }
                 #[path = "."]
                 pub mod io {
+                    pub use semio_s_artifact_puzzle_5d_tests::standards::v1::subsets::any::io::routes;
                     #[path = "."]
                     pub mod text {
                         pub use semio_s_artifact_puzzle_5d_snapshot::standards::v1::subsets::any::io::text::snapshot;

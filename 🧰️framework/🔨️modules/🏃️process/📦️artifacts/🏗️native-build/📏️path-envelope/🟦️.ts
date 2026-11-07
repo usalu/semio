@@ -2,7 +2,7 @@ import {checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseCo
 import {validateJsonSchemaSubset} from "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {posix,win32} from "node:path";
 import type {CargoCompilationUnitV1} from "../🕸️units/🟦️.ts";
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 type Unit=Pick<CargoCompilationUnitV1,"packageName"|"name"|"platform"|"profileName"|"kind"|"operation">;
 const policy=schema.definitions.Policy.const;
 /** 📏️ Models every known selected Cargo metadata, native-library and codegen-object suffix before compiler writes. */

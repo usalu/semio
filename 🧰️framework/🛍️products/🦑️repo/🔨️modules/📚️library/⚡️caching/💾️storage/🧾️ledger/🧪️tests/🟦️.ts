@@ -164,7 +164,7 @@ test("the compact Rust image has an explicit disjoint ledger root",()=>{
  expect(fixture.root).toBe(area.root);expect(area.directory).toBe(fixture.partitionDirectory);
  expect(ledger.roots[area.root].directory).toBe(fixture.directory);
  expect(cacheAreaDirectoryV1("/work/semio",ledger,area)).toBe(fixture.absoluteDirectory);
- const strict=repositoryStrictStorageV1("/work/semio");expect(strict.directory).toBe(fixture.absoluteDirectory);expect(Object.hasOwn(strict,"partition")).toBe(false);
- const held=ledger.areas.find(row=>row.id==="held-rust-image")!;expect(held.kind).toBe("control");expect(held.managed?.owner).toBe("image");expect(held.collect).toBeUndefined();
+ const strict=repositoryStrictStorageV1("/work/semio");expect(strict.directory).toBe(fixture.absoluteDirectory);expect((strict as {partition?:string}).partition).toBe(area.id);
+ expect(ledger.areas.some(row=>row.id==="held-rust-image"),"the held rust image is retired: the rust partition is declared at "+area.directory).toBe(false);
  for(const row of fixture.cases)expect({kind:row.kind,...row.id?{id:row.id}:{}}).toEqual(classifyCachePathV1(ledger,area.root,row.path));
 });

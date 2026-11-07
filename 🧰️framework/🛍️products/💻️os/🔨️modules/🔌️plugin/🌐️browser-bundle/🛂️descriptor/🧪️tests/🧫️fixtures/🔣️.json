@@ -4,7 +4,9 @@
       "stageCommandPage",
       "stageColdPairPage",
       "admitActorContext",
+      "admitActorInput",
       "closeActorContext",
+      "closeActorOutput",
       "poll",
       "channelVersion"
     ],
@@ -15,6 +17,9 @@
       "acknowledgeJobOutput",
       "cancelJob",
       "closeJobs",
+      "publishActorFailure",
+      "readActorFailure",
+      "acknowledgeActorFailure",
       "takeSegmentedDownloadChunk"
     ],
     "checkpoint": [

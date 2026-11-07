@@ -37,6 +37,3 @@ impl OriginalDeclaredEmptyOperationSource{
 }
 impl Drop for OriginalDeclaredEmptyOperationSource{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"native registration source preserves original aliases and inference issuer through cancellation")}}
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

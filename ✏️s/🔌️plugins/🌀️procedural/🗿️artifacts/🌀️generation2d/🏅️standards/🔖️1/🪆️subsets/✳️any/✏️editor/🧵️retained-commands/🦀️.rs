@@ -106,8 +106,8 @@ impl Generation2dSessionCommandWork {
 }
 
 /// 🧮️ The transient bytes one work step may materialize: the work's own frame plus the one emit it can stage.
-pub(super) fn command_work_step_demands<A: semio_plugin::ArtifactApp>(work_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-    Ok(semio_framework_value::RetirementDemand { copy_bytes: work_bytes.saturating_add(size_of::<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>>()), depth: 1, ..Default::default() })
+pub(super) fn command_work_step_demands<A: semio_plugin::ArtifactApp>() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>>(), depth: 1, ..Default::default() })
 }
 
 impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dSessionCommandWork {
@@ -126,7 +126,7 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dSession
     }
 
     fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        command_work_step_demands::<EditorApp<Generation2dPlayApp>>(size_of::<Self>())
+        command_work_step_demands::<EditorApp<Generation2dPlayApp>>()
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
@@ -194,7 +194,7 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dFlowEva
     fn work_demands(&self,input:&ArtifactCommandInputs<'_,EditorApp<Generation2dPlayApp>>,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
         if let Generation2dCommand::FlowEvalResolve(payload)=input.command{let receiver=self.receiver.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original evaluation reply was not donated"))?;let target=generation2d_preview_target(&payload.window_kind_id).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original evaluation window kind is unknown"))?;
             return self.instance_owner.inspect_original::<Generation2dInstanceOperationOwner,_>(|owner|match target{PreviewEvalTarget::Document=>owner.eval_session.as_ref(),PreviewEvalTarget::Generation=>owner.generation_session.as_ref()}.map_or_else(||Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original evaluation session is closing")),|session|receiver.next_demands(session,body,&payload.window_id)))?.unwrap_or(Ok(Default::default()))
-        }command_work_step_demands::<EditorApp<Generation2dPlayApp>>(size_of::<Self>())
+        }command_work_step_demands::<EditorApp<Generation2dPlayApp>>()
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
@@ -325,7 +325,7 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dGenerat
     }
 
     fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        command_work_step_demands::<EditorApp<Generation2dPlayApp>>(size_of::<Self>())
+        command_work_step_demands::<EditorApp<Generation2dPlayApp>>()
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
@@ -418,3 +418,5 @@ impl semio_plugin::ArtifactOwnedToolJobFactory for Generation2dBoundedCommandJob
     ];
 }
 //#endregion 🧵️RetainedCommands
+
+semio_plugin::retained_command::terminal_frame_bound!(Generation2dSessionCommandWork, Generation2dFlowEvalWork, Generation2dGenerationCommandWork);

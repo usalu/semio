@@ -129,6 +129,7 @@ pub fn gis_map_value_stamped_one_item_preparation_factory(
 }
 
 struct Gis2dOneItemPreparation<P, M> {
+    last_work: u64,
     base: std::mem::ManuallyDrop<Option<store::os_store::snapshot_read::SnapshotRead<P>>>,
 
     pub(super) mutation: std::mem::ManuallyDrop<Option<M>>,
@@ -235,6 +236,7 @@ where
         if grant.maximum_copy_bytes < copied_bytes { return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "GIS original stamp copy exceeds supplied authority"), request)); }
         progress.copied_bytes = copied_bytes;
         Ok((Box::new(Gis2dOneItemPreparation {
+            last_work: 0,
             base: std::mem::ManuallyDrop::new(Some(request.base)),
             mutation: std::mem::ManuallyDrop::new(Some(request.mutation)),
             inverse: std::mem::ManuallyDrop::new(None),
@@ -265,12 +267,14 @@ where
     fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, _receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         use protocol::ColdMutation as _;
         use protocol::MutationDiff as _;
+        self.last_work = 0;
         if !grant.permits_one() || self.cancelled {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         if self.refused.is_some() || self.apply_refusal.is_some() {
             return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal"));
         }
+        self.last_work = 1;
         if self.prepared.is_some() {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
         }
@@ -317,6 +321,9 @@ where
         }
     }
 
+    fn last_turn_work(&self) -> u64 {
+        self.last_work
+    }
     fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
         self.checkpoint
     }

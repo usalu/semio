@@ -15,7 +15,7 @@ use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 /// source of truth instead of being restated in Rust. Falls back to [`empty_raster_document`] when
 /// the carrier does not parse — the same shape `block2d`'s `default_block2d_snapshot` uses.
 pub fn default_raster_document() -> RasterSnapshot {
-    semio_s_artifact_raster_raster_model::io::text::snapshot::parse_dsl(crate::art_raster_demo::PRIMARY_TEXT).unwrap_or_else(|_| empty_raster_document())
+    semio_s_artifact_raster_raster_model::io::text::snapshot::parse_dsl(crate::art_raster_demo::PRIMARY_TEXT).unwrap_or_else(|_| semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_document())
 }
 
 pub fn raster_example_document(example_id: &str) -> Option<RasterSnapshot> {

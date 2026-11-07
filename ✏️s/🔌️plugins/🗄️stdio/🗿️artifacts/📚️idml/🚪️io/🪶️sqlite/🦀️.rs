@@ -4,8 +4,8 @@ use crate::schema::IdmlPart;
 use semio_os_kernel as store;
 use semio_os_kernel::os_store::serialization::ArtifactSqliteSnapshotHost;
 use semio_os_kernel::sqlite_snapshot::{artifact::{reconstruct_text, Cell, Projection}, validate_sqlite_database_schema, SnapshotEncoding, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase};
-use semio_framework_pack::snapshot::{ArtifactDsl, ArtifactPack};
-use semio_framework_pack::snapshot::ArtifactSqliteSnapshot;
+use pack::snapshot::{ArtifactDsl, ArtifactPack};
+use pack::snapshot::ArtifactSqliteSnapshot;
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -102,7 +102,9 @@ impl ArtifactSqliteSnapshotHost for IdmlSnapshot {
         census(self, control, SqliteSnapshotPhase::EncodeNative)
     }
 
-    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>, native_control: &mut store::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
+    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>, native_control: &mut store::NativeSnapshotDecodeOwner<'_, '_>) -> semio_framework_value::RetainedWorkOutcome<Self, store::NativeSnapshotFailure> {
+        store::native_snapshot_turn(|work| {
+        work.performed();
         native_control.native().checkpoint()?;
         control.checkpoint(SqliteSnapshotPhase::DecodeNative, 0, 1)?;
         let snapshot = match payload {
@@ -112,14 +114,18 @@ impl ArtifactSqliteSnapshotHost for IdmlSnapshot {
         census(&snapshot, control, SqliteSnapshotPhase::DecodeNative)?;
         snapshot.package()?;
         Ok(snapshot)
+        })
     }
 
-    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>, native_owner: &mut store::NativeSnapshotEncodeOwner<'_, '_>) -> Result<store::io_schema::IoPayload, ValueError> {
+    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>, native_owner: &mut store::NativeSnapshotEncodeOwner<'_, '_>) -> semio_framework_value::RetainedWorkOutcome<store::io_schema::IoPayload, store::NativeSnapshotFailure> {
+        store::native_snapshot_turn(|work| {
+        work.performed();
         native_owner.native().checkpoint()?;
         census(self, control, SqliteSnapshotPhase::EncodeNative)?;
         Ok(match encoding {
             SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(self.encode_pack()),
             SnapshotEncoding::Text => store::io_schema::IoPayload::Text(self.print_dsl()),
+        })
         })
     }
 }

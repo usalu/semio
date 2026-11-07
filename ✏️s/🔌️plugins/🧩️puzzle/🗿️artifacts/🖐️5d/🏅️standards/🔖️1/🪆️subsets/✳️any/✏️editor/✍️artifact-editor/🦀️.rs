@@ -162,9 +162,9 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         }
     }
 
-    fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_framework_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if body.is_none()&&!request.as_ref().is_some_and(|request|["copy","cut","paste","import-media"].contains(&request.tool_id.as_str())){return Ok(false)}
-        semio_framework_plugin::tool_contract::admit_reserved_work::<EditorApp<Self>,crate::editor::puzzle5d::session::Puzzle5dReservedWork>(request,body,cx)
+        semio_plugin::plugin_app_close_prelude::admit_reserved_work::<EditorApp<Self>,crate::editor::puzzle5d::session::Puzzle5dReservedWork>(request,body,cx)
     }
 
     /// 📎 Ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1d: replaces the old

@@ -6,7 +6,7 @@ use std::mem::ManuallyDrop;
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
-struct CallerPolicy{source_kind:String,operation:u64,generation:u64,fuel:u64,clock_us:u64,deadline_us:u64,maximum_turns:usize,grant:RetainedCloneGrant,retirement_loan:RetainedCloneGrant}
+struct CallerPolicy{source_kind:String,operation:u64,generation:u64,fuel:u64,turn_fuel:u64,clock_us:u64,deadline_us:u64,maximum_turns:usize,maximum_idle_turns:usize,grant:RetainedCloneGrant,retirement_loan:RetainedCloneGrant}
 
 fn fixture_remaining(stock:RetainedCloneGrant,spent:RetainedCloneProgress)->Result<RetainedCloneGrant,ValueError>{if !spent.fits(stock){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original fixture source admissions exceed its initiating stock"))}Ok(RetainedCloneGrant{maximum_items:stock.maximum_items-spent.copied_items,maximum_copy_bytes:stock.maximum_copy_bytes-spent.copied_bytes,maximum_capacity_bytes:stock.maximum_capacity_bytes-spent.retained_capacity_bytes,maximum_release_bytes:stock.maximum_release_bytes-spent.released_bytes,..stock})}
 
@@ -23,6 +23,10 @@ impl OriginalFixtureCaller{
  }
  /// 🪢️ Lends one original context; another call cannot recreate its original fuel or ceiling.
  pub fn context(&mut self)->StepContext<'_>{let budget=self.budget.take().expect("original fixture context can only be issued once");let mut cx=self.source.as_ref().expect("original fixture parent remains retained while its context is lent").borrow_context(budget,fixture_now_us,&mut self.sequence,&mut self.receipt).unwrap();cx.bind_original_clock_binding(self.clock_binding).expect("original fixture clock binds to its genuine source context");cx.with_original_decoder(&mut self.decoder)}
+ /// ⛽️ The fuel one host Interactive turn is granted: every fixture turn starts from it, never from what an earlier call left on the long-lived context.
+ pub fn turn_fuel()->u64{serde_json::from_str::<CallerPolicy>(include_str!("🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap().turn_fuel}
+ /// 💤️ Consecutive turns that may settle nothing before a loop fails typed.
+ pub fn maximum_idle_turns()->usize{serde_json::from_str::<CallerPolicy>(include_str!("🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap().maximum_idle_turns}
  /// 📏️ Bounds caller loops without deriving finance from an owner's descriptive demand.
  pub fn maximum_turns()->usize{serde_json::from_str::<CallerPolicy>(include_str!("🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap().maximum_turns}
  /// 🛬️ Retires the body decoder against the same already-issued caller stock before its three parent roots close.
@@ -82,10 +86,10 @@ mod original_physical_laws{
  #[test]
  fn original_guest_failure_debit_fixed_page_original_context_denial_and_paid_physical_release(){
   let input:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/📄️retirement.json")).unwrap();let bytes:Vec<u8>=serde_json::from_value(input["sourceBytes"].clone()).unwrap();let block=input["blockBytes"].as_u64().unwrap()as usize;let phase=serde_json::from_str::<CallerPolicy>(include_str!("🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap().retirement_loan;let mut caller=OriginalFixtureCaller::admit().unwrap();let mut cx=caller.context();let recipient=cx.original_recipient_identity();let(page,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework::kernel::FixedCommandPage::try_copy_from(&bytes).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(block,0));let pointer=page.as_slice().as_ptr();cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:block,..Default::default()}).unwrap();let mut owner=ControlledRetirement::new(page).unwrap_or_else(|_|panic!("real fixed page has no controlled retirement"));assert_eq!(owner.original().unwrap().as_slice().as_ptr(),pointer);
-  let staging=RetainedCloneGrant{maximum_release_bytes:0,..phase};let mut staged=false;for _ in 0..OriginalFixtureCaller::maximum_turns(){if owner.next_release_byte_demand().unwrap()==block{staged=true;break}let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(staging,|same|{let demand=owner.selected_demand(staging.maximum_copy_bytes)?;close_original_retained_step(same,demand,|grant|owner.step(grant))}));let progress=result.unwrap().progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));assert_eq!(progress.released_bytes,0)}assert!(staged);
-  for row in input["cases"].as_array().unwrap().iter().take(2){let loan=RetainedCloneGrant{maximum_items:row["items"].as_u64().unwrap()as usize,maximum_release_bytes:row["releaseBytes"].as_u64().unwrap()as usize,..phase};let before=cx.retained_progress();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(loan,|same|{let demand=owner.selected_demand(phase.maximum_copy_bytes)?;close_original_retained_step(same,demand,|grant|owner.step(grant))}));assert_eq!(result.unwrap().progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(cx.retained_progress(),before);assert!(!owner.terminal_is_empty());assert_eq!(cx.original_recipient_identity(),recipient)}
-  let exact=&input["cases"][2];let loan=RetainedCloneGrant{maximum_items:exact["items"].as_u64().unwrap()as usize,maximum_release_bytes:exact["releaseBytes"].as_u64().unwrap()as usize,..phase};let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(loan,|same|{let demand=owner.selected_demand(phase.maximum_copy_bytes)?;close_original_retained_step(same,demand,|grant|owner.step(grant))}));let progress=result.unwrap().progress();assert_eq!(progress.released_bytes,block);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,block));
-  for _ in 0..OriginalFixtureCaller::maximum_turns(){if owner.terminal_is_empty(){break}let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(phase,|same|{let demand=owner.selected_demand(phase.maximum_copy_bytes)?;close_original_retained_step(same,demand,|grant|owner.step(grant))}));let progress=result.unwrap().progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes))}assert!(owner.terminal_is_empty());let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(cx.original_recipient_identity(),recipient);assert_eq!(cx.operation(),OperationId(97146));assert_eq!(cx.generation(),Generation(17));assert_eq!(cx.deadline_us(),1500);let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).unwrap();
+  let staging=RetainedCloneGrant{maximum_release_bytes:0,..phase};let mut staged=false;for _ in 0..OriginalFixtureCaller::maximum_turns(){if owner.next_release_byte_demand().unwrap()==block{staged=true;break}let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(staging,|same|{let demand=owner.selected_demand(staging.maximum_copy_bytes)?;close_original_retained_step(same,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:owner.step(grant),work:1})}));let progress=result.unwrap().progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));assert_eq!(progress.released_bytes,0)}assert!(staged);
+  for row in input["cases"].as_array().unwrap().iter().take(2){let loan=RetainedCloneGrant{maximum_items:row["items"].as_u64().unwrap()as usize,maximum_release_bytes:row["releaseBytes"].as_u64().unwrap()as usize,..phase};let before=cx.retained_progress();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(loan,|same|{let demand=owner.selected_demand(phase.maximum_copy_bytes)?;close_original_retained_step(same,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:owner.step(grant),work:1})}));assert_eq!(result.unwrap().progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(cx.retained_progress(),before);assert!(!owner.terminal_is_empty());assert_eq!(cx.original_recipient_identity(),recipient)}
+  let exact=&input["cases"][2];let loan=RetainedCloneGrant{maximum_items:exact["items"].as_u64().unwrap()as usize,maximum_release_bytes:exact["releaseBytes"].as_u64().unwrap()as usize,..phase};let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(loan,|same|{let demand=owner.selected_demand(phase.maximum_copy_bytes)?;close_original_retained_step(same,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:owner.step(grant),work:1})}));let progress=result.unwrap().progress();assert_eq!(progress.released_bytes,block);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,block));
+  for _ in 0..OriginalFixtureCaller::maximum_turns(){if owner.terminal_is_empty(){break}let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(phase,|same|{let demand=owner.selected_demand(phase.maximum_copy_bytes)?;close_original_retained_step(same,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:owner.step(grant),work:1})}));let progress=result.unwrap().progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes))}assert!(owner.terminal_is_empty());let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(cx.original_recipient_identity(),recipient);assert_eq!(cx.operation(),OperationId(97146));assert_eq!(cx.generation(),Generation(17));assert_eq!(cx.deadline_us(),1500);let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).unwrap();
  }
  /// 🏗️ The fixture lends one actual decoder to construction and retires its same physical scaffold after the candidate closes.
  #[test]
@@ -94,7 +98,48 @@ mod original_physical_laws{
   let policy:CallerPolicy=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap();let input:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/📄️retirement.json")).unwrap();let bytes:Vec<u8>=serde_json::from_value(input["sourceBytes"].clone()).unwrap();let count=bytes.len();assert!(count>0);let mut caller=OriginalFixtureCaller::admit().unwrap();let mut cx=caller.context();let binding=OriginalToolSourceBinding::borrow(&cx);let demand=ToolJobAdmissionDemand{items:1,copy_bytes:count,capacity_bytes:count,release_bytes:0,depth:1};let mut output:Option<Vec<u8>>=None;
   let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(RetainedCloneGrant{maximum_capacity_bytes:count-1,..policy.retirement_loan},|cx|admit_original_tool_construction(cx,&mut output,demand,|_|panic!("short original capacity cannot call construction"))));assert!(!result.unwrap());assert!(output.is_none());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(binding.matches(&cx));
   let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(policy.retirement_loan,|cx|admit_original_tool_construction(cx,&mut output,demand,|identity|{assert_eq!(identity.source_binding(),binding);let mut value=Vec::with_capacity(count);value.extend_from_slice(&bytes);let progress=RetainedCloneProgress{copied_items:1,copied_bytes:count,retained_capacity_bytes:value.capacity(),..Default::default()};Ok((value,progress))})));assert!(result.unwrap());assert_eq!(heap.requested_bytes,count);assert_eq!(heap.released_bytes,0);assert_eq!(output.as_deref(),Some(bytes.as_slice()));assert!(binding.matches(&cx));let mut owner=ControlledRetirement::new(output.take().unwrap()).unwrap_or_else(|_|panic!("native vector owner must close"));
-  for _ in 0..policy.maximum_turns{if owner.terminal_is_empty(){break}let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(policy.retirement_loan,|cx|{let demand=owner.selected_demand(policy.retirement_loan.maximum_copy_bytes)?;close_original_retained_step(cx,demand,|grant|owner.step(grant))}));let progress=result.unwrap().progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));assert!(binding.matches(&cx));}assert!(owner.terminal_is_empty());let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).unwrap();assert!(caller.decoder.terminal_is_empty());
+  for _ in 0..policy.maximum_turns{if owner.terminal_is_empty(){break}let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(policy.retirement_loan,|cx|{let demand=owner.selected_demand(policy.retirement_loan.maximum_copy_bytes)?;close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:owner.step(grant),work:1})}));let progress=result.unwrap().progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));assert!(binding.matches(&cx));}assert!(owner.terminal_is_empty());let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).unwrap();assert!(caller.decoder.terminal_is_empty());
  }
 
+}
+
+#[cfg(test)]
+mod host_lane_authority_law {
+    /// 🚦️ The fixture caller's per-turn fuel is the host's Interactive lane budget and its lifetime stock is exactly one such turn per allowed fixture turn, read from the same constant the kernel grants turns from, so the two can never drift apart.
+    #[test]
+    fn fixture_caller_fuel_equals_the_host_interactive_lane_budget() {
+        let policy: super::CallerPolicy = serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap();
+        assert_eq!(policy.turn_fuel, semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive).fuel);
+        assert_eq!(policy.fuel, policy.turn_fuel * policy.maximum_turns as u64);
+    }
+
+    /// 📌️ The pinned literals: 2,000,000 fuel per turn is the host Interactive grant, and the lifetime stock is that grant times the 32,768 allowed turns.
+    #[test]
+    fn fixture_caller_json_pins_the_literal_turn_and_lifetime_fuel() {
+        let policy: super::CallerPolicy = serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap();
+        let host = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive).fuel;
+        assert_eq!((policy.turn_fuel, host), (2_000_000, 2_000_000));
+        assert_eq!((policy.maximum_turns, policy.fuel), (32_768, 65_536_000_000));
+        assert_eq!(policy.fuel, host * policy.maximum_turns as u64);
+        assert_eq!(super::OriginalFixtureCaller::turn_fuel(), host);
+    }
+
+    /// 🚧️ A step whose demand can never fit an untouched turn is refused typed at once, a fitting demand is admitted.
+    #[test]
+    fn work_step_exceeding_the_whole_turn_grant_is_refused_typed_not_idled() {
+        let mut scope = super::OriginalFixtureScope::admit();
+        let cx = scope.cx();
+        let grant = cx.retained_grant();
+        assert!(cx.admit_work_step(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() }).unwrap());
+        let oversized = semio_framework_value::RetirementDemand { copy_bytes: grant.maximum_copy_bytes + 1, depth: 1, ..Default::default() };
+        let refused = cx.admit_work_step(oversized).unwrap_err();
+        assert_eq!(refused.kind, semio_framework_value::ValueRefusalKind::WorkLimit);
+    }
+
+    /// 🚦️ Every fixture turn is granted exactly one host Interactive turn of fuel, independent of what an earlier call left on the long-lived context, and a zero-progress loop is bounded strictly below the whole turn stock.
+    #[test]
+    fn fixture_turn_fuel_is_the_host_interactive_budget_and_idle_turns_are_bounded() {
+        assert_eq!(super::OriginalFixtureCaller::turn_fuel(), semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive).fuel);
+        assert!(super::OriginalFixtureCaller::maximum_idle_turns() > 0 && super::OriginalFixtureCaller::maximum_idle_turns() < super::OriginalFixtureCaller::maximum_turns());
+    }
 }

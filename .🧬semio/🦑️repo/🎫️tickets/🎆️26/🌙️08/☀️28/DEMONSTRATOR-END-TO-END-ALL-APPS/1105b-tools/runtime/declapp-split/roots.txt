@@ -1,0 +1,2 @@
+semio-plugin-decl-app
+semio-plugin-original-job-ownership

@@ -61,7 +61,7 @@ impl FixedOperationOwner for DrawingGestureOperationOwner {
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
+        semio_framework_job::close_original_granted_step(cx,|grant|semio_framework_value::RetainedWorkOutcome{result:(||->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
             let maximum_items=grant.maximum_items;let maximum_bytes=grant.maximum_release_bytes;
             if !self.closing || maximum_items == 0 || maximum_bytes == 0 {
                 return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked);
@@ -73,7 +73,7 @@ impl FixedOperationOwner for DrawingGestureOperationOwner {
                 return Ok(semio_framework_job::InteractiveJobCloseStep::Complete {progress:Default::default()});
             }
             Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress:semio_framework_value::retained_clone::RetainedCloneProgress {copied_items:released_items,released_bytes,..Default::default()} })
-        })
+        })(),work:0})
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -153,8 +153,8 @@ impl DrawingInstanceOperationOwner {
             if query.command_id != command.command_id() {
                 return Err(Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.query-owner"), "a retained Drawing point query rejects a different command owner"));
             }
-            semio_s_artifact_draw_drawing_editor_interaction::geometry_session::prepare_query(source_identity,snapshot);
-            let admitted=semio_s_artifact_draw_drawing_editor_interaction::geometry_session::with_query(source_identity,|status,borrowed|match status {
+            semio_s_artifact_draw_drawing_scene_mounted::prepare_query(source_identity,snapshot);
+            let admitted=semio_s_artifact_draw_drawing_scene_mounted::with_query(source_identity,|status,borrowed|match status {
                 semio_s_artifact_draw_drawing_scene::identity::admission::SceneAdmissionStatus::Pending=>Ok(None),
                 semio_s_artifact_draw_drawing_scene::identity::admission::SceneAdmissionStatus::Ready=>{
                     let borrowed=borrowed.unwrap();

@@ -1,11 +1,11 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
-use semio_framework_plugin::__semio_dispatch_PluginApp;
-use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
-use semio_framework_plugin::plugin_app_close_prelude::*;
-use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
-use semio_framework_plugin::PluginBuilder;
-use semio_framework_plugin_instance_construction::OriginalVcsApp;
+use semio_plugin::__semio_dispatch_PluginApp;
+use semio_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_plugin::plugin_app_close_prelude::*;
+use semio_plugin::{ExecutionMode, Plugin, PluginApp};
+use semio_plugin::PluginBuilder;
+use semio_plugin_instance_construction::OriginalVcsApp;
 pub use semio_s_artifact_raster_raster_editor::raster_mounted_owner_policy;
 
 //#region 🗃️Apps

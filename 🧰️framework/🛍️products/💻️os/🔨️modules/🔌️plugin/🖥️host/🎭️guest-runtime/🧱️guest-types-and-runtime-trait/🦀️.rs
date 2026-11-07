@@ -143,12 +143,12 @@ pub enum GuestInstanceState {
 }
 
 /// 🧯️ A Wasmtime original-operation receive failure: a refused admission keeps its typed refusal, any other runtime error traps.
-pub(crate) fn receiving_turn_fault(error:semio_framework_plugin_host_operation::ReceiveError)->TurnFault{match error{semio_framework_plugin_host_operation::ReceiveError::Refused(error)=>identity_turn_fault(error),semio_framework_plugin_host_operation::ReceiveError::Runtime(error)=>TurnFault::Trapped(error.to_string())}}
+pub(crate) fn receiving_turn_fault(error:semio_plugin_host_operation::ReceiveError)->TurnFault{match error{semio_plugin_host_operation::ReceiveError::Refused(error)=>identity_turn_fault(error),semio_plugin_host_operation::ReceiveError::Runtime(error)=>TurnFault::Trapped(error.to_string())}}
 
 pub(super) fn decode_guest_plugin_error(error: wit_types::PluginError) -> TurnFault {
     match error {
         wit_types::PluginError::Fault(bytes) => decode_guest_fault_bytes(&bytes),
-        wit_types::PluginError::OperationRefusal(code)=>identity_turn_fault(semio_framework_plugin_guest_contract::operation_authority::refusal(code)),
+        wit_types::PluginError::OperationRefusal(code)=>identity_turn_fault(semio_plugin_guest_contract::operation_authority::refusal(code)),
     }
 }
 

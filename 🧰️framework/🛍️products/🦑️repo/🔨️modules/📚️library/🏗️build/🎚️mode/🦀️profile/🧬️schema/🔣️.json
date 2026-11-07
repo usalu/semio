@@ -430,7 +430,7 @@
           },
           "prototype-wasm": {
             "optLevel": "1",
-            "debug": 1,
+            "debug": 0,
             "codegenUnits": 256,
             "incremental": true,
             "lto": "off"

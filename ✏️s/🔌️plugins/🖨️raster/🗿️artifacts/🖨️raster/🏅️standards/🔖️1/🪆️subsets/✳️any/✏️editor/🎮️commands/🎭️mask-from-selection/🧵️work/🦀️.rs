@@ -242,3 +242,5 @@ impl<A:RasterWorkApp> ArtifactCommandWork<A> for MaskFromSelectionWork {
     fn terminal_frame_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
     fn terminal_is_empty(&self)->bool{self.candidate.is_none()}
 }
+
+semio_plugin::retained_command::terminal_frame_bound!(MaskFromSelectionWork);

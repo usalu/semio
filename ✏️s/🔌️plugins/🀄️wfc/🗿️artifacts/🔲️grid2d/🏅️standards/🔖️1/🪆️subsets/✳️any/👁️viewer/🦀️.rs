@@ -368,3 +368,5 @@ pub const WFC_GRID2D_DIALECT: Dialect = Dialect { artifact_kind: WFC_GRID2D_DOCU
 //#endregion 🔖️Dialect
 }
 //#endregion 🧩️ArtifactItems
+
+semio_plugin::retained_command::terminal_frame_bound!(Grid2dViewCommandWork);

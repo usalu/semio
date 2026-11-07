@@ -4,7 +4,7 @@ use super::*;
 pub(super) mod affine;
 use affine::AffineEdge as Edge;
 use semio_framework_2d_engine::{PathSegment, Vec2};
-use semio_framework_2d_text_font::work::FontWorkLedger;
+use semio_framework_2d_text_font::work::RetainedWorkLedger;
 use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
 use semio_framework_value_persistent::list::PagedList;
 use semio_framework_pixels::image_decoding::{ImageDecodeInput, ImageDecodeJob};
@@ -27,8 +27,8 @@ impl PaintPath {
     pub(super) fn new(fill: Option<[f32; 4]>, stroke: Option<[f32; 4]>, stroke_width: f64) -> Self { Self { segments: PagedList::new(), edges: PagedList::new(), fill, stroke:if stroke_width==0.0{None}else{stroke}, stroke_width, affine:affine::IDENTITY,inverse:Some([1.0,0.0,0.0,1.0]),world:None,bounds: [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY] } }
     fn transformed(mut self,matrix:[f64;6])->Result<Self,String>{if !matrix.into_iter().all(f64::is_finite){return Err("layout-export-affine-nonfinite".into())}self.affine=matrix;self.inverse=affine::inverse_linear(matrix);Ok(self)}
     pub(super) fn world_bounds(&self)->Option<[f64;4]>{self.world.or_else(||affine::bounds(self.affine,self.bounds,if self.stroke.is_some(){self.stroke_width*0.5}else{0.0}))}
-    fn segment(&mut self, value: PathSegment, work:&mut FontWorkLedger) -> Result<bool, String> { append(&mut self.segments, value, work) }
-    fn edge(&mut self, value: Edge, work:&mut FontWorkLedger) -> Result<bool, String> {
+    fn segment(&mut self, value: PathSegment, work:&mut RetainedWorkLedger) -> Result<bool, String> { append(&mut self.segments, value, work) }
+    fn edge(&mut self, value: Edge, work:&mut RetainedWorkLedger) -> Result<bool, String> {
         if !append(&mut self.edges, value, work)? { return Ok(false); }
         for point in [value.a, value.b] { self.bounds[0] = self.bounds[0].min(point[0]); self.bounds[1] = self.bounds[1].min(point[1]); self.bounds[2] = self.bounds[2].max(point[0]); self.bounds[3] = self.bounds[3].max(point[1]); }
         Ok(true)
@@ -72,7 +72,7 @@ pub(super) struct FidelityState {
     sampling: affine::AffineCoverageCursor,
 }
 impl RetireOwned for FidelityState { fn retirement(self) -> Box<dyn RetirementCursor> { self.owners.retirement() } fn retirement_birth_bytes(&self) -> Option<usize> { self.owners.retirement_birth_bytes() } fn controlled_retirement_supported() -> bool { true } }
-fn append<T>(list: &mut PagedList<T, { usize::MAX }>, value: T, work:&mut FontWorkLedger) -> Result<bool, String> { if list.len() >= SEGMENT_LIMIT { return Err("layout-export-path-segment-limit".into()); } if !work.slot(list)? { return Ok(false); } work.push(list,value).map_err(|(error,_)|error.to_owned())?; Ok(true) }
+fn append<T>(list: &mut PagedList<T, { usize::MAX }>, value: T, work:&mut RetainedWorkLedger) -> Result<bool, String> { if list.len() >= SEGMENT_LIMIT { return Err("layout-export-path-segment-limit".into()); } if !work.slot(list)? { return Ok(false); } work.push(list,value).map_err(|(error,_)|error.to_owned())?; Ok(true) }
 pub(super) fn rotate(p: Vec2, angle: f32, center: [f32; 2]) -> Vec2 { let (s, c) = f64::from(angle).sin_cos(); let dx = p[0] - f64::from(center[0]); let dy = p[1] - f64::from(center[1]); [f64::from(center[0]) + dx * c - dy * s, f64::from(center[1]) + dx * s + dy * c] }
 pub(super) fn mapped(segment: &PathSegment, map: impl Fn(Vec2) -> Vec2) -> Result<PathSegment, String> { Ok(match segment { PathSegment::Move { to } => PathSegment::Move { to: map(*to) }, PathSegment::Line { to } => PathSegment::Line { to: map(*to) }, PathSegment::Quad { ctrl, to } => PathSegment::Quad { ctrl: map(*ctrl), to: map(*to) }, PathSegment::Cubic { ctrl1, ctrl2, to } => PathSegment::Cubic { ctrl1: map(*ctrl1), ctrl2: map(*ctrl2), to: map(*to) }, PathSegment::Close => PathSegment::Close, _ => return Err("layout-export-path-arc-not-resolved".into()) }) }
 fn midpoint(a: Vec2, b: Vec2) -> Vec2 { [(a[0] + b[0]) * 0.5, (a[1] + b[1]) * 0.5] }
@@ -98,7 +98,7 @@ impl FidelityState {
         let proxy = image_proxy_fields(proxy.as_deref(),*link,snapshot)?;
         let mime = if proxy.starts_with("data:image/png;") { "image/png" } else if proxy.starts_with("data:image/jpeg;") { "image/jpeg" } else { return Err("layout-export-image-media-unsupported".into()); };
         let index = match self.image_decoder { Some(index) => index, None => {
-            let mut work=FontWorkLedger::new(context.retained_grant());let reserved=work.slot(&mut self.owners.decoders);context.consume_retained(work.receipt()).map_err(|error|error.to_string())?;if !reserved? { return Ok(false); }
+            let mut work=RetainedWorkLedger::new(context.retained_grant());let reserved=work.slot(&mut self.owners.decoders);context.consume_retained(work.receipt()).map_err(|error|error.to_string())?;if !reserved? { return Ok(false); }
             self.image_bytes = self.image_bytes.checked_add(proxy.len()).ok_or("layout-export-image-source-limit")?;
             if self.image_bytes > MAX_LAYOUT_EXPORT_RAW_BYTES { return Err("layout-export-image-source-limit".into()); }
             let decoder = ImageDecodeJob::new(ImageDecodeInput { mime, data: proxy, max_source_bytes: MAX_LAYOUT_EXPORT_RAW_BYTES, max_bytes: MAX_LAYOUT_EXPORT_OUTPUT_BYTES.min(64 << 20), max_pixels: MAX_LAYOUT_EXPORT_PIXELS as usize, max_chunks: 512 }).map_err(|error| error.to_string())?;
@@ -115,7 +115,7 @@ impl FidelityState {
         } else { if decoder.next_depth_demand().map_err(|error| error.to_string())? > grant.maximum_depth { return Err("layout-export-image-depth-grant".into()); } let (_, receipt) = decoder.advance(proxy, grant).map_err(|error| error.to_string())?; context.consume_retained(receipt).map_err(|error| error.to_string())?; }
         Ok(false)
     }
-    pub fn prepare_one(&mut self, items: &PlanItems, text: Option<&ExportTextState>, drawing:Option<&DrawingCompositionState>,work:&mut FontWorkLedger) -> Result<(), String> {
+    pub fn prepare_one(&mut self, items: &PlanItems, text: Option<&ExportTextState>, drawing:Option<&DrawingCompositionState>,work:&mut RetainedWorkLedger) -> Result<(), String> {
         let Some(item) = items.get(self.item) else { self.prepared = true; return Ok(()); };
         if self.phase == 0 {
             match item {
@@ -154,7 +154,7 @@ impl FidelityState {
         work.push(&mut self.owners.shapes,PaintShape::Path(build.path)).map_err(|(error,_)|error)?;
         self.next_item(); Ok(())
     }
-    fn flatten_one(&mut self,work:&mut FontWorkLedger) -> Result<(), String> {
+    fn flatten_one(&mut self,work:&mut RetainedWorkLedger) -> Result<(), String> {
         let build = self.owners.build.as_mut().unwrap();
         if let Some(curve) = build.curves.last().copied() {
             let last = curve.points[curve.degree as usize];

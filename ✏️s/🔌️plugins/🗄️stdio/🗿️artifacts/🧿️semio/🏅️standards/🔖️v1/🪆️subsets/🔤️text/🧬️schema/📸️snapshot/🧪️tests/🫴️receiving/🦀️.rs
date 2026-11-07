@@ -1,6 +1,6 @@
 //! 🫴️ Text Pack fields receive under one original caller; no destination or cancellation cursor is replaced.
 use semio_s_artifact_stdio_semio_text_model::schema::snapshot::{SemioTextSnapshot,SemioTextRun,SemioTextMark,SemioTextMarkKind};
-use semio_framework_os_kernel::{os_store::OriginalSnapshotRecordReceiving,PackLimits};
+use semio_os_kernel::{os_store::OriginalSnapshotRecordReceiving,PackLimits};
 use semio_framework_pack::snapshot::ArtifactPack;
 use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation,StepContext,OriginalTurnFailure,OriginalTurnPrimary};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetireOwned};

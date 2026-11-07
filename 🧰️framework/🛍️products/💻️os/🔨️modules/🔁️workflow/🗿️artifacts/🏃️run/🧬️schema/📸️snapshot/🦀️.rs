@@ -7,7 +7,7 @@ use semio_framework_value::{ValueError,ValueRefusalKind};
 /// Failed`, not a `Sealed` variant). Hand-crafted `dsl::DslField` (ordinal `Shape::Enum`), not
 /// `#[derive(dsl::DslEnum)]`: this is a plain field-less scalar, not a tagged-variant-with-data sum
 /// type (`DslEnum`/`DslVariants` target the latter — see `WorkflowParameter`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub enum RunStatus {
@@ -70,7 +70,7 @@ impl semio_framework_dsl_record::DslField for RunStatus {
 
 /// 🚦️ Per-node outcome of one run — `Computed` (ran fresh), `CacheHit` (memoized against the prior
 /// sealed run's `RunNodeRecord`), `Failed` (the node's `AppChannelHost` exchange errored).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub enum RunNodeStatus {
@@ -261,7 +261,7 @@ impl semio_framework_dsl_record::DslField for RunTrigger {
 /// plain JSON text sidesteps that risk entirely while staying a lossless round trip. `run::SpaceRunner`
 /// parses it back to `serde_json::Value` when applying the overlay onto a node's config (see
 /// `WorkflowParameterBinding.field_path`).
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct RunParameterValue {
@@ -271,7 +271,7 @@ pub struct RunParameterValue {
 
 /// 🔑️ One port's fingerprint — reused for both a `RunNodeRecord`'s `input_fingerprints` and
 /// `output_fingerprints` (same shape, different table column on the owning row).
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct PortFingerprint {
@@ -281,7 +281,7 @@ pub struct PortFingerprint {
 
 /// 📤️ Where one node's out-port materialized in the run's own write-only output area — `path` is
 /// relative to the run's own sink (see `run::RunContext`'s doc), never a source-bundle path.
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct RunOutputArtifact {
@@ -295,7 +295,7 @@ pub struct RunOutputArtifact {
 /// against the PRIOR sealed run's `node_records`, not a side-channel state file. `duration_ms` is
 /// `f64` (not `u64`): the `dsl` engine's scalar `DslField` impls cover `bool`/`f32`/`f64`/`String`
 /// only, no integer width — see `dsl/rs/lib.rs`'s `impl DslField for f64` and neighbors.
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RunNodeRecord {
@@ -313,7 +313,7 @@ pub struct RunNodeRecord {
 }
 
 /// 📜️ One run-level or per-node log line — `node_id` empty for a run-level line (see `RunMutation::AppendRunLog`).
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RunLogLine {
@@ -377,3 +377,77 @@ pub async fn empty_run_document() -> RunArtifact {
 
 
 
+
+//#region 🫴️TriggerReceiving
+/// 🪞️ The wire record of a run trigger in its hand-crafted spec order: kind tag first, then each variant's optional columns.
+#[derive(semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving)]
+pub struct RunTriggerFields {
+    pub kind: String,
+    pub actor: Option<String>,
+    pub automation_ref: Option<String>,
+    pub event_fingerprint: Option<String>,
+}
+
+fn run_trigger_from_fields(fields: RunTriggerFields) -> Result<RunTrigger, RunTriggerFields> {
+    match (fields.kind.as_str(), fields.actor.is_some(), fields.automation_ref.is_some(), fields.event_fingerprint.is_some()) {
+        ("manual", true, false, false) => Ok(RunTrigger::Manual { actor: fields.actor.unwrap_or_default() }),
+        ("automation", false, true, true) => Ok(RunTrigger::Automation { automation_ref: fields.automation_ref.unwrap_or_default(), event_fingerprint: fields.event_fingerprint.unwrap_or_default() }),
+        _ => Err(fields),
+    }
+}
+
+/// 🗺️ Moves the finished mirror fields into the trigger variant their kind tag names.
+pub struct RunTriggerMap;
+impl semio_framework_dsl_record::receiving::owned::OwnedReceivingMap<RunTriggerFields> for RunTriggerMap {
+    type Output = RunTrigger;
+    fn map_demand(_: &RunTriggerFields) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        Ok(semio_framework_dsl_record::receiving::owned::metadata::<()>())
+    }
+    fn map_into(input: &mut Option<RunTriggerFields>, output: &mut Option<RunTrigger>, grant: semio_framework_value::RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<semio_framework_value::RetainedCloneProgress> {
+        use semio_framework_dsl_record::receiving::owned::{funds, invalid, invariant, metadata, receipt};
+        if input.is_none() || output.is_some() {
+            return semio_framework_value::RetainedWorkOutcome { result: Err(invariant()), work: 0 };
+        }
+        let demand = metadata::<()>();
+        if !funds(grant, demand) {
+            return semio_framework_value::RetainedWorkOutcome { result: Ok(Default::default()), work: 0 };
+        }
+        let Some(fields) = input.take() else {
+            return semio_framework_value::RetainedWorkOutcome { result: Err(invariant()), work: 0 };
+        };
+        match run_trigger_from_fields(fields) {
+            Ok(trigger) => {
+                *output = Some(trigger);
+                semio_framework_value::RetainedWorkOutcome { result: Ok(receipt(demand)), work: 1 }
+            }
+            Err(fields) => {
+                *input = Some(fields);
+                semio_framework_value::RetainedWorkOutcome { result: Err(invalid()), work: 1 }
+            }
+        }
+    }
+}
+
+impl semio_framework_dsl_record::receiving::owned::DslOwnedReceivingField for RunTrigger {
+    type Cursor = semio_framework_dsl_record::receiving::owned::MappedReceiving<RunTriggerFields, RunTriggerMap>;
+    fn receiving_cursor() -> Self::Cursor {
+        Self::Cursor::new()
+    }
+}
+
+impl semio_framework_dsl_record::DslReceivingField for RunTrigger {
+    fn receive_value(value: &semio_framework_dsl_record::FieldValue, owner: &mut semio_framework_dsl_record::receiving::NativeSnapshotDecodeOwner<'_, '_>) -> semio_framework_value::RetainedWorkOutcome<Self, semio_framework_dsl_record::receiving::NativeSnapshotFailure> {
+        use semio_framework_dsl_record::DslReceivingRecord;
+        let semio_framework_dsl_record::FieldValue::Record(record) = value else {
+            return semio_framework_value::RetainedWorkOutcome { result: Err(semio_framework_dsl_record::receiving::owned::invalid().into()), work: 0 };
+        };
+        let turn = RunTriggerFields::receive_record(record, owner);
+        let work = turn.work;
+        let result = match turn.result {
+            Ok(fields) => run_trigger_from_fields(fields).map_err(|_| semio_framework_dsl_record::receiving::owned::invalid().into()),
+            Err(error) => Err(error),
+        };
+        semio_framework_value::RetainedWorkOutcome { result, work }
+    }
+}
+//#endregion 🫴️TriggerReceiving

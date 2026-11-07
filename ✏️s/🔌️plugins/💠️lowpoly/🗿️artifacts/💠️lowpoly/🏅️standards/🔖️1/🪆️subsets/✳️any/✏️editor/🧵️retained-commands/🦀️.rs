@@ -338,7 +338,7 @@ impl LowpolyRetainedCommandWork {
 
 impl ArtifactCommandWork<EditorApp<LowpolyPlayApp>> for LowpolyRetainedCommandWork {
     fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<LowpolyPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self>(), depth: 1, ..Default::default() })
+        Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() })
     }
     fn tool_id(&self) -> &'static str {
         self.tool_id
@@ -550,3 +550,5 @@ impl ArtifactOwnedToolJobFactory for LowpolyCommandJobFactory {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+semio_plugin::retained_command::terminal_frame_bound!(LowpolyRetainedCommandWork);

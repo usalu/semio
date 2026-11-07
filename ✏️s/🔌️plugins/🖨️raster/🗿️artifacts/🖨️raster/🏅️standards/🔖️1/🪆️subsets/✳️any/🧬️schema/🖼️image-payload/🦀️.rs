@@ -39,14 +39,14 @@ impl ToValue for RasterImagePayload {
 impl FromValue for RasterImagePayload {
     fn from_value(_value:semio_framework_value::DslValue)->Result<Self,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"image payload requires original native receiving"))}
 }
-impl semio_framework_value::owned::NativeReceiveMap<Arc<SemioImageSnapshot>> for RasterImagePayload {fn from_native(owner:Arc<SemioImageSnapshot>)->Self{Self::retain(owner)}}
-impl<I:Sync+'static+?Sized>semio_framework_value::owned::NativeReceive<I> for RasterImagePayload where Arc<SemioImageSnapshot>:semio_framework_value::owned::NativeReceive<I>{
-    type Receiver=semio_framework_value::owned::NativeMappedReceiver<I,Arc<SemioImageSnapshot>,Self>;
+impl semio_framework_value_native_owned::owned::NativeReceiveMap<Arc<SemioImageSnapshot>> for RasterImagePayload {fn from_native(owner:Arc<SemioImageSnapshot>)->Self{Self::retain(owner)}}
+impl<I:Sync+'static+?Sized>semio_framework_value_native_owned::owned::NativeReceive<I> for RasterImagePayload where Arc<SemioImageSnapshot>:semio_framework_value_native_owned::owned::NativeReceive<I>{
+    type Receiver=semio_framework_value_native_owned::owned::NativeMappedReceiver<I,Arc<SemioImageSnapshot>,Self>;
     fn receiver()->Self::Receiver{Self::Receiver::new()}
 }
-impl semio_framework_value::owned::NativeRecordFields for RasterImagePayload {
-    fn native_schema_count()->usize{<SemioImageSnapshot as semio_framework_value::owned::NativeRecordFields>::native_schema_count()}
-    fn native_schema_field(index:usize)->Option<semio_framework_value::owned::NativeRecordSchema>{<SemioImageSnapshot as semio_framework_value::owned::NativeRecordFields>::native_schema_field(index)}
+impl semio_framework_value_native_owned::owned::NativeRecordFields for RasterImagePayload {
+    fn native_schema_count()->usize{<SemioImageSnapshot as semio_framework_value_native_owned::owned::NativeRecordFields>::native_schema_count()}
+    fn native_schema_field(index:usize)->Option<semio_framework_value_native_owned::owned::NativeRecordSchema>{<SemioImageSnapshot as semio_framework_value_native_owned::owned::NativeRecordFields>::native_schema_field(index)}
 }
 impl semio_framework_pack_json::ArtifactCanonicalJsonTree for RasterImagePayload {
     fn canonical_tree_node(&self)->Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>,ValueError>{semio_framework_pack_json::ArtifactCanonicalJsonTree::canonical_tree_node(self.image())}

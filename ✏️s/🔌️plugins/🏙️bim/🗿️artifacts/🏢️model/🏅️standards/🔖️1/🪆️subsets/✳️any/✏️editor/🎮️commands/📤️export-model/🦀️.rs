@@ -223,4 +223,4 @@ pub fn handle(payload: &ExportModel, doc: &ArtifactView<'_, ModelSnapshot>, _cfg
 
 }
 
-
+semio_plugin::retained_command::terminal_frame_bound!(ModelExportWork);

@@ -5,9 +5,9 @@ use semio_framework_dsl_record::{
     BorrowedDslField, BorrowedDslRecord, DslField, FieldValue, RecordValue,
     receiving::owned::{DslOwnedReceivingField, OwnedScalar, ScalarReceiving},
 };
-use semio_framework_value::{RetireOwned, ValueError, ValueRefusalKind};
+use semio_framework_value::{RetainedWorkOutcome, RetireOwned, ValueError, ValueRefusalKind};
 use std::mem::size_of;
-use store::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner, OriginalPackWriting, OriginalSnapshotRecordReceiving};
+use store::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner, NativeSnapshotFailure, OriginalPackWriting, OriginalSnapshotRecordReceiving};
 #[path = "geometry-project.rs"]
 mod project;
 #[path = "geometry-read.rs"]
@@ -60,8 +60,8 @@ impl DslOwnedReceivingField for Document {
     }
 }
 impl semio_framework_dsl_record::DslReceivingField for Document {
-    fn receive_value(_: &FieldValue, _: &mut NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
-        Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "glTF geometry source requires original owned receiving"))
+    fn receive_value(_: &FieldValue, _: &mut NativeSnapshotDecodeOwner<'_, '_>) -> RetainedWorkOutcome<Self, NativeSnapshotFailure> {
+        store::native_snapshot_turn(|_| Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "glTF geometry source requires original owned receiving").into()))
     }
 }
 #[derive(RetireOwned, semio_framework_dsl_record_derive::DslScalar)]
@@ -91,13 +91,16 @@ impl DslOwnedReceivingField for Form {
     }
 }
 impl semio_framework_dsl_record::DslReceivingField for Form {
-    fn receive_value(value: &FieldValue, owner: &mut NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
-        semio_framework_dsl_record::receiving::work(owner, size_of::<Self>(), 1)?;
-        match value {
-            FieldValue::Enum(0) => Ok(Self::Json),
-            FieldValue::Enum(1) => Ok(Self::Glb),
-            _ => Err(invalid("glTF native source form is invalid")),
-        }
+    fn receive_value(value: &FieldValue, owner: &mut NativeSnapshotDecodeOwner<'_, '_>) -> RetainedWorkOutcome<Self, NativeSnapshotFailure> {
+        store::native_snapshot_turn(|work| {
+            work.performed();
+            semio_framework_dsl_record::receiving::work(owner, size_of::<Self>(), 1)?;
+            match value {
+                FieldValue::Enum(0) => Ok(Self::Json),
+                FieldValue::Enum(1) => Ok(Self::Glb),
+                _ => Err(invalid("glTF native source form is invalid").into()),
+            }
+        })
     }
 }
 #[derive(RetireOwned, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving)]
@@ -118,76 +121,71 @@ struct Receiving {
 }
 /// 📥️ Receives selected static geometry under the original Pack schema and caller custody; non-geometric source fields retire there.
 pub fn receive_geometry_pack(source: &[u8], owner: &mut NativeSnapshotDecodeOwner<'_, '_>) -> Result<GltfSnapshot, ValueError> {
-    owner.receive_nested::<Receiving, GltfSnapshot>(|slot, original| {
+    owner.receive_nested::<Receiving, GltfSnapshot, NativeSnapshotFailure>(|slot, original| store::native_snapshot_turn(|work| {
+        work.performed();
         original.native().checkpoint()?;
         let g = original.remaining_grant();
         if g.maximum_items == 0 || g.maximum_depth == 0 || g.maximum_copy_bytes < size_of::<Receiving>() {
-            return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "glTF geometry receiving header exceeds original grant"));
+            return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "glTF geometry receiving header exceeds original grant").into());
         }
         *slot = Some(Receiving::default());
         original.record_progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Receiving>(), ..Default::default() })?;
-        let wire = original.receive_nested::<OriginalSnapshotRecordReceiving<Source>, Source>(|receiver, original| {
+        let wire = work.take(original.receive_nested::<OriginalSnapshotRecordReceiving<Source>, Source, NativeSnapshotFailure>(|receiver, original| store::native_snapshot_turn(|work| {
             let grant=original.remaining_grant();
             let mut limits=store::mounted_pack_rt::PackLimits::default();limits.max_file_len=64*1024*1024;
             let Some((rx, p)) = OriginalSnapshotRecordReceiving::admit(source, "stdio.gltf", limits, original.native(), grant)? else {
-                return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "glTF native Pack receiving birth exceeds original grant"));
+                return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "glTF native Pack receiving birth exceeds original grant").into());
             };
             *receiver = Some(rx);
+            work.performed();
             original.record_progress(p)?;
             original.native().begin_stage(0)?;
-            original.drive_cursor(receiver, |rx, native, grant| {
-                let mut out = None;
-                let ready=rx.is_ready();
-                let result = if ready {
-                    rx.take_into(&mut out, grant).map_err(|e| { let p = e.retained_progress(); (e, p) })
+            let wire = work.take(original.drive_cursor(receiver, |rx, native, grant| {
+                if rx.is_ready() {
+                    let mut out = None;
+                    RetainedWorkOutcome { work: 0, result: rx.take_into(&mut out, grant).map(|p| (out, p)).map_err(NativeSnapshotFailure::from) }
                 } else {
-                    rx.step(source, native, grant.maximum_copy_bytes.min(4096), grant).result.map_err(|e| {
-                        let p = e.retained_progress();
-                        (e.primary.or(e.quote_refusal).or(e.allocation_refusal).unwrap_or_else(|| ValueError::literal(ValueRefusalKind::InvalidValue, "original native construction refused")), p)
-                    })
-                };
-                match result {
-                    Ok(p) => {
-                        let result = if !ready&&p.copied_items != 0 { native.step().map(|_| out) } else { Ok(out) };
-                        (result, p)
-                    }
-                    Err((e, p)) => (Err(e), p),
+                    let turn = rx.step(source, native, grant.maximum_copy_bytes.min(4096), grant);
+                    let result = match turn.result {
+                        Ok(p) => match if p.copied_items != 0 { native.step().map(|_| ()) } else { Ok(()) } {
+                            Ok(()) => Ok((None, p)),
+                            Err(e) => Err(NativeSnapshotFailure::from(e)),
+                        },
+                        Err(e) => Err(NativeSnapshotFailure::from(e)),
+                    };
+                    RetainedWorkOutcome { work: turn.work, result }
                 }
-            })
-        })?;
+            }))?;
+            Ok(wire)
+        })))?;
         slot.as_mut().unwrap().source = Some(wire);
-        read::receive(slot.as_mut().unwrap(), original)?;
+        work.take(read::receive(slot.as_mut().unwrap(), original))?;
         let g = original.remaining_grant();
         if g.maximum_items == 0 || g.maximum_depth == 0 || g.maximum_copy_bytes < size_of::<GltfSnapshot>() {
-            return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "glTF geometry target transfer exceeds original grant"));
+            return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "glTF geometry target transfer exceeds original grant").into());
         }
         original.native().checkpoint()?;
         original.record_progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<GltfSnapshot>(), ..Default::default() })?;
         Ok(slot.as_mut().unwrap().target.take().unwrap())
-    })
+    })).result.map_err(NativeSnapshotFailure::into_value_error)
 }
 /// 📦️ Publishes the actual geometry snapshot through its declared native Pack with one final output buffer.
 pub fn encode_geometry_pack(source: &GltfSnapshot, owner: &mut NativeSnapshotEncodeOwner<'_, '_>) -> Result<Vec<u8>, ValueError> {
     project::validate(source, owner)?;
-    owner.receive_nested::<OriginalPackWriting, Vec<u8>>(|slot, original| {
+    owner.receive_nested::<OriginalPackWriting, Vec<u8>, NativeSnapshotFailure>(|slot, original| store::native_snapshot_turn(|work| {
+        work.performed();
         let g = original.remaining_grant();
         let n = size_of::<OriginalPackWriting>();
         if g.maximum_items == 0 || g.maximum_depth == 0 || g.maximum_copy_bytes < n {
-            return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "glTF geometry writer header exceeds original grant"));
+            return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "glTF geometry writer header exceeds original grant").into());
         }
         original.native().checkpoint()?;
         *slot = Some(OriginalPackWriting::new("stdio.gltf", original.native().maximum_bytes())?);
         original.record_progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: n, ..Default::default() })?;
         original.native().begin_stage(0)?;
-        original.drive_cursor(slot, |writer, native, grant| {
+        Ok(work.take(original.drive_cursor(slot, |writer, native, grant| {
             let result = if writer.ready() { writer.take(grant).map(|r| r.map_or((None, Default::default()), |(out, p)| (Some(out), p))) } else { writer.advance(&project::Source(source), Source::RECORD, native, grant).map(|p| (None, p)) };
-            match result {
-                Ok((out, p)) => (Ok(out), p),
-                Err(e) => {
-                    let p = e.retained_progress();
-                    (Err(e), p)
-                }
-            }
-        })
-    })
+            RetainedWorkOutcome { work: 0, result: result.map_err(NativeSnapshotFailure::from) }
+        }))?)
+    })).result.map_err(NativeSnapshotFailure::into_value_error)
 }

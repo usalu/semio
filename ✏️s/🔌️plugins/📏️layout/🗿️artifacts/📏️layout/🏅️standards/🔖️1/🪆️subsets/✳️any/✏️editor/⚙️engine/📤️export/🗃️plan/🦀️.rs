@@ -3,7 +3,7 @@ use super::*;
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value_persistent::list::PagedList;
-use semio_framework_2d_text_font::work::FontWorkLedger;
+use semio_framework_2d_text_font::work::RetainedWorkLedger;
 #[derive(semio_framework_value::RetireOwned)]
 struct OriginalRows<T:RetireOwned>{rows:PagedList<T,{usize::MAX}>,fault:Option<T>}
 pub struct PlanList<T:RetireOwned>{source:Option<OriginalRows<T>>,retirement:Option<Box<dyn store::ErasedSnapshotRetirement>>}
@@ -21,9 +21,9 @@ impl<T:RetireOwned> PlanList<T>{
  pub fn last(&self)->Option<&T>{self.len().checked_sub(1).and_then(|index|self.get(index))}
  pub fn last_mut(&mut self)->Option<&mut T>{self.len().checked_sub(1).and_then(|index|self.get_mut(index))}
  pub fn iter(&self)->impl Iterator<Item=&T>{self.source.iter().flat_map(|source|source.rows.iter())}
- pub fn next_append_demand(&self)->Result<RetirementDemand,ValueError>{let source=self.source.as_ref().ok_or_else(||refusal("layout plan source closed"))?;if source.fault.is_some(){return Err(refusal("layout plan owned append fault"));}FontWorkLedger::slot_demand(&source.rows).map_err(refusal)}
- pub fn reserve_one_in(&mut self,work:&mut FontWorkLedger)->Result<bool,ValueError>{let source=self.source.as_mut().ok_or_else(||refusal("layout plan source closed"))?;if source.fault.is_some(){return Err(refusal("layout plan owned append fault"));}work.slot(&mut source.rows).map_err(refusal)}
- pub fn push_in(&mut self,value:T,work:&mut FontWorkLedger)->Result<(),ValueError>{let source=self.source.as_mut().expect("plan producer requires original reservation");match work.push(&mut source.rows,value){Ok(())=>Ok(()),Err((code,value))=>{source.fault=Some(value);Err(refusal(code).with_retained_progress(work.receipt()))}}}
+ pub fn next_append_demand(&self)->Result<RetirementDemand,ValueError>{let source=self.source.as_ref().ok_or_else(||refusal("layout plan source closed"))?;if source.fault.is_some(){return Err(refusal("layout plan owned append fault"));}RetainedWorkLedger::slot_demand(&source.rows).map_err(refusal)}
+ pub fn reserve_one_in(&mut self,work:&mut RetainedWorkLedger)->Result<bool,ValueError>{let source=self.source.as_mut().ok_or_else(||refusal("layout plan source closed"))?;if source.fault.is_some(){return Err(refusal("layout plan owned append fault"));}work.slot(&mut source.rows).map_err(refusal)}
+ pub fn push_in(&mut self,value:T,work:&mut RetainedWorkLedger)->Result<(),ValueError>{let source=self.source.as_mut().expect("plan producer requires original reservation");match work.push(&mut source.rows,value){Ok(())=>Ok(()),Err((code,value))=>{source.fault=Some(value);Err(refusal(code).with_retained_progress(work.receipt()))}}}
  pub fn next_close_demand(&self)->Result<RetirementDemand,ValueError>{if let Some(owner)=self.retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(owner,0);}if self.source.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.source);}Ok(Default::default())}
  pub fn close_one(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if self.retirement.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,grant);}if self.source.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.source,&mut self.retirement,grant);}Ok(RetainedCloneStep::Complete(Default::default()))}
  pub fn terminal_is_empty(&self)->bool{self.source.is_none()&&self.retirement.is_none()}

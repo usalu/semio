@@ -16,8 +16,8 @@ use protocol::OpText;
 /// ✂️ Local DSL-only mirror of `SourcingMutation` — every real variant flattened into its own
 /// keyworded record, converted at the `store::OpText` boundary only; `SourcingMutation` itself,
 /// and every consumer matching on it, is completely untouched.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
-pub(crate) enum SourcingMutationDsl {
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned)]
+pub enum SourcingMutationDsl {
     CreateCuratedItem {
         #[dsl(block)]
         item: CuratedItem,
@@ -116,3 +116,7 @@ pub fn decode_sourcing_mutation_json(text: &str) -> Result<SourcingMutation, Str
 }
 }
 pub use mutations_codec::*;
+
+dsl::original_ordinal_operation_receiving!(SourcingMutationDsl);
+dsl::original_mirrored_operation_receiving!(SourcingMutation, SourcingMutationDsl, sourcing_mutation_from_dsl);
+dsl::artifact_persisted_binary_operation!(SourcingMutation);

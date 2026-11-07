@@ -15,6 +15,7 @@ struct CadArtifactStorePreparation {
     pub(super) owners: store::OneItemOwners<CadSnapshot, CadMutation>,
     pub(super) checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     pub(super) cancelled: bool,
+    pub(super) last_work: u64,
 }
 
 fn cad_child_retained_bytes<S>(child: &store::os_store::artifact_child::ArtifactChild<S>) -> usize {
@@ -119,12 +120,14 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
             owners: store::OneItemOwners::from_request(request),
             checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
             cancelled: false,
+            last_work: 0,
         }), progress))
     }
 }
 
 impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<CadSnapshot, CadMutation> for CadArtifactStorePreparation {
     fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, _receiving: &mut store::MemberNativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        self.last_work = u64::from(grant.permits_one() && !self.cancelled);
         if !grant.permits_one() || self.cancelled { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
         if self.owners.refused.is_some() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal")); }
         if self.owners.prepared.is_some() { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default())); }
@@ -147,6 +150,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<CadS
     fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<CadSnapshot, CadMutation>> { self.owners.prepared.as_ref() }
     fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<CadSnapshot, CadMutation>> { self.owners.prepared.take() }
     fn cancel(&mut self) { self.cancelled = true; }
+    fn last_turn_work(&self) -> u64 { self.last_work }
     fn begin_close(&mut self) { self.owners.begin_close(); }
     fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }

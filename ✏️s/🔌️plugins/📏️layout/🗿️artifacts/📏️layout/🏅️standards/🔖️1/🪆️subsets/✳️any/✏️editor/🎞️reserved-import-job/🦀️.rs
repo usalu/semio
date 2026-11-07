@@ -1,6 +1,6 @@
 //! 🎞️ Layout import work borrows its original reserved media and authority until paid terminal close.
 use super::*;
-use semio_framework_plugin::tool_contract::ArtifactReservedWork;
+use semio_plugin::plugin_app_close_prelude::ArtifactReservedWork;
 
 //#region 🎞️ReservedImport
 pub(super) const LAYOUT_IMPORT_TOOL_ID:&str="import-media";
@@ -15,7 +15,7 @@ pub(super) struct LayoutImportJob{
  pub(super) decoded:bool,
  pub(super) completed:bool,
  closing:bool,
- pending_completion_rejection:Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<LayoutPlayApp>>>,
+ pending_completion_rejection:Option<semio_plugin::app::ArtifactToolCompletionRejection<EditorApp<LayoutPlayApp>>>,
  last_close_work:u64,
 }
 type LayoutJobTurn<'a>=Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_value::ValueError>;
@@ -66,7 +66,7 @@ impl LayoutImportJob{
   cx.set_stage("layout-import-publish");
   if !self.completed{let completion=&request.completion;if !completion.has_mounted_consumer(){return self.fault(cx,"layout import completion consumer is absent")}
    let mutations=self.mutations.take().unwrap_or_default();
-   if let Err(rejected)=completion.complete(Ok(Emit{artifact_mutations:mutations,ui_scope:semio_framework::kernel::UiDirtyScope::Full,..Default::default()}),semio_framework_plugin::EphemeralEmit::default()){let message=rejected.fault.message.clone();self.pending_completion_rejection=Some(rejected);return self.fault(cx,&message)}
+   if let Err(rejected)=completion.complete(Ok(Emit{artifact_mutations:mutations,ui_scope:semio_framework::kernel::UiDirtyScope::Full,..Default::default()}),semio_plugin::EphemeralEmit::default()){let message=rejected.fault.message.clone();self.pending_completion_rejection=Some(rejected);return self.fault(cx,&message)}
    self.completed=true;
   }
   semio_framework_job::JobOutcomeBorrow::admit_complete(cx,None,None)
@@ -86,8 +86,8 @@ impl ArtifactReservedWork<EditorApp<LayoutPlayApp>> for LayoutImportJob{
 }
 //#endregion 🎞️ReservedImport
 
-pub(super) fn layout_build_export_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<LayoutPlayApp>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-    use semio_framework_plugin::__value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
+pub(super) fn layout_build_export_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<LayoutPlayApp>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+    use semio_plugin::__value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
     use semio_s_artifact_layout_layout_engine_export::{LayoutExportKind, LayoutExportRequest};
     let original = request.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original layout export request is absent"))?;
     let (kind, page_id) = match &*original.command {
@@ -112,13 +112,13 @@ pub(super) fn layout_build_export_tool_job(request: &mut Option<ArtifactOwnedToo
         drop(taken.output_chunks);
         let payload = LayoutExportToolPayload {
             request: LayoutExportRequest { kind, page_id, snapshot: taken.snapshot, preflight_json: None, parent_document_id: taken.parent_document_id, canonical_base_revision_hex },
-            output_chunks: semio_framework_plugin::app::ArtifactOutputChunks::new(semio_s_artifact_layout_layout_engine_export::MAX_LAYOUT_EXPORT_OUTPUT_BYTES),
+            output_chunks: semio_plugin::app::ArtifactOutputChunks::new(semio_s_artifact_layout_layout_engine_export::MAX_LAYOUT_EXPORT_OUTPUT_BYTES),
             completion: Some(taken.completion),
         };
         let job = match taken.input.take() {
             Some(input) => LayoutExportToolJob::from_wire_payload(taken.operation, payload, input).map_err(|error| ValueError::new(ValueRefusalKind::AllocationFailed, error.detail))?,
             None => LayoutExportToolJob::from_payload(taken.operation, payload),
         };
-        Ok((semio_framework_plugin::ErasedToolJob::from_owned(Box::new(job)), RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: std::mem::size_of::<LayoutExportToolJob>(), ..Default::default() }))
+        Ok((semio_plugin::ErasedToolJob::from_owned(Box::new(job)), RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: std::mem::size_of::<LayoutExportToolJob>(), ..Default::default() }))
     })
 }

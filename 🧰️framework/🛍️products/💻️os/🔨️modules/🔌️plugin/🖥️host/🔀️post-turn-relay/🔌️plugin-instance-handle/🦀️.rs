@@ -108,3 +108,9 @@ fn with_controller_pair<T:semio_framework_job::OriginalNativeRetirement>(home:&m
 }
 fn pay(cx:&mut StepContext<'_>,bytes:usize,retirement:bool)->Result<bool,OriginalTurnFailure>{let grant=cx.retained_grant();if (if retirement{cx.retirement_should_yield()}else{cx.should_yield()})||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)}
 fn refused(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
+
+impl std::fmt::Debug for PluginInstanceHandle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("PluginInstanceHandle").field("actor", &self.actor).finish()
+    }
+}

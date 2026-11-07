@@ -11,6 +11,7 @@ pub struct AnimatePresentationConfigPreparation {
     pub(super) serialized_bytes: Option<usize>,
     pub(super) checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     pub(super) cancelled: bool,
+    last_work: u64,
 }
 
 pub struct AnimatePresentationConfigByteCounter {
@@ -61,6 +62,11 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<AnimatePresentationConfigPreparation>(), depth: 1 })
     }
 
+    fn begin_copy_byte_demand(&self, mutation: &PresentationConfigMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<usize, semio_framework_value::ValueError> {
+        self.begin_demand(mutation, lane)?;
+        size_of::<store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<PresentationConfig, PresentationConfigMutation, PresentationConfigMutation>>().checked_add(size_of::<AnimatePresentationConfigPreparation>()).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Animate Presentation config preparation copy demand overflow"))
+    }
+
     fn begin(
         &self,
         request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<PresentationConfig, PresentationConfigMutation, PresentationConfigMutation>,
@@ -80,13 +86,15 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
             serialized_bytes: None,
             checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
             cancelled: false,
+            last_work: 0,
         }), progress))
     }
 }
 
 impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConfigMutation> for AnimatePresentationConfigPreparation {
-    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+    fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, _receiving: &mut semio_framework_value::native_decoding::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         use semio_framework_value::retained_clone::RetainedCloneProgress;
+        self.last_work = 0;
         if !grant.permits_one() || grant.maximum_copy_bytes < ANIMATE_PRESENTATION_CONFIG_STEP_BYTES || self.cancelled || self.owners.is_closing() {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -149,6 +157,9 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Pres
         Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress { copied_items: 1, ..Default::default() }))
     }
 
+    fn last_turn_work(&self) -> u64 {
+        self.last_work
+    }
     fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
         self.checkpoint
     }

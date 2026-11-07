@@ -65,7 +65,7 @@ impl ArtifactCommandWork<App> for Work {
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
  fn begin_close(&mut self){self.closing=true;}
- fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_granted_step(cx,|grant|{use semio_framework_job::InteractiveJobCloseStep;if !self.closing{return Ok(InteractiveJobCloseStep::Blocked);}let Some(workspace)=self.workspace.as_mut() else{return Ok(InteractiveJobCloseStep::Complete {progress:Default::default()});};Ok(match workspace.step(grant){Ok(RetainedCloneStep::Complete(progress))=>InteractiveJobCloseStep::Complete {progress},Ok(RetainedCloneStep::Progress(progress))=>InteractiveJobCloseStep::Pending {progress},Err(error)=>return Err(error)})})}
+ fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_granted_step(cx,|grant|semio_framework_value::RetainedWorkOutcome{result:(||->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{use semio_framework_job::InteractiveJobCloseStep;if !self.closing{return Ok(InteractiveJobCloseStep::Blocked);}let Some(workspace)=self.workspace.as_mut() else{return Ok(InteractiveJobCloseStep::Complete {progress:Default::default()});};Ok(match workspace.step(grant){Ok(RetainedCloneStep::Complete(progress))=>InteractiveJobCloseStep::Complete {progress},Ok(RetainedCloneStep::Progress(progress))=>InteractiveJobCloseStep::Pending {progress},Err(error)=>return Err(error)})})(),work:0})}
  fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{self.workspace.as_ref().map_or(Ok(0),ControlledRetirement::next_copy_byte_demand)}
  fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{self.workspace.as_ref().map_or(Ok(0),|workspace|workspace.next_capacity_byte_demand(copy))}
  fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{self.workspace.as_ref().map_or(Ok(0),ControlledRetirement::next_release_byte_demand)}
@@ -96,3 +96,5 @@ pub fn build(request:&mut Option<semio_plugin::ArtifactOwnedToolJobRequest<App>>
  if original.tool_id!="importImage"||work.extent(&original.command,&original.snapshot,&original.interaction_state,Some(&original.context))!=Some(1) {return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::OwnershipLimit,"Image import exceeds its registered source capacity").into());}
  semio_plugin::retained_command::producer::admit_retained_tool_producer(request,output,cx,DrawingCommand::command_id,DRAWING_IMAGE_RAW_BYTES,4096,false,|_|work)
 }
+
+semio_plugin::retained_command::terminal_frame_bound!(Work);

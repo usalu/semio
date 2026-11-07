@@ -170,15 +170,14 @@ pub trait ArtifactEnvelopeSprConflictAuthority: Send {
 pub trait ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>: semio_framework_value::FactoryRetirement + Send + Sync {
     fn begin_vcs(
         &self,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
+        replacement: Option<semio_framework_job::ReplacementIdentity>,
         path: OwnedSchemaPath,
     ) -> Result<Box<dyn ArtifactEnvelopeVcsFieldAuthority<P, Mutation>>, Box<dyn ArtifactEnvelopeSnapshotFieldAuthority<P>>>;
     fn maximum_vcs_close_byte_demand(&self) -> usize;
     fn maximum_retained_vcs_close_bytes(&self) -> usize;
-    fn begin_snapshot(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: OwnedSchemaPath) -> Box<dyn ArtifactEnvelopeSnapshotFieldAuthority<P>>;
-    fn begin_mutation(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: OwnedSchemaPath) -> Box<dyn ArtifactEnvelopeMutationFieldAuthority<Mutation>>;
-    fn begin_spr_conflict(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: OwnedSchemaPath) -> Box<dyn ArtifactEnvelopeSprConflictAuthority>;
+    fn begin_snapshot(&self, replacement: Option<semio_framework_job::ReplacementIdentity>, path: OwnedSchemaPath) -> Box<dyn ArtifactEnvelopeSnapshotFieldAuthority<P>>;
+    fn begin_mutation(&self, replacement: Option<semio_framework_job::ReplacementIdentity>, path: OwnedSchemaPath) -> Box<dyn ArtifactEnvelopeMutationFieldAuthority<Mutation>>;
+    fn begin_spr_conflict(&self, replacement: Option<semio_framework_job::ReplacementIdentity>, path: OwnedSchemaPath) -> Box<dyn ArtifactEnvelopeSprConflictAuthority>;
     fn edit_history_decoder(&self) -> Arc<dyn ArtifactOwnedHistoryEntryDecoder<Edit<Mutation>>>;
 }
 
@@ -187,8 +186,7 @@ pub trait ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>: semio_framework_value:
 pub trait ArtifactOwnedHistoryEntryDecoder<T>: semio_framework_value::FactoryRetirement + Send + Sync {
     fn begin_entry(
         &self,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
+        replacement: Option<semio_framework_job::ReplacementIdentity>,
         path: OwnedSchemaPath,
         retirement_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<T>>,
     ) -> Box<dyn ArtifactOwnedHistoryEntryAuthority<T>>;

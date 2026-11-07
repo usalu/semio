@@ -14,8 +14,7 @@ enum JackMutationDecodeState {
 }
 
 struct JackMutationDecodeAuthority {
-    pub operation: semio_framework_job::OperationId,
-    pub generation: semio_framework_job::Generation,
+    pub replacement: Option<semio_framework_job::ReplacementIdentity>,
     pub path: store::os_store::owned_schema_decode::OwnedSchemaPath,
     pub state: JackMutationDecodeState,
     pub value: std::mem::ManuallyDrop<Option<TrinityGraphMutation>>,
@@ -23,8 +22,8 @@ struct JackMutationDecodeAuthority {
 }
 
 impl JackMutationDecodeAuthority {
-    pub fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
-        Self { operation, generation, path, state: JackMutationDecodeState::AwaitToken, value: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None) }
+    pub fn new(replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
+        Self { replacement, path, state: JackMutationDecodeState::AwaitToken, value: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None) }
     }
 
     pub fn diagnostic(&self, code: &'static str, offset: u64) -> store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic {
@@ -63,7 +62,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthorit
             if !terminal {
                 return Err(diagnostic("jack-envelope.mutation-pack-must-be-scalar", token.start));
             }
-            self.state = JackMutationDecodeState::Decode(store::os_store::owned_schema_decode::OwnedSchemaHexAuthority::try_new(self.operation, self.generation, token, self.path)?);
+            self.state = JackMutationDecodeState::Decode(store::os_store::owned_schema_decode::OwnedSchemaHexAuthority::try_new(self.replacement, token, self.path)?);
         }
         let JackMutationDecodeState::Decode(authority) = &mut self.state else { return Err(diagnostic("jack-envelope.mutation-pack-token-replayed", token.start)) };
         match authority.step(source, cx) {
@@ -202,8 +201,8 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority 
 pub struct JackEnvelopeOwnedFieldCatalog;
 
 impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<JackSnapshot, TrinityGraphMutation> for JackEnvelopeOwnedFieldCatalog {
-    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Result<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<JackSnapshot, TrinityGraphMutation>>, Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<JackSnapshot>>> {
-        store::os_store::owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority::try_new(self.begin_snapshot(operation, generation, path), std::sync::Arc::new(OwnedValueRetirementFactory::<JackSnapshot>::default()), std::sync::Arc::new(OwnedValueRetirementFactory::<TrinityGraphMutation>::default()), self.edit_history_decoder())
+    fn begin_vcs(&self, replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Result<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<JackSnapshot, TrinityGraphMutation>>, Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<JackSnapshot>>> {
+        store::os_store::owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority::try_new(self.begin_snapshot(replacement, path), std::sync::Arc::new(OwnedValueRetirementFactory::<JackSnapshot>::default()), std::sync::Arc::new(OwnedValueRetirementFactory::<TrinityGraphMutation>::default()), self.edit_history_decoder())
             .map(|authority| Box::new(authority) as Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<JackSnapshot, TrinityGraphMutation>>)
     }
 
@@ -215,15 +214,15 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<Jac
         store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES
     }
 
-    fn begin_snapshot(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<JackSnapshot>> {
-        Box::new(JackSnapshotDecodeAuthority::new(operation, generation, path))
+    fn begin_snapshot(&self, replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<JackSnapshot>> {
+        Box::new(JackSnapshotDecodeAuthority::new(replacement, path))
     }
 
-    fn begin_mutation(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<TrinityGraphMutation>> {
-        Box::new(JackMutationDecodeAuthority::new(operation, generation, path))
+    fn begin_mutation(&self, replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<TrinityGraphMutation>> {
+        Box::new(JackMutationDecodeAuthority::new(replacement, path))
     }
 
-    fn begin_spr_conflict(&self, _operation: semio_framework_job::OperationId, _generation: semio_framework_job::Generation, _path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority> {
+    fn begin_spr_conflict(&self, _replacement: Option<semio_framework_job::ReplacementIdentity>, _path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority> {
         Box::new(JackRejectedConflictAuthority { terminal: false })
     }
 

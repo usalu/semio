@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 
 import TOML from "@iarna/toml";
 import corpus from "./🧫️fixtures/🔣️.json";
-import { channelVersionIsDescribeOutputV1 } from "../🟦️.ts";
+import { channelVersionIsDescribeOutputV1, staleChannelDescribeOutputsV1 } from "../🟦️.ts";
 
 /** 🔬️Checks output ownership against strict JSON schema and independent Cargo TOML admission. */
 export function proveChannelVersionDescribeOwnershipV1(): number {
@@ -23,4 +23,13 @@ export function proveChannelVersionDescribeOwnershipV1(): number {
   }
   assert.deepEqual(failures, [], "Describe output ownership differs from the portable corpus");
   return corpus.cases.length;
+}
+
+/** 🧾️ A committed describe output is stale exactly when its channel differs from the pin; an independent regex over the text agrees. */
+export function proveStaleChannelDescribeOutputsV1(): number {
+  const rows = [{ path: "a", text: '{"executionProtocol":{"appChannelVersion":25}}' }, { path: "b", text: '{"executionProtocol":{"appChannelVersion":24}}' }, { path: "c", text: '{"executionProtocol":{}}' }];
+  const oracle = rows.filter(row => !/"appChannelVersion":25\b/u.test(row.text)).map(row => row.path);
+  assert.deepEqual(staleChannelDescribeOutputsV1(rows, 25), oracle);
+  assert.deepEqual(staleChannelDescribeOutputsV1(rows, 24), ["a", "c"]);
+  return 2;
 }

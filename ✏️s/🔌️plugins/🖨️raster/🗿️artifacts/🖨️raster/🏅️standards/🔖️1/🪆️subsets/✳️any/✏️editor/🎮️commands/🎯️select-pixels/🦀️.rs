@@ -334,3 +334,5 @@ impl<A:RasterWorkApp> ArtifactCommandWork<A> for SelectPixelsWork {
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
+
+semio_plugin::retained_command::terminal_frame_bound!(SelectPixelsWork);

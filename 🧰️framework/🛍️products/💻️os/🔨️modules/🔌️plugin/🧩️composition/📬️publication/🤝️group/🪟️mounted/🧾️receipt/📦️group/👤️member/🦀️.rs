@@ -187,7 +187,7 @@ impl MountedMemberReceipt {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         let bytes = self.next_close_byte_demand()?;
         if grant.maximum_items == 0 || grant.maximum_release_bytes < bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if !plugin_grant_funds(self.retirement_demands()?, grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if !semio_plugin_ownership::bounded_ownership::plugin_grant_funds(self.retirement_demands()?,grant){ return Ok(RetainedCloneStep::Progress(Default::default())); }
         self.closing = true;
         if let Some(owner) = self.kernel.as_mut() { let step = owner.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }); if owner.terminal_is_empty() { self.kernel = None; } return Ok(step); }
         if let Some(owner) = self.forward.as_mut() { let step = owner.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })?; if owner.terminal_is_empty() { self.forward = None; } return Ok(step); }

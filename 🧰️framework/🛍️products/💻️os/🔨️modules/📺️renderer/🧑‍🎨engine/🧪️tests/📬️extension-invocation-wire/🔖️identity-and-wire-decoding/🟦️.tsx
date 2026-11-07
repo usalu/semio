@@ -29,9 +29,9 @@ export function registerIdentityAndWireDecodingTests(kit: InvocationWireTestKit)
       it("preserves every packed export item in both renderer doors and rejects malformed envelopes", async () => {
         const { default: fixture } = await import("../../../🧱️elements/🖼️IconRenderHost/🧪️tests/🧫️fixtures/📡️export-wire/🔣️.json");
         const { default: schema } = await import("../../../🧱️elements/🖼️IconRenderHost/🧬️schema/📡️export-wire/🔣️.json");
-        const { default: Ajv2020 } = await import("ajv/dist/2020");
+        const { default: Ajv } = await import("ajv");
             const { wireEffectToFriendly: sharedDecode } = await import("@semio-tech/framework-actor/wire-turn");
-        const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
+        const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
         for (const sample of fixture.cases) {
           expect(validate(sample.items), sample.name).toBe(sample.valid);
           const wire = { tag: "icon-render-export", val: { items: encodePackValue(sample.items) } };

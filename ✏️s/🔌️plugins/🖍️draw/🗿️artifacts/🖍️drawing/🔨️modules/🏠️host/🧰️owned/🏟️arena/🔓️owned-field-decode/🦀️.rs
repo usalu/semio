@@ -81,8 +81,7 @@ macro_rules! drawing_owned_field_authority {
         }
 
         struct $authority {
-            operation: semio_framework_job::OperationId,
-            generation: semio_framework_job::Generation,
+            replacement: Option<semio_framework_job::ReplacementIdentity>,
             path: store::os_store::owned_schema_decode::OwnedSchemaPath,
             state: $state,
             value: std::mem::ManuallyDrop<Option<$value>>,
@@ -90,8 +89,8 @@ macro_rules! drawing_owned_field_authority {
         }
 
         impl $authority {
-            fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
-                Self { operation, generation, path, state: $state::AwaitToken, value: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None) }
+            fn new(replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
+                Self { replacement, path, state: $state::AwaitToken, value: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None) }
             }
 
             fn diagnostic(&self, code: &'static str, offset: u64) -> store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic {
@@ -124,7 +123,7 @@ macro_rules! drawing_owned_field_authority {
                     if !terminal {
                         return Err(diagnostic(concat!("drawing-envelope.", $kind, "-pack-must-be-scalar"), token.start));
                     }
-                    self.state = $state::Decode(store::os_store::owned_schema_decode::OwnedSchemaHexAuthority::try_new(self.operation, self.generation, token, self.path)?);
+                    self.state = $state::Decode(store::os_store::owned_schema_decode::OwnedSchemaHexAuthority::try_new(self.replacement, token, self.path)?);
                 }
                 let $state::Decode(authority) = &mut self.state else {
                     return Err(diagnostic(concat!("drawing-envelope.", $kind, "-pack-token-replayed"), token.start));
@@ -184,9 +183,9 @@ macro_rules! drawing_owned_field_authority {
                     return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: DRAWING_OWNED_FIELD_BYTES, ..empty }));
                 }
                 let step = if self.retirement.is_some() {
-                    store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant)
+                    store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).result
                 } else if self.value.is_some() {
-                    store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant)
+                    store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant).result
                 } else {
                     Ok(RetainedCloneStep::Complete(empty))
                 }
@@ -280,9 +279,9 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority 
 pub struct DrawingEnvelopeOwnedFieldCatalog;
 
 impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<DrawingSnapshot, DrawingMutation> for DrawingEnvelopeOwnedFieldCatalog {
-    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Result<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<DrawingSnapshot, DrawingMutation>>, Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<DrawingSnapshot>>> {
+    fn begin_vcs(&self, replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Result<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<DrawingSnapshot, DrawingMutation>>, Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<DrawingSnapshot>>> {
         store::os_store::owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority::try_new(
-            self.begin_snapshot(operation, generation, path),
+            self.begin_snapshot(replacement, path),
             std::sync::Arc::new(DrawingSnapshotRetirementFactory::default()),
             std::sync::Arc::new(DrawingMutationRetirementFactory::default()),
             self.edit_history_decoder(),
@@ -298,15 +297,15 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<Dra
         store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES
     }
 
-    fn begin_snapshot(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<DrawingSnapshot>> {
-        Box::new(DrawingSnapshotDecodeAuthority::new(operation, generation, path))
+    fn begin_snapshot(&self, replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<DrawingSnapshot>> {
+        Box::new(DrawingSnapshotDecodeAuthority::new(replacement, path))
     }
 
-    fn begin_mutation(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<DrawingMutation>> {
-        Box::new(DrawingMutationDecodeAuthority::new(operation, generation, path))
+    fn begin_mutation(&self, replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<DrawingMutation>> {
+        Box::new(DrawingMutationDecodeAuthority::new(replacement, path))
     }
 
-    fn begin_spr_conflict(&self, _operation: semio_framework_job::OperationId, _generation: semio_framework_job::Generation, _path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority> {
+    fn begin_spr_conflict(&self, _replacement: Option<semio_framework_job::ReplacementIdentity>, _path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority> {
         Box::new(DrawingRejectedConflictAuthority { terminal: false })
     }
 

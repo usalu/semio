@@ -30,5 +30,6 @@ semio-framework-dsl-record-derive = { path = "../../../../🗣️dsl/🧬️sche
 semio-framework-pack-json = { path = "../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-testing-allocator = { path = "../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 serde = { workspace = true }
 serde_json = { workspace = true }

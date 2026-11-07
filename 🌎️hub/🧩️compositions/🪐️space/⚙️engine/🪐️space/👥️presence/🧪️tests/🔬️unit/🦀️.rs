@@ -61,3 +61,17 @@ async fn presence_and_operations_round_trip_text_and_binary() {
     store::os_store::test_support::assert_op_line_round_trip(&SpacePresenceMutation::SetCamera { window_id: "left".into(), camera: camera(3.0) });
     store::os_store::test_support::assert_op_line_round_trip(&SpacePresenceMutation::RemoveCamera { window_id: "left".into() });
 }
+
+#[test]
+fn every_presence_mutation_variant_is_received_by_its_original_cursor_like_its_decode_oracle() {
+    let operations = [
+        SpacePresenceMutation::SetActiveNode { node_id: Some("a".into()) },
+        SpacePresenceMutation::SetActiveNode { node_id: None },
+        SpacePresenceMutation::SetFocusedNode { node_id: Some("f".into()) },
+        SpacePresenceMutation::SetCollapsed { node_ids: vec!["c".into(), "d".into()] },
+        SpacePresenceMutation::SetPreviewOff { node_ids: Vec::new() },
+        SpacePresenceMutation::SetCamera { window_id: "left".into(), camera: camera(3.0) },
+        SpacePresenceMutation::RemoveCamera { window_id: "left".into() },
+    ];
+    dsl::original_receiving::check_receiving_round_trip(&operations).unwrap();
+}

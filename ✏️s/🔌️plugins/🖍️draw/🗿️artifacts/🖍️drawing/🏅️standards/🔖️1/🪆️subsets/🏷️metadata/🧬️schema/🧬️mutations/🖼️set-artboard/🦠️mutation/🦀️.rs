@@ -12,8 +12,10 @@ pub fn valid(artboard:&Option<DrawingArtboard>)->bool{artboard.as_ref().is_none_
 pub fn copy(artboard:&Option<DrawingArtboard>)->Option<DrawingArtboard>{artboard.as_ref().map(|a|DrawingArtboard{width:a.width,height:a.height})}
 impl<Op> protocol::MutationKind<DrawingSnapshot,Op> for SetArtboard where Op:protocol::Mutation<DrawingSnapshot,Diff=DrawingDiff>+From<SetArtboard>{
  const SEMANTICS:protocol::SemanticDescriptor=protocol::SemanticDescriptor{verb:"set",entity:"artboard",kind:"set-artboard",record:"SetArtboard"};
- fn diff(&self,b:&DrawingSnapshot)->protocol::MutationOutcome<DrawingDiff>{if !valid(&self.artboard){return protocol::MutationOutcome::fatal("mutation.invariant","Artboard dimensions must be finite and positive",["artboard"])}if self.artboard==b.artboard{return protocol::MutationOutcome::empty().warning("mutation.no-op","The Drawing artboard already has these dimensions")}protocol::MutationOutcome::new(DrawingDiff{artboard:Some(copy(&self.artboard)),..Default::default()})}
- fn inverse(&self,b:&DrawingSnapshot)->Result<Vec<Op>,semio_framework_value::ValueError>{Ok(vec![SetArtboard{artboard:copy(&b.artboard)}.into()])}
  fn label(&self)->semio_ui_locale::LocalizedLabel{semio_ui_locale::LocalizedLabel::native("Set artboard","Zeichenfläche festlegen")}
  fn target(&self)->Vec<String>{vec!["artboard".into()]}
+}
+impl<Op> protocol::ColdMutationKind<DrawingSnapshot,Op> for SetArtboard where Op:protocol::ColdMutation<DrawingSnapshot,ReferenceDiff=DrawingDiff>+From<SetArtboard>{
+ fn diff(&self,b:&DrawingSnapshot)->protocol::MutationOutcome<DrawingDiff>{super::diff::diff(self,b)}
+ fn inverse(&self,b:&DrawingSnapshot)->Result<Vec<Op>,semio_framework_value::ValueError>{super::inverse::inverse(self,b)}
 }

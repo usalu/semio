@@ -14,8 +14,6 @@ use semio_framework_dsl_record::{FieldValue, RecordValue};
 #[cfg(test)]
 use semio_framework_value::retirement::RetireOwned;
 #[cfg(test)]
-use semio_framework_value::RetireOwned;
-#[cfg(test)]
 use semio_framework_value::{NativeDecodeControl, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError, ValueRefusalKind};
 #[cfg(test)]
 use semio_framework_value::retained_clone::retained_clone_grant_admits;

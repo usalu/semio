@@ -2,7 +2,7 @@ use super::{DemoDiff, DemoMutation, DemoSnapshot, AssignN};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslRecord, semio_os_dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value_derive::RetireOwned, semio_framework_value::NativeReceive, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_os_dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

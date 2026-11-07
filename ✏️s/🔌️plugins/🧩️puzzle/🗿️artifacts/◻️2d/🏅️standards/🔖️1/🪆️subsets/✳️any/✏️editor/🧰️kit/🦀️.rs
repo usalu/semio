@@ -13,6 +13,7 @@ use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 const PUZZLE2D_CONFIG_STORE_MAXIMUM_BYTES: usize = 65_536;
 
 struct Puzzle2dConfigStorePreparation {
+    last_work: u64,
     pub owners: store::OneItemOwners<Puzzle2dConfig, Puzzle2dConfigMutation>,
     pub checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     completed_bytes: usize,
@@ -50,6 +51,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzz
         use semio_framework_value::retained_clone::RetainedCloneProgress;
         use semio_framework_value::ValueError;
         use semio_framework_value::ValueRefusalKind;
+        self.last_work = 0;
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -59,6 +61,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzz
         if self.owners.prepared.is_some() || self.phase >= 2 {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()));
         }
+        self.last_work = 1;
         match self.phase {
             0 => {
                 let base = self.owners.base.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "Puzzle2d Config preparation lost its exact base root"))?;
@@ -97,6 +100,9 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzz
         }
     }
 
+    fn last_turn_work(&self) -> u64 {
+        self.last_work
+    }
     fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
         self.checkpoint
     }
@@ -181,7 +187,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
             Ok(progress) => progress,
             Err(error) => return Err((error, request)),
         };
-        Ok((Box::new(Puzzle2dConfigStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), completed_bytes: 0, phase: 0, cancelled: false }), progress))
+        Ok((Box::new(Puzzle2dConfigStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), last_work: 0, completed_bytes: 0, phase: 0, cancelled: false }), progress))
     }
 }
 
@@ -194,6 +200,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
 pub struct Puzzle2dArtifactStorePreparationFactory;
 
 struct Puzzle2dArtifactStorePreparation {
+    last_work: u64,
     pub owners: store::OneItemOwners<Puzzle2dPlaySnapshot, Puzzle2dMutation>,
     pub checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     completed_bytes: usize,
@@ -245,7 +252,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
             Ok(progress) => progress,
             Err(error) => return Err((error, request)),
         };
-        Ok((Box::new(Puzzle2dArtifactStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), completed_bytes: 0, phase: 0, cancelled: false }), progress))
+        Ok((Box::new(Puzzle2dArtifactStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), last_work: 0, completed_bytes: 0, phase: 0, cancelled: false }), progress))
     }
 }
 
@@ -257,6 +264,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzz
         use semio_framework_value::retained_clone::RetainedCloneProgress;
         use semio_framework_value::ValueError;
         use semio_framework_value::ValueRefusalKind;
+        self.last_work = 0;
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -266,6 +274,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzz
         if self.owners.prepared.is_some() || self.phase >= 2 {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()));
         }
+        self.last_work = 1;
         match self.phase {
             0 => {
                 let base = self.owners.base.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "Puzzle2d Artifact preparation lost its exact base root"))?;
@@ -300,6 +309,9 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzz
         }
     }
 
+    fn last_turn_work(&self) -> u64 {
+        self.last_work
+    }
     fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
         self.checkpoint
     }

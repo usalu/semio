@@ -6,7 +6,7 @@ import {spawnSync} from "node:child_process";
 import {fileURLToPath} from "node:url";
 import {requireTestToolV1} from "../../../../🧪️testing/🧰️toolchain/🟦️.ts";
 import {cargoCompilerIntermediatePathsV1,requireCargoSelectedPathEnvelopeV1,requireCargoSelectedPathEnvelopeControlledV1} from "../🟦️.ts";
-import schema from "../🧬️schema/🔣️.json";
+import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import fixture from "./🧫️fixtures/🔣️.json";
 test("selected dependency and host/target compiler envelopes equal independent pathlib output",()=>{
  expect(new Ajv({strict:true}).validate({...schema,$ref:"#/definitions/Fixture"},fixture)).toBe(true);

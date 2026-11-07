@@ -24,20 +24,6 @@ pub use semio_s_artifact_sequence_sequence_tests::{SEQUENCE_DIALECT};
 
 pub use semio_s_artifact_sequence_sequence_schema::{SequenceCamera, SequenceContentChild, SequenceEdge, SequenceStep, SequenceWorkingScene, SlotRef, StepParams, genesis_sequence_child_pack, require_sequence_working_scene, sequence_content_child_handle, sequence_content_child_with_owner, sequence_content_snapshot_from_working, sequence_derivable_scene, sequence_step_from_node, sequence_step_params, sequence_working_scene_for_handle, working_from_sequence_content_snapshot};
 
-//#region 🔖️Collections
-impl protocol::Identified<String> for SequenceStep {
-    fn id(&self) -> &String {
-        &self.id
-    }
-}
-
-impl protocol::Identified<String> for SequenceEdge {
-    fn id(&self) -> &String {
-        &self.id
-    }
-}
-
-//#endregion 🔖️Collections
 
 pub use semio_s_artifact_sequence_sequence_v1::{artifact_kind};
 

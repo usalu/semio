@@ -290,9 +290,9 @@ fn remodeling_retained_tool_ids() -> Vec<&'static str> {
     <RemodelingPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().iter().map(|proof| proof.tool_id).collect()
 }
 
-fn remodeling_tool_registrations() -> std::collections::BTreeMap<String, semio_framework_plugin::ArtifactToolRegistration> {
+fn remodeling_tool_registrations() -> std::collections::BTreeMap<String, semio_plugin::ArtifactToolRegistration> {
     let bus = semio_framework::ActionBus::new();
-    let mut registry = semio_framework_plugin::ArtifactToolFactoryRegistry::<EditorApp<RemodelingPlayApp>>::new(&bus, "s.remodel.remodeling@1/*#editor");
+    let mut registry = semio_plugin::ArtifactToolFactoryRegistry::<EditorApp<RemodelingPlayApp>>::new(&bus, "s.remodel.remodeling@1/*#editor");
     <RemodelingPlayApp as ArtifactEditor>::register_tool_job_factories(&mut registry).expect("registered production tool factories");
     registry.finish()
 }
@@ -561,7 +561,7 @@ async fn remodel_window_ownership_one_item_preparation_transfers_its_candidate_o
     }
     assert!(publication.terminal_is_empty());
     drop(publication);
-    for _ in 0..semio_framework_plugin::artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
+    for _ in 0..semio_plugin::artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
         if document.close_owned_terminal_is_empty() { break; }
         let demand = document.close_owned_demands(offered(scope.cx()).maximum_copy_bytes).expect("Remodel Store close quote");
         if close(scope.cx(), demand, |grant| document.close_owned_step(grant)) { break; }

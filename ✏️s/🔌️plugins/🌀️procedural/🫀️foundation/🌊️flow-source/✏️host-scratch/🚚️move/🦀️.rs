@@ -50,7 +50,7 @@ impl MoveNodesWork{
   let demand=self.next_demands(source,grant.maximum_copy_bytes)?;if self.ready{return Ok(true)}if !retained_clone_grant_admits(grant,demand){return Ok(false)}
   if let Some(close)=self.fields.lookup_close.as_mut(){
    if close.terminal_is_empty(){self.fields.lookup_close=None;self.phase=7;self.work=1;self.progress.copied_items=1}
-   else{let turn=close.step(grant);self.work=close.last_turn_work();self.progress=close.step_progress();turn?}return Ok(false)
+   else{let turn=close.step(grant);self.work=close.last_turn_work();self.progress=close.step_progress();turn?;}return Ok(false)
   }
   self.work=1;self.progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
   match self.phase{
@@ -66,7 +66,7 @@ impl MoveNodesWork{
     if turn.result?{if self.scan.result().is_none(){self.next_target()}else{self.phase=3}}
    },
    3=>{let turn=source.layout.admit_lookup_borrowed_original(&self.fields.ids.as_ref().unwrap()[self.target],grant);self.work=turn.work;self.progress=Default::default();let(lookup,progress)=turn.result?;self.fields.lookup=Some(lookup);self.progress=progress;self.phase=4},
-   4=>{let lookup=self.fields.lookup.as_mut().unwrap();let turn=lookup.advance_borrowed_original(&self.fields.ids.as_ref().unwrap()[self.target],grant);self.work=turn.work;self.progress=turn.result?.progress();if lookup.is_complete(){self.phase=5}},
+   4=>{let Fields{lookup,ids,..}=&mut*self.fields;let lookup=lookup.as_mut().unwrap();let turn=lookup.advance_borrowed_original(&ids.as_ref().unwrap()[self.target],grant);self.work=turn.work;self.progress=turn.result?.progress();if lookup.is_complete(){self.phase=5}},
    5=>{self.layout=self.fields.lookup.as_ref().unwrap().result().map(|layout|WidgetLayout{x:layout.x+self.dx,y:layout.y+self.dy});self.phase=6},
    6=>{self.fields.lookup_close=Some(ControlledRetirement::new(self.fields.lookup.take().unwrap()).unwrap_or_else(|_|unreachable!("layout lookup declares controlled retirement")))},
    7=>{
@@ -74,7 +74,7 @@ impl MoveNodesWork{
     else{self.next_target()}
    },
    8=>{if !self.found||(self.dx==0.0&&self.dy==0.0){self.finish(false)}else{self.writing=true;self.target=0;self.scan=ScratchRowScan::new();self.phase=2}},
-   9=>{let turn=self.fields.text.advance_original(&self.fields.ids.as_ref().unwrap()[self.target],grant);self.work=turn.work;self.progress=Default::default();self.progress=turn.result?.progress();if self.fields.text.ready(){self.phase=10}},
+   9=>{let Fields{text,ids,..}=&mut*self.fields;let turn=text.advance_original(&ids.as_ref().unwrap()[self.target],grant);self.work=turn.work;self.progress=Default::default();self.progress=turn.result?.progress();if self.fields.text.ready(){self.phase=10}},
    10=>{let turn=self.fields.text.take_original(grant);self.work=turn.work;self.progress=Default::default();if let Some((key,progress))=turn.result?{self.progress=progress;self.fields.entry=Some(OriginalOwnedEntry::new(std::mem::take(&mut source.layout),key,self.layout.take().unwrap()));self.phase=11}},
    11=>{let entry=self.fields.entry.as_mut().unwrap();let turn=entry.advance(grant);self.work=turn.work;self.progress=entry.step_progress();if let Some(map)=turn.result?{self.fields.pending=Some(map);self.phase=12}},
    12=>{source.layout=self.fields.pending.take().unwrap();self.phase=13},
@@ -104,7 +104,7 @@ impl MoveNodesWork{
   if !self.closing{return Err(invalid("canvas move close was not begun"))}if self.terminal(){return Ok(RetainedCloneStep::Complete(Default::default()))}
   if !retained_clone_grant_admits(grant,self.close_demands(grant.maximum_copy_bytes)?){return Ok(RetainedCloneStep::Progress(Default::default()))}
   if !self.retirement.is_empty(){let turn=self.retirement.step_granted(grant);self.work=turn.work;self.progress=turn.result?.progress()}
-  else if let Some(close)=self.fields.lookup_close.as_mut(){if close.terminal_is_empty(){self.fields.lookup_close=None;self.work=1;self.progress.copied_items=1}else{let turn=close.step(grant);self.work=close.last_turn_work();self.progress=close.step_progress();turn?}}
+  else if let Some(close)=self.fields.lookup_close.as_mut(){if close.terminal_is_empty(){self.fields.lookup_close=None;self.work=1;self.progress.copied_items=1}else{let turn=close.step(grant);self.work=close.last_turn_work();self.progress=close.step_progress();turn?;}}
   else if self.fields.lookup.is_some(){self.fields.lookup_close=Some(ControlledRetirement::new(self.fields.lookup.take().unwrap()).unwrap_or_else(|_|unreachable!("layout lookup declares controlled retirement")));self.work=1;self.progress.copied_items=1}
   else if let Some(entry)=self.fields.entry.as_mut(){if entry.terminal_is_empty(){self.fields.entry=None;self.work=1;self.progress.copied_items=1}else{let turn=entry.close_step(grant);self.work=turn.work;self.progress=turn.result?.progress()}}
   else if !self.fields.text.terminal_is_empty(){let turn=self.fields.text.close_step(grant);self.work=turn.work;self.progress=turn.result?.progress()}

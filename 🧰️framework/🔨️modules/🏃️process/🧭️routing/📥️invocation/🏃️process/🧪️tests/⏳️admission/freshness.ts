@@ -32,7 +32,6 @@ test("a shared short parent cannot authorize after real time elapsed in another 
   }catch{}
   expect(result).toBeDefined();measured.push(result);
  }
- console.log("[DEBUG] public control DAG freshness "+JSON.stringify(measured));
  expect(measured.filter(row=>row.delayed&&row.authorized&&row.parentExpired).length).toBe(fixture.expectedStaleAuthorizations);
 });
 
@@ -55,6 +54,5 @@ test("fresh cutoff evaluation preserves an open authenticated admission wait",as
    },undefined,a);
   });
  });
- console.log("[DEBUG] public open-wait freshness "+JSON.stringify({authorized,delayed,observed}));
  expect(delayed).toBe(true);expect(authorized).toBe(fixture.expectedWaitAuthorized);
 });

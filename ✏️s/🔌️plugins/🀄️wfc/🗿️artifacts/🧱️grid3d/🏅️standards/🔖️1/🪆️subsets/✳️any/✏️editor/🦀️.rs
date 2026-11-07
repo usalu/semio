@@ -837,3 +837,5 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 #[cfg(test)]
 #[path="🧪️tests/🔬️render-source/🦀️.rs"]
 mod render_source_laws;
+
+semio_plugin::retained_command::terminal_frame_bound!(Grid3dCommandWork);

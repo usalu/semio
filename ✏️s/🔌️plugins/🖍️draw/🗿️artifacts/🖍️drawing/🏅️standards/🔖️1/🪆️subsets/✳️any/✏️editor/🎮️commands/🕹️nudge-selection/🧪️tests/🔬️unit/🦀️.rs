@@ -33,8 +33,8 @@ fn selected_ancestor_owns_descendant_movement_once() {
         let mut session=DrawingSession::default();session.interaction.ids=ids.iter().map(|id|(*id).into()).collect();
         let emit=plan(&before,&session,[10.0,-5.0]).unwrap();assert_eq!(emit.artifact_mutations.len(),1);
         for mutation in emit.artifact_mutations {semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut after,&mutation).unwrap();}
-        let original=semio_s_artifact_draw_drawing_scene::flatten_drawing_document_to_scene_nodes(&before)[0].transform;
-        let moved=semio_s_artifact_draw_drawing_scene::flatten_drawing_document_to_scene_nodes(&after)[0].transform;
+        let original=semio_s_artifact_draw_drawing_scene::preparation::testkit::scene_nodes(&before)[0].transform;
+        let moved=semio_s_artifact_draw_drawing_scene::preparation::testkit::scene_nodes(&after)[0].transform;
         assert!((moved[4]-original[4]-10.0).abs()<1e-10 && (moved[5]-original[5]+5.0).abs()<1e-10);
         for i in 0..4 {assert!((moved[i]-original[i]).abs()<1e-10);}
         if ids.len()==2 {assert_eq!(semio_s_artifact_draw_drawing_model::find_drawing_layer(&after,"child"),semio_s_artifact_draw_drawing_model::find_drawing_layer(&before,"child"));}

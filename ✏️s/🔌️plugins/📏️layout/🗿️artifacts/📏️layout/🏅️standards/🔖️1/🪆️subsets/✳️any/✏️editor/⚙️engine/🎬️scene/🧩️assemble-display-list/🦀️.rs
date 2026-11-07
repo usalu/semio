@@ -13,12 +13,6 @@ pub(super) fn assemble_display_list_items(mut engine: Option<&mut LayoutEngine>,
     let mut rects = Vec::new();
     let mut text_runs = Vec::new();
     let mut images = Vec::new();
-    let mut frame_strokes = Vec::new();
-    let background = if deferred{None}else{background_scene(doc)};
-    let raw_drawing = raw_drawing_strokes(background.as_ref());
-    let raw_labels = raw_drawing_labels(background.as_ref());
-    let raw_rasters = raw_drawing_rasters(background.as_ref());
-    let mut frame_labels: Vec<(u32, DrawingLabel)> = Vec::new();
     let mut guides = if chrome_blueprint && page.id == active_page_id { page_margin_guides(page) } else { Vec::new() };
 
     if chrome_blueprint && page.id == active_page_id {
@@ -55,7 +49,6 @@ pub(super) fn assemble_display_list_items(mut engine: Option<&mut LayoutEngine>,
         let rect_from = rects.len();
         let image_from = images.len();
         let text_from = text_runs.len();
-        let stroke_from = frame_strokes.len();
         match &item.frame {
             Frame::Rect { id, bounds, fill, stroke, .. } => {
                 rects.push(bounds_to_display_rect(id, bounds, item.inherited, selected, hovered, *fill, stroke.or(if chrome_blueprint && item.inherited { Some([0.4, 0.5, 0.7, 0.8]) } else { None })));
@@ -112,19 +105,10 @@ pub(super) fn assemble_display_list_items(mut engine: Option<&mut LayoutEngine>,
                 if chrome_blueprint {
                     rects.push(bounds_to_display_rect(id, bounds, item.inherited, selected, hovered, None, Some([0.85, 0.45, 0.2, 0.9])));
                 }
-                let deferred_drawing=deferred&&!proxy_band&&proxy_data_url.is_none()&&doc.background_drawing.is_some()&&link.is_some_and(|link|drawing_kind(&link.artifact_kind));
-                let placed = if !deferred && !proxy_band && proxy_data_url.is_none() {
-                    link.and_then(|link| drawing_kind(&link.artifact_kind).then(|| place_drawing_in_frame(&raw_drawing, bounds))).filter(|strokes| !strokes.is_empty())
-                } else {
-                    None
-                };
-                let preview = if proxy_band || proxy_data_url.is_some() || placed.is_some() || deferred_drawing { String::new() } else { link.map(|link| preview_mark(&link.artifact_kind)).unwrap_or_default() };
+                let deferred_drawing=!proxy_band&&proxy_data_url.is_none()&&doc.background_drawing.is_some()&&link.is_some_and(|link|drawing_kind(&link.artifact_kind));
+                let preview = if proxy_band || proxy_data_url.is_some() || deferred_drawing { String::new() } else { link.map(|link| preview_mark(&link.artifact_kind)).unwrap_or_default() };
                 images.push(DisplayImage { drawing_bounds:deferred_drawing.then_some([bounds.x,bounds.y,bounds.width,bounds.height,bounds.rotation]), object_id: id.clone(), x: bounds.x as f32, y: bounds.y as f32, width: bounds.width as f32, height: bounds.height as f32, rotation: bounds.rotation as f32, placeholder, proxy_data_url: proxy_data_url.clone(), preview, stack: 0 });
-                if let Some(placed) = placed {
-                    frame_strokes.extend(placed);
-                    frame_labels.extend(place_drawing_labels(&raw_labels, &raw_drawing, bounds).into_iter().map(|label| (stack, label)));
-                    images.extend(place_drawing_rasters(&raw_rasters, &raw_drawing, bounds));
-                } else if !deferred_drawing && !proxy_band && proxy_data_url.is_none() {
+                if !deferred_drawing && !proxy_band && proxy_data_url.is_none() {
                     if let Some(kind) = link.and_then(|link| (!link.artifact_kind.is_empty()).then(|| link.artifact_kind.clone())) {
                         let glyphs = placed_kind_glyphs(engine.as_deref_mut(), doc, bounds, &kind);
                         text_runs.push(DisplayTextRun { deferred: None, rotation: 0.0, center: [0.0; 2], object_id: id.clone(), glyphs, content: kind, origin_x: bounds.x as f32 + 4.0, origin_y: bounds.y as f32 + 4.0, font_size: 11.0, stack: 0, color: [0.0, 0.0, 0.0, 1.0] });
@@ -144,37 +128,8 @@ pub(super) fn assemble_display_list_items(mut engine: Option<&mut LayoutEngine>,
             run.rotation = bounds.rotation as f32;
             run.center = [(bounds.x + bounds.width * 0.5) as f32, (bounds.y + bounds.height * 0.5) as f32];
         }
-        for stroke in &mut frame_strokes[stroke_from..] {
-            stroke.stack = stack;
-        }
     }
 
-    let strokes = if include_background { drawing_strokes(&raw_drawing, page.width, page.height) } else { Vec::new() };
-    let label_fit = include_background.then(|| fit_from_points(stroke_points(&raw_drawing), page.width, page.height).or_else(|| fit_from_points(raw_labels.iter().map(|label| (label.x, label.y)), page.width, page.height))).flatten();
-    if let Some(engine) = engine.as_deref_mut() {
-        if let Some((scale, ox, oy)) = label_fit {
-            for label in &raw_labels {
-                text_runs.push(shape_drawing_label(engine, doc, &label.text, label.x * scale + ox, label.y * scale + oy));
-            }
-        }
-        for (stack, label) in &frame_labels {
-            text_runs.push(shape_drawing_label(engine, doc, &label.text, label.x, label.y));
-            text_runs.last_mut().unwrap().stack = *stack;
-        }
-    } else if let Some((scale, ox, oy)) = label_fit {
-        for label in &raw_labels {
-            text_runs.push(unshaped_drawing_label(&label.text, label.x * scale + ox, label.y * scale + oy));
-        }
-        for (stack, label) in &frame_labels {
-            text_runs.push(unshaped_drawing_label(&label.text, label.x, label.y));
-            text_runs.last_mut().unwrap().stack = *stack;
-        }
-    }
-    if let Some((scale, ox, oy)) = include_background.then(|| fit_from_points(stroke_points(&raw_drawing), page.width, page.height).or_else(|| fit_from_points(raw_rasters.iter().flat_map(|raster| [(raster.x, raster.y), (raster.x + raster.width, raster.y + raster.height)]), page.width, page.height))).flatten() {
-        for raster in &raw_rasters {
-            push_drawing_raster(&mut images, raster, raster.x * scale + ox, raster.y * scale + oy, raster.width * scale, raster.height * scale, 0.0);
-        }
-    }
-    DisplayList { page_id: page.id.clone(), page_width: page.width as f32, page_height: page.height as f32, strokes, frame_strokes, rects, text_runs, images, guides }
+    DisplayList { page_id: page.id.clone(), page_width: page.width as f32, page_height: page.height as f32, strokes: Vec::new(), frame_strokes: Vec::new(), rects, text_runs, images, guides }
 }
 //#endregion ⚙️Scene

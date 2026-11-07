@@ -396,7 +396,7 @@
       "root": "native",
       "path": "b/r",
       "kind": "area",
-      "id": "held-rust-image"
+      "id": "rust"
     },
     {
       "root": "repository",
@@ -719,18 +719,18 @@
     ]
   },
   "compactRust": {
-    "root": "rust",
-    "directory": ".r",
-    "partitionDirectory": "i",
-    "absoluteDirectory": "/work/semio/.r/i",
+    "root": "native",
+    "directory": ".cache",
+    "partitionDirectory": "b/r",
+    "absoluteDirectory": "/work/semio/.cache/b/r",
     "cases": [
       {
-        "path": "i",
+        "path": "b/r",
         "kind": "area",
         "id": "rust"
       },
       {
-        "path": "i/m/u/l/p123456",
+        "path": "b/r/m/u/l/p123456",
         "kind": "area",
         "id": "rust"
       },

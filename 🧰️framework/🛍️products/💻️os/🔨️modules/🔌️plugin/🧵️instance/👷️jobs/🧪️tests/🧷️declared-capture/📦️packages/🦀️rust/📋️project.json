@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/plugin-declared-capture-tests-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

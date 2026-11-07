@@ -26,8 +26,7 @@ pub enum OwnedSchemaStringState {
 }
 
 pub struct OwnedSchemaStringAuthority<const MAXIMUM_BYTES: usize> {
-    pub(super) operation: semio_framework_job::OperationId,
-    pub(super) generation: semio_framework_job::Generation,
+    pub(super) replacement: Option<semio_framework_job::ReplacementIdentity>,
     pub(super) token: OwnedSchemaToken,
     pub(super) path: OwnedSchemaPath,
     relative: usize,
@@ -39,11 +38,11 @@ pub struct OwnedSchemaStringAuthority<const MAXIMUM_BYTES: usize> {
 
 impl<const MAXIMUM_BYTES: usize> OwnedSchemaStringAuthority<MAXIMUM_BYTES> {
     /// 🔠️ Binds one string token to fixed caller-chosen semantic storage.
-    pub fn try_new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, token: OwnedSchemaToken, path: OwnedSchemaPath) -> Result<Self, OwnedSchemaToken> {
+    pub fn try_new(replacement: Option<semio_framework_job::ReplacementIdentity>, token: OwnedSchemaToken, path: OwnedSchemaPath) -> Result<Self, OwnedSchemaToken> {
         if token.kind != OwnedSchemaTokenKind::String || token.end.saturating_sub(token.start) < 2 || MAXIMUM_BYTES == 0 {
             return Err(token);
         }
-        Ok(Self { operation, generation, token, path, relative: 1, state: OwnedSchemaStringState::Raw, bytes: [0; MAXIMUM_BYTES], len: 0, taken: false })
+        Ok(Self { replacement, token, path, relative: 1, state: OwnedSchemaStringState::Raw, bytes: [0; MAXIMUM_BYTES], len: 0, taken: false })
     }
 
     pub(super) fn diagnostic(&self, code: &'static str) -> OwnedSchemaDecodeDiagnostic {
@@ -97,7 +96,7 @@ impl<const MAXIMUM_BYTES: usize> OwnedSchemaStringAuthority<MAXIMUM_BYTES> {
 
     /// ⏭️ Unescapes source bytes one semantic byte/scalar at a time under the caller's grant.
     pub fn step(&mut self, source: &OwnedSchemaRecordCursor, cx: &mut semio_framework_job::StepContext<'_>) -> OwnedSchemaStringStep {
-        if cx.operation() != self.operation || cx.generation() != self.generation {
+        if cx.replacement_is_stale(self.replacement) {
             let diagnostic = self.diagnostic("schema-json.stale-string-authority");
             self.state = OwnedSchemaStringState::Fault(diagnostic);
             return OwnedSchemaStringStep::Fault(diagnostic);
@@ -220,8 +219,7 @@ pub enum OwnedSchemaHexStep {
 /// 🔢 Incremental bounded hex scalar used by owner catalogs for nested pack values.
 /// The decoded bytes stay inline and no String/Vec is ever constructed.
 pub struct OwnedSchemaHexAuthority<const MAXIMUM_BYTES: usize> {
-    pub(super) operation: semio_framework_job::OperationId,
-    pub(super) generation: semio_framework_job::Generation,
+    pub(super) replacement: Option<semio_framework_job::ReplacementIdentity>,
     pub(super) token: OwnedSchemaToken,
     pub(super) path: OwnedSchemaPath,
     relative: usize,
@@ -233,11 +231,11 @@ pub struct OwnedSchemaHexAuthority<const MAXIMUM_BYTES: usize> {
 }
 
 impl<const MAXIMUM_BYTES: usize> OwnedSchemaHexAuthority<MAXIMUM_BYTES> {
-    pub fn try_new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, token: OwnedSchemaToken, path: OwnedSchemaPath) -> Result<Self, OwnedSchemaDecodeDiagnostic> {
+    pub fn try_new(replacement: Option<semio_framework_job::ReplacementIdentity>, token: OwnedSchemaToken, path: OwnedSchemaPath) -> Result<Self, OwnedSchemaDecodeDiagnostic> {
         if token.kind != OwnedSchemaTokenKind::String {
             return Err(OwnedSchemaDecodeDiagnostic { code: "schema-json.expected-hex-string", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() });
         }
-        Ok(Self { operation, generation, token, path, relative: 1, bytes: Box::new([0; MAXIMUM_BYTES]), len: 0, high: None, complete: false, taken: false })
+        Ok(Self { replacement, token, path, relative: 1, bytes: Box::new([0; MAXIMUM_BYTES]), len: 0, high: None, complete: false, taken: false })
     }
 
     pub(super) fn fault(&self, code: &'static str) -> OwnedSchemaHexStep {
@@ -257,7 +255,7 @@ impl<const MAXIMUM_BYTES: usize> OwnedSchemaHexAuthority<MAXIMUM_BYTES> {
         if self.complete {
             return OwnedSchemaHexStep::Complete;
         }
-        if cx.operation() != self.operation || cx.generation() != self.generation {
+        if cx.replacement_is_stale(self.replacement) {
             return self.fault("schema-json.stale-hex-authority");
         }
         if cx.is_cancelled() {

@@ -417,8 +417,12 @@ async fn execute_describe_wasmtime(wasm_bytes: &[u8], source: &Path) -> Result<V
     let mut store = wasmtime::Store::new(&engine, DescribeHostState { wasi_ctx: wasmtime_wasi::WasiCtxBuilder::new().build(), resource_table: wasmtime::component::ResourceTable::new() });
     store.set_fuel(DESCRIBE_FUEL_BUDGET).map_err(|error| DescribeError(format!("setting fuel budget: {error}")))?;
     let bindings = actor_bindings::Actor::instantiate_async(&mut store, &component, &linker).await.map_err(|error| DescribeError(format!("instantiating {}: {error}", source.display())))?;
+    use actor_bindings::exports::semio::framework::reactor as wit_reactor;
+    let grant = || wit_reactor::RetainedGrant { maximum_items: 1 << 20, maximum_copy_bytes: 64 << 20, maximum_capacity_bytes: 64 << 20, maximum_release_bytes: 64 << 20, maximum_depth: 64 };
+    let (fuel, deadline_us) = (1u64 << 24, 1u64 << 52);
+    let budget = wit_reactor::ActorContextBudget { input: wit_reactor::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, work: wit_reactor::OriginalActorTurnWork { clock_binding: 1, absolute_deadline_us: deadline_us, fuel }, grant: grant() }, retained_policy: grant(), fuel, deadline_us, cancelled: false };
     store
-        .run_concurrent(async |accessor| bindings.semio_framework_describe().call_describe(accessor).await)
+        .run_concurrent(async |accessor| bindings.semio_framework_describe().call_describe(accessor, budget).await)
         .await
         .map_err(|error| DescribeError(format!("calling describe() on {}: {error}", source.display())))?
         .map_err(|error| DescribeError(format!("calling describe() on {}: {error}", source.display())))

@@ -327,12 +327,12 @@ pub async fn member_rows(app: &mut CadFixtureApp) -> Vec<semio_framework::kernel
 /// 🪟️ The action metadata of a command dispatched in the open world window `window_id` of kind `window_kind_id`.
 pub fn window_meta(window_id: &str, window_kind_id: &str) -> ActionMeta {
     ActionMeta {
-        view_state: Some(ViewModel {
+        view_state: Some(std::sync::Arc::new(ViewModel {
             window_id: Some(window_id.into()),
             active_window_kind_id: Some(window_kind_id.into()),
             window_instances: vec![semio_plugin::ViewWindowInstance { id: window_id.into(), window_kind_id: window_kind_id.into() }],
             ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
-        }),
+        })),
         ..meta("local")
     }
 }

@@ -160,7 +160,7 @@ pub struct FlowHostEffectJobFactory {
 }
 
 impl FlowHostEffectJobFactory {
-    pub(super) fn new(controller_id: &str) -> Self {
+    pub fn new(controller_id: &str) -> Self {
         Self { keys: FLOW_HOST_ONLY_TOOL_IDS.iter().map(|tool_id| semio_framework::ToolFactoryKey::new(controller_id, *tool_id)).collect() }
     }
 }

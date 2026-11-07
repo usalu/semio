@@ -75,14 +75,14 @@ impl store::SnapshotRetirementFactory<DrawingPresence> for DrawingPresenceRetire
         semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<DrawingPresence>()
     }
 
-    fn retire(&self, source: std::sync::Arc<DrawingPresence>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, std::sync::Arc<DrawingPresence>)> {
+    fn retire(&self, source: std::sync::Arc<DrawingPresence>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, std::sync::Arc<DrawingPresence>)> {
         semio_framework_value::retirement::arc_custody::admit_shared_retirement(source, grant, true)
     }
 }
 
 
 impl store::ArtifactPresenceSnapshot for DrawingPresence {
-    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, semio_framework_value::ValueError> {
+    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> semio_framework_value::RetainedWorkOutcome<Self, store::io::control::NativeSnapshotFailure> {
         store::decode_presence_json(bytes, owner)
     }
 }

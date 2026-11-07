@@ -20,16 +20,16 @@ use semio_s_artifact_procedural_3d_viewer_transient::SetPreviewEval;
 /// 🪟️ The viewer preview window's retained evaluation publication.
 pub struct Generation3dViewPreviewWindowTransientOwner;
 
-impl semio_framework_plugin::WindowTransientOwner for Generation3dViewPreviewWindowTransientOwner {
+impl semio_plugin::WindowTransientOwner for Generation3dViewPreviewWindowTransientOwner {
     const WINDOW_KIND_ID: &'static str = super::WINDOW_KIND_ID;
     type State = Generation3dViewTransient;
     type Mutation = Generation3dViewTransientMutation;
-    fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_framework_plugin::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
-    fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
+    fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_plugin::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
+    fn build_owners() -> semio_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
         let state = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::State>::default());
         let mutation = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::Mutation>::default());
         let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(preflight, transfer, state.clone(), mutation.clone()));
-        semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
+        semio_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
     }
 }
 
@@ -49,11 +49,11 @@ fn transfer(mutation: Generation3dViewTransientMutation) -> Generation3dViewTran
 
 /// 🎯️ One publication addressed to the window the tick named — refused unless that window really
 /// is a viewer preview window that really carries this owner.
-pub fn addressed(snapshot: &semio_framework_plugin::WindowTransientSnapshot, eval_text: Option<String>) -> Result<semio_framework_plugin::WindowTransientMutation, semio_framework_plugin::Fault> {
+pub fn addressed(snapshot: &semio_plugin::WindowTransientSnapshot, eval_text: Option<String>) -> Result<semio_plugin::WindowTransientMutation, semio_plugin::Fault> {
     if snapshot.window_kind_id() != super::WINDOW_KIND_ID || snapshot.get::<Generation3dViewPreviewWindowTransientOwner>().is_none() {
-        return Err(semio_framework_plugin::Fault::from("generation3d-view-preview-window-transient-required"));
+        return Err(semio_plugin::Fault::from("generation3d-view-preview-window-transient-required"));
     }
-    Ok(semio_framework_plugin::WindowTransientMutation::of::<Generation3dViewPreviewWindowTransientOwner>(snapshot.window_id(), Generation3dViewTransientMutation::SetPreviewEval(SetPreviewEval { eval_text })))
+    Ok(semio_plugin::WindowTransientMutation::of::<Generation3dViewPreviewWindowTransientOwner>(snapshot.window_id(), Generation3dViewTransientMutation::SetPreviewEval(SetPreviewEval { eval_text })))
 }
 
 #[cfg(test)]

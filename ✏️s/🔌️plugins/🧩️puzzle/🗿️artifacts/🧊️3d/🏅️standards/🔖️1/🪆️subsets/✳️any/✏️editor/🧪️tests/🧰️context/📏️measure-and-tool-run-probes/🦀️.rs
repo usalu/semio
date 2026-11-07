@@ -62,7 +62,7 @@ pub const FILL_RUN_TURNS: usize = 262_144;
 /// Answers the action's output (`{"toolRun": effect}` or `{"rejected": code}`).
 pub async fn tool_run_action(app: &mut Puzzle3dApp, action: &str, args: Value) -> Value {
     app.ensure_window(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
-    let action_meta = ActionMeta { view_state: Some(app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)), ..app.meta("local") };
+    let action_meta = ActionMeta { view_state: Some(std::sync::Arc::new(app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID))), ..app.meta("local") };
     let (raw, cx) = app.parts();
     let result = semio_plugin::artifact_app_laws::dispatch_fixture_action(raw, action, Some(semio_framework_pack_json::to_dsl_value(&args)), &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{action} faulted: {fault:?}"));
     semio_framework_pack_json::from_dsl_value(&result.output)
@@ -112,7 +112,7 @@ pub async fn pump_brush_suggestions(app: &mut Puzzle3dApp, what: &str, until: im
     for turn in 0..FILL_RUN_TURNS {
         let view = app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
         let (raw, cx) = app.parts();
-        let pending = raw.pending_effects(Some(&view), cx).await.expect("pending effects of the live app");
+        let pending = raw.pending_effects(Some(&view), cx).await.expect("pending effects of the live app").unwrap_or_default();
         for effect in pending {
             if let Effect::DispatchAction { action, args, .. } = effect {
                 tool_run_action(app, &action, args.as_ref().map(semio_framework_pack_json::from_dsl_value).unwrap_or(Value::Null)).await;

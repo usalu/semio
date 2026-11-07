@@ -24,7 +24,7 @@ async fn affine_edit_preserves_scene_matrix_and_has_an_exact_inverse() {
     let mutation=semio_s_artifact_draw_drawing_transform::update_layer_transform::mutation::update_layer_transform(layer.into(),drawing_matrix_to_transform(wanted));
     let inverse=semio_s_artifact_draw_drawing_mutations::inverse_drawing_mutation(&document,&mutation).unwrap();
     semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut document,&mutation).unwrap();
-    let scene=semio_s_artifact_draw_drawing_scene::flatten_drawing_document_to_scene_nodes(&document);
+    let scene=semio_s_artifact_draw_drawing_scene::preparation::testkit::scene_nodes(&document);
     for index in 0..6 { assert!((scene[0].transform[index]-wanted[index]).abs()<1e-12); }
     for mutation in inverse { semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut document,&mutation).unwrap(); }
     assert_eq!(document,before);

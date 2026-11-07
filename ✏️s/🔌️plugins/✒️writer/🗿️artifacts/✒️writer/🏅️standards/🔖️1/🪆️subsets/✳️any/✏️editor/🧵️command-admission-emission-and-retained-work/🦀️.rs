@@ -500,3 +500,5 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
     }
 }
 //#endregion 📬️ArtifactStorePreparation
+
+semio_plugin::retained_command::terminal_frame_bound!(WriterRetainedCommandWork);

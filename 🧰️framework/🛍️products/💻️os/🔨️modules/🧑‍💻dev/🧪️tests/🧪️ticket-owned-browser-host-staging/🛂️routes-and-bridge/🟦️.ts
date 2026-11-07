@@ -214,8 +214,9 @@ export async function registerRouteAndBridgeTests(vitest: NonNullable<ImportMeta
 
     it("adapts the retained original turn and the actor grant into the reactor budget vocabulary", () => {
       const source = pluginComponentBridgeSource("plugin", "plugin.core.wasm");
-      expect(source).toContain("reactor.poll(wireEvents, originalBudgetWit(turn, budget))");
-      expect(source).toContain("reactor[method](originalTurnWit(turn), originalGrantWit(turn.input.grant))");
+      expect(source).toContain("reactor.poll(originalContextBudgetWit(turn))");
+      expect(source).toContain("reactor[method](originalContextBudgetWit(turn))");
+      expect(source).toContain("reactor.admitActorInput(actorInputWire.encode(value), originalContextBudgetWit(turn))");
     });
 
     it("normalizes the scalar command-ingress wire record without relying on async variant discriminants", () => {

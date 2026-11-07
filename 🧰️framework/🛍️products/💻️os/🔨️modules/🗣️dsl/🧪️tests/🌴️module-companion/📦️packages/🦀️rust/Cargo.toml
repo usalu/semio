@@ -40,3 +40,4 @@ semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", feat
 semio-framework-test-fixtures = { path = "../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-os-pack-tools = { path = "../../../../../🎒️pack/⌨️cli/📦️packages/🦀️rust" }
 semio-os-pack = { path = "../../../../../🎒️pack/📦️packages/🦀️rust" }
+semio-framework-trace = { path = "../../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }

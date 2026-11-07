@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -103,9 +103,10 @@ describe("⏱️ authority-correlated frame latency diagnostics", () => {
     const latency = readFileSync(join(engineRoot, "🎯️targets", "🧊️wgpu", "⏱️frame-latency", "🦀️.rs"), "utf8");
     const renderer = readModuleTreeSource(join(engineRoot, "🎯️targets", "🧊️wgpu", "🧊️renderer", "🦀️.rs"));
     const worker = readFileSync(join(engineRoot, "🎯️targets", "🧊️wgpu", "🌐️browser-worker", "🦀️.rs"), "utf8");
-    const host = readFileSync(join(engineRoot, "🎯️targets", "🧊️wgpu", "🪟️winit-app", "🦀️.rs"), "utf8");
+    const rustTree = (directory: string): string => readdirSync(directory, { withFileTypes: true }).sort((left, right) => left.name.localeCompare(right.name)).map((entry) => entry.isDirectory() ? rustTree(join(directory, entry.name)) : entry.name.endsWith(".rs") ? readFileSync(join(directory, entry.name), "utf8") : "").join("\n");
+    const host = rustTree(join(engineRoot, "🎯️targets", "🧊️wgpu", "🪟️winit-app"));
     const shell = readModuleTreeSource(join(engineRoot, "🧱️elements", "🐚️Shell", "🎯️targets", "🧊️wgpu", "🦀️.rs"));
-    const bridge = readFileSync(join(engineRoot, "🧱️elements", "🌉️ProgramBridge", "🎯️targets", "🧊️wgpu", "🦀️.rs"), "utf8");
+    const bridge = readModuleTreeSource(join(engineRoot, "🧱️elements", "🌉️ProgramBridge", "🎯️targets", "🧊️wgpu", "🦀️.rs"));
     const interpreter = readModuleTreeSource(join(engineRoot, "🧱️elements", "🗣️Interpreter", "🎯️targets", "🧊️wgpu", "🦀️.rs"));
     expect(latency).toContain("FrameLatencyAuthorityDomain::RendererFrame");
     expect(latency).toContain("FrameLatencyAuthorityDomain::BrowserInputBatch");
@@ -114,6 +115,6 @@ describe("⏱️ authority-correlated frame latency diagnostics", () => {
     expect(host).toContain("FrameLatencyStage::SnapshotPublish");
     expect(shell).toContain("FrameLatencyStage::ShellRefresh");
     expect(bridge).toContain("FrameLatencyStage::RetainedExchange");
-    expect(interpreter).toContain("frame_latency: crate::frame_latency::snapshot()");
+    expect(interpreter).toMatch(/frame_latency: [\w:]*frame_latency::snapshot\(\)/u);
   });
 });

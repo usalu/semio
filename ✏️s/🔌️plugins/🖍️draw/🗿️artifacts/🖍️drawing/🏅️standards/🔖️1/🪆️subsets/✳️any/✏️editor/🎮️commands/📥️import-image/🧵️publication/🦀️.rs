@@ -13,8 +13,8 @@ type Text=PagedUtf8<{usize::MAX}>;
 struct AppendCursor(PagedUtf8AppendCursor);
 struct AppendCursorRetirement(std::mem::ManuallyDrop<PagedUtf8AppendCursor>);
 impl AppendCursor{
- fn next_advance_demand(&self,source:&str,destination:&Text)->Result<RetirementDemand,ValueError>{self.0.next_advance_demand(source,destination)}
- fn advance(&mut self,source:&str,destination:&mut Text,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.0.advance(source,destination,grant)}
+ fn next_advance_demand(&self,source:&str,destination:&Text)->Result<RetirementDemand,ValueError>{self.0.next_advance_demand(source,destination,source.len())}
+ fn advance(&mut self,source:&str,destination:&mut Text,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.0.advance(source,destination,source.len(),grant).result}
 }
 impl semio_framework_value::retirement::RetireOwned for AppendCursor{
  fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{let mut cursor=self.0;cursor.begin_close();Box::new(AppendCursorRetirement(std::mem::ManuallyDrop::new(cursor)))}

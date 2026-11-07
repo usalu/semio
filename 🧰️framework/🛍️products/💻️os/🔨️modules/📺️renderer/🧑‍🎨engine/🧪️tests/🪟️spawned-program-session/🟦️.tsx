@@ -289,7 +289,9 @@ describe("🪟️ the ShellHost decision sites route through the focused program
 
   it("retires the spawned instance when its LAST window closes", () => {
     expect(shellHostSource).toContain("const closedSpawnedId = hostMode && panel ? spawnedIdOfWindowInstanceV1(windowId, panel.spawnedApps.map((entry) => entry.id)) : null;");
-    expect(shellHostSource).toContain("if (remaining.length === 0) {");
+    expect(shellHostSource).toContain("if (closedSpawned && remaining.length === 0) {");
+    expect(shellHostSource).toContain("retirement = await admitProgramRetirementRef.current(");
+    expect(shellHostSource).toContain("await retirement.retire()");
   });
 
   it("subscribes operation completions per spawned instance, not only for the session", () => {
@@ -489,7 +491,7 @@ describe("🚫️ a program the shell cannot open is refused on screen, never dr
     const start = shellHostSource.indexOf("const spawnProgram = useCallback(");
     const body = shellHostSource.slice(start, shellHostSource.indexOf("[loadedPlugins, session, updateSpacePanel, hostApp]", start));
     expect(body).toContain('if (!pluginEntry) return refuse("program-not-installed");');
-    expect(body).toContain('if (!session) return refuse("session-not-ready");');
+    expect(body).toContain('if (!owner) return refuse("session-not-ready");');
     expect(body).toContain('return refuse("open-failed", openError);');
     expect(body).toContain('showTransientNoticeRef.current(spawnProgramRefusalNoticeTextV1(reason, program.breadcrumb.join(" · "), uiLocaleRef.current)');
     expect(body).not.toMatch(/if \(!pluginEntry \|\| !session\) return;/u);

@@ -17,7 +17,7 @@ import { runCanonicalGoBuild, runCanonicalGoTests } from "../../🧪️testing/�
 import { runRepositoryTestCommand } from "../../🧪️testing/🎛️repository-command/🟦️.ts";
 import { spawnDaemon } from "../../🏃️process/👹️daemon/🟦️.ts";
 import { Script, scriptInvocationEnvironment, scriptInvocationBudget } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { repoCacheDirectory } from "../../⚡️caching/🟦️.ts";
+import { repoPlaywrightBrowsersPath } from "../../🏃️process/🌿️environment/🟦️.ts";
 import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { createServer } from "node:net";
@@ -187,7 +187,7 @@ export class TestScript extends Script {
         env: {
           ...process.env,
           PLAYWRIGHT_BASE_URL: baseUrl,
-          PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH ?? repoCacheDirectory(this.root, "tools", "ms-playwright"),
+          PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH ?? repoPlaywrightBrowsersPath(this.root),
           STORYBOOK_PORT: storybookPort,
         },
       });

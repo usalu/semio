@@ -13,10 +13,10 @@ pub fn verify<S:semio_os_store_text_io::ArtifactSqliteSnapshotHost+semio_framewo
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
   let mut output_callback=|_|true;
   let mut output_control=SqliteSnapshotControl::new(&mut output_callback,SqliteDatabaseLimits::default());
-  let encoded=long.encode_sqlite_snapshot_native(encoding,&mut output_control,&mut native.snapshot_encode().unwrap()).expect("actual owner native producer prepares the independent file ceiling outside preflight observation");
+  let encoded=long.encode_sqlite_snapshot_native(encoding,&mut output_control,&mut native.snapshot_encode().unwrap()).result.expect("actual owner native producer prepares the independent file ceiling outside preflight observation");
   let mut input_callback=|_|true;
   let mut input_control=SqliteSnapshotControl::new(&mut input_callback,SqliteDatabaseLimits::default());
-  let mut input_owner=native.snapshot_decode().unwrap();let decoded=S::decode_sqlite_snapshot_native(&encoded,&mut input_control,&mut input_owner).unwrap();
+  let mut input_owner=native.snapshot_decode().unwrap();let decoded=S::decode_sqlite_snapshot_native(&encoded,&mut input_control,&mut input_owner).result.unwrap();
   assert_eq!(decoded,*long,"actual native specimen preserves every typed owner field before preflight observation");
   let mut decoded=semio_framework_value::retirement::controlled::ControlledRetirement::new(decoded).unwrap_or_else(|_|panic!("original preflight decoded specimen custody"));
   close_specimen(&mut decoded,&mut input_owner);

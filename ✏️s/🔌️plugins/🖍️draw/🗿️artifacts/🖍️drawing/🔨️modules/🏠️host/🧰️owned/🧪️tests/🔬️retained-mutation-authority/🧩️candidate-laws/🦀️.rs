@@ -146,7 +146,7 @@ fn retained_drawing_rebuild_fault_after_every_phase_rolls_back_exact_container_a
             let mutation = DrawingMutation::CreateLayer(CreateLayer { parent_id: None, index: Some(1), layer: Box::new(semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("pending")).to_string().into()).expect("nonempty authored identity"), "pending", Default::default())) });
             let operation = semio_framework_job::OperationId(8_500 + phase as u64);
             let generation = semio_framework_job::Generation(850 + phase as u64);
-            let mut authority = DrawingMutationCandidateAuthority::try_new_from_pool(operation, generation, pool.clone()).expect("Drawing rollback candidate borrows one exact pool slot");
+            let mut authority = DrawingMutationCandidateAuthority::try_new_from_pool(None, pool.clone()).expect("Drawing rollback candidate borrows one exact pool slot");
             let slot = authority.arena_slot;
             let arena_generation = authority.arena_generation;
             let reverse_owner = authority.container_reverse.as_ref().expect("Drawing rollback reverse owner").as_ptr();
@@ -184,7 +184,7 @@ fn retained_drawing_rebuild_fault_after_every_phase_rolls_back_exact_container_a
             assert_eq!(source.layers.iter().map(|layer| semio_s_artifact_draw_drawing_model::layer_id(layer)).collect::<Vec<_>>(), source_ids.iter().map(String::as_str).collect::<Vec<_>>(), "rollback restores exact FIFO layer order");
             drop(authority);
 
-            let mut reused = DrawingMutationCandidateAuthority::try_new_from_pool(semio_framework_job::OperationId(operation.0 + 100), semio_framework_job::Generation(generation.0 + 100), pool.clone())
+            let mut reused = DrawingMutationCandidateAuthority::try_new_from_pool(None, pool.clone())
                 .expect("rolled-back Drawing pool slot re-admits immediately");
             assert_eq!(reused.arena_slot, slot);
             assert!(reused.arena_generation > arena_generation);
@@ -216,7 +216,7 @@ fn retained_drawing_reorder_fault_after_source_handoff_restores_exact_nested_fif
         let mutation = DrawingMutation::ReorderLayer(ReorderLayer { layer_id: target, parent_id: Some(group_id), index: 2 });
         let operation = semio_framework_job::OperationId(8_700);
         let generation = semio_framework_job::Generation(870);
-        let mut authority = DrawingMutationCandidateAuthority::try_new_from_pool(operation, generation, pool.clone()).expect("Drawing reorder rollback candidate borrows one exact pool slot");
+        let mut authority = DrawingMutationCandidateAuthority::try_new_from_pool(None, pool.clone()).expect("Drawing reorder rollback candidate borrows one exact pool slot");
         let slot = authority.arena_slot;
         let reverse_owner = authority.container_reverse.as_ref().expect("Drawing reorder reverse owner").as_ptr();
         let output_owner = authority.container_output.as_ref().expect("Drawing reorder output owner").as_ptr();
@@ -252,7 +252,7 @@ fn retained_drawing_reorder_fault_after_source_handoff_restores_exact_nested_fif
         assert_eq!(native_layer_backing(&group.children), source_owner, "source undo restores the exact nested live native page backing");
         assert_eq!(group.children.iter().map(|layer| semio_s_artifact_draw_drawing_model::layer_id(layer)).collect::<Vec<_>>(), source_ids.iter().map(String::as_str).collect::<Vec<_>>(), "source undo restores the exact nested FIFO order");
 
-        let mut reused = DrawingMutationCandidateAuthority::try_new_from_pool(semio_framework_job::OperationId(operation.0 + 1), semio_framework_job::Generation(generation.0 + 1), pool).expect("reorder rollback returns the exact pool slot");
+        let mut reused = DrawingMutationCandidateAuthority::try_new_from_pool(None, pool).expect("reorder rollback returns the exact pool slot");
         assert_eq!(reused.arena_slot, slot);
         assert_eq!(reused.container_reverse.as_ref().expect("returned reorder reverse owner").as_ptr(), reverse_owner);
         assert_eq!(reused.container_output.as_ref().expect("returned reorder output owner").as_ptr(), output_owner);

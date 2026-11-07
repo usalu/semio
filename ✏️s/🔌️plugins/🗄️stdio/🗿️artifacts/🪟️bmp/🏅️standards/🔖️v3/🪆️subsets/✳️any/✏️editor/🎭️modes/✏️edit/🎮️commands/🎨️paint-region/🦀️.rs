@@ -253,3 +253,5 @@ impl ArtifactCommandWork<EditorApp<BmpEditor>> for PaintRegionWork {
         self.closing && self.reader.is_none() && self.intent.is_none()
     }
 }
+
+semio_plugin::retained_command::terminal_frame_bound!(PaintRegionWork);

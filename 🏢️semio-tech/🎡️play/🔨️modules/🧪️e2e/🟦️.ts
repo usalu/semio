@@ -4,7 +4,7 @@ import { createRequire } from "node:module";
 import { BundleScript } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { parseServiceReadinessBudgetV1, readServiceSession, serviceReadyProgressLanguage, serviceReadyProgressLine, waitForServiceReady } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
 import readinessBudget from "../🧩️runtime/🧪️e2e/🔣️.json" with { type: "json" };
-import { repoCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
+import { repoPlaywrightBrowsersPath } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts";
 import { playE2eInvocationPid, playE2eServiceV1 } from "../🧩️runtime/🧪️e2e/🟦️.ts";
 import { readNativeCallerAuthorityV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import {withPublishedPlayPagesV1} from "../📦️site/📄pages/📦️publication/🟦️.ts";
@@ -33,7 +33,7 @@ export class TestScript extends BundleScript {
       const output = process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated",this.reportDirectory, session.id) : join(root, "dist/reports/e2e", session.id);
       console.log(`Testing play at ${baseURL}`);
       const cli = resolve(createRequire(join(root, "package.json")).resolve("playwright/package.json"), "../cli.js");
-      const child = startToolV1(runtimeCommandNameV1(), [cli, "test", "--config", join(root, "🔨️modules/🧪️e2e/🎚️config/🟦️.ts"), "--output", output, ...this.selection], { signal, cwd: root, env: { ...process.env, PLAYWRIGHT_BASE_URL: baseURL, PLAYWRIGHT_BROWSERS_PATH: repoCacheDirectory(this.repoRoot, "tools", "ms-playwright") }, stdio: ["ignore", "inherit", "inherit"] });
+      const child = startToolV1(runtimeCommandNameV1(), [cli, "test", "--config", join(root, "🔨️modules/🧪️e2e/🎚️config/🟦️.ts"), "--output", output, ...this.selection], { signal, cwd: root, env: { ...process.env, PLAYWRIGHT_BASE_URL: baseURL, PLAYWRIGHT_BROWSERS_PATH: repoPlaywrightBrowsersPath(this.repoRoot) }, stdio: ["ignore", "inherit", "inherit"] });
       const status = await toolExitV1(child);
       if (status !== 0 && !signal.aborted) throw new Error(`Play acceptance tests failed (${status})`);
     } finally { process.removeListener("SIGINT", interrupt); process.removeListener("SIGTERM", terminate); }
@@ -63,7 +63,7 @@ export class TestReleaseScript extends BundleScript {
       try{
         const output=process.env.SEMIO_TICKET_DIR?join(process.env.SEMIO_TICKET_DIR,"🗑️generated/play-release-e2e"):join(root,"dist/reports/release-e2e");
         console.log(`Verifying published Play at ${service.baseURL}`);
-        const result=await withScriptInvocationSignalV1(this.invocation,pages.control.signal,original=>captureOwnedCommandResultV1(process.execPath,[join(this.repoRoot,"node_modules/playwright/cli.js"),"test","--config",join(root,"🔨️modules/🧪️e2e/🎚️config/🟦️.ts"),"--output",output],this.repoRoot,{control:pages.control,output:readNativeCallerAuthorityV1(this.invocation.capabilities).transport,env:scriptInvocationEnvironment(original,{...process.env,PLAYWRIGHT_BASE_URL:service.baseURL,PLAY_E2E_RELEASE_ORIGINS:JSON.stringify(service.origins),PLAYWRIGHT_BROWSERS_PATH:repoCacheDirectory(this.repoRoot,"tools","ms-playwright")})}));
+        const result=await withScriptInvocationSignalV1(this.invocation,pages.control.signal,original=>captureOwnedCommandResultV1(process.execPath,[join(this.repoRoot,"node_modules/playwright/cli.js"),"test","--config",join(root,"🔨️modules/🧪️e2e/🎚️config/🟦️.ts"),"--output",output],this.repoRoot,{control:pages.control,output:readNativeCallerAuthorityV1(this.invocation.capabilities).transport,env:scriptInvocationEnvironment(original,{...process.env,PLAYWRIGHT_BASE_URL:service.baseURL,PLAY_E2E_RELEASE_ORIGINS:JSON.stringify(service.origins),PLAYWRIGHT_BROWSERS_PATH:repoPlaywrightBrowsersPath(this.repoRoot)})}));
         if(result.stdout)process.stdout.write(result.stdout);if(result.stderr)process.stderr.write(result.stderr);if(result.status!==0||result.signal!==null)throw new Error("Actual published Play acceptance child failed");
       }catch(error){failed=true;throw error;}finally{try{await service.stop();}catch(error){if(!failed)throw error;}}
     });

@@ -41,7 +41,7 @@ use wasmtime_host_state_and_wit_hosts::{ActorHostState, arm_store_fuel, guest_wa
 #[path = "🐎️wasmtime-runtime/🦀️.rs"]
 mod wasmtime_runtime;
 pub use wasmtime_runtime::{WasmtimeRuntime, observe_sqlite_guest};
-use wasmtime_runtime::WasmtimeInstanceState;
+use wasmtime_runtime::{ActorStore, WasmtimeInstanceState};
 
 #[path = "🗂️wasmtime-guest-runtime-and-codec-dispatch/🦀️.rs"]
 mod wasmtime_guest_runtime_and_codec_dispatch;
@@ -95,7 +95,7 @@ pub use semio_plugin_interpreter_runtime::{OwnedCodecInput,OwnedSnapshotInput};
 use semio_plugin_interpreter_runtime::{OwnedCompiledGuest, OwnedGuestInstance, OwnedRuntime};
 use std::path::PathBuf;
 use wasm::wasi::{WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
-use semio_plugin_host_wit::conversion::{kernel_turn_inputs_to_wit, wit_command_ingress_to_kernel, wit_effect_to_kernel, wit_lifecycle_receipt_to_kernel, wit_patch_receipt_to_kernel, wit_snapshot_grant, wit_snapshot_limits, wit_snapshot_rejection, wit_snapshot_retirement, wit_turn_status_to_kernel};
+use semio_plugin_host_wit::conversion::{kernel_turn_inputs_to_wit, wit_command_ingress_to_kernel, wit_effect_to_kernel, wit_lifecycle_receipt_to_kernel, wit_patch_receipt_to_kernel, wit_snapshot_rejection, wit_snapshot_retirement, wit_turn_status_to_kernel};
 use semio_plugin_host_wit::cold_pair::wit_cold_ingress_to_kernel;
 use semio_plugin_host_wit::wit_capabilities;
 use semio_plugin_host_wit::wit_effects;

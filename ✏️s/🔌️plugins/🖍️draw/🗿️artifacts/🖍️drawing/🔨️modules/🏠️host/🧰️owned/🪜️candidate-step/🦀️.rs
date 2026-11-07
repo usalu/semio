@@ -6,7 +6,7 @@ use super::*;
 impl DrawingMutationCandidateAuthority {
     pub fn step(&mut self, mut access: DrawingSourceAccess<'_, '_>, mutation_ref: RetainedCloneRef<'_, DrawingMutation>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
         let mutation = mutation_ref.get();
-        if (cx.operation() != self.operation || cx.generation() != self.generation) && !self.overlay.as_ref().is_some_and(|overlay| overlay.committed) {
+        if (cx.replacement_is_stale(self.replacement)) && !self.overlay.as_ref().is_some_and(|overlay| overlay.committed) {
             return self.fail("drawing-store.mutation-candidate-stale-authority");
         }
         if cx.is_cancelled() && !self.overlay.as_ref().is_some_and(|overlay| overlay.committed) {
@@ -497,6 +497,9 @@ impl DrawingMutationCandidateAuthority {
             }
             DrawingMutation::ImportImageAsset(_) | DrawingMutation::RemoveImageAsset(_) => {
                 unreachable!("image asset mutations commit before scalar mutation")
+            }
+            DrawingMutation::SetArtboard(value) => {
+                source.artboard = value.artboard.clone();
             }
         }
         self.overlay.as_mut().ok_or("drawing-store.mutation-overlay-missing")?.commit(source)?;

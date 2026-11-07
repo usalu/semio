@@ -474,6 +474,9 @@ describe("exact analytic component interaction targets", () => {
           }
           return [box.min.toArray(), box.max.toArray()];
         };
+        visuals.geometry!.computeBoundingBox();
+        oracle.computeBoundingBox();
+        edgeOracle.computeBoundingBox();
         visuals.edge?.computeBoundingBox();
         const bounds = visuals.geometry!.boundingBox!.clone();
         if (visuals.edge?.boundingBox) bounds.union(visuals.edge.boundingBox);

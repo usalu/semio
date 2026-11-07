@@ -49,7 +49,7 @@ fn sqlite_snapshot_playground_ordinary_native_formats_keep_every_literal_field()
 fn sqlite_snapshot_playground_authored_single_table_is_independently_queryable() {
     use std::process::Command;
     let sql = runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql");
-    let script="import{Database}from'bun:sqlite';const db=new Database(':memory:');try{db.exec(process.env.SEMIO_PLAYGROUND_SQL);if(db.query(\"SELECT name FROM sqlite_schema WHERE type='table'\").all().length!==1||db.query('PRAGMA table_info(playground_document)').all().length!==2)throw Error('hand schema');db.query('INSERT INTO playground_document VALUES(1001,?)').run('literal 日本');if(db.query('SELECT schema FROM playground_document').get().schema!=='literal 日本')throw Error('literal schema');console.log('[DEBUG] independent Playground SQL schema and literal row confirmed');}finally{db.close()}";
+    let script="import{Database}from'bun:sqlite';const db=new Database(':memory:');try{db.exec(process.env.SEMIO_PLAYGROUND_SQL);if(db.query(\"SELECT name FROM sqlite_schema WHERE type='table'\").all().length!==1||db.query('PRAGMA table_info(playground_document)').all().length!==2)throw Error('hand schema');db.query('INSERT INTO playground_document VALUES(1001,?)').run('literal 日本');if(db.query('SELECT schema FROM playground_document').get().schema!=='literal 日本')throw Error('literal schema');}finally{db.close()}";
     let output = Command::new("bun").args(["-e", script]).env("SEMIO_PLAYGROUND_SQL", sql).output().unwrap();
     assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
 }

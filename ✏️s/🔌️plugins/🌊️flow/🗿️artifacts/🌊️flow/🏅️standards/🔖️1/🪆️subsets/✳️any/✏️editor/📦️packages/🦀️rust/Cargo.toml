@@ -55,6 +55,8 @@ semio-framework-value = { path = "../../../../../../../../../../../../🧰️fra
 semio-framework-value-derive = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-s-artifact-flow-flow-config = { path = "../../🎭️modes/✏️edit/🪟️windows/🌊️main/🎚️config/📦️packages/🦀️rust" }
 semio-s-artifact-flow-flow-editor-leaves = { path = "../../🎮️commands/🔗️connect-media-ports/📦️packages/🦀️rust" }
+semio-s-artifact-flow-flow-editor-publication = { path = "../../📤️child-publication/📦️packages/🦀️rust" }
+semio-s-artifact-flow-flow-editor-retained = { path = "../../🧵️retained/📦️packages/🦀️rust" }
 semio-s-artifact-flow-flow-inferences = { path = "../../../🧬️schema/💡️inferences/📦️packages/🦀️rust" }
 semio-s-artifact-flow-flow-mutations = { path = "../../../🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
 semio-s-artifact-flow-flow-schema = { path = "../../../🧬️schema/📦️packages/🦀️rust" }

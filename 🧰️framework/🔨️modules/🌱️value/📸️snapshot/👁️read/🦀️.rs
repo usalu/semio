@@ -877,10 +877,6 @@ extern crate self as semio_framework_value_snapshot_read;
 pub mod presence_test_retirement;
 
 #[cfg(test)]
-#[global_allocator]
-static TEST_ALLOCATION_OBSERVER:semio_framework_trace_memory_testing::RequestedAllocator=semio_framework_trace_memory_testing::RequestedAllocator;
-
-#[cfg(test)]
 #[path="🧪️tests/👥️presence/🦀️.rs"]
 mod presence_read_tests;
 

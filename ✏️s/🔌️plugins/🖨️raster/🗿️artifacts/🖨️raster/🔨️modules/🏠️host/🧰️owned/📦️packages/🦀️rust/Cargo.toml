@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+pack = { workspace = true }
 semio-s-artifact-raster-raster-host-retirement-bounds = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
@@ -35,6 +36,7 @@ semio-s-artifact-raster-raster-model = { workspace = true }
 semio-s-artifact-raster-raster-mutations = { workspace = true }
 semio-s-artifact-raster-raster-mutations-layer-properties = { workspace = true }
 semio-s-artifact-raster-raster-mutations-pixels = { workspace = true }
+semio-s-artifact-raster-raster-mutations-layers = { workspace = true }
 semio-s-artifact-stdio-semio-image = { workspace = true }
 
 [dev-dependencies]

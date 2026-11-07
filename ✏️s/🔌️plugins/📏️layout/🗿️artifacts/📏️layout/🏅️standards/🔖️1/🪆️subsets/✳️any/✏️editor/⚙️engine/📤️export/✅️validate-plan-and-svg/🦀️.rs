@@ -226,7 +226,7 @@ impl LayoutExportJob {
         let snapshot=Arc::clone(&self.request.as_ref().unwrap().snapshot);
         if !self.text.get_or_insert_with(ExportTextState::new).prepare_flow_projection(&snapshot,cx)?{return Ok(());}
         if !self.prepare_frame_plan(&snapshot,cx)?||cx.should_yield(){return Ok(());}
-        let mut work=semio_framework_2d_text_font::work::FontWorkLedger::new(cx.retained_grant());
+        let mut work=semio_framework_2d_text_font::work::RetainedWorkLedger::new(cx.retained_grant());
         let entered=work.enter();let result=(||->Result<(),semio_framework_job::OriginalTurnFailure>{
             if entered.is_none(){return Ok(());}if !self.pdf_items.reserve_one_in(&mut work)?||!self.pdf_pages.reserve_one_in(&mut work)?{return Ok(());}
             if self.pdf_items.len()>=MAX_LAYOUT_EXPORT_DECODED_ITEMS{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"layout-export-item-limit").into());}
@@ -288,7 +288,7 @@ impl LayoutExportJob {
     pub(super) fn encode_one(&mut self,context:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if matches!(self.request.as_ref().unwrap().kind,LayoutExportKind::Svg|LayoutExportKind::Png|LayoutExportKind::Pdf){
             let fidelity=self.fidelity.get_or_insert_with(FidelityState::new);
-            if !fidelity.prepared{if !fidelity.prepare_image_one(&mut self.pdf_items,&self.request.as_ref().unwrap().snapshot,context).map_err(Fault::from)?{return Ok(true);}let mut work=semio_framework_2d_text_font::work::FontWorkLedger::new(context.retained_grant());let result=fidelity.prepare_one(&self.pdf_items,self.text.as_ref(),self.drawing.as_ref(),&mut work);context.consume_retained(work.receipt())?;result.map_err(Fault::from)?;return Ok(true);}
+            if !fidelity.prepared{if !fidelity.prepare_image_one(&mut self.pdf_items,&self.request.as_ref().unwrap().snapshot,context).map_err(Fault::from)?{return Ok(true);}let mut work=semio_framework_2d_text_font::work::RetainedWorkLedger::new(context.retained_grant());let result=fidelity.prepare_one(&self.pdf_items,self.text.as_ref(),self.drawing.as_ref(),&mut work);context.consume_retained(work.receipt())?;result.map_err(Fault::from)?;return Ok(true);}
         }
         self.emit_output_one(context,false,|job,work|match job.request.as_ref().unwrap().kind{LayoutExportKind::Svg=>job.encode_svg_one(work),LayoutExportKind::Pdf=>job.encode_pdf_one(work),LayoutExportKind::Png=>job.encode_png_one(work),LayoutExportKind::Package=>job.encode_package_one(work),LayoutExportKind::Step|LayoutExportKind::Idml=>job.encode_interchange_one(work)})
     }

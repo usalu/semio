@@ -18,8 +18,8 @@ pub struct ArtifactEnvelopeDecodePage {
 }
 
 /// 📚️ Seals exact caller-pre-admitted pages into the sole 12-field envelope cursor.
-pub fn artifact_envelope_decode_record(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, pages: OwnedSchemaDecodePages) -> Result<OwnedSchemaRecordCursor, OwnedSchemaDecodePages> {
-    let tokens = OwnedSchemaTokenCursor::try_new(operation, generation, pages)?;
+pub fn artifact_envelope_decode_record(replacement: Option<semio_framework_job::ReplacementIdentity>, pages: OwnedSchemaDecodePages) -> Result<OwnedSchemaRecordCursor, OwnedSchemaDecodePages> {
+    let tokens = OwnedSchemaTokenCursor::try_new(replacement, pages)?;
     OwnedSchemaRecordCursor::try_new(artifact_envelope_owned_schema(), tokens).map_err(|(tokens, _)| tokens.into_pages())
 }
 

@@ -2,20 +2,24 @@
 
 use super::*;
 
-/// 🪪️ Pays the cancellation issuer birth that the runtime performs while opening an instance: fixture constructors skip that opening, so a typed action could never obtain its cancellation lease.
+/// 🪪️ Pays every birth the runtime performs while opening an instance through the SAME routine, `PluginApp::advance_instance_birth`: fixture constructors skip that opening, so a typed action could never obtain its cancellation lease.
 pub fn ensure_fixture_cancellation_issuer<P:PluginApp>(app:&mut P,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
+    let (instance_id,actor)=app.birth_identity().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original fixture app has no bound instance identity to be born under"))?;
+    let mut birth=semio_plugin_reactor_app::InstanceBirth::default();
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
-        if app.admit_cancellation_issuer(cx)?{return Ok(())}
+        if app.advance_instance_birth(&mut birth,instance_id,&actor,cx)?{return Ok(())}
     }
     Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture cancellation issuer birth exceeded its authored turn bound").into())
 }
 
 /// 🎟️ Drives the actual borrowed action endpoint and pays remaining original fixture sources under its authored close loan.
 pub async fn dispatch_fixture_action<P:PluginApp>(app:&mut P,action:&str,args:Option<semio_framework_value::DslValue>,meta:&ActionMeta,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_framework::kernel::InvocationResult,semio_framework_job::OriginalTurnFailure>{
+    let (fresh_fuel,fresh_grant)=(OriginalFixtureCaller::turn_fuel(),cx.retained_grant());
     ensure_fixture_cancellation_issuer(app,cx)?;
     let mut original_args=args;let mut original_meta=Some(meta.clone());
     let mut result=Ok(None);
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
+        semio_framework_job::testkit::renew_turn(cx,fresh_fuel,fresh_grant)?;
         semio_framework_job::testkit::renew_payload_page_grant(cx);
         result=app.handle_action(action,&mut original_args,&mut original_meta,identity,cx).await;
         if !matches!(result,Ok(None)){break}
@@ -27,9 +31,11 @@ pub async fn dispatch_fixture_action<P:PluginApp>(app:&mut P,action:&str,args:Op
 
 /// 🧭️ Drives the actual addressed command endpoint and pays remaining original fixture sources under its authored close loan.
 pub async fn dispatch_fixture_command<P:PluginApp>(app:&mut P,address:&semio_framework::manifest::CommandAddress,args:Option<semio_framework_value::DslValue>,active_mode:Option<&str>,meta:&ActionMeta,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_framework::kernel::InvocationResult,semio_framework_job::OriginalTurnFailure>{
+    let (fresh_fuel,fresh_grant)=(OriginalFixtureCaller::turn_fuel(),cx.retained_grant());
     let mut original_args=args;let mut original_fault=None;let mut original_meta=Some(meta.clone());
     let mut result=Ok(None);
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
+        semio_framework_job::testkit::renew_turn(cx,fresh_fuel,fresh_grant)?;
         semio_framework_job::testkit::renew_payload_page_grant(cx);
         result=app.handle_command(address,&mut original_args,&mut original_fault,active_mode,&mut original_meta,identity,cx).await;
         if !matches!(result,Ok(None)){break}
@@ -141,8 +147,7 @@ where
 
 /// 🎟️ The explicit mounted owner policy every testkit fixture instance runs under.
 pub fn fixture_mounted_policy() -> semio_plugin_mounted_owner::MountedOwnerPolicyV1 {
-    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
-    semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant }
+    semio_plugin_mounted_owner::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT
 }
 
 /// 🎟️ One valid original retained turn input for a fixture `Budget`.
@@ -163,7 +168,7 @@ pub fn fixture_step_context_for(turn: semio_framework::kernel::RetainedTurnInput
 }
 
 /// 🌀️ Polls one app's pending effects under a fresh fixture step context, as the refresh poll lane does.
-pub async fn fixture_pending_effects<P: PluginApp>(app: &mut P, view: Option<&semio_framework::ViewModel>) -> Result<Vec<semio_framework::kernel::Effect>, semio_framework::Fault> {
+pub async fn fixture_pending_effects<P: PluginApp>(app: &mut P, view: Option<&semio_framework::ViewModel>) -> Result<Option<Vec<semio_framework::kernel::Effect>>, semio_framework_job::OriginalTurnFailure> {
     let mut cx = fixture_step_context();
     app.pending_effects(view, &mut cx).await
 }
@@ -241,8 +246,9 @@ where
     let archive = PluginApp::document_load_archive(app, files)?;
     PluginApp::begin_document_archive_load(app, LAW_DOCUMENT_LOAD_OPERATION, archive)?;
     let mut polls = 0usize;
-    let fresh = cx.fuel_remaining();
+    let fresh = OriginalFixtureCaller::turn_fuel();
     let fresh_grant = cx.retained_grant();
+    ensure_fixture_cancellation_issuer(app,cx)?;
     let status = loop {
         semio_framework_job::testkit::renew_turn(cx, fresh, fresh_grant)?;
         cx.consume_fuel(1);let grant=cx.retained_grant();PluginApp::maintenance_step(app,cx,grant)?;
@@ -275,7 +281,7 @@ pub async fn plugin_load_document<PA: PluginApp>(runtime: &semio_plugin_reactor_
     let archive = semio_framework_plugin_runtime_ops::ops_document::plugin_document_load_archive(runtime, instance_id, files).await?;
     semio_framework_plugin_runtime_ops::ops_document::plugin_begin_document_archive_load(runtime, instance_id, LAW_DOCUMENT_LOAD_OPERATION, archive).await?;
     let mut polls = 0usize;
-    let fresh = cx.fuel_remaining();
+    let fresh = OriginalFixtureCaller::turn_fuel();
     let fresh_grant = cx.retained_grant();
     let status = loop {
         semio_framework_job::testkit::renew_turn(cx, fresh, fresh_grant)?;
@@ -684,3 +690,4 @@ mod renew_turn_laws {
         assert_eq!(turns, LAW_DOCUMENT_LOAD_MAXIMUM_TURNS);
     }
 }
+

@@ -851,3 +851,5 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 }
 //#endregion 🧩️ArtifactItems4
+
+semio_plugin::retained_command::terminal_frame_bound!(WiresWindowDragWork);

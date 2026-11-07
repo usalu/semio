@@ -46,7 +46,7 @@ impl RetainedIdmlPartPatch {
     pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         let d=self.close_demand(grant.maximum_copy_bytes)?;if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}if !fits(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
         if !self.path.terminal_is_empty(){return self.path.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}if !self.bytes.terminal_is_empty(){return self.bytes.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
-        if !self.retirement.is_empty(){return self.retirement.step_granted(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}if let Some(step)=self.retirement.begin_granted(&mut self.result,grant)?{return Ok(RetainedCloneStep::Progress(step.progress()));}Ok(RetainedCloneStep::Complete(Default::default()))
+        if !self.retirement.is_empty(){return self.retirement.step_granted(grant).result.map(|step|RetainedCloneStep::Progress(step.progress()));}if let Some(step)=self.retirement.begin_granted(&mut self.result,grant).result?{return Ok(RetainedCloneStep::Progress(step.progress()));}Ok(RetainedCloneStep::Complete(Default::default()))
     }
     /// 🪹 Original source aliases and every untransferred field have returned.
     pub fn terminal_is_empty(&self)->bool{self.closing&&self.path.terminal_is_empty()&&self.bytes.terminal_is_empty()&&self.result.is_none()&&self.retirement.is_empty()}

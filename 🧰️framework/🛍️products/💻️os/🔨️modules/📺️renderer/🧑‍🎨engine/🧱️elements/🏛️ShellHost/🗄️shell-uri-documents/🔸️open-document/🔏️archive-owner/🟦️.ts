@@ -1,5 +1,5 @@
 /** 🔏️ Reads an opaque archive only from its exact live plugin and document instance. */
-import type { AppDocumentIdentity } from "@semio-tech/framework/wire-contracts";
+import type { AppDocumentIdentity, DocumentArchivePack } from "@semio-tech/framework/wire-contracts";
 
 export type ArchiveOwnerEntryV1 = Readonly<{ documentId: string; session: Readonly<{ pluginId: string; instanceId: number }> }>;
 export type ArchiveOwnerPluginV1 = Readonly<{

@@ -12,6 +12,10 @@ use semio_framework_value::retirement::controlled::ControlledRetirement;
 #[cfg_attr(test,test)]
 pub fn media_original_cancellation_issuer_birth_and_close(){semio_plugin_operation::cancellation_issuer_original_creation_physical_birth_and_close()}
 
+/// 🚧️ An unready cancellation issuer refuses scope renewal typed after its bound, never livelocking.
+#[cfg_attr(test,test)]
+pub fn media_unready_cancellation_issuer_renewal_refuses_typed(){semio_plugin_operation::cancellation_issuer_unready_renewal_refuses_typed_after_its_bound()}
+
 /// 🧪️ The neutral corpus drives the original source constructor and complete physical owner ladder.
 #[cfg_attr(test,test)]
 pub fn media_original_domain_pending_publication_and_cancelled_close(){

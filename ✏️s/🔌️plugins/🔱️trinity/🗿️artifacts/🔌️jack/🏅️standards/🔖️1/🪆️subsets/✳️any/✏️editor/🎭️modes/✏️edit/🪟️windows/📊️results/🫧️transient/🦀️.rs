@@ -41,8 +41,8 @@ impl pack::snapshot::ArtifactPack for JackResultsWindowTransient {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for JackResultsWindowTransient {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for JackResultsWindowTransient {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -115,26 +115,26 @@ fn results_window_transient_transfer(mutation: JackResultsWindowTransientMutatio
 
 pub struct JackResultsWindowTransientOwner;
 
-impl semio_framework_plugin::WindowTransientOwner for JackResultsWindowTransientOwner {
+impl semio_plugin::WindowTransientOwner for JackResultsWindowTransientOwner {
     const WINDOW_KIND_ID: &'static str = WINDOW_KIND_ID;
     type State = JackResultsWindowTransient;
     type Mutation = JackResultsWindowTransientMutation;
 
-    fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_framework_plugin::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
-    fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
+    fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_plugin::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
+    fn build_owners() -> semio_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
         let state = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::State>::default());
         let mutation = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::Mutation>::default());
         let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(results_window_transient_footprint, results_window_transient_transfer, state.clone(), mutation.clone()));
-        semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
+        semio_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
     }
 }
 
-pub fn register(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), semio_framework_plugin::Fault> {
+pub fn register(registry: &mut semio_plugin::WindowTransientOwnerRegistry) -> Result<(), semio_plugin::Fault> {
     registry.register::<JackResultsWindowTransientOwner>()
 }
 
-pub fn addressed(window_id: &str, view: &semio_framework_plugin::ViewModel, mutation: JackResultsWindowTransientMutation) -> Result<semio_framework_plugin::WindowTransientMutation, semio_framework_plugin::Fault> {
-    use semio_framework_plugin::{Fault, FaultCode, FaultOrigin, WindowTransientMutation};
+pub fn addressed(window_id: &str, view: &semio_plugin::ViewModel, mutation: JackResultsWindowTransientMutation) -> Result<semio_plugin::WindowTransientMutation, semio_plugin::Fault> {
+    use semio_plugin::{Fault, FaultCode, FaultOrigin, WindowTransientMutation};
     let kind = view.window_instances.iter().find(|window| window.id == window_id).map(|window| window.window_kind_id.as_str());
     if kind != Some(WINDOW_KIND_ID) {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("jack.results-window-required"), "Jack query output requires the explicit attached results window"));

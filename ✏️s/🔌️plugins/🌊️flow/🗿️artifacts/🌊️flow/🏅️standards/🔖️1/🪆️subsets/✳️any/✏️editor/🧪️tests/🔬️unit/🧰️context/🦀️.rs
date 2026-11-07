@@ -154,12 +154,12 @@ pub async fn flow_app_with_actor(actor: semio_os_kernel::ActorId) -> FlowAppFixt
 pub fn flow_main_window_meta() -> semio_plugin::ActionMeta {
     let window = semio_plugin::ViewWindowInstance { id: FLOW_PLAY_WINDOW_MAIN.into(), window_kind_id: FLOW_PLAY_WINDOW_MAIN.into() };
     semio_plugin::ActionMeta {
-        view_state: Some(ViewModel {
+        view_state: Some(std::sync::Arc::new(ViewModel {
             window_id: Some(window.id.clone()),
             active_window_kind_id: Some(window.window_kind_id.clone()),
             window_instances: vec![window],
             ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
-        }),
+        })),
         ..meta("local")
     }
 }
@@ -217,7 +217,7 @@ pub async fn select_graph(app: &mut FlowAppFixture, node_ids: &[&str], edge_ids:
     let mut targets: Vec<Value> = node_ids.iter().map(|id| serde_json::json!({ "granularity": "node", "id": flow_graph_node_target_id(id) })).collect();
     targets.extend(edge_ids.iter().map(|id| serde_json::json!({ "granularity": "edge", "id": flow_graph_edge_target_id(id) })));
     let targets_json = serde_json::to_string(&targets).expect("targets json");
-    let args = semio_framework_dsl::DslValue::from(serde_json::json!({ "domainId": FLOW_INTERACTION_GRAPH, "targets": targets_json, "merge": "replace" }));
+    let args = semio_os_kernel::DslValue::from(serde_json::json!({ "domainId": FLOW_INTERACTION_GRAPH, "targets": targets_json, "merge": "replace" }));
     let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "interactionSelect", Some(args.clone()), &flow_main_window_meta(), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("interactionSelect admission");
     semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted, app.1.cx()).await.expect("interactionSelect reserved-job commit");
 }
@@ -266,7 +266,7 @@ pub fn every_command() -> Vec<FlowCommand> {
         FlowCommand::RemoveGeneration(remove_generation::RemoveGeneration { id: "g1".into() }),
         FlowCommand::SelectGeneration(select_generation::SelectGeneration { id: "g1".into() }),
         FlowCommand::RenameGeneration(rename_generation::RenameGeneration { id: "g1".into(), name: "Copy".into() }),
-        FlowCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("g1".into()), question_id: "q1".into(), value: semio_framework_dsl::DslValue::float(5.0) }),
+        FlowCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("g1".into()), question_id: "q1".into(), value: semio_os_kernel::DslValue::float(5.0) }),
         FlowCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: FLOW_PLAY_WINDOW_MAIN.into(), window_kind_id: FLOW_PLAY_WINDOW_MAIN.into() }),
         FlowCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { window_id: FLOW_PLAY_WINDOW_MAIN.into(), node_hash: 42, output: Some(semio_framework_pack_json::from_json_str(r#"{"cancellable":false,"done":true,"phase":"complete","unitsDone":1,"unitsTotal":1,"output":{}}"#,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()) }),
         FlowCommand::SetContributions(set_contributions::SetContributions { json: "[]".into(), page: 0, page_count: 1 }),

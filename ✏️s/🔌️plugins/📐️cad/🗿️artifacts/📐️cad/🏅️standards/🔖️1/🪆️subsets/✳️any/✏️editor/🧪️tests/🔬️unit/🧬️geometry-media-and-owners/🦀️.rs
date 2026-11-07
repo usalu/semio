@@ -5,7 +5,7 @@ use semio_framework_test_fixtures::fixture_path;
 
 #[test]
 fn cad_imported_geometry_batches_preserve_exact_typed_owners_and_controlled_close() {
-    use semio_framework_os_kernel::MemberStoreOwnedBatch;
+    use semio_os_kernel::MemberStoreOwnedBatch;
     use semio_framework_value::{retained_clone::RetainedCloneGrant, retirement::RetireOwned};
     use {semio_s_artifact_stdio_semio_brep::schema::mutations::SemioBrepMutation, semio_s_artifact_stdio_semio_brep::schema::mutations::create_vertex::CreateVertex, semio_s_artifact_stdio_semio_model::schema::mutations::SemioModelMutation, semio_s_artifact_stdio_semio_model::schema::mutations::insert_element::InsertElement};
     fn close<M: RetireOwned + semio_framework_value::ToValue>(operations: Vec<M>) {
@@ -37,7 +37,7 @@ fn cad_imported_geometry_batches_preserve_exact_typed_owners_and_controlled_clos
 #[test]
 fn cad_imported_geometry_model_operation_wire_preserves_original_forward_inverse() {
     use protocol::OpBinary;
-    use semio_framework_os_kernel::{ArtifactPreparedOperationCursor, ArtifactPreparedOperationProgress};
+    use semio_os_kernel::{ArtifactPreparedOperationCursor, ArtifactPreparedOperationProgress};
     use semio_framework_value::retained_clone::RetainedCloneGrant;
     use {semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelElement, semio_s_artifact_stdio_semio_model::schema::mutations::SemioModelMutation, semio_s_artifact_stdio_semio_model::schema::mutations::insert_element::InsertElement, semio_s_artifact_stdio_semio_model::schema::mutations::remove_element::RemoveElement, semio_s_artifact_stdio_semio_model::io::binary::mutations::prepared_operation_wire_source};
     let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(fixture_path!("../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/💾️binary/🧬️mutations/🫳️borrowed/🧪️tests/🧫️fixtures/🔣️.json")).expect("../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/💾️binary/🧬️mutations/🫳️borrowed/🧪️tests/🧫️fixtures/🔣️.json").leak()).unwrap();
@@ -74,7 +74,7 @@ fn cad_imported_geometry_model_operation_wire_preserves_original_forward_inverse
 /// 🎞️ Actual CAD media import publishes its exact composed child and retains the file's geometry.
 #[semio_framework_async_macros::async_test]
 async fn cad_intrinsic_geometry_media_preserves_actual_file_owner() {
-    use semio_framework_plugin::app::ArtifactEditor;
+    use semio_plugin::app::ArtifactEditor;
     use semio_framework_value::DslValue;
     let corpus: Value = semio_framework_pack_json::from_json_str(std::fs::read_to_string(fixture_path!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).expect("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json").leak(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(corpus["intrinsicGeometry"]["childPublication"], "insertElement");
@@ -91,23 +91,23 @@ async fn cad_intrinsic_geometry_media_preserves_actual_file_owner() {
         MediaPayload::Intrinsic { schema: "obj.3.0.geometry".into(), value: DslValue::String(text.into()) },
         MediaPayload::Intrinsic { schema: "obj.3.0.geometry".into(), value: DslValue::Bytes(text.as_bytes().to_vec()) },
     ].into_iter().enumerate() {
-        let operation = semio_framework_plugin::AppOperationContext { app_instance_id: TEST_INSTANCE, parent_document_id: scene.id.clone(), operation_id: index as u64 + 1, generation: 1, canonical_base_revision: [0; 32], authoring_seed: format!("cad-media-{index}") };
+        let operation = semio_plugin::AppOperationContext { app_instance_id: TEST_INSTANCE, parent_document_id: scene.id.clone(), operation_id: index as u64 + 1, generation: 1, canonical_base_revision: [0; 32], authoring_seed: format!("cad-media-{index}") };
         let view = ArtifactView::with_children(&scene, &history, children.clone()).bound_to_operation(operation);
         let media = Media { media_type: media_type.clone(), payload };
         assert!(<CadPlayApp as ArtifactEditor>::import_media("geometry:in", &media, &ArtifactView::new(&scene, &history)).is_err(), "an uncomposed view cannot publish a geometry child");
         let mut cancelled = <CadPlayApp as ArtifactEditor>::import_media("geometry:in", &media, &view).expect("cancellable owned geometry import");
         let quoted = |demand: semio_framework_value::RetirementDemand, items: usize| semio_framework_value::RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: demand.copy_bytes.max(65_536), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
         let preparing = quoted(cancelled.child_preparation_demands(65_536).expect("child preparation quote"), 0);
-        assert!(matches!(cancelled.prepare_child_one(preparing).unwrap(), semio_framework_plugin::app::ChildEmitPreparationStep::Pending(progress) if progress == Default::default()));
+        assert!(matches!(cancelled.prepare_child_one(preparing).unwrap(), semio_plugin::app::ChildEmitPreparationStep::Pending(progress) if progress == Default::default()));
         let closing = quoted(cancelled.child_close_demands(65_536).expect("child close quote").expect("a cancelled import still owns its geometry child"), 0);
-        assert_eq!(cancelled.close_child_one(closing).unwrap(), Some(semio_framework_plugin::PluginLifecycleStep::Progress(Default::default())));
+        assert_eq!(cancelled.close_child_one(closing).unwrap(), Some(semio_plugin::PluginLifecycleStep::Progress(Default::default())));
         let mut retired = false;
         for _ in 0..4096 {
             let Some(demand) = cancelled.child_close_demands(65_536).expect("child close quote") else { retired = true; break; };
             let grant = quoted(demand, 1);
             match cancelled.close_child_one(grant).unwrap() {
                 None => { retired = true; break; },
-                Some(semio_framework_plugin::PluginLifecycleStep::Progress(progress)) => { assert!(progress.copied_items <= 1 && progress.released_bytes <= grant.maximum_release_bytes); },
+                Some(semio_plugin::PluginLifecycleStep::Progress(progress)) => { assert!(progress.copied_items <= 1 && progress.released_bytes <= grant.maximum_release_bytes); },
                 Some(step) => panic!("cancelled geometry child must reach its exact empty witness: {step:?}"),
             }
         }
@@ -126,9 +126,9 @@ async fn cad_intrinsic_geometry_media_preserves_actual_file_owner() {
             let demand = emit.child_preparation_demands(65_536).expect("child preparation quote");
             let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(65_536), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
             match emit.prepare_child_one(grant).expect("bounded media child preparation") {
-                semio_framework_plugin::app::ChildEmitPreparationStep::Ready(_) => { ready = true; break; },
-                semio_framework_plugin::app::ChildEmitPreparationStep::Pending(progress) => { assert!(progress.fits(grant)); },
-                semio_framework_plugin::app::ChildEmitPreparationStep::Refused(fault, _) => panic!("media child preparation: {}", fault.message),
+                semio_plugin::app::ChildEmitPreparationStep::Ready(_) => { ready = true; break; },
+                semio_plugin::app::ChildEmitPreparationStep::Pending(progress) => { assert!(progress.fits(grant)); },
+                semio_plugin::app::ChildEmitPreparationStep::Refused(fault, _) => panic!("media child preparation: {}", fault.message),
             }
         }
         assert!(ready);
@@ -174,7 +174,7 @@ async fn cad_intrinsic_geometry_media_preserves_actual_file_owner() {
 /// 🧊️ The mounted import retains actual geometry as one undoable parent and two-child publication.
 #[semio_framework_async_macros::async_test]
 async fn cad_owned_geometry_media_settles_renders_and_undo_redoes_atomically() {
-    use semio_framework_plugin::PluginApp;
+    use semio_plugin::PluginApp;
     let corpus: serde_json::Value = serde_json::from_str(std::fs::read_to_string(fixture_path!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).expect("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json").leak()).unwrap();
     let mut app = new_app().await;
     let before = app.snapshot().unwrap();
@@ -185,7 +185,7 @@ async fn cad_owned_geometry_media_settles_renders_and_undo_redoes_atomically() {
     assert!(large_source.len() > pricing["closeMaximumBytes"].as_u64().unwrap() as usize);
     let media = Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "obj.3.0.geometry".into(), json: large_source } };
     let outcome: Result<(), String> = async {
-        PluginApp::import_media(&mut app, "geometry:in", media, &meta(semio_framework_os_kernel::LOCAL_ACTOR_ID)).await.map_err(|error| format!("{error:?}"))?;
+        PluginApp::import_media(&mut app, "geometry:in", media, &meta(semio_os_kernel::LOCAL_ACTOR_ID)).await.map_err(|error| format!("{error:?}"))?;
         settle(&mut app).await;
         let after = app.snapshot().unwrap();
         if after.breps.len() != before.breps.len() + 1 { return Err("import did not create exactly one retained geometry sibling".into()); }
@@ -211,15 +211,15 @@ async fn cad_owned_geometry_media_settles_renders_and_undo_redoes_atomically() {
         if exported_mesh.positions.len() / 3 != positions.len() || exported_bounds != bounds { return Err("OBJ export substituted geometry outside the exact retained topology child".into()); }
         let mut unavailable = pane.geometry(CadPaneId::Shape).cloned().ok_or("owned pane geometry projection absent")?;
         unavailable.owned_breps.clear();
-        unavailable.owned_meshes.insert(geometry_id.clone(), std::sync::Arc::new(semio_framework_plugin::MeshData::default()));
+        unavailable.owned_meshes.insert(geometry_id.clone(), std::sync::Arc::new(semio_plugin::MeshData::default()));
         if !object_mesh_data(object, Some(&unavailable)).positions.is_empty() || !semio_s_artifact_cad_cad_inferences::pane_world_solids(&mut kernel, std::slice::from_ref(object), Some(&unavailable)).is_empty() { return Err("unavailable declared topology was replaced by invented typology geometry".into()); }
         drop(panes);
         drop(children);
         let rows = member_rows(&mut app).await;
         if rows.len() != 1 || rows[0].mutations.len() != 3 { return Err(format!("import does not publish exactly one atomic three-lane history row: {rows:?}")); }
-        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "undo", TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+        semio_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "undo", TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
         if app.snapshot().unwrap() != before || pane_model(&app, CadPaneId::Shape).await != before_model { return Err("undo did not restore the exact parent and model before geometry creation".into()); }
-        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "redo", TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+        semio_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "redo", TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
         if app.snapshot().unwrap() != after || pane_model(&app, CadPaneId::Shape).await != after_model { return Err("redo did not restore the exact parent and model geometry ownership".into()); }
         let heads = PluginApp::child_head_packs(&app).await.map_err(|fault| format!("{fault:?}"))?.into_iter().map(|entry| (entry.slot, entry.child_id, entry.head_pack)).collect::<Vec<_>>();
         let archive = PluginApp::document_archive(&mut app.0).await.map_err(|fault| format!("{fault:?}"))?;
@@ -227,9 +227,9 @@ async fn cad_owned_geometry_media_settles_renders_and_undo_redoes_atomically() {
         PluginApp::begin_document_archive_load(&mut app.0, 94, archive).map_err(|fault| format!("{fault:?}"))?;
         let mut terminal = None;
         for _ in 0..1_000_000 {
-            let status = PluginApp::poll_document_archive_load(&mut app.0, 94, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|fault| format!("{fault:?}"))?;
+            let status = PluginApp::poll_document_archive_load(&mut app.0, 94, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|fault| format!("{fault:?}"))?;
             if matches!(status.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) { terminal = Some(status); break; }
-            PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).map_err(|fault| format!("{fault:?}"))?;
+            PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).map_err(|fault| format!("{fault:?}"))?;
             std::thread::yield_now();
         }
         let terminal = terminal.ok_or("geometry archive did not reach its bounded terminal witness")?;
@@ -252,7 +252,7 @@ async fn cad_owned_geometry_media_settles_renders_and_undo_redoes_atomically() {
 
 #[test]
 fn cad_media_pricing_retains_exact_source_through_progress_cancel_and_refusal(){
- use semio_framework_plugin::{artifact_app_laws::OriginalWorkFixture,tool_contract::ArtifactReservedWork};
+ use semio_plugin::{artifact_app_laws::OriginalWorkFixture,plugin_app_close_prelude::ArtifactReservedWork};
  use semio_framework_value::{RetainedCloneProgress,RetainedWorkOutcome};
  fn media(caller:&mut OriginalWorkFixture,source:&str,form:&str)->Media{
   let grant=OriginalWorkFixture::stock();let schema="cad.pricing.test";let copy=source.len()+schema.len()+2*std::mem::size_of::<Media>();let capacity=source.len()+schema.len();let mut output=None;

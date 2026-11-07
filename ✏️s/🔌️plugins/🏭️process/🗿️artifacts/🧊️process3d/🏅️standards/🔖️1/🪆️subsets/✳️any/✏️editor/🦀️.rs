@@ -11,6 +11,7 @@
 //! face pick, selection method, engagement input, camera, sun) lives in `config::Process3dConfig`,
 //! written via `config::Process3dConfigMutation`s; every action dispatches through the single typed
 //! `Process3dCommand` channel via `ArtifactEditor::handle`.
+#![cfg_attr(test, recursion_limit = "512")]
 
 extern crate semio_os_kernel as dsl;
 extern crate semio_os_kernel as protocol;
@@ -186,7 +187,7 @@ pub(crate) use retained_commands::*;
 
 #[path = "📬️store-preparation/🦀️.rs"]
 mod store_preparation;
-use store_preparation::*;
+pub(crate) use store_preparation::*;
 
 //#region 🧾️ProofCatalogs
 struct Process3dBoundedProofs;
@@ -450,3 +451,9 @@ pub fn process3d_io() -> semio_plugin::AppIo {
     }
 }
 //#endregion 🔖️Io
+
+#[cfg(test)]
+extern crate self as semio_s_artifact_process_process3d_editor;
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod unit_tests;

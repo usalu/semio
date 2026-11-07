@@ -41,7 +41,7 @@ fn receipt(demand:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress
 impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> OriginalSnapshotRecordReceiving<T>{
  /// 🎟️ Binds actual immutable source and static schema without constructing a second wire or record.
  pub fn admit(source:&[u8],envelope:&'static str,limits:PackLimits,native:&NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
-  let demand=metadata::<Self>();if !funds(grant,demand){return Ok(None)}let prefix=semio_framework_os_semio::declared_envelope_prefix_len(envelope,semio_framework_os_semio::Component::Pack,1)?;
+  let demand=metadata::<Self>();if !funds(grant,demand){return Ok(None)}let prefix=semio_os_semio::declared_envelope_prefix_len(envelope,semio_os_semio::Component::Pack,1)?;
   if source.len()<prefix||source.len()as u64>limits.max_file_len{return Err(invalid("original snapshot Pack is outside its declared source extent"))}
   Ok(Some((Self{source:(source.as_ptr()as usize,source.len()),control:(native.ledger_identity(),native.retirement_recipient_identity()),envelope,prefix,position:0,phase:0,limits,record:None,generic:Default::default(),binding:T::receiving_cursor(),output:Default::default(),closing:false,closed:false},receipt(demand))))
  }
@@ -60,7 +60,7 @@ impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> OriginalSnapshotRecordReceivin
  fn step_turn(&mut self,source:&[u8],native:&mut NativeDecodeControl<'_>,body:usize,grant:RetainedCloneGrant,work:&mut u64)->Result<Turn,ValueError>{
   self.validate_control(native)?;let demand=self.demands(source,body)?;if self.phase>=4||self.closing||self.closed||!funds(grant,demand){return Ok(Turn::Fresh(Default::default()))}native.checkpoint()?;
   match self.phase{
-   0=>{*work=1;let expected=semio_framework_os_semio::declared_binary_prefix_byte(self.envelope,semio_framework_os_semio::Component::Pack,1,self.position)?;if source.get(self.position).copied()!=expected{return Err(invalid("original snapshot Pack envelope differs from its authored identity"))}self.position+=1;if self.position==self.prefix{self.phase=1;}},
+   0=>{*work=1;let expected=semio_os_semio::declared_binary_prefix_byte(self.envelope,semio_os_semio::Component::Pack,1,self.position)?;if source.get(self.position).copied()!=expected{return Err(invalid("original snapshot Pack envelope differs from its authored identity"))}self.position+=1;if self.position==self.prefix{self.phase=1;}},
    1=>{let turn=RetainedRecordReceiving::admit_document(source,(self.prefix,source.len()),T::RECORD,self.limits.clone(),child(grant));*work=turn.work;let Some((record,progress))=turn.result?else{return Ok(Turn::Fresh(Default::default()))};self.record=Some(record);self.phase=2;return Ok(Turn::Fresh(progress))},
    2=>{let record=self.record.as_mut().ok_or_else(||invalid("native snapshot record is absent"))?;if !record.is_ready(){return Ok(Turn::Posted(record.step(source,native,child(grant))))}let mut original=None;let turn=record.take_into(&mut original,child(grant));*work=turn.work;let progress=turn.result?;if let Some(record)=original{*self.generic.value=Some(FieldValue::Record(record));self.phase=3;}return Ok(Turn::Fresh(progress))},
    3=>{if !self.binding.is_ready(){return Ok(Turn::Posted(self.binding.step(&mut self.generic.value,native,body,child(grant))))}let turn=self.binding.take_into(&mut self.output.value,child(grant));*work=turn.work;let progress=turn.result?;if self.output.value.is_some(){self.phase=4;}return Ok(Turn::Fresh(progress))},

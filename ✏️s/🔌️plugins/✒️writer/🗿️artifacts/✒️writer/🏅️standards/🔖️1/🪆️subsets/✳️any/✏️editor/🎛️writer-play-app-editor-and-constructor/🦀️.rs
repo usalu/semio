@@ -35,7 +35,7 @@ impl ArtifactEditor for WriterPlayApp {
     const DOCUMENT_SCHEMA: &'static str = WRITER_DOCUMENT_SCHEMA;
 
     /// ⌨️ Writer composes relative prose edits through its retained original typing producer.
-    fn original_typing_fold() -> semio_plugin::tool_contract::OriginalTypingFoldPolicy<Self::Mutation> {
+    fn original_typing_fold() -> semio_plugin::plugin_app_close_prelude::OriginalTypingFoldPolicy<Self::Mutation> {
         semio_s_artifact_writer_writer_typing_fold::original_typing_fold()
     }
 

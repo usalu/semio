@@ -693,6 +693,22 @@ fn sqlite_snapshot_framework_space_history_original_native_owner_cancels_and_kee
  }}
 }
 
+
+#[test]
+fn sqlite_snapshot_framework_space_history_installed_work_loan_is_admitted_until_exhausted_and_never_replaced(){
+ struct Loan{remaining:u64}
+ impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for Loan{
+  fn available_work(&mut self,observed:u64)->Result<u64,semio_framework_value::ValueError>{self.remaining.checked_sub(observed).ok_or_else(||semio_framework_value::ValueError::invariant("native observed work exceeds its actual finite scope"))}
+  fn admits(&mut self,observed:u64,additional:u64)->Result<bool,semio_framework_value::ValueError>{Ok(observed.checked_add(additional).is_some_and(|total|total<=self.remaining))}
+ }
+ let mut callback=|_|true;let mut native=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64,&mut callback);
+ assert!(native.prepare_work(1).is_err());
+ let mut loan=Loan{remaining:1};let mut issuer=semio_framework_value_native_owned::native_decoding::NativeDecodeWorkIssuer::new();let mut work_loan=issuer.loan(&mut loan);
+ native.with_work_recipient(&mut work_loan,|native|{assert!(native.prepare_work(1)?);native.commit_work(1)?;assert!(!native.prepare_work(1)?);assert_eq!(native.actual_work(),1);let mut other=Loan{remaining:9};let mut other_issuer=semio_framework_value_native_owned::native_decoding::NativeDecodeWorkIssuer::new();let mut other_loan=other_issuer.loan(&mut other);assert!(native.with_work_recipient(&mut other_loan,|_|Ok::<(),semio_framework_value::ValueError>(())).is_err());Ok(())}).unwrap();
+ let mut again=|_|true;let mut first=Loan{remaining:9};let mut first_issuer=semio_framework_value_native_owned::native_decoding::NativeDecodeWorkIssuer::new();let mut first_loan=first_issuer.loan(&mut first);let mut second=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64,&mut again);
+ second.with_work_recipient(&mut first_loan,|native|{let mut other=Loan{remaining:9};let mut other_issuer=semio_framework_value_native_owned::native_decoding::NativeDecodeWorkIssuer::new();let mut other_loan=other_issuer.loan(&mut other);assert!(native.with_work_recipient(&mut other_loan,|_|Ok::<(),semio_framework_value::ValueError>(())).is_err());Ok(())}).unwrap();
+}
+
 #[path="../🛂️validation/🧪️tests/🦀️.rs"]
 mod borrowed_validation_tests;
 

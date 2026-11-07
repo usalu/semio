@@ -150,8 +150,9 @@ fn empty() -> GltfSnapshot {
         source_form: GltfSourceForm::Json,
     }
 }
-pub(super) fn receive(state: &mut Receiving, owner: &mut NativeSnapshotDecodeOwner<'_, '_>) -> Result<(), ValueError> {
-    owner.receive::<Option<GltfSnapshot>, ()>(|target, native, body| {
+pub(super) fn receive(state: &mut Receiving, owner: &mut NativeSnapshotDecodeOwner<'_, '_>) -> RetainedWorkOutcome<(), NativeSnapshotFailure> {
+    owner.receive::<Option<GltfSnapshot>, (), NativeSnapshotFailure>(|target, native, body| store::native_snapshot_turn(|work| {
+        work.performed();
         native.scoped_stage(|native| {
             native.begin_stage(0)?;
             let mut p = Port { native, body };
@@ -325,6 +326,6 @@ pub(super) fn receive(state: &mut Receiving, owner: &mut NativeSnapshotDecodeOwn
             }
             p.effect(size_of::<GltfSnapshot>(), || state.target = target.as_mut().unwrap().take())?;
             Ok(())
-        })
-    })
+        }).map_err(Into::into)
+    }))
 }

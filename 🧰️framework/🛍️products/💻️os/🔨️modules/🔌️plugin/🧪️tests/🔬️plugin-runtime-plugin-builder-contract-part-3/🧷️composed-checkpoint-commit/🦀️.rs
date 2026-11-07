@@ -11,7 +11,10 @@
                 _ => None,
             })
             .expect("a reserved route admits its spawn-job");
-        (job, semio_plugin_reactor_jobs::reserved::drive_framework_reserved_registry_job(job, input, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation))
+        let mut scope = semio_plugin_testing_laws::artifact_app_laws::OriginalFixtureScope::admit();
+        let output = semio_plugin_reactor_jobs::reserved::drive_framework_reserved_registry_job(job, input, scope.cx());
+        drop(scope);
+        (job, output)
     }
 
     /// 🧪️ Polls one publication under the same once-paid caller throughout its transaction.

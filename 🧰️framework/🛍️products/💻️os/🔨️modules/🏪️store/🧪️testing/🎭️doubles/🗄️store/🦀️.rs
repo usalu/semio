@@ -524,6 +524,22 @@ impl<M> Clone for DemoMemberStoreProducer<M> {fn clone(&self)->Self{*self}}
 
 impl<M> DemoMemberStoreProducer<M> {pub const fn new()->Self{Self(::std::marker::PhantomData)}}
 
+/// 🏭️ The initialization owner producer of the demo document: it admits the fixture authoring catalog, so replay initialization finds its installed native semantic producer.
+pub struct DemoDocumentStoreOwnerProducer;
+
+impl semio_os_store_engine_owners::producer::DocumentStoreOwnerProducer<DemoSnapshot, DemoMutation> for DemoDocumentStoreOwnerProducer {
+    fn source_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        let birth = fixture_authoring_birth_demand::<DemoMutation>()?;
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: 0, capacity_bytes: birth.capacity_bytes, depth: birth.depth, ..Default::default() })
+    }
+    fn admit_sources(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<DemoSnapshot, DemoMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), DocumentStoreOwnersAdmissionError<DemoSnapshot, DemoMutation>> {
+        fixture_authoring_member_owners::<DemoMutation>(grant).map(|(mut owners, progress)| {
+            owners.operation_wire = owners.operation_wire.with_original_binary_receiving();
+            (owners, progress)
+        })
+    }
+}
+
 impl MemberStoreProducer<DemoSnapshot,DemoMutation> for crate::DemoMemberStoreProducer<DemoMutation> {
     type SnapshotOpen = UnsupportedMemberSnapshotOpen<DemoSnapshot>;
 

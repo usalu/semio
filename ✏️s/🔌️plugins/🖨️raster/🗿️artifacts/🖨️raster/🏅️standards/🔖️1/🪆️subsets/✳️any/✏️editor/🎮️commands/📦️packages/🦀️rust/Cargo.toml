@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-diagnostic = { workspace = true }
 semio-framework-value-native-owned = { workspace = true }
 semio-s-artifact-raster-raster-editor-commands-2 = { workspace = true }
 semio-framework-machine = { workspace = true }

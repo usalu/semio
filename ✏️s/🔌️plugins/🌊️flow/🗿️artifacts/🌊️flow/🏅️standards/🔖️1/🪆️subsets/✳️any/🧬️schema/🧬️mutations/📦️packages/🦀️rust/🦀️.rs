@@ -8,6 +8,9 @@ pub use crate::standards::v1::subsets::any::schema::snapshot::FlowSnapshot;
 pub use crate::standards::v1::subsets::any::schema::mutations::FlowMutation;
 pub use crate::standards::v1::subsets::any::schema::diff::FlowDiff;
 pub use semio_s_artifact_flow_flow_schema::{FLOW_DOCUMENT_SCHEMA, FlowWorkingScene, flow_content_node_from_working, flow_content_snapshot_from_working};
+pub mod schema {
+    pub use super::standards::v1::subsets::any::schema::*;
+}
 
 #[path = "."]
 pub mod standards {

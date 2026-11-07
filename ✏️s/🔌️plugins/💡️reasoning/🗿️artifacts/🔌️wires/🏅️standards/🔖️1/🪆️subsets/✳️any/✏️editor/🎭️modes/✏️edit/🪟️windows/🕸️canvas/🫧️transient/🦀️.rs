@@ -4,7 +4,7 @@
 use protocol::Mutation;
 
 /// 🖱️ The frozen viewport and total pointer span held by one canvas drag.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_os_kernel::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "reasoning.wirescanvastransient")]
 #[artifact(id = "wires.canvas-window-transient")]
@@ -59,8 +59,8 @@ impl pack::snapshot::ArtifactPack for WiresCanvasTransient {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for WiresCanvasTransient {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for WiresCanvasTransient {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -106,17 +106,17 @@ fn wires_canvas_transient_transfer(mutation: WiresCanvasTransientMutation) -> Wi
 /// 🪟️ The concrete canvas owns its drag lifecycle independently of document/config streams.
 pub struct WiresCanvasTransientOwner;
 
-impl semio_framework_plugin::WindowTransientOwner for WiresCanvasTransientOwner {
+impl semio_plugin::WindowTransientOwner for WiresCanvasTransientOwner {
     const WINDOW_KIND_ID: &'static str = crate::editor::wires::modes::edit::windows::canvas::WIRES_PLAY_WINDOW_CANVAS;
     type State = WiresCanvasTransient;
     type Mutation = WiresCanvasTransientMutation;
 
-    fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_framework_plugin::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
-    fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
+    fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_plugin::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
+    fn build_owners() -> semio_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
         let state = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::State>::default());
         let mutation = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::Mutation>::default());
         let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(wires_canvas_transient_footprint, wires_canvas_transient_transfer, state.clone(), mutation.clone()));
-        semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
+        semio_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
     }
 }
 

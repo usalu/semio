@@ -29,7 +29,7 @@ impl store::ArtifactOwnedValueRetirementFactory<RasterSnapshot> for RasterSnapsh
         semio_framework_value::retirement::owned_retirement_birth_bytes::<RasterSnapshot>()
     }
 
-    fn retire_owned(&self, value: RasterSnapshot, grant: RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, RasterSnapshot)> {
+    fn retire_owned(&self, value: RasterSnapshot, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, RasterSnapshot)> {
         semio_framework_value::retirement::admit_owned_retirement(value, grant)
     }
 }
@@ -39,7 +39,7 @@ impl store::SnapshotRetirementFactory<RasterSnapshot> for RasterSnapshotRetireme
         semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<RasterSnapshot>()
     }
 
-    fn retire(&self, snapshot: std::sync::Arc<RasterSnapshot>, grant: RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, std::sync::Arc<RasterSnapshot>)> {
+    fn retire(&self, snapshot: std::sync::Arc<RasterSnapshot>, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, std::sync::Arc<RasterSnapshot>)> {
         semio_framework_value::retirement::arc_custody::admit_shared_retirement(snapshot, grant, true)
     }
 }
@@ -52,7 +52,7 @@ impl store::ArtifactOwnedValueRetirementFactory<RasterMutation> for RasterMutati
         semio_framework_value::retirement::owned_retirement_birth_bytes::<RasterMutation>()
     }
 
-    fn retire_owned(&self, value: RasterMutation, grant: RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, RasterMutation)> {
+    fn retire_owned(&self, value: RasterMutation, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, RasterMutation)> {
         semio_framework_value::retirement::admit_owned_retirement(value, grant)
     }
 }

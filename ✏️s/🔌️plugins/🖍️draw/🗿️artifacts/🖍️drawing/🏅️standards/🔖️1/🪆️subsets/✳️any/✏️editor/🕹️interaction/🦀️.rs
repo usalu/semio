@@ -172,8 +172,6 @@ pub fn drawing_reset_document_effect(scene: &DrawingSnapshot) -> semio_plugin::E
 pub mod config;
 #[path = "../📚️examples/🎬️demo-session/🦀️.rs"]
 pub mod demo_session;
-#[path = "../🧵️geometry/🦀️.rs"]
-pub mod geometry_session;
 #[path = "."]
 pub mod panels {
     #[path = "../📌️panels/🛍️catalogue/🦀️.rs"]

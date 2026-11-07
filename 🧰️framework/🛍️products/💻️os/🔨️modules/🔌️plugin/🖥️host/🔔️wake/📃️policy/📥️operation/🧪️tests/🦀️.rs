@@ -44,18 +44,18 @@ fn original_vm_port_is_scoped_nested_thread_bound_and_unwind_safe() {
  let first=caps.issue(request,||Some(1000),Box::new(||false)).unwrap();
  let second=caps.issue(request,||Some(1000),Box::new(||false)).unwrap();
  let traces:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/scope.json")).unwrap();
- fn trace(driver:&super::GuestRelayWakeDriver,steps:&[serde_json::Value],index:&mut usize,actual:&mut Vec<bool>){while *index<steps.len(){let step=steps[*index].as_str().unwrap();*index+=1;match step{"enter"=>super::with_execution_scope(driver,0,||trace(driver,steps,index,actual)),"leave"=>return,"unwind"=>panic!("scope trace unwind"),"execute"=>actual.push(!super::current_execution_driver().is_null()),"foreignThread"=>assert!(std::thread::spawn(||super::current_execution_driver().is_null()).join().unwrap()),_=>unreachable!()}}}
- for row in traces["cases"].as_array().unwrap(){let steps=row["steps"].as_array().unwrap();let mut index=0;let mut actual=Vec::new();while index<steps.len(){let _=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||trace(&first,steps,&mut index,&mut actual)));}assert_eq!(serde_json::to_value(actual).unwrap(),row["allowed"]);assert!(super::current_execution_driver().is_null());}
- assert!(super::current_execution_driver().is_null());
- super::with_execution_scope(&first,0,||{
-  assert_eq!(super::current_execution_driver(),&first as*const _);
-  super::with_execution_scope(&second,0,||assert_eq!(super::current_execution_driver(),&second as*const _));
-  assert_eq!(super::current_execution_driver(),&first as*const _);
-  assert!(std::thread::spawn(||super::current_execution_driver().is_null()).join().unwrap());
+ fn trace(driver:&super::GuestRelayWakeDriver,steps:&[serde_json::Value],index:&mut usize,actual:&mut Vec<bool>){while *index<steps.len(){let step=steps[*index].as_str().unwrap();*index+=1;match step{"enter"=>with_execution_scope(driver,0,||trace(driver,steps,index,actual)),"leave"=>return,"unwind"=>panic!("scope trace unwind"),"execute"=>actual.push(!current_execution_driver().is_null()),"foreignThread"=>assert!(std::thread::spawn(||current_execution_driver().is_null()).join().unwrap()),_=>unreachable!()}}}
+ for row in traces["cases"].as_array().unwrap(){let steps=row["steps"].as_array().unwrap();let mut index=0;let mut actual=Vec::new();while index<steps.len(){let _=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||trace(&first,steps,&mut index,&mut actual)));}assert_eq!(serde_json::to_value(actual).unwrap(),row["allowed"]);assert!(current_execution_driver().is_null());}
+ assert!(current_execution_driver().is_null());
+ with_execution_scope(&first,0,||{
+  assert_eq!(current_execution_driver(),&first as*const _);
+  with_execution_scope(&second,0,||assert_eq!(current_execution_driver(),&second as*const _));
+  assert_eq!(current_execution_driver(),&first as*const _);
+  assert!(std::thread::spawn(||current_execution_driver().is_null()).join().unwrap());
  });
- assert!(super::current_execution_driver().is_null());
- let failure=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||super::with_execution_scope(&first,0,||panic!("scoped VM callback unwind"))));
- assert!(failure.is_err());assert!(super::current_execution_driver().is_null());
+ assert!(current_execution_driver().is_null());
+ let failure=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||with_execution_scope(&first,0,||panic!("scoped VM callback unwind"))));
+ assert!(failure.is_err());assert!(current_execution_driver().is_null());
 }
 
 #[test]

@@ -16,7 +16,8 @@ pub use output::{ArtifactPreparedOperationOutput,ArtifactPreparedOperations,Arti
 #[path="🧳️replacement/🦀️.rs"]
 mod replacement;
 pub use replacement::OriginalReplacementReceiving;
-pub use semio_os_store_one_item_publication::lifted_prepared_operation_wire::{ArtifactOperationTargets, ArtifactOriginalOperationReceiving, ArtifactCanonicalTreeSource, ArtifactOperationWire, ArtifactPreparedOperationError, ArtifactPreparedOperationSource, BatchDigestAdmission};
+pub use semio_os_store_one_item_publication::artifact_persisted_binary_operation;
+pub use semio_os_store_one_item_publication::lifted_prepared_operation_wire::{ArtifactOperationTargets, ArtifactOriginalOperationReceiving, ArtifactPersistedOperation, ArtifactCanonicalTreeSource, ArtifactOperationWire, ArtifactPreparedOperationError, ArtifactPreparedOperationSource, BatchDigestAdmission};
 
 /// 📏️ One admitted operation-wire turn, independent of allocation and release axes.
 #[derive(Default, Debug, PartialEq, Eq)]

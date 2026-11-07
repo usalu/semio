@@ -1,7 +1,9 @@
 //! 🎟️ Procedural scratch producers share the original caller's work and retirement driver.
 use semio_framework_job::{OriginalTurnFailure,StepContext};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind};
-pub(crate) trait OriginalScratchWork<S>{
+/// 🎟️ Funds one original construction with the caller's retained grant while the decode control carries its allocation.
+pub fn funded_construction<O>(cx:&mut StepContext<'_>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,run:impl FnOnce(RetainedCloneGrant)->RetainedWorkOutcome<(O,RetainedCloneProgress)>)->Result<bool,OriginalTurnFailure>{let grant=cx.retained_grant();semio_framework_job::admit_original_construction(cx,output,demand,|_|run(grant))}
+pub trait OriginalScratchWork<S>{
  fn origin(&self)->(u64,u64);
  fn source_binding(&self)->semio_framework_job::OriginalSourceBinding;
  fn ready(&self)->bool;
@@ -10,7 +12,7 @@ pub(crate) trait OriginalScratchWork<S>{
  fn advance(&mut self,source:&mut S,grant:RetainedCloneGrant)->RetainedWorkOutcome<bool>;
  fn step_progress(&self)->RetainedCloneProgress;
 }
-pub(crate) fn drive<S,W:OriginalScratchWork<S>>(work:&mut W,source:&mut S,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+pub fn drive<S,W:OriginalScratchWork<S>>(work:&mut W,source:&mut S,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
  if work.origin()!=(cx.operation().0,cx.generation().0)||!work.source_binding().matches(cx){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"scratch work requires its initiating caller").into())}
  cx.original_source_parent()?.validate_borrowed_context(cx)?;
  for _ in 0..512{

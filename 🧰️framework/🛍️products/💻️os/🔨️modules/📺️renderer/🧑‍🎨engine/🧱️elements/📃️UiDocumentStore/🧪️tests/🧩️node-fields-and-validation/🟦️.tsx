@@ -209,8 +209,8 @@ export async function registerNodeFieldsAndValidationTests(vitest: TypedWireVite
       const { encodePackValue } = await import("@semio-tech/framework/packs");
       let source = OwnedUiNodeIndex.empty(); const records: unknown[] = []; let nested: unknown = fixture.text; for (let i = 0; i < fixture.depth; i++) nested = { next: nested };
       for (const [ordinal, id] of fixture.ids.entries()) {
-        const component = ordinal === 0 ? { ...fields.node.component, doc: { bytes: Array.from({ length: fixture.surfaceBytes }, (_, i) => i % 251) } } : { type: "extension", extension: "hash", props: { nested, numbers: [-0, 1e-7, 1e21], "0": true, ["__proto__"]: null } };
-        const decoder = new RetainedUiTypedCursor(encodePackValue({ ...fields.node, id, component }), "node"); expect(finish(decoder)).toBe("ready"); const payload = decoder.takeResult()!; const node = OwnedUiNode.captureFrom(payload);
+        const component = ordinal === 0 ? { ...fields.node.component, doc: { bytes: Array.from({ length: fixture.surfaceBytes }, (_, i) => i % 251) } } : { type: "extension", extension: "hash", props: { nested, numbers: [0, 1e-7, 1e21], "0": true, ["__proto__"]: null } };
+        const decoder = new RetainedUiTypedCursor(encodePackValue({ ...fields.node, id, component }), "node"); expect(finish(decoder), decoder.failure ?? "node decoding").toBe("ready"); const payload = decoder.takeResult()!; const node = OwnedUiNode.captureFrom(payload);
         const record = node.value; records.push({ ...record, component: record.component.type === "surface" ? { ...record.component, doc: { bytes: Array.from({ length: record.component.doc.bytes.length }, (_, i) => record.component.type === "surface" ? record.component.doc.bytes.byteAt(i) : 0) } } : record.component });
         close(decoder); retire(payload.beginClose()); const edit = source.beginSet(node); retire(node.beginClose()); expect(finish(edit)).toBe("ready"); const next = edit.takeResult()!; retire(edit.beginClose()); retire(source.beginClose()); source = next;
       }

@@ -135,7 +135,7 @@ pub fn build_display_list_for_page_background(engine: &mut LayoutEngine, doc: &L
 
 impl LayoutEngine {
     /// 🔤️ Captured font authority of a shaped display glyph.
-    pub fn glyph_font_source(&self, font: ui_render::text::FontHandle) -> Option<(&[u8], u32)> { self.text.glyph_font_source(font) }
+    pub fn glyph_font_source(&self, font: semio_ui_render_text::FontHandle) -> Option<(&[u8], u32)> { self.text.glyph_font_source(font) }
 }
 
 /// 🌄️ Export projection retains real paths and text sources without a synchronous font engine.

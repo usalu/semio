@@ -220,7 +220,7 @@ pub async fn resolve_studio_document(space_id: &str) -> Option<OsSpaceDocument> 
 
 /// 📦️ Pack+spr bytes for `Effect::LoadDocument` / host `loadAppArtifactPack`.
 pub async fn space_document_envelope_pack(document: &OsSpaceDocument) -> Option<store::os_store::serialization::ArtifactPackFiles> {
-    export_os_space_pack(document).ok()
+    export_os_space_pack(document).ok().map(|export| export.files)
 }
 
 //#region 🔖️WorkflowArtifactResolution
@@ -269,7 +269,7 @@ pub async fn empty_workflow_artifact_document(space_id: &str, space_name: &str) 
 /// `Effect::LoadDocument` / host `loadAppArtifactPack`, sized to what the `🪐️space` studio app's
 /// `ArtifactApp::Snapshot` (`WorkflowSnapshot`) actually decodes.
 pub async fn workflow_artifact_envelope_pack(document: &OsWorkflowArtifactDocument) -> Option<store::os_store::serialization::ArtifactPackFiles> {
-    export_backbone_pack(document).ok()
+    export_backbone_pack(document).ok().map(|export| export.files)
 }
 //#endregion 🔖️WorkflowArtifactResolution
 
@@ -514,6 +514,7 @@ fn admit_space_retained_mutation<P, M: ::protocol::OpBinary + ::protocol::Mutati
 
 fn prepare_space_retained_one_item<P, M>(base: &P, mutation: &M, maximum_bytes: usize) -> Result<(P, Vec<M>), ValueError>
 where
+    P: Clone,
     M: ::protocol::Mutation<P> + ::protocol::ColdMutation<P> + ::protocol::OpBinary,
 {
     admit_space_retained_mutation::<P, M>(mutation, maximum_bytes).map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "s.space.retained.mutation-envelope"))?;
@@ -549,6 +550,7 @@ struct SpaceOneItemPreparation<P: 'static, M: 'static> {
     checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     retained_bytes: usize,
     cancelled: bool,
+    last_work: u64,
 }
 
 impl<P, M> store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<P, M> for SpaceOneItemPreparationFactory<P, M>
@@ -597,7 +599,7 @@ where
         {
             return Err((space_refusal("s.space.retained.request-refused"), request));
         }
-        Ok((Box::new(SpaceOneItemPreparation { owners: store::OneItemOwners::from_request(request), maximum_bytes: self.maximum_bytes, checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), retained_bytes, cancelled: false }), progress))
+        Ok((Box::new(SpaceOneItemPreparation { owners: store::OneItemOwners::from_request(request), maximum_bytes: self.maximum_bytes, checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), retained_bytes, cancelled: false, last_work: 0 }), progress))
     }
 }
 
@@ -606,7 +608,12 @@ where
     P: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     M: ::protocol::Mutation<P> + ::protocol::ColdMutation<P> + ::protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + 'static,
 {
+    fn last_turn_work(&self) -> u64 {
+        self.last_work
+    }
+
     fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, _receiving: &mut ::protocol::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, ValueError> {
+        self.last_work = 0;
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -632,6 +639,7 @@ where
                 return Err(error);
             }
         };
+        self.last_work = 1;
         self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
         *self.owners.prepared = Some(prepared);
         Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress { copied_items: 1, copied_bytes: self.retained_bytes, ..Default::default() }))

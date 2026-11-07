@@ -17,6 +17,7 @@ fn admitted_maximum_and_production_grant_make_bounded_progress() {
         ),
         checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
         cancelled: false,
+        last_work: 0,
     };
     let page = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4_096, maximum_capacity_bytes: 4_096, maximum_release_bytes: 4_096, maximum_depth: 8 };
     assert!(matches!(work.advance(store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 0, ..page }), Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked)));

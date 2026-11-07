@@ -28,7 +28,7 @@ fn projected_native_fields_preserve_original_receipts_and_prefix_custody(){
   let mut work=caller.turn_with_decoder(stock,&mut decoder,|cx|Ok(ProjectedFieldCloneWork::new(projection.take().unwrap(),cx))).unwrap();let mut turns=0;
   while !work.ready(){if cut==Some(turns){break}calls+=1;turns+=1;assert!(calls<=200);caller.turn_with_decoder(stock,&mut decoder,|cx|observed(cx,|cx|work.step(cx))).unwrap();}
   let mut output=None;
-  if cut.is_none(){while output.is_none(){calls+=1;assert!(calls<=200);caller.turn_with_decoder(stock,&mut decoder,|cx|observed(cx,|cx|work.take_into(&mut output,cx))).unwrap()}assert_eq!(output.as_deref(),case["expected"].as_str())}
+  if cut.is_none(){while output.is_none(){calls+=1;assert!(calls<=200);caller.turn_with_decoder(stock,&mut decoder,|cx|observed(cx,|cx|work.take_into(&mut output,cx))).unwrap();}assert_eq!(output.as_deref(),case["expected"].as_str())}
   assert_eq!(source.try_borrow().unwrap().get().as_ptr(),address);
   work.begin_close();while !work.terminal_is_empty(){calls+=1;assert!(calls<=200);caller.turn_with_decoder(stock,&mut decoder,|cx|observed(cx,|cx|cx.with_original_retirement(|cx|{
    for _ in 0..512{if work.terminal_is_empty()||cx.should_yield(){break}let d=work.next_close_demands(cx.retained_grant().maximum_copy_bytes)?;let step=close_original_retained_step(cx,d,|g|work.close_step(g))?;if step.progress()==Default::default(){break}}Ok(())

@@ -390,11 +390,11 @@ impl ArtifactEditor for RasterPlayApp {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         if action=="selectPixels"{
             use semio_s_artifact_raster_raster_editor_commands::commands::select_pixels::SelectPixels;
-            return SelectPixels::from_original_action_value(args).map(RasterCommand::SelectPixels).map_err(Fault::from);
+            return SelectPixels::from_original_action_value(args).map(RasterCommand::SelectPixels).map_err(semio_framework::FaultFrom::into_fault);
         }
         if action=="maskFromSelection"{
             use semio_s_artifact_raster_raster_editor_commands::commands::mask_from_selection::MaskFromSelection;
-            return MaskFromSelection::from_original_action_value(args).map(RasterCommand::MaskFromSelection).map_err(Fault::from);
+            return MaskFromSelection::from_original_action_value(args).map(RasterCommand::MaskFromSelection).map_err(semio_framework::FaultFrom::into_fault);
         }
         let args = args.as_ref();
         args_bridge::command_from_action(action, args)

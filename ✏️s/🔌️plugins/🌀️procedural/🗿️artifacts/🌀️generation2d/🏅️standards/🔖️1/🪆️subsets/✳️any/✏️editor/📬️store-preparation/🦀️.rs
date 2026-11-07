@@ -48,6 +48,7 @@ struct Generation2dArtifactStorePreparation {
     pub(super) checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     pub(super) retained_bytes: usize,
     pub(super) cancelled: bool,
+    pub(super) last_work: u64,
 }
 
 impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Generation2dSnapshot, Generation2dMutation> for Generation2dArtifactStorePreparationFactory {
@@ -96,12 +97,13 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
         {
             return Err((generation2d_preparation_refusal("generation2d-artifact-request-refused"), request));
         }
-        Ok((Box::new(Generation2dArtifactStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), retained_bytes, cancelled: false }), progress))
+        Ok((Box::new(Generation2dArtifactStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), retained_bytes, cancelled: false, last_work: 0 }), progress))
     }
 }
 
 impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Generation2dSnapshot, Generation2dMutation> for Generation2dArtifactStorePreparation {
     fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, _receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        self.last_work = 0;
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -129,7 +131,12 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Gene
         };
         self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
         *self.owners.prepared = Some(prepared);
+        self.last_work = 1;
         Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: self.retained_bytes, ..Default::default() }))
+    }
+
+    fn last_turn_work(&self) -> u64 {
+        self.last_work
     }
 
     fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
@@ -248,7 +255,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
         {
             return Err((generation2d_preparation_refusal("generation2d-config-request-refused"), request));
         }
-        Ok((Box::new(Generation2dConfigPreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), cancelled: false }), progress))
+        Ok((Box::new(Generation2dConfigPreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, last_work: 0 }), progress))
     }
 }
 //#endregion 🎟️Admission
@@ -258,10 +265,12 @@ pub(super) struct Generation2dConfigPreparation {
     pub(super) owners: store::OneItemOwners<Generation2dConfig, Generation2dConfigMutation>,
     pub(super) checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     pub(super) cancelled: bool,
+    pub(super) last_work: u64,
 }
 
 impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Generation2dConfig, Generation2dConfigMutation> for Generation2dConfigPreparation {
     fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, _receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        self.last_work = 0;
         if !grant.permits_one() || grant.maximum_copy_bytes < GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES || self.cancelled || self.owners.is_closing() {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -298,7 +307,12 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Gene
         };
         self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES as u64, digest: prepared.edit_digest() };
         *self.owners.prepared = Some(prepared);
+        self.last_work = 1;
         Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES, ..Default::default() }))
+    }
+
+    fn last_turn_work(&self) -> u64 {
+        self.last_work
     }
 
     fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {

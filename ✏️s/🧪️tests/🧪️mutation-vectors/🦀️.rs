@@ -74,7 +74,7 @@ where
     let (diff, messages) = mutation.diff(base).into_parts();
     let messages = messages.iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
     let applied = apply_diff_cold(&diff, base);
-    <M::ReferenceDiff as semio_framework_os_kernel::MutationDiff<S>>::retire_cold(diff);
+    <M::ReferenceDiff as semio_os_kernel::MutationDiff<S>>::retire_cold(diff);
     Ok((applied.map_err(|error| format!("{error:?}"))?, messages))
 }
 
@@ -147,7 +147,7 @@ where
         let raised = mutation.diff(&before);
         let matches = json(&semio_framework_pack_json::to_json_string(raised.diff())) == json(&read(&diff));
         let (owned, _) = raised.into_parts();
-        <M::ReferenceDiff as semio_framework_os_kernel::MutationDiff<S>>::retire_cold(owned);
+        <M::ReferenceDiff as semio_os_kernel::MutationDiff<S>>::retire_cold(owned);
         if !matches {
             breaches.push(format!("{name}: the produced diff is not the committed diff"));
         }
@@ -180,7 +180,7 @@ pub async fn assert_committed_vectors<S, M>(root: &Path, prepare: fn())
 where
     S: Clone + PartialEq + Debug + FromValue,
     M: Mutation<S> + ColdMutation<S> + SemanticMutation<S> + OpBinary + PartialEq + Debug + FromValue + ToValue,
-    M::ReferenceDiff: ToValue + semio_framework_os_kernel::ColdDiffAlgebra<S>,
+    M::ReferenceDiff: ToValue + semio_os_kernel::ColdDiffAlgebra<S>,
 {
     prepare();
     assert!(root.is_dir(), "the fixture mirror {} must exist", root.display());

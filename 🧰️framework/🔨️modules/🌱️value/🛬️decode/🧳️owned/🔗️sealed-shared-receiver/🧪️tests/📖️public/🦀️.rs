@@ -55,3 +55,9 @@ fn native_flattened_ordinals_refuse_ambiguous_declared_ids(){
   for _ in 0..10000{if matcher.result().is_some(){break}let g=bank.loan(257,4096);let(turn,h)=crate::observe_retirement_allocations(||source_fixture::receive(&mut control,g,bank.work_loan(maximum_work),|c|matcher.advance(original.borrow(),c,4096,g)));assert!(turn.work<=257);saw_probe_batch|=turn.work>1;let p=turn.result.as_ref().map(|s|s.progress()).unwrap_or_else(|e|e.retained_progress());bank.post(p,turn.work,g,h);turn.result.unwrap();}assert_eq!(matcher.result(),Some(expected));assert!(saw_probe_batch);matcher.begin_close();let mut actual=None;for _ in 0..10000{if matcher.terminal_is_empty()&&actual.is_none(){break}let g=bank.loan(1,4096);let(turn,h)=crate::observe_retirement_allocations(||crate::source_fixture::close_step(&mut actual,g,bank.work_remaining(),matcher.close_demands(4096),matcher.close_work_demand(4096),|g,a|matcher.close_step(g,a)));source_fixture::post_step(&mut bank,turn,g,h,|e|e.retained_progress()).unwrap();}assert!(matcher.terminal_is_empty());drop(matcher);drain(original,&mut bank);
  }
 }
+#[test]
+fn native_dsl_enum_ordinals_accept_only_non_negative_u32_numbers(){
+ use crate::native_decoding::owned::tree::NativeValueSource;
+ for(value,expected)in [(crate::Number::UInt(0),Some(0)),(crate::Number::UInt(u64::from(u32::MAX)),Some(u32::MAX)),(crate::Number::UInt(u64::from(u32::MAX)+1),None),(crate::Number::Int(7),Some(7)),(crate::Number::Int(-1),None),(crate::Number::Int(i64::MAX),None),(crate::Number::Float(1.0),None)]{assert_eq!(DslValue::Number(value).enum_ordinal().ok(),expected);}
+ assert!(DslValue::String("0".into()).enum_ordinal().is_err());
+}

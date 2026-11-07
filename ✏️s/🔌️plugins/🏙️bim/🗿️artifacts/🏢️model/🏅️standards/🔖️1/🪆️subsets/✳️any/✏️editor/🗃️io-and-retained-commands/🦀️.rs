@@ -135,3 +135,5 @@ impl semio_plugin::ArtifactOwnedToolJobFactory for BimCommandJobFactory {
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = BIM_PUBLICATION_CONTRACTS;
 }
 //#endregion 🔖️RetainedCommands
+
+semio_plugin::retained_command::terminal_frame_bound!(BimCommandWork);

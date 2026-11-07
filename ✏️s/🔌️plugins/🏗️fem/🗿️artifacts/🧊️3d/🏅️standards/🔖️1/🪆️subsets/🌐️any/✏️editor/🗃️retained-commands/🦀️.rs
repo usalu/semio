@@ -208,6 +208,10 @@ impl ArtifactCommandWork<EditorApp<Fem3dPlayApp>> for Fem3dCommandWork {
         fem3d_retained_extent(command, snapshot, interaction)
     }
 
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(std::mem::size_of::<Self>())
+    }
+
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Fem3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Fem3dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
         if self.consumed {
@@ -295,3 +299,5 @@ impl ArtifactOwnedToolJobFactory for Fem3dRetainedCommandJobFactory {
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = FEM3D_RETAINED_PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️RetainedCommands
+
+semio_plugin::retained_command::terminal_frame_bound!(Fem3dCommandWork);

@@ -50,7 +50,7 @@ impl<T:FlowPublicationTarget> FlowWorkPublication<T>{
    3 if c.remaining.is_empty()=>d.capacity_bytes=semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<TreeSnapshot>(),
    4 if c.remaining.is_empty()=>d.capacity_bytes=semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<EvalChannels>(),
    5 if c.remaining.is_empty()=>d.capacity_bytes=s.shared_live.as_ref().unwrap().0.len(),
-   6 if c.remaining.is_empty()=>d.copy_bytes=usize::from(s.converged_bytes.len()<s.shared_live.as_ref().unwrap().0.len()),
+   6 if c.remaining.is_empty()=>d.copy_bytes=s.shared_live.as_ref().unwrap().0.len().saturating_sub(s.converged_bytes.len()).min(copy),
    _=>{}
   }Ok(d)
  }

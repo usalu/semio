@@ -295,7 +295,7 @@ fn selection_drag_leaf_moves_equal_world_displacements_under_distinct_parents() 
     base.transform.scale_x=2.0;
     if let DrawingLayerNode::Group(group)=&mut parent { group.children.push(b); }
     let mut document=DrawingSnapshot { layers:vec![a,parent].into(),..Default::default() };
-    let before=semio_s_artifact_draw_drawing_scene::flatten_drawing_document_to_scene_nodes(&document);
+    let before=semio_s_artifact_draw_drawing_scene::preparation::testkit::scene_nodes(&document);
     let mut preparation=LayerGrabPreparation::new(&document,vec!["a".into(),"b".into()],None);
     let mut complete=false;
     for _ in 0..8 { if preparation.advance(&document).unwrap() {complete=true;break;} }
@@ -304,7 +304,7 @@ fn selection_drag_leaf_moves_equal_world_displacements_under_distinct_parents() 
     assert_eq!(targets.iter().map(|id|id.to_string_owner()).collect::<Vec<_>>(),vec!["a".to_string(),"b".to_string()]);
     let leaf=drawing_grab_leaf(&DrawingGrab::Layers { targets, handle: None },[0.0,0.0],[12.0,8.0],false,false).unwrap();
     semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut document,&leaf).unwrap();
-    let after=semio_s_artifact_draw_drawing_scene::flatten_drawing_document_to_scene_nodes(&document);
+    let after=semio_s_artifact_draw_drawing_scene::preparation::testkit::scene_nodes(&document);
     for (before,after) in before.iter().zip(after) {
         assert!((after.transform[4]-before.transform[4]-12.0).abs()<1e-10);
         assert!((after.transform[5]-before.transform[5]-8.0).abs()<1e-10);
@@ -364,7 +364,8 @@ fn selected_handle_previews_are_ephemeral_and_release_one_parametric_leaf() {
             assert!(matches!(session.tool.context().grab,Some(DrawingGrab::Layers { handle: Some(_), .. })));
             session.sample(end,false,false).unwrap();
             let preview=session.preview().transformation.unwrap();
-            let scene=semio_s_artifact_draw_drawing_scene::flatten_drawing_document_with_transformation(&document,Some(&preview));
+            let plan=semio_s_artifact_draw_drawing_scene::preparation::testkit::scene_plan(&document);
+            let scene=semio_s_artifact_draw_drawing_scene::view::nodes(&plan,Some(&preview)).unwrap();
             assert_eq!(scene[0].transform,preview.1);
             assert_eq!(document,before);
             let emit=if cancel {session.cancel()} else {session.release("canvasPointerUp",pointer("selectDirect",end),base(&document)).unwrap().unwrap()};
@@ -508,8 +509,8 @@ fn node_marquee_rejects_overflow_and_excludes_hidden_or_locked_ancestors() {
 fn stroked_path(name:&str,segments:Vec<PathSegment>)->DrawingLayerNode{let mut layer=semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((name)).to_string().into()).expect("nonempty authored identity"), name,segments.into());semio_s_artifact_draw_drawing_model::layer_base_mut(&mut layer).attributes.stroke=Some(semio_s_artifact_draw_drawing_model::StrokeStyle{color:[0.0,0.0,0.0,1.0],width:1.0,cap:crate::StrokeCap::Butt,join:crate::StrokeJoin::Miter,dash:None});layer}
 fn filled_path(name:&str,segments:Vec<PathSegment>)->DrawingLayerNode{let mut layer=semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((name)).to_string().into()).expect("nonempty authored identity"), name,segments.into());semio_s_artifact_draw_drawing_model::layer_base_mut(&mut layer).attributes.fill=Some(semio_s_artifact_draw_drawing_model::FillStyle::Solid{color:[0.0,0.0,0.0,1.0]});layer}
 fn prepared(document:&DrawingSnapshot)->scene_funding::Funded<semio_s_artifact_draw_drawing_scene_paint::scene::PreparedScene>{
- let mut vector=semio_s_artifact_draw_drawing_scene::preparation::DocumentVectorJob::new(document,semio_s_artifact_draw_drawing_editor_interaction::geometry_session::limits(),semio_s_artifact_draw_drawing_editor_interaction::geometry_session::algorithms()).unwrap();let mut scene_wallet=scene_test_work();while !semio_s_artifact_draw_drawing_scene::draw_scene_funded_turn!(vector,4096,scene_wallet).done{}let(mut close,plan)=vector.into_retirement();semio_s_artifact_draw_drawing_scene::draw_scene_funded_close!(close,scene_wallet,4096);
- let mut paint=semio_s_artifact_draw_drawing_scene_paint::scene::ScenePaintJob::new(plan.unwrap(),0.001,semio_s_artifact_draw_drawing_editor_interaction::geometry_session::paint_limits());while !semio_s_artifact_draw_drawing_scene::draw_scene_funded_turn!(paint,4096,scene_wallet).done{}let(mut close,scene)=paint.into_retirement();semio_s_artifact_draw_drawing_scene::draw_scene_funded_close!(close,scene_wallet,4096);scene_funding::Funded::from_parts(scene.unwrap(),scene_wallet)
+ let mut vector=semio_s_artifact_draw_drawing_scene::preparation::DocumentVectorJob::new(document,semio_s_artifact_draw_drawing_scene_mounted::limits(),semio_s_artifact_draw_drawing_scene_mounted::algorithms()).unwrap();let mut scene_wallet=scene_test_work();while !semio_s_artifact_draw_drawing_scene::draw_scene_funded_turn!(vector,4096,scene_wallet).done{}let(mut close,plan)=vector.into_retirement();semio_s_artifact_draw_drawing_scene::draw_scene_funded_close!(close,scene_wallet,4096);
+ let mut paint=semio_s_artifact_draw_drawing_scene_paint::scene::ScenePaintJob::new(plan.unwrap(),0.001,semio_s_artifact_draw_drawing_scene_mounted::paint_limits());while !semio_s_artifact_draw_drawing_scene::draw_scene_funded_turn!(paint,4096,scene_wallet).done{}let(mut close,scene)=paint.into_retirement();semio_s_artifact_draw_drawing_scene::draw_scene_funded_close!(close,scene_wallet,4096);scene_funding::Funded::from_parts(scene.unwrap(),scene_wallet)
 }
 fn advance_cached(job:&mut TracePointerJob,document:&DrawingSnapshot)->bool{
  let scene=prepared(document);let borrowed=MountedSceneQuery{scene:&scene,source:crate::schema::scene_identity::SceneIdentity{instance:710034,base:11,generation:1,revision:[1;32]},build:1};let done=job.advance(document,&borrowed);

@@ -53,5 +53,5 @@ impl OriginalManifestMetadata{
 }
 impl Drop for OriginalManifestMetadata{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original metadata requires complete paid closure")}}
 #[doc(hidden)]
-#[cfg(any(test,feature="original-actor-context-testing"))]
+#[cfg(feature="original-actor-context-testing")]
 #[path="metadata-tests.rs"]pub mod tests;

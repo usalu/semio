@@ -6,6 +6,7 @@
 //#region 🏛️OwnershipFacet
 
 pub use semio_plugin_abi::sqlite_wire;
+pub use semio_plugin_abi::actor_input_wire;
 
 
 //#endregion 🏛️OwnershipFacet

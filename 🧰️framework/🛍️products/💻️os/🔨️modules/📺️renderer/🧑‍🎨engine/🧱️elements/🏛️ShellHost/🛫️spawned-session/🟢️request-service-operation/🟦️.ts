@@ -64,7 +64,7 @@ export function useRequestServiceOperationState({ documentServices, loadedPlugin
         : [];
     });
     if (matches.length > 1) throw new Error("browser-actor-action: ambiguous document owner");
-    return matches[0] ?? null;
+    return matches.at(0) ?? null;
   }, []);
 
   const dispatchDirectBrowserActorCommand = useCallback(async (

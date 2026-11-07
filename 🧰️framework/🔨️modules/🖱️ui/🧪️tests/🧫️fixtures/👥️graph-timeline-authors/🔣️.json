@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "checkpointId": "checkpoint-authors",
-  "avatarSize": 16.0,
+  "avatarSize": 24.0,
   "overlap": 8.0,
-  "advance": 8.0,
+  "advance": 16.0,
   "authors": [
     {
       "id": "ada",

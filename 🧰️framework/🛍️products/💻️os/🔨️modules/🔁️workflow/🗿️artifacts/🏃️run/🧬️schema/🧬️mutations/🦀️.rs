@@ -33,7 +33,7 @@ pub use start_run_node::StartRunNode;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Aggregate
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = RunArtifact, diff = RunDiff, schema = "os.run", reference = RunArtifact, reference_diff = RunDiff)]
@@ -48,9 +48,14 @@ pub enum RunMutation {
     RemoveRunLog(RemoveRunLog),
     RemoveRunNode(RemoveRunNode),
 }
+dsl::original_ordinal_operation_receiving!(RunMutation);
+dsl::artifact_persisted_binary_operation!(RunMutation);
 //#endregion 🔖️Aggregate
 
 //#region 🧪️Tests
+#[cfg(test)]
+#[path = "../../🧪️tests/🔬️receiving/🦀️.rs"]
+mod receiving_tests;
 //#endregion 🧪️Tests
 
 

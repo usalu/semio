@@ -185,7 +185,7 @@ async fn set_step_enabled_is_idempotent_by_value_and_refuses_a_missing_value() {
     settled_dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: None }));
     let step = app.snapshot().expect("snapshot with the added step").step_payloads.last().cloned().expect("the added step");
     let bare = DslValue::object([("id".to_string(), DslValue::String(step.id.clone()))]);
-    assert!(<Process3dPlayApp as ArtifactEditor>::command_from_action("setStepEnabled", Some((bare).clone()), None).is_err(), "setStepEnabled without its value must be refused");
+    assert!(<Process3dPlayApp as ArtifactEditor>::command_from_action("setStepEnabled", &mut Some((bare).clone()), &mut None).is_err(), "setStepEnabled without its value must be refused");
     let command = || Process3dCommand::SetStepEnabled(set_step_enabled::SetStepEnabled { id: step.id.clone(), enabled: !step.enabled });
     let (_, first) = settled_dispatch(&mut app, command());
     assert!(published_a_document_mutation(&first), "setStepEnabled with the inverse value is one document edit");

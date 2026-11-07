@@ -32,11 +32,11 @@ fn lowpoly_render(
     body_key: &str,
     doc: &ArtifactView<'_, LowpolySnapshot>,
     cfg: &ConfigView<'_, LowpolyConfig>,
-    view_state: &semio_plugin::ViewModel,
+    view_state: &semio_framework_plugin::ViewModel,
     scratch: &mut LowpolyScratch,
     interaction: Option<&InteractionView<'_>>,
     preview: Option<&LowpolySnapshot>,
-) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
+) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
     let projection = preview.unwrap_or(doc.snapshot);
     let config = cfg.snapshot;
     let empty_domain_selection = protocol::DomainSelection::default();
@@ -55,30 +55,30 @@ fn lowpoly_render(
         LOWPOLY_PLAY_BODY_MAIN => edit::windows::model::render(view, loaded.as_ref(), active_utility, &texture_cache, &world_selection, labels),
         LOWPOLY_PLAY_BODY_UV => paint_mode::windows::uv::render(view, loaded.as_ref(), &texture_cache, labels),
         LOWPOLY_PLAY_BODY_ARTIFACT => match &loaded {
-            Some(loaded) => document_panel::render(view, loaded, labels, &semio_plugin::TreeWindows::for_body(view_state, LOWPOLY_PLAY_BODY_ARTIFACT)),
-            None => semio_plugin::built_text_node(labels.failed_model.into())
-                .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "lowpoly document failed-load text admission failed")),
+            Some(loaded) => document_panel::render(view, loaded, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LOWPOLY_PLAY_BODY_ARTIFACT)),
+            None => semio_framework_plugin::built_text_node(labels.failed_model.into())
+                .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "lowpoly document failed-load text admission failed")),
         },
-        LOWPOLY_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_plugin::TreeWindows::for_body(view_state, LOWPOLY_PLAY_BODY_CATALOGUE)),
-        LOWPOLY_PLAY_BODY_INSPECTION => inspection_panel::render(view, active_utility, labels, &semio_plugin::TreeWindows::for_body(view_state, LOWPOLY_PLAY_BODY_INSPECTION)),
-        LOWPOLY_PLAY_BODY_LAYERS => layers_panel::render(view, labels, &semio_plugin::TreeWindows::for_body(view_state, LOWPOLY_PLAY_BODY_LAYERS)),
-        _ => semio_plugin::built_text_node(semio_ui_locale::Label::data(format!("Unknown body: {body_key}")))
-            .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "lowpoly unknown-body text admission failed")),
+        LOWPOLY_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LOWPOLY_PLAY_BODY_CATALOGUE)),
+        LOWPOLY_PLAY_BODY_INSPECTION => inspection_panel::render(view, active_utility, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LOWPOLY_PLAY_BODY_INSPECTION)),
+        LOWPOLY_PLAY_BODY_LAYERS => layers_panel::render(view, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LOWPOLY_PLAY_BODY_LAYERS)),
+        _ => semio_framework_plugin::built_text_node(semio_ui_locale::Label::data(format!("Unknown body: {body_key}")))
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "lowpoly unknown-body text admission failed")),
     }?;
     let node = if matches!(body_key, LOWPOLY_PLAY_BODY_MAIN | LOWPOLY_PLAY_BODY_UV) && !doc.operations().is_empty() {
-        use semio_plugin::{Buildable, HasBase, HasChildren};
-        let progress = semio_plugin::app::operation_progress::operation_progress_controls(doc.operations(), semio_s_artifact_lowpoly_lowpoly_kit::lowpoly_controller_id(), view_state.locale)?;
+        use semio_framework_plugin::{Buildable, HasBase, HasChildren};
+        let progress = semio_framework_plugin::app::operation_progress::operation_progress_controls(doc.operations(), semio_s_artifact_lowpoly_lowpoly_kit::lowpoly_controller_id(), view_state.locale)?;
         semio_ui_contract::column()
             .try_id(format!("{body_key}.with-progress"))
-            .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "lowpoly progress container"))?
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "lowpoly progress container"))?
             .try_children([progress, node])
-            .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "lowpoly progress children"))?
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "lowpoly progress children"))?
             .try_build()
-            .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "lowpoly progress build"))?
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "lowpoly progress build"))?
     } else {
         node
     };
-    Ok(semio_plugin::built_to_component_tree(node))
+    Ok(semio_framework_plugin::built_to_component_tree(node))
 }
 
 //#region 🔖️LowpolyPlayApp
@@ -100,7 +100,7 @@ impl ArtifactEditor for LowpolyPlayApp {
     }
 
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
-    fn examples() -> Vec<semio_plugin::ExampleSource> {
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
         vec![semio_s_artifact_lowpoly_lowpoly_examples::source()]
     }
     type Snapshot = LowpolySnapshot;
@@ -116,7 +116,7 @@ impl ArtifactEditor for LowpolyPlayApp {
 
     type Command = LowpolyCommand;
 
-    const DIALECT: semio_plugin::app::Dialect = semio_s_artifact_lowpoly_lowpoly_model::snapshot::LOWPOLY_DIALECT;
+    const DIALECT: semio_framework_plugin::app::Dialect = semio_s_artifact_lowpoly_lowpoly_model::snapshot::LOWPOLY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = LOWPOLY_DOCUMENT_SCHEMA;
 
     /// 🖱️ "Use selection" over the mesh domain: a row `lowpoly-document.<object>` names that object for an `object`
@@ -144,9 +144,9 @@ impl ArtifactEditor for LowpolyPlayApp {
     /// measures. A granularity or mode switch: the scene (the pick targets change), the engagement
     /// rail and the measures — the framework default refreshes measures but never engagements, which
     /// left the rail's pressed granularity stale until the next pick (2026-09-18).
-    fn interaction_scope(verb: semio_plugin::InteractionVerb, domains: &[&str]) -> Option<semio_framework::kernel::UiDirtyScope> {
+    fn interaction_scope(verb: semio_framework_plugin::InteractionVerb, domains: &[&str]) -> Option<semio_framework::kernel::UiDirtyScope> {
         use semio_framework::kernel::UiDirtyScope;
-        use semio_plugin::InteractionVerb;
+        use semio_framework_plugin::InteractionVerb;
         if domains.is_empty() || domains.iter().any(|domain| *domain != MESH_INTERACTION_DOMAIN) {
             return None;
         }
@@ -167,15 +167,15 @@ impl ArtifactEditor for LowpolyPlayApp {
     }
 
     fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
-        Some(semio_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
+        Some(semio_framework_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
     }
 
-    fn bounded_first_step_tool_proofs() -> Vec<semio_plugin::tool_contract::ArtifactBoundedFirstStepProof> {
-        let proof = |factory, tool, contract| semio_plugin::tool_contract::ArtifactBoundedFirstStepProof::new::<EditorApp<LowpolyPlayApp>>(
+    fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::plugin_app_close_prelude::ArtifactBoundedFirstStepProof> {
+        let proof = |factory, tool, contract| semio_framework_plugin::plugin_app_close_prelude::ArtifactBoundedFirstStepProof::new::<EditorApp<LowpolyPlayApp>>(
             "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs", "s.lowpoly.lowpoly@1/*#editor", factory, tool, "lowpoly.document", contract);
         let mut proofs: Vec<_> = LOWPOLY_MIGRATED_TOOL_IDS.iter().map(|tool| proof("LowpolyCommandJobFactory", *tool, lowpoly_contract()).with_factory_type::<EditorApp<LowpolyPlayApp>, LowpolyCommandJobFactory>()).collect();
         proofs.extend(LOWPOLY_IMPORT_TOOL_IDS.iter().map(|tool| proof("LowpolyImportJobFactory", *tool, lowpoly_import_contract()).with_factory_type::<EditorApp<LowpolyPlayApp>, LowpolyImportJobFactory>()));
@@ -188,13 +188,13 @@ impl ArtifactEditor for LowpolyPlayApp {
         registry.register(LowpolyImportJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         let Some(disposition) = lowpoly_command_disposition(&original.tool_id) else {
             return Ok(false);
         };
         if original.command.command_id() != original.tool_id {
-            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "lowpoly retained command does not match its exact registered tool").into());
+            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "lowpoly retained command does not match its exact registered tool").into());
         }
         let oversized_snapshot_json = match &original.command {
             LowpolyCommand::ImportSnapshotJson(payload) => payload.json.len() > LOWPOLY_SNAPSHOT_JSON_BYTES,
@@ -209,18 +209,18 @@ impl ArtifactEditor for LowpolyPlayApp {
         }
         let tool_id = original.command.command_id();
         let maximum_raw_bytes = lowpoly_command_maximum_raw_bytes(&original.command);
-        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, LowpolyCommand::command_id, maximum_raw_bytes, LOWPOLY_RETAINED_WORK_ITEMS, false, |request| LowpolyRetainedCommandWork::new(tool_id, disposition, request.operation.operation.0, request.operation.generation.0, request.canonical_base_revision, request.context.identity_digest()))
+        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, LowpolyCommand::command_id, maximum_raw_bytes, LOWPOLY_RETAINED_WORK_ITEMS, false, |request| LowpolyRetainedCommandWork::new(tool_id, disposition, request.operation.operation.0, request.operation.generation.0, request.canonical_base_revision, request.context.identity_digest()))
     }
 
     fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
         Some(semio_s_artifact_lowpoly_lowpoly_config::schema::app_schema_descriptor())
     }
 
-    fn reference_birth()->Option<fn()->Result<LowpolySnapshot,semio_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<LowpolySnapshot,semio_framework_plugin::Fault>>{Some(||{
         Ok(semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::default_snapshot())
     })}
 
-    fn io() -> Option<semio_plugin::AppIo> {
+    fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(lowpoly_io())
     }
 
@@ -234,7 +234,7 @@ impl ArtifactEditor for LowpolyPlayApp {
         lowpoly_export_media(port, doc, &LowpolyScratch::default())
     }
 
-    fn export_media_with_request_context(_owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle, port: &str, doc: &ArtifactView<'_, LowpolySnapshot>, transient: &semio_plugin::TransientView<'_, LowpolyTransient>) -> Result<Media, MediaError> {
+    fn export_media_with_request_context(_owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, port: &str, doc: &ArtifactView<'_, LowpolySnapshot>, transient: &semio_framework_plugin::TransientView<'_, LowpolyTransient>) -> Result<Media, MediaError> {
         let scratch = LowpolyScratch::from_transient(transient.snapshot, semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySelection::default());
         lowpoly_export_media(port, doc, &scratch)
     }
@@ -290,7 +290,7 @@ impl ArtifactEditor for LowpolyPlayApp {
         doc: &ArtifactView<'_, LowpolySnapshot>,
         cfg: &ConfigView<'_, LowpolyConfig>,
         interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_plugin::ViewModel>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation, Self::DraftMutation>, Fault> {
@@ -302,21 +302,21 @@ impl ArtifactEditor for LowpolyPlayApp {
         command.dispatch(doc, cfg, &mut scratch)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         lowpoly_render(body_key, doc, cfg, view_state, &mut LowpolyScratch::default(), None, None)
     }
 
     fn render_with_request_context(
-        _owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
+        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, LowpolySnapshot>,
         cfg: &ConfigView<'_, LowpolyConfig>,
-        view_state: &semio_plugin::ViewModel,
-        transient: &semio_plugin::TransientView<'_, LowpolyTransient>,
+        view_state: &semio_framework_plugin::ViewModel,
+        transient: &semio_framework_plugin::TransientView<'_, LowpolyTransient>,
         interaction: &InteractionView<'_>,
-        cx:&mut semio_plugin::StepContext<'_>,
-    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
-        let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
+        cx:&mut semio_framework_plugin::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         let mut scratch = LowpolyScratch::from_transient(transient.snapshot, semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySelection::default());
         let preview = transient.snapshot.paint_preview(doc.snapshot);
         lowpoly_render(body_key, doc, cfg, view_state, &mut scratch, Some(interaction), preview.as_ref())
@@ -325,7 +325,7 @@ impl ArtifactEditor for LowpolyPlayApp {
         rendered.map(Some).map_err(Into::into)
         }
 
-    fn window_engagements(doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
         let config = cfg.snapshot;
         let active_utility = view_state.active_utility_id.as_deref().filter(|utility| !utility.is_empty()).unwrap_or("move");
         let labels = semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::terminology::lowpoly_play_labels(view_state);
@@ -335,7 +335,7 @@ impl ArtifactEditor for LowpolyPlayApp {
 
     /// 🎯️ The live engagement: granularity switches pressed to the mesh domain's state, the selected
     /// component count in the status line.
-    fn window_engagements_with_request_context(doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, view_state: &semio_plugin::ViewModel, _transient: &semio_plugin::TransientView<'_, LowpolyTransient>, interaction: &InteractionView<'_>) -> HashMap<String, WindowEngagement> {
+    fn window_engagements_with_request_context(doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, view_state: &semio_framework_plugin::ViewModel, _transient: &semio_framework_plugin::TransientView<'_, LowpolyTransient>, interaction: &InteractionView<'_>) -> HashMap<String, WindowEngagement> {
         let config = cfg.snapshot;
         let active_utility = view_state.active_utility_id.as_deref().filter(|utility| !utility.is_empty()).unwrap_or("move");
         let labels = semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::terminology::lowpoly_play_labels(view_state);
@@ -346,7 +346,7 @@ impl ArtifactEditor for LowpolyPlayApp {
         HashMap::from([(edit::windows::model::LOWPOLY_PLAY_WINDOW_MAIN.into(), engagement.clone()), (paint_mode::windows::uv::LOWPOLY_PLAY_WINDOW_UV.into(), engagement)])
     }
 
-    fn window_measures(_doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         let labels = semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::terminology::lowpoly_play_labels(view_state);
         let measures = lowpoly_window_measures(config, labels, &semio_s_artifact_lowpoly_lowpoly_options::select::SelectState::default());
@@ -355,7 +355,7 @@ impl ArtifactEditor for LowpolyPlayApp {
 
     /// 🎛️ The live measures: the granularity/selection-mode toggles read the mesh domain's current
     /// state, so the pressed toggle IS the one the next pick uses (they used to be always-off).
-    fn window_measures_with_request_context(_doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, view_state: &semio_plugin::ViewModel, interaction: &InteractionView<'_>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures_with_request_context(_doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, view_state: &semio_framework_plugin::ViewModel, interaction: &InteractionView<'_>) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         let labels = semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::terminology::lowpoly_play_labels(view_state);
         let select = semio_s_artifact_lowpoly_lowpoly_options::select::SelectState::from_interaction(interaction);

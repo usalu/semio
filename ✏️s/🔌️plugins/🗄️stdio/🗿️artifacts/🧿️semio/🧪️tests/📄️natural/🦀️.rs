@@ -1,5 +1,5 @@
 //! 📄️ Populated native editor payloads share neutral expectations and independent JSON observations.
-use semio_framework_plugin::ArtifactEditor;
+use semio_plugin::ArtifactEditor;
 use semio_framework_value::ToValue;
 use serde_json::Value;
 
@@ -85,7 +85,6 @@ where E::Snapshot:semio_framework_pack::snapshot::ArtifactDsl+PartialEq+std::fmt
     let canonical=input.print_dsl();
     let canonical_pack=input.encode_pack();
     assert!(canonical.len()<=262_144&&canonical_pack.len()<=262_144,"bounded canonical example evidence");
-    eprintln!("[DEBUG] semio-current-example {}",serde_json::json!({"subset":subset,"declaredSchema":E::DOCUMENT_SCHEMA,"schema":schema_of(&input),"dsl":canonical,"pack":canonical_pack}));
     assert_eq!(schema_of(&input),E::DOCUMENT_SCHEMA,"populated source owns the current typed schema");
     let sources=E::examples();assert_eq!(sources.len(),1,"{subset}: exactly one declared typed example");
     let source=&sources[0];assert_eq!(source.id(),row["id"].as_str().unwrap());
@@ -93,9 +92,9 @@ where E::Snapshot:semio_framework_pack::snapshot::ArtifactDsl+PartialEq+std::fmt
     let mut arguments=Some(semio_framework_value::DslValue::Object(vec![("exampleId".into(),semio_framework_value::DslValue::String(source.id().into()))]));
     let command=E::command_from_action(action,&mut arguments,&mut None).expect("public picker action produces its actual command");
     assert_eq!(E::command_id(&command),action);
-    let encoded=semio_framework_os_kernel::OpBinary::encode_op(&command).unwrap();
+    let encoded=semio_os_kernel::OpBinary::encode_op(&command).unwrap();
     if row["commandEncoding"]=="json"{let independent:Value=serde_json::from_slice(&encoded).unwrap();assert!(independent.is_object());}
-    let restored=<E::Command as semio_framework_os_kernel::OpBinary>::decode_op(&encoded).unwrap();
+    let restored=<E::Command as semio_os_kernel::OpBinary>::decode_op(&encoded).unwrap();
     assert_eq!(E::command_id(&restored),action);
     let text=source.document_json();
     assert_eq!(text,canonical,"{subset}: authored example equals actual current typed print");
@@ -271,7 +270,6 @@ fn typed_article_natural_file_preserves_all_authored_runs_and_marks(){
  assert_eq!(restored,input);assert_eq!(E::encode_natural_file(&restored).unwrap(),bytes);
  let observed:Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&restored)).unwrap();assert_eq!(observed,independent);
  let canonical=input.print_dsl();assert!(canonical.len()<=262_144&&bytes.len()<=262_144);
- eprintln!("[DEBUG] semio-current-article {}",serde_json::json!({"schema":E::DOCUMENT_SCHEMA,"runs":384,"marks":344,"dsl":canonical,"pack":bytes}));
  assert_eq!(source,canonical,"the authored DSL pin equals its current typed print");
  assert_eq!(std::fs::read(fixture.join("🎒️.pack.semio")).unwrap(),bytes,"the complete article Pack pin equals its actual native encoding");
 }

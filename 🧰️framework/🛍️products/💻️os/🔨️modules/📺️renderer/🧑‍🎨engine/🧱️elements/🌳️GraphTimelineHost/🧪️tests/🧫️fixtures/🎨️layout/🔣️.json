@@ -54,7 +54,7 @@
     "checkpointId": "c4",
     "laneNodeXPx": 32,
     "authorLeftPx": 20,
-    "avatarSizePx": 16,
+    "avatarSizePx": 24,
     "avatarOverlapPx": 8,
     "mutationLevel": "warning",
     "descriptionInert": true

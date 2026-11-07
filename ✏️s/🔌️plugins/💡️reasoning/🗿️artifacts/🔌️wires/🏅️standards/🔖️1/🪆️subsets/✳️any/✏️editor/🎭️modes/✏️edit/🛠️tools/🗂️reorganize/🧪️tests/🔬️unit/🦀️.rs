@@ -280,28 +280,28 @@ fn debug_reorganize_undo_settles() {
         if !app.has_pending_typed_operations() {
             break;
         }
-        PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("[DEBUG] maintenance");
-        ::semio_framework_async::poll::resolve_ready(app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("[DEBUG] advance");
+        PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("maintenance");
+        ::semio_framework_async::poll::resolve_ready(app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("advance");
         if let Some(page) = app.take_typed_operation_result_page(1) {
-            app.acknowledge_typed_operation_result(page.token).expect("[DEBUG] ack");
+            app.acknowledge_typed_operation_result(page.token).expect("ack");
         }
         while let Some(effect) = app.take_typed_operation_effect() {
         }
-        let _ = ::semio_framework_async::poll::resolve_ready(app.take_typed_operation_completion()).expect("[DEBUG] completion");
+        let _ = ::semio_framework_async::poll::resolve_ready(app.take_typed_operation_completion()).expect("completion");
     }
     let admitted = ::semio_framework_async::poll::resolve_ready(semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "undo", None, &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close));
     for turn in 0..4000 {
         if !app.has_pending_typed_operations() {
             break;
         }
-        PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("[DEBUG] maintenance");
-        ::semio_framework_async::poll::resolve_ready(app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("[DEBUG] advance");
+        PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("maintenance");
+        ::semio_framework_async::poll::resolve_ready(app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("advance");
         while let Some(page) = app.take_typed_operation_result_page(1) {
-            app.acknowledge_typed_operation_result(page.token).expect("[DEBUG] ack");
+            app.acknowledge_typed_operation_result(page.token).expect("ack");
         }
         while let Some(effect) = app.take_typed_operation_effect() {
         }
-        let _ = ::semio_framework_async::poll::resolve_ready(app.take_typed_operation_completion()).expect("[DEBUG] completion");
+        let _ = ::semio_framework_async::poll::resolve_ready(app.take_typed_operation_completion()).expect("completion");
     }
     close(app);
 }

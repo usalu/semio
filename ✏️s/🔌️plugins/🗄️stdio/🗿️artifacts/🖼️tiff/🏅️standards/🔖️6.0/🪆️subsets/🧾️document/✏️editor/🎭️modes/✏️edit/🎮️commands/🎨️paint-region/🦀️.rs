@@ -145,3 +145,5 @@ impl ArtifactCommandWork<EditorApp<TiffAnyEditor>> for PaintRegionWork {
         self.closing && self.revision.is_none()
     }
 }
+
+semio_plugin::retained_command::terminal_frame_bound!(PaintRegionWork);

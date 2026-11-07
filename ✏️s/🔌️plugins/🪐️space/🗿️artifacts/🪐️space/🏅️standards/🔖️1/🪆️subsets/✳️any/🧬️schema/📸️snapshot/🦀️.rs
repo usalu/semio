@@ -8,7 +8,7 @@ use semio_s_space_core::time::utc_minute_text;
 //#region 🔖️Dialect
 /// 🪪️ One artifact's coordinate inside a space's index — mirrors the freeze's
 /// `dialect { artifactKind, standard, subset }` shape.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 pub struct SpaceArtifactDialect {
@@ -21,7 +21,7 @@ pub struct SpaceArtifactDialect {
 //#region 🔖️Row
 /// 📇️ One row of a space's artifact index — persisted metadata only, never the artifact's own
 /// document bytes (those live in their own backbone document, addressed by `id`).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 pub struct SpaceArtifactRow {

@@ -1,5 +1,6 @@
 import { availableParallelism } from "node:os";
 import { repoCacheDirectory } from "../../⚡️caching/🟦️.ts";
+import { playwrightBrowsersPathV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
 /** 🧵️ Resolves the shared build task and worker capacity for this machine. */
 export function semioBuildParallel(): number {
@@ -28,11 +29,16 @@ export function devToolingEnv(extra: Partial<NodeJS.ProcessEnv> = {}): NodeJS.Pr
   return env;
 }
 
+/** 🎭️ The repository's shared Playwright browser cache, named once by the tool registry and rooted in the repository cache layout. */
+export function repoPlaywrightBrowsersPath(repoRoot: string): string {
+  return playwrightBrowsersPathV1(repoRoot, (...segments) => repoCacheDirectory(repoRoot, ...segments));
+}
+
 /** ⚡️ Routes Go's build cache and Playwright's browser downloads into the shared cache root; never overrides a value the caller set explicitly. */
 export function repoToolCacheEnv(repoRoot: string, extra: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
   const env = { ...extra };
   env.GOCACHE ??= repoCacheDirectory(repoRoot, "go");
-  env.PLAYWRIGHT_BROWSERS_PATH ??= repoCacheDirectory(repoRoot, "tools", "ms-playwright");
+  env.PLAYWRIGHT_BROWSERS_PATH ??= repoPlaywrightBrowsersPath(repoRoot);
   return env;
 }
 

@@ -178,12 +178,12 @@ fn owned_document_closure_cancellation_generation_and_deadline_retain_source() {
     ] {
         let source = chain(3);
         let original = source.members.as_ptr();
-        let mut cursor = OwnedDocumentClosure::new(OperationId(11), Generation(13), 7, 100);
+        let mut cursor = OwnedDocumentClosure::new(OperationId(11), Generation(13), 7, 100).with_replacement(Some(semio_framework_job::ReplacementIdentity::new(1, OperationId(11), Generation(13))));
         let mut sequence = 0;
         let cancel = root_cancel_token();
         let mut original_retained_progress_5 = semio_framework_value::RetainedCloneProgress::default();
         let mut first = StepContext::new(OperationId(11), Generation(13), StepBudget::new(2, 99, semio_framework_value::testing::physical_test_close_grant()), cancel.clone(), || Some(1), &mut sequence, &mut original_retained_progress_5);
-        assert!(matches!(cursor.step(&source, &mut first), OwnedDocumentClosureStep::Pending(_)));
+        assert!(matches!(first.with_replacement_current(semio_framework_job::ReplacementIdentity::new(1, OperationId(11), Generation(13)), |first| cursor.step(&source, first)), OwnedDocumentClosureStep::Pending(_)));
         drop(first);
         let progress = cursor.progress();
         source.generation.set(source_generation);
@@ -192,8 +192,9 @@ fn owned_document_closure_cancellation_generation_and_deadline_retain_source() {
         }
         let clock: fn() -> Option<u64> = if now == 100 { || Some(100) } else { || Some(1) };
         let mut original_retained_progress_6 = semio_framework_value::RetainedCloneProgress::default();
-        let mut cx = StepContext::new(OperationId(operation), Generation(generation), StepBudget::new(64, 999, semio_framework_value::testing::physical_test_close_grant()), cancel, clock, &mut sequence, &mut original_retained_progress_6);
-        assert_eq!(cursor.step(&source, &mut cx), OwnedDocumentClosureStep::Rejected(reason));
+        let mut cx = StepContext::new(OperationId(901), Generation(77), StepBudget::new(64, 999, semio_framework_value::testing::physical_test_close_grant()), cancel, clock, &mut sequence, &mut original_retained_progress_6);
+        let current = semio_framework_job::ReplacementIdentity::new(1, OperationId(operation), Generation(generation));
+        assert_eq!(cx.with_replacement_current(current, |cx| cursor.step(&source, cx)), OwnedDocumentClosureStep::Rejected(reason));
         assert_eq!(cursor.progress(), progress);
         assert_eq!(source.members.as_ptr(), original);
         assert_eq!(source.members.len(), 3);

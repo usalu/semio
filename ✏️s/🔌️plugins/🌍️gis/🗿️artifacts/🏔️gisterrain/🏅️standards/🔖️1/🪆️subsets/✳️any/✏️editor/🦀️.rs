@@ -258,6 +258,7 @@ struct Gis3dOneItemPreparation<P: 'static, M: 'static> {
     prepare: Gis3dPrepareOne<P, M>,
     phase: u8,
     cancelled: bool,
+    last_work: u64,
 }
 
 fn gis3d_bounded_serialized_bytes<T: semio_framework_value::ToValue>(value: &T) -> Result<usize, semio_framework_value::ValueError> {
@@ -285,12 +286,14 @@ where
     M: semio_framework_value::ToValue + semio_framework_value::retirement::RetireOwned + Send + 'static,
 {
     fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, _receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        self.last_work = 0;
         if !grant.permits_one() || self.cancelled {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         if self.owners.refused.is_some() {
             return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal"));
         }
+        self.last_work = 1;
         if self.owners.prepared.is_some() || self.phase >= 2 {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
         }
@@ -322,6 +325,9 @@ where
         }
     }
 
+    fn last_turn_work(&self) -> u64 {
+        self.last_work
+    }
     fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
         self.checkpoint
     }
@@ -372,6 +378,7 @@ where
         prepare,
         phase: 0,
         cancelled: false,
+        last_work: 0,
     }))
 }
 

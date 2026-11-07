@@ -10,7 +10,7 @@ pub(crate) fn validate(snapshot: &PptxSnapshot, subset: &str, control: &mut Sqli
     let mut native = NativeEncodeControl::new(limits.max_value_bytes, &mut callback);
     let diagnostics = check(snapshot, subset, &mut native).map_err(store::io_schema::IoError::from_value_error)?;
     if diagnostics.iter().any(|item| matches!(item.severity, Severity::Error | Severity::Fatal)) {
-        Err(store::io_schema::IoError { cause: ValueError::new(ValueRefusalKind::InvalidValue, "PPTX owned snapshot violates its exact profile"), diagnostics })
+        Err(store::io_schema::IoError { cause: ValueError::new(ValueRefusalKind::InvalidValue, "PPTX owned snapshot violates its exact profile").into(), diagnostics })
     } else {
         Ok(store::io_schema::IoOutcome { value: (), diagnostics })
     }

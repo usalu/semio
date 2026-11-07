@@ -111,8 +111,7 @@ pub(super) fn drawing_mutation_fill(mutation: &DrawingMutation) -> &FillStyle { 
 pub(super) fn drawing_mutation_stroke(mutation: &DrawingMutation) -> &StrokeStyle { match mutation { DrawingMutation::ReplaceLayerStroke(value) => value.stroke.as_ref().expect("stroke clone source is present"), _ => unreachable!("stroke clone source is projected from its own variant") } }
 
 pub struct DrawingMutationCandidateAuthority {
-    pub operation: semio_framework_job::OperationId,
-    pub generation: semio_framework_job::Generation,
+    pub replacement: Option<semio_framework_job::ReplacementIdentity>,
     pub arena_pool: Option<std::sync::Arc<DrawingMutationArenaPool>>,
     pub arena_slot: usize,
     pub arena_generation: u64,
@@ -155,21 +154,20 @@ impl DrawingMutationCandidateAuthority {
     /// 🧮️ Borrows one slot of the process arena pool. `NotReady` (the pool is still bootstrapping under
     /// maintenance) and `Contended` (another thread holds the pool for one bounded borrow) are
     /// transient: the caller yields and borrows again on a later step.
-    pub fn try_new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Result<Self, DrawingMutationArenaBorrowError> {
+    pub fn try_new(replacement: Option<semio_framework_job::ReplacementIdentity>) -> Result<Self, DrawingMutationArenaBorrowError> {
         let (arena_pool, arena_slot, arena_generation, owner) = borrow_drawing_mutation_arena()?;
-        Ok(Self::from_arena(operation, generation, arena_pool, arena_slot, arena_generation, owner))
+        Ok(Self::from_arena(replacement, arena_pool, arena_slot, arena_generation, owner))
     }
 
     #[cfg(any(test, feature = "testkit"))]
-    pub fn try_new_from_pool(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, pool: std::sync::Arc<DrawingMutationArenaPool>) -> Result<Self, &'static str> {
+    pub fn try_new_from_pool(replacement: Option<semio_framework_job::ReplacementIdentity>, pool: std::sync::Arc<DrawingMutationArenaPool>) -> Result<Self, &'static str> {
         let (arena_pool, arena_slot, arena_generation, owner) = borrow_drawing_mutation_arena_from(pool)?;
-        Ok(Self::from_arena(operation, generation, arena_pool, arena_slot, arena_generation, owner))
+        Ok(Self::from_arena(replacement, arena_pool, arena_slot, arena_generation, owner))
     }
 
-    pub fn from_arena(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, arena_pool: std::sync::Arc<DrawingMutationArenaPool>, arena_slot: usize, arena_generation: u64, owner: DrawingMutationArenaOwner) -> Self {
+    pub fn from_arena(replacement: Option<semio_framework_job::ReplacementIdentity>, arena_pool: std::sync::Arc<DrawingMutationArenaPool>, arena_slot: usize, arena_generation: u64, owner: DrawingMutationArenaOwner) -> Self {
         Self {
-            operation,
-            generation,
+            replacement,
             arena_pool: Some(arena_pool),
             arena_slot,
             arena_generation,
@@ -406,6 +404,7 @@ impl DrawingMutationCandidateAuthority {
         } else {
             return Ok(false);
         }
+        .result
         .map_err(|_| "drawing-store.mutation-retirement")?;
         cx.consume_retained(step.progress()).map_err(|_| "drawing-store.mutation-retirement-grant")?;
         cx.consume_fuel(1);
@@ -528,10 +527,10 @@ impl DrawingMutationCandidateAuthority {
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if self.retirement.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| RetainedCloneStep::Progress(step.progress()));
+            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).result.map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if self.retire_pending.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.retire_pending, &mut self.retirement, grant);
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.retire_pending, &mut self.retirement, grant).result;
         }
         if let Some(rewrite) = self.duplicate_rewrite.as_mut() {
             let step = rewrite.close_step(child)?;
@@ -563,7 +562,7 @@ impl DrawingMutationCandidateAuthority {
         macro_rules! close_clone {
             ($slot:expr, $label:literal) => {
                 if let Some(owner) = $slot.as_mut() {
-                    let step = owner.close_step(child)?;
+                    let step = owner.close_step(child).result?;
                     if matches!(step, RetainedCloneStep::Complete(_)) {
                         if !owner.terminal_is_empty() { return Err(false_terminal(concat!($label, " reported false terminal"))); }
                         drop($slot.take());

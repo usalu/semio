@@ -60,3 +60,17 @@ fn cancelling_a_prepared_typed_payload_returns_both_distinct_original_allocation
  let mut returned=None;for _ in 0..f["maximumTurns"].as_u64().unwrap(){if owner.terminal_is_empty(){break}let g=bank.grant();let(turn,heap)=observe_retirement_allocations(||owner.return_inputs(&mut returned,g));bank.post(turn,heap).unwrap();}assert!(owner.terminal_is_empty());let(value,authority)=returned.unwrap();assert_eq!((value.as_ptr(),authority.as_ptr()),pointers);assert_eq!(serde_json::to_string(&authority).unwrap(),"\"authority 🌿\"");close_value(value,&mut bank,&f);close_value(authority,&mut bank,&f);assert_eq!(observe_retirement_allocations(||drop(owner)).1,(0,0));
  }
 }
+
+/// 📤️ A published source is visible as such, returning inputs before it is taken is refused, and taking it first lets the owner close.
+#[test]
+fn a_published_source_is_reported_and_must_be_taken_before_inputs_return(){
+ let f=fixture();let value=f["texts"][0].as_str().unwrap().to_owned();let pointer=value.as_ptr();let mut owner=RetainedCloneSourceAdmission::new(value,(),|s|s);let mut bank=Bank::new(&f);
+ assert!(!owner.output_published());
+ for _ in 0..f["maximumTurns"].as_u64().unwrap(){if owner.phase()=="ready"{break}let g=bank.grant();let(turn,heap)=observe_retirement_allocations(||owner.advance(g));bank.post(turn,heap).unwrap();}
+ assert!(owner.output_published());
+ let mut returned=None;let refused=owner.return_inputs(&mut returned,bank.grant());assert_eq!(refused.result.unwrap_err().kind,ValueRefusalKind::InvalidValue);assert!(returned.is_none());assert!(owner.output_published());
+ let mut source=None;let g=bank.grant();let(turn,heap)=observe_retirement_allocations(||owner.take_output(&mut source,g));bank.post(turn,heap).unwrap();
+ assert!(!owner.output_published());assert!(owner.terminal_is_empty());let mut source=source.unwrap();assert_eq!(source.borrow().get().as_ptr(),pointer);
+ let mut output=None;for _ in 0..f["maximumTurns"].as_u64().unwrap(){if source.terminal_is_empty(){break}let g=bank.grant();let(turn,heap)=observe_retirement_allocations(||source.take_authority(g));let work=turn.work;let mapped=turn.result.map(|step|match step{crate::RetainedCloneSourceTake::Pending(p)=>S::Progress(p),crate::RetainedCloneSourceTake::Ready(value,p)=>{output=Some(value);S::Complete(p)}});bank.post(crate::RetainedWorkOutcome{result:mapped,work},heap).unwrap();}
+ assert!(source.terminal_is_empty());assert_eq!(output.as_ref().unwrap().as_ptr(),pointer);drop((source,owner));close_value(output.unwrap(),&mut bank,&f);
+}

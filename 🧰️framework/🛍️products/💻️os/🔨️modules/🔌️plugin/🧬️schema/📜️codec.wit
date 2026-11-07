@@ -20,16 +20,6 @@ package semio:framework@1.0.0;
 interface codec {
   use reactor.{actor-context-budget};
   enum snapshot-encoding { binary, text }
-  record snapshot-limits {
-    max-file-bytes: u64,
-    max-value-bytes: u64,
-    max-allocation-bytes: u64,
-    max-schema-bytes: u64,
-    max-rows: u64,
-    max-columns: u64,
-    max-tables: u64,
-    max-pages: u64,
-  }
   /// 📦️ Diagnostic arrays use the first-party value pack; they are transport data, outside the SQLite file.
   record snapshot-file { bytes: list<u8>, diagnostics: pack }
   record snapshot-payload { encoding: snapshot-encoding, bytes: list<u8>, diagnostics: pack }

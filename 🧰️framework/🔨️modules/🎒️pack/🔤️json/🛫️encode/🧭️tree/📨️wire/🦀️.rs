@@ -53,7 +53,7 @@ impl<T:Tree+RetireOwned> ArtifactCanonicalJsonTreeWireCursor<T>{
    1|2|6|7|10=>header(),
    3|8=>self.tree.as_ref().map_or(Ok(header()),|tree|if tree.terminal_is_empty(){Ok(header())}else{tree.next_demand()})?,
    4=>RetirementDemand{capacity_bytes:self.length,depth:1,..Default::default()},
-   5 if self.wire.len()<self.length=>RetirementDemand{copy_bytes:usize::from(body!=0),depth:1,..Default::default()},
+   5 if self.wire.len()<self.length=>RetirementDemand{copy_bytes:(self.length-self.wire.len()).min(body).min(64),depth:1,..Default::default()},
    5=>header(),
    9=>self.source.as_ref().map_or(Ok(header()),|source|if source.terminal_is_empty(){Ok(header())}else{source.next_close_demand(body)})?,
    _=>Default::default(),

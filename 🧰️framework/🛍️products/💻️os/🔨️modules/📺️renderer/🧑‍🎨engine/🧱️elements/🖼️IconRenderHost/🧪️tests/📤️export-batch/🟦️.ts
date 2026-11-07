@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv from "ajv";
 import { describe, expect, it } from "vitest";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -12,20 +12,20 @@ const queueCases = fixture.queueCases as readonly { name: string; groups: readon
 
 describe("Icon export batch admission", () => {
   it("validates the original close's independent backing and zero-work witnesses", () => {
-    const validate = new Ajv2020({ strict: true }).compile(read("🧬️schema/📤️export-request/🎟️original-close.json"));
+    const validate = new Ajv({ strict: true }).compile(read("🧬️schema/📤️export-request/🎟️original-close.json"));
     expect(validate(fixture.originalClose)).toBe(true);
     expect(Buffer.byteLength(fixture.originalClose.text)).toBe(fixture.originalClose.expected.backingBytes);
     expect({...fixture.originalClose.expected, backingBytes:Buffer.byteLength(fixture.originalClose.text)}).toEqual(fixture.originalClose.expected);
   });
   
   it("rejects each invalid request independently using the schema oracle", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(read("🧬️schema/📤️export-request/🔣️.json"));
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(read("🧬️schema/📤️export-request/🔣️.json"));
     const accepted = fixture.invalid.filter((item: { request: unknown }) => validate(item.request));
     expect(accepted).toHaveLength(fixture.expected.completed);
     expect(fixture.invalid.length - accepted.length).toBe(fixture.expected.failed);
   });
   it.each(queueCases)("preserves admission and cancellation scope: $name", async (scenario) => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(read("🧬️schema/📤️export-request/🔣️.json"));
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(read("🧬️schema/📤️export-request/🔣️.json"));
     let controller = new AbortController();
     const requests: Array<{ request: unknown; signal: AbortSignal }> = [];
     for (let index = 0; index <= scenario.groups.length; index++) {

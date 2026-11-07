@@ -1,6 +1,9 @@
 //! 🪟️ Mounted editor pane laws over the bundled BESTEST case 600: it loads into the native owner, one action applies natively and undoes and redoes through history.
 #![cfg(test)]
 
+#[global_allocator]
+static MOUNTED_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+
 use semio_os_kernel::{os_store, ActorId, LOCAL_ACTOR_ID};
 use semio_plugin::artifact_app_laws as laws;
 use semio_plugin::{App, DslValue, EditorApp, MountedOwnerPolicyV1, PluginApp as _, VcsArtifactApp, ViewModel};

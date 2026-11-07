@@ -18,7 +18,7 @@ pub const FLOW_EVAL_TICK_ACTION: &str = "flowEvalTick";
 /// as in generation2d's `🧵️preview-eval` (`PREVIEW_EVAL_HOP_REQUEST`). Three call sites used to mint
 /// three different ids (105/106/107) for one chain, which correlated nothing and only hid that the
 /// hop was unaddressed.
-pub(crate) const FLOW_EVAL_HOP_REQUEST: u64 = 107;
+pub const FLOW_EVAL_HOP_REQUEST: u64 = 107;
 
 /// 🪟️ The one argument object every hop carries, on the redispatch and on the extension request
 /// alike — `reactor::extension_response_args` echoes an invocation request's own fields onto the
@@ -85,7 +85,7 @@ pub fn tick_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, sessi
     let parked = host.take_pending_extension_evals();
     let servable = may_rearm(&host.host_snapshot);
     let mut dependencies: std::collections::BTreeMap<_, _> = parked.iter().filter(|pending|!session.has_evaluation_progress(pending.node_hash)).map(|pending| (pending.neuron_id.clone(), flow::flow_inference_dependency_json(&host.host_snapshot, &pending.neuron_id))).collect();
-    host.retire_cold().map_err(crate::editor::flow::host::value_fault)?;
+    host.retire_cold().or_else(|refusal|refusal.resolve()).map_err(crate::editor::flow::host::value_fault)?;
     let mut extension_invocations = Vec::new();
     for pending in parked {
         let resume=session.has_evaluation_progress(pending.node_hash);

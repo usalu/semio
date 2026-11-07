@@ -279,9 +279,21 @@ impl ArtifactViewer for DrawingViewer {
     }
 
 
+    fn mounted_job_prepare_snapshot_read(operation: semio_plugin::AppRenderOperationContext, snapshot: &Self::Snapshot, _windows: &semio_plugin::WindowConfigOwnerRegistry, _view: Option<&semio_plugin::ViewModel>, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_plugin::MountedSnapshotReadPreparation {
+        semio_plugin::MountedSnapshotReadPreparation { ready: semio_s_artifact_draw_drawing_scene_mounted::prepare(operation, snapshot), progress: Default::default() }
+    }
+    fn mounted_job_maintenance_demands(instance: u32, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { semio_s_artifact_draw_drawing_scene_mounted::maintenance_demands(instance, body) }
+    fn mounted_job_maintenance_step(instance: u32, _cx: &mut semio_framework_job::StepContext<'_>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_plugin::PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> { semio_s_artifact_draw_drawing_scene_mounted::maintenance(instance, grant).map_err(semio_plugin::PluginLifecycleFailure::from) }
+    fn mounted_job_close_demands(instance: u32, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { semio_s_artifact_draw_drawing_scene_mounted::close_demands(instance, body) }
+    fn mounted_job_close_step(instance: u32, _cx: &mut semio_framework_job::StepContext<'_>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_plugin::PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> { semio_s_artifact_draw_drawing_scene_mounted::close(instance, grant).map_err(semio_plugin::PluginLifecycleFailure::from) }
+    fn mounted_jobs_terminal_is_empty(instance: u32) -> bool { semio_s_artifact_draw_drawing_scene_mounted::terminal_is_empty(instance) }
+    fn pending_effects(_owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle, doc: &semio_plugin::ArtifactPendingView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view: Option<&semio_plugin::ViewModel>) -> Vec<semio_framework::kernel::Effect> {
+        semio_s_artifact_draw_drawing_scene_mounted::reconcile(Some(doc.render_operation()), || doc.take_snapshot_read())
+    }
+
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let root = match body_key {
-            canvas::BODY_KEY => canvas::render_with_camera(doc.snapshot,&canvas::config::current(cfg)),
+            canvas::BODY_KEY => semio_s_artifact_draw_drawing_scene_mounted::with_visual(doc.render_operation(), |prepared, _revision, _fresh| canvas::render_with_camera(prepared.map(|scene| &scene.plan), doc.snapshot, &canvas::config::current(cfg))),
             _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
                 .map_err(|_| semio_plugin::PluginAssemblyError::new("drawing.viewer.body.label", "the fixed Drawing viewer label exceeds its UI bound")),
         }?;

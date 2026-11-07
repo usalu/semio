@@ -1735,6 +1735,783 @@
           "endPath"
         ]
       }
+    },
+    {
+      "name": "removed: background drawing fits an offset plan onto the page",
+      "content": {
+        "schema": "drawing.document",
+        "id": "offset",
+        "title": "offset",
+        "assets": {},
+        "layers": [
+          {
+            "id": "p",
+            "kind": "path",
+            "name": "p",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero",
+              "stroke": {
+                "color": [
+                  0.15,
+                  0.2,
+                  0.28,
+                  1
+                ],
+                "width": 1,
+                "cap": "round",
+                "join": "round"
+              }
+            },
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  10,
+                  20
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  110,
+                  20
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  110,
+                  70
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  10,
+                  70
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ]
+          }
+        ]
+      },
+      "target": {
+        "x": 0,
+        "y": 0,
+        "width": 100,
+        "height": 50,
+        "rotation": 0
+      },
+      "expected": {
+        "bounds": {
+          "left": 10,
+          "top": 20,
+          "right": 110,
+          "bottom": 70
+        },
+        "affine": {
+          "xx": 1,
+          "xy": 0,
+          "yx": 0,
+          "yy": 1,
+          "dx": -10,
+          "dy": -20
+        },
+        "textExtents": [],
+        "primitiveKinds": [
+          "beginPath",
+          "segment",
+          "segment",
+          "segment",
+          "segment",
+          "segment",
+          "endPath"
+        ]
+      }
+    },
+    {
+      "name": "removed: hidden background layer contributes no geometry",
+      "content": {
+        "schema": "drawing.document",
+        "id": "hidden",
+        "title": "hidden",
+        "assets": {},
+        "layers": [
+          {
+            "id": "p",
+            "kind": "path",
+            "name": "p",
+            "visible": false,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero",
+              "stroke": {
+                "color": [
+                  0.15,
+                  0.2,
+                  0.28,
+                  1
+                ],
+                "width": 1,
+                "cap": "round",
+                "join": "round"
+              }
+            },
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  10,
+                  20
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  110,
+                  20
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  110,
+                  70
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  10,
+                  70
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ]
+          }
+        ]
+      },
+      "target": {
+        "x": 0,
+        "y": 0,
+        "width": 100,
+        "height": 50,
+        "rotation": 0
+      },
+      "expected": {
+        "bounds": null,
+        "affine": {
+          "xx": 1,
+          "xy": 0,
+          "yx": 0,
+          "yy": 1,
+          "dx": 0,
+          "dy": 0
+        },
+        "textExtents": [],
+        "primitiveKinds": []
+      }
+    },
+    {
+      "name": "removed: placed drawing frame fits the plan inside its bounds",
+      "content": {
+        "schema": "drawing.document",
+        "id": "unit",
+        "title": "unit",
+        "assets": {},
+        "layers": [
+          {
+            "id": "p",
+            "kind": "path",
+            "name": "p",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero",
+              "stroke": {
+                "color": [
+                  0.15,
+                  0.2,
+                  0.28,
+                  1
+                ],
+                "width": 1,
+                "cap": "round",
+                "join": "round"
+              }
+            },
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  1,
+                  1
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ]
+          }
+        ]
+      },
+      "target": {
+        "x": 146,
+        "y": 435,
+        "width": 40,
+        "height": 40,
+        "rotation": 0
+      },
+      "expected": {
+        "bounds": {
+          "left": 0,
+          "top": 0,
+          "right": 1,
+          "bottom": 1
+        },
+        "affine": {
+          "xx": 40,
+          "xy": 0,
+          "yx": 0,
+          "yy": 40,
+          "dx": 146,
+          "dy": 435
+        },
+        "textExtents": [],
+        "primitiveKinds": [
+          "beginPath",
+          "segment",
+          "segment",
+          "segment",
+          "segment",
+          "segment",
+          "endPath"
+        ]
+      }
+    },
+    {
+      "name": "removed: drawing text lands inside the placed frame",
+      "content": {
+        "schema": "drawing.document",
+        "id": "text",
+        "title": "text",
+        "assets": {},
+        "layers": [
+          {
+            "id": "p",
+            "kind": "path",
+            "name": "p",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero",
+              "stroke": {
+                "color": [
+                  0.15,
+                  0.2,
+                  0.28,
+                  1
+                ],
+                "width": 1,
+                "cap": "round",
+                "join": "round"
+              }
+            },
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  100,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  100,
+                  50
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  0,
+                  50
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ]
+          },
+          {
+            "id": "t",
+            "kind": "text",
+            "name": "t",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero",
+              "fill": {
+                "kind": "solid",
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              }
+            },
+            "x": 10,
+            "y": 30,
+            "content": "Plan",
+            "size": 11,
+            "fontFamily": "shareTechMono"
+          }
+        ]
+      },
+      "target": {
+        "x": 20,
+        "y": 30,
+        "width": 200,
+        "height": 100,
+        "rotation": 0
+      },
+      "expected": {
+        "bounds": {
+          "left": 0,
+          "top": 0,
+          "right": 100,
+          "bottom": 50
+        },
+        "affine": {
+          "xx": 2,
+          "xy": 0,
+          "yx": 0,
+          "yy": 2,
+          "dx": 20,
+          "dy": 30
+        },
+        "textExtents": [
+          {
+            "index": 0,
+            "content": "Plan",
+            "bounds": {
+              "left": 0,
+              "top": -8,
+              "right": 22.01123046875,
+              "bottom": 0
+            }
+          }
+        ],
+        "primitiveKinds": [
+          "beginPath",
+          "segment",
+          "segment",
+          "segment",
+          "segment",
+          "segment",
+          "endPath",
+          "text"
+        ]
+      }
+    },
+    {
+      "name": "removed: embedded png fits the placed frame",
+      "content": {
+        "schema": "drawing.document",
+        "id": "png",
+        "title": "png",
+        "assets": {
+          "i": {
+            "width": 1,
+            "height": 1,
+            "samples": [
+              [
+                255,
+                0,
+                0,
+                255
+              ]
+            ]
+          }
+        },
+        "layers": [
+          {
+            "id": "i",
+            "kind": "image",
+            "name": "i",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 5,
+              "y": 5,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero"
+            },
+            "imageKey": "i",
+            "width": 10,
+            "height": 10
+          }
+        ]
+      },
+      "target": {
+        "x": 10,
+        "y": 10,
+        "width": 50,
+        "height": 50,
+        "rotation": 0
+      },
+      "expected": {
+        "bounds": {
+          "left": 5,
+          "top": 5,
+          "right": 15,
+          "bottom": 15
+        },
+        "affine": {
+          "xx": 5,
+          "xy": 0,
+          "yx": 0,
+          "yy": 5,
+          "dx": -15,
+          "dy": -15
+        },
+        "textExtents": [],
+        "primitiveKinds": [
+          "resolve"
+        ]
+      }
+    },
+    {
+      "name": "removed: imported arc bulges off its chord",
+      "content": {
+        "schema": "drawing.document",
+        "id": "arc",
+        "title": "arc",
+        "assets": {},
+        "layers": [
+          {
+            "id": "a",
+            "kind": "path",
+            "name": "a",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero",
+              "stroke": {
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ],
+                "width": 1,
+                "cap": "round",
+                "join": "round"
+              }
+            },
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "arc",
+                "rx": 10,
+                "ry": 10,
+                "rotation": 0,
+                "largeArc": false,
+                "sweep": true,
+                "to": [
+                  20,
+                  0
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "target": {
+        "x": 0,
+        "y": 0,
+        "width": 100,
+        "height": 50,
+        "rotation": 0
+      },
+      "expected": {
+        "bounds": {
+          "left": 0,
+          "top": -10,
+          "right": 20,
+          "bottom": 0
+        },
+        "affine": {
+          "xx": 5,
+          "xy": 0,
+          "yx": 0,
+          "yy": 5,
+          "dx": 0,
+          "dy": 50
+        },
+        "textExtents": [],
+        "primitiveKinds": [
+          "beginPath",
+          "segment",
+          "segment",
+          "endPath"
+        ]
+      }
+    },
+    {
+      "name": "removed: rotated drawing frame turns the plan and keeps its png",
+      "content": {
+        "schema": "drawing.document",
+        "id": "rot",
+        "title": "rot",
+        "assets": {
+          "i": {
+            "width": 1,
+            "height": 1,
+            "samples": [
+              [
+                255,
+                0,
+                0,
+                255
+              ]
+            ]
+          }
+        },
+        "layers": [
+          {
+            "id": "p",
+            "kind": "path",
+            "name": "p",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero",
+              "stroke": {
+                "color": [
+                  0.15,
+                  0.2,
+                  0.28,
+                  1
+                ],
+                "width": 1,
+                "cap": "round",
+                "join": "round"
+              }
+            },
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  100,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  100,
+                  50
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  0,
+                  50
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ]
+          },
+          {
+            "id": "i",
+            "kind": "image",
+            "name": "i",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 5,
+              "y": 5,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero"
+            },
+            "imageKey": "i",
+            "width": 10,
+            "height": 10
+          }
+        ]
+      },
+      "target": {
+        "x": 30,
+        "y": 40,
+        "width": 120,
+        "height": 80,
+        "rotation": 0.7853981633974483
+      },
+      "expected": {
+        "bounds": {
+          "left": 0,
+          "top": 0,
+          "right": 100,
+          "bottom": 50
+        },
+        "affine": {
+          "xx": 0.848528137423857,
+          "xy": -0.8485281374238569,
+          "yx": 0.8485281374238569,
+          "yy": 0.848528137423857,
+          "dx": 68.78679656440357,
+          "dy": 16.36038969321072
+        },
+        "textExtents": [],
+        "primitiveKinds": [
+          "beginPath",
+          "segment",
+          "segment",
+          "segment",
+          "segment",
+          "segment",
+          "endPath",
+          "resolve"
+        ]
+      }
     }
   ],
   "cuts": [

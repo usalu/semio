@@ -67,3 +67,7 @@ mod field_refusal_tests;
 
 #[path="🪆️binding/🎮️operation/🦀️.rs"]
 pub mod variants_text;
+#[path="🪞️transparent/🦀️.rs"]
+pub mod transparent;
+#[path="🧲️bounded-scalar/🦀️.rs"]
+mod bounded_scalar;

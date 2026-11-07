@@ -47,7 +47,7 @@ impl<T:RetireOwned> ScratchRowsWork<T>{
   if self.pending.is_some()||self.payload.is_some(){let value=self.pending.take().or_else(||self.payload.take()).unwrap();self.displaced=Some(ControlledRetirement::new(value).unwrap_or_else(|_|unreachable!("scratch payload has native retirement")));self.work=1;self.progress.copied_items=1;return Ok(RetainedCloneStep::Progress(self.progress))}
   if let Some(original)=self.original.as_mut(){let turn=original.step(grant);self.work=turn.work;self.progress=turn.result?.progress();if original.terminal_is_empty(){self.original=None}return Ok(RetainedCloneStep::Progress(self.progress))}
   if let Some(owner)=self.output_close.as_mut(){let result=owner.step(grant);self.work=owner.last_turn_work();self.progress=owner.step_progress();result?;if owner.terminal_is_empty(){self.output_close=None}return Ok(RetainedCloneStep::Progress(self.progress))}
-  let output=std::mem::take(&mut self.output);self.output_close=Some(ControlledRetirement::new(output).unwrap_or_else(|_|unreachable!("scratch vector has native retirement")));self.work=1;self.progress.copied_items=1;Ok(RetainedCloneStep::Progress(self.progress))
+  let output=std::mem::take(&mut*self.output);self.output_close=Some(ControlledRetirement::new(output).unwrap_or_else(|_|unreachable!("scratch vector has native retirement")));self.work=1;self.progress.copied_items=1;Ok(RetainedCloneStep::Progress(self.progress))
  }
  pub fn step_progress(&self)->RetainedCloneProgress{self.progress}
  pub fn last_turn_work(&self)->u64{self.work}

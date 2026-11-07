@@ -10,3 +10,6 @@ impl protocol::OpBinary for CollectionMutation {
         dsl::variants_binary::decode_op(bytes)
     }
 }
+
+semio_os_kernel::original_ordinal_operation_receiving!(CollectionMutation);
+semio_os_kernel::artifact_persisted_binary_operation!(CollectionMutation);

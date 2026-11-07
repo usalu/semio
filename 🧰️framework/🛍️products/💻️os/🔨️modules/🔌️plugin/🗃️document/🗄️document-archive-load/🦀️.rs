@@ -128,7 +128,7 @@ impl PendingDocumentArchiveMember {
         };
         let ordinal = entry.ordinal as usize;
         drop(entry);
-        let request = match store::MemberOpenRequest::new(handle.operation, handle.generation, u64::MAX, reference.clone(), Some(owner.clone()), pages, actor).admit(1) {
+        let request = match store::MemberOpenRequest::new(handle.operation, handle.generation, u64::MAX, reference.clone(), Some(owner.clone()), pages, actor).with_replacement(semio_framework_job::ReplacementIdentity::new(handle.operation.0, handle.operation, handle.generation)).admit(1) {
             Ok(request) => request,
             Err(rejected) => {
                 let ingress = OwnedDocumentMemberIngress { identity: ManuallyDrop::new(Some((ordinal, reference, owner))), request: ManuallyDrop::new(Some(rejected.request)), identity_field: 0,last_work:0 };

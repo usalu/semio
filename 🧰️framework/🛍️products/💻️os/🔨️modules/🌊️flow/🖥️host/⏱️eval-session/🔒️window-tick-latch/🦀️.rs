@@ -226,7 +226,7 @@ impl FlowEvalSession{
  /// 📏️ Quotes the same fixed keyed window-publication record event.
  pub fn window_evaluation_publication_demands()->RetirementDemand{semio_os_flow_host_source::window_latch::flow_window_publication_demands()}
  /// 📤️ Commits the actual original invocation wave and its window status together.
- pub fn publish_window_evaluation_key_original(&mut self,key:FlowEvalWindowKey,count:usize,unfinished:bool,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{if self.closing||!self.preview_cancellation_terminal_is_empty(){return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original window evaluation waits for live session and cancellation closure")),work:0}}semio_os_flow_host_source::window_latch::publish_flow_window_evaluation(&mut self.state.window_tick_latches,&mut self.state.preview_cancelled,key,count,unfinished,grant)}
+ pub fn publish_window_evaluation_key_original(&mut self,key:FlowEvalWindowKey,count:usize,unfinished:bool,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{if self.closing||!self.preview_cancellation_terminal_is_empty(){return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original window evaluation waits for live session and cancellation closure")),work:0}}let state=&mut *self.state;semio_os_flow_host_source::window_latch::publish_flow_window_evaluation(&mut state.window_tick_latches,&mut state.preview_cancelled,key,count,unfinished,grant)}
 }
 //#endregion 🔒️TickLatch
 

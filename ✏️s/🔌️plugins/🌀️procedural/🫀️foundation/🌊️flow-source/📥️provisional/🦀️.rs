@@ -1,4 +1,5 @@
 //! 📥️ Provisional leaves retain the genuine immutable context and original issuer.
+use super::retained_scratch_driver::funded_construction;
 use semio_plugin::{ArtifactApp,app::{ArtifactOwnedContextHandle,ArtifactOwnedToolJobContext}};
 use semio_framework_job::{StepContext,OriginalTurnFailure,OriginalConstructionDemand,admit_original_construction};
 use semio_framework_value::{DslValue,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,ValueError,ValueRefusalKind};
@@ -17,7 +18,7 @@ impl<A:ArtifactApp> ProvisionalSourceWork<A>{
  pub fn receive_context(&mut self,context:&Handle<A>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.authenticate(cx)?;let view=context.get();let values=view.provisional();let identity=ProvisionalIdentity{context:view as *const Context<A> as usize,values:values.as_ptr()as usize,len:values.len(),generation:view.provisional_generation(),revision:view.canonical_base_revision};
   if self.identity.is_some_and(|previous|previous!=identity){return Err(ValueError::literal(ValueRefusalKind::Canceled,"original provisional context identity changed").into())}if self.original.is_some()||self.admission.is_some()||self.source.is_some(){return Ok(true)}
-  let demand=context.original_alias_demands();let ready=admit_original_construction(cx,&mut self.original,OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:demand.release_bytes,depth:demand.depth},|grant|context.duplicate_original(grant))?;
+  let demand=context.original_alias_demands();let ready=funded_construction(cx,&mut self.original,OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:demand.release_bytes,depth:demand.depth},|grant|context.duplicate_original(grant))?;
   if ready{self.identity=Some(identity)}Ok(ready)
  }
  pub fn original(&self)->Option<&Context<A>>{self.original.as_ref().or_else(||self.admission.as_ref().and_then(RetainedCloneSourceAdmission::original_authority)).or_else(||self.source.as_ref().and_then(RetainedCloneSource::original_authority)).map(Handle::get)}

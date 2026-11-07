@@ -9,7 +9,7 @@ use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::config::Puzzle5dSelectableKinds;
 use crate::editor::puzzle5d::entities::{PUZZLE5D_BOARD_WINDOW_KIND_ID, PUZZLE5D_WORLD_WINDOW_KIND_ID};
 use crate::editor::puzzle5d::modes::edit::windows::world3d;
-use semio_framework_plugin::WorldSunConfig;
+use semio_plugin::WorldSunConfig;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
@@ -66,7 +66,7 @@ impl Default for Puzzle5dWindowConfig {
 /// requires `dsl::DslField`, emitted by `#[derive(dsl::DslArtifact)]` together with the `__dsl_*`
 /// helpers the record-backed `ArtifactDsl`/`ArtifactPack` below call; `id`/`extension` are stated
 /// explicitly so the derived constants reproduce the envelope identity this kind already carried.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.puzzle.puzzle5d.boardwindowconfig", extension = "puzzle5dboardwindowcfg")]
@@ -99,7 +99,7 @@ impl Default for Puzzle5dBoardWindowConfig {
 
 /// 🎚️ ONE exact Puzzle 5D world pane's persisted-local options — same `dsl::DslArtifact` completion
 /// as [`Puzzle5dBoardWindowConfig`], with its own envelope identity.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.puzzle.puzzle5d.worldwindowconfig", extension = "puzzle5dworldwindowcfg")]
@@ -204,7 +204,7 @@ impl protocol::ColdMutation<$state> for $mutation {
 config_mutation!(Puzzle5dBoardWindowConfigMutation, Puzzle5dBoardWindowConfigMutationSet, Puzzle5dBoardWindowConfig, Puzzle5dBoardWindowConfigDiff, "Set Puzzle 5D Board Window Configuration", "puzzle.5dboardwindowconfig");
 config_mutation!(Puzzle5dWorldWindowConfigMutation, Puzzle5dWorldWindowConfigMutationSet, Puzzle5dWorldWindowConfig, Puzzle5dWorldWindowConfigDiff, "Set Puzzle 5D World Window Configuration", "puzzle.5dworldwindowconfig");
 
-impl semio_framework_plugin::WindowConfigApplyMutation<Puzzle5dBoardWindowConfig> for Puzzle5dBoardWindowConfigMutation {
+impl semio_plugin::WindowConfigApplyMutation<Puzzle5dBoardWindowConfig> for Puzzle5dBoardWindowConfigMutation {
     fn exchange(self, post: &mut Puzzle5dBoardWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
         let Self::Set(Puzzle5dBoardWindowConfigMutationSet { mut patch }) = self;
         if let Some(value) = patch.camera2d.as_mut() {
@@ -237,7 +237,7 @@ impl semio_framework_plugin::WindowConfigApplyMutation<Puzzle5dBoardWindowConfig
     }
 }
 
-impl semio_framework_plugin::WindowConfigApplyMutation<Puzzle5dWorldWindowConfig> for Puzzle5dWorldWindowConfigMutation {
+impl semio_plugin::WindowConfigApplyMutation<Puzzle5dWorldWindowConfig> for Puzzle5dWorldWindowConfigMutation {
     fn exchange(self, post: &mut Puzzle5dWorldWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
         let Self::Set(Puzzle5dWorldWindowConfigMutationSet { mut patch }) = self;
         if let Some(value) = patch.camera3d.as_mut() {
@@ -344,8 +344,8 @@ macro_rules! json_store {
             fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> { semio_framework_value::ToValue::to_value(self).encode_pack_with(options) }
             fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> { let value = semio_framework_value::DslValue::decode_pack_with(bytes, options)?; semio_framework_value::FromValue::from_value(value).map_err(|error| store::PackError::from(error)) }
         }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $state {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $state {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -390,8 +390,8 @@ macro_rules! record_store {
             }
             fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> { Some(Self::__dsl_spec()) }
         }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $state {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $state {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -446,7 +446,7 @@ mutation_wire!(Puzzle5dWindowTransientMutation);
 macro_rules! owners {
     ($config:ident, $state:ty, $mutation:ty, $schema:literal, $transient:ident, $kind:expr) => {
         pub struct $config;
-        impl semio_framework_plugin::WindowConfigOwner for $config {
+        impl semio_plugin::WindowConfigOwner for $config {
     fn initial_state_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:2*std::mem::size_of::<Self::State>(),depth:1,..Default::default()})}
     fn initial_state(grant:semio_framework_value::RetainedCloneGrant)->Result<(Self::State,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>{let d=Self::initial_state_demands()?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original window config birth is not funded"))}Ok((Self::State::default(),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
     fn initial_state_pack_source(state:&Self::State)->Result<(&dyn semio_framework_dsl_record::native_encoding::FieldProjectionSource,semio_framework_dsl_record::BorrowedRecordSpec),semio_framework_value::ValueError>{Ok((state,<Self::State as semio_framework_dsl_record::BorrowedDslRecord>::RECORD))}
@@ -455,21 +455,21 @@ macro_rules! owners {
             const MAXIMUM_PUBLICATION_BYTES: usize = 65_536;
             type State = $state;
             type Mutation = $mutation;
-            type Edit = semio_framework_plugin::WindowConfigApplyEdit<$state, $mutation>;
+            type Edit = semio_plugin::WindowConfigApplyEdit<$state, $mutation>;
             const MAXIMUM_PREPARATION_DEPTH: usize = 64;
-            fn build_retained_edit() -> std::sync::Arc<Self::Edit> { std::sync::Arc::new(semio_framework_plugin::WindowConfigApplyEdit::new()) }
-            fn preparation_source_birth()->semio_framework_value::retained_clone::RetainedCloneBirthDemand{semio_framework_plugin::bounded_window_config_preparation_source_birth::<Self>()}
-            fn build_store_owners(grant:semio_framework_value::RetainedCloneGrant)->Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State,Self::Mutation>,semio_framework_value::RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State,Self::Mutation>>{semio_framework_plugin::bounded_window_config_store_owners::<Self>(grant)}
-            fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_preparation_factory::<Self>() }
-            fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_framework_plugin::bounded_window_config_store_disposer::<Self>() }
+            fn build_retained_edit() -> std::sync::Arc<Self::Edit> { std::sync::Arc::new(semio_plugin::WindowConfigApplyEdit::new()) }
+            fn preparation_source_birth()->semio_framework_value::retained_clone::RetainedCloneBirthDemand{semio_plugin::bounded_window_config_preparation_source_birth::<Self>()}
+            fn build_store_owners(grant:semio_framework_value::RetainedCloneGrant)->Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State,Self::Mutation>,semio_framework_value::RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State,Self::Mutation>>{semio_plugin::bounded_window_config_store_owners::<Self>(grant)}
+            fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_plugin::bounded_window_config_preparation_factory::<Self>() }
+            fn build_store_disposer() -> Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_plugin::bounded_window_config_store_disposer::<Self>() }
         }
         pub struct $transient;
-        impl semio_framework_plugin::WindowTransientOwner for $transient {
+        impl semio_plugin::WindowTransientOwner for $transient {
             const WINDOW_KIND_ID: &'static str = $kind;
             type State = Puzzle5dWindowTransient;
             type Mutation = Puzzle5dWindowTransientMutation;
-    fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_framework_plugin::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
-    fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
+    fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_plugin::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
+    fn build_owners() -> semio_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
                 let state = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::State>::default());
                 let mutation = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::Mutation>::default());
                 let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(
@@ -478,7 +478,7 @@ macro_rules! owners {
                     state.clone(),
                     mutation.clone(),
                 ));
-                semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
+                semio_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
             }
         }
     };
@@ -487,12 +487,12 @@ macro_rules! owners {
 owners!(Puzzle5dBoardWindowConfigOwner, Puzzle5dBoardWindowConfig, Puzzle5dBoardWindowConfigMutation, "puzzle.5dboardwindowconfig", Puzzle5dBoardWindowTransientOwner, PUZZLE5D_BOARD_WINDOW_KIND_ID);
 owners!(Puzzle5dWorldWindowConfigOwner, Puzzle5dWorldWindowConfig, Puzzle5dWorldWindowConfigMutation, "puzzle.5dworldwindowconfig", Puzzle5dWorldWindowTransientOwner, PUZZLE5D_WORLD_WINDOW_KIND_ID);
 
-pub fn register_config(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), semio_framework_plugin::Fault> {
+pub fn register_config(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), semio_plugin::Fault> {
     registry.register::<Puzzle5dBoardWindowConfigOwner>()?;
     registry.register::<Puzzle5dWorldWindowConfigOwner>()
 }
 
-pub fn register_transient(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), semio_framework_plugin::Fault> {
+pub fn register_transient(registry: &mut semio_plugin::WindowTransientOwnerRegistry) -> Result<(), semio_plugin::Fault> {
     registry.register::<Puzzle5dBoardWindowTransientOwner>()?;
     registry.register::<Puzzle5dWorldWindowTransientOwner>()
 }

@@ -556,16 +556,12 @@ describe("framework renderer wgpu generated worker", () => {
     const nativeBootstrap = readFileSync(nativeBootstrapPath, "utf8");
     const bunVersion = bunOracle<string>("return Bun.version;");
     expect(pinnedVersion).toBe(bunVersion);
-    expect(/^ARG BUN_VERSION=(\d+\.\d+\.\d+)$/mu.exec(dockerfile)?.[1]).toBe(pinnedVersion);
+    expect(dockerfile).not.toContain("BUN_VERSION");
     expect(configuration.error).toBeUndefined();
-    expect(configuration.config.postCreateCommand).toEqual(["repo", "run", "workspace:setup"]);
+    expect(configuration.config.postCreateCommand).toEqual(["bash", relative(repoRoot, nativeBootstrapPath).replaceAll("\\", "/"), "setup"]);
     expect(JSON.parse(readFileSync(join(repoRoot, "📋️project.json"), "utf8")).targets.setup.dependsOn).toContain("deps-js-all");
     expect(dockerfile).not.toContain("bun.sh/install");
-    expect(dockerfile).toContain("sha256sum -c -");
-    expect([...dockerfile.matchAll(/bun_sha="([0-9a-f]{64})"/gu)]).toHaveLength(2);
-    expect(dockerfile).toContain('test "$(bun --version)" = "$BUN_VERSION"');
-    expect(nativeBootstrap).toContain('"packageManager"');
-    expect(nativeBootstrap).toContain('install_pinned_bun "$required_version"');
+    expect(nativeBootstrap).not.toContain("install_pinned_bun");
     expect(nativeBootstrap).not.toContain("bun.sh/install");
     expect(nativeBootstrap).not.toContain(bunVersion);
     if (process.platform !== "win32") {

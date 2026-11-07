@@ -7,12 +7,11 @@ struct ComposedParentEnvelopeOwnedFieldCatalog;
 impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<ComposedParentSnapshot, RecursiveFixtureMutation> for ComposedParentEnvelopeOwnedFieldCatalog {
     fn begin_vcs(
         &self,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
+        replacement: Option<semio_framework_job::ReplacementIdentity>,
         path: store::os_store::owned_schema_decode::OwnedSchemaPath,
     ) -> Result<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<ComposedParentSnapshot, RecursiveFixtureMutation>>, Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<ComposedParentSnapshot>>> {
         store::os_store::owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority::try_new(
-            self.begin_snapshot(operation, generation, path),
+            self.begin_snapshot(replacement, path),
             std::sync::Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<ComposedParentSnapshot>::default()),
             std::sync::Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<RecursiveFixtureMutation>::default()),
             self.edit_history_decoder(),
@@ -30,17 +29,15 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<Com
 
     fn begin_snapshot(
         &self,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
+        replacement: Option<semio_framework_job::ReplacementIdentity>,
         path: store::os_store::owned_schema_decode::OwnedSchemaPath,
     ) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<ComposedParentSnapshot>> {
-        Box::new(ComposedParentSnapshotDecodeAuthority::new(operation, generation, path))
+        Box::new(ComposedParentSnapshotDecodeAuthority::new(replacement, path))
     }
 
     fn begin_mutation(
         &self,
-        _operation: semio_framework_job::OperationId,
-        _generation: semio_framework_job::Generation,
+        _replacement: Option<semio_framework_job::ReplacementIdentity>,
         path: store::os_store::owned_schema_decode::OwnedSchemaPath,
     ) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<RecursiveFixtureMutation>> {
         Box::new(ComposedParentRejectedFieldAuthority { path, terminal: false })
@@ -48,8 +45,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<Com
 
     fn begin_spr_conflict(
         &self,
-        _operation: semio_framework_job::OperationId,
-        _generation: semio_framework_job::Generation,
+        _replacement: Option<semio_framework_job::ReplacementIdentity>,
         path: store::os_store::owned_schema_decode::OwnedSchemaPath,
     ) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority> {
         Box::new(ComposedParentRejectedFieldAuthority { path, terminal: false })
@@ -122,8 +118,7 @@ impl<const HAS_CHILD: bool> ArtifactApp for ComposedParentApp<HAS_CHILD> {
     fn build_document_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> { Some(bounded_document_store_disposer()) }
     fn build_document_store_initialization_job(
         envelope: store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        _operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
+        _replacement: Option<semio_framework_job::ReplacementIdentity>,
         actor: protocol::ActorId,
     ) -> semio_plugin_ownership::store_lifecycle::ArtifactInitializationAdmission<Self::Snapshot, Self::Mutation> {
         let exact = envelope.schema == Self::DOCUMENT_SCHEMA && envelope.dialect == Some(Self::DIALECT.into()) && envelope.cursor.is_some();

@@ -32,7 +32,12 @@ fn fold_original_close(cx:&mut StepContext<'_>,turn:RetainedWorkOutcome<Interact
 /// 🧳️ See `README.md`.
 pub fn close_original_retained_turn(cx:&mut StepContext<'_>,demand:RetirementDemand,advance:impl FnOnce(RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,crate::OriginalTurnPrimary>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
  cx.original_source_parent()?.validate_borrowed_context(cx)?;
- let remaining=cx.retained_grant();if cx.retirement_should_yield()||remaining.maximum_items==0||remaining.maximum_copy_bytes<demand.copy_bytes||remaining.maximum_capacity_bytes<demand.capacity_bytes||remaining.maximum_release_bytes<demand.release_bytes||remaining.maximum_depth<demand.depth{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
+ let remaining=cx.retained_grant();if cx.retirement_should_yield()||remaining.maximum_items==0{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
+ if remaining.maximum_copy_bytes<demand.copy_bytes||remaining.maximum_capacity_bytes<demand.capacity_bytes||remaining.maximum_release_bytes<demand.release_bytes||remaining.maximum_depth<demand.depth{
+  if cx.retained_turn_untouched(){return Err(OriginalTurnFailure::from(ValueError::literal(ValueRefusalKind::WorkLimit,"original close demand exceeds the whole grant of its turn and can never fit")))}
+  
+  return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})
+ }
  let turn=advance(RetainedCloneGrant{maximum_items:1,..remaining});fold_original_close(cx,RetainedWorkOutcome{result:turn.result.map(|step|InteractiveJobCloseStep::Pending{progress:step.progress()}),work:turn.work})
 }
 

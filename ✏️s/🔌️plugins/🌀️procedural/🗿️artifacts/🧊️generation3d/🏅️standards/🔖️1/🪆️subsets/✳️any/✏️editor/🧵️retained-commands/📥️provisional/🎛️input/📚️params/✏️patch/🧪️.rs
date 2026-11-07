@@ -1,4 +1,6 @@
 //! 🧪️ Original parameter upserts equal the independent native cold dictionary and preserve payload owners.
+use semio_os_flow::neural::ColdRetire as _;
+use semio_framework_value::FromValue as _;
 use super::*;
 use super::super::retained_scratch_testing::ScratchCaller;
 use semio_framework_artifact_flow_flow::neural::Atom;
@@ -31,7 +33,7 @@ fn original_native_param_patch_matches_cold_upsert_with_one_fuel_and_full_prefix
 #[test]
 fn original_native_param_patch_rejects_a_foreign_real_caller_and_equal_replacement_source(){
  let policy=policy();let((mut params,key,value),seed)=semio_framework_trace::observe_heap_allocations_on_this_thread(||(Dictionary::new(),String::from("value"),Value::Atom(Atom::Boolean(true))));let mut caller=ScratchCaller::new(&policy,1,seed.requested_bytes-seed.released_bytes);let mut work=caller.turn(|cx|Ok(NativeParamPatchWork::new(value,cx)));let mut foreign=ScratchCaller::new(&policy,1,0);
- let refused=foreign.turn(|cx|{let before=(cx.fuel_remaining(),cx.retained_progress());let refused=work.step(&mut params,&key,cx).is_err();Ok(refused&&before==(cx.fuel_remaining(),cx.retained_progress()))});foreign.finish();caller.turn(|cx|work.step(&mut params,&key,cx));let other=String::from("value");let source_refused=work.next_demands(&params,&other,4096).is_err();other.retire_cold();close(&mut work,&mut caller);caller.close(params);caller.close(key);caller.finish();assert!(refused&&source_refused);
+ let refused=foreign.turn(|cx|{let before=(cx.fuel_remaining(),cx.retained_progress());let refused=work.step(&mut params,&key,cx).is_err();Ok(refused&&before==(cx.fuel_remaining(),cx.retained_progress()))});foreign.finish();caller.turn(|cx|work.step(&mut params,&key,cx));let other=String::from("value");let source_refused=work.next_demands(&params,&other,4096).is_err();other.retire_decoded();close(&mut work,&mut caller);caller.close(params);caller.close(key);caller.finish();assert!(refused&&source_refused);
 }
 #[test]
 fn original_native_param_patch_preserves_exact_nonfinite_and_signed_zero_payload_words(){

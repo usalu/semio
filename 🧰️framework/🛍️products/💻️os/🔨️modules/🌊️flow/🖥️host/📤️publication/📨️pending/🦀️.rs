@@ -13,7 +13,7 @@ fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated
 fn fixed(bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()}}
 fn progress(bytes:usize)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}}
 fn paid(cx:&mut StepContext<'_>,bytes:usize)->Result<bool,OriginalTurnFailure>{if cx.should_yield()||cx.is_cancelled()||!cx.retained_work_can_enter(fixed(bytes)){return Ok(false)}cx.consume_fuel(1);cx.consume_retained(progress(bytes))?;Ok(true)}
-fn retire(cx:&mut StepContext<'_>,d:RetirementDemand,body:impl FnOnce(RetainedCloneGrant)->RetainedWorkOutcome)->Result<RetainedCloneStep,OriginalTurnFailure>{cx.with_original_retirement(|cx|close_original_retained_step(cx,d,body))}
+fn retire(cx:&mut StepContext<'_>,d:RetirementDemand,body:impl FnOnce(RetainedCloneGrant)->RetainedWorkOutcome)->Result<Close,OriginalTurnFailure>{cx.with_original_retirement(|cx|close_original_retained_step(cx,d,body))}
 fn close_metadata(cx:&mut StepContext<'_>,bytes:usize,body:impl FnOnce())->Result<RetainedCloneProgress,OriginalTurnFailure>{let d=fixed(bytes);retire(cx,d,|g|{if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}body();RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(progress(bytes))),work:1}}).map(|step|step.progress())}
 #[derive(RetireOwned)]
 struct Fields{pending:VecDeque<neural::PendingExtensionEval>,current:Option<neural::PendingExtensionEval>,origin:Option<FlowInvocationOriginLease>,alias:Option<FlowInvocationOriginLease>,invocation:Option<FlowInvocationDispatch>}

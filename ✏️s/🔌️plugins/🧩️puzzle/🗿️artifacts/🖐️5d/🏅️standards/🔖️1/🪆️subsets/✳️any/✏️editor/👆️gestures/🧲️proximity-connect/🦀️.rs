@@ -310,3 +310,5 @@ impl Puzzle5dProximityConnectWork {
         Ok((work, semio_framework_value::RetainedCloneProgress { retained_capacity_bytes: capacity, ..Default::default() }))
     }
 }
+
+semio_plugin::retained_command::terminal_frame_bound!(Puzzle5dProximityConnectWork);

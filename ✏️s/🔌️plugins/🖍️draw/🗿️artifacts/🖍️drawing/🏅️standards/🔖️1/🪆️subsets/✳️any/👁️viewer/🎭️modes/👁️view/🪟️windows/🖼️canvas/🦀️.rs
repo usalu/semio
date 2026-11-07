@@ -5,7 +5,7 @@
 //! selection, no gesture overlay, no engagement: a viewer has no utilities that edit and emits no
 //! mutations by construction (`ViewEmit`).
 
-use semio_s_artifact_draw_drawing_scene::flatten_drawing_document_to_scene_nodes;
+use semio_s_artifact_draw_drawing_scene::preparation::DocumentScenePlan;
 use semio_s_artifact_draw_drawing_geometry::resolve_drawing_artboard;
 use semio_s_artifact_draw_drawing_model::{DrawingArtboard, PathSegment};
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
@@ -65,21 +65,21 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 /// 👁️ Read-only scene with measured initial fitting to the artifact world bounds.
-pub fn render(document: &DrawingSnapshot) -> UiAssemblyResult<BuiltNode> {
-    render_with_camera(document,&config::DrawingViewerCanvasWindowConfig::default())
+pub fn render(plan: Option<&DocumentScenePlan>, document: &DrawingSnapshot) -> UiAssemblyResult<BuiltNode> {
+    render_with_camera(plan,document,&config::DrawingViewerCanvasWindowConfig::default())
 }
 
 /// 🧭️ Restored local navigation suppresses the initial artwork fit.
-pub fn render_with_camera(document: &DrawingSnapshot,config: &config::DrawingViewerCanvasWindowConfig) -> UiAssemblyResult<BuiltNode> {
+pub fn render_with_camera(plan: Option<&DocumentScenePlan>, document: &DrawingSnapshot,config: &config::DrawingViewerCanvasWindowConfig) -> UiAssemblyResult<BuiltNode> {
     let camera = config.viewport;
     let artboard_records = artboard_scene_records(document);
-    let scene_nodes = flatten_drawing_document_to_scene_nodes(document);
+    let scene_nodes = match plan { Some(plan) => semio_s_artifact_draw_drawing_scene::view::nodes(plan, None).map_err(|error| semio_plugin::PluginAssemblyError::new("drawing.viewer.canvas", error.to_string()))?, None => Vec::new() };
     let mut records: Vec<DslValue> = Vec::with_capacity(scene_nodes.len() + artboard_records.len());
     records.extend(artboard_records);
     for node in &scene_nodes {
         records.push(semio_framework_value::ToValue::to_value(node));
     }
-    scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { framing: (!config.framed).then(|| semio_plugin::Canvas2dFraming { revision: 0,bounds: semio_s_artifact_draw_drawing_geometry::framing::drawing_scene_bounds(document.artboard.as_ref(),&scene_nodes),padding: 48.0 }), camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: semio_framework_pack_json::to_json_string(&records), snapshot: None, tool_run_trace: None, lanes: Vec::new() })
+    scene_surface(SURFACE_ID, semio_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { framing: (!config.framed && plan.is_some()).then(|| semio_plugin::Canvas2dFraming { revision: 0,bounds: semio_s_artifact_draw_drawing_scene::view::bounds(document.artboard.as_ref(),&scene_nodes),padding: 48.0 }), camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: semio_framework_pack_json::to_json_string(&records), snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 
 /// 👁️ Read-only twin of the editor's `edit::artboard_scene_records` frame-only half (no dimension

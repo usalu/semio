@@ -4,8 +4,6 @@ use super::Snapshot;
 use semio_os_kernel as store;
 use semio_os_kernel::os_pack as pack;
 use store::sqlite_snapshot::{*, artifact::{Cell, Projection}};
-use semio_framework_value::NativeEncodeControl;
-use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 const SQL: &str = include_str!("🗄️.sql");
 fn invalid(message: &'static str) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
 fn decimal(value: i32, bytes: &mut [u8;11]) -> &str {
@@ -36,59 +34,71 @@ impl store::serialization::ArtifactSqliteSnapshotHost for Snapshot {
     
     
     
-    fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,ValueError> {
- let original=native_owner.native();
-        control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,1)?; control.check_rows(1)?; control.check_value_bytes(8)?;
-        let length=match payload{store::io::IoPayload::Text(text)=>text.len(),store::io::IoPayload::Binary(bytes)=>bytes.len()};
-        if length>control.limits().max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Count native input exceeds the file ceiling"));}
-        control.allocation_stage_native(SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
-            let mut progress=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);
-            let before=original.owned_bytes();let maximum_owned=before.checked_add(remaining).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"fixture native cumulative allowance overflow"));
-            let result=maximum_owned.and_then(|maximum|original.scoped_maximum(maximum,|native|native.scoped_observer(&mut progress,|native|{
-                match payload {
+    fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<Self,store::NativeSnapshotFailure> {
+        store::native_snapshot_turn(|work|{
+            control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,1)?; control.check_rows(1)?; control.check_value_bytes(8)?;
+            let length=match payload{store::io::IoPayload::Text(text)=>text.len(),store::io::IoPayload::Binary(bytes)=>bytes.len()};
+            if length>control.limits().max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Count native input exceeds the file ceiling").into());}
+            let before=native_owner.native().owned_bytes();
+            let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"fixture native cumulative allowance overflow"))?;
+            let mut refused=None;
+            let mut observer=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|match control.checkpoint(SqliteSnapshotPhase::DecodeNative,event.completed,event.total){Ok(())=>true,Err(error)=>{refused=Some(error);false}};
+            let result=native_owner.scoped_native(maximum,&mut observer,|owner|owner.receive::<Self,Self,store::NativeSnapshotFailure>(|slot,native,_body|store::native_snapshot_turn(|work|{
+                work.admit(native)?;
+                *slot=Some(match payload {
                     store::io::IoPayload::Text(text)=>{
                         let empty=native.scoped_stage(|native|{
                             native.begin_stage(text.len())?;let mut empty=true;
                             for character in text.chars(){empty&=character.is_whitespace();native.advance(character.len_utf8())?;}
                             Ok::<_,ValueError>(empty)
                         })?;
-                        if empty { Ok(Self::default()) }
-                        else { semio_framework_pack_json::from_json_str_controlled(text,semio_framework_pack_json::JsonMemberPolicy::Reject,native) }
+                        if empty { Self::default() }
+                        else { semio_framework_pack_json::from_json_str_controlled(text,semio_framework_pack_json::JsonMemberPolicy::Reject,native)? }
                     }
                     store::io::IoPayload::Binary(bytes)=>{
                         let spec=Self::__dsl_spec_producer().decode(native)?;
                         let (record,_)=pack::record::decode_document_controlled(bytes,&spec,&store::PackDecodeOptions::default(),native).map_err(store::PackRefusal::into_value_error)?;
-                        Self::__dsl_from_record_controlled(&record,native)
+                        Self::__dsl_from_record_controlled(&record,native)?
                     }
-                }
+                });
+                Ok(slot.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"Count native decoder retained no output"))?)
             })));
-            (result,original.owned_bytes()-before)
-        })?
+            drop(observer);
+            let result=work.take(result);
+            control.admit_native_allocation_bytes(native_owner.native().owned_bytes().saturating_sub(before))?;
+            if let Some(error)=refused{Err(error.into())}else{result}
+        })
     }
-    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{
-        bound(self,encoding,control)?;
-        let original=owner.native();
-        control.allocation_stage_native(SqliteSnapshotPhase::EncodeNative,|remaining,checkpoint|{
-            let mut progress=|event:semio_framework_value::native_encoding::NativeEncodeProgress|checkpoint(event.completed,event.total);
-            let before=original.owned_bytes();let maximum_owned=before.checked_add(remaining).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"fixture native cumulative allowance overflow"));
-            let result=maximum_owned.and_then(|maximum|original.scoped_maximum(maximum,|native|native.scoped_observer(&mut progress,|native|{
-                match encoding{
+    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<store::io::IoPayload,store::NativeSnapshotFailure>{
+        store::native_snapshot_turn(|work|{
+            bound(self,encoding,control)?;
+            let before=owner.native().owned_bytes();
+            let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"fixture native cumulative allowance overflow"))?;
+            let mut refused=None;
+            let mut observer=|event:semio_framework_value::native_encoding::NativeEncodeProgress|match control.checkpoint(SqliteSnapshotPhase::EncodeNative,event.completed,event.total){Ok(())=>true,Err(error)=>{refused=Some(error);false}};
+            let result=owner.scoped_native(maximum,&mut observer,|owner|owner.receive::<store::io::IoPayload,store::io::IoPayload,store::NativeSnapshotFailure>(|slot,native,_body|store::native_snapshot_turn(|work|{
+                work.performed();
+                *slot=Some(match encoding{
                     SnapshotEncoding::Text=>{
                         let mut digits=[0;11];let digits=decimal(self.count,&mut digits);let length=10+digits.len();
                         native.begin_stage(length)?;native.charge(length)?;let mut output=String::new();
                         output.try_reserve_exact(length).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"Count JSON output allocation failed"))?;
                         for text in ["{\"count\":",digits,"}"]{output.push_str(text);native.advance(text.len())?;}
-                        Ok(store::io::IoPayload::Text(output))
+                        store::io::IoPayload::Text(output)
                     }
                     SnapshotEncoding::Binary=>{
                         let spec=Self::__dsl_spec_producer().encode(native)?;
                         let record=semio_framework_dsl_record::native_encoding::EncodedRecord::from_record(self.__dsl_to_record_controlled(native)?);
-                        pack::record::encode_document_controlled(&spec,record.as_record(),&store::PackEncodeOptions::default(),native).map(store::io::IoPayload::Binary).map_err(store::PackRefusal::into_value_error)
+                        store::io::IoPayload::Binary(pack::record::encode_document_controlled(&spec,record.as_record(),&store::PackEncodeOptions::default(),native).map_err(store::PackRefusal::into_value_error)?)
                     }
-                }
+                });
+                Ok(slot.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"Count native encoder retained no output"))?)
             })));
-            (result,original.owned_bytes()-before)
-        })?
+            drop(observer);
+            let result=work.take(result);
+            control.admit_native_allocation_bytes(owner.native().owned_bytes().saturating_sub(before))?;
+            if let Some(error)=refused{Err(error.into())}else{result}
+        })
     }
     fn preflight_sqlite_snapshot_encoding(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{bound(self,encoding,control)}
 }

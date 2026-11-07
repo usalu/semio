@@ -193,10 +193,13 @@ pub async fn capture_fixture_window_config<O: semio_plugin_window_config::Window
 pub async fn settle_registered_typed_operation<P: PluginApp>(app: &mut P, receiver: u32, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<TypedOperationFixtureReceipt, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let mut turns=0;let maximum_turns=OriginalFixtureCaller::maximum_turns();
     let mut receipt = TypedOperationFixtureReceipt { ownership_receipts: Vec::new(), lanes: Vec::new(), effects: Vec::new(), events: Vec::new(), ui_scope: None, completions: 0, completion_operations: Vec::new(), revisions: Vec::new(), resume_outcomes: Vec::new(), composed: Vec::new() };
+    let (fresh_fuel,fresh_grant)=(OriginalFixtureCaller::turn_fuel(),cx.retained_grant());let(mut idle,maximum_idle)=(0usize,OriginalFixtureCaller::maximum_idle_turns());
     crate::artifact_app_laws::ensure_fixture_cancellation_issuer(app,cx)?;
     retain_registered_ownership_receipts(app, mounted_policy, &mut receipt)?;
     while app.has_pending_typed_operations() || !app.maintenance_terminal_is_empty() {
-        if cx.should_yield()||turns>=maximum_turns{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture settlement exhausted its caller opportunity").into())}turns+=1;semio_framework_job::testkit::renew_payload_page_grant(cx);
+        semio_framework_job::testkit::renew_turn(cx,fresh_fuel,fresh_grant)?;
+        if cx.should_yield()||turns>=maximum_turns{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture settlement exhausted its caller opportunity").into())}turns+=1;
+        let before=(cx.retained_progress(),receipt.ownership_receipts.len()+receipt.lanes.len()+receipt.effects.len()+receipt.events.len()+receipt.completions+receipt.resume_outcomes.len()+receipt.composed.len());
         if !app.has_runnable_typed_operations() {
             let grant = mounted_policy.maintenance;
             let demand = app.maintenance_retirement_demands(grant.maximum_copy_bytes,cx.fuel_remaining())?;
@@ -249,6 +252,9 @@ pub async fn settle_registered_typed_operation<P: PluginApp>(app: &mut P, receiv
                 }
             }
         }
+        let after=(cx.retained_progress(),receipt.ownership_receipts.len()+receipt.lanes.len()+receipt.effects.len()+receipt.events.len()+receipt.completions+receipt.resume_outcomes.len()+receipt.composed.len());
+        idle=if after==before{idle+1}else{0};
+        if idle>=maximum_idle{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture settlement made no progress for its idle turn bound").into())}
         std::thread::yield_now();
     }
     Ok(receipt)

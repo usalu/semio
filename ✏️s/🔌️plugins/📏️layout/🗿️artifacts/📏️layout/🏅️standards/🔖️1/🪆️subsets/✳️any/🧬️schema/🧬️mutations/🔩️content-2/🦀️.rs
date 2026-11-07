@@ -24,6 +24,8 @@ pub mod delete_story;
 pub mod edit_story;
 #[path = "../🏷️rename-page/🦀️.rs"]
 pub mod rename_page;
+#[path = "../✒️set-story-runs/🦀️.rs"]
+pub mod set_story_runs;
 #[path = "../📐️set-page-guides/🦀️.rs"]
 pub mod set_page_guides;
 #[path = "../🗄️set-page-parent/🦀️.rs"]

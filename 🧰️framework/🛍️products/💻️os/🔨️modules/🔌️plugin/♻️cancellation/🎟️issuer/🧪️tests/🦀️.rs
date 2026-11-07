@@ -47,3 +47,16 @@ pub fn cancellation_issuer_original_creation_physical_birth_and_close(){
  assert!(issuer.terminal_is_empty());let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(issuer));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));drop(cx);
  for turn in 0..128{if parent.terminal_is_empty(){break}let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||parent.close_step(phase));let progress=result.result.unwrap().progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;assert!(turn<127)}assert!(parent.terminal_is_empty());assert_eq!(born,released);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(parent));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
 }
+
+/// 🚧️ An issuer whose birth was never paid refuses a scope renewal typed after its bounded number of unready answers, instead of answering `false` forever.
+#[doc(hidden)]
+pub fn cancellation_issuer_unready_renewal_refuses_typed_after_its_bound(){
+ let stock=RetainedCloneGrant{maximum_items:65536,maximum_copy_bytes:134217728,maximum_capacity_bytes:268435456,maximum_release_bytes:536870912,maximum_depth:4096};let phase=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:65536,maximum_capacity_bytes:262144,maximum_release_bytes:16777216,maximum_depth:4096};
+ let(mut parent,mut recipient)={let(cancel,first)=semio_framework_job::CancelToken::admit_root(stock).result.unwrap().unwrap();let(authority,second)=JobPayloadAuthority::admit(OperationId(71),Generation(3),stock).result.unwrap().unwrap();let(parent,third)=OriginalCallerSourceParent::admit(authority,cancel,stock).result.ok().unwrap();(parent,first.checked_add(second).unwrap().checked_add(third).unwrap())};
+ let mut sequence=0;let mut cx=parent.borrow_context(StepBudget::new(32768,1500,stock),||Some(1000),&mut sequence,&mut recipient).unwrap();
+ let mut issuer=ToolCancellationIssuer::empty();assert!(!issuer.ready());
+ for attempt in 1..ToolCancellationIssuer::MAXIMUM_UNREADY_RENEWALS{assert!(!issuer.renew_scope_generation(&mut cx).unwrap(),"attempt {attempt} stays a plain refusal below the bound");}
+ let refusal=issuer.renew_scope_generation(&mut cx).unwrap_err();assert!(format!("{refusal:?}").contains("never became ready"));
+ drop(cx);drop(issuer);
+ for turn in 0..128{if parent.terminal_is_empty(){break}let result=parent.close_step(phase);result.result.unwrap();assert!(turn<127)}assert!(parent.terminal_is_empty());drop(parent);
+}

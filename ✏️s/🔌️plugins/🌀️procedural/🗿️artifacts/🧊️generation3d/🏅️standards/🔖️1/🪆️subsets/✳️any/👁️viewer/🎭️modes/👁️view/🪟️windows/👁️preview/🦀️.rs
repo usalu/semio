@@ -167,7 +167,7 @@ use semio_s_artifact_procedural_3d_preview_eval::PreviewInlineGeometry;
 /// evaluates" (`render_without_a_published_evaluation_paints_the_empty_world`).
 #[cfg(test)]
 pub fn evaluate_host_snapshot(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> String {
-    semio_s_artifact_procedural_3d_model::with_host(host_snapshot, |host| host.evaluate().unwrap_or_default())
+    semio_s_artifact_procedural_3d_model::with_host(host_snapshot, |host| host.evaluate().unwrap_or_default()).expect("test host closes cold")
 }
 
 /// 👁️ One preview instance per geometry-bearing value per OUTPUT CHANNEL, each carrying its

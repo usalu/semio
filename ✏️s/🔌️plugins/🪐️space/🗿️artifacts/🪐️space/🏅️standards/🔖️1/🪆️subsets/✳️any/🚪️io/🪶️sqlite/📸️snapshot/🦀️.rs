@@ -10,14 +10,14 @@ fn words(value:u64)->[Cell<'static>;2]{[Cell::Integer((value>>32)as i64),Cell::I
 fn timestamp(row:&SqliteRow,high:usize,low:usize)->Result<u64,ValueError>{let high=u32::try_from(row.integer(high)?).map_err(|_|invalid("Space timestamp high word exceeds unsigned32"))?;let low=u32::try_from(row.integer(low)?).map_err(|_|invalid("Space timestamp low word exceeds unsigned32"))?;Ok((u64::from(high)<<32)|u64::from(low))}
 impl ArtifactSqliteSnapshotHost for SSpaceSnapshot{
  
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{self.admit_sqlite_values(control,SqliteSnapshotPhase::EncodeNative)?;store::encode_sqlite_snapshot_record_native(encoding,"s.space",Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)}
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
-  let maximum=control.limits().max_rows;let value=store::decode_sqlite_snapshot_record_native(payload,"s.space",Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<store::io_schema::IoPayload,semio_os_kernel::NativeSnapshotFailure> {semio_os_kernel::native_snapshot_turn(|work|{self.admit_sqlite_values(control,SqliteSnapshotPhase::EncodeNative)?;work.take(store::encode_sqlite_snapshot_record_native(encoding,"s.space",Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner))})}
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<Self,semio_os_kernel::NativeSnapshotFailure> {semio_os_kernel::native_snapshot_turn(|work|{
+  let maximum=control.limits().max_rows;let value=work.take(store::decode_sqlite_snapshot_record_native(payload,"s.space",Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
    let length=match record.get(2){Some(semio_framework_dsl_record::FieldValue::List(rows))=>rows.len(),_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue, "Space native occurrence list missing"))};
    let rows=count(length)?;if rows>maximum{return Err(ValueError::new(ValueRefusalKind::WorkLimit, "Space native occurrence rows exceed caller limit"))}
    Self::__dsl_from_record_controlled(record,native)
-  })(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)?;value.admit_sqlite_values(control,SqliteSnapshotPhase::DecodeNative)?;Ok(value)
- }
+  })(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control))?;value.admit_sqlite_values(control,SqliteSnapshotPhase::DecodeNative)?;Ok(value)
+ })}
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
   let mut bound=NativeEncodingBound::new(control)?;bound.add(4096)?;for value in[&self.schema,&self.space_id]{bound.repeated(value.len(),6)?;}for row in &self.artifacts{bound.add(1024)?;for value in[&row.id,&row.name,&row.kind_id,&row.schema,&row.created_by,&row.updated_by,&row.dialect.artifact_kind,&row.dialect.standard,&row.dialect.subset]{bound.repeated(value.len(),6)?;}}bound.finish()
  }

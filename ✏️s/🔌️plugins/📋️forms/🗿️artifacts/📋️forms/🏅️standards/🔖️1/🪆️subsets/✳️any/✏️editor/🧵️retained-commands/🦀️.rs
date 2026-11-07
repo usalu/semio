@@ -381,3 +381,5 @@ pub fn forms_command_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof
     proofs.sort_by_key(|proof| FORMS_RETAINED_TOOL_IDS.iter().position(|id| *id == proof.tool_id()).unwrap());
     proofs
 }
+
+semio_plugin::retained_command::terminal_frame_bound!(FormsWindowCommandWork);

@@ -73,7 +73,7 @@ fn sqlite_snapshot_host_count_reconstruction_rejects_structural_and_integer_doma
  let mut wrong=SqliteDatabase::from_schema(&(SQL.to_owned()+"CREATE TABLE foreign_owner(id INTEGER PRIMARY KEY);")).unwrap();wrong.table_mut("fixture_counter").unwrap().rows=valid.table("fixture_counter").unwrap().rows.clone();cases.push(wrong);
  for malformed in cases{for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
   let mut accept=|_|true;let mut control=SqliteSnapshotControl::new(&mut accept,SqliteDatabaseLimits::default());
-  assert_eq!(import_native(&codec,KIND,&dialect(),malformed.clone(),encoding,&mut control).unwrap_err().cause.kind,ValueRefusalKind::InvalidValue);
+  assert_eq!(import_native(&codec,KIND,&dialect(),malformed.clone(),encoding,&mut control).unwrap_err().cause.kind(),ValueRefusalKind::InvalidValue);
  }}
 }
 #[test]
@@ -96,21 +96,21 @@ fn sqlite_snapshot_host_count_full_erased_backing_limits_and_phase_cancellation_
     let mut accept=|_|true;let mut control=SqliteSnapshotControl::new(&mut accept,SqliteDatabaseLimits{max_allocation_bytes:maximum,..defaults});
     let mut input=Some(expected.clone());let result=operation(&mut control,&mut input);
     if maximum==requests{result.unwrap();assert_eq!(control.allocation_remaining_bytes(),0);}
-    else{assert_eq!(result.unwrap_err().cause.kind,ValueRefusalKind::OwnershipLimit);assert!(maximum-control.allocation_remaining_bytes()<requests);}
+    else{assert_eq!(result.unwrap_err().cause.kind(),ValueRefusalKind::OwnershipLimit);assert!(maximum-control.allocation_remaining_bytes()<requests);}
    }
    let maximum=requests.checked_mul(2).unwrap();let mut accept=|_|true;let mut control=SqliteSnapshotControl::new(&mut accept,SqliteDatabaseLimits{max_allocation_bytes:maximum,..defaults});
    for _ in 0..2{let mut input=Some(expected.clone());operation(&mut control,&mut input).unwrap();}assert_eq!(control.allocation_remaining_bytes(),0);
-   assert_eq!(operation(&mut control,&mut Some(expected.clone())).unwrap_err().cause.kind,ValueRefusalKind::OwnershipLimit);assert_eq!(control.allocation_remaining_bytes(),0);
+   assert_eq!(operation(&mut control,&mut Some(expected.clone())).unwrap_err().cause.kind(),ValueRefusalKind::OwnershipLimit);assert_eq!(control.allocation_remaining_bytes(),0);
   }
   for(limits,kind)in[(SqliteDatabaseLimits{max_rows:0,..defaults},ValueRefusalKind::WorkLimit),(SqliteDatabaseLimits{max_schema_bytes:SQL.len()-1,..defaults},ValueRefusalKind::OwnershipLimit)]{
-   let mut accept=|_|true;let mut control=SqliteSnapshotControl::new(&mut accept,limits);assert_eq!(export_native(&codec,KIND,&dialect(),&native,&mut control).unwrap_err().cause.kind,kind);
-   let mut accept=|_|true;let mut control=SqliteSnapshotControl::new(&mut accept,limits);assert_eq!(import_native(&codec,KIND,&dialect(),expected.clone(),encoding,&mut control).unwrap_err().cause.kind,kind);
+   let mut accept=|_|true;let mut control=SqliteSnapshotControl::new(&mut accept,limits);assert_eq!(export_native(&codec,KIND,&dialect(),&native,&mut control).unwrap_err().cause.kind(),kind);
+   let mut accept=|_|true;let mut control=SqliteSnapshotControl::new(&mut accept,limits);assert_eq!(import_native(&codec,KIND,&dialect(),expected.clone(),encoding,&mut control).unwrap_err().cause.kind(),kind);
   }
   for phase in[SqliteSnapshotPhase::DecodeNative,SqliteSnapshotPhase::ProjectSnapshot,SqliteSnapshotPhase::ReconstructSnapshot,SqliteSnapshotPhase::EncodeNative]{
    let mut reached=false;let mut cancel=|progress:SqliteSnapshotProgress|{let stop=progress.phase==phase;reached|=stop;!stop};
    let mut control=SqliteSnapshotControl::new(&mut cancel,defaults);
    let error=if matches!(phase,SqliteSnapshotPhase::DecodeNative|SqliteSnapshotPhase::ProjectSnapshot){export_native(&codec,KIND,&dialect(),&native,&mut control).unwrap_err()}else{import_native(&codec,KIND,&dialect(),expected.clone(),encoding,&mut control).unwrap_err()};
-   assert_eq!(error.cause.kind,ValueRefusalKind::Canceled);drop(control);assert!(reached);
+   assert_eq!(error.cause.kind(),ValueRefusalKind::Canceled);drop(control);assert!(reached);
   }
   assert_eq!(source,Snapshot{count:i32::MIN});
  }
@@ -137,7 +137,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
   let database=import_sqlite_database(&file.bytes,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();
   assert_eq!(store::io::io_mechanism::sqlite_snapshot_metadata(&database).unwrap(),(dialect(),encoding));
   let output=semio_framework_async::poll::resolve_ready(plugin_runtime::plugin_snapshot_sqlite_import(&mut sqlite_wire::SnapshotInputOwner{wire:Some(SnapshotInput{dialect:coordinate.clone(),encoding:encoding.as_str().into(),payload:file.bytes,limits:SnapshotLimits::from(limits),native:grant.into()}),dialect:None,route:None,payload:None,hop:None},&mut native_control,&mut snapshot_control)).unwrap();
-  let SnapshotPayloadResult::Done(output)=output else{panic!("actual published Count import must succeed")};assert_eq!(output.encoding,encoding);
+  let SnapshotPayloadResult::Done(output)=output else{panic!("actual published Count import must succeed")};assert_eq!(format!("{:?}",output.encoding),format!("{encoding:?}"));
   assert_eq!(decode(match encoding{SnapshotEncoding::Binary=>store::io::IoPayload::Binary(output.bytes),SnapshotEncoding::Text=>store::io::IoPayload::Text(String::from_utf8(output.bytes).unwrap())}),source);
  }}
 }

@@ -88,11 +88,11 @@ fn original_bounded_config_factory_retains_source_until_exact_physical_retiremen
         let turn = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
         for denied in [Some(RetainedCloneGrant { maximum_items: 0, ..turn }), (demand.release_bytes != 0).then(|| RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..turn })].into_iter().flatten() {
             let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut owner, denied));
-            assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());
+            assert_eq!(step.result.unwrap().progress(), RetainedCloneProgress::default());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         }
         let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut owner, turn));
-        let progress = step.unwrap().progress();
+        let progress = step.result.unwrap().progress();
         assert!(progress.fits(turn));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
         born += heap.requested_bytes;
@@ -409,6 +409,11 @@ where
 {
     pub fn new(authority: Box<dyn ArtifactStoreInitializationAuthority<P, Mutation>>) -> Self {
         Self { authority: ManuallyDrop::new(Some(authority)), cancel_requested: ManuallyDrop::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false))), cancel_arc_live: true, terminal_handoff: false }
+    }
+
+    /// 🧷️ Binds the replacement slot identity to the retained initializer authority before it first steps.
+    pub fn bind_replacement(&mut self, replacement: semio_framework_job::ReplacementIdentity) {
+        if let Some(authority) = self.authority.as_mut() { authority.bind_replacement(replacement); }
     }
 
     /// 📏️ Publish domain allocation demand without spending work or granting its release.

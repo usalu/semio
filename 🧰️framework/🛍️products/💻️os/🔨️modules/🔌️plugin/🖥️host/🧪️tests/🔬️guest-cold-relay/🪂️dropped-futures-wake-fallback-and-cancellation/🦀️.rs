@@ -176,7 +176,7 @@ async fn a_callers_cancel_stops_a_mounted_infer_blocked_in_a_pending_guest_step(
         pool.clone(),
         Lane::UserVisible,
         async move {
-            let _ = sender.send(route_handle.infer(b"blocked", &route_cancel).await);
+            let _ = sender.send(route_handle.infer(b"blocked", &route_cancel, &test_relay_wake_authority()).await);
         },
         |_| {},
     );
@@ -203,8 +203,8 @@ async fn a_finished_mounted_infer_leaves_the_callers_token_live() {
     let handle = mounted_handle(Arc::clone(&mock), actor).await;
     mock.script_job_step(actor, JobStep::Done { output: b"first".to_vec() }).await;
     let caller = semio_framework_async::CancelToken::root_now();
-    assert_eq!(handle.infer(b"one", &caller).await.expect("first route"), b"first");
+    assert_eq!(handle.infer(b"one", &caller, &test_relay_wake_authority()).await.expect("first route"), b"first");
     assert!(!caller.is_cancelled_now(), "closing the relay must not cancel the caller's token");
     mock.script_job_step(actor, JobStep::Done { output: b"second".to_vec() }).await;
-    assert_eq!(handle.infer(b"two", &caller).await.expect("second route under the same token"), b"second");
+    assert_eq!(handle.infer(b"two", &caller, &test_relay_wake_authority()).await.expect("second route under the same token"), b"second");
 }

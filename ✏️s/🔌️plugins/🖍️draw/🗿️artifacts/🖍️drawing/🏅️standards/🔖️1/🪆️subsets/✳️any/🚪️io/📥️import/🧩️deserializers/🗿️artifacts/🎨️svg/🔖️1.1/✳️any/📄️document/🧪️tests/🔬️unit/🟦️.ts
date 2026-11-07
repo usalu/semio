@@ -51,7 +51,17 @@ for(const name of ["non-square-object-gradient","forward-gradient-reference-and-
 });
 
 import compositeCases from "../../../../../../../../../../🧪️tests/🧫️fixtures/🎬️scene/🧩️compositing/🔣️.json";
-import {drawingSceneToSvg,type DrawingSvgNode} from "../../../../../../../../../📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🟦️.ts";
+import type {DrawingSvgNode} from "../../../../../../../../../📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧬️schema/🟦️.ts";
+import {SvgWriteJob} from "../../../../../../../../../📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🟦️.ts";
+import type {ScenePlanRead,ScenePlanNode} from "../../../../../../../../../../🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🟦️.ts";
+import {bank,close as closeOwner} from "../../../../../../../../../../🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🧪️tests/owned.test.ts";
+/** 🧵️ Drives the one job-driven SVG writer over caller-authored path rows under a finite stock and drains its owners. */
+function drawingSceneToSvg(nodes:readonly DrawingSvgNode[],viewBox:readonly[number,number,number,number],_assets:object):string{
+  const plan:ScenePlanRead={assets:[],nodes:nodes.map((node,index):ScenePlanNode=>({id:node.id,sourcePath:[index],lockedAncestors:0,groups:node.groups??[],transform:node.transform as ScenePlanNode["transform"],visible:node.visible,opacity:node.opacity,blendMode:node.blendMode,content:{kind:"path",segments:node.segments as never,fillRule:node.fillRule==="evenodd"?"evenodd":"nonzero",fill:node.fill,stroke:node.stroke} as ScenePlanNode["content"]}))};
+  const w=bank(),job=new SvgWriteJob(plan,{viewBox,maxOutputBytes:1<<24,maxWork:1e9});
+  for(let at=0;at<1e6;at++){if(w.run(job,ledger=>job.advance(4096,ledger),4096).result.done){const pages=job.result();const text=Buffer.concat(Array.from({length:pages.length},(_,i)=>{const page=pages.at(i);if(page===undefined)throw Error("SVG page missing");return Buffer.from(page);})).toString("utf8");const moved=job.intoRetirement();closeOwner(moved.job,w);if(moved.output!==null)closeOwner(moved.output,w);return text;}}
+  throw Error("SVG writer did not finish");
+}
 for(const row of compositeCases)test(`SVG isolated blend roundtrip: ${row.name}`,async()=>{
   const source=drawingSceneToSvg(svgNodesFixture(row.nodes),[0,0,24,16],{});
   const document=withParser(()=>{const job=new SvgImportJob(source,"roundtrip");while(!job.step(3).done){}return job.take();});

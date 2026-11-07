@@ -7,7 +7,7 @@ pub mod mutation {
     use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 
     //#region 🔖️CreateLayer
-    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
     #[canonical_json(owner = semio_framework_pack_json)]
     #[mutation_leaf(contract = ::protocol)]
     #[value(rename_all = "camelCase")]
@@ -17,25 +17,27 @@ pub mod mutation {
         pub layer: Box<RasterLayerNode>,
     }
 
-    impl<Op> protocol::MutationKind<RasterSnapshot, Op> for CreateLayer where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::delete_layer::mutation::DeleteLayer> {
-        const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "layer", kind: "create-layer", record: "CreatedLayer" };
-
-        fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
-            crate::create_layer::diff::diff(self, base)
-        }
-
-        fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    crate::create_layer::inverse::inverse(self, base)
-}
-
-        fn label(&self) -> semio_ui_locale::LocalizedLabel {
+    impl<Op> protocol::MutationKind<RasterSnapshot, Op> for CreateLayer
+where
+    Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::delete_layer::mutation::DeleteLayer> {
+const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "layer", kind: "create-layer", record: "CreatedLayer" };
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
             semio_ui_locale::LocalizedLabel::native(&format!("Create layer \"{}\"", semio_s_artifact_raster_raster_model::layer_name(&self.layer)), &format!("Ebene \"{}\" erstellen", semio_s_artifact_raster_raster_model::layer_name(&self.layer)))
         }
-
-        fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
             vec![semio_s_artifact_raster_raster_model::layer_node_id(&self.layer).to_string()]
         }
-    }
+}
+impl<Op> protocol::ColdMutationKind<RasterSnapshot, Op> for CreateLayer
+where
+    Op: protocol::ColdMutation<RasterSnapshot, ReferenceDiff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::delete_layer::mutation::DeleteLayer> {
+    fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
+            crate::create_layer::diff::diff(self, base)
+        }
+    fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    crate::create_layer::inverse::inverse(self, base)
+}
+}
     //#endregion 🔖️CreateLayer
 }
 

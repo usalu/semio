@@ -434,3 +434,5 @@ impl ArtifactCommandWork<semio_plugin::EditorApp<FlowPlayApp>> for FlowDirectSto
     }
 }
 //#endregion 🧵️DirectStoreLaneRoutes
+
+semio_plugin::retained_command::terminal_frame_bound!(FlowDirectStoreWork);

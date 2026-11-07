@@ -1,0 +1,552 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ActorInputWire",
+  "description": "The one payload reactor.admit-actor-input admits into the guest slot; UTF-8 JSON.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/poll"
+    },
+    {
+      "$ref": "#/$defs/startJob"
+    },
+    {
+      "$ref": "#/$defs/restore"
+    },
+    {
+      "$ref": "#/$defs/sqliteSchema"
+    },
+    {
+      "$ref": "#/$defs/sqliteExport"
+    },
+    {
+      "$ref": "#/$defs/sqliteImport"
+    },
+    {
+      "$ref": "#/$defs/sqliteTakeFile"
+    },
+    {
+      "$ref": "#/$defs/sqliteTakePayload"
+    },
+    {
+      "$ref": "#/$defs/sqliteRetirement"
+    },
+    {
+      "$ref": "#/$defs/sqliteClose"
+    },
+    {
+      "$ref": "#/$defs/packSchemaHash"
+    },
+    {
+      "$ref": "#/$defs/genesis"
+    },
+    {
+      "$ref": "#/$defs/printMirror"
+    },
+    {
+      "$ref": "#/$defs/applyOps"
+    },
+    {
+      "$ref": "#/$defs/replayEnvelopes"
+    }
+  ],
+  "$defs": {
+    "byte": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "bytes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/byte"
+      }
+    },
+    "u64": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "event": {
+      "type": "object",
+      "required": [
+        "tag"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "tag": {
+          "type": "string",
+          "minLength": 1
+        },
+        "val": {}
+      }
+    },
+    "shape": {
+      "type": "object",
+      "required": [
+        "maxEffects",
+        "maxPatchBytes",
+        "maxFrames"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "maxEffects": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "maxPatchBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "maxFrames": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "pair": {
+      "type": "object",
+      "required": [
+        "pack",
+        "spr"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "pack": {
+          "$ref": "#/$defs/bytes"
+        },
+        "spr": {
+          "$ref": "#/$defs/bytes"
+        }
+      }
+    },
+    "jobSource": {
+      "type": "object",
+      "required": [
+        "job",
+        "kind",
+        "input",
+        "checkpoint"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "job": {
+          "$ref": "#/$defs/u64"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "input": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        },
+        "checkpoint": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        }
+      }
+    },
+    "snapshotInput": {
+      "type": "object",
+      "required": [
+        "dialect",
+        "encoding",
+        "payload",
+        "limits",
+        "native"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "dialect": {
+          "type": "string"
+        },
+        "encoding": {
+          "enum": [
+            "binary",
+            "text",
+            ""
+          ]
+        },
+        "payload": {
+          "$ref": "#/$defs/bytes"
+        },
+        "limits": {
+          "type": "object",
+          "required": [
+            "max_file_bytes",
+            "max_value_bytes",
+            "max_schema_bytes",
+            "max_rows",
+            "max_columns",
+            "max_tables",
+            "max_pages",
+            "max_allocation_bytes"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "max_file_bytes": {
+              "$ref": "#/$defs/u64"
+            },
+            "max_value_bytes": {
+              "$ref": "#/$defs/u64"
+            },
+            "max_schema_bytes": {
+              "$ref": "#/$defs/u64"
+            },
+            "max_rows": {
+              "$ref": "#/$defs/u64"
+            },
+            "max_columns": {
+              "$ref": "#/$defs/u64"
+            },
+            "max_tables": {
+              "$ref": "#/$defs/u64"
+            },
+            "max_pages": {
+              "$ref": "#/$defs/u64"
+            },
+            "max_allocation_bytes": {
+              "$ref": "#/$defs/u64"
+            }
+          }
+        },
+        "native": {
+          "$ref": "#/$defs/grant"
+        }
+      }
+    },
+    "grant": {
+      "type": "object",
+      "required": [
+        "maximum_items",
+        "maximum_copy_bytes",
+        "maximum_capacity_bytes",
+        "maximum_release_bytes",
+        "maximum_depth"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "maximum_items": {
+          "$ref": "#/$defs/u64"
+        },
+        "maximum_copy_bytes": {
+          "$ref": "#/$defs/u64"
+        },
+        "maximum_capacity_bytes": {
+          "$ref": "#/$defs/u64"
+        },
+        "maximum_release_bytes": {
+          "$ref": "#/$defs/u64"
+        },
+        "maximum_depth": {
+          "$ref": "#/$defs/u64"
+        }
+      }
+    },
+    "poll": {
+      "type": "object",
+      "required": [
+        "operation",
+        "events",
+        "shape"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "const": "poll"
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/event"
+          }
+        },
+        "shape": {
+          "$ref": "#/$defs/shape"
+        }
+      }
+    },
+    "startJob": {
+      "type": "object",
+      "required": [
+        "operation",
+        "source"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "const": "start-job"
+        },
+        "source": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/jobSource"
+            }
+          ]
+        }
+      }
+    },
+    "restore": {
+      "type": "object",
+      "required": [
+        "operation",
+        "state"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "const": "restore"
+        },
+        "state": {
+          "$ref": "#/$defs/bytes"
+        }
+      }
+    },
+    "sqliteSchema": {
+      "type": "object",
+      "required": [
+        "operation",
+        "dialect"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "const": "sqlite-schema"
+        },
+        "dialect": {
+          "type": "string"
+        }
+      }
+    },
+    "sqliteExport": {
+      "type": "object",
+      "required": [
+        "operation",
+        "input"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "const": "sqlite-export"
+        },
+        "input": {
+          "$ref": "#/$defs/snapshotInput"
+        }
+      }
+    },
+    "sqliteImport": {
+      "type": "object",
+      "required": [
+        "operation",
+        "input"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "const": "sqlite-import"
+        },
+        "input": {
+          "$ref": "#/$defs/snapshotInput"
+        }
+      }
+    },
+    "sqliteTakeFile": {
+      "type": "object",
+      "required": [
+        "operation",
+        "ticket"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "const": "sqlite-take-file"
+        },
+        "ticket": {
+          "$ref": "#/$defs/u64"
+        }
+      }
+    },
+    "sqliteTakePayload": {
+      "type": "object",
+      "required": [
+        "operation",
+        "ticket"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "const": "sqlite-take-payload"
+        },
+        "ticket": {
+          "$ref": "#/$defs/u64"
+        }
+      }
+    },
+    "sqliteRetirement": {
+      "type": "object",
+      "required": [
+        "operation",
+        "copyBytes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "const": "sqlite-retirement"
+        },
+        "copyBytes": {
+          "$ref": "#/$defs/u64"
+        }
+      }
+    },
+    "sqliteClose": {
+      "type": "object",
+      "required": [
+        "operation",
+        "input"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "const": "sqlite-close"
+        },
+        "input": {
+          "type": "object",
+          "required": [
+            "ticket",
+            "native"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "ticket": {
+              "$ref": "#/$defs/u64"
+            },
+            "native": {
+              "$ref": "#/$defs/grant"
+            }
+          }
+        }
+      }
+    },
+    "packSchemaHash": {
+      "type": "object",
+      "required": [
+        "operation",
+        "artifactSchema"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "const": "pack-schema-hash"
+        },
+        "artifactSchema": {
+          "type": "string"
+        }
+      }
+    },
+    "genesis": {
+      "type": "object",
+      "required": [
+        "operation",
+        "artifactSchema",
+        "documentId"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "const": "genesis"
+        },
+        "artifactSchema": {
+          "type": "string"
+        },
+        "documentId": {
+          "type": "string"
+        }
+      }
+    },
+    "printMirror": {
+      "type": "object",
+      "required": [
+        "operation",
+        "artifactSchema",
+        "pair"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "const": "print-mirror"
+        },
+        "artifactSchema": {
+          "type": "string"
+        },
+        "pair": {
+          "$ref": "#/$defs/pair"
+        }
+      }
+    },
+    "applyOps": {
+      "type": "object",
+      "required": [
+        "operation",
+        "artifactSchema",
+        "pair",
+        "ops"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "const": "apply-ops"
+        },
+        "artifactSchema": {
+          "type": "string"
+        },
+        "pair": {
+          "$ref": "#/$defs/pair"
+        },
+        "ops": {
+          "$ref": "#/$defs/bytes"
+        }
+      }
+    },
+    "replayEnvelopes": {
+      "type": "object",
+      "required": [
+        "operation",
+        "artifactSchema",
+        "pair",
+        "envelopes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "operation": {
+          "const": "replay-envelopes"
+        },
+        "artifactSchema": {
+          "type": "string"
+        },
+        "pair": {
+          "$ref": "#/$defs/pair"
+        },
+        "envelopes": {
+          "$ref": "#/$defs/bytes"
+        }
+      }
+    }
+  }
+}

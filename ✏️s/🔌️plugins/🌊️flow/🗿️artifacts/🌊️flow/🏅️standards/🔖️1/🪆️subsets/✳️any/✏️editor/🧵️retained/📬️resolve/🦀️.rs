@@ -6,10 +6,10 @@ use std::mem::{ManuallyDrop,size_of};
 const KEYS:[&str;7]=["cancellable","done","output","phase","unitsDone","unitsTotal","pending"];
 const PENDING:[&str;5]=["extensionId","inputJson","neuronId","nodeHash","operatorId"];
 #[derive(RetireOwned)]
-pub(crate) enum FlowReplyEnvelope{Complete{output:DslValue,progress:PreviewEvalProgress},Pending{pending:flow::neural::PendingExtensionEval,progress:PreviewEvalProgress},Working(PreviewEvalProgress),Cancelled(PreviewEvalProgress)}
+pub enum FlowReplyEnvelope{Complete{output:DslValue,progress:PreviewEvalProgress},Pending{pending:flow::neural::PendingExtensionEval,progress:PreviewEvalProgress},Working(PreviewEvalProgress),Cancelled(PreviewEvalProgress)}
 #[derive(RetireOwned)]
 struct Fields{source:Option<DslValue>,output:Option<FlowReplyEnvelope>}
-pub(crate) struct FlowReplyEnvelopeWork{fields:ManuallyDrop<Option<Fields>>,retirement:RetainedCloneClose,binding:Option<OriginalSourceBinding>,slots:[usize;7],pending:[usize;5],scan:usize,phase:u8,kind:u8,progress:PreviewEvalProgress,closing:bool}
+pub struct FlowReplyEnvelopeWork{fields:ManuallyDrop<Option<Fields>>,retirement:RetainedCloneClose,binding:Option<OriginalSourceBinding>,slots:[usize;7],pending:[usize;5],scan:usize,phase:u8,kind:u8,progress:PreviewEvalProgress,closing:bool}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"original Flow evaluation envelope differs from the native reply contract")}
 fn fixed()->RetirementDemand{RetirementDemand{copy_bytes:2*size_of::<FlowReplyEnvelope>()+5*size_of::<DslValue>()+64,depth:1,..Default::default()}}
 fn rows(value:&DslValue)->Result<&[(String,DslValue)],ValueError>{match value{DslValue::Object(rows)=>Ok(rows),_=>Err(invalid())}}
@@ -19,8 +19,8 @@ fn flag(value:&DslValue)->Result<bool,ValueError>{match value{DslValue::Bool(val
 fn unsigned(value:&DslValue)->Result<u64,ValueError>{match value{DslValue::Number(value)=>value.as_u64().ok_or_else(invalid),_=>Err(invalid())}}
 fn take_text(value:&mut DslValue)->Result<String,ValueError>{if !matches!(value,DslValue::String(_)){return Err(invalid())}match std::mem::replace(value,DslValue::Null){DslValue::String(value)=>Ok(value),_=>unreachable!()}}
 impl FlowReplyEnvelopeWork{
- pub(crate) fn new(source:DslValue)->Self{Self{fields:ManuallyDrop::new(Some(Fields{source:Some(source),output:None})),retirement:Default::default(),binding:None,slots:[usize::MAX;7],pending:[usize::MAX;5],scan:0,phase:0,kind:0,progress:Default::default(),closing:false}}
- pub(crate) fn step(&mut self,cx:&mut StepContext<'_>)->Result<Option<FlowReplyEnvelope>,OriginalTurnFailure>{for _ in 0..512{let before=(cx.retained_progress(),cx.original_total_fuel_remaining());if let Some(output)=self.once(cx)?{return Ok(Some(output))}if cx.should_yield()||cx.is_cancelled()||before==(cx.retained_progress(),cx.original_total_fuel_remaining()){break}}Ok(None)}
+ pub fn new(source:DslValue)->Self{Self{fields:ManuallyDrop::new(Some(Fields{source:Some(source),output:None})),retirement:Default::default(),binding:None,slots:[usize::MAX;7],pending:[usize::MAX;5],scan:0,phase:0,kind:0,progress:Default::default(),closing:false}}
+ pub fn step(&mut self,cx:&mut StepContext<'_>)->Result<Option<FlowReplyEnvelope>,OriginalTurnFailure>{for _ in 0..512{let before=(cx.retained_progress(),cx.original_total_fuel_remaining());if let Some(output)=self.once(cx)?{return Ok(Some(output))}if cx.should_yield()||cx.is_cancelled()||before==(cx.retained_progress(),cx.original_total_fuel_remaining()){break}}Ok(None)}
  fn once(&mut self,cx:&mut StepContext<'_>)->Result<Option<FlowReplyEnvelope>,OriginalTurnFailure>{
   if self.closing||self.binding.is_some_and(|binding|!binding.matches(cx)){return Err(invalid().into())}if cx.should_yield()||cx.is_cancelled()||!cx.retained_work_can_enter(fixed()){return Ok(None)}
   self.binding=Some(OriginalSourceBinding::borrow(cx));cx.consume_fuel(1);let p=RetainedCloneProgress{copied_items:1,copied_bytes:fixed().copy_bytes,..Default::default()};
@@ -42,11 +42,11 @@ impl FlowReplyEnvelopeWork{
   }Ok(None)})();
   match result{Ok(output)=>{if let Err(error)=cx.consume_retained(p){if let Some(output)=output{self.restore_output(output)}return Err(error.into())}Ok(output)},Err(error)=>Err(OriginalTurnFailure::debit_original(error.with_retained_progress(p),cx))}
  }
- pub(crate) fn restore_output(&mut self,output:FlowReplyEnvelope){assert_eq!(self.phase,5);self.fields.as_mut().expect("original reply fields").output=Some(output);self.phase=4}
- pub(crate) fn begin_close(&mut self){self.closing=true}
- pub(crate) fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.retirement.is_empty(){return self.retirement.demands(body)}if self.fields.is_some(){return self.retirement.next_owner_demands::<Fields>(true,&None,body)}Ok(RetirementDemand{copy_bytes:size_of::<Option<OriginalSourceBinding>>(),depth:usize::from(self.binding.is_some()),..Default::default()})}
- pub(crate) fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<Close,OriginalTurnFailure>{if !self.closing||self.binding.is_some_and(|binding|!binding.matches(cx)){return Err(invalid().into())}let d=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;let step=close_original_retained_step(cx,d,|g|{if !self.retirement.is_empty(){return self.retirement.step_granted(g)}if self.fields.is_some(){let turn=self.retirement.begin_granted(&mut self.fields,g);return RetainedWorkOutcome{result:turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}}if self.binding.is_none(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.binding=None;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:1}})?;Ok(if self.terminal_is_empty(){Close::Complete{progress:step.progress()}}else{Close::Pending{progress:step.progress()}})}
- pub(crate) fn terminal_is_empty(&self)->bool{self.closing&&self.fields.is_none()&&self.retirement.is_empty()&&self.binding.is_none()}
+ pub fn restore_output(&mut self,output:FlowReplyEnvelope){assert_eq!(self.phase,5);self.fields.as_mut().expect("original reply fields").output=Some(output);self.phase=4}
+ pub fn begin_close(&mut self){self.closing=true}
+ pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.retirement.is_empty(){return self.retirement.demands(body)}if self.fields.is_some(){return self.retirement.next_owner_demands::<Fields>(true,&None,body)}Ok(RetirementDemand{copy_bytes:size_of::<Option<OriginalSourceBinding>>(),depth:usize::from(self.binding.is_some()),..Default::default()})}
+ pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<Close,OriginalTurnFailure>{if !self.closing||self.binding.is_some_and(|binding|!binding.matches(cx)){return Err(invalid().into())}let d=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;let step=close_original_retained_step(cx,d,|g|{if !self.retirement.is_empty(){return self.retirement.step_granted(g)}if self.fields.is_some(){let turn=self.retirement.begin_granted(&mut self.fields,g);return RetainedWorkOutcome{result:turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}}if self.binding.is_none(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.binding=None;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:1}})?;Ok(if self.terminal_is_empty(){Close::Complete{progress:step.progress()}}else{Close::Pending{progress:step.progress()}})}
+ pub fn terminal_is_empty(&self)->bool{self.closing&&self.fields.is_none()&&self.retirement.is_empty()&&self.binding.is_none()}
 }
 impl Drop for FlowReplyEnvelopeWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original native reply requires paid closure of source and output");unsafe{ManuallyDrop::drop(&mut self.fields)}}}
 
@@ -69,4 +69,4 @@ mod effect;
 
 #[path="🧵️job.rs"]
 mod job;
-pub(crate) use job::FlowResolveJobWork;
+pub use job::FlowResolveJobWork;

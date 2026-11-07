@@ -55,7 +55,7 @@ pub(super) fn render(document: &RasterDocument, config: &RasterConfig, layer: &R
     let (source_width, source_height) = match layer {
         RasterLayerNode::Pixel { image_key, width, height, .. } => {
             let image = image_key.as_ref().and_then(|key| document.assets.get(key)).and_then(|asset| asset.local_owner::<semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot>());
-            (image.map(|image| image.width).or(*width).unwrap_or(512), image.map(|image| image.height).or(*height).unwrap_or(512))
+            (image.as_ref().map(|image| image.width).or(*width).unwrap_or(512), image.map(|image| image.height).or(*height).unwrap_or(512))
         }
         _ => unreachable!(),
     };

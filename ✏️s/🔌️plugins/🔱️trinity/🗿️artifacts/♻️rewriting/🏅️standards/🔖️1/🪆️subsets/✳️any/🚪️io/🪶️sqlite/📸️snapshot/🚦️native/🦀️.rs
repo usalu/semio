@@ -2,6 +2,5 @@
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use semio_os_kernel::{NativeSnapshotDecodeOwner,sqlite_snapshot::SqliteSnapshotControl};
 use semio_framework_value::ValueError;
-pub(super) fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut NativeSnapshotDecodeOwner<'_, '_>)->Result<RewritingSnapshot,ValueError>{
- store::decode_sqlite_snapshot_record_native(payload,"trinity.rewriting",RewritingSnapshot::__dsl_spec_producer(),|record,output,native,_body|{*output=Some(RewritingSnapshot::__dsl_from_record_controlled(record,native)?);Ok(())},control,native_owner)
-}
+pub(super) fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut NativeSnapshotDecodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<RewritingSnapshot,semio_os_kernel::NativeSnapshotFailure> {
+ store::decode_sqlite_snapshot_record_native(payload,"trinity.rewriting",RewritingSnapshot::__dsl_spec_producer(),|record,output,native,_body|{*output=Some(RewritingSnapshot::__dsl_from_record_controlled(record,native)?);Ok(())},control,native_owner)}

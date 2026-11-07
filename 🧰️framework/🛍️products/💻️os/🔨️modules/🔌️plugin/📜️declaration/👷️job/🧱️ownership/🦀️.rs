@@ -15,6 +15,12 @@ pub use producer::{ArtifactReservedJob,ArtifactReservedToolJob,ArtifactReservedT
 #[path="🔗️lease/🦀️.rs"]
 mod lease;
 pub use lease::OriginalRequestLease;
+#[path="../🎮️command/🎯️action/🦀️.rs"]
+mod original_action;
+pub use original_action::{ArtifactOriginalCommandProducer,ArtifactOriginalCommandProducerFactory};
+#[path="../🎟️request/🔒️command/🦀️.rs"]
+mod original_command;
+pub use original_command::ArtifactOriginalToolCommand;
 include!("../🎟️birth/🦀️.rs");
 #[cfg(any(test,feature="reserved-producer-testing"))]
 pub mod original_reserved_producer_laws{include!("../🎟️birth/🧪️tests/🦀️.rs");}

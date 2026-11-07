@@ -3,7 +3,7 @@ use crate::*;
 
 #[test]
 fn typed_original_duplicate_preserves_root_and_registry_without_heap_birth() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../fixture.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str::<serde_json::Value>(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap()["duplicate"].clone();
     let registry = SnapshotReadRegistryHandle::new();
     let root = Arc::new(71u64);
     let read = SnapshotRead::new(root.clone(), registry.try_issue(root.clone()).unwrap());
@@ -30,6 +30,7 @@ fn typed_original_duplicate_preserves_root_and_registry_without_heap_birth() {
             let guard = registry.try_take(lease.index, lease.generation).unwrap();
             let mut duplicate = duplicate;
             duplicate.lease.take();
+            drop(duplicate.owner.take());
             drop((duplicate, guard));
         } else {
             assert_eq!(progress, RetainedCloneProgress::default());
@@ -55,10 +56,12 @@ fn typed_original_duplicate_preserves_root_and_registry_without_heap_birth() {
     let mut duplicate = output.take().unwrap();
     let lease = duplicate.lease.take().unwrap();
     drop(registry.try_take(lease.index, lease.generation).unwrap());
+    drop(duplicate.owner.take());
     drop(duplicate);
     let mut read = read;
     let lease = read.lease.take().unwrap();
     drop(registry.try_take(lease.index, lease.generation).unwrap());
+    drop(read.owner.take());
     drop(read);
     assert!(registry.terminal_is_empty());
 }

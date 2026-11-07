@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 /// record-backed `ArtifactDsl`/`ArtifactPack` below are written against; `id`/`extension` are stated
 /// explicitly so the derived `__DSL_ENVELOPE_ID`/`__DSL_EXTENSION` reproduce the envelope identity
 /// the three panes already shared.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[dsl(layout = "lines")]
 #[artifact(id = "s.puzzle.puzzle2d.windowconfig", extension = "puzzle2dwindowcfg")]
@@ -67,7 +67,7 @@ pub enum Puzzle2dWindowConfigMutation {
     Set(Puzzle2dWindowConfigMutationSet),
 }
 
-impl semio_framework_plugin::WindowConfigApplyMutation<Puzzle2dWindowConfig> for Puzzle2dWindowConfigMutation {
+impl semio_plugin::WindowConfigApplyMutation<Puzzle2dWindowConfig> for Puzzle2dWindowConfigMutation {
     fn exchange(self, post: &mut Puzzle2dWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
         let Self::Set(Puzzle2dWindowConfigMutationSet { mut patch }) = self;
         if let Some(value) = patch.camera_x.as_mut() {
@@ -178,8 +178,8 @@ macro_rules! json_store {
                 semio_framework_value::FromValue::from_value(value).map_err(|error| store::PackError::from(error))
             }
         }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $state {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $state {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -226,8 +226,8 @@ impl pack::snapshot::ArtifactPack for Puzzle2dWindowConfig {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Puzzle2dWindowConfig {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Puzzle2dWindowConfig {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -661,7 +661,7 @@ impl protocol::OpBinary for Puzzle2dWindowTransientMutation {
 macro_rules! owners {
     ($config:ident, $transient:ident, $kind:expr) => {
         pub struct $config;
-        impl semio_framework_plugin::WindowConfigOwner for $config {
+        impl semio_plugin::WindowConfigOwner for $config {
     fn initial_state_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:2*std::mem::size_of::<Self::State>(),depth:1,..Default::default()})}
     fn initial_state(grant:semio_framework_value::RetainedCloneGrant)->Result<(Self::State,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>{let d=Self::initial_state_demands()?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original window config birth is not funded"))}Ok((Self::State::default(),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
     fn initial_state_pack_source(state:&Self::State)->Result<(&dyn semio_framework_dsl_record::native_encoding::FieldProjectionSource,semio_framework_dsl_record::BorrowedRecordSpec),semio_framework_value::ValueError>{Ok((state,<Self::State as semio_framework_dsl_record::BorrowedDslRecord>::RECORD))}
@@ -670,27 +670,27 @@ macro_rules! owners {
             const MAXIMUM_PUBLICATION_BYTES: usize = 65_536;
             type State = Puzzle2dWindowConfig;
             type Mutation = Puzzle2dWindowConfigMutation;
-            type Edit = semio_framework_plugin::WindowConfigApplyEdit<Puzzle2dWindowConfig, Puzzle2dWindowConfigMutation>;
+            type Edit = semio_plugin::WindowConfigApplyEdit<Puzzle2dWindowConfig, Puzzle2dWindowConfigMutation>;
             const MAXIMUM_PREPARATION_DEPTH: usize = 64;
             fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
-                std::sync::Arc::new(semio_framework_plugin::WindowConfigApplyEdit::new())
+                std::sync::Arc::new(semio_plugin::WindowConfigApplyEdit::new())
             }
-            fn preparation_source_birth()->semio_framework_value::retained_clone::RetainedCloneBirthDemand{semio_framework_plugin::bounded_window_config_preparation_source_birth::<Self>()}
-            fn build_store_owners(grant:semio_framework_value::RetainedCloneGrant)->Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State,Self::Mutation>,semio_framework_value::RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State,Self::Mutation>>{semio_framework_plugin::bounded_window_config_store_owners::<Self>(grant)}
+            fn preparation_source_birth()->semio_framework_value::retained_clone::RetainedCloneBirthDemand{semio_plugin::bounded_window_config_preparation_source_birth::<Self>()}
+            fn build_store_owners(grant:semio_framework_value::RetainedCloneGrant)->Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State,Self::Mutation>,semio_framework_value::RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State,Self::Mutation>>{semio_plugin::bounded_window_config_store_owners::<Self>(grant)}
             fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {
-                semio_framework_plugin::bounded_window_config_preparation_factory::<Self>()
+                semio_plugin::bounded_window_config_preparation_factory::<Self>()
             }
-            fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> {
-                semio_framework_plugin::bounded_window_config_store_disposer::<Self>()
+            fn build_store_disposer() -> Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> {
+                semio_plugin::bounded_window_config_store_disposer::<Self>()
             }
         }
         pub struct $transient;
-        impl semio_framework_plugin::WindowTransientOwner for $transient {
+        impl semio_plugin::WindowTransientOwner for $transient {
             const WINDOW_KIND_ID: &'static str = $kind;
             type State = Puzzle2dWindowTransient;
             type Mutation = Puzzle2dWindowTransientMutation;
-    fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_framework_plugin::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
-    fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
+    fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_plugin::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
+    fn build_owners() -> semio_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
                 let state = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::State>::default());
                 let mutation = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::Mutation>::default());
                 let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(
@@ -699,7 +699,7 @@ macro_rules! owners {
                     state.clone(),
                     mutation.clone(),
                 ));
-                semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
+                semio_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
             }
         }
     };
@@ -709,23 +709,23 @@ owners!(Puzzle2dOverviewWindowConfigOwner, Puzzle2dOverviewWindowTransientOwner,
 owners!(Puzzle2dDetailWindowConfigOwner, Puzzle2dDetailWindowTransientOwner, crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID);
 owners!(Puzzle2dSelectionWindowConfigOwner, Puzzle2dSelectionWindowTransientOwner, crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID);
 
-pub fn register_config(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), semio_framework_plugin::Fault> {
+pub fn register_config(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), semio_plugin::Fault> {
     registry.register::<Puzzle2dOverviewWindowConfigOwner>()?;
     registry.register::<Puzzle2dDetailWindowConfigOwner>()?;
     registry.register::<Puzzle2dSelectionWindowConfigOwner>()
 }
 
-pub fn register_transient(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), semio_framework_plugin::Fault> {
+pub fn register_transient(registry: &mut semio_plugin::WindowTransientOwnerRegistry) -> Result<(), semio_plugin::Fault> {
     registry.register::<Puzzle2dOverviewWindowTransientOwner>()?;
     registry.register::<Puzzle2dDetailWindowTransientOwner>()?;
     registry.register::<Puzzle2dSelectionWindowTransientOwner>()
 }
 
-pub fn config_from_view(view: &semio_framework_plugin::ConfigView<'_, crate::editor::puzzle2d::config::Puzzle2dConfig>) -> Puzzle2dWindowConfig {
+pub fn config_from_view(view: &semio_plugin::ConfigView<'_, crate::editor::puzzle2d::config::Puzzle2dConfig>) -> Puzzle2dWindowConfig {
     view.window::<Puzzle2dOverviewWindowConfigOwner>().or_else(|| view.window::<Puzzle2dDetailWindowConfigOwner>()).or_else(|| view.window::<Puzzle2dSelectionWindowConfigOwner>()).cloned().unwrap_or_default()
 }
 
-pub fn config_from_snapshot(snapshot: Option<&semio_framework_plugin::WindowConfigSnapshot>) -> Puzzle2dWindowConfig {
+pub fn config_from_snapshot(snapshot: Option<&semio_plugin::WindowConfigSnapshot>) -> Puzzle2dWindowConfig {
     snapshot.and_then(|value| value.get::<Puzzle2dOverviewWindowConfigOwner>().or_else(|| value.get::<Puzzle2dDetailWindowConfigOwner>()).or_else(|| value.get::<Puzzle2dSelectionWindowConfigOwner>())).cloned().unwrap_or_default()
 }
 
@@ -739,7 +739,7 @@ pub fn document_seed(document: &semio_framework_pack_json::Value) -> Puzzle2dWin
     seed
 }
 
-pub fn config_from_view_or_document(view: &semio_framework_plugin::ConfigView<'_, crate::editor::puzzle2d::config::Puzzle2dConfig>, document: &semio_framework_pack_json::Value) -> Puzzle2dWindowConfig {
+pub fn config_from_view_or_document(view: &semio_plugin::ConfigView<'_, crate::editor::puzzle2d::config::Puzzle2dConfig>, document: &semio_framework_pack_json::Value) -> Puzzle2dWindowConfig {
     let config = config_from_view(view);
     if view.window.is_some_and(|snapshot| snapshot.generation() == 0) && config == Puzzle2dWindowConfig::default() {
         document_seed(document)
@@ -748,7 +748,7 @@ pub fn config_from_view_or_document(view: &semio_framework_plugin::ConfigView<'_
     }
 }
 
-pub fn config_from_snapshot_or_document(snapshot: Option<&semio_framework_plugin::WindowConfigSnapshot>, document: &semio_framework_pack_json::Value) -> Puzzle2dWindowConfig {
+pub fn config_from_snapshot_or_document(snapshot: Option<&semio_plugin::WindowConfigSnapshot>, document: &semio_framework_pack_json::Value) -> Puzzle2dWindowConfig {
     let config = config_from_snapshot(snapshot);
     if snapshot.is_some_and(|snapshot| snapshot.generation() == 0) && config == Puzzle2dWindowConfig::default() {
         document_seed(document)
@@ -757,43 +757,43 @@ pub fn config_from_snapshot_or_document(snapshot: Option<&semio_framework_plugin
     }
 }
 
-pub fn transient_from_snapshot(snapshot: Option<&semio_framework_plugin::WindowTransientSnapshot>) -> Puzzle2dWindowTransient {
+pub fn transient_from_snapshot(snapshot: Option<&semio_plugin::WindowTransientSnapshot>) -> Puzzle2dWindowTransient {
     snapshot.and_then(|value| value.get::<Puzzle2dOverviewWindowTransientOwner>().or_else(|| value.get::<Puzzle2dDetailWindowTransientOwner>()).or_else(|| value.get::<Puzzle2dSelectionWindowTransientOwner>())).cloned().unwrap_or_default()
 }
 
-pub fn transient_from_view(view: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>) -> Puzzle2dWindowTransient {
+pub fn transient_from_view(view: &semio_plugin::TransientView<'_, semio_plugin::NoTransient>) -> Puzzle2dWindowTransient {
     view.window::<Puzzle2dOverviewWindowTransientOwner>().or_else(|| view.window::<Puzzle2dDetailWindowTransientOwner>()).or_else(|| view.window::<Puzzle2dSelectionWindowTransientOwner>()).cloned().unwrap_or_default()
 }
 
-fn kind(view: &semio_framework_plugin::ViewModel) -> Option<(&str, &str)> {
+fn kind(view: &semio_plugin::ViewModel) -> Option<(&str, &str)> {
     let id = view.window_id.as_deref()?;
     let kind = view.window_instances.iter().find(|window| window.id == id)?.window_kind_id.as_str();
     Some((id, kind))
 }
 
-pub fn kind_for_view(view: &semio_framework_plugin::ViewModel) -> Option<&str> {
+pub fn kind_for_view(view: &semio_plugin::ViewModel) -> Option<&str> {
     kind(view).map(|(_, kind)| kind)
 }
 
-pub fn addressed_config(view: &semio_framework_plugin::ViewModel, config: Puzzle2dWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
-    let (id, kind) = kind(view).ok_or_else(|| semio_framework_plugin::Fault::from("puzzle2d-window-required"))?;
+pub fn addressed_config(view: &semio_plugin::ViewModel, config: Puzzle2dWindowConfig) -> Result<semio_plugin::WindowConfigMutation, semio_plugin::Fault> {
+    let (id, kind) = kind(view).ok_or_else(|| semio_plugin::Fault::from("puzzle2d-window-required"))?;
     let mutation = Puzzle2dWindowConfigMutation::Set(Puzzle2dWindowConfigMutationSet { patch: Puzzle2dWindowConfigDiff::of(&config) });
     match kind {
-        crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle2dOverviewWindowConfigOwner>(id, mutation)),
-        crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle2dDetailWindowConfigOwner>(id, mutation)),
-        crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle2dSelectionWindowConfigOwner>(id, mutation)),
-        _ => Err(semio_framework_plugin::Fault::from("puzzle2d-window-kind-required")),
+        crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID => Ok(semio_plugin::WindowConfigMutation::of::<Puzzle2dOverviewWindowConfigOwner>(id, mutation)),
+        crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID => Ok(semio_plugin::WindowConfigMutation::of::<Puzzle2dDetailWindowConfigOwner>(id, mutation)),
+        crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID => Ok(semio_plugin::WindowConfigMutation::of::<Puzzle2dSelectionWindowConfigOwner>(id, mutation)),
+        _ => Err(semio_plugin::Fault::from("puzzle2d-window-kind-required")),
     }
 }
 
-pub fn addressed_transient(view: &semio_framework_plugin::ViewModel, transient: Puzzle2dWindowTransient) -> Result<semio_framework_plugin::WindowTransientMutation, semio_framework_plugin::Fault> {
-    let (id, kind) = kind(view).ok_or_else(|| semio_framework_plugin::Fault::from("puzzle2d-window-required"))?;
+pub fn addressed_transient(view: &semio_plugin::ViewModel, transient: Puzzle2dWindowTransient) -> Result<semio_plugin::WindowTransientMutation, semio_plugin::Fault> {
+    let (id, kind) = kind(view).ok_or_else(|| semio_plugin::Fault::from("puzzle2d-window-required"))?;
     let mutation = Puzzle2dWindowTransientMutation::Snapshot { transient };
     match kind {
-        crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowTransientMutation::of::<Puzzle2dOverviewWindowTransientOwner>(id, mutation)),
-        crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowTransientMutation::of::<Puzzle2dDetailWindowTransientOwner>(id, mutation)),
-        crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowTransientMutation::of::<Puzzle2dSelectionWindowTransientOwner>(id, mutation)),
-        _ => Err(semio_framework_plugin::Fault::from("puzzle2d-window-kind-required")),
+        crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID => Ok(semio_plugin::WindowTransientMutation::of::<Puzzle2dOverviewWindowTransientOwner>(id, mutation)),
+        crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID => Ok(semio_plugin::WindowTransientMutation::of::<Puzzle2dDetailWindowTransientOwner>(id, mutation)),
+        crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID => Ok(semio_plugin::WindowTransientMutation::of::<Puzzle2dSelectionWindowTransientOwner>(id, mutation)),
+        _ => Err(semio_plugin::Fault::from("puzzle2d-window-kind-required")),
     }
 }
 

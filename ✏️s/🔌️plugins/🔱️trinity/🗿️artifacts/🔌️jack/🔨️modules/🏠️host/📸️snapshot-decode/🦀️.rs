@@ -35,8 +35,7 @@ enum JackSnapshotDecodeState {
 }
 
 pub struct JackSnapshotDecodeAuthority {
-    pub operation: semio_framework_job::OperationId,
-    pub generation: semio_framework_job::Generation,
+    pub replacement: Option<semio_framework_job::ReplacementIdentity>,
     pub path: store::os_store::owned_schema_decode::OwnedSchemaPath,
     pub state: JackSnapshotDecodeState,
     pub value: std::mem::ManuallyDrop<Option<JackSnapshot>>,
@@ -44,8 +43,8 @@ pub struct JackSnapshotDecodeAuthority {
 }
 
 impl JackSnapshotDecodeAuthority {
-    pub fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
-        Self { operation, generation, path, state: JackSnapshotDecodeState::AwaitToken, value: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None) }
+    pub fn new(replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
+        Self { replacement, path, state: JackSnapshotDecodeState::AwaitToken, value: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None) }
     }
 
     pub fn diagnostic(&self, code: &'static str, offset: u64) -> store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic {
@@ -84,7 +83,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
             if !terminal {
                 return Err(diagnostic("jack-envelope.snapshot-pack-must-be-scalar", token.start));
             }
-            self.state = JackSnapshotDecodeState::Decode(store::os_store::owned_schema_decode::OwnedSchemaHexAuthority::try_new(self.operation, self.generation, token, self.path)?);
+            self.state = JackSnapshotDecodeState::Decode(store::os_store::owned_schema_decode::OwnedSchemaHexAuthority::try_new(self.replacement, token, self.path)?);
         }
         let JackSnapshotDecodeState::Decode(authority) = &mut self.state else { return Err(diagnostic("jack-envelope.snapshot-pack-token-replayed", token.start)) };
         match authority.step(source, cx) {

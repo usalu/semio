@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 /// 📅️ Schedule reference by id.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct ScheduleId(pub u32);
+semio_framework_dsl_record::dsl_scalar_newtype_receiving!(ScheduleId,u32);
 
 // 🌱️ Hand-written, not derived — same tuple-struct reason as `crate::model::EntityId`.
 impl ToValue for ScheduleId {

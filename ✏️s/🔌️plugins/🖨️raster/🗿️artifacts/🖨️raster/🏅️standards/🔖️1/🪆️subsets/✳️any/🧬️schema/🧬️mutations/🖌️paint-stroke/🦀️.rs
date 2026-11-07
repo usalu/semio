@@ -38,6 +38,7 @@ pub const RASTER_PAINT_TOOLS: [&str; 2] = ["brush", "eraser"];
 #[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive)]
 pub struct RasterStrokePoint {
     pub x: f64,
     pub y: f64,
@@ -49,6 +50,7 @@ pub struct RasterStrokePoint {
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive)]
 pub struct RasterBrush {
     pub size: f64,
     pub hardness: f64,
@@ -59,7 +61,7 @@ pub struct RasterBrush {
 pub use semio_s_artifact_raster_raster_model::RasterSelectionSpan;
 use semio_s_artifact_raster_raster_model::RasterSelectionSpans;
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -279,7 +281,7 @@ pub fn painted_inverse<Op: From<crate::add_layer_asset::mutation::AddLayerAsset>
     }
     if let Some(previous) = previous {
         let owner=base.assets.get(previous).and_then(|child|child.local_owner::<semio_s_artifact_raster_raster_model::SemioImageSnapshot>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"raster.asset-owner-unavailable"))?;
-        let asset=<semio_s_artifact_raster_raster_model::RasterImagePayload as semio_framework_value::owned::NativeReceiveMap<std::sync::Arc<semio_s_artifact_raster_raster_model::SemioImageSnapshot>>>::from_native(owner);
+        let asset=<semio_s_artifact_raster_raster_model::RasterImagePayload as semio_framework_value_native_owned::owned::NativeReceiveMap<std::sync::Arc<semio_s_artifact_raster_raster_model::SemioImageSnapshot>>>::from_native(owner);
         steps.push(Op::from(AddLayerAsset { asset_id: previous.to_string(), asset }));
     }
     match &painted.canvas.mask {
@@ -300,6 +302,7 @@ pub fn painted_inverse<Op: From<crate::add_layer_asset::mutation::AddLayerAsset>
 
 //#region 🔖️Kind
 impl<Op> protocol::MutationKind<RasterSnapshot, Op> for PaintStroke where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::add_layer_asset::mutation::AddLayerAsset> + From<crate::change_layer_mask::ChangeLayerMask> + From<crate::change_layer_pixels::ChangeLayerPixels> + From<crate::paint_stroke::PaintStroke> + From<crate::remove_layer_asset::mutation::RemoveLayerAsset> + From<crate::write_pixel_region::WritePixelRegion> {
+
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "paint", entity: "stroke", kind: "paint-stroke", record: "PaintedStroke" };
 
     fn label(&self) -> semio_ui_locale::LocalizedLabel {

@@ -1,7 +1,7 @@
 //! 🌦️ Complete lexical EPW receiving retains every original table, index and partial native field.
-use semio_os_kernel::sqlite_snapshot::receiving::{SqliteSnapshotDecodeReceiving,SqliteSnapshotEncodeReceiving};
+use semio_framework_os_kernel::sqlite_snapshot::receiving::{SqliteSnapshotDecodeReceiving,SqliteSnapshotEncodeReceiving};
 use crate::standards::energyplus::subsets::any::schema::snapshot::{EpwSnapshot,EpwLocation,EpwDataPeriods,EpwDataPeriod,EpwRecord};
-use semio_os_kernel::{io::control::{NativeSnapshotBodyWallet,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner},sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::receiving::{Port,Direction,Projection,Scalar,row,cell,text_cell,push_row,sort,integer,ordinal,validate_schema_sql,check_database}}};
+use semio_framework_os_kernel::{io::control::{NativeSnapshotBodyWallet,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner},sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::receiving::{Port,Direction,Projection,Scalar,row,cell,text_cell,push_row,sort,integer,ordinal,validate_schema_sql,check_database}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use std::mem::size_of;
 pub type Result<T>=std::result::Result<T,ValueError>;

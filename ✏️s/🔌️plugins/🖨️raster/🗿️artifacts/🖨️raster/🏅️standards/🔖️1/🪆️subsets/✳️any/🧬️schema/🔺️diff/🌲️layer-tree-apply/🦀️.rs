@@ -518,7 +518,14 @@ fn apply_pixel_region(snapshot: &RasterSnapshot, region: &RasterPixelRegion, cap
         MutationDiff::<RasterSnapshot>::retire_cold(diff);
         return Err(protocol::MutationApplyError::new("mutation.apply.capacity", "The rewritten image cannot be filed in the asset pool."));
     }
-    let applied = MutationDiff::apply(&diff, snapshot, capability);
+    let mut next = snapshot.clone();
+    let applied = match protocol::ColdMutationDiff::<RasterSnapshot>::apply(&diff, &mut next, capability) {
+        Ok(()) => Ok(next),
+        Err(error) => {
+            semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(next);
+            Err(error)
+        }
+    };
     MutationDiff::<RasterSnapshot>::retire_cold(diff);
     applied
 }

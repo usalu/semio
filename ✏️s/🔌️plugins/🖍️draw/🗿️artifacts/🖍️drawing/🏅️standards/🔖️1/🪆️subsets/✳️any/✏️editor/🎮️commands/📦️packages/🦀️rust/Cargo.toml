@@ -48,7 +48,7 @@ semio-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-trace = { workspace = true }
 semio-ui-locale = { workspace = true }
-semio-s-artifact-draw-drawing-scene = { workspace = true }
+semio-s-artifact-draw-drawing-scene = { workspace = true, features = ["testkit"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 semio-s-artifact-draw-drawing-editor-commands-2 = { workspace = true, features = ["testkit"] }

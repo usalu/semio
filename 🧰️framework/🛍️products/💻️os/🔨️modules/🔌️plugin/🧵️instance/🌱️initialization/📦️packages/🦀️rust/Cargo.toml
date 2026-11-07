@@ -50,3 +50,4 @@ semio-framework-value-snapshot-read = { path = "../../../../../../../../🔨️m
 [dev-dependencies]
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-trace = { workspace = true }
+serde_json = { workspace = true }

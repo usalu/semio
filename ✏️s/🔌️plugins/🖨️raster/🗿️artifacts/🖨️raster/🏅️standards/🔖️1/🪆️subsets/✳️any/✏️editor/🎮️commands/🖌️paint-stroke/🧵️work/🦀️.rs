@@ -122,3 +122,5 @@ impl<A:RasterWorkApp> ArtifactCommandWork<A> for PaintStrokeWork{
     fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(32768)?.depth)}
     fn terminal_is_empty(&self)->bool{self.empty()}
 }
+
+semio_plugin::retained_command::terminal_frame_bound!(PaintStrokeWork);

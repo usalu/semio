@@ -17,6 +17,8 @@ impl<I:NativeValueSource+?Sized,T:NativeReceive<dyn NativeValueSource>,const N:u
   let value=self.pending.take().expect("validated retained array donor");unsafe{self.rows.as_mut_ptr().cast::<T>().add(index).write(value)}self.live+=1;self.index+=1;self.phase=6;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(receipt(d))),work:6}
  }
  fn alias_close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{let source=self.source.as_ref().ok_or_else(invalid)?;if source.terminal_is_empty(){Ok(fixed(size_of::<Option<crate::retained_clone::RetainedOwnedProjection<dyn NativeValueSource>>>()+size_of::<u8>()))}else{source.close_demand(body)}}
+ fn source<'a>(&self,input:RetainedCloneRef<'a,I>)->Result<RetainedCloneRef<'a,dyn NativeValueSource>,ValueError>{input.get().sequence_child(self.index)?;let index=self.index;Ok(input.project(index,move|v|v.sequence_child(index).expect("validated original array child")))}
+
 }
 impl<I:NativeValueSource+?Sized,T:NativeReceive<dyn NativeValueSource>,const N:usize>NativeReceive<I>for[T;N]where[T;N]:RetireOwned{type Receiver=NativeArrayReceiver<I,T,N>;fn receiver()->Self::Receiver{NativeArrayReceiver::new()}}
 impl<I:NativeValueSource+?Sized,T:NativeReceive<dyn NativeValueSource>,const N:usize>NativeReceiver<I,[T;N]>for NativeArrayReceiver<I,T,N>where[T;N]:RetireOwned{

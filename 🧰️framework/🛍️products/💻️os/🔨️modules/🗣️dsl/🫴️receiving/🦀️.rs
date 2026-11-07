@@ -135,3 +135,50 @@ impl<M:DslOwnedReceivingVariants+BorrowedDslVariants> RetirementCursor for Opera
  fn terminal_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
 }
 impl<M:DslOwnedReceivingVariants+BorrowedDslVariants> Drop for OperationRetirement<M>{fn drop(&mut self){assert!(std::thread::panicking()||self.0.closed,"original operation retirement lost its retained fields");if self.0.closed{unsafe{ManuallyDrop::drop(&mut self.0)}}}}
+
+/// 🧪️ Explicit physical stock, per-turn quantum and total work that [`receive_to_completion`] may spend.
+#[derive(Clone,Copy,Debug)]
+pub struct ReceivingStock{pub stock:RetainedCloneGrant,pub quantum:RetainedCloneGrant,pub fuel:u64}
+struct TurnWork(u64);
+impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for TurnWork{fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{Ok(observed.checked_add(additional).is_some_and(|work|work<=self.0))}}
+struct TurnPhysical(RetainedCloneGrant);
+impl semio_framework_value_native_owned::native_decoding::NativeDecodeConstructionRecipient for TurnPhysical{
+ fn grant(&mut self,_:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{Ok(self.0)}
+ fn accept(&mut self,grant:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),ValueError>{if !progress.fits(grant)||!progress.fits(self.0){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"receiving progress exceeds its physical grant"))}debit(&mut self.0,progress);Ok(())}
+}
+fn debit(left:&mut RetainedCloneGrant,progress:RetainedCloneProgress){left.maximum_items=left.maximum_items.saturating_sub(progress.copied_items);left.maximum_copy_bytes=left.maximum_copy_bytes.saturating_sub(progress.copied_bytes);left.maximum_capacity_bytes=left.maximum_capacity_bytes.saturating_sub(progress.retained_capacity_bytes);left.maximum_release_bytes=left.maximum_release_bytes.saturating_sub(progress.released_bytes)}
+fn quantum_of(stock:&ReceivingStock)->RetainedCloneGrant{let (s,q)=(stock.stock,stock.quantum);RetainedCloneGrant{maximum_items:if stock.fuel==0{0}else{s.maximum_items.min(q.maximum_items)},maximum_copy_bytes:s.maximum_copy_bytes.min(q.maximum_copy_bytes),maximum_capacity_bytes:s.maximum_capacity_bytes.min(q.maximum_capacity_bytes),maximum_release_bytes:s.maximum_release_bytes.min(q.maximum_release_bytes),maximum_depth:s.maximum_depth.min(q.maximum_depth)}}
+fn spend(stock:&mut ReceivingStock,progress:RetainedCloneProgress,work:u64){debit(&mut stock.stock,progress);stock.fuel=stock.fuel.saturating_sub(work)}
+fn stalled(text:&'static str)->OriginalReceivingPrimary{ValueError::literal(ValueRefusalKind::WorkLimit,text).into()}
+/// 🧪️ Drives one stored operation through its own original receiving cursor, paying every turn and the paid close from the explicit stock.
+pub fn receive_to_completion<M:OpBinaryReceiving>(source:&[u8],range:(usize,usize),mut stock:ReceivingStock)->Result<M,OriginalReceivingPrimary>{
+ let turn=M::admit_receiving(source,range,quantum_of(&stock));let admitted=turn.result?;let Some((mut cursor,progress))=admitted else{return Err(stalled("original receiving was denied admission"))};spend(&mut stock,progress,turn.work);
+ let mut callback=|_|true;let mut native=NativeDecodeControl::new(stock.stock.maximum_capacity_bytes,&mut callback);let mut failure=None;
+ while !cursor.is_ready()&&failure.is_none(){
+  if stock.fuel==0{failure=Some(stalled("original receiving exhausted its work"));break}
+  let grant=quantum_of(&stock);let mut work=TurnWork(1);let mut physical=TurnPhysical(grant);
+  let turn=native.with_work_recipient(&mut work,|native|native.with_construction_recipient(&mut physical,|native|Ok::<_,ValueError>(cursor.step(source,native,stock.quantum.maximum_copy_bytes,grant))));
+  let turn=match turn{Ok(turn)=>turn,Err(error)=>{failure=Some(error.into());break}};
+  match turn.result{Ok(progress)=>{let idle=turn.work==0&&progress==RetainedCloneProgress::default();spend(&mut stock,progress,turn.work);if idle{failure=Some(stalled("original receiving made no progress"))}},Err(error)=>{spend(&mut stock,error.retained_progress(),turn.work);failure=Some(error)}}
+ }
+ let mut output=None;
+ if failure.is_none(){let turn=cursor.take_into(&mut output,quantum_of(&stock));match turn.result{Ok(progress)=>spend(&mut stock,progress,turn.work),Err(error)=>failure=Some(error.into())}}
+ let mut closes=stock.fuel.saturating_add(1);
+ while !cursor.terminal_is_empty()&&closes>0{closes-=1;let turn=cursor.close_step(quantum_of(&stock));match turn.result{Ok(step)=>spend(&mut stock,step.progress(),turn.work),Err(error)=>{spend(&mut stock,error.retained_progress(),turn.work);failure.get_or_insert(error.into());}}}
+ if !cursor.terminal_is_empty(){failure.get_or_insert(stalled("original receiving close exhausted its work"));}
+ match(failure,output){(Some(error),_)=>Err(error),(None,Some(output))=>Ok(output),(None,None)=>Err(stalled("original receiving produced no operation"))}
+}
+/// ⚖️ Law: each value's own `encode_op` bytes, embedded in a larger source, are received by its original cursor into the value that the `decode_op` oracle returns.
+pub fn check_receiving_round_trip<M:OpBinaryReceiving+PartialEq+std::fmt::Debug>(values:&[M])->Result<(),String>{
+ let stock=ReceivingStock{stock:RetainedCloneGrant{maximum_items:1<<20,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<30,maximum_depth:64},quantum:RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<16,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:64},fuel:1<<20};
+ for(index,value)in values.iter().enumerate(){
+  let bytes=value.encode_op().map_err(|error|format!("value {index} encode: {error:?}"))?;let oracle=M::decode_op(&bytes).map_err(|error|format!("value {index} oracle decode: {error:?}"))?;
+  if&oracle!=value{return Err(format!("value {index} oracle differs: {oracle:?} != {value:?}"))}
+  let mut source=vec![0xA5;3];source.extend_from_slice(&bytes);let end=source.len();source.extend_from_slice(&[0x5A;2]);
+  let received=receive_to_completion::<M>(&source,(3,end),stock).map_err(|error|format!("value {index} receive: {}",error.message()))?;
+  if received!=oracle{return Err(format!("value {index} receiving differs: {received:?} != {oracle:?}"))}
+ }
+ Ok(())
+}
+#[path="🧭️mirrored/🦀️.rs"]
+pub mod mirrored;

@@ -317,15 +317,15 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     /// `build_artifact_reserved_media_job`, never the unbounded one-shot `ArtifactApp::import_media`
     /// seam) and the three clipboard verbs, whose fragment vocabulary is this artifact's own
     /// `puzzle.2d.clipboard.v1` — see [`Puzzle2dClipboardJob`].
-    fn build_reserved_tool_job(source:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_framework_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_reserved_tool_job(source:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if let Some(ready)=body.as_ref(){
-            if (&**ready as &dyn std::any::Any).is::<semio_framework_plugin::tool_contract::ArtifactReservedRequestJob<EditorApp<Self>,Puzzle2dClipboardJob>>(){return semio_framework_plugin::tool_contract::admit_reserved_work::<EditorApp<Self>,Puzzle2dClipboardJob>(source,body,cx)}
-            return semio_framework_plugin::tool_contract::admit_reserved_work::<EditorApp<Self>,Puzzle2dImportJob>(source,body,cx)
+            if (&**ready as &dyn std::any::Any).is::<semio_plugin::plugin_app_close_prelude::ArtifactReservedRequestJob<EditorApp<Self>,Puzzle2dClipboardJob>>(){return semio_plugin::plugin_app_close_prelude::admit_reserved_work::<EditorApp<Self>,Puzzle2dClipboardJob>(source,body,cx)}
+            return semio_plugin::plugin_app_close_prelude::admit_reserved_work::<EditorApp<Self>,Puzzle2dImportJob>(source,body,cx)
         }
         let request=source.as_ref().ok_or_else(||semio_framework_value::ValueError::invariant("puzzle2d import requires its original request"))?;
         if matches!(request.tool_id.as_str(), "copy" | "cut" | "paste") {
             if !matches!(request.input.as_ref(),Some(ArtifactReservedToolInput::Action{..})){return Err(semio_framework_value::ValueError::invariant("puzzle2d clipboard requires its original action input").into())}
-            return semio_framework_plugin::tool_contract::admit_reserved_work::<EditorApp<Self>,Puzzle2dClipboardJob>(source,body,cx)
+            return semio_plugin::plugin_app_close_prelude::admit_reserved_work::<EditorApp<Self>,Puzzle2dClipboardJob>(source,body,cx)
         }
         if request.tool_id.as_str() != PUZZLE2D_IMPORT_TOOL_ID {
             return Ok(false);
@@ -336,7 +336,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         let Some(ArtifactReservedToolInput::Media { .. }) = request.input.as_ref() else {
             return Err(semio_framework_value::ValueError::invariant("puzzle2d import-media requires media input").into());
         };
-        semio_framework_plugin::tool_contract::admit_reserved_work::<EditorApp<Self>,Puzzle2dImportJob>(source,body,cx)
+        semio_plugin::plugin_app_close_prelude::admit_reserved_work::<EditorApp<Self>,Puzzle2dImportJob>(source,body,cx)
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {

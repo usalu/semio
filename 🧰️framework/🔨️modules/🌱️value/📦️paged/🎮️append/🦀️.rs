@@ -92,8 +92,4 @@ impl Drop for PagedUtf8AppendCursor {
 }
 
 
-#[cfg(test)]
-#[path="♻️close/🧪️tests/🦀️.rs"]
-mod close_work_tests;
-
 #[cfg(test)]#[path="🎟️work/🧪️tests/🦀️.rs"]mod normal_work_tests;

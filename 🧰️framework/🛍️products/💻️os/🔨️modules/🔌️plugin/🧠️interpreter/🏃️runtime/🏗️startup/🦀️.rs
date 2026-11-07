@@ -61,6 +61,9 @@ impl Drop for OwnedActorStartup{fn drop(&mut self){assert!(std::thread::panickin
 fn refused(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::UnsupportedOwner,message)}
 fn metadata(cx:&mut StepContext<'_>,copy:usize)->Result<bool,OriginalTurnFailure>{let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})?;cx.consume_fuel(1);Ok(true)}
 
+/// 🔢️ Reads the owned guest channel as its original canonical JSON integer, refusing signs, leading zeros and u32 overflow.
+fn channel_integer(bytes:&[u8])->Result<u32,ValueError>{let bytes=bytes.trim_ascii();if bytes.is_empty()||(bytes.len()>1&&bytes[0]==b'0'){return Err(refused("Owned startup channel is not its original JSON integer"))}bytes.iter().try_fold(0u32,|value,byte|{if !byte.is_ascii_digit(){return Err(refused("Owned startup channel is not its original JSON integer"))}value.checked_mul(10).and_then(|value|value.checked_add(u32::from(byte-b'0'))).ok_or_else(||refused("Owned startup channel exceeds its declared integer width"))})}
+
 #[cfg(test)]
 mod tests{
 //! 🤝️ Actual whole owned ABI startup admits its borrowed channel and returns every physical and VM receipt.

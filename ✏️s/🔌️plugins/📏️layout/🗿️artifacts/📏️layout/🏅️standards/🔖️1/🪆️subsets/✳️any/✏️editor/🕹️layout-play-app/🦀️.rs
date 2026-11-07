@@ -25,7 +25,7 @@ impl Default for LayoutPlayApp {
     /// none leaves the engine on its own native door or on the layout font alone.
     fn default() -> Self {
         use semio_s_artifact_layout_layout_engine::scene::text_fonts::{TextFontsInstallError, install_package_text_fonts};
-        match install_package_text_fonts(semio_framework_plugin::reactor::package_asset) {
+        match install_package_text_fonts(semio_plugin::reactor::package_asset) {
             Ok(()) | Err(TextFontsInstallError::AlreadyInstalled | TextFontsInstallError::PackageAssetMissing { .. }) => {}
             Err(error) => eprintln!("[ERROR] layout: the host's built-in text fonts were refused: {error}"),
         }
@@ -38,10 +38,10 @@ impl LayoutPlayApp {
         body_key: &str,
         doc: &ArtifactView<'_, LayoutSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
+        view_state: &semio_plugin::ViewModel,
         transient: &LayoutWindowTransient,
         interaction: &LayoutInteractionSnapshot,
-    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    ) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let document = doc.snapshot;
         let mut config = blueprint::config::current(cfg);
         if body_key == LAYOUT_PLAY_BODY_BLUEPRINT {
@@ -56,13 +56,13 @@ impl LayoutPlayApp {
                 None => blueprint::render(document, &config, transient, interaction),
             },
             LAYOUT_PLAY_BODY_PREVIEW => preview::render(document, &config, transient, interaction),
-            LAYOUT_PLAY_BODY_ARTIFACT => document_panel::render(document, &config, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_ARTIFACT)),
-            LAYOUT_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_CATALOGUE)),
-            LAYOUT_PLAY_BODY_INSPECTION => inspection_panel::render(document, &config, interaction, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_INSPECTION)),
-            LAYOUT_PLAY_BODY_PREFLIGHT => preflight_panel::render(document, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_PREFLIGHT)),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "layout error text admission failed")),
+            LAYOUT_PLAY_BODY_ARTIFACT => document_panel::render(document, &config, labels, &semio_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_ARTIFACT)),
+            LAYOUT_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_CATALOGUE)),
+            LAYOUT_PLAY_BODY_INSPECTION => inspection_panel::render(document, &config, interaction, labels, &semio_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_INSPECTION)),
+            LAYOUT_PLAY_BODY_PREFLIGHT => preflight_panel::render(document, labels, &semio_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_PREFLIGHT)),
+            _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "layout error text admission failed")),
         }
-        .map(semio_framework_plugin::built_to_component_tree)
+        .map(semio_plugin::built_to_component_tree)
     }
 }
 
@@ -72,7 +72,7 @@ mod host_event_birth_tests;
 
 impl ArtifactEditor for LayoutPlayApp {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
-    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+    fn examples() -> Vec<semio_plugin::ExampleSource> {
         vec![semio_s_artifact_layout_layout_examples::demo::source()]
     }
     type Snapshot = LayoutSnapshot;
@@ -81,21 +81,21 @@ impl ArtifactEditor for LayoutPlayApp {
     type ConfigMutation = NoConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
-    type Presence = semio_framework_plugin::NoPresence;
-    type PresenceMutation = semio_framework_plugin::NoPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Presence = semio_plugin::NoPresence;
+    type PresenceMutation = semio_plugin::NoPresenceMutation;
+    type Transient = semio_plugin::NoTransient;
+    type TransientMutation = semio_plugin::NoTransientMutation;
 
     type Command = LayoutCommand;
 
     const DIALECT: Dialect = semio_s_artifact_layout_layout_model::LAYOUT_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = semio_s_artifact_layout_layout_model::LAYOUT_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->Result<LayoutSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<LayoutSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document())
     })}
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_plugin::AppIo> {
         Some(semio_s_artifact_layout_layout_engine::layout_io())
     }
 
@@ -118,13 +118,13 @@ impl ArtifactEditor for LayoutPlayApp {
     /// 📨️ Every host event ends the window's open transform-tool gesture with zero trace under the reason the tool
     /// records: a blur `blur`, a lost pointer capture `captureLost`, a utility switch or a closing window `retired`, an
     /// opened history edit `frozen` and a remote edit `baseMoved` — the window's typed `translateSelection{phase: "abort"}`.
-    fn host_event_demands(event: &semio_framework_plugin::HostEvent) -> Option<semio_framework_value::RetirementDemand> {
-        let bytes=match event{semio_framework_plugin::HostEvent::WindowBlurred{..}=>9,semio_framework_plugin::HostEvent::PointerCaptureLost{..}=>16,semio_framework_plugin::HostEvent::UtilityChanged{..}|semio_framework_plugin::HostEvent::Retiring{..}=>12,semio_framework_plugin::HostEvent::TimeTravelFrozen{..}=>11,semio_framework_plugin::HostEvent::BaseMoved{..}=>14};
+    fn host_event_demands(event: &semio_plugin::HostEvent) -> Option<semio_framework_value::RetirementDemand> {
+        let bytes=match event{semio_plugin::HostEvent::WindowBlurred{..}=>9,semio_plugin::HostEvent::PointerCaptureLost{..}=>16,semio_plugin::HostEvent::UtilityChanged{..}|semio_plugin::HostEvent::Retiring{..}=>12,semio_plugin::HostEvent::TimeTravelFrozen{..}=>11,semio_plugin::HostEvent::BaseMoved{..}=>14};
         let header=std::mem::size_of::<Self::Command>();Some(semio_framework_value::RetirementDemand{copy_bytes:header.saturating_mul(2).saturating_add(bytes),capacity_bytes:header.saturating_add(bytes),depth:1,..Default::default()})
     }
 
-    fn host_event(event: &semio_framework_plugin::HostEvent) -> Option<Self::Command> {
-        use semio_framework_plugin::HostEvent;
+    fn host_event(event: &semio_plugin::HostEvent) -> Option<Self::Command> {
+        use semio_plugin::HostEvent;
         use semio_framework_tool_machine::ToolAbortReason;
         let reason = match event {
             HostEvent::WindowBlurred { .. } => ToolAbortReason::Blur,
@@ -142,7 +142,7 @@ impl ArtifactEditor for LayoutPlayApp {
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+        Some(semio_plugin::no_transient_local_root_retirement_factory())
     }
 
     /// 🧾️ Store publication authority for the `Artifact` lane — without it the host refuses every
@@ -154,15 +154,15 @@ impl ArtifactEditor for LayoutPlayApp {
         Some(store::cold_mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         blueprint::config::register(registry)
     }
 
-    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_transient_owners(registry: &mut semio_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
         blueprint::transient::register(registry)
     }
 
-    fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+    fn bounded_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
         LayoutRetainedProofs::bounded_first_step_tool_proofs().into_iter().chain(LayoutExportProofs::bounded_first_step_tool_proofs()).collect()
     }
 
@@ -173,23 +173,23 @@ impl ArtifactEditor for LayoutPlayApp {
         registry.register(LayoutMediaExportJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !LAYOUT_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return layout_build_export_tool_job(request, output, cx);
         }
         if original.command.command_id() != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "layout retained command does not match its exact registered tool").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "layout retained command does not match its exact registered tool").into());
         }
         let tool_id = original.command.command_id();
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, LayoutCommand::command_id, LAYOUT_RETAINED_RAW_BYTES, LAYOUT_RETAINED_WORK_ITEMS, false, |request| LayoutWindowWork::new(tool_id))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, LayoutCommand::command_id, LAYOUT_RETAINED_RAW_BYTES, LAYOUT_RETAINED_WORK_ITEMS, false, |request| LayoutWindowWork::new(tool_id))
     }
 
     /// 🎞️ `import-media` is the only reserved route layout owns: every inbound `fields:in` delivery is
     /// routed through this builder (`dispatch_import_media` → `build_artifact_reserved_media_job`);
     /// `copy`/`cut`/`paste` stay on the framework's own reserved factories.
-    fn build_reserved_tool_job(source:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_framework_plugin::ArtifactReservedJob+Send>>,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        if body.is_some(){return semio_framework_plugin::tool_contract::admit_reserved_work::<EditorApp<Self>,LayoutImportJob>(source,body,cx)}
+    fn build_reserved_tool_job(source:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if body.is_some(){return semio_plugin::plugin_app_close_prelude::admit_reserved_work::<EditorApp<Self>,LayoutImportJob>(source,body,cx)}
         let request=source.as_ref().ok_or_else(||Fault::from("layout import requires its original request"))?;
         if request.tool_id.as_str() != LAYOUT_IMPORT_TOOL_ID {
             return Ok(false);
@@ -200,10 +200,10 @@ impl ArtifactEditor for LayoutPlayApp {
         let Some(ArtifactReservedToolInput::Media { .. }) = request.input.as_ref() else {
             return Err(Fault::from("layout import-media requires media input").into());
         };
-        semio_framework_plugin::tool_contract::admit_reserved_work::<EditorApp<Self>,LayoutImportJob>(source,body,cx)
+        semio_plugin::plugin_app_close_prelude::admit_reserved_work::<EditorApp<Self>,LayoutImportJob>(source,body,cx)
     }
 
-    fn build_media_export_job(request:&mut Option<ArtifactMediaExportJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_framework_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_media_export_job(request:&mut Option<ArtifactMediaExportJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         use semio_s_artifact_layout_layout_engine_export::LAYOUT_MEDIA_EXPORT_TOOL_ID;
         if request.as_ref().is_some_and(|input|input.port!="layout:out"||input.tool_id!=LAYOUT_MEDIA_EXPORT_TOOL_ID){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"layout producer requires its exact registered output port").into())}
         LayoutMediaExportJob::admit_original(request,body,cx)
@@ -214,7 +214,7 @@ impl ArtifactEditor for LayoutPlayApp {
         doc: &ArtifactView<'_, LayoutSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
         interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<LayoutMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
@@ -284,11 +284,11 @@ impl ArtifactEditor for LayoutPlayApp {
     }
     //#endregion 🔖️Media
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         Self::render_body(body_key, doc, cfg, view_state, &LayoutWindowTransient::default(), &LayoutInteractionSnapshot::default())
     }
 
-    fn window_engagements(_doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(_doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
         let config = blueprint::config::current(cfg);
         let labels = layout_labels(view_state);
         let Some(window_id) = view_state.window_id.clone() else { return HashMap::new() };
@@ -299,12 +299,12 @@ impl ArtifactEditor for LayoutPlayApp {
     fn uses_render_work(body_key:&str)->bool{matches!(body_key,LAYOUT_PLAY_BODY_BLUEPRINT|LAYOUT_PLAY_BODY_PREVIEW|LAYOUT_PLAY_BODY_INSPECTION)}
     fn begin_render_work(body_key:&str,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Self::RenderWork>,semio_framework_job::OriginalTurnFailure>{let demand=semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Self::RenderWork>(),depth:1,..Default::default()};if cx.should_yield()||cx.is_cancelled()||!cx.retained_work_can_enter(demand){return Ok(None);}let work=if body_key==LAYOUT_PLAY_BODY_INSPECTION{LayoutPanelRenderWork::Inspection(inspection_panel::drawing_work::LayoutInspectorWork::new())}else{LayoutPanelRenderWork::Canvas(semio_s_artifact_layout_layout_editor_commands::canvas::paragraph_work::LayoutRenderWork::new())};cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})?;cx.consume_fuel(1);Ok(Some(work))}
     fn render_work_demand(work:&Self::RenderWork,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{work.demand(maximum_body_bytes)}
-    fn render_with_work_context(work:&mut Self::RenderWork,_owner:&semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,body_key:&str,_source:&std::sync::Arc<LayoutSnapshot>,doc:&ArtifactView<'_,LayoutSnapshot>,cfg:&ConfigView<'_,NoConfig>,view_state:&semio_framework_plugin::ViewModel,transient:&semio_framework_plugin::TransientView<'_,semio_framework_plugin::NoTransient>,interaction:&InteractionView<'_>,cx:&mut semio_framework_job::StepContext<'_>)->semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree>{
+    fn render_with_work_context(work:&mut Self::RenderWork,_owner:&semio_plugin::ArtifactInstanceOperationOwnerHandle,body_key:&str,_source:&std::sync::Arc<LayoutSnapshot>,doc:&ArtifactView<'_,LayoutSnapshot>,cfg:&ConfigView<'_,NoConfig>,view_state:&semio_plugin::ViewModel,transient:&semio_plugin::TransientView<'_,semio_plugin::NoTransient>,interaction:&InteractionView<'_>,cx:&mut semio_framework_job::StepContext<'_>)->semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree>{
         match work {
             LayoutPanelRenderWork::Inspection(work) => {
                 let config=blueprint::config::current(cfg);
                 if !work.advance(doc,&config,cx)? { return Ok(None); }
-                work.render(doc.snapshot,&config,&LayoutInteractionSnapshot::from_interaction(interaction),layout_labels(view_state),&semio_framework_plugin::TreeWindows::for_body(view_state,LAYOUT_PLAY_BODY_INSPECTION)).map(semio_framework_plugin::built_to_component_tree).map(Some).map_err(Into::into)
+                work.render(doc.snapshot,&config,&LayoutInteractionSnapshot::from_interaction(interaction),layout_labels(view_state),&semio_plugin::TreeWindows::for_body(view_state,LAYOUT_PLAY_BODY_INSPECTION)).map(semio_plugin::built_to_component_tree).map(Some).map_err(Into::into)
             }
             LayoutPanelRenderWork::Canvas(work) => {if cx.should_yield()||cx.is_cancelled(){return Ok(None);}if work.needs_inputs(){let mut config=blueprint::config::current(cfg);if body_key==LAYOUT_PLAY_BODY_BLUEPRINT{if let Some(utility)=view_state.active_utility_id.as_deref().filter(|utility|!utility.is_empty()){config.active_utility=utility.to_string();}}work.prepare(doc.snapshot,&config,&blueprint::transient::current(transient),&LayoutInteractionSnapshot::from_interaction(interaction),body_key==LAYOUT_PLAY_BODY_BLUEPRINT).map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"layout original render preparation failed"))?;cx.consume_fuel(1);return Ok(None);}if !work.advance(doc.snapshot,cx)?{return Ok(None);}work.take_tree().map(Some).map_err(Into::into)}
         }
@@ -312,16 +312,16 @@ impl ArtifactEditor for LayoutPlayApp {
 
 
     fn render_with_request_context(
-        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        _owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, LayoutSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        view_state: &semio_plugin::ViewModel,
+        transient: &semio_plugin::TransientView<'_, semio_plugin::NoTransient>,
         interaction: &InteractionView<'_>,
-        cx:&mut semio_framework_plugin::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
-        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
+        cx:&mut semio_plugin::StepContext<'_>,
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
+        let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
         Self::render_body(body_key, doc, cfg, view_state, &blueprint::transient::current(transient), &LayoutInteractionSnapshot::from_interaction(interaction))
 
         })();
@@ -331,8 +331,8 @@ impl ArtifactEditor for LayoutPlayApp {
     fn window_engagements_with_request_context(
         doc: &ArtifactView<'_, LayoutSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        view_state: &semio_plugin::ViewModel,
+        transient: &semio_plugin::TransientView<'_, semio_plugin::NoTransient>,
         _interaction: &InteractionView<'_>,
     ) -> HashMap<String, WindowEngagement> {
         let mut engagements = Self::window_engagements(doc, cfg, view_state);
@@ -347,7 +347,7 @@ impl ArtifactEditor for LayoutPlayApp {
         request: &ContextMenuRequest,
         doc: &ArtifactView<'_, LayoutSnapshot>,
         _cfg: &ConfigView<'_, NoConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
+        view_state: &semio_plugin::ViewModel,
         registry: &AppActionRegistry,
     ) -> Vec<ContextMenuItemSpec> {
         layout_context_menu_items(registry, doc.snapshot, layout_labels(view_state), view_state, request.surface.as_ref(), &[])
@@ -357,7 +357,7 @@ impl ArtifactEditor for LayoutPlayApp {
         request: &ContextMenuRequest,
         doc: &ArtifactView<'_, LayoutSnapshot>,
         _cfg: &ConfigView<'_, NoConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
+        view_state: &semio_plugin::ViewModel,
         interaction: &InteractionView<'_>,
         registry: &AppActionRegistry,
     ) -> Vec<ContextMenuItemSpec> {

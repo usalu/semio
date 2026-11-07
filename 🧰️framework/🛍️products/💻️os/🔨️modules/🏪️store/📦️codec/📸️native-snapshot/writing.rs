@@ -26,7 +26,7 @@ pub struct OriginalPackWriting {
 impl OriginalPackWriting {
     /// 🎟️ Constructs only the inline writer header; its caller must first admit that header under its original grant.
     pub fn new(envelope: &'static str, maximum: usize) -> Result<Self, ValueError> {
-        let prefix = semio_framework_os_semio::declared_envelope_prefix_len(envelope, semio_framework_os_semio::Component::Pack, 1)?;
+        let prefix = semio_os_semio::declared_envelope_prefix_len(envelope, semio_os_semio::Component::Pack, 1)?;
         let body = maximum.checked_sub(prefix).ok_or_else(invalid)?;
         Ok(Self {
             last_work:0,
@@ -114,7 +114,7 @@ impl OriginalPackWriting {
                     return Ok(Default::default());
                 }
                 self.last_work=1;for i in self.prefix_written..self.prefix_written + count {
-                    self.wire[i] = semio_framework_os_semio::declared_binary_prefix_byte(self.envelope, semio_framework_os_semio::Component::Pack, 1, i)?.ok_or_else(invalid)?;
+                    self.wire[i] = semio_os_semio::declared_binary_prefix_byte(self.envelope, semio_os_semio::Component::Pack, 1, i)?.ok_or_else(invalid)?;
                 }
                 self.prefix_written += count;
                 return Ok(RetainedCloneProgress { copied_items: 1, copied_bytes: count, ..Default::default() });

@@ -1,4 +1,4 @@
-import {readdirSync,rmSync,statSync,truncateSync,writeFileSync} from "node:fs";
+import {closeSync,openSync,readSync,readdirSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {basename,dirname,join} from "node:path";
 import {UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
 import {listObjectsV1,pruneEntriesV1,removeObjectsV1} from "../💾️store/🟦️.ts";
@@ -186,7 +186,7 @@ export async function reclaimUnitStorageV1(store:string,needBytes:number,options
 
 function pruneEvents(root:string):void{
  const directory=join(root,UNIT_CACHE_POLICY_V1.layout.events);let names:string[];try{names=readdirSync(directory);}catch{return;}
- for(const name of names){try{const path=join(directory,name);if(statSync(path).size>policy.eventLogMaximumBytes)truncateSync(path,0);}catch{}}
+ for(const name of names){try{const path=join(directory,name);{const size=statSync(path).size;if(size>policy.eventLogMaximumBytes){const keep=Math.floor(policy.eventLogMaximumBytes/2),fd=openSync(path,"r"),tail=Buffer.alloc(keep);try{readSync(fd,tail,0,keep,size-keep);}finally{closeSync(fd);}const text=tail.toString("utf8"),cut=text.indexOf("\n");writeFileSync(path,cut<0?"":text.slice(cut+1));}}}catch{}}
 }
 
 /** 🪜️ Measures, plans and applies in one step. */

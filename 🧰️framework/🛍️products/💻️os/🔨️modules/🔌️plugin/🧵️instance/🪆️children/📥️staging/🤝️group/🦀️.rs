@@ -62,7 +62,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
         let grant=semio_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,grant);
         let demand=self.private_child_group_close_demands(grant.maximum_copy_bytes)?;
         if self.private_child_groups_terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()});}
-        if !plugin_grant_funds(demand,grant){return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()});}
+        if !semio_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()});}
         let Some((_,operation))=self.private_child_groups.next_id_from(0)else{
             if cx.retirement_should_yield(){return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()})}
             let turn=self.private_child_groups.close_empty_backing_step(grant);cx.consume_fuel(turn.work);let step=match turn.result{Ok(step)=>step,Err(error)=>return Err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(error).debit_original(cx))};let progress=step.progress();cx.consume_retained(progress).map_err(|error|semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(error.with_retained_progress(progress)))?;
@@ -88,7 +88,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
         let Some(original)=self.private_child_groups.get(operation)else{return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()});};
         let terminal=original.terminal_is_empty();
         let demand=self.private_child_group_operation_close_demands(operation, grant.maximum_copy_bytes)?;
-        if !plugin_grant_funds(demand,grant){return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()});}
+        if !semio_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()});}
         if terminal{drop(self.private_child_groups.remove(operation));return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}});}
         let owner=self.private_child_groups.get_mut(operation).ok_or_else(||plugin_sdk_fault("private group changed during its exact bounded close"))?;
         let child_grant=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};

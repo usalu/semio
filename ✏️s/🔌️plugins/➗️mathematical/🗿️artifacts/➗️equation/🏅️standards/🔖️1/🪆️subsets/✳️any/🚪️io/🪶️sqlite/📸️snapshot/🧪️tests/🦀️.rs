@@ -52,7 +52,7 @@ fn sqlite_snapshot_equation_explicit_native_output_boundary_preserves_complete_o
  let limits=SqliteDatabaseLimits::default();
  let expected=original_owners::with_sqlite_recipient(limits,&mut |_|true,|sqlite_control|snapshot.to_sqlite_database(sqlite_control)).unwrap();
  for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text] {
-  let payload=<EquationSnapshot as ArtifactSqliteSnapshotHost>::encode_sqlite_snapshot_native(&snapshot,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();
+  let payload=<EquationSnapshot as ArtifactSqliteSnapshotHost>::encode_sqlite_snapshot_native(&snapshot,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).result.unwrap();
   let restored=original_owners::with_decoding(|native_owner|EquationSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap();
   assert_eq!(original_owners::with_sqlite_recipient(limits,&mut |_|true,|sqlite_control|restored.to_sqlite_database(sqlite_control)).unwrap(),expected);
   <EquationSnapshot as ArtifactSqliteSnapshotHost>::retire_sqlite_snapshot(restored);
@@ -82,12 +82,12 @@ fn sqlite_snapshot_equation_explicit_native_output_exact_file_frontier_and_unico
  let (_,mut snapshot)=fixture();snapshot.equation.expr.kind=EquationNodeKind::Symbol{name:"interior 世界".repeat(20000)};
  let limits=SqliteDatabaseLimits::default();
  for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text] {
-  let payload=<EquationSnapshot as ArtifactSqliteSnapshotHost>::encode_sqlite_snapshot_native(&snapshot,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();
+  let payload=<EquationSnapshot as ArtifactSqliteSnapshotHost>::encode_sqlite_snapshot_native(&snapshot,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).result.unwrap();
   let length=match &payload{store::io::IoPayload::Binary(bytes)=>bytes.len(),store::io::IoPayload::Text(text)=>text.len()};
-  assert!(<EquationSnapshot as ArtifactSqliteSnapshotHost>::encode_sqlite_snapshot_native(&snapshot,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_file_bytes:length,..limits})).is_ok());
-  assert!(<EquationSnapshot as ArtifactSqliteSnapshotHost>::encode_sqlite_snapshot_native(&snapshot,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_file_bytes:length-1,..limits})).is_err());
+  assert!(<EquationSnapshot as ArtifactSqliteSnapshotHost>::encode_sqlite_snapshot_native(&snapshot,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_file_bytes:length,..limits})).result.is_ok());
+  assert!(<EquationSnapshot as ArtifactSqliteSnapshotHost>::encode_sqlite_snapshot_native(&snapshot,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_file_bytes:length-1,..limits})).result.is_err());
   let mut interior=false;
-  assert!(<EquationSnapshot as ArtifactSqliteSnapshotHost>::encode_sqlite_snapshot_native(&snapshot,encoding,&mut SqliteSnapshotControl::new(&mut |p|{if p.phase==store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative&&p.completed>=256&&p.completed<p.total{interior=true;false}else{true}},limits)).is_err());
+  assert!(<EquationSnapshot as ArtifactSqliteSnapshotHost>::encode_sqlite_snapshot_native(&snapshot,encoding,&mut SqliteSnapshotControl::new(&mut |p|{if p.phase==store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative&&p.completed>=256&&p.completed<p.total{interior=true;false}else{true}},limits)).result.is_err());
   assert!(interior);
  }
  <EquationSnapshot as ArtifactSqliteSnapshotHost>::retire_sqlite_snapshot(snapshot);

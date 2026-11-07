@@ -273,7 +273,12 @@ pub async fn plugin_refresh_ui<PA: PluginApp>(runtime: &PluginRuntime<PA>, insta
     with_instances_turn_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;
         instance.surface_contexts.update_view(&request.view_state);
-        let mut response = RefreshResponse { requested_effects: ::semio_framework_async::poll::resolve_ready(instance.app.pending_effects(Some(&request.view_state), cx))?, ..RefreshResponse::default() };
+        let polled = {
+            let registered_view = instance.surface_contexts.view().cloned();
+            ::semio_framework_async::poll::resolve_ready(instance.app.pending_effects(registered_view.as_ref(), cx))?
+        };
+        if polled.is_none() { instance.cell.pending_effects.retain() } else { instance.cell.pending_effects.publish() }
+        let mut response = RefreshResponse { requested_effects: polled.unwrap_or_default(), ..RefreshResponse::default() };
         for entry in &request.windows {
             let window_view_state = request.view_state.for_window_instance(&entry.key).ok_or_else(|| plugin_internal_fault(format!("unknown render window instance {}", entry.key)))?;
             let Some(()) = ::semio_framework_async::poll::resolve_ready(instance.app.render(&entry.body_key,None,&window_view_state,cx))? else{return Ok(None)};

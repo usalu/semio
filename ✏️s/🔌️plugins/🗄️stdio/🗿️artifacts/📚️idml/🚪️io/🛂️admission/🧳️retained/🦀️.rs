@@ -45,8 +45,8 @@ impl RetainedIdmlAdmission {
     fn read_advance(&mut self,original:RetainedCloneRef<'_,IdmlSnapshot>,replacement:Option<RetainedCloneRef<'_,Vec<u8>>>,body:usize,grant:RetainedCloneGrant)->Result<RetainedIdmlAdmissionAdvance,ValueError>{
         let demand=self.read_demand(original,replacement,body)?;
         if !fits(demand,grant){return Ok(RetainedIdmlAdmissionAdvance::Progress(Default::default()));}
-        if let Some(progress)=original.bind(&mut self.source,grant)?{return Ok(RetainedIdmlAdmissionAdvance::Progress(progress));}
-        if let Some(replacement)=replacement{if let Some(progress)=replacement.bind(&mut self.replacement_source,grant)?{return Ok(RetainedIdmlAdmissionAdvance::Progress(progress));}}
+        if let Some(progress)=original.bind(&mut self.source,grant).result?{return Ok(RetainedIdmlAdmissionAdvance::Progress(progress));}
+        if let Some(replacement)=replacement{if let Some(progress)=replacement.bind(&mut self.replacement_source,grant).result?{return Ok(RetainedIdmlAdmissionAdvance::Progress(progress));}}
         let capacity=demand.capacity_bytes;let maximum_work=if capacity!=0{1}else{(demand.copy_bytes-FIXED)/UNIT};
         let step=self.cursor.advance(IdmlAdmissionSource{snapshot:original.get(),replacement:self.replacement_index.zip(replacement).map(|(index,source)|IdmlPartReplacement{index,bytes:source.get().as_slice()}),compare_version:self.replacement_index.is_none()},IdmlAdmissionGrant{maximum_work,maximum_copy_bytes:if capacity!=0{self.cursor.next_copy_bytes()}else{0},maximum_capacity_bytes:capacity,maximum_release_bytes:0});
         let progress=RetainedCloneProgress{copied_items:1,copied_bytes:FIXED+step.work*UNIT+step.copied_bytes,retained_capacity_bytes:step.retained_capacity_bytes,..Default::default()};
@@ -79,7 +79,7 @@ impl RetainedIdmlAdmission {
         let demand=self.close_demand(grant.maximum_copy_bytes)?;if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
         if !fits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
         if self.cursor.next_release_bytes()!=0{let step=self.cursor.close_one(grant.maximum_release_bytes);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:FIXED,released_bytes:step.released_bytes,..Default::default()}));}
-        let step=RetainedCloneBinding::close_one(if self.replacement_source.is_some(){&mut self.replacement_source}else{&mut self.source},grant)?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
+        let step=RetainedCloneBinding::close_one(if self.replacement_source.is_some(){&mut self.replacement_source}else{&mut self.source},grant).result?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
     }
     /// 🪹 No numeric page or genuine source alias remains retained.
     pub fn terminal_is_empty(&self)->bool{self.closing&&self.cursor.terminal_is_empty()&&self.source.is_none()&&self.replacement_source.is_none()}

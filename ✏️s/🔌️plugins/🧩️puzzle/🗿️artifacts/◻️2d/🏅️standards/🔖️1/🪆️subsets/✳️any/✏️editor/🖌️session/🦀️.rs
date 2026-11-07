@@ -6,21 +6,21 @@ use crate::editor::puzzle2d::terminology::puzzle2d_labels;
 use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::{kernel::Effect, kernel::PastePlacement};
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::Media;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::app::EphemeralEmit;
+use semio_plugin::{kernel::Effect, kernel::PastePlacement};
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::Media;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::app::EphemeralEmit;
 use semio_framework_pack_json::{json, Value};
 use semio_framework_job::StepContext;
-use semio_framework_plugin::app::ArtifactToolCompletionRejection;
-use semio_framework_plugin::{ArtifactReservedToolJobRequest, ArtifactToolCompletion, MediaPayload};
+use semio_plugin::app::ArtifactToolCompletionRejection;
+use semio_plugin::{ArtifactReservedToolJobRequest, ArtifactToolCompletion, MediaPayload};
 use crate::editor::puzzle2d::{Puzzle2dPlayApp, interaction, snapshot};
-use semio_framework_plugin::component::ArtifactReservedToolInput;
+use semio_plugin::component::ArtifactReservedToolInput;
 use semio_framework_job::InteractiveJob;
-use semio_framework_plugin::component::ArtifactReservedJob;
+use semio_plugin::component::ArtifactReservedJob;
 
 //#region 🔖️PlayApp
 //#region 🧵️ReservedJobs
@@ -483,7 +483,7 @@ impl Puzzle2dImportJob {
     }
 }
 
-impl semio_framework_plugin::tool_contract::ArtifactReservedWork<EditorApp<Puzzle2dPlayApp>> for Puzzle2dImportJob {
+impl semio_plugin::plugin_app_close_prelude::ArtifactReservedWork<EditorApp<Puzzle2dPlayApp>> for Puzzle2dImportJob {
     fn step<'a>(&'a mut self,request:&'a mut ArtifactReservedToolJobRequest<EditorApp<Puzzle2dPlayApp>>,cx:&mut StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(request,cx))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
@@ -603,7 +603,7 @@ impl Puzzle2dClipboardJob{
         let turn=self.turn(request,cx)?;self.outbox.settle(turn,cx).map_err(Into::into)
     }
 }
-impl semio_framework_plugin::tool_contract::ArtifactReservedWork<EditorApp<Puzzle2dPlayApp>> for Puzzle2dClipboardJob{
+impl semio_plugin::plugin_app_close_prelude::ArtifactReservedWork<EditorApp<Puzzle2dPlayApp>> for Puzzle2dClipboardJob{
     fn step<'a>(&'a mut self,request:&'a mut ArtifactReservedToolJobRequest<EditorApp<Puzzle2dPlayApp>>,cx:&mut StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(request,cx))}
     fn borrow_outcome<'a>(&'a self,descriptor:&'a semio_framework_job::JobOutcomeDescriptor)->Result<semio_framework_job::JobOutcomeView<'a>,semio_framework_value::ValueError>{self.outbox.borrow_outcome(descriptor)}
     fn begin_close(&mut self){self.closing=true;}

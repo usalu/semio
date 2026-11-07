@@ -242,13 +242,13 @@ impl TracePointerJob {
                     TracePointerWork::Pick=>{
                         if self.pick.is_none(){
                             let query=if let Some(polygon)=&self.lasso{PreparedScenePick::Lasso{points:polygon.as_slice().to_vec()}}else if let Some((start,end,crossing))=self.marquee{PreparedScenePick::Rectangle{start,end,crossing}}else{PreparedScenePick::Point{point:self.world,tolerance:self.tolerance,required_flatness:if self.tolerance==0.0{scene.flatness}else{(self.tolerance/80.0).clamp(1e-6,16.0)}}};
-                            self.pick=Some(PreparedScenePickJob::new(live,query,DRAWING_QUERY_HIT_CAPACITY).map_err(Fault::from)?);
+                            self.pick=Some(PreparedScenePickJob::new(live,query,DRAWING_QUERY_HIT_CAPACITY).map_err(|error|Fault::from(error.to_string()))?);
                             self.push_work(TracePointerWork::Pick);
-                        }else if self.pick.as_mut().unwrap().advance(scene,live,1).map_err(Fault::from)?.done{self.push_work(TracePointerWork::PublishPick{next:0});}
+                        }else if self.pick.as_mut().unwrap().advance(scene,live,1).map_err(|error|Fault::from(error.to_string()))?.done{self.push_work(TracePointerWork::PublishPick{next:0});}
                         else{self.push_work(TracePointerWork::Pick);}
                     }
                     TracePointerWork::PublishPick{next}=>{
-                        if let Some(index)=self.pick.as_ref().unwrap().result(live).map_err(Fault::from)?.get(next).copied(){
+                        if let Some(index)=self.pick.as_ref().unwrap().result(live).map_err(|error|Fault::from(error.to_string()))?.get(next).copied(){
                             let node=&scene.plan.nodes[index];let path=TracePath::from_source(&node.source_path).ok_or_else(||Fault::from("Invalid prepared layer address"))?;
                             if self.marquee.is_some()||self.lasso.is_some(){self.node_bytes+=node.id.len();if self.node_bytes>DRAWING_QUERY_TARGET_BYTES||self.hits.try_push(node.id.clone()).is_err(){return Err(Fault::from("Layer selection exceeds capacity"));}}
                             else if self.best.as_ref().is_none_or(|best|best.generality<4){self.best=Some(TracePickCandidate{generality:2,layer_id:node.id.clone(),image_key:match &node.content{semio_s_artifact_draw_drawing_scene::preparation::DocumentSceneContent::Image{asset,..}=>Some(asset.clone()),_=>None},path});}
@@ -335,8 +335,8 @@ fn queue_trace_pointer(payload: &CanvasPointerDown, job: &TracePointerJob) -> Ef
 /// the trace layer of the image under the pointer as one transaction.
 pub(super) fn advance_trace_pointer(session: &mut DrawingSession, mut job: TracePointerJob, payload: &CanvasPointerDown, base: DrawingToolBase) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
     let captured=session.source_identity.ok_or_else(||Fault::from("Drawing pointer has no source authority"))?;
-    semio_s_artifact_draw_drawing_editor_interaction::geometry_session::prepare_query(captured,&base.document);
-    let complete=semio_s_artifact_draw_drawing_editor_interaction::geometry_session::with_query(captured,|status,borrowed|match status{
+    semio_s_artifact_draw_drawing_scene_mounted::prepare_query(captured,&base.document);
+    let complete=semio_s_artifact_draw_drawing_scene_mounted::with_query(captured,|status,borrowed|match status{
         semio_s_artifact_draw_drawing_scene::identity::admission::SceneAdmissionStatus::Pending=>Ok(false),
         semio_s_artifact_draw_drawing_scene::identity::admission::SceneAdmissionStatus::Ready=>{let complete=job.advance(&base.document,&borrowed.unwrap());if job.overflowed{Err(Fault::from(job.failure.clone().unwrap_or_else(||"Drawing pointer exceeds capacity".into())))}else{Ok(complete)}},
         _=>Err(Fault::from("Drawing pointer geometry is unavailable or changed")),

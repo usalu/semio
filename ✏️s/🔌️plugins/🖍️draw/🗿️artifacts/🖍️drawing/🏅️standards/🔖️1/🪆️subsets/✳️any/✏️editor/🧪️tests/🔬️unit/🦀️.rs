@@ -1,6 +1,7 @@
 pub mod context {
     use semio_s_artifact_draw_drawing_editor::{DRAWING_BOUNDED_TOOL_IDS, DRAWING_GESTURE_TOOL_IDS, DRAWING_IMAGE_TOOL_IDS, DRAWING_PATH_TOOL_IDS, DrawingBoundedCommandJobFactory, DrawingCommand, DrawingGestureOperationJobFactory, DrawingPlayApp, args_bridge, create_drawing_app, drawing_active_utility};
-    use semio_s_artifact_draw_drawing_editor_interaction::{DRAWING_DEFAULT_UTILITY, DRAWING_INTERACTION_DOMAIN, DRAWING_INTERACTION_GRANULARITY, DRAWING_POINT_DOMAIN, DRAWING_POINT_GRANULARITY, geometry_session};
+    use semio_s_artifact_draw_drawing_editor_interaction::{DRAWING_DEFAULT_UTILITY, DRAWING_INTERACTION_DOMAIN, DRAWING_INTERACTION_GRANULARITY, DRAWING_POINT_DOMAIN, DRAWING_POINT_GRANULARITY};
+use semio_s_artifact_draw_drawing_scene_mounted as geometry_session;
     use semio_s_artifact_draw_drawing_editor_interaction::panels::catalogue::DRAWING_PLAY_BODY_CATALOGUE;
     use semio_s_artifact_draw_drawing_editor_tool::modes::edit::windows::canvas::{DRAWING_PLAY_BODY_COMPOSITE, DRAWING_PLAY_WINDOW_CANVAS};
     use semio_s_artifact_draw_drawing_editor_interaction::panels::layers::DRAWING_PLAY_BODY_LAYERS;
@@ -66,7 +67,8 @@ pub mod context {
 }
 
 use semio_s_artifact_draw_drawing_editor::{DRAWING_BOUNDED_TOOL_IDS, DRAWING_GESTURE_TOOL_IDS, DRAWING_IMAGE_TOOL_IDS, DRAWING_PATH_TOOL_IDS, DrawingBoundedCommandJobFactory, DrawingCommand, DrawingGestureOperationJobFactory, DrawingPlayApp, args_bridge, create_drawing_app, drawing_active_utility};
-use semio_s_artifact_draw_drawing_editor_interaction::{DRAWING_DEFAULT_UTILITY, DRAWING_INTERACTION_DOMAIN, DRAWING_INTERACTION_GRANULARITY, DRAWING_POINT_DOMAIN, DRAWING_POINT_GRANULARITY, geometry_session};
+use semio_s_artifact_draw_drawing_editor_interaction::{DRAWING_DEFAULT_UTILITY, DRAWING_INTERACTION_DOMAIN, DRAWING_INTERACTION_GRANULARITY, DRAWING_POINT_DOMAIN, DRAWING_POINT_GRANULARITY};
+use semio_s_artifact_draw_drawing_scene_mounted as geometry_session;
 use semio_s_artifact_draw_drawing_editor_interaction::panels::catalogue::DRAWING_PLAY_BODY_CATALOGUE;
 use semio_s_artifact_draw_drawing_editor_tool::modes::edit::windows::canvas::{DRAWING_PLAY_BODY_COMPOSITE, DRAWING_PLAY_WINDOW_CANVAS};
 use semio_s_artifact_draw_drawing_editor_interaction::panels::layers::DRAWING_PLAY_BODY_LAYERS;

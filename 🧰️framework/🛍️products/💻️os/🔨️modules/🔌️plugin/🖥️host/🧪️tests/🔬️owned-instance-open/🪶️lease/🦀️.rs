@@ -87,7 +87,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
   let coordinate=row["owner"].as_str().unwrap();let dialect=ArtifactDialect::parse_coordinate(coordinate).unwrap();let file=refusal_file(&dialect);
   let sqlite_wire::SnapshotFileResult::Rejected(export)=runtime.codec_sqlite_export(&compiled,coordinate,"text",b"{\"value\":0}",SqliteDatabaseLimits::default(),codec_budget(),|_,_|{},&GuestCallCancellation::default(),grant,&mut identity).await.expect("selected compiled provider export")else{panic!("explicit fault owner exported")};
   let sqlite_wire::SnapshotPayloadResult::Rejected(import)=runtime.codec_sqlite_import(&compiled,coordinate,&file,SqliteDatabaseLimits::default(),codec_budget(),|_,_|{},&GuestCallCancellation::default(),grant,&mut identity).await.expect("selected compiled provider import")else{panic!("explicit fault owner imported")};
-  for rejection in [export,import]{assert_eq!(rejection.kind,kind);let error=rejection.into_io_error().expect("packed guest diagnostics");assert_eq!(error.cause.kind,kind);assert_eq!(error.cause.message,fixture["message"].as_str().unwrap());assert_eq!(error.diagnostics,vec![diagnostic.clone()]);}
+  for rejection in [export,import]{assert_eq!(rejection.kind,kind);let error=rejection.into_io_error().expect("packed guest diagnostics");assert_eq!(error.cause.kind(),kind);assert_eq!(error.cause.message(),fixture["message"].as_str().unwrap());assert_eq!(error.diagnostics,vec![diagnostic.clone()]);}
  }
  semio_plugin_host_operation::test_native_authority::close(&mut identity);
 }

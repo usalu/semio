@@ -27,6 +27,7 @@ quote = "1.0"
 proc-macro2 = "1.0"
 
 [dev-dependencies]
+semio-framework-value-clone-source-testing = { path = "../../../🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-value-derive-resources = { path = "../../🚪️io/📝️text/📸️snapshot/📦️packages/🦀️rust" }

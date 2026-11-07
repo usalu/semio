@@ -119,7 +119,6 @@ function verify(){
   deepStrictEqual(values,table.rows,table.name+' all semantic cells');totalRows+=rows.length;totalCells+=rows.length*table.columns.length;
  }
  deepStrictEqual(totalRows,expected.totalRows);deepStrictEqual(totalCells,expected.totalCells);
- console.error('[DEBUG] Shooting independent complete SQLite tables='+names.length+' rows='+totalRows+' cells='+totalCells+' mode='+mode+' encoding='+encoding);
 }
 function edited(){const table=expected.tables.find(table=>table.name===expected.edit.table);deepStrictEqual(table.rows[0],expected.edit.before);table.rows[0]=expected.edit.after;}
 try{if(mode==='edited'){edited();verify();}else{verify();if(mode==='edit'){deepStrictEqual(Number(database.query("UPDATE shooting_asset SET origin_x=8.0,origin_x_bits=4620693217682128896,origin_x_class='finite' WHERE document_id=1 AND ordinal=0").run().changes),1);deepStrictEqual(database.query('SELECT origin_x,origin_x_bits,origin_x_class FROM shooting_asset WHERE document_id=1 AND ordinal=0').get(),{origin_x:8,origin_x_bits:4620693217682128896n,origin_x_class:'finite'});edited();verify();}else deepStrictEqual(mode,'original');}await Bun.write(Bun.stdout,database.serialize());}finally{database.close();}"#;

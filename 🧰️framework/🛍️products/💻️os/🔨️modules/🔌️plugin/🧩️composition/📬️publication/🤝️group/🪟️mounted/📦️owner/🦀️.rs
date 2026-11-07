@@ -84,7 +84,7 @@ impl<M:SpaceMember+MemberFactory> MountedPrivateChildGroup<M> {
         let pending=|step:RetainedCloneStep| InteractiveJobCloseStep::Pending{progress:step.progress()};
         if self.terminal_is_empty(){return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()});}
         let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
-        if !plugin_grant_funds(demand, grant){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()});}
+        if !semio_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()});}
         let bytes=demand.release_bytes;
         let child_grant=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
         self.closing=true;

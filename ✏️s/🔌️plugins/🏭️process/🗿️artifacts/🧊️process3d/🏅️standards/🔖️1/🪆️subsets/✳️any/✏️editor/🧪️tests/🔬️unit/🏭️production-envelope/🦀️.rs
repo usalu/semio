@@ -94,7 +94,7 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Process3dSnapshot, [u8; 32
     let (mut retirement, _) = owners.retire_envelope_uninstalled(envelope, funded).map_err(|(error, _, _)| error).expect("Process3d fixture envelope retirement admission");
     for _ in 0..100_000 {
         let demand = retirement.next_demand(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Process3d fixture envelope retirement demand");
-        let step = retirement.close_step(semio_s_artifact_process_process3d_host::process3d_demand_grant(demand)).expect("Process3d fixture envelope retirement");
+        let step = retirement.close_step(semio_s_artifact_process_process3d_host::process3d_demand_grant(demand)).result.expect("Process3d fixture envelope retirement");
         if matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) && retirement.terminal_is_empty() {
             drop(retirement);
             return (wire, expected, expected_digest);
@@ -103,7 +103,7 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Process3dSnapshot, [u8; 32
     panic!("Process3d fixture envelope retirement did not reach terminal")
 }
 
-fn admit_production_envelope(app: &mut crate::context::Process3dApp, wire: &[u8]) -> semio_plugin::ArtifactEnvelopeDecodeOperationHandle {
+fn admit_production_envelope(app: &mut super::context::Process3dApp, wire: &[u8]) -> semio_plugin::ArtifactEnvelopeDecodeOperationHandle {
     let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("Process3d production ingress credits");
     for chunk in wire.chunks(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
@@ -116,7 +116,7 @@ fn admit_production_envelope(app: &mut crate::context::Process3dApp, wire: &[u8]
     handle
 }
 
-fn drive_production_envelope(app: &mut crate::context::Process3dApp, handle: semio_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_plugin::ArtifactEnvelopeDecodeOperationPoll {
+fn drive_production_envelope(app: &mut super::context::Process3dApp, handle: semio_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_plugin::ArtifactEnvelopeDecodeOperationPoll {
     for _ in 0..200_000 {
         PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("one Process3d production maintenance turn");
         let poll = app.0.advance_artifact_envelope_load(handle, app.1.cx()).expect("Process3d production load advancement");
@@ -132,7 +132,7 @@ fn drive_production_envelope(app: &mut crate::context::Process3dApp, handle: sem
 #[semio_framework_async_macros::async_test]
 async fn vcs_artifact_app_production_maintenance_swap_publishes_the_deep_document() {
     let accepted_label = "accepted-production-swap";
-    let mut accepted = crate::context::unseeded_app_with_registry();
+    let mut accepted = super::context::unseeded_app_with_registry();
     let base_generation = accepted.artifact_generation_now();
     let (accepted_wire, expected_snapshot, expected_digest) = production_envelope_wire(accepted_label);
     let accepted_handle = admit_production_envelope(&mut accepted, &accepted_wire);

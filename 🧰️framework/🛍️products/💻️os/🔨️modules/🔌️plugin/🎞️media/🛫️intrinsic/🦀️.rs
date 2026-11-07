@@ -78,7 +78,7 @@ fn close_intrinsic_cursor(cursor: &mut MediaPackCursor, native: &mut semio_frame
 fn encode_intrinsic_parts(port: &str, schema: &str, value: &DslValue, owner: &mut semio_os_kernel::io::control::NativeSnapshotEncodeOwner<'_, '_>) -> Result<IntrinsicMediaParts, MediaValueError> {
     let grant = owner.remaining_grant();
     if grant.maximum_items == 0 || grant.maximum_copy_bytes == 0 || grant.maximum_capacity_bytes == 0 || grant.maximum_release_bytes == 0 || grant.maximum_depth < 4 { return Err(media_frontier_error()); }
-    owner.receive::<IntrinsicMediaEncoding, IntrinsicMediaParts>(|slot, native, wallet| {
+    owner.receive::<IntrinsicMediaEncoding, IntrinsicMediaParts, semio_os_kernel::io::control::NativeSnapshotFailure>(|slot, native, wallet| semio_os_kernel::io::control::native_snapshot_turn(|work| { work.performed(); (|| -> Result<IntrinsicMediaParts, MediaValueError> {
         *slot = Some(IntrinsicMediaEncoding::new()); let state = slot.as_mut().unwrap();
         wallet.copy_encode_text_into(native, port, &mut state.parts.original_mut().unwrap().0, 2)?;
         wallet.copy_encode_text_into(native, schema, &mut state.parts.original_mut().unwrap().1, 2)?;
@@ -125,17 +125,17 @@ fn encode_intrinsic_parts(port: &str, schema: &str, value: &DslValue, owner: &mu
         })?;
         wallet.record_progress(MediaProgress { copied_items: 1, copied_bytes: size_of::<IntrinsicMediaParts>(), ..Default::default() })?;
         state.parts.take_original().ok_or_else(media_projection_error)
-    })
+    })().map_err(Into::into) })).result.map_err(semio_os_kernel::io::control::NativeSnapshotFailure::into_value_error)
 }
 
 #[doc(hidden)]
 pub fn copy_media_text_parts(port: &str, schema: &str, text: &str, owner: &mut semio_os_kernel::io::control::NativeSnapshotEncodeOwner<'_, '_>) -> Result<(String, String, String), MediaValueError> {
-    owner.receive::<(String, String, String), (String, String, String)>(|slot, native, wallet| {
+    owner.receive::<(String, String, String), (String, String, String), semio_os_kernel::io::control::NativeSnapshotFailure>(|slot, native, wallet| semio_os_kernel::io::control::native_snapshot_turn(|work| { work.performed(); (|| -> Result<(String, String, String), MediaValueError> {
         *slot = Some((String::new(), String::new(), String::new())); let parts = slot.as_mut().unwrap();
         wallet.copy_encode_text_into(native, port, &mut parts.0, 2)?; wallet.copy_encode_text_into(native, schema, &mut parts.1, 2)?; wallet.copy_encode_text_into(native, text, &mut parts.2, 2)?;
         wallet.record_progress(MediaProgress { copied_items: 1, copied_bytes: size_of::<(String, String, String)>(), ..Default::default() })?;
         Ok(slot.take().unwrap())
-    })
+    })().map_err(Into::into) })).result.map_err(semio_os_kernel::io::control::NativeSnapshotFailure::into_value_error)
 }
 
 pub use semio_plugin_decl_app::media_intrinsic::*;

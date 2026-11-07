@@ -28,6 +28,7 @@ semio-framework-schema = { workspace = true }
 semio-s-artifact-layout-layout-model = { workspace = true }
 serde_json = { workspace = true }
 ui_render = { workspace = true }
+semio-ui-render-text = { workspace = true }
 semio-framework-io-ports = { workspace = true }
 semio-framework-pixels = { workspace = true }
 

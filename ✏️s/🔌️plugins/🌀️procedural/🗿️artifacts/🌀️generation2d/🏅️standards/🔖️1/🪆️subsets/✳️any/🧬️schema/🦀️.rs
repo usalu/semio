@@ -68,11 +68,25 @@ pub use descriptor::generation2d_artifact_schema_descriptor;
 /// drop (`ordered-map root must be explicitly retired before drop`,
 /// `🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs:81`), so a host is CLOSED through
 /// [`FlowHost::retire_cold`], never dropped.
-pub fn with_host<R>(host_snapshot: &FlowHostSnapshot, body: impl FnOnce(&mut FlowHost) -> R) -> semio_os_flow::FlowHostScopeOutcome<R> {
-    FlowHost::with_host_snapshot(host_snapshot, |host| {
+pub fn with_host<R>(host_snapshot: &FlowHostSnapshot, body: impl FnOnce(&mut FlowHost) -> R) -> Result<R, semio_framework_value::ValueError> {
+    closed(FlowHost::with_host_snapshot(host_snapshot, |host| {
         host.set_neuron_kind_info_map(flow_neuron_kind_info_map());
         body(host)
-    })
+    }))
+}
+
+/// 🧊️ Closes a detached host cold; a refusal retries once and then parks its live custody for the next close.
+pub fn close_host(host: FlowHost) -> Result<(), semio_framework_value::ValueError> {
+    host.retire_cold_or_park()
+}
+
+/// 📦️ A refused cold close retries once, then parks its custody and surfaces as the scope's fault.
+fn closed<R>(outcome: semio_os_flow::FlowHostScopeOutcome<R>) -> Result<R, semio_framework_value::ValueError> {
+    let semio_os_flow::FlowHostScopeOutcome { output, close } = outcome;
+    match close {
+        Ok(()) => Ok(output),
+        Err(refusal) => refusal.resolve().map(|()| output),
+    }
 }
 
 /// 🏠️ [`with_host`]'s session-backed twin: the host shares `session`'s neural cache and converged
@@ -87,10 +101,16 @@ pub fn host_with_session(host_snapshot: &FlowHostSnapshot, session: &FlowEvalSes
     }
 }
 
-pub fn with_host_session<R>(host_snapshot: &FlowHostSnapshot, session: &mut FlowEvalSession, grant: semio_framework_value::RetainedCloneGrant, body: impl FnOnce(&mut FlowHost, &mut FlowEvalSession) -> R) -> Result<semio_os_flow::FlowHostScopeOutcome<R>, (semio_framework_value::ValueError, FlowHost)> {
-    let mut host = host_with_session(host_snapshot, session, grant)?;
-    let result = body(&mut host, session);
-    Ok(semio_os_flow::FlowHostScopeOutcome { output: result, close: host.retire_cold() })
+pub fn with_host_session<R>(host_snapshot: &FlowHostSnapshot, session: &mut FlowEvalSession, grant: semio_framework_value::RetainedCloneGrant, body: impl FnOnce(&mut FlowHost, &mut FlowEvalSession) -> R) -> Result<R, semio_framework_value::ValueError> {
+    let mut host = match host_with_session(host_snapshot, session, grant) {
+        Ok(host) => host,
+        Err((error, host)) => {
+            close_host(host)?;
+            return Err(error);
+        }
+    };
+    let output = body(&mut host, session);
+    closed(semio_os_flow::FlowHostScopeOutcome { output, close: host.retire_cold() })
 }
 
 

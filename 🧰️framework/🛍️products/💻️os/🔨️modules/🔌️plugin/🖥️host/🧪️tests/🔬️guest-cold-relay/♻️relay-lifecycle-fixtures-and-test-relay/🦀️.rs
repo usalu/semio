@@ -73,7 +73,7 @@ async fn retained_pool_future_retries_saturation_once_and_terminalizes_shutdown(
     let mock = Arc::new(MockGuestRuntime::new().await);
     let handle = mounted_handle(Arc::clone(&mock), RuntimeActorId(8_017)).await;
     let oversized = vec![0; semio_framework_job_payload::JOB_PAYLOAD_OPERATION_BYTES + 1];
-    let error = handle.infer(&oversized, &semio_framework_job::root_cancel_token()).await.expect_err("oversized relay input");
+    let error = handle.infer(&oversized, &semio_framework_job::root_cancel_token(), &test_relay_wake_authority()).await.expect_err("oversized relay input");
     assert!(error.to_string().contains("input exceeds the retained operation byte limit"));
     assert_eq!(mock.start_admissions(), 0);
     let mut maximum_rejected_job = GuestColdRelayJob::new(
@@ -87,7 +87,7 @@ async fn retained_pool_future_retries_saturation_once_and_terminalizes_shutdown(
     );
     maximum_rejected_job.begin_close();
     for _ in 0..semio_framework_job_payload::JOB_PAYLOAD_OPERATION_PAGES.saturating_add(3) {
-        if matches!(semio_framework_job::close_with_self_funded_context(test_relay_drive_policy(), |cx| maximum_rejected_job.close_step(cx)).expect("original fixture close turn"), semio_framework_job::InteractiveJobCloseStep::Complete{..}) {
+        if matches!(with_test_relay_turn(test_relay_drive_policy(), |cx| maximum_rejected_job.close_step(cx)).expect("original fixture close turn"), semio_framework_job::InteractiveJobCloseStep::Complete{..}) {
             break;
         }
     }
@@ -117,26 +117,42 @@ enum TestRelayOutcome {
     Fault(Vec<u8>),
 }
 
-fn admit_test_relay(relay: GuestColdRelayJob, params: semio_framework_job_worker_authority::BatchJobParams) -> semio_framework_job_worker::WorkerJobSession<GuestColdRelayJob> {
-    match admit_guest_relay_session(relay, params, test_relay_drive_policy()) {
-        Ok(session) => session,
-        Err(mut rejected) => {
-            rejected.begin_close();
-            while !rejected.terminal_is_empty() {
-                let _ = semio_framework_job::close_with_self_funded_context(test_relay_drive_policy(), |cx| rejected.close_step(cx));
+thread_local! {
+    static TEST_RELAY_CALLER: std::cell::RefCell<Option<std::mem::ManuallyDrop<semio_framework_job::OriginalJobFixtureCaller>>> = const { std::cell::RefCell::new(None) };
+}
+
+fn test_relay_stock() -> semio_framework_value::RetainedCloneGrant {
+    semio_framework_value::RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 4096 }
+}
+
+/// 🎟️ Runs one paid turn on this thread's original fixture caller, whose root owns every test relay session alias.
+fn with_test_relay_turn<T>(grant: semio_framework_value::RetainedCloneGrant, run: impl FnOnce(&mut semio_framework_job::StepContext<'_>) -> Result<T, semio_framework_job::OriginalTurnFailure>) -> Result<T, semio_framework_job::OriginalTurnFailure> {
+    TEST_RELAY_CALLER.with(|slot| {
+        let mut slot = slot.borrow_mut();
+        let caller = slot.get_or_insert_with(|| std::mem::ManuallyDrop::new(semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(7_401), semio_framework_job::Generation(1), test_relay_stock(), || Some(1), u64::MAX, 1 << 40)));
+        caller.turn(grant, run)
+    })
+}
+
+fn admit_test_relay(relay: GuestColdRelayJob, config: semio_framework_job_worker_authority::BatchDriveConfig) -> semio_framework_job_worker::WorkerJobSession<GuestColdRelayJob> {
+    let mut admission = GuestRelayAdmission::new(relay, config);
+    for _ in 0..4096 {
+        if with_test_relay_turn(test_relay_drive_policy(), |cx| admission.advance(cx)).expect("relay test admission turn") {
+            if let Some(session) = admission.take_born() {
+                return session;
             }
-            panic!("relay test session admission");
         }
     }
+    panic!("relay test session admission");
 }
 
 async fn test_relay_step(session: &mut semio_framework_job_worker::WorkerJobSession<GuestColdRelayJob>, _pool: &WorkerPool) -> TestRelayOutcome {
     let grant = test_relay_drive_policy();
     if matches!(session.poll(), semio_framework_job_worker::WorkerJobPoll::Closing | semio_framework_job_worker::WorkerJobPoll::TerminalEmpty) {
-        let _ = semio_framework_job::close_with_self_funded_context(grant, |cx| session.close_step(cx)).expect("original fixture close turn");
+        let _ = with_test_relay_turn(grant, |cx| close_relay_session(session, cx)).expect("original fixture close turn");
         return TestRelayOutcome::Yield;
     }
-    let GuestRelayStep::Checked(mut checked, _receipt) = step_guest_relay_owner(session, grant) else { return TestRelayOutcome::Yield };
+    let Ok(GuestRelayStep::Checked(mut checked)) = with_test_relay_turn(grant, |cx| step_guest_relay_owner(session, cx)) else { return TestRelayOutcome::Yield };
     let mut bytes = Vec::new();
     let mut page = 0;
     let kind = loop {
@@ -156,7 +172,7 @@ async fn test_relay_step(session: &mut semio_framework_job_worker::WorkerJobSess
         GuestRelayOutcomeKind::Fault => TestRelayOutcome::Fault(bytes),
     };
     for _ in 0..256 {
-        if matches!(checked.acknowledge_outcome(grant), semio_framework_value::RetainedCloneStep::Complete(_)) {
+        if matches!(with_test_relay_turn(grant, |cx| checked.acknowledge_outcome(cx)), Ok(true)) {
             break;
         }
     }

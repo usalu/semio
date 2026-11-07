@@ -88,7 +88,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
             if !terminal {
                 return Err(diagnostic("writer-envelope.snapshot-pack-must-be-scalar", token.start));
             }
-            self.state = WriterSnapshotDecodeState::Decode(store::os_store::owned_schema_decode::OwnedSchemaHexAuthority::try_new(self.operation, self.generation, token, self.path)?);
+            self.state = WriterSnapshotDecodeState::Decode(store::os_store::owned_schema_decode::OwnedSchemaHexAuthority::try_new(self.replacement, token, self.path)?);
         }
         let WriterSnapshotDecodeState::Decode(authority) = &mut self.state else { return Err(diagnostic("writer-envelope.snapshot-pack-token-replayed", token.start)) };
         match authority.step(source, cx) {
@@ -198,10 +198,9 @@ struct WriterMutationString {
 }
 
 impl WriterMutationDecodeAuthority {
-    fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
+    fn new(replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
         Self {
-            operation,
-            generation,
+            replacement,
             path,
             cursor: store::os_store::owned_schema_decode::OwnedSchemaNestedRecordCursor::try_new(store::os_store::owned_schema_decode::OwnedSchemaRecordSpec { fields: WRITER_MUTATION_FIELDS }).expect("Writer mutation schema is a validated static catalog"),
             active: None,
@@ -333,7 +332,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthorit
         match self.cursor.accept(token, source) {
             store::os_store::owned_schema_decode::OwnedSchemaNestedRecordStep::Pending => Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::TokenComplete),
             store::os_store::owned_schema_decode::OwnedSchemaNestedRecordStep::FieldToken { field_id, token, terminal: true } => {
-                let authority = store::os_store::owned_schema_decode::OwnedSchemaStringAuthority::try_new(self.operation, self.generation, token, self.path).map_err(|token| self.diagnostic("writer-envelope.mutation-field-string", token.start))?;
+                let authority = store::os_store::owned_schema_decode::OwnedSchemaStringAuthority::try_new(self.replacement, token, self.path).map_err(|token| self.diagnostic("writer-envelope.mutation-field-string", token.start))?;
                 self.active = Some(WriterMutationString { field_id, authority });
                 self.accept_token(token, true, source, cx)
             }
@@ -444,8 +443,8 @@ impl WriterMutationDecodeAuthority {
 
 
 impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<WriterSnapshot, WriterMutation> for WriterEnvelopeOwnedFieldCatalog {
-    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Result<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<WriterSnapshot, WriterMutation>>, Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<WriterSnapshot>>> {
-        store::os_store::owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority::try_new(self.begin_snapshot(operation, generation, path), std::sync::Arc::new(OwnedValueRetirementFactory::<WriterSnapshot>::default()), std::sync::Arc::new(OwnedValueRetirementFactory::<WriterMutation>::default()), self.edit_history_decoder())
+    fn begin_vcs(&self, replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Result<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<WriterSnapshot, WriterMutation>>, Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<WriterSnapshot>>> {
+        store::os_store::owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority::try_new(self.begin_snapshot(replacement, path), std::sync::Arc::new(OwnedValueRetirementFactory::<WriterSnapshot>::default()), std::sync::Arc::new(OwnedValueRetirementFactory::<WriterMutation>::default()), self.edit_history_decoder())
             .map(|authority| Box::new(authority) as Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<WriterSnapshot, WriterMutation>>)
     }
 
@@ -457,15 +456,15 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<Wri
         store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES
     }
 
-    fn begin_snapshot(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<WriterSnapshot>> {
-        Box::new(WriterSnapshotDecodeAuthority::new(operation, generation, path))
+    fn begin_snapshot(&self, replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<WriterSnapshot>> {
+        Box::new(WriterSnapshotDecodeAuthority::new(replacement, path))
     }
 
-    fn begin_mutation(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<WriterMutation>> {
-        Box::new(WriterMutationDecodeAuthority::new(operation, generation, path))
+    fn begin_mutation(&self, replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<WriterMutation>> {
+        Box::new(WriterMutationDecodeAuthority::new(replacement, path))
     }
 
-    fn begin_spr_conflict(&self, _operation: semio_framework_job::OperationId, _generation: semio_framework_job::Generation, _path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority> {
+    fn begin_spr_conflict(&self, _replacement: Option<semio_framework_job::ReplacementIdentity>, _path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority> {
         Box::new(WriterRejectedConflictAuthority { terminal: false })
     }
 
@@ -502,8 +501,7 @@ pub(crate) fn retire_writer_envelope(envelope: WriterDocumentEnvelope) {
 }
 
 struct WriterSnapshotDecodeAuthority {
-    operation: semio_framework_job::OperationId,
-    generation: semio_framework_job::Generation,
+    replacement: Option<semio_framework_job::ReplacementIdentity>,
     path: store::os_store::owned_schema_decode::OwnedSchemaPath,
     state: WriterSnapshotDecodeState,
     value: std::mem::ManuallyDrop<Option<WriterSnapshot>>,
@@ -511,8 +509,8 @@ struct WriterSnapshotDecodeAuthority {
 }
 
 impl WriterSnapshotDecodeAuthority {
-    fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
-        Self { operation, generation, path, state: WriterSnapshotDecodeState::AwaitToken, value: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None) }
+    fn new(replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
+        Self { replacement, path, state: WriterSnapshotDecodeState::AwaitToken, value: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None) }
     }
 
     fn diagnostic(&self, code: &'static str, offset: u64) -> store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic {
@@ -550,8 +548,7 @@ enum WriterMutationKind {
 }
 
 struct WriterMutationDecodeAuthority {
-    operation: semio_framework_job::OperationId,
-    generation: semio_framework_job::Generation,
+    replacement: Option<semio_framework_job::ReplacementIdentity>,
     path: store::os_store::owned_schema_decode::OwnedSchemaPath,
     cursor: store::os_store::owned_schema_decode::OwnedSchemaNestedRecordCursor,
     active: Option<WriterMutationString>,

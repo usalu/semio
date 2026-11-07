@@ -68,3 +68,5 @@ impl ArtifactCommandWork<EditorApp<LayoutPlayApp>> for LayoutOriginalExportWork{
 impl LayoutOriginalExportWork{fn enter_close(cx:&StepContext<'_>,demand:RetirementDemand)->bool{!cx.should_yield()&&cx.retained_grant().maximum_items>0&&cx.retained_work_can_enter(demand)}}
 
 #[cfg(test)]#[path="🧪️tests.rs"]mod tests;
+
+semio_plugin::retained_command::terminal_frame_bound!(LayoutOriginalExportWork);

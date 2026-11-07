@@ -1,0 +1,353 @@
+{
+  "valid": [
+    {
+      "operation": "poll",
+      "wire": {
+        "operation": "poll",
+        "events": [],
+        "shape": {
+          "maxEffects": 8,
+          "maxPatchBytes": 4096,
+          "maxFrames": 2
+        }
+      },
+      "packHex": "0104706f6c6c010111100307066576656e74730c0007096f7065726174696f6e0600070573686170651003070a6d617845666665637473040807096d61784672616d65730402070d6d617850617463684279746573048020"
+    },
+    {
+      "operation": "poll",
+      "wire": {
+        "operation": "poll",
+        "events": [
+          {
+            "tag": "wake"
+          }
+        ],
+        "shape": {
+          "maxEffects": 8,
+          "maxPatchBytes": 4096,
+          "maxFrames": 2
+        }
+      },
+      "packHex": "0204706f6c6c0477616b65010111100307066576656e74730c0110010703746167060107096f7065726174696f6e0600070573686170651003070a6d617845666665637473040807096d61784672616d65730402070d6d617850617463684279746573048020"
+    },
+    {
+      "operation": "poll",
+      "wire": {
+        "operation": "poll",
+        "events": [
+          {
+            "tag": "surface-hidden",
+            "val": {
+              "surface": {
+                "instance": 1,
+                "surface": "main"
+              }
+            }
+          }
+        ],
+        "shape": {
+          "maxEffects": 8,
+          "maxPatchBytes": 4096,
+          "maxFrames": 2
+        }
+      },
+      "packHex": "03046d61696e04706f6c6c0e737572666163652d68696464656e010111100307066576656e74730c01100207037461670602070376616c100107077375726661636510020708696e7374616e63650401070773757266616365060007096f7065726174696f6e0601070573686170651003070a6d617845666665637473040807096d61784672616d65730402070d6d617850617463684279746573048020"
+    },
+    {
+      "operation": "start-job",
+      "wire": {
+        "operation": "start-job",
+        "source": null
+      },
+      "packHex": "010973746172742d6a6f62010111100207096f7065726174696f6e06000706736f7572636512"
+    },
+    {
+      "operation": "start-job",
+      "wire": {
+        "operation": "start-job",
+        "source": {
+          "job": 7,
+          "kind": "semio.kind",
+          "input": [
+            9
+          ],
+          "checkpoint": null
+        }
+      },
+      "packHex": "020a73656d696f2e6b696e640973746172742d6a6f62010111100207096f7065726174696f6e06010706736f757263651004070a636865636b706f696e74120705696e7075740c01040907036a6f62040707046b696e640600"
+    },
+    {
+      "operation": "restore",
+      "wire": {
+        "operation": "restore",
+        "state": [
+          1,
+          2,
+          3
+        ]
+      },
+      "packHex": "0107726573746f7265010111100207096f7065726174696f6e0600070573746174650c03040104020403"
+    },
+    {
+      "operation": "sqlite-schema",
+      "wire": {
+        "operation": "sqlite-schema",
+        "dialect": "s.testkit.w1c-fixture@1/strict"
+      },
+      "packHex": "021e732e746573746b69742e7731632d6669787475726540312f7374726963740d73716c6974652d736368656d61010111100207076469616c656374060007096f7065726174696f6e0601"
+    },
+    {
+      "operation": "sqlite-export",
+      "wire": {
+        "operation": "sqlite-export",
+        "input": {
+          "dialect": "s.testkit.w1c-fixture@1/strict",
+          "encoding": "text",
+          "payload": [
+            48
+          ],
+          "limits": {
+            "max_file_bytes": 1048576,
+            "max_value_bytes": 262144,
+            "max_schema_bytes": 65536,
+            "max_rows": 4096,
+            "max_columns": 64,
+            "max_tables": 64,
+            "max_pages": 256,
+            "max_allocation_bytes": 1048576
+          },
+          "native": {
+            "maximum_items": 64,
+            "maximum_copy_bytes": 8192,
+            "maximum_capacity_bytes": 1048576,
+            "maximum_release_bytes": 16384,
+            "maximum_depth": 32
+          }
+        }
+      },
+      "packHex": "031e732e746573746b69742e7731632d6669787475726540312f7374726963740d73716c6974652d6578706f7274047465787401011110020705696e707574100507076469616c65637406000708656e636f64696e67060207066c696d697473100807146d61785f616c6c6f636174696f6e5f627974657304808040070b6d61785f636f6c756d6e730440070e6d61785f66696c655f62797465730480804007096d61785f706167657304800207086d61785f726f777304802007106d61785f736368656d615f627974657304808004070a6d61785f7461626c65730440070f6d61785f76616c75655f62797465730480801007066e6174697665100507166d6178696d756d5f63617061636974795f62797465730480804007126d6178696d756d5f636f70795f6279746573048040070d6d6178696d756d5f64657074680420070d6d6178696d756d5f6974656d73044007156d6178696d756d5f72656c656173655f62797465730480800107077061796c6f61640c01043007096f7065726174696f6e0601"
+    },
+    {
+      "operation": "sqlite-import",
+      "wire": {
+        "operation": "sqlite-import",
+        "input": {
+          "dialect": "s.testkit.w1c-fixture@1/strict",
+          "encoding": "text",
+          "payload": [
+            48
+          ],
+          "limits": {
+            "max_file_bytes": 1048576,
+            "max_value_bytes": 262144,
+            "max_schema_bytes": 65536,
+            "max_rows": 4096,
+            "max_columns": 64,
+            "max_tables": 64,
+            "max_pages": 256,
+            "max_allocation_bytes": 1048576
+          },
+          "native": {
+            "maximum_items": 64,
+            "maximum_copy_bytes": 8192,
+            "maximum_capacity_bytes": 1048576,
+            "maximum_release_bytes": 16384,
+            "maximum_depth": 32
+          }
+        }
+      },
+      "packHex": "031e732e746573746b69742e7731632d6669787475726540312f7374726963740d73716c6974652d696d706f7274047465787401011110020705696e707574100507076469616c65637406000708656e636f64696e67060207066c696d697473100807146d61785f616c6c6f636174696f6e5f627974657304808040070b6d61785f636f6c756d6e730440070e6d61785f66696c655f62797465730480804007096d61785f706167657304800207086d61785f726f777304802007106d61785f736368656d615f627974657304808004070a6d61785f7461626c65730440070f6d61785f76616c75655f62797465730480801007066e6174697665100507166d6178696d756d5f63617061636974795f62797465730480804007126d6178696d756d5f636f70795f6279746573048040070d6d6178696d756d5f64657074680420070d6d6178696d756d5f6974656d73044007156d6178696d756d5f72656c656173655f62797465730480800107077061796c6f61640c01043007096f7065726174696f6e0601"
+    },
+    {
+      "operation": "sqlite-take-file",
+      "wire": {
+        "operation": "sqlite-take-file",
+        "ticket": 3
+      },
+      "packHex": "011073716c6974652d74616b652d66696c65010111100207096f7065726174696f6e060007067469636b65740403"
+    },
+    {
+      "operation": "sqlite-take-payload",
+      "wire": {
+        "operation": "sqlite-take-payload",
+        "ticket": 3
+      },
+      "packHex": "011373716c6974652d74616b652d7061796c6f6164010111100207096f7065726174696f6e060007067469636b65740403"
+    },
+    {
+      "operation": "sqlite-retirement",
+      "wire": {
+        "operation": "sqlite-retirement",
+        "copyBytes": 4096
+      },
+      "packHex": "011173716c6974652d7265746972656d656e7401011110020709636f7079427974657304802007096f7065726174696f6e0600"
+    },
+    {
+      "operation": "sqlite-close",
+      "wire": {
+        "operation": "sqlite-close",
+        "input": {
+          "ticket": 3,
+          "native": {
+            "maximum_items": 64,
+            "maximum_copy_bytes": 8192,
+            "maximum_capacity_bytes": 1048576,
+            "maximum_release_bytes": 16384,
+            "maximum_depth": 32
+          }
+        }
+      },
+      "packHex": "010c73716c6974652d636c6f736501011110020705696e707574100207066e6174697665100507166d6178696d756d5f63617061636974795f62797465730480804007126d6178696d756d5f636f70795f6279746573048040070d6d6178696d756d5f64657074680420070d6d6178696d756d5f6974656d73044007156d6178696d756d5f72656c656173655f62797465730480800107067469636b6574040307096f7065726174696f6e0600"
+    },
+    {
+      "operation": "pack-schema-hash",
+      "wire": {
+        "operation": "pack-schema-hash",
+        "artifactSchema": "cad"
+      },
+      "packHex": "0203636164107061636b2d736368656d612d686173680101111002070e6172746966616374536368656d61060007096f7065726174696f6e0601"
+    },
+    {
+      "operation": "genesis",
+      "wire": {
+        "operation": "genesis",
+        "artifactSchema": "cad",
+        "documentId": "doc-1"
+      },
+      "packHex": "030363616405646f632d310767656e657369730101111003070e6172746966616374536368656d610600070a646f63756d656e744964060107096f7065726174696f6e0602"
+    },
+    {
+      "operation": "print-mirror",
+      "wire": {
+        "operation": "print-mirror",
+        "artifactSchema": "cad",
+        "pair": {
+          "pack": [
+            1,
+            2
+          ],
+          "spr": [
+            3
+          ]
+        }
+      },
+      "packHex": "02036361640c7072696e742d6d6972726f720101111003070e6172746966616374536368656d61060007096f7065726174696f6e0601070470616972100207047061636b0c020401040207037370720c010403"
+    },
+    {
+      "operation": "apply-ops",
+      "wire": {
+        "operation": "apply-ops",
+        "artifactSchema": "cad",
+        "pair": {
+          "pack": [
+            1,
+            2
+          ],
+          "spr": [
+            3
+          ]
+        },
+        "ops": [
+          5
+        ]
+      },
+      "packHex": "02096170706c792d6f7073036361640101111004070e6172746966616374536368656d61060107096f7065726174696f6e060007036f70730c010405070470616972100207047061636b0c020401040207037370720c010403"
+    },
+    {
+      "operation": "replay-envelopes",
+      "wire": {
+        "operation": "replay-envelopes",
+        "artifactSchema": "cad",
+        "pair": {
+          "pack": [
+            1,
+            2
+          ],
+          "spr": [
+            3
+          ]
+        },
+        "envelopes": [
+          6,
+          7
+        ]
+      },
+      "packHex": "0203636164107265706c61792d656e76656c6f7065730101111004070e6172746966616374536368656d6106000709656e76656c6f7065730c020406040707096f7065726174696f6e0601070470616972100207047061636b0c020401040207037370720c010403"
+    }
+  ],
+  "invalid": [
+    {
+      "reason": "unknown operation",
+      "wire": {
+        "operation": "poll-twice",
+        "events": [],
+        "shape": {
+          "maxEffects": 8,
+          "maxPatchBytes": 4096,
+          "maxFrames": 2
+        }
+      }
+    },
+    {
+      "reason": "poll without shape",
+      "wire": {
+        "operation": "poll",
+        "events": []
+      }
+    },
+    {
+      "reason": "extra field",
+      "wire": {
+        "operation": "restore",
+        "state": [],
+        "extra": 1
+      }
+    },
+    {
+      "reason": "event object with two variants",
+      "wire": {
+        "operation": "poll",
+        "events": [
+          {
+            "a": 1,
+            "b": 2
+          }
+        ],
+        "shape": {
+          "maxEffects": 8,
+          "maxPatchBytes": 4096,
+          "maxFrames": 2
+        }
+      },
+      "stage": "event-lift"
+    },
+    {
+      "reason": "byte out of range",
+      "wire": {
+        "operation": "restore",
+        "state": [
+          256
+        ]
+      }
+    },
+    {
+      "reason": "legacy budget field",
+      "wire": {
+        "operation": "poll",
+        "events": [],
+        "shape": {
+          "maxEffects": 8,
+          "maxPatchBytes": 4096,
+          "maxFrames": 2
+        },
+        "budget": {}
+      }
+    },
+    {
+      "reason": "missing operation",
+      "wire": {
+        "state": []
+      }
+    }
+  ]
+}

@@ -240,7 +240,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             Some(protocol::AppCommand::PureCommand{command,head,..})=>{
                 let actor=instance_actor(runtime,instance_id).await?;
                 let request:semio_framework::kernel::PureCommandRequest=decode_wire_serialized(command).await?;
-                let view_state=if let Some(view)=request.view_state{Some(view)}else{with_instances_original_mut(runtime,|list|Ok(find_instance(list,instance_id)?.surface_contexts.view().cloned())).await?};
+                let view_state=(if let Some(view)=request.view_state{Some(view)}else{with_instances_original_mut(runtime,|list|Ok(find_instance(list,instance_id)?.surface_contexts.view().cloned())).await?}).map(std::sync::Arc::new);
                 let result:Result<Option<(semio_framework::kernel::InvocationResult,EmitWire)>,semio_framework_job::OriginalTurnFailure>=match request.invocation{
                     semio_framework::kernel::PureInvocation::Command(invocation) if matches!(&invocation.address.owner,semio_framework::manifest::CommandOwnerAddress::Plugin{..})=>{
                     let program=runtime.plugin.borrow();

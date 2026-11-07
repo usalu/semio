@@ -1,0 +1,3 @@
+import{captureNxAuthorizerSourcesV1,nxAuthorizerCapturedBytesV1}from"/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/probe-hub.ts";
+const root="/Users/ueli/Documents/semio",entry="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/⚙️runtime/🟦️.ts";
+try{await captureNxAuthorizerSourcesV1(root,entry,new AbortController().signal,{installed:true});const r:any=await captureNxAuthorizerSourcesV1(root,entry,new AbortController().signal,{installed:true});console.log(JSON.stringify(r.manifest.sources.map((s:any)=>[s.path,s.bytes??s.size])))}catch(e:any){console.log(String(e.message).slice(0,200));console.log(JSON.stringify(e.diagnostic??e.cause??Object.keys(e),null,1))}

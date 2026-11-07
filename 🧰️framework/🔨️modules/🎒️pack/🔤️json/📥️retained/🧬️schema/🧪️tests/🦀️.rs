@@ -60,19 +60,22 @@ fn owned_schema_record_reports_exact_invalid_utf8_unknown_and_duplicate_diagnost
 }
 
 #[test]
-fn owned_schema_record_rejects_stale_operation_and_generation_before_consuming_input() {
-    let mut cursor = owned_schema_test_cursor(&[br#"{"schema":"v1","id":"document"}"#]);
+fn owned_schema_record_rejects_a_replaced_slot_identity_before_consuming_input() {
+    let captured = semio_framework_job::ReplacementIdentity::new(3, semio_framework_job::OperationId(30), semio_framework_job::Generation(1));
+    let advanced = semio_framework_job::ReplacementIdentity::new(3, semio_framework_job::OperationId(30), semio_framework_job::Generation(2));
+    let mut cursor = owned_schema_test_cursor_scoped(&[br#"{"schema":"v1","id":"document"}"#], Some(captured));
     let mut preview_sequence = 0;
     let mut original_retained_progress_0=semio_framework_value::RetainedCloneProgress::default();
-        let mut context = semio_framework_job::StepContext::new(
+    let mut context = semio_framework_job::StepContext::new(
         semio_framework_job::OperationId(1),
-        semio_framework_job::Generation(2),
+        semio_framework_job::Generation(1),
         semio_framework_job::StepBudget::new(64, u64::MAX, schema_test_close_grant()),
         semio_framework_job::root_cancel_token(),
         semio_framework_job::default_now_us,
         &mut preview_sequence,
      &mut original_retained_progress_0);
-    let OwnedSchemaRecordStep::Fault(diagnostic) = cursor.step(&mut context) else { panic!("stale generation must fault before syntax work") };
+    let step = context.with_replacement_current(advanced, |context| cursor.step(context));
+    let OwnedSchemaRecordStep::Fault(diagnostic) = step else { panic!("stale generation must fault before syntax work") };
     assert_eq!(diagnostic.code, "schema-json.stale-authority");
     assert_eq!(diagnostic.offset, 0);
     let grant=schema_test_close_grant();
@@ -111,7 +114,7 @@ fn next_owned_schema_field_token(cursor: &mut OwnedSchemaRecordCursor, expected_
 fn owned_schema_string_unescapes_into_fixed_storage_and_rejects_semantic_byte_plus_one() {
     let mut cursor = owned_schema_test_cursor(&[br#"{"schema":"line\n\uD83D\uDE00","id":"document"}"#]);
     let token = next_owned_schema_field_token(&mut cursor, 1);
-    let mut string = OwnedSchemaStringAuthority::<32>::try_new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), token, OwnedSchemaPath::field("schema").expect("bounded field path")).expect("schema token is a string");
+    let mut string = OwnedSchemaStringAuthority::<32>::try_new(None, token, OwnedSchemaPath::field("schema").expect("bounded field path")).expect("schema token is a string");
     let mut preview_sequence = 0;
     for _ in 0..100 {
         let mut original_retained_progress_2=semio_framework_value::RetainedCloneProgress::default();
@@ -136,7 +139,7 @@ fn owned_schema_string_unescapes_into_fixed_storage_and_rejects_semantic_byte_pl
 
     let mut cursor = owned_schema_test_cursor(&[br#"{"schema":"four","id":"document"}"#]);
     let token = next_owned_schema_field_token(&mut cursor, 1);
-    let mut limited = OwnedSchemaStringAuthority::<3>::try_new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), token, OwnedSchemaPath::field("schema").expect("bounded field path")).expect("schema token is a string");
+    let mut limited = OwnedSchemaStringAuthority::<3>::try_new(None, token, OwnedSchemaPath::field("schema").expect("bounded field path")).expect("schema token is a string");
     let mut preview_sequence = 0;
     let mut original_retained_progress_3=semio_framework_value::RetainedCloneProgress::default();
         let mut context = semio_framework_job::StepContext::new(
@@ -179,3 +182,21 @@ fn cancelled_owned_schema_cursor_retires_one_real_page_per_close_grant() {
     let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||cursor.close_step(grant).unwrap());assert_eq!((allocated,released),(0,backing));assert_eq!(step.progress().released_bytes,backing);assert!(step.progress().fits(grant));assert!(matches!(step,RetainedCloneStep::Complete(_)));assert!(cursor.terminal_is_empty());
 }
 
+
+#[test]
+fn owned_schema_record_with_a_current_slot_identity_ignores_the_stepping_caller_identity() {
+    let captured = semio_framework_job::ReplacementIdentity::new(3, semio_framework_job::OperationId(30), semio_framework_job::Generation(1));
+    let mut cursor = owned_schema_test_cursor_scoped(&[br#"{"schema":"v1","id":"document"}"#], Some(captured));
+    let mut preview_sequence = 0;
+    let mut progress = semio_framework_value::RetainedCloneProgress::default();
+    let mut context = semio_framework_job::StepContext::new(
+        semio_framework_job::OperationId(901),
+        semio_framework_job::Generation(77),
+        semio_framework_job::StepBudget::new(64, u64::MAX, schema_test_close_grant()),
+        semio_framework_job::root_cancel_token(),
+        semio_framework_job::default_now_us,
+        &mut preview_sequence,
+        &mut progress);
+    let step = context.with_replacement_current(captured, |context| cursor.step(context));
+    assert!(!matches!(step, OwnedSchemaRecordStep::Fault(_)), "a foreign caller identity is not staleness: {step:?}");
+}

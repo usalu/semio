@@ -13,7 +13,7 @@ use semio_os_kernel::os_directory::DirectoryIndexedDocumentViewV1;
 /// 🧑️ One space member, projected from `semio_os::os_directory::MemberView` into the
 /// space app's own local view-state vocabulary (`role` kept as the wire string `"author"`/
 /// `"spectator"` rather than re-importing the directory crate's enum into render code).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 pub struct SpaceIndexMember {
@@ -28,7 +28,7 @@ pub struct SpaceIndexMember {
 /// 👥️ Live peers on one artifact's documents (all surfaces/documents of that artifact, folded to a
 /// flat actor-id list) — `actors_csv` avoids nesting `Vec<String>` inside a `#[dsl(table)]` row
 /// (unproven by any existing facet in this tree); split on `,` for display.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct SpaceIndexArtifactPresence {
     pub artifact_id: String,
@@ -142,7 +142,7 @@ impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Space
 impl store::ConfigRecord for SpaceIndexConfig {}
 
 /// 📇️ The directory-owned slice of the config (visibility, members, indexed documents): what a directory fold replaces as one entity.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 pub struct SpaceIndexDirectoryProjection {
@@ -269,7 +269,7 @@ impl protocol::ColdDiffAlgebra<SpaceIndexConfig> for SpaceIndexConfigDiff {
 //#region 🔖️ConfigMutation
 /// 🧮️ The config's mutation vocabulary: the host-folded directory slice replaces as one entity, and each presence heartbeat sets
 /// (or clears) the live actors of one artifact.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum SpaceIndexConfigMutation {
     #[dsl(key = "directory-projection")]
@@ -281,7 +281,7 @@ pub enum SpaceIndexConfigMutation {
 }
 
 /// 📇️ The folded directory slice a replacement installs; its wire record is exactly the former variant's fields.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[dsl(keyword = "directory-projection")]
 pub struct DirectoryProjectionReplacement {
@@ -290,7 +290,7 @@ pub struct DirectoryProjectionReplacement {
 }
 
 /// 👥️ The live actors one artifact heartbeat sets; its wire record is exactly the former variant's fields.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[dsl(keyword = "artifact-presence")]
 pub struct ArtifactPresenceSetting {
@@ -299,7 +299,7 @@ pub struct ArtifactPresenceSetting {
 }
 
 /// 👥️ The artifact whose live actors a clear removes; its wire record is exactly the former variant's fields.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[dsl(keyword = "clear-artifact-presence")]
 pub struct ArtifactPresenceClearing {

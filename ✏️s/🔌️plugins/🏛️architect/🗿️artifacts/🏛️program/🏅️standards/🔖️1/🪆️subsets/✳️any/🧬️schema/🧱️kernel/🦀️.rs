@@ -30,6 +30,8 @@ impl EntityId {
     }
 }
 
+semio_framework_dsl_record::dsl_scalar_newtype_receiving!(EntityId,String);
+
 impl fmt::Display for EntityId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(&self.0)

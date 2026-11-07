@@ -77,7 +77,7 @@ async fn created_layers_are_painted_and_selected_for_immediate_editing() {
         let layer=snapshot.layers.last().unwrap();
         let base=semio_s_artifact_draw_drawing_model::layer_base(layer);
         assert_eq!(selected_strokes(&app).await,vec![base.id.clone()]);
-        let scene=semio_s_artifact_draw_drawing_scene::flatten_drawing_document_to_scene_nodes(&snapshot);
+        let scene=semio_s_artifact_draw_drawing_scene::preparation::testkit::scene_nodes(&snapshot);
         let node=scene.iter().find(|node|node.id==base.id).unwrap();
         assert!(node.fill.is_some() || node.stroke.as_ref().is_some_and(|stroke|stroke.width>0.0));
     }
@@ -176,7 +176,7 @@ async fn transform_handles_render_and_commit_once_through_the_registered_editor(
             let scene=canvas_scene(rendered_drawing_canvas(&mut app,None,meta.view_state.as_ref().unwrap()).await.unwrap());
             let records:Vec<serde_json::Value>=serde_json::from_str(&scene.layers_json).unwrap();
             assert_eq!(records.iter().filter(|row|row["id"].as_str().is_some_and(|id|id.starts_with("overlay:transform-handle:"))).count(),9);
-            let mut producer=semio_s_artifact_draw_drawing_scene::preparation::DocumentVectorJob::new(&before,semio_s_artifact_draw_drawing_editor_interaction::geometry_session::limits(),semio_s_artifact_draw_drawing_editor_interaction::geometry_session::algorithms()).unwrap();let mut scene_wallet=scene_test_work();
+            let mut producer=semio_s_artifact_draw_drawing_scene::preparation::DocumentVectorJob::new(&before,semio_s_artifact_draw_drawing_scene_mounted::limits(),semio_s_artifact_draw_drawing_scene_mounted::algorithms()).unwrap();let mut scene_wallet=scene_test_work();
             while !semio_s_artifact_draw_drawing_scene::draw_scene_funded_turn!(producer,4096,scene_wallet).done{}let(mut cleanup,plan)=producer.into_retirement();semio_s_artifact_draw_drawing_scene::draw_scene_funded_close!(cleanup,scene_wallet,4096);
             let mut producer=semio_s_artifact_draw_drawing_scene_paint::scene::ScenePaintJob::new(plan.unwrap(),0.001,semio_s_artifact_draw_drawing_scene_paint::scene::PaintedSceneLimits{max_nodes:1024,max_segments:65536,max_points:262144,max_contours:65536,max_work:1000000000});
             while !semio_s_artifact_draw_drawing_scene::draw_scene_funded_turn!(producer,4096,scene_wallet).done{}let(mut cleanup,prepared)=producer.into_retirement();semio_s_artifact_draw_drawing_scene::draw_scene_funded_close!(cleanup,scene_wallet,4096);let prepared=prepared.unwrap();
@@ -195,8 +195,8 @@ async fn transform_handles_render_and_commit_once_through_the_registered_editor(
             if cancelled {assert_eq!(app.snapshot().unwrap(),before);} else {
                 assert_one_artifact_publication(&released);
                 let after=app.snapshot().unwrap();
-                let original=semio_s_artifact_draw_drawing_scene::flatten_drawing_document_to_scene_nodes(&before)[0].transform;
-                let actual=semio_s_artifact_draw_drawing_scene::flatten_drawing_document_to_scene_nodes(&after)[0].transform;
+                let original=semio_s_artifact_draw_drawing_scene::preparation::testkit::scene_nodes(&before)[0].transform;
+                let actual=semio_s_artifact_draw_drawing_scene::preparation::testkit::scene_nodes(&after)[0].transform;
                 let wanted=semio_s_artifact_draw_drawing_geometry::multiply(expected,original);
                 for index in 0..6 {assert!((actual[index]-wanted[index]).abs()<1e-9);}
                 artifact_laws::settle_history_verb(&mut app.0, "undo", meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;

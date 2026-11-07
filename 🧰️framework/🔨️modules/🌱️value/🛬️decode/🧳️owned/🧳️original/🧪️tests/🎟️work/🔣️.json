@@ -9,7 +9,9 @@
     "capacityBytes",
     "releaseBytes",
     "depth",
-    "constructionGrantsPerTurn"
+    "constructionGrantsPerTurn",
+    "header",
+    "storage"
   ],
   "properties": {
     "items": {
@@ -32,6 +34,154 @@
     },
     "constructionGrantsPerTurn": {
       "const": 1
+    },
+    "header": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stock",
+        "input",
+        "cancelCuts",
+        "ownedCopyBytes",
+        "moveWork",
+        "freeWork",
+        "deniedWork",
+        "cachedWork",
+        "poisonDropCalls",
+        "freshBoxAllocations"
+      ],
+      "properties": {
+        "stock": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "items",
+            "fuel",
+            "copyBytes",
+            "capacityBytes",
+            "releaseBytes",
+            "depth"
+          ],
+          "properties": {
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "fuel": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "copyBytes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "capacityBytes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "releaseBytes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "depth": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "input": {
+          "$ref": "#/$defs/node"
+        },
+        "cancelCuts": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "ownedCopyBytes": {
+          "const": 0
+        },
+        "moveWork": {
+          "const": 1
+        },
+        "freeWork": {
+          "const": 1
+        },
+        "deniedWork": {
+          "const": 0
+        },
+        "cachedWork": {
+          "const": 0
+        },
+        "poisonDropCalls": {
+          "const": 0
+        },
+        "freshBoxAllocations": {
+          "const": 0
+        }
+      },
+      "$defs": {
+        "node": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "children"
+          ],
+          "properties": {
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/node"
+              }
+            }
+          }
+        }
+      }
+    },
+    "storage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "count",
+        "deniedWork",
+        "nullWork",
+        "birthWork",
+        "cachedWork",
+        "empty",
+        "stock"
+      ],
+      "properties": {
+        "count": {
+          "const": 3
+        },
+        "deniedWork": {
+          "const": 0
+        },
+        "nullWork": {
+          "const": 1
+        },
+        "birthWork": {
+          "const": 1
+        },
+        "cachedWork": {
+          "const": 0
+        },
+        "empty": {
+          "const": []
+        },
+        "stock": {
+          "const": {
+            "items": 100000,
+            "copyBytes": 33554432,
+            "capacityBytes": 33554432,
+            "releaseBytes": 33554432,
+            "depth": 64,
+            "fuel": 100000,
+            "maximumTurns": 100000
+          }
+        }
+      }
     }
   }
 }

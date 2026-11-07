@@ -27,15 +27,7 @@ pub fn wit_snapshot_rejection(value: crate::actor_bindings::exports::semio::fram
     sqlite_wire::SnapshotRejection { kind, message: value.message, diagnostics: value.diagnostics }
 }
 
-pub fn wit_snapshot_limits(value: semio_framework::sqlite_snapshot::SqliteDatabaseLimits) -> crate::actor_bindings::exports::semio::framework::codec::SnapshotLimits {
-    let value = sqlite_wire::SnapshotLimits::from(value);
-    crate::actor_bindings::exports::semio::framework::codec::SnapshotLimits { max_file_bytes: value.max_file_bytes, max_value_bytes: value.max_value_bytes, max_allocation_bytes: value.max_allocation_bytes, max_schema_bytes: value.max_schema_bytes, max_rows: value.max_rows, max_columns: value.max_columns, max_tables: value.max_tables, max_pages: value.max_pages }
-}
 
-pub fn wit_snapshot_grant(value:semio_framework_value::RetainedCloneGrant)->crate::actor_bindings::semio::framework::types::RetainedCloneGrant{
-    let value=sqlite_wire::SnapshotGrant::from(value);
-    crate::actor_bindings::semio::framework::types::RetainedCloneGrant{maximum_items:value.maximum_items,maximum_copy_bytes:value.maximum_copy_bytes,maximum_capacity_bytes:value.maximum_capacity_bytes,maximum_release_bytes:value.maximum_release_bytes,maximum_depth:value.maximum_depth}
-}
 //#region 🔀️EffectEventMarshal
 /// 🌉️ `wit_effect_to_kernel`/`kernel_event_to_wit` are the host-side half of `design-abi.md` §2's
 /// "WIT variants mirror [`Effect`/`Event`] field-for-field; the guest SDK glue converts between

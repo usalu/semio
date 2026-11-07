@@ -45,3 +45,22 @@ impl<M:NativeReceive<DslValue>+ArtifactCanonicalJsonTree+Send+Sync+'static> Arti
  /// 🧬️ Registration binds one actual typed receiving implementation to this wire vocabulary.
  pub fn with_original_receiving(mut self)->Self{self.original_receiving=Some(OriginalOperationReceivingAdmission{batch_retirement:crate::lifted_member_owned_batch::BatchRetirementIssuer::typed(),demands:demands::<M>,admit:admit::<M>});self}
 }
+
+#[path="🔢️binary/🦀️.rs"]
+pub mod binary;
+pub use binary::OriginalBinaryReceiving;
+impl<M:protocol::OpBinaryReceiving+Send+Sync+'static> ArtifactOperationWire<M> where M::Receiving:Send{
+ /// 🔢️ Registration binds the vocabulary's own binary receiving cursor for persisted operations; the installer names the encoding, the receiver never sniffs bytes.
+ pub fn with_original_binary_receiving(mut self)->Self{self.original_receiving=Some(OriginalOperationReceivingAdmission::binary(crate::lifted_member_owned_batch::BatchRetirementIssuer::typed()));self}
+}
+/// 🧬️ A mutation vocabulary declares how its persisted operations are encoded and installs the matching original receiving on its operation wire; the Store installs it once for every vocabulary, so persisted history with supersessions replays.
+pub trait ArtifactPersistedOperation:Sized+Send+Sync+'static{
+ fn install_persisted_receiving(wire:ArtifactOperationWire<Self>)->ArtifactOperationWire<Self>;
+}
+/// 🔢️ Declares a vocabulary whose persisted operations are the binary encoding its own `OpBinaryReceiving` cursor receives.
+#[macro_export]
+macro_rules! artifact_persisted_binary_operation{
+ ($operation:ty)=>{impl $crate::lifted_prepared_operation_wire::ArtifactPersistedOperation for $operation{
+  fn install_persisted_receiving(wire:$crate::lifted_prepared_operation_wire::ArtifactOperationWire<Self>)->$crate::lifted_prepared_operation_wire::ArtifactOperationWire<Self>{wire.with_original_binary_receiving()}
+ }};
+}

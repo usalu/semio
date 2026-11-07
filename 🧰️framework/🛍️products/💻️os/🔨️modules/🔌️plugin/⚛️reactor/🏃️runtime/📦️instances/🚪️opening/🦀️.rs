@@ -57,8 +57,7 @@ async fn plugin_advance_actor_opening<PA:PluginApp>(runtime:&PluginRuntime<PA>,i
   }
   if cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(false)}let actor=RuntimeActorAuthority::new(&source.1)?;let mut app=program.create_app(&source.0,protocol::ActorId(actor.to_string().into()),runtime.mounted_policy,identity)?.ok_or_else(||plugin_internal_fault("unknown app"))?;::semio_framework_async::poll::resolve_ready(app.bind_instance_id(instance_id));::semio_framework_async::poll::resolve_ready(app.bind_actor(&source.1));opening.authority=Some(actor);*opening.app=Some(app);opening.identity_bound=true;cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)
  }
- if !opening.identity_bound{let source=opening.source.as_ref().ok_or_else(||plugin_internal_fault("original opening identity source missing"))?;if !opening.app.as_mut().unwrap().bind_original_opening(instance_id,&source.1,cx)?{return Ok(false)}let bytes=std::mem::size_of::<bool>();let mut done=None;built(cx,&mut done,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},||{opening.identity_bound=true;Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}))})?;return Ok(false)}
- if !opening.issuer_ready{if !opening.app.as_mut().unwrap().admit_cancellation_issuer(cx)?{return Ok(false)}opening.issuer_ready=true;return Ok(false)}
+ if !(opening.identity_bound&&opening.issuer_ready){let source=opening.source.as_ref().ok_or_else(||plugin_internal_fault("original opening identity source missing"))?;let mut birth=semio_plugin_reactor_app::InstanceBirth{identity_bound:opening.identity_bound,issuer_ready:opening.issuer_ready};let paid=opening.app.as_mut().unwrap().advance_instance_birth(&mut birth,instance_id,&source.1,cx);opening.identity_bound=birth.identity_bound;opening.issuer_ready=birth.issuer_ready;paid?;return Ok(false)}
  }
  if let Some(source)=opening.source_closing.as_mut(){
   if !source.terminal_is_empty(){retired(cx,source.selected_demand(cx.retained_grant().maximum_copy_bytes)?,|grant|source.step(grant))?;return Ok(false)}
@@ -132,3 +131,18 @@ pub const RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT: u8 = 8;
 /// finishing never does.
 #[doc(hidden)]
 pub const RUNTIME_CLOSE_STALL_CREDIT_US: u64 = semio_framework_trace::INTERACTIVE_STEP_CEILING_US;
+
+#[cfg(test)]
+mod birth_laws {
+    /// 🚪️ The runtime opening and the fixtures pay every birth through the one shared routine, so neither can drift: neither calls a birth step directly.
+    #[test]
+    fn runtime_opening_and_fixtures_pay_one_shared_instance_birth() {
+        let runtime = include_str!("🦀️.rs").split("#[cfg(test)]").next().unwrap();
+        let fixture = include_str!("../../../../🧪️testing/🧪️artifact-app-laws/🎟️fixture-dispatch-steps-and-document-loading/🦀️.rs");
+        for (name, source) in [("runtime opening", runtime), ("fixture", fixture)] {
+            assert!(source.contains("advance_instance_birth"), "{name} pays its births through advance_instance_birth");
+            assert!(!source.contains(".bind_original_opening("), "{name} never binds the opening identity itself");
+            assert!(!source.contains(".admit_cancellation_issuer("), "{name} never admits the cancellation issuer itself");
+        }
+    }
+}

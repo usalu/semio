@@ -1,4 +1,4 @@
-use semio_framework_plugin::WindowKit;
+use semio_plugin::WindowKit;
 use crate::standards::v3_0::subsets::any::schema::snapshot::ObjSnapshot;
 use semio_plugin::MeshWindowKit;
 use crate::viewer::obj::modes::view::windows::main::*;

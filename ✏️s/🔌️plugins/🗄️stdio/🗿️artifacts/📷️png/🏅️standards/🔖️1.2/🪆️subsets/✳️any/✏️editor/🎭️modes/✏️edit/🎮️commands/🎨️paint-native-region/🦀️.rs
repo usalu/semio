@@ -219,3 +219,5 @@ impl PaintNativeRegionWork {
         Ok(Default::default())
     }
 }
+
+semio_plugin::retained_command::terminal_frame_bound!(PaintNativeRegionWork);

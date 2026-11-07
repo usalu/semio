@@ -2,6 +2,11 @@
 
 use super::*;
 
+/// 🧷️ The replacement identity one envelope decode job is admitted under: its slot key is the allocated operation id, so the driver that steps the job installs the same value as the current slot identity.
+pub fn envelope_decode_replacement(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> semio_framework_job::ReplacementIdentity {
+    semio_framework_job::ReplacementIdentity::new(operation.0, operation, generation)
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ArtifactEnvelopeDecodeOperationHandle {
     pub operation: semio_framework_job::OperationId,

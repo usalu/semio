@@ -573,25 +573,25 @@
    "id": "a store quota below the capacity bounds the pool",
    "capacityBytes": 107374182400,
    "machineQuotaBytes": 18897856102,
-   "laneShareNumerator": 1,
-   "laneShareDenominator": 5,
-   "expect": 3779571220
+   "laneShareNumerator": 7,
+   "laneShareDenominator": 64,
+   "expect": 2066953011
   },
   {
    "id": "no machine budget falls back to the capacity",
    "capacityBytes": 42949672960,
    "machineQuotaBytes": null,
-   "laneShareNumerator": 1,
-   "laneShareDenominator": 5,
-   "expect": 8589934592
+   "laneShareNumerator": 7,
+   "laneShareDenominator": 64,
+   "expect": 4697620480
   },
   {
    "id": "a quota above the capacity does not widen the pool",
    "capacityBytes": 10737418240,
    "machineQuotaBytes": 53687091200,
-   "laneShareNumerator": 1,
-   "laneShareDenominator": 5,
-   "expect": 2147483648
+   "laneShareNumerator": 7,
+   "laneShareDenominator": 64,
+   "expect": 1174405120
   }
  ],
  "sweep": {

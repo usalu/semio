@@ -8,7 +8,7 @@ impl<T: FromValue + Send + 'static> ArtifactOwnedHistoryEntryAuthority<T> for Ar
     fn next_close_release_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic> { self.close_demands(0).map(|demand| demand.release_bytes).map_err(|error| self.diagnostic("artifact-envelope.history-entry-release-demand", 0).with_native(error)) }
     fn next_close_depth_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic> { self.close_demands(0).map(|demand| demand.depth).map_err(|error| self.diagnostic("artifact-envelope.history-entry-depth-demand", 0).with_native(error)) }
     fn accept_token(&mut self, token: OwnedSchemaToken, terminal: bool, source: &OwnedSchemaRecordCursor, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic> {
-        if cx.operation() != self.operation || cx.generation() != self.generation {
+        if cx.replacement_is_stale(self.replacement) {
             return Err(self.diagnostic("artifact-envelope.history-entry-stale", token.start));
         }
         if cx.is_cancelled() {

@@ -19,7 +19,7 @@ fn pdf_same_text_cluster(item:&PdfItem,next:Option<&PdfItem>,text:Option<&Export
 //#region 🧩️Job
 impl LayoutExportJob {
     /// 📕️ Advances one original-source Drawing command, addressed frame or retained paragraph turn.
-    pub(super) fn plan_pdf_one(&mut self,work:&mut semio_framework_2d_text_font::work::FontWorkLedger,drawing_read:Option<&semio_framework_io_ports::ChildAdmissionRead<'_>>) -> Result<(), String> {
+    pub(super) fn plan_pdf_one(&mut self,work:&mut semio_framework_2d_text_font::work::RetainedWorkLedger,drawing_read:Option<&semio_framework_io_ports::ChildAdmissionRead<'_>>) -> Result<(), String> {
         if !work.copy_bytes(std::mem::size_of::<Option<DrawingSourceAddress>>()){return Ok(());}
         let request=self.request.as_ref().unwrap();
         let selected=self.target_page.filter(|_|request.page_id.is_some()||matches!(request.kind,LayoutExportKind::Svg|LayoutExportKind::Png));
@@ -52,7 +52,7 @@ impl LayoutExportJob {
         }Ok(())
     }
 
-    pub(super) fn push_plan_item(&mut self,item:PdfItem,work:&mut semio_framework_2d_text_font::work::FontWorkLedger)->Result<(),String>{self.pdf_items.push_in(item,work).map_err(|error|error.to_string())?;self.pdf_plan_items+=1;Ok(())}
+    pub(super) fn push_plan_item(&mut self,item:PdfItem,work:&mut semio_framework_2d_text_font::work::RetainedWorkLedger)->Result<(),String>{self.pdf_items.push_in(item,work).map_err(|error|error.to_string())?;self.pdf_plan_items+=1;Ok(())}
 
     pub(super) fn begin_pdf(&mut self,work:&mut OutputWork) -> Result<(), String> {
         self.output.append(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n",work)?;
@@ -65,10 +65,10 @@ impl LayoutExportJob {
 
     pub(super) fn pdf_offset_demand(&self)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if self.pdf_offset_needed(){self.pdf_offsets.next_append_demand()}else{Ok(Default::default())}}
     fn pdf_offset_needed(&self)->bool{matches!(self.pdf_section,PdfSection::Catalog|PdfSection::Pages|PdfSection::FontType0|PdfSection::FontCid|PdfSection::FontDescriptor|PdfSection::FontFileBegin|PdfSection::PageObject|PdfSection::ContentBegin|PdfSection::ContentLength|PdfSection::ImageBegin|PdfSection::ImageAlphaBegin|PdfSection::UnicodeBegin|PdfSection::UnicodeLength|PdfSection::EncodingCmap)}
-    fn prepare_pdf_offset_in(&mut self,work:&mut OutputWork)->Result<bool,String>{if !self.pdf_offset_needed(){return Ok(true);}let mut ledger=semio_framework_2d_text_font::work::FontWorkLedger::new(work.remaining());let result=self.pdf_offsets.reserve_one_in(&mut ledger);work.consume(ledger.receipt()).map_err(str::to_owned)?;let ready=result.map_err(|error|error.to_string())?;if !ready{work.mark_preparatory();}Ok(ready)}
+    fn prepare_pdf_offset_in(&mut self,work:&mut OutputWork)->Result<bool,String>{if !self.pdf_offset_needed(){return Ok(true);}let mut ledger=semio_framework_2d_text_font::work::RetainedWorkLedger::new(work.remaining());let result=self.pdf_offsets.reserve_one_in(&mut ledger);work.consume(ledger.receipt()).map_err(str::to_owned)?;let ready=result.map_err(|error|error.to_string())?;if !ready{work.mark_preparatory();}Ok(ready)}
     fn pdf_object_offset(&mut self,id:usize,work:&mut OutputWork)->Result<(),String>{
         if self.pdf_offsets.len()+1!=id{return Err("layout-export-pdf-object-order".into());}let value=u32::try_from(self.output.len).map_err(|_|"layout-export-output-limit")?;
-        let mut ledger=semio_framework_2d_text_font::work::FontWorkLedger::new(work.remaining());let result=(||{if !self.pdf_offsets.reserve_one_in(&mut ledger)?{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"layout-export-offset-reservation"));}self.pdf_offsets.push_in(value,&mut ledger)})();work.consume(ledger.receipt()).map_err(str::to_owned)?;result.map_err(|error|error.to_string())
+        let mut ledger=semio_framework_2d_text_font::work::RetainedWorkLedger::new(work.remaining());let result=(||{if !self.pdf_offsets.reserve_one_in(&mut ledger)?{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"layout-export-offset-reservation"));}self.pdf_offsets.push_in(value,&mut ledger)})();work.consume(ledger.receipt()).map_err(str::to_owned)?;result.map_err(|error|error.to_string())
     }
 
     fn pdf_object(&mut self, id: usize, body: &[u8],work:&mut OutputWork) -> Result<(), String> {

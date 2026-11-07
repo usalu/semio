@@ -263,6 +263,19 @@ test("generation receipt: verification honors cancellation and publishes bounded
  }finally{rmSync(root,{recursive:true,force:true});}
 },60000);
 
+test("generation receipt: a relist that scans unlisted directories publishes progress and honors cancellation instead of walking silently",async()=>{
+ const{root,store}=materialize();
+ try{
+  const{result}=await capture(root,store,Date.now()+10000);if(result.status!=="captured")throw Error("captured expected");
+  const files=new Map<string,Uint8Array>(result.files.map(file=>[file.name,file.bytes]));
+  for(let index=0;index<1000;index++)mkdirSync(join(root,"pkgs/a/src/scan"+index),{recursive:true});
+  const abort=new AbortController(),counter={ticks:0,checks:0},input=verifyInput(root,store,result.receipt,files,counter,abort);let projected=0;
+  const watched:GenerationVerifyInputV1={...input,project:path=>{if(++projected===300)abort.abort(Object.freeze({cancel:"scan"}));return input.project(path);}};
+  await expect(verifyGenerationReceiptV1(watched)).rejects.toMatchObject({cancel:"scan"});
+  expect(projected).toBeLessThan(300+protocol.checkWork+1);
+ }finally{rmSync(root,{recursive:true,force:true});}
+},60000);
+
 const oracle=`
 import hashlib, json, os, re, sys
 root, rules = sys.argv[1], json.loads(sys.argv[2])

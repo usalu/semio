@@ -197,7 +197,7 @@ async fn retained_add_widget_dispatches_one_acknowledged_child_group_and_retires
     assert_eq!(expected["parentMutations"], 0);
     assert_eq!(expected["childGroups"], 1);
     for _ in 0..100_000 {
-        let demand = PluginApp::close_retirement_demands(&*app, 16_384).expect("Flow app close quote");
+        let demand = PluginApp::close_retirement_demands(&app.0, 16_384).expect("Flow app close quote");
         let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(16_384), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
         if matches!(PluginApp::close_step(&mut app.0, app.1.cx(), grant).expect("retained addWidget app close"), semio_plugin::PluginLifecycleStep::Complete(_)) {
             break;
@@ -456,7 +456,7 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
 
 #[semio_framework_async_macros::async_test]
 async fn host_from_snapshot_deletes_edge_selected_by_synapse_domain() {
-    context::install_first_party_light_flow_extensions_for_tests();
+    crate::editor::flow::unit_tests::context::install_first_party_light_flow_extensions_for_tests();
     let config = FlowMainWindowConfig::default();
     let fixture = FlowSnapshot::default();
     let mut session = FlowEvalSession::new();
@@ -518,7 +518,7 @@ async fn two_instances_converge_on_disjoint_edits() {
     assert_eq!(converged, probe(&instance_b).await, "both instances must converge on the same content child");
     assert_eq!(converged.len(), genesis.len() + 2, "each instance holds both disjoint notes");
     let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance_a.0, "commitCheckpoint", None, &metadata_a, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("a commits a checkpoint");
-    semio_plugin::app::settle_framework_reserved_admission(&mut instance_a.0, admitted).await.expect("a's checkpoint commit settles");
+    semio_plugin::app::settle_framework_reserved_admission(&mut instance_a.0, admitted, instance_a.1.cx()).await.expect("a's checkpoint commit settles");
     settle_registered_typed_operation(&mut instance_a.0, metadata_a.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's checkpoint publication settles");
     instance_b.0.tick_backbone(&mut semio_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's checkpoint");
     assert_eq!(probe(&instance_a).await, probe(&instance_b).await, "a replicated checkpoint keeps both instances converged");

@@ -20,6 +20,8 @@ pub use semio_framework_value_equality::{slice_equality,retained_equality,Retain
 mod value_codec;
 
 #[cfg(test)]
+pub(crate) use semio_framework_value_intrinsic::NativeEncodeControl;
+#[cfg(test)]
 use semio_framework_value_testing_allocator as allocation_testing;
 #[cfg(test)]
 pub(crate) use allocation_testing::observe_retirement_allocations;

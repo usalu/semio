@@ -477,9 +477,17 @@ export class UiDocumentStore {
     const previous = this.state;
     const next = uiDocumentStateFromSnapshot(snapshot);
     const nodes = new Map(next.nodes);
+    const parentOf = new Map<UiNodeId, UiNodeId>();
+    for (const [id, record] of next.nodes) for (const childId of record.children ?? []) parentOf.set(childId, id);
+    const changed = new Set<UiNodeId>();
     for (const [id, record] of next.nodes) {
       const prior = previous.nodes.get(id);
-      if (prior !== undefined && sameUiStructure(prior, record)) nodes.set(id, prior);
+      if (prior !== undefined && sameUiStructure(prior, record)) continue;
+      for (let at: UiNodeId | undefined = id; at !== undefined && !changed.has(at); at = parentOf.get(at)) changed.add(at);
+    }
+    for (const id of next.nodes.keys()) {
+      const prior = previous.nodes.get(id);
+      if (prior !== undefined && !changed.has(id)) nodes.set(id, prior);
     }
     this.state = { ...next, nodes };
     this.notifyDiff(previous, this.state);
@@ -709,10 +717,3 @@ export function useUiDocumentRevision(store: UiDocumentStore): UiRevision {
   return useSyncExternalStore(store.subscribeRevision, store.getRevisionSnapshot);
 }
 //#endregion 🔖️Hooks
-
-//#region 🧪️Tests
-if (import.meta.vitest) {
-  const { registerTypedWireTests } = await import("./🧪️tests/🧪️typedwire/🟦️.tsx");
-  await registerTypedWireTests(import.meta.vitest, { DEFAULT_UI_DOCUMENT_LIMITS, RetainedUiPatchCursor, RetainedUiSnapshotCursor, RetainedUiSurfaceOwner, UiDocumentStore, applyUiPatch, emitIntent, uiDocumentStateFromSnapshot, validateUiDocumentCore }, { directory: import.meta.dirname, url: import.meta.url });
-}
-//#endregion 🧪️Tests

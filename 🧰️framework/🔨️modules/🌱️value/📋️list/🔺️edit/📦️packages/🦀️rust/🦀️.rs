@@ -27,6 +27,8 @@ pub use named_edit::{NamedEditLane,NamedEditSource,NamedEditFault,NamedEditStep,
 #[cfg(test)]
 use semio_framework_value_testing_allocator as allocation_testing;
 #[cfg(test)]
+pub(crate) use semio_framework_value_control_contract::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
+#[cfg(test)]
 pub(crate) use allocation_testing::observe_retirement_allocations;
 #[cfg(test)]
 pub(crate) mod value {

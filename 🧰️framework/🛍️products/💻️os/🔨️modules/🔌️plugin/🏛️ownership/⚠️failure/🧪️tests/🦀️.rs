@@ -38,6 +38,25 @@ fn original_lifecycle_adopts_nested_context_receipt_without_second_debit(){
  }
 }
 
+/// 🔒️ A lifecycle step runs on a context narrowed to its loan, so a second posted item is refused inside the step and the step itself fails typed instead of spending the whole-turn grant.
+#[test]
+fn original_lifecycle_step_cannot_reach_the_whole_turn_grant(){
+ let mut sequence=0;let whole=RetainedCloneGrant{maximum_items:4,..grant()};let one=RetainedCloneProgress{copied_items:1,..Default::default()};let mut receipt=Default::default();
+ let mut cx=StepContext::new(OperationId(17),Generation(9),StepBudget::new(2,12345,whole),root_cancel_token(),||Some(1),&mut sequence,&mut receipt);
+ let result=original_lifecycle_step(&mut cx,grant(),Default::default(),|same,loan|{assert_eq!(same.retained_grant().maximum_items,loan.maximum_items);same.consume_retained(one).unwrap();let second=same.consume_retained(one);assert!(second.is_err());Ok((PluginLifecycleStep::Progress(one),false))});
+ assert!(result.is_err(),"an over-posting step never succeeds");assert_eq!(cx.retained_progress().copied_items,2);
+}
+
+/// 🚧️ The terminal-frame guard admits frames up to the 64 KiB bound, refuses one byte more and a 1.6 MB frame as oversized, and keeps an absent quote unadmitted.
+#[test]
+fn terminal_frame_guard_refuses_frames_above_the_close_release_bound(){
+ let maximum=TERMINAL_FRAME_GUARD_BYTES;
+ assert_eq!(checked_work_frame_bytes(Some(0)),Ok(0));assert_eq!(checked_work_frame_bytes(Some(maximum)),Ok(maximum));
+ assert_eq!(checked_work_frame_bytes(Some(maximum+1)),Err(WorkFrameRefusal::Oversized));assert_eq!(checked_work_frame_bytes(Some(1_675_904)),Err(WorkFrameRefusal::Oversized));
+ assert_eq!(checked_work_frame_bytes(None),Err(WorkFrameRefusal::Unadmitted));
+ assert_work_frame_fits::<[u8;1024]>();assert!(std::panic::catch_unwind(assert_work_frame_fits::<[u8;65537]>).is_err());
+}
+
 /// 🔄️ Job and lifecycle boundaries transfer both complete original owners without replacing their storage.
 #[test]
 fn original_lifecycle_job_pair_transfer_preserves_both_owned_pointers(){

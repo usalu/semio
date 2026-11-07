@@ -64,8 +64,7 @@ pub enum ArtifactEnvelopeFreshRecordActive<P, Mutation> {
 /// 📋️ Concrete 12-field catalog consumer for one fresh document envelope. All optional
 /// fields must be absent or null; history/edit/conflict collections must be exact empty arrays.
 pub struct ArtifactEnvelopeFreshFieldDecoder<P: Send + Sync + 'static, Mutation: Send + 'static> {
-    pub operation: semio_framework_job::OperationId,
-    pub generation: semio_framework_job::Generation,
+    pub replacement: Option<semio_framework_job::ReplacementIdentity>,
     pub catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
     pub initial_snapshot_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,
     pub mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
@@ -84,8 +83,7 @@ pub struct ArtifactEnvelopeFreshFieldDecoder<P: Send + Sync + 'static, Mutation:
 
 impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFreshFieldDecoder<P, Mutation> {
     pub fn new(
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
+        replacement: Option<semio_framework_job::ReplacementIdentity>,
         catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
         initial_snapshot_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,
         mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
@@ -95,8 +93,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFreshFi
         let maximum_vcs_close_byte_demand = catalog.maximum_vcs_close_byte_demand();
         let maximum_retained_vcs_close_bytes = catalog.maximum_retained_vcs_close_bytes();
         Self {
-            operation,
-            generation,
+            replacement,
             catalog,
             initial_snapshot_factory,
             mutation_factory,
@@ -126,7 +123,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFreshFi
         match field_id {
             ARTIFACT_ENVELOPE_SCHEMA_FIELD | ARTIFACT_ENVELOPE_ID_FIELD => {
                 let field = if field_id == ARTIFACT_ENVELOPE_SCHEMA_FIELD { "schema" } else { "id" };
-                let authority = OwnedSchemaStringAuthority::try_new(self.operation, self.generation, token, OwnedSchemaPath::field(field).unwrap_or(OwnedSchemaPath::ROOT)).map_err(|token| OwnedSchemaDecodeDiagnostic {
+                let authority = OwnedSchemaStringAuthority::try_new(self.replacement, token, OwnedSchemaPath::field(field).unwrap_or(OwnedSchemaPath::ROOT)).map_err(|token| OwnedSchemaDecodeDiagnostic {
                     code: "artifact-envelope.expected-string",
                     offset: token.start,
                     line: 0,
@@ -137,7 +134,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFreshFi
             }
             ARTIFACT_ENVELOPE_VCS_FIELD => {
                 let reservation = self.target.reserve_field(field_id)?;
-                match self.catalog.begin_vcs(self.operation, self.generation, OwnedSchemaPath::field("vcs").unwrap_or(OwnedSchemaPath::ROOT)) {
+                match self.catalog.begin_vcs(self.replacement, OwnedSchemaPath::field("vcs").unwrap_or(OwnedSchemaPath::ROOT)) {
                     Ok(authority) => {
                         if authority.maximum_close_byte_demand() > self.maximum_vcs_close_byte_demand || authority.maximum_retained_close_bytes() > self.maximum_retained_vcs_close_bytes {
                             self.active = Some(ArtifactEnvelopeFreshRecordActive::Vcs { reservation, authority, publishing: false });

@@ -156,11 +156,18 @@ fn cold_host_scope_returns_the_same_body_output_and_refused_original_owner(){
 
 #[test]
 fn funded_job_host_close_slot_keeps_original_custody_and_refusal_receipt(){
- let law=flow_retirement_contract();let mut host=Some(flow_host_with_close_refusal());let mut slot=FlowHostCloseSlot::default();
+ let law=flow_retirement_contract();let mut host=Some(Box::new(flow_host_with_close_refusal()));let mut slot=FlowHostCloseSlot::default();
  assert!(slot.retain(&mut host,RetainedCloneGrant::default()).is_err());assert!(host.is_some());assert!(slot.terminal_is_empty());
  let d=FlowHostCloseSlot::intake_demand();let intake=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};
- let(receipt,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||slot.retain(&mut host,intake).unwrap());assert!(receipt.fits(intake));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(host.is_none());
+ let(receipt,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||slot.retain(&mut host,intake).unwrap());assert!(receipt.fits(intake));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));assert!(host.is_none());
  let mut refusals=0;for _ in 0..law["maximumTurns"].as_u64().unwrap(){if slot.terminal_is_empty(){break;}let d=slot.next_demand(4096).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes.max(4096),maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};
   let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||slot.close_step(grant));let receipt=match result{Ok(step)=>step.progress(),Err(error)=>{refusals+=1;assert_eq!(format!("{:?}",error.kind),law["refusalKind"].as_str().unwrap());assert!(!slot.terminal_is_empty());error.retained_progress()}};assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));
  }assert!(slot.terminal_is_empty());assert_eq!(refusals,law["expectedRefusals"].as_u64().unwrap());
+}
+
+#[test]
+fn refused_cold_close_retries_to_terminal_closure_without_parking(){
+ let outcome=flow_host_with_close_refusal().with_cold(|_|());
+ let refusal=match outcome.close{Err(refusal)=>refusal,Ok(())=>panic!("original authority refusal was omitted")};
+ assert!(refusal.resolve().is_ok());assert_eq!(FlowHostCloseRefusal::parked(),0);
 }

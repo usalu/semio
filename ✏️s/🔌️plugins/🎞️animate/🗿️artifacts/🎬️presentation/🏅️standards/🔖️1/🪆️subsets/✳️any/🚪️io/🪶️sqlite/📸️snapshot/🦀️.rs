@@ -15,17 +15,15 @@ fn restore_child<S>(row:&SqliteRow,native:&mut semio_framework_value_native_owne
 fn bound_child<S>(bound:&mut NativeEncodingBound<'_,'_>,child:&store::os_store::artifact_child::ArtifactChild<S>)->Result<(),ValueError>{let t=&child.target;for text in[&child.child_id,&t.artifact_id,&t.dialect.artifact_kind,&t.dialect.standard,&t.dialect.subset]{bound.repeated(text.len(),24)?}Ok(())}
 impl ArtifactSqliteSnapshotHost for PresentationSnapshot{
  
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
-  semantic_owned(self,control.limits().max_value_bytes,&mut SemanticCheck(control))?;control.check_rows(self.tiles.len().checked_add(4).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Presentation row count overflow"))?)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
- }
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<store::io_schema::IoPayload,semio_os_kernel::NativeSnapshotFailure> {semio_os_kernel::native_snapshot_turn(|work|{
+  semantic_owned(self,control.limits().max_value_bytes,&mut SemanticCheck(control))?;control.check_rows(self.tiles.len().checked_add(4).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Presentation row count overflow"))?)?;work.take(store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner))})}
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<Self,semio_os_kernel::NativeSnapshotFailure> {semio_os_kernel::native_snapshot_turn(|work|{
   control.check_rows(4)?;let maximum=control.limits().max_rows;let maximum_bytes=control.limits().max_value_bytes;
-  store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
+  work.take(store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
    let count=match record.get(2){Some(semio_framework_dsl_record::FieldValue::List(values))=>values.len(),None|Some(semio_framework_dsl_record::FieldValue::Absent)=>0,_=>return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("Presentation tiles require a literal list").to_string()))};
    if count.checked_add(4).filter(|count|*count<=maximum).is_none(){return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("Presentation native snapshot exceeds row limit").to_string()))}
    semantic_borrowed(record,maximum_bytes,native)?;Self::__dsl_from_record_controlled(record,native)
-  })(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
- }
+  })(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control))})}
  fn preflight_sqlite_snapshot_encoding(&self,_:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
   control.check_rows(self.tiles.len().checked_add(4).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Presentation row count overflow"))?)?;let mut bound=NativeEncodingBound::new(control)?;bound.add(8192)?;
   for text in[&self.schema,&self.source.src,&self.source.kind]{bound.repeated(text.len(),24)?}

@@ -47,4 +47,12 @@ pub mod set_layer_visible {
 }
 //#endregion 🪢️TaxonomyMounts
 
-#[path="."]pub mod set_artboard{#[path="🧬️schema/🧬️mutations/🖼️set-artboard/🦠️mutation/🦀️.rs"]pub mod mutation;}
+#[path = "."]
+pub mod set_artboard {
+    #[path = "🧬️schema/🧬️mutations/🖼️set-artboard/🔺️diff/🦀️.rs"]
+    pub mod diff;
+    #[path = "🧬️schema/🧬️mutations/🖼️set-artboard/↩️inverse/🦀️.rs"]
+    pub mod inverse;
+    #[path = "🧬️schema/🧬️mutations/🖼️set-artboard/🦠️mutation/🦀️.rs"]
+    pub mod mutation;
+}

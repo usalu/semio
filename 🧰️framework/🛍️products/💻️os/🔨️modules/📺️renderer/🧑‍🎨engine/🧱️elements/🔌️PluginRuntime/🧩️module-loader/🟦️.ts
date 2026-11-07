@@ -29,7 +29,7 @@ import {
 } from "@semio-tech/framework/app-channel";
 import { DOCUMENT_BACKBONE_RETENTION_LIMITS } from "@semio-tech/framework/replication";
 import { DEFAULT_UI_DOCUMENT_LIMITS } from "../../📃️UiDocumentStore/🟦️.tsx";
-import { activationReasonForAppId } from "@semio-tech/framework";
+import { activationReasonForAppId, type AppDefinition } from "@semio-tech/framework";
 import { descriptorPackageAssets, fetchDescriptorManifest } from "@semio-tech/framework";
 import { type PluginWasmHandle as KernelPluginWasmHandle } from "@semio-tech/framework";
 import { settleFailedInstanceOpen } from "@semio-tech/framework/actor/shard-client/heartbeat";
@@ -220,7 +220,7 @@ function createRefreshUi(scope: PluginHandleScope, instances: ReturnType<typeof 
    * retained actor state publish their first patch. Panels use the same authored-body surface path. */
   const refreshUi = async (instanceId: number, request: PluginUiRefreshRequest, control?: Readonly<{signal:AbortSignal}>): Promise<PluginUiRefreshResponse> => {
     if(control?.signal.aborted)throw control.signal.reason??new Error("staging.cancelled");
-    const app=manifest.apps.find(app=>app.id===appIdByInstance.get(instanceId));
+    const app=(manifest.apps as readonly AppDefinition[]).find(app=>app.id===appIdByInstance.get(instanceId));
     const events = uiRefreshSurfaceEvents(instanceId, request,(window,action)=>{
       const kindId=request.viewState.windowInstances?.find(instance=>instance.id===window)?.windowKindId;
       const kind=app?.windowKinds.find(kind=>kind.id===kindId);

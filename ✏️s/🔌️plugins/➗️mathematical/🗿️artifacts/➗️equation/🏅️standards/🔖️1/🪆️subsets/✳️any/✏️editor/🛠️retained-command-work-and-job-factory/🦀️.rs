@@ -440,3 +440,5 @@ impl ArtifactOwnedToolJobFactory for EquationCommandJobFactory {
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = EQUATION_PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️RetainedCommands
+
+semio_plugin::retained_command::terminal_frame_bound!(EquationRetainedCommandWork);

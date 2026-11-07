@@ -57,7 +57,7 @@ fn pair_posted_error(slot:&mut Option<OriginalArtifactPairFailure>,error:Origina
 }
 fn pair_demand(cx:&mut StepContext<'_>,slot:&mut Option<OriginalArtifactPairFailure>,query:impl FnOnce(&mut dyn NativeDecodeCloseControl)->Result<RetirementDemand,OriginalArtifactPairFailure>)->Result<Option<RetirementDemand>,OriginalTurnFailure>{
  if cx.retirement_should_yield()||slot.is_some()||!crate::registry::fits(cx.retained_grant(),pair_failure_demand()){return Ok(None)}
- match cx.with_native_retirement(query){Ok(mut demand)=>{demand.copy_bytes=demand.copy_bytes.checked_add(pair_failure_demand().copy_bytes).ok_or_else(||invalid("pair failure capture quote overflow"))?;Ok(Some(demand))},Err(error)=>{let diagnostic=pair_error(slot,error);cx.consume_retained(diagnostic.retained_progress())?;cx.consume_fuel(1);Err(diagnostic.into())}}
+ match cx.with_native_retirement(|native|Ok::<_,ValueError>(query(native)))?{Ok(mut demand)=>{demand.copy_bytes=demand.copy_bytes.checked_add(pair_failure_demand().copy_bytes).ok_or_else(||invalid("pair failure capture quote overflow"))?;Ok(Some(demand))},Err(error)=>{let diagnostic=pair_error(slot,error);cx.consume_retained(diagnostic.retained_progress())?;cx.consume_fuel(1);Err(diagnostic.into())}}
 }
 fn vacant_edit()->HistoryEdit{HistoryEdit{id:String::new(),actor:None,started_at:String::new(),finished_at:None,verb:None,line:None,ops:Vec::new(),inverse:Vec::new(),meta:None,lane:None}}
 fn vacant_message()->HistoryMessage{HistoryMessage{level:0,code:String::new(),message:String::new(),target:Vec::new(),op_index:None}}

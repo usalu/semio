@@ -12,31 +12,23 @@ use semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_plugin_job::reserved_jobs::FRAMEWORK_RESERVED_JOB_MAGIC;
 
-/// 🧪️ Drives one framework-reserved spawn-job through the real reactor registry: a genuine original admission under a
-/// caller context funded with at least the registry's own quoted grant, then bounded steps until its terminal output.
+/// 🧪️ Drives one framework-reserved spawn-job through the real reactor registry under the caller's own original context: the admission and every step borrow its source parent, cancellation, clock and grant exactly as the host's reactor turn does, never a detached context.
 #[doc(hidden)]
-pub fn drive_framework_reserved_registry_job(job: u64, input: Vec<u8>, policy: RetainedCloneGrant) -> Result<Vec<u8>,OriginalTurnFailure> {
-    drive_framework_reserved_registry_job_counted(job, input, policy).map(|(output, _)| output)
+pub fn drive_framework_reserved_registry_job(job: u64, input: Vec<u8>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Vec<u8>,OriginalTurnFailure> {
+    drive_framework_reserved_registry_job_counted(job, input, cx).map(|(output, _)| output)
 }
 
-/// 🧪️ The same registry drive, also reporting how many funded `step_job` turns the job needed.
+/// 🧪️ The same registry drive, also reporting how many `step_job` turns the job needed.
 #[doc(hidden)]
-pub fn drive_framework_reserved_registry_job_counted(job: u64, input: Vec<u8>, policy: RetainedCloneGrant) -> Result<(Vec<u8>,u32),OriginalTurnFailure> {
-    use crate::{start_job, step_job, IoRunControl, JobStep, OriginalJobAdmission, SqliteSnapshotControl, WORK_UNITS_EXECUTE};
-    use semio_framework_job::{Generation, OperationId, StepBudget, StepContext};
+pub fn drive_framework_reserved_registry_job_counted(job: u64, input: Vec<u8>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(Vec<u8>,u32),OriginalTurnFailure> {
+    use crate::{start_job, step_job, IoRunControl, JobStep, OriginalJobAdmission, SqliteSnapshotControl};
     use semio_framework_async::poll::resolve_ready;
     const TURNS: usize = 100_000;
     let stall = |detail: &'static str| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-spawn-stall"), detail);
-    let (operation, generation) = (OperationId(job), Generation(1));
-    let widest = |left: RetainedCloneGrant, right: RetainedCloneGrant| RetainedCloneGrant { maximum_items: left.maximum_items.max(right.maximum_items), maximum_copy_bytes: left.maximum_copy_bytes.max(right.maximum_copy_bytes), maximum_capacity_bytes: left.maximum_capacity_bytes.max(right.maximum_capacity_bytes), maximum_release_bytes: left.maximum_release_bytes.max(right.maximum_release_bytes), maximum_depth: left.maximum_depth.max(right.maximum_depth) };
-    let mut grant = policy;
     let mut source = Some(OriginalJobAdmission { job, kind: FRAMEWORK_RESERVED_JOB_KIND.into(), input: Some(input), checkpoint: None });
     let mut admitted = false;
     for _ in 0..TURNS {
-        let mut sequence = 0;
-        let mut receipt = RetainedCloneProgress::default();
-        let mut cx = StepContext::new(operation, generation, StepBudget::new(1, u64::MAX, grant), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence, &mut receipt);
-        match resolve_ready(start_job(&mut source, &mut cx)) {
+        match resolve_ready(start_job(&mut source, cx)) {
             Ok(true) => {
                 admitted = true;
                 break;
@@ -44,24 +36,14 @@ pub fn drive_framework_reserved_registry_job_counted(job: u64, input: Vec<u8>, p
             Ok(false) => {}
             Err(error) => return Err(error.into()),
         }
-        grant = widest(grant, crate::job_admission_demands(job, &cx).unwrap_or(grant));
+        if cx.should_yield() { break; }
     }
     if !admitted {
         return Err(stall("framework reserved spawn-job was never admitted by the reactor registry").into());
     }
     let mut steps = 0u32;
     for _ in 0..TURNS {
-        if let Some(quote) = {
-            let mut sequence = 0;
-            let mut receipt = RetainedCloneProgress::default();
-            let cx = StepContext::new(operation, generation, StepBudget::new(1, u64::MAX, grant), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence, &mut receipt);
-            crate::job_admission_demands(job, &cx).ok()
-        } {
-            grant = widest(grant, quote);
-        }
-        let mut sequence = 0;
-        let mut receipt = RetainedCloneProgress::default();
-        let mut cx = StepContext::new(operation, generation, StepBudget::new(WORK_UNITS_EXECUTE, u64::MAX, grant), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence, &mut receipt);
+        let grant = cx.retained_grant();
         let mut decode_callback = |_| true;
         let mut encode_callback = |_| true;
         let mut decode = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(grant.maximum_capacity_bytes, &mut decode_callback);
@@ -70,12 +52,13 @@ pub fn drive_framework_reserved_registry_job_counted(job: u64, input: Vec<u8>, p
         let mut snapshot_callback = |_| true;
         let mut snapshot = SqliteSnapshotControl::new(&mut snapshot_callback, Default::default());
         steps += 1;
-        match resolve_ready(step_job(job, &mut original, &mut snapshot, &mut cx)) {
+        match resolve_ready(step_job(job, &mut original, &mut snapshot, cx)) {
             Ok(JobStep::Running(_)) => {}
             Ok(JobStep::Done(bytes)) => return Ok((bytes, steps)),
             Ok(JobStep::Failed(bytes)) => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-spawn-failed"), String::from_utf8_lossy(&bytes).into_owned()).into()),
             Err(error)=>return Err(error),
         }
+        if cx.should_yield() { break; }
     }
     Err(stall("framework reserved spawn-job did not reach a terminal step").into())
 }

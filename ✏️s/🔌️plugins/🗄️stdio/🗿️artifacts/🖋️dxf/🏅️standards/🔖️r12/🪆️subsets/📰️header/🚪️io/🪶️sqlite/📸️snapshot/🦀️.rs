@@ -114,13 +114,12 @@ fn reconstruct_sqlite_database(db: &Db, control: &mut Control<'_>) -> Result<Sel
 }
 
 impl ArtifactSqliteSnapshotHost for DxfSnapshot {
-    fn encode_sqlite_snapshot_native(&self,encoding:sqlite_snapshot::SnapshotEncoding,control:&mut Control<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{(|| -> Result<(),ValueError>{
+    fn encode_sqlite_snapshot_native(&self,encoding:sqlite_snapshot::SnapshotEncoding,control:&mut Control<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<store::io_schema::IoPayload,semio_os_kernel::NativeSnapshotFailure> {semio_os_kernel::native_snapshot_turn(|work|{(|| -> Result<(),ValueError>{
         control.checkpoint(Phase::EncodeNative,0,0)?;native_rows(self,control)?;let mut out=Projection::forecast(control,Phase::EncodeNative)?;self.write_sqlite_rows(&mut out)?;out.finish_forecast()?;
-        Ok(())})()?;store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),snapshot_text::spec_producer(),|native|snapshot_text::to_record_controlled(self,native),control,native_owner)
-    }
-    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut Control<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
-        let value:Self=store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),snapshot_text::spec_producer(),|record,output,native,_body|{*output=Some(snapshot_text::from_record_controlled(record,native)?);Ok(())},control,native_control)?;let mut out=Projection::forecast(control,Phase::DecodeNative)?;value.write_sqlite_rows(&mut out)?;out.finish_forecast()?;Ok(value)
-    }
+        Ok(())})()?;work.take(store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),snapshot_text::spec_producer(),|native|snapshot_text::to_record_controlled(self,native),control,native_owner))})}
+    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut Control<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<Self,semio_os_kernel::NativeSnapshotFailure> {semio_os_kernel::native_snapshot_turn(|work|{
+        let value:Self=work.take(store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),snapshot_text::spec_producer(),|record,output,native,_body|{*output=Some(snapshot_text::from_record_controlled(record,native)?);Ok(())},control,native_control))?;let mut out=Projection::forecast(control,Phase::DecodeNative)?;value.write_sqlite_rows(&mut out)?;out.finish_forecast()?;Ok(value)
+    })}
 
     fn preflight_sqlite_snapshot_encoding(&self, encoding: sqlite_snapshot::SnapshotEncoding, control: &mut Control<'_>) -> Result<(),ValueError> {self.preflight_sqlite_encoding(encoding,control)}
     fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&Db,control:&mut Control<'_>)->semio_os_kernel::io_schema::IoResult<()>{( || -> Result<semio_os_kernel::io_schema::IoOutcome<()>,ValueError>{

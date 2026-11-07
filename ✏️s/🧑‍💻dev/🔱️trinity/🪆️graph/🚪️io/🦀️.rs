@@ -26,18 +26,18 @@ fn extent(bytes:&[u8])->Result<(),ValueError>{if bytes.is_empty()||bytes.len()>M
 fn export(payload:&IoPayload,format:Format,control:&mut IoRunControl<'_,'_>)->IoResult<IoPayload>{
  let IoPayload::Binary(bytes)=payload else{return Err(invalid("Jack archive export requires native binary archive").into())};extent(bytes).map_err(IoError::from_value_error)?;
  let(prefix,suffix)=match format{Format::Json=>(JSON_PREFIX,"\"}"),Format::Text=>(TXT_PREFIX,"\n")};let length=bytes.len()*2+prefix.len()+suffix.len();
- control.snapshot_encode().map_err(IoError::from_value_error)?.receive::<IoPayload,IoPayload>(|slot,native,body|{
+ control.snapshot_encode().map_err(IoError::from_value_error)?.receive::<IoPayload,IoPayload,store::io::control::NativeSnapshotFailure>(|slot,native,body|store::io::control::native_snapshot_turn(|work|{work.performed();(||->Result<IoPayload,ValueError>{
   body.admit_frontier(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:length,maximum_capacity_bytes:length,maximum_release_bytes:0,maximum_depth:2})?;
   *slot=Some(IoPayload::Text(String::new()));let Some(IoPayload::Text(output))=slot else{unreachable!()};
   native.begin_stage(bytes.len())?;native.charge(length)?;output.try_reserve_exact(length).map_err(|_|allocation())?;output.push_str(prefix);
   let result=(||{for chunk in bytes.chunks(256){for byte in chunk{output.push(HEX[usize::from(byte>>4)]as char);output.push(HEX[usize::from(byte&15)]as char);}native.advance(chunk.len())?;}output.push_str(suffix);Ok(())})();
   body.record_progress(RetainedCloneProgress{copied_items:1,copied_bytes:output.len(),retained_capacity_bytes:output.capacity(),released_bytes:0})?;result?;Ok(slot.take().unwrap())
- }).map(IoOutcome::clean).map_err(IoError::from_value_error)
+ })().map_err(Into::into)})).result.map(IoOutcome::clean).map_err(IoError::from)
 }
 fn import(payload:&IoPayload,format:Format,control:&mut IoRunControl<'_,'_>)->IoResult<IoPayload>{
  let text=match payload{IoPayload::Text(text)=>text.as_str(),IoPayload::Binary(bytes)=>{if bytes.len()>MAXIMUM_BYTES*2+128{return Err(invalid("Jack archive text extent exceeds authored ceiling").into())}std::str::from_utf8(bytes).map_err(|_|IoError::from_value_error(invalid("Jack archive carrier requires UTF8")))?}};
  if text.len()>MAXIMUM_BYTES*2+128{return Err(invalid("Jack archive text extent exceeds authored ceiling").into())}
- control.snapshot_decode().map_err(IoError::from_value_error)?.receive::<Receiving,IoPayload>(|slot,native,body|{
+ control.snapshot_decode().map_err(IoError::from_value_error)?.receive::<Receiving,IoPayload,store::io::control::NativeSnapshotFailure>(|slot,native,body|store::io::control::native_snapshot_turn(|work|{work.performed();(||->Result<IoPayload,ValueError>{
   *slot=Some(Receiving{carrier:None,output:None});let frame=slot.as_mut().unwrap();
   let encoded=match format{Format::Json=>{
    body.admit_frontier(RetainedCloneGrant{maximum_items:3,maximum_copy_bytes:text.len()*8,maximum_capacity_bytes:text.len()*8,maximum_release_bytes:text.len()*8,maximum_depth:8})?;
@@ -51,7 +51,7 @@ fn import(payload:&IoPayload,format:Format,control:&mut IoRunControl<'_,'_>)->Io
   native.begin_stage(encoded.len())?;native.charge(count)?;output.try_reserve_exact(count).map_err(|_|allocation())?;
   let result=(||{for chunk in encoded.as_bytes().chunks(512){for pair in chunk.chunks_exact(2){output.push((nibble(pair[0])?<<4)|nibble(pair[1])?);}native.advance(chunk.len())?;}extent(output)})();
   body.record_progress(RetainedCloneProgress{copied_items:1,copied_bytes:output.len(),retained_capacity_bytes:output.capacity(),released_bytes:0})?;result?;Ok(frame.output.take().unwrap())
- }).map(IoOutcome::clean).map_err(IoError::from_value_error)
+ })().map_err(Into::into)})).result.map(IoOutcome::clean).map_err(IoError::from)
 }
 #[path="📤️export/🔣️json/🦀️.rs"]mod into_json;
 #[path="📥️import/🔣️json/🦀️.rs"]mod from_json;

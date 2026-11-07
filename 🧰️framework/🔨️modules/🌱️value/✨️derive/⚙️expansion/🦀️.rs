@@ -234,9 +234,9 @@ fn container_crate_path(container: &ContainerAttrs) -> syn::Path {
     syn::parse_str(path).expect("valid #[value(crate = \"...\")] path")
 }
 
-/// 🛬️ Resolves the crate that owns `native_decoding`: an explicit `native_owned` key, else the authored `crate` root that supplies everything, else the owner crate.
+/// 🛬️ Resolves the crate that owns `native_decoding`: an explicit `native_owned` key, else the authored `crate` root that supplies everything, else the value facade.
 fn container_native_owned_path(container: &ContainerAttrs) -> syn::Path {
-    let path = container.native_owned_path.as_deref().or(container.crate_path.as_deref()).unwrap_or("::semio_framework_value_native_owned");
+    let path = container.native_owned_path.as_deref().or(container.crate_path.as_deref()).unwrap_or("::semio_framework_value");
     syn::parse_str(path).expect("valid #[value(native_owned = \"...\")] path")
 }
 

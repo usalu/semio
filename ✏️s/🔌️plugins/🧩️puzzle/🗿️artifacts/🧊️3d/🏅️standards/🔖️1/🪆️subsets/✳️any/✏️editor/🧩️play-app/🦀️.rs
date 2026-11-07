@@ -283,9 +283,9 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         puzzle3d_paste_operations(fragment, placement)
     }
 
-    fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_framework_plugin::ArtifactReservedJob+Send>>,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if body.is_none()&&!request.as_ref().is_some_and(|request|matches!(request.tool_id.as_str(),"copy"|"cut"|"paste")){return Ok(false)}
-        semio_framework_plugin::tool_contract::admit_reserved_work::<EditorApp<Self>,Puzzle3dClipboardJob>(request,body,cx)
+        semio_plugin::plugin_app_close_prelude::admit_reserved_work::<EditorApp<Self>,Puzzle3dClipboardJob>(request,body,cx)
     }
 
     /// 🏷️ Maps each `Puzzle3dCommand` variant back to the action id it was declared under.

@@ -16,7 +16,7 @@ fn strings_capacity(values:&Vec<String>)->usize{
 }
 fn cow_capacity(value:&std::borrow::Cow<'static,str>)->usize{match value{std::borrow::Cow::Owned(owned)=>owned.capacity(),std::borrow::Cow::Borrowed(_)=>0}}
 fn diagnostic_capacity(error:&store::io_schema::IoError)->usize{
- let mut bytes=cow_capacity(&error.cause.message);add(&mut bytes,slots(&error.diagnostics));
+ let mut bytes=match error.cause.cause(){Some(store::NativeSnapshotCause::Value(value))=>cow_capacity(&value.message),_=>0};add(&mut bytes,slots(&error.diagnostics));
  for diagnostic in &error.diagnostics{
   add(&mut bytes,diagnostic.code.0.capacity());add(&mut bytes,diagnostic.message.capacity());
   if let Some(expected)=&diagnostic.expected{for values in [&expected.tokens,&expected.keywords,&expected.keys]{add(&mut bytes,strings_capacity(values));}}
@@ -29,7 +29,7 @@ struct Sample{kind:Option<ValueRefusalKind>,diagnostic:usize,correct:bool}
 fn measure(operation:impl FnOnce()->Result<bool,store::io_schema::IoError>)->(Sample,usize,usize){
  crate::test_allocation::observe_backing(||match operation(){
   Ok(correct)=>Sample{kind:None,diagnostic:0,correct},
-  Err(error)=>{let sample=Sample{kind:Some(error.cause.kind),diagnostic:diagnostic_capacity(&error),correct:false};drop(error);sample}
+  Err(error)=>{let sample=Sample{kind:Some(error.cause.kind()),diagnostic:diagnostic_capacity(&error),correct:false};drop(error);sample}
  })
 }
 fn released(sample:Sample,requested:usize,actual_released:usize,incoming:usize,debit:usize){

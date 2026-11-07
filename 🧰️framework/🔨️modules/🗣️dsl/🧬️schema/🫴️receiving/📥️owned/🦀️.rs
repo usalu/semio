@@ -1,6 +1,6 @@
 //! 📥️ Owned typed binding retains real child backing and returns its defining work with every physical outcome.
 use crate::{FieldValue,RecordValue};
-use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind,retirement::{RetireOwned,controlled::ControlledRetirement}};
+use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueRefusalKind,retirement::{RetireOwned,controlled::ControlledRetirement}};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::mem::ManuallyDrop;
 #[path="🧬️contract/🦀️.rs"]mod contract;
@@ -8,17 +8,20 @@ pub use contract::*;
 #[path="📦️storage/🦀️.rs"]mod storage;
 pub use storage::OwnedReceivingSlot;
 #[path="🔢️scalar/🦀️.rs"]mod scalar;
-pub use scalar::{OwnedScalar,ScalarReceiving};
+pub use scalar::{OwnedScalar,ScalarReceiving,map_outcome};
+pub use semio_framework_value::{RetainedWorkOutcome,ValueError};
 #[doc(hidden)]
 pub use scalar::scalar_sealed;
 #[path="📋️vector/🦀️.rs"]mod vector;
 pub use vector::VectorReceiving;
 #[path="📋️persistent/🦀️.rs"]mod persistent;
 pub use persistent::PersistentReceiving;
+#[path="📝️text/🦀️.rs"]mod text;
+pub use text::TextReceiving;
 #[path="🔢️array/🦀️.rs"]mod array;
 pub use array::ArrayReceiving;
 #[path="🎁️wrapping/🦀️.rs"]mod wrapping;
-pub use wrapping::{WrappedReceiving,OwnedWrapping};
+pub use wrapping::{WrappedReceiving,OwnedWrapping,StatementReceiving};
 #[path="🔄️mapping/🦀️.rs"]mod mapping;
 pub use mapping::{MappedReceiving,OwnedReceivingMap};
 #[path="🌳️intrinsic/🦀️.rs"]mod intrinsic;

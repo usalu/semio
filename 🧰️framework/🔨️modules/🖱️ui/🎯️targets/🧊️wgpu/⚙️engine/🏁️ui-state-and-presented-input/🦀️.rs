@@ -278,7 +278,7 @@ impl Ui {
     /// 🧵️ Drives the sole close owner through input, jobs, paint, documents, and registry release.
     pub fn close_surface_one(&mut self,token:UiSurfaceToken,cx:&mut StepContext<'_>)->Result<UiSurfaceCloseStep,semio_framework_job::OriginalTurnFailure>{
         if cx.should_yield(){return Ok(UiSurfaceCloseStep::Pending)}
-        if let Some(window)=self.windows.get_token_mut(token){if let Some(failure)=window.layout_close_failure.as_mut(){let demand=failure.selected_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|failure.step(grant))?;if failure.terminal_is_empty(){window.layout_close_failure=None;window.layout_retirement_refusal=None;}return Ok(UiSurfaceCloseStep::Pending)}}
+        if let Some(window)=self.windows.get_token_mut(token){if let Some(failure)=window.layout_close_failure.as_mut(){let demand=failure.selected_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:failure.step(grant),work:1})?;if failure.terminal_is_empty(){window.layout_close_failure=None;window.layout_retirement_refusal=None;}return Ok(UiSurfaceCloseStep::Pending)}}
         Ok((||{
         let Some(window) = self.windows.get_token_mut(token) else { return UiSurfaceCloseStep::Complete };
         let Some(phase) = window.closing else { return UiSurfaceCloseStep::Pending };
@@ -286,7 +286,9 @@ impl Ui {
         if let Some(refusal) = window.layout_retirement_refusal {
             if !matches!(refusal.stage, "Layout.Admission" | "Layout.CloseAdmission") { return UiSurfaceCloseStep::Refused(refusal); }
             if !window.layout_admission.terminal_is_empty() {
-                if let Err(error) = window.layout_admission.close_step(ui_contract::UI_WORKER_RETIREMENT_POLICY, None) {
+                let closed = window.layout_admission.close_step(ui_contract::UI_WORKER_RETIREMENT_POLICY, None);
+                cx.consume_fuel(closed.work);
+                if let Err(error) = closed.result {
                     let refusal = UiWorkerRetirementRefusal { stage: "Layout.CloseAdmission", kind: error.kind, progress: error.retained_progress() };
                     assert!(window.layout_admission.failure.is_none(), "original admission failure slot remains available after its prior error transfer");
                     *window.layout_admission.failure = Some(error);
@@ -321,7 +323,9 @@ impl Ui {
             }
             UiSurfaceClosePhase::LayoutAdmission => {
                 if !window.layout_admission.terminal_is_empty() {
-                    if let Err(error) = window.layout_admission.close_step(ui_contract::UI_WORKER_RETIREMENT_POLICY, None) {
+                    let closed = window.layout_admission.close_step(ui_contract::UI_WORKER_RETIREMENT_POLICY, None);
+                cx.consume_fuel(closed.work);
+                if let Err(error) = closed.result {
                         let refusal = UiWorkerRetirementRefusal { stage: "Layout.CloseAdmission", kind: error.kind, progress: error.retained_progress() };
                         window.layout_retirement_refusal = Some(refusal);
                         return UiSurfaceCloseStep::Refused(refusal);

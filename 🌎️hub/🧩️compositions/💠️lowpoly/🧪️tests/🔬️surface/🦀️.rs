@@ -23,7 +23,7 @@ async fn lowpoly_activation_matches_registered_artifact() {
     assert_eq!(descriptor["manifest"]["apps"][0]["artifactKinds"][0]["id"], expected);
     assert_eq!(descriptor["manifest"]["apps"][0]["io"]["artifact"]["id"], expected);
     let plugin = super::plugin().expect("plugin assembles");
-    assert!(plugin.descriptor_extras().activation_events.iter().any(|event| matches!(event, semio_framework_plugin::kernel::ActivationEvent::OnArtifactKind { kind } if kind == expected)));
+    assert!(plugin.descriptor_extras().activation_events.iter().any(|event| matches!(event, semio_plugin::kernel::ActivationEvent::OnArtifactKind { kind } if kind == expected)));
 }
 
 #[test]

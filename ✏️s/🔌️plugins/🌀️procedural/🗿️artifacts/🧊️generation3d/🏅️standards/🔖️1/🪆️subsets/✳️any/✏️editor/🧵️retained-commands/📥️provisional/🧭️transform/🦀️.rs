@@ -18,7 +18,7 @@ pub(crate) struct ProvisionalTransformInput{pub targets:Vec<String>,pub kind:Tra
 #[derive(Clone,Copy,PartialEq,Eq)]
 enum Phase{Validate,Unique,Identity,Scan,Kind,ReadBirth,Read,ReadTake,ReadClose,Compose,LiteralBirth,Literal,LiteralTake,LiteralClose,PatchBirth,Patch,PatchClose,InputClose,Next}
 struct Fields{payload:Option<ProvisionalTransformInput>,read:Option<NativeParamReadWork>,literal:Option<TypedLiteralWork>,input:Option<WidgetInputValue>,value:Option<Value>,patch:Option<NativeParamPatchWork>}
-pub(crate) struct ProvisionalTransformWork{fields:ManuallyDrop<Fields>,original:OriginalSourceBinding,binding:Option<FlowSourceIdentity>,phase:Phase,scan:ScratchRowScan,ordinal:usize,target:Option<usize>,kind_index:usize,read_index:usize,lane:usize,first:[f64;3],second:f64,computed:[f64;3],angle:f64,component:usize,ready:bool,applied:bool,closing:bool,retirement:RetainedCloneClose,progress:RetainedCloneProgress,work:u64}
+pub struct ProvisionalTransformWork{fields:ManuallyDrop<Fields>,original:OriginalSourceBinding,binding:Option<FlowSourceIdentity>,phase:Phase,scan:ScratchRowScan,ordinal:usize,target:Option<usize>,kind_index:usize,read_index:usize,lane:usize,first:[f64;3],second:f64,computed:[f64;3],angle:f64,component:usize,ready:bool,applied:bool,closing:bool,retirement:RetainedCloneClose,progress:RetainedCloneProgress,work:u64}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"provisional transform changed its actual scratch source or native owner phase")}
 fn fixed(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
 fn target_id(value:&String)->&str{value}

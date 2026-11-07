@@ -96,7 +96,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewFlow
     fn work_demands(&self,input:&ArtifactCommandInputs<'_,ViewerApp<Generation3dViewer>>,maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
         if let Generation3dViewCommand::FlowTessellateResolve(payload)=input.command{return self.instance_owner.inspect_original::<Generation3dViewInstanceOperationOwner,_>(|owner|owner.eval_session.as_ref().map_or_else(||Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original preview session is closing")),|session|self.tessellate.demands(payload,session,maximum_copy_bytes)))?.unwrap_or(Ok(Default::default()))}
         if let Generation3dViewCommand::FlowEvalResolve(payload)=input.command{return self.instance_owner.inspect_original::<Generation3dViewInstanceOperationOwner,_>(|owner|owner.eval_session.as_ref().map_or_else(||Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original preview session is closing")),|session|self.evaluation.demands(payload,session,maximum_copy_bytes)))?.unwrap_or(Ok(Default::default()))}
-        command_work_step_demands::<ViewerApp<Generation3dViewer>>(size_of::<Self>())
+        command_work_step_demands::<ViewerApp<Generation3dViewer>>()
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
@@ -193,7 +193,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewFlow
     }
 
     fn work_demands(&self, _input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        command_work_step_demands::<ViewerApp<Generation3dViewer>>(size_of::<Self>())
+        command_work_step_demands::<ViewerApp<Generation3dViewer>>()
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
@@ -275,3 +275,5 @@ impl ArtifactOwnedToolJobFactory for Generation3dViewBoundedCommandJobFactory {
     ];
 }
 //#endregion 🧵️RetainedCommands
+
+semio_plugin::retained_command::terminal_frame_bound!(Generation3dViewFlowEvalWindowWork, Generation3dViewFlowResolveWork);

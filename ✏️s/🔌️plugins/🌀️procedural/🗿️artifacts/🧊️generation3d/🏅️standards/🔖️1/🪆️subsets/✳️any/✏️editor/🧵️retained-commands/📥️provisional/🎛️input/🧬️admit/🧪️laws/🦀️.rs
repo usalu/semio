@@ -1,4 +1,5 @@
 //! 🧪️ Native typed input admission equals its defining schema and original admissible operation.
+use semio_framework_value::FromValue as _;
 use super::retained_typed_input_admission::TypedInputAdmission;
 use semio_s_artifact_procedural_3d_mutations::{Generation3dMutation,ChangeWidgetInput,WidgetInputValue};
 use semio_framework_value::RetainedCloneGrant;
@@ -31,12 +32,12 @@ fn typed_input_admission_matches_original_for_all_native_variants(){
   let Generation3dMutation::ChangeWidgetInput(input)=mutation else{panic!("typed input fixture")};
   assert_eq!(input.admissible(),case["expected"].as_bool().unwrap());assert_eq!(run(&input),input.admissible(),"{}",case["name"]);
   let other=input.clone();let mut work=TypedInputAdmission::new();work.advance(&input,grant()).result.unwrap();assert!(work.next_demands(&other,64).is_err());
-  other.retire_cold();input.retire_cold();
+  other.retire_decoded();input.retire_decoded();
  }
 }
 #[test]
 fn typed_input_admission_preserves_nonfinite_numeric_refusals(){
  for input in [WidgetInputValue::Number(f64::NAN),WidgetInputValue::Vector([0.0,f64::INFINITY,1.0]),WidgetInputValue::NumberList(vec![1.0,f64::NEG_INFINITY])]{
-  let input=ChangeWidgetInput{id:"n".into(),channel:"value".into(),input};assert!(!input.admissible());assert!(!run(&input));input.retire_cold();
+  let input=ChangeWidgetInput{id:"n".into(),channel:"value".into(),input};assert!(!input.admissible());assert!(!run(&input));input.retire_decoded();
  }
 }

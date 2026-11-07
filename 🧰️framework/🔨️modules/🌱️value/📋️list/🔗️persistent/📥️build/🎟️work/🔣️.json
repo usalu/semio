@@ -7,7 +7,9 @@
     "cancelPrefixes",
     "stock",
     "rules",
-    "scanCases"
+    "scanCases",
+    "closeLaw",
+    "readLaw"
   ],
   "properties": {
     "counts": {
@@ -64,6 +66,85 @@
           "selectedWork": 5
         }
       ]
+    },
+    "closeLaw": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "deniedWork",
+        "scanWork",
+        "cachedWork",
+        "headerCopyBytes",
+        "stock"
+      ],
+      "properties": {
+        "value": {
+          "const": 17
+        },
+        "deniedWork": {
+          "const": 0
+        },
+        "scanWork": {
+          "const": 1
+        },
+        "cachedWork": {
+          "const": 0
+        },
+        "headerCopyBytes": {
+          "const": 0
+        },
+        "stock": {
+          "const": {
+            "items": 100000,
+            "copyBytes": 33554432,
+            "capacityBytes": 33554432,
+            "releaseBytes": 33554432,
+            "depth": 64,
+            "maximumTurns": 100000,
+            "fuel": 100000
+          }
+        }
+      }
+    },
+    "readLaw": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "count",
+        "copyBytes",
+        "stock",
+        "rules"
+      ],
+      "properties": {
+        "count": {
+          "const": 33
+        },
+        "copyBytes": {
+          "const": 0
+        },
+        "stock": {
+          "const": {
+            "items": 100000,
+            "copyBytes": 33554432,
+            "capacityBytes": 33554432,
+            "releaseBytes": 33554432,
+            "depth": 64,
+            "fuel": 100000,
+            "maximumTurns": 100000
+          }
+        },
+        "rules": {
+          "const": {
+            "rowBorrowsOriginal": true,
+            "noPayloadCopy": true,
+            "pageProbeActualWork": true,
+            "cachedZero": true,
+            "sameFiniteBank": true,
+            "independentVectorOracle": true
+          }
+        }
+      }
     }
   }
 }

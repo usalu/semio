@@ -7,7 +7,7 @@ fn delta(before:RetainedCloneProgress,after:RetainedCloneProgress)->Result<Retai
  let invalid=||ValueError::literal(ValueRefusalKind::InvariantViolated,"original catalogue lifecycle progress decreased");
  Ok(RetainedCloneProgress{copied_items:after.copied_items.checked_sub(before.copied_items).ok_or_else(invalid)?,copied_bytes:after.copied_bytes.checked_sub(before.copied_bytes).ok_or_else(invalid)?,retained_capacity_bytes:after.retained_capacity_bytes.checked_sub(before.retained_capacity_bytes).ok_or_else(invalid)?,released_bytes:after.released_bytes.checked_sub(before.released_bytes).ok_or_else(invalid)?})
 }
-pub(crate) fn step(owner:&mut FlowOperatorCatalogueOwner,closing:bool,cx:&mut StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
+pub fn step(owner:&mut FlowOperatorCatalogueOwner,closing:bool,cx:&mut StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
  if closing&&owner.terminal_is_empty()||!closing&&owner.ready(){return Ok(PluginLifecycleStep::Complete(Default::default()))}
  let loan=semio_plugin::app::original_lifecycle_grant(cx,grant);
  cx.with_retained_loan(loan,|cx|{

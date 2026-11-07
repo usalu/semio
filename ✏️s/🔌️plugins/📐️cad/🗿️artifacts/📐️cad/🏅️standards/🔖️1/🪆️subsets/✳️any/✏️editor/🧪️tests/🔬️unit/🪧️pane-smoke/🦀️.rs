@@ -9,4 +9,7 @@ async fn koordinator_pane_loads_applies_undoes_and_closes() {
     let command = CadCommand::AddNode(add_node::AddNode { kind: "solid".into() });
     let (loaded, applied) = semio_plugin::artifact_app_laws::assert_pane_smoke(&mut app.0, semio_s_artifact_cad_cad_examples::PRIMARY_TEXT, command, |app| app.snapshot().expect("snapshot"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(applied.nodes.len(), loaded.nodes.len() + 1);
+    let en = cad_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
+    let de = cad_labels(&ViewModel::new(semio_ui_locale::Locale::De, semio_ui_locale::Terminology::Native));
+    assert_ne!(en.typology_box.as_str(), de.typology_box.as_str(), "pane smoke: en and de labels must render differently");
 }

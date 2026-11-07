@@ -9,9 +9,12 @@ import { describe, expect, it } from "vitest";
 import { assign, createActor, setup } from "xstate";
 import { createShellRouteLedgerV1 } from "../../🧱️elements/🏛️ShellHost/🧭️route-ledger/🟦️.ts";
 import corpus from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🧭️route-ledger/🔣️.json";
-import shellUriDocumentsSource from "../../🧱️elements/🏛️ShellHost/🗄️shell-uri-documents/🟦️.ts?raw";
-import shellCoreStateSource from "../../🧱️elements/🏛️ShellHost/🧩️shell-core-state/🟦️.ts?raw";
+import { join } from "node:path";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
+const shellHostDirectory = join(import.meta.dirname, "..", "..", "🧱️elements", "🏛️ShellHost");
+const shellUriDocumentsSource = readModuleTreeSource(join(shellHostDirectory, "🗄️shell-uri-documents", "🟦️.ts"));
+const shellCoreStateSource = readModuleTreeSource(join(shellHostDirectory, "🧩️shell-core-state", "🟦️.ts"));
 const shellTreeSource = Object.values(import.meta.glob<string>(["../../🧱️elements/🏛️ShellHost/🟦️.tsx", "../../🧱️elements/🏛️ShellHost/**/🟦️.ts", "../../🧱️elements/🏛️ShellHost/**/🟦️.tsx", "!../../🧱️elements/🏛️ShellHost/🧪️tests/**"], { query: "?raw", import: "default", eager: true })).join("\n");
 // #endregion 🔌️Adapters
 

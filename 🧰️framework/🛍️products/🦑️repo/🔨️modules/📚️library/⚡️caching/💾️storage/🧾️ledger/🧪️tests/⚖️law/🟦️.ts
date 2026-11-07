@@ -9,7 +9,7 @@ function workspace():string{
  if(process.env.SEMIO_CACHE_LAW_ROOT)return resolve(process.env.SEMIO_CACHE_LAW_ROOT);
  for(let path=import.meta.dir;;path=dirname(path)){if(existsSync(join(path,"bunfig.toml"))&&existsSync(join(path,"bun.lock")))return path;if(dirname(path)===path)throw Error("Repository root not found");}
 }
-const root=workspace(),ledger=cacheLedgerV1(),marker="⚡️cache",sources=/\.(ts|tsx|mjs|js|json|rs|go|py|sh|toml|yml|yaml)$/u,exempt=/(^|\/)(🧪️tests|🧫️fixtures|node_modules|target|dist)\/|(^|\/)🗑️generated\/|^\.🧬semio\/|📚️library\/⚡️caching\/🟦️\.ts$/u;
+const root=workspace(),ledger=cacheLedgerV1(),marker="⚡️cache",sources=/\.(ts|tsx|mjs|js|json|rs|go|py|sh|toml|yml|yaml)$/u,exempt=/(^|\/)(🧪️tests|🧫️fixtures|node_modules|target|dist)\/|(^|\/)🗑️generated\/|^\.🧬semio\/|📚️library\/⚡️caching\/🟦️\.ts$|⚖️laws\/🧫️test-store-isolation\/🔣️\.json$/u;
 
 function candidates():string[]{
  if(process.env.SEMIO_CACHE_LAW_FILES)return readFileSync(process.env.SEMIO_CACHE_LAW_FILES,"utf8").split("\n").filter(Boolean);
@@ -91,7 +91,7 @@ test("the Bazel disk cache share and the Cargo budget agree with the ledger",()=
  const bazel=JSON.parse(readFileSync(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json"),"utf8")),area=ledger.areas.find(row=>row.id==="bazel-actions")!;
  expect("basisPoints" in area.budget!?area.budget.basisPoints:-1).toBe(share(bazel)!);
  const caching=JSON.parse(readFileSync(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json"),"utf8")) as {storage:{cargo:{budgetBytes:number;incremental:{budgetBytes:number}}}},cargo=cacheAreaBudgetBytesV1(ledger,ledger.areas.find(row=>row.id==="cargo-store")!);
- expect(caching.storage.cargo.budgetBytes).toBe(cargo!);
+ expect(Object.hasOwn(caching.storage.cargo,"budgetBytes"),"the cargo budget is the ledger allotment of cargo-store, never a second literal").toBe(false);expect(cargo!).toBeGreaterThan(0);
  expect(caching.storage.cargo.incremental.budgetBytes).toBeLessThanOrEqual(cargo!);
 });
 

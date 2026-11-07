@@ -216,3 +216,5 @@ impl semio_plugin::ArtifactOwnedToolJobFactory for ShootingCommandJobFactory {
 }
 //#endregion 🧵️RetainedCommands
 //#endregion 🔖️ShootingPlayApp
+
+semio_plugin::retained_command::terminal_frame_bound!(ShootingCommandWork);

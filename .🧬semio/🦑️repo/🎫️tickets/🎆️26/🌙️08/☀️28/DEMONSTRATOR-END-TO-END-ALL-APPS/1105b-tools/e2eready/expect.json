@@ -1,0 +1,271 @@
+{
+  "schema": "demonstrator-e2e-ready/1",
+  "sources": {
+    "brand": "♻️mit-bestand/🧺️demonstrator/🪧️brand.ts",
+    "catalog": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🌐️locale/🔣️.json",
+    "spec": "♻️mit-bestand/🧺️demonstrator/🧪️tests/🎭️acceptance/🟦️.ts",
+    "cases": {
+      "edits": "♻️mit-bestand/🧺️demonstrator/🧪️tests/🎭️acceptance/🧬️edits/🧫️cases.json",
+      "simulation": "♻️mit-bestand/🧺️demonstrator/🧪️tests/🎭️acceptance/🧬️simulation/🧫️cases.json",
+      "curation": "♻️mit-bestand/🧺️demonstrator/🧪️tests/🎭️acceptance/🧬️curation/🧫️cases.json"
+    }
+  },
+  "languages": [
+    {
+      "language": "en",
+      "browserLocale": "en-US",
+      "introNext": "Next"
+    },
+    {
+      "language": "de",
+      "browserLocale": "de-DE",
+      "introNext": "Weiter"
+    }
+  ],
+  "unsupportedBrowserLocale": "fr-FR",
+  "timeoutsMs": {
+    "shellReady": 120000,
+    "content": 60000,
+    "action": 60000
+  },
+  "landing": {
+    "titleKey": "demonstrator.landing.title",
+    "taglineKey": "demonstrator.brand.pane.{pane}.tagline",
+    "pickerChoose": "de"
+  },
+  "panes": [
+    {
+      "id": "generator",
+      "windows": [
+        {
+          "kind": "procedural-main",
+          "surface": "nodeGraph",
+          "content": true
+        },
+        {
+          "kind": "procedural-preview",
+          "surface": "world3d",
+          "content": true
+        }
+      ],
+      "action": {
+        "type": "graphValueEdit",
+        "cases": "edits.generator",
+        "graph": "procedural-main",
+        "preview": "procedural-preview",
+        "inputId": "procedural-play-inspector.value.input"
+      }
+    },
+    {
+      "id": "koordinator",
+      "windows": [
+        {
+          "kind": "cad-play-shape",
+          "surface": "world3d",
+          "content": true
+        },
+        {
+          "kind": "cad-play-building",
+          "surface": "world3d",
+          "content": true
+        },
+        {
+          "kind": "cad-play-energy",
+          "surface": "world3d",
+          "content": true
+        },
+        {
+          "kind": "cad-play-structure-classic",
+          "surface": "world3d",
+          "content": true
+        }
+      ],
+      "action": {
+        "type": "catalogueAdd",
+        "cases": "edits.koordinator",
+        "targetKey": "catalogueId",
+        "gains": [
+          "cad-play-shape"
+        ],
+        "unchanged": [
+          "cad-play-building",
+          "cad-play-energy",
+          "cad-play-structure-classic"
+        ],
+        "rowText": "Box \\d+"
+      }
+    },
+    {
+      "id": "aggregator",
+      "windows": [
+        {
+          "kind": "puzzle3d-main",
+          "instances": [
+            "puzzle3d-main-top",
+            "puzzle3d-main-perspective"
+          ],
+          "surface": "world3d",
+          "content": true
+        }
+      ],
+      "action": {
+        "type": "catalogueAdd",
+        "cases": "edits.aggregator",
+        "targetKey": "kindId",
+        "gains": [
+          "puzzle3d-main-top",
+          "puzzle3d-main-perspective"
+        ],
+        "unchanged": [],
+        "rowTextKey": "kindId"
+      }
+    },
+    {
+      "id": "energie",
+      "windows": [
+        {
+          "kind": "energy.model.3d",
+          "surface": "world3d",
+          "content": true
+        },
+        {
+          "kind": "framework.window.tree",
+          "surface": "tree",
+          "content": true
+        },
+        {
+          "kind": "framework.window.table",
+          "surface": "table",
+          "content": true
+        },
+        {
+          "kind": "energy.simulation",
+          "surface": "tree",
+          "content": true
+        }
+      ],
+      "action": {
+        "type": "toolRun",
+        "cases": "simulation.energy",
+        "window": "energy.simulation",
+        "idle": {
+          "en": "No energy simulation run",
+          "de": "Kein Energiesimulationslauf"
+        }
+      }
+    },
+    {
+      "id": "aussuchen",
+      "windows": [
+        {
+          "kind": "sourcing-pool",
+          "surface": "table",
+          "content": true
+        },
+        {
+          "kind": "sourcing-curated",
+          "surface": "table",
+          "content": false
+        },
+        {
+          "kind": "sourcing-preview",
+          "surface": "placeholder",
+          "content": false,
+          "placeholder": {
+            "en": "No selection",
+            "de": "Keine Auswahl"
+          }
+        },
+        {
+          "kind": "sourcing-grid",
+          "surface": "world3d",
+          "content": false
+        }
+      ],
+      "action": {
+        "type": "rowSelectPreview",
+        "cases": "curation",
+        "pool": "sourcing-pool",
+        "preview": "sourcing-preview",
+        "placeholder": {
+          "en": "No selection",
+          "de": "Keine Auswahl"
+        },
+        "follow": [
+          "curationUndoRedo"
+        ],
+        "curated": "sourcing-curated",
+        "grid": "sourcing-grid",
+        "remove": {
+          "en": "Remove",
+          "de": "Entfernen"
+        }
+      }
+    },
+    {
+      "id": "bearbeiten",
+      "windows": [
+        {
+          "kind": "process-workpiece",
+          "surface": "world3d",
+          "content": true
+        }
+      ],
+      "action": {
+        "type": "rowToggle",
+        "cases": "edits.bearbeiten",
+        "window": "process-workpiece",
+        "fieldPrefix": "process3d-play-inspector.step.",
+        "buttonName": {
+          "en": "Enabled",
+          "de": "Aktiviert"
+        }
+      }
+    },
+    {
+      "id": "verfolgen",
+      "windows": [
+        {
+          "kind": "gis2d-main",
+          "surface": "tiledMap",
+          "content": true
+        }
+      ],
+      "action": {
+        "type": "featureAdd",
+        "cases": "edits.verfolgen",
+        "window": "gis2d-main",
+        "summaryPrefix": "gis2d-play-inspector.",
+        "engagementToggleId": "framework.window.gis2dMain.engagement.toggle",
+        "executeId": "framework.window.gis2dMain.action.addFeature.execute"
+      }
+    },
+    {
+      "id": "statik",
+      "windows": [
+        {
+          "kind": "fem3d-model",
+          "surface": "world3d",
+          "content": true
+        },
+        {
+          "kind": "fem3d-results",
+          "surface": "world3d",
+          "content": true
+        }
+      ],
+      "action": {
+        "type": "paramScale",
+        "cases": "simulation.fem",
+        "window": "fem3d-results",
+        "phaseId": "fem3d-play-results.phase.control",
+        "scaleId": "fem3d-play-results.deformation-scale.control",
+        "transportId": "fem3d-play-results.transport.play",
+        "paused": {
+          "en": "Play",
+          "de": "Abspielen"
+        }
+      }
+    }
+  ]
+}

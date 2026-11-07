@@ -14,9 +14,9 @@ fn original_host_publication_source_preserves_native_capacity_and_all_physical_r
    let demand=owner.original_source_demand();
    for denied in [RetainedCloneGrant{maximum_items:0,..POLICY},RetainedCloneGrant{maximum_depth:0,..POLICY},RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes.saturating_sub(1),..POLICY},RetainedCloneGrant{maximum_release_bytes:demand.release_bytes.saturating_sub(1),..POLICY}]{
     if owner.source.is_empty()&&owner.source.capacity()==0{break;}if denied.maximum_copy_bytes>=demand.copy_bytes&&denied.maximum_release_bytes>=demand.release_bytes&&denied.maximum_items>0&&denied.maximum_depth>=demand.depth{continue;}
-    let before=(owner.source.len(),owner.source.capacity(),owner.source.as_ptr());let(step,heap)=observe(||owner.close_original_source(denied).unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(heap,(0,0));assert_eq!(before,(owner.source.len(),owner.source.capacity(),owner.source.as_ptr()));
+    let before=(owner.source.len(),owner.source.capacity(),owner.source.as_ptr());let(step,heap)=observe(||owner.close_original_source(denied).result.unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(heap,(0,0));assert_eq!(before,(owner.source.len(),owner.source.capacity(),owner.source.as_ptr()));
    }
-   let(step,heap)=observe(||owner.close_original_source(POLICY).unwrap());let progress=step.progress();assert!(progress.fits(POLICY));assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));total=total.checked_add(progress).unwrap();turns+=1;
+   let(step,heap)=observe(||owner.close_original_source(POLICY).result.unwrap());let progress=step.progress();assert!(progress.fits(POLICY));assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));total=total.checked_add(progress).unwrap();turns+=1;
    if owner.source.capacity()!=0{assert_eq!(owner.source.as_ptr(),pointer);assert_eq!(owner.source.capacity(),actual_capacity);}
    if matches!(step,RetainedCloneStep::Complete(_)){break;}assert!(progress.copied_items>0);assert!(turns<16);
   }

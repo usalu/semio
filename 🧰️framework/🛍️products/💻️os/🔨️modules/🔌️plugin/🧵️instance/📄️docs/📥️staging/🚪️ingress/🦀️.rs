@@ -2,7 +2,7 @@
 //!
 //! 🚪️ Ingress of the mounted artifact instance: framework-reserved job driving, constructors, store-constructor units, envelope ingress and decode, document archive genesis and merge, child members and packs.
 use semio_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, PluginLifecycleStep, plugin_demand_grant};
-use semio_plugin_document_media::{ActiveArtifactEnvelopeDecode, ActiveArtifactEnvelopeDecodeState, ActiveArtifactEnvelopeIngress, ActiveArtifactStoreReplacement, ActiveArtifactStoreReplacementState, ActiveDocumentArchiveLoad, ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll, ArtifactStoreReplacementAdmissionTarget, ArtifactStoreReplacementRefusal, PendingDocumentArchiveMember};
+use semio_plugin_document_media::{envelope_decode_replacement, ActiveArtifactEnvelopeDecode, ActiveArtifactEnvelopeDecodeState, ActiveArtifactEnvelopeIngress, ActiveArtifactStoreReplacement, ActiveArtifactStoreReplacementState, ActiveDocumentArchiveLoad, ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll, ArtifactStoreReplacementAdmissionTarget, ArtifactStoreReplacementRefusal, PendingDocumentArchiveMember};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use std::sync::Arc;
 use semio_plugin_decl_app::{ArtifactApp, DOCUMENT_LOAD_FAILED_CODE, DOCUMENT_LOAD_TOO_LARGE_CODE, DOCUMENT_LOAD_TOO_MANY_MEMBERS_CODE, document_load_fault};
@@ -257,7 +257,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
         }
         let Some(bundle) = A::build_envelope_decode_owner_bundle() else { return Err(pages) };
         let completion = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeCompletion::new();
-        let fields = bundle.begin_fresh_decoder(operation, generation, std::sync::Arc::clone(&self.envelope_completed_records), std::sync::Arc::clone(&completion));
+        let fields = bundle.begin_fresh_decoder(Some(envelope_decode_replacement(operation, generation)), std::sync::Arc::clone(&self.envelope_completed_records), std::sync::Arc::clone(&completion));
         self.admit_artifact_envelope_decode_owner(operation, generation, pages, fields, completion, cx)
     }
 
@@ -276,7 +276,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
         if !self.envelope_decode_jobs.can_insert(operation.0) {
             return Err(pages);
         }
-        let record = store::os_store::owned_schema_decode::artifact_envelope_decode_record(operation, generation, pages)?;
+        let record = store::os_store::owned_schema_decode::artifact_envelope_decode_record(Some(envelope_decode_replacement(operation, generation)), pages)?;
         let active = match store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeAuthority::try_new(record, &self.envelope_field_decoders, fields) {
             Ok(decode) => ActiveArtifactEnvelopeDecode::admitted(operation,generation,decode,completion,(cx.operation(),cx.generation())),
             Err((record, _fault, fields)) => ActiveArtifactEnvelopeDecode::rejected(operation, generation, Box::new(store::os_store::owned_schema_decode::ArtifactEnvelopeUnadmittedDecodeRejected::new(record, fields)), completion),

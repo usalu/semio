@@ -1,5 +1,5 @@
 //! 📄️ Real variant editor codecs preserve authored WordprocessingML and independently observed ZIP content.
-use semio_framework_plugin::{ArtifactBuilder, ArtifactEditor};
+use semio_plugin::{ArtifactBuilder, ArtifactEditor};
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::{DocxParagraph, DocxSnapshot};
 use semio_s_artifact_stdio_docx_strict::standards::v_ecma_376::subsets::strict::io::DocxStrictBuilderConstruction;
 use semio_s_artifact_stdio_docx_transitional::standards::v_ecma_376::subsets::transitional::io::DocxTransitionalBuilderConstruction;

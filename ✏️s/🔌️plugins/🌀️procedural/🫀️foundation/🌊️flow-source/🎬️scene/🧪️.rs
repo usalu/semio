@@ -1,7 +1,7 @@
 //! 🧪️ Genuine application reads seed native scratch fields and return every issuer lease under the original caller.
 use super::retained_provisional_scene::ProvisionalSceneWork;
 use super::retained_scratch_testing::ScratchCaller;
-use semio_os_kernel::os_store::snapshot_read as reads;
+use semio_framework_value_snapshot_read as reads;
 use semio_framework_value::{RetirementDemand,RetainedWorkOutcome,RetainedCloneStep};
 use semio_framework_value::retirement::arc_custody;
 use semio_framework_job::close_original_retained_step;
@@ -9,7 +9,7 @@ use semio_plugin::ArtifactApp;
 use std::sync::Arc;
 type App=super::ProvisionalSceneTestApp;
 type Root=<App as ArtifactApp>::Snapshot;
-fn close(work:&mut ProvisionalSceneWork<App>,caller:&mut ScratchCaller){
+fn close(work:&mut ProvisionalSceneWork<App,super::ProvisionalSceneTestFolds>,caller:&mut ScratchCaller){
  work.begin_close();for _ in 0..32768{if work.terminal_is_empty(){return}caller.turn(|cx|cx.with_original_retirement(|cx|{let d=work.next_close_demands(cx.retained_grant().maximum_copy_bytes)?;close_original_retained_step(cx,d,|g|work.close_step(g))?;Ok(())}));}panic!("scene owners did not close")
 }
 #[test]
@@ -24,7 +24,7 @@ fn original_procedural_scene_keeps_actual_read_and_closes_all_native_fields_with
   let pointer=read.get()as*const Root;let identity=read.lease_identity();
   let expected_host=semio_framework_pack_json::to_json_string(&read.get().host_snapshot);let expected_generation=semio_framework_pack_json::to_json_string(read.get().generation.as_state());
   let mut caller=ScratchCaller::new(&policy,items,seed.requested_bytes.checked_sub(seed.released_bytes).unwrap());
-  let mut work=caller.turn(|cx|Ok(ProvisionalSceneWork::<App>::new(read,|root|&root.host_snapshot,|root|root.generation.as_state(),revision,business,cx)));
+  let mut work=caller.turn(|cx|Ok(ProvisionalSceneWork::<App,super::ProvisionalSceneTestFolds>::new(read,|root|&root.host_snapshot,|root|root.generation.as_state(),revision,business,cx)));
   let mut foreign=ScratchCaller::new(&policy,items,0);
   let failure=foreign.turn(|cx|Ok(work.step(cx).expect_err("same labels on a foreign real caller must refuse")));
   foreign.close(failure);foreign.finish();
@@ -85,8 +85,8 @@ fn original_procedural_scene_keeps_actual_read_and_closes_all_native_fields_with
    }));
   }
   assert!(!registry.has_returned()&&active.is_none());
-  let mut issuer=reads::SnapshotReadRegistryAliasRetirement::new(registry);
-  for _ in 0..32768{if issuer.terminal_is_empty(){break}caller.turn(|cx|cx.with_original_retirement(|cx|{let d=issuer.next_demand(cx.retained_grant().maximum_copy_bytes)?;close_original_retained_step(cx,d,|g|issuer.close_step(g))?;Ok(())}));}
-  assert!(issuer.terminal_is_empty());caller.finish();assert!(matched);
+  let mut issuer=Some(reads::SnapshotReadRegistryAliasRetirement::new(registry));
+  for _ in 0..32768{if issuer.is_none(){break}caller.turn(|cx|cx.with_original_retirement(|cx|{let d=reads::snapshot_registry_alias_demands(&issuer)?;close_original_retained_step(cx,d,|g|RetainedWorkOutcome{result:reads::snapshot_registry_alias_close_step(&mut issuer,g),work:1})?;Ok(())}));}
+  assert!(issuer.is_none());caller.finish();assert!(matched);
  }}}
 }

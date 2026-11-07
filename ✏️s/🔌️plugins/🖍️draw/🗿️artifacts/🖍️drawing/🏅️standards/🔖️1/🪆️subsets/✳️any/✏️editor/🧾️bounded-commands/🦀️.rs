@@ -133,7 +133,7 @@ impl semio_plugin::retained_command::ArtifactCommandWork<semio_plugin::EditorApp
     fn tool_id(&self) -> &'static str { self.tool_id }
 
     fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, semio_plugin::EditorApp<DrawingPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self>(), depth: 1, ..Default::default() })
+        Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() })
     }
 
     fn extent(
@@ -260,3 +260,5 @@ pub(super) fn drawing_bounded_tool_job(request: &mut Option<semio_plugin::Artifa
     semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, DrawingCommand::command_id, DRAWING_BOUNDED_RAW_BYTES, DRAWING_BOUNDED_WORK_ITEMS, false, |_| DrawingWindowCommandWork::new(tool_id))
 }
 //#endregion 🧵️BoundedCommands
+
+semio_plugin::retained_command::terminal_frame_bound!(DrawingWindowCommandWork);

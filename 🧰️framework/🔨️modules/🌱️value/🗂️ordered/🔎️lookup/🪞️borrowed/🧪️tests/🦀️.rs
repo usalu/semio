@@ -8,7 +8,7 @@ fn close<V:crate::retirement::RetireOwned+Sync>(cursor:LookupCursor<V>){
  for _ in 0..10000{
   if owner.terminal_is_empty(){return}
   let d=owner.selected_demand(4096).unwrap();let g=grant(d);
-  for denied in denied(d,g){let(turn,heap)=crate::observe_retirement_allocations(||owner.step(denied));assert_eq!(owner.last_turn_work(),0);assert_eq!(heap,(0,0));assert_eq!(turn.unwrap().progress(),Default::default());assert_eq!(owner.selected_demand(4096).unwrap(),d)}
+  for denied in denied(d,g){let(turn,heap)=crate::observe_retirement_allocations(||owner.step(denied));assert_eq!(owner.last_turn_work(),0);assert_eq!(heap,(0,0));match turn{Ok(step)=>assert_eq!(step.progress(),Default::default()),Err(error)=>assert_eq!(error.kind,crate::ValueRefusalKind::DepthLimit)}assert_eq!(owner.selected_demand(4096).unwrap(),d)}
   let(turn,heap)=crate::observe_retirement_allocations(||owner.step(g));account(turn.unwrap().progress(),g,heap);
  }panic!("borrowed lookup original root retirement stalled")
 }

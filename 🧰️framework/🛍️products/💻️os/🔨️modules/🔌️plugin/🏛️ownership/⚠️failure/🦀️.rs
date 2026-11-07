@@ -74,3 +74,13 @@ pub fn original_lifecycle_step(cx:&mut StepContext<'_>,loan:RetainedCloneGrant,d
 mod tests;
 
 impl From<PluginLifecyclePrimary> for PluginLifecycleFailure{fn from(primary:PluginLifecyclePrimary)->Self{let effects=primary.retained_progress();Self{effects,primary,receipt_refusal:None,context_refusal:None,work_refusal:None}}}
+
+/// 📏️ The largest inline frame a retained command work may have: its terminal release must fit one close grant, so large owners are boxed or paged and never carried inline.
+pub const TERMINAL_FRAME_GUARD_BYTES:usize=64*1024;
+/// 📏️ Why a quoted terminal frame was refused.
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+pub enum WorkFrameRefusal{Unadmitted,Oversized}
+/// 📏️ The pure guard of the inline frame: an absent quote is unadmitted, a quote above the maximum is oversized.
+pub fn checked_work_frame_bytes(quote:Option<usize>)->Result<usize,WorkFrameRefusal>{match quote{None=>Err(WorkFrameRefusal::Unadmitted),Some(bytes)if bytes>TERMINAL_FRAME_GUARD_BYTES=>Err(WorkFrameRefusal::Oversized),Some(bytes)=>Ok(bytes)}}
+/// 🧪️ Size probe shared by every plugin's command-work census: panics with the measured size when a work frame would exceed [`TERMINAL_FRAME_GUARD_BYTES`].
+pub fn assert_work_frame_fits<W>(){let bytes=std::mem::size_of::<W>();assert!(bytes<=TERMINAL_FRAME_GUARD_BYTES,"{} is {bytes} B inline, above the {TERMINAL_FRAME_GUARD_BYTES} B work frame bound",std::any::type_name::<W>());}

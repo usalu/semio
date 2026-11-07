@@ -19,6 +19,7 @@ impl<I:NativeValueSource+?Sized,V:NativeReceive<dyn NativeValueSource>+Sync> Nat
  ordered_failure_accessors!();
  fn source<'a>(&self,input:RetainedCloneRef<'a,I>)->Result<RetainedCloneRef<'a,dyn NativeValueSource>,ValueError>{input.get().record_child(self.index)?;let index=self.index;Ok(input.project::<dyn NativeValueSource,_>(index,move|v|v.record_child(index).unwrap()))}
  fn fragment(&self,input:&I)->Result<usize,ValueError>{let key=input.record_name(self.index)?;let mut end=(self.offset+64).min(key.len());while !key.is_char_boundary(end){end-=1}Ok(end-self.offset)}
+ pub fn fragment_probe(&self,input:&I)->Result<usize,ValueError>{self.fragment(input)}
  fn residual_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.retirement.next_owner_demands::<Residual<V>>(self.residual.is_some(),&None,body)}
  fn residual_step(retirement:&mut RetainedCloneClose,residual:&mut Option<Residual<V>>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{if !retirement.is_empty(){retirement.step_granted(effect)}else{let turn=retirement.begin_granted(residual,effect);RetainedWorkOutcome{result:turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into),work:turn.work}}}
 

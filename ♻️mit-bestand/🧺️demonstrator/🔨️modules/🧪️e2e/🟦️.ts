@@ -3,7 +3,7 @@ import type { ScriptInvocation } from "@semio-tech/process/routing";
 import { join, resolve } from "node:path";
 import { parseServiceReadinessBudgetV1, readServiceSession, serviceReadyProgressLanguage, serviceReadyProgressLine, waitForServiceReady } from "@semio-tech/repo-lib/dev";
 import readinessBudget from "../🧩️runtime/🧪️e2e/🔣️.json" with { type: "json" };
-import { repoCacheDirectory } from "@semio-tech/repo-lib/process";
+import { repoPlaywrightBrowsersPath } from "@semio-tech/repo-lib/process";
 import { DEMONSTRATOR_E2E_OWNER, demonstratorE2eInvocationPid, demonstratorE2eSessionRoot } from "../🧩️runtime/🧪️e2e/🟦️.ts";
 import { startToolV1, toolExitV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
@@ -20,7 +20,7 @@ export async function runTestScript(context: Readonly<{ root: string; repoRoot: 
     const baseURL = await waitForServiceReady(sessionRoot, session, signal, budget.readyTimeoutMs, { intervalMs: budget.progressIntervalMs, report: progress => console.log(serviceReadyProgressLine(DEMONSTRATOR_E2E_OWNER, progress, language)) });
     const output = demonstratorE2eOutputDirectory(root, process.env.SEMIO_TICKET_DIR, session.id);
     console.log(`Testing Demonstrator at ${baseURL}`);
-    const child = startToolV1("playwright", ["test", "--config", join(root, "🔨️modules/🧪️e2e/🎚️config/🟦️.ts"), "--output", output], { signal, cwd: context.repoRoot, env: { ...process.env, PLAYWRIGHT_BASE_URL: baseURL, PLAYWRIGHT_BROWSERS_PATH: repoCacheDirectory(context.repoRoot, "tools", "ms-playwright") }, stdio: ["ignore", "inherit", "inherit"] });
+    const child = startToolV1("playwright", ["test", "--config", join(root, "🔨️modules/🧪️e2e/🎚️config/🟦️.ts"), "--output", output], { signal, cwd: context.repoRoot, env: { ...process.env, PLAYWRIGHT_BASE_URL: baseURL, PLAYWRIGHT_BROWSERS_PATH: repoPlaywrightBrowsersPath(context.repoRoot) }, stdio: ["ignore", "inherit", "inherit"] });
     const status = await toolExitV1(child);
     if (status !== 0 && !signal.aborted) throw new Error(`Demonstrator acceptance tests failed (${status})`);
   } finally { process.removeListener("SIGINT", interrupt); process.removeListener("SIGTERM", terminate); }

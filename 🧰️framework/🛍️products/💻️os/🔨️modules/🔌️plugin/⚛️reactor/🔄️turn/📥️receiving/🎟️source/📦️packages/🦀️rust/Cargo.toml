@@ -1,5 +1,5 @@
 [package]
-name = "semio-framework-plugin-reactor-receiving-source"
+name = "semio-plugin-reactor-receiving-source"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true

@@ -51,3 +51,5 @@ mod binding_owner_tests;
 
 #[path="🪆️binding/🦀️.rs"]
 mod record_binding;
+#[path = "📥️receiving/🦀️.rs"]
+mod receiving;

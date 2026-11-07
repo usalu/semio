@@ -717,6 +717,7 @@ struct GraphTimelineLayout {
     pub graph_width: f32,
     pub graph_column_width: f32,
     pub selectable_width: f32,
+    /// 🧑️ The avatar edge: the shared `--size-workbench` token (`dom.treeRowUiSpacing`), the size React's `TableAvatar` carries.
     pub avatar_size: f32,
     pub avatar_overlap: f32,
 }
@@ -771,7 +772,7 @@ pub fn graph_timeline_layout(bounds: Rect, columns: &[HistoryColumnJson], theme:
         graph_width,
         graph_column_width,
         selectable_width: (label_track_width + graph_column_width).min(inner.w).max(0.0),
-        avatar_size: theme.control_height_small,
+        avatar_size: theme.tree_row_height,
         avatar_overlap: theme.root_rem_pixels * 0.5,
     }
 }

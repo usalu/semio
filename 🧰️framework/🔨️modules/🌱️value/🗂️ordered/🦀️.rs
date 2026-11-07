@@ -169,6 +169,8 @@ impl<V> OrderedMap<V> {
     }
     /// 🧹️ Moves this root into explicit final-owner retirement.
     pub fn retire(mut self) -> Retirement<V> { Retirement::new(self.root.take()) }
+    /// ❄️ Retires this root synchronously for cold paths that own no retained job.
+    pub fn retire_cold(self) { retire_cold(self.retire()) }
 }
 
 /// 👁️ Each rank item visits at most MAX_AVL_HEIGHT fixed metadata nodes without reading payload bytes.

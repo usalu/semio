@@ -64,6 +64,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
             let (_,turn_grant)=*turn.get_or_insert((closing,semio_plugin_ownership::bounded_ownership::original_plugin_turn_grant(policy,retained)));
             let grant=semio_plugin_ownership::bounded_ownership::original_plugin_turn_grant(policy,semio_plugin_reactor_app::remaining_plugin_turn_grant(turn_grant,spent));
             let stepped=cx.with_retained_loan(grant,|same|operation.drive_worker_step(same));
+            {static N:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);let n=N.fetch_add(1,std::sync::atomic::Ordering::Relaxed);if n<10||n%100_000==0{eprintln!("[DEBUG] aggregator-gate Q2 n={} closing={} grant_items={} copy={} ok={}",n,closing,grant.maximum_items,grant.maximum_copy_bytes,stepped.is_ok());}}
             let progress=match &stepped{Ok(step)=>step.progress().unwrap_or_default(),Err(failure)=>failure.retained_progress()};
             spent=spent.checked_add(progress)?;
             if let Err(fault)=stepped{failure=Some(fault);break;}

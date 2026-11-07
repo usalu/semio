@@ -1,5 +1,8 @@
 //! 🪧️ Aussuchen pane smoke: the bundled curation demo loads, one `CurationAdd` applies, undo restores the loaded snapshot and the app closes through its exact retained close.
 
+#[global_allocator]
+static MOUNTED_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+
 use semio_plugin::artifact_app_laws::{self as laws, OriginalFixtureScope};
 use semio_plugin::{App, EditorApp, MountedOwnerPolicyV1, PluginApp as _, VcsArtifactApp};
 use semio_s_artifact_sourcing_curation::editor::sourcing::commands::curation_add;

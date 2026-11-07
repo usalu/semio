@@ -53,7 +53,11 @@ import { pathToFileURL } from "node:url";
 ${assertActorComponentExports.toString()}
 const component = await import(pathToFileURL(process.argv[1]).href);
 assertActorComponentExports(component, ${JSON.stringify(ACTOR_COMPONENT_EXPORTS)});
-const bytes = await component.describe.describe();
+const grant = { maximumItems: 1n << 20n, maximumCopyBytes: 64n << 20n, maximumCapacityBytes: 64n << 20n, maximumReleaseBytes: 64n << 20n, maximumDepth: 64n };
+const fuel = 1n << 24n;
+const deadlineUs = 1n << 52n;
+const budget = { input: { operation: 1n, generation: 1n, epoch: 1n, work: { clockBinding: 1n, absoluteDeadlineUs: deadlineUs, fuel }, grant }, retainedPolicy: grant, fuel, deadlineUs, cancelled: false };
+const bytes = await component.describe.describe(budget);
 if (!(bytes instanceof Uint8Array) || bytes.length === 0 || bytes.length > 8 * 1024 * 1024) throw new Error("Invalid descriptor byte extent");
 process.stdout.write(Buffer.from(bytes).toString("base64"));
 `;

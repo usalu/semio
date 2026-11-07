@@ -28,3 +28,19 @@ impl DslOwnedReceivingField for f32{type Cursor=ScalarReceiving<Self>;fn receivi
 macro_rules! moved{($ty:ty,$variant:ident)=>{impl scalar_sealed::Sealed for $ty{}impl OwnedScalar for $ty{fn creation_bytes()->usize{0}fn take_source(source:&mut Option<FieldValue>)->Result<Self,ValueError>{if !matches!(source,Some(FieldValue::$variant(_))){return Err(invalid())}let Some(FieldValue::$variant(value))=source.take()else{unreachable!()};Ok(value)}}impl DslOwnedReceivingField for $ty{type Cursor=ScalarReceiving<Self>;fn receiving_cursor()->Self::Cursor{ScalarReceiving::default()}}};}
 moved!(crate::RecordBytes,Bytes64);moved!(String,Text);moved!(semio_framework_value::DslValue,Value);moved!(crate::WireValue,Wire);moved!(crate::ExprValue,Expr);moved!(RecordValue,Record);
 
+/// 🔁️ A newtype keeps its inner scalar's work accounting and only wraps the already-validated value.
+#[doc(hidden)]
+pub fn map_outcome<A,B>(outcome:RetainedWorkOutcome<A,crate::receiving::NativeSnapshotFailure>,wrap:fn(A)->B)->RetainedWorkOutcome<B,crate::receiving::NativeSnapshotFailure>{RetainedWorkOutcome{result:outcome.result.map(wrap),work:outcome.work}}
+/// 🧬️ One declaration gives a tuple newtype over a first-party scalar both receiving families; see [`OwnedScalar`].
+#[macro_export]
+macro_rules! dsl_scalar_newtype_receiving{
+ ($name:ty,$inner:ty)=>{
+  impl $crate::receiving::owned::scalar_sealed::Sealed for $name{}
+  impl $crate::receiving::owned::OwnedScalar for $name{
+   fn creation_bytes()->usize{<$inner as $crate::receiving::owned::OwnedScalar>::creation_bytes()}
+   fn take_source(source:&mut Option<$crate::FieldValue>)->Result<Self,$crate::receiving::owned::ValueError>{<$inner as $crate::receiving::owned::OwnedScalar>::take_source(source).map(Self)}
+  }
+  impl $crate::receiving::owned::DslOwnedReceivingField for $name{type Cursor=$crate::receiving::owned::ScalarReceiving<Self>;fn receiving_cursor()->Self::Cursor{::core::default::Default::default()}}
+  impl $crate::DslReceivingField for $name{fn receive_value(value:&$crate::FieldValue,owner:&mut $crate::receiving::NativeSnapshotDecodeOwner<'_,'_>)->$crate::receiving::owned::RetainedWorkOutcome<Self,$crate::receiving::NativeSnapshotFailure>{$crate::receiving::owned::map_outcome(<$inner as $crate::DslReceivingField>::receive_value(value,owner),Self)}}
+ };
+}

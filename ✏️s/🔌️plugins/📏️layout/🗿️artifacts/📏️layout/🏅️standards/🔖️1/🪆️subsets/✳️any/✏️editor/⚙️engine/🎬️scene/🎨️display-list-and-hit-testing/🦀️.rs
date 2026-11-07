@@ -8,7 +8,7 @@ pub struct DisplayColor(pub [f32; 4]);
 
 #[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct DisplayGlyph {
-    pub font: ui_render::text::FontHandle,
+    pub font: semio_ui_render_text::FontHandle,
     pub glyph_id: u32,
     pub font_size: f32,
     pub x: f32,

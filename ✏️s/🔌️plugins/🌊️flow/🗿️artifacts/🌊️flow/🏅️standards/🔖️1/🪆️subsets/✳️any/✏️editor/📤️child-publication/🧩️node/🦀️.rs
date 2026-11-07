@@ -37,7 +37,7 @@ impl WidgetNodeWork{
   };
   Self{fields:ManuallyDrop::new(Some(Fields{id:Some(id),kind:None,label,params:None,inputs,key:None,value:None,number:None,output:None})),text:None,json:None,retirement:Default::default(),kind,keys,position,index:0,phase:0,text_target:0,value_mode:0,origin:None,closing:false}
  }
- fn paid(cx:&mut StepContext<'_>,copy_bytes:usize)->Result<bool,OriginalTurnFailure>{let d=RetirementDemand{copy_bytes,..fixed()};if cx.should_yield()||cx.is_cancelled()||!cx.retained_work_can_enter(d){return Ok(false)}cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_bytes,..unit()})?;Ok(true)}
+ fn paid(cx:&mut StepContext<'_>,copy_bytes:usize)->Result<bool,OriginalTurnFailure>{let d=RetirementDemand{copy_bytes,..fixed()};if cx.should_yield()||cx.is_cancelled()||!cx.retained_work_can_enter(d){return Ok(false)}cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_bytes:copy_bytes,..unit()})?;Ok(true)}
  fn text_source(&self)->Result<&str,ValueError>{let fields=self.fields.as_ref().ok_or_else(invalid)?;Ok(match self.text_target{0|1=>self.kind,2=>self.keys[self.index],3=>match self.value_mode{0=>fields.label.as_deref().ok_or_else(invalid)?,1=>"true",2=>"false",3=>fields.number.as_ref().ok_or_else(invalid)?.text(),_=>return Err(invalid())},_=>return Err(invalid())})}
  pub(super) fn step(&mut self,cx:&mut StepContext<'_>)->Result<Option<FlowNode>,OriginalTurnFailure>{for _ in 0..512{let before=(cx.retained_progress(),cx.fuel_remaining());if let Some(output)=self.once(cx)?{return Ok(Some(output))}if cx.should_yield()||cx.is_cancelled()||before==(cx.retained_progress(),cx.fuel_remaining()){break}}Ok(None)}
  fn once(&mut self,cx:&mut StepContext<'_>)->Result<Option<FlowNode>,OriginalTurnFailure>{

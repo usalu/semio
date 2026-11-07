@@ -1,19 +1,19 @@
 //! 📌️ Paste job of the puzzle 5d editor session: the reserved paste job with its fixed-page state machine. See [`super`].
 use semio_framework_job::InteractiveJob;
-use semio_framework_plugin::ArtifactReservedJob;
+use semio_plugin::ArtifactReservedJob;
 
 use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
-use semio_framework_plugin::{kernel::ClipboardFragment, kernel::PasteAnchor, kernel::PastePlacement};
-use semio_framework_plugin::ArtifactReservedToolJobRequest;
-use semio_framework_plugin::ArtifactToolCompletion;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::EphemeralEmit;
-use semio_framework_plugin::InteractionWrite;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaType;
+use semio_plugin::{kernel::ClipboardFragment, kernel::PasteAnchor, kernel::PastePlacement};
+use semio_plugin::ArtifactReservedToolJobRequest;
+use semio_plugin::ArtifactToolCompletion;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::EphemeralEmit;
+use semio_plugin::InteractionWrite;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaType;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_pack_json::{parse, Value};
@@ -46,7 +46,7 @@ struct Puzzle5dPasteOwners {
     pub id_map: HashMap<String, String>,
     pub fresh_ids: Puzzle5dFreshIds,
     pub mutations: Vec<Puzzle5dMutation>,
-    pub pending_completion_rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle5dPlayApp>>>,
+    pub pending_completion_rejection: Option<semio_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle5dPlayApp>>>,
 }
 
 pub struct Puzzle5dPasteJob {
@@ -66,7 +66,7 @@ pub struct Puzzle5dPasteJob {
     pub id_map: HashMap<String, String>,
     pub fresh_ids: Puzzle5dFreshIds,
     pub mutations: Vec<Puzzle5dMutation>,
-    pub pending_completion_rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle5dPlayApp>>>,
+    pub pending_completion_rejection: Option<semio_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle5dPlayApp>>>,
     pub completed: bool,
     pub outbox: crate::puzzle_job::JobOutbox,
     pub closing: bool,
@@ -126,7 +126,7 @@ impl Puzzle5dPasteJob {
                 self.stage = Puzzle5dPasteStage::Decode;
             }
             Puzzle5dPasteStage::Decode => {
-                let Some(semio_framework_plugin::ArtifactReservedToolInput::Action{args:Some(args),..})=request.input.as_ref() else {
+                let Some(semio_plugin::ArtifactReservedToolInput::Action{args:Some(args),..})=request.input.as_ref() else {
                     self.stage = Puzzle5dPasteStage::Complete;
                     return self.checkpoint();
                 };
@@ -289,7 +289,7 @@ impl Puzzle5dPasteJob {
     }
 }
 
-impl semio_framework_plugin::tool_contract::ArtifactReservedWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dPasteJob {
+impl semio_plugin::plugin_app_close_prelude::ArtifactReservedWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dPasteJob {
     fn step<'a>(&'a mut self,request:&'a mut ArtifactReservedToolJobRequest<EditorApp<Puzzle5dPlayApp>>,cx:&mut semio_framework_job::StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(request,cx))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {

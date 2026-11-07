@@ -45,6 +45,8 @@ pub trait RouterEffectHandler: Send + Sync {
     fn create_job(&self, effect: RouterEffect) -> Box<dyn InteractiveJob + Send>;
 }
 
+fn router_job_absent() -> semio_framework_value::ValueError { semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original router job custody is absent") }
+
 pub(super) struct DynRouterEffectJob(pub(super) Option<Box<dyn InteractiveJob + Send>>);
 
 impl DynRouterEffectJob {
@@ -56,8 +58,13 @@ impl DynRouterEffectJob {
 }
 
 impl InteractiveJob for DynRouterEffectJob {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure> { self.0.as_mut().expect("original router job remains live").step(cx) }
-    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>,semio_framework_value::ValueError> { self.0.as_ref().expect("original router job remains checked out").borrow_outcome(descriptor) }
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>, return_claim: &mut OriginalJobReturnClaim<'_>) -> InteractiveJobStep<'a> {
+        match self.0.as_mut() {
+            Some(original) => original.step(cx, return_claim),
+            None => InteractiveJobStep::from_callback(Err(router_job_absent().into())),
+        }
+    }
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>,semio_framework_value::ValueError> { self.0.as_ref().ok_or_else(router_job_absent)?.borrow_outcome(descriptor) }
     fn begin_close(&mut self) { if let Some(original) = self.0.as_mut() { original.begin_close(); } }
     fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         use semio_framework_job::OriginalTurnFailure;
@@ -66,7 +73,7 @@ impl InteractiveJob for DynRouterEffectJob {
         if cx.retirement_should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
         let demand=self.close_demands(grant.maximum_copy_bytes).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
-        let original=self.0.as_mut().expect("original router close owns job");
+        let Some(original)=self.0.as_mut() else { return Err(OriginalTurnFailure::debit_original(router_job_absent(),cx)) };
         if original.terminal_is_empty(){
             let progress=semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()};
             cx.consume_retained(progress)?;drop(self.0.take());cx.consume_fuel(1);return Ok(InteractiveJobCloseStep::Complete{progress})
@@ -94,26 +101,30 @@ fn router_effect_close_demands(writer: &Option<RetainedPayloadBuilder>, source: 
     Ok(source.as_ref().map_or(Default::default(), |source| RetirementDemand { copy_bytes: size_of::<Option<Vec<u8>>>(), release_bytes: source.capacity(), depth: 1, ..Default::default() }))
 }
 
-fn close_router_effect_sources(writer: &mut Option<RetainedPayloadBuilder>, source: &mut Option<Vec<u8>>, grant: semio_framework_value::RetainedCloneGrant) -> Result<InteractiveJobCloseStep,semio_framework_value::ValueError> {
-    use semio_framework_value::{RetainedCloneProgress, RetainedCloneStep, RetirementTurnError};
-    let result = router_effect_close_demands(writer, source).and_then(|demand| semio_framework_value::advance_retirement_turn(demand, grant, |child| {
+fn close_router_effect_sources(writer: &mut Option<RetainedPayloadBuilder>, source: &mut Option<Vec<u8>>, grant: semio_framework_value::RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<InteractiveJobCloseStep> {
+    use semio_framework_value::{RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome, RetirementTurnError};
+    let demand = match router_effect_close_demands(writer, source) { Ok(demand) => demand, Err(error) => return RetainedWorkOutcome { result: Err(error), work: 0 } };
+    let turn = semio_framework_value::advance_retirement_turn(demand, grant, |child| {
         if let Some(original) = writer.as_mut() {
             if original.terminal_is_empty() {
                 *writer = None;
-                return Ok((RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }), false));
+                return RetainedWorkOutcome { result: Ok((RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }), false)), work: 1 };
             }
-            let step = original.close_step_granted(semio_framework_value::RetainedCloneGrant { maximum_depth: child.maximum_depth - 1, ..child })?;
-            return Ok((RetainedCloneStep::Progress(step.progress()), false));
+            let turn = original.close_step_granted(semio_framework_value::RetainedCloneGrant { maximum_depth: child.maximum_depth.saturating_sub(1), ..child });
+            return RetainedWorkOutcome { result: turn.result.map(|step| (RetainedCloneStep::Progress(step.progress()), false)), work: turn.work };
         }
         if source.is_some() {
             drop(source.take());
-            return Ok((RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: demand.release_bytes, ..Default::default() }), source.is_none()));
+            return RetainedWorkOutcome { result: Ok((RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: demand.release_bytes, ..Default::default() }), true)), work: 1 };
         }
-        Ok((RetainedCloneStep::Complete(Default::default()), true))
-    }).map_err(|error| match error { RetirementTurnError::Owner(error) | RetirementTurnError::Receipt(error) => error }));
-    let step=result?;
-    let step=if writer.is_none()&&source.is_none(){InteractiveJobCloseStep::Complete{progress:step.progress()}}else{InteractiveJobCloseStep::Pending{progress:step.progress()}};
-    step.admit(grant,writer.is_none()&&source.is_none())
+        RetainedWorkOutcome { result: Ok((RetainedCloneStep::Complete(Default::default()), true)), work: 0 }
+    });
+    let result = turn.result.map_err(|error| match error { RetirementTurnError::Owner(error) | RetirementTurnError::Receipt(error) => error }).and_then(|step| {
+        let done = writer.is_none() && source.is_none();
+        let step = if done { InteractiveJobCloseStep::Complete { progress: step.progress() } } else { InteractiveJobCloseStep::Pending { progress: step.progress() } };
+        step.admit(grant, done)
+    });
+    RetainedWorkOutcome { result, work: turn.work }
 }
 
 pub(super) struct FaultRouterEffectJob {
@@ -123,8 +134,8 @@ pub(super) struct FaultRouterEffectJob {
     pub(super) closing: bool,
 }
 
-impl InteractiveJob for FaultRouterEffectJob {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+impl FaultRouterEffectJob {
+    fn step_callback<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         if cx.is_cancelled() || self.closing { return JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from); }
         if cx.should_yield() { return Ok(None); }
         if self.writer.is_none() {
@@ -134,13 +145,19 @@ impl InteractiveJob for FaultRouterEffectJob {
             self.writer = Some(RetainedPayloadBuilder::new(JobPayloadStream::Fault));
             return Ok(None);
         }
-        let writer = self.writer.as_mut().unwrap();
-        if !writer.is_initialized() { writer.advance_initialization(cx)?; return Ok(None); }
+        let Some(writer) = self.writer.as_mut() else { return Ok(None); };
+        if !writer.is_initialized() { let turn = writer.advance_initialization(cx); receive_original_retained_work(cx, turn)?; return Ok(None); }
         let source = self.detail.as_deref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "router effect original source custody is absent"))?;
-        if self.cursor < source.len() { writer.append_original(cx, source, &mut self.cursor)?; return Ok(None); }
-        if writer.published().is_none() { writer.seal(cx)?; return Ok(None); }
-        let original = writer.published().unwrap();
+        if self.cursor < source.len() { let turn = writer.append_original(cx, source, &mut self.cursor); receive_original_retained_work(cx, turn)?; return Ok(None); }
+        if writer.published().is_none() { let turn = writer.seal(cx); receive_original_retained_work(cx, turn)?; return Ok(None); }
+        let original = writer.published().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "router effect sealed original is absent"))?;
         JobOutcomeBorrow::admit_fault(cx, original).map_err(semio_framework_job::OriginalTurnFailure::from)
+    }
+}
+
+impl InteractiveJob for FaultRouterEffectJob {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>, _return_claim: &mut OriginalJobReturnClaim<'_>) -> InteractiveJobStep<'a> {
+        InteractiveJobStep::from_callback(self.step_callback(cx))
     }
 
     fn borrow_outcome<'a>(&'a self, original: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
@@ -155,9 +172,7 @@ impl InteractiveJob for FaultRouterEffectJob {
 
     fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         self.begin_close();
-        let grant=cx.retained_grant();if cx.retirement_should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
-        let step=close_router_effect_sources(&mut self.writer,&mut self.detail,grant).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
-        cx.consume_retained(step.progress())?;if step.progress().copied_items!=0{cx.consume_fuel(1)}Ok(step)
+        close_original_granted_step(cx,|grant|close_router_effect_sources(&mut self.writer,&mut self.detail,grant))
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(router_effect_close_demands(&self.writer, &self.detail)?.copy_bytes) }
@@ -179,8 +194,8 @@ pub(super) struct CompleteRouterEffectJob {
 }
 
 #[cfg(test)]
-impl InteractiveJob for CompleteRouterEffectJob {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+impl CompleteRouterEffectJob {
+    fn step_callback<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         if cx.is_cancelled() || self.closing { return JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from); }
         if cx.should_yield() { return Ok(None); }
         if self.writer.is_none() {
@@ -190,13 +205,20 @@ impl InteractiveJob for CompleteRouterEffectJob {
             self.writer = Some(RetainedPayloadBuilder::new(JobPayloadStream::CommitOutput));
             return Ok(None);
         }
-        let writer = self.writer.as_mut().unwrap();
-        if !writer.is_initialized() { writer.advance_initialization(cx)?; return Ok(None); }
+        let Some(writer) = self.writer.as_mut() else { return Ok(None); };
+        if !writer.is_initialized() { let turn = writer.advance_initialization(cx); receive_original_retained_work(cx, turn)?; return Ok(None); }
         let source = self.output.as_deref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "router effect original source custody is absent"))?;
-        if self.cursor < source.len() { writer.append_original(cx, source, &mut self.cursor)?; return Ok(None); }
-        if writer.published().is_none() { writer.seal(cx)?; return Ok(None); }
-        let original = writer.published().unwrap();
+        if self.cursor < source.len() { let turn = writer.append_original(cx, source, &mut self.cursor); receive_original_retained_work(cx, turn)?; return Ok(None); }
+        if writer.published().is_none() { let turn = writer.seal(cx); receive_original_retained_work(cx, turn)?; return Ok(None); }
+        let original = writer.published().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "router effect sealed original is absent"))?;
         JobOutcomeBorrow::admit_complete(cx, None, Some(original)).map_err(semio_framework_job::OriginalTurnFailure::from)
+    }
+}
+
+#[cfg(test)]
+impl InteractiveJob for CompleteRouterEffectJob {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>, _return_claim: &mut OriginalJobReturnClaim<'_>) -> InteractiveJobStep<'a> {
+        InteractiveJobStep::from_callback(self.step_callback(cx))
     }
 
     fn borrow_outcome<'a>(&'a self, original: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
@@ -211,9 +233,7 @@ impl InteractiveJob for CompleteRouterEffectJob {
 
     fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         self.begin_close();
-        let grant=cx.retained_grant();if cx.retirement_should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
-        let step=close_router_effect_sources(&mut self.writer,&mut self.output,grant).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
-        cx.consume_retained(step.progress())?;if step.progress().copied_items!=0{cx.consume_fuel(1)}Ok(step)
+        close_original_granted_step(cx,|grant|close_router_effect_sources(&mut self.writer,&mut self.output,grant))
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(router_effect_close_demands(&self.writer, &self.output)?.copy_bytes) }

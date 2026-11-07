@@ -42,7 +42,7 @@ fn close(cursor: &mut OriginalReplayDiagnostics) {
         let g = RetainedCloneGrant { maximum_copy_bytes: 32768, ..grant() };
         assert!(d.copy_bytes <= g.maximum_copy_bytes);
         checked(|| cursor.close_step(g), g);
-        assert!(turn < 99999, "[DEBUG] native diagnostics close failed to progress");
+        assert!(turn < 99999, "native diagnostics close failed to progress");
     }
 }
 fn close_ledger(ledger: ArtifactEditMessageLedger) {
@@ -86,7 +86,7 @@ fn replay_diagnostics_prepare_is_private_and_moves_selected_originals() {
         checked(|| cursor.advance(&baseline, &mut replayed, g), g);
         assert_eq!(plain(&baseline), before);
         assert_eq!(replayed.as_ptr(), backing);
-        assert!(turn < 99999, "[DEBUG] native diagnostics prepare stalled");
+        assert!(turn < 99999, "native diagnostics prepare stalled");
     }
     assert!(cursor.prepared());
     assert!(replayed.iter().all(|row| row.edit_id.is_empty() && row.messages.is_empty()));

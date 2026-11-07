@@ -6,6 +6,7 @@ use super::*;
 /// 🔀 One clipped piece of an intersection curve queued for imprint on one original face: `edge_id` is shared verbatim between the
 /// two originating faces' queues (built once, used twice), so the two resulting halves share topology, not just geometry.
 /// `pcurve_id` over `prange` is this face's own p-curve of that edge, in the edge's own order.
+#[derive(Clone, Copy)]
 pub(super) struct Pending {
     pub(super) edge_id: EdgeId,
     pub(super) pcurve_id: Curve2Id,

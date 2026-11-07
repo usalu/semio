@@ -24,7 +24,7 @@ fn funded_drive<T:RetainedClone+Clone+PartialEq+Debug>(input:T,body:usize,law:&s
   assert_eq!(output.as_ref(),Some(&expected));assert_eq!(encode(output.as_ref().unwrap()),encoded);assert_eq!(source.borrow().get(),&expected);cursor.begin_close();
   for turn in 0..limit{if cursor.terminal_is_empty(){break}let d=cursor.close_demands(body).unwrap();let g=bank.offer(d);let(result,h)=heap(||cursor.close_step(g));let w=result.work;let p=result.result.unwrap().progress();assert!(w<=g.maximum_items as u64);assert!(p.fits(g));bank.debit(w,p,h);assert!(turn<limit-1)}
   assert!(cursor.terminal_is_empty());assert_eq!(heap(||drop(cursor)).1,(0,0));
-  let mut output=output.take();let mut close=RetainedCloneClose::default();
+  let mut output= output.take();let mut close=RetainedCloneClose::default();
   for turn in 0..limit{if output.is_none()&&close.is_empty(){break}let d=close.next_owner_demands::<T>(output.is_some(),&None,body).unwrap();let g=bank.offer(d);let(result,h)=heap(||{if !close.is_empty(){close.step_granted(g)}else{let t=close.begin_granted(&mut output,g);RetainedWorkOutcome{work:t.work,result:t.result.map(|v|v.unwrap())}}});let w=result.work;let p=result.result.unwrap().progress();assert!(w<=g.maximum_items as u64);assert!(p.fits(g));bank.debit(w,p,h);assert!(turn<limit-1)}
   assert!(output.is_none()&&close.is_empty());assert_eq!(heap(||drop(close)).1,(0,0));
   for turn in 0..limit{if source.terminal_is_empty(){break}let d=source.next_close_demand(body).unwrap();let g=bank.offer(d);let(result,h)=heap(||source.close_step(g));let w=result.work;let p=result.result.unwrap().progress();assert!(w<=g.maximum_items as u64);assert!(p.fits(g));bank.debit(w,p,h);assert!(turn<limit-1)}

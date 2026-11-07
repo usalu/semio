@@ -7,17 +7,19 @@ use flow::invocation_publication::{FlowInvocationDispatch};
 use std::collections::VecDeque;
 type Output=Emit<FlowMutation,NoConfigMutation>;
 #[derive(RetireOwned)]
+#[value(send_only)]
 struct Outputs{emit:Option<Output>,pending:VecDeque<flow::neural::PendingExtensionEval>,invocation:Option<FlowInvocationDispatch>}
 fn session<R>(owner:&ArtifactInstanceOperationOwnerHandle,body:impl FnOnce(&mut flow::FlowEvalSession)->Result<R,OriginalTurnFailure>)->Result<Option<R>,OriginalTurnFailure>{owner.with_original_mut::<FlowInstanceOperationOwner,_>(|instance|instance.with_original_session(body))}
-fn pending()->ArtifactCommandWorkStep<EditorApp<FlowPlayApp>>{ArtifactCommandWorkStep::Pending{stage:"flow-evaluation-original",preview:br#"{"en":"Evaluating graph","de":"Graph wird ausgewertet"}"#}}
+fn pending<A:FlowApp>()->ArtifactCommandWorkStep<EditorApp<A>>{ArtifactCommandWorkStep::Pending{stage:"flow-evaluation-original",preview:br#"{"en":"Evaluating graph","de":"Graph wird ausgewertet"}"#}}
 fn window(command:&FlowCommand)->Result<(&str,&str),ValueError>{match command{FlowCommand::Evaluate(_)=>Ok((crate::editor::flow::editor_vocabulary::FLOW_PLAY_WINDOW_MAIN,crate::editor::flow::editor_vocabulary::FLOW_PLAY_WINDOW_MAIN)),FlowCommand::FlowEvalTick(command)=>Ok((&command.window_id,&command.window_kind_id)),_=>Err(invalid())}}
-pub(crate) struct FlowEvaluationJobWork{tool:&'static str,owner:Option<ArtifactInstanceOperationOwnerHandle>,owner_close:Option<ArtifactInstanceOperationOwnerAliasRetirement>,intake:FlowOriginalIntake,birth:Option<flow::FlowEvaluationWork>,pipeline:Option<FlowEvaluationCommandWork>,key_work:flow::FlowEvalWindowKeyWork,key:Option<flow::FlowEvalWindowKey>,pending_dispatch:Option<flow::FlowPendingDispatchWork>,fields:ManuallyDrop<Option<Outputs>>,retirement:RetainedCloneClose,phase:u8,count:usize,unfinished:bool,completed:bool,closing:bool}
+pub struct FlowEvaluationJobWork{tool:&'static str,owner:Option<ArtifactInstanceOperationOwnerHandle>,owner_close:Option<ArtifactInstanceOperationOwnerAliasRetirement>,intake:FlowOriginalIntake,birth:Option<flow::FlowEvaluationWork>,pipeline:Option<FlowEvaluationCommandWork>,key_work:flow::FlowEvalWindowKeyWork,key:Option<flow::FlowEvalWindowKey>,pending_dispatch:Option<flow::FlowPendingDispatchWork>,fields:ManuallyDrop<Option<Outputs>>,retirement:RetainedCloneClose,phase:u8,count:usize,unfinished:bool,completed:bool,closing:bool}
 impl FlowEvaluationJobWork{
- pub(crate) fn new(tool:&'static str,owner:ArtifactInstanceOperationOwnerHandle)->Self{Self{tool,owner:Some(owner),owner_close:None,intake:FlowOriginalIntake::new(tool),birth:None,pipeline:None,key_work:flow::FlowEvalWindowKeyWork::new(),key:None,pending_dispatch:None,fields:ManuallyDrop::new(Some(Outputs{emit:Some(Output::default()),pending:VecDeque::new(),invocation:None})),retirement:Default::default(),phase:0,count:0,unfinished:false,completed:false,closing:false}}
+ pub fn terminal_is_empty(&self)->bool{self.closing&&self.pending_dispatch.is_none()&&self.pipeline.is_none()&&self.birth.is_none()&&self.key_work.terminal_is_empty()&&self.retirement.is_empty()&&self.fields.is_none()&&self.intake.terminal_is_empty()&&self.owner.is_none()&&self.owner_close.is_none()}
+ pub fn new(tool:&'static str,owner:ArtifactInstanceOperationOwnerHandle)->Self{Self{tool,owner:Some(owner),owner_close:None,intake:FlowOriginalIntake::new(tool),birth:None,pipeline:None,key_work:flow::FlowEvalWindowKeyWork::new(),key:None,pending_dispatch:None,fields:ManuallyDrop::new(Some(Outputs{emit:Some(Output::default()),pending:VecDeque::new(),invocation:None})),retirement:Default::default(),phase:0,count:0,unfinished:false,completed:false,closing:false}}
  fn owner(&self)->Result<&ArtifactInstanceOperationOwnerHandle,ValueError>{self.owner.as_ref().ok_or_else(invalid)}
  fn paid(cx:&mut StepContext<'_>,bytes:usize)->Result<bool,OriginalTurnFailure>{FlowEvaluationCommandWork::paid(cx,bytes)}
  fn paid_close(cx:&mut StepContext<'_>,bytes:usize)->Result<bool,OriginalTurnFailure>{FlowEvaluationCommandWork::paid_close(cx,bytes)}
- fn once(&mut self,input:&ArtifactCommandInputs<'_,EditorApp<FlowPlayApp>>,cx:&mut StepContext<'_>)->Result<Option<Output>,OriginalTurnFailure>{
+ fn once<A:FlowApp>(&mut self,input:&ArtifactCommandInputs<'_,EditorApp<A>>,cx:&mut StepContext<'_>)->Result<Option<Output>,OriginalTurnFailure>{
   if self.completed||self.closing||!self.intake.source_matches(cx){return Err(invalid().into())}if cx.is_cancelled()||cx.should_yield(){return Ok(None)}let context=input.context.ok_or_else(invalid)?;
   match self.phase{
    0=>if self.intake.receive_parent(input,cx)?{self.phase=1},
@@ -51,12 +53,12 @@ impl FlowEvaluationJobWork{
   if let Some(pending)=self.pending_dispatch.as_ref(){return if pending.terminal_is_empty(){Ok(fixed(size_of::<flow::FlowPendingDispatchWork>()))}else{pending.close_demands(copy)}}if let Some(pipeline)=self.pipeline.as_ref(){return if pipeline.terminal_is_empty(){Ok(fixed(size_of::<FlowEvaluationCommandWork>()))}else{pipeline.close_demands(copy)}}if let Some(birth)=self.birth.as_ref(){return if birth.terminal_is_empty(){Ok(fixed(size_of::<flow::FlowEvaluationWork>()))}else{birth.next_close_demands(copy)}}if !self.key_work.terminal_is_empty(){return Ok(self.key_work.close_demands())}if !self.retirement.is_empty(){return self.retirement.demands(copy)}if self.fields.is_some(){return self.retirement.next_owner_demands::<Outputs>(true,&None,copy)}if !self.intake.terminal_is_empty(){return self.intake.close_demands(copy)}if let Some(close)=self.owner_close.as_ref(){return close.demands(copy)}Ok(if self.owner.is_some(){ArtifactInstanceOperationOwnerAliasRetirement::constructor_demands()}else{Default::default()})
  }
 }
-impl ArtifactCommandWork<EditorApp<FlowPlayApp>> for FlowEvaluationJobWork{
+impl<A:FlowApp> ArtifactCommandWork<EditorApp<A>> for FlowEvaluationJobWork{
  fn tool_id(&self)->&'static str{self.tool}
  fn receive_original_command(&mut self,command:&mut FlowCommand,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.intake.receive_command(command,cx)}
- fn receive_original_context(&mut self,_context:&semio_plugin::app::ArtifactOwnedContextHandle<EditorApp<FlowPlayApp>>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.intake.receive_catalogue(self.owner.as_ref().ok_or_else(invalid)?,cx)}
- fn extent(&self,command:&FlowCommand,_snapshot:&FlowSnapshot,_interaction:&protocol::InteractionState,context:Option<&ArtifactOwnedToolJobContext<EditorApp<FlowPlayApp>>>)->Option<usize>{(!self.closing&&!self.completed&&command.command_id()==self.tool&&matches!(self.tool,"evaluate"|"flowEvalTick")&&context.is_some_and(|context|context.provisional().is_empty())).then_some(1)}
- fn step(&mut self,input:&ArtifactCommandInputs<'_,EditorApp<FlowPlayApp>>,cx:&mut StepContext<'_>)->Result<ArtifactCommandWorkStep<EditorApp<FlowPlayApp>>,OriginalTurnFailure>{for _ in 0..512{let before=(cx.fuel_remaining(),cx.retained_progress());if let Some(output)=self.once(input,cx)?{return Ok(ArtifactCommandWorkStep::Complete(output))}if cx.should_yield()||cx.is_cancelled()||before==(cx.fuel_remaining(),cx.retained_progress()){break}}Ok(pending())}
+ fn receive_original_context(&mut self,_context:&semio_plugin::app::ArtifactOwnedContextHandle<EditorApp<A>>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.intake.receive_catalogue(self.owner.as_ref().ok_or_else(invalid)?,cx)}
+ fn extent(&self,command:&FlowCommand,_snapshot:&FlowSnapshot,_interaction:&protocol::InteractionState,context:Option<&ArtifactOwnedToolJobContext<EditorApp<A>>>)->Option<usize>{(!self.closing&&!self.completed&&command.command_id()==self.tool&&matches!(self.tool,"evaluate"|"flowEvalTick")&&context.is_some_and(|context|context.provisional().is_empty())).then_some(1)}
+ fn step(&mut self,input:&ArtifactCommandInputs<'_,EditorApp<A>>,cx:&mut StepContext<'_>)->Result<ArtifactCommandWorkStep<EditorApp<A>>,OriginalTurnFailure>{for _ in 0..512{let before=(cx.fuel_remaining(),cx.retained_progress());if let Some(output)=self.once(input,cx)?{return Ok(ArtifactCommandWorkStep::Complete(output))}if cx.should_yield()||cx.is_cancelled()||before==(cx.fuel_remaining(),cx.retained_progress()){break}}Ok(pending())}
  fn begin_close(&mut self){self.closing=true;self.intake.begin_close();self.key_work.begin_close();if let Some(work)=self.pending_dispatch.as_mut(){work.begin_close()}if let Some(work)=self.pipeline.as_mut(){work.begin_close()}if let Some(work)=self.birth.as_mut(){work.begin_close()}}
  fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<Close,OriginalTurnFailure>{
   if !self.closing||!self.intake.source_matches(cx){return Err(invalid().into())}
@@ -79,6 +81,6 @@ impl ArtifactCommandWork<EditorApp<FlowPlayApp>> for FlowEvaluationJobWork{
  fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.release_bytes)}
  fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.depth)}
  fn terminal_frame_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
- fn terminal_is_empty(&self)->bool{self.closing&&self.pending_dispatch.is_none()&&self.pipeline.is_none()&&self.birth.is_none()&&self.key_work.terminal_is_empty()&&self.retirement.is_empty()&&self.fields.is_none()&&self.intake.terminal_is_empty()&&self.owner.is_none()&&self.owner_close.is_none()}
+ fn terminal_is_empty(&self)->bool{FlowEvaluationJobWork::terminal_is_empty(self)}
 }
 impl Drop for FlowEvaluationJobWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original Flow evaluation job must close every original source and output");unsafe{ManuallyDrop::drop(&mut self.fields)}}}

@@ -10,6 +10,37 @@ use semio_plugin_reactor_app::PluginApp;
 use crate::life_cleanup_pumps::RuntimeLiveCleanupPump;
 use crate::result_publication;
 use crate::life_cleanup_vocabulary::RuntimeMaintenanceStatus;
+/// ⏱️ The per-instance pending-effects owner: armed when a poll answered `None` (retained, not empty), polled by the central kernel turn with its own `cx`, lowered by the first published answer and by closure before retirement. It owns no other resource, so closing it is one explicit transition rather than a retirement ladder.
+#[doc(hidden)]
+#[derive(Default)]
+pub struct PendingEffectsOwner(AtomicBool);
+impl PendingEffectsOwner {
+    /// 🔒️ Keeps the instance armed for the next paid poll.
+    pub fn retain(&self) { self.0.store(true, Ordering::SeqCst) }
+    /// 📮️ Releases the owner once its effects were published.
+    pub fn publish(&self) { self.0.store(false, Ordering::SeqCst) }
+    /// 🧯️ Closes the owner before its instance retires; answers whether it still owed a poll.
+    pub fn close(&self) -> bool { self.0.swap(false, Ordering::SeqCst) }
+    /// 🔦️ Whether the owner still owes a paid poll.
+    pub fn is_armed(&self) -> bool { self.0.load(Ordering::SeqCst) }
+}
+#[cfg(test)]
+mod pending_effects_owner_laws {
+    use super::PendingEffectsOwner;
+    #[test]
+    fn retain_publish_and_close_are_the_only_transitions() {
+        let owner = PendingEffectsOwner::default();
+        assert!(!owner.is_armed() && !owner.close());
+        owner.retain();
+        assert!(owner.is_armed());
+        owner.publish();
+        assert!(!owner.is_armed());
+        owner.retain();
+        owner.retain();
+        assert!(owner.close(), "closing an armed owner reports the owed poll");
+        assert!(!owner.is_armed() && !owner.close(), "closure is final and idempotent");
+    }
+}
 /// 🛎️ Why a lane did not get [`RuntimeAppCell::instance`]. `Contended` is a hold that releases
 /// on its own — another lane is mid-step; `Poisoned` is a hold that never will.
 #[doc(hidden)]
@@ -107,6 +138,8 @@ pub struct RuntimeAppCell<PA: PluginApp> {
     /// 🌡️ [`PluginApp::maintenance_under_pressure`] as of the last maintenance step — read by the
     /// reactor turn to decide whether this instance gets a burst of steps instead of one.
     pub maintenance_pressure: AtomicBool,
+    /// ⏱️ The per-instance pending-effects owner: raised when `PluginApp::pending_effects` answered `Ok(None)` (retained, not empty), polled by the central kernel turn with its own `cx` and lowered on the first `Some`.
+    pub pending_effects: PendingEffectsOwner,
     #[cfg(any(test, target_arch = "wasm32"))]
     pub maintenance_probe_entries: AtomicU64,
     #[cfg(any(test, feature = "cleanup-probes"))]
@@ -127,6 +160,7 @@ impl<PA: PluginApp> RuntimeAppCell<PA> {
             host_crossings: AtomicU32::new(0),
             background_holds: AtomicU32::new(0),
             maintenance_pressure: AtomicBool::new(false),
+            pending_effects: PendingEffectsOwner::default(),
             #[cfg(any(test, target_arch = "wasm32"))]
             maintenance_probe_entries: AtomicU64::new(0),
             #[cfg(any(test, feature = "cleanup-probes"))]

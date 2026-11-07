@@ -16,8 +16,7 @@ enum Generation3dPackSnapshotState {
 }
 
 pub(super) struct Generation3dPackSnapshotAuthority {
-    pub(super) operation: semio_framework_job::OperationId,
-    pub(super) generation: semio_framework_job::Generation,
+    pub(super) replacement: Option<semio_framework_job::ReplacementIdentity>,
     pub(super) path: store::os_store::owned_schema_decode::OwnedSchemaPath,
     pub(super) state: Generation3dPackSnapshotState,
     pub(super) token: Option<store::os_store::owned_schema_decode::OwnedSchemaToken>,
@@ -44,10 +43,9 @@ impl Generation3dPackSnapshotAuthority {
         Ok(Default::default())
     }
 
-    pub(super) fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
+    pub(super) fn new(replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
         Self {
-            operation,
-            generation,
+            replacement,
             path,
             state: Generation3dPackSnapshotState::AwaitToken,
             token: None,
@@ -85,7 +83,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
         source: &store::os_store::owned_schema_decode::OwnedSchemaRecordCursor,
         cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
-        if cx.operation() != self.operation || cx.generation() != self.generation {
+        if cx.replacement_is_stale(self.replacement) {
             return Err(self.diagnostic("generation3d-envelope.snapshot-stale-authority", token.start));
         }
         if cx.is_cancelled() {

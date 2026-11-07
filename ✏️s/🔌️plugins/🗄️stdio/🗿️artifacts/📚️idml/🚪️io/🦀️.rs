@@ -1,7 +1,7 @@
 //! 🚪️ IDML native text, pack and operation representations over intrinsic package fields.
 use semio_os_kernel as protocol;
 use semio_framework_value::{DslValue, FromValue, ToValue, ValueError, ValueRefusalKind};
-use semio_framework_pack::{snapshot::{ArtifactDsl, ArtifactPack}, PackError};
+use pack::{snapshot::{ArtifactDsl, ArtifactPack}, PackError};
 use semio_framework_diagnostic::{TextError, TextSpan};
 use crate::{IdmlSnapshot, IdmlDiff, IdmlMutation};
 
@@ -19,7 +19,7 @@ pub fn native_record_spec() -> semio_framework_dsl_record::RecordSpec {
     semio_framework_dsl_record::RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Lines, vec![semio_framework_dsl_record::FieldSpec::new(1, "value", semio_framework_dsl_record::Shape::Value)])
 }
 /// 🔑️ Canonical first-party schema identity of the actual encoded record.
-pub fn schema_hash() -> [u8; 32] { semio_framework_pack::record::schema_hash(&native_record_spec()) }
+pub fn schema_hash() -> [u8; 32] { pack::record::schema_hash(&native_record_spec()) }
 
 impl ArtifactDsl for IdmlSnapshot {
     const EXTENSION: &'static str = "idml";
@@ -39,12 +39,12 @@ impl ArtifactDsl for IdmlSnapshot {
     }
 }
 impl ArtifactPack for IdmlSnapshot {
-    fn encode_pack_with(&self, options: &semio_framework_pack::record::EncodeOptions) -> Result<Vec<u8>, PackError> {
+    fn encode_pack_with(&self, options: &pack::record::EncodeOptions) -> Result<Vec<u8>, PackError> {
         self.package().map_err(PackError::from)?;
         let inner = self.to_value().encode_pack_with(options)?;
         Ok(protocol::semio_format::wrap_binary(&envelope(protocol::semio_format::Component::Pack), &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &semio_framework_pack::record::DecodeOptions) -> Result<Self, PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &pack::record::DecodeOptions) -> Result<Self, PackError> {
         let (identity, inner) = protocol::semio_format::unwrap_binary(bytes).map_err(|error| PackError::from(error.into_value_error()))?;
         if !identity.matches_identity(crate::DOCUMENT_SCHEMA, protocol::semio_format::Component::Pack, 1) { return Err(invalid("stdio.idml.pack-identity")); }
         Self::from_value(DslValue::decode_pack_with(&inner, options)?).map_err(PackError::from)

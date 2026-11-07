@@ -78,10 +78,16 @@ pub fn evaluate_tick(
     let started_us = semio_framework_job::runtime_diagnostics_enabled().then(semio_framework_job::default_now_us).flatten();
     session.begin_window_tick(window_id, retained_grant)?;
     let census_before = node_census_digest(session.status_json());
-    let mut host = host_with_session(host_snapshot, session, retained_grant)?;
+    let mut host = match host_with_session(host_snapshot, session, retained_grant) {
+        Ok(host) => host,
+        Err((error, host)) => {
+            semio_s_artifact_procedural_3d_model::close_host(host)?;
+            return Err(error);
+        }
+    };
     let more = session.tick_cold(&mut host, turn_started_us);
     let pending_extension_evals = host.take_pending_extension_evals();
-    host.retire_cold()?;
+    semio_s_artifact_procedural_3d_model::close_host(host)?;
     let mut extension_invocations = Vec::new();
     for pending in pending_extension_evals {
         let resume = session.has_evaluation_progress(pending.node_hash);

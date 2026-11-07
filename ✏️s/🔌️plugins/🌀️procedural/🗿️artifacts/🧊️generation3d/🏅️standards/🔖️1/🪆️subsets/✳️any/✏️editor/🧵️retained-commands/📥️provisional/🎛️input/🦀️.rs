@@ -16,7 +16,7 @@ use std::mem::{ManuallyDrop,size_of};
 #[derive(Clone,Copy,PartialEq,Eq)]
 enum Phase{Bind,Admit,Scan,Wired,Kind,NoteChannel,NoteCompare,NoteSwap,LookupBirth,LookupRun,CompareBirth,Compare,CompareClose,LookupClose,LiteralBirth,Literal,LiteralTake,LiteralClose,PatchBirth,Patch}
 struct Fields{payload:Option<ChangeWidgetInput>,lookup:Option<LookupCursor<Value>>,lookup_close:Option<ControlledRetirement<LookupCursor<Value>>>,comparison:Option<ProvisionalInputComparison>,literal:Option<TypedLiteralWork>,value:Option<Value>,patch:Option<NativeParamPatchWork>}
-pub(crate) struct ProvisionalTypedInputWork{fields:ManuallyDrop<Fields>,original:OriginalSourceBinding,binding:Option<FlowSourceIdentity>,admission:TypedInputAdmission,scan:ScratchRowScan,target:Option<usize>,wire:usize,field:usize,offset:usize,phase:Phase,ready:bool,applied:bool,closing:bool,retirement:RetainedCloneClose,progress:RetainedCloneProgress,work:u64}
+pub struct ProvisionalTypedInputWork{fields:ManuallyDrop<Fields>,original:OriginalSourceBinding,binding:Option<FlowSourceIdentity>,admission:TypedInputAdmission,scan:ScratchRowScan,target:Option<usize>,wire:usize,field:usize,offset:usize,phase:Phase,ready:bool,applied:bool,closing:bool,retirement:RetainedCloneClose,progress:RetainedCloneProgress,work:u64}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"provisional typed input changed its original scratch source or owner phase")}
 fn fixed(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
 fn pair_window(a:&str,b:&str,offset:usize)->usize{if a.len()==b.len(){a.len().saturating_sub(offset).min(64)}else{0}}
@@ -55,7 +55,7 @@ impl ProvisionalTypedInputWork{
  }
  fn advance_original(&mut self,source:&mut FlowHostSnapshot,grant:RetainedCloneGrant)->Result<bool,ValueError>{
   let d=self.next_demands(source,grant.maximum_copy_bytes)?;if self.ready{return Ok(true)}if !retained_clone_grant_admits(grant,d){return Ok(false)}
-  if let Some(close)=self.fields.lookup_close.as_mut(){if close.terminal_is_empty(){self.fields.lookup_close=None;self.phase=Phase::LiteralBirth;self.work=1;self.progress.copied_items=1}else{let result=close.step(grant);self.work=close.last_turn_work();self.progress=close.step_progress();result?}return Ok(false)}
+  if let Some(close)=self.fields.lookup_close.as_mut(){if close.terminal_is_empty(){self.fields.lookup_close=None;self.phase=Phase::LiteralBirth;self.work=1;self.progress.copied_items=1}else{let result=close.step(grant);self.work=close.last_turn_work();self.progress=close.step_progress();result?;}return Ok(false)}
   self.work=1;self.progress=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};
   match self.phase{
    Phase::Bind=>{self.phase=Phase::Admit},
@@ -127,7 +127,7 @@ impl ProvisionalTypedInputWork{
   if !self.closing{return Err(invalid())}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}if !retained_clone_grant_admits(grant,self.next_close_demands(grant.maximum_copy_bytes)?){return Ok(RetainedCloneStep::Progress(Default::default()))}
   self.work=1;self.progress.copied_items=1;
   if let Some(comparison)=self.fields.comparison.as_mut(){if comparison.terminal_is_empty(){self.fields.comparison=None}else{let turn=comparison.close_step(grant);self.work=turn.work;self.progress=Default::default();self.progress=turn.result?.progress()}}
-  else if let Some(close)=self.fields.lookup_close.as_mut(){if close.terminal_is_empty(){self.fields.lookup_close=None}else{let result=close.step(grant);self.work=close.last_turn_work();self.progress=close.step_progress();result?}}
+  else if let Some(close)=self.fields.lookup_close.as_mut(){if close.terminal_is_empty(){self.fields.lookup_close=None}else{let result=close.step(grant);self.work=close.last_turn_work();self.progress=close.step_progress();result?;}}
   else if self.fields.lookup.is_some(){self.fields.lookup_close=Some(ControlledRetirement::new(self.fields.lookup.take().unwrap()).unwrap_or_else(|_|unreachable!("original parameter lookup declares controlled retirement")))}
   else if let Some(literal)=self.fields.literal.as_mut(){if literal.terminal_is_empty(){self.fields.literal=None}else{let turn=literal.close_step(grant);self.work=turn.work;self.progress=Default::default();self.progress=turn.result?.progress()}}
   else if let Some(patch)=self.fields.patch.as_mut(){if patch.terminal_is_empty(){self.fields.patch=None}else{let turn=patch.close_step(grant);self.work=turn.work;self.progress=Default::default();self.progress=turn.result?.progress()}}
@@ -152,7 +152,7 @@ impl OriginalScratchWork<FlowHostSnapshot> for ProvisionalTypedInputWork{
 }
 impl Drop for ProvisionalTypedInputWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"provisional typed input retains its original payload, native fields or map owners");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
 
-pub(crate) enum P3ProvisionalFold{Input(ProvisionalTypedInputWork),Transform(super::retained_provisional_transform::ProvisionalTransformWork)}
+pub enum P3ProvisionalFold{Input(ProvisionalTypedInputWork),Transform(super::retained_provisional_transform::ProvisionalTransformWork)}
 impl super::retained_native_provisional_fold::NativeAdditionalFold for P3ProvisionalFold{
  fn step(&mut self,host:&mut FlowHostSnapshot,_generation:&mut super::GenerationPlayState,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{match self{Self::Input(work)=>work.step(host,cx),Self::Transform(work)=>work.step(host,cx)}}
  fn next_demands(&self,host:&FlowHostSnapshot,_generation:&super::GenerationPlayState,copy:usize)->Result<RetirementDemand,ValueError>{match self{Self::Input(work)=>work.next_demands(host,copy),Self::Transform(work)=>work.next_demands(host,copy)}}

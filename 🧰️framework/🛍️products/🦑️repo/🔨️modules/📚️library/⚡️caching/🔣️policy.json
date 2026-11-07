@@ -627,7 +627,6 @@
     },
     "guardAgeMs": 172800000,
     "cargo": {
-      "budgetBytes": 18252562432,
       "unusedAgeMs": 604800000,
       "incremental": {
         "budgetBytes": 6442450944,

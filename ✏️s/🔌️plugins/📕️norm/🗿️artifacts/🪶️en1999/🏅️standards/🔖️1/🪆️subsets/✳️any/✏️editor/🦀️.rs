@@ -303,7 +303,7 @@ impl semio_s_plugin_norm_app_surface::NormRetainedEditor for En1999PlayApp {
         }
     }
 
-    fn view_focus_effects(command: &Self::Command, document: &Self::Snapshot, transient: &Self::Transient, interaction: &protocol::InteractionState) -> Vec<semio_framework_plugin::Effect> {
+    fn view_focus_effects(command: &Self::Command, document: &Self::Snapshot, transient: &Self::Transient, interaction: &protocol::InteractionState) -> Vec<semio_plugin::Effect> {
         semio_s_plugin_norm_app_surface::live_view_focus_effects::<Self>(command, document, transient, interaction, checks::INTERACTION_DOMAIN)
     }
 

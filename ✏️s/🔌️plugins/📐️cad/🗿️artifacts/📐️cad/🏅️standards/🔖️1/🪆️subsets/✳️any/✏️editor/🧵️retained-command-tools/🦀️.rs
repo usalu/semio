@@ -168,7 +168,7 @@ fn cad_retained_reduce(input: &ArtifactCommandInputs<'_, EditorApp<CadPlayApp>>)
     let selection = interaction.selection.get(CAD_INTERACTION_DOMAIN).cloned().unwrap_or_default();
     let hovered_ids = hover.get(CAD_INTERACTION_DOMAIN).filter(|hover| hover.channel == CadInteractionSnapshot::POINTER_CHANNEL).map(|hover| hover.ids.clone()).unwrap_or_default();
     let retained_interaction = CadInteractionSnapshot { granularity: selection.granularity.clone(), ids: selection.ids.clone(), anchor_id: selection.anchor_id, hovered_ids };
-    let mut ctx = CadDispatchCtx::new(retained_interaction, context.and_then(|context| context.view_state.clone()), window_transient::from_snapshot(context.and_then(|context| context.window_transient.as_ref())));
+    let mut ctx = CadDispatchCtx::new(retained_interaction, context.and_then(|context| context.view_state.as_deref().cloned()), window_transient::from_snapshot(context.and_then(|context| context.window_transient.as_ref())));
     let command_id = command.command_id();
     let emit = if CAD_RETAINED_ARTIFACT_TOOL_IDS.contains(&command_id) || CAD_RETAINED_EXPORT_TOOL_IDS.contains(&command_id) {
         admit_cad_snapshot(snapshot).map_err(Fault::from)?;
@@ -197,7 +197,7 @@ pub(super) struct CadRetainedCommandWork {
 
 impl ArtifactCommandWork<EditorApp<CadPlayApp>> for CadRetainedCommandWork {
     fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<CadPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self>(), depth: 1, ..Default::default() })
+        Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() })
     }
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
         self.terminal_is_empty().then_some(size_of::<Self>())
@@ -270,3 +270,5 @@ impl ArtifactOwnedToolJobFactory for CadRetainedCommandJobFactory {
 }
 //#endregion 🧵️RetainedCommands
 //#endregion 🔖️PlayApp
+
+semio_plugin::retained_command::terminal_frame_bound!(CadRetainedCommandWork);

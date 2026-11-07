@@ -29,6 +29,12 @@ use semio_plugin_instance_ladders::ladders_close_ladder::{CloseRung, child_grant
 
 
 impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
+    /// 🪜️ The maintenance ladder's rung, with the instance-owned typed host-event frontiers the ladder cannot see ranked as the typed-operation rung.
+    fn close_rung_now(&self) -> CloseRung {
+        let rung = self.ladder_ref().close_rung();
+        if matches!(rung, CloseRung::Uncovered) && (self.original_host_event_command.pending() || !self.host_events.action_delivery.terminal_is_empty() || self.original_typed_tag_pending() || self.original_typed_command.pending() || self.original_typing.pending() || self.original_emission.pending() || !self.host_events.routes.terminal_is_empty()) { CloseRung::TypedOperations } else { rung }
+    }
+
     fn uncovered_close_frontier() -> ValueError {
         ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "plugin close retains an original frontier without its granted owner authority")
     }

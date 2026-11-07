@@ -11,6 +11,7 @@ use crate::editor::puzzle5d::modes::edit;
 pub struct Puzzle5dStorePreparationFactory;
 
 struct Puzzle5dStorePreparation {
+    last_work: u64,
     pub owners: store::OneItemOwners<Puzzle5dPlaySnapshot, Puzzle5dMutation>,
     pub checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     completed_bytes: usize,
@@ -62,7 +63,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
             Ok(progress) => progress,
             Err(error) => return Err((error, request)),
         };
-        Ok((Box::new(Puzzle5dStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), completed_bytes: 0, phase: 0, cancelled: false }), progress))
+        Ok((Box::new(Puzzle5dStorePreparation { last_work: 0, owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), completed_bytes: 0, phase: 0, cancelled: false }), progress))
     }
 }
 
@@ -74,6 +75,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzz
         use semio_framework_value::retained_clone::RetainedCloneProgress;
         use semio_framework_value::ValueError;
         use semio_framework_value::ValueRefusalKind;
+        self.last_work = 0;
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -83,6 +85,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzz
         if self.owners.prepared.is_some() || self.phase >= 2 {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()));
         }
+        self.last_work = 1;
         match self.phase {
             0 => {
                 let base = self.owners.base.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "Puzzle5d preparation lost its exact base root"))?;
@@ -117,6 +120,9 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzz
         }
     }
 
+    fn last_turn_work(&self) -> u64 {
+        self.last_work
+    }
     fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
         self.checkpoint
     }
@@ -166,6 +172,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzz
 pub struct Puzzle5dConfigStorePreparationFactory;
 
 struct Puzzle5dConfigStorePreparation {
+    last_work: u64,
     pub owners: store::OneItemOwners<Puzzle5dConfig, Puzzle5dConfigMutation>,
     pub checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
@@ -209,7 +216,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
             Ok(progress) => progress,
             Err(error) => return Err((error, request)),
         };
-        Ok((Box::new(Puzzle5dConfigStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), cancelled: false }), progress))
+        Ok((Box::new(Puzzle5dConfigStorePreparation { last_work: 0, owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), cancelled: false }), progress))
     }
 }
 
@@ -221,6 +228,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzz
         use semio_framework_value::retained_clone::RetainedCloneProgress;
         use semio_framework_value::ValueError;
         use semio_framework_value::ValueRefusalKind;
+        self.last_work = 0;
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -230,6 +238,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzz
         if self.owners.prepared.is_some() {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()));
         }
+        self.last_work = 1;
         let base = self.owners.base.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "Puzzle5d config preparation lost its exact base root"))?;
         let mutation = self.owners.mutation.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "Puzzle5d config preparation lost its mutation owner"))?;
         let inverse = mutation.inverse(base.get())?;
@@ -251,6 +260,9 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzz
         Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()))
     }
 
+    fn last_turn_work(&self) -> u64 {
+        self.last_work
+    }
     fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
         self.checkpoint
     }

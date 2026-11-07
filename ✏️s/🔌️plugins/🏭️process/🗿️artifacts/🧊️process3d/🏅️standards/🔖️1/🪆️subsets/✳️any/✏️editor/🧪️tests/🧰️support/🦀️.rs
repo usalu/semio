@@ -136,7 +136,7 @@ pub fn process3d_app_manifest_for_tests() -> semio_plugin::App {
     semio_plugin::App { definition: create_process3d_app(), examples: Vec::new() }
 }
 
-semio_plugin::history_edit_acceptance_law!("process", Process3dPlayApp, process3d_app_manifest_for_tests, "../..");
+semio_plugin::history_edit_acceptance_law!("process", Process3dPlayApp, process3d_app_manifest_for_tests, "../../..");
 
 /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
 
@@ -275,7 +275,7 @@ pub fn settled_dispatch(app: &mut Process3dApp, command: Process3dCommand) -> (I
 pub fn settled_dispatch_with_utility(app: &mut Process3dApp, command: Process3dCommand, active_utility_id: &str) -> (InvocationResult, semio_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
     let mut view_state = ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     view_state.active_utility_id = Some(active_utility_id.into());
-    let action_meta = ActionMeta { view_state: Some(view_state), ..meta("local") };
+    let action_meta = ActionMeta { view_state: Some(std::sync::Arc::new(view_state)), ..meta("local") };
     let mut result = ::semio_framework_async::poll::resolve_ready(semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("dispatch");
     let receipt = settle(app);
     result.requested_effects.extend(receipt.effects.iter().cloned());

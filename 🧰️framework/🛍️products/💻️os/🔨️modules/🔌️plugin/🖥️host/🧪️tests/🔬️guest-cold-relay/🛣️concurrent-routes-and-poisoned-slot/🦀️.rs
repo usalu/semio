@@ -24,7 +24,7 @@ async fn concurrent_route_rejects_start_failure_cleanup_pending_then_reuses_only
     wait_for_cancel_admission(&pool, &mock).await;
     wait_for_available_instance(&pool, &handle.instance).await;
     mock.script_job_step(actor, JobStep::Done { output: b"clean-reuse".to_vec() }).await;
-    assert_eq!(handle.infer(b"after-cleanup", &semio_framework_job::root_cancel_token()).await.expect("cleanup success restores mounted availability"), b"clean-reuse");
+    assert_eq!(handle.infer(b"after-cleanup", &semio_framework_job::root_cancel_token(), &test_relay_wake_authority()).await.expect("cleanup success restores mounted availability"), b"clean-reuse");
     assert_eq!(mock.cancel_admissions(), 1);
 }
 
@@ -52,7 +52,7 @@ async fn concurrent_route_rejects_step_failure_cleanup_pending_then_quarantine_i
     assert!(first_error.to_string().contains("scripted concurrent step-job failure"));
     wait_for_cancel_admission(&pool, &mock).await;
     wait_for_quarantine(&pool, &handle.instance).await;
-    let third_error = handle.infer(b"after-failed-cleanup", &semio_framework_job::root_cancel_token()).await.expect_err("cancel failure must leave a stable quarantine");
+    let third_error = handle.infer(b"after-failed-cleanup", &semio_framework_job::root_cancel_token(), &test_relay_wake_authority()).await.expect_err("cancel failure must leave a stable quarantine");
     assert!(third_error.to_string().contains("quarantined after cancel-job failure"));
     assert_eq!(mock.start_admissions(), 1);
     assert_eq!(mock.step_admissions(), 1);
@@ -82,7 +82,7 @@ async fn concurrent_route_rejects_retained_start_panic_cleanup_pending_before_re
     wait_for_cancel_admission(&pool, &mock).await;
     wait_for_available_instance(&pool, &handle.instance).await;
     mock.script_job_step(actor, JobStep::Done { output: b"panic-clean-reuse".to_vec() }).await;
-    assert_eq!(handle.infer(b"after-panic-cleanup", &semio_framework_job::root_cancel_token()).await.expect("panic cleanup success restores availability"), b"panic-clean-reuse");
+    assert_eq!(handle.infer(b"after-panic-cleanup", &semio_framework_job::root_cancel_token(), &test_relay_wake_authority()).await.expect("panic cleanup success restores availability"), b"panic-clean-reuse");
     assert_eq!(mock.cancel_admissions(), 1);
 }
 
@@ -98,7 +98,7 @@ async fn poisoned_instance_slot_recovers_without_losing_the_mounted_route() {
         panic!("scripted instance-slot poison");
     }));
     assert!(handle.instance.is_poisoned());
-    assert_eq!(handle.infer(b"request", &semio_framework_job::root_cancel_token()).await.expect("poison recovery must preserve the resident instance"), b"poison-recovered");
+    assert_eq!(handle.infer(b"request", &semio_framework_job::root_cancel_token(), &test_relay_wake_authority()).await.expect("poison recovery must preserve the resident instance"), b"poison-recovered");
     assert!(handle.instance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_available());
 }
 

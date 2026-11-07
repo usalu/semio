@@ -61,7 +61,7 @@ async fn space_config_op_text_round_trips_every_variant() {
     store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetClipboard(ClipboardSetting { node_ids: vec!["a".into()] }));
     store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetCollapsed(CollapsedSetting { node_ids: vec!["a".into()] }));
     store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetPreviewOff(PreviewOffSetting { node_ids: vec!["a".into()] }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetCamera { window_id: "s-workflow".into(), camera: SpaceWindowCamera { x: 1.0, y: 2.0, zoom: 3.0 } });
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetCamera(CameraSetting { window_id: "s-workflow".into(), camera: SpaceWindowCamera { x: 1.0, y: 2.0, zoom: 3.0 } }));
     store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetWorkflowEngagementInput(WorkflowEngagementInputSetting { value: "draw draw".into() }));
     store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetCompiledDagEngagementInput(CompiledDagEngagementInputSetting { value: "".into() }));
     store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetPendingImport(PendingImportSetting { node_id: Some("a".into()), format: Some("dwg".into()) }));
@@ -122,6 +122,27 @@ async fn the_diff_names_only_what_changed() {
     let base = busy_config();
     let same = SpaceConfigMutation::SetSpaceId(SpaceIdSetting { space_id: base.space_id.clone() }).diff(&base);
     assert!(protocol::DiffAlgebra::is_empty(same.diff()), "an unchanged value is an empty diff");
-    let moved = SpaceConfigMutation::SetCamera { window_id: "left".into(), camera: SpaceWindowCamera { x: 0.0, y: 0.0, zoom: 1.0 } }.diff(&base);
+    let moved = SpaceConfigMutation::SetCamera(CameraSetting { window_id: "left".into(), camera: SpaceWindowCamera { x: 0.0, y: 0.0, zoom: 1.0 } }).diff(&base);
     assert_eq!(moved.diff().camera.keys().collect::<Vec<_>>(), vec!["left"]);
+}
+
+#[test]
+fn every_config_mutation_variant_is_received_by_its_original_cursor_like_its_decode_oracle() {
+    let camera = SpaceWindowCamera { x: 1.5, y: -2.5, zoom: 2.0 };
+    let operations = [
+        SpaceConfigMutation::SetActiveNode(ActiveNodeSetting { node_id: Some("a".into()) }),
+        SpaceConfigMutation::SetActiveNode(ActiveNodeSetting { node_id: None }),
+        SpaceConfigMutation::SetFocusedNode(FocusedNodeSetting { node_id: Some("f".into()) }),
+        SpaceConfigMutation::SetClipboard(ClipboardSetting { node_ids: vec!["x".into(), "y".into()] }),
+        SpaceConfigMutation::SetCollapsed(CollapsedSetting { node_ids: Vec::new() }),
+        SpaceConfigMutation::SetPreviewOff(PreviewOffSetting { node_ids: vec!["p".into()] }),
+        SpaceConfigMutation::SetCamera(CameraSetting { window_id: "left".into(), camera }),
+        SpaceConfigMutation::RemoveCamera(CameraRemoval { window_id: "left".into() }),
+        SpaceConfigMutation::SetWorkflowEngagementInput(WorkflowEngagementInputSetting { value: "w".into() }),
+        SpaceConfigMutation::SetCompiledDagEngagementInput(CompiledDagEngagementInputSetting { value: "d".into() }),
+        SpaceConfigMutation::SetPendingImport(PendingImportSetting { node_id: Some("n".into()), format: None }),
+        SpaceConfigMutation::SetSpaceId(SpaceIdSetting { space_id: Some("s".into()) }),
+        SpaceConfigMutation::SetActivePanelTab(ActivePanelTabSetting { tab_id: "t".into() }),
+    ];
+    dsl::original_receiving::check_receiving_round_trip(&operations).unwrap();
 }

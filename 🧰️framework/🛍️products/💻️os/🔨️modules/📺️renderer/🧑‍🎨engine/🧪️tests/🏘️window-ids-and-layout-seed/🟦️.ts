@@ -20,7 +20,7 @@ import { encodeWorldProjectionTemplateId } from "@semio-tech/infinite-world-r3f"
 import { rendererExport } from "../🧰️engine-contract-helpers/🟦️.ts";
 
 describe("per-window element ids", () => {
-  const domIds = (markup: string): string[] => Array.from(markup.matchAll(/\sid="([^"]+)"/g)).map((match) => match[1]!);
+  const domIds = (markup: string): string[] => Array.from(markup.matchAll(/\sid="([^"]+)"/g)).map((match) => match[1]!).filter((id) => !/^_R_[^_]+_$/u.test(id));
   const duplicates = (ids: readonly string[]): string[] => ids.filter((id, index) => ids.indexOf(id) !== index);
   const threePoint = { mode: { kind: "threePoint" as const, fov: 50 }, orientation: { type: "free" as const } };
   const mountUnfoldedPane = (windowElementSegment: string): void => {

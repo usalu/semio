@@ -1,6 +1,6 @@
 //! 🧪️ Neutral event rows quote the actual command box, field copies and string capacities.
 use super::*;
-use semio_framework_plugin::HostEvent;
+use semio_plugin::HostEvent;
 #[test]
 fn host_event_birth_profile_matches_actual_command_and_neutral_bytes(){
  let fixture:semio_framework_value::serde_json::Value=semio_framework_value::serde_json::from_str(include_str!("fixture.json")).unwrap();

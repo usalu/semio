@@ -13,9 +13,9 @@ fn paint2d_selected_layer_marquee_publishes_intrinsic_intent_and_cancel_keeps_co
     paint2d_pointer_move_into(&scene,bounds,50.0,50.0,&mut input).unwrap();drain(&mut input);
     paint2d_pointer_button_into(&scene,bounds,50.0,50.0,false,0,false,false,&mut input).unwrap();
     assert!(drain(&mut input).is_empty());
-    assert!(!semio_framework_os_renderer_wgpu_engine_board::paint2d::advance_paint2d_pixel_selection_into(&scene,"selection-fixture-window",&mut input).unwrap().2);
+    assert!(!semio_renderer_wgpu_engine_board::paint2d::advance_paint2d_pixel_selection_into(&scene,"selection-fixture-window",&mut input).unwrap().2);
     assert!(drain(&mut input).is_empty());
-    let mut actions=Vec::new();for _ in 0..100{if let Some(action)=input.drive_retained_action_step().unwrap(){actions.push(action.descriptor);}if semio_framework_os_renderer_wgpu_engine_board::paint2d::advance_paint2d_pixel_selection_into(&scene,"selection-fixture-window",&mut input).unwrap().2{break;}}
+    let mut actions=Vec::new();for _ in 0..100{if let Some(action)=input.drive_retained_action_step().unwrap(){actions.push(action.descriptor);}if semio_renderer_wgpu_engine_board::paint2d::advance_paint2d_pixel_selection_into(&scene,"selection-fixture-window",&mut input).unwrap().2{break;}}
     assert_eq!(actions.len(),1);assert_eq!(actions[0].action,"selectPixels");
     let args=actions[0].args.as_ref().unwrap().as_object().unwrap();
     let path=args.iter().find(|(key,_)|key=="path").unwrap().1.as_str().unwrap();let points:Vec<[f64;2]>=serde_json::from_str(path).unwrap();assert_eq!(points,vec![[0.0,0.0],[32.0,32.0]]);
@@ -24,7 +24,7 @@ fn paint2d_selected_layer_marquee_publishes_intrinsic_intent_and_cancel_keeps_co
     paint2d_pointer_move_into(&scene,bounds,50.0,50.0,&mut input).unwrap();drain(&mut input);
     paint2d_pointer_button_into(&scene,bounds,50.0,50.0,false,0,false,false,&mut input).unwrap();
     paint2d_pointer_cancel_into(surface_id);
-    assert!(semio_framework_os_renderer_wgpu_engine_board::paint2d::advance_paint2d_pixel_selection_into(&scene,&mut input).unwrap().2);
+    assert!(semio_renderer_wgpu_engine_board::paint2d::advance_paint2d_pixel_selection_into(&scene,&mut input).unwrap().2);
     assert!(drain(&mut input).is_empty());assert!(scene.paint_2d.as_ref().unwrap().pixel_selection_json.is_some());
     drop_engine_surface(surface_id);
 }

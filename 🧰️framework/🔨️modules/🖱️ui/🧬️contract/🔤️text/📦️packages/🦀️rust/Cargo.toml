@@ -18,6 +18,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-ui-contract-budget = { path = "../../../📏️budget/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+semio-framework-value-native-decoding = { path = "../../../../../🌱️value/🛬️decode/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
 serde.workspace = true
 

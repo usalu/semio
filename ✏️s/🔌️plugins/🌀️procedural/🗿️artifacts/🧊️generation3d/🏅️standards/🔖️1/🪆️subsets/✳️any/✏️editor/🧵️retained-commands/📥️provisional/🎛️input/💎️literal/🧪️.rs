@@ -1,4 +1,6 @@
 //! 🧪️ Genuine one-fuel callers compare typed construction with the defining native cold fold.
+use semio_os_flow::neural::ColdRetire as _;
+use semio_framework_value::FromValue as _;
 use super::*;
 use super::super::retained_scratch_testing::ScratchCaller;
 use semio_framework_value::retirement::RetireOwned;
@@ -29,5 +31,5 @@ fn typed_literal_denials_preserve_original_source_and_physical_caller(){
   let(turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||work.advance(&input,denied));assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(turn.work,0);assert!(!turn.result.unwrap());assert_eq!(work.step_progress(),Default::default());
  }
  let mut other=ScratchCaller::new(&policy,1,0);let foreign_refused=other.turn(|cx|{let before=(cx.fuel_remaining(),cx.retained_progress());let refused=work.step(&input,cx).is_err();Ok(refused&&before==(cx.fuel_remaining(),cx.retained_progress()))});other.finish();
- caller.turn(|cx|work.step(&input,cx));let same=WidgetInputValue::Text("original 💠 text".into());let refused=work.next_demands(&same,g.maximum_copy_bytes).is_err();same.retire_cold();close(&mut work,&mut caller);caller.close(input);caller.finish();assert!(foreign_refused&&refused);
+ caller.turn(|cx|work.step(&input,cx));let same=WidgetInputValue::Text("original 💠 text".into());let refused=work.next_demands(&same,g.maximum_copy_bytes).is_err();same.retire_decoded();close(&mut work,&mut caller);caller.close(input);caller.finish();assert!(foreign_refused&&refused);
 }

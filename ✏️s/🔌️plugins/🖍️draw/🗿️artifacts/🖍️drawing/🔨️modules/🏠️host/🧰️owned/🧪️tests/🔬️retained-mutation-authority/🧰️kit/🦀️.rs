@@ -39,7 +39,7 @@ pub(super) fn admit_layer_string_destinations(layer: &mut DrawingLayerNode) {
 pub(super) fn initialize_drawing_mutation_arena_pool_for_test() {
     let operation = semio_framework_job::OperationId(7_900);
     let generation = semio_framework_job::Generation(79);
-    let mut job = DrawingMutationArenaBootstrapJob::new(operation, generation).expect("fixed Drawing arena bootstrap job admission");
+    let mut job = DrawingMutationArenaBootstrapJob::new(None).expect("fixed Drawing arena bootstrap job admission");
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview_sequence = 0;
     for _ in 0..1_000 {
@@ -164,7 +164,7 @@ pub(super) fn close_candidate(authority: &mut DrawingMutationCandidateAuthority,
 /// transiently contended pool (another law holds it for one bounded borrow) is borrowed again.
 pub(super) fn borrowed_candidate(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Result<DrawingMutationCandidateAuthority, &'static str> {
     for _ in 0..1_000_000 {
-        match DrawingMutationCandidateAuthority::try_new(operation, generation) {
+        match DrawingMutationCandidateAuthority::try_new(None) {
             Err(DrawingMutationArenaBorrowError::Contended) => std::thread::yield_now(),
             other => return other.map_err(DrawingMutationArenaBorrowError::as_str),
         }

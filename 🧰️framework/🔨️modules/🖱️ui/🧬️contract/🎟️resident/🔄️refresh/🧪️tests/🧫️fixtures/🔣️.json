@@ -9,7 +9,7 @@
   "documentNodes": 128,
   "nodeRecordBytes": 7128,
   "openBytes": 1906,
-  "fullDocumentBytes": 923346,
+  "fullDocumentBytes": 928546,
   "fullDocumentAdmittedRoots": 60,
   "fullDocumentRefusedRoot": 61,
   "refreshes": 2,
@@ -42,10 +42,10 @@
     }
   ],
   "peakResidentRoots": 6,
-  "peakResidentBytes": 3569612,
+  "peakResidentBytes": 3589692,
   "permitFaults": 0,
   "doubleBufferedPeakRoots": 12,
-  "doubleBufferedPeakBytes": 7139224,
+  "doubleBufferedPeakBytes": 7179384,
   "ceilingSizedRoots": 6,
   "measured": {
     "target": "http://127.0.0.1:6118/?plugin=generation3d",

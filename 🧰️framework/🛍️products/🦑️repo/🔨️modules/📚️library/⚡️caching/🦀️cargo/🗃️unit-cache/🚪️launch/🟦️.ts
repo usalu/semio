@@ -119,7 +119,8 @@ export function startUnitCacheCollectorV1(options:Readonly<{root:string;capacity
   const stamp=join(options.root,"gc.stamp"),log=join(options.root,"gc.log"),env:Record<string,string>={SEMIO_CACHE_BACKGROUND:"1"};
   for(const key of collectorEnvironmentKeys){const value=options.environment[key];if(value!==undefined)env[key]=value;}
   mkdirSync(options.root,{recursive:true});writeFileSync(stamp,String(Date.now()));
-  const fd=openSync(log,"w");
+  try{if(statSync(log).size>UNIT_CACHE_POLICY_V1.gc.eventLogMaximumBytes)renameSync(log,log+".1");}catch{}
+  const fd=openSync(log,"a");
   try{
    const child=spawn(options.runtime??process.execPath,[options.script??UNIT_CACHE_SCRIPT_V1,"--semio-unit-cache","gc","--single-flight",...options.watch?["--watch"]:[],"--root",options.root,"--capacity",String(options.capacityBytes)],{env,detached:true,stdio:["ignore",fd,fd],windowsHide:true});
    child.on("error",error=>{try{appendFileSync(log,"launch failed: "+error.message+"\n");}catch{}});child.unref();

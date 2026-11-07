@@ -26,6 +26,7 @@ testkit=[]
 [dependencies]
 semio-framework-value-retirement={path="../../../../../🌱️value/♻️retirement/📦️packages/🦀️rust"}
 semio-framework-value-intrinsic={path="../../../../../🌱️value/🌳️intrinsic/📦️packages/🦀️rust"}
+semio-framework-value-ordered={path="../../../../../🌱️value/🗂️ordered/📦️packages/🦀️rust"}
 semio-framework-value-clone-source={path="../../../../../🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust"}
 
 [dev-dependencies]

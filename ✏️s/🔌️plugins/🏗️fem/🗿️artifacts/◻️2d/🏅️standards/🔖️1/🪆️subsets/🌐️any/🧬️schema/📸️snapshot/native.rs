@@ -54,6 +54,14 @@ impl NativeDecodeConstructionRecipient for OriginalStepRecipient {
     }
 }
 
+/// 🔖️ Reference birth is explicit authoring: its caller loans unbounded decode work to the one receiving scope it opens.
+struct AuthoringWork;
+impl NativeDecodeWorkRecipient for AuthoringWork {
+    fn admits(&mut self, _: u64, _: u64) -> Result<bool, ValueError> {
+        Ok(true)
+    }
+}
+
 impl Fem2dSnapshot {
     /// 🫴️ Receives an already admitted authoring owner inside the original snapshot wallet and retirement publication frame.
     pub fn receive_authoring(value:&mut Option<Fem2dSnapshotValue>,output:&mut Option<Self>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->RetainedWorkOutcome<(),store::NativeSnapshotFailure>{

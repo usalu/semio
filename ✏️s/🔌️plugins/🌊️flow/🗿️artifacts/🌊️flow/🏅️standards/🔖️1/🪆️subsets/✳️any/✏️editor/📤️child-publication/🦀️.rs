@@ -1,5 +1,6 @@
 //! 📨️ The parent command and genuine child read authorize one exact original native leaf batch.
-use semio_plugin::{ChildEmitPreparation,ChildContentView,AppOperationContext,app::{MemberKeyRef,child_read::{ChildReadCursor,ChildReadStamp,ChildReadSourceCustody,OriginalChildMemberLookup},child_read::command::{OriginalChildEditorCommandCursor,OriginalChildEditorCommandAuthority}}};
+use semio_plugin::plugin_app_close_prelude::ChildEmitPreparation;
+use semio_plugin::{ChildContentView,AppOperationContext,app::{MemberKeyRef,child_read::{ChildReadCursor,ChildReadStamp,ChildReadSourceCustody,OriginalChildMemberLookup},child_read::command::{OriginalChildEditorCommandCursor,OriginalChildEditorCommandAuthority}}};
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetireOwned,retained_clone::{RetainedCloneRef,retained_clone_grant_admits},retirement::controlled::ControlledRetirement};
 use semio_framework_job::{StepContext,OriginalTurnFailure};
 use semio_s_artifact_stdio_semio_flow::{schema::{snapshot::SemioFlowSnapshot,mutations::SemioFlowMutation},editor::child_editor::{SEMIO_FLOW_CHILD_READ,SEMIO_FLOW_CHILD_APPLY_MUTATIONS,semio_flow_mutation_batch_demand,admit_semio_flow_mutation_batch}};
@@ -9,17 +10,18 @@ use reference::FLOW_CONTENT_REFERENCE_LENDER;
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original Flow child publication source changed")}
 fn add(a:RetirementDemand,b:RetirementDemand)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:a.copy_bytes.checked_add(b.copy_bytes).ok_or_else(invalid)?,capacity_bytes:a.capacity_bytes.checked_add(b.capacity_bytes).ok_or_else(invalid)?,release_bytes:a.release_bytes.checked_add(b.release_bytes).ok_or_else(invalid)?,depth:a.depth.max(b.depth)})}
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct Owners{lookup:Option<OriginalChildMemberLookup>,read_cursor:Option<ChildReadCursor>,child:ChildReadSourceCustody<SemioFlowSnapshot>,qualifier:Option<OriginalChildEditorCommandCursor>,authority:Option<OriginalChildEditorCommandAuthority>,preparation:Option<ChildEmitPreparation>}
 /// 📤️ The surrounding job retains its original parent and command sources until this custody is closed.
 type References=((u64,usize,usize,usize),(u64,usize,usize,usize));
-pub(super) struct FlowChildPublicationWork{references:Option<References>,owners:ControlledRetirement<Owners>,stamp:Option<ChildReadStamp>,phase:u8,closing:bool,origin:Option<(u64,u64)>}
+pub struct FlowChildPublicationWork{references:Option<References>,owners:ControlledRetirement<Owners>,stamp:Option<ChildReadStamp>,phase:u8,closing:bool,origin:Option<(u64,u64)>}
 impl FlowChildPublicationWork{
- pub(super) fn new()->Self{Self{references:None,owners:ControlledRetirement::retain(Owners{lookup:None,read_cursor:None,child:ChildReadSourceCustody::new(),qualifier:None,authority:None,preparation:None}),stamp:None,phase:0,closing:false,origin:None}}
- pub(super) fn read_step<C:Sync>(&mut self,parent:RetainedCloneRef<'_,crate::FlowSnapshot>,command:RetainedCloneRef<'_,C>,children:&ChildContentView,operation:&AppOperationContext,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+ pub fn new()->Self{Self{references:None,owners:ControlledRetirement::retain(Owners{lookup:None,read_cursor:None,child:ChildReadSourceCustody::new(),qualifier:None,authority:None,preparation:None}),stamp:None,phase:0,closing:false,origin:None}}
+ pub fn read_step<C:Sync>(&mut self,parent:RetainedCloneRef<'_,crate::FlowSnapshot>,command:RetainedCloneRef<'_,C>,children:&ChildContentView,operation:&AppOperationContext,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   let mut leaves=None;for _ in 0..512{if self.owners.original().ok_or_else(invalid)?.child.ready(){return Ok(true)}let before=(cx.fuel_remaining(),cx.retained_progress());if self.once(parent,command,children,operation,&mut leaves,cx)?.is_some(){return Err(invalid().into())}if cx.should_yield()||cx.is_cancelled()||before==(cx.fuel_remaining(),cx.retained_progress()){break}}Ok(self.owners.original().ok_or_else(invalid)?.child.ready())
  }
- pub(super) fn child_source(&self)->Result<RetainedCloneRef<'_,SemioFlowSnapshot>,ValueError>{self.owners.original().ok_or_else(invalid)?.child.source()}
- pub(super) fn step<C:Sync>(&mut self,parent:RetainedCloneRef<'_,crate::FlowSnapshot>,command:RetainedCloneRef<'_,C>,children:&ChildContentView,operation:&AppOperationContext,leaves:&mut Option<Vec<SemioFlowMutation>>,cx:&mut StepContext<'_>)->Result<Option<ChildEmitPreparation>,OriginalTurnFailure>{
+ pub fn child_source(&self)->Result<RetainedCloneRef<'_,SemioFlowSnapshot>,ValueError>{self.owners.original().ok_or_else(invalid)?.child.source()}
+ pub fn step<C:Sync>(&mut self,parent:RetainedCloneRef<'_,crate::FlowSnapshot>,command:RetainedCloneRef<'_,C>,children:&ChildContentView,operation:&AppOperationContext,leaves:&mut Option<Vec<SemioFlowMutation>>,cx:&mut StepContext<'_>)->Result<Option<ChildEmitPreparation>,OriginalTurnFailure>{
   for _ in 0..512{let before=(cx.fuel_remaining(),cx.retained_progress());if let Some(output)=self.once(parent,command,children,operation,leaves,cx)?{return Ok(Some(output))}if cx.should_yield()||cx.is_cancelled()||before==(cx.fuel_remaining(),cx.retained_progress()){break}}Ok(None)
  }
  fn once<C:Sync>(&mut self,parent:RetainedCloneRef<'_,crate::FlowSnapshot>,command:RetainedCloneRef<'_,C>,children:&ChildContentView,operation:&AppOperationContext,leaves:&mut Option<Vec<SemioFlowMutation>>,cx:&mut StepContext<'_>)->Result<Option<ChildEmitPreparation>,OriginalTurnFailure>{
@@ -52,10 +54,10 @@ impl FlowChildPublicationWork{
   match result{Ok(p)=>cx.consume_retained(merge(p))?,Err(error)=>{let p=merge(error.retained_progress());return Err(OriginalTurnFailure::debit_original(error.with_retained_progress(p),cx))}}Ok(None)
 
  }
- pub(super) fn begin_close(&mut self){self.closing=true}
- pub(super) fn close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{if !self.owners.terminal_is_empty(){self.owners.next_demand(copy)}else{Ok(RetirementDemand{copy_bytes:size_of::<Option<ChildReadStamp>>()+size_of::<Option<(u64,u64)>>()+size_of::<Option<References>>(),depth:1,..Default::default()})}}
- pub(super) fn close_step(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{if !self.closing{return RetainedWorkOutcome{result:Err(invalid()),work:0}}if !self.owners.terminal_is_empty(){let result=self.owners.step(g);return RetainedWorkOutcome{result,work:self.owners.last_turn_work()}}let d=RetirementDemand{copy_bytes:size_of::<Option<ChildReadStamp>>()+size_of::<Option<(u64,u64)>>()+size_of::<Option<References>>(),depth:1,..Default::default()};if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.stamp=None;self.origin=None;self.references=None;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:1}}
- pub(super) fn terminal_is_empty(&self)->bool{self.closing&&self.owners.terminal_is_empty()&&self.stamp.is_none()&&self.origin.is_none()&&self.references.is_none()}
+ pub fn begin_close(&mut self){self.closing=true}
+ pub fn close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{if !self.owners.terminal_is_empty(){self.owners.next_demand(copy)}else{Ok(RetirementDemand{copy_bytes:size_of::<Option<ChildReadStamp>>()+size_of::<Option<(u64,u64)>>()+size_of::<Option<References>>(),depth:1,..Default::default()})}}
+ pub fn close_step(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{if !self.closing{return RetainedWorkOutcome{result:Err(invalid()),work:0}}if !self.owners.terminal_is_empty(){let result=self.owners.step(g);return RetainedWorkOutcome{result,work:self.owners.last_turn_work()}}let d=RetirementDemand{copy_bytes:size_of::<Option<ChildReadStamp>>()+size_of::<Option<(u64,u64)>>()+size_of::<Option<References>>(),depth:1,..Default::default()};if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.stamp=None;self.origin=None;self.references=None;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:1}}
+ pub fn terminal_is_empty(&self)->bool{self.closing&&self.owners.terminal_is_empty()&&self.stamp.is_none()&&self.origin.is_none()&&self.references.is_none()}
 }
 impl Drop for FlowChildPublicationWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original Flow child publication requires terminal original source and native leaf custody")}}
 
@@ -66,4 +68,4 @@ mod node;
 
 #[path="🍃️leaves/🦀️.rs"]
 mod leaves;
-pub(crate) use leaves::{FlowLeafWork,FlowLeafMode};
+pub use leaves::{FlowLeafWork,FlowLeafMode};

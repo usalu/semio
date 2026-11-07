@@ -3,7 +3,7 @@
 use crate::editor::note::modes::edit::windows::composite::NOTE_PLAY_WINDOW_COMPOSITE;
 use crate::NoteCamera;
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, Default, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, Default, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -93,8 +93,8 @@ macro_rules! json_store {
             fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> { semio_framework_value::ToValue::to_value(self).encode_pack_with(options) }
             fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> { let value = semio_framework_value::DslValue::decode_pack_with(bytes, options)?; semio_framework_value::FromValue::from_value(value).map_err(|error| store::PackError::from(error)) }
         }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $state {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $state {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -141,8 +141,8 @@ impl pack::snapshot::ArtifactPack for NoteCompositeWindowConfig {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for NoteCompositeWindowConfig {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for NoteCompositeWindowConfig {
+    fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
 
 }
@@ -183,7 +183,7 @@ fn note_composite_window_transient_transfer(mutation: NoteCompositeWindowTransie
     }
 }
 
-impl semio_framework_plugin::app::WindowConfigApplyMutation<NoteCompositeWindowConfig> for NoteCompositeWindowConfigMutation {
+impl semio_plugin::app::WindowConfigApplyMutation<NoteCompositeWindowConfig> for NoteCompositeWindowConfigMutation {
     fn exchange(self, post: &mut NoteCompositeWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
         Ok(match self {
             Self::SetCamera(camera) => Self::SetCamera(std::mem::replace(&mut post.camera, camera)),
@@ -192,7 +192,7 @@ impl semio_framework_plugin::app::WindowConfigApplyMutation<NoteCompositeWindowC
 }
 
 pub struct NoteCompositeWindowConfigOwner;
-impl semio_framework_plugin::WindowConfigOwner for NoteCompositeWindowConfigOwner {
+impl semio_plugin::WindowConfigOwner for NoteCompositeWindowConfigOwner {
     fn initial_state_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:2*std::mem::size_of::<Self::State>(),depth:1,..Default::default()})}
     fn initial_state(grant:semio_framework_value::RetainedCloneGrant)->Result<(Self::State,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>{let d=Self::initial_state_demands()?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original window config birth is not funded"))}Ok((Self::State::default(),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
     fn initial_state_pack_source(state:&Self::State)->Result<(&dyn semio_framework_dsl_record::native_encoding::FieldProjectionSource,semio_framework_dsl_record::BorrowedRecordSpec),semio_framework_value::ValueError>{Ok((state,<Self::State as semio_framework_dsl_record::BorrowedDslRecord>::RECORD))}
@@ -201,22 +201,22 @@ impl semio_framework_plugin::WindowConfigOwner for NoteCompositeWindowConfigOwne
     const MAXIMUM_PUBLICATION_BYTES: usize = 65_536;
     type State = NoteCompositeWindowConfig;
     type Mutation = NoteCompositeWindowConfigMutation;
-    type Edit = semio_framework_plugin::app::WindowConfigApplyEdit<NoteCompositeWindowConfig, NoteCompositeWindowConfigMutation>;
+    type Edit = semio_plugin::app::WindowConfigApplyEdit<NoteCompositeWindowConfig, NoteCompositeWindowConfigMutation>;
     const MAXIMUM_PREPARATION_DEPTH: usize = 64;
-    fn build_retained_edit() -> std::sync::Arc<Self::Edit> { std::sync::Arc::new(semio_framework_plugin::app::WindowConfigApplyEdit::new()) }
-    fn preparation_source_birth() -> semio_framework_value::retained_clone::RetainedCloneBirthDemand { semio_framework_plugin::bounded_window_config_preparation_source_birth::<Self>() }
-    fn build_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_store_owners::<Self>(grant) }
-    fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_preparation_factory::<Self>() }
-    fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_framework_plugin::bounded_window_config_store_disposer::<Self>() }
+    fn build_retained_edit() -> std::sync::Arc<Self::Edit> { std::sync::Arc::new(semio_plugin::app::WindowConfigApplyEdit::new()) }
+    fn preparation_source_birth() -> semio_framework_value::retained_clone::RetainedCloneBirthDemand { semio_plugin::bounded_window_config_preparation_source_birth::<Self>() }
+    fn build_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State, Self::Mutation>> { semio_plugin::bounded_window_config_store_owners::<Self>(grant) }
+    fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_plugin::bounded_window_config_preparation_factory::<Self>() }
+    fn build_store_disposer() -> Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_plugin::bounded_window_config_store_disposer::<Self>() }
 }
 
 pub struct NoteCompositeWindowTransientOwner;
-impl semio_framework_plugin::WindowTransientOwner for NoteCompositeWindowTransientOwner {
+impl semio_plugin::WindowTransientOwner for NoteCompositeWindowTransientOwner {
     const WINDOW_KIND_ID: &'static str = NOTE_PLAY_WINDOW_COMPOSITE;
     type State = NoteCompositeWindowTransient;
     type Mutation = NoteCompositeWindowTransientMutation;
-    fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_framework_plugin::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
-    fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
+    fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_plugin::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
+    fn build_owners() -> semio_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
         let state = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::State>::default());
         let mutation = std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Self::Mutation>::default());
         let preparation = std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(
@@ -225,34 +225,34 @@ impl semio_framework_plugin::WindowTransientOwner for NoteCompositeWindowTransie
             state.clone(),
             mutation.clone(),
         ));
-        semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
+        semio_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
     }
 }
 
-pub fn register_config(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), semio_framework_plugin::Fault> { registry.register::<NoteCompositeWindowConfigOwner>() }
-pub fn register_transient(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), semio_framework_plugin::Fault> { registry.register::<NoteCompositeWindowTransientOwner>() }
+pub fn register_config(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), semio_plugin::Fault> { registry.register::<NoteCompositeWindowConfigOwner>() }
+pub fn register_transient(registry: &mut semio_plugin::WindowTransientOwnerRegistry) -> Result<(), semio_plugin::Fault> { registry.register::<NoteCompositeWindowTransientOwner>() }
 
-pub fn config_from_view(view: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>) -> NoteCompositeWindowConfig {
+pub fn config_from_view(view: &semio_plugin::ConfigView<'_, semio_plugin::NoConfig>) -> NoteCompositeWindowConfig {
     view.window::<NoteCompositeWindowConfigOwner>().cloned().unwrap_or_default()
 }
-pub fn config_from_snapshot(snapshot: Option<&semio_framework_plugin::WindowConfigSnapshot>) -> NoteCompositeWindowConfig {
+pub fn config_from_snapshot(snapshot: Option<&semio_plugin::WindowConfigSnapshot>) -> NoteCompositeWindowConfig {
     snapshot.and_then(|snapshot| snapshot.get::<NoteCompositeWindowConfigOwner>()).cloned().unwrap_or_default()
 }
-pub fn transient_from_view(view: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>) -> NoteCompositeWindowTransient {
+pub fn transient_from_view(view: &semio_plugin::TransientView<'_, semio_plugin::NoTransient>) -> NoteCompositeWindowTransient {
     view.window::<NoteCompositeWindowTransientOwner>().cloned().unwrap_or_default()
 }
-pub fn transient_from_snapshot(snapshot: Option<&semio_framework_plugin::WindowTransientSnapshot>) -> NoteCompositeWindowTransient {
+pub fn transient_from_snapshot(snapshot: Option<&semio_plugin::WindowTransientSnapshot>) -> NoteCompositeWindowTransient {
     snapshot.and_then(|snapshot| snapshot.get::<NoteCompositeWindowTransientOwner>()).cloned().unwrap_or_default()
 }
-pub fn addressed_config(view: &semio_framework_plugin::ViewModel, config: NoteCompositeWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
-    let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("note-composite-window-required"))?;
+pub fn addressed_config(view: &semio_plugin::ViewModel, config: NoteCompositeWindowConfig) -> Result<semio_plugin::WindowConfigMutation, semio_plugin::Fault> {
+    let id = view.window_id.as_deref().ok_or_else(|| semio_plugin::Fault::from("note-composite-window-required"))?;
     let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str());
-    if kind != Some(NOTE_PLAY_WINDOW_COMPOSITE) { return Err(semio_framework_plugin::Fault::from("note-composite-window-kind-required")); }
-    Ok(semio_framework_plugin::WindowConfigMutation::of::<NoteCompositeWindowConfigOwner>(id, NoteCompositeWindowConfigMutation::SetCamera(config.camera)))
+    if kind != Some(NOTE_PLAY_WINDOW_COMPOSITE) { return Err(semio_plugin::Fault::from("note-composite-window-kind-required")); }
+    Ok(semio_plugin::WindowConfigMutation::of::<NoteCompositeWindowConfigOwner>(id, NoteCompositeWindowConfigMutation::SetCamera(config.camera)))
 }
-pub fn addressed_transient(snapshot: &semio_framework_plugin::WindowTransientSnapshot, transient: NoteCompositeWindowTransient) -> Result<semio_framework_plugin::WindowTransientMutation, semio_framework_plugin::Fault> {
-    if snapshot.window_kind_id() != NOTE_PLAY_WINDOW_COMPOSITE { return Err(semio_framework_plugin::Fault::from("note-composite-window-kind-required")); }
-    Ok(semio_framework_plugin::WindowTransientMutation::of::<NoteCompositeWindowTransientOwner>(snapshot.window_id(), NoteCompositeWindowTransientMutation::Snapshot { transient }))
+pub fn addressed_transient(snapshot: &semio_plugin::WindowTransientSnapshot, transient: NoteCompositeWindowTransient) -> Result<semio_plugin::WindowTransientMutation, semio_plugin::Fault> {
+    if snapshot.window_kind_id() != NOTE_PLAY_WINDOW_COMPOSITE { return Err(semio_plugin::Fault::from("note-composite-window-kind-required")); }
+    Ok(semio_plugin::WindowTransientMutation::of::<NoteCompositeWindowTransientOwner>(snapshot.window_id(), NoteCompositeWindowTransientMutation::Snapshot { transient }))
 }
 
 #[cfg(test)]

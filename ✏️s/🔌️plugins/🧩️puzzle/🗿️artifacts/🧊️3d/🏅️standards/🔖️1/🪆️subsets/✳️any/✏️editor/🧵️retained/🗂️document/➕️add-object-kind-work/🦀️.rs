@@ -157,6 +157,7 @@ impl<A: Puzzle3dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
         let original: Result<_, Fault> = (|| {
         let semio_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let catalogs = snapshot.typed().meta.kind_catalogs.as_ref();
+        eprintln!("[DEBUG] aggregator-gate W step {:?} kind_cursor={} vortex_cursor={}",std::mem::discriminant(&self.stage),self.kind_cursor,self.vortex_cursor);
         match self.stage {
             Puzzle3dAddObjectKindStage::Decode => {
                 let payload = Self::decode(command);
@@ -262,12 +263,16 @@ impl<A: Puzzle3dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
     }
 
     fn begin_close(&mut self) {
+        eprintln!("[DEBUG] aggregator-gate K1 begin_close from {:?}",std::mem::discriminant(&self.stage));
         self.stage = Puzzle3dAddObjectKindStage::Closing;
         self.close_owners.stage(Puzzle3dAddObjectKindWorkOwners { catalog_mutation: std::mem::take(&mut self.catalog_mutation), mutation: std::mem::take(&mut self.mutation), vortices: std::mem::take(&mut self.vortices), mesh_url: std::mem::take(&mut self.mesh_url), object_id: std::mem::take(&mut self.object_id), payload: std::mem::take(&mut self.payload) });
     }
 
-    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> { semio_framework_job::close_original_nested_step(cx, |cx, _grant| {
-        self.close_owners.close_step(cx)
+    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> { semio_framework_job::close_original_nested_step(cx, |cx, grant| {
+        {static N:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);let n=N.fetch_add(1,std::sync::atomic::Ordering::Relaxed);if n<10||n%50_000==0{eprintln!("[DEBUG] aggregator-gate K3 n={} grant={:?} demand={:?} owners_empty={}",n,grant,self.close_owners.demands(grant.maximum_copy_bytes).map_err(|e|format!("{e:?}")),self.close_owners.is_empty());}}
+        let step = self.close_owners.close_step(cx);
+        {static N:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);let n=N.fetch_add(1,std::sync::atomic::Ordering::Relaxed);if n<10||n%50_000==0{eprintln!("[DEBUG] aggregator-gate K4 n={} step_ok={} owners_empty={}",n,step.is_ok(),self.close_owners.is_empty());}}
+        step
     }) }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
@@ -287,10 +292,14 @@ impl<A: Puzzle3dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.stage == Puzzle3dAddObjectKindStage::Closing && self.close_owners.is_empty()
+        let empty = self.stage == Puzzle3dAddObjectKindStage::Closing && self.close_owners.is_empty();
+        {static N:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);let n=N.fetch_add(1,std::sync::atomic::Ordering::Relaxed);if n<10||n%50_000==0{eprintln!("[DEBUG] aggregator-gate K2 n={} stage={:?} owners_empty={} -> {}",n,std::mem::discriminant(&self.stage),self.close_owners.is_empty(),empty);}}
+        empty
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
         Some(size_of::<Self>())
     }
 }
+
+semio_plugin::retained_command::terminal_frame_bound!(Puzzle3dAddObjectKindWork);

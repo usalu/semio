@@ -107,7 +107,7 @@ impl GuestRelayWakeDriver{
   let account=&mut ledger.accounts[descriptor.purpose.index()];let observed=account.observed.add(GuestUsage::actual(progress,work))?;account.observed=observed;let actual=GuestSettlement{descriptor,input,progress,work,producer:hold.producer};ledger.last=Some(actual);ledger.hold=None;Ok(GuestRelayGuestSettlement{actual})
  }
  /// 🏁️ A forfeited logical hold requires paid retirement of its actual generation-qualified producer and every child Source.
- pub(super) fn forfeit_guest_subloan_step(&self)->Result<bool,GuestRelayAdmissionFailure>{
+ pub(crate) fn forfeit_guest_subloan_step(&self)->Result<bool,GuestRelayAdmissionFailure>{
   let hold={let original=self.original.try_lock().map_err(|_|invalid("guest forfeit issuer is borrowed"))?;let Some(operation)=original.operation.as_ref()else{return Ok(true)};let Some(hold)=operation.guest.hold else{return Ok(true)};if original.root.native_sources_pending(){return Ok(false)}hold};
   let mut witnessed=false;if !self.dispatch_cleanup_admission_step(false,|_,cx|{let result=(||{if let Some(witness)=cx.original_native_retired_witness(hold.producer)?{if !witness.proves(hold.producer,cx){return Err(invalid("guest forfeit received another producer's closure witness").into())}witnessed=true;}Ok(())})();GuestRelayAdmissionCall{result,execution:None}})?||!witnessed{return Ok(false)}
   let mut original=self.original.try_lock().map_err(|_|invalid("guest forfeit issuer is borrowed"))?;let ledger=&mut original.operation.as_mut().ok_or_else(||invalid("guest forfeit lost its original operation"))?.guest;

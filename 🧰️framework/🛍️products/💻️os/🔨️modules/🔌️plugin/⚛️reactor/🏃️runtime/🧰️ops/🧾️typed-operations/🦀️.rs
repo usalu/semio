@@ -246,6 +246,43 @@ fn pending_typed_operation_instance<PA: PluginApp>(runtime: &PluginRuntime<PA>, 
     }
     Ok((None, TypedOperationScan { runnable: false, contended }))
 }
+/// ⏱️ Drives every armed per-instance pending-effects owner with this turn's own `cx`, after command and response intake and before dependent render or publication. A `Some` answer lowers the owner and publishes its effects; `None` keeps it armed and reports runnable work. A busy instance is contention, never runnable work, so the documented typed-operation contention rule stays intact.
+pub fn plugin_drive_pending_effects<PA: PluginApp>(runtime: &PluginRuntime<PA>, effects: &mut Vec<semio_framework::kernel::Effect>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+    let armed: Vec<std::sync::Arc<semio_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell<PA>>> = {
+        let instances = runtime.instances.try_borrow().map_err(|_| plugin_internal_fault("runtime instance authority is busy"))?;
+        let mut armed = Vec::new();
+        let mut cursor = 0;
+        while let Some((index, id, cell)) = instances.next_entry_from(cursor) {
+            if index < cursor { break }
+            cursor = index + 1;
+            if !cell.pending_effects.is_armed() { continue }
+            if runtime.guest_lifetimes.try_borrow().map_err(|_| plugin_internal_fault("lifecycle authority busy"))?.get(id).is_some_and(|slot| !slot.cell.is_live()) {
+                cell.pending_effects.close();
+                continue;
+            }
+            armed.push(cell.clone());
+            if cursor >= PLUGIN_RUNTIME_INSTANCE_SLOTS { break }
+        }
+        armed
+    };
+    let mut runnable = false;
+    for cell in armed {
+        let mut active = match cell.instance.try_lock() {
+            Ok(active) => active,
+            Err(std::sync::TryLockError::WouldBlock) => continue,
+            Err(std::sync::TryLockError::Poisoned(_)) => return Err(plugin_internal_fault(format!("runtime operation authority is poisoned for instance {}", cell.id)).into()),
+        };
+        let view = active.surface_contexts.view().cloned();
+        match ::semio_framework_async::poll::resolve_ready(active.app.pending_effects(view.as_ref(), cx))? {
+            Some(polled) => {
+                cell.pending_effects.publish();
+                effects.extend(polled);
+            }
+            None => runnable = true,
+        }
+    }
+    Ok(runnable)
+}
 /// 📮️ Publishes admitted operations without requiring another user command — as many units of ONE
 /// instance as [`TypedOperationGrant`] allows, so a staged work costs the host one round trip per
 /// acknowledgeable result page instead of one per unit. Units of a SECOND instance are left to the
@@ -462,9 +499,7 @@ pub async fn plugin_complete_reserved_spawned_job<PA: PluginApp>(runtime: &Plugi
         Err(fault) => Err(fault.into()),
     }
 }
-/// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): dispatches ONE actual `UiIntent` of `instance_id` against the app's live `dyn PluginApp` via `PluginApp::handle_intent_frame` -- the only intent dispatch path, which resolves a typed `Command` through `ArtifactApp::command_from_intent` and routes it through the SAME internal `dispatch_typed_command_inner` every other command path uses (kind discipline, command log, undo grouping, `AsyncTask` spawning all apply automatically).
-/// The retained `OriginalIntentActionSource` owns the intent arguments, fault and selected-surface metadata, so a turn that yields resumes the same dispatch on the next poll; the caller revision-guards the intent (`⚛️reactor::poll`'s `PatchTracker::revision` + `ui_runtime::is_stale_intent`) and this function never re-checks staleness.
-/// Frames the result like `plugin_resume_task` (`AppFrame::Emit`, `in_reply_to: 0`): an intent is guest-applied, so the reply is the next `UiPatch` revision bump the caller's own `dirty_render` pass produces this same turn.
+/// 🎯️ Dispatches ONE `UiIntent` of `instance_id` through `PluginApp::handle_intent_frame`, the only intent path: it resolves a typed `Command` and routes it through the shared `dispatch_typed_command_inner`. The retained `OriginalIntentActionSource` lets a yielding turn resume next poll; the caller revision-guards the intent. The reply is the next `UiPatch` revision bump of the caller's own `dirty_render` pass.
 pub async fn plugin_dispatch_intent<PA:PluginApp>(runtime:&PluginRuntime<PA>,instance_id:u32,intent:&mut ui_contract::UiIntent,source:&mut OriginalIntentActionSource,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<PluginExchangeOutput>,semio_framework_job::OriginalTurnFailure>{
     if !source.advance(runtime,intent,cx).await?{return Ok(None)}
     let dispatched=with_instances_turn_mut(runtime,|list|{let mut instance=find_instance(list,instance_id)?;let(args,fault,meta)=source.command_inputs()?;::semio_framework_async::poll::resolve_ready(instance.app.handle_intent_frame(intent,args,fault,meta,identity,cx))}).await?;

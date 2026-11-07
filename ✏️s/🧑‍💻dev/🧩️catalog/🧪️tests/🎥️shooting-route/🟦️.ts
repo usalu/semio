@@ -38,5 +38,4 @@ export function testShootingRouteV1(workspace:string):void{
  const configVisit=(node:ts.Node):void=>{if(ts.isCallExpression(node))configCalls.push(node);ts.forEachChild(node,configVisit);};configVisit(configAst);
  assert.ok(configCalls.some(call=>ts.isIdentifier(call.expression)&&call.expression.text==="specificOsDevBuildInventoryV1"),"Specific builder selects its actual installed inventory");
  for(const source of [entryText,config])assert.deepEqual(ts.transpileModule(source,{reportDiagnostics:true,compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).diagnostics?.filter(row=>row.category===ts.DiagnosticCategory.Error),[]);
- console.log("[DEBUG] shooting authored route, TOML oracle, contribution schema and TypeScript syntax checks passed");
 }

@@ -230,6 +230,9 @@ pub fn evaluate_generation_preview(host_snapshot: &FlowHostSnapshot, values: &se
     let evaluated = host.evaluate().unwrap_or_default();
     match host.retire_cold() {
         Ok(()) => evaluated,
-        Err(error) => format!("{{\"error\":{:?}}}", error.to_string()),
+        Err(refusal) => match refusal.resolve() {
+            Ok(()) => evaluated,
+            Err(error) => format!("{{\"error\":{:?}}}", error.into_message()),
+        },
     }
 }

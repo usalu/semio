@@ -106,7 +106,7 @@ fn install_slow_envelope_decode(
     let generation = semio_framework_job::Generation(app.stores.store.generation_now());
     let bundle = ComposedParentApp::<true>::build_envelope_decode_owner_bundle().expect("composed parent envelope decode bundle");
     let completion = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeCompletion::new();
-    let inner = bundle.begin_fresh_decoder(operation, generation, std::sync::Arc::clone(&app.ingest.envelope_completed_records), std::sync::Arc::clone(&completion));
+    let inner = bundle.begin_fresh_decoder(Some(semio_plugin_document_media::envelope_decode_replacement(operation, generation)), std::sync::Arc::clone(&app.ingest.envelope_completed_records), std::sync::Arc::clone(&completion));
     app.ingest.admit_artifact_envelope_decode_owner(operation, generation, envelope_law_pages(), Box::new(SlowFreshEnvelopeFieldDecoder::new(budget, steps, inner)), completion, cx)
         .unwrap_or_else(|_| panic!("exact envelope decode owner admission"))
 }

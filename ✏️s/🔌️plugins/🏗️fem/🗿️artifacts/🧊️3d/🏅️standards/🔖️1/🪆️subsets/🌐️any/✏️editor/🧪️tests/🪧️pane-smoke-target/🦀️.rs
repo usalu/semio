@@ -1,7 +1,11 @@
 //! 🪧️ Statik pane smoke target: the mounted fem3d editor app on its own, so the pane law compiles without the stale integration targets.
+#![recursion_limit = "256"]
 
 extern crate semio_os_kernel as store;
 extern crate semio_os_kernel as vcs;
+
+#[global_allocator]
+static HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 pub mod context {
     use semio_plugin::artifact_app_laws::{new_app_with_registry, OriginalFixtureScope};

@@ -16,10 +16,29 @@ fn retained_snapshot(machine_count: usize) -> Process3dSnapshot {
 }
 
 fn retained_operation() -> AppOperationContext {
-    AppOperationContext { app_instance_id: 1, parent_document_id: "process3d-retained-test".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "authoring-seed-test".into() }
+    AppOperationContext { app_instance_id: 1, parent_document_id: "process3d-retained-test".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], retained: semio_plugin::artifact_app_laws::OriginalWorkFixture::stock(), authoring_seed: "authoring-seed-test".into() }
+}
+
+type ResumableStep = Result<ArtifactCommandWorkStep<EditorApp<Process3dPlayApp>>, semio_framework_job::OriginalTurnFailure>;
+
+fn step_work(
+    caller: &mut semio_plugin::artifact_app_laws::OriginalWorkFixture,
+    work: &mut Process3dResumableCommandWork,
+    command: &Process3dCommand,
+    snapshot: &Process3dSnapshot,
+    config: &Process3dConfig,
+    history: &HistoryView,
+    interaction: &protocol::InteractionState,
+    hover: &semio_plugin::app::InteractionHoverState,
+    operation: &AppOperationContext,
+) -> ResumableStep {
+    caller.work_turn(semio_plugin::artifact_app_laws::OriginalWorkFixture::stock(), 8, |cx| {
+        work.step(&semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, snapshot_read: semio_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(operation), command, snapshot, config, history, interaction, hover, context: None, operation }, cx)
+    })
 }
 
 fn drive_resumable_work(
+    caller: &mut semio_plugin::artifact_app_laws::OriginalWorkFixture,
     work: &mut Process3dResumableCommandWork,
     command: &Process3dCommand,
     snapshot: &Process3dSnapshot,
@@ -31,8 +50,8 @@ fn drive_resumable_work(
     let operation = retained_operation();
     let mut progress = 0;
     loop {
-        match work.step(&semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command, snapshot, config, history, interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default())).expect("retained work step") {
-            ArtifactCommandWorkStep::Replay { .. } | ArtifactCommandWorkStep::Progress { .. } => progress += 1,
+        match step_work(caller, work, command, snapshot, config, history, interaction, &hover, &operation).expect("retained work step") {
+            ArtifactCommandWorkStep::Replay { .. } | ArtifactCommandWorkStep::Progress { .. } | ArtifactCommandWorkStep::Pending { .. } => progress += 1,
             ArtifactCommandWorkStep::Complete(emit) => return (progress, emit),
             ArtifactCommandWorkStep::CompleteWithEphemeral { emit, .. } => return (progress, emit),
             ArtifactCommandWorkStep::CompleteDownload { .. } => panic!("a process3d document command never completes as a download"),
@@ -152,35 +171,38 @@ async fn retained_resumable_progress_checkpoint_identity_replay_and_close_are_ex
     let history = HistoryView::empty();
     let hover = semio_plugin::app::InteractionHoverState::default();
     let operation = retained_operation();
+    let mut caller = semio_plugin::artifact_app_laws::OriginalWorkFixture::new();
     let extent = process3d_resumable_extent(&command, &snapshot, &config, &interaction).expect("extent");
     let mut uninterrupted = Process3dResumableCommandWork::new("setContributions", extent);
     for _ in 0..11 {
         assert!(matches!(
-            uninterrupted
-                .step(&semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default()))
+            step_work(&mut caller, &mut uninterrupted, &command, &snapshot, &config, &history, &interaction, &hover, &operation)
                 .expect("checkpoint prefix"),
             ArtifactCommandWorkStep::Progress { .. }
         ));
     }
     let mut checkpoint = [0u8; 40];
-    assert_eq!(uninterrupted.checkpoint(&mut checkpoint, &mut semio_plugin::artifact_app_laws::fixture_identity()).expect("checkpoint"), checkpoint.len());
+    for (index, byte) in checkpoint.iter_mut().enumerate() {
+        *byte = uninterrupted.checkpoint_byte(index).expect("checkpoint byte");
+    }
+    assert!(uninterrupted.checkpoint_byte(checkpoint.len()).is_none());
     let mut wrong_tool = Process3dResumableCommandWork::new("engagementInput", extent);
     assert!(wrong_tool.restore(&checkpoint).is_err(), "a config command must not accept another tool's checkpoint");
     let mut replayed = Process3dResumableCommandWork::new("setContributions", extent);
     replayed.restore(&checkpoint).expect("restore");
     assert_eq!((replayed.cursor, replayed.digest), (uninterrupted.cursor, uninterrupted.digest));
-    let (uninterrupted_progress, uninterrupted_emit) = drive_resumable_work(&mut uninterrupted, &command, &snapshot, &config, &interaction, &history);
-    let (replayed_progress, replayed_emit) = drive_resumable_work(&mut replayed, &command, &snapshot, &config, &interaction, &history);
+    let (uninterrupted_progress, uninterrupted_emit) = drive_resumable_work(&mut caller, &mut uninterrupted, &command, &snapshot, &config, &interaction, &history);
+    let (replayed_progress, replayed_emit) = drive_resumable_work(&mut caller, &mut replayed, &command, &snapshot, &config, &interaction, &history);
     assert_eq!(uninterrupted_progress, extent - 11);
     assert_eq!(replayed_progress, uninterrupted_progress);
     assert!(uninterrupted_emit.artifact_mutations.is_empty() && uninterrupted_emit.effects.is_empty());
     assert!(replayed_emit.artifact_mutations.is_empty() && replayed_emit.effects.is_empty());
     assert_eq!(uninterrupted_emit.config_mutations, vec![Process3dConfigMutation::SetContributions(Process3dConfigSetContributions{ json: "x".repeat(4_096) })]);
     assert_eq!(replayed_emit.config_mutations, uninterrupted_emit.config_mutations);
-    let no_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 0 };
-    assert_eq!(semio_framework_job::close_with_self_funded_context(no_grant, |cx| replayed.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Blocked);
+    let grant = semio_plugin::artifact_app_laws::OriginalWorkFixture::stock();
+    assert_eq!(caller.close(&mut replayed, grant).expect("original fixture close turn"), InteractiveJobCloseStep::Blocked);
     replayed.begin_close();
-    assert_eq!(semio_framework_job::close_with_self_funded_context(no_grant, |cx| replayed.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Complete { progress: Default::default() });
+    assert!(matches!(caller.close(&mut replayed, grant).expect("original fixture close turn"), InteractiveJobCloseStep::Complete { .. }));
     assert!(replayed.terminal_is_empty());
 }
 
@@ -192,6 +214,7 @@ async fn retained_bounded_and_resumable_maximum_steps_stay_below_eight_milliseco
     let interaction = protocol::InteractionState::default();
     let hover = semio_plugin::app::InteractionHoverState::default();
     let operation = retained_operation();
+    let mut caller = semio_plugin::artifact_app_laws::OriginalWorkFixture::new();
     let bounded = [
         Process3dCommand::EngagementAbort(engagement_abort::EngagementAbort {}),
         Process3dCommand::SetCamera(set_camera::SetCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 }),
@@ -222,8 +245,7 @@ async fn retained_bounded_and_resumable_maximum_steps_stay_below_eight_milliseco
         let mut work = Process3dResumableCommandWork::new(command.command_id(), extent);
         loop {
             let started = std::time::Instant::now();
-            let step = work
-                .step(&semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &empty, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default()))
+            let step = step_work(&mut caller, &mut work, &command, &empty, &config, &history, &interaction, &hover, &operation)
                 .expect("maximum work step");
             assert!(started.elapsed().as_micros() < 8_000, "resumable {} exceeded the interactive step ceiling", command.command_id());
             if matches!(step, ArtifactCommandWorkStep::Complete(_) | ArtifactCommandWorkStep::CompleteWithEphemeral { .. }) {
@@ -356,7 +378,7 @@ pub(super) fn every_command() -> Vec<Process3dCommand> {
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
     artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Process3dPlayApp>>(process3d_app_manifest_for_tests).await;
-    assert!(Process3dPlayApp::command_from_action("nonsense", None, None).is_err());
+    assert!(Process3dPlayApp::command_from_action("nonsense", &mut None, &mut None).is_err());
 }
 
 /// 🧾️ What the lane RETAINS is the distilled roster, never the host's whole contribution pack: an
@@ -372,7 +394,7 @@ async fn command_from_action_covers_every_declared_action_and_rejects_unknown_on
 #[semio_framework_async_macros::async_test]
 async fn interaction_actions_decode_into_typed_commands() {
     assert_eq!(
-        Process3dPlayApp::command_from_action("setActiveExample", Some((DslValue::from(&serde_json::json!({ "exampleId": PROCESS3D_EXAMPLE_PLATE }))).clone()), None).expect("example bridge"),
+        Process3dPlayApp::command_from_action("setActiveExample", &mut Some((DslValue::from(&serde_json::json!({ "exampleId": PROCESS3D_EXAMPLE_PLATE }))).clone()), &mut None).expect("example bridge"),
         Process3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: PROCESS3D_EXAMPLE_PLATE.into() })
     );
 }

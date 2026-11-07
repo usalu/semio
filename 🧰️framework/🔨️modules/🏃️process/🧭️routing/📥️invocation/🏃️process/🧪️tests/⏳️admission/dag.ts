@@ -14,7 +14,7 @@ test("shared-parent resource DAG checks each reachable restriction within a line
    };await visit(root,depth);
   });
  }
- console.log("[DEBUG] public control DAG real-clock counts "+JSON.stringify(measured));for(const row of measured)expect(row.clockReads).toBeLessThanOrEqual(row.maximum);
+ for(const row of measured)expect(row.clockReads).toBeLessThanOrEqual(row.maximum);
 });
 
 test("a followed deadline remains the earliest maximum without renewal",async()=>{

@@ -135,7 +135,8 @@ fn paint_timeline_scene(scene: &UiComponentSceneNode, bounds: Rect, atlas: &mut 
 fn shared_author_fixture_preserves_authored_identity_order_overlap_and_initials() {
     let fixture = author_fixture();
     let theme = Theme::default();
-    let avatar_size = theme.control_height_small;
+    let avatar_size = theme.tree_row_height;
+    assert!((avatar_size - theme.control_height_small * 1.5).abs() < 0.001, "the avatar edge is the shared --size-workbench token: 1.5 x --size-small");
     let avatar_overlap = theme.root_rem_pixels * 0.5;
     assert_eq!(fixture["avatarSize"].as_f64(), Some(avatar_size as f64));
     assert_eq!(fixture["overlap"].as_f64(), Some(avatar_overlap as f64));

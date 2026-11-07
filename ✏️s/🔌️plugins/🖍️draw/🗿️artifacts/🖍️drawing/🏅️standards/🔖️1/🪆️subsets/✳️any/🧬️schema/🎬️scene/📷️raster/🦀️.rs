@@ -30,7 +30,6 @@ use semio_s_artifact_draw_drawing_geometry::raster::{PathRasterJob, PathRasterIn
 use semio_framework_pixels::{editing::{validate_extent,validate_image},compositing::{CompositeJob,CompositeRetirement,CompositeLayer,CompositeContent,CompositeBlend}};
 use semio_framework_pixels::retirement::RasterLease;
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor};
-use crate::preparation::DocumentSceneError;
 pub const IDENTITY:[f64;6]=[1.0,0.0,0.0,1.0,0.0,0.0];
 #[derive(semio_framework_value::RetireOwned)]
 struct SceneTable<T:RetireOwned>(Vec<(String,T)>);

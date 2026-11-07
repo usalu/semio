@@ -75,3 +75,12 @@ fn cache_live_final_drop_is_guarded_instead_of_recursively_destroying_dictionari
     assert!(std::panic::catch_unwind(||{let cache=crate::NeuralCache::new();cache.seed(1,Dictionary::new().insert("label",Value::Atom(Atom::String("guarded".into())))).unwrap();drop(cache);}).is_err());
 }
 //#endregion 🧠️CacheRetirement
+
+/// 🔒️ Static law: every normal evaluation action that moves retained currency or fails charges at least one fuel, so a one-fuel loan can never chain a second retained action behind its quote.
+#[test]
+fn every_retained_evaluation_action_charges_at_least_one_fuel(){
+ let source=include_str!("../🦀️.rs");
+ assert!(source.contains("cx.consume_fuel(self.last_work.max(u64::from(moved)))"));
+ assert!(!source.contains("if closing_job{cx.consume_fuel(self.last_work)}"));
+ assert!(source.contains("else if moved{cx.consume_fuel(1)}"));
+}

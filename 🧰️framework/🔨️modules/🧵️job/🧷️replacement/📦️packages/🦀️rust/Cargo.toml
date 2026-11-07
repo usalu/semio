@@ -1,0 +1,24 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-job-replacement"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "framework"
+id = "job-replacement"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[[test]]
+name = "replacement_identity"
+path = "../../🧪️tests/🪪️identity/🦀️.rs"
+
+[dependencies]
+semio-framework-trace = { workspace = true }
+semio-framework-value = { workspace = true }

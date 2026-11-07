@@ -174,7 +174,7 @@ impl WindowTransientOwner for Fem2dResultsWindowTransientOwner {
     type State = FemResultsWindowTransient;
     type Mutation = FemResultsWindowTransientMutation;
 
-    fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_framework_plugin::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
+    fn owners_birth_demands()->semio_framework_value::RetirementDemand{semio_plugin::transfer_owners_birth_demands::<Self::State,Self::Mutation>()}
     fn build_owners() -> WindowTransientOwnerBundle<Self::State, Self::Mutation> {
         owners()
     }

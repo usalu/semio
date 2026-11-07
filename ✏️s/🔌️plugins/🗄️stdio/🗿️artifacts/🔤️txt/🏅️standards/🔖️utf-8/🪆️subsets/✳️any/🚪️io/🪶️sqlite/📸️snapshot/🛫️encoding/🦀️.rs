@@ -1,7 +1,7 @@
 //! 🛫️ TXT owns one admitted output backing through the original native receiving frame.
 use super::{native_length,TxtSnapshot};
-use semio_os_kernel::{NativeSnapshotEncodeOwner,NativeSnapshotBodyWallet,sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase}};
-use semio_framework_value::{NativeEncodeControl,RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind};
+use semio_os_kernel::{NativeSnapshotEncodeOwner,NativeSnapshotBodyWallet,NativeSnapshotFailure,native_snapshot_turn,sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase}};
+use semio_framework_value::{NativeEncodeControl,RetainedCloneGrant,RetainedCloneProgress,RetainedWorkOutcome,ValueError,ValueRefusalKind};
 use store::io_schema::IoPayload;
 use std::mem::size_of;
 const TOKEN:&[u8]=b"stdio.txt.pack v1";
@@ -32,25 +32,26 @@ pub fn receive_into(source:&TxtSnapshot,encoding:SnapshotEncoding,body_bytes:usi
   match encoding{SnapshotEncoding::Binary=>Ok(IoPayload::Binary(slot.take().unwrap())),SnapshotEncoding::Text=>match String::from_utf8(slot.take().unwrap()){Ok(text)=>Ok(IoPayload::Text(text)),Err(error)=>{*slot=Some(error.into_bytes());Err(refused(ValueRefusalKind::InvariantViolated,"TXT original borrowed lines lost UTF8"))}}}
  });result.map_err(|error|error.with_retained_progress(body.progress()))
 }
-/// 🔗️ Settles original allocation before publication and preserves the exact SQL or native cause.
-pub(super) fn encode(source:&TxtSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotEncodeOwner<'_,'_>)->Result<IoPayload,ValueError>{
- let result=encode_receiving(source,encoding,control,owner);result.map_err(|error|error.with_retained_progress(owner.progress()))
-}
-fn encode_receiving(source:&TxtSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotEncodeOwner<'_,'_>)->Result<IoPayload,ValueError>{
+pub(super) fn encode(source:&TxtSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotEncodeOwner<'_,'_>)->RetainedWorkOutcome<IoPayload,NativeSnapshotFailure>{
+ let prelude=(||->Result<(usize,usize,usize),ValueError>{
  owner.native().checkpoint()?;let minimum=source.lines.len().saturating_sub(1).checked_add(4).and_then(|items|items.checked_add(if encoding==SnapshotEncoding::Binary{3}else{0})).ok_or_else(||refused(ValueRefusalKind::WorkLimit,"TXT original borrowed census overflow"))?;if minimum>owner.remaining_grant().maximum_items{return Err(refused(ValueRefusalKind::WorkLimit,"TXT original borrowed census exceeds original items"))}
  let body_bytes=native_length(source,control,Some(owner.native()))?;let physical=extent(body_bytes,encoding)?;let limits=control.limits();if physical>limits.max_file_bytes{return Err(refused(ValueRefusalKind::OwnershipLimit,"native text output exceeds file byte limit"))}control.check_value_bytes(physical)?;
  let before=owner.native().owned_bytes();let maximum=before.checked_add(control.allocation_remaining_bytes().min(limits.max_value_bytes)).ok_or_else(||refused(ValueRefusalKind::OwnershipLimit,"TXT original SQL allocation ceiling overflow"))?;
+ Ok((body_bytes,before,maximum))
+ })();
+ let(body_bytes,before,maximum)=match prelude{Ok(parts)=>parts,Err(error)=>return RetainedWorkOutcome{result:Err(error.with_retained_progress(owner.progress()).into()),work:0}};
  let mut settled=before;let mut sql_error=None;
- let result={
+ let outcome={
   let mut progress=|event:semio_framework_value::native_encoding::NativeEncodeProgress|{
    let result=(||{let delta=event.owned_bytes.checked_sub(settled).ok_or_else(||refused(ValueRefusalKind::InvariantViolated,"TXT original allocation receipt regressed"))?;control.admit_native_allocation_bytes(delta)?;settled=event.owned_bytes;control.checkpoint(SqliteSnapshotPhase::EncodeNative,event.completed,event.total)})();
    match result{Ok(())=>true,Err(error)=>{sql_error=Some(error);false}}
   };
-  owner.scoped_native(maximum,&mut progress,|owner|owner.receive::<Vec<u8>,IoPayload>(|slot,native,body|receive_into(source,encoding,body_bytes,slot,native,body)))
+  owner.scoped_native(maximum,&mut progress,|owner|owner.receive::<Vec<u8>,IoPayload,NativeSnapshotFailure>(|slot,native,body|native_snapshot_turn(|work|{work.performed();receive_into(source,encoding,body_bytes,slot,native,body).map_err(Into::into)})))
  };
- match result{Ok(output)=>Ok(output),Err(error)=>{
-  let actual=owner.native().owned_bytes().checked_sub(settled).ok_or_else(||refused(ValueRefusalKind::InvariantViolated,"TXT original refused allocation receipt regressed"))?;
-  control.admit_native_allocation_bytes(actual).map_err(|error|error.with_retained_progress(owner.progress()))?;
-  Err(sql_error.unwrap_or(error).with_retained_progress(owner.progress()))
+ let work=outcome.work;
+ match outcome.result{Ok(output)=>RetainedWorkOutcome{result:Ok(output),work},Err(failure)=>{
+  let settle=(||->Result<(),ValueError>{let actual=owner.native().owned_bytes().checked_sub(settled).ok_or_else(||refused(ValueRefusalKind::InvariantViolated,"TXT original refused allocation receipt regressed"))?;control.admit_native_allocation_bytes(actual).map_err(|error|error.with_retained_progress(owner.progress()))?;Ok(())})();
+  let error=match settle{Err(error)=>error,Ok(())=>sql_error.unwrap_or_else(||failure.into_value_error()).with_retained_progress(owner.progress())};
+  RetainedWorkOutcome{result:Err(error.into()),work}
  }}
 }

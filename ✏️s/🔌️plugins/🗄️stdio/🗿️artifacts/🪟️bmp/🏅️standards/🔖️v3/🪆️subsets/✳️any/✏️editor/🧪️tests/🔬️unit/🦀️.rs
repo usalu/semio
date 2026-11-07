@@ -185,7 +185,7 @@ fn schema_declares_the_bmp_native_codec_and_the_runtime_binds_it() {
 
 #[test]
 fn window_declares_the_paint_actions_as_editable_image_window_actions() {
-    let definition = main::definition();
+    let definition = super::main_window_definition();
     for id in [paint_region::INDEXED_ACTION_ID, paint_region::DIRECT_ACTION_ID] {
         let action = definition.actions.iter().find(|action| action.id == id).expect("paint action is a window action");
         assert_eq!(action.kind, semio_plugin::ActionKind::Mutation);

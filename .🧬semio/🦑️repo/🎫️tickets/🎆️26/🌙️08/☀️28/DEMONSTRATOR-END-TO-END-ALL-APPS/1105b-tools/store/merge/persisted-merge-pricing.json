@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PersistedMergePricing",
+  "description": "Authored price list of the bounded persisted-pair merge. Units are the host's StepContext fuel units. Every unit of work (one edit decode, one census id, one comparison, one ingest) is priced before it runs; a step never starts a unit it cannot afford unless it is the first unit of the step.",
+  "decodeBase": 2,
+  "decodePerOperation": 1,
+  "censusPerId": 1,
+  "orderPerComparison": 1,
+  "ingestBase": 8,
+  "ingestPerDependency": 1,
+  "preflightDecode": true
+}

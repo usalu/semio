@@ -15,7 +15,7 @@ pub struct FlowDirectStoreJobFactory {
 }
 
 impl FlowDirectStoreJobFactory {
-    pub(super) fn new(controller_id: &str) -> Self {
+    pub fn new(controller_id: &str) -> Self {
         Self { keys: FLOW_DIRECT_STORE_TOOL_IDS.iter().map(|tool_id| semio_framework::ToolFactoryKey::new(controller_id, *tool_id)).collect() }
     }
 }
@@ -283,7 +283,7 @@ pub struct FlowChildGroupJobFactory {
 }
 
 impl FlowChildGroupJobFactory {
-    pub(super) fn new(controller_id: &str) -> Self {
+    pub fn new(controller_id: &str) -> Self {
         Self { keys: FLOW_CHILD_GROUP_TOOL_IDS.iter().map(|tool_id| semio_framework::ToolFactoryKey::new(controller_id, *tool_id)).collect() }
     }
 }
@@ -331,7 +331,7 @@ pub(super) fn flow_build_retained_job(request:&mut Option<semio_plugin::Artifact
  fn admit<W:ArtifactCommandWork<semio_plugin::EditorApp<FlowPlayApp>>+'static>(request:&mut Option<semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::EditorApp<FlowPlayApp>>>,output:&mut Option<semio_plugin::ErasedToolJob>,cx:&mut semio_framework_job::StepContext<'_>,raw:usize,items:usize,copy:usize,construct:impl FnOnce(&semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::EditorApp<FlowPlayApp>>)->W)->Result<bool,semio_framework_job::OriginalTurnFailure>{semio_plugin::retained_command::producer::admit_retained_tool_producer_measured(request,output,cx,FlowCommand::command_id,raw,items,false,RetirementDemand{copy_bytes:copy,depth:1,..Default::default()},|request,_|Ok((construct(request),RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})))}
  let original=request.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original Flow retained request is absent"))?;let tool=original.command.command_id();let alias=2*std::mem::size_of::<semio_plugin::ArtifactInstanceOperationOwnerHandle>();
  if FLOW_CONTRIBUTIONS_TOOL_IDS.contains(&tool){return admit(request,output,cx,FLOW_CONTRIBUTIONS_RAW_BYTES,1,alias,|request|FlowContributionsWork::new(request.instance_operation_owner.clone()))}
- let insert=matches!(&original.command,FlowCommand::NodeGraphEdit(payload)if matches!(payload.operations.as_slice(),[super::node_graph_edit::FlowNodeGraphEditOp::InsertPort{..}]));
+ let insert=matches!(&*original.command,FlowCommand::NodeGraphEdit(payload)if matches!(payload.operations.as_slice(),[super::node_graph_edit::FlowNodeGraphEditOp::InsertPort{..}]));
  if tool=="addWidget"||insert{return admit(request,output,cx,FLOW_CHILD_GROUP_RAW_BYTES,1,alias,|request|FlowGraphOperationWork::new(tool,request.instance_operation_owner.clone()))}
  if FLOW_CHILD_GROUP_TOOL_IDS.contains(&tool){return admit(request,output,cx,FLOW_CHILD_GROUP_RAW_BYTES,1,alias,|request|FlowChildGroupWork::new(tool,request.instance_operation_owner.clone()))}
  if FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&tool){return admit(request,output,cx,FLOW_GRAPH_OPERATION_RAW_BYTES,FLOW_GRAPH_OPERATION_CAPACITY.work_items(),alias,|request|FlowGraphOperationWork::new(tool,request.instance_operation_owner.clone()))}
@@ -339,3 +339,5 @@ pub(super) fn flow_build_retained_job(request:&mut Option<semio_plugin::Artifact
  if FLOW_DIRECT_STORE_TOOL_IDS.contains(&tool){return admit(request,output,cx,FLOW_DIRECT_STORE_RAW_BYTES,FLOW_STORE_MAX_MUTATION_ITEMS,0,|_|FlowDirectStoreWork::new(tool))}
  Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original Flow retained request has no declared factory").into())
 }
+
+semio_plugin::retained_command::terminal_frame_bound!(FlowChildGroupWork);

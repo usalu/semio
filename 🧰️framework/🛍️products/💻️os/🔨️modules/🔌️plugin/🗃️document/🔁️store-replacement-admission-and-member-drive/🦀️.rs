@@ -8,7 +8,8 @@ where
     Mutation: ::semio_os_kernel::StoreMutationFor<P>,
     M: SpaceMember + MemberFactory,
 {
-    pub fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, base_child_content_generation:u64,job:ArtifactStoreInitializationJob<P,Mutation>,source_identity:(semio_framework_job::OperationId,semio_framework_job::Generation))->Self {
+    pub fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, base_child_content_generation:u64,mut job:ArtifactStoreInitializationJob<P,Mutation>,source_identity:(semio_framework_job::OperationId,semio_framework_job::Generation))->Self {
+        job.bind_replacement(semio_framework_job::ReplacementIdentity::new(operation.0, operation, generation));
         let cancel = semio_framework_job::CancelToken::root_now();
         let cancel_signal = job.cancel_signal();
         let session=None;
@@ -77,6 +78,11 @@ where
     fn refuse_invariant(&mut self, leg: ArtifactStoreReplacementLeg, detail: &'static str) -> Fault {
         self.refuse(ArtifactStoreReplacementRefusal::Invariant { leg, detail });
         plugin_sdk_fault(detail)
+    }
+
+    /// 🧷️ The slot, operation and artifact generation this replacement was admitted under.
+    pub fn replacement_identity(&self) -> semio_framework_job::ReplacementIdentity {
+        semio_framework_job::ReplacementIdentity::new(self.operation.0, self.operation, self.generation)
     }
 
     pub fn request_cancel(&self) {
@@ -256,7 +262,7 @@ where
                 if !registry.terminal_is_empty() { return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "opened member registry returned false terminal").into()); }
                 let registry = self.member_ingress.take().expect("terminal member ingress registry remains retained");
                 drop(registry);
-                self.closure = Some(store::OwnedDocumentClosure::new(self.operation, self.generation, self.candidate_source_generation, self.expires_at_us));
+                self.closure = Some(store::OwnedDocumentClosure::new(self.operation, self.generation, self.candidate_source_generation, self.expires_at_us).with_replacement(Some(self.replacement_identity())));
                 self.state = ActiveArtifactStoreReplacementState::ValidatingClosure;
                 return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: step.progress().copied_items.max(1), ..step.progress() }));
             }
@@ -315,7 +321,7 @@ where
                     Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))
                     }
 
-    pub fn drive_closure(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    pub fn drive_closure(&mut self, grant: RetainedCloneGrant, current: semio_framework_job::ReplacementIdentity) -> Result<PluginLifecycleStep, Fault> {
         if grant.maximum_items == 0 || grant.maximum_copy_bytes < store::MEMBER_OPEN_IDENTITY_BYTES {
             return Ok(PluginLifecycleStep::Progress(Default::default()));
         }
@@ -337,7 +343,7 @@ where
         };
         let step = {
             let mut cx = semio_framework_job::StepContext::new(self.operation, self.generation, semio_framework_job::StepBudget::new(grant.maximum_items as u64, u64::MAX, grant), self.cancel.as_ref().expect("live replacement cancellation root").clone(), semio_framework_job::default_now_us, &mut sequence, &mut receipt);
-            closure.step(&source, &mut cx)
+            cx.with_replacement_current(current, |cx| closure.step(&source, cx))
         };
         let children_len = children.len();
         self.member_step_sequence = sequence;

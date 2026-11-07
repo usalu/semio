@@ -2,7 +2,7 @@
 use crate::{IdmlSnapshot, IdmlDiff, IdmlMutation};
 use semio_framework_value::FromValue;
 use semio_os_kernel::{ColdMutation, ColdDiffAlgebra, OpText, OpBinary};
-use semio_framework_pack::snapshot::{ArtifactDsl, ArtifactPack};
+use pack::snapshot::{ArtifactDsl, ArtifactPack};
 
 fn decode<T: semio_framework_value::FromValue>(value: &serde_json::Value) -> T {
     semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()

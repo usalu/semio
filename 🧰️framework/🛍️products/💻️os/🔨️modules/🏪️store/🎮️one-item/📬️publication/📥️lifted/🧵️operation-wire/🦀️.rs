@@ -139,7 +139,7 @@ impl<M:ArtifactCanonicalJsonTree+semio_framework_value_native_owned::native_deco
 
 #[path="🧳️receiving/🦀️.rs"]
 pub mod original_receiving;
-pub use original_receiving::ArtifactOriginalOperationReceiving;
+pub use original_receiving::{ArtifactOriginalOperationReceiving,ArtifactPersistedOperation};
 
 #[cfg(test)]
 #[path="🎯️target/🦀️.rs"]

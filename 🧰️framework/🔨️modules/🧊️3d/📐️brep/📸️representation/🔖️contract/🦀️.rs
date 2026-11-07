@@ -122,6 +122,7 @@ pub struct MeshTransfer {
 }
 
 semio_framework_value::artifact_retire_leaf!(SurfaceKind, CurveKind);
+semio_framework_value::artifact_retire_struct!(Aabb { min, max });
 semio_framework_value::artifact_retire_struct!(FaceGroup { start, count, entity_id });
 semio_framework_value::artifact_retire_struct!(EdgeGroup { start, count, entity_id });
 semio_framework_value::artifact_retire_struct!(VertexGroup { start, count, entity_id });

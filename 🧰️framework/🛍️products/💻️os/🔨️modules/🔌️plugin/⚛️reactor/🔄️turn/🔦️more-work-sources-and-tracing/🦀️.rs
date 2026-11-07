@@ -22,6 +22,8 @@ pub struct TurnMoreWorkSources {
     /// scan ran, so the scan could not answer. Deliberately outside [`Self::any`] — see the fold in
     /// `poll_kernel_turn`.
     pub typed_operation_contended: bool,
+    /// ⏱️ An armed per-instance pending-effects owner answered `None` and owes its next paid poll.
+    pub pending_effects: bool,
     /// 🩹️ A surface reconcile has publishable or unpublished patch work.
     pub reconcile: bool,
     /// 🔁️ Resumed async tasks remained undrained at the resume budget.
@@ -48,6 +50,7 @@ impl TurnMoreWorkSources {
         close_cleanup: false,
         typed_operation: false,
         typed_operation_contended: false,
+        pending_effects: false,
         reconcile: false,
         resumes: false,
         executor_pending: false,
@@ -70,6 +73,7 @@ impl TurnMoreWorkSources {
             (self.process_pool, "process_pool"),
             (self.close_cleanup, "close_cleanup"),
             (self.typed_operation, "typed_operation"),
+            (self.pending_effects, "pending_effects"),
             (self.reconcile, "reconcile"),
             (self.resumes, "resumes"),
             (self.executor_pending, "executor_pending"),
@@ -82,6 +86,19 @@ impl TurnMoreWorkSources {
         .into_iter()
         .filter_map(|(armed, name)| armed.then_some(name))
         .collect()
+    }
+}
+
+#[cfg(test)]
+mod pending_effects_source_law {
+    use super::TurnMoreWorkSources;
+    #[test]
+    fn retained_pending_effects_arm_a_named_more_work_source() {
+        let armed = TurnMoreWorkSources { pending_effects: true, ..Default::default() };
+        assert!(armed.any());
+        assert_eq!(armed.names(), vec!["pending_effects"]);
+        assert!(!TurnMoreWorkSources { typed_operation_contended: true, ..Default::default() }.any());
+        assert!(!TurnMoreWorkSources::SETTLED.any());
     }
 }
 
@@ -187,6 +204,7 @@ pub(super) struct TurnWorkInputs {
     pub(super) close_cleanup_work: bool,
     pub(super) typed_operation_runnable: bool,
     pub(super) typed_operation_contended: bool,
+    pub(super) pending_effects_runnable: bool,
     pub(super) reconcile_work: bool,
     pub(super) resumes_remain: bool,
     pub(super) document_load_work: bool,
@@ -230,7 +248,7 @@ pub(super) fn drive_turn_executors(effects: &mut Vec<Effect>) -> TurnExecutorWor
 /// (`resumes`), an ingress command (`command_ingress`) or a lifecycle step (`lifecycle`), each of
 /// which already arms this turn on its own account. See `📓️idle-turns-2026-09-10.md`.
 pub(super) fn settle_turn_work<PA: semio_plugin_reactor_app::PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, inputs: TurnWorkInputs, effects: &[Effect]) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
-    let TurnWorkInputs { events_pending, executors, close_cleanup_work, typed_operation_runnable, typed_operation_contended, reconcile_work, resumes_remain, document_load_work } = inputs;
+    let TurnWorkInputs { events_pending, executors, close_cleanup_work, typed_operation_runnable, typed_operation_contended, pending_effects_runnable, reconcile_work, resumes_remain, document_load_work } = inputs;
     let (executor_deadline_work, task_executor_work, process_pool_work) = (executors.deadline, executors.task, executors.pool);
     let more_work = executor_deadline_work || task_executor_work || process_pool_work;
     let executor_pending = REACTOR_EXECUTOR.with(|executor| executor.has_pending()) || TASK_EXECUTOR.with(|executor| executor.has_pending());
@@ -238,13 +256,14 @@ pub(super) fn settle_turn_work<PA: semio_plugin_reactor_app::PluginApp>(runtime:
     let lifecycle_work = runtime.guest_lifetimes.borrow().has_work();
     let ui_retirement_work = close_late_ui_retirement()?;
     let extension_invocation_pending=RETAINED_EXTENSION_INVOCATIONS.with(|owners|owners.borrow().iter().any(Option::is_some))||original_receiving::response_pending()||original_receiving::intent_pending()||original_receiving::forms::pending();
-    let more_work = events_pending || more_work || extension_invocation_pending || close_cleanup_work || typed_operation_runnable || reconcile_work || resumes_remain || executor_pending || command_ingress_pending || lifecycle_work || ui_retirement_work || document_load_work;
+    let more_work = events_pending || more_work || extension_invocation_pending || close_cleanup_work || typed_operation_runnable || pending_effects_runnable || reconcile_work || resumes_remain || executor_pending || command_ingress_pending || lifecycle_work || ui_retirement_work || document_load_work;
     LAST_MORE_WORK_SOURCES.set(TurnMoreWorkSources {
         executor_deadline: executor_deadline_work,
         process_pool: process_pool_work,
         close_cleanup: close_cleanup_work,
         typed_operation: typed_operation_runnable,
         typed_operation_contended,
+        pending_effects: pending_effects_runnable,
         reconcile: reconcile_work,
         resumes: resumes_remain,
         executor_pending,

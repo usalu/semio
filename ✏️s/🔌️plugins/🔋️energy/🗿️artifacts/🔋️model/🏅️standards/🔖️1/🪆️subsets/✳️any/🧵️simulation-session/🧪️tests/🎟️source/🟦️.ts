@@ -49,5 +49,4 @@ export function verifyEnergyOriginalSessionOracle(): void {
   assert.ok(source.includes("match self.next_action(cx)?"));
   assert.ok(native.includes("turn_with_decoder(TEST_GRANT"));
   assert.ok(native.includes("original Energy caller closes once"));
-  console.log("[DEBUG] Energy original source3 loan vectors preserve actual finite fuel; independent SQLite separates identity activity from timesteps; same-source child/checkpoint/native custody source laws retained; native execution separate");
 }

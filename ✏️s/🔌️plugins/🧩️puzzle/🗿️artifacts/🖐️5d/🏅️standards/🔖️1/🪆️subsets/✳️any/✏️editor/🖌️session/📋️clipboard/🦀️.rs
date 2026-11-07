@@ -1,19 +1,19 @@
 //! 📋️ Clipboard jobs of the puzzle 5d editor session: the selection scan and the reserved copy and cut jobs. See [`super`].
 use semio_framework_job::InteractiveJob;
-use semio_framework_plugin::ArtifactReservedJob;
+use semio_plugin::ArtifactReservedJob;
 
 use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::editor::puzzle5d::config::Puzzle5dConfigMutation;
-use semio_framework_plugin::{kernel::ClipboardFragment, kernel::Effect};
-use semio_framework_plugin::ArtifactReservedToolJobRequest;
-use semio_framework_plugin::ArtifactToolCompletion;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::EphemeralEmit;
-use semio_framework_plugin::MediaClass;
-use semio_framework_plugin::MediaForm;
-use semio_framework_plugin::MediaType;
+use semio_plugin::{kernel::ClipboardFragment, kernel::Effect};
+use semio_plugin::ArtifactReservedToolJobRequest;
+use semio_plugin::ArtifactToolCompletion;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::EphemeralEmit;
+use semio_plugin::MediaClass;
+use semio_plugin::MediaForm;
+use semio_plugin::MediaType;
 use semio_framework_pack_json::Value;
 use std::collections::HashSet;
 use crate::editor::puzzle5d::session::support::{puzzle5d_job_checkpoint, puzzle5d_job_fault, puzzle5d_selection_ids, puzzle5d_step_envelope};
@@ -176,7 +176,7 @@ impl Puzzle5dClipboardWork {
                 self.stage = Puzzle5dClipboardStage::Select;
             }
             Puzzle5dClipboardStage::Select => {
-                let Some(semio_framework_plugin::ArtifactReservedToolInput::Action{interaction,..})=request.input.as_ref()else{return Err("puzzle5d clipboard requires its original action selection".into())};
+                let Some(semio_plugin::ArtifactReservedToolInput::Action{interaction,..})=request.input.as_ref()else{return Err("puzzle5d clipboard requires its original action selection".into())};
                 if !self.scan.step(&request.snapshot,interaction.get())? {
                     self.progress = self.progress.saturating_add(1);
                     cx.consume_fuel(1);
@@ -254,13 +254,13 @@ pub enum Puzzle5dClipboardVerb {
 struct Puzzle5dClipboardOwners {
     pub dsl_text: String,
     pub scan: Puzzle5dSelectionScanOwners,
-    rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle5dPlayApp>>>,
+    rejection: Option<semio_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle5dPlayApp>>>,
 }
 
 pub struct Puzzle5dClipboardJob {
     pub verb: Puzzle5dClipboardVerb,
     pub work: Puzzle5dClipboardWork,
-    rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle5dPlayApp>>>,
+    rejection: Option<semio_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle5dPlayApp>>>,
     pub completed: bool,
     pub outbox: crate::puzzle_job::JobOutbox,
     pub closing: bool,
@@ -348,7 +348,7 @@ impl Puzzle5dClipboardJob {
     }
 }
 
-impl semio_framework_plugin::tool_contract::ArtifactReservedWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dClipboardJob {
+impl semio_plugin::plugin_app_close_prelude::ArtifactReservedWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dClipboardJob {
     fn step<'a>(&'a mut self,request:&'a mut ArtifactReservedToolJobRequest<EditorApp<Puzzle5dPlayApp>>,cx:&mut semio_framework_job::StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(request,cx))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {

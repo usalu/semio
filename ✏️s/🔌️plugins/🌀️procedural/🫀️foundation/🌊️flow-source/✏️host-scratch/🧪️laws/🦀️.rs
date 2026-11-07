@@ -1,6 +1,6 @@
 //! 🧪️ Procedural host edits equal actual cold domain operations under one original finite caller.
 use super::retained_host_scratch::HostScratchDomain;
-use super::retained_native_provisional_fold::{NativeProvisionalFold,NativeProvisionalMutation};
+use super::retained_native_provisional_fold::{NativeProvisionalFold,NativeProvisionalFolds};
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation,close_original_retained_step};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedWorkOutcome};
@@ -31,7 +31,7 @@ fn procedural_host_scratch_matches_original_domain_with_receipts_and_prefix_clos
    let original=super::host_scratch_test_original(&source,&mutation_wire(domain,&case["edit"]));let expected_wire=semio_framework_pack_json::to_json_string(&expected);assert_eq!(semio_framework_pack_json::to_json_string(&original),expected_wire,"{}",case["name"]);
    let mutation:super::HostScratchFixtureMutation=semio_framework_pack_json::from_json_str(&mutation_wire(domain,&case["edit"]).to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
    let mut caller=OriginalJobFixtureCaller::admit(OperationId(policy["operation"].as_u64().unwrap()),Generation(policy["generation"].as_u64().unwrap()),stock,clock,policy["deadlineUs"].as_u64().unwrap(),policy["fuel"].as_u64().unwrap());let mut decoder=OriginalJobDecodeOwner::empty();let mut calls=0;
-   let mut work=caller.turn_with_decoder(stock,&mut decoder,|cx|{let Ok(NativeProvisionalFold::Host(work))=mutation.into_fold_original(semio_framework_job::OriginalSourceBinding::borrow(cx))else{panic!("host fixture must dispatch to its actual retained host producer")};Ok(work)}).unwrap();
+   let mut work=caller.turn_with_decoder(stock,&mut decoder,|cx|{let Ok(NativeProvisionalFold::Host(work))=<super::ProvisionalSceneTestFolds as NativeProvisionalFolds<super::HostScratchFixtureMutation>>::into_fold_original(mutation,semio_framework_job::OriginalSourceBinding::borrow(cx))else{panic!("host fixture must dispatch to its actual retained host producer")};Ok(work)}).unwrap();
    loop{if cut==Some(calls){break}calls+=1;assert!(calls<=200);let ready=caller.turn_with_decoder(stock,&mut decoder,|cx|observed(cx,|cx|work.step(&mut source,cx))).unwrap();if ready{break}}
    if cut.is_none(){assert!(work.ready());assert_eq!(work.applied(),case["applied"].as_bool().unwrap());assert_eq!(semio_framework_pack_json::to_json_string(&source),expected_wire,"{}",case["name"])}
    work.begin_close();while !work.terminal_is_empty(){calls+=1;assert!(calls<=200);caller.turn_with_decoder(stock,&mut decoder,|cx|observed(cx,|cx|cx.with_original_retirement(|cx|{for _ in 0..512{if work.terminal_is_empty()||cx.should_yield(){break}let d=work.next_close_demands(cx.retained_grant().maximum_copy_bytes)?;let step=close_original_retained_step(cx,d,|g|work.close_step(g))?;if step.progress()==Default::default(){break}}Ok(())}))).unwrap()}

@@ -171,15 +171,15 @@ impl Puzzle3dApp {
     /// against its grant and attributed to the fixed stage that ran it. The stage is read BEFORE the call:
     /// `maintenance_step`'s idle early return leaves the round-robin cursor untouched, so reading it afterwards names a
     /// stale stage.
-    pub fn measure_maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> {
+    pub fn measure_maintenance_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> {
         let stage = self.next_maintenance_stage();
         let (raw, cx) = self.parts();
-        let demand = PluginApp::maintenance_retirement_demands(raw, maximum_bytes)?;
-        let grant = semio_s_plugin_puzzle_jobs::testing::funded_turn(demand, maximum_items);
-        let step = cx.with_retained_loan(grant, |cx| {
-            let loan = cx.retained_grant();
-            PluginApp::maintenance_step(raw, cx, loan).map_err(semio_framework_job::OriginalTurnFailure::from)
-        }).map_err(semio_plugin::PluginLifecycleFailure::from);
+        let grant = semio_plugin::artifact_app_laws::fixture_mounted_policy().maintenance;
+        let demand = PluginApp::maintenance_retirement_demands(raw, grant.maximum_copy_bytes)?;
+        let step = semio_plugin::plugin_app_close_prelude::semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx, grant, demand, |same, grant| {
+            let step = PluginApp::maintenance_step(raw, same, grant)?;
+            Ok((step, PluginApp::maintenance_terminal_is_empty(raw)))
+        });
         self.maintenance.record(stage, grant, &step);
         step
     }
@@ -308,30 +308,42 @@ pub const SETTLE_HOST_TURN_ITEMS: usize = 256;
 pub async fn settle_with_items(app: &mut Puzzle3dApp, maximum_items: usize) -> Puzzle3dSettled {
     let mut settled = Puzzle3dSettled::default();
     let census_before = semio_plugin::app::typed_operation_unit_census();
+    let (fresh_fuel, fresh_grant) = {
+        let (_, cx) = app.parts();
+        (cx.fuel_remaining(), cx.retained_grant())
+    };
     for _ in 0..1_048_576 {
         if !app.has_pending_typed_operations() {
             settled.census = semio_plugin::app::typed_operation_unit_census() - census_before;
             return settled;
         }
+        {
+            let (_, cx) = app.parts();
+            semio_framework_job::testkit::renew_turn(cx, fresh_fuel, fresh_grant).expect("renew the fixture turn like the host's fresh context");
+        }
         host_turn(app, maximum_items, &mut settled).await;
     }
-    panic!("puzzle3d app never quiesced: pending typed operations outlived the settle budget");
+    panic!("puzzle3d app never quiesced: pending typed operations outlived the settle budget [DEBUG] {}",app.typed_operation_diagnostic());
 }
 
 /// 🔁️ ONE host continuation turn — the unit [`settle_with_items`] repeats — folding what it forwards
 /// into `settled`.
 pub async fn host_turn(app: &mut Puzzle3dApp, maximum_items: usize, settled: &mut Puzzle3dSettled) {
     settled.turns += 1;
-    app.measure_maintenance_step(maximum_items, SETTLE_TURN_BYTES).expect("maintenance step drives the mounted operation's worker and retirement stages");
+    let maintenance_items = maximum_items.max(semio_plugin::artifact_app_laws::fixture_mounted_policy().maintenance.maximum_items);
+    app.measure_maintenance_step(maintenance_items, SETTLE_TURN_BYTES).expect("maintenance step drives the mounted operation's worker and retirement stages");
+    let instance_id = app.instance_id;
     let (raw, cx) = app.parts();
     raw.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("advance one typed operation publication unit");
-    let instance_id = app.instance_id;
-    if let Some(page) = app.take_typed_operation_result_page(instance_id, semio_plugin::artifact_app_laws::fixture_mounted_policy().maintenance).expect("take one typed operation result page").0 {
+    semio_plugin::artifact_app_laws::retain_original_ownership_receipts(raw, semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut Vec::new()).expect("post the ownership receipts to the fixture caller like the host's exchange output");
+    let policy = semio_plugin::artifact_app_laws::fixture_mounted_policy();
+    while let Some(mut page) = semio_plugin::artifact_app_laws::take_fixture_result_page(raw, instance_id, policy.preparation).expect("take one typed operation result page") {
         assert_ne!(page.lane, semio_plugin::app::TypedOperationResultLane::Fault, "retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
         if page.lane == semio_plugin::app::TypedOperationResultLane::Download {
             settled.downloads.push(Puzzle3dDownload::from_page(page.token.operation, page.bytes()));
         }
-        assert!(app.acknowledge_typed_operation_result(page.token).expect("acknowledge one presented result page"), "the app's own presented result page must accept its exact token");
+        let token = semio_plugin::artifact_app_laws::close_fixture_result_page(&mut page, policy.close);
+        assert!(raw.acknowledge_typed_operation_result(token).expect("acknowledge one presented result page"), "the app's own presented result page must accept its exact token");
     }
     settled.effects.extend(app.take_typed_operation_effect());
     settled.events.extend(app.take_typed_operation_event());

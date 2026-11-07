@@ -271,3 +271,5 @@ impl semio_plugin::ArtifactOwnedToolJobFactory for RemodelingRetainedCommandJobF
 }
 //#endregion 🧵️RetainedCommands
 //#endregion 🔖️RemodelingPlayApp
+
+semio_plugin::retained_command::terminal_frame_bound!(RemodelingWindowCommandWork);

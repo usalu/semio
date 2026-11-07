@@ -39,6 +39,7 @@ export async function registerOwnedStagedControlTests(vitest: TypedWireVitest, d
         const root = { ...container(10, "stage.form", ready ? [0, 17, 18, 19, 22] : [0, 18, 17, 19, 22]), component: { type: "container", role: "form", label: "Vorlage / Template", description: null, required: null, error: null, defaultOpen: null, dropOverlay: null } };
         return [status, input, select, page, preview, field(17, 7, "Wert / Value", true, "Exakter IFC-Wert / Exact IFC value", ready ? null : "Unvollständiger Wert / Incomplete value"), field(18, 8, "Achse / Axis"), field(19, 9, "Weiter / Next"), field(22, 12, "Datentyp / Data type"), root] as unknown as UiNodeRecord[];
       };
+      const settle = async () => { for (let depth = 0; depth < 4; depth++) await maintenance(); };
       const publish = async (current: typeof token, ready: boolean, revision: number) => {
         const operations: unknown[] = nodes(current, ready).map(node => ({ tag: "upsert", val: { node: encodePackValue(node) } }));
         operations.push({ tag: "set-root", val: 10n });
@@ -50,7 +51,7 @@ export async function registerOwnedStagedControlTests(vitest: TypedWireVitest, d
         const receipt = await native.answer(native.lease.submitUiAcknowledgement(authority, patch.peekAcknowledgement()!, native.budget), { status: { tag: "idle" } });
         expect(patch.acceptAcknowledgement(receipt.receipt)).toBe(true);
         close(patch);
-        await maintenance();
+        await settle();
       };
       const mounted = render(<StrictMode><OwnedStagedBodyView owner={controls} /></StrictMode>);
       await publish(token, true, 1);
@@ -68,7 +69,7 @@ export async function registerOwnedStagedControlTests(vitest: TypedWireVitest, d
       expect(input.ownerDocument.activeElement).toBe(input);
       const description = input.getAttribute("aria-describedby")!;
       expect(input.ownerDocument.getElementById(description)?.textContent).toBe("Exakter IFC-Wert / Exact IFC value");
-      const selected = mounted.getByRole("radio", { name: "X" }) as HTMLButtonElement;
+      const selected = mounted.getByRole("radio", { name: "Achse / Axis" }) as HTMLButtonElement;
       const choiceLabel = labels().find(label => label.htmlFor === selected.id)!;
       expect(choiceLabel.control).toBe(selected);
       await act(async () => { await user.click(choiceLabel); });

@@ -337,7 +337,7 @@ async fn mesh_output_encoding_cancels_through_the_existing_graph_owner() {
         let mut trips = 0;
         loop {
             let current=if trips==0 {&request}else{&compact_request};let result = semio_framework_pack_json::parse_bytes(&flow_extension_sdk::evaluate_invoke_json(&registry,current.as_bytes()).unwrap(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-            assert_eq!(result.get("done").and_then(|value|value.as_bool()),Some(false),"[DEBUG] compact output phase {phase}: {result:?}");
+            assert_eq!(result.get("done").and_then(|value|value.as_bool()),Some(false),"compact output phase {phase}: {result:?}");
             assert_eq!(result.get("cancellable").and_then(|value|value.as_bool()),Some(true));
             assert_eq!(result.get("outputJson").and_then(|value|value.as_str()),Some(""));
             trips += 1; assert!(trips < 200000);

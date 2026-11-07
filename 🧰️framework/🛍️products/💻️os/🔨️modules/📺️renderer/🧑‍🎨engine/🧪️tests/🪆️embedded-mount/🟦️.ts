@@ -7,7 +7,7 @@ import { shouldStartIntroduction } from "@semio-tech/ui/introduction";
 import bootLifecycle from "../🧫️fixtures/⏳️boot-lifecycle/🔣️.json";
 // @vitest-environment jsdom
 
-import reactHostSource from "../../🧱️elements/🏛️ShellHost/🎮️focus-and-input/🟦️.tsx?raw";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import reactShellSource from "../../🧱️elements/🐚️Shell/🟦️.tsx?raw";
 import ts from "typescript";
 import introductionFixture from "../🧫️fixtures/🎓️host-introduction/🔣️.json";
@@ -79,6 +79,7 @@ class MountWorker {
 }
 
 const cleanups: (() => void | Promise<void>)[] = [];
+const reactHostSource = readModuleTreeSource(`${import.meta.dirname}/../../🧱️elements/🏛️ShellHost/🎮️focus-and-input/🟦️.tsx`);
 
 describe("boot execution capabilities", () => {
   it("waits for the owner status while retaining operation identity", () => {

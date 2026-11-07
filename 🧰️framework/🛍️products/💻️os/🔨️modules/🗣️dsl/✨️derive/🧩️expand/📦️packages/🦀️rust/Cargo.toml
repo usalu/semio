@@ -19,7 +19,7 @@ maxActiveLines = 4000
 workspace = true
 
 [lib]
-name = "semio_framework_os_kernel_dsl_derive_expand"
+name = "semio_os_kernel_dsl_derive_expand"
 path = "../../🦀️.rs"
 
 [dependencies]

@@ -24,6 +24,7 @@ path = "../../🦀️.rs"
 doctest = false
 
 [dev-dependencies]
+semio-framework-value-clone-source-testing = { path = "../../../../🔗️source/🧪️testing/📦️packages/🦀️rust" }
 semio-framework-value-persistent = { path = "../../../../../📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-test-fixtures = { path = "../../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

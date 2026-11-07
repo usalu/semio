@@ -36,8 +36,7 @@ macro_rules! raster_owned_field_authority {
         }
 
         struct $authority {
-            operation: semio_framework_job::OperationId,
-            generation: semio_framework_job::Generation,
+            replacement: Option<semio_framework_job::ReplacementIdentity>,
             path: store::os_store::owned_schema_decode::OwnedSchemaPath,
             state: $state,
             value: std::mem::ManuallyDrop<Option<$value>>,
@@ -45,8 +44,8 @@ macro_rules! raster_owned_field_authority {
         }
 
         impl $authority {
-            fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
-                Self { operation, generation, path, state: $state::AwaitToken, value: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None) }
+            fn new(replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
+                Self { replacement, path, state: $state::AwaitToken, value: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None) }
             }
 
             fn diagnostic(&self, code: &'static str, offset: u64) -> store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic {
@@ -65,7 +64,7 @@ macro_rules! raster_owned_field_authority {
             }
         }
 
-        impl store::$authority_trait<$value> for $authority {
+        impl store::os_store::owned_schema_decode::$authority_trait<$value> for $authority {
             fn accept_token(
                 &mut self,
                 token: store::os_store::owned_schema_decode::OwnedSchemaToken,
@@ -73,7 +72,7 @@ macro_rules! raster_owned_field_authority {
                 source: &store::os_store::owned_schema_decode::OwnedSchemaRecordCursor,
                 cx: &mut semio_framework_job::StepContext<'_>,
             ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
-                if cx.operation() != self.operation || cx.generation() != self.generation {
+                if cx.replacement_is_stale(self.replacement) {
                     return Err(self.diagnostic(concat!("raster-envelope.", $kind, "-stale-authority"), token.start));
                 }
                 if cx.is_cancelled() {
@@ -88,7 +87,7 @@ macro_rules! raster_owned_field_authority {
                     if !terminal {
                         return Err(diagnostic(concat!("raster-envelope.", $kind, "-pack-must-be-scalar"), token.start));
                     }
-                    self.state = $state::Decode(store::os_store::owned_schema_decode::OwnedSchemaHexAuthority::try_new(self.operation, self.generation, token, self.path)?);
+                    self.state = $state::Decode(store::os_store::owned_schema_decode::OwnedSchemaHexAuthority::try_new(self.replacement, token, self.path)?);
                 }
                 let $state::Decode(authority) = &mut self.state else {
                     return Err(diagnostic(concat!("raster-envelope.", $kind, "-pack-token-replayed"), token.start));
@@ -112,7 +111,7 @@ macro_rules! raster_owned_field_authority {
 
             fn publish_reserved(
                 &mut self,
-                target: &mut dyn store::$target_trait<$value>,
+                target: &mut dyn store::os_store::owned_schema_decode::$target_trait<$value>,
                 reservation: store::os_store::owned_schema_decode::ArtifactEnvelopeFieldReservation,
                 _cx: &mut semio_framework_job::StepContext<'_>,
             ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
@@ -171,7 +170,7 @@ macro_rules! raster_owned_field_authority {
                     self.state = $state::Complete;
                     return Ok(RetainedCloneStep::Complete(empty));
                 };
-                let step = attempt.map_err(|error| store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { code: concat!("raster-envelope.", $kind, "-retirement-fault"), offset: 0, line: 0, column: 0, path: self.path, refusal_kind: ValueRefusalKind::InvariantViolated, retained_progress: error.retained_progress() })?;
+                let step = attempt.result.map_err(|error| store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { code: concat!("raster-envelope.", $kind, "-retirement-fault"), offset: 0, line: 0, column: 0, path: self.path, refusal_kind: ValueRefusalKind::InvariantViolated, retained_progress: error.retained_progress() })?;
                 self.state = $state::Closing;
                 if self.value.is_none() && self.retirement.is_none() {
                     self.state = $state::Complete;
@@ -219,8 +218,8 @@ raster_owned_field_authority!(
 );
 
 impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<RasterSnapshot, RasterMutation> for RasterEnvelopeOwnedFieldCatalog {
-    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Result<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<RasterSnapshot, RasterMutation>>, Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<RasterSnapshot>>> {
-        store::os_store::owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority::try_new(self.begin_snapshot(operation, generation, path), std::sync::Arc::new(RasterSnapshotRetirementFactory), std::sync::Arc::new(RasterMutationRetirementFactory), self.edit_history_decoder())
+    fn begin_vcs(&self, replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Result<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<RasterSnapshot, RasterMutation>>, Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<RasterSnapshot>>> {
+        store::os_store::owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority::try_new(self.begin_snapshot(replacement, path), std::sync::Arc::new(RasterSnapshotRetirementFactory), std::sync::Arc::new(RasterMutationRetirementFactory), self.edit_history_decoder())
             .map(|authority| Box::new(authority) as Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<RasterSnapshot, RasterMutation>>)
     }
 
@@ -232,15 +231,15 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<Ras
         store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES
     }
 
-    fn begin_snapshot(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<RasterSnapshot>> {
-        Box::new(RasterSnapshotDecodeAuthority::new(operation, generation, path))
+    fn begin_snapshot(&self, replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<RasterSnapshot>> {
+        Box::new(RasterSnapshotDecodeAuthority::new(replacement, path))
     }
 
-    fn begin_mutation(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<RasterMutation>> {
-        Box::new(RasterMutationDecodeAuthority::new(operation, generation, path))
+    fn begin_mutation(&self, replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<RasterMutation>> {
+        Box::new(RasterMutationDecodeAuthority::new(replacement, path))
     }
 
-    fn begin_spr_conflict(&self, _operation: semio_framework_job::OperationId, _generation: semio_framework_job::Generation, _path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority> {
+    fn begin_spr_conflict(&self, _replacement: Option<semio_framework_job::ReplacementIdentity>, _path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority> {
         Box::new(RasterRejectedConflictAuthority { terminal: false })
     }
 

@@ -483,27 +483,26 @@ pub enum DrawingMutationArenaBootstrapStep {
 }
 
 pub struct DrawingMutationArenaBootstrapJob {
-    pub operation: semio_framework_job::OperationId,
-    pub generation: semio_framework_job::Generation,
+    pub replacement: Option<semio_framework_job::ReplacementIdentity>,
     pub admission: DrawingMutationArenaBootstrapAdmission,
     pub terminal: bool,
 }
 
 impl DrawingMutationArenaBootstrapJob {
-    pub fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Result<Self, &'static str> {
+    pub fn new(replacement: Option<semio_framework_job::ReplacementIdentity>) -> Result<Self, &'static str> {
         request_drawing_mutation_arena_pool();
-        Ok(Self { operation, generation, admission: DrawingMutationArenaBootstrapAdmission::fixed()?, terminal: false })
+        Ok(Self { replacement, admission: DrawingMutationArenaBootstrapAdmission::fixed()?, terminal: false })
     }
 
-    pub fn inactive(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Self {
-        Self { operation, generation, admission: DrawingMutationArenaBootstrapAdmission { maximum_items: 0, maximum_bytes: 0 }, terminal: true }
+    pub fn inactive(replacement: Option<semio_framework_job::ReplacementIdentity>) -> Self {
+        Self { replacement, admission: DrawingMutationArenaBootstrapAdmission { maximum_items: 0, maximum_bytes: 0 }, terminal: true }
     }
 
     pub fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> DrawingMutationArenaBootstrapStep {
         if self.terminal {
             return DrawingMutationArenaBootstrapStep::Ready;
         }
-        if cx.operation() != self.operation || cx.generation() != self.generation {
+        if cx.replacement_is_stale(self.replacement) {
             self.terminal = true;
             return DrawingMutationArenaBootstrapStep::Fault("drawing-store.mutation-arena-bootstrap-stale-authority");
         }

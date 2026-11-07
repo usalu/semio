@@ -10,7 +10,7 @@ import type {ResourceLeaseControl} from "../../../../../../../🔨️modules/�
 import {requireNativeStorageReservationV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import {NATIVE_TOOLCHAINS_V1, pythonInterpreterDirectoryV1, toolchainHostV1, type ToolchainHostV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
 import bootstrapPins from "../../../../🔩️native/🥾️bootstrap/🧬️schema/🔣️.json" with {type: "json"};
-import {repoCacheDirectory} from "../../../⚡️caching/🟦️.ts";
+import {repoPlaywrightBrowsersPath} from "../../../🏃️process/🌿️environment/🟦️.ts";
 import {repositoryCachePartitionRootV1} from "../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {withRepositoryToolingStoreV1, type RepositoryToolingStoreV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
@@ -83,7 +83,7 @@ export function systemToolContextV1(root: string, control: ResourceLeaseControl,
         return {found: null, location: null};
       }
     }
-    const browsers = environment.PLAYWRIGHT_BROWSERS_PATH ?? repoCacheDirectory(root, "tools", "ms-playwright"), directory = join(browsers, "chromium-" + pin);
+    const browsers = environment.PLAYWRIGHT_BROWSERS_PATH ?? repoPlaywrightBrowsersPath(root), directory = join(browsers, "chromium-" + pin);
     try {
       const registry=join(dirname(resolveSiblingPackageV1(root,"playwright-core","playwright")),"lib/coreBundle.js");
       await captureOwnedCommandV1(process.execPath,["--eval",browserExecutableProbeV1(registry)],root,{control,signal,env:{...scriptResourceProcessEnvironmentV1(control,environment),PLAYWRIGHT_BROWSERS_PATH:browsers},output:{maximumBytes:65536,maximumLines:256}});

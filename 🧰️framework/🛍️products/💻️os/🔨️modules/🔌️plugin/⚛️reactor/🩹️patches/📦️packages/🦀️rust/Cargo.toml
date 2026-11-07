@@ -24,7 +24,7 @@ path = "../../🦀️.rs"
 [features]
 artifact-app-testing = ["original-actor-context-testing"]
 testkit = ["dep:semio-plugin-testing-caller"]
-original-actor-context-testing = ["dep:semio-framework-trace", "testkit"]
+original-actor-context-testing = ["dep:semio-framework-trace", "testkit", "semio-plugin-reactor-lifecycle/original-actor-context-testing"]
 
 [dependencies]
 semio-framework-trace = { workspace = true, optional = true }

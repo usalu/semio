@@ -8,7 +8,7 @@ mod original_custody_tests;
 
 /// ♻️ Only a rejected completion remains private; the complete original request stays in the shared wrapper.
 pub(super) struct Puzzle3dClipboardJob{
- rejection:std::mem::ManuallyDrop<Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle3dPlayApp>>>>,
+ rejection:std::mem::ManuallyDrop<Option<semio_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle3dPlayApp>>>>,
  retirement:semio_framework_value::retained_clone::RetainedCloneClose,
  outbox:semio_s_plugin_puzzle_jobs::JobOutbox,
  closing:bool,
@@ -35,10 +35,10 @@ impl Puzzle3dClipboardJob{
   let emit=Self::emit(request);cx.consume_fuel(1);if let Err(rejected)=request.completion.complete(Ok(emit),EphemeralEmit::default()){*self.rejection=Some(rejected);return self.outbox.settle(JobTurn::Fault(b"puzzle3d-clipboard-completion-rejected".to_vec()),cx).map_err(Into::into)}self.completed=true;self.outbox.settle(JobTurn::Complete,cx).map_err(Into::into)
  }
  fn demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
-  if !self.outbox.terminal_is_empty(){return self.outbox.retirement_demands()}self.retirement.next_owner_demands::<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle3dPlayApp>>>(self.rejection.is_some(),&None,body)
+  if !self.outbox.terminal_is_empty(){return self.outbox.retirement_demands()}self.retirement.next_owner_demands::<semio_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle3dPlayApp>>>(self.rejection.is_some(),&None,body)
  }
 }
-impl semio_framework_plugin::tool_contract::ArtifactReservedWork<EditorApp<Puzzle3dPlayApp>> for Puzzle3dClipboardJob{
+impl semio_plugin::plugin_app_close_prelude::ArtifactReservedWork<EditorApp<Puzzle3dPlayApp>> for Puzzle3dClipboardJob{
  fn step<'a>(&'a mut self,request:&'a mut ArtifactReservedToolJobRequest<EditorApp<Puzzle3dPlayApp>>,cx:&mut StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(request,cx))}
  fn borrow_outcome<'a>(&'a self,descriptor:&'a semio_framework_job::JobOutcomeDescriptor)->Result<semio_framework_job::JobOutcomeView<'a>,semio_framework_value::ValueError>{self.outbox.borrow_outcome(descriptor)}
  fn begin_close(&mut self){self.closing=true}

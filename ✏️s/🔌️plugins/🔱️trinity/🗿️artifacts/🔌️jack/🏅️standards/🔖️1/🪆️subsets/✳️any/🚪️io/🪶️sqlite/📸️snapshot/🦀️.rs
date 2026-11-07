@@ -412,10 +412,10 @@ impl store::os_store::serialization::ArtifactSqliteSnapshotHost for JackSnapshot
     
     
     
-    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, c: &mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
+    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, c: &mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<Self,semio_os_kernel::NativeSnapshotFailure> {semio_os_kernel::native_snapshot_turn(|work|{
         c.checkpoint(SqliteSnapshotPhase::DecodeNative, 0, 0)?;
         let max_rows = c.limits().max_rows;
-        let value = store::decode_sqlite_snapshot_record_native(
+        let value = work.take(store::decode_sqlite_snapshot_record_native(
             payload,
             <Self as pack::snapshot::ArtifactDsl>::envelope_id(),
             crate::standards::v1::subsets::any::io::text::snapshot::JackPackRecord::__dsl_spec_producer(),
@@ -425,15 +425,15 @@ impl store::os_store::serialization::ArtifactSqliteSnapshotHost for JackSnapshot
                 flat.into_snapshot_controlled(native)
             })(); *snapshot_output = Some(constructed?); Ok(()) },
             c,
-        native_control)?;
+        native_control))?;
         let value = semio_framework_value::DecodedValue::new(value, retire_snapshot);
         forecast(value.get(), c, SqliteSnapshotPhase::DecodeNative)?;
         Ok(value.take())
-    }
-    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, c: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<store::io_schema::IoPayload, ValueError> {
+    })}
+    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, c: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<store::io_schema::IoPayload,semio_os_kernel::NativeSnapshotFailure> {semio_os_kernel::native_snapshot_turn(|work|{
         validate(self)?;
         forecast(self, c, SqliteSnapshotPhase::EncodeNative)?;
-        store::encode_sqlite_snapshot_record_native(
+        work.take(store::encode_sqlite_snapshot_record_native(
             encoding,
             <Self as pack::snapshot::ArtifactDsl>::envelope_id(),
             crate::standards::v1::subsets::any::io::text::snapshot::JackPackRecord::__dsl_spec_producer(),
@@ -442,8 +442,7 @@ impl store::os_store::serialization::ArtifactSqliteSnapshotHost for JackSnapshot
                 flat.__dsl_to_record_controlled(native)
             },
             c,
-        native_owner)
-    }
+        native_owner))})}
     fn retire_sqlite_snapshot(self) {
         retire_snapshot(self)
     }

@@ -54,12 +54,12 @@ impl Drop for Documents {
 struct Parts(Vec<DocxXmlPart>);
 
 impl ArtifactSqliteSnapshotHost for DocxSnapshot {
-    fn encode_sqlite_snapshot_native(&self, encoding: semio_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<store::io_schema::IoPayload, ValueError> {
-        crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native::encode(self, encoding, control,native_owner)
+    fn encode_sqlite_snapshot_native(&self, encoding: semio_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<store::io_schema::IoPayload,semio_os_kernel::NativeSnapshotFailure> {
+        {semio_os_kernel::native_snapshot_turn(|work| { work.performed(); crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native::encode(self, encoding, control,native_owner).map_err(Into::into) })}
     }
 
-    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
-        crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native::decode(payload, control,native_control)
+    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<Self,semio_os_kernel::NativeSnapshotFailure> {
+        {semio_os_kernel::native_snapshot_turn(|work| { work.performed(); crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native::decode(payload, control,native_control).map_err(Into::into) })}
     }
 
     fn preflight_sqlite_snapshot_encoding(&self, encoding: semio_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {

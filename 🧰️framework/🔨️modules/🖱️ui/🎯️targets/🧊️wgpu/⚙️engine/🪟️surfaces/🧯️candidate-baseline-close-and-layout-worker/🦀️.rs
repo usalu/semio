@@ -148,14 +148,21 @@ pub struct LayoutWorkerAdmission {
     pub cancel: std::mem::ManuallyDrop<Option<semio_framework_async::CancelTokenRetirement>>,
     pub failure: std::mem::ManuallyDrop<Option<semio_framework_value::ValueError>>,
     pub failure_close: std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_value::ValueError>>>,
+    pub birth: std::mem::ManuallyDrop<semio_framework_job_worker::WorkerJobSessionAdmission<MountedLayoutJob, semio_framework_job_worker::MountedWorkerJobSession<MountedLayoutJob>>>,
 }
 
 impl LayoutWorkerAdmission {
-    pub fn terminal_is_empty(&self) -> bool { self.params.is_none() && self.cancel.is_none() && self.failure.is_none() && self.failure_close.is_none() }
+    pub fn terminal_is_empty(&self) -> bool { self.params.is_none() && self.cancel.is_none() && self.failure.is_none() && self.failure_close.is_none() && self.birth.terminal_is_empty() }
     fn parameter_retirement_demands(&self) -> semio_framework_value::RetirementDemand {
         semio_framework_value::RetirementDemand { copy_bytes: 0, depth: 1, ..Default::default() }
     }
-    pub fn close_step(&mut self, grant: semio_framework_job::RetainedCloneGrant, witness: Option<&semio_framework_job::CancelToken>) -> Result<Option<semio_framework_value::RetainedCloneProgress>, semio_framework_value::ValueError> {
+    /// 🪙️ One funded close step: the progress it retired plus the actual CPU work the cancellation retirement reported, which the enclosing turn must post.
+    pub fn close_step(&mut self, grant: semio_framework_job::RetainedCloneGrant, witness: Option<&semio_framework_job::CancelToken>) -> semio_framework_value::RetainedWorkOutcome<Option<semio_framework_value::RetainedCloneProgress>, semio_framework_value::ValueError> {
+        let mut work = 0u64;
+        let result = self.close_step_result(grant, witness, &mut work);
+        semio_framework_value::RetainedWorkOutcome { result, work }
+    }
+    fn close_step_result(&mut self, grant: semio_framework_job::RetainedCloneGrant, witness: Option<&semio_framework_job::CancelToken>, work: &mut u64) -> Result<Option<semio_framework_value::RetainedCloneProgress>, semio_framework_value::ValueError> {
         use semio_framework_value::RetainedCloneProgress;
         if self.terminal_is_empty() { return Ok(Some(Default::default())); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(Some(Default::default())); }
@@ -192,7 +199,8 @@ impl LayoutWorkerAdmission {
                 Some(original) => cancel.return_alias_step(original, grant),
                 None => cancel.close_step(grant),
             };
-            return match step {
+            *work = step.work;
+            return match step.result {
                 Ok(step) => Ok(Some(step.progress())),
                 Err(semio_framework_async::CancelTokenRetirementError::Blocked(_)) => Ok(None),
                 Err(semio_framework_async::CancelTokenRetirementError::Refused(error)) => Err(error),
@@ -207,7 +215,8 @@ impl Drop for LayoutWorkerAdmission {
 }
 
 /// 🧾️ Records one original worker close receipt before a child error crosses the layout boundary.
-pub fn consume_layout_retirement(context:&mut StepContext<'_>,step:Result<Option<semio_framework_value::RetainedCloneProgress>,semio_framework_value::ValueError>)->Result<bool,semio_framework_value::ValueError>{
-    match step{Ok(Some(progress))=>{context.consume_retained(progress)?;Ok(true)},Ok(None)=>Ok(false),Err(error)=>{context.consume_retained(error.retained_progress())?;Err(error)}}
+pub fn consume_layout_retirement(context:&mut StepContext<'_>,outcome:semio_framework_value::RetainedWorkOutcome<Option<semio_framework_value::RetainedCloneProgress>,semio_framework_value::ValueError>)->Result<bool,semio_framework_value::ValueError>{
+    context.consume_fuel(outcome.work);
+    match outcome.result{Ok(Some(progress))=>{context.consume_retained(progress)?;Ok(true)},Ok(None)=>Ok(false),Err(error)=>{context.consume_retained(error.retained_progress())?;Err(error)}}
 }
 //#endregion 🔖️UiWindow

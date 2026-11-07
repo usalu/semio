@@ -27,7 +27,7 @@ export function registerBrowserCancellationTestsV1(it:(name:string,body:()=>Prom
     const ports={
      BundleScript:Frame,AbortController,AbortSignal,process:host,console:{log:()=>undefined},join,resolve,readinessBudget:budget,
      DEMONSTRATOR_E2E_OWNER:"fixture",PLAY_E2E_OWNER:"fixture",demonstratorE2eSessionRoot:()=>"/session",playE2eSessionRoot:()=>"/session",demonstratorE2eInvocationPid:()=>1,playE2eInvocationPid:()=>1,readServiceSession:()=>({id:"fixture"}),
-     parseServiceReadinessBudgetV1:(value:unknown)=>{assert.equal(value,budget);return budget;},serviceReadyProgressLanguage:()=>"en",serviceReadyProgressLine:()=>"progress",repoCacheDirectory:()=>"/browsers",demonstratorE2eOutputDirectory:()=>"/artifacts",
+     parseServiceReadinessBudgetV1:(value:unknown)=>{assert.equal(value,budget);return budget;},serviceReadyProgressLanguage:()=>"en",serviceReadyProgressLine:()=>"progress",repoPlaywrightBrowsersPath:()=>"/browsers",playE2eServiceV1:()=>({root:"/session",owner:"fixture"}),createRequire:()=>({resolve:()=>"/fixture/node_modules/playwright/package.json"}),runtimeCommandNameV1:()=>"bun",demonstratorE2eOutputDirectory:()=>"/artifacts",
      waitForServiceReady:(_root:unknown,_session:unknown,signal:AbortSignal)=>{
       readySignal=signal;const abort=()=>readyReject(signal.reason);signal.addEventListener("abort",abort,{once:true});void ready.then(()=>signal.removeEventListener("abort",abort),()=>signal.removeEventListener("abort",abort));
       if(signal.aborted)abort();if(row.phase==="ready")entered();else readyResolve("http://fixture");return ready;

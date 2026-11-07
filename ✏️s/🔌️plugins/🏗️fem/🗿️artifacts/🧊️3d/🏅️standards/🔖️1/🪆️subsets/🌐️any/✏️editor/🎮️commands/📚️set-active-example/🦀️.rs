@@ -31,6 +31,8 @@ pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Fem3dSnapshot>
         Some(text) => <Fem3dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| Fault::from(format!("fem3d.set-active-example.load: {error}")))?,
         None => Fem3dSnapshot::default(),
     };
-    Ok(Emit { effects: vec![semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::reset_document_effect(&document)], ..Default::default() })
+    let effect = semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::reset_document_effect(&document);
+    <Fem3dSnapshot as semio_framework_value::FromValue>::retire_decoded(document);
+    Ok(Emit { effects: vec![effect], ..Default::default() })
 }
 

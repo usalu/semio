@@ -1,7 +1,7 @@
 use super::*;
 use semio_plugin_host_guest_runtime::{MockGuestRuntime, PackageRef};
 use crate::component::PackageHash;
-use semio_framework_plugin_host_shard_executor::OutcomeSink;
+use semio_plugin_host_shard_executor::OutcomeSink;
 use semio_framework_actor::{ActivationEvent, ActorKind, Lane, PackageId, ShardKind};
 use semio_framework_async::{ProcessKind, WorkerPool, WorkerPoolConfig};
 
@@ -21,21 +21,21 @@ async fn neutral_activation_failures_retire_the_exact_kernel_and_guest_owners() 
             lane: Lane::Interactive,
             window: None,
             event: ActivationEvent::Manual,
-            retained: semio_framework_plugin_host_operation::test_native_authority::original_retained_turn(),
-            loan: semio_framework_plugin_host_operation::test_native_authority::original_retained_loan(),
+            retained: semio_plugin_host_operation::test_native_authority::original_retained_turn(),
+            loan: semio_plugin_host_operation::test_native_authority::original_retained_loan(),
         };
         let reservation = kernel.reserve_activation(request).await.unwrap();
         let actor = reservation.actor();
         let compiled = mock.compile(&PackageRef { package: package.clone(), hash: PackageHash([0; 32]) }, &[]).await.unwrap();
         let stage = row["stage"].as_str().unwrap();
-        let shards = if stage == "shard" { Vec::new() } else { vec![ShardExecutor::new(Arc::clone(&pool), Arc::clone(&runtime), Vec::new(), OutcomeSink::new(),semio_framework_plugin_host_shard::test_identity_issuer()).await] };
+        let shards = if stage == "shard" { Vec::new() } else { vec![ShardExecutor::new(Arc::clone(&pool), Arc::clone(&runtime), Vec::new(), OutcomeSink::new(),semio_plugin_host_shard::test_identity_issuer()).await] };
         if stage == "record" {
             kernel.deactivate(actor).await.unwrap();
         }
         if stage == "quarantine" {
-            let peer = kernel.activate(package.clone(), 0, ActorKind::PluginApp { plugin: package.clone(), app_id: "peer".into(), instance_id: 2 }, Lane::Interactive, None, ActivationEvent::Manual, semio_framework_plugin_host_operation::test_native_authority::original_retained_turn(), semio_framework_plugin_host_operation::test_native_authority::original_retained_loan()).await;
+            let peer = kernel.activate(package.clone(), 0, ActorKind::PluginApp { plugin: package.clone(), app_id: "peer".into(), instance_id: 2 }, Lane::Interactive, None, ActivationEvent::Manual, semio_plugin_host_operation::test_native_authority::original_retained_turn(), semio_plugin_host_operation::test_native_authority::original_retained_loan()).await;
             let fault = semio_framework_actor::TurnResult {
-                retained_receipt: semio_framework_plugin_host_operation::test_native_authority::idle_receipt(),
+                retained_receipt: semio_plugin_host_operation::test_native_authority::idle_receipt(),
                 ui_patches: vec![],
                 effects: vec![],
                 command_ingress: vec![],
@@ -81,11 +81,11 @@ async fn artifact_kind_app_ids_reach_the_guest_as_the_declared_activation_event(
     assert_eq!(activation_event_for_app_id("s.beta.sheet@1/*"), None, "a coordinate without a role suffix is not a surface id");
     assert!(activation_turn_event("home").is_none());
     let mut event = activation_turn_event("s.beta.sheet@1/*#editor").expect("a surface app id produces one Activate event");
-    match semio_framework_plugin_host_wit::conversion::kernel_event_to_wit(&mut event, 7).await.unwrap() {
-        semio_framework_plugin_host_wit::wit_events::Event::Activate(activate) => {
+    match semio_plugin_host_wit::conversion::kernel_event_to_wit(&mut event, 7).await.unwrap() {
+        semio_plugin_host_wit::wit_events::Event::Activate(activate) => {
             assert_eq!(activate.instance, 7);
             match activate.reason {
-                semio_framework_plugin_host_wit::wit_events::ActivationEvent::OnArtifactKind(kind) => assert_eq!(kind, "s.beta.sheet"),
+                semio_plugin_host_wit::wit_events::ActivationEvent::OnArtifactKind(kind) => assert_eq!(kind, "s.beta.sheet"),
                 _ => panic!("the guest must receive on-artifact-kind, not another activation-event case"),
             }
         }
@@ -110,19 +110,19 @@ async fn a_guest_refused_at_admission_reaches_the_host_as_its_fault() {
         lane: Lane::Interactive,
         window: None,
         event: ActivationEvent::Manual,
-        retained: semio_framework_plugin_host_operation::test_native_authority::original_retained_turn(),
-        loan: semio_framework_plugin_host_operation::test_native_authority::original_retained_loan(),
+        retained: semio_plugin_host_operation::test_native_authority::original_retained_turn(),
+        loan: semio_plugin_host_operation::test_native_authority::original_retained_loan(),
     };
     let reservation = kernel.reserve_activation(request).await.unwrap();
     let actor = reservation.actor();
     let compiled = mock.compile(&PackageRef { package, hash: PackageHash([0; 32]) }, &[]).await.unwrap();
-    let shards = vec![ShardExecutor::new(Arc::clone(&pool), Arc::clone(&runtime), Vec::new(), OutcomeSink::new(),semio_framework_plugin_host_shard::test_identity_issuer()).await];
-    let host = semio_framework_os_kernel::CHANNEL_VERSION;
-    mock.script_instantiate_refusal(semio_framework_os_kernel::os_spr::admit_guest_channel_version(host - 1, host).unwrap_err()).await;
+    let shards = vec![ShardExecutor::new(Arc::clone(&pool), Arc::clone(&runtime), Vec::new(), OutcomeSink::new(),semio_plugin_host_shard::test_identity_issuer()).await];
+    let host = semio_os_kernel::CHANNEL_VERSION;
+    mock.script_instantiate_refusal(semio_os_kernel::os_spr::admit_guest_channel_version(host - 1, host).unwrap_err()).await;
     let budget = Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1000, semio_framework_job::default_now_us().unwrap_or(0), 4, 8, 4096, 1);
     let refusal = install_actor(&mut kernel, &runtime, &shards, reservation, &compiled, &[], &budget).await.expect_err("a refused guest installs no actor");
     let fault = refusal.fault.expect("the admission fault travels with the refusal");
-    assert_eq!(fault.code.0, semio_framework_os_kernel::os_spr::CHANNEL_MISMATCH_CODE);
+    assert_eq!(fault.code.0, semio_os_kernel::os_spr::CHANNEL_MISMATCH_CODE);
     assert_eq!((fault.param("guest"), fault.param("host")), (Some((host - 1).to_string().as_str()), Some(host.to_string().as_str())));
     assert_eq!(refusal.reason, fault.describe(), "the words stay the fault's own description");
     assert!(kernel.transport_key(actor).is_none() && kernel.actor_record(actor).await.is_none(), "the reservation is retired");

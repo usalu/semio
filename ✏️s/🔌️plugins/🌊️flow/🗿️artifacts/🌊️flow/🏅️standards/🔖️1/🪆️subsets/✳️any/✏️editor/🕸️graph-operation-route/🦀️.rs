@@ -84,15 +84,15 @@ impl FlowGraphOperationWork {
     fn original_step(&mut self,input:&semio_plugin::retained_command::ArtifactCommandInputs<'_,semio_plugin::EditorApp<FlowPlayApp>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<ArtifactCommandWorkStep<semio_plugin::EditorApp<FlowPlayApp>>,semio_framework_job::OriginalTurnFailure>{
         use semio_framework_value::{RetirementDemand,RetainedCloneProgress,ValueError,ValueRefusalKind};let invalid=||ValueError::literal(ValueRefusalKind::InvariantViolated,"original graph command changed its retained intake");
         if self.completed||self.closing{return Err(invalid().into())}let context=input.context.ok_or_else(invalid)?;
-        if !self.original.receive_parent(input,cx)?{return Ok(ArtifactCommandWorkStep::Pending{stage:"flow-graph-original",preview:br#"{"en":"Preparing graph changes","de":"Graphänderungen werden vorbereitet"}"#})}
+        if !self.original.receive_parent(input,cx)?{return Ok(ArtifactCommandWorkStep::Pending{stage:"flow-graph-original",preview:br#"{"en":"Preparing graph changes","de":"Graph\u00e4nderungen werden vorbereitet"}"#})}
         if self.tool_id=="addWidget"&&self.descriptor.is_none(){
             if self.descriptor_work.is_none(){let d=RetirementDemand{copy_bytes:size_of::<FlowAddDescriptorWork>(),depth:1,..Default::default()};if cx.retained_work_can_enter(d){self.descriptor_work=Some(FlowAddDescriptorWork::new());cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})?;}return Ok(ArtifactCommandWorkStep::Pending{stage:"flow-descriptor",preview:br#"{"en":"Preparing widget","de":"Widget wird vorbereitet"}"#})}
             let(_,command,_)=self.original.references()?;let FlowCommand::AddWidget(payload)=command.get()else{return Err(invalid().into())};let work=self.descriptor_work.as_mut().ok_or_else(invalid)?;if let Some(descriptor)=work.step(payload,cx)?{self.descriptor=Some(descriptor);work.begin_close()}return Ok(ArtifactCommandWorkStep::Pending{stage:"flow-descriptor",preview:br#"{"en":"Preparing widget","de":"Widget wird vorbereitet"}"#})
         }
         if let Some(work)=self.descriptor_work.as_mut(){if work.terminal_is_empty(){let d=RetirementDemand{copy_bytes:size_of::<FlowAddDescriptorWork>(),depth:1,..Default::default()};if cx.retained_work_can_enter(d){self.descriptor_work=None;cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})?;}}else{work.close_step(cx)?;}return Ok(ArtifactCommandWorkStep::Pending{stage:"flow-descriptor",preview:br#"{"en":"Preparing widget","de":"Widget wird vorbereitet"}"#})}
-        if self.pipeline.is_none(){let d=RetirementDemand{copy_bytes:size_of::<FlowAuthoringCommandWork>(),depth:1,..Default::default()};if !cx.retained_work_can_enter(d){return Ok(ArtifactCommandWorkStep::Pending{stage:"flow-graph-original",preview:br#"{"en":"Preparing graph changes","de":"Graphänderungen werden vorbereitet"}"#})}let(_,command,_)=self.original.references()?;let(_,mode)=Self::original_request(command.get(),self.descriptor.as_ref(),&self.layout_options)?;self.pipeline=Some(FlowAuthoringCommandWork::new(flow::FlowAuthoringSerials::default(),mode));cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})?;return Ok(ArtifactCommandWorkStep::Pending{stage:"flow-graph-original",preview:br#"{"en":"Preparing graph changes","de":"Graphänderungen werden vorbereitet"}"#})}
+        if self.pipeline.is_none(){let d=RetirementDemand{copy_bytes:size_of::<FlowAuthoringCommandWork>(),depth:1,..Default::default()};if !cx.retained_work_can_enter(d){return Ok(ArtifactCommandWorkStep::Pending{stage:"flow-graph-original",preview:br#"{"en":"Preparing graph changes","de":"Graph\u00e4nderungen werden vorbereitet"}"#})}let(_,command,_)=self.original.references()?;let(_,mode)=Self::original_request(command.get(),self.descriptor.as_ref(),&self.layout_options)?;self.pipeline=Some(FlowAuthoringCommandWork::new(flow::FlowAuthoringSerials::default(),mode));cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})?;return Ok(ArtifactCommandWorkStep::Pending{stage:"flow-graph-original",preview:br#"{"en":"Preparing graph changes","de":"Graph\u00e4nderungen werden vorbereitet"}"#})}
         let(parent,command,infos)=self.original.references()?;let(request,_)=Self::original_request(command.get(),self.descriptor.as_ref(),&self.layout_options)?;
-        match self.pipeline.as_mut().ok_or_else(invalid)?.step(parent,command,&context.children,input.operation,infos,request,cx)?{Some(emit)=>{self.completed=true;Ok(ArtifactCommandWorkStep::Complete(emit))},None=>Ok(ArtifactCommandWorkStep::Pending{stage:"flow-graph-original",preview:br#"{"en":"Preparing graph changes","de":"Graphänderungen werden vorbereitet"}"#})}
+        match self.pipeline.as_mut().ok_or_else(invalid)?.step(parent,command,&context.children,input.operation,infos,request,cx)?{Some(emit)=>{self.completed=true;Ok(ArtifactCommandWorkStep::Complete(emit))},None=>Ok(ArtifactCommandWorkStep::Pending{stage:"flow-graph-original",preview:br#"{"en":"Preparing graph changes","de":"Graph\u00e4nderungen werden vorbereitet"}"#})}
     }
     pub(super) fn replaying(&self) -> bool {
         self.cursor < self.replay_target
@@ -228,7 +228,7 @@ pub struct FlowGraphOperationJobFactory {
 }
 
 impl FlowGraphOperationJobFactory {
-    pub(super) fn new(controller_id: &str) -> Self {
+    pub fn new(controller_id: &str) -> Self {
         Self { keys: FLOW_GRAPH_OPERATION_TOOL_IDS.iter().map(|tool_id| semio_framework::ToolFactoryKey::new(controller_id, *tool_id)).collect() }
     }
 }
@@ -379,3 +379,5 @@ impl FlowChildGroupJobFactoryProofs {
         Self::bounded_first_step_tool_proofs()
     }
 }
+
+semio_plugin::retained_command::terminal_frame_bound!(FlowGraphOperationWork);

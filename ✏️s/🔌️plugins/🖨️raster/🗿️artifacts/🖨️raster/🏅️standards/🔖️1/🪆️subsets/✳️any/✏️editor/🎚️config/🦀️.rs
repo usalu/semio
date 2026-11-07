@@ -308,6 +308,8 @@ impl Default for RasterImageGrid {
     fn default() -> Self { Self { x: 0, y: 0, width: 512, height: 512, bilinear: false } }
 }
 
+semio_s_artifact_raster_raster_model::raster_native_default!(RasterImageGrid);
+
 impl RasterImageGrid {
     pub fn valid(&self) -> bool { self.x <= 16_384 && self.y <= 16_384 && (1..=16_384).contains(&self.width) && (1..=16_384).contains(&self.height) }
 }

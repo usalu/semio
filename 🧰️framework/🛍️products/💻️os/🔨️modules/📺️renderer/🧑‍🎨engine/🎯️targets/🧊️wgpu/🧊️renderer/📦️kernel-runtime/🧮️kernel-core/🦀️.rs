@@ -444,7 +444,7 @@ pub fn extension_index() -> &'static ExtensionIndex {
 /// 🧩️ Mirrors `program_bridge::load_wasm_plugins`'s own "first `.wasm` file directly inside the
 /// plugin's own directory" convention — kept as a small local helper rather than importing that
 /// module's version, which is embedded inside its own `find`-style closure, not a reusable fn.
-pub async fn find_wasm_artifact(dir:&std::path::Path)->Result<Option<semio_framework_os_services_native_io::OriginalSuppliedNativePath>,crate::RendererSourceIoError>{crate::find_renderer_wasm_path(dir).await}
+pub async fn find_wasm_artifact(dir:&std::path::Path)->Result<Option<semio_os_services_native_io::OriginalSuppliedNativePath>,crate::RendererSourceIoError>{crate::find_renderer_wasm_path(dir).await}
 //#endregion 🔖️ExtensionIndex
 
 //#region 🔖️Requests/Outcomes
@@ -484,7 +484,7 @@ impl QueuedKernelEvent {
             Event::StagedFormRequested { instance, surface, body_key, request } => {
                 Ok(Self { kind: Some(QueuedKernelEventKind::StagedFormRequested), surface: Some(surface), surface_body_key: Some(body_key), surface_view_state: None, staged_instance: Some(instance), staged_request: Some(request), message_endpoint: None, message_payload: None })
             }
-            Event::Message { source: MessageEndpoint::Shell { instance }, payload } if !payload.is_empty() && payload.len() <= semio_framework_plugin::document_backbone_binding::DOCUMENT_BACKBONE_BINDING_CONTROL_MAXIMUM_BYTES => {
+            Event::Message { source: MessageEndpoint::Shell { instance }, payload } if !payload.is_empty() && payload.len() <= semio_plugin::document_backbone_binding::DOCUMENT_BACKBONE_BINDING_CONTROL_MAXIMUM_BYTES => {
                 Ok(Self { kind: Some(QueuedKernelEventKind::MessageShell), surface: None, surface_body_key: None, surface_view_state: None, staged_instance: None, staged_request: None, message_endpoint: Some(instance.0), message_payload: Some(payload) })
             }
             Event::Message { source: MessageEndpoint::Backbone { uri }, payload } if !payload.is_empty() && payload.len() <= store_sync::os_store::backbone::BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES => {

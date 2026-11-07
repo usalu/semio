@@ -1,0 +1,858 @@
+{
+  "groups": {
+    "other": [
+      {
+        "path": "🌎️hub/🧩️compositions/🖍️draw/🧪️tests/🌐️guest/🦀️.rs",
+        "fns": [
+          "jit_budget"
+        ],
+        "uses": [
+          "semio_framework::kernel::{Budget,Event,TurnResult,TurnStatus}",
+          "semio_plugin_host::{GuestRuntime,GuestInstance,WasmtimeRuntime,SharedEngineConfig,PackageRef,PackageId,PackageHash,retryable_lifecycle_turn}",
+          "super::*"
+        ]
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🔤️text/🛬️receive/🦀️.rs",
+        "fns": [
+          "begin_close"
+        ],
+        "uses": [
+          "semio_value::{OriginalReceivingPrimary,native_decoding::{NativeReceive,NativeReceiver,owned::{NativeDefault,NativeDefaultValue,NativeDefaultValueCursor,tree::{NativeValueSource,fixed,receipt,invalid}}}}"
+        ]
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🗺️surface/🦀️.rs",
+        "fns": [
+          "decode",
+          "encode"
+        ],
+        "uses": []
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/🧾️failure/🦀️.rs",
+        "fns": [
+          "admit",
+          "cause",
+          "context",
+          "context_refusal",
+          "controlled_retirement_supported",
+          "eq",
+          "fmt",
+          "from",
+          "into_value_error",
+          "kind",
+          "message",
+          "native_snapshot_turn",
+          "performed",
+          "primary_value",
+          "receipt",
+          "receipt_refusal",
+          "receiving_primary",
+          "retained_progress",
+          "retirement",
+          "retirement_birth_bytes",
+          "settlement_refusal",
+          "take",
+          "with_context_refusal",
+          "with_receipt_refusal",
+          "with_retained_progress",
+          "with_settlement_refusal"
+        ],
+        "uses": [
+          "semio_value::{ValueError,ValueRefusalKind,RetainedCloneProgress,retirement::{RetireOwned,RetirementCursor,deferred,deferred_birth_bytes_for,sequence,sequence_birth_bytes}}",
+          "semio_value_native_owned::OriginalReceivingPrimary"
+        ]
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/🏠️native/🦀️.rs",
+        "fns": [
+          "new",
+          "pending",
+          "reserve",
+          "return_step"
+        ],
+        "uses": [
+          "semio_value_retained_clone::retirement::controlled::{RetainedOwnerGate,RetainedOwnerGateGuard}",
+          "std::{any::Any,cell::UnsafeCell,marker::PhantomData,ptr::NonNull,sync::{atomic::{AtomicU8,AtomicU64,Ordering}}}"
+        ]
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🦀️.rs",
+        "fns": [
+          "accept",
+          "admit_work_step",
+          "consume_receiving_retained",
+          "grant",
+          "observe_native_decode_progress",
+          "receiving_child_progress",
+          "receiving_issued_grant",
+          "replacement_capture",
+          "replacement_is_stale",
+          "retained_delta",
+          "retained_is_subset",
+          "retained_min",
+          "retained_remaining",
+          "retained_turn_untouched",
+          "settle_receiving_scope",
+          "with_native_decode_progress",
+          "with_replacement_current",
+          "with_scoped_retained_loan"
+        ],
+        "uses": []
+      }
+    ],
+    "value-rest": [
+      {
+        "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🦀️.rs",
+        "fns": [
+          "retirement"
+        ],
+        "uses": []
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+        "fns": [
+          "take_value"
+        ],
+        "uses": [
+          "semio_value::retained_clone::retained_clone_grant_admits"
+        ]
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧳️read/🎟️work/🧪️tests/🦀️.rs",
+        "fns": [],
+        "uses": [
+          "super::super::update_work_tests::{build,debit,debit_admission,retire}"
+        ]
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🧪️tests/🦀️.rs",
+        "fns": [],
+        "uses": [
+          "crate::{DslValue,Number,NativeDecodeControl,NamedPersistentRoot,native_decoding::{NativeDecodeConstructionRecipient,owned::{NativeReceivingOriginal}}}"
+        ]
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🌱️value/📝️shared-utf8/🎟️native/🧪️tests/🦀️.rs",
+        "fns": [],
+        "uses": [
+          "semio_value_native_owned::native_decoding::{NativeDecodeWorkRecipient,NativeDecodeConstructionRecipient}"
+        ]
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🌱️value/📝️text/📦️paged/🦀️.rs",
+        "fns": [
+          "admit_copy",
+          "advance_copy",
+          "begin_copy",
+          "declare_exact_byte_len",
+          "declare_extent",
+          "encode_with",
+          "encode_with_inline",
+          "measure_extent_fragment",
+          "measure_text_fragment",
+          "read_controlled",
+          "read_from_encoding_source",
+          "read_from_source",
+          "refuse_text_producer",
+          "retirement",
+          "scope_copy",
+          "write_encoding_format",
+          "write_str",
+          "write_text"
+        ],
+        "uses": []
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🌱️value/📸️snapshot/👁️read/🔗️source/🧪️tests/🦀️.rs",
+        "fns": [
+          "staged_receipt"
+        ],
+        "uses": []
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🎟️admission/🦀️.rs",
+        "fns": [
+          "output_published"
+        ],
+        "uses": []
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧮️scalar/🧪️tests/🌐️lifecycle/🦀️.rs",
+        "fns": [
+          "take_value"
+        ],
+        "uses": [
+          "crate::observe_retirement_allocations as observe",
+          "crate::retained_clone::*",
+          "semio_test_fixtures::fixture_text"
+        ]
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧳️owner/🦀️.rs",
+        "fns": [
+          "retirement"
+        ],
+        "uses": []
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🌱️value/🫴️receiving/🦀️.rs",
+        "fns": [],
+        "uses": [
+          "crate::{ValueError,ValueRefusalKind}"
+        ]
+      }
+    ],
+    "value-decode": [
+      {
+        "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🦀️.rs",
+        "fns": [
+          "spent_bytes"
+        ],
+        "uses": []
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🎟️work/🦀️.rs",
+        "fns": [
+          "install_work_recipient"
+        ],
+        "uses": []
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧪️tests/🦀️.rs",
+        "fns": [],
+        "uses": [
+          "crate::native_decoding::OriginalReceivingPrimary"
+        ]
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🛂️allocation/🧪️tests/🦀️.rs",
+        "fns": [],
+        "uses": [
+          "crate::RetainedWorkOutcome",
+          "crate::native_decoding::{NativeDecodeControl,NativeDecodeAllocation,NativeForwardedDecodeControl,NativeForwardedDecodeContinuation,NativeDecodeRetirementRecipient}"
+        ]
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/♻️header/🎟️work/🧪️tests/🦀️.rs",
+        "fns": [
+          "actual_recursive_native_receivers_keep_finite_headers_exact_serde_output_and_cancelled_custody",
+          "begin_close"
+        ],
+        "uses": []
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🦀️.rs",
+        "fns": [],
+        "uses": [
+          "crate::OriginalReceivingPrimary",
+          "crate::RetainedWorkOutcome"
+        ]
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔢️array/🦀️.rs",
+        "fns": [
+          "source",
+          "take",
+          "take_demand"
+        ],
+        "uses": []
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🦀️.rs",
+        "fns": [
+          "add_receipt",
+          "as_source",
+          "as_str",
+          "boolean",
+          "child_grant",
+          "enum_ordinal",
+          "fixed",
+          "invalid",
+          "is_null",
+          "nested",
+          "number",
+          "receipt",
+          "record_child",
+          "record_entry",
+          "record_key",
+          "record_len",
+          "record_name",
+          "sequence_child",
+          "sequence_len",
+          "text",
+          "tree_kind",
+          "variant_payload",
+          "variant_tag"
+        ],
+        "uses": []
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🗂️map/tests.rs",
+        "fns": [
+          "as_source",
+          "dynamic_map_keys_require_an_actual_borrowed_name",
+          "record_key",
+          "tree_kind"
+        ],
+        "uses": []
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🗂️map/🦀️.rs",
+        "fns": [
+          "close_demands",
+          "close_step",
+          "fragment_probe"
+        ],
+        "uses": [
+          "crate::{NativeDecodeControl,RetirementDemand,ValueError,retirement::RetireOwned,retained_clone::{RetainedCloneBinding,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,retained_clone_grant_admits}}",
+          "std::mem::{ManuallyDrop,size_of}",
+          "super::{NativeReceive,NativeReceiver,NativeDefault,tree::{NativeValueSource,NativeReceiveSlot,fixed,invalid,receipt,nested,child_grant,add_receipt}}"
+        ]
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🦀️.rs",
+        "fns": [
+          "retirement",
+          "retirement_birth_bytes",
+          "take",
+          "take_demand"
+        ],
+        "uses": [
+          "crate::OriginalReceivingPrimary"
+        ]
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧺️set/🦀️.rs",
+        "fns": [
+          "close_demands",
+          "close_step"
+        ],
+        "uses": [
+          "crate::{NativeDecodeControl,RetirementDemand,ValueError,retirement::RetireOwned,retained_clone::{RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,retained_clone_grant_admits}}",
+          "std::mem::{ManuallyDrop,size_of}",
+          "super::{NativeDefault,NativeReceive,NativeReceiver,tree::{NativeReceiveSlot,NativeValueSource,add_receipt,child_grant,fixed,invalid,nested,receipt}}"
+        ]
+      }
+    ],
+    "os-0": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧵️pipeline/🧪️tests/🎯️target.rs",
+        "fns": [
+          "ev"
+        ],
+        "uses": []
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🛂️validation/🦀️.rs",
+        "fns": [
+          "decoding",
+          "encoding",
+          "receiving_status"
+        ],
+        "uses": [
+          "semio_io_control::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner}",
+          "semio_io_sqlite_snapshot::artifact::receiving::{Port, ReceivingWallet, integer, ordinal, sort, identity_position, parent_range, validate_schema_sql, check_database}",
+          "semio_io_sqlite_snapshot::receiving::{SqliteSnapshotDecodeReceiving as _, SqliteSnapshotEncodeReceiving as _}",
+          "super::{SpaceHistorySnapshot,S_SPACE_HISTORY_SCHEMA,SqliteDatabase,SqliteSnapshotControl,ValueError,ValueRefusalKind}"
+        ]
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "fns": [],
+        "uses": [
+          "semio_io_control::{NativeSnapshotFailure, native_snapshot_turn}",
+          "semio_io_sqlite_snapshot::{SnapshotEncoding, SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase}",
+          "semio_value::{RetainedWorkOutcome, ValueError, ValueRefusalKind}"
+        ]
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🦀️.rs",
+        "fns": [
+          "project_receiving",
+          "receiving_status",
+          "reconstruct_receiving"
+        ],
+        "uses": [
+          "semio_io_control::{NativeSnapshotBodyWallet, NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner, NativeSnapshotFailure}",
+          "semio_io_sqlite_snapshot::artifact::receiving::{Port, Projection, Scalar, row, cell, text_cell, push_row, integer, ordinal, identity_position, parent_range}",
+          "semio_io_sqlite_snapshot::receiving::{SqliteSnapshotDecodeReceiving as _, SqliteSnapshotEncodeReceiving as _}",
+          "semio_io_sqlite_snapshot::{SqliteDatabase, SqliteTable, SqliteRow, SqliteValue, SqliteSnapshotControl}",
+          "semio_value::{RetainedWorkOutcome, ValueError}"
+        ]
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/🦀️.rs",
+        "fns": [
+          "member_open_request_ignores_the_stepping_caller_identity_and_follows_the_slot_identity"
+        ],
+        "uses": [
+          "semio_job::{Generation, OperationId, ReplacementIdentity, StepContext}"
+        ]
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/🎭️exports/🦀️.rs",
+        "fns": [
+          "acknowledge_actor_failure_wit",
+          "actor_receipt_available",
+          "admit_input_wit",
+          "close_output",
+          "close_output_wit",
+          "codec_input",
+          "codec_input_plugin",
+          "codec_input_plugin_none",
+          "failure_authority",
+          "failure_view_length",
+          "fixed_receipt_pointer",
+          "publish_actor_failure_wit",
+          "read_actor_failure_wit",
+          "release_owned_job_receipt",
+          "return_fixed",
+          "take_input",
+          "take_optional_input",
+          "with_owned_job_receipt",
+          "wrong_codec_code",
+          "wrong_codec_operation"
+        ],
+        "uses": [
+          "semio_actor::retained_context::{OriginalActorAdmissionReply, OriginalActorCall, OriginalActorCallError, OriginalActorCloseReply}",
+          "semio_job::{JobOutcomeDescriptor, JobOutcomeView, StepBudget, StepContext}",
+          "semio_plugin_abi::actor_input_wire::ActorInputWire",
+          "super::{admitted_input, OriginalActorFixedReceipt, OriginalActorGuestEntry, OriginalOwnedJobReceiptLoan}"
+        ]
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧬️wit-bridge/🪢️bridge/🦀️.rs",
+        "fns": [
+          "boolean",
+          "bytes",
+          "event_from_wire",
+          "field",
+          "list",
+          "option",
+          "string",
+          "u32",
+          "u64",
+          "variant",
+          "wire_activation",
+          "wire_capability_change",
+          "wire_completion",
+          "wire_endpoint",
+          "wire_grant",
+          "wire_lifetime",
+          "wire_patch_receipt",
+          "wire_surface"
+        ],
+        "uses": []
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🦀️.rs",
+        "fns": [
+          "fund_or_refuse",
+          "fund_or_refuse_funds_yields_or_refuses_exactly",
+          "grant",
+          "plugin_typed_owner_step"
+        ],
+        "uses": []
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔀️post-turn-relay/🔌️plugin-instance-handle/🦀️.rs",
+        "fns": [
+          "compose",
+          "fmt",
+          "io_run",
+          "io_sniff",
+          "migrate",
+          "mutation_plan",
+          "new",
+          "run_job_on_registry",
+          "run_job_on_worker",
+          "test_relay_original_input",
+          "test_relay_wake_authority",
+          "wait_for_scripted_guest_relay_release"
+        ],
+        "uses": []
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🪪️identity/🦀️.rs",
+        "fns": [],
+        "uses": [
+          "semio_value::{ValueError,ValueRefusalKind,ErasedSnapshotRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},native_encoding::{NativeEncodeControl,NativeEncodeAllocation,NativeEncodeAllocationPort,NativeEncodeProgress,NativeEncodeRetirementRecipient,NativeForwardedEncodeReceipt}}"
+        ]
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🔌️plugin-app-impl/🔒️close-terminal/🦀️.rs",
+        "fns": [
+          "close_blockers_debug"
+        ],
+        "uses": []
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🔌️plugin-app-impl/🦀️.rs",
+        "fns": [
+          "birth_identity"
+        ],
+        "uses": []
+      }
+    ],
+    "os-1": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+        "fns": [
+          "admits",
+          "sqlite_snapshot_framework_space_history_installed_work_loan_is_admitted_until_exhausted_and_never_replaced"
+        ],
+        "uses": []
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🛫️native-encoding/🦀️.rs",
+        "fns": [],
+        "uses": [
+          "semio_dsl_record::RecordSpecProducer",
+          "semio_dsl_record::RecordValue",
+          "semio_io_control::{NativeSnapshotFailure, native_snapshot_turn}",
+          "semio_io_sqlite_snapshot::{SnapshotEncoding, SqliteSnapshotControl, SqliteSnapshotPhase}",
+          "semio_io_sqlite_snapshot::{ValueError, ValueRefusalKind}",
+          "semio_value::NativeEncodeControl",
+          "semio_value::RetainedWorkOutcome",
+          "semio_value::native_encoding::NativeEncodeProgress"
+        ]
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🛫️native-encoding/🧪️tests/🚪️control/🦀️.rs",
+        "fns": [],
+        "uses": [
+          "semio_value::native_encoding::{NativeEncodeRetirementRecipient,NativeEncodeAllocation}"
+        ]
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🛬️native-decoding/🦀️.rs",
+        "fns": [],
+        "uses": [
+          "semio_dsl_record::ParseOptions",
+          "semio_dsl_record::RecordSpecProducer",
+          "semio_dsl_record::RecordValue",
+          "semio_io_control::{NativeSnapshotFailure, native_snapshot_turn}",
+          "semio_io_sqlite_snapshot::{SqliteSnapshotControl, SqliteSnapshotPhase}",
+          "semio_io_sqlite_snapshot::{ValueError, ValueRefusalKind}",
+          "semio_value::RetainedWorkOutcome",
+          "semio_value_native_owned::native_decoding::NativeDecodeControl",
+          "semio_value_native_owned::native_decoding::NativeDecodeProgress"
+        ]
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🛬️native-decoding/🧪️tests/🚪️control/🦀️.rs",
+        "fns": [],
+        "uses": [
+          "semio_value_native_owned::{native_decoding::NativeDecodeRetirementRecipient, native_decoding::NativeDecodeAllocation}"
+        ]
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪆️workspace-receiving/🦀️.rs",
+        "fns": [
+          "unbacked",
+          "validate_decoding",
+          "validate_encoding"
+        ],
+        "uses": [
+          "semio_io_control::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner, NativeSnapshotFailure, native_snapshot_turn}",
+          "semio_io_schema::{IoError, IoResult}",
+          "semio_value::{RetainedWorkOutcome, ValueError, ValueRefusalKind}"
+        ]
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/📦️archive/🛬️decode/🦀️.rs",
+        "fns": [],
+        "uses": [
+          "semio_io_control::NativeSnapshotBodyWallet"
+        ]
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎮️command/📥️admission/🦀️.rs",
+        "fns": [],
+        "uses": [
+          "semio_plugin_ownership::bounded_ownership::plugin_typed_owner_step"
+        ]
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/⚠️failure/🦀️.rs",
+        "fns": [
+          "assert_work_frame_fits",
+          "checked_work_frame_bytes"
+        ],
+        "uses": []
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔀️post-turn-relay/🏠️native/🦀️.rs",
+        "fns": [
+          "new"
+        ],
+        "uses": []
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔀️post-turn-relay/🦀️.rs",
+        "fns": [],
+        "uses": [
+          "cold_relay_job::GuestColdRelayJob",
+          "instance_slots_leases_and_cancel_helpers::{\n    cancel_guest_job_once, foreground_cancel_completion, guest_relay_cleanup_pending_detail,\n    mark_guest_cleanup_pending, quarantine_guest_instance, start_guest_job, step_guest_job,\n    GuestInstanceLease, GuestInstanceSlot,\n}",
+          "lifecycle_probe_and_refused_source::{\n    GuestRelayLifecycleProbeControl, GuestRelayLifecycleProbeJob,\n}",
+          "mounted_registry_pump_and_reaper::{\n    GuestRelayMountedFuture, GuestRelayMountedReap, GuestRelayMountedReaper,\n}",
+          "mounted_registry_pump_and_reaper::{\n    read_guest_relay_outcome_page, step_guest_relay_owner, GuestRelayStep,\n}",
+          "mounted_session_types_and_registry_struct::{\n    close_relay_session, GuestRelayAdmission, GuestRelayMountedClose, GuestRelayMountedLifecycle,\n    GuestRelayMountedOutput, GuestRelayMountedOwner, GuestRelayMountedRegistry,\n    GuestRelayMountedSession, GuestRelayMountedSlot, GuestRelayMountedTerminal,\n    GuestRelayOutcomeKind, GuestRelayOutcomeStage, GuestRelayWakeCustody, GUEST_RELAY_MOUNTED_SLOTS,\n    GUEST_RELAY_REAPER_FALLBACK_MS,\n}",
+          "original_crossing::GuestRelayNativeResponse",
+          "plugin_instance_handle::wait_for_scripted_guest_relay_release",
+          "pool_future_requests_and_completion_slot::{\n    RELAY_JOB_WORK_FUEL,\n    GuestRelayCompletionSender, GuestRelayCompletionSlot, GuestRelayInlineRequest,\n    GuestRelayOwnedBytes, GuestRelayPoolFailure, GuestRelayPoolFuture, GuestRelayRequest,\n    GuestRelayRequestKind, GuestRelayStepCompletion,\n}",
+          "relay_attempts_and_publication::{\n    receive_relay_close, recover_guest_relay_failure, run_guest_relay_request, GuestRelayAttempt,\n    GuestRelayPublication, GuestRelayPublicationKind,\n}",
+          "semio_async::{Lane, ProcessKind, WorkerPool, WorkerPoolConfig}",
+          "semio_plugin_guest_contract::{identity_turn_fault, JobBudget, JobStep, PluginHostError, TurnFault}"
+        ]
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🪪️identity/🧪️tests/🦀️.rs",
+        "fns": [],
+        "uses": [
+          "semio_value::native_encoding::{NativeEncodeAllocation, NativeEncodeControl, NativeEncodeProgress, NativeEncodeRetirementRecipient}"
+        ]
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🖼️render/📥️staging/🏷️reserved-jobs/🦀️.rs",
+        "fns": [
+          "build_reserved",
+          "complete",
+          "turn_fault"
+        ],
+        "uses": [
+          "semio_job::{OriginalTurnFailure,OriginalTurnPrimary,StepContext}"
+        ]
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧵️retained-command-job/🦀️.rs",
+        "fns": [
+          "ephemeral_is_unallocated",
+          "terminal_frame_bytes"
+        ],
+        "uses": []
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🫧️transient/🦀️.rs",
+        "fns": [],
+        "uses": [
+          "semio_plugin_ownership::bounded_ownership::PluginLifecycleStep"
+        ]
+      }
+    ],
+    "os-2": [
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/📥️lifted/🪆️workspace-receiving/🦀️.rs",
+        "fns": [
+          "retire_workspace"
+        ],
+        "uses": [
+          "pack::snapshot::ArtifactSqliteSnapshot as _",
+          "semio_io_control::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner, NativeSnapshotFailure, native_snapshot_turn}"
+        ]
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-retirement/🦀️.rs",
+        "fns": [
+          "flatten",
+          "io_failure"
+        ],
+        "uses": [
+          "semio_io_control::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner, NativeSnapshotFailure, native_snapshot_turn}",
+          "semio_value::{RetainedWorkOutcome,ValueError,ValueRefusalKind,retirement::RetireOwned}"
+        ]
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🛂️receiving/🦀️.rs",
+        "fns": [],
+        "uses": [
+          "semio_value_native_owned::{native_decoding::NativeDecodeAllocation, native_decoding::NativeForwardedDecodeControl}"
+        ]
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧬️hydration-types-constructors-and-drive/🦀️.rs",
+        "fns": [
+          "decode_operation",
+          "with_replacement"
+        ],
+        "uses": []
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/📤️turn-output/🦀️.rs",
+        "fns": [
+          "resident_turn_output_retains_denied_and_cancelled_descendants_until_exact_paid_close",
+          "store"
+        ],
+        "uses": [
+          "semio_job::{OriginalTurnFailure,StepContext,close_original_retained_step}",
+          "semio_value::{RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,RetireOwned,ValueError,ValueRefusalKind,retirement::controlled::ControlledRetirement}"
+        ]
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔀️post-turn-relay/🧬️codec/📥️receiving/🦀️.rs",
+        "fns": [],
+        "uses": [
+          "semio_value::{ValueError,ValueRefusalKind,native_encoding::{NativeEncodeProgress,NativeEncodeAllocation}}"
+        ]
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔔️wake/🧪️tests/🦀️.rs",
+        "fns": [
+          "original_host_actor_and_wake_returns_share_one_finite_treasury_and_exact_checkout",
+          "original_host_context_loan_preserves_same_recipient_and_returns_cumulative_wake_once",
+          "original_host_driver_treasury_never_renews_and_rejects_receipts_outside_the_independent_admission_policy",
+          "original_host_production_driver_keeps_same_finite_treasury_across_all_wake_returns"
+        ],
+        "uses": []
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/🎟️call/🦀️.rs",
+        "fns": [
+          "clock",
+          "core_bytes",
+          "grant",
+          "observed",
+          "original_owned_guest_call_preserves_source_core_machine_and_independent_execution",
+          "take_original_call_result_step"
+        ],
+        "uses": [
+          "semio_job::{OriginalJobFixtureCaller,OperationId,Generation}",
+          "semio_value::RetainedCloneGrant",
+          "super::*"
+        ]
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/🦀️.rs",
+        "fns": [
+          "owned_channel_guest",
+          "owned_clock_guest",
+          "owned_guest",
+          "owned_input_echo_guest",
+          "owned_input_pending_guest",
+          "owned_input_receipt_guest",
+          "section",
+          "sleb",
+          "uleb"
+        ],
+        "uses": [
+          "super::OwnedSemioExport"
+        ]
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🎟️caller/👷️work/🦀️.rs",
+        "fns": [],
+        "uses": [
+          "semio_value_native_owned::owned::NativeReceivingOriginal"
+        ]
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️guest-contract/🎟️original-actor-context/🧊️cold-job/🦀️.rs",
+        "fns": [
+          "portable_frontier_consumes_actual_fixed_receipts_before_any_output_ack"
+        ],
+        "uses": []
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📥️staging/📣️host-event-routing/🦀️.rs",
+        "fns": [
+          "action_host_event_close_demands",
+          "capture_original_host_event_route",
+          "claim_original_command_scope",
+          "claim_original_host_event_scope",
+          "claim_scope",
+          "close_action_host_events",
+          "close_original_host_event_source",
+          "original_host_event_close_demands",
+          "owns_original_command_scope",
+          "owns_original_host_event_source"
+        ],
+        "uses": [
+          "semio_plugin_decl_emission::{ActionMeta,HostEvent}"
+        ]
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📥️staging/🔒️close-ladder/🦀️.rs",
+        "fns": [
+          "close_rung_now"
+        ],
+        "uses": []
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs",
+        "fns": [],
+        "uses": [
+          "checkpoint_and_work_contract::{ARTIFACT_COMMAND_CHECKPOINT_HEADER_BYTES, ArtifactCommandCheckpoint, encode_artifact_command_checkpoint}",
+          "checkpoint_and_work_contract::{ARTIFACT_COMMAND_FAULT_DETAIL_MAXIMUM_BYTES, decode_artifact_command_checkpoint}"
+        ]
+      },
+      {
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪜️maintenance-ladder/🦀️.rs",
+        "fns": [
+          "whole_receipt"
+        ],
+        "uses": []
+      }
+    ]
+  },
+  "odd": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/📦️original/🧪️tests/🦀️.rs",
+      "stages": [
+        "1",
+        "3"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📸️snapshot/👁️read/🔗️source/🧪️tests/🧫️fixtures/🔣️.json",
+      "stages": [
+        "1",
+        "2"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/♻️header/🎟️work/📐️.json",
+      "stages": [
+        "1",
+        "2"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/♻️header/🎟️work/🔣️.json",
+      "stages": [
+        "1",
+        "2"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/📦️storage/📐️.json",
+      "stages": [
+        "1",
+        "2"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/📦️storage/🔣️.json",
+      "stages": [
+        "1",
+        "2"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/⚠️refusal/🛬️receiving/🦀️.rs",
+      "stages": [
+        "1",
+        "3"
+      ]
+    }
+  ],
+  "locks": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/Cargo.lock",
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/Cargo.lock",
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/Cargo.lock",
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/Cargo.lock",
+    "🌎️hub/Cargo.lock",
+    "🧰️framework/Cargo.lock"
+  ]
+}

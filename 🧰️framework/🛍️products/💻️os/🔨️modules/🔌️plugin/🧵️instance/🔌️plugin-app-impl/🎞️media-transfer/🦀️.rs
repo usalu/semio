@@ -26,7 +26,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             }));
         }
         if port != "artifact:out" {
-            let exported = owner.receive_nested::<Media, Result<Option<MediaArtifact>,semio_plugin_decl_app::MediaArtifactOperationFailure>>(|slot, original| {
+            let exported = owner.receive_nested::<Media, Result<Option<MediaArtifact>,semio_plugin_decl_app::MediaArtifactOperationFailure>, semio_os_kernel::io::control::NativeSnapshotFailure>(|slot, original| semio_os_kernel::io::control::native_snapshot_turn(|work| { work.performed(); (|| -> Result<Result<Option<MediaArtifact>,semio_plugin_decl_app::MediaArtifactOperationFailure>, ValueError> {
                 let media = match ::semio_framework_async::poll::resolve_ready(self.export_media(port,cx)) {
                     Ok(Some(media))=>media,
                     Ok(None)=>return Ok(Ok(None)),
@@ -47,7 +47,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
                     }
                 };
                 Ok(Ok(Some(artifact)))
-            })??;
+            })().map_err(Into::into) })).result.map_err(semio_os_kernel::io::control::NativeSnapshotFailure::into_value_error)??;
             return Ok(exported);
         }
         let archive = PluginApp::document_archive(self).await?;

@@ -38,6 +38,7 @@ semio-framework-value-shared-issuance = { path = "../../../../♻️retirement/�
 semio-framework-value-snapshot-projection = { path = "../../../../📽️projection/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-clone-source-testing = { path = "../../../../🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value-testing-allocator = { path = "../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }

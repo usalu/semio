@@ -170,3 +170,5 @@ impl ArtifactCommandWork<EditorApp<Gif87aEditor>> for PaintRegionWork {
         self.closing && self.revision.is_none() && self.samples.is_none() && self.rows == 0 && self.cursor == 0
     }
 }
+
+semio_plugin::retained_command::terminal_frame_bound!(PaintRegionWork);

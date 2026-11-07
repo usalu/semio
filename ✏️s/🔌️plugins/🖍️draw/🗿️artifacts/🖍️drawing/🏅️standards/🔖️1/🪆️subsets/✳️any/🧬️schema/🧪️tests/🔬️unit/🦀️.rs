@@ -14,7 +14,7 @@ async fn default_document_has_path_layer() {
 async fn scene_nodes_include_shape_bounds() {
     let layer = create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Rect")).to_string().into()).expect("nonempty authored identity"), "Rect");
     let doc = DrawingSnapshot { layers: vec![layer].into(), ..default_drawing_document("scene", None) };
-    let nodes = flatten_drawing_document_to_scene_nodes(&doc);
+    let nodes = semio_s_artifact_draw_drawing_scene::preparation::testkit::scene_nodes(&doc);
     assert_eq!(nodes.len(), 1);
     assert!(!nodes[0].segments.is_empty());
 }
@@ -38,7 +38,7 @@ async fn resolve_boolean_layer_segments_unions_two_rects() {
     let boolean = create_drawing_boolean_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Union")).to_string().into()).expect("nonempty authored identity"), "Union", "union", [id_a, id_b].into_iter().collect());
     let boolean_id = layer_id(&boolean).to_string();
     doc.layers.push(boolean);
-    let nodes = flatten_drawing_document_to_scene_nodes(&doc);
+    let nodes = semio_s_artifact_draw_drawing_scene::preparation::testkit::scene_nodes(&doc);
     let boolean_node = nodes.iter().find(|node| node.id == boolean_id).expect("boolean scene node");
     assert!(!boolean_node.segments.is_empty());
     assert_eq!(boolean_node.fill_rule.as_deref(), Some("evenodd"));
@@ -64,7 +64,7 @@ async fn resolve_boolean_layer_segments_flattens_arcs_before_boolean_operation()
     let boolean = create_drawing_boolean_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Union")).to_string().into()).expect("nonempty authored identity"), "Union", "union", [id_a, id_b].into_iter().collect());
     let boolean_id = layer_id(&boolean).to_string();
     doc.layers.push(boolean);
-    let nodes = flatten_drawing_document_to_scene_nodes(&doc);
+    let nodes = semio_s_artifact_draw_drawing_scene::preparation::testkit::scene_nodes(&doc);
     let boolean_node = nodes.iter().find(|node| node.id == boolean_id).expect("boolean scene node");
     assert!(!boolean_node.segments.is_empty());
 }
@@ -100,7 +100,7 @@ async fn resolve_trace_layer_segments_traces_solid_square_png() {
     doc.assets = assets;
     doc.artboard = Some(DrawingArtboard { width: 16.0, height: 16.0 });
     doc.layers.push(create_drawing_trace_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Trace")).to_string().into()).expect("nonempty authored identity"), "Trace", "source"));
-    let nodes = flatten_drawing_document_to_scene_nodes(&doc);
+    let nodes = semio_s_artifact_draw_drawing_scene::preparation::testkit::scene_nodes(&doc);
     assert_eq!(nodes.len(), 1);
     assert!(!nodes[0].segments.is_empty());
     assert_eq!(nodes[0].fill_rule.as_deref(), Some("evenodd"));
@@ -529,7 +529,7 @@ fn nested_group_transform_reaches_scene_and_bounds() {
     if let DrawingLayerNode::Group(body) = &mut group { body.children.push(child); }
     assert_eq!(drawing_layer_world_bounds(&group), Some((18.0, 35.0, 20.0, 60.0)));
     let document = DrawingSnapshot { layers: vec![group].into(), ..Default::default() };
-    let scene = flatten_drawing_document_to_scene_nodes(&document);
+    let scene = semio_s_artifact_draw_drawing_scene::preparation::testkit::scene_nodes(&document);
     assert_eq!(scene[0].transform, [2.0, 0.0, 0.0, 3.0, 18.0, 35.0]);
 }
 
@@ -581,7 +581,7 @@ fn text_scene_preserves_authored_coordinates_under_layer_transform() {
     text.base.transform.scale_x = 2.0;
     text.base.transform.scale_y = 3.0;
     let snapshot = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
-    let nodes = flatten_drawing_document_to_scene_nodes(&snapshot);
+    let nodes = semio_s_artifact_draw_drawing_scene::preparation::testkit::scene_nodes(&snapshot);
     assert_eq!(nodes[0].transform, [2.0, 0.0, 0.0, 3.0, 114.0, 233.0]);
 }
 
@@ -589,7 +589,7 @@ fn text_scene_preserves_authored_coordinates_under_layer_transform() {
 fn scene_preserves_authored_curve_segments_for_canvas_and_vector_export() {
     let segments = vec![PathSegment::Move { to:[0.0,0.0] },PathSegment::Arc { rx:5.0,ry:3.0,rotation:25.0,large_arc:true,sweep:false,to:[30.0,10.0] },PathSegment::Quad { ctrl:[5.0,9.0],to:[10.0,0.0] }];
     let snapshot = DrawingSnapshot { layers:vec![create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Curves")).to_string().into()).expect("nonempty authored identity"), "Curves",segments.iter().cloned().collect())].into(),..Default::default() };
-    assert_eq!(flatten_drawing_document_to_scene_nodes(&snapshot)[0].segments,segments);
+    assert_eq!(semio_s_artifact_draw_drawing_scene::preparation::testkit::scene_nodes(&snapshot)[0].segments,segments);
 }
 
 fn clone_assignments(node:&DrawingLayerNode)->semio_framework_value_persistent::list::PagedList<semio_s_artifact_draw_drawing_model::identity::DrawingIdentityAssignment,{usize::MAX}>{

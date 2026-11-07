@@ -108,7 +108,7 @@ impl protocol::ColdDiffAlgebra<Process3dPresence> for Process3dPresenceDiff {
 
 /// 📸️ Native snapshot codec: the canonical JSON of the value projection, no hand-written frame.
 impl store::ArtifactPresenceSnapshot for Process3dPresence {
-    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, semio_framework_value::ValueError> {
+    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> semio_framework_value::RetainedWorkOutcome<Self, store::io::control::NativeSnapshotFailure> {
         store::decode_presence_json(bytes, owner)
     }
 }

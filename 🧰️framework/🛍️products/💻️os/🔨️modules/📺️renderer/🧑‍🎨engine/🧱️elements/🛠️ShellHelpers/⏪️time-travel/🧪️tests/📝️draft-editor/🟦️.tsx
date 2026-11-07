@@ -80,7 +80,7 @@ describe("🧭️ a session change reveals the History panel and moves focus whe
     withInputs.unmount();
     const withoutInputs = mountHistoryBody(editor(false), () => undefined);
     const accept = timeTravelFocusElementV1(withoutInputs.container, "editor");
-    expect([accept?.tagName, accept?.closest("[id]")?.id.endsWith(`/${keys.accept.row}`)]).toEqual(["BUTTON", true]);
+    expect([accept?.tagName, accept?.getAttribute("role"), accept?.closest("[id]")?.id.endsWith(`/${keys.accept.row}`)]).toEqual(["DIV", "treeitem", true]);
     withoutInputs.unmount();
   });
 

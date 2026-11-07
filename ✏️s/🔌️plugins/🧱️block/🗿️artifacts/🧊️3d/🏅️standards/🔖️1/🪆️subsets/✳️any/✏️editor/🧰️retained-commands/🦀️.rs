@@ -206,3 +206,5 @@ impl ArtifactOwnedToolJobFactory for Block3dRetainedCommandJobFactory {
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = BLOCK3D_PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️RetainedCommands
+
+semio_plugin::retained_command::terminal_frame_bound!(Block3dWindowPreviewWork);

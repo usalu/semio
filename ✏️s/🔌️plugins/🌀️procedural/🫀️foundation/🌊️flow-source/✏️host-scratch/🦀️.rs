@@ -102,7 +102,7 @@ impl HostScratchWork{
    HostScratchEdit::RemoveLayout{id}=>{
     match self.phase{
      1=>{let turn=source.layout.admit_lookup_borrowed_original(id,grant);self.work=turn.work;self.progress=Default::default();let(lookup,p)=turn.result?;self.fields.lookup=Some(lookup);self.progress=p;self.phase=2},
-     2=>{let lookup=self.fields.lookup.as_mut().unwrap();let turn=lookup.advance_borrowed_original(id,grant);self.work=turn.work;self.progress=turn.result?.progress();if lookup.is_complete(){self.found=lookup.result_rank().is_some();self.phase=3}},
+     2=>{let Fields{edit,lookup,..}=&mut*self.fields;let Some(HostScratchEdit::RemoveLayout{id})=edit.as_ref()else{unreachable!()};let lookup=lookup.as_mut().unwrap();let turn=lookup.advance_borrowed_original(id,grant);self.work=turn.work;self.progress=turn.result?.progress();if lookup.is_complete(){self.found=lookup.result_rank().is_some();self.phase=3}},
      3=>{let lookup=self.fields.lookup.take().unwrap();self.fields.lookup_close=Some(ControlledRetirement::new(lookup).unwrap_or_else(|_|unreachable!("layout lookup declares controlled retirement")))},
      5=>{if !self.found{self.finish(false)}else{let Some(HostScratchEdit::RemoveLayout{id})=self.fields.edit.take()else{unreachable!()};self.fields.entry=Some(OriginalOwnedEntry::remove(std::mem::take(&mut source.layout),id))}},
      _=>return Err(invalid("layout removal phase is invalid")),

@@ -483,3 +483,16 @@ pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::Ar
 //#endregion 🔖️Declaration
 }
 //#endregion 🧩️ArtifactItems5
+
+/// 🆔️ Collection members are addressed by their own string id.
+impl protocol::Identified<String> for crate::SequenceStep {
+    fn id(&self) -> &String {
+        &self.id
+    }
+}
+
+impl protocol::Identified<String> for crate::SequenceEdge {
+    fn id(&self) -> &String {
+        &self.id
+    }
+}

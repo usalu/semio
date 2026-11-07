@@ -297,7 +297,7 @@ pub fn semio_drawing_from_scenes(scenes_json: &[String]) -> Result<semio_s_artif
 /// every drawing it delivers into an output widget (`output_drawing_handles`) flattened by the flow
 /// drawing kernel — the picture the editor's `drawing:out` port publishes.
 pub fn generation2d_drawing(snapshot: &semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot) -> Result<semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot, String> {
-    let eval_json = semio_s_artifact_procedural_2d_model::with_host(&snapshot.host_snapshot, |host| host.evaluate().unwrap_or_default());
+    let eval_json = semio_s_artifact_procedural_2d_model::with_host(&snapshot.host_snapshot, |host| host.evaluate().unwrap_or_default()).map_err(|error| error.into_message())?;
     let outputs = semio_framework_pack_json::parse(&eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     let handles = semio_s_artifact_procedural_2d_io_text::snapshot::output_drawing_handles(&snapshot.host_snapshot, &outputs);
     semio_drawing_from_scenes(&handles.iter().map(|handle| semio_os_flow::render_scene_json(handle)).collect::<Vec<_>>())

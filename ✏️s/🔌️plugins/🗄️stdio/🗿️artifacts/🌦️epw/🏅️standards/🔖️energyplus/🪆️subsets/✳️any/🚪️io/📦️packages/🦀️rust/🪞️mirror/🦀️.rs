@@ -2,7 +2,7 @@
 
 pub mod io_registry {
     use crate::standards::energyplus::subsets::any::io::io_registry as std_composer;
-    use {semio_plugin::io::register_composer_entries,semio_plugin::io::ComposeError,semio_plugin::io::ComposedArtifact,semio_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_plugin::io::ErasedComposeSource};
+    use {semio_plugin::io::ComposeError,semio_plugin::io::ComposedArtifact,semio_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_plugin::io::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
@@ -18,10 +18,6 @@ pub mod io_registry {
         ::semio_framework_async::poll::resolve_ready((entry.compose)(sources))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn register() {
-        register_composer_entries(std_composer::entries()).expect("static Stdio registration must be available and conflict-free");
-    }
 }
 #[path = "."]
 pub mod standards {

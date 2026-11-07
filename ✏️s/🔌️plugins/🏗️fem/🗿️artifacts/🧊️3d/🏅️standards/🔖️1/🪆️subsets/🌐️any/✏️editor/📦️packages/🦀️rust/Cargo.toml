@@ -70,6 +70,7 @@ semio-s-fem-model = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async = { workspace = true }
+semio-framework-trace = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-ui-scene = { workspace = true }

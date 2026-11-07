@@ -19,25 +19,6 @@ generate!({
     disable_custom_section_link_helpers: true,
 });
 
-/// 🪶️ Converts the schema-declared ABI bounds without platform truncation.
-pub fn sqlite_limits(value: exports::semio::framework::codec::SnapshotLimits) -> crate::sqlite_wire::SnapshotLimits {
-    crate::sqlite_wire::SnapshotLimits {
-        max_file_bytes: value.max_file_bytes,
-        max_value_bytes: value.max_value_bytes,
-        max_allocation_bytes: value.max_allocation_bytes,
-        max_schema_bytes: value.max_schema_bytes,
-        max_rows: value.max_rows,
-        max_columns: value.max_columns,
-        max_tables: value.max_tables,
-        max_pages: value.max_pages,
-    }
-}
-
-/// 🎟️ Preserves all five original native ownership axes in the semantic codec request.
-pub fn sqlite_grant(value: semio::framework::types::RetainedCloneGrant) -> crate::sqlite_wire::SnapshotGrant {
-    crate::sqlite_wire::SnapshotGrant { maximum_items:value.maximum_items, maximum_copy_bytes:value.maximum_copy_bytes, maximum_capacity_bytes:value.maximum_capacity_bytes, maximum_release_bytes:value.maximum_release_bytes, maximum_depth:value.maximum_depth }
-}
-
 /// 👓️ Projects only the actual same-instance retirement ticket and scalar demands.
 pub fn sqlite_retirement(value:crate::sqlite_wire::SnapshotRetirement)->exports::semio::framework::codec::SnapshotRetirement {
     exports::semio::framework::codec::SnapshotRetirement { ticket:value.ticket,owned_bytes:value.owned_bytes,refusal:value.refusal,native_pending:value.native_pending,output_pending:value.output_pending,terminal:value.terminal,demands:exports::semio::framework::codec::SnapshotDemands{items:value.demands.items,copy_bytes:value.demands.copy_bytes,capacity_bytes:value.demands.capacity_bytes,release_bytes:value.demands.release_bytes,depth:value.demands.depth} }

@@ -67,6 +67,7 @@ semio-framework-value-persistent = { path = "../../../../../../../../🔨️modu
 
 [dev-dependencies]
 serde_json = { workspace = true }
+semio-plugin-command = { path = "../../../../🎮️command/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 
 [features]
 artifact-app-testing = []

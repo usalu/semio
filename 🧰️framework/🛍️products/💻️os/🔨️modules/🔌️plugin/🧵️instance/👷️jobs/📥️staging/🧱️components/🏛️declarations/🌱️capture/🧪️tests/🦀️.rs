@@ -1,5 +1,8 @@
 //! 🧪️ Concrete registration capture uses the actual committed source and returns every original alias on cancellation.
-use super::*;
+use semio_framework_job::{close_original_retained_step, default_now_us, Generation, OperationId, OriginalJobDecodeOwner, OriginalJobFixtureCaller, OriginalTurnFailure, StepContext};
+use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_plugin_decl_app::ArtifactApp;
+use semio_plugin_instance_jobs::jobs_components::{produce_declared_tool_catalog, OriginalDeclaredEmptyOperationSource, OriginalDeclaredTools};
 const TURN: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 1048576, maximum_depth: 4096 };
 const HEADER: RetainedCloneGrant = RetainedCloneGrant { maximum_copy_bytes: 32768, maximum_capacity_bytes: 16 * 1048576, ..TURN };
 fn caller() -> OriginalJobFixtureCaller {
@@ -64,7 +67,7 @@ fn concrete_original_registration_captures_same_rows_and_closes_each_cancelled_p
                 completed = true;
                 break;
             }
-            assert!(turn < 65535, "[DEBUG] original registration capture stalled phase={}", source.as_ref().unwrap().progress());
+            assert!(turn < 65535, "original registration capture stalled phase={}", source.as_ref().unwrap().progress());
         }
         if cutoff == usize::MAX {
             assert!(completed)
@@ -76,7 +79,7 @@ fn concrete_original_registration_captures_same_rows_and_closes_each_cancelled_p
                     break;
                 }
                 observed(&mut caller, &mut decoder, HEADER, |cx| cx.with_original_retirement(|cx| owner.close_step(cx)));
-                assert!(turn < 65535, "[DEBUG] original operation registration output close stalled");
+                assert!(turn < 65535, "original operation registration output close stalled");
             }
         }
         drop(output.take());
@@ -85,14 +88,14 @@ fn concrete_original_registration_captures_same_rows_and_closes_each_cancelled_p
                 break;
             }
             observed(&mut caller, &mut decoder, HEADER, |cx| cx.with_original_retirement(|cx| source.as_mut().unwrap().close_step(cx)));
-            assert!(turn < 65535, "[DEBUG] original operation registration source close stalled phase={}", source.as_ref().unwrap().progress());
+            assert!(turn < 65535, "original operation registration source close stalled phase={}", source.as_ref().unwrap().progress());
         }
         let d = OriginalDeclaredEmptyOperationSource::boxed_release_demands();
         observed(&mut caller, &mut decoder, HEADER, |cx| {
             cx.with_original_retirement(|cx| {
                 close_original_retained_step(cx, d, |_| {
                     source.take();
-                    Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: d.copy_bytes, released_bytes: d.release_bytes, ..Default::default() }))
+                    semio_framework_value::RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: d.copy_bytes, released_bytes: d.release_bytes, ..Default::default() })), work: 1 }
                 })?;
                 Ok(())
             })
@@ -104,7 +107,7 @@ fn concrete_original_registration_captures_same_rows_and_closes_each_cancelled_p
             let d = catalog.close_demands(4096).unwrap();
             observed(&mut caller, &mut decoder, HEADER, |cx| {
                 cx.with_original_retirement(|cx| {
-                    close_original_retained_step(cx, d, |g| catalog.close_step(g))?;
+                    close_original_retained_step(cx, d, |g| semio_framework_value::RetainedWorkOutcome { result: catalog.close_step(g), work: 1 })?;
                     Ok(())
                 })
             });
@@ -117,7 +120,7 @@ fn concrete_original_registration_captures_same_rows_and_closes_each_cancelled_p
             let d = definition.close_demands(4096).unwrap();
             observed(&mut caller, &mut decoder, HEADER, |cx| {
                 cx.with_original_retirement(|cx| {
-                    close_original_retained_step(cx, d, |g| definition.close_step(g))?;
+                    close_original_retained_step(cx, d, |g| semio_framework_value::RetainedWorkOutcome { result: definition.close_step(g), work: 1 })?;
                     Ok(())
                 })
             });

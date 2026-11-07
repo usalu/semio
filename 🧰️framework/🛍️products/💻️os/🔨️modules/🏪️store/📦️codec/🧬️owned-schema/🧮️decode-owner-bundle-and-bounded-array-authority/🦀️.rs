@@ -18,8 +18,7 @@ impl<P, Mutation> ArtifactEnvelopeDecodeOwnerBundle<P, Mutation> {
 
     pub fn begin_fresh_decoder(
         &self,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
+        replacement: Option<semio_framework_job::ReplacementIdentity>,
         completed: Arc<ArtifactEnvelopeCompletedRecordRegistry<P, Mutation>>,
         completion: Arc<ArtifactEnvelopeDecodeCompletion>,
     ) -> Box<dyn ArtifactEnvelopeFieldDecoder<P, Mutation>>
@@ -27,7 +26,7 @@ impl<P, Mutation> ArtifactEnvelopeDecodeOwnerBundle<P, Mutation> {
         P: Send + Sync + 'static,
         Mutation: Send + 'static,
     {
-        Box::new(ArtifactEnvelopeFreshFieldDecoder::new(operation, generation, Arc::clone(&self.catalog), Arc::clone(&self.initial_snapshot_factory), Arc::clone(&self.mutation_factory), completed, completion))
+        Box::new(ArtifactEnvelopeFreshFieldDecoder::new(replacement, Arc::clone(&self.catalog), Arc::clone(&self.initial_snapshot_factory), Arc::clone(&self.mutation_factory), completed, completion))
     }
 
     pub fn retire_envelope(&self, envelope: ArtifactEnvelope<P, Mutation>) -> Box<dyn ErasedSnapshotRetirement>
@@ -174,7 +173,7 @@ impl<T: Send + 'static> OwnedSchemaBoundedArrayAuthority<T> {
                     Err(_) => return Err(self.diagnostic("artifact-envelope.history-item-capacity", token)),
                 };
                 self.reservation = Some(reservation);
-                *self.active_decoder = Some(self.decoder.as_ref().expect("live history decoder").begin_entry(cx.operation(), cx.generation(), self.path, self.retirement_factory.as_ref().expect("live history retirement factory").clone()));
+                *self.active_decoder = Some(self.decoder.as_ref().expect("live history decoder").begin_entry(cx.replacement_capture(), self.path, self.retirement_factory.as_ref().expect("live history retirement factory").clone()));
                 self.accept(token, terminal, source, cx)
             }
             OwnedSchemaBoundedArrayState::Entries if self.entry_depth == 0 => Err(self.diagnostic("artifact-envelope.history-expected-record", token)),

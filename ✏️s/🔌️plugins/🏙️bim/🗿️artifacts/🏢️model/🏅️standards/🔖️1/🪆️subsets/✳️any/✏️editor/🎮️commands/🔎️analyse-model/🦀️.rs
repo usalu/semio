@@ -79,4 +79,4 @@ pub fn handle(_payload: &AnalyseModel, doc: &ArtifactView<'_, ModelSnapshot>, _c
     Ok(Emit::default())
 }
 
-
+semio_plugin::retained_command::terminal_frame_bound!(AnalyseWork);

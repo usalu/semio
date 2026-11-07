@@ -54,8 +54,8 @@ struct RecordingRouterJob {
     writer: Option<RetainedPayloadBuilder>,
 }
 
-impl InteractiveJob for RecordingRouterJob {
-    fn step<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{
+impl RecordingRouterJob {
+    fn step_callback<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{
         if cx.is_cancelled()||self.closing{let grant=cx.retained_grant();if grant.maximum_items<2||grant.maximum_copy_bytes<std::mem::size_of::<bool>()||grant.maximum_depth==0{return Ok(None)}self.cancelled=true;cx.consume_retained(semio_framework_job::RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<bool>(),..Default::default()})?;return JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
         if cx.should_yield(){return Ok(None)}
         cx.consume_fuel(1);
@@ -66,10 +66,14 @@ impl InteractiveJob for RecordingRouterJob {
             return JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
         if self.writer.is_none(){let grant=cx.retained_grant();let copied_bytes=std::mem::size_of::<Option<RetainedPayloadBuilder>>();if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_depth==0{return Ok(None)}self.writer=Some(RetainedPayloadBuilder::new(JobPayloadStream::CommitOutput));cx.consume_retained(semio_framework_job::RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()})?;return Ok(None)}
-        let writer=self.writer.as_mut().unwrap();if !writer.is_initialized(){writer.advance_initialization(cx)?;return Ok(None)}if self.cursor<b"ok".len(){writer.append_original(cx,b"ok",&mut self.cursor)?;return Ok(None)}if writer.published().is_none(){writer.seal(cx)?;return Ok(None)}
+        let writer=self.writer.as_mut().unwrap();if !writer.is_initialized(){let turn=writer.advance_initialization(cx);receive_original_retained_work(cx,turn)?;return Ok(None)}if self.cursor<b"ok".len(){let turn=writer.append_original(cx,b"ok",&mut self.cursor);receive_original_retained_work(cx,turn)?;return Ok(None)}if writer.published().is_none(){let turn=writer.seal(cx);receive_original_retained_work(cx,turn)?;return Ok(None)}
         if !self.completed{let grant=cx.retained_grant();let copied_bytes=std::mem::size_of::<usize>()+std::mem::size_of::<bool>();if grant.maximum_items<2||grant.maximum_copy_bytes<copied_bytes||grant.maximum_depth==0{return Ok(None)}self.calls.as_ref().expect("recording router calls").fetch_add(1,Ordering::SeqCst);self.completed=true;cx.consume_retained(semio_framework_job::RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()})?;}
         JobOutcomeBorrow::admit_complete(cx,None,self.writer.as_ref().and_then(RetainedPayloadBuilder::published)).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
+}
+
+impl InteractiveJob for RecordingRouterJob {
+    fn step<'a>(&'a mut self,cx:&mut StepContext<'_>,_return_claim:&mut OriginalJobReturnClaim<'_>)->InteractiveJobStep<'a>{InteractiveJobStep::from_callback(self.step_callback(cx))}
 
     fn borrow_outcome<'a>(&'a self,original:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,semio_framework_value::ValueError>{
         if self.cancelled&&original.kind()==JobOutcomeKind::Cancelled{return original.cancelled()}if self.yielded&&original.kind()==JobOutcomeKind::Yield{return original.yielded()}if self.completed{let output=self.writer.as_ref().and_then(RetainedPayloadBuilder::published).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"recording router original output remains producer-held"))?;return original.complete(None,Some(output))}Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"recording router descriptor has no original producer witness"))
@@ -83,18 +87,23 @@ impl InteractiveJob for RecordingRouterJob {
         self.begin_close();
         let grant=cx.retained_grant();if cx.retirement_should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
         use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetirementTurnError};
-        if let Some(writer)=self.writer.as_mut(){if writer.terminal_is_empty(){let copied_bytes=std::mem::size_of::<Option<RetainedPayloadBuilder>>();if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_depth==0{return Ok(InteractiveJobCloseStep::Blocked)}let progress=RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()};cx.consume_retained(progress)?;drop(self.writer.take());cx.consume_fuel(1);return Ok(InteractiveJobCloseStep::Pending{progress})}let step=writer.close_step_granted(grant).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;cx.consume_retained(step.progress())?;cx.consume_fuel(1);return Ok(InteractiveJobCloseStep::Pending{progress:step.progress()})}
+        if let Some(writer)=self.writer.as_mut(){if writer.terminal_is_empty(){let copied_bytes=std::mem::size_of::<Option<RetainedPayloadBuilder>>();if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_depth==0{return Ok(InteractiveJobCloseStep::Blocked)}let progress=RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()};cx.consume_retained(progress)?;drop(self.writer.take());cx.consume_fuel(1);return Ok(InteractiveJobCloseStep::Pending{progress})}return close_original_granted_step(cx,|grant|{let turn=writer.close_step_granted(grant);semio_framework_value::RetainedWorkOutcome{result:turn.result.map(|step|InteractiveJobCloseStep::Pending{progress:step.progress()}),work:turn.work}})}
         let demand=self.close_demands();
-        let result=semio_framework_value::advance_retirement_turn(demand,grant,|_|{
-            if self.calls.as_ref().is_some_and(|original|Arc::weak_count(original)!=0){return Ok((RetainedCloneStep::Progress(Default::default()),false));}
-            let Some(original)=self.calls.take()else{return Ok((RetainedCloneStep::Complete(Default::default()),true));};
-            let released_bytes=if let Some(original)=Arc::into_inner(original){drop(original);demand.release_bytes}else{0};
-            Ok((RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes,..Default::default()}),true))
-        });
-        let step=result.map_err(|error|match error{RetirementTurnError::Owner(error)|RetirementTurnError::Receipt(error)=>semio_framework_job::OriginalTurnFailure::debit_original(error,cx)})?;
-        let step=if self.calls.is_none(){InteractiveJobCloseStep::Complete{progress:step.progress()}}else{InteractiveJobCloseStep::Pending{progress:step.progress()}};
-        let step=step.admit(grant,self.terminal_is_empty()).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
-        cx.consume_retained(step.progress())?;if step.progress().copied_items!=0{cx.consume_fuel(1)}Ok(step)
+        close_original_granted_step(cx,|grant|{
+            let calls=&mut self.calls;
+            let turn=semio_framework_value::advance_retirement_turn(demand,grant,|_|{
+                if calls.as_ref().is_some_and(|original|Arc::weak_count(original)!=0){return semio_framework_value::RetainedWorkOutcome::<_,semio_framework_value::ValueError>{result:Ok((RetainedCloneStep::Progress(Default::default()),false)),work:1};}
+                let Some(original)=calls.take()else{return semio_framework_value::RetainedWorkOutcome{result:Ok((RetainedCloneStep::Complete(Default::default()),true)),work:0};};
+                let released_bytes=if let Some(original)=Arc::into_inner(original){drop(original);demand.release_bytes}else{0};
+                semio_framework_value::RetainedWorkOutcome{result:Ok((RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes,..Default::default()}),true)),work:1}
+            });
+            let done=self.calls.is_none();
+            let result=turn.result.map_err(|error|match error{RetirementTurnError::Owner(error)|RetirementTurnError::Receipt(error)=>error}).and_then(|step|{
+                let step=if done{InteractiveJobCloseStep::Complete{progress:step.progress()}}else{InteractiveJobCloseStep::Pending{progress:step.progress()}};
+                step.admit(grant,done)
+            });
+            semio_framework_value::RetainedWorkOutcome{result,work:turn.work}
+        })
     }
     fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.receiving_close_demands()?.copy_bytes)}
     fn next_close_capacity_byte_demand(&self,_body:usize)->Result<usize,semio_framework_value::ValueError>{Ok(self.receiving_close_demands()?.capacity_bytes)}

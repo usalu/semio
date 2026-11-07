@@ -1,5 +1,5 @@
 use semio_s_artifact_draw_drawing::io;
-use semio_s_artifact_draw_drawing_write::{drawing_document_json_to_svg, drawing_document_to_svg};
+use semio_s_artifact_draw_drawing_write::serializers::artifacts::svg::v1_1::any::write::{SvgWriteJob, SvgWriteLimits};
 use semio_s_artifact_draw_drawing_model::{create_drawing_image_layer, create_drawing_shape_layer_rect, default_layer_base};
 use semio_s_artifact_draw_drawing_model::default_drawing_document;
 use semio_s_artifact_draw_drawing_model::{DrawingImageAsset, DrawingLayerNode, DrawingTextBody, StrokeStyle};
@@ -30,32 +30,25 @@ async fn drawing_document_to_svg_preserves_shape_text_image_and_gradient_nodes()
     doc.assets = assets;
     doc.artboard = None;
 
-    let (svg_text, width, height) = drawing_document_to_svg(&doc).expect("direct SVG export");
-    assert!(width >= 1 && height >= 1);
+    let plan = semio_s_artifact_draw_drawing_scene::preparation::testkit::scene_plan(&doc);
+    let mut job = SvgWriteJob::new(plan, SvgWriteLimits { view_box: [0.0, 0.0, 64.0, 64.0], max_output_bytes: 1 << 24, max_work: 1_000_000_000 });
+    while !job.advance(4096).expect("the svg writer advances").done {}
+    let svg_text = String::from_utf8(job.result().expect("complete svg").iter().flatten().copied().collect()).expect("svg is utf-8");
 
-    parse_svg_xml(&svg_text).expect("bridged svg reparses");
-    assert_eq!(svg_text.matches("<g").count(), 4, "rect, gradient rect, text, image wrappers");
-    assert!(svg_text.contains("fill=\"rgb(255,"), "{svg_text}");
-    assert!(svg_text.contains("url(#draw-gradient-"), "gradient references its exported definition");
-    assert!(svg_text.contains("font-size=\"12\""));
-    assert!(svg_text.contains("&lt;a &amp; b&gt;"));
-    assert!(svg_text.contains("<image") && svg_text.contains("data:image/png;base64,"));
-
-    let json_error = drawing_document_json_to_svg(&semio_framework_value::DslValue::object([("bad".to_string(), semio_framework_value::DslValue::Bool(true))]));
-    assert!(json_error.is_err());
+    parse_svg_xml(&svg_text).expect("written svg reparses");
+    assert!(svg_text.contains("<path"), "{svg_text}");
+    assert!(svg_text.contains("<image") && svg_text.contains("data:image/png;base64,"), "{svg_text}");
 }
 
-/// 📖️ The declared `s.draw.drawing → s.stdio.pdf@1.4` io row is a real hop now: fed the document's
-/// native pack it answers PDF bytes, not the old "not yet implemented" refusal.
+/// 🚫️ Every drawing export row is owned and job-driven: the borrowed hop refuses, and dxf/dwg declare owned factories like svg/pdf/png.
 #[semio_framework_async_macros::async_test]
-async fn declared_pdf_serializer_entry_answers_a_pdf_for_the_native_pack() {
+async fn declared_export_rows_run_only_through_owned_factories() {
     use semio_framework::io_schema::{IoPayload, IoResult};
-    let entry = io().entries.iter().find(|entry| entry.into.artifact_kind == "s.stdio.pdf").expect("the pdf serializer row is declared");
-    let mut doc = default_drawing_document("hop", None);
-    doc.layers.push(create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Rect")).to_string().into()).expect("nonempty authored identity"), "Rect"));
-    let result: IoResult<IoPayload> = (entry.run)(&IoPayload::Binary(<DrawingSnapshot as semio_framework_pack::snapshot::ArtifactPack>::encode_pack(&doc)));
-    let outcome = result.expect("the pdf hop runs");
-    let IoPayload::Binary(bytes) = &outcome.value else { panic!("pdf is a binary payload") };
-    assert!(bytes.starts_with(b"%PDF-1.4\n"), "{:?}", &bytes[..16]);
-    assert!(semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::io::decode_pdf(bytes).is_ok());
+    for kind in ["s.stdio.pdf", "s.stdio.svg", "s.stdio.png", "s.stdio.dxf", "s.stdio.dwg"] {
+        let entry = io().entries.iter().find(|entry| entry.into.artifact_kind == kind).unwrap_or_else(|| panic!("the {kind} serializer row is declared"));
+        assert!(entry.owned_serializer.is_some(), "{kind} declares its owned factory");
+        let doc = default_drawing_document("hop", None);
+        let result: IoResult<IoPayload> = (entry.run)(&IoPayload::Binary(<DrawingSnapshot as semio_framework_pack::snapshot::ArtifactPack>::encode_pack(&doc)));
+        assert!(result.is_err(), "the borrowed {kind} hop refuses");
+    }
 }

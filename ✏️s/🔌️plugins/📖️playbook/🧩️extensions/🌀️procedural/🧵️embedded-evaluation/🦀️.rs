@@ -1,5 +1,26 @@
 //! 🧵️ Caller-funded flow evaluation and tessellation for embedded questions.
 use super::*;
+
+/// 🧭️ Maps the retained operator refusal to its original turn failure, keeping the already paid receipt.
+fn operator_turn_failure(failure: neural_engine::OperatorWorkFailure) -> OriginalTurnFailure {
+    match failure {
+        neural_engine::OperatorWorkFailure::Original(original) => original,
+        neural_engine::OperatorWorkFailure::Evaluation { primary, retained, receipt_refusal } => {
+            let mut turn = OriginalTurnFailure::from(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, primary.to_string()));
+            turn.effects = retained;
+            turn.receipt_refusal = receipt_refusal;
+            turn
+        }
+    }
+}
+
+/// 🧭️ Maps the native geometry refusal to its original turn failure, keeping its physical effects and receipt refusal.
+fn geometry_turn_failure(failure: flow::geometry::GeometryWorkFailure) -> OriginalTurnFailure {
+    let mut turn = OriginalTurnFailure::from(failure.primary);
+    turn.effects = failure.work.retained;
+    turn.receipt_refusal = failure.receipt_refusal;
+    turn
+}
 use semio_framework_job::{InteractiveJobCloseStep, OriginalTurnFailure};
 use semio_framework_value::retained_clone::RetainedCloneStep;
 
@@ -17,7 +38,7 @@ pub(super) struct PreviewCache {
 
 pub(super) struct EmbeddedFlowWork {
     owner: ArtifactInstanceOperationOwnerHandle,
-    host: Option<FlowHost>,
+    host: Option<Box<FlowHost>>,
     close: flow::FlowHostCloseSlot,
     cache: Option<PreviewCache>,
     retiring_cache: Option<PreviewCache>,
@@ -44,6 +65,7 @@ impl EmbeddedFlowWork {
             if !self.close.terminal_is_empty() { return self.close.next_demand(copy); }
             return preview_close_demands(self.cache.is_some() || self.retiring_cache.is_some(), &self.cache_close, copy);
         }
+        if self.phase == 0 { return Ok(RetirementDemand { capacity_bytes: std::mem::size_of::<FlowHost>(), depth: 1, ..Default::default() }); }
         if self.phase == 1 { return self.host.as_ref().unwrap().next_evaluation_demands(copy); }
         if self.phase == 3 && self.index < self.cache.as_ref().unwrap().handles.len() {
             let (_, handle) = &self.cache.as_ref().unwrap().handles[self.index];
@@ -86,14 +108,15 @@ impl ArtifactCommandWork<ModuleApp> for EmbeddedFlowWork {
                 let source = host.host_snapshot.clone();
                 apply_flow_params(&mut host, &source, &effective_params(&payload));
                 source.retire_cold();
-                self.host = Some(host);
+                cx.consume_retained(RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: std::mem::size_of::<FlowHost>(), ..Default::default() })?;
+                self.host = Some(Box::new(host));
                 self.identity = Some(flow::geometry::GeometryWorkIdentity { operation: cx.operation().0, generation: cx.generation().0 });
                 self.cache = Some(PreviewCache { key: payload_json.clone(), rows: Vec::new(), meshes: Vec::new(), instances: Vec::new(), handles: Vec::new() });
                 self.phase = 1;
                 cx.consume_fuel(1);
             }
             1 => {
-                if matches!(self.host.as_mut().unwrap().evaluate_step(cx)?, flow::FlowEvaluationStep::Complete) {
+                if matches!(self.host.as_mut().unwrap().evaluate_step(cx).map_err(operator_turn_failure)?, flow::FlowEvaluationStep::Complete) {
                     self.phase = 2;
                     self.index = 0;
                 }
@@ -126,7 +149,7 @@ impl ArtifactCommandWork<ModuleApp> for EmbeddedFlowWork {
                 let cache = self.cache.as_mut().unwrap();
                 if let Some((id, handle)) = cache.handles.get(self.index) {
                     self.tessellating = true;
-                    let step = self.owner.with_mut::<ModuleGeometryOwner, _>(|owner| Ok(owner.session.tessellate_step(self.identity.unwrap(), handle, 0.05, cx))).map_err(OriginalTurnFailure::from)??;
+                    let step = self.owner.with_mut::<ModuleGeometryOwner, _>(|owner| Ok(owner.session.tessellate_step(self.identity.unwrap(), handle, 0.05, cx))).map_err(OriginalTurnFailure::from)?.map_err(geometry_turn_failure)?;
                     match step.0 {
                         flow::geometry::GeometryStep::Ready(mesh) => {
                             let mesh_id = format!("eval-{id}");
@@ -180,7 +203,7 @@ impl ArtifactCommandWork<ModuleApp> for EmbeddedFlowWork {
         let grant = cx.retained_grant();
         let progress = if self.tessellating {
             let (_, handle) = &self.cache.as_ref().unwrap().handles[self.index];
-            let step = self.owner.with_mut::<ModuleGeometryOwner, _>(|owner| Ok(owner.session.cancel_tessellation_step(self.identity.unwrap(), handle, 0.05, cx))).map_err(OriginalTurnFailure::from)??;
+            let step = self.owner.with_mut::<ModuleGeometryOwner, _>(|owner| Ok(owner.session.cancel_tessellation_step(self.identity.unwrap(), handle, 0.05, cx))).map_err(OriginalTurnFailure::from)?.map_err(geometry_turn_failure)?;
             if matches!(step.0, RetainedCloneStep::Complete(_)) { self.tessellating = false; }
             return Ok(InteractiveJobCloseStep::Pending { progress: step.1.retained });
         } else if self.host.is_some() {
@@ -370,3 +393,5 @@ mod tests {
         assert!(turns > 1);
     }
 }
+
+semio_plugin::retained_command::terminal_frame_bound!(EmbeddedFlowWork);

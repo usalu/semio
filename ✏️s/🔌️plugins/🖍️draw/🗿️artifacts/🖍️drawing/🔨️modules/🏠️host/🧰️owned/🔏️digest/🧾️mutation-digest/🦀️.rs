@@ -475,6 +475,7 @@ impl DrawingMutationWorksetPlan {
 /// 🎯️ The owner text a mutation addresses first: its layer or asset id, or the first target of a selection transform.
 pub fn drawing_mutation_target_owner(mutation: &DrawingMutation) -> Option<&DrawingNativeText> {
     match mutation {
+        DrawingMutation::SetArtboard(_) => None,
         DrawingMutation::ImportImageAsset(value)=>Some(&value.asset_id),
         DrawingMutation::RemoveImageAsset(value)=>Some(&value.asset_id),
         DrawingMutation::SetLayerVisible(value) => Some(&value.layer_id),

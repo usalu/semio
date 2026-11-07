@@ -46,10 +46,13 @@ fn connection_keeps_the_original_typed_owner_until_publication() {
             assert_eq!(emit.child_preparations.len(), fixture["acceptedGroups"].as_u64().unwrap() as usize);
             let mut ready = false;
             for _ in 0..fixture["closeSteps"].as_u64().unwrap() {
-                match emit.prepare_child_one(1, fixture["closeGrant"].as_u64().unwrap() as usize).unwrap() {
-                    ChildEmitPreparationStep::Pending => {},
-                    ChildEmitPreparationStep::Ready => { ready = true; break; },
-                    ChildEmitPreparationStep::Refused(fault) => panic!("connection source refused: {fault:?}"),
+                let body = fixture["closeGrant"].as_u64().unwrap() as usize;
+                let demand = emit.child_preparation_demands(body).expect("quoted child preparation demand");
+                let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(body), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+                match emit.prepare_child_one(grant).unwrap() {
+                    ChildEmitPreparationStep::Pending(_) => {},
+                    ChildEmitPreparationStep::Ready(_) => { ready = true; break; },
+                    ChildEmitPreparationStep::Refused(fault, _) => panic!("connection source refused: {fault:?}"),
                 }
             }
             assert!(ready);

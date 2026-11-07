@@ -1,4 +1,6 @@
 //! 🧪️ Bounded current-value comparison matches genuine original landing semantics and physical receipts.
+use semio_os_flow::neural::ColdRetire as _;
+use semio_framework_value::FromValue as _;
 use super::retained_typed_current::{ProvisionalInputComparison,ProvisionalInputMatch};
 use super::retained_scratch_testing::ScratchCaller;
 use semio_s_artifact_procedural_3d_mutations::{WidgetInputValue,ChangeWidgetInput};
@@ -9,7 +11,7 @@ fn original(current:&Value,input:&WidgetInputValue)->ProvisionalInputMatch{
  let widget=Widget::Neuron{id:"n".into(),neuron_kind:"fixture".into(),params:Dictionary::new().insert("value",current.clone()),input_ports:Vec::new(),output_ports:Vec::new(),preview:true};
  let payload=ChangeWidgetInput{id:"n".into(),channel:"value".into(),input:input.clone()};
  let result=match payload.landing(&widget,false){Ok(None)=>ProvisionalInputMatch::Equal,Ok(Some(widget))=>{widget.retire_cold();ProvisionalInputMatch::Different},Err(_)=>ProvisionalInputMatch::Refused};
- payload.retire_cold();widget.retire_cold();result
+ payload.retire_decoded();widget.retire_cold();result
 }
 fn run(current:&Value,input:&WidgetInputValue,cut:Option<usize>)->Option<ProvisionalInputMatch>{
  let policy:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🎟️caller/🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap();
@@ -27,7 +29,7 @@ fn provisional_current_input_matches_original_landing_with_prefix_custody(){
   let input:WidgetInputValue=semio_framework_pack_json::from_json_str(&case["input"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
   let expected=original(&current,&input);let name=match expected{ProvisionalInputMatch::Equal=>"equal",ProvisionalInputMatch::Different=>"different",ProvisionalInputMatch::Refused=>"refused"};assert_eq!(name,case["expected"].as_str().unwrap());
   assert_eq!(run(&current,&input,None),Some(expected),"{}",case["name"]);run(&current,&input,Some(0));run(&current,&input,Some(1));
-  current.retire_cold();input.retire_cold();
+  current.retire_cold();input.retire_decoded();
  }
 }
 #[test]
@@ -35,6 +37,6 @@ fn provisional_current_input_preserves_scalar_vs_list_nonfinite_policy(){
  for list in [false,true]{
   let literal=Value::Dictionary(Dictionary::new().insert("$schema",Value::Atom(Atom::String("number".into()))).insert("value",Value::Atom(Atom::Decimal(f64::NAN))));
   let(current,input)=if list{(Value::Dictionary(Dictionary::new().insert("$schema",Value::Atom(Atom::String("list".into()))).insert("0",literal)),WidgetInputValue::NumberList(vec![1.0]))}else{(literal,WidgetInputValue::Number(1.0))};
-  let expected=if list{ProvisionalInputMatch::Refused}else{ProvisionalInputMatch::Different};assert_eq!(original(&current,&input),expected);assert_eq!(run(&current,&input,None),Some(expected));current.retire_cold();input.retire_cold();
+  let expected=if list{ProvisionalInputMatch::Refused}else{ProvisionalInputMatch::Different};assert_eq!(original(&current,&input),expected);assert_eq!(run(&current,&input,None),Some(expected));current.retire_cold();input.retire_decoded();
  }
 }

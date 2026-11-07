@@ -11,7 +11,7 @@ fn observe<T>(call:impl FnOnce()->T)->(T,usize,usize){let(value,heap)=semio_fram
 fn receipt(p:RetainedCloneProgress,g:RetainedCloneGrant,born:usize,released:usize){assert!(p.fits(g));assert_eq!((born,released),(p.retained_capacity_bytes,p.released_bytes));}
 #[test]
 fn native_field_clone_retains_original_store_issuer_and_receipts(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("📁️cases.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str::<serde_json::Value>(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap()["fieldClone"].clone();
  for law in corpus.as_array().unwrap(){
   let values:Vec<String>=serde_json::from_value(law["field"].clone()).unwrap();let expected=values.clone();let root=Arc::new((values,73));let pointer=Arc::as_ptr(&root);
   let registry=SnapshotReadRegistryHandle::new();let generation=law["generation"].as_u64().unwrap();let revision=[law["revisionByte"].as_u64().unwrap()as u8;32];assert!(registry.publish_authority(generation,revision));
@@ -28,14 +28,14 @@ fn native_field_clone_retains_original_store_issuer_and_receipts(){
    assert_eq!(work.original().unwrap().lease_identity(),identity);assert_eq!(work.original().unwrap().get()as*const _,pointer);
    if law["cancelAfter"].as_u64()==Some(index){break}
    let d=work.next_demands(4).unwrap();let g=grant(d);
-   for axis in 0..5{let mut denied=g;match axis{0=>denied.maximum_items=0,1 if d.copy_bytes>0=>denied.maximum_copy_bytes-=1,2 if d.capacity_bytes>0=>denied.maximum_capacity_bytes-=1,3 if d.release_bytes>0=>denied.maximum_release_bytes-=1,4 if d.depth>0=>denied.maximum_depth-=1,_=>continue}let(turn,born,released)=observe(||work.advance(denied));assert!(turn.result.unwrap().is_none());assert_eq!(turn.work,0);assert_eq!((born,released),(0,0));}
+   for axis in 0..5{let mut denied=g;match axis{0=>denied.maximum_items=0,1 if d.copy_bytes>0=>denied.maximum_copy_bytes-=1,2 if d.capacity_bytes>0=>denied.maximum_capacity_bytes-=1,3 if d.release_bytes>0=>denied.maximum_release_bytes-=1,4 if d.depth>0=>denied.maximum_depth-=1,_=>continue}if semio_framework_value::retained_clone::retained_clone_grant_admits(denied,work.next_demands(denied.maximum_copy_bytes).unwrap()){continue}let(turn,born,released)=observe(||work.advance(denied));assert!(turn.result.unwrap().is_none());assert_eq!(turn.work,0);assert_eq!((born,released),(0,0));}
    let(turn,born,released)=observe(||work.advance(g));let value=turn.result.unwrap();receipt(work.step_progress(),g,born,released);
    if let Some(value)=value{assert_eq!(value,expected);output=Some(value);break}
   }
   if law["cancelAfter"].is_null(){assert!(output.is_some());}
   if let Some(output)=output{work.restore_output(output)}
   assert!(registry.publish_authority(generation+1,[0;32]));assert!(work.validate_current().is_err());work.begin_close();
-  for _ in 0..10000{if work.terminal_is_empty(){break}let g=grant(work.next_close_demands(4).unwrap());let(turn,born,released)=observe(||work.close_step(g));let step=turn.result.unwrap();receipt(step.progress(),g,born,released);}
+  let mut closed=(RetainedCloneProgress::default(),0usize,0usize);for _ in 0..10000{if work.terminal_is_empty(){break}let g=grant(work.next_close_demands(4).unwrap());let(turn,born,released)=observe(||work.close_step(g));let step=turn.result.unwrap();receipt(step.progress(),g,born,released);closed=(closed.0.checked_add(step.progress()).unwrap(),closed.1+born,closed.2+released);}assert_eq!((closed.0.retained_capacity_bytes,closed.0.released_bytes),(closed.1,closed.2),"dropping terminal-empty owners leaves the exact close receipt total unchanged");
   assert!(work.terminal_is_empty());drop(work);
   let mut active=None;
   for _ in 0..10000{

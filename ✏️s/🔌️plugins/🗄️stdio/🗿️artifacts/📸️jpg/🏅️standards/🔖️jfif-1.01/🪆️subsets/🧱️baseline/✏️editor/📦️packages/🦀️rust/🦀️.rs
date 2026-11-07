@@ -5,6 +5,7 @@ extern crate semio_os_kernel as store;
 extern crate semio_framework_value_derive as value_derive;
 pub use schema::snapshot::{JpgImage, JpgSnapshot};
 pub use schema::diff::JpgDiff;
+pub use semio_s_artifact_stdio_contract::apply_mutation;
 pub use schema::mutations::JpgMutation;
 pub mod schema {
     pub use super::standards::v_jfif_1_01::subsets::document::schema::*;
@@ -18,7 +19,7 @@ pub use editor::jpg_baseline::artifact_items_11::contribution;
 
 pub mod io_registry {
     use crate::standards::v_jfif_1_01::subsets::baseline::io::io_registry as baseline;
-    use semio_framework_plugin::io::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, ErasedComposeSource};
+    use semio_plugin::io::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, ErasedComposeSource};
     use semio_framework_artifact_reference::Dialect;
     use std::sync::OnceLock;
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
@@ -111,6 +112,7 @@ pub mod standards {
 }
 #[path = "."]
 pub mod editor {
+    pub use semio_s_artifact_stdio_jpg_schema_2::editor::paint_region_declaration;
     #[path = "."]
     pub mod jpg_any {
         #[path = "../../../../🧾️document/✏️editor/🦀️.rs"]

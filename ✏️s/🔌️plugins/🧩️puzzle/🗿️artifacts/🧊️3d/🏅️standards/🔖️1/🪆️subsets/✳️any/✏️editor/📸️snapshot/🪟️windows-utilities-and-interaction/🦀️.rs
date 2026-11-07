@@ -35,7 +35,7 @@ fn puzzle3d_first_instance_id<'a>(ids: impl IntoIterator<Item = Option<&'a str>>
     ids.into_iter().flatten().find(|id| !id.is_empty() && !puzzle3d_window_id_is_kind(id))
 }
 
-fn puzzle3d_utility_map_hit<'a>(view: &'a semio_framework_plugin::ViewModel, wid: &str) -> Option<&'a String> {
+fn puzzle3d_utility_map_hit<'a>(view: &'a semio_plugin::ViewModel, wid: &str) -> Option<&'a String> {
     view.active_utility_by_window_id.get(wid).or_else(|| {
         if !puzzle3d_window_id_is_kind(wid) {
             return None;
@@ -51,7 +51,7 @@ fn puzzle3d_utility_map_hit<'a>(view: &'a semio_framework_plugin::ViewModel, wid
     })
 }
 
-pub fn puzzle3d_addressed_window_id<'a>(view_state: Option<&'a semio_framework_plugin::ViewModel>, keyed: Option<&'a str>, fallback: Option<&'a str>, roster: &'a [String]) -> &'a str {
+pub fn puzzle3d_addressed_window_id<'a>(view_state: Option<&'a semio_plugin::ViewModel>, keyed: Option<&'a str>, fallback: Option<&'a str>, roster: &'a [String]) -> &'a str {
     puzzle3d_first_instance_id([
         keyed,
         view_state.and_then(|view| view.window_id.as_deref()),
@@ -68,7 +68,7 @@ pub fn puzzle3d_addressed_window_id<'a>(view_state: Option<&'a semio_framework_p
 }
 
 /// 🛠️ The shared window owner resolves pane utilities; the mode-wide fill tool retains its viewport interaction.
-pub fn puzzle3d_scene_active_utility(config: &Puzzle3dRuntime, view_state: Option<&semio_framework_plugin::ViewModel>, window_id: Option<&str>) -> String {
+pub fn puzzle3d_scene_active_utility(config: &Puzzle3dRuntime, view_state: Option<&semio_plugin::ViewModel>, window_id: Option<&str>) -> String {
     if puzzle3d_fill_tool_active(config) {
         return PUZZLE3D_FILL_TOOL_ID.to_string();
     }
@@ -122,7 +122,7 @@ impl Puzzle3dInteractionSnapshot {
     /// 🕹️ The retained-reducer twin — the same read from the raw `InteractionState`/hover map a
     /// retained tool job is handed, so a command reusing a render helper sees the same selection and
     /// hover the viewport painted.
-    pub fn from_state(state: &protocol::InteractionState, hover: &semio_framework_plugin::app::InteractionHoverState) -> Self {
+    pub fn from_state(state: &protocol::InteractionState, hover: &semio_plugin::app::InteractionHoverState) -> Self {
         let mut result=Self::from_selection_state(state);
         result.hovered=hover.get(PUZZLE3D_INTERACTION_DOMAIN).filter(|hover|hover.channel==PUZZLE3D_HOVER_CHANNEL).map(|hover|hover.ids.clone()).unwrap_or_default();
         result

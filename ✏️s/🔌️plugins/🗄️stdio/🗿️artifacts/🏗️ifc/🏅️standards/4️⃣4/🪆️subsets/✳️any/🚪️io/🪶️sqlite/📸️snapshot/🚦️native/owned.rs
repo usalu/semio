@@ -1,7 +1,7 @@
 //! 🫴️ Literal IFC Pack ingress keeps the original source, receiving ledger and partial graph until funded closure.
 use super::{Frame, IfcSnapshot, STDIO_IFC_DOCUMENT_SCHEMA, owned_graph::GraphReceiving};
 use semio_framework_dsl_record::receiving::owned::{OwnedSlot, funds, metadata, receipt};
-use semio_framework_os_kernel::{ArtifactPackReceiving, NativeSnapshotDecodeOwner, OriginalArtifactPackReceiving, OriginalArtifactSnapshotReceiving, OriginalSnapshotRecordReceiving, NativeSnapshotFailure};
+use semio_os_kernel::{ArtifactPackReceiving, NativeSnapshotDecodeOwner, OriginalArtifactPackReceiving, OriginalArtifactSnapshotReceiving, OriginalSnapshotRecordReceiving, NativeSnapshotFailure};
 use semio_framework_value::{
     RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome, RetireOwned, RetirementDemand, ValueError, ValueRefusalKind,
     retirement::{RetireOwned as RetireOwnedTrait, RetirementCursor, RetirementStep},

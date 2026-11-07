@@ -230,6 +230,9 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️
 [workspace.dependencies.semio-s-artifact-layout-layout-viewer]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-ui-render-text]
+path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🖌️render/🖋️text/📦️packages/🦀️rust"
+
 [workspace.dependencies.ui_render]
 path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust"
 package = "semio-ui-render"

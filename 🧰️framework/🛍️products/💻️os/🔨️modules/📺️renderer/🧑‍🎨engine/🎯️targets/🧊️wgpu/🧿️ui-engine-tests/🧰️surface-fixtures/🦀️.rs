@@ -110,7 +110,7 @@ pub fn drop_world3d_states(mut states: semio_renderer_wgpu_contracts::AdmittedSu
 
 pub struct RetainedSurfacePaint {
     pub draw: DrawList,
-    pub owner: semio_framework_os_renderer_wgpu_contracts::ScenePointerTarget,
+    pub owner: semio_renderer_wgpu_contracts::ScenePointerTarget,
     pub actions:Vec<ActionDescriptor>,
 }
 
@@ -146,7 +146,7 @@ pub fn paint_retained_surface_in_window(scene: &UiComponentSceneNode, bounds: Re
     assert_eq!(owner.kind, scene.component_kind);
     caller.retire_world(&mut world_resources);
     caller.finish();
-    let mut actions=semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
+    let mut actions=semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     if let Some(action)=input.drive_retained_action_step().expect("one retained fixture page"){actions.push(action.descriptor);}
     RetainedSurfacePaint { draw, owner,actions }
 }
@@ -158,10 +158,10 @@ pub fn with_world_step(fuel: u64, apply: impl FnOnce(&mut semio_framework_job::S
 #[cfg(test)]
 mod selection_tests {
     use super::*;
-    use semio_framework_os_renderer_wgpu_engine_board::paint2d::*;
+    use semio_renderer_wgpu_engine_board::paint2d::*;
     #[test]
     fn unchanged_production_frames_advance_selection_intent_and_released_capture_cancels(){
-        let _guard=semio_framework_os_renderer_wgpu_engine_registry::engine_surface_law_guard();
+        let _guard=semio_renderer_wgpu_engine_registry::engine_surface_law_guard();
         let window="paint-selection-production-frames";let bounds=Rect::new(0.0,0.0,100.0,100.0);
         let paint=semio_ui_scene_plane::Paint2dScene {
             document_sync_json:serde_json::json!({"schema":"raster.document","layers":[{"kind":"pixel","id":"p","visible":true,"mask":null,"width":64,"height":64,"transform":{"x":0,"y":0,"a":1,"b":0,"c":0,"d":1}}]}).to_string(),
@@ -174,8 +174,8 @@ mod selection_tests {
         let mut input=InputState::<ActionDescriptor>::default();
         let start=|input:&mut InputState<ActionDescriptor>|{
             paint2d_pointer_button_into(&scene,bounds,18.0,18.0,true,0,false,false,input).unwrap();
-            for index in 0..200{paint2d_pointer_move_into(&scene,bounds,18.0+(index%32) as f32,18.0+(index/32) as f32,input).unwrap();semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(input);}
-            semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(input);
+            for index in 0..200{paint2d_pointer_move_into(&scene,bounds,18.0+(index%32) as f32,18.0+(index/32) as f32,input).unwrap();semio_renderer_wgpu_frame_actions::collect_fixture_actions(input);}
+            semio_renderer_wgpu_frame_actions::collect_fixture_actions(input);
             paint2d_pointer_button_into(&scene,bounds,50.0,50.0,false,0,false,false,input).unwrap();
         };
         start(&mut input);assert!(paint2d_pixel_selection_work_pending());

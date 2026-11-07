@@ -47,3 +47,34 @@ impl OperationBank{
  let g=bank.grant();let denied=RetainedCloneGrant{maximum_items:0,..g};let turn=cursor.step(&source,&mut native,4096,denied);assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap(),Default::default());let g=bank.grant();let turn=bank.normal(&mut native,|native,g|cursor.step(&source,native,4096,g));assert_eq!(turn.work,f["failureWork"].as_u64().unwrap());let fault=turn.result.unwrap_err();assert_eq!(fault.primary.as_ref().unwrap().kind,ValueRefusalKind::InvalidValue);assert!(fault.quote_refusal.is_none()&&fault.allocation_refusal.is_none());assert_eq!(fault.retained_progress().copied_items,f["failureItems"].as_u64().unwrap()as usize);
  let mut fault=ControlledRetirement::new(fault).unwrap_or_else(|_|panic!("actual native failure has original retirement"));for _ in 0..10000{if fault.terminal_is_empty(){break}let result=fault.step(bank.grant());let work=fault.last_turn_work();let p=result.as_ref().map(|s|s.progress()).unwrap_or_else(|e|e.retained_progress());bank.debit(p,work);result.unwrap();}assert!(fault.terminal_is_empty());for _ in 0..10000{if cursor.terminal_is_empty(){break}let turn=cursor.close_step(bank.grant());if matches!(&turn.result,Ok(RetainedCloneStep::Complete(_))){assert!(cursor.terminal_is_empty())}let p=turn.result.as_ref().map(|s|s.progress()).unwrap_or_else(|e|e.retained_progress());bank.debit(p,turn.work);turn.result.unwrap();}assert!(cursor.terminal_is_empty());assert_eq!(cursor.close_step(Default::default()).work,0);
 }
+
+#[derive(Clone,Copy,Debug,PartialEq,semio_framework_dsl_record_derive::DslScalar,semio_framework_dsl_record_derive::DslReceiving,semio_framework_value::RetireOwned)]
+enum ReceivedMode{Draft,Sealed,Retired}
+#[derive(Clone,Debug,PartialEq,semio_framework_dsl_record_derive::DslEnum,semio_framework_dsl_record_derive::DslReceiving,semio_framework_value::RetireOwned)]
+enum ScalarFieldMutation{Mark{mode:ReceivedMode,note:String},Clear{}}
+impl OpBinary for ScalarFieldMutation{
+ fn encode_op(&self)->Result<Vec<u8>,protocol::ProtocolError>{semio_os_kernel::os_dsl::variants_binary::encode_op(self)}
+ fn decode_op(bytes:&[u8])->Result<Self,protocol::ProtocolError>{semio_os_kernel::os_dsl::variants_binary::decode_op(bytes)}
+}
+semio_os_kernel::original_ordinal_operation_receiving!(ScalarFieldMutation);
+#[test]
+fn every_unit_enum_field_value_is_received_like_its_decode_oracle(){
+ let values=[ReceivedMode::Draft,ReceivedMode::Sealed,ReceivedMode::Retired].map(|mode|ScalarFieldMutation::Mark{mode,note:"n".into()});
+ check_receiving_round_trip(&values).unwrap();
+ check_receiving_round_trip(&[ScalarFieldMutation::Clear{}]).unwrap();
+}
+
+#[derive(Clone,Debug,PartialEq,semio_framework_dsl_record_derive::DslEnum,semio_framework_dsl_record_derive::DslReceiving,semio_framework_value::RetireOwned)]
+enum StatementBody{Text{text:String},Number{value:i64}}
+#[derive(Clone,Debug,PartialEq,semio_framework_dsl_record_derive::DslEnum,semio_framework_dsl_record_derive::DslReceiving,semio_framework_value::RetireOwned)]
+enum StatementFieldMutation{Put{id:String,#[dsl(statements)] body:Box<StatementBody>}}
+impl OpBinary for StatementFieldMutation{
+ fn encode_op(&self)->Result<Vec<u8>,protocol::ProtocolError>{semio_os_kernel::os_dsl::variants_binary::encode_op(self)}
+ fn decode_op(bytes:&[u8])->Result<Self,protocol::ProtocolError>{semio_os_kernel::os_dsl::variants_binary::decode_op(bytes)}
+}
+semio_os_kernel::original_ordinal_operation_receiving!(StatementFieldMutation);
+#[test]
+fn every_statement_enum_field_variant_is_received_like_its_decode_oracle(){
+ let values=[StatementBody::Text{text:"t".into()},StatementBody::Number{value:-7}].map(|body|StatementFieldMutation::Put{id:"i".into(),body:Box::new(body)});
+ check_receiving_round_trip(&values).unwrap();
+}

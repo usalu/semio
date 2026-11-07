@@ -289,37 +289,80 @@ impl<V: FromValue> FromValue for KeyedRow<V> {
 /// 🗂️ The keyed rows of one map-valued field.
 pub type KeyedRows<V> = BTreeMap<String, KeyedRow<V>>;
 
+/// 🗝️ The map operations the keyed-row algebra needs; a persistent map joins by retiring discarded owners explicitly.
+pub trait KeyedMap<V>: Clone {
+    fn lookup(&self, key: &str) -> Option<&V>;
+    fn pairs<'a>(&'a self) -> Box<dyn Iterator<Item = (&'a String, &'a V)> + 'a>
+    where
+        V: 'a;
+    fn put(&mut self, key: String, value: V) -> bool;
+    fn take(&mut self, key: &str) -> bool;
+    fn discard(self);
+}
+
+impl<V: Clone> KeyedMap<V> for BTreeMap<String, V> {
+    fn lookup(&self, key: &str) -> Option<&V> {
+        self.get(key)
+    }
+    fn pairs<'a>(&'a self) -> Box<dyn Iterator<Item = (&'a String, &'a V)> + 'a>
+    where
+        V: 'a,
+    {
+        Box::new(self.iter())
+    }
+    fn put(&mut self, key: String, value: V) -> bool {
+        self.insert(key, value).is_some()
+    }
+    fn take(&mut self, key: &str) -> bool {
+        self.remove(key).is_some()
+    }
+    fn discard(self) {}
+}
+
+impl<V: Clone> KeyedMap<V> for semio_framework_value_ordered::OrderedMap<V> {
+    fn lookup(&self, key: &str) -> Option<&V> {
+        self.get(key)
+    }
+    fn pairs<'a>(&'a self) -> Box<dyn Iterator<Item = (&'a String, &'a V)> + 'a>
+    where
+        V: 'a,
+    {
+        Box::new(self.iter())
+    }
+    fn put(&mut self, key: String, value: V) -> bool {
+        self.insert(key, value).is_some()
+    }
+    fn take(&mut self, key: &str) -> bool {
+        self.remove(key).is_some()
+    }
+    fn discard(self) {
+        self.retire_cold()
+    }
+}
+
 /// ⌨️ The map after `rows`: an insert of an existing key, or a replace/remove of a missing one, is refused (`field` names it).
-pub fn keyed_rows_apply<V: Clone>(base: &BTreeMap<String, V>, rows: &KeyedRows<V>, field: &str) -> MutationApplyResult<BTreeMap<String, V>> {
+pub fn keyed_rows_apply<V: Clone, M: KeyedMap<V>>(base: &M, rows: &KeyedRows<V>, field: &str) -> MutationApplyResult<M> {
     let mut next = base.clone();
     for (key, row) in rows {
         let refusal = |code: &str, message: &str| MutationApplyError::new(code, format!("{message} {key}")).at([field, key.as_str()]);
-        match row {
-            KeyedRow::Insert(value) => {
-                if next.insert(key.clone(), value.clone()).is_some() {
-                    return Err(refusal("mutation.apply.duplicate-target", "row already exists:"));
-                }
-            }
-            KeyedRow::Replace(value) => {
-                if next.insert(key.clone(), value.clone()).is_none() {
-                    return Err(refusal("mutation.apply.missing-target", "row does not exist:"));
-                }
-            }
-            KeyedRow::Remove => {
-                if next.remove(key).is_none() {
-                    return Err(refusal("mutation.apply.missing-target", "row does not exist:"));
-                }
-            }
+        let failure = match row {
+            KeyedRow::Insert(value) => next.put(key.clone(), value.clone()).then(|| refusal("mutation.apply.duplicate-target", "row already exists:")),
+            KeyedRow::Replace(value) => (!next.put(key.clone(), value.clone())).then(|| refusal("mutation.apply.missing-target", "row does not exist:")),
+            KeyedRow::Remove => (!next.take(key)).then(|| refusal("mutation.apply.missing-target", "row does not exist:")),
+        };
+        if let Some(error) = failure {
+            next.discard();
+            return Err(error);
         }
     }
     Ok(next)
 }
 
 /// ↩️ The rows that undo `rows` from `base`: an insert is removed, a replace restores the base value, a remove re-inserts it.
-pub fn keyed_rows_inverse<V: Clone>(base: &BTreeMap<String, V>, rows: &KeyedRows<V>) -> KeyedRows<V> {
+pub fn keyed_rows_inverse<V: Clone, M: KeyedMap<V>>(base: &M, rows: &KeyedRows<V>) -> KeyedRows<V> {
     rows.iter()
         .filter_map(|(key, row)| {
-            let prior = base.get(key);
+            let prior = base.lookup(key);
             let inverse = match (row, prior) {
                 (KeyedRow::Insert(_), _) => KeyedRow::Remove,
                 (KeyedRow::Replace(_), Some(prior)) => KeyedRow::Replace(prior.clone()),
@@ -332,10 +375,10 @@ pub fn keyed_rows_inverse<V: Clone>(base: &BTreeMap<String, V>, rows: &KeyedRows
 }
 
 /// 🧱️ The rows turning `base` into `next`: inserts, replaces where the value differs, removes of keys `next` lacks.
-pub fn keyed_rows_changing<V: Clone + PartialEq>(base: &BTreeMap<String, V>, next: &BTreeMap<String, V>) -> KeyedRows<V> {
+pub fn keyed_rows_changing<V: Clone + PartialEq, M: KeyedMap<V>>(base: &M, next: &M) -> KeyedRows<V> {
     let mut rows = KeyedRows::new();
-    for (key, value) in next {
-        match base.get(key) {
+    for (key, value) in next.pairs() {
+        match base.lookup(key) {
             None => {
                 rows.insert(key.clone(), KeyedRow::Insert(value.clone()));
             }
@@ -345,7 +388,7 @@ pub fn keyed_rows_changing<V: Clone + PartialEq>(base: &BTreeMap<String, V>, nex
             Some(_) => {}
         }
     }
-    for key in base.keys().filter(|key| !next.contains_key(*key)) {
+    for (key, _) in base.pairs().filter(|(key, _)| next.lookup(key).is_none()) {
         rows.insert(key.clone(), KeyedRow::Remove);
     }
     rows

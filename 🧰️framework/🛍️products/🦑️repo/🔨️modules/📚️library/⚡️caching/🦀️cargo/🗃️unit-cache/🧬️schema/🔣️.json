@@ -125,11 +125,11 @@
           "timeoutMilliseconds": 5000
         },
         "gc": {
-          "casShare": 0.25,
+          "casShare": 0.125,
           "casProtectedShare": 0.1,
-          "laneShare": 0.2,
+          "laneShare": 0.109375,
           "incrementalShare": 0.1,
-          "admissionShare": 0.03,
+          "admissionShare": 0.015,
           "admissionRetentionMilliseconds": 604800000,
           "admissionTemporaryMilliseconds": 3600000,
           "highWaterShare": 0.875,

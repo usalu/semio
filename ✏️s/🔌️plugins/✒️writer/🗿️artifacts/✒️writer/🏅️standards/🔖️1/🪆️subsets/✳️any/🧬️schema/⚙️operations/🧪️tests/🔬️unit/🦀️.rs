@@ -102,7 +102,7 @@ async fn edit_text_outcome_obeys_the_policy_matrix() {
 fn writer_editor_forwards_its_canonical_original_typing_factory() {
     type App = semio_plugin::app::EditorApp<crate::editor::writer::WriterPlayApp>;
     let policy = <App as semio_plugin::ArtifactApp>::original_typing_fold();
-    let semio_plugin::tool_contract::OriginalTypingFoldPolicy::Factory(actual) = policy else { panic!("Writer editor must select its original producer") };
-    let expected: &dyn semio_plugin::tool_contract::ArtifactOriginalTypingFoldFactory<WriterMutation> = &semio_s_artifact_writer_writer_typing_fold::WRITER_ORIGINAL_TYPING_FOLD;
+    let semio_plugin::plugin_app_close_prelude::OriginalTypingFoldPolicy::Factory(actual) = policy else { panic!("Writer editor must select its original producer") };
+    let expected: &dyn semio_plugin::plugin_app_close_prelude::ArtifactOriginalTypingFoldFactory<WriterMutation> = &semio_s_artifact_writer_writer_typing_fold::WRITER_ORIGINAL_TYPING_FOLD;
     assert!(std::ptr::eq(actual, expected));
 }

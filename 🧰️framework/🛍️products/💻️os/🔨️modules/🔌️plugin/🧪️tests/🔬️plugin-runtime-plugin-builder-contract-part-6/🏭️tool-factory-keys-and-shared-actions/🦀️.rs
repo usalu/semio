@@ -287,7 +287,7 @@ pub fn instance_source() -> String {
                 other => panic!("unknown cancellation proof case {other}"),
             }
             let before = serde_json::to_value(&definition).unwrap();
-            let result = semio_framework_plugin_decl_registry::declarations::project_tool_cancellation::<TestApp<false>>(&mut definition, &rows);
+            let result = semio_plugin_decl_registry::declarations::project_tool_cancellation::<TestApp<false>>(&mut definition, &rows);
             if case["outcome"] == "refused" {
                 assert!(result.is_err(), "{case}");
                 assert_eq!(serde_json::to_value(&definition).unwrap(), before, "refusal must be atomic");

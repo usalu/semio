@@ -188,7 +188,7 @@ pub use semio_s_artifact_stdio_semio_brep_viewer::editor::edit_rules;
 pub struct SemioBrepEditor;
 
 impl ArtifactEditor for SemioBrepEditor {
-    fn examples()->Vec<semio_framework_plugin::ExampleSource>{vec![semio_s_artifact_stdio_semio_brep_examples::examples::solid::source()]}
+    fn examples()->Vec<semio_plugin::ExampleSource>{vec![semio_s_artifact_stdio_semio_brep_examples::examples::solid::source()]}
 
     type Snapshot = SemioBrepSnapshot;
     type Mutation = SemioBrepMutation;
@@ -322,7 +322,7 @@ pub fn create_semio_brep_editor() -> semio_plugin::AppDefinition {
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,semio_s_artifact_stdio_contract::set_active_example_args(&[(semio_s_artifact_stdio_semio_brep_examples::examples::solid::ID,semio_s_artifact_stdio_semio_brep_examples::examples::solid::label())],semio_s_artifact_stdio_semio_brep_examples::examples::solid::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,semio_s_artifact_stdio_contract::set_active_example_description())
-        .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,semio_framework_plugin::InteractiveJobClassification::Migrated);
+        .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,semio_plugin::InteractiveJobClassification::Migrated);
     editing::snapshot_edit_actions_with(builder).build_definition()
 }
 //#endregion 🔖️Manifest
@@ -344,5 +344,7 @@ fn typed_example_selection_refuses_unknown_and_malformed_sources(){
 #[test]
 fn example_picker_declares_only_the_host_load_lane(){
     let contract=<SemioBrepEditor as editing::BoundedNativeEditingEditor>::NATIVE_PUBLICATION_CONTRACTS.iter().find(|contract|contract.tool_id==semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID).unwrap();
-    assert_eq!(contract.lanes,&[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly]);
+    assert_eq!(contract.lanes,&[semio_plugin::ArtifactToolPublicationLane::HostOnly]);
 }
+
+semio_plugin::retained_command::terminal_frame_bound!(SemioBrepSetVertexWork);

@@ -76,6 +76,7 @@ impl semio_framework_dsl_record::DslField for Float32Buffer {
 #[value(transparent)]
 #[serde(transparent)]
 pub struct ByteBuffer(pub Vec<u8>);
+semio_framework_dsl_record::dsl_transparent_receiving!(ByteBuffer,Vec<u8>);
 
 impl ByteBuffer {
     pub fn from_u8_slice(values: &[u8]) -> Self { Self(values.to_vec()) }

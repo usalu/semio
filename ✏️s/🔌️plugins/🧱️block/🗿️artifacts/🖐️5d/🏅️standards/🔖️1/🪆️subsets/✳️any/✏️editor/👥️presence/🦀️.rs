@@ -101,7 +101,7 @@ impl protocol::ColdMutationDiff<Block5dPresence> for Block5dPresenceDiff {
 pub enum Block5dPresenceMutation {}
 
 impl store::ArtifactPresenceSnapshot for Block5dPresence {
-    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, semio_framework_value::ValueError> {
+    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> semio_framework_value::RetainedWorkOutcome<Self, store::io::control::NativeSnapshotFailure> {
         store::decode_presence_json(bytes, owner)
     }
 }

@@ -25,8 +25,8 @@ impl BitmapSnapshot{
 }
 impl ArtifactSqliteSnapshotHost for BitmapSnapshot{
  
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{crate::standards::v1::subsets::any::io::text::snapshot::decode_sqlite_snapshot_native(payload,c,native_control)}
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{crate::standards::v1::subsets::any::io::text::snapshot::encode_sqlite_snapshot_native(self,encoding,c,native_owner)}
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<Self,semio_os_kernel::NativeSnapshotFailure> {crate::standards::v1::subsets::any::io::text::snapshot::decode_sqlite_snapshot_native(payload,c,native_control)}
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<store::io_schema::IoPayload,semio_os_kernel::NativeSnapshotFailure> {crate::standards::v1::subsets::any::io::text::snapshot::encode_sqlite_snapshot_native(self,encoding,c,native_owner)}
  
 
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{let mut b=NativeEncodingBound::new(c)?;b.add(4096)?;b.check_rows(4usize.checked_add(self.input.palette.len()).and_then(|n|n.checked_add(self.pinned.len())).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"bitmap native entity overflow"))?)?;b.repeated(self.schema.len(),16)?;b.repeated(self.input.pixels.len(),16)?;for _ in &self.input.palette{b.add(512)?;}for _ in &self.pinned{b.add(512)?;}b.finish()}

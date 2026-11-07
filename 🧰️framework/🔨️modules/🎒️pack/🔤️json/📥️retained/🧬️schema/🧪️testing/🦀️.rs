@@ -11,7 +11,10 @@ pub const OWNED_SCHEMA_TEST_FIELDS: &[OwnedSchemaFieldSpec] = &[
     OwnedSchemaFieldSpec { id: 7, key: "escaped/\u{0008}\u{000c}\n\r\t", required: false },
 ];
 
-pub fn owned_schema_test_cursor(chunks: &[&[u8]]) -> OwnedSchemaRecordCursor {
+pub fn owned_schema_test_cursor(chunks: &[&[u8]]) -> OwnedSchemaRecordCursor { owned_schema_test_cursor_scoped(chunks, None) }
+
+/// 🧷️ Builds the cursor under a captured replacement identity (`None`: nothing drives a slot, so nothing can go stale).
+pub fn owned_schema_test_cursor_scoped(chunks: &[&[u8]], replacement: Option<semio_framework_job::ReplacementIdentity>) -> OwnedSchemaRecordCursor {
     let byte_count = chunks.iter().map(|chunk| chunk.len()).sum();
     let mut pages = OwnedSchemaDecodePages::try_with_credits(OwnedSchemaDecodeCredits { maximum_pages: chunks.len(), maximum_bytes: byte_count }).expect("fixed schema credits");
     for chunk in chunks {
@@ -19,7 +22,7 @@ pub fn owned_schema_test_cursor(chunks: &[&[u8]]) -> OwnedSchemaRecordCursor {
         pages.admit_page(page).unwrap_or_else(|_| panic!("pre-admitted test page"));
     }
     pages.seal().expect("seal exact test extent");
-    let tokens = OwnedSchemaTokenCursor::try_new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), pages).unwrap_or_else(|_| panic!("sealed token source"));
+    let tokens = OwnedSchemaTokenCursor::try_new(replacement, pages).unwrap_or_else(|_| panic!("sealed token source"));
     OwnedSchemaRecordCursor::try_new(OwnedSchemaRecordSpec { fields: OWNED_SCHEMA_TEST_FIELDS }, tokens).unwrap_or_else(|_| panic!("valid fixed test schema"))
 }
 

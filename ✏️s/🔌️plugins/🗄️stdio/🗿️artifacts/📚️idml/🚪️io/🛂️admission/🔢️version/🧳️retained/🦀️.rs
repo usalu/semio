@@ -22,7 +22,7 @@ impl RetainedIdmlVersion {
     /// ▶ Appends at most one admitted ASCII scalar after bounded original member reads.
     pub fn advance(&mut self,original:RetainedCloneRef<'_,Vec<u8>>,body:usize,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         let demand=self.demand(original,body)?;if !fits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if let Some(progress)=original.bind(&mut self.source,grant)?{return Ok(RetainedCloneStep::Progress(progress));}
+        if let Some(progress)=original.bind(&mut self.source,grant).result?{return Ok(RetainedCloneStep::Progress(progress));}
         if self.phase==0{let mut value=String::new();value.try_reserve_exact(self.view.decoded_length).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"IDML version capacity reservation failed"))?;let capacity=value.capacity();*self.value=Some(value);self.phase=1;return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(grant,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:capacity,..Default::default()},"IDML decoded version reservation")?));}
         let step=self.decoder.advance(original.get(),(demand.copy_bytes-FIXED)/UNIT);let progress=RetainedCloneProgress{copied_items:1,copied_bytes:FIXED+step.work*UNIT,..Default::default()};
         if let Some(error)=step.error{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,error).with_retained_progress(progress));}
@@ -43,9 +43,9 @@ impl RetainedIdmlVersion {
     /// 🪜 Executes one admitted typed String retirement or original alias action.
     pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         let d=self.close_demand(grant.maximum_copy_bytes)?;if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}if !fits(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if !self.retirement.is_empty(){return self.retirement.step_granted(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
-        if let Some(step)=self.retirement.begin_granted(&mut self.value,grant)?{return Ok(RetainedCloneStep::Progress(step.progress()));}
-        let step=RetainedCloneBinding::close_one(&mut self.source,grant)?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
+        if !self.retirement.is_empty(){return self.retirement.step_granted(grant).result.map(|step|RetainedCloneStep::Progress(step.progress()));}
+        if let Some(step)=self.retirement.begin_granted(&mut self.value,grant).result?{return Ok(RetainedCloneStep::Progress(step.progress()));}
+        let step=RetainedCloneBinding::close_one(&mut self.source,grant).result?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
     }
     /// 🪹 No staged String or original member lease remains.
     pub fn terminal_is_empty(&self)->bool{self.closing&&self.value.is_none()&&self.retirement.is_empty()&&self.source.is_none()}

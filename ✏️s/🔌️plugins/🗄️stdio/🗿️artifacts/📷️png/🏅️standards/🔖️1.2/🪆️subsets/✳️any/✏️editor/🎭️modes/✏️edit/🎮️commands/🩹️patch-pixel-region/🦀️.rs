@@ -211,3 +211,5 @@ impl ArtifactCommandWork<EditorApp<PngEditor>> for PatchPixelRegionWork {
         self.closing && self.plan.is_none() && self.revision.is_none() && self.cursor == 0
     }
 }
+
+semio_plugin::retained_command::terminal_frame_bound!(PatchPixelRegionWork);

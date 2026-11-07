@@ -26,7 +26,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreview
     }
 
     fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        command_work_step_demands::<EditorApp<Generation3dPlayApp>>(size_of::<Self>())
+        command_work_step_demands::<EditorApp<Generation3dPlayApp>>()
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
@@ -68,9 +68,6 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreview
 
     fn begin_close(&mut self) {
         self.closing = true;
-        if let Some(session) = self.session.as_mut() {
-            session.begin_close();
-        }
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
@@ -90,27 +87,6 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreview
         }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 {
             return Ok(InteractiveJobCloseStep::Pending { progress: idle });
-        }
-        if let Some(session) = self.session.as_mut() {
-            if session.terminal_is_empty() {
-                self.session.take();
-                return Ok(InteractiveJobCloseStep::Pending { progress: one });
-            }
-            return session.close_step(grant);
-        }
-        if let Some(host) = self.host.take() {
-            self.host_retirement = Some(semio_os_flow::FlowHostRetirement::new(host));
-            return Ok(InteractiveJobCloseStep::Pending { progress: one });
-        }
-        if let Some(retirement) = self.host_retirement.as_mut() {
-            if retirement.terminal_is_empty() {
-                self.host_retirement = None;
-                return Ok(InteractiveJobCloseStep::Pending { progress: one });
-            }
-            return match retirement.close_step(grant) {
-                Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => Ok(InteractiveJobCloseStep::Pending { progress }),
-                Err(error) => refused(error),
-            };
         }
         if let Some(emit) = self.emit.take() {
             return match semio_framework_value::retirement::controlled::ControlledRetirement::new(emit) {
@@ -157,7 +133,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreview
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.emit.is_none() && self.emit_retirement.is_none() && self.host.is_none() && self.host_retirement.is_none() && self.session.is_none()
+        self.closing && self.emit.is_none() && self.emit_retirement.is_none()
     }
 }
 
@@ -232,7 +208,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEva
     fn work_demands(&self,input:&ArtifactCommandInputs<'_,EditorApp<Generation3dPlayApp>>,maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
         if let Generation3dCommand::FlowTessellateResolve(payload)=input.command{return self.instance_owner.inspect_original::<Generation3dInstanceOperationOwner,_>(|owner|owner.eval_session.as_ref().map_or_else(||Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original preview session is closing")),|session|self.tessellate.demands(payload,session,maximum_copy_bytes)))?.unwrap_or(Ok(Default::default()))}
         if let Generation3dCommand::FlowEvalResolve(payload)=input.command{return self.instance_owner.inspect_original::<Generation3dInstanceOperationOwner,_>(|owner|owner.eval_session.as_ref().map_or_else(||Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original preview session is closing")),|session|self.evaluation.demands(payload,session,maximum_copy_bytes)))?.unwrap_or(Ok(Default::default()))}
-        command_work_step_demands::<EditorApp<Generation3dPlayApp>>(size_of::<Self>())
+        command_work_step_demands::<EditorApp<Generation3dPlayApp>>()
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
@@ -350,3 +326,5 @@ pub fn generation3d_gumball_preview(committed: &Generation3dSnapshot, marks: &Pr
 }
 //#endregion 🧵️RetainedCommands
 //#endregion 🔖️Generation3dPlayApp
+
+semio_plugin::retained_command::terminal_frame_bound!(Generation3dPreviewCommandWork, Generation3dFlowEvalWindowWork);

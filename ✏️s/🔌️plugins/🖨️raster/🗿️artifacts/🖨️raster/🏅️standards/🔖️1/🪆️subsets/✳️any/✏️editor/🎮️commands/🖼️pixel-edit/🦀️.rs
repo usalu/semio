@@ -22,7 +22,7 @@ pub struct PixelLeafWork{route:Route,owned:ManuallyDrop<Option<Owned>>,source:Op
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
 fn quote(copy:usize,capacity:usize)->RetirementDemand{RetirementDemand{copy_bytes:copy,capacity_bytes:capacity,depth:1,..Default::default()}}
 fn fixed(copy:usize)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}}
-fn posted(cx:&mut StepContext<'_>,progress:RetainedCloneProgress)->Result<(),OriginalTurnFailure>{receive_original_retained_work(cx,RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress)),work:0})?;Ok(())}
+fn posted(cx:&mut StepContext<'_>,progress:RetainedCloneProgress)->Result<(),OriginalTurnFailure>{receive_original_retained_work(cx,RetainedWorkOutcome::<RetainedCloneStep,ValueError>{result:Ok(RetainedCloneStep::Progress(progress)),work:0})?;Ok(())}
 fn exact(value:&str)->String{let bytes=Box::<[u8]>::new_uninit_slice(value.len());let mut bytes=bytes;for(index,byte)in value.bytes().enumerate(){bytes[index].write(byte);}let bytes=unsafe{bytes.assume_init()}.into_vec();unsafe{String::from_utf8_unchecked(bytes)}}
 fn one_row()->Vec<RasterMutation>{let storage=Box::new(std::mem::MaybeUninit::<RasterMutation>::uninit());unsafe{Vec::from_raw_parts(Box::into_raw(storage).cast::<RasterMutation>(),0,1)}}
 
@@ -78,3 +78,5 @@ impl<A:RasterWorkApp> ArtifactCommandWork<A> for PixelLeafWork{
 }
 impl Drop for PixelLeafWork{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"Raster pixel producer requires original close");}}
 #[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;
+
+semio_plugin::retained_command::terminal_frame_bound!(PixelLeafWork);

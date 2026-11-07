@@ -105,10 +105,10 @@ pub async fn plugin_snapshot_sqlite_export(owner: &mut semio_plugin_abi::sqlite_
     if matches!(encoding,semio_framework::sqlite_snapshot::SnapshotEncoding::Text)&&std::str::from_utf8(&input.payload).is_err(){return Err(plugin_internal_fault("snapshot original text is invalid UTF8"))}
     owner.payload=Some(match encoding{semio_framework::sqlite_snapshot::SnapshotEncoding::Binary=>IoPayload::Binary(std::mem::take(&mut input.payload)),semio_framework::sqlite_snapshot::SnapshotEncoding::Text=>IoPayload::Text(String::from_utf8(std::mem::take(&mut input.payload)).unwrap())});
     owner.route=Some(semio_os_kernel::io::io_mechanism::io_route(owner.dialect.as_ref().unwrap(),&ArtifactDialect::from(SQLITE_SNAPSHOT),1).await);
-    let route=match owner.route.as_mut().unwrap(){Ok(route)=>&route.value,Err(error)=>{let kind=error.cause.kind;return Err(plugin_internal_fault(std::mem::replace(&mut error.cause,semio_framework_value::ValueError::literal(kind,"snapshot route refused")).into_message()))}};
+    let route=match owner.route.as_mut().unwrap(){Ok(route)=>&route.value,Err(error)=>{let message=error.cause.message().to_string();return Err(plugin_internal_fault(message))}};
     owner.hop=Some(semio_os_kernel::io::io_mechanism::io_run_with_snapshot_control(route,&mut owner.payload,native,snapshot).await);
     match owner.hop.as_mut().unwrap(){
-        Err(error)=>{let kind=error.cause.kind;let diagnostics=semio_plugin_abi::sqlite_wire::encode_diagnostics(&error.diagnostics);let message=std::mem::replace(&mut error.cause,semio_framework_value::ValueError::literal(kind,"snapshot hop refused")).into_message();Ok(semio_plugin_abi::sqlite_wire::SnapshotFileResult::Rejected(semio_plugin_abi::sqlite_wire::SnapshotRejection{kind,message,diagnostics}))},
+        Err(error)=>{let kind=error.cause.kind();let diagnostics=semio_plugin_abi::sqlite_wire::encode_diagnostics(&error.diagnostics);let message=error.cause.message().to_string();Ok(semio_plugin_abi::sqlite_wire::SnapshotFileResult::Rejected(semio_plugin_abi::sqlite_wire::SnapshotRejection{kind,message,diagnostics}))},
         Ok(output)=>match &mut output.value{IoPayload::Binary(bytes)=>Ok(semio_plugin_abi::sqlite_wire::SnapshotFileResult::Done(semio_plugin_abi::sqlite_wire::SnapshotFile{bytes:std::mem::take(bytes),diagnostics:semio_plugin_abi::sqlite_wire::encode_diagnostics(&output.diagnostics)})),IoPayload::Text(_)=>Err(plugin_internal_fault("semantic SQLite export must produce binary"))},
     }
 }
@@ -122,10 +122,10 @@ pub async fn plugin_snapshot_sqlite_import(owner: &mut semio_plugin_abi::sqlite_
     owner.dialect=Some(ArtifactDialect::parse_coordinate(&input.dialect).map_err(plugin_internal_fault)?);
     owner.payload=Some(IoPayload::Binary(std::mem::take(&mut input.payload)));
     owner.route=Some(semio_os_kernel::io::io_mechanism::io_route(&ArtifactDialect::from(SQLITE_SNAPSHOT),owner.dialect.as_ref().unwrap(),1).await);
-    let route=match owner.route.as_mut().unwrap(){Ok(route)=>&route.value,Err(error)=>{let kind=error.cause.kind;return Err(plugin_internal_fault(std::mem::replace(&mut error.cause,semio_framework_value::ValueError::literal(kind,"snapshot route refused")).into_message()))}};
+    let route=match owner.route.as_mut().unwrap(){Ok(route)=>&route.value,Err(error)=>{let message=error.cause.message().to_string();return Err(plugin_internal_fault(message))}};
     owner.hop=Some(semio_os_kernel::io::io_mechanism::io_run_with_snapshot_control(route,&mut owner.payload,native,snapshot).await);
     match owner.hop.as_mut().unwrap(){
-        Err(error)=>{let kind=error.cause.kind;let diagnostics=semio_plugin_abi::sqlite_wire::encode_diagnostics(&error.diagnostics);let message=std::mem::replace(&mut error.cause,semio_framework_value::ValueError::literal(kind,"snapshot hop refused")).into_message();Ok(semio_plugin_abi::sqlite_wire::SnapshotPayloadResult::Rejected(semio_plugin_abi::sqlite_wire::SnapshotRejection{kind,message,diagnostics}))},
+        Err(error)=>{let kind=error.cause.kind();let diagnostics=semio_plugin_abi::sqlite_wire::encode_diagnostics(&error.diagnostics);let message=error.cause.message().to_string();Ok(semio_plugin_abi::sqlite_wire::SnapshotPayloadResult::Rejected(semio_plugin_abi::sqlite_wire::SnapshotRejection{kind,message,diagnostics}))},
         Ok(output)=>{let diagnostics=semio_plugin_abi::sqlite_wire::encode_diagnostics(&output.diagnostics);Ok(semio_plugin_abi::sqlite_wire::SnapshotPayloadResult::Done(match &mut output.value{IoPayload::Binary(bytes)=>semio_plugin_abi::sqlite_wire::SnapshotPayload{encoding:semio_plugin_abi::sqlite_wire::SnapshotEncoding::Binary,bytes:std::mem::take(bytes),diagnostics},IoPayload::Text(text)=>semio_plugin_abi::sqlite_wire::SnapshotPayload{encoding:semio_plugin_abi::sqlite_wire::SnapshotEncoding::Text,bytes:std::mem::take(text).into_bytes(),diagnostics}}))},
     }
 }

@@ -72,3 +72,11 @@ export function pinnedChannelVersion(repoRoot: string): number {
   if (!Number.isInteger(pin.channelVersion) || (pin.channelVersion as number) < 1) throw new Error(`${CHANNEL_VERSION_PIN_PATH} carries no positive integer channelVersion`);
   return pin.channelVersion as number;
 }
+
+/** 🧾️ The committed describe outputs whose execution protocol names another app channel than the pin: the registry refuses exactly these as `appChannelVersion is unsupported`. */
+export function staleChannelDescribeOutputsV1(rows: readonly Readonly<{ path: string; text: string }>[], pin: number): readonly string[] {
+  return rows.filter(row => {
+    const channel = (JSON.parse(row.text) as { executionProtocol?: { appChannelVersion?: unknown } }).executionProtocol?.appChannelVersion;
+    return channel !== pin;
+  }).map(row => row.path);
+}

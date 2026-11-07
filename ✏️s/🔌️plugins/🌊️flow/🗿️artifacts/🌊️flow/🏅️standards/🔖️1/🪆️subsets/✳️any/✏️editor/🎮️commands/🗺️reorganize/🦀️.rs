@@ -21,7 +21,7 @@ pub fn reorganize_edit(composed: &FlowSnapshot, config: &FlowMainWindowConfig, s
     let mut control = infinite_canvas::board::schema::layout::LayoutControl::new(100_000_000, &mut progress);
     let laid_out = host.reorganize(&infinite_canvas::board::schema::layout::DagLayoutOptions::default(), &mut control).is_ok();
     let positions: Vec<(String, f64, f64)> = if laid_out { host.host_snapshot.widgets.iter().filter_map(|widget| { let id = crate::schema::widget_id(widget); host.host_snapshot.layout.get(id).map(|entry| (id.to_string(), entry.x, entry.y)) }).collect() } else { Vec::new() };
-    host.retire_cold().map_err(crate::editor::flow::host::value_fault)?;
+    host.retire_cold().or_else(|refusal|refusal.resolve()).map_err(crate::editor::flow::host::value_fault)?;
     let mut edit = ContentEdit::new(flow_composed_content(composed)?);
     for (id, x, y) in &positions {
         edit.set_position(id, *x, *y);

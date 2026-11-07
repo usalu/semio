@@ -72,8 +72,7 @@ pub enum ArtifactOwnedSprMutationArrayState {
 }
 
 pub struct ArtifactOwnedSprMutationArrayAuthority<P, Mutation: Send> {
-    pub operation: semio_framework_job::OperationId,
-    pub generation: semio_framework_job::Generation,
+    pub replacement: Option<semio_framework_job::ReplacementIdentity>,
     pub path: OwnedSchemaPath,
     pub catalog: std::mem::ManuallyDrop<Option<Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>>>,
     pub mutation_factory: std::mem::ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>>>,
@@ -117,8 +116,7 @@ impl<P, Mutation: Send + 'static> ArtifactOwnedSprMutationArrayAuthority<P, Muta
         Ok(Default::default())
     }
     pub(super) fn try_new(
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
+        replacement: Option<semio_framework_job::ReplacementIdentity>,
         path: OwnedSchemaPath,
         catalog: Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>,
         mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
@@ -130,8 +128,7 @@ impl<P, Mutation: Send + 'static> ArtifactOwnedSprMutationArrayAuthority<P, Muta
             ArtifactStoreOperationRowOwners::Forwards(values)
         };
         Ok(Self {
-            operation,
-            generation,
+            replacement,
             path,
             catalog: std::mem::ManuallyDrop::new(Some(catalog)),
             mutation_factory: std::mem::ManuallyDrop::new(Some(mutation_factory)),
@@ -155,7 +152,7 @@ impl<P, Mutation: Send + 'static> ArtifactOwnedSprMutationArrayAuthority<P, Muta
     }
 
     pub fn accept(&mut self, token: OwnedSchemaToken, terminal: bool, source: &OwnedSchemaRecordCursor, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic> {
-        if cx.operation() != self.operation || cx.generation() != self.generation {
+        if cx.replacement_is_stale(self.replacement) {
             return Err(self.diagnostic("artifact-spr.mutation-array-stale", token.start));
         }
         if cx.is_cancelled() {
@@ -250,7 +247,7 @@ impl<P, Mutation: Send + 'static> ArtifactOwnedSprMutationArrayAuthority<P, Muta
                 let reservation = self.target.reserve_mutation()?;
                 self.reservation = Some(reservation);
                 self.scalar_entry = token.kind == OwnedSchemaTokenKind::String;
-                *self.active = Some(self.catalog.as_ref().expect("live original mutation catalog").begin_mutation(self.operation, self.generation, self.path));
+                *self.active = Some(self.catalog.as_ref().expect("live original mutation catalog").begin_mutation(self.replacement, self.path));
                 self.accept(token, self.scalar_entry, source, cx)
             }
             ArtifactOwnedSprMutationArrayState::AwaitStart => Err(self.diagnostic("artifact-spr.mutation-array-start", token.start)),
@@ -356,8 +353,7 @@ where
     P: Send + Sync + 'static,
     Mutation: Send + 'static,
 {
-    pub operation: semio_framework_job::OperationId,
-    pub generation: semio_framework_job::Generation,
+    pub replacement: Option<semio_framework_job::ReplacementIdentity>,
     pub path: OwnedSchemaPath,
     pub catalog: std::mem::ManuallyDrop<Option<Arc<dyn ArtifactEnvelopeOwnedFieldCatalog<P, Mutation>>>>,
     pub mutation_factory: std::mem::ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>>>,

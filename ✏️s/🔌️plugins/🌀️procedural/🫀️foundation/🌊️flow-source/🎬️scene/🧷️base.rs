@@ -1,4 +1,5 @@
 //! 🧷️ The original context-overlaid host stays immutable while one genuine projected clone becomes working scratch.
+use super::retained_scratch_driver::funded_construction;
 use super::retained_flow_source::ProceduralFlowSourceWork;
 use super::retained_projected_clone::ProjectedFieldCloneWork;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
@@ -8,26 +9,26 @@ use semio_framework_value::retained_clone::{RetainedCloneSource,RetainedCloneSou
 use semio_framework_value::retirement::RetireOwned;
 use std::mem::{ManuallyDrop,size_of};
 struct Fields{scratch:Option<FlowHostSnapshot>,returned:Option<(FlowHostSnapshot,())>,admission:Option<RetainedCloneSourceAdmission<FlowHostSnapshot,FlowHostSnapshot,()>>,base:Option<RetainedCloneSource<FlowHostSnapshot>>,clone:Option<ProjectedFieldCloneWork<FlowHostSnapshot>>}
-pub(crate) struct OriginalSceneBaseWork{fields:ManuallyDrop<Fields>,original:OriginalSourceBinding,source:Option<usize>,phase:u8,closing:bool,retirement:RetainedCloneClose,progress:RetainedCloneProgress,work:u64}
+pub struct OriginalSceneBaseWork{fields:ManuallyDrop<Fields>,original:OriginalSourceBinding,source:Option<usize>,phase:u8,closing:bool,retirement:RetainedCloneClose,progress:RetainedCloneProgress,work:u64}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"immutable procedural base changed its actual source, caller or custody")}
 fn fixed(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
 fn event(cx:&mut StepContext<'_>,d:RetirementDemand,body:impl FnOnce(RetainedCloneGrant)->RetainedWorkOutcome)->Result<bool,OriginalTurnFailure>{
  let mut accepted=None;
- admit_original_construction(cx,&mut accepted,OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth},|g|{let turn=body(g);RetainedWorkOutcome{result:turn.result.map(|step|((),step.progress())),work:turn.work}})
+ funded_construction(cx,&mut accepted,OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth},|g|{let turn=body(g);RetainedWorkOutcome{result:turn.result.map(|step|((),step.progress())),work:turn.work}})
 }
 impl OriginalSceneBaseWork{
- pub(crate) fn new(cx:&StepContext<'_>)->Self{Self::new_original(OriginalSourceBinding::borrow(cx))}
- pub(crate) fn new_original(original:OriginalSourceBinding)->Self{Self{fields:ManuallyDrop::new(Fields{scratch:None,returned:None,admission:None,base:None,clone:None}),original,source:None,phase:0,closing:false,retirement:Default::default(),progress:Default::default(),work:0}}
- pub(crate) fn ready(&self)->bool{!self.closing&&self.phase==8}
- pub(crate) fn base(&self)->Result<Option<&FlowHostSnapshot>,ValueError>{if !self.ready(){return Ok(None)}self.fields.base.as_ref().map(RetainedCloneSource::try_authority).transpose()}
+ pub fn new(cx:&StepContext<'_>)->Self{Self::new_original(OriginalSourceBinding::borrow(cx))}
+ pub fn new_original(original:OriginalSourceBinding)->Self{Self{fields:ManuallyDrop::new(Fields{scratch:None,returned:None,admission:None,base:None,clone:None}),original,source:None,phase:0,closing:false,retirement:Default::default(),progress:Default::default(),work:0}}
+ pub fn ready(&self)->bool{!self.closing&&self.phase==8}
+ pub fn base(&self)->Result<Option<&FlowHostSnapshot>,ValueError>{if !self.ready(){return Ok(None)}self.fields.base.as_ref().map(RetainedCloneSource::try_authority).transpose()}
 
- pub(crate) fn projection_demands(&self)->Result<RetirementDemand,ValueError>{if !self.ready()||self.fields.base.is_none(){return Err(invalid())}Ok(RetainedOwnedProjection::<FlowHostSnapshot>::constructor_demand())}
- pub(crate) fn retain_base_original(&self,grant:RetainedCloneGrant)->RetainedWorkOutcome<(RetainedOwnedProjection<FlowHostSnapshot>,RetainedCloneProgress)>{
+ pub fn projection_demands(&self)->Result<RetirementDemand,ValueError>{if !self.ready()||self.fields.base.is_none(){return Err(invalid())}Ok(RetainedOwnedProjection::<FlowHostSnapshot>::constructor_demand())}
+ pub fn retain_base_original(&self,grant:RetainedCloneGrant)->RetainedWorkOutcome<(RetainedOwnedProjection<FlowHostSnapshot>,RetainedCloneProgress)>{
   if !self.ready(){return RetainedWorkOutcome{result:Err(invalid()),work:0}}
   match self.fields.base.as_ref(){Some(base)=>base.retain_original(grant),None=>RetainedWorkOutcome{result:Err(invalid()),work:0}}
  }
  fn validate<T:RetireOwned+Sync>(&self,source:&ProceduralFlowSourceWork<T>)->Result<(),ValueError>{if self.closing||self.source.is_some_and(|bound|bound!=source as*const _ as usize){return Err(invalid())}source.original_source_demands()?;Ok(())}
- pub(crate) fn next_demands<T:RetireOwned+Sync>(&self,source:&ProceduralFlowSourceWork<T>,copy:usize)->Result<RetirementDemand,ValueError>{
+ pub fn next_demands<T:RetireOwned+Sync>(&self,source:&ProceduralFlowSourceWork<T>,copy:usize)->Result<RetirementDemand,ValueError>{
   self.validate(source)?;
   match self.phase{
    0|7=>source.scratch_transfer_demands(),
@@ -40,7 +41,7 @@ impl OriginalSceneBaseWork{
    _=>Err(invalid()),
   }
  }
- pub(crate) fn step<T:RetireOwned+Sync>(&mut self,source:&mut ProceduralFlowSourceWork<T>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+ pub fn step<T:RetireOwned+Sync>(&mut self,source:&mut ProceduralFlowSourceWork<T>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(source)?;if !self.original.matches(cx){return Err(invalid().into())}cx.original_source_parent()?.validate_borrowed_context(cx)?;
   if self.ready(){return Ok(true)}if cx.is_cancelled()||cx.should_yield(){return Ok(false)}
   match self.phase{
@@ -56,7 +57,7 @@ impl OriginalSceneBaseWork{
    },
    3=>{
     let d=self.next_demands(source,cx.retained_grant().maximum_copy_bytes)?;let original=self.original;let fields=&mut*self.fields;let(base,clone)=(&fields.base,&mut fields.clone);
-    if admit_original_construction(cx,clone,OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth},|g|{
+    if funded_construction(cx,clone,OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth},|g|{
      let turn=base.as_ref().unwrap().retain_original(g);
      RetainedWorkOutcome{result:turn.result.map(|(projection,mut p)|{p.copied_bytes+=size_of::<ProjectedFieldCloneWork<FlowHostSnapshot>>();(ProjectedFieldCloneWork::new_original(projection,original),p)}),work:turn.work}
     })?{self.phase=4}
@@ -72,8 +73,8 @@ impl OriginalSceneBaseWork{
    _=>return Err(invalid().into()),
   }Ok(self.ready())
  }
- pub(crate) fn begin_close(&mut self){self.closing=true;if let Some(work)=self.fields.clone.as_mut(){work.begin_close()}}
- pub(crate) fn next_close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
+ pub fn begin_close(&mut self){self.closing=true;if let Some(work)=self.fields.clone.as_mut(){work.begin_close()}}
+ pub fn next_close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
   if let Some(work)=self.fields.clone.as_ref(){return if work.terminal_is_empty(){Ok(fixed(0))}else{work.next_close_demands(copy)}}
   if let Some(admission)=self.fields.admission.as_ref(){return if admission.phase()=="ready"{admission.next_demand()}else{admission.next_return_demand()}}
   if !self.retirement.is_empty(){return self.retirement.demands(copy)}
@@ -82,7 +83,7 @@ impl OriginalSceneBaseWork{
   if let Some(base)=self.fields.base.as_ref(){return base.next_close_demand(copy)}
   Ok(Default::default())
  }
- pub(crate) fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
+ pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
   self.progress=Default::default();self.work=0;let result=self.close_original(grant).map_err(|error|{let p=error.retained_progress();if p!=Default::default(){self.progress=p}error.with_retained_progress(self.progress)});RetainedWorkOutcome{result,work:self.work}
  }
  fn close_original(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
@@ -98,8 +99,8 @@ impl OriginalSceneBaseWork{
   else{let base=fields.base.as_mut().ok_or_else(invalid)?;let turn=base.close_step(grant);if base.terminal_is_empty(){fields.base=None}turn};
   self.work=turn.work;self.progress=turn.result?.progress();Ok(RetainedCloneStep::Progress(self.progress))
  }
- pub(crate) fn terminal_is_empty(&self)->bool{self.closing&&self.fields.clone.is_none()&&self.fields.admission.is_none()&&self.fields.base.is_none()&&self.fields.scratch.is_none()&&self.fields.returned.is_none()&&self.retirement.is_empty()}
- pub(crate) fn step_progress(&self)->RetainedCloneProgress{self.progress}
- pub(crate) fn last_turn_work(&self)->u64{self.work}
+ pub fn terminal_is_empty(&self)->bool{self.closing&&self.fields.clone.is_none()&&self.fields.admission.is_none()&&self.fields.base.is_none()&&self.fields.scratch.is_none()&&self.fields.returned.is_none()&&self.retirement.is_empty()}
+ pub fn step_progress(&self)->RetainedCloneProgress{self.progress}
+ pub fn last_turn_work(&self)->u64{self.work}
 }
 impl Drop for OriginalSceneBaseWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"immutable procedural base retains its actual source, admission or projected scratch");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}

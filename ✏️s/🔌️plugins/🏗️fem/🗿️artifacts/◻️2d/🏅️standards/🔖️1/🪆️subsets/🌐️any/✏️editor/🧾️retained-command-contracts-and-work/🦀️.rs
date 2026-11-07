@@ -173,6 +173,10 @@ impl semio_plugin::retained_command::ArtifactCommandWork<EditorApp<Fem2dPlayApp>
         fem2d_retained_extent(command, snapshot, interaction)
     }
 
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(std::mem::size_of::<Self>())
+    }
+
     fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Fem2dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Fem2dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
         let original = (|| -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Fem2dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
 
@@ -213,3 +217,5 @@ impl semio_plugin::retained_command::ArtifactCommandWork<EditorApp<Fem2dPlayApp>
     }
 }
 //#endregion 🧵️RetainedCommands
+
+semio_plugin::retained_command::terminal_frame_bound!(Fem2dRetainedWork);

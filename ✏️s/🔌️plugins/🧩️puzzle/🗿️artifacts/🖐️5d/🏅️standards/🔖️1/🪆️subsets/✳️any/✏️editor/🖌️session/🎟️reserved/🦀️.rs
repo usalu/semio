@@ -1,7 +1,7 @@
 //! 🎟️ One closed inline work family retains all request lanes through the shared original job.
 use super::{Puzzle5dClipboardJob,Puzzle5dPasteJob,Puzzle5dImportJob};
 use crate::editor::puzzle5d::Puzzle5dPlayApp;
-use semio_framework_plugin::{EditorApp,ArtifactReservedToolJobRequest,tool_contract::ArtifactReservedWork};
+use semio_plugin::{EditorApp,ArtifactReservedToolJobRequest,plugin_app_close_prelude::ArtifactReservedWork};
 use semio_framework_job::{StepContext,OriginalTurnFailure,OriginalJobReturnClaim,InteractiveJobStep,InteractiveJobCloseStep,JobOutcomeDescriptor,JobOutcomeView};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind};
 type App=EditorApp<Puzzle5dPlayApp>;

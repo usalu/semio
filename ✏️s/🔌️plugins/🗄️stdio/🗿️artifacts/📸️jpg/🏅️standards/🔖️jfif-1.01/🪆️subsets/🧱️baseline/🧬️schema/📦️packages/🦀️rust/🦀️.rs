@@ -66,3 +66,9 @@ pub mod standards {
         }
     }
 }
+
+#[path = "."]
+pub mod editor {
+    #[path = "../../../../🧾️document/✏️editor/🎭️modes/✏️edit/🎮️commands/🎨️paint-region/📜️declaration/🦀️.rs"]
+    pub mod paint_region_declaration;
+}

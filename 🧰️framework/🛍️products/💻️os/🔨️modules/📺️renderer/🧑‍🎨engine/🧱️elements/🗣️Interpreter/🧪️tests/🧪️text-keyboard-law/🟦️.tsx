@@ -72,7 +72,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const typed = String(DRAFT);
         const expected = { newline: [[], `${typed}\n`], commit: [[row.kind === "number" ? Number(typed) : typed], null], revert: [[], PUBLISHED], none: [[], typed] }[row.action ?? "none"];
         expect([received(), row.action === "commit" ? null : input.value], `${row.case}: ${chord}`).toEqual(expected);
-        if (row.action === "commit") expect(document.activeElement === input, `${row.case}: a committed field gives its focus back`).toBe(false);
+        if (row.action === "commit") expect(document.activeElement === input, `${row.case}: a committed field keeps its focus`).toBe(true);
         unmount();
       }
     }, 60_000);

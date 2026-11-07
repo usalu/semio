@@ -18,7 +18,7 @@ mod issuer;
 pub use issuer::ToolCancellationIssuer;
 #[cfg(any(test,feature="media-turn-testing"))]
 #[doc(hidden)]
-pub use issuer::cancellation_issuer_original_creation_physical_birth_and_close;
+pub use issuer::{cancellation_issuer_original_creation_physical_birth_and_close,cancellation_issuer_unready_renewal_refuses_typed_after_its_bound};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct ArtifactDocumentAuthority(pub u32);

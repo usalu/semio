@@ -133,7 +133,8 @@ pub struct BooleanJob {
     pub(super) phase: BooleanPhase,
 }
 
-semio_framework_value::artifact_retire_struct!(BooleanJob {pre_existing_solids,protected_edges,protected_vertices,coincident_a,coincident_b,faces_a,faces_b,row,weld,pending_a,pending_b,pieces_a,pieces_b,selected,validation});
+semio_framework_value::artifact_retire_leaf!(BooleanPhase, BooleanOp);
+semio_framework_value::artifact_retire_struct!(BooleanJob {a,b,op,tol,result,cursor_a,cursor_b,apply_a,apply_b,classify_a,classify_b,units_done,units_total,phase,pre_existing_solids,protected_edges,protected_vertices,coincident_a,coincident_b,faces_a,faces_b,row,weld,pending_a,pending_b,pieces_a,pieces_b,selected,validation});
 
 impl BooleanJob {
     /// 🎟️ Runs the existing result-validation producer on its actual supplied caller turn.

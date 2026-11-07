@@ -1,7 +1,7 @@
 //! 📥️ Reserved presentation import: the import tool id and port, the import job with its actions, its interactive job implementation and its reserved job implementation. See [`super`].
 
 use super::*;
-use semio_framework_plugin::tool_contract::ArtifactReservedWork;
+use semio_plugin::plugin_app_close_prelude::ArtifactReservedWork;
 
 //#region 🎞️ReservedImport
 /// 🎞️ The framework registers the reserved `import-media` factory for every app but never a concrete
@@ -20,7 +20,7 @@ pub(super) struct PresentationImportJob {
     pub(super) decoded: bool,
     completed: bool,
     pub(super) closing: bool,
-    pending_completion_rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<AnimatePresentationPlayApp>>>,
+    pending_completion_rejection: Option<semio_plugin::app::ArtifactToolCompletionRejection<EditorApp<AnimatePresentationPlayApp>>>,
     publication: RetainedJobPublication,
     publishing: Option<JobPublicationKind>,
     pub(super) source: Vec<u8>,
@@ -100,7 +100,7 @@ impl PresentationImportJob {
                 self.stage_fault("presentation import completion consumer is absent");
                 return PresentationImportAction::Publish;
             }
-            if let Err(rejected) = completion.complete(Ok(Emit { artifact_mutations: mutations, ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }), semio_framework_plugin::EphemeralEmit::default()) {
+            if let Err(rejected) = completion.complete(Ok(Emit { artifact_mutations: mutations, ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }), semio_plugin::EphemeralEmit::default()) {
                 let message = rejected.fault.message.clone();
                 self.pending_completion_rejection = Some(rejected);
                 self.stage_fault(&message);
@@ -142,7 +142,7 @@ enum PresentationImportAction {
 
 impl PresentationImportJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, request:&ArtifactReservedToolJobRequest<EditorApp<AnimatePresentationPlayApp>>, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step_value<'a>(&'a mut self, request:&ArtifactReservedToolJobRequest<EditorApp<AnimatePresentationPlayApp>>, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         if self.delivered {
             let turn = self.publication.close_step(cx.retained_grant());
             cx.consume_fuel(turn.work);
@@ -154,12 +154,12 @@ impl PresentationImportJob {
             return Ok(None);
         }
         if cx.is_cancelled() {
-            return JobOutcomeBorrow::admit_cancelled(cx);
+            return JobOutcomeBorrow::admit_cancelled(cx).map_err(Into::into);
         }
         if self.publishing.is_none() {
             cx.set_stage(if self.decoded { "presentation-import-publish" } else { "presentation-import-decode" });
             if matches!(self.advance(request), PresentationImportAction::Complete) {
-                return JobOutcomeBorrow::admit_complete(cx, None, None);
+                return JobOutcomeBorrow::admit_complete(cx, None, None).map_err(Into::into);
             }
             cx.consume_fuel(1);
             return Ok(None);
@@ -177,7 +177,7 @@ impl PresentationImportJob {
 }
 
 impl ArtifactReservedWork<EditorApp<AnimatePresentationPlayApp>> for PresentationImportJob {
-    fn step<'a>(&'a mut self,request:&'a mut ArtifactReservedToolJobRequest<EditorApp<AnimatePresentationPlayApp>>,cx:&mut StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(request,cx).map_err(semio_framework_job::OriginalTurnFailure::from))}
+    fn step<'a>(&'a mut self,request:&'a mut ArtifactReservedToolJobRequest<EditorApp<AnimatePresentationPlayApp>>,cx:&mut StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(request,cx))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
         match descriptor.kind() {

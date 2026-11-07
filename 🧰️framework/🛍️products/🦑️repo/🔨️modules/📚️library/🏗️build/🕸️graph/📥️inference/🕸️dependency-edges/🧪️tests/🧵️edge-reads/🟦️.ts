@@ -103,7 +103,6 @@ test("seeded workspaces: every owner whose edges differ under an edited environm
    runs++;
   }finally{rmSync(rootA,{recursive:true,force:true});rmSync(rootB,{recursive:true,force:true});}
  }
- console.log("[DEBUG] edge-reads soundness",JSON.stringify({runs,kept,changed,flagged,perEdit}));
  expect(changed).toBeGreaterThan(10);
  expect(flagged).toBeLessThan(kept*0.5);
 },300000);

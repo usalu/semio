@@ -129,7 +129,7 @@ impl ArtifactEditor for FlowPlayApp {
         if original.command.command_id() != original.tool_id {
             return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "Flow command does not match its exact retained tool registration").into());
         }
-        if original.tool_id.as_str()!="flowEvalResolve"&&!FLOW_CONTRIBUTIONS_TOOL_IDS.contains(&original.tool_id.as_str())&&!original.instance_operation_owner.with_mut::<FlowInstanceOperationOwner,_>(|owner|owner.catalogue_ready())?{return Ok(false)}
+        if original.tool_id.as_str()!="flowEvalResolve"&&!FLOW_CONTRIBUTIONS_TOOL_IDS.contains(&original.tool_id.as_str())&&!original.instance_operation_owner.with_mut::<FlowInstanceOperationOwner,_>(|owner|Ok(owner.catalogue_ready()))?{return Ok(false)}
         if FLOW_CHILD_GROUP_TOOL_IDS.contains(&original.tool_id.as_str())
             || FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&original.tool_id.as_str())
             || FLOW_DIRECT_STORE_TOOL_IDS.contains(&original.tool_id.as_str())

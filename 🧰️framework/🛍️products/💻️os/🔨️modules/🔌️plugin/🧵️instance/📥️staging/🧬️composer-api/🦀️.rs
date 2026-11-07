@@ -42,6 +42,18 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
         self.stores.test_document_revision()
     }
 
+    /// 🧪️ The original parent document identity every pending read must observe unchanged.
+    #[cfg(any(test, feature = "artifact-app-testing"))]
+    pub fn fixture_original_document_identity(&self) -> &str {
+        &self.stores.store.envelope().id
+    }
+
+    /// 🧪️ The original render operation whose revision, generation and canonical base every pending read must carry.
+    #[cfg(any(test, feature = "artifact-app-testing"))]
+    pub fn fixture_original_render_operation(&self) -> semio_plugin_decl_views::AppRenderOperationContext {
+        self.tools.live_render_operation(&self.mounted_policy, &self.stores)
+    }
+
     /// 🔗️ Borrows the current backbone descriptor.
     pub fn backbone_ref(&self) -> Option<&store::os_store::store_schema::ArtifactBackboneRef> {
         self.stores.backbone_ref()

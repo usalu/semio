@@ -15,7 +15,7 @@ pub const DRAWING_BOUNDED_WORK_ITEMS: usize = 4_096;
 
 //#region 📬️StorePreparation
 /// 📬️ The drawing document lane: the store's cold preparation behind the drawing work item bound.
-#[derive(semio_framework_value::FactoryPayloadRetirement)]
+#[derive(Default, semio_framework_value::FactoryPayloadRetirement)]
 pub struct DrawingArtifactStorePreparationFactory;
 
 type DrawingCold = store::ColdMutationApplyFactory<DrawingSnapshot, DrawingMutation>;
@@ -45,6 +45,15 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
             return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "drawing preparation exceeds its bounded work items"), request));
         }
         DrawingCold::default().begin(request, grant)
+    }
+}
+impl store::os_store::replay_preparation::ArtifactReplayPreparationFactory<DrawingSnapshot, DrawingMutation> for DrawingArtifactStorePreparationFactory {
+    fn preparation_birth_demand(&self) -> semio_framework_value::RetirementDemand {
+        store::os_store::replay_preparation::ArtifactReplayPreparationFactory::preparation_birth_demand(&DrawingCold::default())
+    }
+
+    fn begin(&self, request: store::os_store::replay_preparation::ArtifactReplayPreparationRequest<DrawingSnapshot, DrawingMutation>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Box<dyn store::os_store::replay_preparation::ArtifactReplayPreparation<DrawingSnapshot, DrawingMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::replay_preparation::ArtifactReplayPreparationRequest<DrawingSnapshot, DrawingMutation>)> {
+        store::os_store::replay_preparation::ArtifactReplayPreparationFactory::begin(&DrawingCold::default(), request, grant)
     }
 }
 //#endregion 📬️StorePreparation

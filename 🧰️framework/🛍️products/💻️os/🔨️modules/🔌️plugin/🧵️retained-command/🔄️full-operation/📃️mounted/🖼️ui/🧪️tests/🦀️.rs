@@ -2,7 +2,7 @@
 #[global_allocator]
 static MOUNTED_UI_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 
-use semio_framework_plugin_retained_command::typed_operation::MountedUiCopy;
+use semio_plugin_retained_command::typed_operation::MountedUiCopy;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,RetainedWorkOutcome,RetireOwned};
 use semio_framework_value::retirement::controlled::ControlledRetirement;

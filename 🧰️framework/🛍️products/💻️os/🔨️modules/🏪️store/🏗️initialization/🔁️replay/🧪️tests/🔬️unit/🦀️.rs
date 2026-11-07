@@ -22,7 +22,7 @@ const ACTOR: &str = "actor:replay";
 const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
 const WIDE: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 24, maximum_capacity_bytes: 1 << 24, maximum_release_bytes: 1 << 24, maximum_depth: 64 };
 
-type Initializer = ArtifactStoreReplayInitializer<DemoSnapshot, DemoMutation, semio_os_store_engine_owners::producer::BoundedDocumentStoreOwnerProducer>;
+type Initializer = ArtifactStoreReplayInitializer<DemoSnapshot, DemoMutation, semio_os_store_testing_doubles::DemoDocumentStoreOwnerProducer>;
 type Store = ArtifactStore<DemoSnapshot, DemoMutation>;
 
 fn set(n: i32) -> DemoMutation {
@@ -116,7 +116,8 @@ fn accounted_turn(init: &Initializer) -> bool {
 
 struct ReplayOriginal{caller:Option<semio_framework_job::OriginalJobFixtureCaller>,decoder:semio_framework_job::OriginalJobDecodeOwner}
 impl ReplayOriginal{
- fn new()->Self{let stock=RetainedCloneGrant{maximum_items:1<<24,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<30,maximum_depth:4096};Self{caller:Some(semio_framework_job::OriginalJobFixtureCaller::admit(OperationId(7),Generation(3),stock,||Some(1),u64::MAX,1<<24)),decoder:semio_framework_job::OriginalJobDecodeOwner::empty()}}
+ fn new()->Self{Self::with_identity(OperationId(7),Generation(3))}
+ fn with_identity(operation:OperationId,generation:Generation)->Self{let stock=RetainedCloneGrant{maximum_items:1<<24,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<30,maximum_depth:4096};Self{caller:Some(semio_framework_job::OriginalJobFixtureCaller::admit(operation,generation,stock,||Some(1),u64::MAX,1<<24)),decoder:semio_framework_job::OriginalJobDecodeOwner::empty()}}
  fn turn<T>(&mut self,grant:RetainedCloneGrant,advance:impl FnOnce(&mut StepContext<'_>)->Result<T,semio_framework_job::OriginalTurnFailure>)->Result<T,semio_framework_job::OriginalTurnFailure>{self.caller.as_mut().expect("replay retains its initiating source until close").turn_with_decoder(grant,&mut self.decoder,advance)}
  fn receipt(&self)->RetainedCloneProgress{self.caller.as_ref().unwrap().receipt()}
  fn finish(&mut self){while !self.decoder.terminal_is_empty(){self.caller.as_mut().unwrap().turn(WIDE,|cx|{let turn=self.decoder.close_step(cx.retained_grant());let step=turn.result?;cx.consume_retained(step.progress())?;cx.consume_fuel(turn.work);Ok(())}).unwrap();}self.caller.take().unwrap().retire(WIDE);}
@@ -257,7 +258,11 @@ async fn cancellation_at_every_turn_boundary_closes_with_exact_retirement() {
     drop(candidate);
     close_initializer(&mut full,&mut original);
     let mut retired_turns = 0;
-    for stop in (0..reference.turns).step_by(1) {
+    let exhaustive = std::env::var("SEMIO_TEST_LEVEL").is_ok_and(|level| level == "long");
+    let stride = if exhaustive { 1 } else { reference.turns.div_ceil(24).max(1) };
+    let mut stops = 0;
+    for stop in (0..reference.turns).step_by(stride) {
+        stops += 1;
         let mut init = initializer(envelope(&source).await);
     let mut original=ReplayOriginal::new();
         let (_, reached) = run_until(&mut init,&mut original, WIDE, 100_000, |_, turns| turns == stop, Outcome::Complete);
@@ -270,7 +275,7 @@ async fn cancellation_at_every_turn_boundary_closes_with_exact_retirement() {
         assert!(ArtifactStoreInitializationAuthority::terminal_is_empty(&init), "stop {stop}: a cancelled replay retires every born owner before it reports Cancelled");
         close_initializer(&mut init,&mut original);
     }
-    assert!(retired_turns > reference.turns, "cancellation retired real owners across the sweep");
+    assert!(retired_turns > stops, "cancellation retired real owners across the sweep");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -285,6 +290,54 @@ async fn cancellation_under_a_single_item_wallet_makes_progress_and_closes() {
     assert_eq!(outcome, Outcome::Cancelled);
     assert!(ArtifactStoreInitializationAuthority::terminal_is_empty(&init));
     close_initializer(&mut init,&mut original);
+}
+
+/// 🪪️ Stepping on an original caller whose identity differs from the replacement's own identity is not stale.
+#[semio_framework_async_macros::async_test]
+async fn an_original_caller_with_a_foreign_identity_is_not_stale() {
+    let source = source("replay-foreign-caller", 2, &[]).await;
+    let mut init = initializer(envelope(&source).await);
+    let mut original=ReplayOriginal::with_identity(OperationId(9001),Generation(77));
+    let (_, outcome) = run_until(&mut init,&mut original, WIDE, 100_000, |_, _| false, Outcome::Complete);
+    assert_eq!(outcome, Outcome::Complete);
+    close_initializer(&mut init,&mut original);
+}
+
+fn turn_with_current(init:&mut Initializer,original:&mut ReplayOriginal,current:semio_framework_job::ReplacementIdentity)->Outcome{
+    original.turn(WIDE,|cx|Ok(cx.with_replacement_current(current,|cx|match ArtifactStoreInitializationAuthority::step(init,cx).expect("a replay original turn never errs"){
+        None=>Outcome::Unaffordable,
+        Some(JobOutcomeBorrow::Yield{..})=>Outcome::Yield,
+        Some(JobOutcomeBorrow::Complete{..})=>Outcome::Complete,
+        Some(JobOutcomeBorrow::Cancelled{..})=>Outcome::Cancelled,
+        Some(JobOutcomeBorrow::Fault{..})=>Outcome::Fault,
+        Some(other)=>panic!("the replay initializer lends no {other:?}"),
+    }))).expect("same original replay admission")
+}
+
+async fn replay_under(name:&str,stored:semio_framework_job::ReplacementIdentity,current:semio_framework_job::ReplacementIdentity)->Outcome{
+    let source = source(name, 2, &[]).await;
+    let mut init = initializer(envelope(&source).await).with_replacement(Some(stored));
+    let mut original=ReplayOriginal::with_identity(OperationId(9001),Generation(77));
+    let mut outcome=Outcome::Yield;
+    for _ in 0..100_000 {
+        outcome=turn_with_current(&mut init,&mut original,current);
+        if !matches!(outcome,Outcome::Yield|Outcome::Unaffordable){break}
+    }
+    if outcome==Outcome::Cancelled{assert!(ArtifactStoreInitializationAuthority::take_candidate(&mut init).is_none());assert!(ArtifactStoreInitializationAuthority::terminal_is_empty(&init));}
+    else{drop(ArtifactStoreInitializationAuthority::take_candidate(&mut init).map(|mut candidate|retire_store(&mut candidate)));}
+    close_initializer(&mut init,&mut original);
+    outcome
+}
+
+/// ⚖️ Law (b): a replaced slot or an advanced artifact generation, judged by the shared predicate inside the initializer, is stale and ends Cancelled; the identical identity completes.
+#[semio_framework_async_macros::async_test]
+async fn a_replaced_slot_or_advanced_generation_is_stale_and_cancelled_while_the_current_identity_completes() {
+    use semio_framework_job::ReplacementIdentity as Identity;
+    let stored=Identity::new(5,OperationId(9),Generation(1));
+    assert_eq!(replay_under("replay-current",stored,stored).await,Outcome::Complete);
+    assert_eq!(replay_under("replay-replaced-slot",stored,Identity::new(6,OperationId(9),Generation(1))).await,Outcome::Cancelled);
+    assert_eq!(replay_under("replay-replaced-operation",stored,Identity::new(5,OperationId(10),Generation(1))).await,Outcome::Cancelled);
+    assert_eq!(replay_under("replay-advanced-generation",stored,Identity::new(5,OperationId(9),Generation(2))).await,Outcome::Cancelled);
 }
 
 #[semio_framework_async_macros::async_test]

@@ -57,6 +57,7 @@ pub mod standards {
                 }
                 #[path = "."]
                 pub mod io {
+                    pub use semio_s_artifact_puzzle_2d_text_inverse::standards::v1::subsets::any::io::routes;
                     #[path = "."]
                     pub mod text {
                         pub use semio_s_artifact_puzzle_2d_snapshot::standards::v1::subsets::any::io::text::snapshot;

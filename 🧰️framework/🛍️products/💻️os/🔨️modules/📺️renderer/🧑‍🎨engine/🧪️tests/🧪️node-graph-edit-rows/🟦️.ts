@@ -6,7 +6,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv from "ajv";
 import { describe, expect, it } from "vitest";
 import { flowAddWidgetArgs, nodeGraphEditRows } from "@semio-tech/framework-os-node-graph-rs/index";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
@@ -26,7 +26,7 @@ const flowFixture = JSON.parse(readFileSync(resolve(engineRoot, "🧪️tests/�
 };
 const schema = JSON.parse(readFileSync(resolve(toolMachineRoot, "🧬️schema/🔣️node-graph-edit-rows/🔣️.json"), "utf8"));
 const flowSchema = JSON.parse(readFileSync(resolve(engineRoot, "🧬️schema/🔣️flow-add-widget/🔣️.json"), "utf8"));
-const ajv = new Ajv2020({ allErrors: true, strict: true });
+const ajv = new Ajv({ allErrors: true, strict: true });
 ajv.addSchema(schema);
 const validateRows = ajv.getSchema(schema.$id)!;
 const validateAddWidget = ajv.compile(flowSchema);

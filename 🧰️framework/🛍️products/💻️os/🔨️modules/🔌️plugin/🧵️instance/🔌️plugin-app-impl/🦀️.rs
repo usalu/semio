@@ -141,6 +141,8 @@ fn loaded_with_app_dialect<A: ArtifactApp>(mut envelope: ArtifactEnvelope<A::Sna
 impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> PluginApp for VcsArtifactApp<A, M> {
     fn admit_cancellation_issuer(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let parent=cx.original_source_parent()?;self.tools.tool_cancellations.admit_step(parent,cx)}
 
+    fn birth_identity(&self)->Option<(u32,String)>{self.tools.live_runtime_instance_id.map(|id|(id,self.stores.store.local_actor_id().0.to_string()))}
+
     fn mounted_owner_maintenance_phase(&self) -> Result<MountedOwnerPhaseV1, Fault> {
         let instance_id = self.tools.live_runtime_instance_id.ok_or_else(|| plugin_sdk_fault("mounted phase requires the live instance"))?;
         if A::mounted_jobs_terminal_is_empty(instance_id) { return Ok(MountedOwnerPhaseV1::Maintenance); }

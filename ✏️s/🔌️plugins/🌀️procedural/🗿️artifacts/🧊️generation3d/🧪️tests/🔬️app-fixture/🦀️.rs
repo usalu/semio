@@ -17,7 +17,7 @@ impl std::ops::DerefMut for Generation3dAppFixture {
     fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
 impl Drop for Generation3dAppFixture {
-    fn drop(&mut self) { semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close"); }
+    fn drop(&mut self) { if !std::thread::panicking() { semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close"); } }
 }
 
 /// 🏗️ Supplies the artifact's registered tool catalog without installing geometry implementations.

@@ -17,11 +17,14 @@ pub struct ChildContentReadRetirement {
 #[derive(semio_framework_value::RetireOwned)]
 struct ChildContentReadMetadata {owner:String,slot:String,child_id:String,artifact_id:String,dialect:ArtifactDialect,revision:[u8;32]}
 
+/// 🪢️ Aliases another live holder keeps (the app's own children view) are returned by dropping this alias, never by waiting for sole ownership; only the last owner pays the deep release.
+///
+/// 🧵️ Sound because every holder of these roots belongs to one app instance and is only touched on that instance's actor turn thread (the instance owns its children view and the captured context under `&mut self`; the worker session thread never holds a child view), so no other thread can drop the other holder between the `strong_count` check and the alias drop. Wasm is single-threaded and the native fixture drives one thread. If a holder ever crosses threads, replace the count check with an atomic `Arc::into_inner` ownership transfer.
 struct ChildContentReadAliases;
 impl ChildContentRetainers for ChildContentReadAliases {
- fn retains_root(&self,_view:&ChildContentView)->bool{false}
- fn retains_page(&self,_index:usize,_page:&std::sync::Arc<ChildContentPage>)->bool{false}
- fn retains_entry(&self,_entry:&std::sync::Arc<ChildContentEntry>)->bool{false}
+ fn retains_root(&self,view:&ChildContentView)->bool{view.root.as_ref().is_some_and(|root|std::sync::Arc::strong_count(root)>1)}
+ fn retains_page(&self,_index:usize,page:&std::sync::Arc<ChildContentPage>)->bool{std::sync::Arc::strong_count(page)>1}
+ fn retains_entry(&self,entry:&std::sync::Arc<ChildContentEntry>)->bool{std::sync::Arc::strong_count(entry)>1}
 }
 
 impl ChildContentReadRetirement {
@@ -63,3 +66,21 @@ impl semio_framework_value::retirement::RetireOwned for ChildContentView {
  fn controlled_retirement_supported()->bool{true}
 }
 impl Drop for ChildContentReadRetirement{fn drop(&mut self){assert!(self.terminal_is_empty(),"original child view abandoned exact read registry custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.view);ManuallyDrop::drop(&mut self.pending);ManuallyDrop::drop(&mut self.returned);ManuallyDrop::drop(&mut self.metadata);}}}}
+
+#[cfg(test)]
+mod shared_root_laws{
+ use super::*;
+ /// 👁️ LAW: a child view that merely aliases a root another live holder keeps retires by returning its alias in bounded turns; only the last owner pays the deep release, and the live holder keeps its root.
+ #[test]
+ fn a_view_aliasing_a_live_root_retires_by_dropping_its_alias_in_bounded_turns(){
+  let root=std::sync::Arc::new(ChildContentRoot::default());
+  let live=ChildContentView{root:Some(root.clone())};
+  let mut retirement=ChildContentReadRetirement::new(ChildContentView{root:Some(root.clone())});
+  assert_eq!(std::sync::Arc::strong_count(&root),3);
+  let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:1<<20,maximum_depth:4};
+  for _ in 0..8{if retirement.terminal_is_empty(){break}retirement.step(grant).expect("bounded alias return");}
+  assert!(retirement.terminal_is_empty());
+  assert_eq!(std::sync::Arc::strong_count(&root),2);
+  assert!(live.root.is_some());
+ }
+}

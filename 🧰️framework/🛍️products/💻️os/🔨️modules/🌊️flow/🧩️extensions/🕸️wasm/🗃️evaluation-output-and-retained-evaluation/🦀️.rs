@@ -139,7 +139,7 @@ impl RetainedEvaluation {
                 let bytes=size_of_val(job.as_ref());
                 if grant.maximum_release_bytes<bytes{return Ok(RetainedCloneStep::Progress(empty));}
                 drop(self.job.take());RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:bytes,..empty})
-            }else{let step=job.close_step(grant)?;semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,job.terminal_is_empty(),"evaluation operator job")?}
+            }else{let outcome=job.close_step(grant);self.work+=outcome.work;let step=outcome.result?;semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,job.terminal_is_empty(),"evaluation operator job")?}
         }else if let Some(value)=self.finished.take(){
             match self.retirement.push_dictionary(value,grant){Ok(progress)=>RetainedCloneStep::Progress(progress),Err((error,value))=>{self.finished=Some(value);self.finish=neural_engine::OperatorFinishCursor::new();return Err(error.into());}}
         }else if let Some(output)=&mut self.output{
@@ -185,7 +185,7 @@ impl RetainedEvaluation {
             if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"terminal evaluation job shell requires admitted depth"));}
             let bytes=size_of_val(job.as_ref());if grant.maximum_release_bytes<bytes{return Ok(empty);}drop(self.job.take());return Ok(RetainedCloneProgress {copied_items:1,released_bytes:bytes,..empty});
         }
-        let step=job.close_step(grant)?;semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,job.terminal_is_empty(),"finished original operator job").map(|step|step.progress())
+        let outcome=job.close_step(grant);self.work+=outcome.work;let step=outcome.result?;semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,job.terminal_is_empty(),"finished original operator job").map(|step|step.progress())
     }
     pub fn take_work(&mut self)->u64{std::mem::take(&mut self.work)+self.admission.as_mut().map_or(0,EvaluationInputPreparation::take_work)+self.replacement.as_mut().map_or(0,EvaluationInputPreparation::take_work)+self.discarded_preparation.as_mut().map_or(0,EvaluationInputPreparation::take_work)+self.external_completion.as_mut().map_or(0,EvaluationExternalCompletion::take_work)+self.output.as_mut().map_or(0,EvaluationOutput::take_work)+self.response.as_mut().map_or(0,EvaluationOutput::take_work)}
     pub fn normal_step_progress(&self)->RetainedCloneProgress {self.normal_progress}

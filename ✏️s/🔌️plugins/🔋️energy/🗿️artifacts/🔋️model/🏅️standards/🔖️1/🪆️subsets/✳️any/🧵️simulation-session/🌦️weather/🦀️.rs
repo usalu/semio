@@ -218,7 +218,7 @@ impl LinkedWeather {
     pub(super) fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<RetainedCloneProgress,OriginalTurnFailure> {
         let demand=self.close_demands()?;
         if let Some(decoder)=self.decoder.as_mut().filter(|_|self.receiver.is_none()&&self.header_binding.is_none()&&self.row_binding.is_none()&&self.row_close.is_none()) {
-            if !decoder.terminal_is_empty() { return retire(cx,demand,|native,grant|decoder.close_step(native,grant)); }
+            if !decoder.terminal_is_empty() { return retire(cx,demand,|native,grant|decoder.close_step(native,grant).result); }
         }
         let before=cx.retained_progress();
         semio_framework_job::close_original_retained_step(cx,demand,|grant|energy_outcome((||{

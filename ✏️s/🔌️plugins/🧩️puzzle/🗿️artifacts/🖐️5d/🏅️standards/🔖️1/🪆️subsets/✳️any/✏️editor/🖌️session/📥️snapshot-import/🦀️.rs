@@ -1,15 +1,15 @@
 //! 📥️ Import job of the puzzle 5d editor session: the reserved snapshot import job with its fixed-page state machine. See [`super`].
 use semio_framework_job::InteractiveJob;
-use semio_framework_plugin::ArtifactReservedJob;
+use semio_plugin::ArtifactReservedJob;
 
 use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
-use semio_framework_plugin::ArtifactReservedToolJobRequest;
-use semio_framework_plugin::ArtifactToolCompletion;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::EphemeralEmit;
-use semio_framework_plugin::Media;
+use semio_plugin::ArtifactReservedToolJobRequest;
+use semio_plugin::ArtifactToolCompletion;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::EphemeralEmit;
+use semio_plugin::Media;
 use semio_framework_value::FromValue;
 use semio_framework_pack_json::{parse, Value};
 use crate::editor::puzzle5d::session::support::{puzzle5d_import_checkpoint, puzzle5d_job_fault, puzzle5d_step_envelope};
@@ -54,7 +54,7 @@ enum Puzzle5dImportStage {
 #[derive(semio_framework_value::RetireOwned)]
 #[value(send_only)]
 struct Puzzle5dImportOwners {
-    input:Option<semio_framework_plugin::ArtifactReservedToolInput>,
+    input:Option<semio_plugin::ArtifactReservedToolInput>,
     media_json: Option<String>,
     pub fragment: Option<Value>,
     pub catalogs: crate::standards::v1::subsets::any::schema::document_records::Puzzle5dKindCatalogs,
@@ -64,7 +64,7 @@ struct Puzzle5dImportOwners {
     compatibility_index: Vec<((String, String), usize)>,
     mutation_pages: [Vec<Puzzle5dMutation>; PUZZLE5D_IMPORT_MUTATION_PAGES],
     current_part: Option<crate::standards::v1::subsets::any::schema::document_records::Puzzle5dCatalogPartKind>,
-    pub pending_completion_rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle5dPlayApp>>>,
+    pub pending_completion_rejection: Option<semio_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle5dPlayApp>>>,
 }
 
 pub struct Puzzle5dImportJob {
@@ -73,7 +73,7 @@ pub struct Puzzle5dImportJob {
     pub raw_page_len: usize,
     pub progress: u64,
     pub stage: Puzzle5dImportStage,
-    input:Option<semio_framework_plugin::ArtifactReservedToolInput>,
+    input:Option<semio_plugin::ArtifactReservedToolInput>,
     input_captured:bool,
     media_json: Option<String>,
     pub fragment: Option<Value>,
@@ -89,7 +89,7 @@ pub struct Puzzle5dImportJob {
     pub nested_cursor: usize,
     pub decoded_items: usize,
     current_part: Option<crate::standards::v1::subsets::any::schema::document_records::Puzzle5dCatalogPartKind>,
-    pub pending_completion_rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle5dPlayApp>>>,
+    pub pending_completion_rejection: Option<semio_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle5dPlayApp>>>,
     pub completed: bool,
     pub outbox: crate::puzzle_job::JobOutbox,
     pub closing: bool,
@@ -407,15 +407,15 @@ impl Puzzle5dImportJob {
 
     /// 🧱️ Decodes one record of the imported snapshot.
     fn turn_decode(&mut self,snapshot:&Puzzle5dPlaySnapshot) -> Option<crate::puzzle_job::JobTurn> {
-        let Some(semio_framework_plugin::ArtifactReservedToolInput::Media{port,media})=self.input.as_ref()else{return Some(puzzle5d_job_fault("puzzle5d import requires its original media owner"))};
+        let Some(semio_plugin::ArtifactReservedToolInput::Media{port,media})=self.input.as_ref()else{return Some(puzzle5d_job_fault("puzzle5d import requires its original media owner"))};
         if port != "kit:in" {
             return Some(puzzle5d_job_fault("puzzle5d import only implements kit:in"));
         }
-        if self.media_json.is_none(){if let semio_framework_plugin::MediaPayload::Intrinsic{value,..}=&media.payload{self.media_json=Some(semio_framework_pack_json::to_json_string(value));}}
+        if self.media_json.is_none(){if let semio_plugin::MediaPayload::Intrinsic{value,..}=&media.payload{self.media_json=Some(semio_framework_pack_json::to_json_string(value));}}
         let media_json=match &media.payload{
-            semio_framework_plugin::MediaPayload::Structured{json,..}=>json.as_str(),
-            semio_framework_plugin::MediaPayload::Intrinsic{..}=>self.media_json.as_deref().unwrap(),
-            semio_framework_plugin::MediaPayload::Binary{..}=>return Some(puzzle5d_job_fault("puzzle5d kit:in requires a structured payload")),
+            semio_plugin::MediaPayload::Structured{json,..}=>json.as_str(),
+            semio_plugin::MediaPayload::Intrinsic{..}=>self.media_json.as_deref().unwrap(),
+            semio_plugin::MediaPayload::Binary{..}=>return Some(puzzle5d_job_fault("puzzle5d kit:in requires a structured payload")),
         };
         let fragment = match puzzle5d_decode_import_fragment(media_json) {
             Ok(fragment) => fragment,
@@ -686,14 +686,14 @@ impl Puzzle5dImportJob {
             }
             crate::puzzle_job::OutboxPhase::Idle => {}
         }
-        if !self.input_captured{let bytes=2*std::mem::size_of::<Option<semio_framework_plugin::ArtifactReservedToolInput>>();let d=semio_framework_value::RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()};if cx.should_yield()||!cx.retained_work_can_enter(d){return Ok(None)}self.input=request.input.take();self.input_captured=true;cx.consume_fuel(1);cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;return Ok(None)}
+        if !self.input_captured{let bytes=2*std::mem::size_of::<Option<semio_plugin::ArtifactReservedToolInput>>();let d=semio_framework_value::RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()};if cx.should_yield()||!cx.retained_work_can_enter(d){return Ok(None)}self.input=request.input.take();self.input_captured=true;cx.consume_fuel(1);cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;return Ok(None)}
         if self.stage==Puzzle5dImportStage::Complete&&!request.raw_wire.is_empty(){return crate::editor::puzzle5d::session::support::puzzle5d_prepare_original_wire(&mut request.raw_wire,&mut self.outbox,cx)}
         let turn = if cx.fuel_exhausted() || cx.deadline_exceeded() { crate::puzzle_job::JobTurn::Yield } else { self.turn(request,cx) };
         self.outbox.settle(turn, cx).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
-impl semio_framework_plugin::tool_contract::ArtifactReservedWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dImportJob {
+impl semio_plugin::plugin_app_close_prelude::ArtifactReservedWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dImportJob {
     fn step<'a>(&'a mut self,request:&'a mut ArtifactReservedToolJobRequest<EditorApp<Puzzle5dPlayApp>>,cx:&mut semio_framework_job::StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(request,cx))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {

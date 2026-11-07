@@ -843,3 +843,5 @@ mod tests {
         assert_eq!(<WavEditCommand as protocol::OpBinary>::decode_op(&bytes).expect("natural command decodes"), command);
     }
 }
+
+semio_plugin::retained_command::terminal_frame_bound!(EditAudioWork);

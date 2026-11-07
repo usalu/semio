@@ -23,20 +23,20 @@ fn render_drawing_body(
     preview: &DrawingGesturePreview,
     selection: &[String],
     point_selection: &[String],
-    view_state: &semio_framework_plugin::ViewModel,
-) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    view_state: &semio_plugin::ViewModel,
+) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
     let document=doc.snapshot;
-    let labels = semio_framework_plugin::resolve_labels::<DrawingPlayLabels>(view_state);
+    let labels = semio_plugin::resolve_labels::<DrawingPlayLabels>(view_state);
     let active_utility = drawing_active_utility(view_state);
-    let windows = semio_framework_plugin::TreeWindows::for_body(view_state, body_key);
+    let windows = semio_plugin::TreeWindows::for_body(view_state, body_key);
     let root = match body_key {
-        DRAWING_PLAY_BODY_COMPOSITE => semio_s_artifact_draw_drawing_editor_interaction::geometry_session::with_visual(doc.render_operation(),|plan,revision,fresh|{let idle=DrawingGesturePreview::default();canvas_window::render(plan,revision,document,config,if fresh{preview}else{&idle},active_utility,if fresh{selection}else{&[]},if fresh{point_selection}else{&[]})}),
+        DRAWING_PLAY_BODY_COMPOSITE => semio_s_artifact_draw_drawing_scene_mounted::with_visual(doc.render_operation(),|plan,revision,fresh|{let idle=DrawingGesturePreview::default();canvas_window::render(plan,revision,document,config,if fresh{preview}else{&idle},active_utility,if fresh{selection}else{&[]},if fresh{point_selection}else{&[]})}),
         DRAWING_PLAY_BODY_LAYERS => layers_panel::render(document, labels, &windows),
         DRAWING_PLAY_BODY_CATALOGUE => catalogue_panel::render(document, labels, &windows),
         DRAWING_PLAY_BODY_PROPERTIES => properties_panel::render(document, &[], labels, &windows),
-        _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("drawing.body.label", "the fixed Drawing unknown-body label exceeds its UI bound")),
+        _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("drawing.body.label", "the fixed Drawing unknown-body label exceeds its UI bound")),
     }?;
-    Ok(semio_framework_plugin::built_to_component_tree(root))
+    Ok(semio_plugin::built_to_component_tree(root))
 }
 
 impl Default for DrawingPlayApp {
@@ -50,8 +50,8 @@ impl Default for DrawingPlayApp {
 }
 
 impl ArtifactEditor for DrawingPlayApp {
-    fn completion_retirement_birth_bytes(value:&semio_framework_plugin::ArtifactToolCompletionValue<semio_framework_plugin::EditorApp<Self>>)->Option<usize>{completion::birth(value)}
-    fn admit_completion_retirement(value:&mut Option<semio_framework_plugin::ArtifactToolCompletionValue<semio_framework_plugin::EditorApp<Self>>>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress)>>{completion::admit(value,grant)}
+    fn completion_retirement_birth_bytes(value:&semio_plugin::ArtifactToolCompletionValue<semio_plugin::EditorApp<Self>>)->Option<usize>{completion::birth(value)}
+    fn admit_completion_retirement(value:&mut Option<semio_plugin::ArtifactToolCompletionValue<semio_plugin::EditorApp<Self>>>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress)>>{completion::admit(value,grant)}
     /// 📢️ The localized notices of the retained gesture owner's refusals (design §20.12).
     fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
         drawing_fault_notices()
@@ -65,8 +65,8 @@ impl ArtifactEditor for DrawingPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = DrawingPresence;
     type PresenceMutation = DrawingPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Transient = semio_plugin::NoTransient;
+    type TransientMutation = semio_plugin::NoTransientMutation;
 
     type Command = DrawingCommand;
 
@@ -91,16 +91,16 @@ impl ArtifactEditor for DrawingPlayApp {
         Some(semio_s_artifact_draw_drawing_host_arena::drawing_envelope_decode_owner_bundle())
     }
 
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(Box::new(semio_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
 
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::no_config_store_disposer())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_plugin::no_config_store_disposer())
     }
 
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_plugin::no_draft_store_disposer())
     }
 
     /// 👥️ Returned local reads retain the actual Draw presence fields and original Arc backing.
@@ -112,47 +112,47 @@ impl ArtifactEditor for DrawingPlayApp {
         Some(std::sync::Arc::new(semio_s_artifact_draw_drawing_editor_interaction::presence::DrawingPresenceRetirementFactory))
     }
 
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |value| value == &Self::Presence::default()).expect("default Drawing presence is the exact empty terminal")))
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(Box::new(semio_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |value| value == &Self::Presence::default()).expect("default Drawing presence is the exact empty terminal")))
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+        Some(semio_plugin::no_transient_local_root_retirement_factory())
     }
 
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_plugin::no_transient_store_disposer())
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(DrawingArtifactStorePreparationFactory::default()))
     }
 
-    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         canvas_window::config::register(registry)
     }
 
-    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_transient_owners(registry: &mut semio_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
         canvas_window::transient::register(registry)
     }
 
-    fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+    fn bounded_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
         DrawingGestureProofs::bounded_first_step_tool_proofs().into_iter().chain(DrawingBoundedProofs::bounded_first_step_tool_proofs()).chain(DrawingPathProofs::bounded_first_step_tool_proofs()).chain(DrawingImageProofs::bounded_first_step_tool_proofs()).chain(DrawingExportProofs::bounded_first_step_tool_proofs()).collect()
     }
 
-    fn mounted_job_prepare_snapshot_read(operation:semio_framework_plugin::AppRenderOperationContext,snapshot:&Self::Snapshot)->bool{semio_s_artifact_draw_drawing_editor_interaction::geometry_session::prepare(operation,snapshot)}
-    fn mounted_job_maintenance_demands(instance:u32,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_s_artifact_draw_drawing_editor_interaction::geometry_session::maintenance_demands(instance,body)}
-    fn mounted_job_maintenance_step(instance:u32,cx:&mut semio_framework_job::StepContext<'_>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_plugin::PluginLifecycleStep,semio_framework_plugin::PluginLifecycleFailure>{semio_s_artifact_draw_drawing_editor_interaction::geometry_session::maintenance(instance,grant).map_err(semio_framework_plugin::PluginLifecycleFailure::from)}
-    fn mounted_job_close_demands(instance:u32,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_s_artifact_draw_drawing_editor_interaction::geometry_session::close_demands(instance,body)}
-    fn mounted_job_close_step(instance:u32,cx:&mut semio_framework_job::StepContext<'_>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_plugin::PluginLifecycleStep,semio_framework_plugin::PluginLifecycleFailure>{semio_s_artifact_draw_drawing_editor_interaction::geometry_session::close(instance,grant).map_err(semio_framework_plugin::PluginLifecycleFailure::from)}
-    fn mounted_jobs_terminal_is_empty(instance:u32)->bool{semio_s_artifact_draw_drawing_editor_interaction::geometry_session::terminal_is_empty(instance)}
-    fn pending_effects(_owner:&semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,doc:&ArtifactView<'_,DrawingSnapshot>,_cfg:&ConfigView<'_,NoConfig>,_view:Option<&semio_framework_plugin::ViewModel>)->Vec<semio_framework::kernel::Effect>{semio_s_artifact_draw_drawing_editor_interaction::geometry_session::reconcile(doc)}
+    fn mounted_job_prepare_snapshot_read(operation:semio_plugin::AppRenderOperationContext,snapshot:&Self::Snapshot)->bool{semio_s_artifact_draw_drawing_scene_mounted::prepare(operation,snapshot)}
+    fn mounted_job_maintenance_demands(instance:u32,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_s_artifact_draw_drawing_scene_mounted::maintenance_demands(instance,body)}
+    fn mounted_job_maintenance_step(instance:u32,cx:&mut semio_framework_job::StepContext<'_>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_plugin::PluginLifecycleStep,semio_plugin::PluginLifecycleFailure>{semio_s_artifact_draw_drawing_scene_mounted::maintenance(instance,grant).map_err(semio_plugin::PluginLifecycleFailure::from)}
+    fn mounted_job_close_demands(instance:u32,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_s_artifact_draw_drawing_scene_mounted::close_demands(instance,body)}
+    fn mounted_job_close_step(instance:u32,cx:&mut semio_framework_job::StepContext<'_>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_plugin::PluginLifecycleStep,semio_plugin::PluginLifecycleFailure>{semio_s_artifact_draw_drawing_scene_mounted::close(instance,grant).map_err(semio_plugin::PluginLifecycleFailure::from)}
+    fn mounted_jobs_terminal_is_empty(instance:u32)->bool{semio_s_artifact_draw_drawing_scene_mounted::terminal_is_empty(instance)}
+    fn pending_effects(_owner:&semio_plugin::ArtifactInstanceOperationOwnerHandle,doc:&ArtifactView<'_,DrawingSnapshot>,_cfg:&ConfigView<'_,NoConfig>,_view:Option<&semio_plugin::ViewModel>)->Vec<semio_framework::kernel::Effect>{semio_s_artifact_draw_drawing_scene_mounted::reconcile(doc.render_operation(),||doc.take_snapshot_read())}
 
-    fn build_instance_operation_owner() -> Box<dyn semio_framework_plugin::ArtifactInstanceOperationOwner> {
+    fn build_instance_operation_owner() -> Box<dyn semio_plugin::ArtifactInstanceOperationOwner> {
         Box::new(DrawingInstanceOperationOwner::new())
     }
 
-    fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
+    fn register_tool_job_factories(registry: &mut semio_plugin::ArtifactToolFactoryRegistry<'_, semio_plugin::EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
         registry.register(DrawingGestureOperationJobFactory::new(&controller))?;
         registry.register(DrawingBoundedCommandJobFactory::new(&controller))?;
@@ -161,8 +161,8 @@ impl ArtifactEditor for DrawingPlayApp {
         registry.register(DrawingExportCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         let tool_id = original.tool_id.as_str();
         if DRAWING_EXPORT_TOOL_IDS.contains(&tool_id) {return export_job::build(request, output, cx);}
         if DRAWING_IMAGE_TOOL_IDS.contains(&tool_id) {return image_job::build(request, output, cx);}
@@ -176,11 +176,11 @@ impl ArtifactEditor for DrawingPlayApp {
         Some(semio_s_artifact_draw_drawing_editor_interaction::config::app_schema_descriptor())
     }
 
-    fn reference_birth()->Option<fn()->Result<DrawingSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<DrawingSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(semio_s_artifact_draw_drawing_model::default_drawing_document("empty", None))
     })}
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_plugin::AppIo> {
         Some(drawing_io())
     }
 
@@ -189,7 +189,7 @@ impl ArtifactEditor for DrawingPlayApp {
     /// body for every port on this app, not just the new one).
     fn export_media(port: &str, doc: &ArtifactView<'_, DrawingSnapshot>) -> Result<Media, MediaError> {
         match port {
-            "vector:out" => drawing_vector_media(doc.snapshot),
+            "vector:out" => semio_s_artifact_draw_drawing_scene_mounted::with_visual(doc.render_operation(), |prepared, _, fresh| drawing_vector_media(prepared.filter(|_| fresh).map(|scene| &scene.plan), doc.snapshot)),
             "artifact:out" => {
                 let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
                 let bytes = doc.snapshot.encode_pack();
@@ -201,7 +201,7 @@ impl ArtifactEditor for DrawingPlayApp {
 
     fn clipboard_media_type()->Option<MediaType>{Some(semio_s_artifact_draw_drawing_editor_interaction::clipboard::media_type())}
 
-    fn copy_fragment(doc:&ArtifactView<'_,DrawingSnapshot>,_cfg:&ConfigView<'_,NoConfig>,interaction:&InteractionView<'_>)->Result<semio_framework_plugin::kernel::ClipboardFragment,semio_framework_plugin::kernel::ClipboardError>{
+    fn copy_fragment(doc:&ArtifactView<'_,DrawingSnapshot>,_cfg:&ConfigView<'_,NoConfig>,interaction:&InteractionView<'_>)->Result<semio_plugin::kernel::ClipboardFragment,semio_plugin::kernel::ClipboardError>{
         semio_s_artifact_draw_drawing_editor_interaction::clipboard::copy(doc.snapshot,&interaction.selection(DRAWING_INTERACTION_DOMAIN).ids)
     }
 
@@ -209,9 +209,9 @@ impl ArtifactEditor for DrawingPlayApp {
         semio_s_artifact_draw_drawing_editor_interaction::clipboard::cut(doc.snapshot,&interaction.selection(DRAWING_INTERACTION_DOMAIN).ids).unwrap_or_default()
     }
 
-    fn build_reserved_tool_job(request:&mut Option<semio_framework_plugin::ArtifactReservedToolJobRequest<semio_framework_plugin::EditorApp<Self>>>,body:&mut Option<Box<dyn semio_framework_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_reserved_tool_job(request:&mut Option<semio_plugin::ArtifactReservedToolJobRequest<semio_plugin::EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if body.is_none()&&!request.as_ref().is_some_and(|request|DRAWING_CLIPBOARD_RESERVED_IDS.contains(&request.tool_id.as_str())){return Ok(false);}
-        semio_framework_plugin::tool_contract::admit_reserved_work::<semio_framework_plugin::EditorApp<Self>,crate::clipboard_job::DrawingClipboardJob>(request,body,cx)
+        semio_plugin::plugin_app_close_prelude::admit_reserved_work::<semio_plugin::EditorApp<Self>,crate::clipboard_job::DrawingClipboardJob>(request,body,cx)
     }
 
     /// 🏷️ `app_commands!`'s generated `command_id()`.
@@ -232,7 +232,7 @@ impl ArtifactEditor for DrawingPlayApp {
         doc: &ArtifactView<'_, DrawingSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
         interaction: &InteractionView<'_>,
-        view_state: Option<&semio_framework_plugin::ViewModel>,
+        view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<DrawingMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
@@ -246,21 +246,21 @@ impl ArtifactEditor for DrawingPlayApp {
         command.dispatch(doc, cfg, &mut session)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, DrawingSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, DrawingSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         render_drawing_body(body_key, doc, &canvas_window::config::current(cfg), &DrawingSession::default().preview(), &[], &[], view_state)
     }
 
     fn render_with_instance_operation_owner(
-        owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, DrawingSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        view_state: &semio_plugin::ViewModel,
+    ) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let preview = match doc.render_operation() {
             Some(operation) => owner
-                .with_mut::<DrawingInstanceOperationOwner, _>(|owner| Ok(owner.preview_projection(semio_s_artifact_draw_drawing_editor_interaction::geometry_session::identity(operation), drawing_active_utility(view_state))))
-                .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("drawing.gesture.preview-owner", error.message))?
+                .with_mut::<DrawingInstanceOperationOwner, _>(|owner| Ok(owner.preview_projection(semio_s_artifact_draw_drawing_scene_mounted::identity(operation), drawing_active_utility(view_state))))
+                .map_err(|error| semio_plugin::PluginAssemblyError::new("drawing.gesture.preview-owner", error.message))?
                 .unwrap_or_default(),
             None => DrawingGesturePreview::default(),
         };
@@ -268,22 +268,22 @@ impl ArtifactEditor for DrawingPlayApp {
     }
 
     fn render_with_request_context(
-        owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, DrawingSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        _transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        view_state: &semio_plugin::ViewModel,
+        _transient: &semio_plugin::TransientView<'_, semio_plugin::NoTransient>,
         interaction: &InteractionView<'_>,
-        cx:&mut semio_framework_plugin::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
-        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
+        cx:&mut semio_plugin::StepContext<'_>,
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
+        let rendered:semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree>=(||{
         if body_key == DRAWING_PLAY_BODY_PROPERTIES {
-            return properties_panel::render(doc.snapshot, &interaction.selection(DRAWING_INTERACTION_DOMAIN).ids, semio_framework_plugin::resolve_labels::<DrawingPlayLabels>(view_state), &semio_framework_plugin::TreeWindows::for_body(view_state, body_key)).map(semio_framework_plugin::built_to_component_tree);
+            return properties_panel::render(doc.snapshot, &interaction.selection(DRAWING_INTERACTION_DOMAIN).ids, semio_plugin::resolve_labels::<DrawingPlayLabels>(view_state), &semio_plugin::TreeWindows::for_body(view_state, body_key)).map(semio_plugin::built_to_component_tree);
         }
         let preview=match doc.render_operation() {
-            Some(operation)=>owner.with_mut::<DrawingInstanceOperationOwner,_>(|owner|Ok(owner.preview_projection(semio_s_artifact_draw_drawing_editor_interaction::geometry_session::identity(operation),drawing_active_utility(view_state))))
-                .map_err(|error|semio_framework_plugin::PluginAssemblyError::new("drawing.gesture.preview-owner",error.message))?.unwrap_or_default(),
+            Some(operation)=>owner.with_mut::<DrawingInstanceOperationOwner,_>(|owner|Ok(owner.preview_projection(semio_s_artifact_draw_drawing_scene_mounted::identity(operation),drawing_active_utility(view_state))))
+                .map_err(|error|semio_plugin::PluginAssemblyError::new("drawing.gesture.preview-owner",error.message))?.unwrap_or_default(),
             None=>DrawingGesturePreview::default(),
         };
         render_drawing_body(body_key,doc,&canvas_window::config::current(cfg),&preview,&interaction.selection(DRAWING_INTERACTION_DOMAIN).ids,&interaction.selection(DRAWING_POINT_DOMAIN).ids,view_state)
@@ -292,15 +292,15 @@ impl ArtifactEditor for DrawingPlayApp {
         rendered.map(Some).map_err(Into::into)
         }
 
-    fn window_engagements(doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
         semio_s_artifact_draw_drawing_editor_interaction::status::engagements(doc.snapshot.layers.len(),0,String::new(),view_state)
     }
 
     fn window_engagements_with_request_context(
         doc: &ArtifactView<'_, DrawingSnapshot>,
         _cfg: &ConfigView<'_, NoConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        view_state: &semio_plugin::ViewModel,
+        transient: &semio_plugin::TransientView<'_, semio_plugin::NoTransient>,
         interaction: &InteractionView<'_>,
     ) -> HashMap<String, WindowEngagement> {
         semio_s_artifact_draw_drawing_editor_interaction::status::engagements(doc.snapshot.layers.len(),interaction.selection(DRAWING_INTERACTION_DOMAIN).ids.len(),canvas_window::transient::current(transient).engagement_input,view_state)

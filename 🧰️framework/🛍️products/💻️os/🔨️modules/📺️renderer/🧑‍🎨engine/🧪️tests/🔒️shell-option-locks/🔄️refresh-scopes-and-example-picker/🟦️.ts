@@ -84,7 +84,7 @@ export function registerRefreshScopeAndExamplePickerTests(): void {
     expect(hostEffectRefreshScopeV1(owedEffects, passScope, bodyKeys), "a pass's owed pending_effects earn no scope of their own").toBe(passScope);
     expect(hostEffectRefreshScopeV1(owedEffects, { kind: "full" }, bodyKeys), "so the only thing that ever made the owed pass full was the caller").toEqual({ kind: "full" });
 
-    const shellHostRelative = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx";
+    const shellHostRelative = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🔁️contributions-refresh/🟦️.ts";
     let shellHostRoot = process.cwd();
     for (let hop = 0; hop < 12 && !existsSync(`${shellHostRoot}/${shellHostRelative}`); hop += 1) shellHostRoot = `${shellHostRoot}/..`;
     expect(existsSync(`${shellHostRoot}/${shellHostRelative}`)).toBe(true);

@@ -161,8 +161,8 @@ impl Generation3dViewCommandWork {
 }
 
 /// 🧮️ The transient bytes one work step may materialize: the work's own frame plus the one emit it can stage.
-pub(super) fn command_work_step_demands<A: semio_plugin::ArtifactApp>(work_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-    Ok(semio_framework_value::RetirementDemand { copy_bytes: work_bytes.saturating_add(size_of::<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>>()), depth: 1, ..Default::default() })
+pub(super) fn command_work_step_demands<A: semio_plugin::ArtifactApp>() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>>(), depth: 1, ..Default::default() })
 }
 
 impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewCommandWork {
@@ -181,7 +181,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
     }
 
     fn work_demands(&self, _input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        command_work_step_demands::<ViewerApp<Generation3dViewer>>(size_of::<Self>())
+        command_work_step_demands::<ViewerApp<Generation3dViewer>>()
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
@@ -311,3 +311,5 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
     }
 }
 //#endregion 🧵️RetainedCommands
+
+semio_plugin::retained_command::terminal_frame_bound!(Generation3dViewCommandWork);

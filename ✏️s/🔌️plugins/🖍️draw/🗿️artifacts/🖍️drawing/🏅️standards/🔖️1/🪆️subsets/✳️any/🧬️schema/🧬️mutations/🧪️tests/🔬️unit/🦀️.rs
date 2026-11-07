@@ -176,7 +176,7 @@ fn stroke_fields_preserve_appearance_and_undo() {
     let stroke = semio_s_artifact_draw_drawing_model::layer_base(&document.layers[0]).attributes.stroke.as_ref().unwrap();
     assert_eq!((stroke.width, stroke.cap.as_str(), stroke.join.as_str()), (3.0, "round", "bevel"));
     assert_eq!(stroke.dash, Some([8.0].into_iter().collect()));
-    let scene = semio_s_artifact_draw_drawing_scene::flatten_drawing_document_to_scene_nodes(&document);
+    let scene = semio_s_artifact_draw_drawing_scene::preparation::testkit::scene_nodes(&document);
     assert_eq!(scene.iter().find_map(|node| node.stroke.as_ref()), Some(stroke));
     assert_eq!(field_input("name", "123"), semio_framework_value::DslValue::String("123".into()));
 }

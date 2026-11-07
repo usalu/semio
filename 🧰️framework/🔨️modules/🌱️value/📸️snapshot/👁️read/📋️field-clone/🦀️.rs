@@ -87,5 +87,5 @@ impl<T:RetireOwned+Sync,U:RetainedClone> SnapshotReadFieldClone<T,U>{
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.read.is_none()&&self.admission.is_none()&&self.source.is_none()&&self.projection.is_none()&&self.cursor.terminal_is_empty()&&self.output.is_none()&&self.read_close.is_none()&&self.output_close.is_none()}
 }
-impl<T:RetireOwned+Sync,U:RetainedClone> Drop for SnapshotReadFieldClone<T,U>{fn drop(&mut self){assert!(self.terminal_is_empty(),"native field clone retains its original captured read or output");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.read);ManuallyDrop::drop(&mut self.output);ManuallyDrop::drop(&mut self.cursor)}}}}
+impl<T:RetireOwned+Sync,U:RetainedClone> Drop for SnapshotReadFieldClone<T,U>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"native field clone retains its original captured read or output");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.read);ManuallyDrop::drop(&mut self.output);ManuallyDrop::drop(&mut self.cursor)}}}}
 

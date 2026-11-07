@@ -51,7 +51,7 @@ fn writer_edit_source(bytes: &[u8]) -> store::os_store::owned_schema_decode::Own
     let mut pages = store::os_store::owned_schema_decode::OwnedSchemaDecodePages::try_with_credits(store::os_store::owned_schema_decode::OwnedSchemaDecodeCredits { maximum_pages: 1, maximum_bytes: bytes.len() }).expect("exact Writer edit page credits");
     pages.admit_page(store::os_store::owned_schema_decode::OwnedSchemaDecodePage::try_from_slice(bytes).expect("bounded Writer edit page")).unwrap_or_else(|_| panic!("pre-admitted Writer edit page"));
     pages.seal().expect("sealed Writer edit source");
-    let tokens = store::os_store::owned_schema_decode::OwnedSchemaTokenCursor::try_new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), pages).unwrap_or_else(|_| panic!("sealed Writer edit tokens"));
+    let tokens = store::os_store::owned_schema_decode::OwnedSchemaTokenCursor::try_new(None, pages).unwrap_or_else(|_| panic!("sealed Writer edit tokens"));
     store::os_store::owned_schema_decode::OwnedSchemaRecordCursor::try_new(store::os_store::owned_schema_decode::OwnedSchemaRecordSpec { fields: FIELDS }, tokens).unwrap_or_else(|_| panic!("valid Writer edit wrapper schema"))
 }
 

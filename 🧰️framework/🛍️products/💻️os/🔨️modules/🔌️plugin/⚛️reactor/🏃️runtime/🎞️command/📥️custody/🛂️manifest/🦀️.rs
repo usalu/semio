@@ -243,15 +243,15 @@ impl OriginalDecodedPluginCommand{
 pub mod tests;
 
 #[doc(hidden)]
-#[cfg(any(test,feature="original-actor-context-testing"))]
+#[cfg(feature="original-actor-context-testing")]
 pub fn original_manifest_metadata_law(){metadata::tests::original_manifest_metadata_retains_native_view_and_every_cancel_prefix()}
 
 #[doc(hidden)]
-#[cfg(any(test,feature="original-actor-context-testing"))]
+#[cfg(feature="original-actor-context-testing")]
 pub fn original_manifest_surface_refresh_law(){metadata::tests::original_manifest_surface_refresh_law()}
 
 #[doc(hidden)]
-#[cfg(any(test,feature="original-actor-context-testing"))]
+#[cfg(feature="original-actor-context-testing")]
 pub fn original_manifest_surface_read_law(){metadata::tests::original_manifest_surface_read_law()}
 
 #[cfg(feature="original-actor-context-testing")]

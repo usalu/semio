@@ -128,7 +128,7 @@ impl RasterLayersDelta {
     }
 }
 
-impl protocol::DiffAlgebra<RasterSnapshot> for RasterDiff {
+impl protocol::ColdDiffAlgebra<RasterSnapshot> for RasterDiff {
     fn inverse(&self, base: &RasterSnapshot) -> Self {
         Self {
             schema: self.schema.as_ref().map(|_| base.schema.clone()),
@@ -143,7 +143,9 @@ impl protocol::DiffAlgebra<RasterSnapshot> for RasterDiff {
             pixels: self.pixels.iter().rev().filter_map(|region| crate::inverse_pixel_region(region, base)).collect(),
         }
     }
+}
 
+impl protocol::DiffAlgebra<RasterSnapshot> for RasterDiff {
     fn is_empty(&self) -> bool {
         self.schema.is_none() && self.id.is_none() && self.title.is_none() && self.layers.as_ref().is_none_or(RasterLayersDelta::is_empty) && self.assets.as_ref().is_none_or(|assets| assets.entries.is_empty()) && self.pixels.is_empty()
     }

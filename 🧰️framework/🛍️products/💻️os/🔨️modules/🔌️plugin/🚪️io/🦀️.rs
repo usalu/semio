@@ -525,6 +525,8 @@ impl<Spec: DerivedArtifactSpec> ArtifactComposer for DerivedArtifactComposer<Spe
 pub mod operation_authority;
 #[path = "../🧬️schema/🪶️sqlite/🦀️.rs"]
 pub mod sqlite_wire;
+#[path = "../🧬️schema/🎟️actor-input/🦀️.rs"]
+pub mod actor_input_wire;
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 #[path = "../🧬️schema/🦀️.rs"]
 pub mod wasip2;

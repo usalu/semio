@@ -25,8 +25,8 @@ async fn sqlite_snapshot_guest_refusal_host_preserves_causes_diagnostics_and_act
         let rejection = wit_snapshot_rejection(SnapshotRejection { kind: wire, message: fixture["message"].as_str().unwrap().into(), diagnostics: sqlite_wire::encode_diagnostics(&diagnostics) });
         assert_eq!(rejection.kind, native);
         let original = rejection.into_io_error().unwrap();
-        assert_eq!(original.cause.kind, native);
-        assert_eq!(original.cause.message, fixture["message"].as_str().unwrap());
+        assert_eq!(original.cause.kind(), native);
+        assert_eq!(original.cause.message(), fixture["message"].as_str().unwrap());
         assert_eq!(original.diagnostics, diagnostics);
     }
     let engine = wasmtime::Engine::default();

@@ -1,0 +1,12 @@
+import {execFileSync} from "node:child_process";
+import {writeFileSync} from "node:fs";
+const root = process.argv[2], out = process.argv[3];
+const inference = await import(new URL(`file://${root}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs`));
+const {cacheInternals, libraryBootstrap} = await inference.loadCurrentImplementationV1();
+await libraryBootstrap;
+const files = execFileSync("git", ["ls-files", "-z", "--", "*Cargo.toml"], {cwd: root, maxBuffer: 1 << 28}).toString().split("\0").filter(Boolean);
+const catalog = await cacheInternals.workspaceCatalogBuildContributionsV1(root);
+const targets = await cacheInternals.playgroundPreparationTargets(files, root, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript", {}, catalog, {preparationControl: {advance: async () => {}}});
+writeFileSync(out, JSON.stringify(Object.fromEntries(Object.entries(targets).map(([k, v]) => [k, {dependsOn: v.dependsOn, admission: v.metadata?.semio?.runtimeInputAdmission}])), null, 1));
+console.log(Object.keys(targets).length);
+process.exit(0);

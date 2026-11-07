@@ -62,6 +62,7 @@ pub fn adopt_raster_asset_owner(source: &RasterAssetChild, target: &mut RasterAs
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::NativeReceive,semio_framework_dsl_record_derive::DslOwnedReceiving)]
 pub struct RasterPixelContent {
     pub image_key: Option<String>,
     pub width: Option<u32>,
@@ -94,6 +95,18 @@ impl RasterAdjustmentNumber {
 }
 
 semio_framework_value::artifact_retire_leaf!(RasterAdjustmentNumber);
+
+/// 🛡️ A received generic value becomes a tone number only when it is a number; integer and decimal identity are kept.
+impl semio_framework_value_native_owned_try_map::NativeReceiveTryMap<semio_framework_value::DslValue> for RasterAdjustmentNumber {
+    fn try_from_native(value:&semio_framework_value::DslValue,control:&mut semio_framework_value::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{
+        control.checkpoint()?;
+        Self::from_parameter(value).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"raster tone number requires a number"))
+    }
+}
+impl<I:semio_framework_value::native_decoding::owned::tree::NativeValueSource+?Sized> semio_framework_value::native_decoding::NativeReceive<I> for RasterAdjustmentNumber {
+    type Receiver=semio_framework_value_native_owned_try_map::NativeTryMappedReceiver<I,semio_framework_value::DslValue,Self>;
+    fn receiver()->Self::Receiver{Self::Receiver::new()}
+}
 
 impl semio_framework_pack_json::ArtifactCanonicalJsonTree for RasterAdjustmentNumber {
     fn canonical_tree_node(&self)->Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>,semio_framework_value::ValueError> {

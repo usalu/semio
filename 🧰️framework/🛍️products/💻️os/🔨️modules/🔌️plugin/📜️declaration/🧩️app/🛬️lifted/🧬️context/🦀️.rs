@@ -7,7 +7,7 @@ use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retirem
 use std::mem::ManuallyDrop;
 #[path="../📸️fields/🦀️.rs"]
 mod original_fields;
-pub use original_fields::{ContextOwnedFields,ContextOriginalResidual,ContextRetirementParts,ContextToolRunMetadata,ContextToolRunSources};
+pub use original_fields::{ContextViewLease,ContextOwnedFields,ContextOriginalResidual,ContextRetirementParts,ContextToolRunMetadata,ContextToolRunSources};
 
 #[path="../../../👷️job/🎯️completion-and-owned-context/📥️provisional/🦀️.rs"]
 mod original_provisional;

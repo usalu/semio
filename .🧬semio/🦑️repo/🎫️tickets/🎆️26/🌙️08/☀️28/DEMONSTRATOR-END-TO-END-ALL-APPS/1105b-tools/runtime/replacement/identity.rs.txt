@@ -1,0 +1,61 @@
+//! 🧷️ A replacement's own identity is independent of the execution identity of whoever steps it.
+use super::{StepContext,Generation,OperationId,OriginalTurnFailure,ValueError,ValueRefusalKind};
+
+/// 🪪️ Which fixed slot, operation and artifact generation one replacement job or member belongs to; stored at creation and never derived from a stepping context.
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+pub struct ReplacementIdentity{slot:u64,operation:OperationId,generation:Generation}
+
+/// 🚦️ The single verdict of comparing a stored replacement identity with the store's current slot identity.
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+pub enum ReplacementStaleness{Current,Replaced,Advanced,Unscoped}
+
+impl ReplacementIdentity{
+ /// 🌱️ Names the slot, operation and artifact generation a replacement was admitted under.
+ pub fn new(slot:u64,operation:OperationId,generation:Generation)->Self{Self{slot,operation,generation}}
+ pub fn slot(self)->u64{self.slot}
+ pub fn operation(self)->OperationId{self.operation}
+ pub fn generation(self)->Generation{self.generation}
+ /// ⚖️ The one shared predicate: a different slot or operation was replaced, the same one at another generation was advanced.
+ pub fn staleness(self,current:Option<Self>)->ReplacementStaleness{
+  match current{None=>ReplacementStaleness::Unscoped,Some(now)if now.slot!=self.slot||now.operation!=self.operation=>ReplacementStaleness::Replaced,Some(now)if now.generation!=self.generation=>ReplacementStaleness::Advanced,Some(_)=>ReplacementStaleness::Current}
+ }
+}
+
+impl ReplacementStaleness{
+ pub fn is_current(self)->bool{self==Self::Current}
+}
+
+impl StepContext<'_>{
+ /// 🔭️ The store's current identity of the replacement slot being driven, installed by whoever drives it.
+ pub fn replacement_current(&self)->Option<ReplacementIdentity>{self.replacement_current}
+ /// ⚖️ Compares a stored replacement identity with the current slot identity; the stepping context's own operation and generation never take part.
+ pub fn replacement_staleness(&self,stored:ReplacementIdentity)->ReplacementStaleness{stored.staleness(self.replacement_current)}
+ /// 🪪️ Captures the slot identity a replacement is created under; `None` when nothing drives a slot (the capture then has nothing to go stale against).
+ pub fn replacement_capture(&self)->Option<ReplacementIdentity>{self.replacement_current}
+ /// ⚖️ The Option-aware staleness verdict stores use: only a captured identity can be stale, and only against the current slot identity.
+ pub fn replacement_is_stale(&self,stored:Option<ReplacementIdentity>)->bool{stored.is_some_and(|identity|!self.replacement_staleness(identity).is_current())}
+ /// 🚧️ Refuses with a typed invariant when the stored identity is not the current one.
+ pub fn require_current_replacement(&self,stored:ReplacementIdentity,what:&'static str)->Result<(),OriginalTurnFailure>{
+  if self.replacement_staleness(stored).is_current(){return Ok(())}
+  Err(OriginalTurnFailure::from(ValueError::literal(ValueRefusalKind::InvariantViolated,what)))
+ }
+ /// 🎚️ Installs the current slot identity for exactly one driven step and restores the previous one afterwards.
+ pub fn with_replacement_current<R>(&mut self,current:ReplacementIdentity,run:impl FnOnce(&mut Self)->R)->R{
+  let previous=self.replacement_current.replace(current);let result=run(self);self.replacement_current=previous;result
+ }
+}
+
+#[cfg(test)]
+mod tests{
+ use super::*;
+ fn id(slot:u64,operation:u64,generation:u64)->ReplacementIdentity{ReplacementIdentity::new(slot,OperationId(operation),Generation(generation))}
+ #[test]
+ fn staleness_is_decided_by_the_stored_identity_against_the_current_slot_only(){
+  let stored=id(3,30,7);
+  assert_eq!(stored.staleness(Some(id(3,30,7))),ReplacementStaleness::Current);
+  assert_eq!(stored.staleness(Some(id(4,30,7))),ReplacementStaleness::Replaced);
+  assert_eq!(stored.staleness(Some(id(3,31,7))),ReplacementStaleness::Replaced);
+  assert_eq!(stored.staleness(Some(id(3,30,8))),ReplacementStaleness::Advanced);
+  assert_eq!(stored.staleness(None),ReplacementStaleness::Unscoped);
+ }
+}

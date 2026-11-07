@@ -23,6 +23,8 @@ pub struct CommandHistory<A: ArtifactApp> {
     /// 🗂️ Keyed on `(store.generation(), log_generation, history_filter)` — any of the three
     /// changing invalidates the cached snapshot/`HistoryView` pair.
     pub cache: Option<AppProjectionCache<A>>,
+    /// 🤝️ The cached snapshot's funded shared-owner retirement: the last alias hands its pages back instead of dropping them.
+    pub cache_retirement: Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
     /// 🧾️ Append-only session command log — see `🔖️CommandLog`. Never persisted, never
     /// truncated: undo/redo/revert push entries, they never remove any.
     pub command_log: PagedCommandLog,
@@ -61,6 +63,7 @@ impl<A: ArtifactApp> CommandHistory<A> {
             pending_command_prune: None,
             next_command_seq: 0,
             log_generation: 0,
+            cache_retirement: None,
             history_dirty_sequences: HashSet::new(),
             history_view: None,
             history_backfill: None,

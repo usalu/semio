@@ -34,7 +34,8 @@ impl GumballNodeIdentityWork{
  pub fn step(&mut self,source:&str,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(source)?;if !self.original.matches(cx){return Err(invalid().into())}cx.original_source_parent()?.validate_borrowed_context(cx)?;if self.ready(){return Ok(true)}if cx.should_yield()||cx.is_cancelled(){return Ok(false)}
   let d=self.next_demands(source,cx.retained_grant().maximum_copy_bytes)?;let mut accepted=None;
-  admit_original_construction(cx,&mut accepted,OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:0,depth:d.depth},|g|{
+  let grant=cx.retained_grant();
+  admit_original_construction(cx,&mut accepted,OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:0,depth:d.depth},|_|{let g=grant;
    if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Err(invalid()),work:0}}
    let progress=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()};let result=(||{
     match self.phase{

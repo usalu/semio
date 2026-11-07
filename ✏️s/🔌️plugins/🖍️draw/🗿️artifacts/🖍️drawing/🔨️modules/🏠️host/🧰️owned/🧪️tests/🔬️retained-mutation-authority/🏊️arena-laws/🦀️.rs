@@ -8,7 +8,7 @@ fn retained_drawing_process_arena_pool_cap_plus_one_returns_exact_slots_and_reje
     let pool = DrawingMutationArenaPool::try_new().expect("isolated Drawing process arena pool claims exact bytes and items before operation admission");
     let mut first = Vec::new();
     for index in 0..DRAWING_MUTATION_ARENA_POOL_CAPACITY {
-        let candidate = DrawingMutationCandidateAuthority::try_new_from_pool(semio_framework_job::OperationId(8_100 + index as u64), semio_framework_job::Generation(100 + index as u64), pool.clone())
+        let candidate = DrawingMutationCandidateAuthority::try_new_from_pool(None, pool.clone())
             .expect("each fixed Drawing process arena slot admits exactly once");
         first.push((
             candidate.arena_slot,
@@ -20,7 +20,7 @@ fn retained_drawing_process_arena_pool_cap_plus_one_returns_exact_slots_and_reje
             candidate,
         ));
     }
-    match DrawingMutationCandidateAuthority::try_new_from_pool(semio_framework_job::OperationId(8_999), semio_framework_job::Generation(999), pool.clone()) {
+    match DrawingMutationCandidateAuthority::try_new_from_pool(None, pool.clone()) {
         Err(error) => assert_eq!(error, "drawing-store.mutation-arena-pool-saturated"),
         Ok(_) => panic!("fixed Drawing arena pool must reject capacity +1"),
     }
@@ -42,7 +42,7 @@ fn retained_drawing_process_arena_pool_cap_plus_one_returns_exact_slots_and_reje
 
     let mut second = Vec::new();
     for index in 0..DRAWING_MUTATION_ARENA_POOL_CAPACITY {
-        let candidate = DrawingMutationCandidateAuthority::try_new_from_pool(semio_framework_job::OperationId(8_200 + index as u64), semio_framework_job::Generation(200 + index as u64), pool.clone()).expect("returned Drawing arena slot re-admits");
+        let candidate = DrawingMutationCandidateAuthority::try_new_from_pool(None, pool.clone()).expect("returned Drawing arena slot re-admits");
         second.push(candidate);
     }
     for candidate in &second {
@@ -92,7 +92,7 @@ fn retained_drawing_arena_bootstrap_deadline_between_guards_preserves_and_resume
     let allocation = bootstrap.allocation;
     let operation = semio_framework_job::OperationId(7_906);
     let generation = semio_framework_job::Generation(79);
-    let mut job = DrawingMutationArenaBootstrapJob::new(operation, generation).unwrap();
+    let mut job = DrawingMutationArenaBootstrapJob::new(None).unwrap();
     let mut state = DrawingMutationArenaProcessState::Building(bootstrap);
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview_sequence = 0;
@@ -271,7 +271,7 @@ fn retained_drawing_arena_default_second_app_and_borrow_only_request_without_all
 fn retained_drawing_arena_bootstrap_job_cancel_budget_contention_and_saturation_are_governed() {
     let operation = semio_framework_job::OperationId(7_904);
     let generation = semio_framework_job::Generation(79);
-    let mut job = DrawingMutationArenaBootstrapJob::new(operation, generation).expect("fixed Drawing bootstrap admission claim");
+    let mut job = DrawingMutationArenaBootstrapJob::new(None).expect("fixed Drawing bootstrap admission claim");
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview_sequence = 0;
     let mut exhausted_retained = semio_framework_job::RetainedCloneProgress::default();
@@ -287,7 +287,7 @@ fn retained_drawing_arena_bootstrap_job_cancel_budget_contention_and_saturation_
 
     let local_operation = semio_framework_job::OperationId(7_905);
     let local_generation = semio_framework_job::Generation(79);
-    let mut local_job = DrawingMutationArenaBootstrapJob::new(local_operation, local_generation).expect("local Drawing bootstrap job claims its fixed admission");
+    let mut local_job = DrawingMutationArenaBootstrapJob::new(None).expect("local Drawing bootstrap job claims its fixed admission");
     let local_cancel = semio_framework_job::root_cancel_token();
     let mut local_preview_sequence = 0;
     let mut local_state = DrawingMutationArenaProcessState::Inert;
@@ -318,9 +318,9 @@ fn retained_drawing_arena_bootstrap_job_cancel_budget_contention_and_saturation_
     let mut candidates = Vec::new();
     for index in 0..DRAWING_MUTATION_ARENA_POOL_CAPACITY {
         candidates
-            .push(DrawingMutationCandidateAuthority::try_new_from_pool(semio_framework_job::OperationId(7_910 + index as u64), semio_framework_job::Generation(80 + index as u64), pool.clone()).expect("each fixed Drawing pool slot admits once"));
+            .push(DrawingMutationCandidateAuthority::try_new_from_pool(None, pool.clone()).expect("each fixed Drawing pool slot admits once"));
     }
-    assert!(matches!(DrawingMutationCandidateAuthority::try_new_from_pool(semio_framework_job::OperationId(7_999), semio_framework_job::Generation(99), pool), Err("drawing-store.mutation-arena-pool-saturated")));
+    assert!(matches!(DrawingMutationCandidateAuthority::try_new_from_pool(None, pool), Err("drawing-store.mutation-arena-pool-saturated")));
     for candidate in &mut candidates {
         close_candidate(candidate, None);
     }

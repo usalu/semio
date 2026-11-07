@@ -27,3 +27,5 @@ impl ArtifactCommandWork<App> for EnergyModelCommandWork{
  fn terminal_is_empty(&self)->bool{self.mutation.is_none()&&self.rows.is_none()&&self.retirement.is_empty()}
 }
 impl Drop for EnergyModelCommandWork{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original Energy command work requires funded closure")}}
+
+semio_plugin::retained_command::terminal_frame_bound!(EnergyModelCommandWork);

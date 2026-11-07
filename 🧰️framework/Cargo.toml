@@ -118,6 +118,7 @@ members = [
     "🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/📦️packages/🦀️rust",
+    "🔨️modules/🌱️value/🛬️decode/🧳️owned/🛡️try-map/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧪️testing/👥️presence-retirement/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧪️tests/🥣️companion/📦️packages/🦀️rust",
@@ -474,6 +475,7 @@ members = [
     "🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/📡️progress/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/📦️packages/🦀️rust",
+    "🔨️modules/🧵️job/🧷️replacement/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust",
@@ -908,6 +910,7 @@ exclude = [
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🍈️tests-10/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🍉️tests-06/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🍊️tests-03/📦️packages/🦀️rust",
+    "🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🫐️tests-20/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🍋️tests-04/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🍌️tests-05/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🍍️tests-14/📦️packages/🦀️rust",
@@ -1270,6 +1273,9 @@ semio-framework-value-original-slot = { path = "🔨️modules/🌱️value/🧬
     [workspace.dependencies.semio-framework-job-payload]
     path = "🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust"
 
+    [workspace.dependencies.semio-framework-job-replacement]
+    path = "🔨️modules/🧵️job/🧷️replacement/📦️packages/🦀️rust"
+
     [workspace.dependencies.semio-framework-job-return-escrow-publication]
     path = "🔨️modules/🧵️job/📬️outcome/📤️publication/🪙️escrow/📦️packages/🦀️rust"
 
@@ -1327,6 +1333,9 @@ semio-framework-value-original-slot = { path = "🔨️modules/🌱️value/🧬
 
     [workspace.dependencies.semio-framework-value-native-owned]
     path = "🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-value-native-owned-try-map]
+    path = "🔨️modules/🌱️value/🛬️decode/🧳️owned/🛡️try-map/📦️packages/🦀️rust"
 
     [workspace.dependencies.semio-framework-value-native-default]
     path = "🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/📦️packages/🦀️rust"

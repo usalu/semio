@@ -30,7 +30,7 @@ impl<T:NativeReceive<DslValue>> ProvisionalFieldWork<T>{
  }
  pub fn take_into(&mut self,output:&mut Option<T>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.authenticate(cx)?;let receiver=self.receiver.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"provisional native receiver is absent"))?;let demand=receiver.take_demand()?;
-  admit_original_construction(cx,output,OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:demand.release_bytes,depth:demand.depth},|grant|{
+  funded_construction(cx,output,OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:demand.release_bytes,depth:demand.depth},|grant|{
    let turn=receiver.take(grant);RetainedWorkOutcome{result:turn.result.and_then(|output|output.ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"provisional native receiver omitted its funded output"))),work:turn.work}
   })
  }

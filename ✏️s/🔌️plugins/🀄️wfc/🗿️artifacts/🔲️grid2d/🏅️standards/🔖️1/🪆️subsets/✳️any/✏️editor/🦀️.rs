@@ -924,3 +924,5 @@ pub fn create_grid2d_editor() -> semio_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+semio_plugin::retained_command::terminal_frame_bound!(Grid2dCommandWork);

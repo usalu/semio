@@ -164,10 +164,11 @@ impl RendererIoCaller {
         if !owner.terminal_is_empty() {
             let _ = self.turn_under(semio_framework_job::root_cancel_token(), |cx| {
                 let grant = cx.retained_grant();
-                match owner.close_step(grant) {
+                let step = owner.close_step(grant);
+                cx.consume_fuel(step.work);
+                match step.result {
                     Ok(step) => {
                         cx.consume_retained(step.progress())?;
-                        cx.consume_fuel(step.progress().copied_items as u64);
                     }
                     Err(semio_framework_async::CancelTokenRetirementError::Blocked(_)) => {}
                     Err(semio_framework_async::CancelTokenRetirementError::Refused(error)) => return Err(semio_framework_job::OriginalTurnFailure::debit_original(error, cx)),
@@ -234,7 +235,9 @@ impl RendererIoNode {
         let admitted = caller.turn(|cx| -> Result<bool, semio_framework_job::OriginalTurnFailure> {
             if job.is_some() && params.is_none() {
                 let Some(now) = cx.now_us() else { return Ok(false) };
-                let Some(cancel) = cx.admit_original_cancel_alias()? else { return Ok(false) };
+                let mut admitted_cancel = None;
+                if !cx.admit_original_cancel_alias(&mut admitted_cancel)? { return Ok(false) }
+                let Some(cancel) = admitted_cancel else { return Ok(false) };
                 *params = Some(semio_framework_job_worker_authority::BatchJobParams {
                     operation: cx.operation(),
                     generation: cx.generation(),
@@ -249,9 +252,7 @@ impl RendererIoNode {
                     },
                 });
             }
-            if let Some(admitted) = admission.advance(job, params, &mut *cx)? {
-                *session = Some(admitted);
-            }
+            admission.advance(job, params, session, &mut *cx)?;
             Ok(session.is_some())
         });
         matches!(admitted, Ok(Some(true)))
@@ -317,10 +318,11 @@ impl RendererIoNode {
             }
             if let Some(owner) = params_retirement.as_mut() {
                 if !owner.terminal_is_empty() {
-                    match owner.return_alias_step(cx.original_cancel_token(), grant) {
+                    let step = owner.return_alias_step(cx.original_cancel_token(), grant);
+                    cx.consume_fuel(step.work);
+                    match step.result {
                         Ok(step) => {
                             cx.consume_retained(step.progress())?;
-                            cx.consume_fuel(step.progress().copied_items as u64);
                         }
                         Err(semio_framework_async::CancelTokenRetirementError::Blocked(_)) => {}
                         Err(semio_framework_async::CancelTokenRetirementError::Refused(error)) => return Err(semio_framework_job::OriginalTurnFailure::debit_original(error, cx)),
@@ -357,14 +359,17 @@ impl RendererIoNode {
                 return Ok(true);
             }
             match owner.has_original_cancel_alias_witness(cx.original_cancel_token()) {
-                Ok(true) => match owner.return_original_cancel_alias_step(cx.original_cancel_token(), grant) {
-                    Ok(Some(step)) => {
-                        cx.consume_retained(step.progress())?;
-                        cx.consume_fuel(step.progress().copied_items as u64);
+                Ok(true) => {
+                    let alias = owner.return_original_cancel_alias_step(cx.original_cancel_token(), grant);
+                    cx.consume_fuel(alias.work);
+                    match alias.result {
+                        Ok(Some(step)) => {
+                            cx.consume_retained(step.progress())?;
+                        }
+                        Ok(None) | Err(WorkerJobDemandError::Contention(_)) => {}
+                        Err(WorkerJobDemandError::Refused(error)) => return Err(semio_framework_job::OriginalTurnFailure::debit_original(error, cx)),
                     }
-                    Ok(None) | Err(WorkerJobDemandError::Contention(_)) => {}
-                    Err(WorkerJobDemandError::Refused(error)) => return Err(semio_framework_job::OriginalTurnFailure::debit_original(error, cx)),
-                },
+                }
                 Ok(false) => {
                     owner.close_step(cx)?;
                 }

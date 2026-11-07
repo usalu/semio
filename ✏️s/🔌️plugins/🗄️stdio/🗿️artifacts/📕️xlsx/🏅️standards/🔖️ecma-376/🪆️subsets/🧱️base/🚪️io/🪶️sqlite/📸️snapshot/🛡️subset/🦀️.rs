@@ -322,7 +322,7 @@ pub fn validate(snapshot: &XlsxSnapshot, subset: &str, control: &mut SqliteSnaps
     let mut native = NativeEncodeControl::new(limits.max_value_bytes, &mut callback);
     let diagnostics = check(snapshot, subset, &mut native).map_err(store::io_schema::IoError::from_value_error)?;
     if diagnostics.iter().any(|diagnostic| matches!(diagnostic.severity, Severity::Error | Severity::Fatal)) {
-        Err(store::io_schema::IoError { cause: ValueError::new(ValueRefusalKind::InvalidValue, "XLSX owned snapshot violates its exact profile"), diagnostics })
+        Err(store::io_schema::IoError { cause: ValueError::new(ValueRefusalKind::InvalidValue, "XLSX owned snapshot violates its exact profile").into(), diagnostics })
     } else {
         Ok(store::io_schema::IoOutcome { value: (), diagnostics })
     }

@@ -81,7 +81,7 @@ where
     app.bind_instance_id(meta("local").instance_id).await;
     settle_store_constructor(&mut app, mounted_policy);
     if let Some(boot) = boot {
-        let action_meta = ActionMeta { view_state: Some(boot.view.clone()), ..meta("local") };
+        let action_meta = ActionMeta { view_state: Some(std::sync::Arc::new(boot.view.clone())), ..meta("local") };
         let result = dispatch_fixture_action(&mut app,"setActiveExample",Some(boot.args.clone()),&action_meta,identity,cx,mounted_policy.close).await.unwrap_or_else(|fault| panic!("the app's own boot example must be admitted: {fault:?}"));
         let receipt = settle_registered_typed_operation(&mut app, action_meta.instance_id, mounted_policy, identity,cx).await.unwrap_or_else(|fault| panic!("the app's own boot example must settle: {fault:?}"));
         for effect in result.requested_effects.into_iter().chain(receipt.effects) {
@@ -145,7 +145,7 @@ where
     let mut app = declared_verb_fixture_app::<A, M>(definition, boot, mounted_policy, identity,cx).await;
     let (document_before, config_before) = declared_verb_state(&mut app).await;
     let unheld_before = declared_verb_unheld_children(&app).await;
-    let action_meta = ActionMeta { view_state: Some(view.clone()), ..meta("local") };
+    let action_meta = ActionMeta { view_state: Some(std::sync::Arc::new(view.clone())), ..meta("local") };
     let receiver = action_meta.instance_id;
     let outcome = match dispatch_fixture_action(&mut app,verb,Some(args.clone()),&action_meta,identity,cx,mounted_policy.close).await {
         Err(fault) => declared_verb_refusal(fault),
@@ -202,6 +202,16 @@ where A:ArtifactApp+Default,M:store::ReferenceSpaceMember+store::MemberFactory+S
     render_registered_fixture_app_over(app,body_key,None,view,cx).await
 }
 
+/// 🧹️ Retires the stationary render tree through the host's own funded close after the caller observed it, so the next render rebuilds from the current document instead of re-serving the retained tree.
+fn release_fixture_render<A,M>(app:&mut VcsArtifactApp<A,M>,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>
+where A:ArtifactApp+Default,M:store::ReferenceSpaceMember+store::MemberFactory+Send+'static{
+    for _ in 0..OriginalFixtureCaller::maximum_turns(){
+        if app.close_render_work_request(cx)?==Some(true){return Ok(())}
+        if cx.should_yield(){break}
+    }
+    Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture render tree release remained pending under its authored caller").into())
+}
+
 /// 🎬️ [`render_registered_fixture_app`] over an explicit snapshot override document, the way the host renders an embedded payload.
 #[doc(hidden)]
 pub async fn render_registered_fixture_app_over<A,M>(app:&mut VcsArtifactApp<A,M>,body_key:&str,snapshot_override_json:Option<&str>,view:&semio_framework::ViewModel,cx:&mut semio_framework_job::StepContext<'_>)->Result<String,semio_framework_job::OriginalTurnFailure>
@@ -212,7 +222,9 @@ where A:ArtifactApp+Default,M:store::ReferenceSpaceMember+store::MemberFactory+S
             let source=app.original_render_tree_source(cx)?;
             let tree=source.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original fixture render readiness lost its stationary tree"))?;
             let mut remaining=FIXTURE_TREE_MAX_NODES;
-            return project_fixture_node(&tree.root,&mut remaining,0).and_then(|value|serde_json::to_string(&value).map_err(|_|"projection-json")).map_err(|source|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,source).into())
+            let projected:Result<String,semio_framework_job::OriginalTurnFailure>=project_fixture_node(&tree.root,&mut remaining,0).and_then(|value|serde_json::to_string(&value).map_err(|_|"projection-json")).map_err(|source|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,source).into());
+            release_fixture_render(app,cx)?;
+            return projected
         }
     }
     Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original registered fixture render remained pending under its authored caller").into())
@@ -227,7 +239,9 @@ where A:ArtifactApp+Default,M:store::ReferenceSpaceMember+store::MemberFactory+S
         if app.render(body_key,None,view,cx).await?.is_some(){
             let source=app.original_render_tree_source(cx)?;
             let tree=source.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original fixture render readiness lost its stationary tree"))?;
-            return Ok(observe(&tree.root))
+            let observed=observe(&tree.root);
+            release_fixture_render(app,cx)?;
+            return Ok(observed)
         }
     }
     Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original registered fixture render remained pending under its authored caller").into())
@@ -279,7 +293,7 @@ where
         },
         arguments,
     };
-    let action_meta = ActionMeta { view_state: Some(view.clone()), ..meta("agent") };
+    let action_meta = ActionMeta { view_state: Some(std::sync::Arc::new(view.clone())), ..meta("agent") };
     let result = preview_fixture_on_original(app,&invocation,&action_meta,cx).await?;
     Ok(result.output.get("documentOps").and_then(|value| value.as_str()).and_then(|value| value.parse::<usize>().ok()).unwrap_or(0))
 }
@@ -313,7 +327,7 @@ where
         arguments,
     };
     let view = semio_framework::ViewModel { active_mode_id: Some(definition.default_mode_id.clone()), active_window_kind_id: Some(window_kind_id.to_string()), window_id: Some("declared-verb-agent".to_string()), window_instances: vec![semio_framework::ViewWindowInstance { id: "declared-verb-agent".to_string(), window_kind_id: window_kind_id.to_string() }], ..semio_framework::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
-    let action_meta = ActionMeta { view_state: Some(view), ..meta("agent") };
+    let action_meta = ActionMeta { view_state: Some(std::sync::Arc::new(view)), ..meta("agent") };
     let outcome = match preview_fixture_on_original(&mut app,&invocation,&action_meta,cx).await {
         Err(fault) => declared_verb_refusal(fault),
         Ok(result) => {

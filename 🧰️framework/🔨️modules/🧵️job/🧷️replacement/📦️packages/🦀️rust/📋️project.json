@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/framework-job-replacement-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

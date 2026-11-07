@@ -5,7 +5,7 @@ use semio_framework_job::{StepContext,OriginalTurnFailure,InteractiveJob,Interac
 use semio_framework_value::{DslValue,RetirementDemand,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::RetainedCloneClose;
 use semio_framework_pack_json::ArtifactCanonicalJsonTreeWireCursor;
-use semio_framework_plugin_instance_stores::stores_command_routes::AuthoringSeedWork;
+use semio_plugin_instance_stores::stores_command_routes::AuthoringSeedWork;
 use std::mem::{ManuallyDrop,size_of};
 
 type ActionWire=ArtifactCanonicalJsonTreeWireCursor<(String,Option<DslValue>)>;

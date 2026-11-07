@@ -1,6 +1,6 @@
 //! ⚖️ Flow host retirement, work continuation and source read laws: the suites that drive a retained host together with its evaluation session.
 
-use semio_framework_test_fixtures::fixture_text;
+#[cfg(test)] use semio_framework_test_fixtures::fixture_text;
 
 pub use semio_os_flow_host_core::*;
 pub use semio_os_flow_host_read::*;

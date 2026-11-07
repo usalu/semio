@@ -164,7 +164,7 @@ fn export_font_source_from_set<'a>(index: usize, fonts: &TextFontSet<'a>) -> Opt
     TextFontRole::ALL.get(index - 1).map(|role| fonts.get(*role))
 }
 
-fn cached_export_font_set(fonts: &OnceLock<TextFontSet<'static>>, load: impl FnOnce() -> Option<TextFontSet<'static>>) -> Option<&TextFontSet<'static>> {
+fn cached_export_font_set<'a>(fonts: &'a OnceLock<TextFontSet<'static>>, load: impl FnOnce() -> Option<TextFontSet<'static>>) -> Option<&'a TextFontSet<'static>> {
     if fonts.get().is_none() { let _ = fonts.set(load()?); }
     fonts.get()
 }

@@ -133,18 +133,21 @@ pub fn preflight_xml_document(schema: &str, doc: &XmlDocument, encoding: semio_o
 
 use semio_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
 impl ArtifactSqliteSnapshotHost for XmlSnapshot {
-    fn decode_sqlite_snapshot_native(payload: &semio_os_kernel::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>, native_owner: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self,ValueError> {
-        native_owner.receive::<Self, Self>(|slot, native, body| {
-            let value = native_decoding::decode(payload, control, native)?;
-            let inline = size_of::<Self>();
-            body.admit_frontier(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: inline, maximum_depth: 1, ..Default::default() })?;
-            *slot = Some(value);
-            body.record_progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: inline, ..Default::default() })?;
-            Ok(slot.take().expect("received XML snapshot slot"))
-        })
+    fn decode_sqlite_snapshot_native(payload: &semio_os_kernel::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>, native_owner: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> semio_framework_value::RetainedWorkOutcome<Self,semio_os_kernel::NativeSnapshotFailure> {
+        semio_os_kernel::native_snapshot_turn(|work| work.take(native_owner.receive::<Self, Self, semio_os_kernel::NativeSnapshotFailure>(|slot, native, body| {
+            let result = (|| -> Result<Self, semio_os_kernel::NativeSnapshotFailure> {
+                let value = native_decoding::decode(payload, control, native)?;
+                let inline = size_of::<Self>();
+                body.admit_frontier(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: inline, maximum_depth: 1, ..Default::default() })?;
+                *slot = Some(value);
+                body.record_progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: inline, ..Default::default() })?;
+                slot.take().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "received XML snapshot slot").into())
+            })();
+            semio_framework_value::RetainedWorkOutcome { result, work: 1 }
+        })))
     }
     fn retire_sqlite_snapshot(self) { drop(XmlDocumentOwner(Some(self.doc))); }
-    fn encode_sqlite_snapshot_native(&self, encoding: semio_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<semio_os_kernel::io_schema::IoPayload,ValueError> { native_encoding::encode(self, encoding, control,native_owner) }
+    fn encode_sqlite_snapshot_native(&self, encoding: semio_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<semio_os_kernel::io_schema::IoPayload,semio_os_kernel::NativeSnapshotFailure> { semio_os_kernel::native_snapshot_turn(|_| Ok(native_encoding::encode(self, encoding, control, native_owner)?)) }
     fn preflight_sqlite_snapshot_encoding(&self, encoding: semio_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(),ValueError> { preflight_xml_document(&self.schema, &self.doc, encoding, control) }
     fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_os_kernel::io_schema::IoResult<()>{
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0).map_err(semio_os_kernel::io_schema::IoError::from_value_error)?;

@@ -7,7 +7,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
-pub use semio_plugin_abi::{operation_authority, return_walk_template, sqlite_wire};
+pub use semio_plugin_abi::{actor_input_wire, operation_authority, return_walk_template, sqlite_wire};
 #[path = "🎟️original-actor-context/🦀️.rs"]
 pub mod original_actor_context;
 pub use semio_plugin_actor_input as original_input;

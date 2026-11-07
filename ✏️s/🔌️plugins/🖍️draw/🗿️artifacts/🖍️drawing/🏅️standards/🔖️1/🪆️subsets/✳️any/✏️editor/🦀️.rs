@@ -260,12 +260,50 @@ pub fn drawing_vector_out_port() -> semio_framework::MediaPortSpec {
     }
 }
 
-/// 🖼️ Exports the current drawing document as an SVG `Media` payload for the `vector:out` port —
-/// reuses `crate::standards::v1::subsets::any::io::drawing_document_to_svg` (the same semio/drawing↔svg bridge the
-/// export-svg shell path uses), so there is exactly one SVG renderer.
-pub fn drawing_vector_media(doc: &DrawingSnapshot) -> Result<Media, MediaError> {
-    let (svg, _width, _height) = semio_s_artifact_draw_drawing_write::drawing_document_to_svg(doc).map_err(|error| MediaError::Payload("vector:out".into(), error))?;
+/// 🖼️ Exports the mounted completed scene as an SVG `Media` payload for the `vector:out` port: the plan comes from the
+/// retained geometry owner and the bytes from the one job-driven SVG writer, so there is exactly one SVG renderer.
+pub fn drawing_vector_media(plan: Option<&semio_s_artifact_draw_drawing_scene::preparation::DocumentScenePlan>, document: &DrawingSnapshot) -> Result<Media, MediaError> {
+    let fail = |message: String| MediaError::Payload("vector:out".into(), message);
+    let plan = plan.ok_or_else(|| fail("the drawing scene is still preparing".into()))?;
+    let nodes = semio_s_artifact_draw_drawing_scene::view::nodes(plan, None).map_err(|error| fail(error.to_string()))?;
+    let [x1, y1, x2, y2] = semio_s_artifact_draw_drawing_scene::view::bounds(document.artboard.as_ref(), &nodes);
+    let svg = svg_from_plan(plan.clone(), [x1, y1, (x2 - x1).max(1.0), (y2 - y1).max(1.0)]).map_err(fail)?;
     Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.drawing".into(), json: svg } })
+}
+
+/// 🧵️ Runs the work-granted SVG writer over a completed plan, then drains its physical page owners under exact grants.
+fn svg_from_plan(plan: semio_s_artifact_draw_drawing_scene::preparation::DocumentScenePlan, view_box: [f64; 4]) -> Result<String, String> {
+    use semio_s_artifact_draw_drawing_write::serializers::artifacts::svg::v1_1::any::write::{SvgWriteJob, SvgWriteLimits};
+    use semio_framework_value::RetainedCloneGrant;
+    let mut job = SvgWriteJob::new(plan, SvgWriteLimits { view_box, max_output_bytes: 25_165_824, max_work: 1_000_000_000 });
+    let mut previous = None;
+    loop {
+        let progress = job.advance(4096)?;
+        if progress.done {
+            break;
+        }
+        if previous == Some((progress.work, progress.bytes)) {
+            return Err("SVG writer made no progress".into());
+        }
+        previous = Some((progress.work, progress.bytes));
+    }
+    let (mut retired, pages) = job.into_retirement();
+    let pages = pages.ok_or_else(|| "SVG output incomplete".to_string())?;
+    let mut bytes = Vec::new();
+    for page in pages.iter() {
+        bytes.extend_from_slice(page);
+    }
+    let refused = |_| "SVG retirement refused its physical grant".to_string();
+    while !retired.terminal_is_empty() {
+        let copy = retired.next_copy_byte_demand().map_err(refused)?;
+        let release = retired.next_release_byte_demand().map_err(refused)?;
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: retired.next_capacity_byte_demand(if copy > 0 { copy } else { release }).map_err(refused)?, maximum_release_bytes: release, maximum_depth: retired.next_depth_demand().map_err(refused)? };
+        if retired.close_step(grant).map_err(refused)?.progress() == Default::default() {
+            return Err("SVG retirement made no progress".into());
+        }
+    }
+    drop(pages);
+    String::from_utf8(bytes).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Io
 

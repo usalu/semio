@@ -53,7 +53,7 @@ export function ButtonView({ record, context }: { readonly record: UiNodeRecord;
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const activate = () => {
     const current = context.controls.read(record.id);
-    if (state.busy || !current || current !== record || current.component.type !== "button" || context.controls.disabled(current)) return;
+    if (state.busy || !current || current.key !== record.key || current.component.type !== "button" || context.controls.disabled(current)) return;
     state.busy = true;
     render((value) => value + 1);
     const finish = () => { if (pending.current !== state || !mounted.current) return; state.busy = false; render((value) => value + 1); };

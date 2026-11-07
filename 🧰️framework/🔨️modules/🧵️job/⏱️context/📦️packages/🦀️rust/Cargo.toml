@@ -38,6 +38,7 @@ semio-framework-value-derive = { path = "../../../../🌱️value/✨️derive/�
 semio-framework-job-receiving = { workspace = true }
 semio-framework-job-clock = { workspace = true }
 semio-framework-trace = { workspace = true }
+semio-framework-job-replacement = { workspace = true }
 semio-framework-job-payload = { workspace = true }
 semio-framework-job-outcome = { workspace = true }
 semio-framework-async = { workspace = true }

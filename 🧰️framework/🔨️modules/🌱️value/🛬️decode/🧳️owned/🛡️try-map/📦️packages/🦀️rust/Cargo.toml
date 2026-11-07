@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-value-native-owned-try-map"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Fallible authored mapping of a received native owner: NativeReceiveTryMap and NativeTryMappedReceiver."
+
+[package.metadata.semio]
+role = "framework"
+id = "value-native-owned-try-map"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_value_native_owned_try_map"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value-native-owned = { path = "../../../📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-value-derive = { path = "../../../../../✨️derive/📦️packages/🦀️rust" }
+semio-framework-value-testing-admission = { path = "../../../../../🧪️testing/📥️admission/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

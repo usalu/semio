@@ -41,10 +41,10 @@ pub fn jack_retained_window_config_reduce<C:crate::standards::v1::subsets::any::
     command: &TrinityJackCommand,
     _snapshot: &JackSnapshot,
     _config: &NoConfig,
-    _history: &semio_framework_plugin::HistoryView,
+    _history: &semio_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TrinityJackPlayApp<C>>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TrinityJackPlayApp<C>>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<TrinityGraphMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
@@ -80,7 +80,7 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
     fn execution_contract(&self) -> ToolExecutionContract {
         jack_retained_config_contract()
     }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: JACK_RETAINED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: JACK_RETAINED_RAW_BYTES, checkpoint_resume: false);
 }
 
 impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition> ArtifactOwnedToolJobFactory for JackRetainedWindowConfigJobFactory<C> {
@@ -117,7 +117,7 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
     fn execution_contract(&self) -> ToolExecutionContract {
         jack_retained_config_contract()
     }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: JACK_RETAINED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: JACK_RETAINED_RAW_BYTES, checkpoint_resume: false);
 }
 
 impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition> ArtifactOwnedToolJobFactory for JackRetainedTransientJobFactory<C> {
@@ -136,11 +136,11 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
         "textSelect"
     }
 
-    fn extent(&self, command: &TrinityJackCommand, _snapshot: &JackSnapshot, _interaction: &protocol::InteractionState, context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TrinityJackPlayApp<C>>>>) -> Option<usize> {
+    fn extent(&self, command: &TrinityJackCommand, _snapshot: &JackSnapshot, _interaction: &protocol::InteractionState, context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TrinityJackPlayApp<C>>>>) -> Option<usize> {
         matches!(command, TrinityJackCommand::TextSelect { .. }).then_some(()).and(context.and_then(|context| context.view_state.as_deref()).and_then(|view| view.window_id.as_ref()).filter(|window_id| !window_id.is_empty()).map(|_| ())).map(|_| 1)
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<TrinityJackPlayApp<C>>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<TrinityJackPlayApp<C>>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<TrinityJackPlayApp<C>>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<TrinityJackPlayApp<C>>>, semio_framework_job::OriginalTurnFailure> {
         let original:Result<_,Fault>=(||{
         if self.consumed {
             return Err(Fault::from("jack-retained-transient-work-repeated"));
@@ -151,11 +151,11 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
         };
         let window_id =
             input.context.and_then(|context| context.view_state.as_deref()).and_then(|view| view.window_id.as_ref()).filter(|window_id| !window_id.is_empty()).cloned().ok_or_else(|| Fault::from("jack-text-selection-requires-concrete-window"))?;
-        let mutation = semio_framework_plugin::WindowTransientMutation::of::<JackEditorWindowTransientOwner>(
+        let mutation = semio_plugin::WindowTransientMutation::of::<JackEditorWindowTransientOwner>(
             window_id,
             crate::editor::jack::transient::SetEditorSelection { selection: Some(crate::editor::jack::transient::JackEditorSelection { start: *start, end: *end }) }.into(),
         );
-        Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit: Emit::default(), ephemeral: EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![mutation] } })
+        Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit: Emit::default(), ephemeral: EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![mutation] } })
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
@@ -202,13 +202,13 @@ pub fn jack_retained_document_reduce<C:crate::standards::v1::subsets::any::schem
     command: &TrinityJackCommand,
     snapshot: &JackSnapshot,
     _config: &NoConfig,
-    _history: &semio_framework_plugin::HistoryView,
+    _history: &semio_plugin::HistoryView,
     interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TrinityJackPlayApp<C>>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TrinityJackPlayApp<C>>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<TrinityGraphMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    let children = || context.map(|context| context.children.as_ref()).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("trinity.jack.content-missing"), "the retained document command carries no child view"));
+    let children = || context.map(|context| context.children.as_ref()).ok_or_else(|| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("trinity.jack.content-missing"), "the retained document command carries no child view"));
     Ok(match command {
         TrinityJackCommand::PatchNodes { node_ids, field, value } => commands::patch_nodes::patch_nodes::<C>(snapshot, children()?, node_ids, interaction.selection.get("ast").map_or(&[][..], |selection| selection.ids.as_slice()), field, value)?,
         TrinityJackCommand::DeleteSelection => commands::delete_selection::delete_selection::<C>(snapshot, children()?, interaction.selection.get("ast").map_or(&[][..], |selection| selection.ids.as_slice()))?,
@@ -246,7 +246,7 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
     fn execution_contract(&self) -> ToolExecutionContract {
         jack_retained_document_contract()
     }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: JACK_RETAINED_DOCUMENT_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: JACK_RETAINED_DOCUMENT_RAW_BYTES, checkpoint_resume: false);
 }
 
 impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition> ArtifactOwnedToolJobFactory for JackRetainedDocumentJobFactory<C> {

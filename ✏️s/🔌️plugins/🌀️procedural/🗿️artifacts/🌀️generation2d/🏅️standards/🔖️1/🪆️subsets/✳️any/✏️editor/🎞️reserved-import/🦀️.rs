@@ -19,7 +19,7 @@ pub(super) struct Generation2dImportJob {
     decoded: bool,
     completed: bool,
     pub(super) closing: bool,
-    pending_completion_rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<Generation2dPlayApp>>>,
+    pending_completion_rejection: Option<semio_plugin::app::ArtifactToolCompletionRejection<EditorApp<Generation2dPlayApp>>>,
     pub(super) publication: semio_framework_job_publication::RetainedJobPublication,
     publishing: Option<semio_framework_job_publication::JobPublicationKind>,
     pub(super) source: Vec<u8>,
@@ -70,7 +70,7 @@ impl Generation2dImportJob {
             return Some("generation2d import only implements params:in");
         }
         let snapshot = &request.snapshot;
-        if let semio_framework_plugin::MediaPayload::Intrinsic { value: source, .. } = &media.payload {
+        if let semio_plugin::MediaPayload::Intrinsic { value: source, .. } = &media.payload {
             let Some(object) = source.as_object() else { return Some("generation2d params:in intrinsic payload must be an object") };
             if let Some((key, value)) = object.get(self.media_position) {
                 if let Some(mutation) = value.as_f64().and_then(|number| Self::numeric_row(snapshot, key, number)) {
@@ -83,7 +83,7 @@ impl Generation2dImportJob {
             }
             return None;
         }
-        let semio_framework_plugin::MediaPayload::Structured { json: media_json, .. } = &media.payload else {
+        let semio_plugin::MediaPayload::Structured { json: media_json, .. } = &media.payload else {
             return Some("generation2d params:in requires a structured payload");
         };
         let Ok(parsed) = semio_framework_pack_json::parse(media_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
@@ -242,7 +242,7 @@ impl Generation2dImportJob {
     }
 }
 
-impl semio_framework_plugin::tool_contract::ArtifactReservedWork<EditorApp<Generation2dPlayApp>> for Generation2dImportJob {
+impl semio_plugin::plugin_app_close_prelude::ArtifactReservedWork<EditorApp<Generation2dPlayApp>> for Generation2dImportJob {
     fn step<'a>(&'a mut self,request:&'a mut ArtifactReservedToolJobRequest<EditorApp<Generation2dPlayApp>>,cx:&mut semio_framework_job::StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(request,cx))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {

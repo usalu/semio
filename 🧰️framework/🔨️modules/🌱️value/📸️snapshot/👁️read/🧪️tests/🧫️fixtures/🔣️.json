@@ -1,0 +1,196 @@
+{
+  "duplicate": {
+    "schema": "snapshot-read.original-duplicate.v1",
+    "cases": [
+      {
+        "name": "no-items",
+        "items": 0,
+        "copy": "exact",
+        "depth": 2,
+        "issued": false,
+        "work": 0
+      },
+      {
+        "name": "short-copy",
+        "items": 1,
+        "copy": "short",
+        "depth": 2,
+        "issued": false,
+        "work": 0
+      },
+      {
+        "name": "short-depth",
+        "items": 1,
+        "copy": "exact",
+        "depth": 1,
+        "issued": false,
+        "work": 0
+      },
+      {
+        "name": "admitted",
+        "items": 1,
+        "copy": "exact",
+        "depth": 2,
+        "issued": true,
+        "work": 1
+      }
+    ],
+    "capacity": 0,
+    "release": 0,
+    "sameRoot": true,
+    "sameRegistry": true,
+    "distinctLease": true,
+    "publicationSlotRetainsRead": true
+  },
+  "fieldClone": [
+    {
+      "name": "unicode-and-empty",
+      "field": [
+        "α",
+        "",
+        "a\nb"
+      ],
+      "revisionByte": 17,
+      "generation": 9,
+      "cancelAfter": null
+    },
+    {
+      "name": "cancel-admission",
+      "field": [
+        "kept"
+      ],
+      "revisionByte": 18,
+      "generation": 10,
+      "cancelAfter": 2
+    },
+    {
+      "name": "cancel-clone",
+      "field": [
+        "one",
+        "two"
+      ],
+      "revisionByte": 19,
+      "generation": 11,
+      "cancelAfter": 12
+    }
+  ],
+  "source": {
+    "contract": "semio.original.snapshot-source/v1",
+    "cases": [
+      {
+        "id": "held-empty",
+        "bytes": [],
+        "expected": [],
+        "registryHeld": true,
+        "projectionHeld": false
+      },
+      {
+        "id": "held-byte-order",
+        "bytes": [
+          0,
+          255,
+          17,
+          128,
+          17
+        ],
+        "expected": [
+          0,
+          255,
+          17,
+          128,
+          17
+        ],
+        "registryHeld": true,
+        "projectionHeld": true
+      },
+      {
+        "id": "orphan-empty",
+        "bytes": [],
+        "expected": [],
+        "registryHeld": false,
+        "projectionHeld": false
+      },
+      {
+        "id": "orphan-byte-order",
+        "bytes": [
+          255,
+          0,
+          127,
+          128,
+          42
+        ],
+        "expected": [
+          255,
+          0,
+          127,
+          128,
+          42
+        ],
+        "registryHeld": false,
+        "projectionHeld": true
+      }
+    ],
+    "refusedCurrencies": [
+      "items",
+      "copy",
+      "capacity",
+      "release",
+      "depth"
+    ],
+    "maximumTurns": 100000
+  },
+  "registryBirth": {
+    "capacity": 1024,
+    "freePage": 512,
+    "slotPage": 128,
+    "generationPage": 256,
+    "copyQuantum": 4096,
+    "maximumBirthWork": 1,
+    "zeroWorkHasNoEffects": true,
+    "cancelAt": [
+      0,
+      1,
+      2,
+      3,
+      7,
+      11,
+      13
+    ],
+    "queue": [
+      {
+        "issue": 3,
+        "return": [
+          1,
+          0
+        ],
+        "next": [
+          3,
+          4
+        ]
+      },
+      {
+        "issue": 1024,
+        "return": [
+          1023,
+          0,
+          512
+        ],
+        "next": [
+          1023,
+          0,
+          512
+        ]
+      }
+    ],
+    "contracts": [
+      "original-ledger",
+      "one-paid-page",
+      "exact-global-balance",
+      "cancel-all-born-pages",
+      "same-registry-handoff",
+      "no-unpublished-read",
+      "original-work-preflight",
+      "compile-time-fifo-indexes"
+    ]
+  }
+}

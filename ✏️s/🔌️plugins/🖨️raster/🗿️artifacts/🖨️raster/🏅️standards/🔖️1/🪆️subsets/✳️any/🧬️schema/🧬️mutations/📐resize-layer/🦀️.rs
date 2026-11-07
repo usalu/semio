@@ -8,7 +8,7 @@ pub mod mutation {
     use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 
     //#region 🔖️ResizeLayer
-    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+    #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
     #[canonical_json(owner = semio_framework_pack_json)]
     #[mutation_leaf(contract = ::protocol)]
     #[value(rename_all = "camelCase")]
@@ -18,25 +18,27 @@ pub mod mutation {
         pub new_height: u32,
     }
 
-    impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ResizeLayer where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<semio_s_artifact_raster_raster_mutations_pixels::change_layer_pixels::ChangeLayerPixels> {
-        const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "resize", entity: "layer", kind: "resize-layer", record: "ResizedLayer" };
-
-        fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
-            crate::resize_layer::diff::diff(self, base)
-        }
-
-        fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    crate::resize_layer::inverse::inverse(self, base)
-}
-
-        fn label(&self) -> semio_ui_locale::LocalizedLabel {
+    impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ResizeLayer
+where
+    Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<semio_s_artifact_raster_raster_mutations_pixels::change_layer_pixels::ChangeLayerPixels> {
+const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "resize", entity: "layer", kind: "resize-layer", record: "ResizedLayer" };
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
             semio_ui_locale::LocalizedLabel::native(&format!("Resize layer {} to {}x{}", self.layer_id, self.new_width, self.new_height), &format!("Größe von Ebene {} auf {}×{} ändern", self.layer_id, self.new_width, self.new_height))
         }
-
-        fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
             vec![self.layer_id.clone()]
         }
-    }
+}
+impl<Op> protocol::ColdMutationKind<RasterSnapshot, Op> for ResizeLayer
+where
+    Op: protocol::ColdMutation<RasterSnapshot, ReferenceDiff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<semio_s_artifact_raster_raster_mutations_pixels::change_layer_pixels::ChangeLayerPixels> {
+    fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
+            crate::resize_layer::diff::diff(self, base)
+        }
+    fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    crate::resize_layer::inverse::inverse(self, base)
+}
+}
     //#endregion 🔖️ResizeLayer
 }
 

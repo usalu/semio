@@ -9,7 +9,7 @@ pub struct RasterSelectionSpansBuilder{
 }
 fn fault()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"packed selection builder differs from its original declared rows")}
 fn fixed(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
-fn posted(copy_bytes:usize)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()}}
+fn posted(copy_bytes:usize)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:copy_bytes,..Default::default()}}
 
 impl RasterSelectionSpansBuilder{
     pub fn new(expected:usize)->Result<Self,ValueError>{

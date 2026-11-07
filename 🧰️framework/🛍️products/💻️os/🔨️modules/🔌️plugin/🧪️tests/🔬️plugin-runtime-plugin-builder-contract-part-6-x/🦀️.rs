@@ -265,7 +265,7 @@ async fn a_childless_whole_document_archive_replaces_the_live_document() {
 async fn the_refresh_poll_lane_stamps_the_load_document_it_emits() {
     let mut caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity())).await.expect("the reference snapshot births");
-    let effects = Box::pin(semio_plugin_testing_laws::artifact_app_laws::fixture_pending_effects(&mut app, None)).await.unwrap();
+    let effects = Box::pin(semio_plugin_testing_laws::artifact_app_laws::fixture_pending_effects(&mut app, None)).await.unwrap().expect("the refresh poll lane retained instead of publishing");
     let Some(Effect::LoadDocument { pack, spr }) = effects.first().cloned() else { panic!("the refresh poll lane dropped the LoadDocument effect: {effects:?}") };
     let archive = protocol::DocumentArchivePack { parent_pack: pack, parent_spr: spr, members: Vec::new() };
     PluginApp::begin_document_archive_load(&mut app, 94, archive).expect("polled archive admission");

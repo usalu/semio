@@ -1,5 +1,5 @@
 use semio_framework_artifact_reference::ArtifactRef;
-use semio_framework_job::{Generation, OperationId, StepContext};
+use semio_framework_job::{Generation, OperationId, ReplacementIdentity, StepContext};
 use semio_framework_os_store_member_open::{MemberOpenDiagnostic, MemberOpenInputStep, MemberOpenProgress, MemberOpenRequest};
 use semio_os_store_owned_schema_decode::{OwnedSchemaDecodePage, OwnedSchemaDecodePages};
 use semio_os_store_envelope::owner::OwnerRef;
@@ -389,4 +389,20 @@ fn member_input_buffer_birth_and_retirement_preserve_actual_system_and_original_
     }
     assert!(original.is_none()&&active.is_none());assert_eq!(released,allocated);
     let (_,heap)=observe_heap_allocations_on_this_thread(||drop((original,active)));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+}
+
+#[test]
+fn member_open_request_ignores_the_stepping_caller_identity_and_follows_the_slot_identity() {
+    use semio_framework_job::{StepBudget, root_cancel_token};
+    let slot = ReplacementIdentity::new(5, OperationId(1), Generation(1));
+    let mut request = request_for(&[1, 97, 83]).with_replacement(slot);
+    let mut sequence = 0;
+    let mut progress = RetainedCloneProgress::default();
+    let mut cx = StepContext::new(OperationId(901), Generation(77), StepBudget::new(8, 999, request_close_policy()), root_cancel_token(), || Some(1), &mut sequence, &mut progress);
+    let current = cx.with_replacement_current(slot, |cx| request.step_input(cx));
+    assert!(!matches!(current, MemberOpenInputStep::Rejected(_)), "a foreign caller identity is not staleness: {current:?}");
+    retire_request(&mut request);
+    let mut unscoped = request_for(&[1, 97, 83]).with_replacement(slot);
+    assert_eq!(unscoped.step_input(&mut cx), MemberOpenInputStep::Rejected(MemberOpenDiagnostic::Stale), "no installed slot identity is unscoped, not current");
+    retire_request(&mut unscoped);
 }

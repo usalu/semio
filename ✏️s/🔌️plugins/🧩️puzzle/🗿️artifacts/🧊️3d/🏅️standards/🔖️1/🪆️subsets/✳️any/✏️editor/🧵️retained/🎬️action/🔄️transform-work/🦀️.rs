@@ -69,7 +69,7 @@ impl Puzzle3dTransformWork {
     }
 
     /// 🎬️ The gesture this command states on `document`, or the refusal it answers with instead.
-    fn read(&self, command: &Puzzle3dCommand, document: &Puzzle3dSnapshot, interaction: &protocol::InteractionState, window_config: Option<&semio_framework_plugin::WindowConfigSnapshot>) -> Result<Option<Puzzle3dTransformGesture>, fn(&Puzzle3dLabels) -> &'static str> {
+    fn read(&self, command: &Puzzle3dCommand, document: &Puzzle3dSnapshot, interaction: &protocol::InteractionState, window_config: Option<&semio_plugin::WindowConfigSnapshot>) -> Result<Option<Puzzle3dTransformGesture>, fn(&Puzzle3dLabels) -> &'static str> {
         let args = command.args();
         match self.tool_id {
             "translateSelection" | "rotateSelection" | "scaleSelection" => {
@@ -95,7 +95,7 @@ impl Puzzle3dTransformWork {
     }
 
     /// 🏁️ The ONE terminal emit: the committed transaction, a refusal, or nothing at all.
-    fn commit(&mut self, snapshot: &Puzzle3dPlaySnapshot, view_state: Option<&semio_framework_plugin::ViewModel>) -> Emit<Puzzle3dMutation, Puzzle3dConfigMutation> {
+    fn commit(&mut self, snapshot: &Puzzle3dPlaySnapshot, view_state: Option<&semio_plugin::ViewModel>) -> Emit<Puzzle3dMutation, Puzzle3dConfigMutation> {
         self.stage = Puzzle3dTransformStage::Complete;
         if let Some(refusal) = self.refusal.take() {
             return puzzle3d_notice_emit(view_state, refusal);
@@ -117,27 +117,27 @@ impl Puzzle3dTransformWork {
     }
 }
 
-impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle3dTransformWork {
+impl<A: Puzzle3dEditor> semio_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle3dTransformWork {
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
 
     /// 🔢️ `Read` + `Commit`, plus one `Scan` step per page of objects a drop measures.
-    fn extent(&self, command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
+    fn extent(&self, command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
         let addressed = Self::addressed(command, interaction, PUZZLE3D_GRANULARITY_OBJECT).len().checked_add(Self::selected(interaction, PUZZLE3D_GRANULARITY_TARGET_VOLUME).len())?;
         let pages = if self.tool_id == "worldRelocate" { snapshot.typed().objects.len().div_ceil(semio_s_artifact_puzzle_3d_editor_transform::PUZZLE3D_RELOCATE_SCAN_PAGE).max(1) } else { 0 };
         (addressed <= semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_DECODED_ITEMS).then_some(2 + pages)
     }
 
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         semio_s_plugin_puzzle_retained::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
-        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
 
         let original: Result<_, Fault> = (|| {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction, hover: _hover, context, .. } = *input;
+        let semio_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction, hover: _hover, context, .. } = *input;
         match self.stage {
             Puzzle3dTransformStage::Read => {
                 match self.read(command, snapshot.typed(), interaction, context.and_then(|context| context.window_config.as_ref())) {
@@ -157,7 +157,7 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 }
                 Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle3d-transform-scan", "Measuring nearby vortices", "Nahe Vortices werden gemessen"))
             }
-            Puzzle3dTransformStage::Commit => Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(self.commit(snapshot, context.and_then(|context| context.view_state.as_deref())))),
+            Puzzle3dTransformStage::Commit => Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(self.commit(snapshot, context.and_then(|context| context.view_state.as_deref())))),
             Puzzle3dTransformStage::Complete => Err(Fault::from("puzzle3d-transform-complete-repolled")),
             Puzzle3dTransformStage::Closing => Err(Fault::from("puzzle3d-transform-closing")),
         }
@@ -201,3 +201,5 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
         Some(size_of::<Self>())
     }
 }
+
+semio_plugin::retained_command::terminal_frame_bound!(Puzzle3dTransformWork);

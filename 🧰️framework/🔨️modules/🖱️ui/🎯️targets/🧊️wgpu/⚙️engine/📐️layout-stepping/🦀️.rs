@@ -1,6 +1,7 @@
 //! 📐️ Layout stepping: the surface lane, the layout steps, the theme propagation, the layout queue and the shell settings. See [`super`].
 
 use super::*;
+use semio_framework_job_worker::AdmittedWorkerJobSession as _;
 
 // #region engine
 //#region 🔖️Ui
@@ -93,8 +94,9 @@ impl Ui {
             }
             if window.layout_closing {
                 let witness=cx.original_cancel_token();
-                let alias=match session.has_original_cancel_alias_witness(witness){Ok(true)=>session.return_original_cancel_alias_step(witness,cx.retained_grant()),Ok(false)=>Ok(None),Err(error)=>Err(error)};
-                match alias {
+                let alias=match session.has_original_cancel_alias_witness(witness){Ok(true)=>session.return_original_cancel_alias_step(witness,cx.retained_grant()),Ok(false)=>semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0},Err(error)=>semio_framework_value::RetainedWorkOutcome{result:Err(error),work:0}};
+                cx.consume_fuel(alias.work);
+                match alias.result {
                     Ok(Some(step)) => {
                         let progress = step.progress();
                         if let Err(error) = cx.consume_retained(progress) {
@@ -145,16 +147,16 @@ impl Ui {
                         return UiLayoutStep::Refused { window_id, lane, refusal };
                     }
                 }
-                let acknowledgement = session.acknowledge_checked_out_outcome(cx.retained_grant());
-                let progress = acknowledgement.progress();
-                if let Err(error) = cx.consume_retained(progress) {
-                    let refusal = UiWorkerRetirementRefusal { stage: "Layout.AcknowledgeOriginalOutcome", kind: error.kind, progress: error.retained_progress() };
-                    window.layout_retirement_refusal = Some(refusal);
-                    return UiLayoutStep::Refused { window_id, lane, refusal };
-                }
-                if !matches!(acknowledgement, semio_framework_value::RetainedCloneStep::Complete(_)) {
-                    self.enqueue_layout(window_id.as_ref());
-                    return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.AcknowledgeOriginalOutcome", nodes: progress.copied_items, glyphs: 0 };
+                match session.acknowledge_checked_out_outcome(cx) {
+                    Ok(true) => {}
+                    Ok(false) => {
+                        self.enqueue_layout(window_id.as_ref());
+                        return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.AcknowledgeOriginalOutcome", nodes: 0, glyphs: 0 };
+                    }
+                    Err(failure) => {
+                        let refusal = window.retain_layout_close_failure("Layout.AcknowledgeOriginalOutcome", failure);
+                        return UiLayoutStep::Refused { window_id, lane, refusal };
+                    }
                 }
                 let identity = (token, window.layout_generation, window.revision, window.theme_revision, window.viewport_revision, window.viewport.0, window.viewport.1);
                 let layout_preview = session.checked_out_job_mut().and_then(MountedLayoutJob::take_preview_one);
@@ -182,9 +184,13 @@ impl Ui {
                     _ => UiLayoutStep::Yielded { window_id, lane, stage: "Layout.WorkerOutcome", nodes: usize::from(publish.is_some()), glyphs: 0 },
                 };
             }
-            let poll = session.pump_one(pool, worker_lane(lane), cx.retained_grant());
+            let poll = match session.pump_one_for_interactive_turn(cx) {
+                Err(failure) => Err(window.retain_layout_close_failure("Layout.WorkerPump", failure)),
+                Ok(poll) => Ok(poll),
+            };
             self.enqueue_layout(window_id.as_ref());
             return match poll {
+                Err(refusal) => UiLayoutStep::Refused { window_id, lane, refusal },
                 Ok(semio_framework_job_worker::WorkerJobPoll::Submitted) => UiLayoutStep::Awaiting { window_id, lane },
                 Ok(semio_framework_job_worker::WorkerJobPoll::Outcome | semio_framework_job_worker::WorkerJobPoll::Terminal) => UiLayoutStep::Yielded { window_id, lane, stage: "Layout.WorkerTake", nodes: 0, glyphs: 0 },
                 _ => UiLayoutStep::Yielded { window_id, lane, stage: "Layout.WorkerPool.UserVisible", nodes: 0, glyphs: 0 },
@@ -197,6 +203,14 @@ impl Ui {
                 window.layout_closing = true;
             }
             if window.layout_closing {
+                if !window.layout_admission.birth.terminal_is_empty() {
+                    if let Err(failure) = window.layout_admission.birth.close_step(cx) {
+                        let refusal = window.retain_layout_close_failure("Layout.CloseAdmission", failure);
+                        return UiLayoutStep::Refused { window_id, lane, refusal };
+                    }
+                    self.enqueue_layout(window_id.as_ref());
+                    return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.CloseAdmission", nodes: 1, glyphs: 0 };
+                }
                 if !window.layout_admission.terminal_is_empty() {
                     let step = window.layout_admission.close_step(cx.retained_grant(), Some(cx.original_cancel_token()));
                     if let Err(error) = consume_layout_retirement(cx, step) {
@@ -234,21 +248,18 @@ impl Ui {
                     self.enqueue_layout(window_id.as_ref());
                     return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.AdmissionParameters", nodes: progress.copied_items, glyphs: 0 };
                 }
-                match semio_framework_job_worker::MountedWorkerJobSession::try_admit_owned(&mut window.layout_job, &mut window.layout_admission.params, cx) {
-                    Ok(Some((session, progress))) => {
-                        window.layout_session = Some(session);
+                match window.layout_admission.birth.advance(&mut window.layout_job, &mut window.layout_admission.params, &mut window.layout_session, cx) {
+                    Ok(true) => {
                         window.layout_session_generation = Some(window.layout_generation);
                         self.enqueue_layout(window_id.as_ref());
-                        return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.Mount", nodes: progress.copied_items, glyphs: 0 };
+                        return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.Mount", nodes: 1, glyphs: 0 };
                     }
-                    Ok(None) => {
+                    Ok(false) => {
                         self.enqueue_layout(window_id.as_ref());
                         return UiLayoutStep::Yielded { window_id, lane, stage: "Layout.Mount", nodes: 0, glyphs: 0 };
                     }
-                    Err(error) => {
-                        let refusal = UiWorkerRetirementRefusal { stage: "Layout.Admission", kind: error.kind, progress: error.retained_progress() };
-                        *window.layout_admission.failure=Some(error);
-                        window.layout_retirement_refusal = Some(refusal);
+                    Err(failure) => {
+                        let refusal = window.retain_layout_close_failure("Layout.Admission", failure);
                         if let Some(original) = window.layout_job.as_mut() { original.begin_close(); }
                         window.layout_closing = true;
                         self.enqueue_layout(window_id.as_ref());

@@ -87,7 +87,7 @@
     },
     {
       "name": "the object share keeps the newest objects",
-      "input": {"capacityBytes": 1000, "volumeBytes": 1000, "freeBytes": 900, "nowMs": 1000000, "lanes": [], "objects": [
+      "input": {"capacityBytes": 2000, "volumeBytes": 2000, "freeBytes": 1800, "nowMs": 1000000, "lanes": [], "objects": [
         {"digest": "1111111111111111111111111111111111111111111111111111111111111111", "bytes": 250, "lastUsedMs": 300},
         {"digest": "2222222222222222222222222222222222222222222222222222222222222222", "bytes": 250, "lastUsedMs": 200},
         {"digest": "3333333333333333333333333333333333333333333333333333333333333333", "bytes": 250, "lastUsedMs": 100}]},

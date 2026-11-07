@@ -65,6 +65,10 @@ use semio_plugin_decl_app::document_load_fault;
 use semio_plugin_decl_app::whole_document_archive;
 use semio_plugin_document_media::lifted_app::whole_document_media;
 
+/// 🚪️ Which births an instance has paid so far; the runtime opening and the fixtures advance the same value through [`PluginApp::advance_instance_birth`].
+#[derive(Clone,Copy,Debug,Default,PartialEq,Eq)]
+pub struct InstanceBirth{pub identity_bound:bool,pub issuer_ready:bool}
+
 /// 🗄️ Object-safe runtime contract every hosted app satisfies. Owns persistent document state
 /// (via {@link VcsArtifactApp}'s store) across calls — no per-call document JSON is threaded in.
 /// History actions (undo/redo/checkpoint/alternative) are intercepted by the wrapper; typed
@@ -98,6 +102,19 @@ pub trait PluginApp: Send + 'static {
     async fn bind_instance_id(&mut self, _instance_id: u32) {}
     /// 🧷️ Native construction binds the actual opening identity with original receipts before instance publication.
     fn bind_original_opening(&mut self,_instance_id:u32,_actor:&str,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"app has no original opening identity binding capability").into())}
+    /// 🆔️ The instance id and actor this app is born under when it already owns them, so a fixture pays the same birth as the host without inventing either.
+    fn birth_identity(&self)->Option<(u32,String)>{None}
+    /// 🚪️ The one birth sequence every instance pays before it serves, shared by the runtime opening and every fixture constructor: identity binding with its receipt, then the canonical cancellation issuer.
+    fn advance_instance_birth(&mut self,birth:&mut InstanceBirth,instance_id:u32,actor:&str,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if !birth.identity_bound{
+            if !self.bind_original_opening(instance_id,actor,cx)?{return Ok(false)}
+            let bytes=std::mem::size_of::<bool>();let mut done=None;
+            semio_framework_job::admit_original_construction(cx,&mut done,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},|_|{birth.identity_bound=true;semio_framework_value::RetainedWorkOutcome{result:Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}})?;
+            return Ok(false)
+        }
+        if !birth.issuer_ready{if !self.admit_cancellation_issuer(cx)?{return Ok(false)}birth.issuer_ready=true;return Ok(false)}
+        Ok(true)
+    }
     /// 🧍️ Binds the actor admitted for this instance at its open: who it acts as from then on — across a reload too —
     /// on every route that carries no actor of its own.
     async fn bind_actor(&mut self, _actor: &str) {}
@@ -487,9 +504,9 @@ pub trait PluginApp: Send + 'static {
     async fn app_catalogue_json(&mut self) -> String {
         String::from("{}")
     }
-    /// ⏱️ Object-safe counterpart to `ArtifactApp::pending_effects` — called once per `refreshUi` pass.
-    async fn pending_effects(&mut self, _view: Option<&ViewModel>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<Vec<Effect>, Fault> {
-        Ok(Vec::new())
+    /// ⏱️ Object-safe counterpart to `ArtifactApp::pending_effects`. `Ok(None)` is the retained answer: the original turn yielded or the snapshot-read preparation is not admitted yet, so the runtime keeps the instance armed and polls again with the next original epoch; it is never flattened into an empty effect list.
+    async fn pending_effects(&mut self, _view: Option<&ViewModel>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<Vec<Effect>>, semio_framework_job::OriginalTurnFailure> {
+        Ok(Some(Vec::new()))
     }
     /// 🖱️ Object-safe counterpart to `ArtifactApp::context_menu` — the WIT `context-menu` export's
     /// dispatch target.

@@ -255,11 +255,13 @@ export async function runShellInput({ clipboardFragmentRef, primaryPluginId, dis
       const target=response.forms?.find(target=>target.key===key);
       if (!target) throw new Error("staging.surface-unpublished");
       const lease=plugin.acquireOwnedUiSurface(targetSession.instanceId,target);
+      if (!lease) throw new Error("staging.surface-unowned");
       if (signal.aborted) { await lease.close(); throw new Error("staging.cancelled"); }
       return lease;
     },
     execute:async(args,revision,signal)=>{
       const outcome=await execute({...action,args},revision,signal);
+      if (outcome.kind==="superseded") throw new Error("staging.superseded");
       if (outcome.kind!=="applied") throw new Error(outcome.detail??outcome.reason);
       committed=outcome;
     },

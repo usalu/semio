@@ -1,6 +1,7 @@
 use semio_framework_test_fixtures::fixture_text;
 use crate::retained_clone::FixtureSourceBirth;
 use super::*;
+use crate::retirement::RetirementCursor;
 use serde::Deserialize;
 use std::{
     mem::{ManuallyDrop, size_of},

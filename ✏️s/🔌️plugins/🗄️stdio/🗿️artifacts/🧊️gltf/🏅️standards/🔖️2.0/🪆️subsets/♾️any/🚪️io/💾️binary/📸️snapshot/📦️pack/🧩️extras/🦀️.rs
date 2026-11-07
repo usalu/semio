@@ -1,12 +1,12 @@
 //! 🧩️ Ordered GLTF extras use explicit flat typed nodes without recursive wire lowering.
 use super::*;
-#[derive(semio_framework_dsl_record_derive::DslScalar)]
+#[derive(Clone,Copy,semio_framework_dsl_record_derive::DslScalar,semio_framework_dsl_record_derive::DslReceiving,semio_framework_value::RetireOwned)]
 enum JsonKind{Null,Boolean,Number,String,Array,Object}
-#[derive(semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_dsl_record_derive::DslRecord,semio_framework_dsl_record_derive::DslReceiving,semio_framework_value::RetireOwned)]
 struct JsonMember{name:String,value:u64}
-#[derive(semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_dsl_record_derive::DslRecord,semio_framework_dsl_record_derive::DslReceiving,semio_framework_value::RetireOwned)]
 struct JsonNode{kind:JsonKind,boolean:Option<bool>,number:Option<f64>,text:Option<String>,items:Vec<u64>,members:Vec<JsonMember>}
-#[derive(semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_dsl_record_derive::DslRecord,semio_framework_dsl_record_derive::DslReceiving,semio_framework_value::RetireOwned)]
 pub(super) struct Json{nodes:Vec<JsonNode>}
 impl From<&GltfJson> for Json{
  fn from(value:&GltfJson)->Self{let mut pending=std::collections::VecDeque::from([value]);let mut nodes=Vec::new();let mut next=1u64;while let Some(value)=pending.pop_front(){let mut node=JsonNode{kind:JsonKind::Null,boolean:None,number:None,text:None,items:Vec::new(),members:Vec::new()};match value{
@@ -49,3 +49,5 @@ impl Json{
   }if values.0.iter().skip(1).any(Option::is_some){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"GLTF extras contains an unowned node"))}control.checkpoint()?;values.0[0].take().ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"GLTF extras root is missing"))
  }
 }
+#[path="📥️receiving/🦀️.rs"]
+mod receiving;

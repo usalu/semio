@@ -30,7 +30,7 @@ impl ArtifactApp for PreparationApp {
     type TransientMutation = NoTransientMutation;
     type Command = NoConfigMutation;
     fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_plugin::Fault>>{Some(||{ Ok(NoConfig::default()) })}
-    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _view: Option<&ViewModel>, _draft: &DraftView<'_, Self::Draft>, _engines: &semio_framework_2d_compute::EngineHandles) -> ArtifactMutationOutcome<Self::Mutation, Self::ConfigMutation, Self::DraftMutation> {
+    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _view: Option<&ViewModel>, _draft: &DraftView<'_, Self::Draft>, _engines: &semio_framework_2d_compute::EngineHandles) -> semio_plugin_decl_emission::ArtifactMutationOutcome<Self::Mutation, Self::ConfigMutation, Self::DraftMutation> {
         Ok(Emit::default())
     }
     fn mounted_job_prepare_snapshot_read(_operation: AppRenderOperationContext, _snapshot: &Self::Snapshot, _windows: &WindowConfigOwnerRegistry, _view: Option<&ViewModel>, grant: RetainedCloneGrant) -> MountedSnapshotReadPreparation {
@@ -54,7 +54,13 @@ async fn mounted_snapshot_preparation_boundary_uses_original_context_and_readine
     let mut app = Box::pin(VcsArtifactApp::<PreparationApp>::new(PreparationApp, replication::ActorId("mounted-preparation".into()), policy, &mut identity)).await.expect("the reference snapshot births");
     artifact_app_laws::settle_store_constructor(&mut app, policy);
     let original_parent_identity=app.fixture_original_document_identity().as_ptr()as usize;
-    let original_source_version=app.fixture_original_document_source_version();
+    {
+        let mut warm_sequence = 0; let mut warm_receipt = RetainedCloneProgress::default();
+        let mut warm = StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), StepBudget::new(8, u64::MAX, policy.preparation), semio_framework_job::root_cancel_token(), || Some(0), &mut warm_sequence, &mut warm_receipt);
+        PluginApp::pending_effects(&mut app, None, &mut warm).await.expect("the warm poll builds the render cache once");
+    }
+    let original_operation=app.fixture_original_render_operation();
+    let original_source_version=semio_framework_value_registry::fixed_request_owners::RequestSourceVersion{base_revision:original_operation.base_revision.0,generation:original_operation.generation.0,canonical_revision:original_operation.canonical_base_revision};
     for row in fixture["cases"].as_array().unwrap() {
         let number = |field: &str, index: usize| row[field][index].as_u64().unwrap() as usize;
         let grant = RetainedCloneGrant { maximum_items: number("grant", 0), maximum_copy_bytes: number("grant", 1), maximum_capacity_bytes: number("grant", 2), maximum_release_bytes: number("grant", 3), maximum_depth: number("grant", 4) };
@@ -66,6 +72,7 @@ async fn mounted_snapshot_preparation_boundary_uses_original_context_and_readine
         let admitted_grant = MountedSnapshotReadPreparation::grant(policy.preparation, &cx).unwrap();
         let (result,_heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_async::poll::resolve_ready(PluginApp::pending_effects(&mut app,None,&mut cx)));
         assert_eq!(result.is_err(), row["fault"].as_bool().unwrap());
+        if !row["fault"].as_bool().unwrap() { assert!(result.as_ref().unwrap().is_some(), "an admitted poll publishes its effects instead of retaining"); }
         assert_eq!(cx.retained_progress(), progress);
         let observed = ORIGINAL.with(|probe| probe.take().unwrap());
         let pre_heap=observed.pre_heap.expect("original callback samples live allocator scope");assert_eq!(pre_heap.requested_bytes,fixture["preAdmissionHeap"]["requestedBytes"].as_u64().unwrap()as usize);assert_eq!(pre_heap.released_bytes,fixture["preAdmissionHeap"]["releasedBytes"].as_u64().unwrap()as usize);assert!(!pre_heap.overflowed);assert_eq!(observed.source_version,result.is_ok().then_some(original_source_version)); assert_eq!(observed.parent_identity,if result.is_ok(){original_parent_identity}else{0},"admitted poll view must borrow original envelope identity"); assert_eq!(observed.calls, 1); assert_eq!(observed.grant, admitted_grant); assert_eq!(observed.reads, usize::from(ready && result.is_ok()));
@@ -73,9 +80,29 @@ async fn mounted_snapshot_preparation_boundary_uses_original_context_and_readine
     let mut sequence = 0; let mut receipt = RetainedCloneProgress::default();
     let mut cx = StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), StepBudget::new(0, u64::MAX, policy.preparation), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);
     ORIGINAL.with(|probe| probe.set(Some(Default::default())));
-    assert!(PluginApp::pending_effects(&mut app, None, &mut cx).await.unwrap().is_empty());
+    assert!(PluginApp::pending_effects(&mut app, None, &mut cx).await.unwrap().is_none());
     assert_eq!(ORIGINAL.with(|probe| probe.take().unwrap().calls), 0);
-    let _ = artifact_app_laws::close_registered_fixture_app(&mut app, policy);
+    let mut resume_sequence = 0; let mut resume_receipt = RetainedCloneProgress::default();
+    let mut resumed = StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), StepBudget::new(8, u64::MAX, policy.preparation), semio_framework_job::root_cancel_token(), || Some(0), &mut resume_sequence, &mut resume_receipt);
+    assert!(PluginApp::pending_effects(&mut app, None, &mut resumed).await.unwrap().is_some(), "the retained poll resumes with funded fuel");
+    {
+        let mut idle_caller = semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original idle caller input");
+        let mut idle_cx = idle_caller.context();
+        for _ in 0..8 {
+            let step = PluginApp::maintenance_step(&mut app, &mut idle_cx, policy.maintenance).unwrap();
+            assert!(matches!(step, semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress) | semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(progress) if progress == RetainedCloneProgress::default()), "an idle instance with no cancellation reaches idle in one bounded maintenance step: {step:?}");
+        }
+        let idle_fuel = idle_cx.fuel_remaining();
+        drop(idle_cx);
+        idle_caller.retire(idle_fuel).expect("original idle caller paid retirement");
+    }
+    let mut close_caller = semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original close caller input");
+    let mut close_cx = close_caller.context();
+    let closed = artifact_app_laws::close_registered_fixture_app(&mut app, policy, &mut close_cx);
+    let close_fuel = close_cx.fuel_remaining();
+    drop(close_cx);
+    close_caller.retire(close_fuel).expect("original close caller paid retirement");
+    let _ = closed;
     assert!(PluginApp::close_terminal_is_empty(&app));
 }
 

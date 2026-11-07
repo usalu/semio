@@ -72,7 +72,7 @@ pub(super) fn emit_owned_receiving(input:&DeriveInput)->proc_macro2::TokenStream
     fn close_demands(&self,body:usize)->Result<#v::RetirementDemand,#v::ValueError>{use #o::OwnedFieldReceiving as _;match #receiver{#(#close_demands),*}}
     fn close_step(&mut self,grant:#v::RetainedCloneGrant)->#v::RetainedWorkOutcome<#v::RetainedCloneProgress>{use #o::OwnedFieldReceiving as _;match #receiver{#(#close_steps),*}}
     fn terminal_is_empty(&self)->bool{use #o::OwnedFieldReceiving as _;match #receiver{#(#empty),*}}
-   }}
+   }impl #o::DslOwnedReceivingField for #name{type Cursor=#o::StatementReceiving<Self>;fn receiving_cursor()->Self::Cursor{Default::default()}}}
   },
   _=>syn::Error::new_spanned(input,"owned receiving requires a record or tagged variants").to_compile_error(),
  }

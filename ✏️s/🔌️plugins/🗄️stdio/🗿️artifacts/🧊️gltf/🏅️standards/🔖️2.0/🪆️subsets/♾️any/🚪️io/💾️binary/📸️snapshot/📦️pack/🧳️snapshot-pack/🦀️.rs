@@ -45,4 +45,4 @@ fn snapshot_value(value: &GltfSnapshot, control: &mut NativeEncodeControl<'_>) -
 }
 
 /// 🛫️ Emits every literal logical field through the declared controlled native output terminal.
-pub fn encode_native(value:&GltfSnapshot,encoding:semio_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut semio_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{store::encode_sqlite_snapshot_record_native(encoding,"stdio.gltf",spec_producer(),|native|snapshot_value(value,native),control,native_owner)}
+pub fn encode_native(value:&GltfSnapshot,encoding:semio_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut semio_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<store::io::IoPayload,semio_os_kernel::NativeSnapshotFailure> {store::encode_sqlite_snapshot_record_native(encoding,"stdio.gltf",spec_producer(),|native|snapshot_value(value,native),control,native_owner)}

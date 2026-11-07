@@ -529,3 +529,5 @@ impl Puzzle2dRedrawHandlesWork{
   let progress=semio_framework_value::RetainedCloneProgress{copied_bytes:handle_locations.copied_bytes,retained_capacity_bytes:work.shapes.capacity()*size_of::<Option<Puzzle2dRedrawShape>>() + work.mutations.capacity()*size_of::<Puzzle2dMutation>() + handle_locations.retained_capacity_bytes,..Default::default()};Ok((work,progress))
  }
 }
+
+semio_plugin::retained_command::terminal_frame_bound!(Puzzle2dForceLayoutWork, Puzzle2dRedrawHandlesWork);

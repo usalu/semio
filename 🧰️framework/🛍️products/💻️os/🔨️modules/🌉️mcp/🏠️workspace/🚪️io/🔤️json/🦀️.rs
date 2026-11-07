@@ -44,9 +44,9 @@ fn record_inline<T>(body:&mut NativeSnapshotBodyWallet)->Result<(),ValueError>{b
 fn admit_turn(body:&NativeSnapshotBodyWallet,demand:semio_framework_value::RetirementDemand)->Result<(),ValueError>{body.admit_frontier(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth})}
 
 /// 🫴️ Moves the direct grammar result while retaining cursor and original diagnostic custody.
-fn read_original<T:semio_framework_value::retirement::RetireOwned>(text:&str,owner:&mut NativeSnapshotDecodeOwner<'_,'_>,construct:fn(DslValue)->T)->Result<T,ValueError>{
+fn read_original<T:semio_framework_value::retirement::RetireOwned>(text:&str,owner:&mut NativeSnapshotDecodeOwner<'_,'_>,construct:fn(DslValue)->T)->semio_framework_value::RetainedWorkOutcome<T,store::NativeSnapshotFailure>{
  type Receiving<T>=(JsonGrammarCursor<DslValue>,Option<DslValue>,Option<JsonError>,Option<T>);
- owner.receive::<Receiving<T>,T>(|slot,native,body|{
+ owner.receive::<Receiving<T>,T,store::NativeSnapshotFailure>(|slot,native,body|store::native_snapshot_turn(|work|{work.performed();(||->Result<T,ValueError>{
   admit_inline::<Receiving<T>>(body)?;
   *slot=Some((JsonGrammarCursor::new(JsonMemberPolicy::Reject),None,None,None));
   record_inline::<Receiving<T>>(body)?;
@@ -69,19 +69,19 @@ fn read_original<T:semio_framework_value::retirement::RetireOwned>(text:&str,own
    }
    if performed==RetainedCloneProgress::default(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"Probe JSON parser has no funded frontier"))}
   }
- })
+ })().map_err(Into::into)}))
 }
 
 /// 🌱️ Publishes the original value through the same retained receiving lifecycle.
-pub(crate) fn read(text:&str,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<DslValue,ValueError>{read_original(text,owner,std::convert::identity)}
+pub(crate) fn read(text:&str,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<DslValue,store::NativeSnapshotFailure>{read_original(text,owner,std::convert::identity)}
 
 /// 🧩️ Constructs only this domain's allocation-free snapshot wrapper inside original receiving custody.
-pub(crate) fn receive_snapshot(text:&str,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<ProbeSnapshot,ValueError>{read_original(text,owner,ProbeSnapshot)}
+pub(crate) fn receive_snapshot(text:&str,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<ProbeSnapshot,store::NativeSnapshotFailure>{read_original(text,owner,ProbeSnapshot)}
 
 /// 🪶️ Borrows the unchanged tree and publishes the original canonical String backing.
 pub(crate) fn write(value:&DslValue,maximum_bytes:usize,owner:&mut NativeSnapshotEncodeOwner<'_,'_>)->Result<String,ValueError>{
  type Receiving=(JsonBorrowedWriteCursor,Option<String>);
- owner.receive::<Receiving,String>(|slot,native,body|{
+ owner.receive::<Receiving,String,store::NativeSnapshotFailure>(|slot,native,body|store::native_snapshot_turn(|work|{work.performed();(||->Result<String,ValueError>{
   validate_with(value,&mut |depth|{body.admit_frontier(RetainedCloneGrant{maximum_items:1,maximum_depth:depth,..Default::default()})?;native.checkpoint()?;body.record_progress(RetainedCloneProgress{copied_items:1,..Default::default()})})?;
   admit_inline::<Receiving>(body)?;
   *slot=Some((JsonBorrowedWriteCursor::new(),None));
@@ -98,7 +98,7 @@ pub(crate) fn write(value:&DslValue,maximum_bytes:usize,owner:&mut NativeSnapsho
    if outcome?{if output.as_ref().unwrap().len()>maximum_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"Probe JSON output exceeds original file byte ceiling"))}return Ok(output.take().unwrap())}
    if performed==RetainedCloneProgress::default(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"Probe JSON writer has no funded frontier"))}
   }
- })
+ })().map_err(Into::into)})).result.map_err(store::NativeSnapshotFailure::into_value_error)
 }
 
 /// 🌱️ Supplies a bounded synchronous caller and its own separate original retirement turns.
@@ -108,8 +108,8 @@ pub(crate) fn parse(text:&str)->Result<DslValue,ValueError>{
  let mut recipient=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();
  let mut native=NativeDecodeControl::new(268_435_456,&mut accepted);
  native.install_retirement_recipient(&mut recipient)?;
- let result={let mut owner=NativeSnapshotDecodeOwner::new(&mut native,PLAIN_GRANT);read(text,&mut owner)};
- for _ in 0..100_000{if !native.has_retirement_owner(){return result}let step=native.close_retirement_recipient(CLOSE_GRANT)?;if !step.progress().fits(CLOSE_GRANT){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"Probe JSON retirement exceeded original caller turn"))}}
+ let result={let mut owner=NativeSnapshotDecodeOwner::new(&mut native,PLAIN_GRANT);read(text,&mut owner).result.map_err(store::NativeSnapshotFailure::into_value_error)};
+ for _ in 0..100_000{if !native.has_retirement_owner(){return result}let step=native.close_retirement_recipient(CLOSE_GRANT).result?;if !step.progress().fits(CLOSE_GRANT){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"Probe JSON retirement exceeded original caller turn"))}}
  Err(ValueError::literal(ValueRefusalKind::WorkLimit,"Probe JSON original decoder retirement did not terminate"))
 }
 
@@ -120,6 +120,6 @@ pub(crate) fn print(value:&DslValue)->Result<String,ValueError>{
  let mut native=NativeEncodeControl::new(268_435_456,&mut accepted);
  native.install_retirement_recipient(&mut recipient)?;
  let result={let mut owner=NativeSnapshotEncodeOwner::new(&mut native,PLAIN_GRANT);write(value,33_554_432,&mut owner)};
- for _ in 0..100_000{if !native.has_retirement_owner(){return result}let step=native.close_retirement_recipient(CLOSE_GRANT)?;if !step.progress().fits(CLOSE_GRANT){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"Probe JSON retirement exceeded original caller turn"))}}
+ for _ in 0..100_000{if !native.has_retirement_owner(){return result}let step=native.close_retirement_recipient(CLOSE_GRANT).result?;if !step.progress().fits(CLOSE_GRANT){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"Probe JSON retirement exceeded original caller turn"))}}
  Err(ValueError::literal(ValueRefusalKind::WorkLimit,"Probe JSON original encoder retirement did not terminate"))
 }

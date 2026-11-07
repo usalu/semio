@@ -56,7 +56,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     }
 
     #[cfg(target_arch="wasm32")]
-    pub fn has_pending_raster_selection_work(&self)->bool{semio_framework_os_renderer_wgpu_engine_board::paint2d::paint2d_pixel_selection_work_pending()}
+    pub fn has_pending_raster_selection_work(&self)->bool{semio_renderer_wgpu_engine_board::paint2d::paint2d_pixel_selection_work_pending()}
 
     /// 📡️ Reports only work owned by the private decoder continuation.
     pub(super) fn has_pending_asset_decode(&self) -> bool {

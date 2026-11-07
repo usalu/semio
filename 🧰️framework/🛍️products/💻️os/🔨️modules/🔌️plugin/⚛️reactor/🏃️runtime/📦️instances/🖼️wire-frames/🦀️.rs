@@ -74,7 +74,7 @@ pub async fn with_instances_original_mut<PA:PluginApp,R>(runtime:&PluginRuntime<
 #[doc(hidden)]
 #[cfg(any(test, feature = "artifact-app-testing"))]
 pub async fn test_push_instance<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance: AppInstance<PA>) {
-    with_instances_mut(runtime, |list| list.insert(instance.id, std::sync::Arc::new(RuntimeAppCell::new(instance, runtime.mounted_policy))).map_err(|_| plugin_internal_fault("fixed runtime instance authority is saturated or collided")))
+    with_instances_mut(runtime, |list| { let id = instance.id; list.insert_admitted(id, std::sync::Arc::new(RuntimeAppCell::new(instance, runtime.mounted_policy))); Ok(()) })
         .await
         .expect("test_push_instance must not fail");
 }

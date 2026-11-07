@@ -1,0 +1,16 @@
+
+#[cfg(test)]
+mod instance_birth_laws {
+    /// 🚪️ The runtime opening and the fixtures pay every birth through the one shared routine, so neither can drift: neither calls a birth step directly.
+    #[test]
+    fn runtime_opening_and_fixtures_pay_one_shared_instance_birth() {
+        let runtime = include_str!("../../../⚛️reactor/🏃️runtime/📦️instances/🚪️opening/🦀️.rs");
+        let fixture = include_str!("🦀️.rs");
+        let fixture_body = fixture.split("#[cfg(test)]").next().unwrap();
+        for (name, source) in [("runtime opening", runtime), ("fixture", fixture_body)] {
+            assert!(source.contains("advance_instance_birth"), "{name} pays its births through advance_instance_birth");
+            assert!(!source.contains(".bind_original_opening("), "{name} never binds the opening identity itself");
+            assert!(!source.contains(".admit_cancellation_issuer("), "{name} never admits the cancellation issuer itself");
+        }
+    }
+}

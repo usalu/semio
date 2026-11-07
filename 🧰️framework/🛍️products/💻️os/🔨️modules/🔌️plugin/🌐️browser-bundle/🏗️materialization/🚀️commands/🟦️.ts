@@ -137,13 +137,18 @@ async function assembleComponentModuleV1(work:ComponentModuleWorkV1,transpiled:s
 }
 
 /** 🔎️ The probe stage: the assembled module's own `describe()` under JSPI, cached by the digest of every module file and the node version. */
+/** 🧪️ The probe stage cache request: the probe source is part of the key, so a changed probe can never reuse the semantic bytes of an older one. */
+export function probeStageRequestV1(inputs: Record<string, string>, node: string, source: string = PLUGIN_DESCRIPTOR_PROBE_SOURCE) {
+  return { stage: "probe", schemaVersion: 2, inputs, tools: { node, probe: createHash("sha256").update(source).digest("hex") } };
+}
+
 async function probeComponentModuleV1(work: ComponentModuleWorkV1, module: string,vendor:string): Promise<Uint8Array> {
   checkResourceLeaseControl(work.control);
   const inputs: Record<string, string> = {};
   for (const [name, path] of artifactFiles(module)) inputs[name] = await fileDigest(path, work.control.signal);
   for (const [name, path] of artifactFiles(vendor)) inputs[`vendor/${name}`] = await fileDigest(path, work.control.signal);
   const node = await toolIdentityV1("node", () => captureOwnedCommandV1("node", ["--version"], work.repoRoot, { control: work.control }).then((text) => text.trim())), output = join(work.work, "probe");
-  await work.cache.run({ stage: "probe", schemaVersion: 1, inputs, tools: { node } }, output, async (directory) => { writeFileSync(join(directory, "semantic.bin"), await probeModuleDescriptor(join(module, `${componentBaseV1(work.target)}.js`), work.repoRoot, work.control, work.environment)); }, work.control.signal);
+  await work.cache.run(probeStageRequestV1(inputs, node), output, async (directory) => { writeFileSync(join(directory, "semantic.bin"), await probeModuleDescriptor(join(module, `${componentBaseV1(work.target)}.js`), work.repoRoot, work.control, work.environment)); }, work.control.signal);
   checkResourceLeaseControl(work.control);
   return readArtifactBytesV1(join(output,"semantic.bin"),CATALOG_DESCRIPTOR_MAX_BYTES,work.control.signal);
 }

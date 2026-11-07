@@ -248,7 +248,7 @@ fn original_repository_history_entry_close_conserves_raw_box_value_and_factory_c
     assert_eq!(actual, expected);
     let (mut owner, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| {
         let factory: Arc<dyn ArtifactOwnedValueRetirementFactory<u64>> = Arc::new(BoundedArtifactRetirementFactory::<u64>::new());
-        let mut owner = ArtifactRepositoryHistoryEntryAuthority::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), OwnedSchemaPath::ROOT, factory);
+        let mut owner = ArtifactRepositoryHistoryEntryAuthority::new(None, OwnedSchemaPath::ROOT, factory);
         *owner.value = Some(actual);
         owner
     });
@@ -294,7 +294,7 @@ fn original_schema_history_array_close_releases_same_decoder_ledger_and_factory_
         let factory: Arc<dyn ArtifactOwnedValueRetirementFactory<u64>> = Arc::new(BoundedArtifactRetirementFactory::<u64>::new());
         let decoder: Arc<dyn ArtifactOwnedHistoryEntryDecoder<u64>> = Arc::new(ArtifactRepositoryHistoryEntryDecoder::<u64>::new());
         let mut owner = OwnedSchemaBoundedArrayAuthority::new(OwnedSchemaPath::ROOT, factory, decoder);
-        *owner.active_decoder = Some(owner.decoder.as_ref().unwrap().begin_entry(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), OwnedSchemaPath::ROOT, Arc::clone(owner.retirement_factory.as_ref().unwrap())));
+        *owner.active_decoder = Some(owner.decoder.as_ref().unwrap().begin_entry(None, OwnedSchemaPath::ROOT, Arc::clone(owner.retirement_factory.as_ref().unwrap())));
         owner
     });
     let original = allocated - released;

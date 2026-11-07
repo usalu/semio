@@ -52,7 +52,7 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dContrib
     }
 
     fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        command_work_step_demands::<EditorApp<Generation2dPlayApp>>(size_of::<Self>())
+        command_work_step_demands::<EditorApp<Generation2dPlayApp>>()
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
@@ -188,3 +188,5 @@ pub(super) fn generation2d_bounded_first_step_tool_proofs() -> Vec<semio_plugin:
     proofs.extend(Generation2dContributionsJobFactoryProofs::bounded_first_step_tool_proofs());
     proofs
 }
+
+semio_plugin::retained_command::terminal_frame_bound!(Generation2dContributionsWork);

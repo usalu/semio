@@ -280,3 +280,4 @@ impl<A: ArtifactApp> ArtifactCommandWork<A> for BoundedArtifactCommandWork<A> {
     }
 }
 //#endregion 🔖️Work
+

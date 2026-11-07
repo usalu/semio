@@ -146,7 +146,7 @@ pub fn project_tool_cancellation<A: ArtifactApp>(def: &mut AppDefinition, rows: 
         return Err(PluginAssemblyError::new("plugin-assembly.cancellation-controller", format!("app {} has a different action controller", def.id)));
     }
     let migrated = registry.migrated_tool_ids();
-    let expected = <A::Command as semio_framework_os_kernel::OpBinary>::TOOL_JOB_IDS.iter()
+    let expected = <A::Command as semio_os_kernel::OpBinary>::TOOL_JOB_IDS.iter()
         .filter(|id| **id != "typed-command" && migrated.contains(**id)).copied().collect::<BTreeSet<_>>();
     let mut seen = BTreeSet::new();
     for row in rows {

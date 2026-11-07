@@ -107,7 +107,7 @@ fn the_real_contributions_push_passes_the_host_configuration_output_gate() {
     let mut arguments = Some(DslValue::object(invocation.arguments.iter().map(|(name, value)| (name.clone(), value.clone()))));
     let mut fault = None;
     for _ in 0..semio_plugin::artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
-        let handled = ::semio_framework_async::poll::resolve_ready(PluginApp::handle_command(&mut app.0, &invocation.address, &mut arguments, &mut fault, None, &semio_plugin::artifact_app_laws::meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("the host's setContributions command passes the host-configuration output gate");
+        let handled = ::semio_framework_async::poll::resolve_ready(PluginApp::handle_command(&mut app.0, &invocation.address, &mut arguments, &mut fault, None, &mut Some(semio_plugin::artifact_app_laws::meta("local")), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("the host's setContributions command passes the host-configuration output gate");
         if handled.is_some() {
             return;
         }
@@ -147,7 +147,7 @@ fn published_example_load(app: &mut context::Process3dApp, example: &str) -> (Ve
         }
         PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("example maintenance step");
         ::semio_framework_async::poll::resolve_ready(app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("example publication");
-        if let Some(page) = app.take_typed_operation_result_page(instance) {
+        if let (Some(page), _) = app.take_typed_operation_result_page(instance, semio_plugin::artifact_app_laws::OriginalWorkFixture::stock()).expect("example result page") {
             assert!(app.acknowledge_typed_operation_result(page.token).expect("example result ack"));
         }
         if let Some(Effect::LoadDocument { pack, spr }) = app.take_typed_operation_effect() {

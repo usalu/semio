@@ -28,10 +28,10 @@ impl PendingLease {
 }
 
 #[doc(hidden)]
-pub struct ToolCancellationIssuer{admission:ManuallyDrop<Admission>,issued:ManuallyDrop<Option<ToolCancellationHandle>>,pending:ManuallyDrop<Option<PendingLease>>,pending_close:ManuallyDrop<Option<crate::CancellationLeaseParts>>,renew_cancel:ManuallyDrop<Option<semio_framework_job::CancelToken>>,renew_claim:ManuallyDrop<Option<PublicationClaimHandle>>,renew_source:Option<(semio_framework_job::OperationId,semio_framework_job::Generation,usize)>,renew_swapped:bool,cleanup_index:Option<usize>,closing:bool}
+pub struct ToolCancellationIssuer{admission:ManuallyDrop<Admission>,issued:ManuallyDrop<Option<ToolCancellationHandle>>,pending:ManuallyDrop<Option<PendingLease>>,pending_close:ManuallyDrop<Option<crate::CancellationLeaseParts>>,renew_cancel:ManuallyDrop<Option<semio_framework_job::CancelToken>>,renew_claim:ManuallyDrop<Option<PublicationClaimHandle>>,renew_source:Option<(semio_framework_job::OperationId,semio_framework_job::Generation,usize)>,renew_swapped:bool,renew_unready:u32,cleanup_index:Option<usize>,closing:bool}
 impl ToolCancellationIssuer{
  #[doc(hidden)]
- pub const fn empty()->Self{Self{admission:ManuallyDrop::new(Admission::empty()),issued:ManuallyDrop::new(None),pending:ManuallyDrop::new(None),pending_close:ManuallyDrop::new(None),renew_cancel:ManuallyDrop::new(None),renew_claim:ManuallyDrop::new(None),renew_source:None,renew_swapped:false,cleanup_index:None,closing:false}}
+ pub const fn empty()->Self{Self{admission:ManuallyDrop::new(Admission::empty()),issued:ManuallyDrop::new(None),pending:ManuallyDrop::new(None),pending_close:ManuallyDrop::new(None),renew_cancel:ManuallyDrop::new(None),renew_claim:ManuallyDrop::new(None),renew_source:None,renew_swapped:false,renew_unready:0,cleanup_index:None,closing:false}}
  #[doc(hidden)]
  pub fn ready(&self)->bool{self.issued.is_some()}
  #[doc(hidden)]
@@ -117,8 +117,17 @@ impl ToolCancellationIssuer{
   }
   cx.consume_retained(progress)?;cx.consume_fuel(1);Ok(None)
  }
+ /// 🚧️ Consecutive refusals of a renewal on an issuer that never became ready before it fails typed instead of livelocking its caller.
+ pub const MAXIMUM_UNREADY_RENEWALS:u32=4096;
+ /// 🔁️ Renews the scope generation, refusing typed once an issuer has stayed unready for [`Self::MAXIMUM_UNREADY_RENEWALS`] consecutive attempts.
  #[doc(hidden)]
  pub fn renew_scope_generation(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+  if self.ready(){self.renew_unready=0;return self.renew_scope_generation_once(cx)}
+  self.renew_unready=self.renew_unready.saturating_add(1);
+  if self.renew_unready>=Self::MAXIMUM_UNREADY_RENEWALS{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"cancellation scope renewal requires an issuer that never became ready").into())}
+  self.renew_scope_generation_once(cx)
+ }
+ fn renew_scope_generation_once(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if self.closing||!self.ready()||self.pending.is_some()||cx.should_yield()||cx.is_cancelled(){return Ok(false)}
   let source=(cx.operation(),cx.generation(),cx.original_source_parent()?.source_identity()?);let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
   if let Some(original)=self.renew_source{if original!=source{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"cancellation renewal belongs to another original source").into())}}
@@ -231,7 +240,7 @@ impl Drop for ToolCancellationIssuer{fn drop(&mut self){assert!(std::thread::pan
 mod original_laws;
 #[cfg(any(test,feature="media-turn-testing"))]
 #[doc(hidden)]
-pub use original_laws::cancellation_issuer_original_creation_physical_birth_and_close;
+pub use original_laws::{cancellation_issuer_original_creation_physical_birth_and_close,cancellation_issuer_unready_renewal_refuses_typed_after_its_bound};
 #[cfg(test)]
 #[path="🧪️tests/📜️contract/🦀️.rs"]
 mod contract_laws;

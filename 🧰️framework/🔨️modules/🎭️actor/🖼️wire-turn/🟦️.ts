@@ -199,7 +199,7 @@ export function wireEffectToFriendly(effect: WireVariant, decodePackValue: (byte
     case "open-window":
       return { openWindow: { req: num("req"), kind: pstr("kind"), params: ppack("params") } };
     case "close-window":
-      return { closeWindow: { window: num("window") } };
+      return { closeWindow: { window: str("window") } };
     case "spawn-plugin-instance":
       return {
         spawnPluginInstance: { req: num("req"), pluginId: pstr("pluginId"), appId: pstr("appId"), osInstanceId: poptstr("osInstanceId"), label: poptstr("label"), artifactJson: poptstr("artifactJson") },

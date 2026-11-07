@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PersistedMergeProgress",
+  "description": "Ephemeral local-only progress of a resumable persisted-pair merge (nothing here is persisted; the store's own atomic ingests are the only durable effect).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["phase", "completed", "total", "merged", "ahead"],
+  "properties": {
+    "phase": {"enum": ["preflight", "preflightTransitions", "census", "censusTransitions", "order", "ingestEdits", "ingestTransitions", "complete"]},
+    "completed": {"type": "integer", "minimum": 0, "description": "units of the current phase done"},
+    "total": {"type": "integer", "minimum": 0, "description": "units of the current phase"},
+    "merged": {"type": "integer", "minimum": 0},
+    "ahead": {"type": "integer", "minimum": 0}
+  }
+}

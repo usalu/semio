@@ -1,9 +1,7 @@
 //! 🧾️ Canonical language-neutral operation wire witness through the independent JSON oracle.
-/// 🎟️ Reads the independently authored physical close authority used by original native conformance laws.
+/// 🎟️ Is the physical close authority of original native conformance laws; it equals `physicalCloseGrant` of the os-store emission fixture, which the os-store laws pin.
 pub fn physical_test_close_grant() -> crate::RetainedCloneGrant {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🧫️fixtures/🔣️.json")).expect("plain physical close policy");
-    let policy=&fixture["physicalCloseGrant"];
-    crate::RetainedCloneGrant { maximum_items:policy["maximumItems"].as_u64().unwrap() as usize,maximum_copy_bytes:policy["maximumCopyBytes"].as_u64().unwrap() as usize,maximum_capacity_bytes:policy["maximumCapacityBytes"].as_u64().unwrap() as usize,maximum_release_bytes:policy["maximumReleaseBytes"].as_u64().unwrap() as usize,maximum_depth:policy["maximumDepth"].as_u64().unwrap() as usize }
+    crate::RetainedCloneGrant { maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:64 }
 }
 
 /// 🎟️ Drives one staged original source admission to its output, paying every turn its exact quote and reporting the summed receipt and actual work.

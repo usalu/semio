@@ -155,23 +155,29 @@ pub type NoDraftMutation = NoConfigMutation;
 pub struct NoPresence {}
 
 impl store::ArtifactPresenceSnapshot for NoPresence {
-    fn decode_presence_native(bytes: &[u8], owner: &mut semio_os_kernel::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
+    fn decode_presence_native(bytes: &[u8], owner: &mut semio_os_kernel::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> semio_framework_value::RetainedWorkOutcome<Self, semio_os_kernel::io::control::NativeSnapshotFailure> {
+        semio_os_kernel::io::control::native_snapshot_turn(|work| {
+        work.performed();
         let grant = owner.remaining_grant();
-        if grant.maximum_items == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "empty presence needs original work admission")); }
-        if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "empty presence needs original depth admission")); }
+        if grant.maximum_items == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "empty presence needs original work admission").into()); }
+        if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "empty presence needs original depth admission").into()); }
         owner.native().checkpoint()?;
-        if !bytes.is_empty() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "empty presence has no encoded fields")); }
+        if !bytes.is_empty() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "empty presence has no encoded fields").into()); }
         owner.record_progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })?;
         Ok(Self {})
+        })
     }
 
-    fn encode_presence_native(&self, owner: &mut semio_os_kernel::io::control::NativeSnapshotEncodeOwner<'_, '_>) -> Result<Vec<u8>, ValueError> {
+    fn encode_presence_native(&self, owner: &mut semio_os_kernel::io::control::NativeSnapshotEncodeOwner<'_, '_>) -> semio_framework_value::RetainedWorkOutcome<Vec<u8>, semio_os_kernel::io::control::NativeSnapshotFailure> {
+        semio_os_kernel::io::control::native_snapshot_turn(|work| {
+        work.performed();
         let grant = owner.remaining_grant();
-        if grant.maximum_items == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "empty presence needs original work admission")); }
-        if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "empty presence needs original depth admission")); }
+        if grant.maximum_items == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "empty presence needs original work admission").into()); }
+        if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "empty presence needs original depth admission").into()); }
         owner.native().checkpoint()?;
         owner.record_progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })?;
         Ok(Vec::new())
+        })
     }
 }
 

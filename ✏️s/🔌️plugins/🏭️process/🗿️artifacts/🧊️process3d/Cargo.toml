@@ -49,6 +49,9 @@ member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
 [workspace.dependencies.semio-framework-artifact-reference]
 path = "../../../../../🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-framework-trace]
+path = "../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-framework-tool-machine]
 path = "../../../../../🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust"
 

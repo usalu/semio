@@ -12,8 +12,7 @@ enum ComposedParentSnapshotDecodeState {
 }
 
 struct ComposedParentSnapshotDecodeAuthority {
-    pub operation: semio_framework_job::OperationId,
-    pub generation: semio_framework_job::Generation,
+    pub replacement: Option<semio_framework_job::ReplacementIdentity>,
     pub path: store::os_store::owned_schema_decode::OwnedSchemaPath,
     pub state: ComposedParentSnapshotDecodeState,
     pub value: std::mem::ManuallyDrop<Option<ComposedParentSnapshot>>,
@@ -21,10 +20,9 @@ struct ComposedParentSnapshotDecodeAuthority {
 }
 
 impl ComposedParentSnapshotDecodeAuthority {
-    pub fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
+    pub fn new(replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
         Self {
-            operation,
-            generation,
+            replacement,
             path,
             state: ComposedParentSnapshotDecodeState::AwaitToken,
             value: std::mem::ManuallyDrop::new(None),
@@ -64,7 +62,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
             if !terminal {
                 return Err(self.diagnostic("composed-parent-envelope.snapshot-pack-must-be-scalar", token.start));
             }
-            self.state = ComposedParentSnapshotDecodeState::Decode(store::os_store::owned_schema_decode::OwnedSchemaHexAuthority::try_new(self.operation, self.generation, token, self.path)?);
+            self.state = ComposedParentSnapshotDecodeState::Decode(store::os_store::owned_schema_decode::OwnedSchemaHexAuthority::try_new(self.replacement, token, self.path)?);
         }
         let path = self.path;
         let ComposedParentSnapshotDecodeState::Decode(authority) = &mut self.state else {

@@ -67,6 +67,33 @@ pub enum Puzzle5dScale {
 }
 
 semio_framework_value::artifact_retire_leaf!(Puzzle5dScale);
+fn puzzle5dscale_receive(value:&semio_framework_dsl_record::FieldValue)->Result<Puzzle5dScale,semio_framework_value::ValueError>{
+    use semio_framework_dsl_record::{receiving::owned::invalid,FieldValue};
+    let FieldValue::List(items)=value else{return Err(invalid())};
+    let axis=|value:&FieldValue|match value{FieldValue::Float(axis)=>Ok(*axis),_=>Err(invalid())};
+    match items.as_slice(){[x]=>Ok(Puzzle5dScale::Uniform(axis(x)?)),[x,y,z]=>Ok(Puzzle5dScale::Vec3([axis(x)?,axis(y)?,axis(z)?])),_=>Err(invalid())}
+}
+semio_framework_dsl_record::dsl_owned_scalar_receiving!(copy Puzzle5dScale,puzzle5dscale_receive);
+
+#[cfg(test)]
+mod puzzle5dscale_receiving_tests{
+    use super::*;
+    use semio_framework_dsl_record::{receiving::owned::OwnedScalar,DslField,FieldValue};
+    #[test]
+    fn puzzle5dscale_round_trips_through_original_receiving_and_refuses_foreign_shapes(){
+        for scale in [Puzzle5dScale::Uniform(2.0),Puzzle5dScale::Vec3([1.0,2.0,3.0])]{
+            let mut source=Some(scale.to_value());
+            assert_eq!(<Puzzle5dScale as OwnedScalar>::take_source(&mut source).unwrap(),scale);
+            assert_eq!(scale,Puzzle5dScale::from_value(&scale.to_value()).unwrap());
+        }
+        for foreign in [FieldValue::List(vec![FieldValue::Float(1.0),FieldValue::Float(2.0)]),FieldValue::Bool(true)]{
+            let mut source=Some(foreign);
+            assert!(<Puzzle5dScale as OwnedScalar>::take_source(&mut source).is_err());
+            assert!(source.is_some());
+        }
+    }
+}
+
 
 impl semio_framework_value::retained_clone::RetainedClone for Puzzle5dScale {
     type Cursor = semio_framework_value::retained_clone::ScalarCursor<Self>;

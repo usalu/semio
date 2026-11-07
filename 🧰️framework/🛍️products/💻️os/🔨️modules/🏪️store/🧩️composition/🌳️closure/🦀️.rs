@@ -58,6 +58,7 @@ enum Phase {
 pub struct OwnedDocumentClosure {
     pub operation: OperationId,
     pub generation: Generation,
+    pub replacement: Option<semio_framework_job::ReplacementIdentity>,
     source_generation: u64,
     pub expires_at_us: u64,
     expected_members: Option<usize>,
@@ -74,11 +75,18 @@ pub struct OwnedDocumentClosure {
 }
 
 impl OwnedDocumentClosure {
+    /// 🧷️ Binds the closure to the replacement slot identity it was admitted under; staleness is judged against the store's current slot, never against the stepping caller.
+    pub fn with_replacement(mut self, replacement: Option<semio_framework_job::ReplacementIdentity>) -> Self {
+        self.replacement = replacement;
+        self
+    }
+
     /// 🌱️ Reserves only fixed scalar metadata; no candidate payload or borrowed read is retained.
     pub fn new(operation: OperationId, generation: Generation, source_generation: u64, expires_at_us: u64) -> Self {
         Self {
             operation,
             generation,
+            replacement: None,
             source_generation,
             expires_at_us,
             expected_members: None,
@@ -134,7 +142,7 @@ impl OwnedDocumentClosure {
     }
 
     pub fn authority<S: OwnedDocumentClosureSource>(&self, source: &S, cx: &StepContext<'_>) -> Result<(), OwnedDocumentClosureDiagnostic> {
-        if cx.operation() != self.operation || cx.generation() != self.generation || source.generation() != self.source_generation || self.expected_members.is_some_and(|count| count != source.member_count()) {
+        if cx.replacement_is_stale(self.replacement) || source.generation() != self.source_generation || self.expected_members.is_some_and(|count| count != source.member_count()) {
             return Err(OwnedDocumentClosureDiagnostic::Stale);
         }
         if cx.is_cancelled() {

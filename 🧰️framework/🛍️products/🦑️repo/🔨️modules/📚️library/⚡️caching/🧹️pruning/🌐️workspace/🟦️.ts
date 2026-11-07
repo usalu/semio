@@ -1,6 +1,7 @@
 import { repoCacheDirectory } from "../../🟦️.ts";
 import { cargoDirectories } from "../../🦀️cargo/🗂️directories/🟦️.ts";
 import { CACHE_POLICY } from "../../🔍️discovery/📂️source/🟦️.ts";
+import { cacheAreaBudgetBytesV1, cacheLedgerV1 } from "../../💾️storage/🧾️ledger/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { scanCargoBuildUnits, scanCargoIncrementalUnits, scanCargoTargetUnits, scanDirectoryUnits, type CacheAreaInput, type CacheUnit, type CargoIncrementalScan } from "../🟦️.ts";
@@ -40,6 +41,7 @@ export async function scanCacheAreas(
 ): Promise<CacheAreaInput[]> {
   checkResourceLeaseControl(control);
   const storage = CACHE_POLICY.storage;
+  const ledger = cacheLedgerV1(), cargoBudgetBytes = cacheAreaBudgetBytesV1(ledger, ledger.areas.find((area) => area.id === "cargo-store")!)!;
   const dirs = operations.cargoDirectories(repoRoot);
   const progress = (area: string) => (unit: CacheUnit) => onUnit?.(area, unit);
   const buildUnits = await operations.scanCargoBuild(dirs.build, control, progress("cargo"));
@@ -49,7 +51,7 @@ export async function scanCacheAreas(
   const agentUnits = await operations.scanDirectories(operations.cacheDirectory(repoRoot, "agents"), control, new Set(["resource-leases"]), progress("agents"));
   checkResourceLeaseControl(control);
   return [
-    { name: "cargo", budgetBytes: storage.cargo.budgetBytes, unusedAgeMs: storage.cargo.unusedAgeMs, units: [...buildUnits, ...targetUnits] },
+    { name: "cargo", budgetBytes: cargoBudgetBytes, unusedAgeMs: storage.cargo.unusedAgeMs, units: [...buildUnits, ...targetUnits] },
     { name: "cargo-incremental", budgetBytes: storage.cargo.incremental.budgetBytes, unusedAgeMs: storage.cargo.incremental.unusedAgeMs, guardAgeMs: storage.cargo.incremental.guardAgeMs, units: incremental.units },
     { name: "cargo-incremental-sessions", budgetBytes: null, unusedAgeMs: 0, units: incremental.staleSessions },
     { name: "vite", budgetBytes: null, unusedAgeMs: storage.vite.unusedAgeMs, units: viteUnits },

@@ -55,7 +55,6 @@ fn numerical_restore_funds_each_original_contributor_frontier_separately() {
         assert_eq!(physical, (actual.retained_capacity_bytes, actual.released_bytes, actual.retained_capacity_bytes));
         assert!(actual.fits(exact));
         if demand.capacity_bytes != 0 { births += 1; assert_eq!(owner.len(), before.0); }
-        eprintln!("[DEBUG] restore contributor frontier={turn} len={} copy={} capacity={} depth={}", owner.len(), actual.copied_bytes, actual.retained_capacity_bytes, demand.depth);
         if complete { break; }
     }
     assert!(complete && births > 0);

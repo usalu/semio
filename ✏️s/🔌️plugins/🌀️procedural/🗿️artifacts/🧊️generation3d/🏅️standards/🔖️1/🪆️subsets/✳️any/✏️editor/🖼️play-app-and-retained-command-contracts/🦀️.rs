@@ -245,12 +245,6 @@ pub struct Generation3dPreviewCommandWork {
     /// every attached preview a tick, and owes it at most once.
     pub(super) instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle,
     pub(super) emit: Option<Emit<Generation3dMutation, Generation3dConfigMutation, NoDraftMutation>>,
-    pub(super) host: Option<FlowHost>,
-    /// 🧹️ The host's explicit retirement ladder, armed by `close_step` when the evaluation host is
-    /// handed over. A bare `Option<FlowHost>::take()`-and-drop panics on the fixture's
-    /// `OrderedMap<WidgetLayout>` root, so the host is drained under the caller's grant instead.
-    pub(super) host_retirement: Option<semio_os_flow::FlowHostRetirement>,
-    pub(super) session: Option<FlowEvalSession>,
     pub(super) emit_retirement: Option<semio_framework_value::retirement::controlled::ControlledRetirement<Emit<Generation3dMutation, Generation3dConfigMutation, NoDraftMutation>>>,
     pub(super) started: bool,
     pub(super) complete: bool,
@@ -259,7 +253,7 @@ pub struct Generation3dPreviewCommandWork {
 
 impl Generation3dPreviewCommandWork {
     pub(super) fn new(tool_id: &'static str, instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
-        Self { tool_id, instance_owner, emit: None, host: None, host_retirement: None, session: None, emit_retirement: None, started: false, complete: false, closing: false }
+        Self { tool_id, instance_owner, emit: None, emit_retirement: None, started: false, complete: false, closing: false }
     }
 
     /// 🔒️ Owes every attached preview window an evaluation on the RETAINED session's latch, so two
@@ -272,14 +266,8 @@ impl Generation3dPreviewCommandWork {
     pub(super) fn close_demands(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         use semio_framework_value::RetirementDemand;
         let leaf = RetirementDemand { depth: 1, ..Default::default() };
-        if let Some(session) = self.session.as_ref() {
-            return if session.terminal_is_empty() { Ok(leaf) } else { Ok(RetirementDemand { copy_bytes: session.next_close_copy_byte_demand()?, capacity_bytes: session.next_close_capacity_byte_demand(copy)?, release_bytes: session.next_close_release_byte_demand()?, depth: session.next_close_depth_demand()? }) };
-        }
-        if self.host.is_some() || self.emit.is_some() {
+        if self.emit.is_some() {
             return Ok(leaf);
-        }
-        if let Some(retirement) = self.host_retirement.as_ref() {
-            return if retirement.terminal_is_empty() { Ok(leaf) } else { Ok(RetirementDemand { copy_bytes: retirement.next_close_copy_byte_demand()?, capacity_bytes: retirement.next_close_capacity_byte_demand(copy)?, release_bytes: retirement.next_close_release_byte_demand()?, depth: retirement.next_close_depth_demand()? }) };
         }
         if let Some(retirement) = self.emit_retirement.as_ref() {
             return Ok(RetirementDemand { copy_bytes: retirement.next_copy_byte_demand()?, capacity_bytes: retirement.next_capacity_byte_demand(copy)?, release_bytes: retirement.next_release_byte_demand()?, depth: retirement.next_depth_demand()? });
@@ -295,8 +283,24 @@ impl Generation3dPreviewCommandWork {
 }
 
 /// 🧮️ The transient bytes one work step may materialize: the work's own frame plus the one emit it can stage.
-pub(super) fn command_work_step_demands<A: semio_plugin::ArtifactApp>(work_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-    Ok(semio_framework_value::RetirementDemand { copy_bytes: work_bytes.saturating_add(size_of::<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>>()), depth: 1, ..Default::default() })
+pub(super) fn command_work_step_demands<A: semio_plugin::ArtifactApp>() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>>(), depth: 1, ..Default::default() })
 }
 //#endregion 🧵️RetainedCommands
 //#endregion 🔖️Generation3dPlayApp
+
+#[cfg(test)]
+mod work_frame_size_laws {
+    use super::*;
+    /// 📏️ A retained command work frame is a small control record, never an inline 1 MiB+ evaluation host: its terminal release must fit one close grant.
+    #[test]
+    fn generation3d_preview_command_work_frame_stays_below_the_close_release_grant() {
+        let frames = [
+            ("Generation3dPreviewCommandWork", size_of::<Generation3dPreviewCommandWork>()),
+            ("Emit", size_of::<Emit<Generation3dMutation, Generation3dConfigMutation, NoDraftMutation>>()),
+        ];
+        eprintln!("[work-frame-sizes] {frames:?}");
+        assert!(frames[0].1 <= 64 * 1024, "{frames:?}");
+        assert!(frames[0].1 <= 1024 * 1024, "the work frame fits one close release grant: {frames:?}");
+    }
+}

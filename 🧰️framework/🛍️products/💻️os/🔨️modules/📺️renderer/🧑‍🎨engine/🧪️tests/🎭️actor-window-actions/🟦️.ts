@@ -50,7 +50,7 @@ describe("actor window actions", () => {
   it("forwards a funnelled action of an actor-bound session to its verified browser actor", () => {
     const funnel = shellActionsSource.slice(shellActionsSource.indexOf("const onAction = useCallback("));
     expect(funnel.length).toBeGreaterThan(0);
-    expect(funnel).toContain("directBrowserActor = directBrowserActorForSession(targetSession);");
+    expect(funnel).toContain("directBrowserActor = action.commandAddress ? null : directBrowserActorForSession(targetSession);");
     expect(funnel).toMatch(/if \(directBrowserActor !== null\) \{[\s\S]*?await dispatchDirectBrowserActorCommand\(\s*directBrowserActor,/u);
   });
 });

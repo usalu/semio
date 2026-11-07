@@ -108,6 +108,7 @@ where
     pub active: ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     pub operation: OperationId,
     pub generation: Generation,
+    pub replacement: Option<semio_framework_job::ReplacementIdentity>,
     pub expires_at_us: u64,
     pub phase: Phase,
     input_buffer_progress: RetainedCloneProgress,
@@ -267,7 +268,7 @@ where
         let request=admission.request.as_ref().ok_or_else(||member_admission_diagnostic(MemberOpenDiagnostic::Stale))?;
         request.check_step_authority(cx).map_err(member_admission_diagnostic)?;
         admission.source_loan.as_ref().ok_or_else(||member_admission_diagnostic(MemberOpenDiagnostic::Stale))?.validate_context(cx)?;
-        let operation=request.operation();let generation=request.generation();let expires_at_us=request.expires_at_us();
+        let operation=request.operation();let generation=request.generation();let replacement=request.replacement();let expires_at_us=request.expires_at_us();
         let required=Self::begin_birth_demand(request,&producer).map_err(member_admission_diagnostic)?;
         if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth<required.depth||grant.maximum_capacity_bytes<required.capacity_bytes{return Err(member_admission_diagnostic(MemberOpenDiagnostic::Capacity).into())}
         let snapshot_birth=C::SnapshotOpen::begin_birth_bytes(request).map_err(member_admission_diagnostic)?;
@@ -319,6 +320,7 @@ where
             active: ManuallyDrop::new(None),
             operation,
             generation,
+            replacement,
             expires_at_us,
             phase: if diagnostic.is_some() { Phase::Rejected } else { Phase::Snapshot },
             input_buffer_progress: Default::default(),
@@ -337,7 +339,7 @@ where
     }
 
     pub fn check_authority(&self, cx: &StepContext<'_>) -> Result<(), MemberOpenDiagnostic> {
-        if cx.operation() != self.operation || cx.generation() != self.generation {
+        if cx.replacement_is_stale(self.replacement) {
             return Err(MemberOpenDiagnostic::Stale);
         }
         if cx.is_cancelled() {
@@ -569,7 +571,7 @@ where
                     self.expires_at_us,
                     semio_os_store_document::persisted_document_hydration::PersistedDocumentHydrationTarget::Store { generation: 0 },
                     actor,
-                ));
+                ).with_replacement(self.replacement));
                 self.phase = Phase::Hydrate;
                 cx.consume_fuel(1);
                 MemberOpenStep::Pending(self.replay_progress())
@@ -630,7 +632,7 @@ where
     fn close_step(&mut self,parent:&OriginalCallerSourceParent,cx:&mut StepContext<'_>)->Result<RetainedCloneStep,OriginalTurnFailure>{
         if self.ownership_is_empty()&&!self.history_page_due(){if let Some(loan)=self.source_loan.as_mut(){let step=loan.close_step(parent,cx)?;let progress=step.progress();if loan.terminal_is_empty(){self.source_loan.take();}return Ok(if self.source_loan.is_none(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})}return Ok(RetainedCloneStep::Complete(Default::default()))}
         self.source_loan.as_ref().ok_or_else(||member_admission_diagnostic(MemberOpenDiagnostic::Stale))?.validate_context(cx)?;
-        if cx.operation()!=self.operation||cx.generation()!=self.generation{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original member close changed operation identity").into())}
+        if cx.replacement_is_stale(self.replacement){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original member close changed replacement identity").into())}
         let mut grant=cx.retained_grant();
         if !self.terminal_is_empty()&&grant.maximum_items>0&&grant.maximum_depth<self.next_depth_demand()?{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"initial member close exceeds original depth").into())}
         if cx.should_yield(){return Ok(RetainedCloneStep::Progress(Default::default()))}

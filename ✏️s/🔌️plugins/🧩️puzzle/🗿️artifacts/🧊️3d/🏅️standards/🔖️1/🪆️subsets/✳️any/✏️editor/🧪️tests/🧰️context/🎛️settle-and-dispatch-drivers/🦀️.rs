@@ -175,7 +175,7 @@ pub async fn dispatch_reporting(app: &mut Puzzle3dApp, action: &str, args: Optio
 pub async fn dispatch_action_reporting(app: &mut Puzzle3dApp, action: &str, args: &semio_framework_value::DslValue) -> (Result<InvocationResult, Fault>, Puzzle3dSettled) {
     let window_id = semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID;
     app.ensure_window(window_id);
-    let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..app.meta("local") };
+    let action_meta = ActionMeta { view_state: Some(std::sync::Arc::new(app.window_view(window_id))), ..app.meta("local") };
     let (raw, cx) = app.parts();
     let answered = semio_plugin::artifact_app_laws::dispatch_fixture_action(raw, action, Some(args.clone()), &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(fault_of);
     settle_into_reporting_with_items(app, answered, 1).await
@@ -195,7 +195,7 @@ pub async fn dispatch_reporting_with_items(
     if matches!(action, SET_ACTIVE_TOOL_ACTION_ID | semio_plugin::SET_ACTIVE_UTILITY_ACTION_ID) {
         app.activate(action, args, window_id);
     }
-    let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..app.meta("local") };
+    let action_meta = ActionMeta { view_state: Some(std::sync::Arc::new(app.window_view(window_id))), ..app.meta("local") };
     if matches!(
         action,
         "undo"
@@ -253,7 +253,7 @@ fn action_args(args: Option<&Value>, window_id: &str) -> Option<semio_framework_
 pub async fn dispatch_unsettled(app: &mut Puzzle3dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
     let window_id = window_id.unwrap_or(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     app.ensure_window(window_id);
-    let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..app.meta("local") };
+    let action_meta = ActionMeta { view_state: Some(std::sync::Arc::new(app.window_view(window_id))), ..app.meta("local") };
     let (raw, cx) = app.parts();
     semio_plugin::artifact_app_laws::dispatch_fixture_action(raw, action, action_args(args, window_id), &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(fault_of)
 }
@@ -281,7 +281,7 @@ pub async fn hover_id(app: &mut Puzzle3dApp, granularity: &str, id: Option<&str>
 pub async fn dispatch_reserved_unsettled(app: &mut Puzzle3dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
     let window_id = window_id.unwrap_or(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     app.ensure_window(window_id);
-    let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..app.meta("local") };
+    let action_meta = ActionMeta { view_state: Some(std::sync::Arc::new(app.window_view(window_id))), ..app.meta("local") };
     let dsl_args = args.map(semio_framework_pack_json::to_dsl_value);
     let (raw, cx) = app.parts();
     semio_plugin::artifact_app_laws::dispatch_fixture_action(raw, action, dsl_args, &action_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(fault_of)

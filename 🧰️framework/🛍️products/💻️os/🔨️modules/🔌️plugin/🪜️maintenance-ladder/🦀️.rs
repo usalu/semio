@@ -856,3 +856,18 @@ pub mod ladders_ingress;
 pub mod ladder_bundle;
 #[path = "📥️staging/🧱️components/🦀️.rs"]
 pub mod ladders_components;
+
+/// 🧾️ A producer's whole receipt always covers the effects its nested owners already posted on the same original context.
+fn whole_receipt(step: PluginLifecycleStep, posted: RetainedCloneProgress) -> PluginLifecycleStep {
+    let cover = |whole: RetainedCloneProgress| RetainedCloneProgress {
+        copied_items: whole.copied_items.max(posted.copied_items),
+        copied_bytes: whole.copied_bytes.max(posted.copied_bytes),
+        retained_capacity_bytes: whole.retained_capacity_bytes.max(posted.retained_capacity_bytes),
+        released_bytes: whole.released_bytes.max(posted.released_bytes),
+    };
+    match step {
+        PluginLifecycleStep::Progress(progress) => PluginLifecycleStep::Progress(cover(progress)),
+        PluginLifecycleStep::Complete(progress) => PluginLifecycleStep::Complete(cover(progress)),
+        other => other,
+    }
+}

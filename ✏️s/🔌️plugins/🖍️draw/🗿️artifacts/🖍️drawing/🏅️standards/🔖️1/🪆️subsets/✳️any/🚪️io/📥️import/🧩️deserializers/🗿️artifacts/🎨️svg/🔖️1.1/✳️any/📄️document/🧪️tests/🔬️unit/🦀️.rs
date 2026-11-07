@@ -42,10 +42,15 @@ fn svg_import_normalizes_css_blends_and_accepts_exported_isolation() {
     let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../🧪️tests/🧫️fixtures/🎬️scene/🧩️compositing/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {
         let nodes:Vec<semio_s_artifact_draw_drawing_model::DrawingSceneNode>=semio_framework_pack_json::from_json_str(&case["nodes"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let source=semio_s_artifact_draw_drawing_write::serializers::artifacts::svg::v1_1::any::drawing_scene_to_svg(&nodes,[0.0,0.0,24.0,16.0],&Default::default()).unwrap();
+        use semio_s_artifact_draw_drawing_scene::preparation::{DocumentSceneContent,DocumentSceneNode,DocumentScenePlan};
+        use semio_s_artifact_draw_drawing_write::serializers::artifacts::svg::v1_1::any::write::{SvgWriteJob,SvgWriteLimits};
+        let plan=DocumentScenePlan{assets:Vec::new(),nodes:nodes.iter().map(|node|DocumentSceneNode{source_path:vec![0],locked_ancestors:0,id:node.id.clone(),groups:node.groups.clone(),transform:node.transform,opacity:node.opacity,blend_mode:node.blend_mode.clone(),visible:node.visible,content:DocumentSceneContent::Path{segments:node.segments.clone(),fill_rule:if node.fill_rule.as_deref()==Some("evenodd"){semio_s_artifact_draw_drawing_model::fill_rule::FillRule::Evenodd}else{semio_s_artifact_draw_drawing_model::fill_rule::FillRule::Nonzero},fill:node.fill.clone(),stroke:node.stroke.clone()}}).collect()};
+        let mut writer=SvgWriteJob::new(plan,SvgWriteLimits{view_box:[0.0,0.0,24.0,16.0],max_output_bytes:1<<24,max_work:1_000_000_000});
+        while !writer.advance(4096).unwrap().done {}
+        let source=String::from_utf8(writer.result().unwrap().iter().flatten().copied().collect()).unwrap();
         let mut job=super::SvgImportJob::new(&source,"roundtrip").unwrap();while !job.step(3).unwrap().done {}
         let document=job.take().unwrap();
-        let output=semio_s_artifact_draw_drawing_scene::flatten_drawing_document_to_scene_nodes(&document);
+        let output=semio_s_artifact_draw_drawing_scene::preparation::testkit::scene_nodes(&document);
         assert_eq!(output.len(),nodes.len(),"{}",case["name"]);
         let authored=nodes.iter().flat_map(|node|node.groups.iter().map(|group|group.blend_mode.as_str()).chain(std::iter::once(node.blend_mode.as_str()))).filter(|mode|*mode!="normal").collect::<std::collections::BTreeSet<_>>();
         let imported=output.iter().flat_map(|node|node.groups.iter().map(|group|group.blend_mode.as_str()).chain(std::iter::once(node.blend_mode.as_str()))).filter(|mode|*mode!="normal").collect::<std::collections::BTreeSet<_>>();

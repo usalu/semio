@@ -49,7 +49,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewCont
     }
 
     fn work_demands(&self, _input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        command_work_step_demands::<ViewerApp<Generation3dViewer>>(size_of::<Self>())
+        command_work_step_demands::<ViewerApp<Generation3dViewer>>()
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
@@ -233,3 +233,5 @@ pub(super) fn generation3d_view_route_first_step_tool_proofs() -> Vec<semio_plug
     proofs.extend(Generation3dViewExampleJobFactoryProofs::bounded_first_step_tool_proofs());
     proofs
 }
+
+semio_plugin::retained_command::terminal_frame_bound!(Generation3dViewContributionsWork);

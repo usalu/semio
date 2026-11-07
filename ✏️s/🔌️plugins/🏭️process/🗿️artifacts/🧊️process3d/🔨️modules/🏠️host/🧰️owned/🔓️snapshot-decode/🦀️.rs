@@ -10,7 +10,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
         source: &store::os_store::owned_schema_decode::OwnedSchemaRecordCursor,
         cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
-        if cx.operation() != self.operation || cx.generation() != self.generation {
+        if cx.replacement_is_stale(self.replacement) {
             return Err(self.diagnostic("process3d-envelope.snapshot-stale-authority", token.start));
         }
         if cx.is_cancelled() {
@@ -212,8 +212,7 @@ pub(super) enum Process3dSnapshotDecodeState {
 /// 🧵️ The envelope's `snapshot` field: hex pack bytes streamed nibble by nibble into this
 /// artifact's mounted canonical pack session, then the typed snapshot published exactly once.
 pub(super) struct Process3dSnapshotDecodeAuthority {
-    pub(super) operation: semio_framework_job::OperationId,
-    pub(super) generation: semio_framework_job::Generation,
+    pub(super) replacement: Option<semio_framework_job::ReplacementIdentity>,
     pub(super) path: store::os_store::owned_schema_decode::OwnedSchemaPath,
     pub(super) state: Process3dSnapshotDecodeState,
     pub(super) token: Option<store::os_store::owned_schema_decode::OwnedSchemaToken>,
@@ -225,10 +224,9 @@ pub(super) struct Process3dSnapshotDecodeAuthority {
 }
 
 impl Process3dSnapshotDecodeAuthority {
-    pub(super) fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
+    pub(super) fn new(replacement: Option<semio_framework_job::ReplacementIdentity>, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
         Self {
-            operation,
-            generation,
+            replacement,
             path,
             state: Process3dSnapshotDecodeState::AwaitToken,
             token: None,

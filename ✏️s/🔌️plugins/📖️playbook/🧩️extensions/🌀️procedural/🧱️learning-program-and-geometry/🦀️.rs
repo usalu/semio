@@ -177,7 +177,7 @@ pub(super) struct ModuleGeometryOwner {
     pub(super) session: SessionCapture,
     pub(super) registry: Option<SharedRegistry>,
     pub(super) registry_retirement: RegistryRetirement,
-    host_template: Option<FlowHost>,
+    host_template: Option<Box<FlowHost>>,
     host_template_close: flow::FlowHostCloseSlot,
     closing: bool,
     pub(super) preview: Option<embedded_evaluation::PreviewCache>,
@@ -210,7 +210,7 @@ impl ModuleGeometryOwner {
         registry.finalize();
         let (registry, registry_retirement) = SharedRegistry::new(registry);
         let host_template = FlowHost::from_host_snapshot(FlowHostSnapshot::default()).with_operator_registry(registry.clone());
-        Self { session: session.capture(), registry: Some(registry), registry_retirement, host_template: Some(host_template), host_template_close: Default::default(), closing: false, preview: None, preview_close: None, active_preview_key: String::new(), preview_phase: 0, preview_units: 0, imported: None, stale: Vec::new(), retirement: ValueRetirement::default() }
+        Self { session: session.capture(), registry: Some(registry), registry_retirement, host_template: Some(Box::new(host_template)), host_template_close: Default::default(), closing: false, preview: None, preview_close: None, active_preview_key: String::new(), preview_phase: 0, preview_units: 0, imported: None, stale: Vec::new(), retirement: ValueRetirement::default() }
     }
 
     pub(super) fn retire_import_cache(&mut self) {

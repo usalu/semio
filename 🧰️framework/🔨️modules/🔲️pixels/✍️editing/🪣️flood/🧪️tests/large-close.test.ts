@@ -22,6 +22,5 @@ test("accepted1024square cancellation closes with actual mounted release authori
   const turn=cursor.close(fixture.grant);expect(turn.result.ok).toBe(true);
   if(turn.result.ok){expect(turn.work).toBe(1);expect(turn.result.value.progress.releasedBytes).toBeGreaterThan(0);expect(turn.result.value.progress.releasedBytes).toBeLessThanOrEqual(fixture.grant.maximumReleaseBytes);released+=turn.result.value.progress.releasedBytes;receipts.push({work:turn.work,...turn.result.value.progress});}
  }
- console.log("[DEBUG] large flood close probe "+JSON.stringify({retained,released,closed:cursor.closed,initialQuote,grant:fixture.grant,receiptCount:receipts.length}));
  expect(cursor.closed).toBe(fixture.expected.closed);expect(released).toBe(fixture.expected.releasedBytes);
 });

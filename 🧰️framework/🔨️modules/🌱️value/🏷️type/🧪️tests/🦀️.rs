@@ -14,14 +14,14 @@ fn original_type_variants_retire_through_actual_controlled_ownership() {
     for row in corpus()["wire"].as_array().unwrap() {for copy in [1,3,64] {
         let (subject,(original_born,original_freed))=observe_retirement_allocations(||ValueType::from_value(DslValue::from(row.clone())).unwrap());
         assert_eq!(serde_json::Value::from(subject.to_value()),*row);
-        let mut owner=ControlledRetirement::new(subject).map_err(|(error,_)|error).unwrap();let mut births=0;let mut released=0;let mut copied=0;
+        let mut owner=ControlledRetirement::new(subject).map_err(|(error,_)|error).unwrap();let mut births=0;let mut released=0;let mut copied=0;let mut quoted=0;
         for turn in 0..100000 {
             if owner.terminal_is_empty(){break;}
-            let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};
+            let selected=owner.selected_demand(copy).unwrap();quoted+=selected.copy_bytes;let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy.max(selected.copy_bytes),maximum_capacity_bytes:selected.capacity_bytes,maximum_release_bytes:selected.release_bytes,maximum_depth:selected.depth};
             let (zero,(a,r))=observe_retirement_allocations(||owner.step(RetainedCloneGrant {maximum_items:0,..grant}).unwrap());assert_eq!(zero.progress().copied_items,0);assert_eq!((a,r),(0,0));
-            let (step,(a,r))=observe_retirement_allocations(||owner.step(grant).unwrap());let progress=step.progress();assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(a,r));assert!(progress.copied_items<=1);assert!(progress.copied_bytes<=copy);assert!(a<=grant.maximum_capacity_bytes);assert!(r<=grant.maximum_release_bytes);births+=a;released+=r;copied+=progress.copied_bytes;assert!(progress.copied_items!=0,"exact type owner grant blocked on turn {turn}");
+            let (step,(a,r))=observe_retirement_allocations(||owner.step(grant).unwrap());let progress=step.progress();assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(a,r));assert!(progress.copied_items<=1);assert_eq!(progress.copied_bytes,selected.copy_bytes);assert!(a<=grant.maximum_capacity_bytes);assert!(r<=grant.maximum_release_bytes);births+=a;released+=r;copied+=progress.copied_bytes;assert!(progress.copied_items!=0,"exact type owner grant blocked on turn {turn}");
         }
-        assert!(owner.terminal_is_empty());assert_eq!(copied,0,"schema id text retires as native length metadata, copy0");assert_eq!(released,original_born-original_freed+births);
+        assert!(owner.terminal_is_empty());assert_eq!(copied,quoted,"every copied byte is exactly the quoted indivisible move; text ids retire as native length metadata with no move");assert_eq!(released,original_born-original_freed+births);
     }}
 }
 

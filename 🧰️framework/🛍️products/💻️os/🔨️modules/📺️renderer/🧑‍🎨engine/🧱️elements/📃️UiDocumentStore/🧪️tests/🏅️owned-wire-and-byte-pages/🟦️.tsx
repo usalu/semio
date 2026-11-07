@@ -105,9 +105,10 @@ export async function registerOwnedWireAndBytePagesTests(vitest: TypedWireVitest
       const { encodePackValue } = await import("@semio-tech/framework/packs");
       const { readFileSync } = await import("node:fs");
       const { resolve } = await import("node:path");
-      const action = readFileSync(resolve(process.cwd(), "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🎬️action.rs"), "utf8");
-      expect(action).toContain(`UI_TEXT_MAX_BYTES: usize = ${wireFixture.nativeBounds.textBytes};`);
-      expect(action).toContain(`UI_VALUE_MAX_ITEMS: usize = ${wireFixture.nativeBounds.collectionItems};`);
+      const budget = JSON.parse(readFileSync(resolve(process.cwd(), "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📏️budget/🧬️schema/🔣️.json"), "utf8")) as Record<string, unknown>;
+      const setting = (name: string): unknown => { const walk = (node: unknown): unknown => { if (node === null || typeof node !== "object") return undefined; const record = node as Record<string, unknown>; if (name in record && typeof record[name] === "number") return record[name]; for (const child of Object.values(record)) { const found = walk(child); if (found !== undefined) return found; } return undefined; }; return walk(budget); };
+      expect(setting("textMaxBytes")).toBe(wireFixture.nativeBounds.textBytes);
+      expect(setting("valueMaxItems")).toBe(wireFixture.nativeBounds.collectionItems);
       for (const value of ["x".repeat(512), Array.from({ length: 256 }, (_, i) => i)]) {
         const cursor = new RetainedUiWireValueCursor(encodePackValue(value));
         expect(cursor.advance({ maxItems: 1, maxBytes: 4095 }).kind).toBe("blocked");

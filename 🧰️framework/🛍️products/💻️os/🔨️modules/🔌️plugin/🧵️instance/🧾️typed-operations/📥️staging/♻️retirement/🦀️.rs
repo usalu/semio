@@ -32,7 +32,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     fn retire_typed_operation_granted(&mut self,operation_id:u64,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         if self.tools.tool_operations.get(operation_id).is_some_and(|owner|owner.pending_stream_abort.is_some()){let before=cx.retained_progress();cx.with_original_retirement(|cx|self.tools.tool_operations.get_mut(operation_id).unwrap().close_stream_abort(&mut self.stores.store,cx))?;return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}
         if self.tools.tool_operations.get(operation_id).is_some_and(|owner|owner.terminal_is_empty()){
-            let d=self.tools.tool_operations.get(operation_id).unwrap().original_frame_release_demands();if !plugin_grant_funds(d,grant)||grant.maximum_items==0{return Ok(PluginLifecycleStep::Progress(Default::default()))}
+            let d=self.tools.tool_operations.get(operation_id).unwrap().original_frame_release_demands();if !semio_plugin_ownership::bounded_ownership::fund_or_refuse(d,grant,grant)?{return Ok(PluginLifecycleStep::Progress(Default::default()))}
             let original=self.tools.tool_operations.remove(operation_id).unwrap();self.tools.operation_progress_retired|=original.progress.is_some();drop(original);
             return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))
         }
@@ -88,7 +88,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             }
             let grant = semio_plugin_ownership::bounded_ownership::original_plugin_turn_grant(self.mounted_policy.close, cx.retained_grant());
             let demand = self.tools.typed_operation_retirement_demands(&*self.child_composition, operation_id, &*self.stores, grant.maximum_copy_bytes)?;
-            if !plugin_grant_funds(demand, grant) {
+            if !semio_plugin_ownership::bounded_ownership::fund_or_refuse(demand, self.mounted_policy.close, grant)? {
                 return Ok(());
             }
             match cx.with_retained_loan(grant,|same|self.retire_typed_operation_unit(operation_id,same).map_err(Into::into))? {
@@ -98,7 +98,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                         return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"typed operation retirement exceeded its issuer grant").with_retained_progress(progress).into());
                     }
                     if progress == RetainedCloneProgress::default() {
-                        return Ok(());
+                                                return Ok(());
                     }
                 }
             }

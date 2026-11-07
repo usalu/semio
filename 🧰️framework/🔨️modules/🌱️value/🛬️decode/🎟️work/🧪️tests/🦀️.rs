@@ -44,3 +44,10 @@ fn original_work_refused_pause_returns_the_same_pending_control(){
 fn original_work_issuer_tracks_multiple_independent_reservations(){
  let row:serde_json::Value=serde_json::from_str(include_str!("../recovery.json")).unwrap();let mut issuer=NativeDecodeWorkIssuer::new();let mut source=Loan{remaining:4,calls:0};let mut first_callback=|_|true;let mut second_callback=|_|true;let mut first=NativeDecodeControl::new(0,&mut first_callback);let mut second=NativeDecodeControl::new(0,&mut second_callback);{let mut loan=issuer.loan(&mut source);first.with_work_recipient(&mut loan,|control|{assert!(control.prepare_work(1)?);Ok::<_,ValueError>(())}).unwrap();}{let mut loan=issuer.loan(&mut source);second.with_work_recipient(&mut loan,|control|{assert!(control.prepare_work(1)?);Ok::<_,ValueError>(())}).unwrap();}assert_eq!(issuer.outstanding(),row["parallelReservations"].as_u64().unwrap()as usize);{let mut loan=issuer.loan(&mut source);first.with_work_recipient(&mut loan,|control|control.commit_work(1)).unwrap();}assert_eq!(issuer.outstanding(),1);{let mut loan=issuer.loan(&mut source);second.with_work_recipient(&mut loan,|control|control.commit_work(1)).unwrap();}assert_eq!(issuer.outstanding(),0);assert_eq!((first.actual_work(),second.actual_work()),(1,1));assert_eq!(source.calls,2);
 }
+#[test]fn installed_work_loan_admits_until_exhausted_and_refuses_replacement(){
+ let mut callback=|_|true;let mut loan=Loan{remaining:1,calls:0};let mut native=NativeDecodeControl::new(64,&mut callback);
+ native.install_work_recipient(&mut loan).unwrap();
+ assert!(native.prepare_work(1).unwrap());native.commit_work(1).unwrap();assert!(!native.prepare_work(1).unwrap());assert_eq!(native.actual_work(),1);
+ let mut other=Loan{remaining:9,calls:0};let mut again=|_|true;let mut second=NativeDecodeControl::new(64,&mut again);
+ let mut first=Loan{remaining:9,calls:0};second.install_work_recipient(&mut first).unwrap();assert!(second.install_work_recipient(&mut other).is_err());
+}

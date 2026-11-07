@@ -13,7 +13,7 @@ pub fn payload_demands(bytes: &MountedCausalPayload) -> Result<RetirementDemand,
 }
 pub fn payload_close(bytes: &mut MountedCausalPayload, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
     let d = payload_demands(bytes)?;
-    if !plugin_grant_funds(d, grant) {
+    if !semio_plugin_ownership::bounded_ownership::plugin_grant_funds(d,grant){
         return Ok(RetainedCloneStep::Progress(Default::default()));
     }
     if bytes.retained_bytes().terminal_is_empty() {

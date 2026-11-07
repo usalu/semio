@@ -23,10 +23,12 @@ function ageOf(path:string,now:number):number|undefined{try{return now-statSync(
 /** 🪪️ One held claim: a file created exclusively and kept fresh by its holder, released by removal. */
 export type ClaimV1=Readonly<{path:string;waitedMs:number;release():void}>;
 
+/** ⌛️ A claim is stale when its holder is dead; a holder that is alive keeps it however old the file is, because a stalled event loop stops the heartbeat while the holder still works. A file without a readable holder ages out. */
 function stale(path:string,staleMs:number,now:number):boolean{
  const age=ageOf(path,now);if(age===undefined)return false;
- if(age>staleMs)return true;
- const holder=holderOf(path);return holder!==undefined&&age>1000&&!processAliveV1(holder.pid);
+ const holder=holderOf(path);
+ if(holder===undefined)return age>staleMs;
+ return age>1000&&!processAliveV1(holder.pid);
 }
 
 function removeStale(path:string,staleMs:number):void{

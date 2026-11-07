@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/value-native-owned-try-map-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

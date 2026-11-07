@@ -6,7 +6,7 @@ fn fresh_vcs_release_publishes_actual_retained_backing_demand() {
     #[derive(semio_framework_value::FactoryPayloadRetirement)]
     struct UnusedEditDecoder;
     impl ArtifactOwnedHistoryEntryDecoder<Edit<DemoMutation>> for UnusedEditDecoder {
-        fn begin_entry(&self, _: semio_framework_job::OperationId, _: semio_framework_job::Generation, _: OwnedSchemaPath, _: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<DemoMutation>>>) -> Box<dyn ArtifactOwnedHistoryEntryAuthority<Edit<DemoMutation>>> { panic!("the release-only fixture never decodes a history entry") }
+        fn begin_entry(&self, _: Option<semio_framework_job::ReplacementIdentity>, _: OwnedSchemaPath, _: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<DemoMutation>>>) -> Box<dyn ArtifactOwnedHistoryEntryAuthority<Edit<DemoMutation>>> { panic!("the release-only fixture never decodes a history entry") }
     }
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json")).unwrap();
     let admission = fixture["admissionBytes"].as_u64().unwrap() as usize;
@@ -78,12 +78,12 @@ fn fresh_field_release_propagates_retained_target_allocation_demand() {
     #[derive(semio_framework_value::FactoryPayloadRetirement)]
     struct ReleaseOnlyCatalog;
     impl ArtifactEnvelopeOwnedFieldCatalog<DemoSnapshot, DemoMutation> for ReleaseOnlyCatalog {
-        fn begin_vcs(&self, _: semio_framework_job::OperationId, _: semio_framework_job::Generation, _: OwnedSchemaPath) -> Result<Box<dyn ArtifactEnvelopeVcsFieldAuthority<DemoSnapshot, DemoMutation>>, Box<dyn ArtifactEnvelopeSnapshotFieldAuthority<DemoSnapshot>>> { panic!("release-only catalog") }
+        fn begin_vcs(&self, _: Option<semio_framework_job::ReplacementIdentity>, _: OwnedSchemaPath) -> Result<Box<dyn ArtifactEnvelopeVcsFieldAuthority<DemoSnapshot, DemoMutation>>, Box<dyn ArtifactEnvelopeSnapshotFieldAuthority<DemoSnapshot>>> { panic!("release-only catalog") }
         fn maximum_vcs_close_byte_demand(&self) -> usize { ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES }
         fn maximum_retained_vcs_close_bytes(&self) -> usize { ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES }
-        fn begin_snapshot(&self, _: semio_framework_job::OperationId, _: semio_framework_job::Generation, _: OwnedSchemaPath) -> Box<dyn ArtifactEnvelopeSnapshotFieldAuthority<DemoSnapshot>> { panic!("release-only catalog") }
-        fn begin_mutation(&self, _: semio_framework_job::OperationId, _: semio_framework_job::Generation, _: OwnedSchemaPath) -> Box<dyn ArtifactEnvelopeMutationFieldAuthority<DemoMutation>> { panic!("release-only catalog") }
-        fn begin_spr_conflict(&self, _: semio_framework_job::OperationId, _: semio_framework_job::Generation, _: OwnedSchemaPath) -> Box<dyn ArtifactEnvelopeSprConflictAuthority> { panic!("release-only catalog") }
+        fn begin_snapshot(&self, _: Option<semio_framework_job::ReplacementIdentity>, _: OwnedSchemaPath) -> Box<dyn ArtifactEnvelopeSnapshotFieldAuthority<DemoSnapshot>> { panic!("release-only catalog") }
+        fn begin_mutation(&self, _: Option<semio_framework_job::ReplacementIdentity>, _: OwnedSchemaPath) -> Box<dyn ArtifactEnvelopeMutationFieldAuthority<DemoMutation>> { panic!("release-only catalog") }
+        fn begin_spr_conflict(&self, _: Option<semio_framework_job::ReplacementIdentity>, _: OwnedSchemaPath) -> Box<dyn ArtifactEnvelopeSprConflictAuthority> { panic!("release-only catalog") }
         fn edit_history_decoder(&self) -> Arc<dyn ArtifactOwnedHistoryEntryDecoder<Edit<DemoMutation>>> { panic!("release-only catalog") }
     }
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json")).unwrap();
@@ -92,7 +92,7 @@ fn fresh_field_release_propagates_retained_target_allocation_demand() {
     for row in fixture["cases"].as_array().unwrap() {
         let extent = row["physicalBytes"].as_u64().unwrap() as usize;
         let mut buffer = Vec::new(); buffer.try_reserve_exact(extent).unwrap(); assert_eq!(buffer.capacity(), extent);
-        let mut owner = ArtifactEnvelopeFreshFieldDecoder::new(semio_framework_job::OperationId(7002), semio_framework_job::Generation(1), Arc::new(ReleaseOnlyCatalog), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), ArtifactEnvelopeCompletedRecordRegistry::new(), ArtifactEnvelopeDecodeCompletion::new());
+        let mut owner = ArtifactEnvelopeFreshFieldDecoder::new(None, Arc::new(ReleaseOnlyCatalog), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), ArtifactEnvelopeCompletedRecordRegistry::new(), ArtifactEnvelopeDecodeCompletion::new());
         owner.active_retirement = Some(Box::new(DemandingBufferRetirement { buffer: Some(buffer) }));
         let demand = owner.next_close_release_byte_demand().unwrap();
         let caller = row["callerBytes"].as_u64().unwrap() as usize;
@@ -128,7 +128,7 @@ fn fresh_vcs_preserves_terminal_snapshot_cursor_box_under_grant() {
     #[derive(semio_framework_value::FactoryPayloadRetirement)]
     struct UnusedEditDecoder;
     impl ArtifactOwnedHistoryEntryDecoder<Edit<DemoMutation>> for UnusedEditDecoder {
-        fn begin_entry(&self, _: semio_framework_job::OperationId, _: semio_framework_job::Generation, _: OwnedSchemaPath, _: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<DemoMutation>>>) -> Box<dyn ArtifactOwnedHistoryEntryAuthority<Edit<DemoMutation>>> { panic!("terminal snapshot fixture has no history decode work") }
+        fn begin_entry(&self, _: Option<semio_framework_job::ReplacementIdentity>, _: OwnedSchemaPath, _: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<DemoMutation>>>) -> Box<dyn ArtifactOwnedHistoryEntryAuthority<Edit<DemoMutation>>> { panic!("terminal snapshot fixture has no history decode work") }
     }
     fn check<const N: usize>(row: &serde_json::Value, admission: usize) -> (bool, usize, usize, usize, RetainedCloneStep) {
         let mut owner = ArtifactEnvelopeFreshVcsAuthority::try_new(Box::new(TerminalSnapshotCursor::<N>([0; N])), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Arc::new(UnusedEditDecoder)).unwrap_or_else(|_| panic!("bounded terminal snapshot scaffold admits"));
@@ -155,12 +155,12 @@ fn fresh_vcs_active_history_decoder_propagates_physical_release_demand() {
     #[derive(semio_framework_value::FactoryPayloadRetirement)]
     struct ReleaseOnlyCatalog;
     impl ArtifactEnvelopeOwnedFieldCatalog<DemoSnapshot, DemoMutation> for ReleaseOnlyCatalog {
-        fn begin_vcs(&self, _: semio_framework_job::OperationId, _: semio_framework_job::Generation, _: OwnedSchemaPath) -> Result<Box<dyn ArtifactEnvelopeVcsFieldAuthority<DemoSnapshot, DemoMutation>>, Box<dyn ArtifactEnvelopeSnapshotFieldAuthority<DemoSnapshot>>> { panic!("release-only catalog") }
+        fn begin_vcs(&self, _: Option<semio_framework_job::ReplacementIdentity>, _: OwnedSchemaPath) -> Result<Box<dyn ArtifactEnvelopeVcsFieldAuthority<DemoSnapshot, DemoMutation>>, Box<dyn ArtifactEnvelopeSnapshotFieldAuthority<DemoSnapshot>>> { panic!("release-only catalog") }
         fn maximum_vcs_close_byte_demand(&self) -> usize { ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES }
         fn maximum_retained_vcs_close_bytes(&self) -> usize { ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES }
-        fn begin_snapshot(&self, _: semio_framework_job::OperationId, _: semio_framework_job::Generation, _: OwnedSchemaPath) -> Box<dyn ArtifactEnvelopeSnapshotFieldAuthority<DemoSnapshot>> { panic!("release-only catalog") }
-        fn begin_mutation(&self, _: semio_framework_job::OperationId, _: semio_framework_job::Generation, _: OwnedSchemaPath) -> Box<dyn ArtifactEnvelopeMutationFieldAuthority<DemoMutation>> { panic!("release-only catalog") }
-        fn begin_spr_conflict(&self, _: semio_framework_job::OperationId, _: semio_framework_job::Generation, _: OwnedSchemaPath) -> Box<dyn ArtifactEnvelopeSprConflictAuthority> { panic!("release-only catalog") }
+        fn begin_snapshot(&self, _: Option<semio_framework_job::ReplacementIdentity>, _: OwnedSchemaPath) -> Box<dyn ArtifactEnvelopeSnapshotFieldAuthority<DemoSnapshot>> { panic!("release-only catalog") }
+        fn begin_mutation(&self, _: Option<semio_framework_job::ReplacementIdentity>, _: OwnedSchemaPath) -> Box<dyn ArtifactEnvelopeMutationFieldAuthority<DemoMutation>> { panic!("release-only catalog") }
+        fn begin_spr_conflict(&self, _: Option<semio_framework_job::ReplacementIdentity>, _: OwnedSchemaPath) -> Box<dyn ArtifactEnvelopeSprConflictAuthority> { panic!("release-only catalog") }
         fn edit_history_decoder(&self) -> Arc<dyn ArtifactOwnedHistoryEntryDecoder<Edit<DemoMutation>>> { panic!("release-only catalog") }
     }
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json")).unwrap();
@@ -173,7 +173,7 @@ fn fresh_vcs_active_history_decoder_propagates_physical_release_demand() {
         let mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<DemoMutation>> = Arc::new(DemoMutationRetirementFactory);
         let edit_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<DemoMutation>>> = Arc::new(ArtifactStoreDecodedEditRetirementFactory { mutation_factory: mutation_factory.clone() });
         let decoder: Arc<dyn ArtifactOwnedHistoryEntryDecoder<Edit<DemoMutation>>> = Arc::new(ArtifactOwnedSprEditDecoder { catalog: catalog.clone(), mutation_factory: mutation_factory.clone() });
-        let mut edit = ArtifactOwnedSprEditAuthority::new(semio_framework_job::OperationId(7003), semio_framework_job::Generation(1), OwnedSchemaPath::ROOT, catalog.clone(), mutation_factory.clone(), edit_factory.clone());
+        let mut edit = ArtifactOwnedSprEditAuthority::new(None, OwnedSchemaPath::ROOT, catalog.clone(), mutation_factory.clone(), edit_factory.clone());
         *edit.retirement = Some(Box::new(DemandingBufferRetirement { buffer: Some(backing) }));
         let mut array = OwnedSchemaBoundedArrayAuthority::new(OwnedSchemaPath::ROOT, edit_factory.clone(), decoder.clone());
         *array.values = None;

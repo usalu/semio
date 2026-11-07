@@ -1,0 +1,14 @@
+import{readFile,writeFile}from"node:fs/promises";
+import{resolve,dirname,relative}from"node:path";
+import{pathToFileURL}from"node:url";
+import{endianness}from"node:os";
+import TOML from"@iarna/toml";
+const{readRustSourceClosureV1}=await import(pathToFileURL(resolve("🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts")).href);
+const manifest=resolve(process.argv[2]),label=process.argv[3];
+if(!/^[a-z0-9-]+$/.test(label))throw Error("invalid census label");
+const cargo=TOML.parse(await readFile(manifest,"utf8")),options=process.argv.slice(4),selection=options.find(value=>value.startsWith("--test="))?.slice(7)??null,normal=options.includes("--normal"),target=selection?(cargo.test??[]).find(row=>row.name===selection):cargo.lib;if(!target?.path)throw Error("actual declared target path required");const entry=resolve(dirname(manifest),target.path),root=process.cwd(),reads=new Map();
+const targetOs={darwin:"macos",win32:"windows",linux:"linux"}[process.platform];if(!targetOs)throw Error("explicit research target required");const targetArch={arm64:"aarch64",x64:"x86_64",ia32:"x86",arm:"arm"}[process.arch];if(!targetArch)throw Error("explicit research architecture required");const family=targetOs==="windows"?"windows":"unix";const cfg=[...(normal?[]:["test"]),"debug_assertions",family,"target_family="+family,"target_os="+targetOs,"target_arch="+targetArch,"target_pointer_width="+(["arm64","x64"].includes(process.arch)?64:32),"target_endian="+(endianness()==="LE"?"little":"big"),...options.filter(value=>!value.startsWith("--")).map(feature=>"feature="+feature)];
+const inputs=await readRustSourceClosureV1([entry],root,cfg,async path=>{try{const data=await readFile(path);reads.set(path,data.byteLength);if(reads.size>256||[...reads.values()].reduce((a,b)=>a+b,0)>2097152)throw Error("bounded research observer exhausted");return data}catch(error){if(error.code==="ENOENT")return null;throw error}},{manifestDirectory:dirname(manifest),generated:()=>{}});
+const result={method:"actual first-party readRustSourceClosureV1; explicit research host/test cfg, not compiler cfg/admission",manifest:relative(root,manifest),entry:relative(root,entry),selection,normal,cfg,bytes:[...reads.values()].reduce((a,b)=>a+b,0),count:reads.size,reads:[...reads].map(([path,bytes])=>({path:relative(root,path),bytes})),inputs};
+await writeFile(new URL("../../🗑️generated/1105b/valuesplit-census-"+label+".json",import.meta.url),JSON.stringify(result,null,2)+"\n");
+console.log(JSON.stringify({manifest:result.manifest,bytes:result.bytes,count:result.count,inputCount:inputs.length,cfg}));

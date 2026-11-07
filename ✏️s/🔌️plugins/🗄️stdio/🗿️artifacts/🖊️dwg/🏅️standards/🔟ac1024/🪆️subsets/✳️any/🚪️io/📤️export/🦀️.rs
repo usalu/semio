@@ -331,13 +331,13 @@ pub fn encode_dwg(snapshot: &DwgSnapshot) -> Result<Vec<u8>, DwgExportError> {
     if let Some((_, message)) = unwritable_version(snapshot) {
         return Err(DwgExportError::InvalidVersion(message));
     }
-    let applied = snapshot.drawing.layers_applied(snapshot.header.handle_seed.max(snapshot.auxiliary_header.handle_seed)).map_err(DwgExportError::InvalidLogical)?;
+    let applied = snapshot.drawing.layers_applied(snapshot.header.relations.handle_seed.max(snapshot.auxiliary_header.handle_seed)).map_err(DwgExportError::InvalidLogical)?;
     let mut reconciled;
     let source = match applied {
         Some(drawing) => {
             let seed = drawing.handle_seed();
             reconciled = DwgSnapshot { drawing, ..snapshot.clone() };
-            reconciled.header.handle_seed = reconciled.header.handle_seed.max(seed);
+            reconciled.header.relations.handle_seed = reconciled.header.relations.handle_seed.max(seed);
             reconciled.auxiliary_header.handle_seed = reconciled.auxiliary_header.handle_seed.max(seed);
             &reconciled
         }

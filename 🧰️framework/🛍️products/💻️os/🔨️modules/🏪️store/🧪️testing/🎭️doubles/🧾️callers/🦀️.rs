@@ -83,7 +83,7 @@ pub fn artifact_envelope_decode_test_cursor(chunks: &[&[u8]]) -> OwnedSchemaReco
         pages.admit_page(page).unwrap_or_else(|_| panic!("admitted envelope page"));
     }
     pages.seal().expect("sealed envelope pages");
-    let tokens = OwnedSchemaTokenCursor::try_new(semio_framework_job::OperationId(91), semio_framework_job::Generation(7), pages).unwrap_or_else(|_| panic!("sealed envelope token cursor"));
+    let tokens = OwnedSchemaTokenCursor::try_new(None, pages).unwrap_or_else(|_| panic!("sealed envelope token cursor"));
     OwnedSchemaRecordCursor::try_new(artifact_envelope_owned_schema(), tokens).unwrap_or_else(|_| panic!("valid envelope schema"))
 }
 

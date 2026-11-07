@@ -270,10 +270,7 @@ const longInSourceSuites = [
   resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts"),
   resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🟦️.tsx"),
 ] as const;
-const exhaustiveInSourceSuites = [
-  ...longInSourceSuites,
-  resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🟦️.tsx"),
-] as const;
+const exhaustiveTestSuites = [elementSuite("📃️UiDocumentStore", "🧪️suite", "tsx")] as const;
 
 export default defineConfig({
   root: testRoot,
@@ -285,7 +282,7 @@ export default defineConfig({
       { find: exactPackage("@semio-tech/assets"), replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🟦️.ts") },
       { find: exactPackage("@semio-tech/ui-styling"), replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript") },
       { find: exactPackage("@semio-tech/framework-os"), replacement: resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts") },
-      { find: packageTree("@semio-tech/framework-os-node-graph-rs"), replacement: wasmEngineStub },
+      { find: /^@semio-tech\/framework-os-node-graph-rs(?:\/(?!index$|testing\/).*)?$/u, replacement: wasmEngineStub },
       { find: packageTree("@semio-tech/framework-surface-rs"), replacement: wasmEngineStub },
       { find: exactPackage("@semio-tech/framework-editor-rs/testing/fixtures"), replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/✍️editor/🧪️tests/🧫️fixtures/🟦️.ts") },
       { find: packageTree("@semio-tech/framework-editor-rs"), replacement: wasmEngineStub },
@@ -303,13 +300,13 @@ export default defineConfig({
     env: { SEMIO_PROCEDURAL_COMPOSITION_DESCRIPTOR: resolve(repoRoot, "./🌎️hub/🧩️compositions/🌀️procedural/🧩️component/🔣️.json") },
     coverage: { include: ["../../🟦️.tsx"] },
     exclude: [...configDefaults.exclude, ...playwrightEngineTestSuites, ...rootPolicySelfTestSuites],
-    include: (includeAgentBridge ? agentBridgeTestSuites : testLevel === "fundamental" || testLevel === "quick" ? [quickTestSuite] : [...engineTestSuites]).map(path => path.replaceAll("\\", "/")),
+    include: (includeAgentBridge ? agentBridgeTestSuites : testLevel === "fundamental" || testLevel === "quick" ? [quickTestSuite] : testLevel === "exhaustive" ? [...engineTestSuites, ...exhaustiveTestSuites] : [...engineTestSuites]).map(path => path.replaceAll("\\", "/")),
     testNamePattern: testLevel === "fundamental" ? /validates the language-neutral renderer resident capacity with the Node oracle/ : undefined,
     // 🧪️ In-source (`import.meta.vitest`) suites in the `🧑‍🎨engine/🧱️elements/` co-location dirs —
     // NOT under this package's own `root`, so the default `include` glob never finds them. Fundamental
     // and quick deliberately select the bounded resident-composition file; long restores the default
     // package corpus plus moderate in-source suites; exhaustive adds the expensive incremental ownership
     // matrices. A file must never appear in both `include` and `includeSource`, which would double-count it.
-    includeSource: (includeAgentBridge ? [] : includeBackboneWorker ? [backboneWorkerSuite] : testLevel === "exhaustive" ? [...exhaustiveInSourceSuites] : testLevel === "long" ? [...longInSourceSuites] : []).map(path => path.replaceAll("\\", "/")),
+    includeSource: (includeAgentBridge ? [] : includeBackboneWorker ? [backboneWorkerSuite] : testLevel === "exhaustive" ? [...longInSourceSuites] : testLevel === "long" ? [...longInSourceSuites] : []).map(path => path.replaceAll("\\", "/")),
   },
 });

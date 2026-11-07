@@ -17,5 +17,4 @@ export function verifyThermalBalanceOracle():void{
   const independent=(lusolve(matrix,[180,440+row.delivered]) as number[][]).flat();for(let i=0;i<2;i++)assert(Math.abs(independent[i]!-settled[i]!)<=fixture.tolerance,row.id+" Mathjs");
   assert(Math.abs(13*settled[0]!-3*settled[1]!-180)<=fixture.tolerance,row.id+" face residual");assert(Math.abs(-3*settled[0]!+23*settled[1]!-440-row.delivered)<=fixture.tolerance,row.id+" air residual");
  }
- console.log("[DEBUG] retained Energy thermal "+fixture.cases.length+" free/constrained/partial-delivery cases matched actual Mathjs and both source balance residuals");
 }

@@ -81,8 +81,7 @@ pub enum OwnedSchemaTokenStep {
 pub struct OwnedSchemaTokenCursor {
     pub(crate) pages: OwnedSchemaDecodePages,
     pub(super) state: OwnedSchemaLexState,
-    pub(super) operation: semio_framework_job::OperationId,
-    pub(super) generation: semio_framework_job::Generation,
+    pub(super) replacement: Option<semio_framework_job::ReplacementIdentity>,
     pub(super) offset: usize,
     pub(super) line: u32,
     pub(super) column: u32,
@@ -93,11 +92,11 @@ impl OwnedSchemaTokenCursor {
     pub fn into_pages(self) -> OwnedSchemaDecodePages { self.pages }
 
     /// 🧬️ Begins tokenization only after exact fixed-page admission is sealed.
-    pub fn try_new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, pages: OwnedSchemaDecodePages) -> Result<Self, OwnedSchemaDecodePages> {
+    pub fn try_new(replacement: Option<semio_framework_job::ReplacementIdentity>, pages: OwnedSchemaDecodePages) -> Result<Self, OwnedSchemaDecodePages> {
         if !pages.is_sealed() {
             return Err(pages);
         }
-        Ok(Self { pages, state: OwnedSchemaLexState::Ready, operation, generation, offset: 0, line: 1, column: 1 })
+        Ok(Self { pages, state: OwnedSchemaLexState::Ready, replacement, offset: 0, line: 1, column: 1 })
     }
 
     pub(super) fn diagnostic(&self, code: &'static str, offset: usize) -> OwnedSchemaDecodeDiagnostic {
@@ -185,7 +184,7 @@ impl OwnedSchemaTokenCursor {
 
     /// ⏭️ Advances lexical validation by budgeted bytes and yields at most one schema token.
     pub fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> OwnedSchemaTokenStep {
-        if cx.operation() != self.operation || cx.generation() != self.generation {
+        if cx.replacement_is_stale(self.replacement) {
             let diagnostic = self.diagnostic("schema-json.stale-authority", self.offset);
             self.state = OwnedSchemaLexState::Fault(diagnostic);
             return OwnedSchemaTokenStep::Fault(diagnostic);

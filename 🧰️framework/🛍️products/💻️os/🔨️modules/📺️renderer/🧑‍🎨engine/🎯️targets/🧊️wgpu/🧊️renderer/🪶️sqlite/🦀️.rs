@@ -33,17 +33,17 @@ impl ArtifactSqliteSnapshotHost for NativeSocketProbeSnapshot{
  
  
  
- fn decode_sqlite_snapshot_native(payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,ValueError>{
- let native=native_owner.native();
+ fn decode_sqlite_snapshot_native(payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<Self,store::NativeSnapshotFailure>{store::native_snapshot_turn(|work|{
+ let native=native_owner.native();work.performed();
   let input=match payload{IoPayload::Binary(bytes)=>NativeSnapshotInput::Binary(bytes),IoPayload::Text(text)=>NativeSnapshotInput::Text(text)};
   let length=match input{NativeSnapshotInput::Binary(bytes)=>bytes.len(),NativeSnapshotInput::Text(text)=>text.len()};physical(length,Phase::DecodeNative,control)?;
-  let before=native.owned_bytes();let result=native.scoped_maximum(maximum(before,control)?,|native|Self::decode_native_snapshot(input,native));control.admit_allocation_bytes(native.owned_bytes()-before)?;result
- }
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::os_store::NativeSnapshotEncodeOwner<'_, '_>)->Result<IoPayload,ValueError>{
-  let native=owner.native();
+  let before=native.owned_bytes();let result=native.scoped_maximum(maximum(before,control)?,|native|Self::decode_native_snapshot(input,native));control.admit_allocation_bytes(native.owned_bytes()-before)?;result.map_err(Into::into)
+ })}
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::os_store::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<IoPayload,store::NativeSnapshotFailure>{store::native_snapshot_turn(|work|{
+  let native=owner.native();work.performed();
   self.preflight_sqlite_snapshot_encoding(encoding,control)?;let encoding=match encoding{SnapshotEncoding::Binary=>NativeSnapshotEncoding::Binary,SnapshotEncoding::Text=>NativeSnapshotEncoding::Text};
-  let before=native.owned_bytes();let result=native.scoped_maximum(maximum(before,control)?,|native|self.encode_native_snapshot(encoding,native));control.admit_allocation_bytes(native.owned_bytes()-before)?;result
- }
+  let before=native.owned_bytes();let result=native.scoped_maximum(maximum(before,control)?,|native|self.encode_native_snapshot(encoding,native));control.admit_allocation_bytes(native.owned_bytes()-before)?;result.map_err(Into::into)
+ })}
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{physical(self.0.len(),Phase::EncodeNative,control)}
 }
 impl pack::snapshot::ArtifactSqliteSnapshot for NativeSocketProbeSnapshot {

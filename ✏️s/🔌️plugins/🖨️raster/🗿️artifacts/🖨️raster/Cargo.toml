@@ -173,6 +173,10 @@ path = "../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome
 path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust"
 package = "semio-os"
 
+[workspace.dependencies.pack]
+path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust"
+package = "semio-framework-pack"
+
 [workspace.dependencies.semio-os-kernel]
 path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
 package = "semio-os-kernel"
@@ -206,6 +210,9 @@ path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packa
 
 [workspace.dependencies.semio-framework-value-native-owned]
 path = "../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-value-native-owned-try-map]
+path = "../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🛡️try-map/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-value-derive]
 path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust"

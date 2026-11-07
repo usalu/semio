@@ -55,6 +55,7 @@ pub(super) struct Fem2dArtifactPreparation {
     pub(super) owners: store::OneItemOwners<Fem2dSnapshot, Fem2dMutation>,
     pub(super) checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     pub(super) cancelled: bool,
+    pub(super) last_work: u64,
 }
 
 impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Fem2dSnapshot, Fem2dMutation> for Fem2dArtifactPreparationFactory {
@@ -100,12 +101,13 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
             owners: store::OneItemOwners::from_request(request),
             checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
             cancelled: false,
+            last_work: 0,
         }), progress))
     }
 }
 
-impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Fem2dSnapshot, Fem2dMutation> for Fem2dArtifactPreparation {
-    fn advance(&mut self, body:usize,grant: store::os_store::one_item::ArtifactStoreOneItemGrant, _receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+impl Fem2dArtifactPreparation {
+    fn advance_owned(&mut self, body:usize,grant: store::os_store::one_item::ArtifactStoreOneItemGrant, _receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         use protocol::{ColdMutation as _, Mutation as _};
         let fault = |message: &'static str| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, message);
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
@@ -147,6 +149,15 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Fem2
         self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
         *self.owners.prepared = Some(prepared);
         Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+    }
+}
+
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Fem2dSnapshot, Fem2dMutation> for Fem2dArtifactPreparation {
+    fn last_turn_work(&self) -> u64 { self.last_work }
+    fn advance(&mut self, body:usize,grant: store::os_store::one_item::ArtifactStoreOneItemGrant, _receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        let step = self.advance_owned(body, grant, _receiving);
+        self.last_work = u64::from(!matches!(step, Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked)));
+        step
     }
 
     fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {

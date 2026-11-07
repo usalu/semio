@@ -26,6 +26,7 @@ semio-framework-schema-composition = { path = "../../../../../../../../../../../
 semio-framework-schema-state = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-raster-raster-diff = { workspace = true }
 semio-s-artifact-raster-raster-model = { workspace = true }

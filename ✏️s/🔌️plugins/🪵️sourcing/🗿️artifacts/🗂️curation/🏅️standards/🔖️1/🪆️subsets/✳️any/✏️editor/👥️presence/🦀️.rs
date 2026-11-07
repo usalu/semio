@@ -28,7 +28,7 @@ impl Default for SourcingCurationPresence {
 }
 
 impl store::ArtifactPresenceSnapshot for SourcingCurationPresence {
-    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, semio_framework_value::ValueError> {
+    fn decode_presence_native(bytes: &[u8], owner: &mut store::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> semio_framework_value::RetainedWorkOutcome<Self, store::io::control::NativeSnapshotFailure> {
         store::decode_presence_json(bytes, owner)
     }
 }

@@ -1,10 +1,12 @@
 {
   "operation": 97146,
   "generation": 17,
-  "fuel": 32768,
+  "fuel": 65536000000,
+  "turnFuel": 2000000,
   "clockUs": 1000,
   "deadlineUs": 1500,
   "maximumTurns": 32768,
+  "maximumIdleTurns": 4096,
   "grant": {
     "maximumItems": 65536,
     "maximumCopyBytes": 134217728,

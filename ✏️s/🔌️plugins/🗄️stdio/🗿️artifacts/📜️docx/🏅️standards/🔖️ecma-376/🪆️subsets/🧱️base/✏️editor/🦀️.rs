@@ -582,3 +582,5 @@ pub fn create_docx_editor() -> semio_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+semio_plugin::retained_command::terminal_frame_bound!(DocxSetPageWork);

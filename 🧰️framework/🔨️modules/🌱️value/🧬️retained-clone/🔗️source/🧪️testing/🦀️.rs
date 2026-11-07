@@ -1,9 +1,39 @@
 //! 🧪️ Root native allocator custody creates and drains actual canonical source fixtures.
 use semio_framework_value_retirement::{RetainedAllocationEffect,RetireOwned,RetirementDemand,RetainedWorkOutcome,RetainedCloneProgress,RetainedCloneStep};
 #[path="../../../♻️retirement/🧪️tests/⏱️work/🦀️.rs"] mod work;
-use semio_framework_value_clone_source::{RetainedCloneSource,RetainedCloneGrant};
+use semio_framework_value_clone_source::{RetainedCloneSource,RetainedCloneGrant,RetainedCloneSourceAdmission,ValueError,ValueRefusalKind};
 const STOCK:RetainedCloneGrant=RetainedCloneGrant{maximum_items:1048576,maximum_copy_bytes:16777216,maximum_capacity_bytes:16777216,maximum_release_bytes:33554432,maximum_depth:256};
 const CPU:u64=1048576;
+/// 🎟️ Drives one staged owned admission to its published source under one repeated grant, returning both inputs after any refusal.
+pub fn admit_owned<A:RetireOwned+Sync+'static,B:RetireOwned>(owner:A,authority:B,grant:RetainedCloneGrant)->RetainedWorkOutcome<(RetainedCloneSource<A>,RetainedCloneProgress),(ValueError,A,B)>{drive(RetainedCloneSource::admission_owned(owner,authority),grant)}
+/// 🎟️ Drives one staged borrowed admission to its published source under one repeated grant, returning the authority after any refusal.
+pub fn admit_borrowed<T:Sync+'static,A:RetireOwned+Sync>(authority:A,project:for<'a> fn(&'a A)->&'a T,grant:RetainedCloneGrant)->RetainedWorkOutcome<(RetainedCloneSource<T,A>,RetainedCloneProgress),(ValueError,A)>{
+ let turn=drive(RetainedCloneSource::admission_borrowed(authority,project),grant);
+ RetainedWorkOutcome{result:turn.result.map_err(|(error,authority,())|(error,authority)),work:turn.work}
+}
+fn unfunded<T:Sync+'static,A:RetireOwned+Sync,B:RetireOwned>(admission:&RetainedCloneSourceAdmission<T,A,B>,grant:RetainedCloneGrant)->ValueError{
+ let kind=match admission.next_demand().or_else(|_|admission.next_return_demand()){Ok(demand)=>if grant.maximum_items==0{ValueRefusalKind::WorkLimit}else if grant.maximum_depth<demand.depth{ValueRefusalKind::DepthLimit}else{ValueRefusalKind::OwnershipLimit},Err(_)=>ValueRefusalKind::OwnershipLimit};
+ ValueError::literal(kind,"original source admission is not funded")
+}
+fn drive<T:Sync+'static,A:RetireOwned+Sync,B:RetireOwned>(mut admission:RetainedCloneSourceAdmission<T,A,B>,grant:RetainedCloneGrant)->RetainedWorkOutcome<(RetainedCloneSource<T,A>,RetainedCloneProgress),(ValueError,A,B)>{
+ let mut total=RetainedCloneProgress::default();let mut work=0u64;
+ for _ in 0..64{
+  if admission.phase()=="ready"{break}
+  let turn=admission.advance(grant);work=work.saturating_add(turn.work);
+  match turn.result{
+   Ok(step)=>{let progress=step.progress();assert!(progress.fits(grant),"fixture admission stage exceeded its grant");total=total.checked_add(progress).expect("fixture admission receipt overflow");if progress==RetainedCloneProgress::default()&&turn.work==0{return {let error=unfunded(&admission,grant);refuse(admission,work,error)}}}
+   Err(error)=>return refuse(admission,work,error),
+  }
+ }
+ let mut output=None;let turn=admission.take_output(&mut output,grant);work=work.saturating_add(turn.work);
+ match turn.result{Ok(step)=>{total=total.checked_add(step.progress()).expect("fixture admission receipt overflow")},Err(error)=>return refuse(admission,work,error)}
+ match output{Some(source)=>RetainedWorkOutcome{result:Ok((source,total)),work},None=>{let error=unfunded(&admission,grant);refuse(admission,work,error)}}
+}
+fn refuse<T:Sync+'static,A:RetireOwned+Sync,B:RetireOwned,R>(mut admission:RetainedCloneSourceAdmission<T,A,B>,work:u64,error:ValueError)->RetainedWorkOutcome<R,(ValueError,A,B)>{
+ let release=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:64};let mut inputs=None;
+ for _ in 0..256{admission.return_inputs(&mut inputs,release).result.expect("fixture admission returns its inputs");if inputs.is_some(){break}}
+ let(owner,authority)=inputs.expect("fixture admission returns both inputs");RetainedWorkOutcome{result:Err((error,owner,authority)),work}
+}
 /// 🔭️ Observes an enclosing fixture scope independently of its canonical inner receipt checks.
 pub fn observe_fixture_source_allocations<T>(operation:impl FnOnce()->T)->(T,(usize,usize)){
  let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(operation);assert!(!heap.overflowed,"fixture source observation overflow");(result,(heap.requested_bytes,heap.released_bytes))

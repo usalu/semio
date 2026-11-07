@@ -35,12 +35,12 @@ impl<T:FieldProjectionSource+RetireOwned+Sync> OwnedProjectedPackWireCursor<T>{
   if let Some(cursor)=self.cursor.as_ref(){return if cursor.terminal_is_empty(){Ok(header())}else{cursor.retirement_demands()}}
   if let Some(source)=self.source.as_ref(){return if source.terminal_is_empty(){Ok(header())}else{source.next_close_demand(body)}}
   if let Some(owner)=self.original_close.as_ref(){return if owner.terminal_is_empty(){Ok(header())}else{owner.selected_demand(body)}}
-  if self.original.is_some(){return Ok(header())}if !self.wire.is_empty(){return Ok(RetirementDemand{copy_bytes:1,depth:self.wire.next_pop_depth_demand().map_err(page_error)?.max(1),..Default::default()})}Ok(RetirementDemand{release_bytes:self.wire.next_release_allocation_bytes().map_err(page_error)?,depth:self.wire.next_release_depth_demand().map_err(page_error)?.max(1),..Default::default()})
+  if self.original.is_some(){return Ok(header())}if !self.wire.is_empty(){return Ok(RetirementDemand{copy_bytes:self.wire.len().min(body).min(64),depth:self.wire.next_pop_depth_demand().map_err(page_error)?.max(1),..Default::default()})}Ok(RetirementDemand{release_bytes:self.wire.next_release_allocation_bytes().map_err(page_error)?,depth:self.wire.next_release_depth_demand().map_err(page_error)?.max(1),..Default::default()})
  }
  /// 📏️ Quotes the exact original source, symbol, output or ownership donation selected by this turn.
  pub fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if self.closing{return self.close_demand(body)}
-  if matches!(self.phase,6|7)&&self.pending_offset<self.pending_length{return Ok(RetirementDemand{copy_bytes:usize::from(body!=0),depth:1,..Default::default()})}
+  if matches!(self.phase,6|7)&&self.pending_offset<self.pending_length{return Ok(RetirementDemand{copy_bytes:(self.pending_length-self.pending_offset).min(body),depth:1,..Default::default()})}
   Ok(match self.phase{
    0=>match self.admission.as_ref(){Some(admission) if admission.phase()!="ready"=>admission.next_demand()?,_=>header()},
    1|6=>{let cursor=self.cursor.as_ref().ok_or_else(||invalid("original Pack codec is absent"))?;RetirementDemand{copy_bytes:cursor.next_minimum_copy_bytes(),capacity_bytes:cursor.next_capacity_byte_demand()?,depth:cursor.next_advance_depth_demand()?,..Default::default()}},

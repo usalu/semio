@@ -27,3 +27,4 @@ semio-framework-value-retained-clone = { path = "../../../🧬️contract/📦�
 semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value-testing-allocator = { path = "../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
+semio-framework-value-clone-source-testing = { path = "../../../🔗️source/🧪️testing/📦️packages/🦀️rust" }

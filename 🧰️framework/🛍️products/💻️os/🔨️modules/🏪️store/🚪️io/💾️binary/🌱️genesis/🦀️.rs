@@ -3,8 +3,7 @@
 use semio_framework_pack_json_retained_schema::{OwnedSchemaToken, OwnedSchemaTokenKind, OwnedSchemaDecodeDiagnostic, OwnedSchemaRecordCursor};
 use crate::ArtifactEnvelopeFreshVcsAuthority;
 pub struct ArtifactGenesisPackCapture {
-    pub operation: semio_framework_job::OperationId,
-    pub generation: semio_framework_job::Generation,
+    pub replacement: Option<semio_framework_job::ReplacementIdentity>,
     pub token: OwnedSchemaToken,
     pub relative: usize,
     pub bytes: Vec<u8>,
@@ -20,10 +19,10 @@ impl ArtifactGenesisPackCapture {
         if token.kind != OwnedSchemaTokenKind::String || extent == 0 || extent & 1 != 0 { return Err(ArtifactEnvelopeFreshVcsAuthority::<(), ()>::diagnostic("artifact-envelope.genesis-pack-hex")); }
         let mut bytes = Vec::new();
         bytes.try_reserve_exact(extent / 2).map_err(|_| ArtifactEnvelopeFreshVcsAuthority::<(), ()>::diagnostic("artifact-envelope.genesis-pack-capacity"))?;
-        Ok(Self { operation: cx.operation(), generation: cx.generation(), token, relative: 1, bytes, hasher: semio_framework_hash::Hasher::new(), complete: false, high: None })
+        Ok(Self { replacement: cx.replacement_capture(), token, relative: 1, bytes, hasher: semio_framework_hash::Hasher::new(), complete: false, high: None })
     }
     pub fn step(&mut self, source: &OwnedSchemaRecordCursor, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, OwnedSchemaDecodeDiagnostic> {
-        if cx.operation() != self.operation || cx.generation() != self.generation || cx.is_cancelled() { return Err(ArtifactEnvelopeFreshVcsAuthority::<(), ()>::diagnostic("artifact-envelope.genesis-pack-stale")); }
+        if cx.replacement_is_stale(self.replacement) || cx.is_cancelled() { return Err(ArtifactEnvelopeFreshVcsAuthority::<(), ()>::diagnostic("artifact-envelope.genesis-pack-stale")); }
         cx.set_stage("artifact-genesis-pack");
         while !self.complete && !cx.should_yield() && cx.fuel_remaining() != 0 {
             if self.token.start + self.relative as u64 + 1 >= self.token.end { self.complete = true; break; }

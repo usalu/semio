@@ -71,7 +71,7 @@ describe("framework renderer hosts", () => {
       expect(naturalMediaDescriptorMatchesV1({ portId: "artifact:native", kindId: row.formatKind, wire: { kind: "binary", format_kind: row.formatKind } }, format)).toBe(true);
       expect(naturalMediaDescriptorMatchesV1({ portId: "artifact:native", kindId: row.formatKind, wire: { Binary: { format_kind: row.formatKind } } }, format)).toBe(false);
     }
-    const unsupported = { id: naturalFileLifecycleFixture.unsupported[0]!.appId, actions: [], io: { exportFormats: [], importFormats: [] }, windowKinds: [{ actions: [] }] } as unknown as AppDefinition;
+    const unsupported = { id: "s.fixture.unsupported@1/*#editor", actions: [], io: { exportFormats: [], importFormats: [] }, windowKinds: [{ actions: [] }] } as unknown as AppDefinition;
     expect(naturalFileFormatV1(unsupported)).toBeNull();
     const matched = definition(naturalFileLifecycleFixture.formats[0]!);
     const mismatched = { ...matched, io: { ...matched.io, importFormats: [] } } as AppDefinition;

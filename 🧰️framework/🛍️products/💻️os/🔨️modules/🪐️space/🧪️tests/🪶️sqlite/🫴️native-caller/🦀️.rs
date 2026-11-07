@@ -28,12 +28,12 @@ macro_rules! original_native_caller {
             assert_eq!(native.owned_bytes(), accepted.load(Ordering::Relaxed));
             let held = native.has_retirement_owner();
             let denied = serde_json::from_value::<semio_framework_value::RetainedCloneGrant>(law["deniedCloseGrant"].clone()).unwrap();
-            assert_eq!(native.close_retirement_recipient(denied).unwrap().progress(), Default::default());
+            assert_eq!(native.close_retirement_recipient(denied).result.unwrap().progress(), Default::default());
             assert_eq!(native.has_retirement_owner(), held);
             original_continuation(&mut native);
             for _ in 0..law["maximumCloseTurns"].as_u64().unwrap() {
                 if !native.has_retirement_owner() { return result; }
-                assert!(native.close_retirement_recipient(close).unwrap().progress().fits(close));
+                assert!(native.close_retirement_recipient(close).result.unwrap().progress().fits(close));
             }
             assert!(!native.has_retirement_owner(), "original native caller did not reach funded terminal");
             result
@@ -73,10 +73,10 @@ pub fn with_native_control<T>(operation: impl FnOnce(&mut store::io::io_mechanis
         operation(&mut control)
     };
     while decode.has_retirement_owner() {
-        decode.close_retirement_recipient(grant).expect("the decode recipient closes under the run grant");
+        decode.close_retirement_recipient(grant).result.expect("the decode recipient closes under the run grant");
     }
     while encode.has_retirement_owner() {
-        encode.close_retirement_recipient(grant).expect("the encode recipient closes under the run grant");
+        encode.close_retirement_recipient(grant).result.expect("the encode recipient closes under the run grant");
     }
     result
 }

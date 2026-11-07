@@ -283,7 +283,7 @@ fn member_hydration_ready_auxiliary_retains_empty_capacity_until_paid_close() {
         expected: ManuallyDrop::new(None), owner: ManuallyDrop::new(None), schema: ManuallyDrop::new(None), envelope: ManuallyDrop::new(None),
         runtime: ManuallyDrop::new(None), initialization_catalog: ManuallyDrop::new(None), replay: ManuallyDrop::new(None), owners: ManuallyDrop::new(None),
         pending_edit: ManuallyDrop::new(None), pending_messages: ManuallyDrop::new(None), active: ManuallyDrop::new(None),
-        operation: OperationId(814), generation: Generation(1), expires_at_us: u64::MAX,
+        operation: OperationId(814), generation: Generation(1), replacement: None, expires_at_us: u64::MAX,
         target: PersistedDocumentHydrationTarget::Store { generation: 0 }, phase: Phase::Finish,
         edit_index: 0, operation_index: 0, record_index: 0, pin_group_index: 0, pin_index: 0, pack_scanned: 0,
         pack_hasher: semio_framework_hash::Hasher::new(), pack_digest: None, diagnostic: None, terminal: true,
@@ -519,17 +519,16 @@ fn authority_hydration() -> (RetainedPersistedDocumentHydration<semio_os_store_t
 }
 
 #[test]
-fn persisted_hydration_authority_is_the_stepping_job_identity_not_the_archive_load_slot() {
+fn persisted_hydration_authority_is_the_current_slot_identity_not_the_stepping_caller_identity() {
     let step_under = |bind: bool| {
         let (mut hydration, turns) = authority_hydration();
         let mut sequence = 0;
         let mut retained = semio_framework_value::RetainedCloneProgress::default();
         let mut cx = StepContext::new(OperationId(900), Generation(7), semio_framework_job::StepBudget::new(1, u64::MAX, semio_framework_value::testing::physical_test_close_grant()), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence, &mut retained);
-        if bind {
-            hydration.operation = cx.operation();
-            hydration.generation = cx.generation();
-        }
-        let stale = matches!(hydration.step(&mut cx, wide_grant()), semio_os_store_document::persisted_document_hydration::PersistedDocumentHydrationStep::Rejected(MemberOpenDiagnostic::Stale));
+        let slot = semio_framework_job::ReplacementIdentity::new(3, OperationId(811), Generation(1));
+        hydration.replacement = Some(slot);
+        let current = if bind { slot } else { semio_framework_job::ReplacementIdentity::new(3, OperationId(811), Generation(2)) };
+        let stale = matches!(cx.with_replacement_current(current, |cx| hydration.step(cx, wide_grant())), semio_os_store_document::persisted_document_hydration::PersistedDocumentHydrationStep::Rejected(MemberOpenDiagnostic::Stale));
         for _ in 0..turns {
             if hydration.terminal_is_empty() { break; }
             hydration.close_step(semio_framework_value::testing::physical_test_close_grant()).result.unwrap();
@@ -537,7 +536,7 @@ fn persisted_hydration_authority_is_the_stepping_job_identity_not_the_archive_lo
         assert!(hydration.terminal_is_empty());
         stale
     };
-    assert!(step_under(false), "a slot-id authority differing from the job identity is Stale");
-    assert!(!step_under(true), "authority bound to the stepping job identity is never Stale");
+    assert!(step_under(false), "a captured slot identity that the store replaced or advanced is Stale");
+    assert!(!step_under(true), "the current slot identity is never Stale, whoever steps it");
 }
 

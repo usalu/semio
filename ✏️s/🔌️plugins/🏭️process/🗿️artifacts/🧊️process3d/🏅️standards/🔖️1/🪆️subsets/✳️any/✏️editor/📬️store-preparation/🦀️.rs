@@ -10,6 +10,7 @@ struct Process3dConfigStorePreparation {
     owners: store::OneItemOwners<Process3dConfig, Process3dConfigMutation>,
     pub(super) checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
+    last_work: u64,
 }
 
 fn process3d_config_retained_bytes(config: &Process3dConfig) -> Option<usize> {
@@ -25,7 +26,7 @@ fn process3d_config_mutation_retained_bytes(mutation: &Process3dConfigMutation) 
     }
 }
 
-fn admit_process3d_config_mutation(mutation: &Process3dConfigMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+pub(crate) fn admit_process3d_config_mutation(mutation: &Process3dConfigMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
     let retained_bytes = process3d_config_mutation_retained_bytes(mutation);
     let envelope = match mutation {
         Process3dConfigMutation::SetContributions(Process3dConfigSetContributions{ .. }) => PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES,
@@ -37,7 +38,7 @@ fn admit_process3d_config_mutation(mutation: &Process3dConfigMutation) -> Result
     Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
 }
 
-fn prepare_process3d_config(base: &Process3dConfig, mutation: &Process3dConfigMutation) -> Result<(Process3dConfig, Vec<Process3dConfigMutation>), String> {
+pub(crate) fn prepare_process3d_config(base: &Process3dConfig, mutation: &Process3dConfigMutation) -> Result<(Process3dConfig, Vec<Process3dConfigMutation>), String> {
     admit_process3d_config_mutation(mutation)?;
     if process3d_config_retained_bytes(base).is_none_or(|bytes| bytes > PROCESS3D_CONFIG_STORE_MAXIMUM_BYTES) {
         return Err("Process3d config base exceeds its fixed retained preparation envelope".into());
@@ -122,13 +123,14 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
             Ok(progress) => progress,
             Err(error) => return Err((error, request)),
         };
-        Ok((Box::new(Process3dConfigStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), cancelled: false }), progress))
+        Ok((Box::new(Process3dConfigStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), last_work: 0, cancelled: false }), progress))
     }
 }
 
 impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Process3dConfig, Process3dConfigMutation> for Process3dConfigStorePreparation {
     fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, _receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         use semio_framework_value::{retained_clone::RetainedCloneProgress, ValueError, ValueRefusalKind};
+        self.last_work = 0;
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -164,8 +166,13 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Proc
             }
         };
         self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
+        self.last_work = 1;
         *self.owners.prepared = Some(prepared);
         Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()))
+    }
+
+    fn last_turn_work(&self) -> u64 {
+        self.last_work
     }
 
     fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
@@ -221,8 +228,8 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Proc
 const PROCESS3D_DOCUMENT_MAXIMUM_ITEMS: usize = 4_096;
 /// 🔤️ Longest single id, label, handle or recipe parameter name the retained lane admits, in either
 /// the base or a mutation payload.
-const PROCESS3D_DOCUMENT_TEXT_BYTES: usize = 256;
-const PROCESS3D_DOCUMENT_MAXIMUM_BYTES: usize = 512 * 1_024;
+pub(crate) const PROCESS3D_DOCUMENT_TEXT_BYTES: usize = 256;
+pub(crate) const PROCESS3D_DOCUMENT_MAXIMUM_BYTES: usize = 512 * 1_024;
 /// 🎟️ What one `advance`/`close_step` turn costs, and the ONLY figure the grant is ever compared
 /// against. The host drives this lane with a fixed `ArtifactStoreOneItemGrant { maximum_items: 1,
 /// maximum_copy_bytes: TYPED_OPERATION_RESULT_PAGE_BYTES }` (4 KiB), so a gate that scaled with the
@@ -230,7 +237,7 @@ const PROCESS3D_DOCUMENT_MAXIMUM_BYTES: usize = 512 * 1_024;
 /// timeline or a workshop outgrew one page, stalling the operation instead of failing it. The base's
 /// own size is a VALIDATION (`process3d_document_bytes`, rejected past
 /// `PROCESS3D_DOCUMENT_MAXIMUM_BYTES`), never the gate.
-const PROCESS3D_DOCUMENT_GRANT_BYTES: usize = 4_096;
+pub(crate) const PROCESS3D_DOCUMENT_GRANT_BYTES: usize = 4_096;
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub(super) struct Process3dArtifactPreparationFactory;
@@ -240,6 +247,7 @@ struct Process3dArtifactPreparation {
     pub(super) checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     retained_bytes: usize,
     cancelled: bool,
+    last_work: u64,
 }
 
 /// 📏️ One text field's own retained cost — rejected rather than truncated past the fixed envelope.
@@ -367,7 +375,7 @@ fn process3d_document_bytes(document: &Process3dSnapshot) -> Result<usize, semio
 /// 📏️ One semantic mutation's own retained bytes, shaped like what it actually addresses: a single step, machine,
 /// stock field or cursor is one item carrying that target's own text, while a created machine or a replaced capability
 /// set is one item per capability leaf it carries — the items bounded by `PROCESS3D_DOCUMENT_MAXIMUM_ITEMS`.
-fn process3d_mutation_retained_bytes(mutation: &Process3dMutation) -> Result<usize, semio_framework_value::ValueError> {
+pub(crate) fn process3d_mutation_retained_bytes(mutation: &Process3dMutation) -> Result<usize, semio_framework_value::ValueError> {
     let (items, retained_bytes) = match mutation {
         Process3dMutation::CreateStep(payload) => (1, process3d_step_bytes(&payload.step)?),
         Process3dMutation::DeleteStep(payload) => (1, process3d_text_bytes(&payload.id)?),
@@ -399,7 +407,7 @@ fn process3d_mutation_retained_bytes(mutation: &Process3dMutation) -> Result<usi
 /// so the retained lane and the batch lane can never diverge. An `Error`/`Fatal` outcome (a duplicate
 /// step id, a missing target) is a REJECTION here, not a silent no-op: `MutationOutcome::error`/
 /// `fatal` force an EMPTY diff, and publishing anyway would write a no-op edit into history.
-fn prepare_process3d_document(base: &Process3dSnapshot, mutation: &Process3dMutation) -> Result<(Process3dSnapshot, Vec<Process3dMutation>), String> {
+pub(crate) fn prepare_process3d_document(base: &Process3dSnapshot, mutation: &Process3dMutation) -> Result<(Process3dSnapshot, Vec<Process3dMutation>), String> {
     process3d_mutation_retained_bytes(mutation).map_err(semio_framework_value::ValueError::into_message)?;
     process3d_document_bytes(base).map_err(semio_framework_value::ValueError::into_message)?;
     let outcome = <Process3dMutation as protocol::ColdMutation<Process3dSnapshot>>::diff(mutation, base);
@@ -463,7 +471,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
             Err(error) => return Err((error, request)),
         };
         Ok((
-            Box::new(Process3dArtifactPreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), retained_bytes: 0, cancelled: false }),
+            Box::new(Process3dArtifactPreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), last_work: 0, retained_bytes: 0, cancelled: false }),
             progress,
         ))
     }
@@ -472,6 +480,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
 impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Process3dSnapshot, Process3dMutation> for Process3dArtifactPreparation {
     fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, _receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         use semio_framework_value::{retained_clone::RetainedCloneProgress, ValueError, ValueRefusalKind};
+        self.last_work = 0;
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -501,6 +510,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Proc
             }
             self.retained_bytes = PROCESS3D_DOCUMENT_GRANT_BYTES;
             self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: PROCESS3D_DOCUMENT_GRANT_BYTES as u64, digest: [0; 32] };
+            self.last_work = 1;
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, RetainedCloneProgress::default()));
         }
         if grant.maximum_copy_bytes < self.retained_bytes {
@@ -519,8 +529,13 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Proc
             }
         };
         self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
+        self.last_work = 1;
         *self.owners.prepared = Some(prepared);
         Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()))
+    }
+
+    fn last_turn_work(&self) -> u64 {
+        self.last_work
     }
 
     fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {

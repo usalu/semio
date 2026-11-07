@@ -68,7 +68,7 @@ impl FlowEvalSession {
         let host=self.state.pending_host.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original evaluation tick Host was not admitted"))?;
         if self.state.tick_evaluation_ready==0{return host.next_evaluation_demands(copy)}
         if !self.state.retirement.terminal_is_empty(){return self.state.retirement.demands(copy)}
-        self.state.pending_tick_display.as_ref().map_or(Ok(RetirementDemand{depth:1,..Default::default()}),|owner|owner.demands(&host.last_eval_json))
+        self.state.pending_tick_display.as_ref().map_or(Ok(RetirementDemand{depth:1,..Default::default()}),|owner|owner.demands(&host.last_eval_json,copy))
     }
     fn tick_display_step(&mut self,grant:RetainedCloneGrant)->Result<FlowEvaluationStep,ValueError>{
         if !self.state.retirement.terminal_is_empty(){let result=self.state.retirement.step(grant);self.state.tick_display_progress=self.state.retirement.step_progress();result?;return Ok(FlowEvaluationStep::Working)}

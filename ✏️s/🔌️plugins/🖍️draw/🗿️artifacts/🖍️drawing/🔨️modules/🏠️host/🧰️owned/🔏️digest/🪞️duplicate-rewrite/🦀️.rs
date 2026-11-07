@@ -84,7 +84,7 @@ impl DrawingDuplicateRewriteAuthority {
     pub fn close_append(&mut self, grant: RetainedCloneGrant) -> Result<bool, &'static str> {
         if !self.append_active { return Ok(true); }
         self.append.begin_close();
-        let step = self.append.close_step(grant).map_err(|_| "drawing-store.duplicate-append-close")?;
+        let step = self.append.close_step(grant).result.map_err(|_| "drawing-store.duplicate-append-close")?;
         if matches!(step, RetainedCloneStep::Complete(_)) && self.append.terminal_is_empty() { self.append = Default::default();self.append_active = false;return Ok(true); }
         Ok(false)
     }
@@ -96,7 +96,7 @@ impl DrawingDuplicateRewriteAuthority {
         }
         let Some(chunk) = source.retained_chunks().get(self.append_chunk) else { self.append_chunk = 0;return Ok(true); };
         self.append_active = true;
-        let step = self.append.advance(chunk.as_str(), &mut self.native_id, grant).map_err(|_| label)?;
+        let step = self.append.advance(chunk.as_str(), &mut self.native_id, chunk.as_str().len(), grant).result.map_err(|_| label)?;
         if matches!(step, RetainedCloneStep::Complete(_)) { self.append_complete = true; }
         Ok(false)
     }
@@ -170,7 +170,7 @@ impl DrawingDuplicateRewriteAuthority {
                 4 => { if matches!(self.retire_displaced_granted(grant).map_err(|_| "drawing-store.duplicate-text-close")?, RetainedCloneStep::Complete(_)) { self.frames[self.depth].phase = 5; }cx.consume_fuel(1); }
                 5 if self.depth == 0 => {
                     self.append_active = true;
-                    let step = self.append.advance(" copy", &mut semio_s_artifact_draw_drawing_model::layer_base_mut(node).name, grant).map_err(|_| "drawing-store.duplicate-name-append")?;
+                    let step = self.append.advance(" copy", &mut semio_s_artifact_draw_drawing_model::layer_base_mut(node).name, " copy".len(), grant).result.map_err(|_| "drawing-store.duplicate-name-append")?;
                     cx.consume_fuel(step.progress().copied_items.max(1) as u64);
                     if matches!(step, RetainedCloneStep::Complete(_)) { self.frames[self.depth].phase = 6; }
                 }
@@ -241,7 +241,7 @@ impl DrawingDuplicateRewriteAuthority {
         if let Some(search) = self.search.as_mut() { search.close();self.search = None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
         if self.append_active {
             self.append.begin_close();
-            let step = self.append.close_step(grant)?;
+            let step = self.append.close_step(grant).result?;
             if matches!(step, RetainedCloneStep::Complete(_)) && self.append.terminal_is_empty() { self.append = Default::default();self.append_active = false; }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }

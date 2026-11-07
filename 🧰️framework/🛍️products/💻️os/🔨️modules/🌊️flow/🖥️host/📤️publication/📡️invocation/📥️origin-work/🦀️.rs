@@ -16,9 +16,9 @@ impl FlowInvocationOriginWork{
   if self.closing{return self.next_close_demands(copy)}self.check(source,window,kind)?;let fields=self.fields.as_ref().unwrap();
   if self.phase==0{let mut demand=self.dependency.as_ref().unwrap().next_demands(source,&fields.pending.as_ref().unwrap().neuron_id,copy)?;demand.depth+=1;return Ok(demand)}
   if self.phase==1{let mut demand=self.dependency.as_ref().unwrap().next_close_demands(copy)?;demand.depth+=1;return Ok(demand)}
-  if self.phase==6&&!fields.identity.complete(){return Ok(fields.identity.demands())}
+  if self.phase==6&&!fields.identity.complete(){return Ok(fields.identity.demands(copy))}
   let mut demand=RetirementDemand{depth:1,..Default::default()};
-  match self.phase{2=>demand.capacity_bytes=window.len(),3=>demand.copy_bytes=usize::from(self.offset<window.len()),4=>demand.capacity_bytes=kind.len(),5=>demand.copy_bytes=usize::from(self.offset<kind.len()),7=>demand.capacity_bytes=Self::version_length(fields),8=>demand.copy_bytes=usize::from(self.offset<Self::version_length(fields)),10=>demand.capacity_bytes=FlowInvocationOriginLease::allocation_bytes(),_=>{}}Ok(demand)
+  match self.phase{2=>demand.capacity_bytes=window.len(),3=>demand.copy_bytes=window.len().saturating_sub(self.offset).min(copy).min(64),4=>demand.capacity_bytes=kind.len(),5=>demand.copy_bytes=kind.len().saturating_sub(self.offset).min(copy).min(64),7=>demand.capacity_bytes=Self::version_length(fields),8=>demand.copy_bytes=Self::version_length(fields).saturating_sub(self.offset).min(copy).min(64),10=>demand.capacity_bytes=FlowInvocationOriginLease::allocation_bytes(),_=>{}}Ok(demand)
  }
  pub fn step(&mut self,source:&dyn FlowSnapshotSource,window:&str,kind:&str,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<FlowInvocationOriginLease>,semio_framework_job::OriginalTurnFailure>{
   let operation=semio_framework_job::OriginalSourceBinding::borrow(cx);if self.operation.is_some_and(|original|!original.matches(cx)){return Err(semio_framework_job::OriginalTurnFailure::debit_original(ValueError::literal(ValueRefusalKind::InvariantViolated,"original invocation origin operation changed"),cx))}

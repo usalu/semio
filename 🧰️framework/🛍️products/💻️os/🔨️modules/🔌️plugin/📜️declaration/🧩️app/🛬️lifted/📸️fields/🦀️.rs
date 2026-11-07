@@ -13,12 +13,13 @@ use semio_os_kernel as store;
 use semio_framework_value::{DslValue,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::{RetirementCursor,RetirementStep,RetireOwned,controlled::ControlledRetirement,arc_custody::SharedControlledRetirement}};
 use std::{mem::ManuallyDrop,sync::Arc};
 
+pub use semio_plugin_decl_emission::ViewLease as ContextViewLease;
 #[derive(semio_framework_value::RetireOwned)]
 pub struct ContextToolRunMetadata{pub tool_id:String,pub identity:semio_framework_tool_run::ToolRunIdentity,pub state:semio_framework_tool_run::ToolRunState,pub progress:semio_framework_tool_run::ToolRunProgress}
 pub struct ContextToolRunSources{pub entities:Arc<std::collections::BTreeSet<u64>>,pub payload:Option<Arc<Vec<u8>>>}
 #[derive(semio_framework_value::RetireOwned)]
 pub struct ContextOwnedFields<D:Send+Sync+'static,T:Send+Sync+'static,M:Send+'static>{
- pub gesture:GestureCapture<M>,pub view_state:Option<std::sync::Arc<ViewModel>>,pub tool_run:Option<ContextToolRunMetadata>,pub original_tool_run:Option<semio_framework_tool_run_presentation::ToolRunCapturedView>,pub draft:ArtifactContextRoot<D>,pub transient:ArtifactContextRoot<T>,pub presence:Option<store::os_store::snapshot_read::ErasedSnapshotRead>,pub window_config:Option<WindowConfigSnapshot>,pub window_transient:Option<WindowTransientSnapshot>,pub provisional:Vec<DslValue>,pub refused_reads:[Option<store::os_store::snapshot_read::ErasedSnapshotRead>;2],pub transient_source_fault:Option<String>,pub draft_source_fault:Option<String>,
+ pub gesture:GestureCapture<M>,pub view_state:Option<ContextViewLease>,pub tool_run:Option<ContextToolRunMetadata>,pub original_tool_run:Option<semio_framework_tool_run_presentation::ToolRunCapturedView>,pub draft:ArtifactContextRoot<D>,pub transient:ArtifactContextRoot<T>,pub presence:Option<store::os_store::snapshot_read::ErasedSnapshotRead>,pub window_config:Option<WindowConfigSnapshot>,pub window_transient:Option<WindowTransientSnapshot>,pub provisional:Vec<DslValue>,pub refused_reads:[Option<store::os_store::snapshot_read::ErasedSnapshotRead>;2],pub transient_source_fault:Option<String>,pub draft_source_fault:Option<String>,
 }
 pub struct ContextOriginalResidual<A:ArtifactApp>{pub children:Arc<ChildContentView>,pub peers:Option<Arc<store::os_store::presence::PresencePeersRoot<A::Presence>>>,pub peer_factory:Option<Arc<dyn store::SnapshotRetirementFactory<A::Presence>>>,pub tool_run:Option<ContextToolRunSources>}
 pub struct ContextRetirementParts<A:ArtifactApp>{pub metadata:ContextOwnedFields<A::Draft,A::Transient,A::Mutation>,pub residual:ContextOriginalResidual<A>}
@@ -77,3 +78,22 @@ impl<A:ArtifactApp> RetirementCursor for Cursor<A>{
  fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl<A:ArtifactApp> Drop for Cursor<A>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"captured original context retains unresolved source graph");}}
+
+#[cfg(test)]
+mod tests{
+ use super::*;
+ fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<16,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:16}}
+ fn drain<T:RetireOwned>(value:T){
+  let mut owner=ControlledRetirement::new(value).unwrap_or_else(|_|panic!("controlled custody"));
+  for _ in 0..64{if owner.terminal_is_empty(){return}owner.step(grant()).expect("retirement step");}
+  assert!(owner.terminal_is_empty(),"retirement reaches its terminal within the bound");
+ }
+ /// 🧩️ LAW: closing a captured context's view lease succeeds while the host window still holds the view, releases exactly its own reference and never waits for sole ownership.
+ #[test]
+ fn closing_a_context_view_lease_succeeds_while_the_window_still_holds_the_view(){
+  let window=Arc::new(ViewModel::new(semio_framework::Locale::En,semio_framework::Terminology::Native));
+  drain(ContextViewLease::new(Arc::clone(&window)));
+  assert_eq!(Arc::strong_count(&window),1,"the lease released exactly its own reference");
+  drain(window);
+ }
+}

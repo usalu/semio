@@ -256,6 +256,9 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️impo
 [workspace.dependencies.semio-s-artifact-draw-drawing-scene]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-draw-drawing-scene-mounted]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧵️mounted/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-draw-drawing-scene-paint]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📦️packages/🦀️rust"
 

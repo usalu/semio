@@ -7,6 +7,7 @@ import { dirname, join } from "node:path";
 import { types } from "@bytecodealliance/jco";
 import ts from "typescript";
 import { APP_CHANNEL_VERSION } from "@semio-tech/framework-os";
+import { decodePackValue, packUInt, type PackValue } from "../../../../../../../../🔨️modules/🎁️packs/🟦️.ts";
 import { originalOperationWorkerSource } from "../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts";
 import { PLUGIN_HOST_SHIM_FILE } from "../../🧾️contract/🟦️.ts";
 import { pluginComponentBridgeSource } from "../../🌉️component-bridge-source/🟦️.ts";
@@ -22,7 +23,7 @@ async function witOracle(): Promise<Oracle> {
   const files = new Map<string, string>(Object.entries(generated).map(([name, bytes]) => [name, new TextDecoder().decode(bytes)]));
   const records = new Map<string, Member[]>();
   const functions = new Map<string, string[]>();
-  for (const name of ["reactor", "jobs"]) {
+  for (const name of ["reactor", "jobs", "checkpoint", "describe", "codec"]) {
     const source = ts.createSourceFile(name + ".d.ts", files.get(`interfaces/semio-framework-${name}.d.ts`)!, ts.ScriptTarget.Latest, true);
     for (const node of source.statements) {
       if (ts.isInterfaceDeclaration(node)) records.set(node.name.text, node.members.filter(ts.isPropertySignature).map((member) => ({ name: member.name.getText(source), optional: member.questionToken !== undefined, type: member.type!.getText(source) })));
@@ -74,30 +75,35 @@ export const reactor = {
   channelVersion: async () => ${version},
   stageCommandPage: async (cursor, bytes) => record("reactor", "stageCommandPage", [cursor, bytes]),
   stageColdPairPage: async (page) => record("reactor", "stageColdPairPage", [page]),
-  admitActorContext: async (input, policy) => { record("reactor", "admitActorContext", [input, policy]); return { input, spent: zero, workUnitsSpent: 0n, ready: true }; },
-  closeActorContext: async (input, policy) => { record("reactor", "closeActorContext", [input, policy]); return { input, spent: { ...zero, copiedItems: 1n }, workUnitsSpent: 0n, complete: true, blocked: false }; },
-  poll: async (events, budget) => {
-    record("reactor", "poll", [events, budget]);
+  admitActorContext: async (budget) => { record("reactor", "admitActorContext", [budget]); return { input: budget.input, spent: zero, workUnitsSpent: 0n, ready: true }; },
+  admitActorInput: async (wire, budget) => { record("reactor", "admitActorInput", [wire, budget]); return { input: budget.input, spent: zero, workUnitsSpent: 0n, ready: true, disposition: "retained" }; },
+  closeActorContext: async (budget) => { record("reactor", "closeActorContext", [budget]); return { input: budget.input, spent: { ...zero, copiedItems: 1n }, workUnitsSpent: 0n, complete: true, blocked: false }; },
+  poll: async (budget) => {
+    record("reactor", "poll", [budget]);
     const cursor = { owner: 0n, generation: 0n, commandIndex: 0, commandCount: 0, instance: 0, seq: 0n, kind: 0, pageIndex: 0, pageCount: 0, itemCount: 0, metadata: 0 };
-    return { retainedReceipt: { input: budget.retained, spent: zero, workUnitsSpent: 0n, remaining: budget.retained.grant, remainingFuel: budget.retained.work.fuel }, uiPatches: [], effects: [], presence: [], nextWake: { tag: "none" }, status: { tag: "idle" }, fuelUsed: 0n, commandIngress: { kind: 0, cursor, fault: new Uint8Array() }, coldPairIngress: { tag: "idle" }, lifecycleReceipt: { tag: "none" }, uiPatchReceipt: { tag: "none" } };
+    return { retainedReceipt: { input: budget.input, spent: zero, workUnitsSpent: 0n, remaining: budget.input.grant, remainingFuel: budget.input.work.fuel }, uiPatches: [], effects: [], presence: [], nextWake: { tag: "none" }, status: { tag: "idle" }, fuelUsed: 0n, commandIngress: { kind: 0, cursor, fault: new Uint8Array() } };
   },
 };
 const call = (input, extra) => ({ input, spent: zero, workUnitsSpent: 0n, ...extra });
 export const jobs = {
-  startJob: async (source, budget) => { record("jobs", "startJob", [source, budget]); return call(budget.input, { admitted: true }); },
+  startJob: async (job, budget) => { record("jobs", "startJob", [job, budget]); return call(budget.input, { admitted: true }); },
   stepJob: async (job, budget) => { record("jobs", "stepJob", [job, budget]); return call(budget.input, { sourceClosed: false, outcome: { tag: "some", val: { job, operation: budget.input.operation, generation: budget.input.generation, state: "done", byteLength: 3n } } }); },
   readJobOutput: async (job, budget) => { record("jobs", "readJobOutput", [job, budget]); return call(budget.input, { sourceClosed: false, chunk: { tag: "some", val: { offset: 0n, bytes: { tag: "some", val: new Uint8Array([1, 2, 3]) }, outputClosed: true } } }); },
   acknowledgeJobOutput: async (job, budget) => { record("jobs", "acknowledgeJobOutput", [job, budget]); return call(budget.input, { acknowledged: true, sourceClosed: false }); },
   cancelJob: async (job, budget) => { record("jobs", "cancelJob", [job, budget]); return call(budget.input, { admitted: true }); },
   takeSegmentedDownloadChunk: async () => ({ tag: "none" }),
 };
-export const checkpoint = {};
-export const describe = {};
+export const checkpoint = {
+  checkpoint: async (budget) => { record("checkpoint", "checkpoint", [budget]); return new Uint8Array([7]); },
+  restore: async (budget) => { record("checkpoint", "restore", [budget]); },
+};
+export const describe = { describe: async (budget) => { record("describe", "describe", [budget]); return new Uint8Array([8]); } };
+export const codec = { packSchemaHash: async (budget) => { record("codec", "packSchemaHash", [budget]); return new Uint8Array(32); } };
 `;
 
 const SHAPE = { maxEffects: 1, maxPatchBytes: 2, maxFrames: 3 };
-const zeroProgress = { copiedItems: 0n, copiedBytes: 0n, retainedCapacityBytes: 0n, releasedBytes: 0n };
-const wireReceipt = (budget: any) => ({ input: budget.retained, spent: zeroProgress, workUnitsSpent: 0n, remaining: budget.retained.grant, remainingFuel: budget.retained.work.fuel });
+const u = (value: number) => packUInt(BigInt(value));
+const decodedWire = (call: readonly [string, string, readonly unknown[]]): PackValue => decodePackValue(call[2][0] as Uint8Array);
 
 test("the generated component bridge calls the reactor and jobs exports with exactly the WIT parameters", async () => {
   const oracle = await witOracle();
@@ -115,15 +121,25 @@ test("the generated component bridge calls the reactor and jobs exports with exa
     await api.startJob!(7n, "semio.kind", new Uint8Array([9]));
     expect(await api.stepJob!(7n, { fuel: 1n, deadlineMs: 5 })).toEqual({ status: "done", value: new Uint8Array([1, 2, 3]) });
     await api.cancelJob!(7n);
+    await api.checkpoint!();
+    await api.restore!(new Uint8Array([4, 5]));
+    await api.describe!();
+    await api.codec!({ operation: "pack-schema-hash", artifactKind: "cad" });
     await api.closeOriginal!();
-    expect(calls.map(([owner, name]) => `${owner}.${name}`)).toEqual(["reactor.admitActorContext", "reactor.poll", "jobs.startJob", "jobs.stepJob", "jobs.readJobOutput", "jobs.acknowledgeJobOutput", "jobs.cancelJob", "reactor.closeActorContext"]);
+    expect(calls.map(([owner, name]) => `${owner}.${name}`)).toEqual(["reactor.admitActorContext", "reactor.admitActorInput", "reactor.poll", "reactor.admitActorInput", "jobs.startJob", "jobs.stepJob", "jobs.readJobOutput", "jobs.acknowledgeJobOutput", "jobs.cancelJob", "checkpoint.checkpoint", "reactor.admitActorInput", "checkpoint.restore", "describe.describe", "reactor.admitActorInput", "codec.packSchemaHash", "reactor.closeActorContext"]);
     for (const call of calls) conformsCall(oracle, call);
-    const poll = calls.find(([, name]) => name === "poll")![2][1] as any;
-    expect(poll.retained.work).toEqual({ clockBinding: 3n, absoluteDeadlineUs: 60_000_005n, fuel: 1000n });
-    expect(poll.retainedPolicy).toEqual(poll.retained.grant);
-    expect(poll.workFuel).toBe(1000n);
-    const start = calls.find(([, name]) => name === "startJob")![2] as any[];
-    expect(start[0]).toEqual({ job: 7n, kind: "semio.kind", input: new Uint8Array([9]) });
+    const poll = calls.find(([, name]) => name === "poll")![2][0] as any;
+    expect(poll.input.work).toEqual({ clockBinding: 3n, absoluteDeadlineUs: 60_000_005n, fuel: 1000n });
+    expect(poll.retainedPolicy).toEqual(poll.input.grant);
+    expect(poll.fuel).toBe(1000n);
+    expect(poll.cancelled).toBe(false);
+    const wires = calls.filter(([, name]) => name === "admitActorInput").map(decodedWire);
+    expect(wires).toEqual([
+      { operation: "poll", events: [], shape: { maxEffects: u(1), maxPatchBytes: u(2), maxFrames: u(3) } },
+      { operation: "start-job", source: { job: u(7), kind: "semio.kind", input: [u(9)], checkpoint: null } },
+      { operation: "restore", state: [u(4), u(5)] },
+      { operation: "pack-schema-hash", artifactSchema: "cad" },
+    ]);
   } finally {
     delete (globalThis as Record<string, unknown>).__witCalls;
     rmSync(directory, { recursive: true, force: true });
@@ -147,10 +163,11 @@ test("the document browser actor driver issues its own turns and job crossings w
     await turns.startJob(1n, "kind", new Uint8Array());
     expect(await turns.stepJob(1n, { deadlineMs: 2 })).toEqual({ status: "done", value: new Uint8Array([1, 2, 3]) });
     await turns.cancelJob(1n);
-    expect(calls.map(([owner, name]) => `${owner}.${name}`)).toEqual(["reactor.admitActorContext", "reactor.poll", "reactor.poll", "jobs.startJob", "jobs.stepJob", "jobs.readJobOutput", "jobs.acknowledgeJobOutput", "jobs.cancelJob"]);
+    expect(calls.map(([owner, name]) => `${owner}.${name}`)).toEqual(["reactor.admitActorContext", "reactor.admitActorInput", "reactor.poll", "reactor.admitActorInput", "reactor.poll", "reactor.admitActorInput", "jobs.startJob", "jobs.stepJob", "jobs.readJobOutput", "jobs.acknowledgeJobOutput", "jobs.cancelJob"]);
     for (const call of calls) conformsCall(oracle, call);
-    const epochs = calls.filter(([, name]) => name === "poll").map(([, , args]) => (args[1] as any).retained.epoch);
-    expect(epochs).toEqual([2n, 3n]);
+    const epochs = calls.filter(([, name]) => name === "poll").map(([, , args]) => (args[0] as any).input.epoch);
+    expect(epochs).toEqual([3n, 5n]);
+    expect(calls.filter(([, name]) => name === "admitActorInput").map(decodedWire)[1]).toEqual({ operation: "poll", events: [{ tag: "wake" }], shape: { maxEffects: u(1), maxPatchBytes: u(2), maxFrames: u(3) } });
   } finally {
     delete (globalThis as Record<string, unknown>).__witCalls;
     rmSync(directory, { recursive: true, force: true });
@@ -176,7 +193,7 @@ test("the closed document actor module lowers every reactor.poll and jobs invoca
     await actor.invoke(["jobs", "cancelJob"], [3n]);
     await expect(actor.invoke(["reactor", "poll"], [[{ tag: "wake" }, { tag: "wake" }], SHAPE])).rejects.toThrow("a reactor turn admits at most one event");
     await actor.close();
-    expect(calls.map(([owner, name]) => `${owner}.${name}`)).toEqual(["reactor.admitActorContext", "reactor.poll", "jobs.startJob", "jobs.stepJob", "jobs.readJobOutput", "jobs.acknowledgeJobOutput", "jobs.cancelJob"]);
+    expect(calls.map(([owner, name]) => `${owner}.${name}`)).toEqual(["reactor.admitActorContext", "reactor.admitActorInput", "reactor.poll", "reactor.admitActorInput", "jobs.startJob", "jobs.stepJob", "jobs.readJobOutput", "jobs.acknowledgeJobOutput", "jobs.cancelJob"]);
     for (const call of calls) conformsCall(oracle, call);
   } finally {
     delete (globalThis as Record<string, unknown>).__witCalls;
@@ -185,23 +202,29 @@ test("the closed document actor module lowers every reactor.poll and jobs invoca
   }
 });
 
-test("the WIT oracle refuses the pre-WIT shapes the browser host used to send", async () => {
+test("the WIT oracle refuses the pre-admission shapes the browser host used to send", async () => {
   const oracle = await witOracle();
   const grant = { maximumItems: 1n, maximumCopyBytes: 1n, maximumCapacityBytes: 1n, maximumReleaseBytes: 1n, maximumDepth: 1n };
-  const legacyInput = { operation: 1n, generation: 1n, epoch: 1n, grant };
   const work = { clockBinding: 1n, absoluteDeadlineUs: 9n, fuel: 1n };
-  const input = { ...legacyInput, work };
-  const budget = { retained: input, retainedPolicy: grant, workFuel: 1n, fuel: 1n, deadlineUs: 9n, maxEffects: 1, maxPatchBytes: 1, maxFrames: 1 };
-  expect(() => conformsCall(oracle, ["reactor", "poll", [[], budget]])).not.toThrow();
-  expect(() => conformsCall(oracle, ["reactor", "poll", [[], { ...budget, retained: legacyInput }]])).toThrow("missing");
-  const { retainedPolicy, workFuel, ...withoutLoan } = budget;
-  expect(() => conformsCall(oracle, ["reactor", "poll", [[], withoutLoan]])).toThrow("missing");
-  expect(() => conformsCall(oracle, ["reactor", "poll", [[], { ...budget, deadlineMs: 5 }]])).toThrow("deadlineMs is not a field");
-  expect(() => conformsCall(oracle, ["reactor", "admitActorContext", [input]])).toThrow("1 arguments for 2 parameters");
+  const input = { operation: 1n, generation: 1n, epoch: 1n, work, grant };
+  const budget = { input, retainedPolicy: grant, fuel: 1n, deadlineUs: 9n, cancelled: false };
+  expect(() => conformsCall(oracle, ["reactor", "poll", [budget]])).not.toThrow();
+  expect(() => conformsCall(oracle, ["reactor", "admitActorInput", [undefined, budget]])).not.toThrow();
+  expect(() => conformsCall(oracle, ["reactor", "admitActorInput", [new Uint8Array([1]), budget]])).not.toThrow();
+  expect(() => conformsCall(oracle, ["reactor", "poll", [[], budget]])).toThrow("2 arguments for 1 parameters");
+  expect(() => conformsCall(oracle, ["reactor", "poll", [{ ...budget, input: { ...input, work: undefined } }]])).toThrow("missing");
+  const { retainedPolicy, ...withoutLoan } = budget;
+  expect(() => conformsCall(oracle, ["reactor", "poll", [withoutLoan]])).toThrow("missing");
+  expect(() => conformsCall(oracle, ["reactor", "poll", [{ ...budget, deadlineMs: 5 }]])).toThrow("deadlineMs is not a field");
+  expect(() => conformsCall(oracle, ["reactor", "poll", [{ ...budget, workFuel: 1n }]])).toThrow("workFuel is not a field");
+  expect(() => conformsCall(oracle, ["reactor", "admitActorContext", [input, grant]])).toThrow("2 arguments for 1 parameters");
+  expect(() => conformsCall(oracle, ["jobs", "startJob", [{ job: 7n, kind: "kind" }, budget]])).toThrow("is not bigint");
   expect(() => conformsCall(oracle, ["jobs", "startJob", [7n, "kind", new Uint8Array()]])).toThrow("3 arguments for 2 parameters");
   expect(() => conformsCall(oracle, ["jobs", "cancelJob", [7n]])).toThrow("1 arguments for 2 parameters");
   expect(() => conformsCall(oracle, ["jobs", "stepJob", [7n, { fuel: 1n, deadlineMs: 5 }]])).toThrow("is not a field");
-  void retainedPolicy; void workFuel;
+  expect(() => conformsCall(oracle, ["describe", "describe", []])).toThrow("0 arguments for 1 parameters");
+  expect(() => conformsCall(oracle, ["checkpoint", "restore", [new Uint8Array()]])).toThrow("missing RetainedTurnInput");
+  void retainedPolicy;
 });
 
 test("the lowering helpers type-check against the declarations JCO derives from the WIT", async () => {
@@ -214,13 +237,12 @@ test("the lowering helpers type-check against the declarations JCO derives from 
     }
     const probe = join(directory, "probe.ts");
     const module = JSON.stringify(retainedTurn);
-    writeFileSync(probe, `import type { Budget, RetainedGrant, RetainedTurnInput } from "./interfaces/semio-framework-reactor.js";
+    writeFileSync(probe, `import type { ActorContextBudget, RetainedGrant, RetainedTurnInput } from "./interfaces/semio-framework-reactor.js";
 import type { JobBudget } from "./interfaces/semio-framework-jobs.js";
-import { OriginalJobFunds, originalBudgetWit, originalGrantWit, originalTurnWit, type OriginalOperationTurn, type OriginalTurnShape } from ${module};
+import { OriginalJobFunds, originalContextBudgetWit, originalGrantWit, originalTurnWit, type OriginalOperationTurn } from ${module};
 declare const turn: OriginalOperationTurn;
-declare const shape: OriginalTurnShape;
 export const input: RetainedTurnInput = originalTurnWit(turn);
-export const budget: Budget = originalBudgetWit(turn, shape);
+export const budget: ActorContextBudget = originalContextBudgetWit(turn);
 export const grant: RetainedGrant = originalGrantWit(turn.input.grant);
 export const job: JobBudget = new OriginalJobFunds(1n, 0n, 1n).crossing();
 `);

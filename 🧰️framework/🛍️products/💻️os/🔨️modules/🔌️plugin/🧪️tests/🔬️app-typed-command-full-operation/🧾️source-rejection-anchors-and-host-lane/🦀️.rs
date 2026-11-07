@@ -150,3 +150,22 @@
         assert!(source[command..].contains("A::original_host_configuration(command_id).is_some()"));
         for cold in ["A::host_configuration_mutation(","admit_host_configuration_json(","OpBinary::encode_op(&config_mutation)","dispatch_emit(command_id, Emit::config"]{assert!(!source.contains(cold),"cold host producer route returned: {cold}");}
     }
+
+    /// 🧩️ LAW: the retained command job retires its completion alias before the boxed original context, in both the close step and its demand quote. The sealed context retirement waits for every live alias, so retiring it first strands the job in zero-progress close forever.
+#[test]
+    fn retained_command_job_retires_completion_before_the_boxed_context() {
+        let source = module_source("🧵️retained-command/🧵️retained-command-job/🦀️.rs");
+        let close_start = source.find("fn close_one_original").expect("close step");
+        let close_end = source[close_start..].find("pub fn close_demands").map(|offset| close_start + offset).expect("close step end");
+        let close = &source[close_start..close_end];
+        let completion = close.find("self.completion.take()").expect("completion retirement");
+        let completion_retirement = close.find("self.completion_retirement.as_mut()").expect("completion retirement cursor");
+        let context = close.find("self.input_retirement.is_some()").expect("boxed context retirement");
+        assert!(completion < context && completion_retirement < context, "completion retires before the boxed context in the close step");
+        let demands_start = close_end;
+        let demands = &source[demands_start..];
+        let completion = demands.find("self.completion.is_some()").expect("completion demand");
+        let completion_retirement = demands.find("self.completion_retirement.as_ref()").expect("completion cursor demand");
+        let context = demands.find("artifact_retirement_box_demands(owner,copy)").expect("boxed context demand");
+        assert!(completion < context && completion_retirement < context, "completion is quoted before the boxed context in the demand quote");
+    }

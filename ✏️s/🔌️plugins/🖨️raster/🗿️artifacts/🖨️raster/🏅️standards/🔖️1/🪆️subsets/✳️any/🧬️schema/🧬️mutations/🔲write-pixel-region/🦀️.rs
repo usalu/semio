@@ -9,7 +9,7 @@ use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 
 //#region 🔖️Payload
 /// 🔲 `width × height` RGBA8 `samples`, row-major, written at `(x, y)` of `layer_id`'s `target` image (`pixels` or `mask`).
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -75,6 +75,7 @@ pub fn inverse<Op: From<crate::write_pixel_region::WritePixelRegion>>(payload: &
 
 //#region 🔖️Kind
 impl<Op> protocol::MutationKind<RasterSnapshot, Op> for WritePixelRegion where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::write_pixel_region::WritePixelRegion> {
+
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "pixel-region", kind: "write-pixel-region", record: "WrittenPixelRegion" };
 
     fn label(&self) -> semio_ui_locale::LocalizedLabel {
