@@ -1,0 +1,9 @@
+/** 🧪️ The original physical payout requires its actual issuer, Work, grant and free destination. */
+import {test,expect} from "bun:test";
+import {Database} from "bun:sqlite";
+import Ajv from "ajv";
+import cases from "./payout.json";
+import schema from "./payout.schema.json";
+test("original receipt payout preserves distinct acceptance",()=>{const validate=new Ajv({strict:true}).compile(schema);expect(validate(cases)).toBe(true);const db=new Database(":memory:");try{const sql=db.query("select (?1 and ?2 and ?3 and ?4 and ?5) stage, (?1 and ?2 and ?3 and ?4 and ?5 and ?6) publish");for(const c of cases){const result=sql.get(+c.issuer,+c.work,+c.grant,+c.vacant,+c.refused,+c.accepted) as {stage:number,publish:number};expect(Boolean(result.stage)).toBe(c.stage);expect(Boolean(result.publish)).toBe(c.publish)}}finally{db.close()}});
+
+test("terminal failure starts with a finite Source stock",()=>{const stock=require("./failure-stock.json"),shape=require("./failure-stock.schema.json");expect(new Ajv({strict:true}).compile(shape)(stock)).toBe(true);const db=new Database(":memory:");try{const row=db.query("select json_extract(?1, '$.copyBytes') copyBytes, json_extract(?1, '$.fuel') fuel").get(JSON.stringify(stock)) as {copyBytes:number,fuel:number};expect(row).toEqual({copyBytes:stock.copyBytes,fuel:stock.fuel});const bounded=db.query("select ?1*?2+?3 copyBytes, ?1*?4 capacityBytes, ?1*?5+?6 fuel, ?1*?7+?8 items").get(stock.retirementCycles,stock.copyBytesPerCycle,stock.fixedCopyReserve,stock.capacityBytesPerCycle,stock.workPerCycle,stock.fixedWorkReserve,stock.itemsPerCycle,stock.fixedItems) as {copyBytes:number,capacityBytes:number,fuel:number,items:number};expect(bounded).toEqual({copyBytes:stock.copyBytes,capacityBytes:stock.capacityBytes,fuel:stock.fuel,items:stock.items});expect(stock.releaseBytes).toBe(stock.capacityBytes+stock.fixedReleaseReserve)}finally{db.close()}});

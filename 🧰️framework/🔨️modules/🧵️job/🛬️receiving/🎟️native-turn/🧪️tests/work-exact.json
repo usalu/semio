@@ -1,0 +1,32 @@
+[
+  {
+    "priorHi": 0,
+    "priorLo": 0,
+    "deltaHi": 0,
+    "deltaLo": 3,
+    "fuel": 5,
+    "nextHi": 0,
+    "nextLo": 3,
+    "remaining": 2
+  },
+  {
+    "priorHi": 0,
+    "priorLo": 0,
+    "deltaHi": 0,
+    "deltaLo": 8,
+    "fuel": 5,
+    "nextHi": 0,
+    "nextLo": 8,
+    "remaining": 0
+  },
+  {
+    "priorHi": 18446744073,
+    "priorLo": 709551615,
+    "deltaHi": 0,
+    "deltaLo": 1,
+    "fuel": 1,
+    "nextHi": 18446744073,
+    "nextLo": 709551616,
+    "remaining": 0
+  }
+]

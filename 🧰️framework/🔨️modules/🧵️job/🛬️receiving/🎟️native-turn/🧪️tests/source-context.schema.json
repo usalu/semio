@@ -1,0 +1,23 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "actualSource",
+      "lockReleased",
+      "callback"
+    ],
+    "properties": {
+      "actualSource": {
+        "type": "boolean"
+      },
+      "lockReleased": {
+        "type": "boolean"
+      },
+      "callback": {
+        "type": "boolean"
+      }
+    }
+  }
+}

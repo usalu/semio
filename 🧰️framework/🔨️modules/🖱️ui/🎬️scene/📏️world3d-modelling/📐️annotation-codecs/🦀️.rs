@@ -13,7 +13,7 @@ impl World3dAnnotation {
     }
 
     pub fn marker(id: impl Into<String>, position: World3dVec3, text: World3dText) -> Self {
-        Self::Marker(World3dMarker { id: id.into(), position, shape: World3dMarkerShape::Dot, text, tone: World3dTone::Neutral })
+        Self::Marker(World3dMarker { id: id.into(), position, shape: World3dMarkerShape::Dot, axis: None, text, tone: World3dTone::Neutral })
     }
 
     pub fn leader(id: impl Into<String>, anchor: World3dVec3, label_offset_px: [f64; 2], text: World3dText) -> Self {
@@ -70,7 +70,12 @@ impl World3dAnnotation {
                     return Err(refuse("radiusPx must be within 16..256"));
                 }
             }
-            Self::Marker(item) => vec3_finite(&item.position, "position")?,
+            Self::Marker(item) => {
+                vec3_finite(&item.position, "position")?;
+                if let Some(axis) = &item.axis {
+                    vec3_nonzero(axis, "axis")?;
+                }
+            }
             Self::Leader(item) => {
                 vec3_finite(&item.anchor, "anchor")?;
                 if !item.label_offset_px.iter().all(|component| component.is_finite()) {
@@ -110,6 +115,7 @@ impl ToValue for World3dAnnotation {
                 push(&mut entries, "id", &item.id);
                 push(&mut entries, "position", &item.position);
                 push(&mut entries, "shape", &item.shape);
+                push_option(&mut entries, "axis", &item.axis);
                 push(&mut entries, "text", &item.text);
                 push(&mut entries, "tone", &item.tone);
             }
@@ -147,8 +153,8 @@ impl FromValue for World3dAnnotation {
                 })
             }
             "marker" => {
-                let mut fields = Fields::read(value, &["kind", "id", "position", "shape", "text", "tone"])?;
-                Self::Marker(World3dMarker { id: fields.require("id")?, position: fields.require("position")?, shape: fields.or("shape", World3dMarkerShape::Dot)?, text: fields.require("text")?, tone: fields.or("tone", World3dTone::Neutral)? })
+                let mut fields = Fields::read(value, &["kind", "id", "position", "shape", "axis", "text", "tone"])?;
+                Self::Marker(World3dMarker { id: fields.require("id")?, position: fields.require("position")?, shape: fields.or("shape", World3dMarkerShape::Dot)?, axis: fields.option("axis")?, text: fields.require("text")?, tone: fields.or("tone", World3dTone::Neutral)? })
             }
             "leader" => {
                 let mut fields = Fields::read(value, &["kind", "id", "anchor", "labelOffsetPx", "text", "tone"])?;

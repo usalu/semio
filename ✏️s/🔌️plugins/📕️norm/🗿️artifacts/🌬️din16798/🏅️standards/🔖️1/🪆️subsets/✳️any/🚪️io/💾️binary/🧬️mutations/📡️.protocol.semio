@@ -162,3 +162,39 @@ field new-vent-method
 record change-vent-design-airflow tag=40
 field vent-id
 field new-design-airflow-m3-h
+
+record change-zone-name tag=41
+field zone-id
+field new-name
+
+record change-zone-id tag=42
+field zone-id
+field new-id
+
+record change-vent-name tag=43
+field vent-id
+field new-name
+
+record change-vent-id tag=44
+field vent-id
+field new-id
+
+record change-vent-fan-flow tag=45
+field vent-id
+field new-fan-q-v-m3-s
+
+record change-vent-fan-run-hours tag=46
+field vent-id
+field new-fan-t-run-h
+
+record change-vent-duct-test-pressure tag=47
+field vent-id
+field new-duct-test-pressure-pa
+
+record change-vent-humidification-required tag=48
+field vent-id
+field new-humidification-required-kg-h
+
+record change-vent-humidification-provided tag=49
+field vent-id
+field new-humidification-provided-kg-h

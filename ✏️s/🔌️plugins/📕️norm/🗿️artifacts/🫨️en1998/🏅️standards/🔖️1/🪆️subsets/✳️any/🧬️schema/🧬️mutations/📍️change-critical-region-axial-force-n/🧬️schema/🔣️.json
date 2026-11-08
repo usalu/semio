@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-critical-region-axial-force-n/schema.json",
+  "title": "ChangeCriticalRegionAxialForceN",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newAxialForceN"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeCriticalRegionAxialForceN"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "CriticalRegion",
+          "de": "Kritischer Bereich"
+        },
+        "description": {
+          "en": "The criticalRegion this mutation addresses, by id.",
+          "de": "Das adressierte Element (Kritischer Bereich), per Kennung."
+        },
+        "ref": {
+          "kind": "criticalRegion"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newAxialForceN": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Axial force",
+          "de": "Normalkraft"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.01,
+        "precision": 3
+      }
+    }
+  }
+}

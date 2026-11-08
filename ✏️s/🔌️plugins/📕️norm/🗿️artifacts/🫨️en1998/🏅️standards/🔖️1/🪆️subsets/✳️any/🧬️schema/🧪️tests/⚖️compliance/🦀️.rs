@@ -2064,3 +2064,33 @@ async fn the_showcase_isolation_system_settles_a_consistent_equivalent_linear_st
     assert!((law.force_n(d) - force).abs() < 1e-9 * force);
     assert!((showcase_check(&report, "en1998.isolation.iso-1.damping").computed.value - law.state(d, mass).damping).abs() < 1e-9);
 }
+
+#[semio_framework_async_macros::async_test]
+async fn spec_rows_and_new_references_match_rust() {
+    let script = family_any_dir().join("🔮️oracles/⚖️compliance/🐍️.py");
+    let run = |flag: &str| {
+        let output = semio_s_plugin_norm_compliance::python_oracle::command().arg(&script).arg(flag).output().expect("oracle");
+        assert!(output.status.success(), "{flag}: {}", String::from_utf8_lossy(&output.stderr));
+        serde_json::from_slice::<serde_json::Value>(&output.stdout).expect("json")
+    };
+    let rows = run("--spec-rows");
+    for id in ["SEI-06", "SEI-48", "SEI-52", "GE-06", "GE-08", "BR-04", "BR-05", "AS-04", "AS-05", "ST-01", "TW-03"] {
+        let values = rows.get(id).and_then(|row| row.get("values")).and_then(|values| values.as_object()).unwrap_or_else(|| panic!("{id}: no reference values"));
+        assert!(!values.is_empty() && values.values().all(|v| v.as_f64().is_some_and(f64::is_finite)), "{id}: reference values must be finite numbers");
+    }
+    let formulas = run("--formulas");
+    let mut pairs = Vec::new();
+    let mut close = |key: &str, rust: f64| {
+        let oracle = formulas.get(key).and_then(|v| v.as_f64()).unwrap_or_else(|| panic!("oracle key {key} missing"));
+        assert!((oracle - rust).abs() <= 1e-9 * oracle.abs().max(1.0), "{key}: oracle={oracle} rust={rust}");
+        pairs.push((key.to_string(), oracle, rust));
+    };
+    for (key, coefficient) in [("tie_force_b", 0.3), ("tie_force_c", 0.4), ("tie_force_d", 0.6)] {
+        close(key, part_5::tie_force_n(coefficient, 9.81, 1.2, 2.0e6));
+    }
+    close("tie_util_c", part_5::tie_force_n(0.4, 9.81, 1.2, 2.0e6) / part_5::tie_resistance_n(6.0e-4, 435.0e6));
+    let mass = 1.5e6 / 9.81;
+    close("silo_n_ed", part_4::silo_axial_demand_n(mass, 0.6));
+    close("silo_f_h", mass * part_1::design_spectrum_horizontal(0.6, 1.25, 0.05, 0.25, 2.0, 1.5, 0.15));
+    assert_eq!(pairs.len(), 6);
+}

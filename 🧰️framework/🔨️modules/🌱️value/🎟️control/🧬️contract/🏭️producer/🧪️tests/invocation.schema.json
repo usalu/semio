@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fuel",
+    "actionCeilings",
+    "turns",
+    "nestedIdentityPreserved",
+    "foreignProducerRejected",
+    "outsideInvocationAbsent"
+  ],
+  "properties": {
+    "fuel": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "actionCeilings": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "turns": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "action",
+          "work",
+          "mode",
+          "sameAsPrevious",
+          "pending"
+        ],
+        "properties": {
+          "action": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "work": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "mode": {
+            "enum": [
+              "receive",
+              "recover"
+            ]
+          },
+          "sameAsPrevious": {
+            "type": "boolean"
+          },
+          "pending": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "nestedIdentityPreserved": {
+      "const": true
+    },
+    "foreignProducerRejected": {
+      "const": true
+    },
+    "outsideInvocationAbsent": {
+      "const": true
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changePierBasePoissonRatio",
+  "id": "pb-1",
+  "newPoissonRatio": 1.35
+}

@@ -45,10 +45,14 @@ use semio_s_artifact_norm_en1999_mut_patch_load_load::{change_patch_load};
 use semio_s_artifact_norm_en1999_mut_ring_stiffener::{change_ring_depth, change_ring_internal, change_ring_shell_id, change_ring_thickness, change_ring_x};
 use semio_s_artifact_norm_en1999_mut_rows_fatigue_category::{insert_fatigue_category, remove_fatigue_category};
 use semio_s_artifact_norm_en1999_mut_rows_patch_load::{insert_patch_load, remove_patch_load};
-use semio_s_artifact_norm_en1999_mut_rows_ring_stiffener::{insert_ring_stiffener, remove_ring_stiffener};
-use semio_s_artifact_norm_en1999_mut_transverse_stiffener::{change_transverse_girder_id, change_transverse_position, change_transverse_sides, change_transverse_thickness, change_transverse_width, change_conn_load_eccentricity, change_conn_hole_stagger};
+use semio_s_artifact_norm_en1999_mut_rows_ring_stiffener::{insert_ring_stiffener, remove_ring_stiffener}
+use semio_s_artifact_norm_en1999_mut_sheet_profiles::{insert_sheet_profile, remove_sheet_profile}
+use semio_s_artifact_norm_en1999_mut_fire_insulations::{insert_fire_insulation, remove_fire_insulation};;;
+use semio_s_artifact_norm_en1999_mut_transverse_stiffener::{change_transverse_girder_id, change_transverse_position, change_transverse_sides, change_transverse_thickness, change_transverse_width, change_conn_load_eccentricity, change_conn_hole_stagger}
+use semio_s_artifact_norm_en1999_mut_sheet_profiles::{change_sheet_profile_sheet_id, change_sheet_profile_pitch, change_sheet_profile_top_flange, change_sheet_profile_bottom_flange, change_sheet_profile_web_height}
+use semio_s_artifact_norm_en1999_mut_fire_insulations::{change_fire_insulation_fire_id, change_fire_insulation_thickness, change_fire_insulation_conductivity, change_fire_insulation_specific_heat, change_fire_insulation_density};;;
 use semio_s_artifact_norm_en1999_mut_rows_transverse_stiffener::{insert_transverse_stiffener, remove_transverse_stiffener};
-use semio_s_artifact_norm_en1999_model::{TransverseStiffener, RingStiffener, PatchLoad, FatigueCategory, AluminiumConnection, AluminiumMaterial, AluminiumSection, AluminiumShell, ColdFormedSheet, FatigueDetail, FireScenario, Placement, SectionVertex, WeldRun, SupportCondition, AluminiumMember};
+use semio_s_artifact_norm_en1999_model::{TransverseStiffener, RingStiffener, PatchLoad, FatigueCategory, AluminiumConnection, AluminiumMaterial, AluminiumSection, AluminiumShell, ColdFormedSheet, FatigueDetail, FireScenario, Placement, SectionVertex, WeldRun, SupportCondition, AluminiumMember, SheetProfile, FireInsulation};
 use semio_s_artifact_norm_en1999_mut_rows_member_action::{insert_member_action, remove_member_action};
 use semio_s_artifact_norm_en1999_mut_rows_connection_action::{insert_connection_action, remove_connection_action};
 use semio_s_artifact_norm_en1999_mut_rows_section_element::{insert_section_element, remove_section_element};
@@ -245,6 +249,10 @@ pub enum En1999MutationDsl {
     RemovePatchLoad { id: String },
     InsertRingStiffener { index: u32, payload_json: String },
     RemoveRingStiffener { id: String },
+    InsertSheetProfile { index: u32, payload_json: String },
+    RemoveSheetProfile { id: String },
+    InsertFireInsulation { index: u32, payload_json: String },
+    RemoveFireInsulation { id: String },
     InsertMemberAction { member_id: String, index: u32, payload_json: String },
     RemoveMemberAction { member_id: String, id: String },
     InsertConnectionAction { connection_id: String, index: u32, payload_json: String },
@@ -256,11 +264,21 @@ pub enum En1999MutationDsl {
     InsertShellAction { shell_id: String, index: u32, payload_json: String },
     RemoveShellAction { shell_id: String, id: String },
     ChangeTransverseGirderId { transverse_stiffener_id: String, new_girder_id: String },
+    ChangeSheetProfileSheetId { sheet_profile_id: String, new_sheet_id: String },
+    ChangeFireInsulationFireId { fire_insulation_id: String, new_fire_id: String },
     ChangeTransversePosition { transverse_stiffener_id: String, new_position: f64 },
     ChangeTransverseWidth { transverse_stiffener_id: String, new_width: f64 },
     ChangeTransverseThickness { transverse_stiffener_id: String, new_thickness: f64 },
     ChangeConnLoadEccentricity { aluminium_connection_id: String, new_load_eccentricity: f64 },
     ChangeConnHoleStagger { aluminium_connection_id: String, new_hole_stagger: f64 },
+    ChangeSheetProfileWebHeight { sheet_profile_id: String, new_web_height: f64 },
+    ChangeSheetProfileBottomFlange { sheet_profile_id: String, new_bottom_flange: f64 },
+    ChangeSheetProfileTopFlange { sheet_profile_id: String, new_top_flange: f64 },
+    ChangeSheetProfilePitch { sheet_profile_id: String, new_pitch: f64 },
+    ChangeFireInsulationDensity { fire_insulation_id: String, new_density: f64 },
+    ChangeFireInsulationSpecificHeat { fire_insulation_id: String, new_specific_heat: f64 },
+    ChangeFireInsulationConductivity { fire_insulation_id: String, new_conductivity: f64 },
+    ChangeFireInsulationThickness { fire_insulation_id: String, new_thickness: f64 },
     ChangeTransverseSides { transverse_stiffener_id: String, new_sides: String },
     InsertTransverseStiffener { index: u32, payload_json: String },
     RemoveTransverseStiffener { id: String },
@@ -482,6 +500,10 @@ pub fn en1999_mutation_to_dsl(mutation: &En1999Mutation) -> En1999MutationDsl {
         En1999Mutation::RemovePatchLoad(p) => En1999MutationDsl::RemovePatchLoad { id: p.id.clone() },
         En1999Mutation::InsertRingStiffener(p) => En1999MutationDsl::InsertRingStiffener { index: p.index, payload_json: json_of(&p.ring_stiffener) },
         En1999Mutation::RemoveRingStiffener(p) => En1999MutationDsl::RemoveRingStiffener { id: p.id.clone() },
+        En1999Mutation::InsertSheetProfile(p) => En1999MutationDsl::InsertSheetProfile { index: p.index, payload_json: json_of(&p.sheet_profile) },
+        En1999Mutation::RemoveSheetProfile(p) => En1999MutationDsl::RemoveSheetProfile { id: p.id.clone() },
+        En1999Mutation::InsertFireInsulation(p) => En1999MutationDsl::InsertFireInsulation { index: p.index, payload_json: json_of(&p.fire_insulation) },
+        En1999Mutation::RemoveFireInsulation(p) => En1999MutationDsl::RemoveFireInsulation { id: p.id.clone() },
         En1999Mutation::InsertMemberAction(p) => En1999MutationDsl::InsertMemberAction { member_id: p.member_id.clone(), index: p.index, payload_json: json_of(&p.action) },
         En1999Mutation::RemoveMemberAction(p) => En1999MutationDsl::RemoveMemberAction { member_id: p.member_id.clone(), id: p.id.clone() },
         En1999Mutation::InsertConnectionAction(p) => En1999MutationDsl::InsertConnectionAction { connection_id: p.connection_id.clone(), index: p.index, payload_json: json_of(&p.action) },
@@ -493,11 +515,21 @@ pub fn en1999_mutation_to_dsl(mutation: &En1999Mutation) -> En1999MutationDsl {
         En1999Mutation::InsertShellAction(p) => En1999MutationDsl::InsertShellAction { shell_id: p.shell_id.clone(), index: p.index, payload_json: json_of(&p.action) },
         En1999Mutation::RemoveShellAction(p) => En1999MutationDsl::RemoveShellAction { shell_id: p.shell_id.clone(), id: p.id.clone() },
         En1999Mutation::ChangeTransverseGirderId(p) => En1999MutationDsl::ChangeTransverseGirderId { transverse_stiffener_id: p.transverse_stiffener_id.clone(), new_girder_id: p.new_girder_id.clone() },
+        En1999Mutation::ChangeSheetProfileSheetId(p) => En1999MutationDsl::ChangeSheetProfileSheetId { sheet_profile_id: p.sheet_profile_id.clone(), new_sheet_id: p.new_sheet_id.clone() },
+        En1999Mutation::ChangeFireInsulationFireId(p) => En1999MutationDsl::ChangeFireInsulationFireId { fire_insulation_id: p.fire_insulation_id.clone(), new_fire_id: p.new_fire_id.clone() },
         En1999Mutation::ChangeTransversePosition(p) => En1999MutationDsl::ChangeTransversePosition { transverse_stiffener_id: p.transverse_stiffener_id.clone(), new_position: p.new_position },
         En1999Mutation::ChangeTransverseWidth(p) => En1999MutationDsl::ChangeTransverseWidth { transverse_stiffener_id: p.transverse_stiffener_id.clone(), new_width: p.new_width },
         En1999Mutation::ChangeTransverseThickness(p) => En1999MutationDsl::ChangeTransverseThickness { transverse_stiffener_id: p.transverse_stiffener_id.clone(), new_thickness: p.new_thickness },
         En1999Mutation::ChangeConnLoadEccentricity(p) => En1999MutationDsl::ChangeConnLoadEccentricity { aluminium_connection_id: p.aluminium_connection_id.clone(), new_load_eccentricity: p.new_load_eccentricity },
         En1999Mutation::ChangeConnHoleStagger(p) => En1999MutationDsl::ChangeConnHoleStagger { aluminium_connection_id: p.aluminium_connection_id.clone(), new_hole_stagger: p.new_hole_stagger },
+        En1999Mutation::ChangeSheetProfileWebHeight(p) => En1999MutationDsl::ChangeSheetProfileWebHeight { sheet_profile_id: p.sheet_profile_id.clone(), new_web_height: p.new_web_height },
+        En1999Mutation::ChangeSheetProfileBottomFlange(p) => En1999MutationDsl::ChangeSheetProfileBottomFlange { sheet_profile_id: p.sheet_profile_id.clone(), new_bottom_flange: p.new_bottom_flange },
+        En1999Mutation::ChangeSheetProfileTopFlange(p) => En1999MutationDsl::ChangeSheetProfileTopFlange { sheet_profile_id: p.sheet_profile_id.clone(), new_top_flange: p.new_top_flange },
+        En1999Mutation::ChangeSheetProfilePitch(p) => En1999MutationDsl::ChangeSheetProfilePitch { sheet_profile_id: p.sheet_profile_id.clone(), new_pitch: p.new_pitch },
+        En1999Mutation::ChangeFireInsulationDensity(p) => En1999MutationDsl::ChangeFireInsulationDensity { fire_insulation_id: p.fire_insulation_id.clone(), new_density: p.new_density },
+        En1999Mutation::ChangeFireInsulationSpecificHeat(p) => En1999MutationDsl::ChangeFireInsulationSpecificHeat { fire_insulation_id: p.fire_insulation_id.clone(), new_specific_heat: p.new_specific_heat },
+        En1999Mutation::ChangeFireInsulationConductivity(p) => En1999MutationDsl::ChangeFireInsulationConductivity { fire_insulation_id: p.fire_insulation_id.clone(), new_conductivity: p.new_conductivity },
+        En1999Mutation::ChangeFireInsulationThickness(p) => En1999MutationDsl::ChangeFireInsulationThickness { fire_insulation_id: p.fire_insulation_id.clone(), new_thickness: p.new_thickness },
         En1999Mutation::ChangeTransverseSides(p) => En1999MutationDsl::ChangeTransverseSides { transverse_stiffener_id: p.transverse_stiffener_id.clone(), new_sides: p.new_sides.clone() },
         En1999Mutation::InsertTransverseStiffener(p) => En1999MutationDsl::InsertTransverseStiffener { index: p.index, payload_json: json_of(&p.transverse_stiffener) },
         En1999Mutation::RemoveTransverseStiffener(p) => En1999MutationDsl::RemoveTransverseStiffener { id: p.id.clone() },
@@ -692,6 +724,10 @@ pub fn en1999_mutation_from_dsl(mutation: En1999MutationDsl) -> En1999Mutation {
         En1999MutationDsl::RemovePatchLoad { id } => En1999Mutation::RemovePatchLoad(remove_patch_load::RemovePatchLoad { id }),
         En1999MutationDsl::InsertRingStiffener { index, payload_json } => En1999Mutation::InsertRingStiffener(insert_ring_stiffener::InsertRingStiffener { index, ring_stiffener: from_json::<RingStiffener>(&payload_json) }),
         En1999MutationDsl::RemoveRingStiffener { id } => En1999Mutation::RemoveRingStiffener(remove_ring_stiffener::RemoveRingStiffener { id }),
+        En1999MutationDsl::InsertSheetProfile { index, payload_json } => En1999Mutation::InsertSheetProfile(insert_sheet_profile::InsertSheetProfile { index, sheet_profile: from_json::<SheetProfile>(&payload_json) }),
+        En1999MutationDsl::RemoveSheetProfile { id } => En1999Mutation::RemoveSheetProfile(remove_sheet_profile::RemoveSheetProfile { id }),
+        En1999MutationDsl::InsertFireInsulation { index, payload_json } => En1999Mutation::InsertFireInsulation(insert_fire_insulation::InsertFireInsulation { index, fire_insulation: from_json::<FireInsulation>(&payload_json) }),
+        En1999MutationDsl::RemoveFireInsulation { id } => En1999Mutation::RemoveFireInsulation(remove_fire_insulation::RemoveFireInsulation { id }),
         En1999MutationDsl::InsertMemberAction { member_id, index, payload_json } => En1999Mutation::InsertMemberAction(insert_member_action::InsertMemberAction { member_id, index, action: from_json::<MemberAction>(&payload_json) }),
         En1999MutationDsl::RemoveMemberAction { member_id, id } => En1999Mutation::RemoveMemberAction(remove_member_action::RemoveMemberAction { member_id, id }),
         En1999MutationDsl::InsertConnectionAction { connection_id, index, payload_json } => En1999Mutation::InsertConnectionAction(insert_connection_action::InsertConnectionAction { connection_id, index, action: from_json::<MemberAction>(&payload_json) }),
@@ -703,11 +739,21 @@ pub fn en1999_mutation_from_dsl(mutation: En1999MutationDsl) -> En1999Mutation {
         En1999MutationDsl::InsertShellAction { shell_id, index, payload_json } => En1999Mutation::InsertShellAction(insert_shell_action::InsertShellAction { shell_id, index, action: from_json::<MemberAction>(&payload_json) }),
         En1999MutationDsl::RemoveShellAction { shell_id, id } => En1999Mutation::RemoveShellAction(remove_shell_action::RemoveShellAction { shell_id, id }),
         En1999MutationDsl::ChangeTransverseGirderId { transverse_stiffener_id, new_girder_id } => En1999Mutation::ChangeTransverseGirderId(change_transverse_girder_id::ChangeTransverseGirderId { transverse_stiffener_id, new_girder_id }),
+        En1999MutationDsl::ChangeSheetProfileSheetId { sheet_profile_id, new_sheet_id } => En1999Mutation::ChangeSheetProfileSheetId(change_sheet_profile_sheet_id::ChangeSheetProfileSheetId { sheet_profile_id, new_sheet_id }),
+        En1999MutationDsl::ChangeFireInsulationFireId { fire_insulation_id, new_fire_id } => En1999Mutation::ChangeFireInsulationFireId(change_fire_insulation_fire_id::ChangeFireInsulationFireId { fire_insulation_id, new_fire_id }),
         En1999MutationDsl::ChangeTransversePosition { transverse_stiffener_id, new_position } => En1999Mutation::ChangeTransversePosition(change_transverse_position::ChangeTransversePosition { transverse_stiffener_id, new_position }),
         En1999MutationDsl::ChangeTransverseWidth { transverse_stiffener_id, new_width } => En1999Mutation::ChangeTransverseWidth(change_transverse_width::ChangeTransverseWidth { transverse_stiffener_id, new_width }),
         En1999MutationDsl::ChangeTransverseThickness { transverse_stiffener_id, new_thickness } => En1999Mutation::ChangeTransverseThickness(change_transverse_thickness::ChangeTransverseThickness { transverse_stiffener_id, new_thickness }),
         En1999MutationDsl::ChangeConnLoadEccentricity { aluminium_connection_id, new_load_eccentricity } => En1999Mutation::ChangeConnLoadEccentricity(change_conn_load_eccentricity::ChangeConnLoadEccentricity { aluminium_connection_id, new_load_eccentricity }),
         En1999MutationDsl::ChangeConnHoleStagger { aluminium_connection_id, new_hole_stagger } => En1999Mutation::ChangeConnHoleStagger(change_conn_hole_stagger::ChangeConnHoleStagger { aluminium_connection_id, new_hole_stagger }),
+        En1999MutationDsl::ChangeSheetProfileWebHeight { sheet_profile_id, new_web_height } => En1999Mutation::ChangeSheetProfileWebHeight(change_sheet_profile_web_height::ChangeSheetProfileWebHeight { sheet_profile_id, new_web_height }),
+        En1999MutationDsl::ChangeSheetProfileBottomFlange { sheet_profile_id, new_bottom_flange } => En1999Mutation::ChangeSheetProfileBottomFlange(change_sheet_profile_bottom_flange::ChangeSheetProfileBottomFlange { sheet_profile_id, new_bottom_flange }),
+        En1999MutationDsl::ChangeSheetProfileTopFlange { sheet_profile_id, new_top_flange } => En1999Mutation::ChangeSheetProfileTopFlange(change_sheet_profile_top_flange::ChangeSheetProfileTopFlange { sheet_profile_id, new_top_flange }),
+        En1999MutationDsl::ChangeSheetProfilePitch { sheet_profile_id, new_pitch } => En1999Mutation::ChangeSheetProfilePitch(change_sheet_profile_pitch::ChangeSheetProfilePitch { sheet_profile_id, new_pitch }),
+        En1999MutationDsl::ChangeFireInsulationDensity { fire_insulation_id, new_density } => En1999Mutation::ChangeFireInsulationDensity(change_fire_insulation_density::ChangeFireInsulationDensity { fire_insulation_id, new_density }),
+        En1999MutationDsl::ChangeFireInsulationSpecificHeat { fire_insulation_id, new_specific_heat } => En1999Mutation::ChangeFireInsulationSpecificHeat(change_fire_insulation_specific_heat::ChangeFireInsulationSpecificHeat { fire_insulation_id, new_specific_heat }),
+        En1999MutationDsl::ChangeFireInsulationConductivity { fire_insulation_id, new_conductivity } => En1999Mutation::ChangeFireInsulationConductivity(change_fire_insulation_conductivity::ChangeFireInsulationConductivity { fire_insulation_id, new_conductivity }),
+        En1999MutationDsl::ChangeFireInsulationThickness { fire_insulation_id, new_thickness } => En1999Mutation::ChangeFireInsulationThickness(change_fire_insulation_thickness::ChangeFireInsulationThickness { fire_insulation_id, new_thickness }),
         En1999MutationDsl::ChangeTransverseSides { transverse_stiffener_id, new_sides } => En1999Mutation::ChangeTransverseSides(change_transverse_sides::ChangeTransverseSides { transverse_stiffener_id, new_sides }),
         En1999MutationDsl::InsertTransverseStiffener { index, payload_json } => En1999Mutation::InsertTransverseStiffener(insert_transverse_stiffener::InsertTransverseStiffener { index, transverse_stiffener: from_json::<TransverseStiffener>(&payload_json) }),
         En1999MutationDsl::RemoveTransverseStiffener { id } => En1999Mutation::RemoveTransverseStiffener(remove_transverse_stiffener::RemoveTransverseStiffener { id }),

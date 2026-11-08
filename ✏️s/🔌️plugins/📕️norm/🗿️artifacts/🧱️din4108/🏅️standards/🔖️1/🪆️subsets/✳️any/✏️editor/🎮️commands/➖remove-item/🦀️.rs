@@ -16,6 +16,6 @@ pub struct RemoveItem {
 
 //#region 🔖️Handler
 pub fn handle(payload: &RemoveItem, doc: &ArtifactView<'_, Din4108Snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Din4108Mutation, NoConfigMutation>, Fault> {
-    semio_s_plugin_norm_app_surface::dispatch_remove_item(doc.snapshot, &payload.path, payload.index as usize, |document, edit| semio_s_artifact_norm_din4108_mutations::EDIT_RULES.resolve(document, edit))
+    semio_s_plugin_norm_app_surface::dispatch_remove_item(doc.snapshot, &payload.path, payload.index as usize, |document, edit| semio_s_artifact_norm_din4108_mutations::resolve(document, edit))
 }
 //#endregion 🔖️Handler

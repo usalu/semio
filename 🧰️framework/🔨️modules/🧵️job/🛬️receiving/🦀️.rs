@@ -19,3 +19,6 @@ pub mod testkit;
 #[path="🎟️work/🦀️.rs"]
 mod work;
 pub use work::{OriginalJobWorkRecipient,OriginalJobWorkDriver,OriginalNativeReceivingOutcome,OriginalReceivingOperation,native_call_result};
+
+#[path="🎟️source/🏠️native/🦀️.rs"]
+mod native_source_engine;

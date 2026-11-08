@@ -844,7 +844,7 @@ pub const ROWS: &[NdpEntry] = &[
     c("ndp.en1993.c-40.2", S0, "1.7", "?", Unset, "", S1),
     c("ndp.en1993.c-47.1", S0, "4.3", "?", Unset, "", "DIN EN 1993-1-2/NA"),
     c("ndp.en1993.c-52.1", S0, "6.8", "?", Unset, "", "DIN EN 1993-1-9/NA"),
-    c("ndp.en1993.gamma-m0", S0, "6.1(1)", "γ_M0", Number(1.0), "", S1),
+    c("ndp.en1993.gamma-m0", S0, "6.1(1)", "γ_M0", Number(1.0), "", S1).ver_en(),
     d("ndp.en1993.gamma-m1", S0, "6.1(1)", "γ_M1", Number(1.0), Number(1.1), "", S1),
     c("ndp.en1993.gamma-m2", S0, "6.1(1)", "γ_M2", Number(1.25), "", S1),
     c("ndp.en1993.gamma-m3", S0, "6.1(1)", "γ_M3", Number(1.25), "", S1),

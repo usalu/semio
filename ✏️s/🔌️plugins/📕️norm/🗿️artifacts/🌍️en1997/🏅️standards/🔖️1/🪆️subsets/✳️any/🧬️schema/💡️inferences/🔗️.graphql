@@ -1,12 +1,14 @@
+scalar UInt32
+
 type En1997Inference {
   outline: En1997Outline!
 }
 type En1997Outline {
   sectionOutline: [String!]!
-  fieldCount: Int!
-  entryCount: Int!
-  checkCount: Int!
-  passCount: Int!
+  fieldCount: UInt32!
+  entryCount: UInt32!
+  checkCount: UInt32!
+  passCount: UInt32!
   allPass: Boolean!
   governingClause: String!
   governingUtilization: Float!

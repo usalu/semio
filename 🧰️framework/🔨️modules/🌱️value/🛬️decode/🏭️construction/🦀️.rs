@@ -1,22 +1,21 @@
 //! 🏭️ Retained native construction requires original physical grants and retains born output before receipt acceptance.
 use super::NativeDecodeControl;
-use crate::native_decoding::retirement_loan::NativePreparedDecodeControl;
 use crate::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},shared_issuance::{SealedShared,SharedIssuer}};
 #[path="🧾️result/🦀️.rs"]
 mod result;
 #[path="📦️effect/🦀️.rs"]mod effect;
-pub use effect::{OriginalEffectAction,OriginalEffectAuthority,OriginalEffectCallbackMode,OriginalEffectProducer,OriginalEffectReply,OriginalEffectReplyComplete,NativeEffectCapturePlan,NativeReceivingEffect,NativeReceivingEffectPoll,NativeReceivingEffectError,NativeReceivingEffectFailure,NativeReceivingEffectPhase};
+pub use effect::{NativeReceivingConstructionBinding,NativeReceivingSuccessIdentity,NativeResidentSuccessAck,OriginalEffectAction,OriginalEffectAuthority,OriginalEffectCallbackMode,OriginalEffectProducer,OriginalEffectReply,OriginalEffectReplyComplete,NativeReceivingEffectState,NativeReceivingEffectOutcome,NativeEffectCapturePlan,NativeReceivingEffect,NativeReceivingEffectPoll,NativeReceivingEffectError,NativeReceivingEffectFailure,NativeReceivingEffectPhase};
 pub use result::{NativeConstructionStepResult,NativeConstructionStepOutcome,NativeConstructionStepFailure,OriginalReceivingPrimary};
 
 /// 🧭️ One actual held construction scope exposes no allocation or work issuance methods.
 pub struct NativeConstructionScope<'scope,'decode>{original:&'scope mut NativeDecodeControl<'decode>,grant:RetainedCloneGrant,work:u64}
 impl NativeConstructionScope<'_, '_>{
  pub fn checkpoint(&mut self)->Result<(),ValueError>{self.original.checkpoint()}
- pub fn available_work_units(&mut self)->Result<u64,ValueError>{self.original.available_work_units().map(|available|available.min(self.work))}
+ pub fn remaining_work_units(&self)->Result<u64,ValueError>{self.original.remaining_prepared_work_units().map(|available|available.min(self.work))}
  pub fn retained_grant(&self)->RetainedCloneGrant{self.grant}
  /// 🪟️ Narrows the same held scope without preparing or settling another reservation.
- pub fn with_limits<T>(&mut self,grant:RetainedCloneGrant,work:u64,run:impl FnOnce(&mut NativeConstructionScope<'_, '_>)->T)->Result<T,ValueError>{let work=work.min(self.available_work_units()?);let g=self.grant;let grant=RetainedCloneGrant{maximum_items:g.maximum_items.min(grant.maximum_items),maximum_copy_bytes:g.maximum_copy_bytes.min(grant.maximum_copy_bytes),maximum_capacity_bytes:g.maximum_capacity_bytes.min(grant.maximum_capacity_bytes),maximum_release_bytes:g.maximum_release_bytes.min(grant.maximum_release_bytes),maximum_depth:g.maximum_depth.min(grant.maximum_depth)};Ok(run(&mut NativeConstructionScope{original:&mut *self.original,grant,work}))}
- pub fn ledger_identity(&self)->semio_framework_value_control_contract::NativeAllocationIdentity{self.original.ledger_identity()}
+ pub fn with_limits<T>(&mut self,grant:RetainedCloneGrant,work:u64,run:impl FnOnce(&mut NativeConstructionScope<'_, '_>)->T)->Result<T,ValueError>{let work=work.min(self.remaining_work_units()?);let g=self.grant;let grant=RetainedCloneGrant{maximum_items:g.maximum_items.min(grant.maximum_items),maximum_copy_bytes:g.maximum_copy_bytes.min(grant.maximum_copy_bytes),maximum_capacity_bytes:g.maximum_capacity_bytes.min(grant.maximum_capacity_bytes),maximum_release_bytes:g.maximum_release_bytes.min(grant.maximum_release_bytes),maximum_depth:g.maximum_depth.min(grant.maximum_depth)};Ok(run(&mut NativeConstructionScope{original:&mut *self.original,grant,work}))}
+ pub fn ledger_identity(&self)->crate::NativeAllocationIdentity{self.original.ledger_identity()}
  pub fn retirement_recipient_identity(&self)->Option<u64>{self.original.retirement_recipient_identity()}
 }
 /// 🛟️ Borrows the actual typed callback owner for original receiving recovery.
@@ -82,11 +81,6 @@ fn quote_construction(loan:&mut OriginalConstructionLoan<'_>,demand:RetirementDe
 impl NativeDecodeControl<'_>{
  /// 🔭️ Reads actual original construction submissions without issuing another grant.
  pub fn construction_submitted(&self)->Result<RetainedCloneProgress,ValueError>{self.construction.as_deref().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native construction requires its original recipient"))?.submitted()}
- /// 🎟️ Quotes the real original recipient without introducing another payer.
- pub fn construction_grant(&mut self,demand:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{let loan=self.construction.as_deref_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native construction requires its original recipient"))?;quote_construction(loan,demand,None)}
- /// 🧾️ Publishes already-performed fresh effects under the caller’s previously issued grant.
- pub fn submit_constructed_progress(&mut self,grant:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),ValueError>{if !progress.fits(grant){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"constructed progress exceeds its original grant"))}
-  let loan=self.construction.as_deref_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native construction requires its original recipient"))?;let demand=RetirementDemand{copy_bytes:progress.copied_bytes,capacity_bytes:progress.retained_capacity_bytes,release_bytes:progress.released_bytes,depth:usize::from(grant.maximum_depth>0)};quote_construction(loan,demand,Some(progress)).map(|_|())}
  /// 🛬️ One original physical recipient funds and records a bounded typed construction transition.
  pub fn receive_construction_step(&mut self,demand:RetirementDemand,operation:impl FnOnce(&mut Self,RetainedCloneGrant)->crate::RetainedWorkOutcome)->crate::RetainedWorkOutcome<crate::retained_clone::RetainedCloneStep,NativeConstructionStepFailure<ValueError>>{
   self.receive_construction_step_typed(demand,|control,grant|{let turn=operation(control,grant);let progress=match &turn.result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};NativeConstructionStepResult{result:turn.result,progress,work:turn.work}}).into_step_outcome()
@@ -97,23 +91,10 @@ impl NativeDecodeControl<'_>{
   let grant=match admission{Ok(grant)=>grant,Err(error)=>return NativeConstructionStepOutcome{result:Some(Err(error.into())),receipt_refusal:None,progress:Default::default(),work:0}};
   if !crate::retained_clone::retained_clone_grant_admits(grant,demand){return NativeConstructionStepOutcome{result:None,receipt_refusal:None,progress:Default::default(),work:0}}
   let NativeConstructionStepResult{result,progress,work}=operation(self,grant);
-  let receipt_refusal=self.submit_constructed_progress(grant,progress).err().map(|error|error.with_retained_progress(progress));
+  let receipt_refusal=(||{if !progress.fits(grant){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"constructed progress exceeds its original grant"))}let loan=self.construction.as_deref_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native construction requires its original recipient"))?;let posted=RetirementDemand{copy_bytes:progress.copied_bytes,capacity_bytes:progress.retained_capacity_bytes,release_bytes:progress.released_bytes,depth:usize::from(grant.maximum_depth>0)};quote_construction(loan,posted,Some(progress)).map(|_|())})().err().map(|error|error.with_retained_progress(progress));
   NativeConstructionStepOutcome{result:Some(result),receipt_refusal,progress,work}
  }
 
- /// 🏗️ Runs one constructor inside its actual retained allocation and work frame.
- pub fn receive_prepared_construction(&mut self,demand:RetirementDemand,frame:&mut NativeReceivingEffect,work:u64,operation:impl FnOnce(&mut NativeConstructionScope<'_, '_>,RetainedCloneGrant,&mut Option<usize>)->crate::RetainedWorkOutcome)->crate::RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{
-  if work==0{return crate::RetainedWorkOutcome{result:Ok(Default::default()),work:0}}let mut actual_work=0;let turn=(||{
-   if frame.phase()==NativeReceivingEffectPhase::Empty{if self.has_pending_work(){return Err(ValueError::invariant("construction cannot borrow another action work").into())}frame.quote(self,demand)?}else if !frame.matches_demand(demand){return Err(ValueError::invariant("original construction demand changed").into())}
-   if frame.phase()==NativeReceivingEffectPhase::Granted{
-    let admitted=match frame.prepare_work(self,work)?{Some(admitted)=>admitted,None=>return Ok(Default::default())};
-    if admitted{frame.effect_controlled(self,|original,effect|{let grant=effect.grant();let start=effect.performed_work();let mut turn=operation(&mut NativeConstructionScope{original,grant,work},grant,effect.actual());let owed=turn.work.saturating_sub(effect.performed_work()-start);if owed>0{match u64::try_from(owed).ok().map(|owed|effect.performed(owed)){Some(Ok(true))=>{},Some(Err(error))=>{if turn.result.is_ok(){turn.result=Err(error)}},_=>{if turn.result.is_ok(){turn.result=Err(ValueError::literal(ValueRefusalKind::WorkLimit,"construction work exceeded its original action"))}}}}turn})?}else{frame.cancel_unstarted(self)?}
-   }
-   let finished=self.finish_receiving(frame);actual_work=finished.work;finished.result
-  })();crate::RetainedWorkOutcome{result:turn,work:actual_work}
- }
- /// 🏗️ Lends one original construction recipient through this receiving hop without changing its cumulative decoder receipt.
- pub fn with_construction_recipient<T,E:From<ValueError>>(&mut self,recipient:&mut OriginalConstructionLoan<'_>,operation:impl FnOnce(&mut NativeDecodeControl<'_>)->Result<T,E>)->Result<T,E>{run(self,recipient,operation)}
  /// 🧷️ Admits sealed field ownership only under this hop's explicitly supplied original construction recipient.
  pub fn receive_shared<T:Send+Sync+'static>(&mut self,input:&mut Option<T>,output:&mut Option<SealedShared<T>>,issuer:SharedIssuer<T>,owner:&mut NativeSharedAdmission<T>)->crate::RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{
   if input.is_none()||output.is_some()||owner.arc.is_some(){return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("native sealed admission requires its original slots").into()),work:0}}
@@ -126,7 +107,32 @@ impl NativeDecodeControl<'_>{
   let demand=owner.arc_demand();let born=owner.arc.is_some();let frame=&mut owner.effect;let slot=&mut *owner.arc;
   self.receive_allocation(demand,frame,!born,1,|grant,actual|{if !born{let turn=crate::retirement::arc_custody::try_uninitialized_arc::<T>(grant,actual.expect("allocated birth marker"));let result=turn.result.map(|(value,progress)|{*slot=Some(value);crate::RetainedCloneStep::Progress(progress)});crate::RetainedWorkOutcome{result,work:turn.work}}else{let mut work=0;let result=(||{let birth=slot.as_mut().ok_or_else(||ValueError::invariant("Arc birth absent"))?;let target=std::sync::Arc::get_mut(birth).ok_or_else(||ValueError::invariant("original Arc birth is not unique"))?;target.write(input.take().ok_or_else(||ValueError::invariant("original Arc input absent"))?);work=1;let birth=slot.take().ok_or_else(||ValueError::invariant("Arc birth absent"))?;*output=Some(unsafe{birth.assume_init()});Ok(crate::RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))})();crate::RetainedWorkOutcome{result,work}}})
  }
-
+ /// 🎟️ Recovers only the grant deposited in this actual original construction action.
+ pub fn construction_grant(&mut self,demand:RetirementDemand,action:&mut Option<OriginalConstructionAction>)->Result<Option<Result<RetainedCloneGrant,ValueError>>,ValueError>{
+  if action.is_none(){self.checkpoint()?}let work=semio_framework_value_control_contract::OriginalWorkBorrow::new(&mut self.work);let recipient=self.construction.as_deref_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native construction requires its original recipient"))?;
+  if action.is_none(){recipient.begin(demand,action,&work)?}let original=action.as_mut().ok_or_else(||ValueError::invariant("original construction action absent"))?;if original.demand()!=demand{return Err(ValueError::invariant("original construction demand changed"))}
+  if original.phase()==OriginalConstructionPhase::Fresh{recipient.quote(original)?}
+  if original.phase()==OriginalConstructionPhase::Granted{return Ok(Some(Ok(original.grant().ok_or_else(||ValueError::invariant("original construction grant absent"))?)))}
+  recipient.recover_grant(original)
+ }
+ /// 🧾️ Records the actual performed span and recovers its original producer-owned verdict.
+ pub fn submit_constructed_progress(&mut self,action:&mut OriginalConstructionAction,progress:RetainedCloneProgress,actual:Option<usize>)->Result<Option<semio_framework_value_control_contract::OriginalConstructionAcceptStatus>,ValueError>{
+  let recipient=self.construction.as_deref_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native construction requires its original recipient"))?;
+  if action.phase()==OriginalConstructionPhase::Granted{recipient.post(action,progress,actual)?}else if action.progress()!=Some(progress)||action.actual()!=actual{return Err(ValueError::invariant("original construction receipt changed"))}
+  recipient.recover_accept(action)
+ }
+ /// 🔓️ Publishes the original completion under this control’s actual Work and construction loans.
+ pub fn publish_construction_completion(&mut self,completion:&mut semio_framework_value_control_contract::OriginalConstructionCompletion,payout:&mut OriginalConstructionAction,proof:&semio_framework_value_control_contract::OriginalWorkActionProof)->Result<bool,ValueError>{let work=semio_framework_value_control_contract::OriginalWorkBorrow::new(&mut self.work);let recipient=self.construction.as_deref_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native construction requires its original recipient"))?;recipient.publish_completion(completion,payout,&work,proof)}
+ /// ♻️ Retires a published receiving completion through this exact original construction loan.
+ pub fn retire_receiving_completion(&mut self,receiving:&mut crate::OriginalReceivingPrimary,payout:&OriginalConstructionAction,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<Option<RetainedCloneProgress>,ValueError>{let recipient=match self.construction.as_deref_mut(){Some(recipient)=>recipient,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native construction requires its original recipient")),work:0}};receiving.retire_receipt_completion(recipient,payout,effect)}
+ /// 🏁️ Releases the same action only after every recorded original reply returned.
+ pub fn finish_constructed_action(&mut self,action:&mut Option<OriginalConstructionAction>)->Result<(),ValueError>{let recipient=self.construction.as_deref_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native construction requires its original recipient"))?;if action.as_ref().and_then(|original|original.recorded_accept_status())==Some(semio_framework_value_control_contract::OriginalConstructionAcceptStatus::Accepted){recipient.finish_accepted(action)}else{recipient.finish(action)}}
+ /// 🏗️ Lends a held construction scope to the original resident producer and reply.
+ pub fn receive_prepared_construction<P>(&mut self,demand:RetirementDemand,frame:&mut NativeReceivingEffect<P::Failure>,work:u64,authority:&mut OriginalEffectAuthority<P>,invoke:impl FnOnce(&mut NativeConstructionScope<'_,'_>,&mut crate::RetainedAllocationEffect<'_>,&mut OriginalEffectAuthority<P>,&mut Option<OriginalEffectAction<crate::RetainedCloneStep,P::Failure>>)->Result<bool,ValueError>)->Result<NativeReceivingEffectPoll<P::Failure>,ValueError>where P:OriginalEffectProducer<Output=crate::RetainedCloneStep>,P::Failure:NativeReceivingEffectError{
+  self.receive_original_effect(demand,work,frame,authority,|original,effect,authority,action|{let grant=effect.grant();invoke(&mut NativeConstructionScope{original,grant,work},effect,authority,action)})
+ }
+ /// 🏗️ Lends one original construction recipient through this receiving hop without changing its cumulative decoder receipt.
+ pub fn with_construction_recipient<T,E:From<ValueError>>(&mut self,recipient:&mut OriginalConstructionLoan<'_>,operation:impl FnOnce(&mut NativeDecodeControl<'_>)->Result<T,E>)->Result<T,E>{run(self,recipient,operation)}
  /// 🏗️ Advances the actual retained value effect under original construction and work loans.
  pub fn receive_allocation(&mut self,demand:RetirementDemand,frame:&mut NativeReceivingEffect,allocating:bool,work_demand:u64,operation:impl FnOnce(RetainedCloneGrant,Option<&mut Option<usize>>)->crate::RetainedWorkOutcome)->crate::RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{let turn=self.receive_effect_typed(demand,frame,allocating,work_demand,operation);crate::RetainedWorkOutcome{result:turn.result.map_err(|failure|{let mut receiving=failure.receiving;receiving.allocation_refusal=failure.child;receiving.work_refusal=failure.work_refusal;receiving}),work:turn.work}}
  /// ♻️ Advances the actual retained retirement effect without flattening its failure.
@@ -171,8 +177,6 @@ impl<'operation,'decode,'recipient> NativeOwnedDecodeControl<'operation,'decode,
  }
 
 }
-
-#[cfg(test)]#[path="🎟️work/🧪️tests/🦀️.rs"]mod shared_work_tests;
 
 #[path="📦️backing/🦀️.rs"]mod backing;
 pub use backing::{NativeBackingTurn,allocate_empty_vec};

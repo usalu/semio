@@ -1402,5 +1402,6 @@
       "soilUnitWeightNM3": 19000.0,
       "poissonRatio": 0.35
     }
-  ]
+  ],
+  "criticalRegions": []
 }

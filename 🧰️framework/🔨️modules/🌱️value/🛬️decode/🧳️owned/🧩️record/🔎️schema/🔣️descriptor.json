@@ -1,0 +1,9 @@
+{
+  "work": 1,
+  "deniedWork": 0,
+  "deniedCalls": 0,
+  "selectedCalls": 1,
+  "unavailable": "missing",
+  "selected": "leaf",
+  "retainsDestinationOnDenial": true
+}

@@ -8,7 +8,8 @@
     "deniedWork",
     "cachedWork",
     "maximumTurnWork",
-    "stock"
+    "stock",
+    "maximumMetadataEvents"
   ],
   "properties": {
     "cursors": {
@@ -27,7 +28,7 @@
       "const": 0
     },
     "maximumTurnWork": {
-      "const": 1
+      "const": 4
     },
     "stock": {
       "const": {
@@ -39,6 +40,9 @@
         "fuel": 100000,
         "maximumTurns": 100000
       }
+    },
+    "maximumMetadataEvents": {
+      "const": 1
     }
   }
 }

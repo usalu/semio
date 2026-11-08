@@ -1,0 +1,11 @@
+# Native Map and Shared Owner Checkpoint
+
+The original-source projection corpus passes 16/16. Native map clone passes its real 4,096-byte policy across 390 scenarios (counts 0, 1, 17; all cuts 0..128 plus completion), including actual pointer and finite-bank retirement checks. Native edit integration passes 2/2 with shared native helper, original 70-row insertion and all seven numeric removal cases. The original map library corpus remains mounted and is being ported; these integration results do not establish full library acceptance.
+
+Shared native clone storage now passes defining std library 18/18, Field 2/2, neutral 1/1, and NativeStorage 17/17. The fixed scalar/tuple descriptors expose native seed templates; absent-descriptor constructor fallback is still open debt. Current native source sizes admit on all three OS collectors. The immutable-root concat corpus passes 3/3 after actual borrowed paged-pop migration.
+
+Combined resident receiving owner passes 2/2 plus fieldwise seed/cancel 1/1. Full receiving semantic failure handback still exceeds 4,096 bytes (8,384-byte whole move); sparse staged failure destination remains in progress. Schema matcher obsolete owned advance was removed and a real 48-cut test now runs; its current 5,712-byte selected copy is a genuine failure. Schema parent/generated coordination is not accepted. Generic paid reply routing, captured close, pending leaves, original Context, browser norm editors, EN/DE and end-to-end plugin checks remain open.
+
+The native edit birth predicate is restored to actual Source birth, before lookup completion. The old source constructor's zero-copy quote cannot describe new paid fieldwise initialization; the original birth law must validate the actual permanent plus transient owner ABI and each bounded action rather than the obsolete cold constructor API. Parent cache/header installation and test authority return remain explicit accounting limitations.
+
+Evidence: generated logs retained while ticket is active: retained-map-native-clone-all-cuts-current.log; retained-map-native-edit-shared-helper-2.log; standard-full-eighteen-native-current.log; original-vector-concat-native-pop.log; resident-owner-foreign-work-native.log; resident-owner-field-seed-native.log; native-schema-key-cuts-3.log.

@@ -23,12 +23,14 @@ name = "semio_framework_value_paged_clone"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value-native-clone-engine = { path="../../../../⚙️engine/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path = "../../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-retirement = { path = "../../../../../♻️retirement/📦️packages/🦀️rust" }
 semio-framework-value-clone-source = { path = "../../../../🔗️source/📦️packages/🦀️rust" }
 semio-framework-value-paged-list = { path = "../../../../../📋️list/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-testing-effect-bank = { path="../../../../../🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-value-retained-clone = { path = "../../../../🧬️contract/📦️packages/🦀️rust" }
@@ -36,3 +38,7 @@ semio-framework-value-clone-source-testing = { path = "../../../../🔗️source
 semio-framework-value-testing-allocator = { path = "../../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../✨️derive/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+
+[[test]]
+name="borrowed"
+path="../../../🧪️tests/borrowed.rs"

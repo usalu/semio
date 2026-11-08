@@ -26,8 +26,10 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-en1993-diff = { workspace = true }
 semio-s-artifact-norm-en1993-model = { workspace = true }
 
+semio-s-artifact-norm-en1993-mut-fatigue-stresses-2 = { workspace = true }
+
 [features]
-test-support = ["dep:serde", "semio-s-artifact-norm-en1993-diff/test-support", "semio-s-artifact-norm-en1993-model/test-support"]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1993-diff/test-support", "semio-s-artifact-norm-en1993-model/test-support", "semio-s-artifact-norm-en1993-mut-fatigue-stresses-2/test-support"]
 
 [dev-dependencies]
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

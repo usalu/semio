@@ -1,0 +1,79 @@
+{
+  "message": "actual resident outcome custody 源",
+  "semanticWork": 1,
+  "transferWork": 1,
+  "deniedWork": 0,
+  "cases": [
+    {
+      "id": "unready",
+      "ready": false,
+      "empty": true,
+      "work": true,
+      "copy": true,
+      "sameOwner": true,
+      "moves": false
+    },
+    {
+      "id": "occupied",
+      "ready": true,
+      "empty": false,
+      "work": true,
+      "copy": true,
+      "sameOwner": true,
+      "moves": false
+    },
+    {
+      "id": "workDenied",
+      "ready": true,
+      "empty": true,
+      "work": false,
+      "copy": true,
+      "sameOwner": true,
+      "moves": false
+    },
+    {
+      "id": "copyDenied",
+      "ready": true,
+      "empty": true,
+      "work": true,
+      "copy": false,
+      "sameOwner": true,
+      "moves": false
+    },
+    {
+      "id": "foreignOwner",
+      "ready": true,
+      "empty": true,
+      "work": true,
+      "copy": true,
+      "sameOwner": false,
+      "moves": false
+    },
+    {
+      "id": "funded",
+      "ready": true,
+      "empty": true,
+      "work": true,
+      "copy": true,
+      "sameOwner": true,
+      "moves": true
+    }
+  ],
+  "stock": {
+    "items": 64,
+    "copyBytes": 1048576,
+    "capacityBytes": 65536,
+    "releaseBytes": 65536,
+    "depth": 64,
+    "fuel": 64
+  },
+  "transferredWork": 0,
+  "readyRepeatWork": 0,
+  "acknowledgement": {
+    "work": 1,
+    "metadataOnly": true,
+    "unreportedAccepted": false,
+    "errorAccepted": false,
+    "receiveCallsAfterRecovery": 1
+  }
+}

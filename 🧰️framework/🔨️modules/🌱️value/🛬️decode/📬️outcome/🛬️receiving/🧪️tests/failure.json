@@ -1,0 +1,21 @@
+{
+  "variants": [
+    "primary",
+    "valueEffect",
+    "retirementEffect",
+    "receivingEffect"
+  ],
+  "causes": [
+    "receiving-primary",
+    "receiving-work",
+    "receiving-retirement",
+    "producer-child",
+    "producer-refusal",
+    "producer-work"
+  ],
+  "progress": {
+    "copiedItems": 2,
+    "copiedBytes": 3
+  },
+  "wrappingAllocations": 0
+}

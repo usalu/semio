@@ -1,0 +1,32 @@
+{
+  "type": "array",
+  "minItems": 5,
+  "items": {
+    "type": "object",
+    "properties": {
+      "sameIssuer": {
+        "type": "boolean"
+      },
+      "sameScope": {
+        "type": "boolean"
+      },
+      "sameActual": {
+        "type": "boolean"
+      },
+      "finished": {
+        "type": "boolean"
+      },
+      "valid": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "sameIssuer",
+      "sameScope",
+      "sameActual",
+      "finished",
+      "valid"
+    ],
+    "additionalProperties": false
+  }
+}

@@ -1,14 +1,24 @@
 //! 📚️ ISO 16757-4 dictionary structure, constraints, ISO 12006 mappings.
 
-use semio_s_artifact_norm_iso16757_checks_common::{assess, copy, fail, na, pass, q_dim, subject, controlled_ordinal, reference_slot_score};
+use semio_s_artifact_norm_iso16757_checks_common::{Section, ALL_FACETS, assess, copy, fail, na, pass, q_dim, subject, controlled_ordinal, reference_slot_score};
 use semio_s_plugin_norm_compliance::{CheckReport, CheckStatus, Remedy, RemedyBound};
 use semio_s_artifact_norm_iso16757_model::CatalogueValue;
 use semio_s_artifact_norm_iso16757_checks_common::part_libraries::part_4 as helpers;
 use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 use std::collections::HashSet;
 
+/// 🧮️ The sections of Part 4 in report order.
+pub const SECTIONS: &[Section] = &[
+    Section { id: "dictionary-typing", reads: ALL_FACETS, run: |d, r| check_dictionary_typing(d, r) },
+    Section { id: "dictionary-structure", reads: &["dictionary"], run: |d, r| check_dictionary_structure(d, r) },
+];
+
 pub fn check_part_4(doc: &Iso16757Snapshot, report: &mut CheckReport) {
-    check_dictionary_typing(doc, report);
+    SECTIONS.iter().for_each(|section| (section.run)(doc, report));
+}
+
+/// 🌳️ The dictionary relationship structure and the ISO 12006-3 mapping.
+fn check_dictionary_structure(doc: &Iso16757Snapshot, report: &mut CheckReport) {
     let dictionary = &doc.dictionary;
     let issues = helpers::validate_dictionary(dictionary);
     if issues.is_empty() {

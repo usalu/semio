@@ -1,0 +1,58 @@
+[
+  {
+    "pending": true,
+    "present": false,
+    "terminal": true,
+    "child": false,
+    "spare": true,
+    "expected": "failureStorage"
+  },
+  {
+    "pending": true,
+    "present": true,
+    "terminal": false,
+    "child": true,
+    "spare": false,
+    "expected": "failureStorage"
+  },
+  {
+    "pending": false,
+    "present": false,
+    "terminal": true,
+    "child": false,
+    "spare": false,
+    "expected": null
+  },
+  {
+    "pending": false,
+    "present": true,
+    "terminal": true,
+    "child": true,
+    "spare": false,
+    "expected": null
+  },
+  {
+    "pending": false,
+    "present": true,
+    "terminal": false,
+    "child": true,
+    "spare": false,
+    "expected": "child"
+  },
+  {
+    "pending": false,
+    "present": true,
+    "terminal": false,
+    "child": false,
+    "spare": false,
+    "expected": "failureStorage"
+  },
+  {
+    "pending": false,
+    "present": true,
+    "terminal": false,
+    "child": false,
+    "spare": true,
+    "expected": null
+  }
+]

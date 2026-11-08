@@ -31,22 +31,29 @@ test("the closed insert corpus covers all fifteen cohorts and every declared bin
   expect(new Set(fixture.rules.map(row => row.source + ":" + row.path)).size).toBe(227);
 });
 
+const payloads = new Map<string, any>();
+const payloadOf = (path: string) => payloads.get(path) ?? (payloads.set(path, JSON.parse(readFileSync(join(root, path), "utf8"))), payloads.get(path));
+const ajv = semioSchemaAjvV1({ strict: true, allErrors: true });
+const validators = new Map<string, ReturnType<typeof ajv.compile>>();
+const membership = (properties: string[], required: string[]) => {
+  const key = JSON.stringify([properties, required]);
+  if (!validators.has(key)) validators.set(key, ajv.compile({ type: "object", additionalProperties: false, properties: Object.fromEntries(properties.map(name => [name, true])), required }));
+  return validators.get(key)!;
+};
+const bindings = new Map(actual.map(candidate => [candidate.source + "\0" + candidate.path, candidate]));
+
 test("every native insert key matches its payload schema and independent strict Ajv membership oracle", () => {
   const failures: string[] = [];
   for (const row of fixture.rules) {
-    const binding = actual.find(candidate => candidate.source === row.source && candidate.path === row.path);
+    const binding = bindings.get(row.source + "\0" + row.path);
     expect(binding, row.family + ":" + row.path).toBeDefined();
     if (!binding) continue;
-    const payload = JSON.parse(readFileSync(join(root, row.schema), "utf8"));
+    const payload = payloadOf(row.schema);
     const properties = payload.properties as Record<string, { const?: unknown; enum?: unknown[] }>;
     const required = (payload.required as string[]).filter(key => properties[key].const === undefined && properties[key].enum?.length !== 1);
     const keys = [...binding.selectors, binding.index, binding.item];
     const own = keys.every(key => Object.hasOwn(properties, key)) && required.every(key => keys.includes(key)) && new Set(keys).size === keys.length;
-    const validate = semioSchemaAjvV1({ strict: true, allErrors: true }).compile({
-      type: "object", additionalProperties: false,
-      properties: Object.fromEntries(Object.keys(properties).map(key => [key, true])),
-      required,
-    });
+    const validate = membership(Object.keys(properties), required);
     const oracle = validate(Object.fromEntries(keys.map(key => [key, null])));
     const errors = JSON.stringify(validate.errors);
     expect(own, row.family + ":" + row.path + " oracle disagreement").toBe(oracle);

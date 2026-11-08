@@ -1,0 +1,5 @@
+{
+  "mutation": "changeCriticalRegionAxialForceN",
+  "id": "cr-1",
+  "newAxialForceN": 800001.0
+}

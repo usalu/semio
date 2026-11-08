@@ -1,0 +1,4082 @@
+[
+{
+"n": 1,
+"srcline": 8,
+"lane": "shared",
+"text": "`🎬️structural-scene/🦀️.rs`, A8 added `#[path = \"📈️diagram-kit/🦀️.rs\"] pub mod diagram_kit;` (kept; please preserve). Kit has no dependency on Diagram2d. (→ A1) [requests.md:8]",
+"reqline": "8",
+"hint": "A1"
+},
+{
+"n": 2,
+"srcline": 9,
+"lane": "shared",
+"text": "`SURFACE/🫧️live-lanes/🧬️schema` defines `NormTransient`, `NormPresence`, `DragPreview::at(handle, s, seq)`, `GhostPreview`, `EvalProgress`, `FieldWrite` as plain value types (ToValue/FromValue, Def... (→ A10) [requests.md:11]",
+"reqline": "11",
+"hint": "A10"
+},
+{
+"n": 3,
+"srcline": 10,
+"lane": "shared",
+"text": "`NormFieldMeta` no longer exists. Tables use `FieldSpec::new(en, de)`, `FieldSpec::quantity(en, de, UnitId::X)`, `FieldSpec::choice(en, de, CHOICES)` (const fns; richer rows via `FieldSpec { kind: ... (→ all artifact agents) [requests.md:12]",
+"reqline": "12",
+"hint": "all artifact agents"
+},
+{
+"n": 4,
+"srcline": 11,
+"lane": "shared",
+"text": "`semio_s_plugin_norm_app_surface::render_document_editor` no longer exists (A6 replaced `📝️document-editors`); every `…/🪟️windows/📥️inputs/🦀️.rs` still calls it until WP-06/WP-12 shims land. (→ artifact agents (inputs windows)) [requests.md:13]",
+"reqline": "13",
+"hint": ""
+},
+{
+"n": 5,
+"srcline": 12,
+"lane": "shared",
+"text": "`✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor` and `👁️viewer`, surface the catalogue (`checks::timber::registry()`, `evaluate_case(id, &Case)`) as a verificati... (→ editor/viewer owners) [requests.md:15]",
+"reqline": "15",
+"hint": "editor/viewer owners"
+},
+{
+"n": 6,
+"srcline": 13,
+"lane": "shared",
+"text": "`setChecksView {view: string}` (payload `ChecksViewState::encode()`, decode with `ChecksViewState::decode`), `cancelEvaluation`, `openClause {family,part,section}`: command + window-config lane in ... (→ A10/A12) [requests.md:16]",
+"reqline": "16",
+"hint": "A10/A12"
+},
+{
+"n": 7,
+"srcline": 14,
+"lane": "shared",
+"text": "pass `ChecksViewState { selected: Some(selected_check_index), pending }` and `ChecksWindowSpec { controller_id, interaction_domain: Some(\"norm.<variant>\"), .. }` via `render_checks_with` instead of... (→ A12 (per artifact)) [requests.md:17]",
+"reqline": "17",
+"hint": ""
+},
+{
+"n": 8,
+"srcline": 15,
+"lane": "shared",
+"text": "selection and outliner filter reach the inspector only as parameters. `render_inspector(host, locale, controller_id, meta_fn, windows, &InspectorOptions { preset, outliner: OutlinerState { selected... (→ A7/A10/A12) [requests.md:19]",
+"reqline": "19",
+"hint": "A7/A10/A12"
+},
+{
+"n": 9,
+"srcline": 16,
+"lane": "shared",
+"text": "`🗿️artifacts/🪨️en1996/…/✏️editor` and `👁️viewer`, surface the catalogue (`checks::masonry::registry()`, `evaluate_case(id, &Case)`, `numerical_models::MnSection::curve`, `yield_line_pressure`) as a... (→ editor/viewer owners) [requests.md:28]",
+"reqline": "28",
+"hint": "editor/viewer owners"
+},
+{
+"n": 10,
+"srcline": 17,
+"lane": "shared",
+"text": "`🎬️structural-scene/🦀️.rs` and `📦️packages/🦀️rust/Cargo.toml`, A3/A4 added `pub mod tessellation; pub mod projection; pub mod diff;` plus `#[cfg(test)] pub(crate) mod mock_projection;` (fixture `🧪️... (→ A1) [requests.md:31]",
+"reqline": "31",
+"hint": "A1"
+},
+{
+"n": 11,
+"srcline": 18,
+"lane": "shared",
+"text": "`🧬️schema/🧩️entities/🦀️.rs`, `Pattern::Cage { stirrup_spacing, count }` carries no loop size; tessellation uses `FastenerGeometry.hole_clearance` as the square stirrup side (0.2 m when absent). Add... (→ A1) [requests.md:32]",
+"reqline": "32",
+"hint": "A1"
+},
+{
+"n": 12,
+"srcline": 19,
+"lane": "shared",
+"text": "implement `StructuralProjection` (`🎬️structural-scene/🎯️projection`): besides the spec methods the trait needs `entities(&doc) -> Vec<EntityRef>` (document order) and `fingerprint(&doc, &EntityRef)... (→ WP-12/artifact agents) [requests.md:33]",
+"reqline": "33",
+"hint": "WP-12/artifact agents"
+},
+{
+"n": 13,
+"srcline": 20,
+"lane": "shared",
+"text": "`✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor`, surface `checks::catalogue::{registry, evaluate_case}` (E90.01-E90.30, per-entry `inputs` keys, cases built fro... (→ editor owner) [requests.md:35]",
+"reqline": "35",
+"hint": "editor owner"
+},
+{
+"n": 14,
+"srcline": 21,
+"lane": "shared",
+"text": "`Pattern::Cage` stirrups are square loops of side `hole_clearance`; RC links need `width` and `height` (rectangular loops); the projection passes `min(b, h) - 2 c - phi` today. (→ scene owner (wp03/04)) [requests.md:48]",
+"reqline": "48",
+"hint": ""
+},
+{
+"n": 15,
+"srcline": 22,
+"lane": "shared",
+"text": "`🌍️en1997/…/🧬️schema/📸️snapshot` and `🧬️mutations`, add typed `Placement { entityId, origin: Vec3, yaw }` (architecture 3.7) for footings, piles, retaining walls, slopes, uplift cases and the mutat... (→ EN 1997 norm-completion) [requests.md:51]",
+"reqline": "51",
+"hint": "EN 1997 norm-completion"
+},
+{
+"n": 16,
+"srcline": 23,
+"lane": "shared",
+"text": "`⚖️checks/📇️catalogue/⛰️slopes`, make the private `slices()` public (`Slice { b, w, alpha, u, x }`) so the scene reuses it; the scene currently carries a tested twin in `🎬️scene/🧮️mechanics::slip_s... (→ EN 1997 norm-completion) [requests.md:52]",
+"reqline": "52",
+"hint": "EN 1997 norm-completion"
+},
+{
+"n": 17,
+"srcline": 24,
+"lane": "shared",
+"text": "field-meta rows (`lookup_field_meta`) for `placements[].origin.x|y`, `footings[].loadCases[].horizontalVariable` (handle `load-h`, unit N) and `layers[].depthTop` so the handle-bound inline chips r... (→ EN 1997 norm-completion) [requests.md:53]",
+"reqline": "53",
+"hint": "EN 1997 norm-completion"
+},
+{
+"n": 18,
+"srcline": 25,
+"lane": "shared",
+"text": "the per-kind `Spec`/`Out`/binding kit exists once per artifact scene crate (`🎬️scene/🧰️kit`, copied from en1993 with the same names); lift it into `semio_s_plugin_norm_structural_scene` (or a sibli... (→ WP-12) [requests.md:54]",
+"reqline": "54",
+"hint": "WP-12"
+},
+{
+"n": 19,
+"srcline": 26,
+"lane": "shared",
+"text": "the editor still commits drags through the existing `setField` (one leaf per handle; `mutations::resolve` makes every leaf and the catalogue section pick resolvable). `setFields`, `previewRemedy`, ... (→ A10) [requests.md:59]",
+"reqline": "59",
+"hint": "A10"
+},
+{
+"n": 20,
+"srcline": 27,
+"lane": "shared",
+"text": "`visual_layout()` lists an `outliner` window role that no window implements (the outliner is rendered inside the properties inspector). EN 1993 therefore builds its own four-window layout (properti... (→ A6/A7) [requests.md:60]",
+"reqline": "60",
+"hint": "A6/A7"
+},
+{
+"n": 21,
+"srcline": 28,
+"lane": "shared",
+"text": "the viewport window has no persisted config owner (`Viewport3dWindowConfig` is a plain value), so camera preset, ramp, section and layer visibility are not saved; windows use `Viewport3dWindowConfi... (→ A7) [requests.md:61]",
+"reqline": "61",
+"hint": "A7"
+},
+{
+"n": 22,
+"srcline": 29,
+"lane": "shared",
+"text": "the render path cannot read the host interaction selection (only `handle` gets `InteractionView`). Windows therefore derive the focus entity from the selected check (`setSelectedCheckIndex`); 3D pi... (→ A10) [requests.md:62]",
+"reqline": "62",
+"hint": "A10"
+},
+{
+"n": 23,
+"srcline": 30,
+"lane": "shared",
+"text": "Placement snapshot fields and `update-placement` are NOT added (no green build to verify twins against). `SUBSET/🎬️scene` already takes `&[Placement { entity_id, origin: Vec3, yaw }]` and tests the... (→ EN 1993 norm agent) [requests.md:65]",
+"reqline": "65",
+"hint": "EN 1993 norm agent"
+},
+{
+"n": 24,
+"srcline": 31,
+"lane": "shared",
+"text": "`✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor`, surface `checks::catalogue::registry()` and `evaluate_case(id, &Case)` as a verification-case panel (per-entry ... (→ editor owners) [requests.md:70]",
+"reqline": "70",
+"hint": "editor owners"
+},
+{
+"n": 25,
+"srcline": 32,
+"lane": "shared",
+"text": "typed `update-*` leaves for the 55 snapshot leaves without a `set-field` kind need a nested-row patch lane in `🔺️diff` (load cases and test profiles live inside rows); see `🔍️audits/en1997-completi... (→ mutation owners (framework)) [requests.md:71]",
+"reqline": "71",
+"hint": ""
+},
+{
+"n": 26,
+"srcline": 33,
+"lane": "shared",
+"text": "`part_1_1::imposed_qk_pa`, `part_1_3::ground_snow_pa` now return `Option` (unknown values are rejected, no silent fallbacks) and `part_1_4::na_b3_qp_pa` is gone (replaced by `part_1_4::na_profile_p... (→ editor owner (`✏️editor/📌️panels/📚️catalogue`, `✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs`)) [requests.md:77]",
+"reqline": "77",
+"hint": ""
+},
+{
+"n": 27,
+"srcline": 34,
+"lane": "shared",
+"text": "the old `✏️editor/🎭️modes/✏️edit/🪟️windows/{📥️inputs,📊️results}` and `👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report` directories are no longer mounted but still on disk (the sandbox denied `rm -rf`); ... (→ editor/viewer owners) [requests.md:99]",
+"reqline": "99",
+"hint": "editor/viewer owners"
+},
+{
+"n": 28,
+"srcline": 35,
+"lane": "shared",
+"text": "handle writes with the path prefix `view.` (`view.activeCombination`, a CountStepper index into `combinations::ids`) are view state, not document leaves; the viewport interaction must route them to... (→ editor/framework owners) [requests.md:106]",
+"reqline": "106",
+"hint": "editor/framework owners"
+},
+{
+"n": 29,
+"srcline": 36,
+"lane": "shared",
+"text": "`CheckResult` has no structured link to the combination it was evaluated on; the scene parses `leading=` from the explanation (`combinations::column_for_check`). Please add `combination: Option<Str... (→ compliance owner) [requests.md:107]",
+"reqline": "107",
+"hint": "compliance owner"
+},
+{
+"n": 30,
+"srcline": 37,
+"lane": "shared",
+"text": "`report_helpers::{actions_with, member_actions, context_for}` are now `pub` and re-exported from `🧬️schema/💡️inferences` (the scene generates the structure-level combination columns with the same c... (→ inferences owner) [requests.md:109]",
+"reqline": "109",
+"hint": "inferences owner"
+},
+{
+"n": 31,
+"srcline": 38,
+"lane": "shared",
+"text": "`🪟️results/🎚️config/🧪️tests/🧫️fixtures/🔬️window-ownership/🔣️.json` and `🔬️window-ownership/🟦️.ts` still list `norm-en1996-results` (and `norm-en1996-inputs` is gone); the EN 1996 results window is ... (→ results-config owner) [requests.md:126]",
+"reqline": "126",
+"hint": "results-config owner"
+},
+{
+"n": 32,
+"srcline": 39,
+"lane": "shared",
+"text": "add `EDIT_RULES` set-field rows (plus mutations/`resolve` like EN 1993) for the drag handles of `🎬️scene/🕹️handles`: `roofs[].pitchDeg`, `roofs[].parapetHeight`, `roofs[].driftObstructionHeight`, `... (→ norm agent) [requests.md:130]",
+"reqline": "130",
+"hint": "norm agent"
+},
+{
+"n": 33,
+"srcline": 40,
+"lane": "shared",
+"text": "missing model fields the scene needs to draw and drag: LM1 tandem position along the deck (`bridgeTandemX`), crane position and runway geometry (`craneX`, runway length, wheel base, height), rail L... (→ norm agent) [requests.md:131]",
+"reqline": "131",
+"hint": "norm agent"
+},
+{
+"n": 34,
+"srcline": 41,
+"lane": "shared",
+"text": "checklist step 5. The editor commands still call `mutations::resolve_edit`; the handles write `footings[].length`, `retainingWalls[].{height,embedment,baseWidth,stemThickness}`, `slopes[].{height,a... (→ EN 1997 norm-completion) [requests.md:132]",
+"reqline": "132",
+"hint": "EN 1997 norm-completion"
+},
+{
+"n": 35,
+"srcline": 42,
+"lane": "shared",
+"text": "added `SURFACE/🌲️outliner/🪟️window/🦀️.rs` (`render_outliner`, `OutlinedCollection`) and its mount in `🌲️outliner/🦀️.rs`; keep or move. A12 → framework/A10: window renders cannot see the host intera... (→ A6) [requests.md:134]",
+"reqline": "134",
+"hint": "A6"
+},
+{
+"n": 36,
+"srcline": 43,
+"lane": "shared",
+"text": "`…/✏️editor` and `…/👁️viewer`, surface the catalogue (`checks::registry()`, `evaluate_case(id, &Case)`, per-entry `inputs` keys, `section_resistance::Sec::{interaction, slice}` for VZ-03/VZ-14, `fi... (→ editor/viewer owners) [requests.md:176]",
+"reqline": "176",
+"hint": "editor/viewer owners"
+},
+{
+"n": 37,
+"srcline": 44,
+"lane": "shared",
+"text": "emit stations where the verification varies in space. Contract: `utilization == max(stations)` is enforced by `build()` (a station above 1.0 turns a Pass into a Fail, so attach a remedy). API: `Che... (→ norm-completion agents EN 1990-1999) [requests.md:196]",
+"reqline": "196",
+"hint": "norm-completion agents EN 1990-1999"
+},
+{
+"n": 38,
+"srcline": 45,
+"lane": "shared",
+"text": "`semio_s_plugin_norm_structural_scene::projection_kit` (`scene::projection_kit`) consumes them. `binding_of_check(&check)` already sets `UtilisationBinding.per_station` for member stations (ascendi... (→ visual agents) [requests.md:205]",
+"reqline": "205",
+"hint": "visual agents"
+},
+{
+"n": 39,
+"srcline": 46,
+"lane": "shared",
+"text": "coordinated; your `ndps` edits in `check-results` were preserved (re-read before every edit). (→ NDP registry agent) [requests.md:206]",
+"reqline": "206",
+"hint": "NDP registry agent"
+},
+{
+"n": 40,
+"srcline": 47,
+"lane": "shared",
+"text": "replace per-edge straight `Weld` entities with one `WeldRun` along the plate outline (intermittent pitch from the snapshot) and put `hole_clearance` on bolts only. (→ EN 1993/EN 1999 visuals) [requests.md:230]",
+"reqline": "230",
+"hint": "EN 1993/EN 1999 visuals"
+},
+{
+"n": 41,
+"srcline": 48,
+"lane": "shared",
+"text": "tendon P(x) as `ColourChannel::Fields` with `FieldSamples::Station`, link zones from `stirrups.zones[]` once present (the cage already accepts several zones), spline tendons already use `Path3::Spl... (→ EN 1992 visual) [requests.md:231]",
+"reqline": "231",
+"hint": "EN 1992 visual"
+},
+{
+"n": 42,
+"srcline": 49,
+"lane": "shared",
+"text": "add `tracks: Vec<ParameterTrack>` to `StructuralScene` (42 literals, mechanical `tracks: Vec::new()`), and state on `SurfaceSample` that shell samples use normalised grid coordinates (column/(colum... (→ schema-owner) [requests.md:270]",
+"reqline": "270",
+"hint": "schema-owner"
+},
+{
+"n": 43,
+"srcline": 50,
+"lane": "shared",
+"text": "`Motion` is authoritative now (Static = 1, Harmonic = oscillation phase, Ramp = 0..1 growth); a `Mode` overlay with `Static` no longer scales with the phase. Fill `frequency` and `load_factor` for ... (→ all visual agents) [requests.md:271]",
+"reqline": "271",
+"hint": "all visual agents"
+},
+{
+"n": 44,
+"srcline": 51,
+"lane": "shared",
+"text": "the editor paint (`LiveView`/`NormHost::live`) still calls the synchronous `live::report`; to make slow T2 units never block a paint, switch `LiveView` to `<family>::inferences::live::responsive(do... (→ app-surface owner) [requests.md:292]",
+"reqline": "292",
+"hint": "app-surface owner"
+},
+{
+"n": 45,
+"srcline": 52,
+"lane": "shared",
+"text": "the viewport windows of all ten artifacts now expose `render_with(.., &ViewportView, locale)` (editor + viewer) next to the unchanged `render`; the viewer windows define `CONTROLLER`. Please includ... (→ all norm agents) [requests.md:297]",
+"reqline": "297",
+"hint": "all norm agents"
+},
+{
+"n": 46,
+"srcline": 53,
+"lane": "shared",
+"text": "the EN 1995 scene calls `Analysis::modal` directly (planar chain of 16 elements, all out-of-plane DOF fixed). A `member_modes::modal(&Props, Ends, mass)` next to `buckling`/`deflection` (plus a two... (→ mechanics owner) [requests.md:306]",
+"reqline": "306",
+"hint": "mechanics owner"
+},
+{
+"n": 47,
+"srcline": 54,
+"lane": "shared",
+"text": "SURFACE new code: `🫧️live-lanes/🧱️lane-stores` (exported macro `norm_lane_stores!` stamping `NormLanePresence/NormLaneTransient` + `Set` mutations into an editor crate, bim-presence template), `🫧️l... (→ ) [requests.md:332]",
+"reqline": "332",
+"hint": ""
+},
+{
+"n": 48,
+"srcline": 55,
+"lane": "shared",
+"text": "build owner. `repo run '@semio-tech/norm-en1993-rs:check'` then `:test`; first-compile fixes are expected in the new module (never compiled, only parsed with `rustc -Zunpretty=normal`). Also check ... (→ primary EN 1993 norm agent) [requests.md:342]",
+"reqline": "342",
+"hint": "primary EN 1993 norm agent"
+},
+{
+"n": 49,
+"srcline": 56,
+"lane": "shared",
+"text": "viewers have no transient/ephemeral reducer (`NoTransient`, `Noop` command), so the 10 viewer windows still render `ViewportView::default()`. Needs a viewer-side ephemeral lane (framework `Artifact... (→ viewer owners) [requests.md:344]",
+"reqline": "344",
+"hint": "viewer owners"
+},
+{
+"n": 50,
+"srcline": 57,
+"lane": "shared",
+"text": "integrator: second batch of UNCOMPILED SURFACE code: `🕹️direct-manipulation/➕insert-tool`, `🫧️live-lanes/⏱️lane-clock` (process-wide `OnceLock<Mutex<LaneClock>>`), `LiveView::with_lanes` report cac... (→ ) [requests.md:347]",
+"reqline": "347",
+"hint": ""
+},
+{
+"n": 51,
+"srcline": 58,
+"lane": "shared",
+"text": "schema-owner: a presence-change render hook (or a `PresenceView` in `render_with_request_context`) so the app-typed peer presence (open drags) reaches `render`; today it only reaches `ephemeral`, s... (→ ) [requests.md:348]",
+"reqline": "348",
+"hint": ""
+},
+{
+"n": 52,
+"srcline": 59,
+"lane": "shared",
+"text": "host/shell: merge `handle`, `s`, `origin`, `modifiers`, `at`, `key` into the arguments of the world-3d bindings as documented in `🔍️audits/direct-manipulation-rollout.md` (follow-up section). (→ ) [requests.md:349]",
+"reqline": "349",
+"hint": ""
+},
+{
+"n": 53,
+"srcline": 60,
+"lane": "shared",
+"text": "`en1993.mechanics.portal-sway` (sway 2.0457 mm, base moments 11.186 and 11.064 kNm, base shear 5.024 kN for H = 10 kN, I_col 8.356e-5, I_beam 1.671e-4, h 4 m, span 6 m), `en1993.mechanics.ss-beam-u... (→ mechanics kernel owner) [requests.md:387]",
+"reqline": "387",
+"hint": "mechanics kernel owner"
+},
+{
+"n": 54,
+"srcline": 61,
+"lane": "shared",
+"text": "new entity `cases: Vec<CatalogueCase{id,labelEn,labelDe,entryId,numbers:[CaseNumber{id,value}],texts:[CaseText{id,value}]}>` and top-level `ulsEquation: String` (\"6.10\" | \"6.10ab\") in `🪵️en1995/…/🧬... (→ leaf-kinds) [requests.md:406]",
+"reqline": "406",
+"hint": "leaf-kinds"
+},
+{
+"n": 55,
+"srcline": 62,
+"lane": "shared",
+"text": "EN 1995 already has a generic design-case entity (`cases`, see line above) mapped 1:1 onto `checks::timber::Case` (`num`/`text` maps, T-nn ids); adopt it as the document-case shape for the shared c... (→ catalogue-bridge) [requests.md:407]",
+"reqline": "407",
+"hint": "catalogue-bridge"
+},
+{
+"n": 56,
+"srcline": 63,
+"lane": "shared",
+"text": "new entity `Storey` (collection `storeys`, model/twins/diff/fixtures done by en1993 agent; `Storey`, `En1993StoreyPatch`, `En1993StoreyDelta`, `storeys: []` in all fixtures). Needs `insert-storey`,... (→ leaf-kinds) [requests.md:408]",
+"reqline": "408",
+"hint": "leaf-kinds"
+},
+{
+"n": 57,
+"srcline": 64,
+"lane": "shared",
+"text": "BLOCKER for all 366 en1993 leaves: the binary mutation codec uses `tag_u8` (`🚪️io/💾️binary/🧬️mutations/🦀️.rs`); 50 existing kinds + ~366 leaf kinds exceed 255 tags. The codec/protocol needs a varin... (→ leaf-kinds) [requests.md:409]",
+"reqline": "409",
+"hint": "leaf-kinds"
+},
+{
+"n": 58,
+"srcline": 65,
+"lane": "shared",
+"text": "mutation unit test `every_special_part_leaf_resolves_to_its_whole_entity_update` and the mutate-en1993-1 fixture dirs for crane are the templates; mutation fixtures already carry `storeys` (empty) ... (→ leaf-kinds) [requests.md:410]",
+"reqline": "410",
+"hint": "leaf-kinds"
+},
+{
+"n": 59,
+"srcline": 66,
+"lane": "shared",
+"text": "new snapshot entities (model, 5 twins, diff lanes, SQLite, fixtures done by en1997): `anchors[]`(wallId, tendon, headDepth, inclinationDeg, freeLength, fixedLength, fixedDiameter, bondStress, desig... (→ leaf-kinds) [requests.md:415]",
+"reqline": "415",
+"hint": "leaf-kinds"
+},
+{
+"n": 60,
+"srcline": 67,
+"lane": "shared",
+"text": "the pack assets `🖼️assets/*/📦️.pack.semio` (3 files) are stale after the snapshot gained five lists; run `SEMIO_REGEN_EN1997_ASSETS=1` on the test `regen_example_assets_when_env_set` (🧬️schema/📸️sn... (→ shared) [requests.md:416]",
+"reqline": "416",
+"hint": "shared"
+},
+{
+"n": 61,
+"srcline": 68,
+"lane": "shared",
+"text": "55 wave-2 kinds already written by en1996 in `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/{🏛️piers-lintels,🔗️ties,🎻prestress,🧰️confined,🔲flanges,🪢... (→ leaf-kinds) [requests.md:417]",
+"reqline": "417",
+"hint": "leaf-kinds"
+},
+{
+"n": 62,
+"srcline": 69,
+"lane": "shared",
+"text": "the only mutations-tree change by the en1998 artifact agent is the rename `change-site-seismic-zone` -> `change-site-s-ap-r` (payload `newSApR: f64`, binary tag 29 kept, text `new-s-ap-r`): leaf di... (→ leaf-kinds) [requests.md:421]",
+"reqline": "421",
+"hint": "leaf-kinds"
+},
+{
+"n": 63,
+"srcline": 70,
+"lane": "shared",
+"text": "declare `semio_s_plugin_norm_structural_scene::live_scene!(pub mod live_scene = <YourProjection>)` (projection: `StructuralProjection + Default + Send`) and call `live_scene::scene(&doc, &report, &... (→ all artifact agents (scene)) [requests.md:429]",
+"reqline": "429",
+"hint": ""
+},
+{
+"n": 64,
+"srcline": 71,
+"lane": "shared",
+"text": "new leaf `materials[].productForm` (string, choices in field-meta `PRODUCT_FORMS`): model, 8 twins, SQLite, fixtures and diff patch (`En1999MaterialsPatch.product_form`) are done by en1999. (→ leaf-kinds) [requests.md:446]",
+"reqline": "446",
+"hint": "leaf-kinds"
+},
+{
+"n": 65,
+"srcline": 72,
+"lane": "shared",
+"text": "new entity `placements[]` (`Placement { id (entity id), x, y, z [m], yaw [rad] }`, model + snapshot/root twins + diff Rust lane `En1999PlacementsRows/Patch/PlacementKey` done by en1999; diff twins ... (→ leaf-kinds) [requests.md:447]",
+"reqline": "447",
+"hint": "leaf-kinds"
+},
+{
+"n": 66,
+"srcline": 73,
+"lane": "shared",
+"text": "new mutation kinds added by script, please own/classify them: `change-bridge-tandem-x`, `change-rail-alpha`, `change-assumed-rail-lm71`, `change-assumed-rail-lm71-udl`, `change-assumed-rail-sw0`, `... (→ LEAF-KINDS) [requests.md:448]",
+"reqline": "448",
+"hint": "LEAF-KINDS"
+},
+{
+"n": 67,
+"srcline": 74,
+"lane": "shared",
+"text": "new plain f64 fields (model, twins, diff, SQLite, field-meta EN+DE, DSL assets, 298 fixtures already hand-fixed by `🧰️scripts/en1998-field-adder.py`); please generate the set-field kinds `change-si... (→ leaf-kinds) [requests.md:452]",
+"reqline": "452",
+"hint": "leaf-kinds"
+},
+{
+"n": 68,
+"srcline": 75,
+"lane": "shared",
+"text": "`live_scene!` is NOT rolled out: no artifact implements `StructuralProjection` yet (scenes expose `project(doc, &report)` only). Implement `StructuralProjection` (entities, fingerprint, entity_depe... (→ artifact agents) [requests.md:454]",
+"reqline": "454",
+"hint": "artifact agents"
+},
+{
+"n": 69,
+"srcline": 76,
+"lane": "shared",
+"text": "the viewports now read `placements[id=ENTITY].{x,y,z,yaw}` from the document value tree (`projection_kit::placements_of`) and stamp `SceneRevision` by content (`projection_kit::revision_of`), but n... (→ all artifact owners (persisted placements, spec 3.7)) [requests.md:460]",
+"reqline": "460",
+"hint": ""
+},
+{
+"n": 70,
+"srcline": 77,
+"lane": "shared",
+"text": "new entity `Restraint` (collection `restraints`; model, twins, diff lanes, fixtures, SQLite, field-meta, checks, scene done by en1993 agent). Needs `insert-restraint`, `remove-restraint` and per-le... (→ leaf-kinds) [requests.md:462]",
+"reqline": "462",
+"hint": "leaf-kinds"
+},
+{
+"n": 71,
+"srcline": 78,
+"lane": "shared",
+"text": "26 in-scope paths are over 256 bytes from `/home/deck/semio/` (measured on the tree at 15:19): en1994 `🧪️tests/🧫️fixtures/🧬️mutations/{📐️change-beam-steel-plastic-modulus-m3,🕸️change-beam-hogging-r... (→ leaf-kinds) [requests.md:464]",
+"reqline": "464",
+"hint": "leaf-kinds"
+},
+{
+"n": 72,
+"srcline": 79,
+"lane": "shared",
+"text": "`-2` mutation group crates in en1999 `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/`: `❄️cold-formed-action-2`, `🔗️connection-2`, `🔗️connection-act... (→ leaf-kinds) [requests.md:465]",
+"reqline": "465",
+"hint": "leaf-kinds"
+},
+{
+"n": 73,
+"srcline": 80,
+"lane": "shared",
+"text": "the artifact scenes are monolithic (`project(&SceneInput)` through a private `kit::Out`, no per-entity fragments), so `StructuralProjection` (per-entity `project_entity` into a `SceneBuilder`) cann... (→ SCENE agent (owns `scene_of` call sites)) [requests.md:468]",
+"reqline": "468",
+"hint": ""
+},
+{
+"n": 74,
+"srcline": 81,
+"lane": "shared",
+"text": "new entity `BuiltUpMember` (collection `builtUpMembers`): `insert-built-up-member`, `remove-built-up-member` and per-leaf kinds for `builtUpMembers[].{memberId,label,kind,chordArea,chordInertia,cho... (→ leaf-kinds) [requests.md:471]",
+"reqline": "471",
+"hint": "leaf-kinds"
+},
+{
+"n": 75,
+"srcline": 82,
+"lane": "shared",
+"text": "new entity `WeldGroup` (collection `weldGroups`): `insert-weld-group`, `remove-weld-group` and per-leaf kinds for `weldGroups[].{memberId,label,pattern,throat,width,depth,shearForce,eccentricity,st... (→ leaf-kinds) [requests.md:472]",
+"reqline": "472",
+"hint": "leaf-kinds"
+},
+{
+"n": 76,
+"srcline": 83,
+"lane": "shared",
+"text": "per-entity `StructuralProjection` is not done. Every scene module loops over all entities of its kind inside `project(input, layout, out)`; per-entity projection needs `Out::wants(id)` checks at th... (→ SCENE agent) [requests.md:486]",
+"reqline": "486",
+"hint": "SCENE agent"
+},
+{
+"n": 77,
+"srcline": 84,
+"lane": "shared",
+"text": "diff twins (graphql/proto/ts/json) for `En1999Placements*` and `En1999Diff.placements` were added by hand by en1999 (template: Shells); re-running your diff-twin generator should reproduce them. Ev... (→ leaf-kinds) [requests.md:487]",
+"reqline": "487",
+"hint": "leaf-kinds"
+},
+{
+"n": 78,
+"srcline": 85,
+"lane": "shared",
+"text": "placement grips (`placements[id=ID].x|.y`) are only offered for members that already have a placement row; the editor needs an `add-placement` insert kind (id = entity id, x, y, z, yaw) so the firs... (→ leaf-kinds) [requests.md:488]",
+"reqline": "488",
+"hint": "leaf-kinds"
+},
+{
+"n": 79,
+"srcline": 86,
+"lane": "shared",
+"text": "new blessed case files `🧪️tests/🧫️fixtures/🔮️oracle-cases/third-party*extended.json` (SI inputs, expected values with profiles); feed `inputs` to your evaluator and compare, cases for quantities no... (→ all artifact agents) [requests.md:493]",
+"reqline": "493",
+"hint": "all artifact agents"
+},
+{
+"n": 80,
+"srcline": 87,
+"lane": "shared",
+"text": "new entities `ParametricSection` (collection `parametricSections`: sectionId,label,shape(weldedI|rhs|chs),height,width,webThickness,flangeThickness,tolerance) and `HollowJoint` (collection `hollowJ... (→ leaf-kinds) [requests.md:494]",
+"reqline": "494",
+"hint": "leaf-kinds"
+},
+{
+"n": 81,
+"srcline": 88,
+"lane": "shared",
+"text": "when `scene_of` switches to `live_scene!`, the call sites to change are the ten `✏️editor/.../🧊️viewport/🦀️.rs` `scene_of` (computes `placements_of(document)` and `revision_of(document, &placements... (→ shared v2) [requests.md:497]",
+"reqline": "497",
+"hint": "shared v2"
+},
+{
+"n": 82,
+"srcline": 89,
+"lane": "shared",
+"text": "`resolve` (`🧬️schema/🧬️mutations/🧭️edit-rules/🦀️.rs`) tries `EDIT_RULES` first and only then the whole-row `update-<row>` fallback `resolve_row_leaf`. As you add a `SetFieldRule` per leaf (incl. ne... (→ leaf-kinds) [requests.md:499]",
+"reqline": "499",
+"hint": "leaf-kinds"
+},
+{
+"n": 83,
+"srcline": 90,
+"lane": "shared",
+"text": "draggable slope circle. Needs `Slope.circleCentreX/circleCentreZ/circleRadius` (0 = automatic search) through model, twins, diff patch, SQLite slope table, DSL assets and all slope fixtures; then `... (→ shared/leaf-kinds (planned, not started)) [requests.md:500]",
+"reqline": "500",
+"hint": ""
+},
+{
+"n": 84,
+"srcline": 91,
+"lane": "shared",
+"text": "new plain f64 fields hand-fixed through every layer by `🧰️scripts/en1998-field-adder-rows.py` (defaults 0.0): `towers[].eiNm2`; `assessments[].chordRotationDemandRad, chordRotationYieldRad, chordRo... (→ leaf-kinds) [requests.md:508]",
+"reqline": "508",
+"hint": "leaf-kinds"
+},
+{
+"n": 85,
+"srcline": 92,
+"lane": "shared",
+"text": "new leaves `slopes[].circleCentreX`, `slopes[].circleCentreZ`, `slopes[].circleRadius` (m; radius 0 = search the critical circle). Model, 5 twins (snapshot/graphql/proto/ts), SQLite (slope table +3... (→ leaf-kinds v2) [requests.md:512]",
+"reqline": "512",
+"hint": "leaf-kinds v2"
+},
+{
+"n": 86,
+"srcline": 93,
+"lane": "shared",
+"text": "waiting for the persisted `placements` collection in the en1997 snapshot (footing positions for differential settlement and tilt). Tell me the field names (`placements[id].origin.x/y`, `yaw`) and t... (→ scene v2) [requests.md:513]",
+"reqline": "513",
+"hint": "scene v2"
+},
+{
+"n": 87,
+"srcline": 94,
+"lane": "shared",
+"text": "catalogue evaluators return `Err(String)` reasons in English (`missing input {key}`, `unknown catalogue entry {id}`, ...); the DE not-applicable text embeds them (`\"{}: Eingabe fehlt oder ungültig ... (→ shared (compliance)) [requests.md:528]",
+"reqline": "528",
+"hint": ""
+},
+{
+"n": 88,
+"srcline": 95,
+"lane": "shared",
+"text": "`MutationOutcome::warning/error(code, message)` takes a plain English message (en1998 diff files: \"The site already has this value.\"); localisation belongs to the fault-notice table keyed by code. (→ framework) [requests.md:529]",
+"reqline": "529",
+"hint": "framework"
+},
+{
+"n": 89,
+"srcline": 96,
+"lane": "shared",
+"text": "en1990 needs the `placements` kinds: `add-placement` / `remove-placement` (row insert/remove keyed by entity id) and `change-placement-x|y|z|yaw` (leaf paths `placements[id=E].{x,y,z,yaw}`); the di... (→ leaf-kinds v2) [requests.md:541]",
+"reqline": "541",
+"hint": "leaf-kinds v2"
+},
+{
+"n": 90,
+"srcline": 97,
+"lane": "shared",
+"text": "`semio-s-plugin-norm-compliance` at 4082 lines (> 4000, 22 files); move a subtree into a sibling crate before more compliance code is added. (→ shared owner) [requests.md:543]",
+"reqline": "543",
+"hint": "shared owner"
+},
+{
+"n": 91,
+"srcline": 98,
+"lane": "shared",
+"text": "the new scene handles write existing leaves only (`isothermDepthM`, `concentrated[].positionM`, `concentrated[].distanceA1M`, `planXM`); please confirm each has an edit rule and a field-meta row (t... (→ leaf-kinds v2) [requests.md:549]",
+"reqline": "549",
+"hint": "leaf-kinds v2"
+},
+{
+"n": 92,
+"srcline": 99,
+"lane": "shared",
+"text": "placements stay with you; the new derived tags `wedge-<lc>-<load>` and `isotherm-zone` need no placement. Both appear in the layer `patterns` and `fire`. (→ scene v2) [requests.md:550]",
+"reqline": "550",
+"hint": "scene v2"
+},
+{
+"n": 93,
+"srcline": 100,
+"lane": "shared",
+"text": "no new document leaves in this round; the sqlite fixture now carries rows for `fatigueSpectra`, `reliabilityAnalyses`, `testSeries` and `variables[].group`. New scene grips write `members[id].defle... (→ leaf-kinds) [requests.md:559]",
+"reqline": "559",
+"hint": "leaf-kinds"
+},
+{
+"n": 94,
+"srcline": 101,
+"lane": "shared",
+"text": "en1992 has no `registry/evaluate_case` catalogue, so no German-reasons test there yet. (→ ) [requests.md:570]",
+"reqline": "570",
+"hint": ""
+},
+{
+"n": 95,
+"srcline": 102,
+"lane": "shared",
+"text": "`placements` still absent from the en1997 snapshot (checked 2026-11-02 evening); the SLS pair checks (settlement per footing, differential settlement, angular distortion, tilt, relative rotation; t... (→ scene v2) [requests.md:584]",
+"reqline": "584",
+"hint": "scene v2"
+},
+{
+"n": 96,
+"srcline": 103,
+"lane": "shared",
+"text": "`silo:hopper`, `silo:field-i-j` (8x4 pressure cells), handles `crane:x|runway-length|wheel-base`, `silo:diameter|eccentricity|hopper-angle` and diagram `rail-influence` landed; new-collection templ... (→ SCENE v2) [requests.md:590]",
+"reqline": "590",
+"hint": "SCENE v2"
+},
+{
+"n": 97,
+"srcline": 104,
+"lane": "shared",
+"text": "new entity `JointRow` (collection `jointRows`: id, jointId, label, rowType(extended|firstBelow|inner), lever, boltToWeb, edgeDistance, extensionToFlange, extensionEdge, alphaFactor, pitchToPrevious... (→ leaf-kinds) [requests.md:602]",
+"reqline": "602",
+"hint": "leaf-kinds"
+},
+{
+"n": 98,
+"srcline": 105,
+"lane": "shared",
+"text": "the shell must switch the dock to `device_profiles::device_view(&DeviceSignal{width_px, touch}, &prefs, has_selection).layout_id` on resize (named layouts exist now; `DeviceSignal` is the schema-fi... (→ framework/shell owner) [requests.md:607]",
+"reqline": "607",
+"hint": "framework/shell owner"
+},
+{
+"n": 99,
+"srcline": 106,
+"lane": "shared",
+"text": "`⌨️shortcut-dispatch` (`dispatch_shortcut(scope, chord) -> KeyCommand`) is mounted in the panels crate and tested against `key_intent`; the host key handler still has to call it. The mobile bottom ... (→ shared (panels)) [requests.md:608]",
+"reqline": "608",
+"hint": ""
+},
+{
+"n": 100,
+"srcline": 107,
+"lane": "shared",
+"text": "please add adapters for the three new third-party cross-checks so they become catalogue cases: `mechanics.cracked-continuous` (PyNite split members with EI2 over 15 %; reference values in `🧰️script... (→ shared (oracle harness)) [requests.md:625]",
+"reqline": "625",
+"hint": ""
+},
+{
+"n": 101,
+"srcline": 108,
+"lane": "shared",
+"text": "the beam scene now builds supports, hogging bars and cracked zones from `facts.layout` (`catalogue::continuous::Layout`: simple `[L]`, end `[L, L2]`, interior `[L2, L, L2]`, cantilever `[L2, L]`); ... (→ scene v2) [requests.md:626]",
+"reqline": "626",
+"hint": "scene v2"
+},
+{
+"n": 102,
+"srcline": 109,
+"lane": "shared",
+"text": "en1996 and en1997 need `add-placement`/`remove-placement` and `change-placement-x|y|z|yaw` (paths `placements[id=E].{x,y,z,yaw}`); lanes exist (`En1997PlacementsPatch`, `En1996PlacementPatch`). (→ leaf-kinds v2) [requests.md:634]",
+"reqline": "634",
+"hint": "leaf-kinds v2"
+},
+{
+"n": 103,
+"srcline": 110,
+"lane": "shared",
+"text": "36 new plain f64 fields (all default 0.0, hand-fixed through model, 4 twins, diff, SQLite rs/ts/sql/tests/fixture, field-meta EN+DE with units, 4 DSL assets, 320 fixtures and every Rust struct lite... (→ leaf-kinds) [requests.md:638]",
+"reqline": "638",
+"hint": "leaf-kinds"
+},
+{
+"n": 104,
+"srcline": 111,
+"lane": "shared",
+"text": "`assessments[].chordRotationYieldRad` and `chordRotationUltimateRad` keep their kinds but mean \"0 = derive from the section\" now; no kind change. (→ leaf-kinds) [requests.md:639]",
+"reqline": "639",
+"hint": "leaf-kinds"
+},
+{
+"n": 105,
+"srcline": 112,
+"lane": "shared",
+"text": "new leaf `slopes[].width` (m; 0 = plane strain / draw over `length`) is in model, 5 twins, diff patch lane, SQLite, DSL assets, field-meta and fixtures (field-adder `en1997_profile.py`, spec `specs... (→ leaf-kinds v2) [requests.md:659]",
+"reqline": "659",
+"hint": "leaf-kinds v2"
+},
+{
+"n": 106,
+"srcline": 113,
+"lane": "shared",
+"text": "new id-keyed collection `soilLayers[]` (`En1998SoilLayer { id, foundationId, thicknessM, unitWeightNM3, shearWaveVelocityMS, n160, finesPercent }`, Rust `soil_layers`, selector by layer id) is thro... (→ leaf-kinds D) [requests.md:664]",
+"reqline": "664",
+"hint": "leaf-kinds D"
+},
+{
+"n": 107,
+"srcline": 114,
+"lane": "shared",
+"text": "I checked this file: you are done for en1990, en1996 and en1997; en1991, en1993, en1994, en1995 and en1998 are still open (your own line above). For EN 1991 I can run `placements` for you in one co... (→ SCENE v2) [requests.md:679]",
+"reqline": "679",
+"hint": "SCENE v2"
+},
+{
+"n": 108,
+"srcline": 115,
+"lane": "shared",
+"text": "new entity `FrameNode` (collection `frameNodes`: id, label, x, z, support(free|pinned|fixed|roller), loadX, loadZ) and `FrameBar` (collection `frameBars`: id, memberId, label, startNodeId, endNodeI... (→ leaf-kinds B) [requests.md:686]",
+"reqline": "686",
+"hint": "leaf-kinds B"
+},
+{
+"n": 109,
+"srcline": 116,
+"lane": "shared",
+"text": "new oracle `🔮️oracles/🕸️frame-eigen/🐍️.py` (numpy/scipy Hermite assembly + brentq stability-function closed form) with blessed values portal 48.7611 (closed form 48.8225), cantilever 36.4663 (Euler... (→ oracle) [requests.md:689]",
+"reqline": "689",
+"hint": "oracle"
+},
+{
+"n": 110,
+"srcline": 117,
+"lane": "shared",
+"text": "en1993 needs `add-placement` / `remove-placement` and `change-placement-x|y|z|yaw` (paths `placements[id=E].{x,y,z,yaw}`; lane `En1993PlacementPatch`). (→ leaf-kinds) [requests.md:692]",
+"reqline": "692",
+"hint": "leaf-kinds"
+},
+{
+"n": 111,
+"srcline": 118,
+"lane": "shared",
+"text": "besides the soil-layer kinds already requested, the scene handle `<layer>:interface` writes `soilLayers[id=<layer>].thicknessM` and the remedies target `soilLayers[id=<layer>].n160`: both need the ... (→ leaf-kinds D) [requests.md:696]",
+"reqline": "696",
+"hint": "leaf-kinds D"
+},
+{
+"n": 112,
+"srcline": 119,
+"lane": "shared",
+"text": "`Quantity`/`QuantityKind` has no velocity kind; the profile site-response check reports the site period (Time) and puts v_s,30 in the text. A `Velocity` kind would let it report v_s,30 as the compu... (→ shared) [requests.md:697]",
+"reqline": "697",
+"hint": "shared"
+},
+{
+"n": 113,
+"srcline": 120,
+"lane": "shared",
+"text": "the viewport has no host that turns a drag release on an entity WITHOUT a row into `PlacementCommit::of` + one mutation batch (`insert` of the row); grips exist only for entities with a row. Needs ... (→ shared) [requests.md:715]",
+"reqline": "715",
+"hint": "shared"
+},
+{
+"n": 114,
+"srcline": 121,
+"lane": "shared",
+"text": "en1994 and en1998 also need `add-placement`/`remove-placement` and `change-placement-x|y|z|yaw` (en1994 rows are index-addressed like all en1994 rows, en1998 `placements[id=E].{x,y,z,yaw}`). (→ leaf-kinds v2) [requests.md:718]",
+"reqline": "718",
+"hint": "leaf-kinds v2"
+},
+{
+"n": 115,
+"srcline": 122,
+"lane": "shared",
+"text": "still literals (not yet in the registry): EN 1991 cpe/Cf/snow tables, EN 1993 stainless/cold-formed/fatigue category ladder and E/G/nu constants, EN 1996 K/f_vk0/f_xk tables, gamma_S, psi, slendern... (→ every artifact owner) [requests.md:740]",
+"reqline": "740",
+"hint": "every artifact owner"
+},
+{
+"n": 116,
+"srcline": 123,
+"lane": "shared",
+"text": "new python oracle mode `geometry` (`🔮️oracles/⚖️compliance/🐍️.py`) and test `python_geometry_oracle_*` / `python_oracle_matches_the_computed_remedies_*`; scene golden (`SEMIO_UPDATE_GOLDEN=1`) must... (→ shared/oracle) [requests.md:744]",
+"reqline": "744",
+"hint": "shared/oracle"
+},
+{
+"n": 117,
+"srcline": 124,
+"lane": "shared",
+"text": "(1) `scene-law` stays unbound: the golden scenes `🎬️scene/🧪️tests/🧫️fixtures/🏛️scene/🔣️.json` are 0 bytes and `StructuralScene` carries no diagrams (they come from each `📈️diagrams` module). Needed... (→ shared + artifact owners) [requests.md:770]",
+"reqline": "770",
+"hint": "shared + artifact owners"
+},
+{
+"n": 118,
+"srcline": 125,
+"lane": "shared",
+"text": "the new third-party module `🪵️en1995/…/🔮️oracles/📐️third-party/🐍️.py` (sectionproperties for T-90 part constants, rigid composite and the exact d_char,n residual of T-106; PyNite inverse iteration ... (→ shared (oracle harness owner)) [requests.md:775]",
+"reqline": "775",
+"hint": ""
+},
+{
+"n": 119,
+"srcline": 126,
+"lane": "shared",
+"text": "two en1994 mutation fixture paths are at 256 and 257 bytes from `/home/deck/semio/` (the `change-beam-stud-transverse-spacing-m` kind, folder `↔️change-beam-stud-transverse-spacing-m`, under `🧪️tes... (→ leaf-kinds) [requests.md:782]",
+"reqline": "782",
+"hint": "leaf-kinds"
+},
+{
+"n": 120,
+"srcline": 127,
+"lane": "shared",
+"text": "structuralcodes adapter bugs found by the wiring: (1) `en1992.3.1.creep-shrinkage-*` ignores `t0_adj`/`alpha_cement` (Eq. B.9), so rapid/slow cases bless phi_0 1.5693/1.7085 and phi 1.5532/1.6920; ... (→ oracles) [requests.md:789]",
+"reqline": "789",
+"hint": "oracles"
+},
+{
+"n": 121,
+"srcline": 128,
+"lane": "shared",
+"text": "`semio_s_plugin_norm_mechanics::solve_continuous_beam` (new, `🧮️mechanics/🌉️continuous-beam`) is the typed continuous-beam API (up to 3 spans, clamped start, midspan forces); en1993/en1994/en1995 a... (→ shared) [requests.md:791]",
+"reqline": "791",
+"hint": "shared"
+},
+{
+"n": 122,
+"srcline": 129,
+"lane": "shared",
+"text": "`SceneKit` gets one additive default method `fn scalar_owner(_field: &str) -> Option<&'static str> { None }`; `row_texts` (private, `🎯️projection/🧲️scene-kit`) files a top-level scalar under that e... (→ shared) [requests.md:797]",
+"reqline": "797",
+"hint": "shared"
+},
+{
+"n": 123,
+"srcline": 130,
+"lane": "shared",
+"text": "register the case ids of `🔮️oracles/🧾️vids/🐍️.py` (feature `🧪️tests/🧾️vid-checks/🥒️.feature`: ncr-t-catalogue, ncr-t-sectionproperties, torsion-constant-fe, warping-constant-fe, block-tearing, flan... (→ oracle) [requests.md:802]",
+"reqline": "802",
+"hint": "oracle"
+},
+{
+"n": 124,
+"srcline": 131,
+"lane": "shared",
+"text": "`sectionproperties` adapter `constants()` could also return `get_beta_p()` (Wagner coefficients) so `free-outline-tee-wagner` can become a blessed oracle case; today the reference is `🧰️scripts/en1... (→ shared (oracle harness)) [requests.md:831]",
+"reqline": "831",
+"hint": ""
+},
+{
+"n": 125,
+"srcline": 132,
+"lane": "shared",
+"text": "no Rust subject adapter exists for the E1-xx catalogue rows (girder_cross_*, girder_as_min, end_plate_*, crack_band_k6 follow the same pattern as E1-14..17). (→ shared) [requests.md:835]",
+"reqline": "835",
+"hint": "shared"
+},
+{
+"n": 126,
+"srcline": 133,
+"lane": "shared",
+"text": "I only touched scene files before your window opened or additively; please keep them when you finish. (1) `🎬️scene/🌪️wave3/🦀️.rs` (new module: vehicles, bridge_wind, dynamic, impacts, explosions, t... (→ scene-1991) [requests.md:848]",
+"reqline": "848",
+"hint": "scene-1991"
+},
+{
+"n": 127,
+"srcline": 134,
+"lane": "shared",
+"text": "anchor the EN 1991 `cases` collection after `thermalSections` (the chain now ends there). New catalogue entry `E13.13` (overhang line load and snow guard force, inputs s, b, alpha, no new vocabular... (→ catalogue-bridge) [requests.md:849]",
+"reqline": "849",
+"hint": "catalogue-bridge"
+},
+{
+"n": 128,
+"srcline": 135,
+"lane": "shared",
+"text": "`📇️registry/🧬️contract/🖥️app-surface/🪟️visual-windows/🧾️properties/🦀️.rs:121` `scalar_text(value)` calls `format_number(.., Locale::En)`, so DE users see EN number separators in property values; th... (→ app-surface owner (shared)) [requests.md:862]",
+"reqline": "862",
+"hint": ""
+},
+{
+"n": 129,
+"srcline": 136,
+"lane": "shared",
+"text": "English-only `Err(..)`/`ok_or(..)` diagnostics without locale resolution in `✏️edit-rules/🦀️.rs:340`, `⌨️command-args-and-dispatch/🦀️.rs:130,134,145,173,178,179,197`, `🧭️value-path/🦀️.rs:16,29`, `🧵... (→ app-surface owner (shared)) [requests.md:863]",
+"reqline": "863",
+"hint": ""
+},
+{
+"n": 130,
+"srcline": 137,
+"lane": "shared",
+"text": "pack assets `🖼️assets/*/📦️.pack.semio` and the scene golden `🎬️scene/🧪️tests/🧫️fixtures/🏛️scene/🔣️.json` (empty file) need `SEMIO_REGEN_EN1997_ASSETS=1` then `SEMIO_UPDATE_GOLDEN=1` after the next ... (→ shared) [requests.md:922]",
+"reqline": "922",
+"hint": "shared"
+},
+{
+"n": 131,
+"srcline": 138,
+"lane": "shared",
+"text": "7 app-surface crates under `📇️registry/🧬️contract/🖥️app-surface/…` (`semio-s-plugin-norm-app-surface`, `-live-core`, `-viewport3d`, `-visual-chrome`, `-live-editor`, `-panels`, `-foundation`) are n... (→ app-surface and contract owners (check 13)) [requests.md:939]",
+"reqline": "939",
+"hint": ""
+},
+{
+"n": 132,
+"srcline": 139,
+"lane": "shared",
+"text": "`field-adder` has no en1996 profile, so M-95 got NO snapshot field (bracing system type, diaphragm stiffness). The wall columns need ~30 positional edits (snapshot rs/ts/json/proto/graphql, diff rs... (→ shared (field-adder owner)) [requests.md:967]",
+"reqline": "967",
+"hint": ""
+},
+{
+"n": 133,
+"srcline": 140,
+"lane": "shared",
+"text": "`Spec.path` of scene entities is hard-wired to `walls[id=..]`; chase and joint entities select the wall, not their case row. A `cases[id=..]` owner path would let the properties window open the row. (→ shared) [requests.md:971]",
+"reqline": "971",
+"hint": "shared"
+},
+{
+"n": 134,
+"srcline": 141,
+"lane": "shared",
+"text": "scene golden and pack assets need regeneration after the next green build (flow net replaces the four conformal-map streamlines: 5 streamlines + 5 equipotentials, `ewall-*:seepage-*` and new `ewall... (→ shared) [requests.md:983]",
+"reqline": "983",
+"hint": "shared"
+},
+{
+"n": 135,
+"srcline": 142,
+"lane": "shared",
+"text": "insert/remove kinds for nested `actions[]` NOT done. `En1994{Beams,Columns,Slabs}ActionsRows` carry only `modified`; the lane needs `removed`/`inserted` (apply, inverse, absorb, four schema twins, ... (→ leaf-kinds) [requests.md:991]",
+"reqline": "991",
+"hint": "leaf-kinds"
+},
+{
+"n": 136,
+"srcline": 143,
+"lane": "shared",
+"text": "optional, add `UnitSpec { symbol: \"N/m\", .. }` to `UNITS`; then the three `assumedRailLm71Udl|Sw0|Sw2` fields can get `#[dsl(unit = \"N/m\")]` back. (→ framework owner (dsl/token)) [requests.md:1006]",
+"reqline": "1006",
+"hint": ""
+},
+{
+"n": 137,
+"srcline": 144,
+"lane": "shared",
+"text": "`one_leaf_edit_rebuilds_exactly_the_dependent_fragments` miss counts and `kit::dependencies_of` may need a check: the overlay is emitted by the `bridge-deck` entity (reads span, lane width, lanes, ... (→ live-scene) [requests.md:1010]",
+"reqline": "1010",
+"hint": "live-scene"
+},
+{
+"n": 138,
+"srcline": 145,
+"lane": "shared",
+"text": "`🧭️spec-trace/🔣️.json` of en1995 now names the entity collections for T-18, T-30 … T-33, T-45, T-46, T-74, T-75, T-97 (fragments of the form `en1995.t-nn.<outcome>`, which the seeded catalogue emis... (→ shared (spec-trace owner)) [requests.md:1017]",
+"reqline": "1017",
+"hint": ""
+},
+{
+"n": 139,
+"srcline": 146,
+"lane": "shared",
+"text": "`Rows::row(.., extra = [\"members\", \"connections\"], ..)` is used for the entity rows; the dependency on a referenced member is declared coarsely. (→ shared (incremental evaluation)) [requests.md:1018]",
+"reqline": "1018",
+"hint": ""
+},
+{
+"n": 140,
+"srcline": 147,
+"lane": "shared",
+"text": "remedies of entity checks that sit on a unit-converted input (mm, degrees, minutes) are `applicable = false` (the case bridge works in mm and degrees, the entity fields in m and rad); a unit-aware ... (→ shared (remedies)) [requests.md:1019]",
+"reqline": "1019",
+"hint": ""
+},
+{
+"n": 141,
+"srcline": 148,
+"lane": "shared",
+"text": "`Emitted::with_case_catalogue` seeds from vocabulary examples only, so vector entries (S-01, ST-04, FA-xx ...) count as run on a not-applicable result; add an API to feed the demo rows (`catalogue_... (→ compliance owner) [requests.md:1025]",
+"reqline": "1025",
+"hint": "compliance owner"
+},
+{
+"n": 142,
+"srcline": 149,
+"lane": "shared",
+"text": "oracle rows `7.2.sigma-s|sigma-c` (characteristic combination, state II) and `5.10.prestress` assume the current bar/centroid conventions; `5.10.decompression` has no oracle row (sign issue in the ... (→ correctness) [requests.md:1026]",
+"reqline": "1026",
+"hint": "correctness"
+},
+{
+"n": 143,
+"srcline": 150,
+"lane": "shared",
+"text": "`second_order` is implemented in the artifact (`frame-eigen`) from public kernel items only (`Analysis::new/solve_raw`, `System::assemble`, `Element::{k,geometric}`, `Skyline::{cholesky,solve,mul_v... (→ mechanics owner) [requests.md:1030]",
+"reqline": "1030",
+"hint": "mechanics owner"
+},
+{
+"n": 144,
+"srcline": 151,
+"lane": "shared",
+"text": "member-checks `lambda_y/lambda_z` now carry `sqrt(A_eff/A)` for class 4 (EN 1993-1-1 6.3.1.2); `mn_interaction_eta` class 3/4 still omits `ΔM = N e_N` (zero for doubly symmetric sections) and the w... (→ correctness) [requests.md:1032]",
+"reqline": "1032",
+"hint": "correctness"
+},
+{
+"n": 145,
+"srcline": 152,
+"lane": "shared",
+"text": "`cases[].numbers|texts` stay WITHOUT insert/remove kinds: `change-case-number|text {caseId, key, value: Option}` already upserts (Some) and clears (None) the row `key`; separate kinds would duplica... (→ design-case owner (BRIDGE v2)) [requests.md:1063]",
+"reqline": "1063",
+"hint": ""
+},
+{
+"n": 146,
+"srcline": 153,
+"lane": "shared",
+"text": "the older oracle `⚖️compliance/🐍️.py` ignored `weldRuns[].hazExtent` in the section strips (Rust `haz_overrides` honours it); the new `🚦️check-outcome` oracle patches it (web run with hazExtent 20 ... (→ compliance owner (oracle)) [requests.md:1074]",
+"reqline": "1074",
+"hint": ""
+},
+{
+"n": 147,
+"srcline": 154,
+"lane": "shared",
+"text": "the schema fields `nKN`, `mKNm`, `vKN`, `nTKN`, `fC90KN` of member actions are SI (N, N m), the `KN` in the names is misleading (a 30 kN axial force is `nKN: 30000`); rename after the kind conventi... (→ fixtures) [requests.md:1078]",
+"reqline": "1078",
+"hint": "fixtures"
+},
+{
+"n": 148,
+"srcline": 155,
+"lane": "shared",
+"text": "T-97 rolling shear (`en1995.t-97.rolling_shear`) and T-120/T-121 (EN 1995-2 `avert`, `fatigue`) have no document-level row yet: the CLT gamma method (`clt_gamma`) needs an independent derivation wi... (→ oracle owner) [requests.md:1079]",
+"reqline": "1079",
+"hint": "oracle owner"
+},
+{
+"n": 149,
+"srcline": 156,
+"lane": "shared",
+"text": "EN annex branch used S = 1.2, TB 0.15, TC 0.40, TD 2.0 for every ground (Table 3.2 ground B is TC 0.50), ignored gamma_I (importance III: oracle 0.1292 vs Rust 0.1550), cut q at 1.0 instead of 1.5 ... (→ old compliance oracle (`⚖️compliance/🐍️.py`, evaluated by the earlier case)) [requests.md:1087]",
+"reqline": "1087",
+"hint": ""
+},
+{
+"n": 150,
+"srcline": 157,
+"lane": "shared",
+"text": "(1) `a14.deflection*` is built with `.sampled(10, ..)`: if the sampled maximum replaces the utilisation, the value is `max_s |w| elastic_line(s) / limit` and equals `w/limit` only when a station si... (→ owner (unverified by running)) [requests.md:1093]",
+"reqline": "1093",
+"hint": ""
+},
+{
+"n": 151,
+"srcline": 158,
+"lane": "shared",
+"text": "`FieldBinding` carries only numbers, so a text leaf cannot be dragged. CLT layer thicknesses live in the string `panels[].layup` (`40/40/40`); a layer grip needs either a string-capable write (`Fie... (→ shared (app-surface)) [requests.md:1103]",
+"reqline": "1103",
+"hint": ""
+},
+{
+"n": 152,
+"srcline": 159,
+"lane": "shared",
+"text": "the notch void of the case engine is drawn at the top face (`g.h - g.notch`..`g.h`); a bottom-face notch (`cutouts[].face = bottom`, the support-side notch of 6.5.2) needs a `face` input on the cas... (→ scene shared) [requests.md:1104]",
+"reqline": "1104",
+"hint": "scene shared"
+},
+{
+"n": 153,
+"srcline": 160,
+"lane": "shared",
+"text": "`FastenerKind::Rebar { bend }` bends only the `to` end, towards `perpendicular(direction)`; EN 1992 hooks need both ends (or `bend_start`) and a roll/side vector so the hook always turns into the s... (→ scene owner) [requests.md:1118]",
+"reqline": "1118",
+"hint": "scene owner"
+},
+{
+"n": 154,
+"srcline": 161,
+"lane": "shared",
+"text": "`inPlaneShearN` / `inPlaneMomentNm` of a wall never enter `shear()`: V_Ed is only `gamma_Q (0.5 w_k h L + H_earth)` from `design_effects`, so the mutations `change-in-plane-shear` and `change-in-pl... (→ owner (`6.2.shear`, `⚖️masonry/🧱️evaluate-wall/🏋️load-case-checks`)) [requests.md:1122]",
+"reqline": "1122",
+"hint": ""
+},
+{
+"n": 155,
+"srcline": 162,
+"lane": "shared",
+"text": "when Phi reaches 0 (eccentricity above t/2) N_Rd is floored at 1e-9 N and the utilisation is 6.6e14 to 7.4e14 (fixture `change-support-sides` wall-weak 6.61e14). The status is right, the number is ... (→ owner (`6.1.2.compression.<wall>.<lc>`)) [requests.md:1123]",
+"reqline": "1123",
+"hint": ""
+},
+{
+"n": 156,
+"srcline": 163,
+"lane": "shared",
+"text": "status-only rows without a utilisation (earth-pressure regime vs movement; category 1 skips bearing), so check-outcome has no numeric row for them. If a number is wanted (for example K_used / K_reg... (→ owner (`9.earthPressure.<wall>`, `6.5.bearing` for geotechnical category 1)) [requests.md:1125]",
+"reqline": "1125",
+"hint": ""
+},
+{
+"n": 157,
+"srcline": 164,
+"lane": "shared",
+"text": "the finite-element torsion solver (`mechanics::section::torsion_constants`), `pub evaluate_case_file`, `scene_law_rows` and the oracle-harness adapters (en1994 x3, en1999 Wagner) remain open: they ... (→ oracle-wiring owner) [requests.md:1131]",
+"reqline": "1131",
+"hint": "oracle-wiring owner"
+},
+{
+"n": 158,
+"srcline": 165,
+"lane": "shared",
+"text": "`Rows::global` and `Rows::part` read `*`, so the three T0 verdict units (`global:document`, `part:fire-rating`, `part:bridge-kind`) re-run on every load drag. A `global_reading(&[paths], run)` / `p... (→ shared (`⚖️compliance/⚡️incremental-evaluation/🧱️rows`)) [requests.md:1137]",
+"reqline": "1137",
+"hint": ""
+},
+{
+"n": 159,
+"srcline": 166,
+"lane": "shared",
+"text": "spec ids `BR-09` (EN 1992-2 6.8.4 fatigue as document check), `LQ-08` (EN 1992-3 7.3 crack width as document check) and `DI-01` (document integrity rows) exist in the spec-trace but not yet in `📐️s... (→ spec owner) [requests.md:1161]",
+"reqline": "1161",
+"hint": "spec owner"
+},
+{
+"n": 160,
+"srcline": 167,
+"lane": "shared",
+"text": "`checks-special-frames` mounts `🔗️special-element-checks/🥫️thin-walled-section-checks/🦀️.rs` (new crate in flight); its test `the_cold_formed_showcase_row_reports_the_kernel_torsion_constants` (lin... (→ special-frames owner) [requests.md:1172]",
+"reqline": "1172",
+"hint": "special-frames owner"
+},
+{
+"n": 161,
+"srcline": 168,
+"lane": "shared",
+"text": "`mutations::resolve` (used by editor commands apply-remedy/insert-item/remove-item/set-field) does not exist in `semio-s-artifact-norm-en1997-mutations` (en1996 has `resolve_edit` in `🧭️edit-rules`... (→ owner) [requests.md:1173]",
+"reqline": "1173",
+"hint": "owner"
+},
+{
+"n": 162,
+"srcline": 169,
+"lane": "shared",
+"text": "`🎬️scene/🦀️.rs:210` mounts `🧪️tests/🗂️cases/🦀️.rs` (`mod case_law`) but the directory is empty. (→ scene owner) [requests.md:1174]",
+"reqline": "1174",
+"hint": "scene owner"
+},
+{
+"n": 163,
+"srcline": 170,
+"lane": "shared",
+"text": "`🔺️diff` has a dev-dependency `en1999-mut-member` that itself depends on `en1999-diff` (dev-dependency cycle; allowed by cargo but test types would be duplicated); the unit test file `🔺️diff/🧪️test... (→ owner) [requests.md:1175]",
+"reqline": "1175",
+"hint": "owner"
+},
+{
+"n": 164,
+"srcline": 171,
+"lane": "shared",
+"text": "infra: `Cargo.lock` of en1995 lacks the new mut family crates in the root package dependency list (mut-cutouts, entity-rows, fastener-*, floor-*, panels, placements, tapers, panel-layers, fastener-... (→ ) [requests.md:1176]",
+"reqline": "1176",
+"hint": ""
+},
+{
+"n": 165,
+"srcline": 172,
+"lane": "shared",
+"text": "`HandleKind` has no 2D translate; explicit fastener positions get two `ScalarAlong` grips per fastener (`px<k>`, `py<k>`); a planar drag handle would halve the grips. (→ shared) [requests.md:1189]",
+"reqline": "1189",
+"hint": "shared"
+},
+{
+"n": 166,
+"srcline": 173,
+"lane": "shared",
+"text": "grain direction of a `GrainLayer` has no hatch cue (`Hatch` is a non-directional enum); orientation is shown by the tessellated grain angle and the layer label only. (→ shared) [requests.md:1190]",
+"reqline": "1190",
+"hint": "shared"
+},
+{
+"n": 167,
+"srcline": 174,
+"lane": "shared",
+"text": "no change; the proto oneof numbers of the en1995 mutation root were renumbered 1..145 (duplicates 81..89 from `kinds.py` removed; `kinds.py` now numbers after the highest tag). (→ leaf-kinds) [requests.md:1191]",
+"reqline": "1191",
+"hint": "leaf-kinds"
+},
+{
+"n": 168,
+"srcline": 175,
+"lane": "shared",
+"text": "en1995 v6: T-94 (diaphragms), T-95 (trusses), T-96 (bracing) typed entities are NOT built (the entity generators `schema.py`/`kinds.py` anchor after `placements` and skip when `tapers` exists; they... (→ ) [requests.md:1192]",
+"reqline": "1192",
+"hint": ""
+},
+{
+"n": 169,
+"srcline": 176,
+"lane": "shared",
+"text": "while converting the lanes, note (a) the 19 existing nested set-kind diffs built `…ActionsRows { modified: .. }` without `..Default::default()` (E0063 after the removed/inserted fields); fixed in p... (→ KIND-CONVENTION v3) [requests.md:1239]",
+"reqline": "1239",
+"hint": "KIND-CONVENTION v3"
+},
+{
+"n": 170,
+"srcline": 177,
+"lane": "shared",
+"text": "point-load position `xM` is honoured for simply supported beams only (exact F a b / L); continuous spans keep the mid-span idealisation in `action_internals` (needs the asymmetric Clapeyron terms F... (→ ndp/normative (UNVERIFIED)) [requests.md:1242]",
+"reqline": "1242",
+"hint": ""
+},
+{
+"n": 171,
+"srcline": 178,
+"lane": "shared",
+"text": "521 raw `String` field hits in `🧬️schema` structs whose fixture values form a closed set of 2 to 5 values. By artifact: en1992 150, en1999 124, en1998 71, en1993 46, en1991 30, en1994 29, en1997 24... (→ artifact owners, report only (check 21, enum candidates)) [requests.md:1273]",
+"reqline": "1273",
+"hint": ""
+},
+{
+"n": 172,
+"srcline": 179,
+"lane": "shared",
+"text": "GEO-F01/F04, SLS-01, PILE-04, RW-01/06 and SLOPE-01 stay in the catalogue registry (stand-alone calculators) and keep their `geometry` declarations; entity-realised ids simply have no seeded case i... (→ bridge v5) [requests.md:1278]",
+"reqline": "1278",
+"hint": "bridge v5"
+},
+{
+"n": 173,
+"srcline": 180,
+"lane": "shared",
+"text": "the 17 en1997 leaves without kinds are untouched by this wave (no entity field was added). (→ leaves-and-hygiene / kind-convention) [requests.md:1279]",
+"reqline": "1279",
+"hint": "leaves-and-hygiene / kind-convention"
+},
+{
+"n": 174,
+"srcline": 181,
+"lane": "shared",
+"text": "soil layers need `nSpt` (N_SPT, blows/30 cm) and `cuKpa` (c_u) plus site flags `liquefiableOrSensitive`, `softClayThicknessM`, `softClayPlasticityIndex`, `alluviumThicknessM`, `alluviumVsMS`, `belo... (→ leaf-kinds/KIND-CONVENTION) [requests.md:1287]",
+"reqline": "1287",
+"hint": "leaf-kinds/KIND-CONVENTION"
+},
+{
+"n": 175,
+"srcline": 182,
+"lane": "shared",
+"text": "E0277 risk from review E item 2 is unchanged and now also covers `🧬️mutations/🧪️tests/🔬️unit` of en1995 (`ChangeAnnex`, `ChangeCase*`, `ChangeConnectionActionFK` ... from `mut-*` crates serialised ... (→ all owners) [requests.md:1292]",
+"reqline": "1292",
+"hint": "all owners"
+},
+{
+"n": 176,
+"srcline": 183,
+"lane": "shared",
+"text": "`kFiDeclared` choice values are numeric strings \"0.9\",\"1.0\",\"1.1\"; confirm the choice control matches an f64 (serde prints 1.0) or give a numeric-choice leaf kind. (→ leaves-and-hygiene) [requests.md:1297]",
+"reqline": "1297",
+"hint": "leaves-and-hygiene"
+},
+{
+"n": 177,
+"srcline": 184,
+"lane": "shared",
+"text": "`CheckStatus` for the traffic-group check stays Warning while utilisation > 1 (same as annex-b.dsl); a typed traffic-group table (collection with rows gr1a..gr6 and Table A2.4 coefficients) needs a... (→ shared) [requests.md:1298]",
+"reqline": "1298",
+"hint": "shared"
+},
+{
+"n": 178,
+"srcline": 185,
+"lane": "shared",
+"text": "`spec_trace::Emitted` should offer `with_report(&CheckReport)` next to `with_checks`, the artifact test folds the ids by hand. (→ compliance owner (spec-trace)) [requests.md:1303]",
+"reqline": "1303",
+"hint": ""
+},
+{
+"n": 179,
+"srcline": 186,
+"lane": "shared",
+"text": "the diaphragm is solved in the catalogue crate by a 200-element shear-beam tridiagonal solve with PyNite as the independent oracle; no `semio-s-plugin-norm-mechanics` dependency was added (the maso... (→ shared (mechanics)) [requests.md:1304]",
+"reqline": "1304",
+"hint": ""
+},
+{
+"n": 180,
+"srcline": 187,
+"lane": "shared",
+"text": "`en1992_run.py` existing_crates regex matches only quoted names so `group_kinds` never sees existing crates; and its diff/protocol output is stale (see above). Fix before anyone applies it. (→ leaf-kinds owner) [requests.md:1312]",
+"reqline": "1312",
+"hint": "leaf-kinds owner"
+},
+{
+"n": 181,
+"srcline": 188,
+"lane": "shared",
+"text": "bar-cover row `en1992.4.4.bar-cover.` realises D-03 (persisted bar layout, necessary condition surface distance >= c_nom); no oracle row yet (python oracle has no cover rows). (→ spec owner) [requests.md:1313]",
+"reqline": "1313",
+"hint": "spec owner"
+},
+{
+"n": 182,
+"srcline": 189,
+"lane": "shared",
+"text": "stud positions are still ring parameters (`studRings[]` radius/count/diameter); a per-stud collection or ring phase angle was not added. (→ structural-scene owner) [requests.md:1314]",
+"reqline": "1314",
+"hint": "structural-scene owner"
+},
+{
+"n": 183,
+"srcline": 190,
+"lane": "shared",
+"text": "the continuous action internals (point forces at `xM`, uniform and cracked EI2 stiffness) are cross-checked against PyNite in `🧰️scripts/en1994-continuous-points-oracle.py` (values hard-coded in th... (→ shared (oracle harness)) [requests.md:1376]",
+"reqline": "1376",
+"hint": ""
+},
+{
+"n": 184,
+"srcline": 191,
+"lane": "shared",
+"text": "`🧬️schema/{🛰️.proto,📸️snapshot/🛰️.proto,🔺️diff/🛰️.proto}` and the three `🔗️.graphql` twins carry no fire fields at all (proto ends at tag 56 before `floors`, 94 snapshot fields exist); `fireLoadBas... (→ SCHEMA-SYNC) [requests.md:1389]",
+"reqline": "1389",
+"hint": "SCHEMA-SYNC"
+},
+{
+"n": 185,
+"srcline": 192,
+"lane": "shared",
+"text": "v7 adds no kind, no check field and no snapshot leaf; diaphragm handle and diagrams write the existing `walls[].diaphragmStiffnessNPerM`. (→ shared (typed-enums/kind-convention)) [requests.md:1398]",
+"reqline": "1398",
+"hint": ""
+},
+{
+"n": 186,
+"srcline": 193,
+"lane": "shared",
+"text": "after the build, regenerate the scene golden (`SEMIO_UPDATE_GOLDEN=1`, consolidation stage troughs, `ewall-E1:pore-pressure` section in the showcase) and the example packs (`SEMIO_REGEN_EN1997_ASSE... (→ shared) [requests.md:1402]",
+"reqline": "1402",
+"hint": "shared"
+},
+{
+"n": 187,
+"srcline": 194,
+"lane": "shared",
+"text": "the oracle harness has no adapter for the geotechnics design cases (`🧪️tests/🧫️fixtures/🌍️geotechnics/🔣️.json`); they live beside `🔮️oracle-cases` and run through the `🌍️geotechnics-en1997-1` featu... (→ shared) [requests.md:1404]",
+"reqline": "1404",
+"hint": "shared"
+},
+{
+"n": 188,
+"srcline": 195,
+"lane": "shared",
+"text": "still open from the 4 other enum-like families of EN 1995 (not converted): `members[].actions[].kind|category|loadDuration`, `connections[].actions[].kind|loadDuration`, `connections[].fastenerType... (→ NDP owner) [requests.md:1408]",
+"reqline": "1408",
+"hint": "NDP owner"
+},
+{
+"n": 189,
+"srcline": 196,
+"lane": "shared",
+"text": "`wallStorey` is an f64 storey number (0 = every storey) and the liquefiable indicator is a thickness (`liquefiableThicknessM` > 0 means S2); a typed reference to `storeys[id]` and a typed wall dire... (→ TYPED-ENUMS) [requests.md:1413]",
+"reqline": "1413",
+"hint": "TYPED-ENUMS"
+},
+{
+"n": 190,
+"srcline": 197,
+"lane": "shared",
+"text": "`field_adder.py` en1998 root handler used importance_class/aGr anchors; patched to follow the last field (`en1998_root.py`); the adder supports only f64 leaves. (→ shared (field-adder)) [requests.md:1414]",
+"reqline": "1414",
+"hint": ""
+},
+{
+"n": 191,
+"srcline": 198,
+"lane": "shared",
+"text": "the `LiveCommand` enum has no entity-edit command. Add `LiveCommand::Edit(EditCommand)` (`duplicate{collection, ids}`, `paste{clip}`) whose arm in `dispatch_live_command` calls `entity_editing::han... (→ SHARED v7 (SURFACE)) [requests.md:1441]",
+"reqline": "1441",
+"hint": ""
+},
+{
+"n": 192,
+"srcline": 199,
+"lane": "shared",
+"text": "`handle_key` answers `norm.shortcut.copy|paste|duplicate|select-all|undo|redo` as host action ids; the host/editor must map them (undo/redo to the store `ArtifactCommand::Undo|Redo`, the rest to th... (→ SHARED v7 (shell hooks)) [requests.md:1442]",
+"reqline": "1442",
+"hint": ""
+},
+{
+"n": 193,
+"srcline": 200,
+"lane": "shared",
+"text": "call `entity_editing::with_scene_targets(handle, &scene)` where the live handles are built (`live_handles`) so every translating grip snaps to member ends and midpoints; `entry_to_s` should replace... (→ SHARED v7 (handle owner)) [requests.md:1443]",
+"reqline": "1443",
+"hint": ""
+},
+{
+"n": 194,
+"srcline": 201,
+"lane": "shared",
+"text": "per-stud positions (collection with rail id) still not persisted; needs schema/twins/diff/kinds/fixtures (large, FEATURE-ROWS and TYPED-ENUMS active in en1992). (→ structural-scene owner) [requests.md:1467]",
+"reqline": "1467",
+"hint": "structural-scene owner"
+},
+{
+"n": 195,
+"srcline": 202,
+"lane": "shared",
+"text": "add `RemedyBound::Insert` (a new list row with field values) so 6.7.4/6.7.5 can propose \"insert a transverse stiffener at x = ...\" when no single move of an existing stiffener helps; today the shea... (→ shared (compliance `Remedy`)) [requests.md:1479]",
+"reqline": "1479",
+"hint": ""
+},
+{
+"n": 196,
+"srcline": 203,
+"lane": "shared",
+"text": "call `shortcut_route` for every chord, send `ArtifactCommand::Undo/Redo` for History, fill `collection`/`ids` of the entity tools from the selection. (→ host/shell owner) [requests.md:1487]",
+"reqline": "1487",
+"hint": "host/shell owner"
+},
+{
+"n": 197,
+"srcline": 204,
+"lane": "shared",
+"text": "drag-to-reorder calling `move_item_edit` then `setFields`-like commit; no `moveItem` tool exists yet (case-edits returns a ui error for MoveItem). (→ outliner/properties UI) [requests.md:1489]",
+"reqline": "1489",
+"hint": "outliner/properties UI"
+},
+{
+"n": 198,
+"srcline": 205,
+"lane": "shared",
+"text": "`executionImperfections`, `tieRuns[].kind`, `constructionLoads[].kind` and `constructionLoads[].stage` (entity reference) are candidates. (→ TYPED-ENUMS) [requests.md:1494]",
+"reqline": "1494",
+"hint": "TYPED-ENUMS"
+},
+{
+"n": 199,
+"srcline": 206,
+"lane": "shared",
+"text": "scalar-owner classification of `altitude`, `tMax`, `tMin` for the new `en1991.1-5.isotherm` check (subject entity `thermal`) and a golden/law-test bless (`SEMIO_UPDATE_GOLDEN=1`); field-meta rows o... (→ scene/shared) [requests.md:1495]",
+"reqline": "1495",
+"hint": "scene/shared"
+},
+{
+"n": 200,
+"srcline": 207,
+"lane": "shared",
+"text": "41 `gate(cond, \"EN reason\")?` calls in `⚖️checks/📇️catalogue/{🧗️wall-sections,⚓️walls-and-anchors,🔬️investigation,🪵️piles,💧hydraulics}` and `📐️geotechnical-parts`. `gate(ok, reason: &str) -> Result... (→ gate reasons) [requests.md:1506]",
+"reqline": "1506",
+"hint": "gate reasons"
+},
+{
+"n": 201,
+"srcline": 208,
+"lane": "shared",
+"text": "`SpecTrace::new(id, section, collection, Realisation, \"EN description\")` has one EN-only `&str`. Add a `LocalizedCopy` description. Owners: `🧭️spec-trace/🦀️.rs` of each artifact. Separately, 413 sp... (→ spec-trace descriptions) [requests.md:1507]",
+"reqline": "1507",
+"hint": "spec-trace descriptions"
+},
+{
+"n": 202,
+"srcline": 209,
+"lane": "shared",
+"text": "en1990 `catalogue/🦀️.rs:364` \"plausibility of the factor triple\" and `:742,743` \"Rackwitz-Fiessler normal tail\"; en1993 `special-element-checks/🪜️built-up-checks:76` \"angles back to back\", `🌐️store... (→ check text EN-only inside checks (mechanics-side free text, not gates)) [requests.md:1508]",
+"reqline": "1508",
+"hint": ""
+},
+{
+"n": 203,
+"srcline": 210,
+"lane": "shared",
+"text": "`.steps(\"Load case drifted.\")` (`⚖️checks/📇️catalogue/❄️snow/🦀️.rs:68`) and 9 more `.steps(\"…\")` prose calls. The `steps` builder takes an EN-only `String`, unlike en1992's `steps_de`. Add a biling... (→ steps prose EN-only) [requests.md:1509]",
+"reqline": "1509",
+"hint": "steps prose EN-only"
+},
+{
+"n": 204,
+"srcline": 211,
+"lane": "shared",
+"text": "\"Annex E\"` in `ClauseRef` and `ClauseId::new(...)`: EN-only. The DE edition uses \"Anhang X\". Make the `section` label bilingual, or map Annex to a typed section enum with DE rendering. Example `en1... (→ standard clause section labels `clause(\"Annex A\")`, `section) [requests.md:1510]",
+"reqline": "1510",
+"hint": ""
+},
+{
+"n": 205,
+"srcline": 212,
+"lane": "shared",
+"text": "`📸️snapshot/🦀️.rs:344` \"Failing prestressed beam\", `:362` \"Compliant prestressed beam\" (`snap.title = \"…\".into()`). `en1998` `📸️snapshot/🦀️.rs:197` \"Weak RC frame\" and `🧬️mutations/🎲️demo-cases:947... (→ snapshot titles EN-only) [requests.md:1511]",
+"reqline": "1511",
+"hint": "snapshot titles EN-only"
+},
+{
+"n": 206,
+"srcline": 213,
+"lane": "shared",
+"text": "the family and part labels are EN-only and may show in the clause column. Use a stable id, or a bilingual label. (→ `CheckResult::assess(…, \"Design case\", ClauseId::new(\"Design case\", \"§0\", \"0\"), …)`) [requests.md:1513]",
+"reqline": "1513",
+"hint": ""
+},
+{
+"n": 207,
+"srcline": 214,
+"lane": "shared",
+"text": "`🕸️mesh/🦀️.rs:93` \"section ring has no area\"; `🪶️thin-walled/🦀️.rs:56` \"wall thickness and coordinates must be finite and the thickness positive\"; `:139` \"the walls are not connected\". Route them t... (→ EN-only errors) [requests.md:1514]",
+"reqline": "1514",
+"hint": "EN-only errors"
+},
+{
+"n": 208,
+"srcline": 215,
+"lane": "shared",
+"text": "`enum Lang { #[default] En, De }` (`🎚️config/🦀️.rs:69`). AGENTS requires no default language. Remove `#[default]` and make the language explicit wherever the config is built. Also `🌳️report-tree/🦀️... (→ default-language fallback) [requests.md:1515]",
+"reqline": "1515",
+"hint": "default-language fallback"
+},
+{
+"n": 209,
+"srcline": 216,
+"lane": "shared",
+"text": "two snapshot leaves are NOT added because the field-adder supports only `f64`/`u32` leaves of the `beams`/`columns` rows: (1) `columns[].reinforcementProduct` (choice `hot_rolled|cold_worked`, defa... (→ shared / SCHEMA-CODEGEN) [requests.md:1527]",
+"reqline": "1527",
+"hint": "shared / SCHEMA-CODEGEN"
+},
+{
+"n": 210,
+"srcline": 217,
+"lane": "shared",
+"text": "`KitDoc.option` is one string; en1990 packs the traffic group into it (`<column>#group=GR2`, `view_option`/`split_option` in the scene). A typed second `KitDoc` option (or `Option<u32>` group) woul... (→ shared) [requests.md:1546]",
+"reqline": "1546",
+"hint": "shared"
+},
+{
+"n": 211,
+"srcline": 218,
+"lane": "shared",
+"text": "new `ndp_awaits_value` lives in en1990 checks; if other artifacts need \"registered but Unset\" move it next to `ndp_number_opt` in `⚖️compliance/📜️annex-and-tables`. (→ shared) [requests.md:1547]",
+"reqline": "1547",
+"hint": "shared"
+},
+{
+"n": 212,
+"srcline": 219,
+"lane": "shared",
+"text": "en1998 umbrella owner: `semio-s-artifact-norm-en1998-mut-site-ground` and `semio-s-artifact-norm-en1998-mut-members-wall-rows` are not in the `📜️script.ts` packages list of `🗿️artifacts/🫨️en1998/📦️... (→ ) [requests.md:1557]",
+"reqline": "1557",
+"hint": ""
+},
+{
+"n": 213,
+"srcline": 220,
+"lane": "shared",
+"text": "test owners (check 23, report only): tolerances looser than 1 % with an oracle reference need a justification or a tighter bound. Most visible: `🔮️oracles/🏃️harness/🧪️tests/🐍️.py:61-64` (`within(\"n... (→ ) [requests.md:1558]",
+"reqline": "1558",
+"hint": ""
+},
+{
+"n": 214,
+"srcline": 221,
+"lane": "shared",
+"text": "app-surface edit-rules owner: `📇️registry/🧬️contract/🖥️app-surface/✏️edit-rules/🦀️.rs:400` matches `RemedyBound` with a `_` arm that hides `AtLeast`/`AtMost`/`Exactly` (only `Remove` is special-cas... (→ ) [requests.md:1559]",
+"reqline": "1559",
+"hint": ""
+},
+{
+"n": 215,
+"srcline": 222,
+"lane": "shared",
+"text": "en1994 mutations/edit-rules owner: `🧭️edit-rules/🦀️.rs:160` routes every non-`SetField` edit through `_ => resolve_with_id_removals`, so `MoveItem` is decided by the wildcard. Also `move_item: &[]`... (→ ) [requests.md:1560]",
+"reqline": "1560",
+"hint": ""
+},
+{
+"n": 216,
+"srcline": 223,
+"lane": "shared",
+"text": "other String fields of en1998 (`material`, `importanceClass`, `enGroundType`, `t1Method`, ...) are untouched. (→ GAMMA-UNIFY / TYPED-ENUMS v2) [requests.md:1578]",
+"reqline": "1578",
+"hint": "GAMMA-UNIFY / TYPED-ENUMS v2"
+},
+{
+"n": 217,
+"srcline": 224,
+"lane": "shared",
+"text": "the reliability class is a project-level setting that does not exist in the en1992/en1994/en1995/en1996 documents yet, so K_FI = 1.0 (RC2) everywhere. Add `reliabilityClass: ReliabilityClass` (shar... (→ all four owners (schema, every layer)) [requests.md:1600]",
+"reqline": "1600",
+"hint": ""
+},
+{
+"n": 218,
+"srcline": 225,
+"lane": "shared",
+"text": "new case kind `en1997.G.pile-dynamic-tests` (3 cases) and `downdrag` on `negative-skin-friction` (1 case) in `🧪️tests/🧫️fixtures/🌍️geotechnics/🔣️.json` (xi5/xi6 by groundhog `select_correlation_fac... (→ shared (oracle harness)) [requests.md:1621]",
+"reqline": "1621",
+"hint": ""
+},
+{
+"n": 219,
+"srcline": 226,
+"lane": "shared",
+"text": "framework: select all (Ctrl+A in the viewport, \"Select all\" in the touch menu) needs a plugin write API for the interaction-domain selection (set the selected addresses of a domain); until then the... (→ ) [requests.md:1629]",
+"reqline": "1629",
+"hint": ""
+},
+{
+"n": 220,
+"srcline": 227,
+"lane": "shared",
+"text": "framework: the wgpu shell does not sync drop targets for tree items (`drop_target_action` reads `Stack` nodes only); the outliner rows carry `draggable` + `Trigger::Drop` bindings already, the move... (→ ) [requests.md:1630]",
+"reqline": "1630",
+"hint": ""
+},
+{
+"n": 221,
+"srcline": 228,
+"lane": "shared",
+"text": "en1992 owner: `members` is the only list with a `MoveItemRule`; other families add `MoveItemRule`s and call `OutlinerState::with_reorderable(&EDIT_RULES)` in their outliner window to get the drag a... (→ ) [requests.md:1631]",
+"reqline": "1631",
+"hint": ""
+},
+{
+"n": 222,
+"srcline": 229,
+"lane": "shared",
+"text": "shared v9: most `→ shared` lines above this section were not triaged in wave 2 v8 (capacity went to the assigned items and the compile review); see audits/wave2/shared-v8.md. (→ ) [requests.md:1632]",
+"reqline": "1632",
+"hint": ""
+},
+{
+"n": 223,
+"srcline": 233,
+"lane": "infra",
+"text": "`📦️packages/🦀️rust/📜️script.ts` of `🧩️en1994` now lists `semio-s-artifact-norm-en1994-scene`; the generated indexes `📋️build-owners.json` and `🔒️dependencies.json` need regenerating for the new crate. (→ WP-12 / workspace owner) [requests.md:68]",
+"reqline": "68",
+"hint": "WP-12 / workspace owner"
+},
+{
+"n": 224,
+"srcline": 234,
+"lane": "infra",
+"text": "generated component manifests (`🌎️hub/🧩️compositions/📕️norm/🧩️component/🔣️.json` and fixtures) list `norm-en1996-inputs/results` and `norm.en1996.view.report`; regenerate to `norm-en1996-{propertie... (→ hub owner) [requests.md:127]",
+"reqline": "127",
+"hint": "hub owner"
+},
+{
+"n": 225,
+"srcline": 235,
+"lane": "infra",
+"text": "compile and run `@semio-s/plugin-norm-structural-scene:test` (my own `repo run` after a ~1 h queue wait failed with `Unknown project in the closure: @semio-s/plugin-norm-structural-scene`: the crat... (→ integrator) [requests.md:133]",
+"reqline": "133",
+"hint": "integrator"
+},
+{
+"n": 226,
+"srcline": 236,
+"lane": "infra",
+"text": "ready for rebuild. New module `✏️s/🔌️plugins/📕️norm/🎬️structural-scene/🧰️projection-kit` (mounted as `pub mod projection_kit` in `🦀️.rs`; `semio-s-plugin-norm-compliance` is now a normal dependency... (→ integrator) [requests.md:135]",
+"reqline": "135",
+"hint": "integrator"
+},
+{
+"n": 227,
+"srcline": 237,
+"lane": "infra",
+"text": "ready for rebuild of `@semio-tech/norm-compliance-rs` and `@semio-s/plugin-norm-structural-scene` (kit). New `Station`, `CheckResult.{stations, station_field}`, `CheckBuilder::{stations, field, sam... (→ integrator) [requests.md:194]",
+"reqline": "194",
+"hint": "integrator"
+},
+{
+"n": 228,
+"srcline": 238,
+"lane": "infra",
+"text": "`CheckResult` has two new fields. Only the builder constructs it (no struct literals exist outside the kernel), so nothing breaks; do not construct `CheckResult { .. }` literally. (→ norm-completion agents (compile note)) [requests.md:195]",
+"reqline": "195",
+"hint": ""
+},
+{
+"n": 229,
+"srcline": 239,
+"lane": "infra",
+"text": "compile and test `@semio-tech/norm-compliance-rs` and `@semio-s/plugin-norm-app-surface` first. Changed: `⚖️compliance/🏛️norm-error-and-family` (removed `document_revision_key`, the global report c... (→ integrator) [requests.md:214]",
+"reqline": "214",
+"hint": "integrator"
+},
+{
+"n": 230,
+"srcline": 240,
+"lane": "infra",
+"text": "every Eurocode editor now has an `norm-enXXXX-outliner` window kind (EN 1993 had it already); regenerate the hub component manifests and window-ownership fixtures. (→ hub owner) [requests.md:215]",
+"reqline": "215",
+"hint": "hub owner"
+},
+{
+"n": 231,
+"srcline": 241,
+"lane": "infra",
+"text": "NOTHING BELOW IS COMPILED. Please run `@semio-s/plugin-norm-structural-scene:test` (schema `🧪️tests/🔬️unit`: three new tests `cages_points_and_weld_runs_validate_and_round_trip`, `wall_cuts_and_lam... (→ integrator) [requests.md:220]",
+"reqline": "220",
+"hint": "integrator"
+},
+{
+"n": 232,
+"srcline": 242,
+"lane": "infra",
+"text": "compile and test SURFACE (`✅️checks/**`, `🌳️report-tree`, `📚️catalogue-and-inspection`, `🧪️tests/🔬️unit`) via `@semio-tech/norm-artifact-contract-rs`; WP-09 code was never compiled. Likeliest fixes... (→ integrator) [requests.md:248]",
+"reqline": "248",
+"hint": "integrator"
+},
+{
+"n": 233,
+"srcline": 243,
+"lane": "infra",
+"text": "UNCOMPILED. Please run `@semio-tech/norm-artifact-contract-rs:check` then `:test` (crate `semio-s-plugin-norm-app-surface`, dir `SURFACE`). New code: `SURFACE/🕹️direct-manipulation/**` (mounted `pu... (→ integrator) [requests.md:255]",
+"reqline": "255",
+"hint": "integrator"
+},
+{
+"n": 234,
+"srcline": 244,
+"lane": "infra",
+"text": "`✏️s/🔌️plugins/📕️norm/⚖️compliance/⚡️incremental-evaluation/` (WP-05) has never been compiled. Please build/test via `@semio-tech/norm-artifact-contract-rs`; compliance lib tests: `repo cargo --sto... (→ integrator) [requests.md:256]",
+"reqline": "256",
+"hint": "integrator"
+},
+{
+"n": 235,
+"srcline": 245,
+"lane": "infra",
+"text": "ready for rebuild, NOT COMPILED. Run `@semio-s/plugin-norm-structural-scene:test` (new `parameter_tracks_validate_and_round_trip`, new schema types `ParameterTrack`, `Keyframe`, `TrackKind`) and `@... (→ integrator) [requests.md:269]",
+"reqline": "269",
+"hint": "integrator"
+},
+{
+"n": 236,
+"srcline": 246,
+"lane": "infra",
+"text": "NOTHING BELOW IS COMPILED. `@semio-tech/norm-compliance-rs`: `⚖️compliance/⚡️incremental-evaluation` gained `🧱️rows` (`Scope::{All,Globals,Part,Row}`, `Rows::{new,except,global,part,row,slow,finish... (→ integrator (compile owner of shared crates)) [requests.md:291]",
+"reqline": "291",
+"hint": ""
+},
+{
+"n": 237,
+"srcline": 247,
+"lane": "infra",
+"text": "ready for rebuild of `@semio-tech/norm-en1992-rs`, `@semio-tech/norm-en1995-rs`, `@semio-tech/norm-en1996-rs` (scene fidelity). New dependency edge: the EN 1995 scene crate depends on `semio-s-plug... (→ integrator) [requests.md:305]",
+"reqline": "305",
+"hint": "integrator"
+},
+{
+"n": 238,
+"srcline": 248,
+"lane": "infra",
+"text": "NOT COMPILED, second batch. New ephemeral local-only `ViewLane` in `NormTransient` (live-lanes schema, twins regenerated, `wp02-gen-twins.py --check` green), `LaneEvent::View*` + `view_event`, `Nor... (→ integrator) [requests.md:343]",
+"reqline": "343",
+"hint": "integrator"
+},
+{
+"n": 239,
+"srcline": 249,
+"lane": "infra",
+"text": "rebuild everything that depends on `⚖️compliance` (all norm artifacts, app-surface, structural-scene). Kernel changes: `CheckStatus::Info` (new), `CheckBuilder::informative(value)` (info row withou... (→ integrator) [requests.md:371]",
+"reqline": "371",
+"hint": "integrator"
+},
+{
+"n": 240,
+"srcline": 250,
+"lane": "infra",
+"text": "the pre-compiler gate is a PER-CRATE budget (262144 bytes / 32 files / 4000 lines), see `🔍️audits/source-boundary.md`. Done UNCOMPILED by the size agent: (1) new crate `semio-s-plugin-norm-ndp` (ND... (→ integrator (compile owner)) [requests.md:374]",
+"reqline": "374",
+"hint": ""
+},
+{
+"n": 241,
+"srcline": 251,
+"lane": "infra",
+"text": "`📇️registry/🧬️contract/🖥️app-surface/🪟️visual-windows/📈️diagrams2d/🖼️canvas-lowering/🦀️.rs` is 32979 bytes; the cargo Source admission refuses it (maximumBytes 29513) so every norm-enXXXX-rs build ... (→ app-surface owner (visual agents)) [requests.md:375]",
+"reqline": "375",
+"hint": ""
+},
+{
+"n": 242,
+"srcline": 252,
+"lane": "infra",
+"text": "`semio-s-plugin-norm-app-surface` is now a thin facade over six new sibling crates (foundation, viewport3d, visual-chrome, live-core, panels, live-editor), all within budget (largest 124 KB / 16 fi... (→ integrator (compile owner)) [requests.md:377]",
+"reqline": "377",
+"hint": ""
+},
+{
+"n": 243,
+"srcline": 253,
+"lane": "infra",
+"text": "groundhog 0.15.0 declares no dependencies yet imports `plotly`, `pyproj` and `jinja2` at module level (plotting and GIS only); the harness adapter installs an inert import finder for exactly those ... (→ integrator / dependencies owner) [requests.md:388]",
+"reqline": "388",
+"hint": "integrator / dependencies owner"
+},
+{
+"n": 244,
+"srcline": 254,
+"lane": "infra",
+"text": "run 6 of `@semio-tech/norm-en1996-rs:build` (`🗑️generated/build-en1996/6.txt`) died after 63 min with \"NX Funded Nx graph cache capacity exhausted\" (no rustc output). `.🧬semio/🦑️repo/⚡️cache` is 50... (→ integrator) [requests.md:401]",
+"reqline": "401",
+"hint": "integrator"
+},
+{
+"n": 245,
+"srcline": 255,
+"lane": "infra",
+"text": "the committed binary twin `🖼️assets/🏢️seismic-rc-frame/🎒️.pack.semio` must be regenerated by the compiled codec: run `SEMIO_UPDATE_GOLDEN=1` with the test `committed_pack_twin_matches_the_code_buil... (→ infra) [requests.md:423]",
+"reqline": "423",
+"hint": "infra"
+},
+{
+"n": 246,
+"srcline": 256,
+"lane": "infra",
+"text": "44 norm crates have a `Cargo.toml` package but no row in `📋️build-owners.json` (list: `🗑️generated/manifest-fix/owners-missing.py` output in the ticket folder). The file is generated, not hand-auth... (→ infra) [requests.md:433]",
+"reqline": "433",
+"hint": "infra"
+},
+{
+"n": 247,
+"srcline": 257,
+"lane": "infra",
+"text": "ready for rebuild: contract-rs build+test (view lane `units`, unit picker, LaneEvent::ViewUnits, twins edited by hand: ts/graphql/proto), then each `norm-enXXXX-rs` build (editor `live_responsive`,... (→ infra) [requests.md:455]",
+"reqline": "455",
+"hint": "infra"
+},
+{
+"n": 248,
+"srcline": 258,
+"lane": "infra",
+"text": "`Cargo.lock` of the norm-en1991 and norm-en1996 artifact workspaces and `🔒️dependencies.json` need `synchronize` for the new scene dependency `semio-s-plugin-norm-mechanics` (added to `🏋️en1991/Car... (→ integrator) [requests.md:458]",
+"reqline": "458",
+"hint": "integrator"
+},
+{
+"n": 249,
+"srcline": 259,
+"lane": "infra",
+"text": "after the first green compile bless `🖼️assets/*/*/🎒️.pack.semio` (4 files) and `📚️examples/🌉️glulam-footbridge/🖼️assets/*.{spr,op}.semio` by encoding the matching constructors with `encode_en1995_p... (→ infra/integrator) [requests.md:461]",
+"reqline": "461",
+"hint": "infra/integrator"
+},
+{
+"n": 250,
+"srcline": 260,
+"lane": "infra",
+"text": "ready for rebuild contract-rs (scene memo + tests). (→ infra/runner) [requests.md:470]",
+"reqline": "470",
+"hint": "infra/runner"
+},
+{
+"n": 251,
+"srcline": 261,
+"lane": "infra",
+"text": "run 11 refused `mut-traffic-load-models` (file cap). Rail kinds moved to new crate `semio-s-artifact-norm-en1991-mut-rail-load-models` (`🧬️mutations/🚆rail-load-models`), registered in artifact `Car... (→ infra/integrator) [requests.md:473]",
+"reqline": "473",
+"hint": "infra/integrator"
+},
+{
+"n": 252,
+"srcline": 262,
+"lane": "infra",
+"text": "`semio-s-plugin-norm-structural-scene` is at 33 files (> 32 limit), 3846 lines; move a subtree into a sibling crate before the next contract build. (→ shared owner) [requests.md:478]",
+"reqline": "478",
+"hint": "shared owner"
+},
+{
+"n": 253,
+"srcline": 263,
+"lane": "infra",
+"text": "schema derives/indices: new model rows (FatigueSpectrum, ReliabilityAnalysis, TestSeries, VariableAction.group) and diff lanes need `repo ./📜️script.ts schema generate` to refresh `schema-document-... (→ infra) [requests.md:483]",
+"reqline": "483",
+"hint": "infra"
+},
+{
+"n": 254,
+"srcline": 264,
+"lane": "infra",
+"text": "new schema-first crate `✏️s/🔌️plugins/📕️norm/🪟️viewport/🎚️config` (`semio-s-plugin-norm-viewport-config`, adapted from results-config: one leaf `change-viewport-view` replacing camera_preset, hidde... (→ infra (viewport window-config crate, ISOLATED)) [requests.md:485]",
+"reqline": "485",
+"hint": ""
+},
+{
+"n": 255,
+"srcline": 265,
+"lane": "infra",
+"text": "SQLite hard-coded extents were stale after the new document columns; I set admission / schema extent to 8 tables x 170 columns (72 values + 49 float pairs) in `sqlite/snapshot` (rs, admission, test... (→ runner) [requests.md:502]",
+"reqline": "502",
+"hint": "runner"
+},
+{
+"n": 256,
+"srcline": 266,
+"lane": "infra",
+"text": "viewport config crate registered (workspace member + workspace dependency in norm `Cargo.toml`, glob in contract `📋️project.json`, already in `📋️build-owners.json`). Please run `repo ./📜️script.ts ... (→ infra) [requests.md:536]",
+"reqline": "536",
+"hint": "infra"
+},
+{
+"n": 257,
+"srcline": 267,
+"lane": "infra",
+"text": "see `🗑️generated/build-en1996/latest.md`: ready for rebuild; after the first green build run the scene golden bless (`SEMIO_UPDATE_GOLDEN=1`) and `regenerate_example_assets` for the EN 1996 binary ... (→ shared (build runner)) [requests.md:547]",
+"reqline": "547",
+"hint": ""
+},
+{
+"n": 258,
+"srcline": 268,
+"lane": "infra",
+"text": "please include `✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990` in the next run and bless the scene golden afterwards (badges `kfi-applied` and `traffic-groups` and the new grips changed the scene), the... (→ infra) [requests.md:560]",
+"reqline": "560",
+"hint": "infra"
+},
+{
+"n": 259,
+"srcline": 269,
+"lane": "infra",
+"text": "`Cargo.lock` of the en1994 artifact needs `synchronize` (63 + 6 per-leaf kinds, 9 group crates). No new crates since the last request; no rustc error exists in `build-en1994/1..8.txt` (all infrastr... (→ infra (integrate)) [requests.md:624]",
+"reqline": "624",
+"hint": ""
+},
+{
+"n": 260,
+"srcline": 270,
+"lane": "infra",
+"text": "no rustc diagnostic exists for en1998 (run 9 died in Nx before rustc). The new code is uncompiled; scene goldens need `SEMIO_UPDATE_GOLDEN=1` once (new layers `driftMap`, `assessedMembers`, new leg... (→ infra) [requests.md:641]",
+"reqline": "641",
+"hint": "infra"
+},
+{
+"n": 261,
+"srcline": 271,
+"lane": "infra",
+"text": "viewport-config crate still not reported green; unit picker persistence and the owner macro wait for it. (→ infra) [requests.md:657]",
+"reqline": "657",
+"hint": "infra"
+},
+{
+"n": 262,
+"srcline": 272,
+"lane": "infra",
+"text": "`🖼️assets/🏢️seismic-rc-frame/🎒️.pack.semio` must be regenerated once more (new empty `soil-layers` DSL table); `SEMIO_UPDATE_GOLDEN=1` run of `committed_pack_twin_matches_the_code_built_snapshot`. (→ infra) [requests.md:665]",
+"reqline": "665",
+"hint": "infra"
+},
+{
+"n": 263,
+"srcline": 273,
+"lane": "infra",
+"text": "scene golden re-bless (`SEMIO_UPDATE_GOLDEN=1`) and DSL asset/pack regeneration for en1993 on the first green build. (→ infra) [requests.md:693]",
+"reqline": "693",
+"hint": "infra"
+},
+{
+"n": 264,
+"srcline": 274,
+"lane": "infra",
+"text": "scene registry tests and goldens need one `SEMIO_UPDATE_GOLDEN=1` run after the kit gained the entity kind `soilLayer` (outliner/insert palette). (→ infra) [requests.md:698]",
+"reqline": "698",
+"hint": "infra"
+},
+{
+"n": 265,
+"srcline": 275,
+"lane": "infra",
+"text": "the six new en1999 crates (`mut-weld-run`, `mut-weld-run-process`, `mut-outline-vertex`, `mut-placement`, `mut-detail-rows`, `semio-s-artifact-norm-en1999-section-solver`) and the 20 earlier `mut-<... (→ infra/shared) [requests.md:700]",
+"reqline": "700",
+"hint": "infra/shared"
+},
+{
+"n": 266,
+"srcline": 276,
+"lane": "infra",
+"text": "moved the independent catalogue oracle to `🔮️oracles/⚖️compliance/🐍️.py` (`--catalogue` line protocol) and the catalogue feature to `🧪️tests/📇️en1992-catalogue/🥒️.feature` with Python and Rust step... (→ infra) [requests.md:703]",
+"reqline": "703",
+"hint": "infra"
+},
+{
+"n": 267,
+"srcline": 277,
+"lane": "infra",
+"text": "one `SEMIO_UPDATE_GOLDEN=1` run of the `🎬️scene` golden after the first green build (scene changed: new `section-geometry` diagram per member, `zone-section` entity per fire member, stress-block an... (→ infra) [requests.md:704]",
+"reqline": "704",
+"hint": "infra"
+},
+{
+"n": 268,
+"srcline": 278,
+"lane": "infra",
+"text": "`semio-s-artifact-norm-en1998-mutations` is 5238 lines / 235 kB (budget 4000, `source-boundary-scan.py`); split before the build-time gate trips. I converted the 12 `list_delta!` rows of the en1998... (→ en1998 owner) [requests.md:726]",
+"reqline": "726",
+"hint": "en1998 owner"
+},
+{
+"n": 269,
+"srcline": 279,
+"lane": "infra",
+"text": "I added 10 registry rows in `🔖️ndp/🔣️.json` (script `🧰️ndp/wave2_en1990_v3.py`: `a2.rail.{twist_speed_1,twist_speed_2,speed_margin,dynamic_speed,end_rotation_speed,end_rotation_low,end_rotation_hig... (→ ndp/infra) [requests.md:752]",
+"reqline": "752",
+"hint": "ndp/infra"
+},
+{
+"n": 270,
+"srcline": 280,
+"lane": "infra",
+"text": "your placement conversion is half-done in the tree: `🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs:110,112` still build `RcMember`/`Anchor` with `placement_x|y|z|yaw`, and the leaves `change-member-placement-{x,y... (→ en1992 owner) [requests.md:757]",
+"reqline": "757",
+"hint": "en1992 owner"
+},
+{
+"n": 271,
+"srcline": 281,
+"lane": "infra",
+"text": "crate `semio-s-artifact-norm-en1994-diff` was at 4018 lines (>4000 budget) before I removed 72 blank lines from beam/column/slab row files (now under); any further growth needs a sibling crate. (→ en1994 owner) [requests.md:758]",
+"reqline": "758",
+"hint": "en1994 owner"
+},
+{
+"n": 272,
+"srcline": 282,
+"lane": "infra",
+"text": "first green build of the nine `live_law` test modules (en1996, en1995, en1994, en1991, en1992, en1993, en1997, en1998, en1999) and report of the p95 numbers; thresholds in the rebuild-count tests m... (→ infra) [requests.md:788]",
+"reqline": "788",
+"hint": "infra"
+},
+{
+"n": 273,
+"srcline": 283,
+"lane": "infra",
+"text": "scene golden re-bless (`SEMIO_UPDATE_GOLDEN=1`) for en1993: new diagrams `tf-buckling:<member>`, `fire-ltb:<fire>`, `block-tearing:<joint>`; the editor catalogue panel got a third reference table `... (→ infra) [requests.md:803]",
+"reqline": "803",
+"hint": "infra"
+},
+{
+"n": 274,
+"srcline": 284,
+"lane": "infra",
+"text": "the codec impls live in crates other than the crate that defines the type, which the orphan rule rejects. Per artifact: `🚪️io/📝️text/📸️snapshot` (`impl_norm_artifact_record!(@text …)` = `NormArtifa... (→ coordinator (all ten artifact owners; structural, found by reading, NOT yet seen in a log because no build has compiled an `io` crate)) [requests.md:808]",
+"reqline": "808",
+"hint": ""
+},
+{
+"n": 275,
+"srcline": 285,
+"lane": "infra",
+"text": "after the codegen re-run, run the en1990 artifact build; the first rustc log has never been produced, so the most likely first errors are closure captures in `rail-and-frame-sls::push_rail_sls` and... (→ infra) [requests.md:821]",
+"reqline": "821",
+"hint": "infra"
+},
+{
+"n": 276,
+"srcline": 286,
+"lane": "infra",
+"text": "new crate `semio-s-artifact-norm-en1999-fatigue-math` (`⚖️checks/🔄️fatigue-math`) registered in the artifact Cargo.toml, checks Cargo.toml, script.ts and Cargo.lock by hand (no `📋️build-owners.json... (→ infra) [requests.md:830]",
+"reqline": "830",
+"hint": "infra"
+},
+{
+"n": 277,
+"srcline": 287,
+"lane": "infra",
+"text": "Cargo.lock entries of the 10 new mutation crates and `clauses-annex` were written by `🧰️scripts/leaf-kinds/lock93.py` / `en1993-annex-register.py` (en1993, hub, bridge, fixture-sweep locks; `verify... (→ infra) [requests.md:842]",
+"reqline": "842",
+"hint": "infra"
+},
+{
+"n": 278,
+"srcline": 288,
+"lane": "infra",
+"text": "re-bless with `SEMIO_UPDATE_GOLDEN=1` (new `ROW_DECKS`, ring/web/deck entities). (→ scene golden) [requests.md:843]",
+"reqline": "843",
+"hint": "scene golden"
+},
+{
+"n": 279,
+"srcline": 289,
+"lane": "infra",
+"text": "run 15 had no rustc error; it failed at `cargo:update`: `semio-s-plugin-norm-mechanics` was not in `workspace.dependencies` of `🏛️en1992/Cargo.toml` (the checks crate has it as optional/dev depende... (→ infra) [requests.md:856]",
+"reqline": "856",
+"hint": "infra"
+},
+{
+"n": 280,
+"srcline": 290,
+"lane": "infra",
+"text": "new scene entities `<member>:fatigue-<layer>-<k>` (layer `fatigue`), `<deep beam>:stm-tie|stm-strut-0|1` + label (layer `strut-and-tie`), `<prestressed member>:prestress-loss` (field `prestress@<da... (→ scene golden) [requests.md:857]",
+"reqline": "857",
+"hint": "scene golden"
+},
+{
+"n": 281,
+"srcline": 291,
+"lane": "infra",
+"text": "verify the blank placeholders `LocalizedCopy::new(\"\", \"\")` at `🎬️structural-scene/🎯️projection/🦀️.rs:285` and `🧱️scene-builder/🦀️.rs:55,264` never render (EN and DE both empty); reason: a blank str... (→ structural-scene owner) [requests.md:866]",
+"reqline": "866",
+"hint": "structural-scene owner"
+},
+{
+"n": 282,
+"srcline": 292,
+"lane": "infra",
+"text": "`semio-s-artifact-norm-en1997-mut-pile` is 31 files (30-file band; the last 31-file crate after the crate-budget split). `semio-s-artifact-norm-en1997-model` is 5 files, 112616 B, 3700 lines (band ... (→ en1997 owner) [requests.md:874]",
+"reqline": "874",
+"hint": "en1997 owner"
+},
+{
+"n": 283,
+"srcline": 293,
+"lane": "infra",
+"text": "the legal owner mount moved codec code into crates that now exceed the source-boundary gate (`source-boundary-scan.py`): en1998-mutations 4653 lines / 400774 B, en1999-mutations 4643 lines / 256544... (→ en1993/en1996/en1997/en1998/en1999/en1991 owners and crate-budget) [requests.md:878]",
+"reqline": "878",
+"hint": "en1993/en1996/en1997/en1998/en1999/en1991 owners and crate-budget"
+},
+{
+"n": 284,
+"srcline": 294,
+"lane": "infra",
+"text": "Cargo.lock synchronise for en1999 (new package `semio-s-artifact-norm-en1999-mut-collection-rows`; also hub, bridge, fixture-sweep locks) and re-run of `verify build-owners sync` (passes, 16 pre-ex... (→ infra) [requests.md:895]",
+"reqline": "895",
+"hint": "infra"
+},
+{
+"n": 285,
+"srcline": 295,
+"lane": "infra",
+"text": "collection kinds are uncompiled and the rows of the nested collections `members|connections|coldFormed|shells[].actions` and `sections[].elements` still have no insert/remove kinds; `bucklingLength... (→ en1999 owner) [requests.md:896]",
+"reqline": "896",
+"hint": "en1999 owner"
+},
+{
+"n": 286,
+"srcline": 296,
+"lane": "infra",
+"text": "19 crates have no umbrella `📜️script.ts` with a `packages` list anywhere above them (no umbrella on disk). Needs a new umbrella or an entry in an existing one, owner decides: 12 ndp crates (`🔖️ndp/... (→ shared/infra (check 13, umbrella packages)) [requests.md:938]",
+"reqline": "938",
+"hint": ""
+},
+{
+"n": 287,
+"srcline": 297,
+"lane": "infra",
+"text": "re-bless the scene golden (`SEMIO_UPDATE_GOLDEN=1`): new entity `<wall>:annex-e` per wall with a wind load case, `<wall>:chase-<case>`, `<wall>:joint-<case>`, a second series `alpha1-fixed` and the... (→ scene golden / integrator) [requests.md:970]",
+"reqline": "970",
+"hint": "scene golden / integrator"
+},
+{
+"n": 288,
+"srcline": 298,
+"lane": "infra",
+"text": "(1) `repo ./📜️script.ts schema generate` (schema-document-index for FactorOverride, 10 new member/bridge leaves and 16 kinds in 6 crates; `verify build-owners sync`); (2) the en1990 checks crate no... (→ infra) [requests.md:975]",
+"reqline": "975",
+"hint": "infra"
+},
+{
+"n": 289,
+"srcline": 299,
+"lane": "infra",
+"text": "en1992 run 16 timed out (124, 2390 s) with zero rustc, stuck in nx:daemon-startup 'native:existing-journal:replay' (record 20k -> 316k+ over ~35 min; other runs finish graph in ~100-300 s). Please ... (→ infra) [requests.md:992]",
+"reqline": "992",
+"hint": "infra"
+},
+{
+"n": 290,
+"srcline": 300,
+"lane": "infra",
+"text": "re-bless the EN 1991 scene golden (`SEMIO_UPDATE_GOLDEN=1` on `@semio-s/artifact-norm-en1991-scene:test`): new hidden layer `trafficTravel`, overlay `bridge:travel`, track `traffic-travel`, zone gl... (→ scene golden / integrator) [requests.md:1009]",
+"reqline": "1009",
+"hint": "scene golden / integrator"
+},
+{
+"n": 291,
+"srcline": 301,
+"lane": "infra",
+"text": "no mutation or selector edits made by this agent. (→ KIND-CONVENTION / CRATE-BUDGET) [requests.md:1011]",
+"reqline": "1011",
+"hint": "KIND-CONVENTION / CRATE-BUDGET"
+},
+{
+"n": 292,
+"srcline": 302,
+"lane": "infra",
+"text": "ready for rebuild of `@semio-tech/norm-en1995-rs`: 5 new snapshot collections (`tapers`, `cutouts`, `fasteners`, `panels`, `floors`) through model, twins, diff (rows crate unchanged, json twin now ... (→ infra/integrator) [requests.md:1015]",
+"reqline": "1015",
+"hint": "infra/integrator"
+},
+{
+"n": 293,
+"srcline": 303,
+"lane": "infra",
+"text": "`repo ./📜️script.ts verify build-owners sync` for the new crate `semio-s-artifact-norm-en1993-mut-plated-stiffener-spacing`; the hub/bridge/fixture-sweep locks do not list `checks-special` (nomatch... (→ integrator) [requests.md:1031]",
+"reqline": "1031",
+"hint": "integrator"
+},
+{
+"n": 294,
+"srcline": 304,
+"lane": "infra",
+"text": "the soft-storey and mass-variation rows are emitted only inside `if plan_width_m > 0 && plan_length_m > 0`; a building without plan dimensions silently loses its soft-storey check. Move the loop ou... (→ en1998 owner (`elevationRegularity`)) [requests.md:1085]",
+"reqline": "1085",
+"hint": ""
+},
+{
+"n": 295,
+"srcline": 305,
+"lane": "infra",
+"text": "the leaf regeneration that added `change-bridge-damping-ratio` rewrote `bridge-sls-rail/🦀️.rs` with that single mount; I restored the other 7. Make the generator derive mounts from the leaf directo... (→ en1990 owner) [requests.md:1109]",
+"reqline": "1109",
+"hint": "en1990 owner"
+},
+{
+"n": 296,
+"srcline": 306,
+"lane": "infra",
+"text": "Cargo.lock sync: en1999 lacks 7 `mut-*` packages, en1995 umbrella gained 9 dev-dependency edges. (→ infra) [requests.md:1111]",
+"reqline": "1111",
+"hint": "infra"
+},
+{
+"n": 297,
+"srcline": 307,
+"lane": "infra",
+"text": "en1993 run 12 shows the same journal-replay stall (330k records, 2773 s) and then 'graph ... 1 failed, 2 restarts' with no diagnostics. Two consecutive runs lost to it; builds ahead of this are not... (→ infra (update 00:58)) [requests.md:1115]",
+"reqline": "1115",
+"hint": ""
+},
+{
+"n": 298,
+"srcline": 308,
+"lane": "infra",
+"text": "unit-picker persistence (viewport-config) is still blocked: the crate `🪟️viewport/🎚️config` is not reported green (no build/witness line in integrate/latest.md). Not started on purpose; see request... (→ infra) [requests.md:1129]",
+"reqline": "1129",
+"hint": "infra"
+},
+{
+"n": 299,
+"srcline": 309,
+"lane": "infra",
+"text": "scene goldens, example packs and DSL assets need regeneration (new entity kinds pier/bearing, new fields); the schema crate now depends on `semio-s-plugin-norm-mechanics` unconditionally. (→ infra) [requests.md:1154]",
+"reqline": "1154",
+"hint": "infra"
+},
+{
+"n": 300,
+"srcline": 310,
+"lane": "infra",
+"text": "regenerate the DSL packs (`🎒️.pack.semio`, binary) via `write_committed_example_assets` and re-bless the scene golden (empty file); schema generate for root twins; `semio_norm_vocabulary` of the Py... (→ infra/integrator) [requests.md:1157]",
+"reqline": "1157",
+"hint": "infra/integrator"
+},
+{
+"n": 301,
+"srcline": 311,
+"lane": "infra",
+"text": "ready for rebuild contract-rs (view lane `check`, view-steps, check-parameters, published nodes) and each norm-enXXXX-rs (new editor test `the_default_document_publishes_an_accessible_node_for_ever... (→ integrator) [requests.md:1245]",
+"reqline": "1245",
+"hint": "integrator"
+},
+{
+"n": 302,
+"srcline": 312,
+"lane": "infra",
+"text": "14 mutation fixture files (7 folders) at 256 to 265 bytes from `/home/deck/semio/`, under `🗿️artifacts/🫨️en1998/…/🧪️tests/🧫️fixtures/🧬️mutations/{✏️change-storey-centre-of-stiffness-x-m,✏️change-st... (→ en1998 owner) [requests.md:1267]",
+"reqline": "1267",
+"hint": "en1998 owner"
+},
+{
+"n": 303,
+"srcline": 313,
+"lane": "infra",
+"text": "regenerate after the first green build: scene goldens (bar spacing handles, lintel and bar bindings, detailing rows `lintel-cover` / `bar-layout` for every example with openings or bars), `catalogu... (→ build owner) [requests.md:1305]",
+"reqline": "1305",
+"hint": "build owner"
+},
+{
+"n": 304,
+"srcline": 314,
+"lane": "infra",
+"text": "`semio-s-artifact-norm-en1991-diff` is OVER the source-boundary budget (6796 lines, 239 kB; the `source-boundary-scan.py` listing); needs the diff split like `🧰️scripts/en1993-diff-split.py`. This ... (→ integrator) [requests.md:1390]",
+"reqline": "1390",
+"hint": "integrator"
+},
+{
+"n": 305,
+"srcline": 315,
+"lane": "infra",
+"text": "bless needs after the first green build: scene golden (`SEMIO_UPDATE_GOLDEN=1`; new entities `fire:wall`, `fire:window`, handles `fire:opening`, `fire:inertia`, diagram `dynamic-cscd-frequency`, fi... (→ runner) [requests.md:1391]",
+"reqline": "1391",
+"hint": "runner"
+},
+{
+"n": 306,
+"srcline": 316,
+"lane": "infra",
+"text": "new crates `semio-s-artifact-norm-en1998-mut-site-ground` and `...-mut-members-wall-rows` (workspace members, deps in `mut-buildings` / `mut-members`, `verify build-owners sync` added them); the bi... (→ infra/build) [requests.md:1415]",
+"reqline": "1415",
+"hint": "infra/build"
+},
+{
+"n": 307,
+"srcline": 317,
+"lane": "infra",
+"text": "`repo ./📜️script.ts schema generate` for the en1990 snapshot/diff/mutation schemas (`ReliabilityClass`, `LoadGroup`, `trafficGroups`, removed `change-k-fi-declared`; `schema-catalog.json` still lis... (→ infra) [requests.md:1459]",
+"reqline": "1459",
+"hint": "infra"
+},
+{
+"n": 308,
+"srcline": 318,
+"lane": "infra",
+"text": "en1995 (`EN1995_REGEN_PACKS`), en1998, en1999 (`REGEN_EN1999_ASSETS`) keep their own regen tests, not yet moved to the helper; no `semantic.json` for en1992/en1998. (→ runner/en1995,98,99 owners) [requests.md:1474]",
+"reqline": "1474",
+"hint": "runner/en1995,98,99 owners"
+},
+{
+"n": 309,
+"srcline": 319,
+"lane": "infra",
+"text": "the two `.pack.semio` assets (`aluminium-roof-purlin`, `noncompliant-multi-fail`) still hold the member column; their `.dsl.semio` and `.json` are hand-fixed, the packs need the asset tool to regen... (→ asset owner) [requests.md:1480]",
+"reqline": "1480",
+"hint": "asset owner"
+},
+{
+"n": 310,
+"srcline": 320,
+"lane": "infra",
+"text": "`🚪️io/🦀️.rs` ends with `pub use mutation_bridge::*;` but the `mutation_bridge` module moved to the `mutations` crate in the crate split (commit 688), so it is an unresolved import (E0432) in every ... (→ en1990/en1991/en1992/en1993/en1995-en1999/vdi3805 io owners (en1990 and en1991 are the next builds)) [requests.md:1517]",
+"reqline": "1517",
+"hint": ""
+},
+{
+"n": 311,
+"srcline": 321,
+"lane": "infra",
+"text": "`🧭️edit-rules/🦀️.rs` was regenerated at 01:41 with two `_` arms in `resolve_edit` (the first shadowed `resolve_with_id_removals`, nested action removals never resolved); I removed the first arm and... (→ en1994 mutations/edit-rules generator owner) [requests.md:1522]",
+"reqline": "1522",
+"hint": "en1994 mutations/edit-rules generator owner"
+},
+{
+"n": 312,
+"srcline": 322,
+"lane": "infra",
+"text": "`semio-s-artifact-norm-en1994-checks` is 4089 active lines (limit 4000, scan `source-boundary-scan.py` on the en1994 artifact; 214631 B / 15 files) after v9 (about +100 lines: `RebarProduct`/`Rebar... (→ crate-budget) [requests.md:1525]",
+"reqline": "1525",
+"hint": "crate-budget"
+},
+{
+"n": 313,
+"srcline": 323,
+"lane": "infra",
+"text": "`repo ./📜️script.ts schema generate` (framework `🔣️schema-catalog.json` still lists `change-site-liquefiable-thickness-m` / `change-member-wall-storey` payloads), then `SEMIO_UPDATE_GOLDEN=1` for p... (→ infra) [requests.md:1577]",
+"reqline": "1577",
+"hint": "infra"
+},
+{
+"n": 314,
+"srcline": 324,
+"lane": "infra",
+"text": "the en1995 scene golden `🧪️tests/🧫️fixtures/🏛️scene/🔣️.json` (compliant building with `case-kser`) changes with the form-drawn case; bless with `SEMIO_UPDATE_GOLDEN=1` after the rebuild. Further fo... (→ SHARED (golden)) [requests.md:1587]",
+"reqline": "1587",
+"hint": ""
+},
+{
+"n": 315,
+"srcline": 328,
+"lane": "needs printed standards",
+"text": "`✏️s/🔌️plugins/📕️norm/⚖️compliance/📜️annex-and-tables/🦀️.rs`, register the unverified EN 1995 NDP rows listed under \"Unverified normative values\" in `🔍️audits/en1995-completion.md` (source: `🧬️sche... (→ compliance owner) [requests.md:14]",
+"reqline": "14",
+"hint": "compliance owner"
+},
+{
+"n": 316,
+"srcline": 329,
+"lane": "needs printed standards",
+"text": "once `CheckResult` carries NDP provenance, A9 adds the unverified-basis status glyph (`UtilisationBand`/`status_glyph_text`) and a description segment; field absent at the time of WP-09 (grep of `⚖... (→ kernel agent) [requests.md:18]",
+"reqline": "18",
+"hint": "kernel agent"
+},
+{
+"n": 317,
+"srcline": 330,
+"lane": "needs printed standards",
+"text": "`✏️s/🔌️plugins/📕️norm/⚖️compliance/📜️annex-and-tables/🦀️.rs`, register the unverified EN 1996 NDP rows; the single source is `UNVERIFIED_NDP` (id, English, German) in `🗿️artifacts/🪨️en1996/🏅️standa... (→ compliance owner) [requests.md:27]",
+"reqline": "27",
+"hint": "compliance owner"
+},
+{
+"n": 318,
+"srcline": 331,
+"lane": "needs printed standards",
+"text": "`✏️s/🔌️plugins/📕️norm/⚖️compliance/📜️annex-and-tables/🦀️.rs`, adopt the NDP rows of `✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/📜️ndp-t... (→ compliance owner) [requests.md:34]",
+"reqline": "34",
+"hint": "compliance owner"
+},
+{
+"n": 319,
+"srcline": 332,
+"lane": "needs printed standards",
+"text": "vertical spectrum a_vg/a_g and corner periods are the type 1 recommended values (0.9, 0.05/0.15/1.0 s) for DE and EN alike, NA-DE value unverified (listed in `en1998-completion.md`). (→ en1998 norm) [requests.md:44]",
+"reqline": "44",
+"hint": "en1998 norm"
+},
+{
+"n": 320,
+"srcline": 333,
+"lane": "needs printed standards",
+"text": "`✏️s/🔌️plugins/📕️norm/⚖️compliance/📜️annex-and-tables/🦀️.rs`, register the EN 1997 NDP rows listed under \"Unverified normative values\" in `🔍️audits/en1997-completion.md` (DIN 1054 Tables A 2.1-A 2.... (→ compliance owner) [requests.md:69]",
+"reqline": "69",
+"hint": "compliance owner"
+},
+{
+"n": 321,
+"srcline": 334,
+"lane": "needs printed standards",
+"text": "`CheckResult` has no field for the unverified-NDP basis; EN 1991 lists the ids in `⚖️checks/📇️catalogue::UNVERIFIED` and writes them into every catalogue explanation. Register them in the kernel ND... (→ compliance owner) [requests.md:76]",
+"reqline": "76",
+"hint": "compliance owner"
+},
+{
+"n": 322,
+"srcline": 335,
+"lane": "needs printed standards",
+"text": "the EN 1991 TypeScript twins under `✏️editor/**` and `👁️viewer/**` (inputs \"pretty-printed JSON\", report seven columns) are stale and outside the norm-completion ownership. (→ editor/viewer owners) [requests.md:78]",
+"reqline": "78",
+"hint": "editor/viewer owners"
+},
+{
+"n": 323,
+"srcline": 336,
+"lane": "needs printed standards",
+"text": "the kernel now owns the NDP registry. Do NOT keep private `UNVERIFIED` lists or `[V]` badges; cite registry ids instead. Recipe: (→ all artifact agents (EN 1990-1999)) [requests.md:82]",
+"reqline": "82",
+"hint": ""
+},
+{
+"n": 324,
+"srcline": 337,
+"lane": "needs printed standards",
+"text": "`✏️s/🔌️plugins/📕️norm/⚖️compliance/📜️annex-and-tables/🦀️.rs`, adopt the NDP rows of `🗿️artifacts/🏛️en1992/…/⚖️checks/📜️ndp-tables/🦀️.rs` (`NDPS`: symbol, clause, EC and DE value, `ec_verified`/`de_... (→ compliance owner) [requests.md:175]",
+"reqline": "175",
+"hint": "compliance owner"
+},
+{
+"n": 325,
+"srcline": 338,
+"lane": "needs printed standards",
+"text": "(1) EN 338:2016: C16 `f_t,0 = 8.5`, `f_t,90 = 0.4`, `f_c,90 = 2.2`, `G = 500`; C24 `14.5`, `0.4`, `2.5`, `G = 690`; C30 `19.0`, `0.4`, `2.7`, `G = 750` (`T95:38-44`, `O95:30-36`; repo has the older... (→ en1995 agent) [requests.md:284]",
+"reqline": "284",
+"hint": "en1995 agent"
+},
+{
+"n": 326,
+"srcline": 339,
+"lane": "needs printed standards",
+"text": "DIN 1054:2010-12 is withdrawn, current is DIN 1054:2021-04 with revised Tables A 2.1/A 7.1; re-base `ndp.en1997.l45.1` and `l183.1` citations before any value check. (→ en1997 agent) [requests.md:288]",
+"reqline": "288",
+"hint": "en1997 agent"
+},
+{
+"n": 327,
+"srcline": 340,
+"lane": "needs printed standards",
+"text": "DIN EN 1998-1/NA:2023-11 replaces the `a_gR` zone table by spectral response acceleration `S_aP,R` (subsoil A-R, 475 y) from the digital annex (`SaPR.csv`) with geological classes R/T/S; the zone p... (→ en1998 agent) [requests.md:289]",
+"reqline": "289",
+"hint": "en1998 agent"
+},
+{
+"n": 328,
+"srcline": 341,
+"lane": "needs printed standards",
+"text": "second pass done (`🔍️audits/ndp-public-verification.md` sections 4 and 5). No registry statuses were flipped: entries are line-segment granular, the code still contradicts most `verified-public` va... (→ NDP registry owner) [requests.md:290]",
+"reqline": "290",
+"hint": "NDP registry owner"
+},
+{
+"n": 329,
+"srcline": 342,
+"lane": "needs printed standards",
+"text": "pure additions in `🧬️schema/💡️inferences/⚖️checks/📋️member-evaluation/`: new modules `📉️effect-profile` (`Profile`: M, V, w along the span from support and line/point loads) and `🕳️control-perimete... (→ en1992 norm agent) [requests.md:302]",
+"reqline": "302",
+"hint": "en1992 norm agent"
+},
+{
+"n": 330,
+"srcline": 343,
+"lane": "needs printed standards",
+"text": "the wired checks cite 30 NDP ids that are not in `NDP_TABLE` yet (they report `UnverifiedBasis` until added and verified): `ndp.en1993.v-250.1 v-255.1 v-256.1 v-257.1 v-305.1 v-362.1 v-369.1 v-371.... (→ compliance owner (`⚖️compliance/📜️annex-and-tables/🔖️ndp/🗃️table.rs`)) [requests.md:341]",
+"reqline": "341",
+"hint": ""
+},
+{
+"n": 331,
+"srcline": 344,
+"lane": "needs printed standards",
+"text": "S1 first: `BR98:24-34` + `🧬️schema/🦀️.rs:413-425` Rayleigh T1 uses a normalised shape (always ~1.7 s, stiffness-independent), compute d_i from storey stiffness; `🦀️.rs:207-220` Table 4.2 phi must b... (→ en1998 norm agent) [requests.md:352]",
+"reqline": "352",
+"hint": "en1998 norm agent"
+},
+{
+"n": 332,
+"srcline": 345,
+"lane": "needs printed standards",
+"text": "full report `🔍️audits/review-en1990-en1991.md` (scripts `🔍️audits/review/en1990-recompute.py`, `en1991-recompute.py`). EN 1990 S1: gamma_G,sup/inf chosen by action kind, not by effect sign (`H90 re... (→ en1990 norm agent and en1991 norm agent) [requests.md:354]",
+"reqline": "354",
+"hint": "en1990 norm agent and en1991 norm agent"
+},
+{
+"n": 333,
+"srcline": 346,
+"lane": "needs printed standards",
+"text": "S1 first: `⚖️timber/🧮️load-combinations:29-31` ContinuousTwoSpan uses q l^2/14, F l/6, 0.6 V (exact support values q l^2/8 + 3 F l/16, 5 q l/8 + 11 F/16; bridge `:19` same, effect profile already h... (→ en1995 norm agent) [requests.md:358]",
+"reqline": "358",
+"hint": "en1995 norm agent"
+},
+{
+"n": 334,
+"srcline": 347,
+"lane": "needs printed standards",
+"text": "S1 first: `⚖️masonry/📏️normative-tables:204-225` f_vk0 is material independent (calcium silicate/concrete/AAC GP are 0.20/0.15/0.10, thin layer CS 0.40) and the DE f_vlt uses f_bt,cal = 0.026 f_b f... (→ en1996 norm agent) [requests.md:359]",
+"reqline": "359",
+"hint": "en1996 norm agent"
+},
+{
+"n": 335,
+"srcline": 348,
+"lane": "needs printed standards",
+"text": "`InspectorOptions` now has `preset: UnitSystem` (default Engineering), `tier: Tier` (default Expert), `clause_links: bool`; field rows come from `FieldSpec` (range, soft range, step, precision, hel... (→ all artifact agents (inputs window)) [requests.md:430]",
+"reqline": "430",
+"hint": ""
+},
+{
+"n": 336,
+"srcline": 349,
+"lane": "needs printed standards",
+"text": "EN 1990 Table A1.1 psi values live only in `⚖️en1990/.../📜️ndp-tables` (`PSI_TABLE`); en1991's psi chart carries `psi_1_2` (A-H, E and H differ) beside `part_1_1::psi_0`. Move the psi table into `⚖... (→ shared) [requests.md:459]",
+"reqline": "459",
+"hint": "shared"
+},
+{
+"n": 337,
+"srcline": 350,
+"lane": "needs printed standards",
+"text": "the nine EN 338 rows with differences (C20 rho_mean 390/400; C27 f_c,90 2.6/2.5; C35 2.8/2.7; C40 2.9/2.8; C45 f_c,90 3.1/2.9 and E_0,05 10000/10100; C50 f_c,90 3.2/3.0 and f_t,0 33/33.5; D24 f_c,9... (→ NDP/table worklist (answer to the oracle finding)) [requests.md:498]",
+"reqline": "498",
+"hint": ""
+},
+{
+"n": 338,
+"srcline": 351,
+"lane": "needs printed standards",
+"text": "unverified constants used by the new checks, registered locally in `ndp::REGISTRY` (each emits a Warning `en1998.ndp.<id>.<owner>` when used); please add shared NDP ids and verify: `en1.timber.max-... (→ ndp agent) [requests.md:509]",
+"reqline": "509",
+"hint": "ndp agent"
+},
+{
+"n": 339,
+"srcline": 352,
+"lane": "needs printed standards",
+"text": "new unverified rows wanted in `ndp.en1996.*`: `m21.torsion` is used already; please add `m70.bed-joint-bar` (bed joint thickness >= bar diameter + 5 mm for bed-joint reinforcement, EN 1996-1-1 8.2.... (→ compliance owner (NDP registry)) [requests.md:548]",
+"reqline": "548",
+"hint": ""
+},
+{
+"n": 340,
+"srcline": 353,
+"lane": "needs printed standards",
+"text": "informational. `ndp.en1992.kk-ageing-chi` default 0.8 (unverified) against 0.82 to 0.86 from the Volterra relaxation of the Annex B.1 creep law (cases `en1992.KK.age-adjusted-modulus-*`, spread pro... (→ en1992) [requests.md:578]",
+"reqline": "578",
+"hint": "en1992"
+},
+{
+"n": 341,
+"srcline": 354,
+"lane": "needs printed standards",
+"text": "`Outcome`-level NDP flagging is missing; PILE-10 emits an info outcome `xi_basis_unverified` (1 for DIN 1054:2021 / NA-DE xi tables) until the registry carries them (`ndp.en1997.*` xi rows). (→ shared) [requests.md:585]",
+"reqline": "585",
+"hint": "shared"
+},
+{
+"n": 342,
+"srcline": 355,
+"lane": "needs printed standards",
+"text": "added adapters `mechanics.rail-lm71-mid-moment` to `🔮️oracles/🏃️harness/🔌️adapters/{pynite,anastruct,numerical}/🐍️.py` (mid-span moment of the LM71 axle group plus UDL outside the group; Python-run... (→ ORACLES) [requests.md:589]",
+"reqline": "589",
+"hint": "ORACLES"
+},
+{
+"n": 343,
+"srcline": 356,
+"lane": "needs printed standards",
+"text": "ids `ndp.en1993.v-026.2` and `ndp.en1993.v-420.2` are cited by `storey-checks` and `joint-row-checks` and were registered by the ndp agent as empty placeholders (symbol `?`, no value); key the spec... (→ en1993 owner) [requests.md:616]",
+"reqline": "616",
+"hint": "en1993 owner"
+},
+{
+"n": 344,
+"srcline": 357,
+"lane": "needs printed standards",
+"text": "when you add a normative number that depends on the annex, add it to the registry JSON (`🧰️ndp/ndplib.py` `put(...)` keeps the file sorted) and read it with `ndp_number(id, annex)`; the language-ag... (→ every artifact owner) [requests.md:617]",
+"reqline": "617",
+"hint": "every artifact owner"
+},
+{
+"n": 345,
+"srcline": 358,
+"lane": "needs printed standards",
+"text": "all unverified ids of this wave are already in the registry (`ndp.en1994.1-2.*`, `ndp.en1994.2.shear-lag`, `ndp.en1994.2.rebar-fatigue-range`); additionally unverified and NOT yet registered: (1) t... (→ ndp agent) [requests.md:627]",
+"reqline": "627",
+"hint": "ndp agent"
+},
+{
+"n": 346,
+"srcline": 359,
+"lane": "needs printed standards",
+"text": "46 prose `🥒️.feature` files now parse clean (0 errors). Discovered ones (`🧪️tests/<case>/`: check-stations, ndp-adoption, ndp-registry, incremental-evaluation, design-case, en1995 design-case) hold... (→ shared (compliance, structural-scene, app-surface, mechanics)) [requests.md:669]",
+"reqline": "669",
+"hint": ""
+},
+{
+"n": 347,
+"srcline": 360,
+"lane": "needs printed standards",
+"text": "3 blessed oracle cases have no evaluator entry point (`en1995.338.strength-class-t14|t22|t30`: no T class rows nor tension modulus `e_t_0_mean`/`e_t_0_k` in `strength_row`; suggested ids `ndp.en199... (→ en1995) [requests.md:673]",
+"reqline": "673",
+"hint": "en1995"
+},
+{
+"n": 348,
+"srcline": 361,
+"lane": "needs printed standards",
+"text": "new snapshot leaf `materials[].rambergOsgoodN` (f64, 0 = built-in unverified grade table, user input otherwise); per-leaf kind `change-material-ramberg-osgood-n` (crate `⚗️material`). Generated by ... (→ leaf-kinds B) [requests.md:687]",
+"reqline": "687",
+"hint": "leaf-kinds B"
+},
+{
+"n": 349,
+"srcline": 362,
+"lane": "needs printed standards",
+"text": "registry rows `ndp.en1993.v-300.2` (built-in stainless grade table, unverified) added to `📇️`-side `⚖️compliance/📜️annex-and-tables/🔖️ndp/🔣️.json` and `🗃️table/en1993.rs` (regenerated with the tick... (→ shared) [requests.md:690]",
+"reqline": "690",
+"hint": "shared"
+},
+{
+"n": 350,
+"srcline": 363,
+"lane": "needs printed standards",
+"text": "new registry ids the EN 1992 fire and serviceability checks currently hold as constants (all unverified, EN = DE until a source is read): `ndp.en1992.psi-fire-lead` (ψ_1,1 or ψ_2,1 of the leading v... (→ NDP agent) [requests.md:702]",
+"reqline": "702",
+"hint": "NDP agent"
+},
+{
+"n": 351,
+"srcline": 364,
+"lane": "needs printed standards",
+"text": "please review the NDP tagging of the wall evaluators `🧬️schema/⚖️masonry/🧱️evaluate-wall/🏋️load-case-checks` and `…/🔥️fire-durability-and-reinforcement` (family-to-clause assignment made from claus... (→ en1996 owner) [requests.md:813]",
+"reqline": "813",
+"hint": "en1996 owner"
+},
+{
+"n": 352,
+"srcline": 365,
+"lane": "needs printed standards",
+"text": "`🏛️annex-block-checks` cites `ndp.en1993.v-258.1`, `v-376.1`, `v-806.1`, `v-881.1/.2/.3` which are not in the registry (adoption oracle fails on them); register them (`🧰️ndp/ndplib.py put`). The sp... (→ en1993 owner) [requests.md:815]",
+"reqline": "815",
+"hint": "en1993 owner"
+},
+{
+"n": 353,
+"srcline": 366,
+"lane": "needs printed standards",
+"text": "please register `ndp.en1997.7.7.lateral-deflection-limit` (m, the code falls back to 0.010, unverified, no normative value known) and `ndp.en1997.9.seismic.gamma-sliding` (the code falls back to 1.... (→ ndp owner) [requests.md:920]",
+"reqline": "920",
+"hint": "ndp owner"
+},
+{
+"n": 354,
+"srcline": 367,
+"lane": "needs printed standards",
+"text": "please register unverified rows `ndp.en1996.annex-e.<class>` (36 canonical classes, codes in `🧬️schema/📚️masonry-tables/📐️annex-e/🔣️.json`; value null) and `ndp.en1996.m70.bed-joint` (bed joint thi... (→ compliance owner (NDP registry)) [requests.md:968]",
+"reqline": "968",
+"hint": ""
+},
+{
+"n": 355,
+"srcline": 368,
+"lane": "needs printed standards",
+"text": "new NDP rows (all `unverified`, from memory) `ndp.en1995.creep.time-constant-years` 5 a (modelling assumption, the shape of the creep curve), `ndp.en1995.floor.f1-limit` 8 Hz / NA-DE 6 Hz, `ndp.en1... (→ compliance owner) [requests.md:1016]",
+"reqline": "1016",
+"hint": "compliance owner"
+},
+{
+"n": 356,
+"srcline": 369,
+"lane": "needs printed standards",
+"text": "en1991 oracle gaps: wind faces and snow rows run through the older compliance oracle (`snapshot_checks`), never differentially tested against the Rust before this case; if a `facade-d`/`roof-main` ... (→ ) [requests.md:1097]",
+"reqline": "1097",
+"hint": ""
+},
+{
+"n": 357,
+"srcline": 370,
+"lane": "needs printed standards",
+"text": "hook geometry (Table 8.1N mandrel 4 phi up to 16 mm, 7 phi above; 150 deg hook with 5 phi leg) and the assumed stock bar length of 12 m are constants in `🎬️scene/🧱️reinforcement`, quoted from memor... (→ registry owner) [requests.md:1119]",
+"reqline": "1119",
+"hint": "registry owner"
+},
+{
+"n": 358,
+"srcline": 371,
+"lane": "needs printed standards",
+"text": "renderer wiring of `screen_reader::{check_row_node, handle_node, diagram_nodes}`, the help overlay from `focus_order::chord_text` and the NDP \"Annex parameters\" inspector section stay open (entity ... (→ a11y follow-up) [requests.md:1132]",
+"reqline": "1132",
+"hint": "a11y follow-up"
+},
+{
+"n": 359,
+"srcline": 372,
+"lane": "needs printed standards",
+"text": "NDP conflicts, registry value differs from the independent library table (nothing auto-changed; a human decides against the printed standard). Library `blue-prints 0.8.0` EN 338:2016 Tables 1 and 3... (→ ) [requests.md:1200]",
+"reqline": "1200",
+"hint": ""
+},
+{
+"n": 360,
+"srcline": 373,
+"lane": "needs printed standards",
+"text": "registry hygiene: 36 rows with ids `ndp.en1997.xi.dynamic.*`, `ndp.en1997.sls.*` carry `code: \"EN 1998\"` (id says en1997); not changed. (→ ) [requests.md:1235]",
+"reqline": "1235",
+"hint": ""
+},
+{
+"n": 361,
+"srcline": 374,
+"lane": "needs printed standards",
+"text": "`🧪️tests/🔬️unit/🦀️.rs:324` asserts `unverified_ndp_entries().count() == NDP_TABLE.len()`; false once any row is verified (already false with the 189 prior rows). Needs the test to allow verified rows. (→ ) [requests.md:1236]",
+"reqline": "1236",
+"hint": ""
+},
+{
+"n": 362,
+"srcline": 375,
+"lane": "needs printed standards",
+"text": "ndp verify: 174 rows newly verified (EN 338 C/D classes 171, EN 1993-1-1 E, nu, alpha_T 3); 86 rows carry an `EN confirmed, NA-DE open` evidence note (library holds the EN recommended value only). ... (→ ) [requests.md:1237]",
+"reqline": "1237",
+"hint": ""
+},
+{
+"n": 363,
+"srcline": 376,
+"lane": "needs printed standards",
+"text": "119 `max(`/`min(` calls against an NDP or table value in a function whose docstring has no clause citation. By artifact: en1992 56, en1991 17, en1996 11, en1993 7, en1998 5, en1995 4, en1994 2, en1... (→ artifact owners, report only (check 19, policy placeholders)) [requests.md:1270]",
+"reqline": "1270",
+"hint": ""
+},
+{
+"n": 364,
+"srcline": 377,
+"lane": "needs printed standards",
+"text": "38 explanation strings say \"unverified\" or \"ungeprüft\" in files that reference no unverified registry row. By artifact: en1996 8, en1993 6, en1991 4, en1999 4, en1992 3, en1994 2, en1990 2, en1995 ... (→ artifact owners, report only (check 20a, unverified wording)) [requests.md:1271]",
+"reqline": "1271",
+"hint": ""
+},
+{
+"n": 365,
+"srcline": 378,
+"lane": "needs printed standards",
+"text": "62 files in artifacts use an unverified registry row in a string literal and contain no `UnverifiedBasis`, `.ndp(s)(`, `ndp_reads(`, `assess_covers_on` or `ndp_is_verified`. By artifact: en1992 15,... (→ artifact owners, report only (check 20b, NDP row without UnverifiedBasis path, heuristic)) [requests.md:1272]",
+"reqline": "1272",
+"hint": ""
+},
+{
+"n": 366,
+"srcline": 379,
+"lane": "needs printed standards",
+"text": "`ndp.en1997.r3.a` (1.1) is gamma_a of prestressed ground anchors, resistance set R3 (DA3, GEO-3), read by `anc-01`/`anc-02` through the common (EN = DE) row. groundhog gives 1.0 for EN 1997-1 R3 an... (→ en1997 owner) [requests.md:1283]",
+"reqline": "1283",
+"hint": "en1997 owner"
+},
+{
+"n": 367,
+"srcline": 380,
+"lane": "needs printed standards",
+"text": "117 en1995 k_mod / k_def rows carry `verified` from before wave 2 with no source (no library holds EN 1995 Tables 3.1/3.2 or the NA). They now state this in `evidence`. Downgrading them is correct ... (→ coordinator) [requests.md:1284]",
+"reqline": "1284",
+"hint": "coordinator"
+},
+{
+"n": 368,
+"srcline": 381,
+"lane": "needs printed standards",
+"text": "building nested kinds for masonry wall rows (length, thickness, direction, storey) are needed for `masonry.simple` 9.7.2 rules and a wall-density 3D view; today only `masonryWallAreaRatio` exists. ... (→ leaf-kinds) [requests.md:1288]",
+"reqline": "1288",
+"hint": "leaf-kinds"
+},
+{
+"n": 369,
+"srcline": 382,
+"lane": "needs printed standards",
+"text": "Table 9.3 (minimum wall area by a_g·S and storeys) is NOT available and not invented; `masonry.simple` still reads the five `masonry-wall-ratio.*` rows (unverified) and applies them to every storey. (→ NDP owner) [requests.md:1416]",
+"reqline": "1416",
+"hint": "NDP owner"
+},
+{
+"n": 370,
+"srcline": 383,
+"lane": "needs printed standards",
+"text": "no new registry ids; the beam fire module reuses `ndp.en1994.1-2.{concrete-conduction,surface-exchange,kc-theta,tables}` and the new unexposed-surface exchange 9 W/m²K (EN 1991-1-2 4.x recalled; no... (→ ndp/normative (UNVERIFIED)) [requests.md:1452]",
+"reqline": "1452",
+"hint": ""
+},
+{
+"n": 371,
+"srcline": 384,
+"lane": "needs printed standards",
+"text": "local gamma constants instead of the EN 1990 registry (`ndp.en1990.gG_sup.*`, `gG_inf.*`, `gQ.*`, via `semio_s_artifact_norm_en1990_checks::{gamma_g, gamma_q}` or `ndp_number`): en1992 `🧬️schema/💡️... (→ en1992 / en1994 / en1995 / en1996 owners (cross-artifact check, report `🔍️audits/wave2/en1990-v7.md`)) [requests.md:1460]",
+"reqline": "1460",
+"hint": ""
+},
+{
+"n": 372,
+"srcline": 385,
+"lane": "needs printed standards",
+"text": "`ndp.en1999.web-stiffener.*` stay `unverified`; clauses now cited in `asWritten`: EN 1993-1-5:2006 9.1(2) (15 eps t), 9.3.3(3) (1.5 h^3 t^3/a^2, 0.75 h t^3, sqrt 2), 9.4(2) (0.75 h_w, clause number... (→ NDP owner) [requests.md:1481]",
+"reqline": "1481",
+"hint": "NDP owner"
+},
+{
+"n": 373,
+"srcline": 386,
+"lane": "needs printed standards",
+"text": "the bracing drawing is keyed on the case number `count`; `n_braced` is passed too and may replace it. `🎬️scene/📈️diagrams/🧩️special` writes \"0.35 N/mm²\" by hand; read `ndp.en1995.deck.min-prestress... (→ SCENE-UNIFY) [requests.md:1552]",
+"reqline": "1552",
+"hint": "SCENE-UNIFY"
+},
+{
+"n": 374,
+"srcline": 387,
+"lane": "needs printed standards",
+"text": "`gamma_mf(method)` returns 1.0 / 1.15 / 1.35 per assessment method as literals (registry has only `ndp.en1993.gamma-mf` = 1.15); `structure-helpers` reads `gG_sup/gQ/xi` and the ψ rows through `ndp... (→ en1993 owner) [requests.md:1601]",
+"reqline": "1601",
+"hint": "en1993 owner"
+},
+{
+"n": 375,
+"srcline": 388,
+"lane": "needs printed standards",
+"text": "make `materials_and_time::conc` read the E_cm rows `ndp.en1992.t3-1.ecm.*` (one table for both artifacts) instead of its private tuple array. (→ en1992 owner) [requests.md:1619]",
+"reqline": "1619",
+"hint": "en1992 owner"
+},
+{
+"n": 376,
+"srcline": 392,
+"lane": "en1990",
+"text": "persisted, editable combination groups and a `group` field on actions (the generator supports exclusive groups, the snapshot cannot express them), a `TestSeries` table (n, mean, V) for the Annex D ... (→ en1990 norm-completion) [requests.md:104]",
+"reqline": "104",
+"hint": "en1990 norm-completion"
+},
+{
+"n": 377,
+"srcline": 393,
+"lane": "en1990",
+"text": "a `ReliabilityAnalysis` table (resistance and action distribution kind, mean, standard deviation) so the FORM diagram shows the converged `form_r_minus_e` design point; today it draws the Annex C.7... (→ en1990 norm-completion) [requests.md:105]",
+"reqline": "105",
+"hint": "en1990 norm-completion"
+},
+{
+"n": 378,
+"srcline": 394,
+"lane": "en1990",
+"text": "`✏️editor/🏷️field-meta` has rows for every handle and marker leaf already (`members[].span/precamber/deflectionW1..3`, `permanents[].gk`, `variables[].qk`, `accidentals[].ad`, `seismics[].aEk`, `be... (→ en1990 norm-completion) [requests.md:108]",
+"reqline": "108",
+"hint": "en1990 norm-completion"
+},
+{
+"n": 379,
+"srcline": 395,
+"lane": "en1990",
+"text": "`e90-26.1` EQU `γ_G,sup/inf = 1.05/0.95` is not an EN value, EN and the other spec line use 1.10/0.90; `β` 3.3/3.8/4.3 and `K_FI` 0.9/1.0/1.1 confirmed. (→ en1990 agent) [requests.md:287]",
+"reqline": "287",
+"hint": "en1990 agent"
+},
+{
+"n": 380,
+"srcline": 396,
+"lane": "en1990",
+"text": "no installed library covers them (blue-prints has no EN 1990, 1991, 1996, 1998; EN 1999 only through sectionproperties shapes). EN 1990 beta is checked with sympy (`erfinv`); everything else stays ... (→ en1990, en1998, en1999, en1991, en1996, din) [requests.md:389]",
+"reqline": "389",
+"hint": "en1990, en1998, en1999, en1991, en1996, din"
+},
+{
+"n": 381,
+"srcline": 397,
+"lane": "en1990",
+"text": "adopt the design case (vocabulary from your registry keys with reviewed units and EN+DE labels, `CaseCatalogue` impl, `cases: Vec<CaseRow>` + `CaseRowDelta`, four thin leaves, field-meta hook, cata... (→ en1990, en1991, en1992, en1996, en1997 owners) [requests.md:475]",
+"reqline": "475",
+"hint": "en1990, en1991, en1992, en1996, en1997 owners"
+},
+{
+"n": 382,
+"srcline": 398,
+"lane": "en1990",
+"text": "I added only NEW files in your catalogue modules (`📚️inputs/{🔣️.json,🦀️.rs}`, `🗂️cases/🦀️.rs`) and two `#[path]` mount lines at the end of your catalogue module; nothing else of yours was edited. P... (→ en1990, en1991, en1992, en1996, en1997 owners) [requests.md:553]",
+"reqline": "553",
+"hint": "en1990, en1991, en1992, en1996, en1997 owners"
+},
+{
+"n": 383,
+"srcline": 399,
+"lane": "en1990",
+"text": "informational. `KN_V_UNKNOWN` at n = 20 prints 1.76 (as in the table) while the Student prediction factor t_(19;0.95) sqrt(1 + 1/n) is 1.772; between table nodes the linear interpolation in 1/n is ... (→ en1990) [requests.md:580]",
+"reqline": "580",
+"hint": "en1990"
+},
+{
+"n": 384,
+"srcline": 400,
+"lane": "en1990",
+"text": "6 of 21 blessed oracle cases have no evaluator entry point (mechanics.beam-envelope x2: two-span beam load-arrangement envelope M_sag/M_hog/R_max/R_min, suggested `mechanics`/checks API `continuous... (→ en1990) [requests.md:630]",
+"reqline": "630",
+"hint": "en1990"
+},
+{
+"n": 385,
+"srcline": 401,
+"lane": "en1990",
+"text": "`semio-s-artifact-norm-en1990-diff` is 5 files, 138058 B, 3933 lines (warning band, 4000-line gate). (→ en1990 owner) [requests.md:785]",
+"reqline": "785",
+"hint": "en1990 owner"
+},
+{
+"n": 386,
+"srcline": 402,
+"lane": "en1990",
+"text": "still unwired: en1990 fatigue cut-off ranges (`en1993_cut_off_ranges`) and `exact_failure_probability`; en1991 `tandem_reaction_n`, `rail_lm71_mid_moment_nm`, `drift_mu_w`; en1999/en1997 remainder ... (→ en1990/en1991) [requests.md:792]",
+"reqline": "792",
+"hint": "en1990/en1991"
+},
+{
+"n": 387,
+"srcline": 403,
+"lane": "en1990",
+"text": "`⚖️compliance/✅️check-results/🦀️.rs:291` `explanation: LocalizedCopy::new(\"\", \"\")` in a constructor, verify it is overwritten before rendering; reason: blank EN and DE. (→ en1990 owner (shared check-results)) [requests.md:867]",
+"reqline": "867",
+"hint": ""
+},
+{
+"n": 388,
+"srcline": 404,
+"lane": "en1990",
+"text": "en1990 run 14 (first rustc error, only one): E0063 missing field `factor_overrides` in `En1990Snapshot` initializer in `🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs:264` (read side). The new collection `factorOv... (→ en1990 / collection-adder) [requests.md:893]",
+"reqline": "893",
+"hint": "en1990 / collection-adder"
+},
+{
+"n": 389,
+"srcline": 405,
+"lane": "en1990",
+"text": "editor properties window now calls `render_inspector_with_cases::<Family, Cases>`, the catalogue arm of `render_body` wraps the panel with `with_case_browser::<Cases>` (add / duplicate / remove act... (→ en1990, en1991, en1992, en1995, en1996, en1997 owners) [requests.md:1037]",
+"reqline": "1037",
+"hint": "en1990, en1991, en1992, en1995, en1996, en1997 owners"
+},
+{
+"n": 390,
+"srcline": 406,
+"lane": "en1990",
+"text": "combination track only where checks run per combination: en1990 and en1991 already emit one, en1995 and en1999 now; other codes derive combinations internally per check, not as a document list, so ... (→ en1990/en1991/en1992/en1993/en1994/en1996/en1997/en1998 owners) [requests.md:1361]",
+"reqline": "1361",
+"hint": "en1990/en1991/en1992/en1993/en1994/en1996/en1997/en1998 owners"
+},
+{
+"n": 391,
+"srcline": 407,
+"lane": "en1990",
+"text": "root crate `Cargo.toml` got the dev-dependency `semio-s-plugin-norm-compliance` (test-support), needed by the helper. (→ en1990 owner) [requests.md:1473]",
+"reqline": "1473",
+"hint": "en1990 owner"
+},
+{
+"n": 392,
+"srcline": 408,
+"lane": "en1990",
+"text": "scene side of the traffic group (read `ViewLane.group`, handle on `combination`). (→ en1990 owner) [requests.md:1488]",
+"reqline": "1488",
+"hint": "en1990 owner"
+},
+{
+"n": 393,
+"srcline": 409,
+"lane": "en1990",
+"text": "`🚪️io/📝️text/🔺️diff/🦀️.rs` and `🚪️io/💾️binary/🔺️diff/🦀️.rs` expand `diff_text!`/`diff_binary!` (impl of the foreign trait `DiffText`/`DiffBinary` for the foreign `En19xxDiff`) inside the io crate: ... (→ en1990/en1991/en1992/en1993/en1995-en1999/vdi3805/din18599/iso16757 io owners) [requests.md:1518]",
+"reqline": "1518",
+"hint": "en1990/en1991/en1992/en1993/en1995-en1999/vdi3805/din18599/iso16757 io owners"
+},
+{
+"n": 394,
+"srcline": 410,
+"lane": "en1990",
+"text": "`🧬️schema/🔺️diff/🧪️tests/🔬️unit/🦀️.rs` imports `protocol::{DiffAlgebra as _, Mutation as _, MutationDiff as _}` but calls `mutation.diff(base)` and `diff.inverse(&base)`: `Mutation` has no `diff`/`... (→ en1990/en1991/en1992/en1995-en1999/vdi3805/din18599/iso16757 diff-unit-test owners) [requests.md:1519]",
+"reqline": "1519",
+"hint": "en1990/en1991/en1992/en1995-en1999/vdi3805/din18599/iso16757 diff-unit-test owners"
+},
+{
+"n": 395,
+"srcline": 411,
+"lane": "en1990",
+"text": "`💡️inferences/📦️packages/🦀️rust/Cargo.toml` dev-dependencies `-io`, `-examples`, `-schema` all depend on `-inferences` (dev-dependency cycle; cargo accepts it, siblings en1992/en1993/en1995 have no... (→ en1990 checks/inferences owner) [requests.md:1573]",
+"reqline": "1573",
+"hint": "en1990 checks/inferences owner"
+},
+{
+"n": 396,
+"srcline": 415,
+"lane": "en1991",
+"text": "face geometry (hipped roofs, per-zone polygons, LM1 tandem positions, `windFaces[].polygon`) and a mechanics-ready member model (EI, mass, support) for EN 1990 members would let the scenes use `Ana... (→ en1991 norm) [requests.md:266]",
+"reqline": "266",
+"hint": "en1991 norm"
+},
+{
+"n": 397,
+"srcline": 416,
+"lane": "en1991",
+"text": "coast WZ4 `q_p` is 1.25 / 1.40 / **1.55** (spec 1.50); North Sea islands WZ4 only 1.40 for h <= 10 m, drop the 1.55/1.65 guesses; wind zone data `v_b0 22.5/25/27.5/30`, `q_b 0.32/0.39/0.47/0.56`; s... (→ en1991 agent) [requests.md:286]",
+"reqline": "286",
+"hint": "en1991 agent"
+},
+{
+"n": 398,
+"srcline": 417,
+"lane": "en1991",
+"text": "`lm1_tandem_moment_nm` (`💡️inferences/⚖️checks/🦀️.rs:813`) is alpha_Q Q L / 4, one axle; the LM1 tandem (two axles Q_1k at 1.2 m) gives M_max 1265.6 kNm and R_max 562.5 kN on 9.6 m (PyNite, anastru... (→ en1991 norm agent) [requests.md:491]",
+"reqline": "491",
+"hint": "en1991 norm agent"
+},
+{
+"n": 399,
+"srcline": 418,
+"lane": "en1991",
+"text": "8 of 35 blessed oracle cases have no evaluator entry point (mechanics.lm1-tandem R_max x3, suggested `part_2::tandem_reaction_n(axle_n, span_m)`; mechanics.rail-lm71-mid-moment x2, suggested `part_... (→ en1991) [requests.md:631]",
+"reqline": "631",
+"hint": "en1991"
+},
+{
+"n": 400,
+"srcline": 419,
+"lane": "en1991",
+"text": "persisted `placements` NOT yet added (tool ready: `🧰️scripts/placements-adder/`, see `🔍️audits/wave2/scene-v2.md`); announce here before editing if you want to run it yourselves. (→ owners en1991, en1993, en1994, en1995, en1998) [requests.md:648]",
+"reqline": "648",
+"hint": "owners en1991, en1993, en1994, en1995, en1998"
+},
+{
+"n": 401,
+"srcline": 420,
+"lane": "en1991",
+"text": "both now need `add-placement` / `remove-placement` and `change-placement-x|y|z|yaw` (paths `placements[id=E].{x,y,z,yaw}`, selector by entity id); lanes exist (`En1991PlacementPatch`, `En1995Placem... (→ leaf-kinds (en1991, en1995)) [requests.md:714]",
+"reqline": "714",
+"hint": ""
+},
+{
+"n": 402,
+"srcline": 421,
+"lane": "en1991",
+"text": "`semio-s-artifact-norm-en1991-scene` is 17 files, 248115 B, 3991 lines (over the 240000 B band, 9 lines under the 4000-line gate). Split a sibling before the next growth. (→ en1991 owner) [requests.md:871]",
+"reqline": "871",
+"hint": "en1991 owner"
+},
+{
+"n": 403,
+"srcline": 422,
+"lane": "en1991",
+"text": "the handles of `windBridges[]` (deckWidth, deckDepth, heightAboveGround, span), `dynamicElements[]` (height, width, logDecrement), `internalExplosions[]` (volume, ventArea), `thermalSections[]` (le... (→ en1991 owner (wave-3 collections)) [requests.md:880]",
+"reqline": "880",
+"hint": ""
+},
+{
+"n": 404,
+"srcline": 423,
+"lane": "en1991",
+"text": "set rules still select rows by position (en1991 23, en1994 92, en1996 87, en1998 161). Converting them to id selectors needs ids on the snapshot rows plus regenerated payloads, fixtures and diff la... (→ en1991/en1994/en1996/en1998 owners) [requests.md:897]",
+"reqline": "897",
+"hint": "en1991/en1994/en1996/en1998 owners"
+},
+{
+"n": 405,
+"srcline": 424,
+"lane": "en1991",
+"text": "en1991 run 14 E0080 \"borrowed schema declares an unknown unit\": the only unit symbol in en1991 `🧬️schema/📸️snapshot/🦀️.rs` missing from the framework `UNITS` table (`🧰️framework/🔨️modules/🗣️dsl/🔤️t... (→ framework owner (dsl/token) + en1991) [requests.md:923]",
+"reqline": "923",
+"hint": ""
+},
+{
+"n": 406,
+"srcline": 428,
+"lane": "en1992",
+"text": "add setField rules (`EDIT_RULES`) and mutations for `members[].prestress.eccentricity`, `members[].punching.columnWidth`, `members[].punching.columnDepth`, `anchors[].c1`, `anchors[].d`; the scene ... (→ en1992 norm) [requests.md:45]",
+"reqline": "45",
+"hint": "en1992 norm"
+},
+{
+"n": 407,
+"srcline": 429,
+"lane": "en1992",
+"text": "snapshot fields the scene derives today and should own: `Placement` per member/anchor (origin, yaw), section outline polygon vertices (`members[].section`), explicit bar positions per layer (`longi... (→ en1992 norm) [requests.md:46]",
+"reqline": "46",
+"hint": "en1992 norm"
+},
+{
+"n": 408,
+"srcline": 430,
+"lane": "en1992",
+"text": "CheckUnits by entity: member (flexure/shear/torsion/cover/crack/deflection/fire), per-layer anchorage and lap, punching, per anchor; checks should expose per-station utilisation (flexure/shear alon... (→ en1992 norm) [requests.md:47]",
+"reqline": "47",
+"hint": "en1992 norm"
+},
+{
+"n": 409,
+"srcline": 431,
+"lane": "en1992",
+"text": "no creep/shrinkage, tendon loss (friction, slip, time) or strut-and-tie data exists in the snapshot, so VZ-02 colour-by-P(x), VZ-09 and the creep curves of VZ-13 are not drawn. (→ en1992 norm) [requests.md:49]",
+"reqline": "49",
+"hint": "en1992 norm"
+},
+{
+"n": 410,
+"srcline": 432,
+"lane": "en1992",
+"text": "snapshot fields for explicit bars, section polygons, tendon control points, stud rings, anchor groups and head diameter are NOT in the schema (the completion is schema-free, see `en1992-completion.... (→ visual en1992 agent) [requests.md:177]",
+"reqline": "177",
+"hint": "visual en1992 agent"
+},
+{
+"n": 411,
+"srcline": 433,
+"lane": "en1992",
+"text": "(1) shear DE `k1 = 0.12`, `C_Rd,c = 0.15/γc` (EN 0.15, 0.18/γc), `v_min = (κ1/γc) k^1.5 sqrt(fck)` with `κ1 = 0.0525` for d <= 600 and `0.0375` for d > 800, interpolated (`H92:184-185,217`); (2) DE... (→ en1992 agent) [requests.md:283]",
+"reqline": "283",
+"hint": "en1992 agent"
+},
+{
+"n": 412,
+"srcline": 434,
+"lane": "en1992",
+"text": "S1 first: `🧰️helpers-and-annex-parts:157` asw m²/m -> mm²/mm is `* 1e3` not `* 1e-3` (member shear ignores links) and `:103` of the resistance file must use min(V_Rd,s, V_Rd,max); `🧮️design-effects... (→ en1992 norm agent) [requests.md:327]",
+"reqline": "327",
+"hint": "en1992 norm agent"
+},
+{
+"n": 413,
+"srcline": 435,
+"lane": "en1992",
+"text": "S1 verify (Rust not executed): the Python compliance mirror `🧬️schema/🧪️tests/⚖️compliance/🐍️.py:242-263` `flexural_resistance_nm` (rectangular block, x capped at 0.45 d) returns M_Rd = 561.5 kNm f... (→ en1992 norm agent) [requests.md:382]",
+"reqline": "382",
+"hint": "en1992 norm agent"
+},
+{
+"n": 414,
+"srcline": 436,
+"lane": "en1992",
+"text": "`conc()` returns the rounded Table 3.1 values for standard grades; structuralcodes evaluates the formulas. Differences f_ctm 0.1-1.0 percent, f_ctk,0.05 0.9-1.7 percent, f_ctk,0.95 0.6-0.9 percent,... (→ en1992 norm agent (info, no defect)) [requests.md:384]",
+"reqline": "384",
+"hint": ""
+},
+{
+"n": 415,
+"srcline": 437,
+"lane": "en1992",
+"text": "`semio-s-artifact-norm-en1992-diff` closure is 5 files / 151599 B / 4507 lines (> 4000): `🧬️schema/🔺️diff/🦀️.rs` (1150) plus `include_str!` of its `.ts` (496), `.graphql` (414), `.json` (2046) and ... (→ en1992 owner (2026-11-02 15:50)) [requests.md:477]",
+"reqline": "477",
+"hint": ""
+},
+{
+"n": 416,
+"srcline": 438,
+"lane": "en1992",
+"text": "18 blessed oracle cases have no evaluator entry point (17 checks: 3.6 creep strain, 6.2 A_sw,max, 6.10 nu_1, 6.26 tau_t,t_ef, 6.28 sum A_sl, 6.30 T_Rd,max, 6.38/6.39/6.43/6.51 punching beta and v_E... (→ en1992) [requests.md:649]",
+"reqline": "649",
+"hint": "en1992"
+},
+{
+"n": 417,
+"srcline": 439,
+"lane": "en1992",
+"text": "`change-reinforcement-ductility` fixture `🧪️tests/🧫️fixtures/🧬️mutations/🔩️change-reinforcement-ductility/✅apply/🦠️mutation/🔣️.json` carries `\"newDuctility\": \"b-alt\"`; the model field is now the en... (→ en1992 owner) [requests.md:756]",
+"reqline": "756",
+"hint": "en1992 owner"
+},
+{
+"n": 418,
+"srcline": 440,
+"lane": "en1992",
+"text": "`🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🪟️serviceability/🦀️.rs` lines 35, 66, 127, 206, 207, 234, 242, 333 and 54 carry English-only calculation steps a... (→ en1992 owner) [requests.md:860]",
+"reqline": "860",
+"hint": "en1992 owner"
+},
+{
+"n": 419,
+"srcline": 441,
+"lane": "en1992",
+"text": "source boundary `semio-s-artifact-norm-en1992-model` 4186 lines (172787 B) and `semio-s-artifact-norm-en1997-model` 4035 lines; model crates cannot shrink by blank lines (en1992 snapshot file has 5... (→ en1992/en1997 owners) [requests.md:928]",
+"reqline": "928",
+"hint": "en1992/en1997 owners"
+},
+{
+"n": 420,
+"srcline": 442,
+"lane": "en1992",
+"text": "`members[].tightness` (Option enum) set/clear kinds are not done: the nested_patch macro needs an `optional` clause (set field plus clear marker) so the diff separates clearing from not setting. (→ en1992 owner) [requests.md:1064]",
+"reqline": "1064",
+"hint": "en1992 owner"
+},
+{
+"n": 421,
+"srcline": 443,
+"lane": "en1992",
+"text": "source gate fails again: `en1992-checks` 284143 B, `en1993-checks-special` 277657 B and 4171 lines, `en1998-mutations` 274057 B (the io-orphan codec was moved in), `en1998-scene` 268908 B (limit 26... (→ en1992 / en1993 / en1998 owners) [requests.md:1108]",
+"reqline": "1108",
+"hint": "en1992 / en1993 / en1998 owners"
+},
+{
+"n": 422,
+"srcline": 444,
+"lane": "en1992",
+"text": "`En1992ReinforcementGradesPatch` (diff rs) still declares `ductility: String` while the model and `change-reinforcement-ductility` use `DuctilityClass`; the patch field must be `DuctilityClass` (an... (→ en1992 owner) [requests.md:1335]",
+"reqline": "1335",
+"hint": "en1992 owner"
+},
+{
+"n": 423,
+"srcline": 445,
+"lane": "en1992",
+"text": "per-field classification of the 121 deduplicated check-21 fields (enum / catalogue reference / entity reference / free text) is in the report; owners decide and convert with the template `🧰️scripts... (→ en1992, en1999, en1998, en1993, en1991, en1994, en1997, en1990, en1995, en1996 owners) [requests.md:1336]",
+"reqline": "1336",
+"hint": "en1992, en1999, en1998, en1993, en1991, en1994, en1997, en1990, en1995, en1996 owners"
+},
+{
+"n": 424,
+"srcline": 446,
+"lane": "en1992",
+"text": "`📍️insert-placement/↩️inverse` and `📍️remove-placement/↩️inverse` of en1992 and en1997 still use `payload.index`/`placement:` field names (`InsertPlacement { index, placement: row.clone() }` in en1... (→ en1992/en1997 owners) [requests.md:1537]",
+"reqline": "1537",
+"hint": "en1992/en1997 owners"
+},
+{
+"n": 425,
+"srcline": 450,
+"lane": "en1993",
+"text": "informational. Eq. 5.2 (alpha_cr = H/V h/delta_H) gives 11.70 against the eigenvalue 9.97 for a fixed-base portal with a stiff beam (7.19 against 6.39 flexible beam; PyNite P-Delta agrees with the ... (→ en1993) [requests.md:577]",
+"reqline": "577",
+"hint": "en1993"
+},
+{
+"n": 426,
+"srcline": 451,
+"lane": "en1993",
+"text": "18 of 47 blessed oracle cases have gaps (9 checks without evaluator: section tee/mono-i/ehs/rhs-rounded/channel/angle properties, 6.3.2 mcr-i from rolled-I geometry, 6.39 a_w hollow, 6.21 tau_Ed I;... (→ en1993) [requests.md:651]",
+"reqline": "651",
+"hint": "en1993"
+},
+{
+"n": 427,
+"srcline": 452,
+"lane": "en1993",
+"text": "`🧪️tests/🕸️frame-eigen/🥒️.feature` (5 scenarios, parse clean) has no `🐍️.py`/`🦀️.rs`; add the adapters on the step layer (clause-vector fits). (→ en1993 owner) [requests.md:670]",
+"reqline": "670",
+"hint": "en1993 owner"
+},
+{
+"n": 428,
+"srcline": 453,
+"lane": "en1993",
+"text": "`🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/🦀️.rs` add row `materials[].rambergOsgoodN` (snapshot leaf `ramberg_osgood_n`, no field-meta row), EN \"Ramberg-Osgood exp... (→ en1993 owner) [requests.md:859]",
+"reqline": "859",
+"hint": "en1993 owner"
+},
+{
+"n": 429,
+"srcline": 454,
+"lane": "en1993",
+"text": "`🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🧮️clauses/🔗️joint-components/🦀️.rs:399` `governing` is an English-only `&str` (\"end plate in bending\", \"column f... (→ en1993 owner) [requests.md:861]",
+"reqline": "861",
+"hint": "en1993 owner"
+},
+{
+"n": 430,
+"srcline": 455,
+"lane": "en1993",
+"text": "`semio-s-artifact-norm-en1993-scene` is 17 files, 240098 B (2 B over the 240000 B band, 3631 lines); `semio-s-artifact-norm-en1993-clauses` is 28 files, 3771 lines (warning band). (→ en1993 owner) [requests.md:872]",
+"reqline": "872",
+"hint": "en1993 owner"
+},
+{
+"n": 431,
+"srcline": 456,
+"lane": "en1993",
+"text": "`verify_fixtures.py en1993` has 22 failures: nested `insert|remove-<x>-action` kinds address the parent by an `id` plus `index` (names cannot be resolved to `coldFormedMembers[].actions`...), `inse... (→ en1993 owner) [requests.md:1352]",
+"reqline": "1352",
+"hint": "en1993 owner"
+},
+{
+"n": 432,
+"srcline": 460,
+"lane": "en1994",
+"text": "`🧬️schema/📸️snapshot` and `🧬️mutations`, add per-entity `Placement {origin, yaw}` and `update-<entity>-placement` mutations (architecture spec 3.7); the scene reads placements through `semio_s_arti... (→ en1994 norm-completion) [requests.md:66]",
+"reqline": "66",
+"hint": "en1994 norm-completion"
+},
+{
+"n": 433,
+"srcline": 461,
+"lane": "en1994",
+"text": "the scene calls `checks::{part_1_1, part_column, part_en1990, part_slab, AnnexParams}` (effective_width_m, uncapped_effective_width_m, steel_mpl_from_plates_nm, steel_plastic_moment_nm, full_plasti... (→ en1994 norm-completion) [requests.md:67]",
+"reqline": "67",
+"hint": "en1994 norm-completion"
+},
+{
+"n": 434,
+"srcline": 462,
+"lane": "en1994",
+"text": "`🎬️scene/🧮️facts/🦀️.rs` line ~100, `part_1_1::effective_width_m(span, b0, spacing)` now takes `b0` as the distance between the outer connector rows (0 for one stud row), not the steel flange width;... (→ visual-en1994) [requests.md:90]",
+"reqline": "90",
+"hint": "visual-en1994"
+},
+{
+"n": 435,
+"srcline": 463,
+"lane": "en1994",
+"text": "`✏️editor` set-field coverage: `EDIT_RULES` still resolves only 19 leaves; the missing leaf mutations are tracked in `🔍️audits/en1994-completion.md` (Remaining gaps). (→ visual-en1994) [requests.md:91]",
+"reqline": "91",
+"hint": "visual-en1994"
+},
+{
+"n": 436,
+"srcline": 464,
+"lane": "en1994",
+"text": "S1 first: `⚖️checks/🦀️.rs:131,139` two-span coefficients (UDL span 9qL^2/128, point load 5PL/32 span, 3PL/32 support, V 11P/16) plus pattern loading; `🧮️compliance/🏗️beams:573` Delta sigma_s uses t... (→ en1994 norm agent) [requests.md:363]",
+"reqline": "363",
+"hint": "en1994 norm agent"
+},
+{
+"n": 437,
+"srcline": 465,
+"lane": "en1994",
+"text": "PyNiteFEA and anastruct agree to 1e-4 on two-span beam load arrangements (cases `en1994.mechanics.*`, `en1995.mechanics.*`): UDL on both spans R = 3qL/8, 5qL/4, 3qL/8, M_sup = qL^2/8, M_span = 9qL^... (→ en1994 and en1995 norm agents) [requests.md:386]",
+"reqline": "386",
+"hint": "en1994 and en1995 norm agents"
+},
+{
+"n": 438,
+"srcline": 466,
+"lane": "en1994",
+"text": "`🧪️tests/🧫️fixtures/🧬️mutations/{🕸️change-beam-hogging-reinforcement-m2-per-m,📐️change-beam-steel-plastic-modulus-m3,🧱️change-beam-steel-flange-thickness-m}` exceed 256 bytes; shorten the fixture f... (→ en1994) [requests.md:442]",
+"reqline": "442",
+"hint": "en1994"
+},
+{
+"n": 439,
+"srcline": 467,
+"lane": "en1994",
+"text": "3 blessed oracle cases have no evaluator entry point (`en1994.6.4.ltb-restrained-*` quantity `Iw`; suggested `catalogue::ISection::iw()`); expected visible mismatches: stud `k_t` (k_t,max derived f... (→ en1994) [requests.md:672]",
+"reqline": "672",
+"hint": "en1994"
+},
+{
+"n": 440,
+"srcline": 468,
+"lane": "en1994",
+"text": "`⚖️checks/🦀️.rs` `part_1_1::section_class` takes the flange outstand `c = (b - t_w) / 2`, without the root fillet `r` of Table 5.2 (the beam snapshot has no `r`, the catalogue does). HEB300 / S355:... (→ en1994 owner) [requests.md:890]",
+"reqline": "890",
+"hint": "en1994 owner"
+},
+{
+"n": 441,
+"srcline": 469,
+"lane": "en1994",
+"text": "warping constants of rolled and welded sections (`catalogue::ISection::iw()`, mono-i Iw) can now come from `analyse_section(&profiles::i_section(..))`; plastic moduli with fillets come from `w_pl_y... (→ en1994 / en1999 / en1993 owners) [requests.md:907]",
+"reqline": "907",
+"hint": "en1994 / en1999 / en1993 owners"
+},
+{
+"n": 442,
+"srcline": 470,
+"lane": "en1994",
+"text": "`semio-s-artifact-norm-en1994-mut-beam-design` is 31 files, 730 lines, 42763 B (the 30-file band). Merge or split a file group into a sibling crate. (→ en1994 owner) [requests.md:937]",
+"reqline": "937",
+"hint": "en1994 owner"
+},
+{
+"n": 443,
+"srcline": 471,
+"lane": "en1994",
+"text": "`🗿️artifacts/🧩️en1994/📦️packages/🦀️rust/📜️script.ts` calls `runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-norm-en1994\", …)` twice (lines 4 and 5). Line 4 is a stale subset (33 packa... (→ en1994 owner) [requests.md:1046]",
+"reqline": "1046",
+"hint": "en1994 owner"
+},
+{
+"n": 444,
+"srcline": 472,
+"lane": "en1994",
+"text": "a load arrow POSITION needs a new nested leaf `actions[].xM` (position along the span, 0 = default midspan/full span) with kinds `change-{beam,slab}-action-position-m`; the field-adder has no neste... (→ leaf-kinds / field-adder (after KIND-CONVENTION v2 finishes the en1994 lanes)) [requests.md:1136]",
+"reqline": "1136",
+"hint": ""
+},
+{
+"n": 445,
+"srcline": 473,
+"lane": "en1994",
+"text": "`🧬️schema/🧬️mutations/🧰️testkit/🦀️.rs` `demo_mutation_cases()` has no case for ChangePlacementX/Y/Z/Yaw, InsertPlacement, RemovePlacement (113 of 119 kinds); needs a snapshot with a placement for t... (→ en1994 mutations/testkit owner) [requests.md:1521]",
+"reqline": "1521",
+"hint": "en1994 mutations/testkit owner"
+},
+{
+"n": 446,
+"srcline": 474,
+"lane": "en1994",
+"text": "`🧬️schema/💡️inferences/⚖️checks/🦀️.rs` `part_en1990` is structurally broken in the working tree: `fn accumulate_column` is followed directly by the beam `match mode { \"uls\" => { ... label_en = ...`... (→ en1994 owner (BLOCKER, not mine)) [requests.md:1599]",
+"reqline": "1599",
+"hint": ""
+},
+{
+"n": 447,
+"srcline": 478,
+"lane": "en1995",
+"text": "`🧬️schema/⚖️timber/🦀️.rs` re-exports only `d_ef_mm` from the private `fire` module; please also `pub use fire::{charring_rates, cladding_times}` and from `load_combinations`/`serviceability` the `d... (→ en1995 norm-completion) [requests.md:95]",
+"reqline": "95",
+"hint": "en1995 norm-completion"
+},
+{
+"n": 448,
+"srcline": 479,
+"lane": "en1995",
+"text": "`placements: Vec<Placement>` in the snapshot (+ twins, diff, io, sqlite) and mutation `update-placement` (rollout step 9); `SceneInput.placements` is already wired and passes `&[]` until then. (→ en1995 norm-completion) [requests.md:97, requests.md:103]",
+"reqline": "97, requests.md:103",
+"hint": "en1995 norm-completion"
+},
+{
+"n": 449,
+"srcline": 480,
+"lane": "en1995",
+"text": "pure additions in `⚖️timber/`: new module `📉️effect-profile` (`Profile`, `deflection_at`, `row_shares`); `Assessed::{along, fielded, timed}` in `🧰️assessment-vocabulary`; `Worst.combo` + `along_mem... (→ en1995 norm agent) [requests.md:303]",
+"reqline": "303",
+"hint": "en1995 norm agent"
+},
+{
+"n": 450,
+"srcline": 481,
+"lane": "en1995",
+"text": "you already added `CatalogueCase`/`CaseNumber`/`CaseText` (snapshot, diff, json/ts/graphql/proto). I wire the rest (evaluation rows in `En1995Units`, `evaluate_document`, mutations `insert-catalogu... (→ en1995 owner) [requests.md:405]",
+"reqline": "405",
+"hint": "en1995 owner"
+},
+{
+"n": 451,
+"srcline": 482,
+"lane": "en1995",
+"text": "`🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/❌️multi-fail-timber/🟦️.ts:3` DE title \"Nicht nachweisbarer Mehrfachversagen-Holzbau\" is a clumsy compound for \"Non-Compliant Multi-F... (→ en1995 owner) [requests.md:865]",
+"reqline": "865",
+"hint": "en1995 owner"
+},
+{
+"n": 452,
+"srcline": 483,
+"lane": "en1995",
+"text": "source gate fails by line count: `semio-s-artifact-norm-en1995-mutations` 4786 lines (233114 B, 11 files) and `semio-s-artifact-norm-en1995-model` 4726 lines (limit 4000). Move a record group to a ... (→ en1995 owner) [requests.md:1291]",
+"reqline": "1291",
+"hint": "en1995 owner"
+},
+{
+"n": 453,
+"srcline": 487,
+"lane": "en1996",
+"text": "`🧬️schema/📸️snapshot` + `🧬️mutations`, add `Placement { entityId, origin: Vec3, yaw }` per wall and the mutation `update-placement`; the scene crate `semio-s-artifact-norm-en1996-scene` already tak... (→ en1996 norm) [requests.md:121]",
+"reqline": "121",
+"hint": "en1996 norm"
+},
+{
+"n": 454,
+"srcline": 488,
+"lane": "en1996",
+"text": "`WallOpening` has no horizontal position and `ConcentratedLoad` has no position along the wall; the scene spreads openings evenly between the piers (`📍️layout::openings`) and concentrated loads eve... (→ en1996 norm) [requests.md:122]",
+"reqline": "122",
+"hint": "en1996 norm"
+},
+{
+"n": 455,
+"srcline": 489,
+"lane": "en1996",
+"text": "not snapshot entities, hence not drawn or editable: cavity wall with second leaf and ties (tie spacing, tie force heat map V-M7), flange walls and bracing layout (V-M4 flange widths, compressed len... (→ en1996 norm) [requests.md:123]",
+"reqline": "123",
+"hint": "en1996 norm"
+},
+{
+"n": 456,
+"srcline": 490,
+"lane": "en1996",
+"text": "export a public `masonry::wall_profile(annex, class, situation, wall, lc) -> { n_top, n_mid, n_bot, e_top, e_mk, e_bottom, phi[3], utilisation[3], f_d, area, shear_sigma, n_min }` from `⚖️masonry/🧱... (→ en1996 norm) [requests.md:124]",
+"reqline": "124",
+"hint": "en1996 norm"
+},
+{
+"n": 457,
+"srcline": 491,
+"lane": "en1996",
+"text": "`fire_state` (μ_fi) and `shear`/`flexure` structs are private; the fire diagram samples μ_fi = 0.4, 0.6, 1.0 and reads `t_min` from the check, the lateral diagrams recompute `m1, m2` through `profi... (→ en1996 norm) [requests.md:125]",
+"reqline": "125",
+"hint": "en1996 norm"
+},
+{
+"n": 458,
+"srcline": 492,
+"lane": "en1996",
+"text": "`🔩️reinforcement` can draw bars at the real positions with `Pattern::Points`; lintels/openings with `WallAssembly.openings` once `offsetXM` lands in the snapshot. (→ EN 1996 visual (vis-en1996)) [requests.md:229]",
+"reqline": "229",
+"hint": ""
+},
+{
+"n": 459,
+"srcline": 493,
+"lane": "en1996",
+"text": "(1) EN Table 3.3 `K`: clay GP G1 0.55, G2 0.45, G3 0.35, G4 0.35; thin layer G1 0.75, G2 0.70, G3 0.50, G4 0.35; calcium silicate thin G1 0.80, G2 0.65 (`F96:48,53` use 0.40/0.80); (2) `f_vk0` depe... (→ en1996 agent) [requests.md:285]",
+"reqline": "285",
+"hint": "en1996 agent"
+},
+{
+"n": 460,
+"srcline": 494,
+"lane": "en1996",
+"text": "`🧱️evaluate-wall/🏋️load-case-checks`: `Compression` gained `sections`/`capacity`; compression check carries field `wall-phi` (stations at 0, 0.5, 1 of the height = bottom, middle, top, `[N_Ed, N_Rd... (→ en1996 norm agent) [requests.md:304]",
+"reqline": "304",
+"hint": "en1996 norm agent"
+},
+{
+"n": 461,
+"srcline": 495,
+"lane": "en1996",
+"text": "`semio-s-artifact-norm-en1996-masonry` is 3886 lines in 19 files (warning band, already split once, see `[done] en1996 (shared fix)`); split again before the next growth. (→ en1996 owner) [requests.md:519]",
+"reqline": "519",
+"hint": "en1996 owner"
+},
+{
+"n": 462,
+"srcline": 496,
+"lane": "en1996",
+"text": "3 blessed oracle cases have no evaluator entry point (`en1996.G.phi-m-*` quantities `lambda`, `A_1`, `u`; suggested `phi_m_terms(slenderness, e_mk, t, k_e) -> (lambda, a1, u, phi)`); report 🔍️audit... (→ en1996) [requests.md:674]",
+"reqline": "674",
+"hint": "en1996"
+},
+{
+"n": 463,
+"srcline": 497,
+"lane": "en1996",
+"text": "`semio-s-artifact-norm-en1996-diff` is 5 files, 127383 B, 3715 lines (warning band). (→ en1996 owner) [requests.md:786]",
+"reqline": "786",
+"hint": "en1996 owner"
+},
+{
+"n": 464,
+"srcline": 498,
+"lane": "en1996",
+"text": "`🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️change-tie-*/🔺️diff/🦀️.rs:7` `String::from(\"Invalid tie index.\")` (four files), reason: English-only fatal text; confirm... (→ en1996 owner) [requests.md:864]",
+"reqline": "864",
+"hint": "en1996 owner"
+},
+{
+"n": 465,
+"srcline": 499,
+"lane": "en1996",
+"text": "`semio-s-artifact-norm-en1996-mutations` is 6 files, 136591 B, 3792 lines (3700-line band). (→ en1996 owner) [requests.md:873]",
+"reqline": "873",
+"hint": "en1996 owner"
+},
+{
+"n": 466,
+"srcline": 503,
+"lane": "en1997",
+"text": "snapshot fields needed for positioned geometry: `piles[].positions[]` (x,y per pile) and `placements[]` (already requested); per-layer skin friction (`pile-shaft` currently shares R_s by thickness ... (→ en1997 norm) [requests.md:264]",
+"reqline": "264",
+"hint": "en1997 norm"
+},
+{
+"n": 467,
+"srcline": 504,
+"lane": "en1997",
+"text": "groundhog has no EN 1997 N_gamma: Vesic is 2 (N_q + 1) tan phi (22.40 at 30 deg), Meyerhof (N_q - 1) tan 1.4 phi (15.67), EN 1997 Annex D.4 is 2 (N_q - 1) tan phi (20.09, our `n_gamma`). The EN val... (→ en1997 norm agent (info)) [requests.md:385]",
+"reqline": "385",
+"hint": ""
+},
+{
+"n": 468,
+"srcline": 505,
+"lane": "en1997",
+"text": "informational. `bearing_drained` with `include_depth` multiplies by a depth factor d_q; Annex D of EN 1997-1 gives none (it is a DIN 4017 / Hansen factor). Label it outside the Eurocode or remove i... (→ en1997) [requests.md:579]",
+"reqline": "579",
+"hint": "en1997"
+},
+{
+"n": 469,
+"srcline": 506,
+"lane": "en1997",
+"text": "`En1997Diff` now carries the bare lane `cases: semio_s_plugin_norm_compliance::design_case::CaseRowDelta` (rs: field, absorb, apply, is_empty, inverse) and the snapshot `cases: Vec<CaseRow>` (+ roo... (→ LEAF-KINDS C (en1997) 17:50) [requests.md:652]",
+"reqline": "652",
+"hint": ""
+},
+{
+"n": 470,
+"srcline": 507,
+"lane": "en1997",
+"text": "8 blessed oracle cases have no evaluator entry point (phase-relations gamma/gamma_eff; anchor-elongation delta/N; anchor-resistance R_a_h and characteristic utilisation; pile-group R_group; oedomet... (→ en1997) [requests.md:723]",
+"reqline": "723",
+"hint": "en1997"
+},
+{
+"n": 471,
+"srcline": 508,
+"lane": "en1997",
+"text": "the taxonomy generator skips `change-structure-id` (descriptor identity mismatch). (→ en1997 owner) [requests.md:1454]",
+"reqline": "1454",
+"hint": "en1997 owner"
+},
+{
+"n": 472,
+"srcline": 509,
+"lane": "en1997",
+"text": "snapshot leaf `piles[].concreteClass` (enum C12/15..C50/60, `PILE_CONCRETE_CLASSES`) is NOT added: the field-adder only knows f64/u32 and a string enum needs model, 4 twins, diff lane, SQLite (rs/t... (→ en1997 (self, next round)) [requests.md:1620]",
+"reqline": "1620",
+"hint": ""
+},
+{
+"n": 473,
+"srcline": 513,
+"lane": "en1998",
+"text": "`🧬️schema/📸️snapshot` + `🧬️mutations`, add `Placement { origin: Vec3, yaw }` per spatial entity (buildings, bridges, silos, tanks, towers, retaining walls) and `update-<entity>-placement` mutations... (→ en1998 norm) [requests.md:39]",
+"reqline": "39",
+"hint": "en1998 norm"
+},
+{
+"n": 474,
+"srcline": 514,
+"lane": "en1998",
+"text": "capacity design needs snapshot inputs `sum_m_rc_nm` and `sum_m_rb_nm` (or per-joint `En1998Joint { id, storey_id, m_rd_columns_nm, m_rd_beams_nm }`) plus a check `en1998.1.{b}.{sys}.capacity.{joint... (→ en1998 norm) [requests.md:40]",
+"reqline": "40",
+"hint": "en1998 norm"
+},
+{
+"n": 475,
+"srcline": 515,
+"lane": "en1998",
+"text": "`site.seismicZone` is an enum; the zone chart marker binds `site.seismicZone` with `Quantise::Choice [0,1,2,3]`; the set-field path must accept the zone index (0..3) for this binding or expose a mu... (→ en1998 norm) [requests.md:41]",
+"reqline": "41",
+"hint": "en1998 norm"
+},
+{
+"n": 476,
+"srcline": 516,
+"lane": "en1998",
+"text": "expose `resolve_annex` (now `pub(super)` in `💡️inferences/🧰️seismic-helpers`) as pub or move it to the schema crate; the scene keeps a local `response::annex_params` twin. (→ en1998 norm) [requests.md:43]",
+"reqline": "43",
+"hint": "en1998 norm"
+},
+{
+"n": 477,
+"srcline": 517,
+"lane": "en1998",
+"text": "`…/💡️inferences/🌍️full-seismic-check/🧱️structural-system-checks/🏬️storey-forces-and-drift/🦀️.rs` line `let plan_w = if system.direction == \"y\" { building.plan_length_m } else { building.plan_width_... (→ en1998 norm) [requests.md:261]",
+"reqline": "261",
+"hint": "en1998 norm"
+},
+{
+"n": 478,
+"srcline": 518,
+"lane": "en1998",
+"text": "capacity-design ratio per joint still blocked on `sum_m_rc_nm`/`sum_m_rb_nm` or per-joint `En1998Joint` (see earlier request); then emit `en1998.1.{b}.{sys}.capacity.{joint}` with `Station::point3`... (→ en1998 norm) [requests.md:265]",
+"reqline": "265",
+"hint": "en1998 norm"
+},
+{
+"n": 479,
+"srcline": 519,
+"lane": "en1998",
+"text": "`semio-s-artifact-norm-en1998-diff` is 3919 lines in 5 files (inside the 4000 gate, above the 3700 warning band); split a sibling crate before the next growth. (→ en1998 owner) [requests.md:518]",
+"reqline": "518",
+"hint": "en1998 owner"
+},
+{
+"n": 480,
+"srcline": 520,
+"lane": "en1998",
+"text": "the boundary scan reports `semio-s-artifact-norm-en1998-{schema,diff,model}` at 4130/4351/4218 lines (> 4000; 5-file crates whose line count is dominated by the `include_str!` leaves, JSON/proto/gr... (→ en1998 owner (2026-11-02 17:15)) [requests.md:542]",
+"reqline": "542",
+"hint": ""
+},
+{
+"n": 481,
+"srcline": 521,
+"lane": "en1998",
+"text": "insert/remove kinds for `buildings[].members|storeys|systems` and the five nested en1999 collections are not done; en1994 action kinds were added by the en1994 owner. (→ en1998/en1999 owners) [requests.md:1065]",
+"reqline": "1065",
+"hint": "en1998/en1999 owners"
+},
+{
+"n": 482,
+"srcline": 522,
+"lane": "en1998",
+"text": "`check_storey_forces` computes the accidental-torsion amplification `delta` (1.3 on the fixture, 1.6 simplified bound) and then drops it (`let _ = delta_torsion;`), so `storeyForces.<storey>`, `ove... (→ en1998 owner (storey shears)) [requests.md:1083]",
+"reqline": "1083",
+"hint": ""
+},
+{
+"n": 483,
+"srcline": 523,
+"lane": "en1998",
+"text": "the check reports `utilization = Lx / Ly` (24/16 = 1.5 on every fixture) but forces status Pass; the shared step layer reads `pass_or_fail(1.5)` = fail. Set the utilisation to 0 for positive dimens... (→ en1998 owner (`planDims`)) [requests.md:1084]",
+"reqline": "1084",
+"hint": ""
+},
+{
+"n": 484,
+"srcline": 524,
+"lane": "en1998",
+"text": "`e0 = max(e0x, e0y)` is compared with `0.30 * min(rx, ry)`; EN 1998-1 4.2.3.2 compares e0x with 0.30 rx and e0y with 0.30 ry. Identical when kx = ky (all fixtures), conservative otherwise. Oracle u... (→ en1998 owner (`planRegularity`)) [requests.md:1086]",
+"reqline": "1086",
+"hint": ""
+},
+{
+"n": 485,
+"srcline": 525,
+"lane": "en1998",
+"text": "a `Velocity` quantity kind needs `VdiQuantityKind` (exhaustive mapping in vdi3805 snapshot/sqlite) and the schema twins changed in one pass; not done by shared alone. (→ en1998 owner/vdi3805) [requests.md:1130]",
+"reqline": "1130",
+"hint": "en1998 owner/vdi3805"
+},
+{
+"n": 486,
+"srcline": 526,
+"lane": "en1998",
+"text": "\"legacy\" in two test assertion messages (check 5): `🗿️artifacts/🫨️en1998/…/🎬️scene/🧪️tests/🔬️unit/🦀️.rs:656` (\"the legacy single-pier drawing\") and `…/🧬️schema/🧪️tests/🏗️structures/🦀️.rs:139`. Rewo... (→ en1998 owner) [requests.md:1269]",
+"reqline": "1269",
+"hint": "en1998 owner"
+},
+{
+"n": 487,
+"srcline": 530,
+"lane": "en1999",
+"text": "`🧬️schema/📸️snapshot` + `🧬️mutations`, add `Placement { entityId, origin: Vec3, yaw }` per member, cold-formed sheet and shell and the mutation `update-placement`; the scene crate `semio-s-artifact... (→ en1999 norm) [requests.md:113]",
+"reqline": "113",
+"hint": "en1999 norm"
+},
+{
+"n": 488,
+"srcline": 531,
+"lane": "en1999",
+"text": "`AluminiumSection` has no free polygon, no vertex list and no hole list (spec 5.3 \"section editor: polyline vertex dragging\"); the scene derives the outline from `kind` (extrudedI, channel, angle, ... (→ en1999 norm) [requests.md:114]",
+"reqline": "114",
+"hint": "en1999 norm"
+},
+{
+"n": 489,
+"srcline": 532,
+"lane": "en1999",
+"text": "`PlateElement` carries only `weldPosition` (one weld per plate) and `Strip` factors; add explicit weld runs (`welds: Vec<WeldRun { elementId, position, tig, hazOverride }>`), a transverse-weld HAZ ... (→ en1999 norm) [requests.md:115]",
+"reqline": "115",
+"hint": "en1999 norm"
+},
+{
+"n": 490,
+"srcline": 533,
+"lane": "en1999",
+"text": "expose the pure functions the scene mirrors as one `member_resistances(member, section, alloy, params) -> { n_t_rd, n_c_rd, m_y_rd, m_z_rd, v_rd, n_b_rd_y, n_b_rd_z, m_b_rd, eta, class }` in the ch... (→ en1999 norm) [requests.md:116]",
+"reqline": "116",
+"hint": "en1999 norm"
+},
+{
+"n": 491,
+"srcline": 534,
+"lane": "en1999",
+"text": "CheckUnits by entity (member, connection, sheet, shell, fire scenario, fatigue detail) and per-station utilisation along members; the scene colours entities by the governing check of its subject only. (→ en1999 norm) [requests.md:117]",
+"reqline": "117",
+"hint": "en1999 norm"
+},
+{
+"n": 492,
+"srcline": 535,
+"lane": "en1999",
+"text": "`…/⚖️checks/🧱️member-checks/🦀️.rs:328-330` multiplies `member.buckling_length_y|z|t` by `k_sup` (0.7/2.0/1.0). The snapshot docs call those fields the buckling lengths themselves (default L_cr when... (→ en1999 norm) [requests.md:262]",
+"reqline": "262",
+"hint": "en1999 norm"
+},
+{
+"n": 493,
+"srcline": 536,
+"lane": "en1999",
+"text": "S1 first: `MC99:226-229` + `AS99:118-121,276` the web stress-gradient eta is applied to internal flanges of RHS/box (class 4 flange classified class 2 under bending); `CC99:181` HAZ plate check use... (→ en1999 norm agent) [requests.md:353]",
+"reqline": "353",
+"hint": "en1999 norm agent"
+},
+{
+"n": 494,
+"srcline": 537,
+"lane": "en1999",
+"text": "new mutation fixtures exceed 256 bytes from the repo root (the `🧪️tests/🧫️fixtures/🧬️mutations/<emoji>change-...` folders: `change-section-element-edge-stiffener-thickness`/`-depth`, `change-sectio... (→ en1999) [requests.md:441]",
+"reqline": "441",
+"hint": "en1999"
+},
+{
+"n": 495,
+"srcline": 538,
+"lane": "en1999",
+"text": "`semio-s-artifact-norm-en1999-diff` (`🗿️artifacts/🪶️en1999/…/🧬️schema/🔺️diff`) is OVER the source gate: 5 files, 220795 B, 6281 lines (gate 4000 lines per `source-boundary-scan.py`). The compiler g... (→ en1999 owner) [requests.md:517]",
+"reqline": "517",
+"hint": "en1999 owner"
+},
+{
+"n": 496,
+"srcline": 539,
+"lane": "en1999",
+"text": "7 blessed oracle cases have no evaluator entry point (tee and elliptical hollow kinds in `part_1_1::section_geometry`; channel `y_sc`; angle `I_major`/`I_minor`; free outline `It`/`Iw` x3, suggeste... (→ en1999) [requests.md:675]",
+"reqline": "675",
+"hint": "en1999"
+},
+{
+"n": 497,
+"srcline": 540,
+"lane": "en1999",
+"text": "`semio-s-artifact-norm-en1999-checks` is 17 files, 252363 B, 3966 lines (over the 240000 B and 3700-line warning band, 4000-line gate). Split a sibling crate before the next growth. (→ en1999 owner) [requests.md:783]",
+"reqline": "783",
+"hint": "en1999 owner"
+},
+{
+"n": 498,
+"srcline": 541,
+"lane": "en1999",
+"text": "`semio-s-artifact-norm-en1999-mutations` is 6 files, 168978 B, 3720 lines (warning band). (→ en1999 owner) [requests.md:784]",
+"reqline": "784",
+"hint": "en1999 owner"
+},
+{
+"n": 499,
+"srcline": 542,
+"lane": "en1999",
+"text": "`semio-s-artifact-norm-en1999-checks` is at the gate: 259934 B / 18 files / 4007 lines (limit 4000 lines, 262144 B; it was 268844 B / 4152 lines minutes earlier). Source admission fails the whole `... (→ en1999 owner) [requests.md:809]",
+"reqline": "809",
+"hint": "en1999 owner"
+},
+{
+"n": 500,
+"srcline": 543,
+"lane": "en1999",
+"text": "the handle `connections[id=..].bolts.boltsPerRow` (`🎬️scene/🕹️handles`, tag `per-row`) has no `SetFieldRule`/typed kind (only `bolts.rows` -> `change-bolt-count`), so its release cannot commit; add... (→ en1999 owner) [requests.md:879]",
+"reqline": "879",
+"hint": "en1999 owner"
+},
+{
+"n": 501,
+"srcline": 544,
+"lane": "en1999",
+"text": "`semio-s-artifact-norm-en1999-mutations` `🧬️schema/🧬️mutations/🦀️.rs:43-49,64-70,173-175` still does `use ..._mut_member::change_member_{section_id,material_id,length,support,ltb_length,c1,restrain... (→ en1999 owner) [requests.md:927]",
+"reqline": "927",
+"hint": "en1999 owner"
+},
+{
+"n": 502,
+"srcline": 545,
+"lane": "en1999",
+"text": "`semio-s-artifact-norm-en1999-model` is 10 files, 3966 lines (in the 3700-line band, 34 lines under the 4000-line gate). Split a sibling before the next growth. (→ en1999 owner) [requests.md:936]",
+"reqline": "936",
+"hint": "en1999 owner"
+},
+{
+"n": 503,
+"srcline": 546,
+"lane": "en1999",
+"text": "five crates are missing from the umbrella packages list in `🗿️artifacts/🪶️en1999/📦️packages/🦀️rust/📜️script.ts` (check 13): `semio-s-artifact-norm-en1999-mut-rows-{sheet-action,connection-action,me... (→ en1999 owner) [requests.md:1268]",
+"reqline": "1268",
+"hint": "en1999 owner"
+},
+{
+"n": 504,
+"srcline": 550,
+"lane": "other standards (din/iso/vdi)",
+"text": "`NormHost::from_artifact` calls became `NormHost::live`, which uses the family's default `live_report` (= full `evaluate` on every paint). Give them a `live_fold_source!`/`live_report!` pair like t... (→ five non-Eurocode norm apps (DIN 4108, DIN EN 16798, DIN V 18599, ISO 16757, VDI 3805)) [requests.md:216]",
+"reqline": "216",
+"hint": ""
+},
+{
+"n": 505,
+"srcline": 551,
+"lane": "other standards (din/iso/vdi)",
+"text": "every `✏️editor/🎭️modes/✏️edit/🦀️.rs` and `👁️viewer/.../👁️view/🦀️.rs` `layout()` hard-codes the desktop 22/50/28 tree. Replace the body with `semio_s_plugin_norm_app_surface::visual_layout_with(\"<v... (→ all artifact agents / coordinator) [requests.md:564]",
+"reqline": "564",
+"hint": "all artifact agents / coordinator"
+},
+{
+"n": 506,
+"srcline": 552,
+"lane": "other standards (din/iso/vdi)",
+"text": "ADAPTER REGISTRIES EXPOSED: every artifact checks crate (en1990..en1999) now mounts `oracle_wiring` as `pub mod` under `cfg(any(test, feature = \"oracle-wiring\"))` with `pub fn registry() -> &'stati... (→ coordinator) [requests.md:793]",
+"reqline": "793",
+"hint": "coordinator"
+},
+{
+"n": 507,
+"srcline": 553,
+"lane": "other standards (din/iso/vdi)",
+"text": "(1) `part_1_6::construction_qk_pa`: `machinery` and `concreting` 3.0 kN/m2 are not in EN 1991-1-6 Table 4.1 (Q_cc non-permanent equipment is taken from the manufacturer; Q_cb storage 0.2 and Q_ca p... (→ owner (by reading, against the standard)) [requests.md:1095]",
+"reqline": "1095",
+"hint": ""
+},
+{
+"n": 508,
+"srcline": 554,
+"lane": "other standards (din/iso/vdi)",
+"text": "enum families (action kind/category/loadDuration, fastenerType, ulsEquation, strengthClass), the catalogue-id newtype derive and the case-scene unification are NOT done (about 300 hand-written stri... (→ coordinator) [requests.md:1436]",
+"reqline": "1436",
+"hint": "coordinator"
+},
+{
+"n": 509,
+"srcline": 555,
+"lane": "other standards (din/iso/vdi)",
+"text": "the shared app-surface/compliance/scene crates changed under the review again (entity-editing + `shortcut_route` landed 02:03-02:12, en1995 hatch ribbons in `viewport3d/{mesh,parts,lowering,colour}... (→ coordinator) [requests.md:1536]",
+"reqline": "1536",
+"hint": "coordinator"
+},
+{
+"n": 510,
+"srcline": 556,
+"lane": "other standards (din/iso/vdi)",
+"text": "`🧰️scripts/en1995-collections/schema.py` has drifted from the tree (TS root/snapshot comma anchors for a last collection, diff TS lane `bracings` is required, not optional); the `decks` collection ... (→ SCHEMA-CODEGEN / coordinator) [requests.md:1553]",
+"reqline": "1553",
+"hint": "SCHEMA-CODEGEN / coordinator"
+}
+]

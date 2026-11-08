@@ -1,0 +1,12 @@
+{
+  "mutation": "insertSheetProfile",
+  "index": 0,
+  "sheetProfile": {
+    "id": "sheet-profile-1",
+    "sheetId": "sheet-pass",
+    "pitch": 0.2,
+    "topFlange": 0.06,
+    "bottomFlange": 0.06,
+    "webHeight": 0.04
+  }
+}

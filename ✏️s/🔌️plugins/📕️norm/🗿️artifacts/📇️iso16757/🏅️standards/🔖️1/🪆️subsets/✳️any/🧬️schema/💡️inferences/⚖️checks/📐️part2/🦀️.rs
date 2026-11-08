@@ -1,6 +1,6 @@
 //! 📐️ ISO 16757-2 geometry graph, solids, ports, spaces, placement.
 
-use semio_s_artifact_norm_iso16757_checks_common::{assess, copy, fail, na, pass, q_dim, q_len, q_vol, subject, controlled_ordinal};
+use semio_s_artifact_norm_iso16757_checks_common::{Section, ALL_FACETS, assess, copy, fail, na, pass, q_dim, q_len, q_vol, subject, controlled_ordinal};
 use semio_s_plugin_norm_compliance::{CheckReport, CheckStatus, Remedy, RemedyBound};
 use semio_s_artifact_norm_iso16757_model::part_2::{GeometryCatalogue, GeometryNode, GeometryObject, SpaceKind};
 use semio_s_artifact_norm_iso16757_checks_common::part_libraries::part_2 as helpers;
@@ -9,9 +9,18 @@ use std::collections::HashSet;
 
 use semio_s_artifact_norm_iso16757_checks_common::part_libraries::part_2::INSTALL_CLEARANCE_M;
 
-pub fn check_part_2(doc: &Iso16757Snapshot, report: &mut CheckReport) {
-    check_ports_primitives_and_spaces(doc, report);
+/// 🧮️ The sections of Part 2 in report order.
+pub const SECTIONS: &[Section] = &[
+    Section { id: "ports-primitives-spaces", reads: ALL_FACETS, run: |d, r| check_ports_primitives_and_spaces(d, r) },
+    Section { id: "geometry-objects", reads: ALL_FACETS, run: |d, r| check_geometry_objects(d, r) },
+];
 
+pub fn check_part_2(doc: &Iso16757Snapshot, report: &mut CheckReport) {
+    SECTIONS.iter().for_each(|section| (section.run)(doc, report));
+}
+
+/// 📐️ The geometry graph, solids, ports, spaces, surfaces and parameter bindings of every object and their roll-up.
+fn check_geometry_objects(doc: &Iso16757Snapshot, report: &mut CheckReport) {
     let geometry = &doc.geometry;
     if geometry.objects.is_empty() {
         report.push(na(

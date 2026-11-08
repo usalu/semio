@@ -15,7 +15,7 @@ pub struct ArtifactChildNativeReceiver<I:NativeValueSource+?Sized,S:Send+'static
     snapshot:PhantomData<fn()->S>,
 }
 
-impl<S:Send+'static> NativeRecordFields for ArtifactChild<S> {
+unsafe impl<S:Send+'static> NativeRecordFields for ArtifactChild<S> {
     fn native_schema_count()->usize { PersistedChildHeader::native_schema_count() }
     fn native_schema_field(index:usize)->Option<semio_framework_value_native_owned::native_decoding::owned::NativeRecordSchema> { PersistedChildHeader::native_schema_field(index) }
 }

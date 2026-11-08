@@ -9,11 +9,69 @@
     "maximumReleaseBytes": 33554432,
     "maximumDepth": 256
   },
-  "birthActions": {"issuanceAttempts":3,"allocationAttempts":3,"aliasActions":1,"publicationActions":1,"handoffActions":1},
   "expected": {
     "deniedCpu": 0,
-    "birthCpu": 9,
+    "birthCpu": 36,
     "cachedCloseCpu": 0,
     "liveCloseMinimumDepth": 1
+  },
+  "birthStages": [
+    5,
+    3,
+    1,
+    4,
+    4,
+    1,
+    1,
+    2,
+    1,
+    2,
+    1,
+    1,
+    4,
+    1,
+    4,
+    1
+  ],
+  "ownedAdmissionDenied": {
+    "capacity": 0,
+    "work": 3,
+    "kind": "OwnershipLimit",
+    "inputPreserved": true,
+    "handbackWork": 2
+  },
+  "sharedBankCheck": {
+    "work": 1,
+    "bound": false
+  },
+  "partialAdmission": {
+    "allocatedBeforeRefusal": true,
+    "inputPreserved": true,
+    "deniedRecoveryWork": 0
+  },
+  "admittedSource": {
+    "sourceIdentityPreserved": true,
+    "bankWorkPreserved": true,
+    "closeConsumesWork": true
+  },
+  "dualProjection": {
+    "original": "fixture cancel request",
+    "projection": "fixture projection refusal",
+    "deniedWork": 0
+  },
+  "pendingBank": {
+    "firstWork": 0,
+    "closeBlocked": true,
+    "recoveryWork": 1,
+    "sourcePreserved": true
+  },
+  "closeDenial": {
+    "work": 0,
+    "sourcePreserved": true
+  },
+  "cleanupRefusal": {
+    "message": "fixture cleanup refusal",
+    "deniedWork": 0,
+    "publicationWork": 1
   }
 }

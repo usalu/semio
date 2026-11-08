@@ -104,6 +104,7 @@ impl Vdi3805ManufacturerFilePatch {
 pub struct Vdi3805ProductsPatch {
     pub title: Option<Vec<semio_s_plugin_norm_compliance::LocalizedText>>,
     pub configuration: Option<semio_s_artifact_norm_vdi3805_model::Configuration>,
+    pub records: Option<Vec<semio_s_artifact_norm_vdi3805_model::NativeRecord>>,
 }
 
 impl protocol::list_delta::RowPatch<semio_s_artifact_norm_vdi3805_model::CatalogueProduct> for Vdi3805ProductsPatch {
@@ -113,6 +114,9 @@ impl protocol::list_delta::RowPatch<semio_s_artifact_norm_vdi3805_model::Catalog
         }
         if let Some(value) = &self.configuration {
             row.configuration = value.clone();
+        }
+        if let Some(value) = &self.records {
+            row.records = value.clone();
         }
         Ok(())
     }
@@ -124,17 +128,21 @@ impl protocol::list_delta::RowPatch<semio_s_artifact_norm_vdi3805_model::Catalog
         if later.configuration.is_some() {
             self.configuration = later.configuration;
         }
+        if later.records.is_some() {
+            self.records = later.records;
+        }
     }
 
     fn inverse(&self, row: &semio_s_artifact_norm_vdi3805_model::CatalogueProduct) -> Self {
         Self {
             title: self.title.as_ref().map(|_| row.title.clone()),
             configuration: self.configuration.as_ref().map(|_| row.configuration.clone()),
+            records: self.records.as_ref().map(|_| row.records.clone()),
         }
     }
 
     fn is_empty(&self) -> bool {
-        self.title.is_none() && self.configuration.is_none()
+        self.title.is_none() && self.configuration.is_none() && self.records.is_none()
     }
 }
 

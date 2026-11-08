@@ -1,0 +1,33 @@
+{
+  "fuel": 3,
+  "actionCeilings": [
+    2,
+    1
+  ],
+  "turns": [
+    {
+      "action": 0,
+      "work": 1,
+      "mode": "receive",
+      "sameAsPrevious": false,
+      "pending": true
+    },
+    {
+      "action": 0,
+      "work": 1,
+      "mode": "recover",
+      "sameAsPrevious": true,
+      "pending": false
+    },
+    {
+      "action": 1,
+      "work": 1,
+      "mode": "receive",
+      "sameAsPrevious": false,
+      "pending": false
+    }
+  ],
+  "nestedIdentityPreserved": true,
+  "foreignProducerRejected": true,
+  "outsideInvocationAbsent": true
+}

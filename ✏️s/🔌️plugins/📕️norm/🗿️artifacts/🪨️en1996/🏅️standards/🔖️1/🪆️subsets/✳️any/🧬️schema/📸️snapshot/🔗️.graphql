@@ -1,8 +1,10 @@
+scalar UInt32
+
 type En1996Snapshot {
   annex: String!
   masonryClass: String!
   designSituation: String!
-  storeys: Int!
+  storeys: UInt32!
   walls: [MasonryWall!]!
   placements: [Placement!]!
   cases: [CaseRow!]!

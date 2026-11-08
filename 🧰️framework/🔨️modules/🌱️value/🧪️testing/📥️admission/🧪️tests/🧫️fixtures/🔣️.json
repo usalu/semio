@@ -8,7 +8,8 @@
     "unwindIndex",
     "allocationAttempts",
     "rejectChangedGrant",
-    "zero"
+    "zero",
+    "walletReturn"
   ],
   "properties": {
     "stock": {
@@ -42,6 +43,14 @@
         "performed": 0,
         "sourceChecks": 1,
         "remainingWork": 5
+      }
+    },
+    "walletReturn": {
+      "const": {
+        "pendingDenied": true,
+        "uninspectedDenied": true,
+        "spent": 3,
+        "remaining": 2
       }
     }
   }

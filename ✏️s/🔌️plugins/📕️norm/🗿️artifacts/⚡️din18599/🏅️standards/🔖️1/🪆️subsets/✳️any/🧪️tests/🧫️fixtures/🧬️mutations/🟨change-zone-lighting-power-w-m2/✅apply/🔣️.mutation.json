@@ -1,0 +1,5 @@
+{
+  "mutation": "changezonelightingpowerwm2",
+  "zoneId": "zone-living",
+  "newLightingPowerWM2": 7.5
+}

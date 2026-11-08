@@ -172,3 +172,17 @@ CREATE TABLE en1999_transverse_stiffener (
  width_ieee754_bits INTEGER NOT NULL, width_ieee754_class TEXT NOT NULL,
  thickness_ieee754_bits INTEGER NOT NULL, thickness_ieee754_class TEXT NOT NULL
 );
+CREATE TABLE en1999_sheet_profile (
+ id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES en1999_document(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), logical_id TEXT NOT NULL, sheet_id TEXT NOT NULL, pitch REAL, top_flange REAL, bottom_flange REAL, web_height REAL,
+ pitch_ieee754_bits INTEGER NOT NULL, pitch_ieee754_class TEXT NOT NULL,
+ top_flange_ieee754_bits INTEGER NOT NULL, top_flange_ieee754_class TEXT NOT NULL,
+ bottom_flange_ieee754_bits INTEGER NOT NULL, bottom_flange_ieee754_class TEXT NOT NULL,
+ web_height_ieee754_bits INTEGER NOT NULL, web_height_ieee754_class TEXT NOT NULL
+);
+CREATE TABLE en1999_fire_insulation (
+ id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES en1999_document(id), ordinal INTEGER NOT NULL CHECK(ordinal>=0), logical_id TEXT NOT NULL, fire_id TEXT NOT NULL, thickness REAL, conductivity REAL, specific_heat REAL, density REAL,
+ thickness_ieee754_bits INTEGER NOT NULL, thickness_ieee754_class TEXT NOT NULL,
+ conductivity_ieee754_bits INTEGER NOT NULL, conductivity_ieee754_class TEXT NOT NULL,
+ specific_heat_ieee754_bits INTEGER NOT NULL, specific_heat_ieee754_class TEXT NOT NULL,
+ density_ieee754_bits INTEGER NOT NULL, density_ieee754_class TEXT NOT NULL
+);

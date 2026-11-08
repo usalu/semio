@@ -1,0 +1,59 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fuel",
+    "receive",
+    "recover",
+    "refusal",
+    "reportedRecoveryWork",
+    "maximumTurns",
+    "header",
+    "selectedBody",
+    "foreignBody",
+    "changedBodyDenied"
+  ],
+  "properties": {
+    "fuel": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "receive": {
+      "const": 1
+    },
+    "recover": {
+      "const": 0
+    },
+    "refusal": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reportedRecoveryWork": {
+      "const": 0
+    },
+    "maximumTurns": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "header": {
+      "const": {
+        "work": 2,
+        "drops": 2,
+        "unknownRetained": true,
+        "foreignTypeRefused": true,
+        "foreignAddressRefused": true
+      }
+    },
+    "selectedBody": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "foreignBody": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "changedBodyDenied": {
+      "const": true
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeelementlabelde",
+  "elementId": "wall-n",
+  "newLabelDe": "Nordwand"
+}

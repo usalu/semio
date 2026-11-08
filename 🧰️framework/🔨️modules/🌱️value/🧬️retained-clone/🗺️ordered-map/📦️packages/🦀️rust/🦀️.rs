@@ -10,6 +10,8 @@ pub use semio_framework_value_retained_clone::retained_clone::*;
 pub use semio_framework_value_retirement::{retirement,RetireOwned,ErasedSnapshotRetirement,owned_retirement_birth_bytes,OriginalRetirementControl,OriginalRetirementOutcome,OriginalRetirementPoll,RetirementPollExit,retirement_fields_type,retirement_fields_seed};
 pub use semio_framework_value_derive::RetireOwned;
 pub use semio_framework_value_intrinsic::{DslValue,Number,DecodedValue,FromValue,ToValue,ValueShape,ValueEdit,NativeDecodeControl,NativeEncodeControl};
+pub use semio_framework_value_control_contract::{OriginalSourceTurnIdentity,RetainedAllocationEffect,OriginalEffectReply,OriginalEffectReplyComplete,OriginalEffectCallbackMode,OriginalEffectProducer,OriginalEffectAuthority,OriginalEffectAction,RetainedWorkPoll,RetainedWorkOutcome};
+pub use semio_framework_value_retirement::{OriginalRetirementFailure,OriginalRetirementCloseLoan};
 pub use serde;
 #[path="../../🦀️.rs"]
 pub mod ordered_map;

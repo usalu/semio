@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-value-native-array-backing"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Resident native array backing with original Work and typed element custody."
+
+[package.metadata.semio]
+role = "framework"
+id = "value-native-array-backing"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value-control-contract = { path = "../../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+semio-framework-value-testing-effect-bank = { path = "../../../../../🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+
+[[test]]
+name = "array_backing"
+path = "../../🧪️tests/native.rs"

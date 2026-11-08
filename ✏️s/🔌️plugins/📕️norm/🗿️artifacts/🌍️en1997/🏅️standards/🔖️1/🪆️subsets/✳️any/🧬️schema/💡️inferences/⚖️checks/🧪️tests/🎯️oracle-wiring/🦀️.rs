@@ -393,7 +393,70 @@ fn single_well(i: &Inputs) -> Outputs {
     Outputs::default().with("radius", outcome("DEW-01", &case, "radius")).with("q", outcome("DEW-01", &case, "q"))
 }
 
-static GEOTECHNICS_ADAPTERS: [Adapter; 12] = [
+/// ⚖️ EQU-01 overturning utilisation with unit partial factors.
+fn equilibrium_overturning(i: &Inputs) -> Outputs {
+    let case = unfactored("EQU-01").with_n("m_dst_g", i.num("m_dst_g")).with_n("m_dst_q", i.num("m_dst_q")).with_n("m_stb_g", i.num("m_stb_g")).with_n("m_tension", i.num("m_tension"));
+    Outputs::default().with("equ_util", outcome("EQU-01", &case, "equ"))
+}
+
+/// 💧 UPL-01 uplift utilisation and required ballast with unit partial factors.
+fn uplift_equilibrium(i: &Inputs) -> Outputs {
+    let case = unfactored("UPL-01").with_n("g_dst", i.num("g_dst")).with_n("q_dst", i.num("q_dst")).with_n("g_stb", i.num("g_stb")).with_n("r_d", i.num("r_d")).with_n("head", i.num("head")).with_n("area", i.num("area")).with_n("gamma_w", i.num("gamma_w"));
+    Outputs::default().with("uplift_util", outcome("UPL-01", &case, "uplift")).with("ballast", outcome("UPL-01", &case, "ballast"))
+}
+
+/// 💧 HYD-01 heave utilisation, gradients and safety with unit partial factors.
+fn hydraulic_heave(i: &Inputs) -> Outputs {
+    let case = unfactored("HYD-01").with_n("delta_h", i.num("delta_h")).with_n("l_flow", i.num("l_flow")).with_n("gamma_prime", i.num("gamma_prime")).with_n("gamma_w", i.num("gamma_w"));
+    Outputs::default().with("heave_util", outcome("HYD-01", &case, "heave")).with("i", outcome("HYD-01", &case, "i")).with("i_crit", outcome("HYD-01", &case, "i_crit")).with("safety", outcome("HYD-01", &case, "safety"))
+}
+
+/// ⛰️ SLOPE-03 infinite slope utilisation and characteristic factor with unit partial factors.
+fn infinite_slope(i: &Inputs) -> Outputs {
+    let base = unfactored("SLOPE-03").with_n("beta_deg", i.num("beta_deg")).with_n("phi_k_deg", i.num("phi_k_deg")).with_n("gamma", i.num("gamma")).with_n("z", i.num("z")).with_n("gamma_w", i.num("gamma_w"));
+    let case = [("c_k", i.opt("c_k")), ("gamma_sat", i.opt("gamma_sat")), ("seepage", i.opt("seepage"))].into_iter().fold(base, |case, (key, value)| match value { Some(value) => case.with_n(key, value), None => case });
+    Outputs::default().with("infinite_slope_util", outcome("SLOPE-03", &case, "infinite_slope")).with("f_k", outcome("SLOPE-03", &case, "f_k"))
+}
+
+/// 🧾️ The catalogue case `id` with unity partial factors and every present input of `keys` copied from the oracle inputs.
+fn with_present(id: &str, i: &Inputs, keys: &[&str]) -> Case {
+    keys.iter().fold(unfactored(id), |case, key| match i.opt(key) { Some(value) => case.with_n(key, value), None => case })
+}
+
+/// ⛰️ SLOPE-02 Janbu simplified utilisation and factor of safety on a fixed slip circle with unit partial factors.
+fn slope_janbu(i: &Inputs) -> Outputs {
+    let case = with_present("SLOPE-02", i, &["h", "beta_deg", "xc", "yc", "r", "gamma", "phi_k_deg", "c_k", "gamma_w", "gamma_sat", "gwl_level"]).with_n("slices", 400.0);
+    Outputs::default().with("janbu", outcome("SLOPE-02", &case, "janbu")).with("f", outcome("SLOPE-02", &case, "f"))
+}
+
+/// ⛰️ SLOPE-04 plane wedge utilisation, minimum factor of safety and critical angle with unit partial factors.
+fn slope_wedge(i: &Inputs) -> Outputs {
+    let case = with_present("SLOPE-04", i, &["h", "beta_deg", "gamma", "phi_k_deg", "c_k"]);
+    Outputs::default().with("wedge", outcome("SLOPE-04", &case, "wedge")).with("f", outcome("SLOPE-04", &case, "f")).with("theta_deg", outcome("SLOPE-04", &case, "theta_deg"))
+}
+
+/// 📐️ SLS-04 angular distortion against the limit and the tilt tan ω.
+fn footing_tilt(i: &Inputs) -> Outputs {
+    let case = with_present("SLS-04", i, &["s_a", "s_b", "l", "limit_den"]);
+    Outputs::default().with("tilt", outcome("SLS-04", &case, "tilt")).with("tan_omega", outcome("SLS-04", &case, "tan_omega"))
+}
+
+/// 💧 DEW-02 equivalent radius, discharge and the superposed drawdown of a well series.
+fn drawdown_superposition(i: &Inputs) -> Outputs {
+    let series: Vec<String> = (1..=64).flat_map(|n| ["x", "y", "qw"].map(|prefix| format!("{prefix}{n}"))).collect();
+    let keys: Vec<&str> = ["area", "h_aquifer", "h_well", "k", "r_influence", "r_well", "thickness", "px", "py"].into_iter().chain(series.iter().map(String::as_str)).collect();
+    let case = with_present("DEW-02", i, &keys);
+    let out = Outputs::default().with("r_eq", outcome("DEW-02", &case, "r_eq")).with("q", outcome("DEW-02", &case, "q"));
+    if i.opt("x1").is_some() { out.with("drawdown", outcome("DEW-02", &case, "drawdown")) } else { out }
+}
+
+/// 💧 DEW-03 effective stress increase and settlement from groundwater drawdown.
+fn drawdown_settlement(i: &Inputs) -> Outputs {
+    let case = with_present("DEW-03", i, &["delta_h", "e_oed", "h", "gamma_w"]);
+    Outputs::default().with("d_sigma", outcome("DEW-03", &case, "d_sigma")).with("s", outcome("DEW-03", &case, "s"))
+}
+
+static GEOTECHNICS_ADAPTERS: [Adapter; 21] = [
     Adapter { check: "en1997.G.secondary-settlement", evaluator: "catalogue SLS-03", run: secondary_settlement },
     Adapter { check: "en1997.G.negative-skin-friction", evaluator: "catalogue PILE-05 with the registry factors", run: negative_skin_friction },
     Adapter { check: "en1997.G.pile-dynamic-tests", evaluator: "catalogue PILE-08 with the registry factors of the design approach", run: pile_dynamic_tests },
@@ -406,6 +469,15 @@ static GEOTECHNICS_ADAPTERS: [Adapter; 12] = [
     Adapter { check: "en1997.G.wall-sliding-design", evaluator: "catalogue RW-06 and crate::catalogue::earth_pressure::ka_rankine with the registry factors", run: wall_sliding_design },
     Adapter { check: "en1997.G.settlement-primary", evaluator: "catalogue SLS-02, crate::catalogue::settlement::sigma_z_rect_centre", run: settlement_primary },
     Adapter { check: "en1997.G.slope-bishop", evaluator: "catalogue SLOPE-01 with the registry factors of the design approach", run: slope_bishop_design },
+    Adapter { check: "en1997.G.equilibrium-overturning", evaluator: "catalogue EQU-01", run: equilibrium_overturning },
+    Adapter { check: "en1997.G.uplift-equilibrium", evaluator: "catalogue UPL-01", run: uplift_equilibrium },
+    Adapter { check: "en1997.G.hydraulic-heave", evaluator: "catalogue HYD-01", run: hydraulic_heave },
+    Adapter { check: "en1997.G.infinite-slope", evaluator: "catalogue SLOPE-03", run: infinite_slope },
+    Adapter { check: "en1997.G.slope-janbu", evaluator: "catalogue SLOPE-02", run: slope_janbu },
+    Adapter { check: "en1997.G.slope-wedge", evaluator: "catalogue SLOPE-04", run: slope_wedge },
+    Adapter { check: "en1997.G.footing-tilt", evaluator: "catalogue SLS-04", run: footing_tilt },
+    Adapter { check: "en1997.G.drawdown-superposition", evaluator: "catalogue DEW-02", run: drawdown_superposition },
+    Adapter { check: "en1997.G.drawdown-settlement", evaluator: "catalogue DEW-03", run: drawdown_settlement },
 ];
 
 static GEOTECHNICS_REGISTRY: Registry = Registry { artifact: "en1997", adapters: &GEOTECHNICS_ADAPTERS, known_differences: &KNOWN };

@@ -28,7 +28,7 @@ pub fn render(document: &En1996Snapshot, locale: Locale) -> UiAssemblyResult<Bui
 
 /// 🎞️ The same window at an explicit view: the persisted local-only configuration and the ephemeral playback state, with the field picker and playback toolbar above the surface.
 pub fn render_with(document: &En1996Snapshot, view: &ViewportView, locale: Locale) -> UiAssemblyResult<BuiltNode> {
-    let report = semio_s_artifact_norm_en1996_inferences::live::report(document);
+    let report = semio_s_artifact_norm_en1996_inferences::live::responsive(document, semio_s_plugin_norm_app_surface::PAINT_BUDGET).0;
     let scene = live_scene_of(document, &report);
     render_viewport_panel(BODY_VIEWPORT, &scene, view, &[], &interaction_domain_id("en1996"), CONTROLLER, locale)
 }

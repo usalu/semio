@@ -19,4 +19,4 @@ pub mod change_zone_occupants;
 pub mod change_zone_pollution_class;
 //#endregion 🪢️Mounts
 
-pub use semio_s_artifact_norm_din16798_mut_zones_more::{change_zone_usage_type, change_zone_vent_method, change_zone_vent_system_id, insert_zone, remove_zone};
+pub use semio_s_artifact_norm_din16798_mut_zones_more::{change_zone_id, change_zone_name, change_zone_usage_type, change_zone_vent_method, change_zone_vent_system_id, insert_zone, remove_zone};

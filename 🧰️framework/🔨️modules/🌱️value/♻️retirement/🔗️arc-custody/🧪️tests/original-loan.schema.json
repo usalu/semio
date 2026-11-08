@@ -1,0 +1,107 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "maximumTurns",
+    "maximumEvents",
+    "maximumItems",
+    "maximumCopyBytes",
+    "maximumWork",
+    "loanCalls",
+    "stock",
+    "loanRecovers",
+    "ackWork",
+    "deniedAckWork",
+    "ackCalls",
+    "ackRecovers",
+    "actorClosePosts",
+    "actorVisibleBeforePost",
+    "actorRefusalMessage",
+    "actorRefusalRetirements",
+    "actorPayoutRefusalMessage",
+    "foreignIdentityMatch",
+    "sameIdentityAfterAck",
+    "sameIdentityAfterRetire",
+    "identityDeniedWork",
+    "bindingCancelPosts",
+    "foreignWorkAccepted"
+  ],
+  "properties": {
+    "maximumTurns": {
+      "const": 128
+    },
+    "maximumEvents": {
+      "const": 512
+    },
+    "maximumItems": {
+      "const": 1
+    },
+    "maximumCopyBytes": {
+      "const": 4096
+    },
+    "maximumWork": {
+      "const": 16
+    },
+    "loanCalls": {
+      "const": 1
+    },
+    "stock": {
+      "const": {
+        "items": 512,
+        "copyBytes": 2097152,
+        "capacityBytes": 65536,
+        "releaseBytes": 65536,
+        "depth": 64,
+        "fuel": 8192
+      }
+    },
+    "loanRecovers": {
+      "const": 1
+    },
+    "ackWork": {
+      "const": 1
+    },
+    "deniedAckWork": {
+      "const": 0
+    },
+    "ackCalls": {
+      "const": 1
+    },
+    "ackRecovers": {
+      "const": 0
+    },
+    "actorClosePosts": {
+      "const": 2
+    },
+    "actorVisibleBeforePost": {
+      "const": false
+    },
+    "actorRefusalMessage": {
+      "const": "original acknowledgement Source refusal"
+    },
+    "actorRefusalRetirements": {
+      "const": 1
+    },
+    "actorPayoutRefusalMessage": {
+      "const": "independent acknowledgement payout refusal"
+    },
+    "foreignIdentityMatch": {
+      "const": false
+    },
+    "sameIdentityAfterAck": {
+      "const": true
+    },
+    "sameIdentityAfterRetire": {
+      "const": false
+    },
+    "identityDeniedWork": {
+      "const": 0
+    },
+    "bindingCancelPosts": {
+      "const": 1
+    },
+    "foreignWorkAccepted": {
+      "const": false
+    }
+  }
+}

@@ -115,6 +115,8 @@ pub struct World3dMarker {
     pub position: World3dVec3,
     #[serde(default)]
     pub shape: World3dMarkerShape,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub axis: Option<World3dVec3>,
     pub text: World3dText,
     #[serde(default)]
     pub tone: World3dTone,

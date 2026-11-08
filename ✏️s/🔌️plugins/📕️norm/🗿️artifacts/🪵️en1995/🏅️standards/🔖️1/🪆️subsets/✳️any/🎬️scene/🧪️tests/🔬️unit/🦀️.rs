@@ -187,6 +187,18 @@ fn fire_shows_residual_section_char_layer_and_zero_strength_layer() {
 }
 
 #[test]
+fn floor_limits_are_read_from_the_registry_for_both_annexes() {
+    let document = compliant();
+    let m = &document.members[0];
+    let props = facts::properties(m.strength_class.id()).expect("class");
+    for (annex, f1, a) in [(norm::AnnexChoice::En, 8.0, 1.5), (norm::AnnexChoice::De, 6.0, 0.5)] {
+        let d = facts::dynamics(annex, m, &props).expect("floor");
+        assert_eq!((d.f1_limit, d.unit_limit), (f1, a));
+        assert_eq!((norm::ndp_number("ndp.en1995.floor.f1-limit", annex), norm::ndp_number("ndp.en1995.floor.a-limit", annex)), (f1, a));
+    }
+}
+
+#[test]
 fn floors_and_footbridges_carry_a_vibration_mode_with_the_kernel_frequency() {
     let document = compliant();
     let (scene, _) = scene_of(&document, &[]);
@@ -441,11 +453,7 @@ fn golden_scene_matches_committed_bytes() {
     let (scene, _) = scene_of(&compliant(), &[]);
     let actual = canonical_json(&scene);
     let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🧫️fixtures/🏛️scene/🔣️.json");
-    if std::env::var("SEMIO_UPDATE_GOLDEN").is_ok() {
-        std::fs::write(path, &actual).expect("write golden");
-    }
-    let expected = std::fs::read_to_string(path).expect("golden fixture");
-    assert_eq!(actual.trim(), expected.trim(), "golden scene changed; rerun with SEMIO_UPDATE_GOLDEN=1 after reviewing the diff");
+    scene::projection_kit::test_support::assert_golden(path, &actual);
 }
 
 #[test]

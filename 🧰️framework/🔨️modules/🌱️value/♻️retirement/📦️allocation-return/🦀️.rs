@@ -1,7 +1,7 @@
 //! 🎟️ A parent retains genuine returned flat allocations until their complete physical release grant.
 #![feature(allocator_api)]
 use semio_framework_value_control_contract::{ValueError,ValueRefusalKind};
-pub use semio_framework_value_control_contract::{RetirementDemand,RetainedCloneStep,RetainedWorkOutcome};
+pub use semio_framework_value_control_contract::{RetainedAllocationEffect,RetirementDemand,RetainedCloneStep,RetainedWorkOutcome};
 pub use semio_framework_value_control_contract as retained_clone;
 use std::{alloc::Layout,mem::ManuallyDrop,ptr::NonNull};
 
@@ -85,7 +85,7 @@ mod tests;
 
 #[path="🔗️shared/🦀️.rs"]
 mod shared;
-pub use shared::{admit_shared_allocation,admit_shared_allocation_from,try_uninitialized_arc,shared_uninitialized_demand,shared_allocation_value_demand,shared_allocation_slot_demand,shared_allocation_bytes,SharedAllocation};
+pub use shared::{shared_arc_publication_demand,shared_arc_publication_work_demand,publish_uninitialized_arc_from,try_uninitialized_arc_into,shared_uninitialized_work_demand,uninitialized_arc_release_demand,release_uninitialized_arc_from,admit_shared_allocation,admit_shared_allocation_from,try_uninitialized_arc,shared_uninitialized_demand,shared_allocation_value_demand,shared_allocation_slot_demand,shared_allocation_bytes,SharedAllocation};
 
 #[path="🔗️shared/📦️original/🦀️.rs"]
 pub mod original;

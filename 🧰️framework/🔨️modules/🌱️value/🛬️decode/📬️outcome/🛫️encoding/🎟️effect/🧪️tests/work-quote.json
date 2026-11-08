@@ -1,0 +1,29 @@
+{
+  "sourceWork": 5,
+  "cases": [
+    {
+      "id": "zero",
+      "maximum": 0,
+      "actual": 0,
+      "accepted": true
+    },
+    {
+      "id": "one",
+      "maximum": 1,
+      "actual": 1,
+      "accepted": true
+    },
+    {
+      "id": "exact",
+      "maximum": 5,
+      "actual": 5,
+      "accepted": true
+    },
+    {
+      "id": "beyondSource",
+      "maximum": 6,
+      "actual": 0,
+      "accepted": false
+    }
+  ]
+}

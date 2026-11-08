@@ -1,177 +1,120 @@
-//! ⚙️ Original fixed-page clone phases depend on a first-party element protocol.
+//! ⚙️ Original paged cloning records every arbitrary child reply before its caller can unwind.
 use super::*;
-use std::{
-    mem::{ManuallyDrop, size_of},
-    ops::{Deref, DerefMut},
-};
-
+use std::mem::{ManuallyDrop,size_of};
+type Step=RetainedCloneStep;
+type Failure=OriginalRetirementFailure;
+type Reply<'r>=OriginalEffectReply<'r,Step,Failure>;
+type Complete<'r>=OriginalEffectReplyComplete<'r,Step,Failure>;
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+struct Route{invocation:Option<OriginalEffectInvocationIdentity>,code:u8,closing:bool,original:bool,source:Option<(u64,usize,usize,usize)>,body:usize,maximum:u64,demand:RetirementDemand,child:RetirementDemand,work:u64,child_work:u64,prefix_work:u64,prefix_bytes:usize}
 #[doc(hidden)]
-pub struct PagedListCursorState<T: RetireOwned+Send+Sync+'static,C:PagedCloneElement<T>, const N: usize> {
-    values: PagedList<T, N>,
-    child: Option<C>,
-    child_closing: bool,
-    child_value: Option<T>,
-    index: usize,
-    source: Option<RetainedCloneBinding>,
-    phase: u8,
-    output: Option<PagedList<T, N>>,
-    closing: bool,
-    close: RetainedCloneClose,
-}
-
-pub struct PagedListCloneEngine<T: RetireOwned+Send+Sync+'static,C:PagedCloneElement<T>, const N: usize> {
-    state: ManuallyDrop<PagedListCursorState<T,C,N>>,
-}
-
-impl<T: RetireOwned+Send+Sync+'static,C:PagedCloneElement<T>, const N: usize> Deref for PagedListCloneEngine<T,C,N> {
-    type Target = PagedListCursorState<T,C,N>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.state
-    }
-}
-
-impl<T: RetireOwned+Send+Sync+'static,C:PagedCloneElement<T>, const N: usize> DerefMut for PagedListCloneEngine<T,C,N> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.state
-    }
-}
-
-impl<T: RetireOwned+Send+Sync+'static,C:PagedCloneElement<T>, const N: usize> Default for PagedListCloneEngine<T,C,N> {
-    fn default() -> Self {
-        Self { state: ManuallyDrop::new(PagedListCursorState { values: PagedList::default(), child: None, child_closing:false, child_value: None, index: 0, source: None, phase: 0, output: None, closing: false, close: RetainedCloneClose::default() }) }
-    }
-}
-
-impl<T: RetireOwned+Send+Sync+'static,C:PagedCloneElement<T>, const N: usize> PagedListCloneEngine<T,C,N> {
-    fn selected_close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{
-        if !self.closing{return Ok(Default::default());}
-        if let Some(child)=self.child.as_ref(){return if !self.child_closing{child_start_demand(child)}else if child.terminal_is_empty(){Ok(crate::RetirementDemand {copy_bytes:size_of::<C>(),depth:1,..Default::default()})}else{nested_retained_clone_close_demands::<T,C>(child,body)};}
-        if self.child_value.is_some(){return self.close.next_owner_demands::<T>(true,&self.source,body);}
-        self.close.next_owner_demands::<PagedList<T,N>>(self.output.is_some()||!self.values.terminal_is_empty(),&self.source,body)
-    }
-    fn owner_state_is_empty(&self) -> bool {
-        self.values.terminal_is_empty() && self.child.is_none() && self.child_value.is_none() && self.output.is_none() && self.close.is_empty() && self.source.is_none()
-    }
-}
-
-impl<T: RetireOwned+Send+Sync+'static,C:PagedCloneElement<T>, const N: usize> Drop for PagedListCloneEngine<T,C,N> {
-    fn drop(&mut self) {
-        assert!(std::thread::panicking() || self.owner_state_is_empty(), "retained paged list cursor abandoned before bounded terminal close");
-        if self.owner_state_is_empty() {
-            unsafe { ManuallyDrop::drop(&mut self.state) };
-        }
-    }
-}
-
-impl<T: RetireOwned+Send+Sync+'static,C:PagedCloneElement<T>, const N: usize> PagedListCloneEngine<T,C,N> {
-    pub fn output_ready(&self)->bool{!self.closing&&self.phase==1&&self.output.is_some()}
-    pub fn close_started(&self)->bool{self.closing}
-    pub fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.selected_close_demands(body)}
-    pub fn advance_demands(&self, source: RetainedCloneRef<'_, PagedList<T, N>>, body: usize,maximum_work_units:u64) -> Result<crate::RetirementDemand, crate::ValueError> {
-        if self.closing || self.phase == 2 { return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "paged list clone is closing or spent")); }
-        if let Some(demand)=source.binding_demand(&self.source)?{return Ok(demand);}
-        if self.output_ready() { return Ok(Default::default()); }
-        let length = source.get().len();
-        if length > N { return Err(crate::ValueError::literal(crate::ValueRefusalKind::OwnershipLimit, "paged list source exceeds its logical capacity")); }
-        if self.values.capacity() < length { return Ok(crate::RetirementDemand { copy_bytes:self.values.next_capacity_copy_byte_demand(length).map_err(crate::ValueError::from)?, capacity_bytes: self.values.next_capacity_allocation_bytes(length)?.ok_or_else(|| crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "paged list capacity action is absent"))?, depth: self.values.next_capacity_depth_demand(length).map_err(crate::ValueError::from)?, ..Default::default() }); }
-        if let Some(child) = self.child.as_ref() {
-            if self.child_value.is_some() {
-                if !self.child_closing{return child_start_demand(child)}return if child.terminal_is_empty() { self.values.adoption_demand(&self.child_value) } else { nested_retained_clone_close_demands::<T,C>(child, body) };
-            }
-            if child.output_ready() { return nested_retained_clone_take_demands(child); }
-            let mut demand=nested_retained_clone_demands::<T,C>(child, source.project(self.index + 1, |values| values.get(self.index).expect("validated paged list source ordinal")), body,maximum_work_units)?;demand.depth=demand.depth.max(source.get().next_get_depth_demand(self.index).map_err(crate::ValueError::from)?);return Ok(demand);
-        }
-        Ok(crate::RetirementDemand { copy_bytes: if self.index == length { size_of::<PagedList<T, N>>() } else { size_of::<C>() }, depth: 1, ..Default::default() })
-    }
-
-
-
-    pub fn advance(&mut self, source: RetainedCloneRef<'_, PagedList<T, N>>, body: usize,maximum_work_units:u64, effect:&mut crate::RetainedAllocationEffect<'_>) ->crate::OriginalRetirementOutcome{let grant=effect.grant();let maximum_work_units=maximum_work_units.min(effect.maximum_work_units());let mut work=0;let result=(|| -> Result<RetainedCloneStep,crate::OriginalRetirementFailure>{
-        let selected=self.advance_work_demand(source,body,maximum_work_units)?;if selected==0||selected>maximum_work_units{return Ok(RetainedCloneStep::Progress(Default::default()))}let demand = self.advance_demands(source, body,maximum_work_units)?;
-        if self.output_ready() { return Ok(RetainedCloneStep::Complete(Default::default())); }
-        if !retained_clone_grant_admits(grant, demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if let Some(progress) = {let turn=source.bind(&mut self.source,effect);work+=turn.work;turn.result}? { return Ok(RetainedCloneStep::Progress(progress)); }
-        let length = source.get().len();
-        if self.values.capacity() < length {
-            let turn=self.values.reserve_capacity_one_funded(length,effect);work+=turn.work;return match turn.result{Ok(crate::PagedListReservationOutcome::Denied)=>Ok(RetainedCloneStep::Progress(Default::default())),Ok(crate::PagedListReservationOutcome::Ready(progress))=>Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(grant,progress,"paged list capacity")?)),Err(crate::PagedListReservationFailure::Work(error))=>Err(error.into()),Err(crate::PagedListReservationFailure::Allocation{error,copied_bytes})=>Err(crate::ValueError::from(error.refusal()).with_retained_progress(RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes!=0||copied_bytes!=0),copied_bytes,retained_capacity_bytes:error.allocated_bytes,..Default::default()}).into())};
-        }
-        let index = self.index;
-        let state = &mut *self.state;
-        if let Some(child) = state.child.as_mut() {
-            if state.child_value.is_some() {
-                if !state.child_closing{let turn=start_child_close(child,&mut state.child_closing,effect);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}
-                if !child.terminal_is_empty() {
-                    let nested = nested_retained_clone_grant(grant)?;
-                    let step = {let turn=settle_child_close(child.close_step(&mut effect.nested(nested)));work+=turn.work;turn.result}?;
-                    return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(nested, step, child.terminal_is_empty(), "paged list child scaffold")?.progress()));
-                }
-                let turn=state.values.adopt_reserved(&mut state.child_value,effect);work+=turn.work;let progress=match turn.result{Ok(p)=>p,Err(error)=>return Err(error.into())};
-                if !progress.progressed { return Err((crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "paged list lost its reserved adoption slot")).into()); }
-                state.child = None;state.child_closing=false;
-                state.index += 1;
-                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
-            }
-            if child.output_ready() {
-                let nested=nested_retained_clone_grant(grant)?;let mut slot=None;let boundary=effect.performed_boundary();{let reply=crate::OriginalEffectReply::borrow(&mut slot)?;child.take(&mut state.child_value,&mut effect.nested(nested),reply)?;}work+=effect.performed_since(boundary)?;let progress=slot.take().ok_or_else(||crate::ValueError::invariant("paged list child take left no reply"))??.progress();
-                
-                return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested,progress,"paged list child take")?));
-            }
-            let nested = nested_retained_clone_grant(grant)?;
-            let step = {let turn=child.advance(source.try_project(index + 1, |values| values.get(index).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"paged list source ordinal is absent")))?,body,maximum_work_units,&mut effect.nested_within(nested,maximum_work_units));work+=turn.work;turn.result}?;
-            return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested, step.progress(), "paged list child")?));
-        }
-        if index == length {
-            work+=1;state.output = Some(std::mem::take(&mut state.values));
-            state.phase = 1;
-            return Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
-        }
-        work+=1;state.child = Some(C::new());
-        Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
-    })();crate::RetainedWorkOutcome{result,work}}
-    pub fn take_demand(&self)->Result<crate::RetirementDemand,crate::ValueError>{semio_framework_value_control_contract::retained_clone_cursor_take_demand::<PagedList<T,N>,u8>()}
-    pub fn take<'reply>(&mut self,output:&mut Option<PagedList<T, N>>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::OriginalEffectReply<'reply,RetainedCloneStep,ValueError>)->Result<crate::OriginalEffectReplyComplete<'reply,RetainedCloneStep,ValueError>,ValueError>{semio_framework_value_control_contract::take_retained_clone_cursor_output!(self.output_ready(),self.state.output,output,self.state.phase,2,effect,reply,PagedList<T,N>,u8)}
-
-    pub fn begin_close_demand(&self)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:usize::from(!self.closing),depth:usize::from(!self.closing),..Default::default()})}
- pub fn begin_close_work_demand(&self)->Result<u64,ValueError>{Ok(u64::from(!self.closing))}
- pub fn begin_close_paid(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress>{crate::start_retained_close(&mut self.closing,effect)}
-
-    
-
-    pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let grant=effect.grant();let mut work=0;let result=(||->Result<RetainedCloneStep,semio_framework_value_retirement::retirement_contract::RetirementPollExit>{
-        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if !self.closing { return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "paged list must begin close before granted retirement").into()); }
-        if !retained_clone_grant_admits(grant,self.selected_close_demands(grant.maximum_copy_bytes)?) {return Ok(RetainedCloneStep::Progress(Default::default()));}
-        let state = &mut *self.state;
-        if let Some(child) = state.child.as_mut() {
-            if !state.child_closing {let turn=start_child_close(child,&mut state.child_closing,effect);work+=turn.work;let progress=turn.result?;return Ok(RetainedCloneStep::Progress(progress))}
-            if !child.terminal_is_empty() { let step = {let turn=semio_framework_value_retirement::retirement_contract::RetirementPollExit::settled(child.close_step(&mut effect.nested(nested_retained_clone_grant(grant)?)))?;work+=turn.work;turn.result}?; return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, child.terminal_is_empty(), "retained child close")?.progress())); }
-            state.child = None;state.child_closing=false;work+=1;
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes:size_of::<C>(), ..Default::default() }));
-        }
-        if !state.close.is_empty() { return {let turn=semio_framework_value_retirement::retirement_contract::RetirementPollExit::settled(state.close.step_granted(effect))?;work+=turn.work;turn.result.map_err(Into::into)}; }
-        if let Some(step) = {let turn=state.close.begin_granted(&mut state.child_value,effect);work+=turn.work;turn.result}? { return Ok(step); }
-        if let Some(step) = {let turn=state.close.begin_granted(&mut state.output,effect);work+=turn.work;turn.result}? { return Ok(step); }
-        if !state.values.terminal_is_empty() {
-            if let Some(step) = {let turn=state.close.begin_empty_granted(&mut state.values,effect);work+=turn.work;turn.result}? { return Ok(step); }
-        }
-        {let turn=semio_framework_value_retirement::retirement_contract::RetirementPollExit::settled(close_retained_binding(&mut state.source,effect))?;work+=turn.work;turn.result.map_err(Into::into)}
-    })();semio_framework_value_retirement::retirement_contract::RetirementPollExit::finish(result,work)}
-
-    pub fn next_close_depth_demand(&self)->Result<usize,crate::ValueError>{Ok(self.close_demands(0)?.depth)}
-    pub fn next_close_copy_byte_demand(&self)->Result<usize,crate::ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
-    pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,crate::ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
-    pub fn next_close_release_byte_demand(&self)->Result<usize,crate::ValueError>{Ok(self.close_demands(0)?.release_bytes)}
-    pub fn terminal_is_empty(&self) -> bool { self.closing && self.owner_state_is_empty() }
-}
-
-
-
-impl<T:RetireOwned+Send+Sync+'static,C:PagedCloneElement<T>,const N:usize>PagedListCloneEngine<T,C,N>{
- pub fn advance_work_demand(&self,source:RetainedCloneRef<'_,PagedList<T,N>>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{let _=self.advance_demands(source,body,maximum_work_units)?;if maximum_work_units==0||self.output_ready(){return Ok(0)}let selected=if !source.check_binding(&self.source)?{source.binding_work_demand(&self.source)?}else if self.values.capacity()<source.get().len(){1}else if let Some(child)=self.child.as_ref(){if self.child_value.is_some(){if !self.child_closing{if child.close_started(){1}else{child.begin_close_work_demand()?}}else if child.terminal_is_empty(){1}else{child.close_work_demand(body)?}}else if child.output_ready(){child.take_work_demand()?}else{child.advance_work_demand(source.project(self.index+1,|values|values.get(self.index).expect("validated paged list ordinal")),body,maximum_work_units)?}}else{1};Ok(if selected<=maximum_work_units{selected}else{0})}
+pub struct PagedListCursorState<T:RetireOwned+Sync,C:PagedCloneElement<T>,const N:usize>{values:PagedList<T,N>,child:Option<C>,child_value:Option<T>,index:usize,source:Option<RetainedCloneBinding>,work:Option<OriginalWorkBindingIdentity>,phase:u8,output:Option<PagedList<T,N>>,closing:bool,close:RetainedCloneClose,route:Option<Route>,answer:ManuallyDrop<Option<Result<Step,Failure>>>,value_answer:ManuallyDrop<Option<Result<Step,ValueError>>>}
+pub struct PagedListCloneEngine<T:RetireOwned+Sync,C:PagedCloneElement<T>,const N:usize>{state:ManuallyDrop<PagedListCursorState<T,C,N>>}
+impl<T:RetireOwned+Sync,C:PagedCloneElement<T>,const N:usize> Default for PagedListCloneEngine<T,C,N>{fn default()->Self{Self{state:ManuallyDrop::new(PagedListCursorState{values:Default::default(),child:None,child_value:None,index:0,source:None,work:None,phase:0,output:None,closing:false,close:Default::default(),route:None,answer:ManuallyDrop::new(None),value_answer:ManuallyDrop::new(None)})}}}
+fn invalid()->ValueError{ValueError::invariant("paged clone changed its original operation, Source or native lifecycle")}
+fn fixed(copy:usize)->RetirementDemand{RetirementDemand{copy_bytes:copy,depth:1,..Default::default()}}
+fn progress(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes,..Default::default()}}
+impl<T:RetireOwned+Sync,C:PagedCloneElement<T>,const N:usize> PagedListCloneEngine<T,C,N>{
+ fn empty(&self)->bool{let s=&*self.state;s.values.terminal_is_empty()&&s.child.is_none()&&s.child_value.is_none()&&s.source.is_none()&&s.work.is_none()&&s.output.is_none()&&s.close.is_empty()&&s.route.is_none()&&s.answer.is_none()&&s.value_answer.is_none()}
+ fn validate(&self,effect:&RetainedAllocationEffect<'_>)->Result<(),ValueError>{if effect.invocation().is_none()||self.state.work.is_some_and(|binding|!binding.matches_effect(effect)){return Err(invalid())}Ok(())}
+ fn header_bytes()->Result<usize,ValueError>{[size_of::<Option<Route>>(),size_of::<Option<Result<Step,Failure>>>(),size_of::<Option<Result<Step,ValueError>>>()].into_iter().try_fold(0usize,|sum,n|sum.checked_add(n.checked_mul(2)?)).ok_or_else(invalid)}
+ fn add(mut d:RetirementDemand,extra:usize)->Result<RetirementDemand,ValueError>{d.copy_bytes=d.copy_bytes.checked_add(extra).ok_or_else(invalid)?;Ok(d)}
+ fn check_source(&self,source:RetainedCloneRef<'_,PagedList<T,N>>,effect:&mut RetainedAllocationEffect<'_>)->Result<(),ValueError>{if source.check_binding_paid(&self.state.source,effect).result?!=Some(true){return Err(invalid())}Ok(())}
+ fn record<'r>(reply:Reply<'r>,result:Result<Step,ValueError>)->Result<Complete<'r>,ValueError>{Ok(reply.complete(result.map_err(Into::into)))}
+ fn local_performed(effect:&mut RetainedAllocationEffect<'_>)->Result<(),ValueError>{if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"paged clone exceeded its original Work"))}Ok(())}
+ pub fn output_ready(&self)->bool{!self.state.closing&&self.state.phase==1&&self.state.output.is_some()&&self.state.route.is_none()}
+ pub fn close_started(&self)->bool{self.state.closing}
+ pub fn terminal_is_empty(&self)->bool{self.state.closing&&self.empty()}
+ pub fn native_terminal_release(&self)->Option<RetainedCursorRelease<Self>>{self.terminal_is_empty().then(||unsafe{RetainedCursorRelease::native(Self::terminal_is_empty)})}
+ fn child_projection(source:RetainedCloneRef<'_,PagedList<T,N>>,index:usize)->Result<RetainedCloneRef<'_,T>,ValueError>{source.try_project(index+1,|values|values.get(index).ok_or_else(invalid))}
+ fn child_release(&self)->Result<RetainedCursorRelease<C>,ValueError>{let child=self.state.child.as_ref().ok_or_else(invalid)?;let release=child.native_terminal_release().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"paged child has no native terminal destructor"))?;if !release.validates(child){return Err(invalid())}Ok(release)}
+ fn child_quote(&self,source:Option<RetainedCloneRef<'_,PagedList<T,N>>>,body:usize,maximum:u64,code:u8,closing:bool,original:bool)->Result<Route,ValueError>{
+  let s=&*self.state;let check=if source.is_some(){5u64}else{0};let projected=code==1;let projection_work=if projected{let root=source.ok_or_else(invalid)?;let depth=root.get().next_get_depth_demand(s.index).map_err(ValueError::from)?;u64::try_from(depth).map_err(|_|invalid())?.checked_add(5).ok_or_else(invalid)?}else{0};
+  let prefix_work=check.checked_add(projection_work).and_then(|n|n.checked_add(1)).ok_or_else(invalid)?;let available=maximum.saturating_sub(prefix_work);let child=s.child.as_ref();
+  let (demand,work)=match code{
+   1=>{let child=child.ok_or_else(invalid)?;let projected=Self::child_projection(source.ok_or_else(invalid)?,s.index)?;let work=child.advance_work_demand(projected,body,available)?;let d=child.advance_demands(projected,body,work)?;if work!=child.advance_work_demand(projected,body,work)?{return Err(invalid())}(d,work)},
+   2=>{let child=child.ok_or_else(invalid)?;(child.take_demand()?,child.take_work_demand()?)},
+   3=>{let child=child.ok_or_else(invalid)?;(child.begin_close_demand()?,child.begin_close_work_demand()?)},
+   4=>{let child=child.ok_or_else(invalid)?;(child.close_demands(body)?,child.close_work_demand(body)?)},
+   5=>{let release=self.child_release()?;(release.inline_demand(),release.inline_work())},
+   6=>(s.close.next_owner_demands::<T>(false,&None,body)?,s.close.next_owner_work::<T>(false,&None,body)?),
+   7=>(RetainedCloneBinding::close_demand(&s.source,body)?,RetainedCloneBinding::close_work_demand(&s.source,body)?),
+   _=>return Err(invalid())
+  };
+  let prefix_bytes=Self::header_bytes()?.checked_add(if projected{RetainedCloneRef::<PagedList<T,N>>::projection_demand::<T>().copy_bytes}else{0}).ok_or_else(invalid)?;let mut combined=Self::add(demand,prefix_bytes)?;combined.depth=combined.depth.checked_add(1).ok_or_else(invalid)?;if projected{combined.depth=combined.depth.max(source.ok_or_else(invalid)?.get().next_get_depth_demand(s.index).map_err(ValueError::from)?)}let work=prefix_work.checked_add(work).ok_or_else(invalid)?;
+  Ok(Route{invocation:None,code,closing,original,source:source.map(|s|s.reference_identity()),body,maximum,demand:combined,child:demand,work,child_work:work-prefix_work,prefix_work,prefix_bytes})
+ }
+ fn advance_code(&self)->Option<u8>{let s=&*self.state;if let Some(child)=s.child.as_ref(){Some(if s.child_value.is_some(){if !child.close_started(){3}else if child.terminal_is_empty(){5}else{4}}else if child.output_ready(){2}else{1})}else{None}}
+ pub fn advance_demands(&self,source:RetainedCloneRef<'_,PagedList<T,N>>,body:usize,maximum:u64)->Result<RetirementDemand,ValueError>{
+  if let Some(route)=self.state.route{return Ok(route.demand)}if self.state.closing||self.state.phase==2{return Err(invalid())}if let Some(d)=source.binding_demand(&self.state.source)?{return Self::add(d,size_of::<Option<OriginalWorkBindingIdentity>>())}if self.output_ready(){return Ok(Default::default())}let s=&*self.state;let length=source.get().len();if length>N{return Err(invalid())}
+  if s.values.capacity()<length{return Ok(RetirementDemand{copy_bytes:s.values.next_capacity_copy_byte_demand(length).map_err(ValueError::from)?,capacity_bytes:s.values.next_capacity_allocation_bytes(length)?.ok_or_else(invalid)?,depth:s.values.next_capacity_depth_demand(length).map_err(ValueError::from)?,..Default::default()})}
+  if let Some(code)=self.advance_code(){return Ok(self.child_quote(Some(source),body,maximum,code,false,false)?.demand)}
+  if s.child_value.is_some(){return Self::add(s.values.adoption_demand(&s.child_value)?,size_of::<usize>())}if s.index==length{return Ok(fixed(size_of::<PagedList<T,N>>()+size_of::<Option<PagedList<T,N>>>()+size_of::<u8>()))}Ok(fixed(size_of::<Option<C>>()+size_of::<C>()))
+ }
+ pub fn advance_work_demand(&self,source:RetainedCloneRef<'_,PagedList<T,N>>,body:usize,maximum:u64)->Result<u64,ValueError>{if let Some(route)=self.state.route{return Ok(route.work)}self.advance_demands(source,body,maximum)?;if self.output_ready(){return Ok(0)}if self.state.source.is_none(){return source.binding_work_demand(&self.state.source)?.checked_add(1).ok_or_else(invalid)}if self.state.values.capacity()<source.get().len(){return Ok(6)}if let Some(code)=self.advance_code(){return Ok(self.child_quote(Some(source),body,maximum,code,false,false)?.work)}Ok(if self.state.child_value.is_some(){7}else{6})}
+ fn finish_child<'r>(&mut self,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{let Some(result)=self.state.answer.as_ref()else{return Ok(reply.pending())};let route=self.state.route.ok_or_else(invalid)?;let p=match result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};let extra=RetainedCloneProgress{copied_items:0,copied_bytes:route.prefix_bytes,..Default::default()};let mut p=p.checked_add(extra).map_err(|_|invalid())?;p.copied_items=p.copied_items.max(1);let result=self.state.answer.take().ok_or_else(invalid)?;self.state.route=None;Ok(reply.complete(match result{Ok(_)=>Ok(Step::Progress(p)),Err(error)=>Err(error.with_retained_progress(p))}))}
+ fn child_drive<'r>(&mut self,source:Option<RetainedCloneRef<'_,PagedList<T,N>>>,original:Option<&mut OriginalRetirementCloseLoan<'_>>,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>,recover:bool,route:Route)->Result<Complete<'r>,ValueError>{
+  let s=&mut*self.state;if s.answer.is_none(){if s.value_answer.is_none(){let mut effect=effect.reborrow(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:route.child.copy_bytes,maximum_capacity_bytes:route.child.capacity_bytes,maximum_release_bytes:route.child.release_bytes,maximum_depth:route.child.depth},route.child_work.min(effect.remaining_work_units()?))?;
+   match route.code{
+    1=>{let source=Self::child_projection(source.ok_or_else(invalid)?,s.index)?;let child=s.child.as_mut().ok_or_else(invalid)?;let inner=OriginalEffectReply::borrow(&mut s.answer)?;if recover{child.recover_advance_into(source,route.body,route.child_work,&mut effect,inner)?;}else{child.advance_into(source,route.body,route.child_work,&mut effect,inner)?;}},
+    2=>{let child=s.child.as_mut().ok_or_else(invalid)?;let inner=OriginalEffectReply::borrow(&mut s.value_answer)?;if recover{child.recover_take(&mut s.child_value,&mut effect,inner)?;}else{child.take(&mut s.child_value,&mut effect,inner)?;}},
+    3=>{let child=s.child.as_mut().ok_or_else(invalid)?;let inner=OriginalEffectReply::borrow(&mut s.answer)?;if recover{child.recover_begin_close_into(&mut effect,inner)?;}else{child.begin_close_into(&mut effect,inner)?;}},
+    4=>{let child=s.child.as_mut().ok_or_else(invalid)?;let inner=OriginalEffectReply::borrow(&mut s.answer)?;match(original,recover){(Some(original),false)=>{child.close_original_into(original,route.body,&mut effect,inner)?;},(Some(original),true)=>{child.recover_close_original_into(original,route.body,&mut effect,inner)?;},(None,false)=>{child.close_into(route.body,&mut effect,inner)?;},(None,true)=>{child.recover_close_into(route.body,&mut effect,inner)?;}}},
+    5=>{let release=s.child.as_ref().and_then(PagedCloneElement::native_terminal_release).ok_or_else(invalid)?;let inner=OriginalEffectReply::borrow(&mut s.value_answer)?;release.inline_into(&mut s.child,&mut effect,inner)?;},
+    6=>{let inner=OriginalEffectReply::borrow(&mut s.answer)?;match(original,recover){(Some(original),false)=>{s.close.step_original_into(original,route.body,&mut effect,inner)?;},(Some(original),true)=>{s.close.recover_step_original_into(original,route.body,&mut effect,inner)?;},(None,false)=>{s.close.step_into(route.body,&mut effect,inner)?;},(None,true)=>{s.close.recover_step_into(route.body,&mut effect,inner)?;}}},
+    7=>{let inner=OriginalEffectReply::borrow(&mut s.answer)?;match(original,recover){(Some(original),false)=>{RetainedCloneBinding::close_original_into(&mut s.source,original,route.body,&mut effect,inner)?;},(Some(original),true)=>{RetainedCloneBinding::recover_close_original_into(&mut s.source,original,route.body,&mut effect,inner)?;},(None,false)=>{RetainedCloneBinding::close_into(&mut s.source,route.body,&mut effect,inner)?;},(None,true)=>{RetainedCloneBinding::recover_close_into(&mut s.source,route.body,&mut effect,inner)?;}}},
+    _=>return Err(invalid())
+   }
+  }if s.value_answer.is_some(){let inner=OriginalEffectReply::borrow(&mut s.answer)?;semio_framework_value_retirement::forward_original_value_reply(&mut s.value_answer,inner)?;}}
+  self.finish_child(reply)
+ }
+ fn select<'r>(&mut self,source:Option<RetainedCloneRef<'_,PagedList<T,N>>>,original:Option<&mut OriginalRetirementCloseLoan<'_>>,body:usize,maximum:u64,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>,recover:bool,mut route:Route)->Result<Complete<'r>,ValueError>{
+  let invocation=effect.invocation().ok_or_else(invalid)?.identity();if let Some(current)=self.state.route{if current.invocation!=Some(invocation)||current.source!=source.map(|s|s.reference_identity())||current.body!=body||current.maximum!=maximum||current.original!=original.is_some()||!recover{return Err(invalid())}return self.child_drive(source,original,effect,reply,true,current)}
+  if recover{return Err(invalid())}if !retained_clone_grant_admits(effect.grant(),route.demand)||effect.remaining_work_units()?<route.work{return Ok(reply.complete(Ok(Step::Progress(Default::default()))))}
+  if let Some(source)=source{self.check_source(source,effect)?;}let spent=if source.is_some(){5}else{0};if route.prefix_work>spent+1{if !effect.performed(route.prefix_work-spent-1)?{return Err(invalid())}}Self::local_performed(effect)?;route.invocation=Some(invocation);self.state.route=Some(route);self.child_drive(source,original,effect,reply,false,route)
+ }
+ fn advance_reply<'r>(&mut self,source:RetainedCloneRef<'_,PagedList<T,N>>,body:usize,maximum:u64,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>,recover:bool)->Result<Complete<'r>,ValueError>{
+  self.validate(effect)?;if let Some(route)=self.state.route{return self.select(Some(source),None,body,maximum,effect,reply,recover,route)}if recover{return Err(invalid())}let d=self.advance_demands(source,body,maximum)?;let work=self.advance_work_demand(source,body,maximum)?;if !retained_clone_grant_admits(effect.grant(),d)||effect.remaining_work_units()?<work{return Ok(reply.complete(Ok(Step::Progress(Default::default()))))}if self.output_ready(){return Ok(reply.complete(Ok(Step::Complete(Default::default()))))}
+  if self.state.source.is_none(){Self::local_performed(effect)?;self.state.work=Some(OriginalWorkBindingIdentity::from_effect(effect));let turn=source.bind(&mut self.state.source,effect);return Self::record(reply,turn.result.map(|p|Step::Progress(p.unwrap_or_default().checked_add(RetainedCloneProgress{copied_bytes:size_of::<Option<OriginalWorkBindingIdentity>>(),..Default::default()}).expect("quoted paged binding header"))).map_err(|error|{let p=error.retained_progress().checked_add(RetainedCloneProgress{copied_bytes:size_of::<Option<OriginalWorkBindingIdentity>>(),..Default::default()}).expect("quoted paged binding refusal header");error.with_retained_progress(p)}))}
+  if self.state.values.capacity()<source.get().len(){self.check_source(source,effect)?;let turn=self.state.values.reserve_capacity_one_funded(source.get().len(),effect);return match turn.result{Ok(PagedListReservationOutcome::Denied)=>Ok(reply.complete(Ok(Step::Progress(Default::default())))),Ok(PagedListReservationOutcome::Ready(p))=>Ok(reply.complete(Ok(Step::Progress(p)))),Err(PagedListReservationFailure::Work(error))=>Ok(reply.complete(Err(error.into()))),Err(PagedListReservationFailure::Allocation{error,copied_bytes})=>Ok(reply.complete(Err(ValueError::from(error.refusal()).with_retained_progress(RetainedCloneProgress{copied_items:usize::from(copied_bytes!=0||error.allocated_bytes!=0),copied_bytes,retained_capacity_bytes:error.allocated_bytes,..Default::default()}).into())))}}
+  if let Some(code)=self.advance_code(){let route=self.child_quote(Some(source),body,maximum,code,false,false)?;return self.select(Some(source),None,body,maximum,effect,reply,false,route)}
+  self.check_source(source,effect)?;Self::local_performed(effect)?;if self.state.child_value.is_some(){let mut child=effect.reborrow(RetainedCloneGrant{maximum_copy_bytes:effect.grant().maximum_copy_bytes-size_of::<usize>(),..effect.grant()},effect.remaining_work_units()?)?;let turn={let s=&mut*self.state;s.values.adopt_reserved(&mut s.child_value,&mut child)};return Self::record(reply,turn.result.map(|p|{if p.progressed{self.state.index+=1;}Step::Progress(RetainedCloneProgress{copied_items:usize::from(p.progressed),copied_bytes:p.placed_bytes+size_of::<usize>(),..Default::default()})}).map_err(Into::into))}
+  if self.state.index==source.get().len(){self.state.output=Some(std::mem::take(&mut self.state.values));self.state.phase=1;}else{self.state.child=Some(C::new());}Ok(reply.complete(Ok(Step::Progress(progress(d)))))
+ }
+ pub fn advance_into<'r>(&mut self,source:RetainedCloneRef<'_,PagedList<T,N>>,body:usize,maximum:u64,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{self.advance_reply(source,body,maximum,effect,reply,false)}
+ pub fn recover_advance_into<'r>(&mut self,source:RetainedCloneRef<'_,PagedList<T,N>>,body:usize,maximum:u64,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{self.advance_reply(source,body,maximum,effect,reply,true)}
+ pub fn take_demand(&self)->Result<RetirementDemand,ValueError>{retained_clone_cursor_take_demand::<PagedList<T,N>,u8>()}
  pub fn take_work_demand(&self)->Result<u64,ValueError>{Ok(u64::from(self.output_ready()))}
- pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.closing{return Ok(0)}if let Some(child)=self.child.as_ref(){return if !self.child_closing{if child.close_started(){Ok(1)}else{child.begin_close_work_demand()}}else if child.terminal_is_empty(){Ok(1)}else{child.close_work_demand(body)}}if self.child_value.is_some(){return self.close.next_owner_work::<T>(true,&self.source,body)}self.close.next_owner_work::<PagedList<T,N>>(self.output.is_some()||!self.values.terminal_is_empty(),&self.source,body)}
+ pub fn take<'r>(&mut self,output:&mut Option<PagedList<T,N>>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,Step,ValueError>)->Result<OriginalEffectReplyComplete<'r,Step,ValueError>,ValueError>{self.validate(effect)?;take_retained_clone_cursor_output!(self.output_ready(),self.state.output,output,self.state.phase,2,effect,reply,PagedList<T,N>,u8)}
+ pub fn recover_take<'r>(&mut self,output:&mut Option<PagedList<T,N>>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,Step,ValueError>)->Result<OriginalEffectReplyComplete<'r,Step,ValueError>,ValueError>{self.take(output,effect,reply)}
+ pub fn begin_close_demand(&self)->Result<RetirementDemand,ValueError>{Ok(fixed(usize::from(!self.state.closing)))}
+ pub fn begin_close_work_demand(&self)->Result<u64,ValueError>{Ok(u64::from(!self.state.closing))}
+ pub fn begin_close_paid(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress>{let before=effect.performed_work();let result=(||{self.validate(effect)?;if self.state.route.is_some(){return Err(invalid())}let d=self.begin_close_demand()?;if !self.state.closing&&retained_clone_grant_admits(effect.grant(),d)&&effect.remaining_work_units()?>=1{Self::local_performed(effect)?;self.state.closing=true;Ok(progress(d))}else{Ok(Default::default())}})();RetainedWorkOutcome{result,work:effect.performed_work()-before}}
+ pub fn begin_close_into<'r>(&mut self,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{let turn=self.begin_close_paid(effect);Self::record(reply,turn.result.map(Step::Progress))}
+ pub fn recover_begin_close_into<'r>(&mut self,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{self.begin_close_into(effect,reply)}
+ fn close_code(&self)->Option<u8>{let s=&*self.state;if let Some(child)=s.child.as_ref(){return Some(if !child.close_started(){3}else if child.terminal_is_empty(){5}else{4})}if !s.close.is_empty(){return Some(6)}if s.child_value.is_none()&&s.output.is_none()&&s.values.terminal_is_empty()&&s.source.is_some(){return Some(7)}None}
+ pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if let Some(route)=self.state.route{return Ok(route.demand)}if !self.state.closing{return Err(invalid())}if let Some(code)=self.close_code(){return Ok(self.child_quote(None,body.saturating_sub(Self::header_bytes()?),u64::MAX,code,true,false)?.demand)}let s=&*self.state;if s.child_value.is_some(){return s.close.next_owner_demands::<T>(true,&None,body)}if s.output.is_some()||!s.values.terminal_is_empty(){return s.close.next_owner_demands::<PagedList<T,N>>(true,&None,body)}Ok(fixed(if s.work.is_some(){size_of::<Option<OriginalWorkBindingIdentity>>()}else{0}))}
+ pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if let Some(route)=self.state.route{return Ok(route.work)}self.close_demands(body)?;if let Some(code)=self.close_code(){return Ok(self.child_quote(None,body.saturating_sub(Self::header_bytes()?),u64::MAX,code,true,false)?.work)}let s=&*self.state;if s.child_value.is_some(){return s.close.next_owner_work::<T>(true,&None,body)}if s.output.is_some()||!s.values.terminal_is_empty(){return s.close.next_owner_work::<PagedList<T,N>>(true,&None,body)}Ok(u64::from(s.work.is_some()))}
+ fn close_reply<'r>(&mut self,original:Option<&mut OriginalRetirementCloseLoan<'_>>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>,recover:bool)->Result<Complete<'r>,ValueError>{
+  self.validate(effect)?;if !self.state.closing{return Err(invalid())}if let Some(route)=self.state.route{return self.select(None,original,route.body,route.maximum,effect,reply,recover,route)}if recover{return Err(invalid())}let d=self.close_demands(body)?;let work=self.close_work_demand(body)?;if !retained_clone_grant_admits(effect.grant(),d)||effect.remaining_work_units()?<work{return Ok(reply.complete(Ok(Step::Progress(Default::default()))))}if self.terminal_is_empty(){return Ok(reply.complete(Ok(Step::Complete(Default::default()))))}if let Some(code)=self.close_code(){let route=self.child_quote(None,body.saturating_sub(Self::header_bytes()?),u64::MAX,code,true,original.is_some())?;return self.select(None,original,route.body,u64::MAX,effect,reply,false,route)}
+  if self.state.child_value.is_some(){let turn={let s=&mut*self.state;s.close.begin_granted(&mut s.child_value,effect)};return Self::record(reply,turn.result.map(|s|s.unwrap_or(Step::Progress(Default::default()))))}
+  if self.state.output.is_some(){let turn={let s=&mut*self.state;s.close.begin_granted(&mut s.output,effect)};return Self::record(reply,turn.result.map(|s|s.unwrap_or(Step::Progress(Default::default()))))}
+  if !self.state.values.terminal_is_empty(){let turn={let s=&mut*self.state;s.close.begin_empty_granted(&mut s.values,effect)};return Self::record(reply,turn.result.map(|s|s.unwrap_or(Step::Progress(Default::default()))))}
+  Self::local_performed(effect)?;self.state.work=None;Ok(reply.complete(Ok(Step::Complete(progress(d)))))
+ }
+ pub fn close_into<'r>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{self.close_reply(None,body,effect,reply,false)}
+ pub fn recover_close_into<'r>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{self.close_reply(None,body,effect,reply,true)}
+ pub fn close_original_into<'r>(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{self.close_reply(Some(original),body,effect,reply,false)}
+ pub fn recover_close_original_into<'r>(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{self.close_reply(Some(original),body,effect,reply,true)}
+ pub fn requires_original_birth(&self)->bool{if self.state.route.is_some(){return false}if let Some(child)=self.state.child.as_ref(){return child.requires_original_birth()}if !self.state.close.is_empty(){return self.state.close.requires_original_birth()}self.state.child_value.is_none()&&self.state.output.is_none()&&self.state.values.terminal_is_empty()&&RetainedCloneBinding::requires_original_birth(&self.state.source)}
+ pub fn close_original_birth_step(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->OriginalRetirementPoll{if self.state.route.is_some(){return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(invalid().into()),work:0})}if let Some(child)=self.state.child.as_mut(){return child.close_original_birth_step(original,grant)}if !self.state.close.is_empty(){return self.state.close.step_original_birth(original,grant)}RetainedCloneBinding::close_original_birth_step(&mut self.state.source,original,grant)}
+ pub fn requires_original_control(&self)->bool{if let Some(route)=self.state.route{return route.original}if let Some(child)=self.state.child.as_ref(){return child.requires_original_control()}if !self.state.close.is_empty(){return self.state.close.requires_original_control()}self.state.child_value.is_none()&&self.state.output.is_none()&&self.state.values.terminal_is_empty()&&RetainedCloneBinding::requires_original_control(&self.state.source)}
+ pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.depth)}
+ pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
+ pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
+ pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.release_bytes)}
 }
+impl<T:RetireOwned+Sync,C:PagedCloneElement<T>,const N:usize> Drop for PagedListCloneEngine<T,C,N>{fn drop(&mut self){let empty=self.empty();assert!(empty||std::thread::panicking(),"paged clone retains original owners requiring paid closure");if empty{unsafe{ManuallyDrop::drop(&mut self.state)}}}}
 #[cfg(test)]
 use semio_framework_value_retained_clone::retained_clone::paged_list::PagedListCursor;
 #[cfg(test)]

@@ -1,0 +1,1 @@
+const p='🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🪡️field/🎛️producer.rs';let s=await Bun.file(p).text();if((s.match(/super::NativeSharedSlots/g)||[]).length!==3)throw Error('expected three concrete field slot references');s=s.replaceAll('super::NativeSharedSlots','crate::NativeSharedSlots');await Bun.write(p,s);

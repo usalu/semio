@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fuel",
+    "value",
+    "pendingWork",
+    "recoveryWork",
+    "cases"
+  ],
+  "properties": {
+    "fuel": {
+      "const": 1
+    },
+    "value": {
+      "const": 73
+    },
+    "pendingWork": {
+      "const": 1
+    },
+    "recoveryWork": {
+      "const": 0
+    },
+    "cases": {
+      "const": [
+        {
+          "producer": false,
+          "payer": false,
+          "same": true,
+          "active": false,
+          "accepted": true
+        },
+        {
+          "producer": false,
+          "payer": true,
+          "same": false,
+          "active": false,
+          "accepted": true
+        },
+        {
+          "producer": true,
+          "payer": false,
+          "same": true,
+          "active": false,
+          "accepted": false
+        },
+        {
+          "producer": true,
+          "payer": true,
+          "same": false,
+          "active": false,
+          "accepted": false
+        },
+        {
+          "producer": true,
+          "payer": true,
+          "same": true,
+          "active": false,
+          "accepted": true
+        },
+        {
+          "producer": true,
+          "payer": true,
+          "same": true,
+          "active": true,
+          "accepted": false
+        }
+      ]
+    }
+  }
+}

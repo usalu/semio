@@ -178,3 +178,22 @@ mod marker_cell {
         assert_eq!(marker_row_writes_in(&diagrams, &escape), Some(None), "Escape never commits");
     }
 }
+
+#[test]
+fn the_editor_wiring_paints_only_from_the_responsive_report() {
+    let source = include_str!("../../🦀️.rs");
+    let synchronous: Vec<&str> = source.lines().filter(|line| line.contains("::live_report(") && !line.trim_start().starts_with("///")).collect();
+    assert!(synchronous.is_empty(), "paint paths must use paint_report, found {synchronous:?}");
+    assert!(source.contains("responsive(PAINT_BUDGET).0"));
+}
+
+#[test]
+fn a_family_free_paint_reads_the_partial_report_within_the_paint_budget() {
+    let seen = std::cell::Cell::new(None);
+    let report = paint_report_of(|budget| {
+        seen.set(Some(budget));
+        (std::sync::Arc::new(semio_s_plugin_norm_compliance::CheckReport::default()), false)
+    });
+    assert_eq!(seen.get(), Some(PAINT_BUDGET));
+    assert!(report.checks.is_empty());
+}

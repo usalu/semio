@@ -3494,7 +3494,7 @@
         {
           "mutationId": "change-rail-load-group-assumed-longitudinal",
           "sourceMutationDirectoryName": "⚙️change-rail-load-group-assumed-longitudinal",
-          "mutationDirectoryName": "⚙️change-rail-load-group-assumed-longitudinal",
+          "mutationDirectoryName": "⚙️change-rail-group-assumed-longitudinal",
           "scenarios": [
             {
               "id": "apply",
@@ -3538,7 +3538,7 @@
         {
           "mutationId": "change-rail-load-group-factor-longitudinal",
           "sourceMutationDirectoryName": "⚙️change-rail-load-group-factor-longitudinal",
-          "mutationDirectoryName": "⚙️change-rail-load-group-factor-longitudinal",
+          "mutationDirectoryName": "⚙️change-rail-group-factor-longitudinal",
           "scenarios": [
             {
               "id": "apply",
@@ -3571,7 +3571,7 @@
         {
           "mutationId": "change-dust-explosion-static-opening-pressure",
           "sourceMutationDirectoryName": "⚙️change-dust-explosion-static-opening-pressure",
-          "mutationDirectoryName": "⚙️change-dust-explosion-static-opening-pressure",
+          "mutationDirectoryName": "⚙️change-dust-explosion-static-pressure",
           "scenarios": [
             {
               "id": "apply",

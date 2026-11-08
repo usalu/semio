@@ -34,6 +34,15 @@ import { type ChangeZoneVentMethod, parseChangeZoneVentMethod } from "./📐️c
 import { type ChangeEnvelopeVolume, parseChangeEnvelopeVolume } from "./📦️change-envelope-volume/🧬️schema/🟦️.ts";
 import { type ChangeThetaRm, parseChangeThetaRm } from "./🔄️change-theta-rm/🧬️schema/🟦️.ts";
 import { type ChangeZoneNoise, parseChangeZoneNoise } from "./🔊️change-zone-noise/🧬️schema/🟦️.ts";
+import { type ChangeZoneName, parseChangeZoneName } from "./🏷️change-zone-name/🧬️schema/🟦️.ts";
+import { type ChangeZoneId, parseChangeZoneId } from "./🆔️change-zone-id/🧬️schema/🟦️.ts";
+import { type ChangeVentName, parseChangeVentName } from "./📛change-vent-name/🧬️schema/🟦️.ts";
+import { type ChangeVentId, parseChangeVentId } from "./🪪change-vent-id/🧬️schema/🟦️.ts";
+import { type ChangeVentFanFlow, parseChangeVentFanFlow } from "./🌪️change-vent-fan-flow/🧬️schema/🟦️.ts";
+import { type ChangeVentFanRunHours, parseChangeVentFanRunHours } from "./⏱️change-vent-fan-run-hours/🧬️schema/🟦️.ts";
+import { type ChangeVentDuctTestPressure, parseChangeVentDuctTestPressure } from "./🧪change-vent-duct-test-pressure/🧬️schema/🟦️.ts";
+import { type ChangeVentHumidificationRequired, parseChangeVentHumidificationRequired } from "./💦change-vent-humidification-required/🧬️schema/🟦️.ts";
+import { type ChangeVentHumidificationProvided, parseChangeVentHumidificationProvided } from "./🚿change-vent-humidification-provided/🧬️schema/🟦️.ts";
 import { type ChangeZoneVentSystemId, parseChangeZoneVentSystemId } from "./🔗change-zone-vent-system-id/🧬️schema/🟦️.ts";
 import { type ChangeVentDuctLeakage, parseChangeVentDuctLeakage } from "./🕳️change-vent-duct-leakage/🧬️schema/🟦️.ts";
 import { parseRemoveVentSystem, type RemoveVentSystem } from "./🗑️remove-vent-system/🧬️schema/🟦️.ts";
@@ -85,7 +94,16 @@ export type Din16798Mutation =
   | { ChangeVentInspection: ChangeVentInspection }
   | { ChangeVentDuctClass: ChangeVentDuctClass }
   | { ChangeVentDuctLeakage: ChangeVentDuctLeakage }
-  | { ChangeVentDesignAirflow: ChangeVentDesignAirflow };
+  | { ChangeVentDesignAirflow: ChangeVentDesignAirflow }
+  | { ChangeZoneName: ChangeZoneName }
+  | { ChangeZoneId: ChangeZoneId }
+  | { ChangeVentName: ChangeVentName }
+  | { ChangeVentId: ChangeVentId }
+  | { ChangeVentFanFlow: ChangeVentFanFlow }
+  | { ChangeVentFanRunHours: ChangeVentFanRunHours }
+  | { ChangeVentDuctTestPressure: ChangeVentDuctTestPressure }
+  | { ChangeVentHumidificationRequired: ChangeVentHumidificationRequired }
+  | { ChangeVentHumidificationProvided: ChangeVentHumidificationProvided };
 
 export const parseDin16798Mutation: NormWireReader<Din16798Mutation> = normWireExternal<Din16798Mutation>({
   ChangeAnnex: parseChangeAnnex,
@@ -129,4 +147,13 @@ export const parseDin16798Mutation: NormWireReader<Din16798Mutation> = normWireE
   ChangeVentDuctClass: parseChangeVentDuctClass,
   ChangeVentDuctLeakage: parseChangeVentDuctLeakage,
   ChangeVentDesignAirflow: parseChangeVentDesignAirflow,
+  ChangeZoneName: parseChangeZoneName,
+  ChangeZoneId: parseChangeZoneId,
+  ChangeVentName: parseChangeVentName,
+  ChangeVentId: parseChangeVentId,
+  ChangeVentFanFlow: parseChangeVentFanFlow,
+  ChangeVentFanRunHours: parseChangeVentFanRunHours,
+  ChangeVentDuctTestPressure: parseChangeVentDuctTestPressure,
+  ChangeVentHumidificationRequired: parseChangeVentHumidificationRequired,
+  ChangeVentHumidificationProvided: parseChangeVentHumidificationProvided,
 });

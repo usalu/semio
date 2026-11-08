@@ -1,4 +1,6 @@
 //! 🛫️ Native encoding outcomes retain their original independent causes.
+#[path="🔭️observer/🦀️.rs"]
+mod original_encode_observer;
 use crate::{NativeAllocationRequest,ValueError};
 use std::mem::size_of;
 /// 🧾️ Retains a native producer failure independently from its original work-post refusal.

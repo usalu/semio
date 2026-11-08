@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "body",
+    "aliases",
+    "maximumItems",
+    "maximumCopyBytes",
+    "firstAliasRetiresPayload",
+    "lastAliasRetiresExactPayload",
+    "capturedFactory"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "body": {
+      "const": "Issued original α"
+    },
+    "aliases": {
+      "const": 2
+    },
+    "maximumItems": {
+      "const": 1
+    },
+    "maximumCopyBytes": {
+      "const": 4096
+    },
+    "firstAliasRetiresPayload": {
+      "const": false
+    },
+    "lastAliasRetiresExactPayload": {
+      "const": true
+    },
+    "capturedFactory": {
+      "const": true
+    }
+  }
+}

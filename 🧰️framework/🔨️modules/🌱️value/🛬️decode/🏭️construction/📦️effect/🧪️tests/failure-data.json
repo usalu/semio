@@ -1,0 +1,35 @@
+{
+  "domains": [
+    "ValueEffect",
+    "RetirementEffect",
+    "ReceivingEffect"
+  ],
+  "message": "original typed native failure 🧳",
+  "work": {
+    "semantic": 1,
+    "wholeOutcome": 1,
+    "failureData": 1,
+    "denied": 0
+  },
+  "refusals": [
+    "work",
+    "copy",
+    "occupied"
+  ],
+  "independent": {
+    "semanticReceipt": true,
+    "metadataReceipt": true,
+    "oneReceive": true,
+    "noRecoverReplay": true,
+    "sameMessagePointer": true
+  },
+  "copy": "fullOutcomeCanonicalDestinationAndReply",
+  "stock": {
+    "items": 128,
+    "copyBytes": 65536,
+    "capacityBytes": 65536,
+    "releaseBytes": 65536,
+    "depth": 64,
+    "fuel": 256
+  }
+}

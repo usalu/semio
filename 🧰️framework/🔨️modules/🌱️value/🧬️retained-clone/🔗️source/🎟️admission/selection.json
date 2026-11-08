@@ -1,0 +1,7 @@
+{
+  "arrayEdges": 2,
+  "rootSelectors": 1,
+  "selectorsPerEdge": 4,
+  "maximumSelectors": 9,
+  "perTurnWork": 4096
+}

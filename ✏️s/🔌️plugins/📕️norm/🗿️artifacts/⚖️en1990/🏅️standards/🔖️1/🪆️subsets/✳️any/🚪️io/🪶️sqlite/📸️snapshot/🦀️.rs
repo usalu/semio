@@ -29,8 +29,8 @@ const MEMBER_FLOATS: &[FloatColumn] = &[FloatColumn::Binary64(6), FloatColumn::B
 const BRIDGE_FLOATS: &[FloatColumn] = &[FloatColumn::Binary64(6), FloatColumn::Binary64(7), FloatColumn::Binary64(8), FloatColumn::Binary64(9), FloatColumn::Binary64(10), FloatColumn::Binary64(11), FloatColumn::Binary64(12), FloatColumn::Binary64(13), FloatColumn::Binary64(14), FloatColumn::Binary64(15), FloatColumn::Binary64(16), FloatColumn::Binary64(17), FloatColumn::Binary64(18), FloatColumn::Binary64(19)];
 const EFFECT_FLOATS: &[FloatColumn] = &[FloatColumn::Binary64(7)];
 const FATIGUE_FLOATS: &[FloatColumn] = &[FloatColumn::Binary64(6), FloatColumn::Binary64(7), FloatColumn::Binary64(8)];
-const RELIABILITY_FLOATS: &[FloatColumn] = &[FloatColumn::Binary64(5), FloatColumn::Binary64(6), FloatColumn::Binary64(8), FloatColumn::Binary64(9)];
-const TEST_FLOATS: &[FloatColumn] = &[FloatColumn::Binary64(7), FloatColumn::Binary64(8), FloatColumn::Binary64(9), FloatColumn::Binary64(10), FloatColumn::Binary64(11),FloatColumn::Binary64(13)];
+const RELIABILITY_FLOATS: &[FloatColumn] = &[FloatColumn::Binary64(5), FloatColumn::Binary64(6), FloatColumn::Binary64(8), FloatColumn::Binary64(9), FloatColumn::Binary64(12), FloatColumn::Binary64(13)];
+const TEST_FLOATS: &[FloatColumn] = &[FloatColumn::Binary64(7), FloatColumn::Binary64(8), FloatColumn::Binary64(9), FloatColumn::Binary64(10), FloatColumn::Binary64(11),FloatColumn::Binary64(13),FloatColumn::Binary64(14)];
 const CASE_NUMBER_FLOATS: &[FloatColumn] = &[FloatColumn::Binary64(4)];
 const FACTOR_OVERRIDE_FLOATS: &[FloatColumn] = &[FloatColumn::Binary64(6)];
 const PLACEMENT_FLOATS: &[FloatColumn] = &[FloatColumn::Binary64(4), FloatColumn::Binary64(5), FloatColumn::Binary64(6), FloatColumn::Binary64(7)];
@@ -124,10 +124,10 @@ impl En1990Snapshot{
             out.insert_float( "en1990_fatigue_spectrum", &[Cell::Integer(1), ordinal(position)?, Cell::Text(&spectrum.id), Cell::Text(&spectrum.member_id), member, Cell::Real(spectrum.detail_category), Cell::Real(spectrum.stress_range), Cell::Real(spectrum.cycles)], FATIGUE_FLOATS)?;
         }
         for (position, analysis) in self.reliability_analyses.iter().enumerate() {
-            out.insert_float( "en1990_reliability_analysis", &[Cell::Integer(1), ordinal(position)?, Cell::Text(&analysis.id), Cell::Text(distribution_kind_text(analysis.resistance_distribution)), Cell::Real(analysis.resistance_mean), Cell::Real(analysis.resistance_sd), Cell::Text(distribution_kind_text(analysis.action_distribution)), Cell::Real(analysis.action_mean), Cell::Real(analysis.action_sd),Cell::Text(&analysis.member_id)], RELIABILITY_FLOATS)?;
+            out.insert_float( "en1990_reliability_analysis", &[Cell::Integer(1), ordinal(position)?, Cell::Text(&analysis.id), Cell::Text(distribution_kind_text(analysis.resistance_distribution)), Cell::Real(analysis.resistance_mean), Cell::Real(analysis.resistance_sd), Cell::Text(distribution_kind_text(analysis.action_distribution)), Cell::Real(analysis.action_mean), Cell::Real(analysis.action_sd),Cell::Text(&analysis.member_id),Cell::Text(distribution_kind_text(analysis.second_action_distribution)),Cell::Real(analysis.second_action_mean),Cell::Real(analysis.second_action_sd)], RELIABILITY_FLOATS)?;
         }
         for (position, series) in self.test_series.iter().enumerate() {
-            out.insert_float( "en1990_test_series", &[Cell::Integer(1), ordinal(position)?, Cell::Text(&series.id), Cell::Text(&series.quantity), Cell::Text(test_distribution_text(series.distribution)), Cell::Integer(i64::from(series.sample_size)), Cell::Real(series.mean), Cell::Real(series.std_dev), Cell::Real(series.variation_known), Cell::Real(series.conversion_factor), Cell::Real(series.required),Cell::Text(&series.pairs),Cell::Real(series.theory_variation)], TEST_FLOATS)?;
+            out.insert_float( "en1990_test_series", &[Cell::Integer(1), ordinal(position)?, Cell::Text(&series.id), Cell::Text(&series.quantity), Cell::Text(test_distribution_text(series.distribution)), Cell::Integer(i64::from(series.sample_size)), Cell::Real(series.mean), Cell::Real(series.std_dev), Cell::Real(series.variation_known), Cell::Real(series.conversion_factor), Cell::Real(series.required),Cell::Text(&series.pairs),Cell::Real(series.theory_variation),Cell::Real(series.theory_mean)], TEST_FLOATS)?;
         }
         for (position, placement) in self.placements.iter().enumerate() {
             out.insert_float( "en1990_placement", &[Cell::Integer(1), ordinal(position)?, Cell::Text(&placement.id), Cell::Real(placement.x), Cell::Real(placement.y), Cell::Real(placement.z), Cell::Real(placement.yaw)], PLACEMENT_FLOATS)?;
@@ -199,8 +199,8 @@ fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotC
         let bridge_rows = entities(database, "en1990_bridge_sls", 20, BRIDGE_FLOATS, control)?;
         let effect_rows = entities(database, "en1990_effect", 8, EFFECT_FLOATS, control)?;
         let fatigue_rows = entities(database, "en1990_fatigue_spectrum", 9, FATIGUE_FLOATS, control)?;
-        let reliability_rows = entities(database, "en1990_reliability_analysis", 11, RELIABILITY_FLOATS, control)?;
-        let test_rows = entities(database, "en1990_test_series", 14, TEST_FLOATS, control)?;
+        let reliability_rows = entities(database, "en1990_reliability_analysis", 14, RELIABILITY_FLOATS, control)?;
+        let test_rows = entities(database, "en1990_test_series", 15, TEST_FLOATS, control)?;
         let placement_rows = entities(database, "en1990_placement", 8, PLACEMENT_FLOATS, control)?;
         let override_rows = entities(database, "en1990_factor_override", 8, FACTOR_OVERRIDE_FLOATS, control)?;
         let traffic_rows = entities(database, "en1990_traffic_group", 6, &[], control)?;
@@ -262,13 +262,13 @@ fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotC
         for row in ordered(reliability_rows.values().copied(), 2, control)? {
             checkpoint(control, reliability_analyses.len(), 0)?;
             if row.integer(1)? != 1 { return Err(invalid("EN1990 reliability analysis has an unknown document")); }
-            reliability_analyses.push(ReliabilityAnalysis { id: reconstruct_text(control, row.text(3)?)?, resistance_distribution: read_distribution_kind(row.text(4)?)?, resistance_mean: row.real(5)?, resistance_sd: row.real(6)?, action_distribution: read_distribution_kind(row.text(7)?)?, action_mean: row.real(8)?, action_sd: row.real(9)?, second_action_distribution: DistributionKind::Normal, second_action_mean: 0.0, second_action_sd: 0.0, member_id: reconstruct_text(control, row.text(10)?)? });
+            reliability_analyses.push(ReliabilityAnalysis { id: reconstruct_text(control, row.text(3)?)?, resistance_distribution: read_distribution_kind(row.text(4)?)?, resistance_mean: row.real(5)?, resistance_sd: row.real(6)?, action_distribution: read_distribution_kind(row.text(7)?)?, action_mean: row.real(8)?, action_sd: row.real(9)?, second_action_distribution: read_distribution_kind(row.text(11)?)?, second_action_mean: row.real(12)?, second_action_sd: row.real(13)?, member_id: reconstruct_text(control, row.text(10)?)? });
         }
         let mut test_series = Vec::new();
         for row in ordered(test_rows.values().copied(), 2, control)? {
             checkpoint(control, test_series.len(), 0)?;
             if row.integer(1)? != 1 { return Err(invalid("EN1990 test series has an unknown document")); }
-            test_series.push(TestSeries { id: reconstruct_text(control, row.text(3)?)?, quantity: reconstruct_text(control, row.text(4)?)?, distribution: read_test_distribution(row.text(5)?)?, sample_size: u32::try_from(row.integer(6)?).map_err(|error| invalid(error.to_string()))?, mean: row.real(7)?, std_dev: row.real(8)?, variation_known: row.real(9)?, conversion_factor: row.real(10)?, required: row.real(11)?,pairs: reconstruct_text(control, row.text(12)?)?, theory_variation: row.real(13)?, theory_mean: 0.0 });
+            test_series.push(TestSeries { id: reconstruct_text(control, row.text(3)?)?, quantity: reconstruct_text(control, row.text(4)?)?, distribution: read_test_distribution(row.text(5)?)?, sample_size: u32::try_from(row.integer(6)?).map_err(|error| invalid(error.to_string()))?, mean: row.real(7)?, std_dev: row.real(8)?, variation_known: row.real(9)?, conversion_factor: row.real(10)?, required: row.real(11)?,pairs: reconstruct_text(control, row.text(12)?)?, theory_variation: row.real(13)?, theory_mean: row.real(14)? });
         }
         let mut placements = Vec::new();
         for row in ordered(placement_rows.values().copied(), 2, control)? {

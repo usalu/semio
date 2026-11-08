@@ -61,6 +61,19 @@ pub mod part_1 {
     pub fn co2_above_outdoor_ppm(cat: ComfortCategory) -> f64 {
         match cat { ComfortCategory::I => 550.0, ComfortCategory::II => 800.0, ComfortCategory::III => 1350.0, ComfortCategory::IV => 1350.0 }
     }
+    /// 🫧 The CO₂ concentration above outdoor air [ppm] a category allows: the category value, under the German annex capped by the absolute limit of the usage minus the outdoor concentration.
+    pub fn co2_limit_above_outdoor_ppm(annex: &AnnexParams, usage: OccupancyType, cat: ComfortCategory, outdoor_co2_ppm: f64) -> f64 {
+        let category_limit = co2_above_outdoor_ppm(cat);
+        if annex.choice != AnnexChoice::De {
+            return category_limit;
+        }
+        let absolute = match usage {
+            OccupancyType::Residential => annex.co2_absolute_residential_ppm,
+            OccupancyType::Classroom => annex.co2_absolute_classroom_ppm,
+            _ => annex.co2_absolute_other_ppm,
+        };
+        (absolute - outdoor_co2_ppm).min(category_limit)
+    }
     pub fn illuminance_min_lx(usage: OccupancyType, cat: ComfortCategory) -> f64 {
         let base = match usage {
             OccupancyType::Office | OccupancyType::Meeting => 500.0,
@@ -90,52 +103,38 @@ pub mod part_1 {
     }
     pub fn adaptive_comfort_temperature_c(theta_rm_c: f64) -> f64 { 0.33 * theta_rm_c + 18.8 }
 
-    fn saturation_pressure_pa(t_c: f64) -> f64 { 611.2 * (17.67 * t_c / (t_c + 243.5)).exp() }
-
-    fn solve_clothing_temp_c(t_a: f64, t_r: f64, m: f64, w: f64, i_cl: f64, f_cl: f64, v: f64) -> f64 {
-        let mut t_cl = t_a + (35.5 - t_a) / (3.5 * i_cl + 1.0);
-        for _ in 0..100 {
-            let h_c_nat = 2.38 * (t_cl - t_a).abs().max(1e-6).powf(0.25);
-            let h_c_for = 12.1 * v.max(0.0).sqrt();
-            let h_c = h_c_nat.max(h_c_for).max(1e-3);
-            let t_cl_k = t_cl + 273.15;
-            let t_r_k = t_r + 273.15;
-            let rad = 3.96e-8 * f_cl * (t_cl_k.powi(4) - t_r_k.powi(4));
-            let conv = f_cl * h_c * (t_cl - t_a);
-            let t_new = 35.7 - 0.028 * (m - w) - i_cl * (rad + conv);
-            if !t_new.is_finite() {
+    /// 😌️ ISO 7730:2005 Annex D predicted mean vote: the fixed-point iteration of the clothing surface temperature, `t_a = t_r = t_op`, no external work; `rh_percent` in %, `air_speed_m_s` in m/s, `metabolic_rate_met` in met and `clothing_clo` in clo.
+    pub fn pmv_iso7730(t_op_c: f64, rh_percent: f64, air_speed_m_s: f64, metabolic_rate_met: f64, clothing_clo: f64) -> f64 {
+        let (t_a, t_r) = (t_op_c, t_op_c);
+        let p_a = rh_percent.clamp(0.0, 100.0) * 10.0 * (16.6536 - 4030.183 / (t_a + 235.0)).exp();
+        let i_cl = 0.155 * clothing_clo.max(0.0);
+        let m = metabolic_rate_met * 58.15;
+        let f_cl = if i_cl <= 0.078 { 1.0 + 1.29 * i_cl } else { 1.05 + 0.645 * i_cl };
+        let h_cf = 12.1 * air_speed_m_s.max(0.0).sqrt();
+        let (t_aa, t_ra) = (t_a + 273.0, t_r + 273.0);
+        let p1 = i_cl * f_cl;
+        let (p2, p3, p4) = (p1 * 3.96, p1 * 100.0, p1 * t_aa);
+        let p5 = 308.7 - 0.028 * m + p2 * (t_ra / 100.0).powi(4);
+        let mut x_n = (t_aa + (35.5 - t_a) / (3.5 * i_cl + 0.1)) / 100.0;
+        let mut x_f = x_n * 2.0;
+        let mut h_c = h_cf;
+        for _ in 0..150 {
+            if (x_n - x_f).abs() <= 0.00015 {
                 break;
             }
-            if (t_new - t_cl).abs() < 0.001 {
-                return t_new;
-            }
-            t_cl = 0.5 * (t_cl + t_new);
+            x_f = (x_f + x_n) / 2.0;
+            h_c = (2.38 * (100.0 * x_f - t_aa).abs().powf(0.25)).max(h_cf);
+            x_n = (p5 + p4 * h_c - p2 * x_f.powi(4)) / (100.0 + p3 * h_c);
         }
-        if t_cl.is_finite() { t_cl } else { t_a }
-    }
-
-    /// 😌️ ISO 7730 PMV full iteration with metabolic rate [met] and clothing [clo].
-    pub fn pmv_iso7730(t_op_c: f64, rh_percent: f64, air_speed_m_s: f64, metabolic_rate_met: f64, clothing_clo: f64) -> f64 {
-        let m = metabolic_rate_met * 58.15;
-        let w = 0.0;
-        let i_cl = 0.155 * clothing_clo;
-        let f_cl = if i_cl <= 0.078 { 1.0 + 1.29 * i_cl } else { 1.05 + 0.645 * i_cl };
-        let t_a = t_op_c;
-        let t_r = t_op_c;
-        let v = air_speed_m_s.max(0.0);
-        let p_a = (rh_percent / 100.0).clamp(0.0, 1.0) * saturation_pressure_pa(t_a);
-        let t_cl = solve_clothing_temp_c(t_a, t_r, m, w, i_cl, f_cl, v);
-        let h_c = (2.38 * (t_cl - t_a).abs().max(1e-6).powf(0.25)).max(12.1 * v.sqrt()).max(1e-3);
-        let t_cl_k = t_cl + 273.15;
-        let t_r_k = t_r + 273.15;
-        let e_r = 3.96e-8 * f_cl * (t_cl_k.powi(4) - t_r_k.powi(4));
-        let e_c = f_cl * h_c * (t_cl - t_a);
-        let e_sw = 3.05e-3 * (5733.0 - 6.99 * m - p_a).max(0.0);
-        let e_diff = if m > 58.15 { 0.42 * (m - 58.15) } else { 0.0 };
-        let e = e_sw + e_diff;
-        let c_res = 1.7e-5 * m * (34.0 - t_a);
-        let l = m - w - e - e_r - e_c - c_res;
-        let pmv = (0.303 * (-0.035 * m).exp() + 0.028) * l; if pmv.is_finite() { pmv.clamp(-3.0, 3.0) } else { 0.0 }
+        let t_cl = 100.0 * x_n - 273.0;
+        let hl1 = 3.05e-3 * (5733.0 - 6.99 * m - p_a);
+        let hl2 = if m > 58.15 { 0.42 * (m - 58.15) } else { 0.0 };
+        let hl3 = 1.7e-5 * m * (5867.0 - p_a);
+        let hl4 = 0.0014 * m * (34.0 - t_a);
+        let hl5 = 3.96 * f_cl * (x_n.powi(4) - (t_ra / 100.0).powi(4));
+        let hl6 = f_cl * h_c * (t_cl - t_a);
+        let pmv = (0.303 * (-0.036 * m).exp() + 0.028) * (m - hl1 - hl2 - hl3 - hl4 - hl5 - hl6);
+        if pmv.is_finite() { pmv.clamp(-3.0, 3.0) } else { 0.0 }
     }
 
     pub fn ppd_from_pmv(pmv: f64) -> f64 {

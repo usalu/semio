@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFireInsulationFireId",
+  "fireInsulationId": "fire-insulation-1",
+  "newFireId": "fire-1-changed"
+}

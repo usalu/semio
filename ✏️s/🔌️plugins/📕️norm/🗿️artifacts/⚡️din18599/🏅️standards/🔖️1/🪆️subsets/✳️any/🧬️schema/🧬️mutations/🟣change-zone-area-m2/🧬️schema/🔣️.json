@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-zone-area-m2/schema.json",
+  "title": "ChangeZoneAreaM2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "zoneId",
+    "newAreaM2"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changezoneaream2"
+    },
+    "zoneId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Thermal zone",
+          "de": "Thermische Zone"
+        },
+        "description": {
+          "en": "The zone this mutation addresses.",
+          "de": "Das Objekt (Zone), das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newAreaM2": {
+      "type": "number",
+      "exclusiveMinimum": 0.0,
+      "maximum": 1000000.0,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Reference floor area A_NGF",
+          "de": "Nettogrundfläche A_NGF"
+        },
+        "widget": "stepper",
+        "unit": "m²",
+        "step": 0.5,
+        "precision": 2,
+        "group": "zone",
+        "order": 20
+      }
+    }
+  }
+}

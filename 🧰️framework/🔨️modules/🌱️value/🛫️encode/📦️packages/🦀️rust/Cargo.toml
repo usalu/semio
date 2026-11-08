@@ -21,6 +21,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value-retirement-contract = { path = "../../../♻️retirement/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-native-outcome = { path = "../../../🛬️decode/📬️outcome/📦️packages/🦀️rust" }
 semio-framework-value-receiving = { path = "../../../🫴️receiving/📦️packages/🦀️rust" }
 semio-framework-value-call = { path = "../../../♻️retirement/📦️call/📦️packages/🦀️rust" }
@@ -43,3 +44,7 @@ path = "../../🧪️tests/🥣️action/🦀️.rs"
 [[test]]
 name = "effect-settlement"
 path = "../../🧪️tests/🎟️effect/🦀️.rs"
+
+[[test]]
+name = "source-effect"
+path = "../../🎟️effect/🧪️tests/source.rs"

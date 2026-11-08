@@ -12,10 +12,14 @@ struct ObservedAllocator;
 thread_local! { static RETIREMENT_ALLOCATION_EVENTS: std::cell::Cell<Option<(usize, usize)>> = const { std::cell::Cell::new(None) }; }
 fn retirement_allocation_event(requested: usize, released: usize) { let _ = RETIREMENT_ALLOCATION_EVENTS.try_with(|events| { if let Some((allocated, freed)) = events.get() { events.set(Some((allocated + requested, freed + released))); } }); }
 pub fn observe_retirement_allocations<T>(operation: impl FnOnce() -> T) -> (T, (usize, usize)) {
-    RETIREMENT_ALLOCATION_EVENTS.with(|events| { assert!(events.replace(Some((0, 0))).is_none()); });
-    let result = operation();
-    let events = RETIREMENT_ALLOCATION_EVENTS.with(|events| events.replace(None).unwrap());
-    (result, events)
+    struct Guard;
+    impl Drop for Guard{fn drop(&mut self){let _=RETIREMENT_ALLOCATION_EVENTS.try_with(|events|events.set(None));}}
+    RETIREMENT_ALLOCATION_EVENTS.with(|events|{assert!(events.get().is_none());events.set(Some((0,0)));});
+    let guard=Guard;
+    let result=operation();
+    let events=RETIREMENT_ALLOCATION_EVENTS.with(|events|events.replace(None).unwrap());
+    drop(guard);
+    (result,events)
 }
 pub static OBSERVE_ALLOCATIONS:std::sync::atomic::AtomicBool=std::sync::atomic::AtomicBool::new(false);
 pub static LARGEST_ALLOCATION:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);

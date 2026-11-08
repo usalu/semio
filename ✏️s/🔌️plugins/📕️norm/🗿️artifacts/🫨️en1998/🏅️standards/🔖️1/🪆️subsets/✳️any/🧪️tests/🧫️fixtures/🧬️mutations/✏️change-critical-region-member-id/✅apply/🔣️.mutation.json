@@ -1,0 +1,5 @@
+{
+  "mutation": "changeCriticalRegionMemberId",
+  "id": "cr-1",
+  "newMemberId": "col-c1-2"
+}

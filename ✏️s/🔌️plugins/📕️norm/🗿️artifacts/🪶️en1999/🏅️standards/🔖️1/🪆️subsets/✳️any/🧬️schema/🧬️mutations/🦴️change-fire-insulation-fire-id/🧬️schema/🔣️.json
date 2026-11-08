@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-fire-insulation-fire-id/schema.json",
+  "title": "ChangeFireInsulationFireId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "fireInsulationId",
+    "newFireId"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeFireInsulationFireId"
+    },
+    "fireInsulationId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "FireInsulation stiffener",
+          "de": "Quersteife"
+        },
+        "description": {
+          "en": "The fireInsulation stiffener this mutation addresses, by id.",
+          "de": "Das adressierte Element (Quersteife), per Kennung."
+        },
+        "ref": {
+          "kind": "fire-insulation"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newFireId": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Fire scenario",
+          "de": "Brandszenario"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

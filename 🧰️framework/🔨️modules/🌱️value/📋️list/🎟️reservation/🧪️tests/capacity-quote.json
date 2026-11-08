@@ -1,0 +1,14 @@
+[
+  {
+    "capacity": 0,
+    "expected": "zero"
+  },
+  {
+    "capacity": 1,
+    "expected": "same-selected"
+  },
+  {
+    "capacity": 5,
+    "expected": "refused"
+  }
+]

@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-element-adjacency/schema.json",
+  "title": "ChangeElementAdjacency",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "elementId",
+    "newAdjacency"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeelementadjacency"
+    },
+    "elementId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Envelope element",
+          "de": "Bauteil der Gebäudehülle"
+        },
+        "description": {
+          "en": "The element this mutation addresses.",
+          "de": "Das Objekt (Bauteil), das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "element"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newAdjacency": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/Adjacency",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Adjacent to",
+          "de": "Angrenzung"
+        },
+        "description": {
+          "en": "What the element borders; sets its temperature correction factor F_x (DIN V 18599-2).",
+          "de": "Woran das Bauteil grenzt; bestimmt seinen Temperatur-Korrekturfaktor F_x (DIN V 18599-2)."
+        },
+        "group": "element",
+        "order": 20
+      }
+    }
+  }
+}

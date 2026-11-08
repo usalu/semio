@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-zone-internal-gains-w-m2/schema.json",
+  "title": "ChangeZoneInternalGainsWM2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "zoneId",
+    "newInternalGainsWM2"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changezoneinternalgainswm2"
+    },
+    "zoneId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Thermal zone",
+          "de": "Thermische Zone"
+        },
+        "description": {
+          "en": "The zone this mutation addresses.",
+          "de": "Das Objekt (Zone), das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newInternalGainsWM2": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 100.0,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Internal heat gains q_I",
+          "de": "Interne Wärmequellen q_I"
+        },
+        "widget": "stepper",
+        "unit": "W/m²",
+        "step": 0.5,
+        "precision": 1,
+        "group": "zone",
+        "order": 20
+      }
+    }
+  }
+}

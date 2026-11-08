@@ -1,3 +1,5 @@
+scalar UInt32
+
 type En1993Artifact {
   annex: String!
   materials: [SteelMaterial!]!
@@ -198,13 +200,13 @@ type SteelJoint {
   memberId: String!
   boltClass: String!
   boltDiameter: Float!
-  boltRows: Int!
-  boltsPerRow: Int!
+  boltRows: UInt32!
+  boltsPerRow: UInt32!
   pitch: Float!
   gauge: Float!
   endDistance: Float!
   edgeDistance: Float!
-  shearPlanes: Int!
+  shearPlanes: UInt32!
   plateThickness: Float!
   plateFu: Float!
   weldThroat: Float!
@@ -216,7 +218,7 @@ type SteelJoint {
   frictionMu: Float!
   preloadForce: Float!
   slipFactorKs: Float!
-  frictionSurfaces: Int!
+  frictionSurfaces: UInt32!
   plateFy: Float!
   plateWidth: Float!
   boltToWeb: Float!
@@ -239,7 +241,7 @@ type SteelJoint {
   columnMomentResistance: Float!
   beamInertia: Float!
   beamSpan: Float!
-  bracedFrame: Int!
+  bracedFrame: UInt32!
   stiffnessRatio: Float!
   transformationParameter: Float!
   assumedClass: StiffnessClass!
@@ -311,8 +313,8 @@ type ColdFormedMember {
   shearForce: Float!
   supportReaction: Float!
   supportLength: Float!
-  cripplingCategory: Int!
-  stiffenedSupport: Int!
+  cripplingCategory: UInt32!
+  stiffenedSupport: UInt32!
   bendingMoment: Float!
   momentResistance: Float!
   sheetingStiffness: Float!
@@ -348,7 +350,7 @@ type PlatedPanel {
   compressionStress: Float!
   halfWidth: Float!
   equivalentSpan: Float!
-  hogging: Int!
+  hogging: UInt32!
   patchType: PatchLoadType!
   patchForce: Float!
   patchLength: Float!
@@ -547,7 +549,7 @@ type CraneRunway {
   maxWheelLoad: Float!
   loadFactor: Float!
   railInertia: Float!
-  railFixed: Int!
+  railFixed: UInt32!
   flangeEffectiveWidth: Float!
   flangeThickness: Float!
   wheelEccentricity: Float!
@@ -570,8 +572,8 @@ type Storey {
   verticalLoad: Float!
   horizontalLoad: Float!
   drift: Float!
-  columns: Int!
-  plasticAnalysis: Int!
+  columns: UInt32!
+  plasticAnalysis: UInt32!
   buildingHeight: Float!
   bracingLoad: Float!
   bracingLength: Float!
@@ -600,7 +602,7 @@ type Restraint {
   loadDistribution: RestraintDistribution!
   designMoment: Float!
   designAxial: Float!
-  generalMethod: Int!
+  generalMethod: UInt32!
   hingeToRestraint: Float!
 }
 enum ChordShape {
@@ -624,13 +626,13 @@ type BuiltUpMember {
   chordInertia: Float!
   chordDistance: Float!
   panelSpacing: Float!
-  planes: Int!
+  planes: UInt32!
   battenInertia: Float!
   diagonalArea: Float!
   diagonalLength: Float!
   designAxial: Float!
   designMoment: Float!
-  backToBack: Int!
+  backToBack: UInt32!
   minRadius: Float!
   chainSpacing: Float!
   chordShape: ChordShape!
@@ -713,12 +715,12 @@ type JointRow {
   extensionEdge: Float!
   alphaFactor: Float!
   pitchToPrevious: Float!
-  bolts: Int!
+  bolts: UInt32!
   boltDiameter: Float!
   boltStressArea: Float!
   gripLength: Float!
   boltClass: String!
-  groupWithPrevious: Int!
+  groupWithPrevious: UInt32!
 }
 enum FrameNodeSupport {
   Free
@@ -764,19 +766,19 @@ type JointPlate {
   plateHeight: Float!
   plateWidth: Float!
   plateThickness: Float!
-  plateCount: Int!
+  plateCount: UInt32!
   plateFy: Float!
   plateFu: Float!
   boltClass: String!
   boltDiameter: Float!
   holeDiameter: Float!
-  boltRows: Int!
-  boltsPerRow: Int!
+  boltRows: UInt32!
+  boltsPerRow: UInt32!
   pitch: Float!
   gauge: Float!
   endDistance: Float!
   edgeDistance: Float!
-  shearPlanes: Int!
+  shearPlanes: UInt32!
   eccentricity: Float!
   weldThroat: Float!
   weldFu: Float!
@@ -793,7 +795,7 @@ type FoundationBlock {
   concreteFck: Float!
   groutFck: Float!
   groutThickness: Float!
-  anchorCount: Int!
+  anchorCount: UInt32!
   anchorClass: String!
   anchorDiameter: Float!
   anchorStressArea: Float!
@@ -907,7 +909,7 @@ type FormingGain {
   forming: FormingProcess!
   ultimateStrength: Float!
   grossArea: Float!
-  bends: Int!
+  bends: UInt32!
   usedYield: Float!
 }
 type MaterialDuctility {
@@ -926,8 +928,8 @@ type FastenedJoint {
   kind: FastenerKind!
   diameter: Float!
   washerDiameter: Float!
-  count: Int!
-  perRow: Int!
+  count: UInt32!
+  perRow: UInt32!
   headThickness: Float!
   baseThickness: Float!
   headStrength: Float!

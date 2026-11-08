@@ -1,0 +1,90 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "input",
+    "maximumTurns",
+    "maximumItems",
+    "maximumCopyBytes",
+    "maximumWork",
+    "stock",
+    "postInterruptReplays",
+    "postInterruptRecovers",
+    "completedLocalPending",
+    "childCloseCalls",
+    "childCloseRecovers",
+    "vacantFrameFields",
+    "seedInterruptReplays",
+    "seedCancelCuts",
+    "nestedSeedActions",
+    "childTakeCalls",
+    "childTakeRecovers",
+    "parentCloseBeforePost"
+  ],
+  "properties": {
+    "input": {
+      "const": 37
+    },
+    "maximumTurns": {
+      "const": 512
+    },
+    "maximumItems": {
+      "const": 1
+    },
+    "maximumCopyBytes": {
+      "const": 4096
+    },
+    "maximumWork": {
+      "const": 16
+    },
+    "stock": {
+      "const": {
+        "items": 1024,
+        "copyBytes": 4194304,
+        "capacityBytes": 65536,
+        "releaseBytes": 65536,
+        "depth": 64,
+        "fuel": 16384
+      }
+    },
+    "postInterruptReplays": {
+      "const": 0
+    },
+    "postInterruptRecovers": {
+      "const": 0
+    },
+    "completedLocalPending": {
+      "const": false
+    },
+    "childCloseCalls": {
+      "const": 1
+    },
+    "childCloseRecovers": {
+      "const": 1
+    },
+    "vacantFrameFields": {
+      "const": 36
+    },
+    "seedInterruptReplays": {
+      "const": 0
+    },
+    "seedCancelCuts": {
+      "const": [
+        1,
+        4
+      ]
+    },
+    "nestedSeedActions": {
+      "const": 5
+    },
+    "childTakeCalls": {
+      "const": 1
+    },
+    "childTakeRecovers": {
+      "const": 1
+    },
+    "parentCloseBeforePost": {
+      "const": false
+    }
+  }
+}

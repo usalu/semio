@@ -56,6 +56,12 @@ pub struct En1998Artifact {
     pub tie_beams: Vec<En1998TieBeam>,
     #[state(artifact)]
     pub slopes: Vec<En1998Slope>,
+    #[state(artifact)]
+    pub isolation_systems: Vec<En1998IsolationSystem>,
+    #[state(artifact)]
+    pub pier_bases: Vec<En1998PierBase>,
+    #[state(artifact)]
+    pub critical_regions: Vec<En1998CriticalRegion>,
 }
 //#endregion 🔖️Artifact
 
@@ -80,6 +86,9 @@ impl En1998Artifact {
             joints: self.joints.clone(),
             tie_beams: self.tie_beams.clone(),
             slopes: self.slopes.clone(),
+            isolation_systems: self.isolation_systems.clone(),
+            pier_bases: self.pier_bases.clone(),
+            critical_regions: self.critical_regions.clone(),
             placements: self.placements.clone(),
         }
     }
@@ -104,6 +113,9 @@ impl En1998Artifact {
             joints: snapshot.joints,
             tie_beams: snapshot.tie_beams,
             slopes: snapshot.slopes,
+            isolation_systems: snapshot.isolation_systems,
+            pier_bases: snapshot.pier_bases,
+            critical_regions: snapshot.critical_regions,
             placements: snapshot.placements,
         }
     }

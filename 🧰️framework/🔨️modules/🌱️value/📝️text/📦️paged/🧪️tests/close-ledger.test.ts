@@ -1,0 +1,3 @@
+import {test,expect} from "bun:test";import {Database} from "bun:sqlite";import Ajv from "ajv";import schema from "./close-ledger.schema.json";import law from "./close-ledger.json";
+/** 🧾️ Original backing release excludes the genuinely paid transient child cursor birth. */
+test("paged close ledger separates original and newly retained backing",()=>{expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);const db=new Database(":memory:");try{expect(db.query("select ?-? netOriginalRelease,?+? grossRelease").get(law.releasedBytes,law.childBirthBytes,law.originalBytes,law.childBirthBytes)).toEqual({netOriginalRelease:law.netOriginalRelease,grossRelease:law.releasedBytes});expect(law.netOriginalRelease).toBe(law.originalBytes)}finally{db.close()}});

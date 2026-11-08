@@ -1,0 +1,5 @@
+{
+  "mutation": "changezonevolumem3",
+  "zoneId": "zone-living",
+  "newVolumeM3": 390.0
+}

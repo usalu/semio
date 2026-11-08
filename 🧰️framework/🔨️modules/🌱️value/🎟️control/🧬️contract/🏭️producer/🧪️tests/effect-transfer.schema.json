@@ -1,0 +1,34 @@
+{
+  "type": "array",
+  "minItems": 5,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "active",
+      "occupied",
+      "items",
+      "work",
+      "accepted"
+    ],
+    "properties": {
+      "active": {
+        "type": "boolean"
+      },
+      "occupied": {
+        "type": "boolean"
+      },
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "work": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "accepted": {
+        "type": "boolean"
+      }
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "variants",
+    "causes",
+    "progress",
+    "wrappingAllocations"
+  ],
+  "properties": {
+    "variants": {
+      "const": [
+        "primary",
+        "valueEffect",
+        "retirementEffect",
+        "receivingEffect"
+      ]
+    },
+    "causes": {
+      "const": [
+        "receiving-primary",
+        "receiving-work",
+        "receiving-retirement",
+        "producer-child",
+        "producer-refusal",
+        "producer-work"
+      ]
+    },
+    "progress": {
+      "const": {
+        "copiedItems": 2,
+        "copiedBytes": 3
+      }
+    },
+    "wrappingAllocations": {
+      "const": 0
+    }
+  }
+}

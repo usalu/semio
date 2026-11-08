@@ -1,0 +1,5 @@
+{
+  "mutation": "changeelementgvalue",
+  "elementId": "wall-n",
+  "newGValue": 1.5
+}

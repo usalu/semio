@@ -1,0 +1,144 @@
+{
+  "scalarWords": 361,
+  "additionalScalarWords": 58,
+  "rows": {
+    "jointPlates": [
+      {
+        "id": "plate 世界",
+        "jointId": "joint",
+        "label": "Blech\u0000plate",
+        "role": "end",
+        "plateHeight": 0.7,
+        "plateWidth": 0.4,
+        "plateThickness": 0.02,
+        "plateCount": 2,
+        "plateFy": 355000000,
+        "plateFu": 510000000,
+        "boltClass": "8.8",
+        "boltDiameter": 0.02,
+        "holeDiameter": 0.022,
+        "boltRows": 4,
+        "boltsPerRow": 2,
+        "pitch": 0.08,
+        "gauge": 0.06,
+        "endDistance": 0.04,
+        "edgeDistance": 0.035,
+        "shearPlanes": 2,
+        "eccentricity": 0.025,
+        "weldThroat": 0.006,
+        "weldFu": 430000000,
+        "weldBetaW": 0.9,
+        "groupMethod": "InstantaneousCentre"
+      }
+    ],
+    "foundationBlocks": [
+      {
+        "id": "block",
+        "jointId": "joint",
+        "label": "Fundament",
+        "blockLength": 1.2,
+        "blockWidth": 0.9,
+        "blockDepth": 0.6,
+        "concreteFck": 30000000,
+        "groutFck": 45000000,
+        "groutThickness": 0.025,
+        "anchorCount": 4,
+        "anchorClass": "8.8",
+        "anchorDiameter": 0.024,
+        "anchorStressArea": 0.000353,
+        "anchorEmbedment": 0.4,
+        "anchorEdgeDistance": 0.2
+      }
+    ],
+    "frameActions": [
+      {
+        "id": "frame-action",
+        "loadCaseId": "case",
+        "targetId": "unresolved node",
+        "kind": "NodalMoment",
+        "fx": 1234,
+        "fz": -5678,
+        "my": 9012,
+        "startRatio": 0.25,
+        "endRatio": 0.75
+      }
+    ],
+    "frameMemberBases": [
+      {
+        "id": "frame-basis",
+        "memberId": "member",
+        "basis": "Explicit"
+      }
+    ],
+    "fatigueStresses": [
+      {
+        "id": "stress",
+        "detailId": "fatigue",
+        "maxCaseId": "case",
+        "minCaseId": "another case",
+        "fibreZ": 0.12,
+        "fibreY": -0.03,
+        "relief": "StressRelieved",
+        "concentration": 1.4,
+        "thickness": 0.02,
+        "cycles": 2000000
+      }
+    ],
+    "bucklingLengths": [
+      {
+        "id": "buckling",
+        "memberId": "member",
+        "plane": "MinorAxis",
+        "sway": "Sway",
+        "restraintA": "Fixed",
+        "columnStiffnessA": 0.0003,
+        "beamStiffnessA": 0.0002,
+        "restraintB": "Pinned",
+        "columnStiffnessB": 0.0004,
+        "beamStiffnessB": 0.0001
+      }
+    ],
+    "formingGains": [
+      {
+        "id": "forming",
+        "memberId": "cold",
+        "forming": "OtherForming",
+        "ultimateStrength": 510000000,
+        "grossArea": 0.003,
+        "bends": 6,
+        "usedYield": 390000000
+      }
+    ],
+    "materialDuctility": [
+      {
+        "id": "ductility",
+        "materialId": "duplicate",
+        "elongation": 0.18,
+        "ultimateStrain": 0.12
+      }
+    ],
+    "fastenedJoints": [
+      {
+        "id": "fastened",
+        "memberId": "cold",
+        "kind": "BlindRivet",
+        "diameter": 0.0048,
+        "washerDiameter": 0.011,
+        "count": 8,
+        "perRow": 4,
+        "headThickness": 0.001,
+        "baseThickness": 0.002,
+        "headStrength": 350000000,
+        "baseStrength": 430000000,
+        "endDistance": 0.025,
+        "edgeDistance": 0.02,
+        "pitch": 0.04,
+        "gauge": 0.03,
+        "sheetWidth": 0.2,
+        "shearForce": 10000,
+        "tensionForce": 5000,
+        "shearResistance": 3000
+      }
+    ]
+  }
+}

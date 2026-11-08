@@ -1,0 +1,6 @@
+{
+  "ChangeVentFanFlow": {
+    "ventId": "vent-central",
+    "newFanQVM3S": 0.35
+  }
+}

@@ -1,3 +1,5 @@
+scalar UInt32
+
 union En1996Mutation = ChangeConcentratedBearingLength | ChangeSlabSpan | ChangeWallLength | ChangeWallHeight | ChangeWallThickness | ChangeEccentricityBottom | ChangeEccentricityTop | ChangePhiInfinity | ChangeQKSnow | InsertConcentrated | InsertLoadCase | InsertOpening | InsertWall | RemoveConcentrated | RemoveLoadCase | RemoveOpening | RemoveWall | ChangeAnnex | ChangeReliabilityClass | ChangeQPWind | ChangeDesignSituation | ChangeLoadCaseSituation | ChangeConcentratedForce | ChangeGKSlab | ChangeQKImposed | ChangeIsBasement | ChangeStoreys | ChangeMasonryClass | ChangeImposedCategory | ChangeWallLabelDe | ChangeWallLabelEn | ChangeExposure | ChangeConcentratedBearingArea | ChangeSlabBearingDepth | ChangeTributaryArea | ChangeFireRei | ChangeAsHorizontal | ChangeAsVertical | ChangeFYd | ChangeReinforced | ChangeBedJointThickness | ChangeFm | ChangeMortarClass | ChangeMortarType | ChangeCPe | ChangeDensity | ChangeSupportSides | ChangeUnitFb | ChangeUnitGroup | ChangeUnitHeight | ChangeUnitLength | ChangeUnitMaterial | ChangeUnitWidth | ChangeWallType | ChangeMu | ChangeOpeningHeight | ChangeOpeningSill | ChangeOpeningWidth | ChangeHKEarth | ChangePierPosition | ChangePierWidth | InsertPier | RemovePier | ChangeLintelPosition | ChangeLintelSpan | ChangeLintelDepth | ChangeLintelBearingLength | InsertLintel | RemoveLintel | ChangeTieKind | ChangeTiePosition | ChangeTieLevel | ChangeTieCapacity | InsertTie | RemoveTie | ChangePrestressForce | ChangePrestressArea | ChangePrestressStrength | ChangePrestressPosition | ChangePrestressEccentricity | ChangePrestressLoss | InsertPrestress | RemovePrestress | ChangeConfinedPosition | ChangeConfinedWidth | ChangeConfinedDepth | ChangeConfinedSteel | InsertConfined | RemoveConfined | ChangeFlangeLength | ChangeFlangeThickness | ChangeFlangePosition | InsertFlange | RemoveFlange | ChangeBarKind | ChangeBarDiameter | ChangeBarLength | ChangeBarSpacing | InsertBar | RemoveBar | ChangeFrostClass | ChangeCover | ChangeDeflectionLimit | ChangeSoilHeight | ChangeSoilDensity | ChangeIsothermDepth | ChangePlanX | ChangePlanY | ChangePlanAngle | ChangeInPlaneShear | ChangeInPlaneMoment | ChangeOpeningPosition | ChangeConcentratedPosition | ChangeConcentratedDistanceA1 | ChangePlacementX | ChangePlacementY | ChangePlacementZ | ChangePlacementYaw | InsertPlacement | RemovePlacement | InsertCase | RemoveCase | ChangeCaseNumber | ChangeCaseText | ChangeCaseLabelEn | ChangeCaseLabelDe | ChangeCaseEntryId | ChangeBracingSystem | ChangeDiaphragmStiffness | ChangeChaseWall | ChangeChaseKind | ChangeChaseX | ChangeChaseY | ChangeChaseWidth | ChangeChaseLength | ChangeChaseDepth | InsertChase | RemoveChase | ChangeMovementJointWall | ChangeMovementJointPosition | InsertMovementJoint | RemoveMovementJoint | ChangeWallWebSpacingM
 type ChangeConcentratedBearingLength {
   wallId: String!
@@ -115,7 +117,7 @@ type ChangeIsBasement {
   newIsBasement: Boolean!
 }
 type ChangeStoreys {
-  newStoreys: Int!
+  newStoreys: UInt32!
 }
 type ChangeMasonryClass {
   newMasonryClass: MasonryClass!
@@ -154,7 +156,7 @@ type ChangeTributaryArea {
 }
 type ChangeFireRei {
   id: String!
-  newFireReiMin: Int!
+  newFireReiMin: UInt32!
 }
 type ChangeAsHorizontal {
   id: String!

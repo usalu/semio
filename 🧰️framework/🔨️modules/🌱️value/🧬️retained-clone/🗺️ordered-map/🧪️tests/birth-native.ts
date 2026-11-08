@@ -1,0 +1,6 @@
+import {Database} from "bun:sqlite";
+import {semioSchemaAjvV1} from "@semio-tech/framework/schema/oracles/validator";
+import schema from "./birth-native.schema.json";
+export interface BirthTrace{permanent:number;transient:number;events:{allocated:number;released:number;copied:number;work:number}[]}
+export function birthOracle(trace:BirthTrace){if(!semioSchemaAjvV1({strict:true}).validate(schema,trace))throw new Error("native birth trace violates the language-neutral schema");const db=new Database(":memory:");try{db.run("create table birth(allocated integer,released integer,copied integer,work integer)");for(const row of trace.events)db.run("insert into birth values(?,?,?,?)",row.allocated,row.released,row.copied,row.work);const sums=db.query("select sum(allocated) allocated,sum(released) released,sum(copied) copied,sum(work) work,count(*) turns from birth").get()as{allocated:number;released:number;copied:number;work:number;turns:number};if(sums.allocated!==trace.permanent+trace.transient||sums.released!==trace.transient||sums.copied<=0||sums.work<=0)throw new Error("native birth lost permanent/transient custody");return sums}finally{db.close()}}
+if(import.meta.main)console.log(JSON.stringify(birthOracle(JSON.parse(await Bun.stdin.text()))));

@@ -23,6 +23,7 @@ path = "../../🦀️.rs"
 doctest = false
 
 [dependencies]
+semio-framework-value-clone-source-testing = { path = "../../../../🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }
 semio-framework-value-testing-effect-bank = { path="../../🎟️effect/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path = "../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-native-decoding = { path = "../../../../🛬️decode/📦️packages/🦀️rust" }
@@ -41,3 +42,7 @@ path = "../../marker.rs"
 [[test]]
 name = "decode-effect-driver"
 path = "../../decode-effect-driver.rs"
+
+[[test]]
+name = "retirement_borrowed"
+path = "../../🧪️tests/retirement.rs"

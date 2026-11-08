@@ -1,7 +1,15 @@
 {
   "schemaVersion": 1,
-  "facets": ["", "📸️snapshot", "🔺️diff", "🧬️mutations"],
+  "facets": [
+    "",
+    "📸️snapshot",
+    "🔺️diff",
+    "🧬️mutations"
+  ],
   "expectedArtifacts": 15,
-  "expectedRoots": 60,
-  "expectedDiagnostics": []
+  "expectedRoots": 75,
+  "expectedDiagnostics": [],
+  "sourceFacets": [
+    "🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts"
+  ]
 }

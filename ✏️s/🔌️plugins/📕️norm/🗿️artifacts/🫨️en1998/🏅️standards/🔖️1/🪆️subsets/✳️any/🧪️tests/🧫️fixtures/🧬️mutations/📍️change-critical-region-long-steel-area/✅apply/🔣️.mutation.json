@@ -1,0 +1,5 @@
+{
+  "mutation": "changeCriticalRegionLongitudinalSteelAreaM2",
+  "id": "cr-1",
+  "newLongitudinalSteelAreaM2": 1.0048
+}

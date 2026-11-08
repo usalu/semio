@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "liveReturn",
+    "closedReturn",
+    "returnWork",
+    "reuseWork",
+    "preservesSource",
+    "preservesRemaining"
+  ],
+  "properties": {
+    "liveReturn": {
+      "const": false
+    },
+    "closedReturn": {
+      "const": true
+    },
+    "returnWork": {
+      "const": 0
+    },
+    "reuseWork": {
+      "const": 1
+    },
+    "preservesSource": {
+      "const": true
+    },
+    "preservesRemaining": {
+      "const": true
+    }
+  }
+}

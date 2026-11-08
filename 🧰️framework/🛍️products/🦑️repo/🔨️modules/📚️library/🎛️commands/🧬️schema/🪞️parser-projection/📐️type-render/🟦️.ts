@@ -106,8 +106,12 @@ class Auxiliaries {
     this.texts.set(name, text);
   }
 
+  scalar(name: string): void {
+    if (this.claim(name)) this.put(name, `scalar ${name}\n`);
+  }
+
   json(): void {
-    if (this.claim("JSON")) this.put("JSON", "scalar JSON\n");
+    this.scalar("JSON");
   }
 
   all(): string[] {
@@ -123,6 +127,14 @@ interface GraphqlType {
 }
 
 const GRAPHQL_SCALARS = { string: "String", boolean: "Boolean", integer: "Int", number: "Float" } as const;
+
+/** 🔢️ Keeps declared native widths and bounded unsigned32 domains outside GraphQL Int. */
+function graphqlInteger(node: Dict): string {
+  if (node.format === "uint32") return "UInt32";
+  if (node.format === "uint64") return "UInt64";
+  if (node.format === "int64") return "Int64";
+  return typeof node.minimum === "number" && node.minimum >= 0 && typeof node.maximum === "number" && node.maximum > 2147483647 && node.maximum <= 4294967295 ? "UInt32" : "Int";
+}
 
 /** 🔗️ A `type <name>` of a nested object, or `undefined` when a property has no GraphQL name. */
 function graphqlObject(name: string, node: Dict, aux: Auxiliaries): string | undefined {
@@ -154,7 +166,12 @@ function graphqlType(node: Dict, parent: string, field: string, aux: Auxiliaries
   const present = nullableOf(node);
   if (present) return { ...graphqlType(present, parent, field, aux), nullable: true };
   const kind = kindOf(node);
-  if (kind === "string" || kind === "boolean" || kind === "integer" || kind === "number") return { text: GRAPHQL_SCALARS[kind], nullable: false };
+  if (kind === "integer") {
+    const text = graphqlInteger(node);
+    if (text !== "Int") aux.scalar(text);
+    return { text, nullable: false };
+  }
+  if (kind === "string" || kind === "boolean" || kind === "number") return { text: GRAPHQL_SCALARS[kind], nullable: false };
   if (kind === "array") {
     if (!isDict(node.items)) return json();
     const inner = graphqlType(node.items, parent, field, aux);

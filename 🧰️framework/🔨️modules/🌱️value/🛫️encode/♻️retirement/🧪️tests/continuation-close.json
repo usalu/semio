@@ -1,0 +1,26 @@
+[
+  {
+    "ready": true,
+    "grant": true,
+    "work": true,
+    "closed": true
+  },
+  {
+    "ready": false,
+    "grant": true,
+    "work": true,
+    "closed": false
+  },
+  {
+    "ready": true,
+    "grant": false,
+    "work": true,
+    "closed": false
+  },
+  {
+    "ready": true,
+    "grant": true,
+    "work": false,
+    "closed": false
+  }
+]

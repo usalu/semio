@@ -268,7 +268,7 @@ const TABLE: &[(&str, FieldSpec)] = &[
     ("members[].tendonPoints[].z", m("Tendon z (eccentricity)", "Spannglied z (Exzentrizität)", Some(UnitId::Metre), None)),
     ("members[].studRows", m("Shear stud rows (rails, 6.4.5)", "Dübelreihen (Schienen, 6.4.5)", None, None)),
     ("members[].studRows[].id", m("Row id", "Reihen-Id", None, None)),
-    ("members[].studRows[].angle", m("Rail angle from the column x axis", "Schienenwinkel zur Stützenachse x", Some(UnitId::Angle), None)),
+    ("members[].studRows[].angle", m("Rail angle from the column x axis", "Schienenwinkel zur Stützenachse x", Some(UnitId::Radian), None)),
     ("members[].studRows[].count", m("Studs per row", "Dübel je Reihe", None, None)),
     ("members[].studRows[].spacingFirst", m("First stud distance s0 from the column face", "Abstand des ersten Dübels s0 vom Stützenrand", Some(UnitId::Metre), None)),
     ("members[].studRows[].spacingRadial", m("Radial stud spacing s_r", "Radialer Dübelabstand s_r", Some(UnitId::Metre), None)),

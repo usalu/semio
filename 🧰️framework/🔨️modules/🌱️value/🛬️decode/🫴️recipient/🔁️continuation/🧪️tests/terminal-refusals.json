@@ -1,0 +1,30 @@
+[
+  {
+    "quote": true,
+    "work": true,
+    "overrun": false,
+    "post": false,
+    "mask": 3
+  },
+  {
+    "quote": false,
+    "work": true,
+    "overrun": true,
+    "post": true,
+    "mask": 14
+  },
+  {
+    "quote": false,
+    "work": false,
+    "overrun": false,
+    "post": true,
+    "mask": 8
+  },
+  {
+    "quote": true,
+    "work": false,
+    "overrun": false,
+    "post": false,
+    "mask": 1
+  }
+]

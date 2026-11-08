@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "perTurnCopy"
+  ],
+  "properties": {
+    "perTurnCopy": {
+      "type": "integer",
+      "const": 4096
+    }
+  }
+}

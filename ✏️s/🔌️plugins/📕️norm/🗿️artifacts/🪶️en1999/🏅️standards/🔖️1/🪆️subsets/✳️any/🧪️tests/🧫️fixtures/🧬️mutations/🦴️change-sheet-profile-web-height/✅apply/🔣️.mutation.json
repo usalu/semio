@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSheetProfileWebHeight",
+  "sheetProfileId": "sheet-profile-1",
+  "newWebHeight": 1.04
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeelementgvalue",
+  "elementId": "ghost",
+  "newGValue": 0.5
+}

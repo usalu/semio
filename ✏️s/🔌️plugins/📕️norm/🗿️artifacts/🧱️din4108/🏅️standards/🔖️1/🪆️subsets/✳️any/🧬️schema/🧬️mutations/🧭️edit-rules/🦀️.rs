@@ -1,6 +1,9 @@
 //! 🧭️ The `setField` / `insertItem` / `removeItem` / `applyRemedy` vocabulary of the DIN 4108 editor: which value-tree path raises which concrete kind.
 
-use semio_s_plugin_norm_app_surface::{InsertItemRule, NormEditRules, RemoveItemRule, SelectorKey, SetFieldRule};
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
+use semio_s_plugin_norm_app_surface::{InsertItemRule, NormEdit, NormEditRules, RemoveItemRule, SelectorKey, SetFieldRule};
+
+use crate::Din4108Mutation;
 
 /// 📚 Every path an DIN 4108 editor edit resolves, one rule per kind that sets, inserts or removes through it.
 pub const EDIT_RULES: NormEditRules = NormEditRules {
@@ -55,3 +58,8 @@ pub const EDIT_RULES: NormEditRules = NormEditRules {
         RemoveItemRule { path: "thermalBridges", kind: "remove-thermal-bridge", selectors: &[], index: "index" },
     ],
 };
+
+/// 🧭️ Resolves every edit of the DIN 4108 editor through the typed [`EDIT_RULES`]: one leaf kind per edit, no whole-row fallback.
+pub fn resolve(document: &Din4108Snapshot, edit: &NormEdit) -> Result<Vec<Din4108Mutation>, String> {
+    EDIT_RULES.resolve(document, edit)
+}

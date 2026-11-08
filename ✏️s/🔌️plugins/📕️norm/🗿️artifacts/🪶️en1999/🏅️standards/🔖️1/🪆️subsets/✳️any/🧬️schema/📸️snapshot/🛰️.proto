@@ -35,6 +35,10 @@ message En1999Snapshot {
   repeated TransverseStiffener transverse_stiffeners = 16;
   // @state artifact
   string reliability_class = 17;
+  // @state artifact
+  repeated SheetProfile sheet_profiles = 18;
+  // @state artifact
+  repeated FireInsulation fire_insulations = 19;
 }
 message ColdFormedSheet {
   string id = 1;
@@ -228,4 +232,20 @@ message TransverseStiffener {
 enum FastenerForceMethod {
   FASTENER_FORCE_METHOD_ELASTIC = 0;
   FASTENER_FORCE_METHOD_INSTANTANEOUS_CENTRE = 1;
+}
+message SheetProfile {
+  string id = 1;
+  string sheet_id = 2;
+  double pitch = 3;
+  double top_flange = 4;
+  double bottom_flange = 5;
+  double web_height = 6;
+}
+message FireInsulation {
+  string id = 1;
+  string fire_id = 2;
+  double thickness = 3;
+  double conductivity = 4;
+  double specific_heat = 5;
+  double density = 6;
 }

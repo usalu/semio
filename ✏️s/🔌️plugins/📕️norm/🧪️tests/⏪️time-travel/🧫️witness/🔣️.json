@@ -1,26 +1,509 @@
 {
-  "schemaVersion": 1,
-  "variant": "en1990",
-  "example": "road-bridge-compliant",
-  "serves": {
-    "react": "http://127.0.0.1:6094/?plugin=en1990&role=editor&example=road-bridge-compliant",
-    "wgpu": "http://127.0.0.1:6194/?plugin=en1990&role=editor&example=road-bridge-compliant"
-  },
-  "locales": ["en", "de"],
-  "field": {
-    "path": "bridgeSls[id=sls-D1].deckAcceleration",
-    "key": "norm-inputs.bridgeSls[id=sls-D1].deckAcceleration",
-    "owner": "scope:1:9:bridgeSls6:sls-D1",
-    "ownerWindow": "norm-en1990-outliner",
-    "argument": "newDeckAcceleration",
-    "label": {"en": "Deck acceleration", "de": "Deckbeschleunigung"},
-    "limit": 0.5,
-    "unit": "m/s²"
-  },
-  "check": "en1990.a2.acceleration.deck-D1.sls-D1",
-  "states": {
-    "before": {"value": 0.2, "utilization": 0.4},
-    "after": {"value": 0.4, "utilization": 0.8}
-  },
-  "journey": ["boot", "edit", "undo", "redo", "reload"]
+  "schemaVersion": 2,
+  "locales": [
+    "en",
+    "de"
+  ],
+  "journey": [
+    "boot",
+    "edit",
+    "undo",
+    "redo",
+    "reload"
+  ],
+  "windows": [
+    "viewport",
+    "diagrams",
+    "properties",
+    "checks",
+    "outliner"
+  ],
+  "artifacts": [
+    {
+      "variant": "en1990",
+      "example": "road-bridge-compliant",
+      "ports": {
+        "react": 6094,
+        "wgpu": 6194
+      },
+      "pin": {
+        "field": {
+          "path": "bridgeSls[id=sls-D1].deckAcceleration",
+          "key": "norm-inputs.bridgeSls[id=sls-D1].deckAcceleration",
+          "owner": "scope:1:9:bridgeSls6:sls-D1",
+          "ownerWindow": "norm-en1990-outliner",
+          "argument": "newDeckAcceleration",
+          "label": {
+            "en": "Deck acceleration",
+            "de": "Deckbeschleunigung"
+          },
+          "limit": 0.5,
+          "unit": "m/s²"
+        },
+        "check": "en1990.a2.acceleration.deck-D1.sls-D1",
+        "states": {
+          "before": {
+            "value": 0.2,
+            "utilization": 0.4
+          },
+          "after": {
+            "value": 0.4,
+            "utilization": 0.8
+          }
+        },
+        "basis": "Deck acceleration check utilization = a / 0.5 m/s2 (EN 1990 A2.4.4); closed form, matches the native example.",
+        "linear": true
+      }
+    },
+    {
+      "variant": "en1993",
+      "example": "heb240-compliant",
+      "ports": {
+        "react": 6097,
+        "wgpu": 6197
+      },
+      "pin": {
+        "field": {
+          "path": "members[id=member-b1].deflectionLimitRatio",
+          "key": "norm-inputs.members[id=member-b1].deflectionLimitRatio",
+          "owner": "scope:1:7:members9:member-b1",
+          "ownerWindow": "norm-en1993-outliner",
+          "argument": "newDeflectionLimitRatio",
+          "label": {
+            "en": "Deflection limit L/δ",
+            "de": "Durchbiegungsgrenze L/δ"
+          },
+          "limit": 989.8,
+          "unit": "1"
+        },
+        "check": "en1993.7.sls.sls-char-q-imposed",
+        "states": {
+          "before": {
+            "value": 300,
+            "utilization": 0.3031
+          },
+          "after": {
+            "value": 600,
+            "utilization": 0.6062
+          }
+        },
+        "basis": "SLS deflection d = 5 M L^2/(48 E Iy) with M = 40000+17333 Nm, L = 4 m, E = 210 GPa, Iy = 1.126e-4 m4 gives 4.041 mm; utilization = d/(L/ratio), linear in the ratio (limit field = ratio/utilization).",
+        "linear": true
+      }
+    },
+    {
+      "variant": "en1991",
+      "example": "de-office-compliant",
+      "ports": {
+        "react": 6095,
+        "wgpu": 6195
+      },
+      "pin": {
+        "field": {
+          "path": "selfWeightElements[id=slab-rc].thickness",
+          "key": "norm-inputs.selfWeightElements[id=slab-rc].thickness",
+          "owner": "scope:1:18:selfWeightElements7:slab-rc",
+          "ownerWindow": "norm-en1991-outliner",
+          "argument": "newThickness",
+          "label": {
+            "en": "Thickness",
+            "de": "Dicke"
+          },
+          "limit": 0.24,
+          "unit": "m"
+        },
+        "check": "en1991.1-1.self-weight.slab-rc",
+        "states": {
+          "before": {
+            "value": 0.2,
+            "utilization": 0.8333
+          },
+          "after": {
+            "value": 0.22,
+            "utilization": 0.9167
+          }
+        },
+        "basis": "Self-weight check (EN 1991-1-1 Annex A): required g_k = 25 kN/m3 (reinforced concrete) * t, utilization = required/assumed g_k with assumed 6000 Pa, so linear in t (limit = 6000/25000 = 0.24 m). Only this check reads thickness.",
+        "linear": true
+      }
+    },
+    {
+      "variant": "en1992",
+      "example": "compliant-prestressed-beam",
+      "ports": {
+        "react": 6096,
+        "wgpu": 6196
+      },
+      "pin": {
+        "field": {
+          "path": "members[id=beam-PS1].span",
+          "key": "norm-inputs.members[id=beam-PS1].span",
+          "owner": "scope:1:7:members8:beam-PS1",
+          "ownerWindow": "norm-en1992-outliner",
+          "argument": "newValue",
+          "label": {
+            "en": "Span l",
+            "de": "Spannweite l"
+          },
+          "limit": 10.8349,
+          "unit": "m"
+        },
+        "check": "en1992.7.4.ld.beam-PS1",
+        "states": {
+          "before": {
+            "value": 12,
+            "utilization": 1.1075
+          },
+          "after": {
+            "value": 9,
+            "utilization": 0.8307
+          }
+        },
+        "basis": "Span-to-depth check (EN 1992-1-1 7.4.2, Eq. 7.16, DE cap K*35): util = (l/d)/lim with d = 0.62 m, rho = 8 phi20 / (0.35*0.62) = 1.158 %, rho' = 0, fck = 50 MPa, K = 1 gives lim = 11 + 1.5 sqrt(fck) rho0/rho = 17.48 (< 35); linear in span (limit field = d*lim = 10.84 m). Other checks also change with span (loads); the example sits above 100% at span 12 m (unverified-NDP basis). Re-derived in Python from Rust formula.",
+        "linear": true
+      }
+    },
+    {
+      "variant": "en1994",
+      "example": "composite-floor-beam",
+      "ports": {
+        "react": 6098,
+        "wgpu": 6198
+      },
+      "pin": {
+        "field": {
+          "path": "beams[id=beam-B1].barSpacingM",
+          "key": "norm-inputs.beams[id=beam-B1].barSpacingM",
+          "owner": "scope:1:5:beams7:beam-B1",
+          "ownerWindow": "norm-en1994-outliner",
+          "argument": "newBarSpacingM",
+          "label": {
+            "en": "Bar spacing s",
+            "de": "Stababstand s"
+          },
+          "limit": 0.3,
+          "unit": "m"
+        },
+        "check": "en1994.7.4.crack.beam-B1",
+        "states": {
+          "before": {
+            "value": 0.15,
+            "utilization": 0.6919
+          },
+          "after": {
+            "value": 0.24,
+            "utilization": 0.8
+          }
+        },
+        "basis": "Crack check util = max(A_s,min/A_s, sigma_s/(0.8 fsk), s/s_max); simply supported so sigma_s = 0 and s_max = 300 mm (Table 7.3N, wk 0.3 mm). Before: A_s,min/A_s = 0.6919 (fctm=2.896 MPa, kc=0.976, beff=2.0 m, hc=0.085 m) dominates; after s=0.24 gives s/0.3 = 0.80. Before-state utilization is not value/limit (0.5) because the A_s,min term governs. Only bar spacing is read by the s/s_max term.",
+        "linear": false
+      }
+    },
+    {
+      "variant": "en1995",
+      "example": "glulam-floor-beam",
+      "ports": {
+        "react": 6099,
+        "wgpu": 6199
+      },
+      "pin": {
+        "field": {
+          "path": "members[id=beam-B1].dampingXi",
+          "key": "norm-inputs.members[id=beam-B1].dampingXi",
+          "owner": "scope:1:7:members7:beam-B1",
+          "ownerWindow": "norm-en1995-outliner",
+          "argument": "newValue",
+          "label": {
+            "en": "Modal damping ratio ξ",
+            "de": "Modales Dämpfungsmaß ξ"
+          },
+          "limit": 8.278,
+          "unit": "1 (inspector may display %)"
+        },
+        "check": "en1995.7.3.velocity.beam-B1",
+        "states": {
+          "before": {
+            "value": 0.04,
+            "utilization": 0.00483
+          },
+          "after": {
+            "value": 0.005,
+            "utilization": 0.14324
+          }
+        },
+        "basis": "Floor unit-impulse velocity (EN 1995-1-1 7.3.3): u = v/100^(f1*xi-1), v=4(0.4+0.6 n40)/(m l^2+200)=2.3246e-3 m/(N s2), f1=21.03 Hz (GL28h E0=12.6 GPa, strip 120/450 m, EI_l/EI_b, m=450, l=5), n40=10.42; independent Python; limit is NOT linear (u ~ 100^(-f1*xi)) so limit field = value/u_before only; compare states. Only this check reads dampingXi (f1/stiffness do not).",
+        "linear": false
+      }
+    },
+    {
+      "variant": "en1996",
+      "example": "loadbearing-wall",
+      "ports": {
+        "react": 6100,
+        "wgpu": 6200
+      },
+      "pin": {
+        "field": {
+          "path": "walls[id=wall-north].bedJointThicknessM",
+          "key": "norm-inputs.walls[id=wall-north].bedJointThicknessM",
+          "owner": "scope:1:5:walls10:wall-north",
+          "ownerWindow": "norm-en1996-outliner",
+          "argument": "newBedJointThicknessM",
+          "label": {
+            "en": "Bed-joint thickness",
+            "de": "Lagerfugendicke"
+          },
+          "limit": 0.015,
+          "unit": "m"
+        },
+        "check": "en1996.2.bedjoint.wall-north",
+        "states": {
+          "before": {
+            "value": 0.012,
+            "utilization": 0.8
+          },
+          "after": {
+            "value": 0.0135,
+            "utilization": 0.9
+          }
+        },
+        "basis": "EN 1996-2 8: u = max(t_joint/0.015 m, 0.006 m/t_joint) for general-purpose mortar (ndp.en1996.m70.bed-joint, EN and NA-DE both 6..15 mm); 0.012 -> 0.8, 0.0135 -> 0.9 (upper branch, linear). Collateral: en1996.3.1.material.wall-north (max with mortar 0, dimension 0.375, strength 0.2 -> also 0.8 -> 0.9) and the catalogue m-70 bed-joint case use the same ratio.",
+        "linear": true
+      }
+    },
+    {
+      "variant": "en1997",
+      "example": "compliant",
+      "ports": {
+        "react": 6101,
+        "wgpu": 6201
+      },
+      "pin": {
+        "field": {
+          "path": "upliftCases[id=upl-U1].porePressure",
+          "key": "norm-inputs.upliftCases[id=upl-U1].porePressure",
+          "owner": "scope:1:11:upliftCases6:upl-U1",
+          "ownerWindow": "norm-en1997-outliner",
+          "argument": "newPorePressure",
+          "label": {
+            "en": "Pore pressure u",
+            "de": "Porenwasserdruck u"
+          },
+          "limit": 60000,
+          "unit": "Pa"
+        },
+        "check": "en1997.10.hyd.upl-U1",
+        "states": {
+          "before": {
+            "value": 40000,
+            "utilization": 0.6667
+          },
+          "after": {
+            "value": 20000,
+            "utilization": 0.3333
+          }
+        },
+        "basis": "HYD heave (EN 1997-1 10.3): u = (pore*gamma_HYD)/(totalStress*gamma_HYD,stb) with persistent NA-DE gamma_HYD=1.8, gamma_HYD,stb=0.9 (ndp.en1997.upl.p.hyd/hydstb), totalStress=120 kPa: 40000*1.8/(120000*0.9)=0.6667; exactly linear/proportional (limit = 120000*0.9/1.8 = 60000 Pa); pore pressure is read by no other check. Doc annex=de, design situation bsP (persistent only).",
+        "linear": true
+      }
+    },
+    {
+      "variant": "en1998",
+      "example": "seismic-rc-frame",
+      "ports": {
+        "react": 6102,
+        "wgpu": 6202
+      },
+      "pin": {
+        "field": {
+          "path": "joints[id=joint-1].beamMomentRdNm",
+          "key": "norm-inputs.joints[id=joint-1].beamMomentRdNm",
+          "owner": "scope:1:6:joints7:joint-1",
+          "ownerWindow": "norm-en1998-outliner",
+          "argument": "newBeamMomentRdNm",
+          "label": {
+            "en": "Sum of the design flexural resistances of the beams at the joint, ΣM_Rb",
+            "de": "Summe der Bemessungsbiegewiderstände der Riegel am Knoten, ΣM_Rb"
+          },
+          "limit": 6923076.9,
+          "unit": "N·m"
+        },
+        "check": "en1998.1.bldg-office.capacityDesign.joint.joint-1",
+        "states": {
+          "before": {
+            "value": 4000000.0,
+            "utilization": 0.5778
+          },
+          "after": {
+            "value": 6000000.0,
+            "utilization": 0.8667
+          }
+        },
+        "basis": "Capacity design 4.4.2.3: utilization = 1.3*SumM_Rb / SumM_Rc with SumM_Rc=9e6 Nm (joint-1 in the seismic-rc-frame DSL), so limit = SumM_Rc/1.3; joint-1 sits at s1 (not top storey, ductile DCH frame) so the check runs. Linear in the edited field, no collateral.",
+        "linear": true
+      }
+    },
+    {
+      "variant": "en1999",
+      "example": "aluminium-roof-purlin",
+      "ports": {
+        "react": 6103,
+        "wgpu": 6203
+      },
+      "pin": {
+        "field": {
+          "path": "fatigueDetails[id=fat-1].deltaSigmaEd",
+          "key": "norm-inputs.fatigueDetails[id=fat-1].deltaSigmaEd",
+          "owner": "scope:1:14:fatigueDetails5:fat-1",
+          "ownerWindow": "norm-en1999-outliner",
+          "argument": "newDeltaSigmaEd",
+          "label": {
+            "en": "Stress range Δσ_Ed",
+            "de": "Spannungsschwingbreite Δσ_Ed"
+          },
+          "limit": 41286868.2,
+          "unit": "Pa"
+        },
+        "check": "en1999.1-3.fat.range.fat-1",
+        "states": {
+          "before": {
+            "value": 35000000.0,
+            "utilization": 0.8477
+          },
+          "after": {
+            "value": 25000000.0,
+            "utilization": 0.6055
+          }
+        },
+        "basis": "Stress-range check u = gamma_Ff*dSigma_Ed / (dSigma_R(N)/gamma_Mf); category 71 (71 MPa), m1=4.3, m2=6.3, n=6e6 (> N_D=5e6) so dSigma_R = 71e6*(2e6/5e6)^(1/4.3)*(5e6/6e6)^(1/6.3), gamma_Ff=1.0, gamma_Mf=1.35 (annex de), rd=41.287 MPa; linear in dSigma_Ed. Collateral: Miner damage check en1999.1-3.fat.fat-1 also changes (0.353 -> 0). Matches oracle fatigue_checks in the artifact 🐍️.py.",
+        "linear": true
+      }
+    },
+    {
+      "variant": "din4108",
+      "example": "failing-thin-insulation",
+      "ports": {
+        "react": 6091,
+        "wgpu": 6191
+      },
+      "pin": {
+        "field": {
+          "path": "thermalBridges[id=tb-bad].psi",
+          "key": "norm-inputs.thermalBridges[id=tb-bad].psi",
+          "owner": "scope:1:14:thermalBridges6:tb-bad",
+          "ownerWindow": "norm-din4108-outliner",
+          "argument": "newPsi",
+          "label": {
+            "en": "Linear thermal transmittance ψ",
+            "de": "Längenbezogener Wärmedurchgangskoeffizient ψ"
+          },
+          "limit": 0.4,
+          "unit": "W/(m·K)"
+        },
+        "check": "din4108-bb2.delta-u",
+        "states": {
+          "before": {
+            "value": 0.4,
+            "utilization": 1.0
+          },
+          "after": {
+            "value": 0.2,
+            "utilization": 0.5
+          }
+        },
+        "basis": "Example failing-thin-insulation. dU_WB = psi*L/A_opaque = psi*50 m/200 m2 (40+80+80 m2 opaque); tb-bad is bb2Type detailed with bb2DetailsConform=false so the limit is category B 0.10 W/(m2K); utilization = dU_WB/0.10 = psi/0.4, linear in psi. Rust check_equivalence in part bb-2; example: example=failing-thin-insulation.",
+        "linear": true
+      }
+    },
+    {
+      "variant": "din16798",
+      "example": "compliant-office",
+      "ports": {
+        "react": 6092,
+        "wgpu": 6192
+      },
+      "pin": {
+        "field": {
+          "path": "zones[id=zone-office].noiseDb",
+          "key": "norm-inputs.zones[id=zone-office].noiseDb",
+          "owner": "scope:1:5:zones11:zone-office",
+          "ownerWindow": "norm-din16798-outliner",
+          "argument": "newNoiseDb",
+          "label": {
+            "en": "Indoor noise level",
+            "de": "Raumschallpegel"
+          },
+          "limit": 35,
+          "unit": "dB"
+        },
+        "check": "din16798-1.noise.zone-office",
+        "states": {
+          "before": {
+            "value": 34,
+            "utilization": 0.9714
+          },
+          "after": {
+            "value": 24.5,
+            "utilization": 0.7
+          }
+        },
+        "basis": "Example compliant-office. Noise check utilization = noiseDb / acoustic_limit_db(category II, office) = L/35 dB; linear in the field (Rust check_zone_humidity_light_noise_and_draught).",
+        "linear": true
+      }
+    },
+    {
+      "variant": "din18599",
+      "example": "compliant-two-zone",
+      "ports": {
+        "react": 6093,
+        "wgpu": 6193
+      },
+      "pin": {
+        "field": {
+          "path": "elements[id=roof].uValueWM2k",
+          "key": "norm-inputs.elements[id=roof].uValueWM2k",
+          "owner": "scope:1:8:elements4:roof",
+          "ownerWindow": "norm-din18599-outliner",
+          "argument": "newUValueWM2k",
+          "label": {
+            "en": "U-value",
+            "de": "U-Wert"
+          },
+          "limit": 0.4,
+          "unit": "W/(m²·K)"
+        },
+        "check": "din18599.geg.ht-prime",
+        "states": {
+          "before": {
+            "value": 0.14,
+            "utilization": 0.5978
+          },
+          "after": {
+            "value": 0.4,
+            "utilization": 0.8043
+          }
+        },
+        "basis": "Example compliant-two-zone (residential, detached, A_N=140 -> GEG limit 0.40). H'T = (sum Fx*U*A + dUwb*A_env)/A_env with A_env=472.1 m2, dUwb=0.03, sum Fx*U*A=98.73 W/K; utilization = H'T/0.40 is affine (not proportional) in roof U: +150/472.1/0.40 per unit U; limit field is the check limit 0.40 W/(m2K).",
+        "linear": false
+      }
+    },
+    {
+      "variant": "iso16757",
+      "example": "demo",
+      "ports": {
+        "react": 6104,
+        "wgpu": 6204
+      },
+      "pin": null
+    },
+    {
+      "variant": "vdi3805",
+      "example": "blatt-3",
+      "ports": {
+        "react": 6105,
+        "wgpu": 6205
+      },
+      "pin": null
+    }
+  ]
 }

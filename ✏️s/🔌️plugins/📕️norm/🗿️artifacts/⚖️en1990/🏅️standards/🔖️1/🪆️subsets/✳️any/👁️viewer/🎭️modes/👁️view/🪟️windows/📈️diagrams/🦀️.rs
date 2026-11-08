@@ -22,7 +22,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 📈️ Every diagram of the document.
 pub fn render(document: &En1990Snapshot, windows: &TreeWindows<'_>, locale: Locale) -> UiAssemblyResult<BuiltNode> {
-    let report = semio_s_artifact_norm_en1990_inferences::live::report(document);
+    let report = semio_s_artifact_norm_en1990_inferences::live::responsive(document, semio_s_plugin_norm_app_surface::PAINT_BUDGET).0;
     let shown = memo_diagrams("en1990", document, &report, "\u{0}|\u{0}", || diagrams(document, &report, None, None));
     render_diagrams(BODY_DIAGRAMS, &shown, &DiagramsWindowSpec::default(), windows, locale)
 }

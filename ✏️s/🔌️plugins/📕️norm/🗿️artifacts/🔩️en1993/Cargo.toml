@@ -65,10 +65,14 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️member-warping-more/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️member-warping/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪛fastened-joints/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪛fastened-joints-3/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪛fastened-joints-2/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥫forming-gains/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪material-ductility/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏳fatigue-stresses/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏳fatigue-stresses-2/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪜buckling-lengths/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪜buckling-lengths-2/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️member-web/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️member/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️section-iw/📦️packages/🦀️rust",
@@ -681,6 +685,12 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️
 [workspace.dependencies.semio-s-artifact-norm-en1993-mut-fastened-joints]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪛fastened-joints/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-norm-en1993-mut-fastened-joints-3]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪛fastened-joints-3/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1993-mut-fastened-joints-2]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪛fastened-joints-2/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-norm-en1993-mut-forming-gains]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥫forming-gains/📦️packages/🦀️rust"
 
@@ -690,8 +700,14 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️
 [workspace.dependencies.semio-s-artifact-norm-en1993-mut-fatigue-stresses]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏳fatigue-stresses/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-norm-en1993-mut-fatigue-stresses-2]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏳fatigue-stresses-2/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-norm-en1993-mut-buckling-lengths]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪜buckling-lengths/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1993-mut-buckling-lengths-2]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪜buckling-lengths-2/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-norm-en1993-spec-trace]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧭️spec-trace/📦️packages/🦀️rust"

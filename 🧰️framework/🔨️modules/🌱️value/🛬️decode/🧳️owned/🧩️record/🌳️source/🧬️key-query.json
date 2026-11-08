@@ -1,0 +1,420 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operations",
+    "events",
+    "sourceCalls",
+    "recoverCalls",
+    "originalErrorPreserved",
+    "foreignSourceAccepted",
+    "replyCustody",
+    "seedParts",
+    "maxPartCopy",
+    "seedCancelCuts",
+    "seedStock",
+    "acknowledgementPhases",
+    "semanticFailureAcknowledged",
+    "checkpointUnwind",
+    "slotSource"
+  ],
+  "properties": {
+    "operations": {
+      "const": [
+        "record",
+        "text",
+        "variantTag",
+        "enumOrdinal",
+        "recordName",
+        "recordText"
+      ]
+    },
+    "events": {
+      "const": [
+        "admitSource",
+        "receive",
+        "recordReply",
+        "unwind",
+        "recoverRecorded",
+        "settle",
+        "transfer"
+      ]
+    },
+    "sourceCalls": {
+      "const": 1
+    },
+    "recoverCalls": {
+      "const": 0
+    },
+    "originalErrorPreserved": {
+      "const": true
+    },
+    "foreignSourceAccepted": {
+      "const": false
+    },
+    "replyCustody": {
+      "const": "residentOriginalSource"
+    },
+    "seedParts": {
+      "const": 90
+    },
+    "maxPartCopy": {
+      "const": 4096
+    },
+    "seedCancelCuts": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "const": 0
+        },
+        {
+          "const": 1
+        },
+        {
+          "const": 2
+        },
+        {
+          "const": 3
+        },
+        {
+          "const": 4
+        },
+        {
+          "const": 5
+        },
+        {
+          "const": 6
+        },
+        {
+          "const": 7
+        },
+        {
+          "const": 8
+        },
+        {
+          "const": 9
+        },
+        {
+          "const": 10
+        },
+        {
+          "const": 11
+        },
+        {
+          "const": 12
+        },
+        {
+          "const": 13
+        },
+        {
+          "const": 14
+        },
+        {
+          "const": 15
+        },
+        {
+          "const": 16
+        },
+        {
+          "const": 17
+        },
+        {
+          "const": 18
+        },
+        {
+          "const": 19
+        },
+        {
+          "const": 20
+        },
+        {
+          "const": 21
+        },
+        {
+          "const": 22
+        },
+        {
+          "const": 23
+        },
+        {
+          "const": 24
+        },
+        {
+          "const": 25
+        },
+        {
+          "const": 26
+        },
+        {
+          "const": 27
+        },
+        {
+          "const": 28
+        },
+        {
+          "const": 29
+        },
+        {
+          "const": 30
+        },
+        {
+          "const": 31
+        },
+        {
+          "const": 32
+        },
+        {
+          "const": 33
+        },
+        {
+          "const": 34
+        },
+        {
+          "const": 35
+        },
+        {
+          "const": 36
+        },
+        {
+          "const": 37
+        },
+        {
+          "const": 38
+        },
+        {
+          "const": 39
+        },
+        {
+          "const": 40
+        },
+        {
+          "const": 41
+        },
+        {
+          "const": 42
+        },
+        {
+          "const": 43
+        },
+        {
+          "const": 44
+        },
+        {
+          "const": 45
+        },
+        {
+          "const": 46
+        },
+        {
+          "const": 47
+        },
+        {
+          "const": 48
+        },
+        {
+          "const": 49
+        },
+        {
+          "const": 50
+        },
+        {
+          "const": 51
+        },
+        {
+          "const": 52
+        },
+        {
+          "const": 53
+        },
+        {
+          "const": 54
+        },
+        {
+          "const": 55
+        },
+        {
+          "const": 56
+        },
+        {
+          "const": 57
+        },
+        {
+          "const": 58
+        },
+        {
+          "const": 59
+        },
+        {
+          "const": 60
+        },
+        {
+          "const": 61
+        },
+        {
+          "const": 62
+        },
+        {
+          "const": 63
+        },
+        {
+          "const": 64
+        },
+        {
+          "const": 65
+        },
+        {
+          "const": 66
+        },
+        {
+          "const": 67
+        },
+        {
+          "const": 68
+        },
+        {
+          "const": 69
+        },
+        {
+          "const": 70
+        },
+        {
+          "const": 71
+        },
+        {
+          "const": 72
+        },
+        {
+          "const": 73
+        },
+        {
+          "const": 74
+        },
+        {
+          "const": 75
+        },
+        {
+          "const": 76
+        },
+        {
+          "const": 77
+        },
+        {
+          "const": 78
+        },
+        {
+          "const": 79
+        },
+        {
+          "const": 80
+        },
+        {
+          "const": 81
+        },
+        {
+          "const": 82
+        },
+        {
+          "const": 83
+        },
+        {
+          "const": 84
+        },
+        {
+          "const": 85
+        },
+        {
+          "const": 86
+        },
+        {
+          "const": 87
+        },
+        {
+          "const": 88
+        },
+        {
+          "const": 89
+        },
+        {
+          "const": 90
+        },
+        {
+          "const": 91
+        },
+        {
+          "const": 92
+        }
+      ],
+      "items": false,
+      "minItems": 93,
+      "maxItems": 93
+    },
+    "seedStock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth",
+        "fuel",
+        "maximumTurns"
+      ],
+      "properties": {
+        "items": {
+          "const": 512
+        },
+        "copyBytes": {
+          "const": 1048576
+        },
+        "capacityBytes": {
+          "const": 1048576
+        },
+        "releaseBytes": {
+          "const": 1048576
+        },
+        "depth": {
+          "const": 64
+        },
+        "fuel": {
+          "const": 4096
+        },
+        "maximumTurns": {
+          "const": 512
+        }
+      }
+    },
+    "acknowledgementPhases": {
+      "const": [
+        "bind",
+        "acceptPost",
+        "query",
+        "prepare",
+        "acceptPost",
+        "acknowledge",
+        "closeMetadata",
+        "acceptPost",
+        "rearm",
+        "acceptPost",
+        "clearRequest"
+      ]
+    },
+    "semanticFailureAcknowledged": {
+      "const": false
+    },
+    "checkpointUnwind": {
+      "const": {
+        "replay": false,
+        "requestRetained": true,
+        "closeAllowed": false
+      }
+    },
+    "slotSource": {
+      "const": {
+        "genuineWitness": true,
+        "foreignAccepted": false
+      }
+    }
+  }
+}

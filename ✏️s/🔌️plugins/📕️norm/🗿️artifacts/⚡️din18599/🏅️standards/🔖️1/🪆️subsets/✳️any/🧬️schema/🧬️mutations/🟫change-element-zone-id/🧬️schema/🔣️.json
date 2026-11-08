@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-element-zone-id/schema.json",
+  "title": "ChangeElementZoneId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "elementId",
+    "newZoneId"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeelementzoneid"
+    },
+    "elementId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Envelope element",
+          "de": "Bauteil der Gebäudehülle"
+        },
+        "description": {
+          "en": "The element this mutation addresses.",
+          "de": "Das Objekt (Bauteil), das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "element"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newZoneId": {
+      "type": "string",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Move element to another zone",
+          "de": "Bauteil in eine andere Zone verschieben"
+        },
+        "group": "element",
+        "order": 20,
+        "widget": "reference",
+        "ref": {
+          "kind": "zone"
+        }
+      }
+    }
+  }
+}

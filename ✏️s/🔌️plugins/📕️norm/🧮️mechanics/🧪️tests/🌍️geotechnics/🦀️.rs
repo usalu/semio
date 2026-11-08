@@ -121,6 +121,12 @@ fn the_static_factors_match_the_independent_slice_solution() {
 }
 
 #[test]
+fn ponded_water_above_the_toe_loads_the_slice_and_the_base_like_the_independent_solution() {
+    let ponded = Circle { h: 6.0, beta_deg: 30.0, xc: 6.0, yc: 10.0, r: 11.0, gamma: 18_000.0, gamma_sat: 20_000.0, gwl_level: 2.0, ru: 0.0, q: 0.0 };
+    close(slope::janbu(&ponded, 30.0_f64.to_radians().tan(), 5_000.0, 120).expect("janbu"), oracle()["slope.janbu.ponded"], 5e-3, "Janbu ponded");
+}
+
+#[test]
 fn the_pseudo_static_slice_forces_reduce_the_factors_to_the_worse_vertical_sign() {
     let (tan_phi, c) = (28.0_f64.to_radians().tan() / 1.25, 6_000.0 / 1.25);
     let seismic = Pseudostatic { horizontal: 0.08, vertical: 0.5 };

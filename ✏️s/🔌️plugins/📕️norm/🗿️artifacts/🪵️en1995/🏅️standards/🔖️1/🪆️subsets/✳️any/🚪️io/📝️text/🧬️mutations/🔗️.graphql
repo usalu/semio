@@ -1,3 +1,5 @@
+scalar UInt32
+
 union En1995Mutation = ChangeAnnex | InsertMember | RemoveMember | ChangeMemberH | ChangeMemberB | ChangeMemberStrengthClass | ChangeConnectionNumber | InsertConnection | RemoveConnection
 type ChangeAnnex {
   newAnnex: AnnexChoice!
@@ -23,7 +25,7 @@ type ChangeMemberStrengthClass {
 }
 type ChangeConnectionNumber {
   connectionId: String!
-  newValue: Int!
+  newValue: UInt32!
 }
 type InsertConnection {
   index: Int!

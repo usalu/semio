@@ -140,19 +140,7 @@ protocol::list_delta! {
     pub Din18599ZonesRows { removal: Din18599ZonesRemoved, insertion: Din18599ZonesInserted, relocation: Din18599ZonesMoved, modification: Din18599ZonesModified, row: semio_s_artifact_norm_din18599_model::ThermalZone, patch: Din18599ZonesPatch, list: Vec<semio_s_artifact_norm_din18599_model::ThermalZone>, key: String = by Din18599ZonesRowsKey }
 }
 
-impl Din18599ZonesRows {
-        /// 🧮️ The delta of a whole-list setter: every base row leaves at its base index and every payload row enters at its payload index.
-        pub fn setting(base: &[semio_s_artifact_norm_din18599_model::ThermalZone], new: &[semio_s_artifact_norm_din18599_model::ThermalZone]) -> Self {
-            Self {
-                removed: base.iter().enumerate().map(|(index, row)| Din18599ZonesRemoved { id: row.key().to_string(), index }).collect(),
-                inserted: new.iter().enumerate().map(|(index, row)| Din18599ZonesInserted { index, row: row.clone() }).collect(),
-                moved: Vec::new(),
-                modified: Vec::new(),
-            }
-        }
-    }
-
-    /// 🩹️ Sparse patch of the `elements` row addressed by its key.
+/// 🩹️ Sparse patch of the `elements` row addressed by its key.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
@@ -284,19 +272,7 @@ protocol::list_delta! {
     pub Din18599ElementsRows { removal: Din18599ElementsRemoved, insertion: Din18599ElementsInserted, relocation: Din18599ElementsMoved, modification: Din18599ElementsModified, row: semio_s_artifact_norm_din18599_model::EnvelopeElement, patch: Din18599ElementsPatch, list: Vec<semio_s_artifact_norm_din18599_model::EnvelopeElement>, key: String = by Din18599ElementsRowsKey }
 }
 
-impl Din18599ElementsRows {
-        /// 🧮️ The delta of a whole-list setter: every base row leaves at its base index and every payload row enters at its payload index.
-        pub fn setting(base: &[semio_s_artifact_norm_din18599_model::EnvelopeElement], new: &[semio_s_artifact_norm_din18599_model::EnvelopeElement]) -> Self {
-            Self {
-                removed: base.iter().enumerate().map(|(index, row)| Din18599ElementsRemoved { id: row.key().to_string(), index }).collect(),
-                inserted: new.iter().enumerate().map(|(index, row)| Din18599ElementsInserted { index, row: row.clone() }).collect(),
-                moved: Vec::new(),
-                modified: Vec::new(),
-            }
-        }
-    }
-
-    /// 🩹️ Sparse per-field patch of the `heating` section.
+/// 🩹️ Sparse per-field patch of the `heating` section.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]

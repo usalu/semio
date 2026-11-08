@@ -1,0 +1,334 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "text",
+    "bodyWork",
+    "replyWork",
+    "ownerWork",
+    "sourceWork",
+    "cases",
+    "reuse",
+    "failure",
+    "overrun",
+    "residentRecovery"
+  ],
+  "properties": {
+    "text": {
+      "const": "hello"
+    },
+    "bodyWork": {
+      "const": 5
+    },
+    "replyWork": {
+      "const": 1
+    },
+    "ownerWork": {
+      "const": 1
+    },
+    "sourceWork": {
+      "const": 7
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mode",
+          "partialWork"
+        ],
+        "properties": {
+          "mode": {
+            "enum": [
+              "complete",
+              "producerPending",
+              "producerUnwind"
+            ]
+          },
+          "partialWork": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 2,
+            "items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            }
+          }
+        }
+      }
+    },
+    "reuse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "operations",
+        "bodyWork",
+        "replyWork",
+        "rearmWork",
+        "ownerWork",
+        "sourceWork",
+        "posts",
+        "drivers",
+        "recoveryCases",
+        "maximumCopyBytes"
+      ],
+      "properties": {
+        "text": {
+          "const": "helloworld"
+        },
+        "operations": {
+          "const": 2
+        },
+        "bodyWork": {
+          "const": 5
+        },
+        "replyWork": {
+          "const": 1
+        },
+        "rearmWork": {
+          "const": 1
+        },
+        "ownerWork": {
+          "const": 1
+        },
+        "sourceWork": {
+          "const": 14
+        },
+        "posts": {
+          "const": 6
+        },
+        "drivers": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "enum": [
+              "paidPrimitive",
+              "residentPayment"
+            ]
+          }
+        },
+        "recoveryCases": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "enum": [
+              "complete",
+              "rearmCheckpointPending",
+              "rearmCheckpointUnwind",
+              "rearmPostUnwind"
+            ]
+          }
+        },
+        "maximumCopyBytes": {
+          "const": 4096
+        }
+      }
+    },
+    "failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "message",
+        "bodyWork",
+        "replyWork",
+        "publicationWork",
+        "ownerWork",
+        "retirementWork",
+        "sourceWork",
+        "posts"
+      ],
+      "properties": {
+        "message": {
+          "const": "actual original producer refusal"
+        },
+        "bodyWork": {
+          "const": 1
+        },
+        "replyWork": {
+          "const": 1
+        },
+        "publicationWork": {
+          "const": 1
+        },
+        "ownerWork": {
+          "const": 1
+        },
+        "retirementWork": {
+          "const": 1
+        },
+        "sourceWork": {
+          "const": 5
+        },
+        "posts": {
+          "const": 5
+        }
+      }
+    },
+    "overrun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "message",
+        "quotedBodyWork",
+        "actualBodyWork",
+        "failurePayoutWork",
+        "replyWork",
+        "publicationWork",
+        "ownerWork",
+        "retirementWork",
+        "sourceWork",
+        "posts",
+        "valueSlots"
+      ],
+      "properties": {
+        "message": {
+          "const": "actual original producer refusal"
+        },
+        "quotedBodyWork": {
+          "const": 2
+        },
+        "actualBodyWork": {
+          "const": 3
+        },
+        "failurePayoutWork": {
+          "const": 1
+        },
+        "replyWork": {
+          "const": 1
+        },
+        "publicationWork": {
+          "const": 1
+        },
+        "ownerWork": {
+          "const": 1
+        },
+        "retirementWork": {
+          "const": 2
+        },
+        "sourceWork": {
+          "const": 9
+        },
+        "posts": {
+          "const": 7
+        },
+        "valueSlots": {
+          "type": "array",
+          "minItems": 10,
+          "maxItems": 10,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "primary",
+              "context",
+              "invariant",
+              "physicalInvariant",
+              "capacityInvariant",
+              "markerFailure",
+              "work",
+              "workOverrun",
+              "local",
+              "physical"
+            ]
+          }
+        }
+      }
+    },
+    "residentRecovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "message",
+        "quotedBodyWork",
+        "actualBodyWork",
+        "failurePayoutWork",
+        "replyWork",
+        "publicationWork",
+        "ownerWork",
+        "retirementWork",
+        "sourceWork",
+        "posts",
+        "recoveryWork",
+        "cases",
+        "causeProgress"
+      ],
+      "properties": {
+        "message": {
+          "const": "actual original producer refusal"
+        },
+        "quotedBodyWork": {
+          "const": 2
+        },
+        "actualBodyWork": {
+          "const": 3
+        },
+        "failurePayoutWork": {
+          "const": 1
+        },
+        "replyWork": {
+          "const": 1
+        },
+        "publicationWork": {
+          "const": 1
+        },
+        "ownerWork": {
+          "const": 1
+        },
+        "retirementWork": {
+          "const": 2
+        },
+        "sourceWork": {
+          "const": 11
+        },
+        "posts": {
+          "const": 8
+        },
+        "recoveryWork": {
+          "const": 2
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "complete",
+              "recordedReplyUnwind"
+            ]
+          }
+        },
+        "causeProgress": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "copiedItems",
+            "copiedBytes",
+            "retainedCapacityBytes",
+            "releasedBytes"
+          ],
+          "properties": {
+            "copiedItems": {
+              "const": 7
+            },
+            "copiedBytes": {
+              "const": 13
+            },
+            "retainedCapacityBytes": {
+              "const": 0
+            },
+            "releasedBytes": {
+              "const": 0
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "value": "hello β",
+  "cuts": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    10
+  ],
+  "original": 11,
+  "foreign": 12,
+  "foreignAccepted": false,
+  "published": true,
+  "unwindAt": 5,
+  "largeLength": 8192,
+  "maximumCopy": 4096,
+  "seedCuts": [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26],
+  "placement": {
+    "elementBytes": 1,
+    "chunkElements": 2048,
+    "offsets": [
+      0,
+      2048,
+      4096,
+      6144,
+      8192
+    ],
+    "deniedOffset": 2048
+  }
+}

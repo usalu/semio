@@ -1,121 +1,149 @@
-//! ✍️ Original owned map entries share the existing AVL producer and preserve exact grant custody.
+//! ✍️ Owned map entries publish every native result into caller-resident slots.
 use super::{OrderedMap,UpdateCursor,SharedOwner};
-use crate::{ValueError,ValueRefusalKind,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome};
+use crate::{ValueError,ValueRefusalKind,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetainedAllocationEffect,OriginalEffectReply,OriginalEffectReplyComplete,OriginalRetirementFailure,OriginalRetirementCloseLoan};
 use crate::retirement::{RetireOwned,RetirementCursor,RetirementStep};
-use semio_framework_value_retained_clone::{OriginalRetirementFailure,RetainedCloneClose,retained_clone_grant_admits};
+use semio_framework_value_retained_clone::{RetainedCloneClose,retained_clone_grant_admits};
 use std::mem::{ManuallyDrop,size_of};
-fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original owned map entry changed its retained frontier")}
+fn invalid()->ValueError{ValueError::invariant("original owned map entry changed its retained frontier")}
 struct Fields<V>{base:Option<OrderedMap<V>>,key:Option<String>,value:Option<V>,shared_key:Option<SharedOwner<String>>,shared_value:Option<SharedOwner<V>>,update:Option<UpdateCursor<V>>}
-/// 📝️ Owns the original map and entry without an alternate update algorithm or borrowed source mirror.
-pub struct OriginalOwnedEntry<V:RetireOwned+Sync>{fields:ManuallyDrop<Fields<V>>,retirement:RetainedCloneClose,phase:u8,closing:bool,progress:RetainedCloneProgress,last_work:u128,last_allocation_attempt:Option<usize>}
+/// 📝️ Retains the original inputs, actual updater and selected retirement until paid handoff.
+pub struct OriginalOwnedEntry<V:RetireOwned+Sync>{fields:ManuallyDrop<Fields<V>>,retirement:RetainedCloneClose,phase:u8,closing:bool}
 impl<V:RetireOwned+Sync> OriginalOwnedEntry<V>{
- /// 🌱️ Transfers actual original owners inline before any header allocation is admitted.
- pub fn new(base:OrderedMap<V>,key:String,value:V)->Self{Self{fields:ManuallyDrop::new(Fields{base:Some(base),key:Some(key),value:Some(value),shared_key:None,shared_value:None,update:None}),retirement:Default::default(),phase:0,closing:false,progress:Default::default(),last_work:0,last_allocation_attempt:None}}
- /// 🔗️ Transfers the already-issued immutable value and admits only the original new key header.
- pub fn from_shared_value(base:OrderedMap<V>,key:String,value:SharedOwner<V>)->Self{Self{fields:ManuallyDrop::new(Fields{base:Some(base),key:Some(key),value:None,shared_key:None,shared_value:Some(value),update:None}),retirement:Default::default(),phase:0,closing:false,progress:Default::default(),last_work:0,last_allocation_attempt:None}}
- /// 📥️ Transfers both actual immutable entry headers without allocating replacement authority.
- pub fn from_shared(base:OrderedMap<V>,key:SharedOwner<String>,value:SharedOwner<V>)->Self{Self{fields:ManuallyDrop::new(Fields{base:Some(base),key:None,value:None,shared_key:Some(key),shared_value:Some(value),update:None}),retirement:Default::default(),phase:2,closing:false,progress:Default::default(),last_work:0,last_allocation_attempt:None}}
- /// ♻️ Identifies the actual existing updater closure selected during normal advancement.
+ pub fn new(base:OrderedMap<V>,key:String,value:V)->Self{Self{fields:ManuallyDrop::new(Fields{base:Some(base),key:Some(key),value:Some(value),shared_key:None,shared_value:None,update:None}),retirement:Default::default(),phase:0,closing:false}}
+ pub fn from_shared_value(base:OrderedMap<V>,key:String,value:SharedOwner<V>)->Self{Self{fields:ManuallyDrop::new(Fields{base:Some(base),key:Some(key),value:None,shared_key:None,shared_value:Some(value),update:None}),retirement:Default::default(),phase:0,closing:false}}
+ pub fn from_shared(base:OrderedMap<V>,key:SharedOwner<String>,value:SharedOwner<V>)->Self{Self{fields:ManuallyDrop::new(Fields{base:Some(base),key:None,value:None,shared_key:Some(key),shared_value:Some(value),update:None}),retirement:Default::default(),phase:2,closing:false}}
  pub fn advancing_retirement(&self)->bool{!self.closing&&self.phase==5&&(!self.retirement.is_empty()||self.fields.update.is_some())}
- pub fn step_progress(&self)->RetainedCloneProgress{self.progress}
- pub fn last_turn_work(&self)->u64{crate::narrow_work(self.last_work)}
- pub fn last_allocation_attempt(&self)->Option<usize>{self.last_allocation_attempt}
- /// ⛽️ Quotes the selected updater or real retirement producer before any effects.
- pub fn next_work_demand(&self,copy:usize)->Result<u64,ValueError>{if self.closing{return self.next_close_work_demand(copy)}match self.phase{3=>self.fields.update.as_ref().ok_or_else(invalid)?.next_work_demand(copy),5 if !self.retirement.is_empty()||self.fields.update.is_some()=>self.retirement.next_owner_work::<UpdateCursor<V>>(self.fields.update.is_some(),&None,copy),7=>Ok(0),_=>Ok(1)}}
- /// 🪙️ Quotes the same original header, AVL event or retained close that the next advance selects.
+ pub fn requires_original_birth(&self)->bool{self.retirement.requires_original_birth()}
+ pub fn requires_original_control(&self)->bool{self.retirement.requires_original_control()}
+ pub fn close_original_birth_step(&mut self,o:&mut OriginalRetirementCloseLoan<'_>,g:RetainedCloneGrant)->crate::OriginalRetirementPoll{self.retirement.step_original_birth(o,g)}
+ pub fn next_work_demand(&self,copy:usize)->Result<u64,ValueError>{
+  if self.closing{return self.next_close_work_demand(copy)}
+  match self.phase{
+   0=>Ok(SharedOwner::<String>::source_admission_work_demand()+1),
+   1=>Ok(if self.fields.shared_value.is_none()&&self.fields.value.is_some(){SharedOwner::<V>::source_admission_work_demand()+1}else{1}),
+   2=>Ok(1+3*u64::from(self.fields.base.as_ref().is_some_and(|base|!base.is_empty()))),
+   3=>{let update=self.fields.update.as_ref().ok_or_else(invalid)?;if update.is_complete(){Ok(1)}else{update.native_work_demand(copy)}},
+   5 if !self.retirement.is_empty()||self.fields.update.is_some()=>self.retirement.next_owner_work::<UpdateCursor<V>>(self.fields.update.is_some(),&None,copy),
+   7=>Ok(0),_=>Ok(1)
+  }
+ }
  pub fn next_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
   if self.closing{return self.next_close_demands(copy)}
   Ok(match self.phase{
-   0=>{let mut d=SharedOwner::admission_demand(&self.fields.key,&self.fields.shared_key)?;d.copy_bytes=d.copy_bytes.checked_add(size_of::<u8>()).ok_or_else(invalid)?;d},
-   1=>{let mut d=if self.fields.shared_value.is_none()&&self.fields.value.is_some(){SharedOwner::admission_demand(&self.fields.value,&self.fields.shared_value)?}else{RetirementDemand{depth:1,..Default::default()}};d.copy_bytes=d.copy_bytes.checked_add(size_of::<u8>()).ok_or_else(invalid)?;d},
-   3=>{let update=self.fields.update.as_ref().ok_or_else(invalid)?;RetirementDemand{copy_bytes:update.next_copy_byte_demand(),capacity_bytes:update.next_capacity_byte_demand()?,depth:update.next_depth_demand(),..Default::default()}},
-   5=>if self.retirement.is_empty()&&self.fields.update.is_none(){RetirementDemand{depth:1,..Default::default()}}else{return self.retirement.next_owner_demands::<UpdateCursor<V>>(self.fields.update.is_some(),&None,copy)},
-   7=>Default::default(),
-   _=>RetirementDemand{depth:1,..Default::default()},
+   0=>{let mut d=SharedOwner::<String>::source_admission_demand()?;d.copy_bytes=d.copy_bytes.checked_add(size_of::<u8>()).ok_or_else(invalid)?;d},
+   1 if self.fields.shared_value.is_none()&&self.fields.value.is_some()=>{let mut d=SharedOwner::<V>::source_admission_demand()?;d.copy_bytes=d.copy_bytes.checked_add(size_of::<u8>()).ok_or_else(invalid)?;d},
+   2=>RetirementDemand{copy_bytes:size_of::<Option<OrderedMap<V>>>()+size_of::<Option<SharedOwner<String>>>()+size_of::<Option<SharedOwner<V>>>()+size_of::<Option<UpdateCursor<V>>>()+SharedOwner::<V>::duplicate_copy_bytes()+size_of::<u8>(),depth:1,..Default::default()},
+   3=>{let update=self.fields.update.as_ref().ok_or_else(invalid)?;if update.is_complete(){RetirementDemand{copy_bytes:size_of::<u8>(),depth:1,..Default::default()}}else{return update.native_demands(copy)}},
+   4=>RetirementDemand{copy_bytes:2*size_of::<Option<OrderedMap<V>>>()+size_of::<u8>(),depth:1,..Default::default()},
+   5 if !self.retirement.is_empty()||self.fields.update.is_some()=>return self.retirement.next_owner_demands::<UpdateCursor<V>>(self.fields.update.is_some(),&None,copy),
+   6=>RetirementDemand{copy_bytes:2*size_of::<Option<OrderedMap<V>>>()+size_of::<u8>(),depth:1,..Default::default()},
+   7=>Default::default(),_=>RetirementDemand{copy_bytes:size_of::<u8>(),depth:1,..Default::default()}
   })
  }
- /// ⏱️ Returns the defining producer's actual work on success, denial and failure.
- pub fn advance(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkPoll<Option<OrderedMap<V>>,OriginalRetirementFailure>{
-  self.progress=Default::default();self.last_work=0;self.last_allocation_attempt=None;if effect.maximum_work_units()<self.advance_work_demand(effect.grant().maximum_copy_bytes).unwrap_or(u64::MAX){return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(None),work:0})}let start=effect.performed_work();let result=self.advance_original(effect).map_err(|exit|match exit{crate::RetirementPollExit::Failed(error)=>crate::RetirementPollExit::Failed(error.with_retained_progress(self.progress)),pending=>pending});
-  let result=match self.record_owed_work(effect,start){Ok(())=>result,Err(error)=>result.and(Err(error.into()))};crate::RetirementPollExit::finish(result,self.last_work)
+ fn native_advance(&mut self,body:usize,output:&mut Option<OrderedMap<V>>,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneStep,OriginalRetirementFailure>{
+  let before=effect.performed_boundary();let result=(||{
+   if self.closing{return Err(ValueError::literal(ValueRefusalKind::Canceled,"owned map entry is closing").into())}
+   if self.phase==7{return Ok(RetainedCloneStep::Complete(Default::default()))}
+   if output.is_some(){return Err(invalid().into())}
+   let grant=effect.grant();let d=self.next_demands(body)?;let work=self.next_work_demand(body)?;
+   if !retained_clone_grant_admits(grant,d)||effect.remaining_work_units()?<work{return Ok(RetainedCloneStep::Progress(Default::default()))}
+   if self.phase==3{let turn=self.fields.update.as_mut().ok_or_else(invalid)?.advance_native(body,effect);let step=turn.result?;if matches!(step,RetainedCloneStep::Complete(_)){return Ok(RetainedCloneStep::Progress(step.progress()))}return Ok(step)}
+   if self.phase==5&&(!self.retirement.is_empty()||self.fields.update.is_some()){
+    if !self.retirement.is_empty(){return Err(invalid().into())}
+    return self.retirement.begin_granted(&mut self.fields.update,effect).result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into)
+   }
+   if self.phase<=1{
+    let fields=&mut*self.fields;
+    if self.phase==1&&(fields.shared_value.is_some()||fields.value.is_none()){
+     if !effect.performed(1)?{return Err(invalid().into())}self.phase=2;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<u8>(),..Default::default()}))
+    }
+    let child_grant=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-size_of::<u8>(),..grant};let child_work=work-1;
+    let turn=if self.phase==0{SharedOwner::admit_from(&mut fields.key,&mut fields.shared_key,&mut effect.reborrow(child_grant,child_work)?)}else{SharedOwner::admit_from(&mut fields.value,&mut fields.shared_value,&mut effect.reborrow(child_grant,child_work)?)};
+    let step=turn.result?;if !matches!(step,RetainedCloneStep::Complete(_)){return Ok(RetainedCloneStep::Progress(step.progress()))}
+    if !effect.performed(1)?{return Err(invalid().into())}self.phase+=1;let mut progress=step.progress();progress.copied_bytes=progress.copied_bytes.checked_add(size_of::<u8>()).ok_or_else(invalid)?;return Ok(RetainedCloneStep::Progress(progress))
+   }
+   if !effect.performed(work)?{return Err(invalid().into())}
+   match self.phase{
+    2=>{let fields=&mut*self.fields;fields.update=Some(UpdateCursor::new(fields.base.take().ok_or_else(invalid)?,fields.shared_key.take().ok_or_else(invalid)?,fields.shared_value.take()));self.phase=3},
+    4=>{self.fields.base=self.fields.update.as_mut().ok_or_else(invalid)?.take_result();if self.fields.base.is_none(){return Err(invalid().into())}self.phase=5},
+    5=>self.phase=6,
+    6=>{*output=self.fields.base.take();self.phase=7},
+    _=>return Err(invalid().into())
+   }
+   Ok(if self.phase==7{RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})}else{RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})})
+  })();RetainedWorkOutcome{result,work:effect.performed_since(before).expect("same original ordered entry receipt")}
  }
- fn record_owed_work(&self,effect:&mut crate::RetainedAllocationEffect<'_>,start:u128)->Result<(),ValueError>{let performed=effect.performed_work().checked_sub(start).ok_or_else(invalid)?;let owed=self.last_work.checked_sub(performed).ok_or_else(||ValueError::invariant("original entry reported less work than its effect performed"))?;if owed==0{return Ok(())}let owed=u64::try_from(owed).map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"original entry work exceeds its receipt"))?;if effect.performed(owed)?{Ok(())}else{Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original entry work exceeded its authority"))}}
- fn advance_original(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->Result<Option<OrderedMap<V>>,crate::RetirementPollExit>{let grant=effect.grant();
-  if self.closing{return Err(ValueError::literal(ValueRefusalKind::Canceled,"original owned map entry is closing").into())}
-  if grant.maximum_items==0{return Ok(None)}
-  let d=self.next_demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<d.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original owned map entry exceeds admitted depth").into())}if !retained_clone_grant_admits(grant,d){return Ok(None)}
-  if self.phase==5&&(!self.retirement.is_empty()||self.fields.update.is_some()){let outcome=if self.retirement.is_empty(){let turn=self.retirement.begin_granted(&mut self.fields.update,&mut effect.nested(grant));RetainedWorkOutcome{result:turn.result.map_err(Into::into).map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}}else{crate::RetirementPollExit::settled(self.retirement.step_granted(effect))?};self.progress=outcome.result.as_ref().map_or_else(|e|e.retained_progress(),|step|step.progress());self.last_work=outcome.work;outcome.result?;return Ok(None)}
-  self.progress.copied_items=1;self.last_work=1;
-  match self.phase{
-   0=>{let fields=&mut*self.fields;let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes.saturating_sub(size_of::<u8>()),..grant};let turn=SharedOwner::admit_into(&mut fields.key,&mut fields.shared_key,&mut effect.nested(child));self.last_work=turn.work;self.progress=Default::default();if let Some(mut progress)=turn.result?{progress.copied_bytes+=size_of::<u8>();self.progress=progress;self.phase=1}},
-   1=>{if self.fields.shared_value.is_some()||self.fields.value.is_none(){self.phase=2;self.progress.copied_bytes=size_of::<u8>()}else{let fields=&mut*self.fields;let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes.saturating_sub(size_of::<u8>()),..grant};let turn=SharedOwner::admit_into(&mut fields.value,&mut fields.shared_value,&mut effect.nested(child));self.last_work=turn.work;self.progress=Default::default();if let Some(mut progress)=turn.result?{progress.copied_bytes+=size_of::<u8>();self.progress=progress;self.phase=2}}},
-   2=>{let fields=&mut*self.fields;fields.update=Some(UpdateCursor::new(fields.base.take().ok_or_else(invalid)?,fields.shared_key.take().ok_or_else(invalid)?,fields.shared_value.take()));self.phase=3},
-   3=>{let update=self.fields.update.as_mut().ok_or_else(invalid)?;let outcome=update.advance(grant,effect.maximum_work_units());self.last_work=outcome.work;self.last_allocation_attempt=update.last_allocation_attempt();if let Some(bytes)=self.last_allocation_attempt{*effect.actual()=Some(bytes)}self.progress=outcome.result.as_ref().map_or_else(|e|e.retained_progress(),|step|step.progress());outcome.result?;if update.is_complete(){self.phase=4}},
-   4=>{self.fields.base=self.fields.update.as_mut().ok_or_else(invalid)?.take_result();if self.fields.base.is_none(){return Err(invalid().into())}self.phase=5},
-   5=>{self.phase=6},
-   6=>{self.phase=7;return Ok(self.fields.base.take())},
-   _=>{self.progress=Default::default();self.last_work=0;return Err(invalid().into())},
-  }Ok(None)
+ /// 📥️ Publishes the actual ordered output only after its original native action is paid.
+ pub fn advance_into<'r>(&mut self,body:usize,output:&mut Option<OrderedMap<V>>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{
+  if self.phase==3&&self.fields.update.as_ref().is_some_and(|update|update.is_complete()){
+   let demand=RetirementDemand{copy_bytes:size_of::<u8>(),depth:1,..Default::default()};if !retained_clone_grant_admits(effect.grant(),demand)||effect.remaining_work_units()?<1{return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}if !effect.performed(1)?{return Err(invalid())}self.phase=4;return Ok(reply.complete(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))))
+  }
+  if self.phase==5&&!self.retirement.is_empty(){return self.retirement.step_into(body,effect,reply.progress())}
+  let turn=self.native_advance(body,output,effect);Ok(reply.complete(turn.result))
  }
- /// 🛑️ Retains every original input and partial child until explicit closure.
+ pub fn recover_advance_into<'r>(&mut self,body:usize,_output:&mut Option<OrderedMap<V>>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{if self.phase!=5||self.retirement.is_empty(){return Err(invalid())}self.retirement.recover_step_into(body,effect,reply.progress())}
  pub fn begin_close_demand(&self)->RetirementDemand{crate::retained_clone::retained_close_start_demand(self.closing)}
  pub fn begin_close_work_demand(&self)->u64{u64::from(!self.closing)}
- pub fn begin_close_paid(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress>{crate::retained_clone::start_retained_close(&mut self.closing,effect)}
- pub fn advance_work_demand(&self,copy:usize)->Result<u64,ValueError>{if self.closing||self.phase==7{return Ok(0)}if self.phase==5&&(!self.retirement.is_empty()||self.fields.update.is_some()){return self.retirement.next_owner_work::<UpdateCursor<V>>(self.fields.update.is_some(),&None,copy)}if self.phase==3{if let Some(update)=self.fields.update.as_ref(){return update.next_work_demand(copy)}}Ok(1)}
- pub fn close_work_demand(&self,copy:usize)->Result<u64,ValueError>{if self.retirement.requires_original_control(){return self.retirement.next_owner_work::<V>(false,&None,copy)}if !self.closing{return Ok(1)}if !self.retirement.is_empty(){return self.retirement.next_owner_work::<V>(false,&None,copy)}Ok(u64::from(self.fields.base.is_some()||self.fields.key.is_some()||self.fields.value.is_some()||self.fields.shared_key.is_some()||self.fields.shared_value.is_some()||self.fields.update.is_some()))}
- pub fn next_close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{if self.retirement.requires_original_control(){return self.retirement.demands(copy)}if !self.closing{return Ok(self.begin_close_demand())}
-  if !self.retirement.is_empty(){return self.retirement.demands(copy)}
+ pub fn begin_close_paid(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress>{crate::retained_clone::start_retained_close(&mut self.closing,effect)}
+ pub fn next_close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
+  if !self.retirement.is_empty(){return self.retirement.demands(copy)}if !self.closing{return Ok(self.begin_close_demand())}
   macro_rules! owner{($field:ident,$type:ty)=>{if self.fields.$field.is_some(){return self.retirement.next_owner_demands::<$type>(true,&None,copy)}}}
   owner!(base,OrderedMap<V>);owner!(key,String);owner!(value,V);owner!(shared_key,SharedOwner<String>);owner!(shared_value,SharedOwner<V>);owner!(update,UpdateCursor<V>);Ok(Default::default())
  }
- /// ⛽️ Quotes the actual selected retained owner or child retirement.
- pub fn next_close_work_demand(&self,copy:usize)->Result<u64,ValueError>{if !self.retirement.is_empty(){return self.retirement.next_owner_work::<OrderedMap<V>>(false,&None,copy)}
+ pub fn next_close_work_demand(&self,copy:usize)->Result<u64,ValueError>{
+  if !self.retirement.is_empty(){return self.retirement.next_owner_work::<OrderedMap<V>>(false,&None,copy)}if !self.closing{return Ok(1)}
   macro_rules! owner{($field:ident,$type:ty)=>{if self.fields.$field.is_some(){return self.retirement.next_owner_work::<$type>(true,&None,copy)}}}
-  owner!(base,OrderedMap<V>);owner!(key,String);owner!(value,V);owner!(shared_key,SharedOwner<String>);owner!(shared_value,SharedOwner<V>);owner!(update,UpdateCursor<V>);Ok(0)}
- /// 🧹️ Preserves the complete original close outcome, including work performed before refusal.
- pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{
-  self.progress=Default::default();self.last_work=0;self.last_allocation_attempt=None;let poll=self.close_original_with(effect,|retirement,effect|retirement.step_granted(effect));match &poll{crate::RetainedWorkPoll::Pending{work}=>self.last_work=*work,crate::RetainedWorkPoll::Complete(outcome)=>{self.last_work=outcome.work;self.progress=outcome.result.as_ref().map_or_else(|e|e.retained_progress(),|step|step.progress())}}poll
+  owner!(base,OrderedMap<V>);owner!(key,String);owner!(value,V);owner!(shared_key,SharedOwner<String>);owner!(shared_value,SharedOwner<V>);owner!(update,UpdateCursor<V>);Ok(0)
  }
- fn close_original_with(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,invoke:impl FnOnce(&mut RetainedCloneClose,&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll)->crate::OriginalRetirementPoll{let grant=effect.grant();if effect.maximum_work_units()<self.close_work_demand(grant.maximum_copy_bytes).unwrap_or(u64::MAX){return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}
-  if self.retirement.requires_original_control(){return invoke(&mut self.retirement,effect)}
-  if !self.closing{let turn=self.begin_close_paid(effect);return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map_err(Into::into).map(RetainedCloneStep::Progress),work:turn.work})}
-  if !self.retirement.is_empty(){return invoke(&mut self.retirement,effect)}
-  macro_rules! owner{($field:ident)=>{if self.fields.$field.is_some(){let turn=self.retirement.begin_granted(&mut self.fields.$field,effect);return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map_err(Into::into).map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work})}}}
-  owner!(base);owner!(key);owner!(value);owner!(shared_key);owner!(shared_value);owner!(update);crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0})
+ fn close_native(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneStep,OriginalRetirementFailure>{
+  if !self.closing{let turn=self.begin_close_paid(effect);return RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress).map_err(Into::into),work:turn.work}}
+  macro_rules! owner{($field:ident)=>{if self.fields.$field.is_some(){let turn=self.retirement.begin_granted(&mut self.fields.$field,effect);return RetainedWorkOutcome{result:turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into),work:turn.work}}}}
+  owner!(base);owner!(key);owner!(value);owner!(shared_key);owner!(shared_value);owner!(update);RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}
  }
+ pub fn close_into<'r>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{if !self.retirement.is_empty(){return self.retirement.step_into(body,effect,reply.progress())}let turn=self.close_native(body,effect);Ok(reply.complete(turn.result))}
+ pub fn recover_close_into<'r>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{self.retirement.recover_step_into(body,effect,reply.progress())}
+ pub fn close_original_into<'r>(&mut self,o:&mut OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{if !self.retirement.is_empty(){return self.retirement.step_original_into(o,body,effect,reply.progress())}let turn=self.close_native(body,effect);Ok(reply.complete(turn.result))}
+ pub fn recover_close_original_into<'r>(&mut self,o:&mut OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{self.retirement.recover_step_original_into(o,body,effect,reply.progress())}
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.retirement.is_empty()&&self.fields.base.is_none()&&self.fields.key.is_none()&&self.fields.value.is_none()&&self.fields.shared_key.is_none()&&self.fields.shared_value.is_none()&&self.fields.update.is_none()}
 }
-impl<V:RetireOwned+Sync> Drop for OriginalOwnedEntry<V>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original owned map entry must reach physical terminal emptiness");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
+impl<V:RetireOwned+Sync> Drop for OriginalOwnedEntry<V>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original ordered entry retains its actual owners");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
+#[derive(Clone,Copy,PartialEq,Eq)]
+struct Route{body:usize,demand:RetirementDemand,boundary:crate::OriginalWorkActionBoundary,loan:Option<(crate::NativeAllocationIdentity,Option<u64>)>,invocation:crate::OriginalEffectInvocationIdentity,grant:RetainedCloneGrant,work:u64,original:bool}
 #[doc(hidden)]
-pub struct EntryRetirement<V:RetireOwned+Sync>(OriginalOwnedEntry<V>);
-impl<V:RetireOwned+Sync> RetirementCursor for EntryRetirement<V>{
- fn requires_original_control(&self)->bool{self.0.retirement.requires_original_control()}
- fn requires_original_birth(&self)->bool{self.0.retirement.requires_original_birth()}
- fn close_original_birth_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->RetirementStep{if !self.requires_original_birth(){return RetirementStep::Failure(invalid().into(),0)}entry_retirement_step(self.0.retirement.step_original_birth(original,grant))}
- fn close_original_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{entry_retirement_step(self.0.close_original_with(effect,|retirement,effect|retirement.step_original(original,effect)))}
- fn close_step_controlled(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn crate::OriginalRetirementControl)->RetirementStep{entry_retirement_step(self.0.close_original_with(effect,|retirement,effect|retirement.step_controlled(effect,control)))}
-
- fn next_computational_work(&self,copy:usize)->Result<u64,ValueError>{self.0.close_work_demand(copy)}
- fn next_demand(&self,copy:usize)->Result<RetirementDemand,ValueError>{self.0.next_close_demands(copy)}
- fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{entry_retirement_step(self.0.close_step(effect))}
- fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
- fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.next_close_demands(0)?.copy_bytes)}
- fn allows_admitted_narrow_work(&self)->bool{true}
- fn next_birth_bytes(&self,copy:usize)->Option<usize>{self.0.next_close_demands(copy).ok().map(|d|d.capacity_bytes)}
- fn next_close_byte_demand(&self)->Option<usize>{self.0.next_close_demands(0).ok().map(|d|d.release_bytes)}
- fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.0.next_close_demands(0)?.depth)}
- fn terminal_release_bytes(&self)->Option<usize>{self.0.terminal_is_empty().then_some(size_of::<Self>())}
+pub struct EntryRetirement<V:RetireOwned+Sync>{owner:OriginalOwnedEntry<V>,answer:ManuallyDrop<Option<Result<RetainedCloneStep,OriginalRetirementFailure>>>,route:Option<Route>}
+impl<V:RetireOwned+Sync> EntryRetirement<V>{
+ fn headers()->usize{size_of::<Option<Route>>()+size_of::<Option<Result<RetainedCloneStep,OriginalRetirementFailure>>>()}
+ fn drive<'r>(&mut self,mut original:Option<&mut OriginalRetirementCloseLoan<'_>>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetirementStep,OriginalRetirementFailure>,recover:bool)->Result<OriginalEffectReplyComplete<'r,RetirementStep,OriginalRetirementFailure>,ValueError>{
+  if self.terminal_is_empty(){return Ok(reply.complete(Ok(RetirementStep::Complete(0))))}
+  let grant=effect.grant();let before=effect.performed_boundary();let loan=original.as_ref().map(|o|(o.ledger_identity(),o.retirement_recipient_identity()));let key=effect.invocation().ok_or_else(invalid)?.identity();let fresh=self.route.is_none();let route=match self.route{Some(r)=>{if !recover||r.body!=body||r.loan!=loan||r.invocation!=key||r.grant!=grant||r.original!=original.is_some(){return Err(invalid())}r},None=>{if recover{return Err(invalid())}let demand=self.next_demand(body)?;let work=self.next_computational_work(body)?;if !retained_clone_grant_admits(grant,demand)||effect.remaining_work_units()?<work{return Ok(reply.complete(Ok(RetirementStep::BudgetExhausted)))}Route{body,demand,boundary:effect.action_boundary(),loan,invocation:key,grant,work,original:original.is_some()}}};
+  if fresh&&!effect.performed(1)?{return Err(invalid())}let mut scope=reply.scope(&mut self.route,route)?;
+  if self.answer.is_none(){let child=OriginalEffectReply::borrow(&mut self.answer)?;let child_grant=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes.checked_sub(Self::headers()).ok_or_else(invalid)?,..grant};let remaining=u128::from(route.work.checked_sub(1).ok_or_else(invalid)?).checked_sub(effect.performed_since_action(route.boundary)?).and_then(|work|u64::try_from(work).ok()).ok_or_else(invalid)?;let mut e=effect.reborrow(child_grant,remaining)?;match(original.as_deref_mut(),recover){(Some(o),true)=>self.owner.recover_close_original_into(o,body.saturating_sub(Self::headers()),&mut e,child)?,(Some(o),false)=>self.owner.close_original_into(o,body.saturating_sub(Self::headers()),&mut e,child)?,(None,true)=>self.owner.recover_close_into(body.saturating_sub(Self::headers()),&mut e,child)?,(None,false)=>self.owner.close_into(body.saturating_sub(Self::headers()),&mut e,child)?};}
+  if self.answer.is_none(){return Ok(scope.forwarded())}if !effect.performed(1)?{return Err(invalid())}let work=effect.performed_since(before)?;let answer=self.answer.take().expect("actual recorded ordered entry close");let answer=answer.map(|step|{let mut p=step.progress();p.copied_bytes=p.copied_bytes.checked_add(Self::headers()).expect("selected entry reply headers");RetirementStep::Progress(p,work)});scope.borrow()?.complete(answer);Ok(scope.forwarded())
+ }
 }
+impl<V:RetireOwned+Sync> RetirementCursor for EntryRetirement<V>{
+ fn close_into<'r>(&mut self,body:usize,e:&mut RetainedAllocationEffect<'_>,r:OriginalEffectReply<'r,RetirementStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'r,RetirementStep,OriginalRetirementFailure>,ValueError>{self.drive(None,body,e,r,false)}
+ fn recover_close_into<'r>(&mut self,body:usize,e:&mut RetainedAllocationEffect<'_>,r:OriginalEffectReply<'r,RetirementStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'r,RetirementStep,OriginalRetirementFailure>,ValueError>{self.drive(None,body,e,r,true)}
+ fn close_original_into<'r>(&mut self,o:&mut OriginalRetirementCloseLoan<'_>,body:usize,e:&mut RetainedAllocationEffect<'_>,r:OriginalEffectReply<'r,RetirementStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'r,RetirementStep,OriginalRetirementFailure>,ValueError>{self.drive(Some(o),body,e,r,false)}
+ fn recover_close_original_into<'r>(&mut self,o:&mut OriginalRetirementCloseLoan<'_>,body:usize,e:&mut RetainedAllocationEffect<'_>,r:OriginalEffectReply<'r,RetirementStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'r,RetirementStep,OriginalRetirementFailure>,ValueError>{self.drive(Some(o),body,e,r,true)}
+ fn requires_original_birth(&self)->bool{self.route.is_none()&&self.owner.requires_original_birth()}
+ fn requires_original_control(&self)->bool{self.route.map_or_else(||self.owner.requires_original_control(),|r|r.original)}
+ fn close_original_birth_step(&mut self,o:&mut OriginalRetirementCloseLoan<'_>,g:RetainedCloneGrant)->RetirementStep{crate::retirement::erased_cursor_turn(self.owner.close_original_birth_step(o,g))}
+ fn next_demand(&self,b:usize)->Result<RetirementDemand,ValueError>{if let Some(r)=self.route{if r.body!=b{return Err(invalid())}return Ok(r.demand)}let mut d=self.owner.next_close_demands(b.saturating_sub(Self::headers()))?;d.copy_bytes=d.copy_bytes.checked_add(Self::headers()).ok_or_else(invalid)?;Ok(d)}
+ fn next_computational_work(&self,b:usize)->Result<u64,ValueError>{self.route.map_or_else(||self.owner.next_close_work_demand(b.saturating_sub(Self::headers()))?.checked_add(2).ok_or_else(invalid),|r|if r.body==b{Ok(r.work)}else{Err(invalid())})}
+ fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()&&self.answer.is_none()&&self.route.is_none()}
+ fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.next_demand(0)?.copy_bytes)}
+ fn next_close_byte_demand(&self)->Option<usize>{self.next_demand(0).ok().map(|d|d.release_bytes)}
+ fn next_birth_bytes(&self,b:usize)->Option<usize>{self.next_demand(b).ok().map(|d|d.capacity_bytes)}
+ fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.next_demand(0)?.depth)}
+ fn allows_admitted_narrow_work(&self)->bool{true}
+ fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
+}
+impl<V:RetireOwned+Sync> Drop for EntryRetirement<V>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"entry retirement retains its original reply");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.answer)}}}}
 impl<V:RetireOwned+Sync> RetireOwned for OriginalOwnedEntry<V>{
- type RetirementCursor=EntryRetirement<V>;
- fn retirement_seed(self)->Self::RetirementCursor{EntryRetirement(self)}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<EntryRetirement<V>>())}
+ type RetirementCursor=EntryRetirement<V>;fn retirement_seed(self)->Self::RetirementCursor{EntryRetirement{owner:self,answer:ManuallyDrop::new(None),route:None}}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Self::RetirementCursor>())}
  fn controlled_retirement_supported()->bool{V::controlled_retirement_supported()}
 }
-#[cfg(test)]
-#[path="🧪️.rs"]mod tests;
-
-#[path="➖remove/🦀️.rs"]
-mod removal;
-
-fn entry_retirement_step(poll:crate::OriginalRetirementPoll)->RetirementStep{let turn=match poll{crate::RetainedWorkPoll::Pending{work}=>return RetirementStep::Pending(work),crate::RetainedWorkPoll::Complete(turn)=>turn};match turn.result{Ok(RetainedCloneStep::Complete(p))if p==Default::default()=>RetirementStep::Complete(turn.work),Ok(step)if step.progress()!=Default::default()||turn.work!=0=>RetirementStep::Progress(step.progress(),turn.work),Ok(_)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error,turn.work)}}
+#[cfg(test)]#[path="🧪️.rs"]mod original_owned_entry_tests;
+#[path="➖remove/🦀️.rs"]mod original_remove;

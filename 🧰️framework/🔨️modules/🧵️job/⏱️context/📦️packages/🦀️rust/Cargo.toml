@@ -26,6 +26,8 @@ path = "🦀️.rs"
 testkit = ["semio-framework-async/testkit", "semio-framework-job-receiving/testkit"]
 
 [dependencies]
+semio-framework-value-native-outcome = { path = "../../../../🌱️value/🛬️decode/📬️outcome/📦️packages/🦀️rust" }
+semio-framework-value-native-receiving-frame = { path = "../../../../🌱️value/🛬️decode/🏭️construction/📦️effect/🧳️frame/📦️packages/🦀️rust" }
 semio-framework-job-return-book = { path = "../../../📬️outcome/⏸️continuation/🎟️source/📒️book/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path = "../../../../🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-call = { path = "../../../../🌱️value/♻️retirement/📦️call/📦️packages/🦀️rust" }
@@ -50,6 +52,7 @@ semio-framework-diagnostic = { path = "../../../../⚠️diagnostic/📦️packa
 semio-framework-value = { workspace = true }
 
 [dev-dependencies]
+semio-framework-value-testing-effect-bank = { path = "../../../../🌱️value/🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 semio-framework-job-receiving = { workspace = true, features = ["testkit"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-job-testing-caller = { workspace = true }
@@ -70,20 +73,12 @@ required-features = ["testkit"]
 path = "../../../📬️outcome/📦️builder/🎟️work/🧪️tests/🦀️.rs"
 
 
-[[test]]
-name = "original-receiver-acknowledgement"
-required-features = ["testkit"]
-path = "../../../📬️outcome/⏸️continuation/🎟️origin/🔔️acknowledge/🧪️tests/🦀️.rs"
 
 [[test]]
 name = "original-source-return-place"
 required-features = ["testkit"]
 path = "../../📦️return/🎟️place/🧪️tests/🦀️.rs"
 
-[[test]]
-name = "original-continuation-view"
-required-features = ["testkit"]
-path = "../../../📬️outcome/⏸️continuation/👁️view/🧪️tests/🦀️.rs"
 
 [[test]]
 name = "original-source-close-work"
@@ -123,3 +118,7 @@ path = "../../🧪️tests/🪙️effect-provider/🦀️.rs"
 name = "original-park-state"
 required-features = ["testkit"]
 path = "../../🧪️tests/🅿️park-state/🦀️.rs"
+
+[[test]]
+name = "original_source_resident_birth"
+path = "../../🎟️source/🏭️admission/🧪️tests/🦀️.rs"

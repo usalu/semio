@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-humidification-provided/schema.json",
+  "title": "ChangeVentHumidificationProvided",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ventId",
+    "newHumidificationProvidedKgH"
+  ],
+  "properties": {
+    "ventId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Ventilation system",
+          "de": "Lüftungsanlage"
+        },
+        "description": {
+          "en": "The ventilation system this mutation addresses.",
+          "de": "Die Lüftungsanlage, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "ventSystem"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newHumidificationProvidedKgH": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Provided humidification",
+          "de": "Bereitgestellte Befeuchtungsleistung"
+        },
+        "unit": "kg/h",
+        "step": 0.1,
+        "precision": 1,
+        "group": "humidification",
+        "order": 20
+      }
+    }
+  }
+}

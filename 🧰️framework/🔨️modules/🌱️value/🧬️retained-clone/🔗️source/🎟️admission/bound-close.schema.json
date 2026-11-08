@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "work",
+    "deniedWork",
+    "allocations",
+    "releases",
+    "foreignWork",
+    "receives",
+    "recovers",
+    "sourceValue"
+  ],
+  "properties": {
+    "work": {
+      "const": 1
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "allocations": {
+      "const": 0
+    },
+    "releases": {
+      "const": 0
+    },
+    "foreignWork": {
+      "const": 0
+    },
+    "receives": {
+      "const": 1
+    },
+    "recovers": {
+      "const": 0
+    },
+    "sourceValue": {
+      "const": 73
+    }
+  }
+}

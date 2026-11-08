@@ -137,3 +137,7 @@ pub fn din16798_field_meta(path: &str) -> Option<FieldSpec> {
         semio_s_artifact_norm_din16798_mutations::EDIT_RULES.can_remove_item(path, ["zones", "ventSystems"]),
     )
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

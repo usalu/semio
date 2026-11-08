@@ -4,17 +4,15 @@ use semio_framework_value::{DslValue, FromValue, ToValue, RetainedClone, RetireO
 use semio_framework_value::retained_clone::{RetainedClone as RetainedCloneTrait, RetainedCloneBorrowAuthority, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneSource, RetainedCloneStep};
 use serde::{Deserialize, Serialize};
 
-fn admit_source<T: semio_framework_value::retirement::RetireOwned + Sync>(owner: T) -> RetainedCloneSource<T> {
-    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: RetainedCloneSource::<T>::constructor_copy_bytes(), maximum_capacity_bytes: RetainedCloneSource::<T>::owned_constructor_capacity_bytes::<()>(), maximum_depth: 1, ..Default::default() };
-    semio_framework_value_clone_source_testing::admit_owned(owner, (), grant).result.map_err(|(error, _, _)| error).expect("original source admission").0
+fn admit_source<T: semio_framework_value::retirement::RetireOwned + Sync + 'static>(owner: T) -> semio_framework_value_clone_source_testing::FixtureSource<T> {
+    use semio_framework_value_clone_source_testing::FixtureSourceBirth;
+    RetainedCloneSource::from_owner(owner)
 }
 
-fn drain_source<T: semio_framework_value::retirement::RetireOwned + Sync>(mut source: RetainedCloneSource<T>) {
+fn drain_source<T: semio_framework_value::retirement::RetireOwned + Sync + 'static>(mut source: semio_framework_value_clone_source_testing::FixtureSource<T>) {
     for _ in 0..100000 {
         if source.terminal_is_empty() { return; }
-        let copy = source.next_close_copy_byte_demand().unwrap();
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: source.next_close_capacity_byte_demand(copy).unwrap(), maximum_release_bytes: source.next_close_release_byte_demand().unwrap(), maximum_depth: source.next_close_depth_demand().unwrap() };
-        assert!(source.close_step(grant).result.unwrap().progress().fits(grant));
+        source.close_once().expect("original source close");
     }
     panic!("original source did not close");
 }

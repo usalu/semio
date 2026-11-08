@@ -1,0 +1,35 @@
+{
+  "stock": {
+    "items": 2,
+    "copyBytes": 8,
+    "capacityBytes": 16,
+    "releaseBytes": 32,
+    "depth": 4,
+    "fuel": 8
+  },
+  "refused": [
+    {
+      "axis": "items",
+      "request": 3
+    },
+    {
+      "axis": "copyBytes",
+      "request": 9
+    },
+    {
+      "axis": "capacityBytes",
+      "request": 17
+    },
+    {
+      "axis": "releaseBytes",
+      "request": 33
+    },
+    {
+      "axis": "depth",
+      "request": 5
+    }
+  ],
+  "producerCalls": 0,
+  "remainingWork": 8,
+  "idle": true
+}

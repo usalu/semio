@@ -3459,26 +3459,6 @@
       "verb": "set"
     },
     {
-      "aggregateVariant": "ReplaceZones",
-      "artifact": "⚡️din18599",
-      "edit": {
-        "rule": "set-field",
-        "path": "zones",
-        "selectors": [],
-        "value": "newZones"
-      },
-      "entity": "zones",
-      "kind": "replace-zones",
-      "module": "🗺️replace-zones",
-      "physicalLayout": "direct",
-      "record": "ReplacedZones",
-      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️replace-zones/🦀️.rs",
-      "standard": "🔖️1",
-      "subset": "✳️any",
-      "type": "ReplaceZones",
-      "verb": "replace"
-    },
-    {
       "aggregateVariant": "SpecifyDhwSystem",
       "artifact": "⚡️din18599",
       "edit": {
@@ -3497,26 +3477,6 @@
       "subset": "✳️any",
       "type": "SpecifyDhwSystem",
       "verb": "set"
-    },
-    {
-      "aggregateVariant": "ReplaceElements",
-      "artifact": "⚡️din18599",
-      "edit": {
-        "rule": "set-field",
-        "path": "elements",
-        "selectors": [],
-        "value": "newElements"
-      },
-      "entity": "elements",
-      "kind": "replace-elements",
-      "module": "🧩replace-elements",
-      "physicalLayout": "direct",
-      "record": "ReplacedElements",
-      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩replace-elements/🦀️.rs",
-      "standard": "🔖️1",
-      "subset": "✳️any",
-      "type": "ReplaceElements",
-      "verb": "replace"
     },
     {
       "aggregateVariant": "ChangeMethod",
@@ -3556,6 +3516,588 @@
       "standard": "🔖️1",
       "subset": "✳️any",
       "type": "ChangeAttachment",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "InsertZone",
+      "artifact": "⚡️din18599",
+      "edit": {
+        "rule": "insert-item",
+        "path": "zones",
+        "selectors": [],
+        "index": "index",
+        "item": "zone"
+      },
+      "entity": "zone",
+      "kind": "insert-zone",
+      "module": "➕insert-zone",
+      "physicalLayout": "direct",
+      "record": "InsertedZone",
+      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-zone/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "InsertZone",
+      "verb": "insert"
+    },
+    {
+      "aggregateVariant": "RemoveZone",
+      "artifact": "⚡️din18599",
+      "edit": {
+        "rule": "id-removal",
+        "path": "zones",
+        "selectors": [],
+        "id": "id"
+      },
+      "entity": "zone",
+      "kind": "remove-zone",
+      "module": "➖remove-zone",
+      "physicalLayout": "direct",
+      "record": "RemovedZone",
+      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-zone/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "RemoveZone",
+      "verb": "remove"
+    },
+    {
+      "aggregateVariant": "ChangeZoneLabelEn",
+      "artifact": "⚡️din18599",
+      "edit": {
+        "rule": "set-field",
+        "path": "zones[].labelEn",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "zoneId"
+          }
+        ],
+        "value": "newLabelEn"
+      },
+      "entity": "zone-label-en",
+      "kind": "change-zone-label-en",
+      "module": "🟠change-zone-label-en",
+      "physicalLayout": "direct",
+      "record": "ChangedZoneLabelEn",
+      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟠change-zone-label-en/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeZoneLabelEn",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeZoneLabelDe",
+      "artifact": "⚡️din18599",
+      "edit": {
+        "rule": "set-field",
+        "path": "zones[].labelDe",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "zoneId"
+          }
+        ],
+        "value": "newLabelDe"
+      },
+      "entity": "zone-label-de",
+      "kind": "change-zone-label-de",
+      "module": "🟡change-zone-label-de",
+      "physicalLayout": "direct",
+      "record": "ChangedZoneLabelDe",
+      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟡change-zone-label-de/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeZoneLabelDe",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeZoneUsageProfile",
+      "artifact": "⚡️din18599",
+      "edit": {
+        "rule": "set-field",
+        "path": "zones[].usageProfile",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "zoneId"
+          }
+        ],
+        "value": "newUsageProfile"
+      },
+      "entity": "zone-usage-profile",
+      "kind": "change-zone-usage-profile",
+      "module": "🟢change-zone-usage-profile",
+      "physicalLayout": "direct",
+      "record": "ChangedZoneUsageProfile",
+      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢change-zone-usage-profile/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeZoneUsageProfile",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeZoneOccupants",
+      "artifact": "⚡️din18599",
+      "edit": {
+        "rule": "set-field",
+        "path": "zones[].occupants",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "zoneId"
+          }
+        ],
+        "value": "newOccupants"
+      },
+      "entity": "zone-occupants",
+      "kind": "change-zone-occupants",
+      "module": "🔵change-zone-occupants",
+      "physicalLayout": "direct",
+      "record": "ChangedZoneOccupants",
+      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔵change-zone-occupants/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeZoneOccupants",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeZoneAreaM2",
+      "artifact": "⚡️din18599",
+      "edit": {
+        "rule": "set-field",
+        "path": "zones[].areaM2",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "zoneId"
+          }
+        ],
+        "value": "newAreaM2"
+      },
+      "entity": "zone-area-m2",
+      "kind": "change-zone-area-m2",
+      "module": "🟣change-zone-area-m2",
+      "physicalLayout": "direct",
+      "record": "ChangedZoneAreaM2",
+      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟣change-zone-area-m2/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeZoneAreaM2",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeZoneVolumeM3",
+      "artifact": "⚡️din18599",
+      "edit": {
+        "rule": "set-field",
+        "path": "zones[].volumeM3",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "zoneId"
+          }
+        ],
+        "value": "newVolumeM3"
+      },
+      "entity": "zone-volume-m3",
+      "kind": "change-zone-volume-m3",
+      "module": "🟤change-zone-volume-m3",
+      "physicalLayout": "direct",
+      "record": "ChangedZoneVolumeM3",
+      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟤change-zone-volume-m3/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeZoneVolumeM3",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeZoneThetaIHeatC",
+      "artifact": "⚡️din18599",
+      "edit": {
+        "rule": "set-field",
+        "path": "zones[].thetaIHeatC",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "zoneId"
+          }
+        ],
+        "value": "newThetaIHeatC"
+      },
+      "entity": "zone-theta-i-heat-c",
+      "kind": "change-zone-theta-i-heat-c",
+      "module": "🔴change-zone-theta-i-heat-c",
+      "physicalLayout": "direct",
+      "record": "ChangedZoneThetaIHeatC",
+      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔴change-zone-theta-i-heat-c/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeZoneThetaIHeatC",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeZoneThetaICoolC",
+      "artifact": "⚡️din18599",
+      "edit": {
+        "rule": "set-field",
+        "path": "zones[].thetaICoolC",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "zoneId"
+          }
+        ],
+        "value": "newThetaICoolC"
+      },
+      "entity": "zone-theta-i-cool-c",
+      "kind": "change-zone-theta-i-cool-c",
+      "module": "🟥change-zone-theta-i-cool-c",
+      "physicalLayout": "direct",
+      "record": "ChangedZoneThetaICoolC",
+      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟥change-zone-theta-i-cool-c/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeZoneThetaICoolC",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeZoneInternalGainsWM2",
+      "artifact": "⚡️din18599",
+      "edit": {
+        "rule": "set-field",
+        "path": "zones[].internalGainsWM2",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "zoneId"
+          }
+        ],
+        "value": "newInternalGainsWM2"
+      },
+      "entity": "zone-internal-gains-w-m2",
+      "kind": "change-zone-internal-gains-w-m2",
+      "module": "🟧change-zone-internal-gains-w-m2",
+      "physicalLayout": "direct",
+      "record": "ChangedZoneInternalGainsWM2",
+      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟧change-zone-internal-gains-w-m2/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeZoneInternalGainsWM2",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeZoneLightingPowerWM2",
+      "artifact": "⚡️din18599",
+      "edit": {
+        "rule": "set-field",
+        "path": "zones[].lightingPowerWM2",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "zoneId"
+          }
+        ],
+        "value": "newLightingPowerWM2"
+      },
+      "entity": "zone-lighting-power-w-m2",
+      "kind": "change-zone-lighting-power-w-m2",
+      "module": "🟨change-zone-lighting-power-w-m2",
+      "physicalLayout": "direct",
+      "record": "ChangedZoneLightingPowerWM2",
+      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟨change-zone-lighting-power-w-m2/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeZoneLightingPowerWM2",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "InsertElement",
+      "artifact": "⚡️din18599",
+      "edit": {
+        "rule": "insert-item",
+        "path": "elements",
+        "selectors": [],
+        "index": "index",
+        "item": "element"
+      },
+      "entity": "element",
+      "kind": "insert-element",
+      "module": "🆕insert-element",
+      "physicalLayout": "direct",
+      "record": "InsertedElement",
+      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕insert-element/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "InsertElement",
+      "verb": "insert"
+    },
+    {
+      "aggregateVariant": "RemoveElement",
+      "artifact": "⚡️din18599",
+      "edit": {
+        "rule": "id-removal",
+        "path": "elements",
+        "selectors": [],
+        "id": "id"
+      },
+      "entity": "element",
+      "kind": "remove-element",
+      "module": "🚮remove-element",
+      "physicalLayout": "direct",
+      "record": "RemovedElement",
+      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮remove-element/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "RemoveElement",
+      "verb": "remove"
+    },
+    {
+      "aggregateVariant": "ChangeElementLabelEn",
+      "artifact": "⚡️din18599",
+      "edit": {
+        "rule": "set-field",
+        "path": "elements[].labelEn",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "elementId"
+          }
+        ],
+        "value": "newLabelEn"
+      },
+      "entity": "element-label-en",
+      "kind": "change-element-label-en",
+      "module": "🟩change-element-label-en",
+      "physicalLayout": "direct",
+      "record": "ChangedElementLabelEn",
+      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟩change-element-label-en/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeElementLabelEn",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeElementLabelDe",
+      "artifact": "⚡️din18599",
+      "edit": {
+        "rule": "set-field",
+        "path": "elements[].labelDe",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "elementId"
+          }
+        ],
+        "value": "newLabelDe"
+      },
+      "entity": "element-label-de",
+      "kind": "change-element-label-de",
+      "module": "🟦change-element-label-de",
+      "physicalLayout": "direct",
+      "record": "ChangedElementLabelDe",
+      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦change-element-label-de/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeElementLabelDe",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeElementKind",
+      "artifact": "⚡️din18599",
+      "edit": {
+        "rule": "set-field",
+        "path": "elements[].kind",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "elementId"
+          }
+        ],
+        "value": "newKind"
+      },
+      "entity": "element-kind",
+      "kind": "change-element-kind",
+      "module": "🟪change-element-kind",
+      "physicalLayout": "direct",
+      "record": "ChangedElementKind",
+      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟪change-element-kind/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeElementKind",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeElementZoneId",
+      "artifact": "⚡️din18599",
+      "edit": {
+        "rule": "set-field",
+        "path": "elements[].zoneId",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "elementId"
+          }
+        ],
+        "value": "newZoneId"
+      },
+      "entity": "element-zone-id",
+      "kind": "change-element-zone-id",
+      "module": "🟫change-element-zone-id",
+      "physicalLayout": "direct",
+      "record": "ChangedElementZoneId",
+      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟫change-element-zone-id/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeElementZoneId",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeElementAreaM2",
+      "artifact": "⚡️din18599",
+      "edit": {
+        "rule": "set-field",
+        "path": "elements[].areaM2",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "elementId"
+          }
+        ],
+        "value": "newAreaM2"
+      },
+      "entity": "element-area-m2",
+      "kind": "change-element-area-m2",
+      "module": "⬜change-element-area-m2",
+      "physicalLayout": "direct",
+      "record": "ChangedElementAreaM2",
+      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬜change-element-area-m2/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeElementAreaM2",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeElementOrientationDeg",
+      "artifact": "⚡️din18599",
+      "edit": {
+        "rule": "set-field",
+        "path": "elements[].orientationDeg",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "elementId"
+          }
+        ],
+        "value": "newOrientationDeg"
+      },
+      "entity": "element-orientation-deg",
+      "kind": "change-element-orientation-deg",
+      "module": "🔶change-element-orientation-deg",
+      "physicalLayout": "direct",
+      "record": "ChangedElementOrientationDeg",
+      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔶change-element-orientation-deg/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeElementOrientationDeg",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeElementTiltDeg",
+      "artifact": "⚡️din18599",
+      "edit": {
+        "rule": "set-field",
+        "path": "elements[].tiltDeg",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "elementId"
+          }
+        ],
+        "value": "newTiltDeg"
+      },
+      "entity": "element-tilt-deg",
+      "kind": "change-element-tilt-deg",
+      "module": "🔷change-element-tilt-deg",
+      "physicalLayout": "direct",
+      "record": "ChangedElementTiltDeg",
+      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷change-element-tilt-deg/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeElementTiltDeg",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeElementGValue",
+      "artifact": "⚡️din18599",
+      "edit": {
+        "rule": "set-field",
+        "path": "elements[].gValue",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "elementId"
+          }
+        ],
+        "value": "newGValue"
+      },
+      "entity": "element-g-value",
+      "kind": "change-element-g-value",
+      "module": "🔸change-element-g-value",
+      "physicalLayout": "direct",
+      "record": "ChangedElementGValue",
+      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔸change-element-g-value/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeElementGValue",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeElementFc",
+      "artifact": "⚡️din18599",
+      "edit": {
+        "rule": "set-field",
+        "path": "elements[].fc",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "elementId"
+          }
+        ],
+        "value": "newFc"
+      },
+      "entity": "element-fc",
+      "kind": "change-element-fc",
+      "module": "🔹change-element-fc",
+      "physicalLayout": "direct",
+      "record": "ChangedElementFc",
+      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔹change-element-fc/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeElementFc",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeElementAdjacency",
+      "artifact": "⚡️din18599",
+      "edit": {
+        "rule": "set-field",
+        "path": "elements[].adjacency",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "elementId"
+          }
+        ],
+        "value": "newAdjacency"
+      },
+      "entity": "element-adjacency",
+      "kind": "change-element-adjacency",
+      "module": "🔻change-element-adjacency",
+      "physicalLayout": "direct",
+      "record": "ChangedElementAdjacency",
+      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔻change-element-adjacency/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeElementAdjacency",
       "verb": "change"
     },
     {
@@ -9180,6 +9722,231 @@
       "standard": "🔖️1",
       "subset": "✳️any",
       "type": "ChangeZoneCo2",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeZoneName",
+      "artifact": "🌬️din16798",
+      "edit": {
+        "rule": "set-field",
+        "path": "zones[].name",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "zoneId"
+          }
+        ],
+        "value": "newName"
+      },
+      "entity": "zone-name",
+      "kind": "change-zone-name",
+      "module": "🏷️change-zone-name",
+      "physicalLayout": "direct",
+      "record": "ChangeZoneName",
+      "source": "🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-zone-name/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeZoneName",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeZoneId",
+      "artifact": "🌬️din16798",
+      "edit": {
+        "rule": "set-field",
+        "path": "zones[].id",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "zoneId"
+          }
+        ],
+        "value": "newId"
+      },
+      "entity": "zone-id",
+      "kind": "change-zone-id",
+      "module": "🆔️change-zone-id",
+      "physicalLayout": "direct",
+      "record": "ChangeZoneId",
+      "source": "🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆔️change-zone-id/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeZoneId",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeVentName",
+      "artifact": "🌬️din16798",
+      "edit": {
+        "rule": "set-field",
+        "path": "ventSystems[].name",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "ventId"
+          }
+        ],
+        "value": "newName"
+      },
+      "entity": "vent-name",
+      "kind": "change-vent-name",
+      "module": "📛change-vent-name",
+      "physicalLayout": "direct",
+      "record": "ChangeVentName",
+      "source": "🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📛change-vent-name/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeVentName",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeVentId",
+      "artifact": "🌬️din16798",
+      "edit": {
+        "rule": "set-field",
+        "path": "ventSystems[].id",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "ventId"
+          }
+        ],
+        "value": "newId"
+      },
+      "entity": "vent-id",
+      "kind": "change-vent-id",
+      "module": "🪪change-vent-id",
+      "physicalLayout": "direct",
+      "record": "ChangeVentId",
+      "source": "🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪪change-vent-id/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeVentId",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeVentFanFlow",
+      "artifact": "🌬️din16798",
+      "edit": {
+        "rule": "set-field",
+        "path": "ventSystems[].fanQVM3S",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "ventId"
+          }
+        ],
+        "value": "newFanQVM3S"
+      },
+      "entity": "vent-fan-flow",
+      "kind": "change-vent-fan-flow",
+      "module": "🌪️change-vent-fan-flow",
+      "physicalLayout": "direct",
+      "record": "ChangeVentFanFlow",
+      "source": "🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌪️change-vent-fan-flow/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeVentFanFlow",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeVentFanRunHours",
+      "artifact": "🌬️din16798",
+      "edit": {
+        "rule": "set-field",
+        "path": "ventSystems[].fanTRunH",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "ventId"
+          }
+        ],
+        "value": "newFanTRunH"
+      },
+      "entity": "vent-fan-run-hours",
+      "kind": "change-vent-fan-run-hours",
+      "module": "⏱️change-vent-fan-run-hours",
+      "physicalLayout": "direct",
+      "record": "ChangeVentFanRunHours",
+      "source": "🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-vent-fan-run-hours/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeVentFanRunHours",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeVentDuctTestPressure",
+      "artifact": "🌬️din16798",
+      "edit": {
+        "rule": "set-field",
+        "path": "ventSystems[].ductTestPressurePa",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "ventId"
+          }
+        ],
+        "value": "newDuctTestPressurePa"
+      },
+      "entity": "vent-duct-test-pressure",
+      "kind": "change-vent-duct-test-pressure",
+      "module": "🧪change-vent-duct-test-pressure",
+      "physicalLayout": "direct",
+      "record": "ChangeVentDuctTestPressure",
+      "source": "🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪change-vent-duct-test-pressure/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeVentDuctTestPressure",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeVentHumidificationRequired",
+      "artifact": "🌬️din16798",
+      "edit": {
+        "rule": "set-field",
+        "path": "ventSystems[].humidificationRequiredKgH",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "ventId"
+          }
+        ],
+        "value": "newHumidificationRequiredKgH"
+      },
+      "entity": "vent-humidification-required",
+      "kind": "change-vent-humidification-required",
+      "module": "💦change-vent-humidification-required",
+      "physicalLayout": "direct",
+      "record": "ChangeVentHumidificationRequired",
+      "source": "🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💦change-vent-humidification-required/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeVentHumidificationRequired",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeVentHumidificationProvided",
+      "artifact": "🌬️din16798",
+      "edit": {
+        "rule": "set-field",
+        "path": "ventSystems[].humidificationProvidedKgH",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "ventId"
+          }
+        ],
+        "value": "newHumidificationProvidedKgH"
+      },
+      "entity": "vent-humidification-provided",
+      "kind": "change-vent-humidification-provided",
+      "module": "🚿change-vent-humidification-provided",
+      "physicalLayout": "direct",
+      "record": "ChangeVentHumidificationProvided",
+      "source": "🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿change-vent-humidification-provided/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeVentHumidificationProvided",
       "verb": "change"
     },
     {
@@ -51165,6 +51932,340 @@
       "standard": "🔖️1",
       "subset": "✳️any",
       "type": "ChangeConnForceMethod",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "InsertSheetProfile",
+      "artifact": "🪶️en1999",
+      "edit": {
+        "rule": "insert-item",
+        "path": "sheetProfiles",
+        "selectors": [],
+        "index": "index",
+        "item": "sheet-profile"
+      },
+      "entity": "sheet-profile",
+      "kind": "insert-sheet-profile",
+      "module": "➕insert-sheet-profile",
+      "physicalLayout": "direct",
+      "record": "InsertedSheetProfile",
+      "source": "🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-sheet-profile/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "InsertSheetProfile",
+      "verb": "add"
+    },
+    {
+      "aggregateVariant": "RemoveSheetProfile",
+      "artifact": "🪶️en1999",
+      "edit": {
+        "rule": "id-removal",
+        "path": "sheetProfiles",
+        "selectors": [],
+        "id": "id",
+        "item": "sheet-profile"
+      },
+      "entity": "sheet-profile",
+      "kind": "remove-sheet-profile",
+      "module": "➖remove-sheet-profile",
+      "physicalLayout": "direct",
+      "record": "RemovedSheetProfile",
+      "source": "🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-sheet-profile/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "RemoveSheetProfile",
+      "verb": "remove"
+    },
+    {
+      "aggregateVariant": "ChangeSheetProfileSheetId",
+      "artifact": "🪶️en1999",
+      "edit": {
+        "rule": "set-field",
+        "path": "sheetProfiles[].sheetId",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "transverseStiffenerId"
+          }
+        ],
+        "value": "newSheetId"
+      },
+      "entity": "sheet-profile-sheet-id",
+      "kind": "change-sheet-profile-sheet-id",
+      "module": "🦴️change-sheet-profile-sheet-id",
+      "physicalLayout": "direct",
+      "record": "ChangedSheetProfileSheetId",
+      "source": "🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦴️change-sheet-profile-sheet-id/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeSheetProfileSheetId",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeSheetProfilePitch",
+      "artifact": "🪶️en1999",
+      "edit": {
+        "rule": "set-field",
+        "path": "sheetProfiles[].pitch",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "transverseStiffenerId"
+          }
+        ],
+        "value": "newPitch"
+      },
+      "entity": "sheet-profile-pitch",
+      "kind": "change-sheet-profile-pitch",
+      "module": "🦴️change-sheet-profile-pitch",
+      "physicalLayout": "direct",
+      "record": "ChangedSheetProfilePitch",
+      "source": "🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦴️change-sheet-profile-pitch/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeSheetProfilePitch",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeSheetProfileTopFlange",
+      "artifact": "🪶️en1999",
+      "edit": {
+        "rule": "set-field",
+        "path": "sheetProfiles[].topFlange",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "transverseStiffenerId"
+          }
+        ],
+        "value": "newTopFlange"
+      },
+      "entity": "sheet-profile-top-flange",
+      "kind": "change-sheet-profile-top-flange",
+      "module": "🦴️change-sheet-profile-top-flange",
+      "physicalLayout": "direct",
+      "record": "ChangedSheetProfileTopFlange",
+      "source": "🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦴️change-sheet-profile-top-flange/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeSheetProfileTopFlange",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeSheetProfileBottomFlange",
+      "artifact": "🪶️en1999",
+      "edit": {
+        "rule": "set-field",
+        "path": "sheetProfiles[].bottomFlange",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "transverseStiffenerId"
+          }
+        ],
+        "value": "newBottomFlange"
+      },
+      "entity": "sheet-profile-bottom-flange",
+      "kind": "change-sheet-profile-bottom-flange",
+      "module": "🦴️change-sheet-profile-bottom-flange",
+      "physicalLayout": "direct",
+      "record": "ChangedSheetProfileBottomFlange",
+      "source": "🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦴️change-sheet-profile-bottom-flange/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeSheetProfileBottomFlange",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeSheetProfileWebHeight",
+      "artifact": "🪶️en1999",
+      "edit": {
+        "rule": "set-field",
+        "path": "sheetProfiles[].webHeight",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "transverseStiffenerId"
+          }
+        ],
+        "value": "newWebHeight"
+      },
+      "entity": "sheet-profile-web-height",
+      "kind": "change-sheet-profile-web-height",
+      "module": "🦴️change-sheet-profile-web-height",
+      "physicalLayout": "direct",
+      "record": "ChangedSheetProfileWebHeight",
+      "source": "🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦴️change-sheet-profile-web-height/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeSheetProfileWebHeight",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "InsertFireInsulation",
+      "artifact": "🪶️en1999",
+      "edit": {
+        "rule": "insert-item",
+        "path": "fireInsulations",
+        "selectors": [],
+        "index": "index",
+        "item": "fire-insulation"
+      },
+      "entity": "fire-insulation",
+      "kind": "insert-fire-insulation",
+      "module": "➕insert-fire-insulation",
+      "physicalLayout": "direct",
+      "record": "InsertedFireInsulation",
+      "source": "🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-fire-insulation/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "InsertFireInsulation",
+      "verb": "add"
+    },
+    {
+      "aggregateVariant": "RemoveFireInsulation",
+      "artifact": "🪶️en1999",
+      "edit": {
+        "rule": "id-removal",
+        "path": "fireInsulations",
+        "selectors": [],
+        "id": "id",
+        "item": "fire-insulation"
+      },
+      "entity": "fire-insulation",
+      "kind": "remove-fire-insulation",
+      "module": "➖remove-fire-insulation",
+      "physicalLayout": "direct",
+      "record": "RemovedFireInsulation",
+      "source": "🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-fire-insulation/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "RemoveFireInsulation",
+      "verb": "remove"
+    },
+    {
+      "aggregateVariant": "ChangeFireInsulationFireId",
+      "artifact": "🪶️en1999",
+      "edit": {
+        "rule": "set-field",
+        "path": "fireInsulations[].fireId",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "transverseStiffenerId"
+          }
+        ],
+        "value": "newFireId"
+      },
+      "entity": "fire-insulation-fire-id",
+      "kind": "change-fire-insulation-fire-id",
+      "module": "🦴️change-fire-insulation-fire-id",
+      "physicalLayout": "direct",
+      "record": "ChangedFireInsulationFireId",
+      "source": "🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦴️change-fire-insulation-fire-id/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeFireInsulationFireId",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeFireInsulationThickness",
+      "artifact": "🪶️en1999",
+      "edit": {
+        "rule": "set-field",
+        "path": "fireInsulations[].thickness",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "transverseStiffenerId"
+          }
+        ],
+        "value": "newThickness"
+      },
+      "entity": "fire-insulation-thickness",
+      "kind": "change-fire-insulation-thickness",
+      "module": "🦴️change-fire-insulation-thickness",
+      "physicalLayout": "direct",
+      "record": "ChangedFireInsulationThickness",
+      "source": "🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦴️change-fire-insulation-thickness/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeFireInsulationThickness",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeFireInsulationConductivity",
+      "artifact": "🪶️en1999",
+      "edit": {
+        "rule": "set-field",
+        "path": "fireInsulations[].conductivity",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "transverseStiffenerId"
+          }
+        ],
+        "value": "newConductivity"
+      },
+      "entity": "fire-insulation-conductivity",
+      "kind": "change-fire-insulation-conductivity",
+      "module": "🦴️change-fire-insulation-conductivity",
+      "physicalLayout": "direct",
+      "record": "ChangedFireInsulationConductivity",
+      "source": "🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦴️change-fire-insulation-conductivity/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeFireInsulationConductivity",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeFireInsulationSpecificHeat",
+      "artifact": "🪶️en1999",
+      "edit": {
+        "rule": "set-field",
+        "path": "fireInsulations[].specificHeat",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "transverseStiffenerId"
+          }
+        ],
+        "value": "newSpecificHeat"
+      },
+      "entity": "fire-insulation-specific-heat",
+      "kind": "change-fire-insulation-specific-heat",
+      "module": "🦴️change-fire-insulation-specific-heat",
+      "physicalLayout": "direct",
+      "record": "ChangedFireInsulationSpecificHeat",
+      "source": "🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦴️change-fire-insulation-specific-heat/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeFireInsulationSpecificHeat",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeFireInsulationDensity",
+      "artifact": "🪶️en1999",
+      "edit": {
+        "rule": "set-field",
+        "path": "fireInsulations[].density",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "transverseStiffenerId"
+          }
+        ],
+        "value": "newDensity"
+      },
+      "entity": "fire-insulation-density",
+      "kind": "change-fire-insulation-density",
+      "module": "🦴️change-fire-insulation-density",
+      "physicalLayout": "direct",
+      "record": "ChangedFireInsulationDensity",
+      "source": "🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦴️change-fire-insulation-density/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeFireInsulationDensity",
       "verb": "change"
     },
     {

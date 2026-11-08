@@ -90,8 +90,9 @@ pub fn pr06(c: &Case) -> R {
 
 pub fn pr07(c: &Case) -> R {
     let pmt = c.pos("pm_t")?;
-    let unb = c.so("bond", "bonded") != "bonded";
-    let (rs, ri) = if unb { (c.ndp("ndp.en1992.p-r-sup-unbonded"), c.ndp("ndp.en1992.p-r-inf-unbonded")) } else { (c.ndp("ndp.en1992.p-r-sup"), c.ndp("ndp.en1992.p-r-inf")) };
+    let kind = if c.so("bond", "post_bonded") == "post_bonded" { "post-bonded" } else { "pre-or-unbonded" };
+    let (rs, ri) = (c.ndp(&format!("ndp.en1992.p-r-sup.{kind}")), c.ndp(&format!("ndp.en1992.p-r-inf.{kind}")));
+    if rs.is_nan() || ri.is_nan() { return Err("No r_sup/r_inf of 5.10.9(1) is registered for this annex; the check is not decided. / Für diesen Anhang ist kein r_sup/r_inf nach 5.10.9(1) hinterlegt; der Nachweis ist nicht entschieden.".into()); }
     Ok(vec![Outcome::n("pk_sup", "P_k,sup", "P_k,sup", rs * pmt, format!("r_sup = {}", f(rs))), Outcome::n("pk_inf", "P_k,inf", "P_k,inf", ri * pmt, format!("r_inf = {}", f(ri))), Outcome::num("gamma_p", "γ_P", "γ_P", 1.0, "favourable and unfavourable".into()).steps_de("günstig und ungünstig")])
 }
 
@@ -213,7 +214,7 @@ pub const ENTRIES: &[Entry] = &[
     entry_of("PR-04", "DIN EN 1992-1-1", "5.10.5", "Friction and anchorage slip", "Reibung und Verankerungsschlupf", &["pmax", "mu", "k", "x", "theta", "slip", "ap", "radius_m", "ep"], &["ndp.en1992.friction-mu", "ndp.en1992.friction-k"], pr04),
     entry_of("PR-05", "DIN EN 1992-1-1", "5.10.6", "Time-dependent losses", "Zeitabhängige Verluste", &["ep", "ecm", "phi", "ap", "ac", "ic", "zcp", "eps_cs", "sigma_c_qp", "sigma_pi", "fpk", "relax_class", "rho1000", "t_hours"], &["ndp.en1992.sigma-p-qp"], pr05),
     entry_of("PR-06", "DIN EN 1992-1-1", "5.10.8", "Unbonded tendons at ULS", "Spannglieder ohne Verbund im GZT", &["sigma_pm_inf", "fpk", "fp01k", "delta_sigma"], &["ndp.en1992.unbonded-dsigma", "ndp.en1992.gamma-s"], pr06),
-    entry_of("PR-07", "DIN EN 1992-1-1", "5.10.9", "Characteristic prestress values", "Charakteristische Vorspannwerte", &["pm_t", "bond"], &["ndp.en1992.p-r-sup", "ndp.en1992.p-r-inf", "ndp.en1992.p-r-sup-unbonded", "ndp.en1992.p-r-inf-unbonded"], pr07),
+    entry_of("PR-07", "DIN EN 1992-1-1", "5.10.9", "Characteristic prestress values", "Charakteristische Vorspannwerte", &["pm_t", "bond"], &["ndp.en1992.p-r-sup.pre-or-unbonded", "ndp.en1992.p-r-inf.pre-or-unbonded", "ndp.en1992.p-r-sup.post-bonded", "ndp.en1992.p-r-inf.post-bonded"], pr07),
     entry_of("PR-08", "DIN EN 1992-1-1", "5.10.10", "Deviation forces", "Umlenkkräfte", &["p", "sag", "l", "radius"], &[], pr08),
     entry_of("PR-09", "DIN EN 1992-1-1", "8.10.3", "Anchorage zones of post-tensioned members", "Verankerungsbereiche", &["pmax", "a", "h", "fyk", "as_provided"], &["ndp.en1992.gamma-s"], pr09),
     entry_of("PR-10", "DIN EN 1992-1-1", "5.10.2.2", "Concrete stress at release", "Betonspannung bei Vorspannung", &["sigma_c", "fck_t", "nonlinear_creep_proven"], &[], pr10),

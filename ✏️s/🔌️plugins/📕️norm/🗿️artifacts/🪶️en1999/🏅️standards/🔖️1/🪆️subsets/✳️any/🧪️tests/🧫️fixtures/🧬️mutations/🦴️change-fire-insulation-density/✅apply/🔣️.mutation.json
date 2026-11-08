@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFireInsulationDensity",
+  "fireInsulationId": "fire-insulation-1",
+  "newDensity": 801.0
+}

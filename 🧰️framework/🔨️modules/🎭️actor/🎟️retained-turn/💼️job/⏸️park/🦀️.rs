@@ -47,8 +47,8 @@ impl<T> OriginalActorParkAdmission<T>{
 impl<T> Drop for OriginalActorParkAdmission<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"owned Actor admission dropped its issuer or partial original source")}}
 impl<T> OriginalActorParkedTurn<T>{
  /// 🤝️ The genuine issuer stays owned while its producer checks out and receives in the same parked context.
- pub async fn execute<R>(mut self,phase:ActorGuestPhase,run:impl for<'turn> AsyncFnOnce(RetainedTurnInput,&mut StepContext<'turn>)->Result<R,OriginalTurnFailure>)->OriginalActorParkedReturn<T,R>{
-  let input=self.input;let failure=self.admission_failure.take();let returned=self.turn.take().unwrap().execute(async move|cx|{if let Some(error)=failure{return Err(error.into())}run(input.ok_or_else(||refusal("original parked producer has no actual issuer checkout"))?,cx).await}).await;
+ pub async fn execute<R>(mut self,phase:ActorGuestPhase,run:impl for<'turn> AsyncFnOnce(RetainedTurnInput,&mut StepContext<'turn>,semio_framework_job::OriginalSourceTurnWitness<'turn>)->Result<R,OriginalTurnFailure>)->OriginalActorParkedReturn<T,R>{
+  let input=self.input;let failure=self.admission_failure.take();let returned=self.turn.take().unwrap().execute(async move|cx,witness|{if let Some(error)=failure{return Err(error.into())}run(input.ok_or_else(||refusal("original parked producer has no actual issuer checkout"))?,cx,witness).await}).await;
   let mut issuer=self.issuer.take().unwrap();let received=match input{Some(input)=>issuer.receive_guest_spent(input,returned.receipt(),u64::try_from(returned.work_units_spent()).unwrap_or(u64::MAX),if returned.receiving_refusal().is_none(){phase}else{ActorGuestPhase::Ready}),None=>Err(refusal("original parked body has no checked out issuer return"))};let receipt=if received.is_ok(){issuer.return_actor_turn()}else{Err(received.err().unwrap())};let(receipt,refusal)=match receipt{Ok(receipt)=>(Some(receipt),None),Err(error)=>(None,Some(error))};
   OriginalActorParkedReturn{issuer:ManuallyDrop::new(Some(issuer)),returned,receipt,issuer_refusal:ManuallyDrop::new(refusal)}
  }

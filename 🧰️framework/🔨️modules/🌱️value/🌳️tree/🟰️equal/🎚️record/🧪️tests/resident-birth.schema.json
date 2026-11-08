@@ -1,0 +1,37 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "stages"
+  ],
+  "properties": {
+    "stages": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "backing",
+          "initialized",
+          "typed"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "backing": {
+            "type": "boolean"
+          },
+          "initialized": {
+            "type": "boolean"
+          },
+          "typed": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

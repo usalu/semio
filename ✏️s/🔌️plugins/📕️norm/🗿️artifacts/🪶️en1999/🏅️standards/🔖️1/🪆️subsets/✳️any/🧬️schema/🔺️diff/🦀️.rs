@@ -1529,6 +1529,134 @@ protocol::list_delta! {
     /// 📋️ Positional row delta of the `ring_stiffeners` list (rows keyed by `id`).
     pub En1999RingStiffenersRows { removal: En1999RingStiffenersRemoved, insertion: En1999RingStiffenersInserted, relocation: En1999RingStiffenersMoved, modification: En1999RingStiffenersModified, row: semio_s_artifact_norm_en1999_model::RingStiffener, patch: En1999RingStiffenersPatch, list: Vec<semio_s_artifact_norm_en1999_model::RingStiffener>, key: String = by RingStiffenerKey }
 }
+
+/// 🔑️ Key extractor of the foreign `SheetProfile` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SheetProfileKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_en1999_model::SheetProfile> for SheetProfileKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_en1999_model::SheetProfile) -> String {
+        row.id.clone()
+    }
+}
+
+/// 🩹️ Sparse patch of the `stiffeners` row addressed by its key.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
+pub struct En1999SheetProfilesPatch {
+    pub sheet_id: Option<String>,
+    pub pitch: Option<f64>,
+    pub top_flange: Option<f64>,
+    pub bottom_flange: Option<f64>,
+    pub web_height: Option<f64>,
+}
+
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_en1999_model::SheetProfile> for En1999SheetProfilesPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_en1999_model::SheetProfile, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+        if let Some(value) = &self.sheet_id { row.sheet_id = value.clone(); }
+        if let Some(value) = &self.pitch { row.pitch = value.clone(); }
+        if let Some(value) = &self.top_flange { row.top_flange = value.clone(); }
+        if let Some(value) = &self.bottom_flange { row.bottom_flange = value.clone(); }
+        if let Some(value) = &self.web_height { row.web_height = value.clone(); }
+        Ok(())
+    }
+
+    fn absorb(&mut self, later: Self) {
+        if later.sheet_id.is_some() { self.sheet_id = later.sheet_id; }
+        if later.pitch.is_some() { self.pitch = later.pitch; }
+        if later.top_flange.is_some() { self.top_flange = later.top_flange; }
+        if later.bottom_flange.is_some() { self.bottom_flange = later.bottom_flange; }
+        if later.web_height.is_some() { self.web_height = later.web_height; }
+    }
+
+    fn inverse(&self, row: &semio_s_artifact_norm_en1999_model::SheetProfile) -> Self {
+        Self {
+            sheet_id: self.sheet_id.as_ref().map(|_| row.sheet_id.clone()),
+            pitch: self.pitch.as_ref().map(|_| row.pitch.clone()),
+            top_flange: self.top_flange.as_ref().map(|_| row.top_flange.clone()),
+            bottom_flange: self.bottom_flange.as_ref().map(|_| row.bottom_flange.clone()),
+            web_height: self.web_height.as_ref().map(|_| row.web_height.clone()),
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.sheet_id.is_none() && self.pitch.is_none() && self.top_flange.is_none() && self.bottom_flange.is_none() && self.web_height.is_none() && self.internal.is_none()
+    }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+    /// 📋️ Positional row delta of the `sheet_profiles` list (rows keyed by `id`).
+    pub En1999SheetProfilesRows { removal: En1999SheetProfilesRemoved, insertion: En1999SheetProfilesInserted, relocation: En1999SheetProfilesMoved, modification: En1999SheetProfilesModified, row: semio_s_artifact_norm_en1999_model::SheetProfile, patch: En1999SheetProfilesPatch, list: Vec<semio_s_artifact_norm_en1999_model::SheetProfile>, key: String = by SheetProfileKey }
+}
+
+/// 🔑️ Key extractor of the foreign `FireInsulation` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct FireInsulationKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_en1999_model::FireInsulation> for FireInsulationKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_en1999_model::FireInsulation) -> String {
+        row.id.clone()
+    }
+}
+
+/// 🩹️ Sparse patch of the `stiffeners` row addressed by its key.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
+pub struct En1999FireInsulationsPatch {
+    pub fire_id: Option<String>,
+    pub thickness: Option<f64>,
+    pub conductivity: Option<f64>,
+    pub specific_heat: Option<f64>,
+    pub density: Option<f64>,
+}
+
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_en1999_model::FireInsulation> for En1999FireInsulationsPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_en1999_model::FireInsulation, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+        if let Some(value) = &self.fire_id { row.fire_id = value.clone(); }
+        if let Some(value) = &self.thickness { row.thickness = value.clone(); }
+        if let Some(value) = &self.conductivity { row.conductivity = value.clone(); }
+        if let Some(value) = &self.specific_heat { row.specific_heat = value.clone(); }
+        if let Some(value) = &self.density { row.density = value.clone(); }
+        Ok(())
+    }
+
+    fn absorb(&mut self, later: Self) {
+        if later.fire_id.is_some() { self.fire_id = later.fire_id; }
+        if later.thickness.is_some() { self.thickness = later.thickness; }
+        if later.conductivity.is_some() { self.conductivity = later.conductivity; }
+        if later.specific_heat.is_some() { self.specific_heat = later.specific_heat; }
+        if later.density.is_some() { self.density = later.density; }
+    }
+
+    fn inverse(&self, row: &semio_s_artifact_norm_en1999_model::FireInsulation) -> Self {
+        Self {
+            fire_id: self.fire_id.as_ref().map(|_| row.fire_id.clone()),
+            thickness: self.thickness.as_ref().map(|_| row.thickness.clone()),
+            conductivity: self.conductivity.as_ref().map(|_| row.conductivity.clone()),
+            specific_heat: self.specific_heat.as_ref().map(|_| row.specific_heat.clone()),
+            density: self.density.as_ref().map(|_| row.density.clone()),
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.fire_id.is_none() && self.thickness.is_none() && self.conductivity.is_none() && self.specific_heat.is_none() && self.density.is_none() && self.internal.is_none()
+    }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+    /// 📋️ Positional row delta of the `fire_insulations` list (rows keyed by `id`).
+    pub En1999FireInsulationsRows { removal: En1999FireInsulationsRemoved, insertion: En1999FireInsulationsInserted, relocation: En1999FireInsulationsMoved, modification: En1999FireInsulationsModified, row: semio_s_artifact_norm_en1999_model::FireInsulation, patch: En1999FireInsulationsPatch, list: Vec<semio_s_artifact_norm_en1999_model::FireInsulation>, key: String = by FireInsulationKey }
+}
 /// 🩹️ Sparse patch of the `stiffeners` row addressed by its key.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
@@ -1620,6 +1748,10 @@ pub struct En1999Diff {
     pub patch_loads: Option<En1999PatchLoadsRows>,
     #[state(artifact)]
     pub ring_stiffeners: Option<En1999RingStiffenersRows>,
+    #[state(artifact)]
+    pub sheet_profiles: Option<En1999SheetProfilesRows>,
+    #[state(artifact)]
+    pub fire_insulations: Option<En1999FireInsulationsRows>,
     #[state(artifact)]
     pub transverse_stiffeners: Option<En1999TransverseStiffenersRows>,
     #[state(artifact)]
@@ -1734,6 +1866,20 @@ impl protocol::ColdMutationDiff<En1999Snapshot> for En1999Diff {
             }
             self.ring_stiffeners = self.ring_stiffeners.take().filter(|rows| !rows.is_empty());
         }
+        if let Some(theirs) = other.sheet_profiles {
+            match self.sheet_profiles.as_mut() {
+                Some(mine) => mine.absorb(theirs),
+                None => self.sheet_profiles = Some(theirs),
+            }
+            self.sheet_profiles = self.sheet_profiles.take().filter(|rows| !rows.is_empty());
+        }
+        if let Some(theirs) = other.fire_insulations {
+            match self.fire_insulations.as_mut() {
+                Some(mine) => mine.absorb(theirs),
+                None => self.fire_insulations = Some(theirs),
+            }
+            self.fire_insulations = self.fire_insulations.take().filter(|rows| !rows.is_empty());
+        }
         if let Some(theirs) = other.transverse_stiffeners {
             match self.transverse_stiffeners.as_mut() {
                 Some(mine) => mine.absorb(theirs),
@@ -1794,6 +1940,12 @@ impl protocol::ColdMutationDiff<En1999Snapshot> for En1999Diff {
         if let Some(rows) = &self.ring_stiffeners {
             next.ring_stiffeners = rows.commit_onto(&base.ring_stiffeners, capability).map_err(|error| error.under(["ring_stiffeners"]))?;
         }
+        if let Some(rows) = &self.sheet_profiles {
+            next.sheet_profiles = rows.commit_onto(&base.sheet_profiles, capability).map_err(|error| error.under(["sheet_profiles"]))?;
+        }
+        if let Some(rows) = &self.fire_insulations {
+            next.fire_insulations = rows.commit_onto(&base.fire_insulations, capability).map_err(|error| error.under(["fire_insulations"]))?;
+        }
         if let Some(rows) = &self.transverse_stiffeners {
             next.transverse_stiffeners = rows.commit_onto(&base.transverse_stiffeners, capability).map_err(|error| error.under(["transverse_stiffeners"]))?;
         }
@@ -1804,7 +1956,7 @@ impl protocol::ColdMutationDiff<En1999Snapshot> for En1999Diff {
 
 impl protocol::DiffAlgebra<En1999Snapshot> for En1999Diff {
     fn is_empty(&self) -> bool {
-        self.annex.is_none() && self.reliability_class.is_none() && self.materials.as_ref().map_or(true, |rows| rows.is_empty()) && self.sections.as_ref().map_or(true, |rows| rows.is_empty()) && self.members.as_ref().map_or(true, |rows| rows.is_empty()) && self.connections.as_ref().map_or(true, |rows| rows.is_empty()) && self.fire_scenarios.as_ref().map_or(true, |rows| rows.is_empty()) && self.fatigue_details.as_ref().map_or(true, |rows| rows.is_empty()) && self.cold_formed.as_ref().map_or(true, |rows| rows.is_empty()) && self.shells.as_ref().map_or(true, |rows| rows.is_empty()) && self.placements.as_ref().map_or(true, |rows| rows.is_empty()) && self.weld_runs.as_ref().map_or(true, |rows| rows.is_empty()) && self.outline_vertices.as_ref().map_or(true, |rows| rows.is_empty()) && self.fatigue_categories.as_ref().map_or(true, |rows| rows.is_empty()) && self.patch_loads.as_ref().map_or(true, |rows| rows.is_empty()) && self.ring_stiffeners.as_ref().map_or(true, |rows| rows.is_empty()) && self.transverse_stiffeners.as_ref().map_or(true, |rows| rows.is_empty())
+        self.annex.is_none() && self.reliability_class.is_none() && self.materials.as_ref().map_or(true, |rows| rows.is_empty()) && self.sections.as_ref().map_or(true, |rows| rows.is_empty()) && self.members.as_ref().map_or(true, |rows| rows.is_empty()) && self.connections.as_ref().map_or(true, |rows| rows.is_empty()) && self.fire_scenarios.as_ref().map_or(true, |rows| rows.is_empty()) && self.fatigue_details.as_ref().map_or(true, |rows| rows.is_empty()) && self.cold_formed.as_ref().map_or(true, |rows| rows.is_empty()) && self.shells.as_ref().map_or(true, |rows| rows.is_empty()) && self.placements.as_ref().map_or(true, |rows| rows.is_empty()) && self.weld_runs.as_ref().map_or(true, |rows| rows.is_empty()) && self.outline_vertices.as_ref().map_or(true, |rows| rows.is_empty()) && self.fatigue_categories.as_ref().map_or(true, |rows| rows.is_empty()) && self.patch_loads.as_ref().map_or(true, |rows| rows.is_empty()) && self.ring_stiffeners.as_ref().map_or(true, |rows| rows.is_empty())  && self.sheet_profiles.as_ref().map_or(true, |rows| rows.is_empty())  && self.fire_insulations.as_ref().map_or(true, |rows| rows.is_empty()) && self.transverse_stiffeners.as_ref().map_or(true, |rows| rows.is_empty())
     }
 }
 
@@ -1827,6 +1979,8 @@ impl protocol::ColdDiffAlgebra<En1999Snapshot> for En1999Diff {
             fatigue_categories: self.fatigue_categories.as_ref().map(|rows| rows.inverse(&base.fatigue_categories)).filter(|rows| !rows.is_empty()),
             patch_loads: self.patch_loads.as_ref().map(|rows| rows.inverse(&base.patch_loads)).filter(|rows| !rows.is_empty()),
             ring_stiffeners: self.ring_stiffeners.as_ref().map(|rows| rows.inverse(&base.ring_stiffeners)).filter(|rows| !rows.is_empty()),
+            sheet_profiles: self.sheet_profiles.as_ref().map(|rows| rows.inverse(&base.sheet_profiles)).filter(|rows| !rows.is_empty()),
+            fire_insulations: self.fire_insulations.as_ref().map(|rows| rows.inverse(&base.fire_insulations)).filter(|rows| !rows.is_empty()),
             transverse_stiffeners: self.transverse_stiffeners.as_ref().map(|rows| rows.inverse(&base.transverse_stiffeners)).filter(|rows| !rows.is_empty()),
         }
     }

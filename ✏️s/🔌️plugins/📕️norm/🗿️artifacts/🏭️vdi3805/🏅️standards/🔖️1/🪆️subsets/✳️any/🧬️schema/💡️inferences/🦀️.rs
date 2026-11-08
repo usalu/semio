@@ -58,7 +58,7 @@ pub fn vdi3805_artifact_inference_descriptor() -> ::semio_framework_schema_regis
     ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
         id: "s.norm.vdi3805.inference",
         inference: ::semio_framework_schema_registry::FacetLeaves {
-            rust: concat!(include_str!("🦀️.rs"), include_str!("🧰️check-evidence/🦀️.rs"), include_str!("🧱️sheet-checks/🦀️.rs"), include_str!("🧱️sheet-checks/🚰️valve-radiator-and-pump-checks/🦀️.rs"), include_str!("🧱️sheet-checks/🔥️heat-generator-and-operative-sheet-checks/🦀️.rs"), include_str!("📚️document-checks/🦀️.rs"), include_str!("📚️document-checks/🗃️catalog/🦀️.rs"), include_str!("📚️document-checks/🗂️file-header-and-historical-checks/🦀️.rs"), include_str!("📏️parts/🦀️.rs"), include_str!("🧾outline/🦀️.rs")),
+            rust: concat!(include_str!("🦀️.rs"), include_str!("🧰️check-evidence/🦀️.rs"), include_str!("🧱️sheet-checks/🦀️.rs"), include_str!("🧱️sheet-checks/🚰️valve-radiator-and-pump-checks/🦀️.rs"), include_str!("🧱️sheet-checks/🔥️heat-generator-and-operative-sheet-checks/🦀️.rs"), include_str!("📚️document-checks/🦀️.rs"), include_str!("📚️document-checks/🗃️catalog/🦀️.rs"), include_str!("📚️document-checks/🗂️file-header-and-historical-checks/🦀️.rs"), include_str!("📏️parts/🦀️.rs"), include_str!("🧮️units/🦀️.rs"), include_str!("🧾outline/🦀️.rs")),
             typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
         },
     }
@@ -94,6 +94,10 @@ pub use document_checks::*;
 mod parts;
 pub use parts::*;
 
+#[path = "🧮️units/🦀️.rs"]
+pub mod units;
+pub use units::Vdi3805Units;
+
 //#endregion 🔖️ComplianceReport
 
 //#region 🔁️Re-exports
@@ -105,3 +109,7 @@ pub use crate::outline::Vdi3805Outline;
 #[path = "🧾outline/🦀️.rs"]
 pub mod outline;
 //#endregion 🪢️Mounts
+
+//#region 🛰️LiveEvaluation
+semio_s_plugin_norm_compliance::live_report!(pub mod live(Vdi3805Snapshot) = Vdi3805Units);
+//#endregion 🛰️LiveEvaluation

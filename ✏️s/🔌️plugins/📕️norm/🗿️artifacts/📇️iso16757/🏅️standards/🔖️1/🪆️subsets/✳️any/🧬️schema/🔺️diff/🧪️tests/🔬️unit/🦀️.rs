@@ -9,7 +9,7 @@ use semio_s_artifact_norm_iso16757_mut_products::rename_product_group::mutation:
 use semio_s_artifact_norm_iso16757_mut_products::retire_product_group::mutation::RetireProductGroup;
 use semio_s_artifact_norm_iso16757_mutations::Iso16757Mutation;
 use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
-use protocol::{DiffAlgebra as _, Mutation as _, MutationDiff as _};
+use protocol::{ColdDiffAlgebra as _, ColdMutation as _, DiffAlgebra as _, MutationDiff as _};
 use protocol::ColdMutationDiff;
 
 fn diff_of(mutation: &Iso16757Mutation, base: &Iso16757Snapshot) -> Iso16757Diff {

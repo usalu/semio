@@ -1,0 +1,28 @@
+{
+  "events": [
+    {
+      "name": "selected-finish",
+      "request": "Finish",
+      "producer": "Finish",
+      "operation": "Finish"
+    },
+    {
+      "name": "recorded-post-unwind",
+      "request": "Finish",
+      "producer": "Publish",
+      "operation": "Finish"
+    },
+    {
+      "name": "accepted-post-before-rearm",
+      "request": "Finish",
+      "producer": "Publish",
+      "operation": "Finish"
+    },
+    {
+      "name": "paid-rearm",
+      "request": null,
+      "producer": "Publish",
+      "operation": "Publish"
+    }
+  ]
+}

@@ -21,6 +21,8 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value-native-receiving-frame = { path = "../../🏭️construction/📦️effect/🧳️frame/📦️packages/🦀️rust" }
+semio-framework-value-retirement-contract = { path = "../../../♻️retirement/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-receiving = { path = "../../../🫴️receiving/📦️packages/🦀️rust" }
 semio-framework-value-call = { path = "../../../♻️retirement/📦️call/📦️packages/🦀️rust" }
 semio-framework-value-native-outcome = { path = "../../📬️outcome/📦️packages/🦀️rust" }
@@ -31,6 +33,7 @@ semio-framework-value-native-encoding = { path="../../../🛫️encode/📦️pa
 semio-framework-value-shared-issuance = { path="../../../♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-testing-effect-bank = { path = "../../../🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 semio-framework-value-testing-allocator = { path = "../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }

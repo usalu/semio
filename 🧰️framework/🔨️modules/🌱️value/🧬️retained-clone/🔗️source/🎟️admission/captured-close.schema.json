@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "aliasWork",
+    "headerWork",
+    "deniedWork",
+    "pointerWords",
+    "allocations",
+    "releases"
+  ],
+  "properties": {
+    "aliasWork": {
+      "const": 1
+    },
+    "headerWork": {
+      "const": 1
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "pointerWords": {
+      "const": 1
+    },
+    "allocations": {
+      "const": 0
+    },
+    "releases": {
+      "const": 0
+    }
+  }
+}

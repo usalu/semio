@@ -1,0 +1,5 @@
+{
+  "mutation": "changeIsolationSystemBuildingId",
+  "id": "iso-1",
+  "newBuildingId": "-2"
+}

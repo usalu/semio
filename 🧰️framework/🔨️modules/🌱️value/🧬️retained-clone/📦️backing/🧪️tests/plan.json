@@ -1,0 +1,74 @@
+{
+  "copyLimit": 4096,
+  "structuralPrefix": [
+    "binding",
+    "reserve"
+  ],
+  "plans": [
+    {
+      "name": "immutable",
+      "fields": [
+        "binding",
+        "output",
+        "retirement",
+        "projected",
+        "admitted",
+        "closing",
+        "project_route",
+        "close_route"
+      ],
+      "parts": 8,
+      "prefix": 10
+    },
+    {
+      "name": "map",
+      "fields": [
+        "child",
+        "pages",
+        "output",
+        "close",
+        "take_reply",
+        "binding",
+        "route",
+        "closing",
+        "spent"
+      ],
+      "parts": 9,
+      "prefix": 11
+    }
+  ],
+  "deniedWork": 0,
+  "nestedTuple": {
+    "children": [
+      {
+        "name": "u64",
+        "parts": 1,
+        "valueHeader": 1
+      },
+      {
+        "name": "unit",
+        "parts": 1,
+        "valueHeader": 1
+      }
+    ],
+    "tail": [
+      "phase",
+      "source",
+      "output",
+      "spent",
+      "closing",
+      "close",
+      "route",
+      "selected",
+      "child_reply"
+    ],
+    "parts": 13,
+    "fieldPrefix": [
+      "binding",
+      "reserve",
+      "take-box",
+      "binding-clear"
+    ],
+    "actions": 17
+  }
+}

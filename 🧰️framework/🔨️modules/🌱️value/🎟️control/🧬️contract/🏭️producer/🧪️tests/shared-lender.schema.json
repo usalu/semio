@@ -1,0 +1,1 @@
+{"type":"object","additionalProperties":false,"required":["first","second","total","sameReceipt","sameSource","window","localOverrun","spent"],"properties":{"first":{"const":1},"second":{"const":2},"total":{"const":3},"sameReceipt":{"const":true},"sameSource":{"const":true},"window":{"const":2},"localOverrun":{"const":true},"spent":{"const":6}}}

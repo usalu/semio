@@ -26,11 +26,12 @@ impl CancelTokenRetirement{
     /// ↩️ Returns this original token alias while its matching borrowed strong root stays live through the paid turn.
     fn alias_return_work(&self)->u64{u64::from(!self.terminal_is_empty())}
     pub fn return_alias_work_demand(&self)->Result<u64,ValueError>{Ok(self.alias_return_work())}
-    pub fn return_alias_step(&mut self,witness:&CancelToken,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,CancelTokenRetirementError>{
+    pub fn return_alias_step(&mut self,witness:&CancelToken,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneStep,CancelTokenRetirementError>{let grant=effect.grant();
         if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0};}
         let work=u128::from(self.alias_return_work());let demand=RetirementDemand{depth:1,..Default::default()};
         if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}
-        let matches=self.current.as_ref().is_some_and(|original|Arc::ptr_eq(&original.0,&witness.0));
+        let remaining=match effect.remaining_work_units(){Ok(remaining)=>remaining,Err(error)=>return RetainedWorkOutcome{result:Err(CancelTokenRetirementError::Refused(error)),work:0}};if remaining<work{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}match effect.performed(work){Ok(true)=>{},Ok(false)=>return RetainedWorkOutcome{result:Err(CancelTokenRetirementError::Refused(ValueError::literal(ValueRefusalKind::WorkLimit,"cancellation alias return exceeded its Work grant"))),work:u128::from(work)},Err(error)=>return RetainedWorkOutcome{result:Err(CancelTokenRetirementError::Refused(error)),work:0}}
+        let work=u128::from(work);let matches=self.current.as_ref().is_some_and(|original|Arc::ptr_eq(&original.0,&witness.0));
         if !matches{return RetainedWorkOutcome{result:Err(CancelTokenRetirementError::Refused(ValueError::literal(ValueRefusalKind::InvariantViolated,"borrowed cancellation root does not witness this original alias"))),work};}
         if self.node.is_some(){return RetainedWorkOutcome{result:Err(CancelTokenRetirementError::Refused(ValueError::literal(ValueRefusalKind::InvariantViolated,"cancellation node custody cannot be returned as a root alias"))),work};}
         drop(self.current.take());
@@ -39,11 +40,12 @@ impl CancelTokenRetirement{
     /// 🎟️ Releases one actual original frontier and retains every blocked original alias and ancestor.
     /// ⛽️ Quotes one original node inspection, buffer release or parent transition.
     pub fn retirement_work_demand(&self)->u64{u64::from(!self.terminal_is_empty())}
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,CancelTokenRetirementError>{
+    pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneStep,CancelTokenRetirementError>{let grant=effect.grant();
         if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0};}
         let demand=match self.retirement_demands(){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(CancelTokenRetirementError::Refused(error)),work:0}};
         if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}
-        let mut work=0;
+        let remaining=match effect.remaining_work_units(){Ok(remaining)=>remaining,Err(error)=>return RetainedWorkOutcome{result:Err(CancelTokenRetirementError::Refused(error)),work:0}};if remaining==0{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}match effect.performed(1){Ok(true)=>{},Ok(false)=>return RetainedWorkOutcome{result:Err(CancelTokenRetirementError::Refused(ValueError::literal(ValueRefusalKind::WorkLimit,"cancellation close exceeded its Work grant"))),work:1},Err(error)=>return RetainedWorkOutcome{result:Err(CancelTokenRetirementError::Refused(error)),work:0}}
+        let mut work:u128=1;
         let result=(||{
             if let Some(current)=self.current.as_ref(){
                 let observed=current.0.waiters.try_lock();work=1;
@@ -76,7 +78,7 @@ impl RetirementCursor for CancelTokenRetirementCursor{
     fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.0.retirement_demands()}
 
     fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{
-        if effect.maximum_work_units()<self.0.retirement_work_demand(){return RetirementStep::BudgetExhausted}let turn=self.0.close_step(effect.grant());
+        match effect.remaining_work_units(){Ok(work)if work>=self.0.retirement_work_demand()=>{},Ok(_)=>return RetirementStep::BudgetExhausted,Err(error)=>return RetirementStep::Failure(error.into(),0)}let turn=self.0.close_step(effect);
         match turn.result{
             Ok(step)=>{let progress=step.progress();if progress!=RetainedCloneProgress::default()||turn.work!=0{RetirementStep::Progress(progress,turn.work)}else if self.0.terminal_is_empty(){RetirementStep::Complete(turn.work)}else{RetirementStep::BudgetExhausted}}
             Err(CancelTokenRetirementError::Blocked(blocked))=>RetirementStep::Failure(ValueError::literal(ValueRefusalKind::UnsupportedOwner,match blocked{CancelTokenRetirementBlocked::SharedAlias=>"original cancellation node retains a shared alias",CancelTokenRetirementBlocked::WeakAlias=>"original cancellation node retains a weak alias",CancelTokenRetirementBlocked::RegisteredWaiter=>"original cancellation node retains a registered wake owner",CancelTokenRetirementBlocked::WaiterContention=>"original cancellation waiter guard is occupied"}).into(),turn.work),

@@ -1,0 +1,227 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "states",
+    "cancel",
+    "comparisons",
+    "nestedComparisons",
+    "cancelCuts",
+    "failurePublication"
+  ],
+  "properties": {
+    "states": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "backing",
+          "initialized",
+          "output"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "backing": {
+            "type": "boolean"
+          },
+          "initialized": {
+            "type": "boolean"
+          },
+          "output": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "cancel": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "from",
+          "next"
+        ],
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "next": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "comparisons": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "left",
+          "right",
+          "equal"
+        ],
+        "properties": {
+          "left": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          },
+          "right": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          },
+          "equal": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "nestedComparisons": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "left",
+          "right",
+          "equal"
+        ],
+        "properties": {
+          "left": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "right": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "equal": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "cancelCuts": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "uniqueItems": true
+    },
+    "failurePublication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "message",
+        "originalCopied",
+        "states"
+      ],
+      "properties": {
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "originalCopied": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "states": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "phase",
+              "child",
+              "outer"
+            ],
+            "properties": {
+              "phase": {
+                "enum": [
+                  "recorded",
+                  "denied",
+                  "published"
+                ]
+              },
+              "child": {
+                "type": "boolean"
+              },
+              "outer": {
+                "type": "boolean"
+              }
+            },
+            "oneOf": [
+              {
+                "properties": {
+                  "phase": {
+                    "const": "recorded"
+                  },
+                  "child": {
+                    "const": true
+                  },
+                  "outer": {
+                    "const": false
+                  }
+                },
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "phase": {
+                    "const": "denied"
+                  },
+                  "child": {
+                    "const": true
+                  },
+                  "outer": {
+                    "const": false
+                  }
+                },
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "phase": {
+                    "const": "published"
+                  },
+                  "child": {
+                    "const": false
+                  },
+                  "outer": {
+                    "const": true
+                  }
+                },
+                "type": "object"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

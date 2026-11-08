@@ -540,6 +540,81 @@ protocol::list_delta! {
     pub En1998SlopeDelta { removal: En1998SlopeRemoval, insertion: En1998SlopeInsertion, relocation: En1998SlopeRelocation, modification: En1998SlopeModification, row: semio_s_artifact_norm_en1998_model::En1998Slope, patch: En1998SlopePatch, list: Vec<semio_s_artifact_norm_en1998_model::En1998Slope>, key: String = by En1998SlopeDeltaKey }
 }
 
+protocol::row_patch! {
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+    /// 🩹 Sparse field patch of one `En1998IsolationSystem`.
+    pub En1998IsolationSystemPatch of semio_s_artifact_norm_en1998_model::En1998IsolationSystem { set { bridge_id: String, building_id: String, strength_n: f64, stiffness_n_per_m: f64, yield_displacement_m: f64, capacity_m: f64 } }
+}
+
+/// 🔑️ Key extractor of the foreign `En1998IsolationSystem` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct En1998IsolationSystemDeltaKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_en1998_model::En1998IsolationSystem> for En1998IsolationSystemDeltaKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_en1998_model::En1998IsolationSystem) -> String {
+        row.id.clone()
+    }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+    /// 📋️ Keyed row delta of one `En1998IsolationSystem` list.
+    pub En1998IsolationSystemDelta { removal: En1998IsolationSystemRemoval, insertion: En1998IsolationSystemInsertion, relocation: En1998IsolationSystemRelocation, modification: En1998IsolationSystemModification, row: semio_s_artifact_norm_en1998_model::En1998IsolationSystem, patch: En1998IsolationSystemPatch, list: Vec<semio_s_artifact_norm_en1998_model::En1998IsolationSystem>, key: String = by En1998IsolationSystemDeltaKey }
+}
+
+protocol::row_patch! {
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+    /// 🩹 Sparse field patch of one `En1998PierBase`.
+    pub En1998PierBasePatch of semio_s_artifact_norm_en1998_model::En1998PierBase { set { bridge_id: String, pier_id: String, radius_m: f64, soil_vs_m_s: f64, soil_unit_weight_n_m3: f64, poisson_ratio: f64 } }
+}
+
+/// 🔑️ Key extractor of the foreign `En1998PierBase` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct En1998PierBaseDeltaKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_en1998_model::En1998PierBase> for En1998PierBaseDeltaKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_en1998_model::En1998PierBase) -> String {
+        row.id.clone()
+    }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+    /// 📋️ Keyed row delta of one `En1998PierBase` list.
+    pub En1998PierBaseDelta { removal: En1998PierBaseRemoval, insertion: En1998PierBaseInsertion, relocation: En1998PierBaseRelocation, modification: En1998PierBaseModification, row: semio_s_artifact_norm_en1998_model::En1998PierBase, patch: En1998PierBasePatch, list: Vec<semio_s_artifact_norm_en1998_model::En1998PierBase>, key: String = by En1998PierBaseDeltaKey }
+}
+
+protocol::row_patch! {
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+    /// 🩹 Sparse field patch of one `En1998CriticalRegion`.
+    pub En1998CriticalRegionPatch of semio_s_artifact_norm_en1998_model::En1998CriticalRegion { set { building_id: String, member_id: String, section_width_m: f64, section_depth_m: f64, clear_length_m: f64, hooped_length_m: f64, core_width_m: f64, core_depth_m: f64, axial_force_n: f64, concrete_design_strength_mpa: f64, steel_design_yield_mpa: f64, hoop_design_yield_mpa: f64, longitudinal_steel_area_m2: f64, longitudinal_bar_diameter_m: f64, longitudinal_bar_max_diameter_m: f64, hoop_diameter_m: f64, hoop_spacing_m: f64, hoop_legs_x: f64, hoop_legs_y: f64, restrained_bar_count: f64, restrained_bar_spacing_m: f64 } }
+}
+
+/// 🔑️ Key extractor of the foreign `En1998CriticalRegion` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct En1998CriticalRegionDeltaKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_en1998_model::En1998CriticalRegion> for En1998CriticalRegionDeltaKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_en1998_model::En1998CriticalRegion) -> String {
+        row.id.clone()
+    }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+    /// 📋️ Keyed row delta of one `En1998CriticalRegion` list.
+    pub En1998CriticalRegionDelta { removal: En1998CriticalRegionRemoval, insertion: En1998CriticalRegionInsertion, relocation: En1998CriticalRegionRelocation, modification: En1998CriticalRegionModification, row: semio_s_artifact_norm_en1998_model::En1998CriticalRegion, patch: En1998CriticalRegionPatch, list: Vec<semio_s_artifact_norm_en1998_model::En1998CriticalRegion>, key: String = by En1998CriticalRegionDeltaKey }
+}
+
 //#region 🔖️Diff
 /// 🔺️ Sparse delta for the En1998 artifact: the scalar fields a mutation sets and the keyed row deltas of its lists.
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
@@ -586,6 +661,12 @@ pub struct En1998Diff {
     pub slopes: En1998SlopeDelta,
     #[state(artifact)]
     pub placements: En1998PlacementDelta,
+    #[state(artifact)]
+    pub isolation_systems: En1998IsolationSystemDelta,
+    #[state(artifact)]
+    pub pier_bases: En1998PierBaseDelta,
+    #[state(artifact)]
+    pub critical_regions: En1998CriticalRegionDelta,
 }
 //#endregion 🔖️Diff
 
@@ -616,6 +697,9 @@ impl protocol::ColdMutationDiff<En1998Snapshot> for En1998Diff {
         self.tie_beams.absorb(other.tie_beams);
         self.slopes.absorb(other.slopes);
         self.placements.absorb(other.placements);
+        self.isolation_systems.absorb(other.isolation_systems);
+        self.pier_bases.absorb(other.pier_bases);
+        self.critical_regions.absorb(other.critical_regions);
     }
 
     fn apply(&self, unpublished: &mut En1998Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
@@ -644,6 +728,9 @@ impl protocol::ColdMutationDiff<En1998Snapshot> for En1998Diff {
         next.tie_beams = self.tie_beams.commit_onto(&base.tie_beams, capability).map_err(|error| error.under(["tieBeams"]))?;
         next.slopes = self.slopes.commit_onto(&base.slopes, capability).map_err(|error| error.under(["slopes"]))?;
         next.placements = self.placements.commit_onto(&base.placements, capability).map_err(|error| error.under(["placements"]))?;
+        next.isolation_systems = self.isolation_systems.commit_onto(&base.isolation_systems, capability).map_err(|error| error.under(["isolationSystems"]))?;
+        next.pier_bases = self.pier_bases.commit_onto(&base.pier_bases, capability).map_err(|error| error.under(["pierBases"]))?;
+        next.critical_regions = self.critical_regions.commit_onto(&base.critical_regions, capability).map_err(|error| error.under(["criticalRegions"]))?;
         *unpublished = next;
         Ok(())
     }
@@ -670,6 +757,9 @@ impl DiffAlgebra<En1998Snapshot> for En1998Diff {
             && self.tie_beams.is_empty()
             && self.slopes.is_empty()
             && self.placements.is_empty()
+            && self.isolation_systems.is_empty()
+            && self.pier_bases.is_empty()
+            && self.critical_regions.is_empty()
     }
 }
 
@@ -695,6 +785,9 @@ impl protocol::ColdDiffAlgebra<En1998Snapshot> for En1998Diff {
             tie_beams: self.tie_beams.inverse(&base.tie_beams),
             slopes: self.slopes.inverse(&base.slopes),
             placements: self.placements.inverse(&base.placements),
+            isolation_systems: self.isolation_systems.inverse(&base.isolation_systems),
+            pier_bases: self.pier_bases.inverse(&base.pier_bases),
+            critical_regions: self.critical_regions.inverse(&base.critical_regions),
         }
     }
 }

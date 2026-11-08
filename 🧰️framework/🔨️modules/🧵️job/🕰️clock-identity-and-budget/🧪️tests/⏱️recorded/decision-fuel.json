@@ -1,0 +1,30 @@
+[
+  {
+    "initialFuel": 2,
+    "currentFuel": 1,
+    "expired": false,
+    "valid": true,
+    "shouldYield": false
+  },
+  {
+    "initialFuel": 2,
+    "currentFuel": 0,
+    "expired": false,
+    "valid": true,
+    "shouldYield": true
+  },
+  {
+    "initialFuel": 2,
+    "currentFuel": 1,
+    "expired": true,
+    "valid": true,
+    "shouldYield": true
+  },
+  {
+    "initialFuel": 2,
+    "currentFuel": 3,
+    "expired": false,
+    "valid": false,
+    "shouldYield": null
+  }
+]

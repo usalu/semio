@@ -17,7 +17,13 @@
     "emptyFactoryPreparationWork",
     "forwardChildWorkBeforeResult",
     "originalRootAndRegistryRetainedOnRefusal",
-    "cases"
+    "cases",
+    "nullAllocationAttemptWork",
+    "nullReplyCaptureWork",
+    "nullRetainsRoot",
+    "retirementEmptyScanWords",
+    "retirementEmptyReleaseWork",
+    "aliasElectionWork"
   ],
   "properties": {
     "schema": {
@@ -84,6 +90,24 @@
         "authority-view",
         "source-admission"
       ]
+    },
+    "nullAllocationAttemptWork": {
+      "const": 1
+    },
+    "nullReplyCaptureWork": {
+      "const": 1
+    },
+    "nullRetainsRoot": {
+      "const": true
+    },
+    "retirementEmptyScanWords": {
+      "const": 17
+    },
+    "retirementEmptyReleaseWork": {
+      "const": 18
+    },
+    "aliasElectionWork": {
+      "const": 4
     }
   }
 }

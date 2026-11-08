@@ -1,0 +1,7 @@
+{
+  "chunk": 1024,
+  "maximumCopy": 4096,
+  "rows": 32,
+  "headerBytes": 48,
+  "rowBytes": 184
+}

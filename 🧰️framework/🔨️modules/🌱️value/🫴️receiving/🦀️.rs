@@ -9,31 +9,7 @@ pub mod turn;
 pub mod span;
 pub fn invariant()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"foreign native receiving ledger disagrees with its original directional owner")}
 
-/// 🚧️ Retains an unresolved original owner or an inline ready retirement cursor.
-pub enum NativeRetirementGate<P,C>{Pending(P),Ready(C)}
-impl<P,C> NativeRetirementGate<P,C>{
- /// 🫴️ Returns the unchanged unresolved owner for its original recovery path.
- pub fn into_pending(self)->Result<P,Self>{match self{Self::Pending(original)=>Ok(original),ready=>Err(ready)}}
-}
-fn pending_retirement_refusal()->ValueError{ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original allocation owner requires recovery before retirement")}
-impl<P:Send+'static,C:crate::retirement::RetirementCursor+'static> crate::retirement::RetirementCursor for NativeRetirementGate<P,C>{
- fn requires_original_birth(&self)->bool{match self{Self::Ready(cursor)=>cursor.requires_original_birth(),Self::Pending(_)=>false}}
- fn close_original_birth_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,grant:crate::RetainedCloneGrant)->crate::retirement::RetirementStep{match self{Self::Ready(cursor)=>cursor.close_original_birth_step(original,grant),Self::Pending(_)=>crate::retirement::RetirementStep::Failure(pending_retirement_refusal().into(),0)}}
- fn requires_original_control(&self)->bool{match self{Self::Ready(cursor)=>cursor.requires_original_control(),Self::Pending(_)=>false}}
- fn close_step_controlled(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn semio_framework_value_retirement::OriginalRetirementControl)->crate::retirement::RetirementStep{match self{Self::Ready(cursor)=>cursor.close_step_controlled(effect,control),Self::Pending(_)=>crate::retirement::RetirementStep::Failure(pending_retirement_refusal().into(),0)}}
- fn close_original_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::retirement::RetirementStep{match self{Self::Ready(cursor)=>cursor.close_original_step(original,effect),Self::Pending(_)=>crate::retirement::RetirementStep::Failure(pending_retirement_refusal().into(),0)}}
- fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{match self{Self::Ready(cursor)=>cursor.next_computational_work(body),Self::Pending(_)=>Err(pending_retirement_refusal())}}
- fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{match self{Self::Ready(cursor)=>cursor.next_demand(body),Self::Pending(_)=>Err(pending_retirement_refusal())}}
- fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::retirement::RetirementStep{match self{Self::Ready(cursor)=>cursor.close_step(effect),Self::Pending(_)=>crate::retirement::RetirementStep::Failure(pending_retirement_refusal().into(),0)}}
- fn terminal_is_empty(&self)->bool{match self{Self::Ready(cursor)=>cursor.terminal_is_empty(),Self::Pending(_)=>false}}
- fn next_depth_demand(&self)->Result<usize,ValueError>{match self{Self::Ready(cursor)=>cursor.next_depth_demand(),Self::Pending(_)=>Err(pending_retirement_refusal())}}
- fn next_close_byte_demand(&self)->Option<usize>{match self{Self::Ready(cursor)=>cursor.next_close_byte_demand(),Self::Pending(_)=>None}}
- fn next_work_byte_demand(&self)->Result<usize,ValueError>{match self{Self::Ready(cursor)=>cursor.next_work_byte_demand(),Self::Pending(_)=>Err(pending_retirement_refusal())}}
- fn next_selected_work_byte_demand(&self,body:usize)->Result<usize,ValueError>{match self{Self::Ready(cursor)=>cursor.next_selected_work_byte_demand(body),Self::Pending(_)=>Err(pending_retirement_refusal())}}
- fn allows_admitted_narrow_work(&self)->bool{match self{Self::Ready(cursor)=>cursor.allows_admitted_narrow_work(),Self::Pending(_)=>false}}
- fn next_birth_bytes(&self,body:usize)->Option<usize>{match self{Self::Ready(cursor)=>cursor.next_birth_bytes(body),Self::Pending(_)=>None}}
- fn terminal_release_bytes(&self)->Option<usize>{crate::retirement::RetirementCursor::terminal_is_empty(self).then_some(std::mem::size_of::<Self>())}
-}
+pub use semio_framework_value_retirement::NativeRetirementGate;
 /// 🎟️ Borrows the same original work owner and its optional original progress observer.
 pub struct NativeEncodingReceiverWork<'turn,'source,'observer>{work:semio_framework_value_control_contract::OriginalWorkTurn<'turn,'source>,observer:Option<&'turn mut (dyn FnMut(usize,usize)->Result<(),ValueError>+'observer)>,owned:&'turn std::sync::atomic::AtomicUsize,action:&'turn mut Option<semio_framework_value_control_contract::OriginalWorkActionIdentity>,proof:&'turn mut Option<semio_framework_value_control_contract::OriginalWorkActionProof>}
 impl<'turn,'source,'observer> NativeEncodingReceiverWork<'turn,'source,'observer>{
@@ -53,6 +29,18 @@ impl<'turn,'source,'observer> NativeEncodingReceiverWork<'turn,'source,'observer
  pub fn cancel(&mut self)->Result<(),ValueError>{self.work.cancel(self.action)}
  /// 🏁️ Returns the actual proof to its original issuer.
  pub fn finish(&mut self)->Result<(),ValueError>{self.work.finish(self.proof,self.action)}
+ /// 🧾️ Returns the child action while retaining its original proof for payout.
+ pub fn finish_retained(&mut self)->Result<(),ValueError>{self.work.finish_retained(self.proof,self.action)}
+ /// 🧾️ Issues the actual payout receipt after validating its original Source action.
+ pub fn issue_payout_receipt(&mut self,receipt:&mut Option<crate::OriginalWorkPerformedReceipt>)->Result<(),ValueError>{self.work.validate_action_source(*self.action)?;self.work.issue_performed_for_action(*self.action,receipt)}
+ /// 📥️ Claims the same performed receipt without invoking its Source.
+ pub fn claim_payout_receipt(&mut self,receipt:&mut Option<crate::OriginalWorkPerformedReceipt>)->Result<(),ValueError>{self.work.claim_performed_for_action(*self.action,receipt)}
+ /// 📨️ Settles the original Source reply directly into caller custody.
+ pub fn settle_payout_partial(&mut self,output:&mut Option<crate::OriginalWorkPartialOutcome>)->Result<bool,ValueError>{self.work.settle_partial_for_action_into(*self.action,output)}
+ /// 📨️ Commits a separate payout action into its caller-owned proof slot.
+ pub fn commit_payout(&mut self,actual:u128,proof:&mut Option<crate::OriginalWorkActionProof>)->Result<bool,ValueError>{self.work.commit(actual,*self.action,proof)}
+ /// 🏁️ Returns that exact payout proof and action.
+ pub fn finish_payout(&mut self,proof:&mut Option<crate::OriginalWorkActionProof>)->Result<(),ValueError>{self.work.finish(proof,self.action)}
  /// 📍️ Reports progress to the actual original source with its paired-ledger observation.
  pub fn observe(&mut self,completed:usize)->Result<(),ValueError>{match self.observer.as_deref_mut(){Some(observer)=>observer(completed,self.owned.load(std::sync::atomic::Ordering::Relaxed)),None=>Ok(())}}
 }
@@ -62,7 +50,31 @@ impl<'turn,'source> NativeEncodingReceiverConstruction<'turn,'source>{
  /// 🔗️ Binds the actual original loan to the original receiver-owned slot.
  pub fn new(loan:&'turn mut semio_framework_value_control_contract::OriginalConstructionLoan<'source>,action:&'turn mut Option<semio_framework_value_control_contract::OriginalConstructionAction>)->Self{Self{loan,action}}
  /// 🎟️ Issues one original construction action before its producer runs.
- pub fn begin(&mut self,demand:crate::RetirementDemand)->Result<(),ValueError>{self.loan.begin(demand,self.action)}
+ pub fn begin(&mut self,demand:crate::RetirementDemand,work:&mut NativeEncodingReceiverWork<'_,'_,'_>)->Result<(),ValueError>{work.work.begin_construction(self.loan,demand,self.action)}
+ /// 🎟️ Issues a separate payout under the same original Work and construction loans.
+ pub fn begin_payout(&mut self,demand:crate::RetirementDemand,slot:&mut Option<crate::OriginalConstructionAction>,work:&mut NativeEncodingReceiverWork<'_,'_,'_>)->Result<(),ValueError>{work.work.begin_construction(self.loan,demand,slot)}
+ /// 🎫️ Quotes the exact caller-owned payout action.
+ pub fn quote_payout(&mut self,action:&mut crate::OriginalConstructionAction)->Result<(),ValueError>{self.loan.quote(action)}
+ /// 🔁️ Recovers only the payout producer’s recorded grant.
+ pub fn recover_payout_grant(&mut self,action:&mut crate::OriginalConstructionAction)->Result<Option<Result<crate::RetainedCloneGrant,ValueError>>,ValueError>{self.loan.recover_grant(action)}
+ /// 📨️ Posts the payout’s actual physical progress.
+ pub fn post_payout(&mut self,action:&mut crate::OriginalConstructionAction,progress:crate::RetainedCloneProgress,actual:Option<usize>)->Result<(),ValueError>{self.loan.post(action,progress,actual)}
+ /// 🔁️ Observes the payout status while its actual reply stays resident.
+ pub fn recover_payout(&mut self,action:&mut crate::OriginalConstructionAction)->Result<Option<crate::OriginalConstructionAcceptStatus>,ValueError>{self.loan.recover_accept(action)}
+ /// 📦️ Stages the whole original action under the actual separate payout effect.
+ pub fn stage_completion(&mut self,payout:&crate::OriginalConstructionAction,output:&mut Option<crate::OriginalConstructionCompletion>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<Option<crate::RetainedCloneProgress>,ValueError>{let witness=match self.loan.witness(payout){Ok(witness)=>witness,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work:0}};self.loan.stage_completion(self.action,output,&witness,effect)}
+ /// 🔁️ Restages a sealed completion while retaining the separately published payout refusal.
+ pub fn restage_completion(&mut self,slot:&mut Option<crate::OriginalConstructionCompletion>,output:&mut Option<crate::OriginalConstructionCompletion>,refusal:&crate::OriginalConstructionCompletion,payout:&crate::OriginalConstructionAction,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<Option<crate::RetainedCloneProgress>,ValueError>{let witness=match self.loan.witness(payout){Ok(witness)=>witness,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work:0}};self.loan.restage_completion(slot,output,refusal,&witness,effect)}
+ /// ♻️ Retires a published completion through the exact original payout effect.
+ pub fn retire_completion(&mut self,slot:&mut Option<crate::OriginalConstructionCompletion>,payout:&crate::OriginalConstructionAction,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<Option<crate::RetainedCloneProgress>,ValueError>{self.loan.retire_completion(slot,payout,effect)}
+ /// 🏁️ Returns an accepted or canceled payout without moving any refusal.
+ pub fn finish_payout(&mut self,slot:&mut Option<crate::OriginalConstructionAction>)->Result<(),ValueError>{if slot.as_ref().and_then(|action|action.recorded_accept_status())==Some(crate::OriginalConstructionAcceptStatus::Accepted){self.loan.finish_accepted(slot)}else{self.loan.finish(slot)}}
+ /// 📏️ Prices the resident finished child Work proof header.
+ pub fn finished_work_proof_demand()->crate::RetirementDemand{crate::RetirementDemand{copy_bytes:std::mem::size_of::<Option<crate::OriginalWorkActionProof>>(),depth:1,..Default::default()}}
+ /// ♻️ Returns the finished child proof only under the same published completion and paid payout.
+ pub fn retire_finished_work_proof(&mut self,completion:&crate::OriginalConstructionCompletion,payout:&crate::OriginalConstructionAction,work:&mut NativeEncodingReceiverWork<'_,'_,'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<Option<crate::RetainedCloneProgress>,ValueError>{let fail=|error|crate::RetainedWorkOutcome{result:Err(error),work:0};let Some(proof)=work.proof.as_ref()else{return fail(invariant())};let Some(binding)=completion.work_binding()else{return fail(invariant())};let witness=match self.loan.witness(payout){Ok(witness)=>witness,Err(error)=>return fail(error)};let demand=Self::finished_work_proof_demand();if !proof.is_finished()||witness.phase()!=crate::OriginalConstructionPhase::Granted||witness.demand()!=demand||witness.grant()!=Some(effect.grant())||witness.work_binding()!=binding||!binding.matches_effect(effect)||effect.actual().is_some(){return fail(invariant())}match work.work.validates_finished(proof,proof.actual_work()){Ok(true)=>{},Ok(false)=>return fail(invariant()),Err(error)=>return fail(error)}if let Err(error)=self.loan.validate_context(){return fail(error)}match effect.remaining_work_units(){Ok(0)=>return crate::RetainedWorkOutcome{result:Ok(None),work:0},Err(error)=>return fail(error),Ok(_)=>{}}if !crate::retained_clone_grant_admits(effect.grant(),demand){return crate::RetainedWorkOutcome{result:Ok(None),work:0}}match effect.performed(1){Ok(true)=>{},Ok(false)=>return crate::RetainedWorkOutcome{result:Err(ValueError::literal(crate::ValueRefusalKind::WorkLimit,"original finished proof return exceeded its Work")),work:1},Err(error)=>return fail(error)}drop(work.proof.take());crate::RetainedWorkOutcome{result:Ok(Some(crate::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}}
+ /// 🔓️ Publishes only with the same actual payout and Work proof.
+ pub fn publish_completion(&mut self,completion:&mut crate::OriginalConstructionCompletion,payout:&mut crate::OriginalConstructionAction,work:&mut NativeEncodingReceiverWork<'_,'_,'_>,proof:&crate::OriginalWorkActionProof)->Result<bool,ValueError>{work.work.publish_construction_completion(self.loan,completion,payout,proof)}
  /// 🪪️ Borrows this receiver action identity.
  pub fn identity(&self)->Option<semio_framework_value_control_contract::OriginalConstructionActionIdentity>{self.action.as_ref().map(|action|action.identity())}
  /// 🚦️ Observes the original construction callback phase.
@@ -74,11 +86,11 @@ impl<'turn,'source> NativeEncodingReceiverConstruction<'turn,'source>{
  /// 📨️ Posts the actual physical receipt to the same original producer.
  pub fn post(&mut self,progress:crate::RetainedCloneProgress,actual:Option<usize>)->Result<(),ValueError>{self.loan.post(self.action.as_mut().ok_or_else(invariant)?,progress,actual)}
  /// 🔁️ Takes only the actual recorded receipt reply.
- pub fn recover_accept(&mut self)->Result<Option<Result<(),ValueError>>,ValueError>{self.loan.recover_accept(self.action.as_mut().ok_or_else(invariant)?)}
+ pub fn recover_accept(&mut self)->Result<Option<crate::OriginalConstructionAcceptStatus>,ValueError>{self.loan.recover_accept(self.action.as_mut().ok_or_else(invariant)?)}
  /// ↩️ Cancels only an explicitly unperformed original action.
  pub fn cancel(&mut self,performed:bool,progress:crate::RetainedCloneProgress,actual:Option<usize>)->Result<(),ValueError>{self.loan.cancel(self.action.as_mut().ok_or_else(invariant)?,performed,progress,actual)}
  /// 🏁️ Returns this exact completed action to the original issuer.
- pub fn finish(&mut self)->Result<(),ValueError>{self.loan.finish(self.action)}
+ pub fn finish(&mut self)->Result<(),ValueError>{if self.action.as_ref().and_then(|action|action.recorded_accept_status())==Some(crate::OriginalConstructionAcceptStatus::Accepted){self.loan.finish_accepted(self.action)}else{self.loan.finish(self.action)}}
 }
 /// 🧳️ Owns an operation result and each independently refused receiving authority.
 pub struct NativeEncodingReceiverOutcome<T,E>{pub frame:Option<NativeEncodingReceiverFrame>,pub operation:Option<Result<T,E>>,pub allocation:Option<crate::NativeAllocationFailure>,pub observer:Option<ValueError>,pub parent:Option<ValueError>,pub child:Option<ValueError>}
@@ -122,7 +134,7 @@ pub struct PendingEncodingReceiverFrame{frame:Option<NativeEncodingReceiverFrame
 impl crate::retirement::RetirementCursor for PendingEncodingReceiverFrame{
  fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.next_demand(body)?;Ok(u64::from(self.frame.is_some()))}
  fn next_demand(&self,_:usize)->Result<crate::RetirementDemand,ValueError>{if self.frame.as_ref().is_some_and(|frame|!crate::retirement::RetireOwned::retirement_ready(frame)){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original receiver must settle before retirement"))}Ok(crate::RetirementDemand{copy_bytes:if self.frame.is_some(){std::mem::size_of::<Option<NativeEncodingReceiverFrame>>()}else{0},depth:usize::from(self.frame.is_some()),..Default::default()})}
- fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::retirement::RetirementStep{if self.frame.is_none(){return crate::retirement::RetirementStep::Complete(0)}let demand=match self.next_demand(effect.grant().maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return crate::retirement::RetirementStep::Failure(error.into(),0)};if effect.maximum_work_units()<1||!crate::retained_clone_grant_admits(effect.grant(),demand){return crate::retirement::RetirementStep::BudgetExhausted}self.frame.take();crate::retirement::RetirementStep::Progress(crate::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()},1)}
+ fn close_into<'reply>(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'reply,crate::retirement::RetirementStep,semio_framework_value_retirement::OriginalRetirementFailure>)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'reply,crate::retirement::RetirementStep,semio_framework_value_retirement::OriginalRetirementFailure>,ValueError>{if self.frame.is_none(){return Ok(reply.complete(Ok(crate::retirement::RetirementStep::Complete(0))))}let demand=match self.next_demand(body){Ok(demand)=>demand,Err(error)=>return Ok(reply.complete(Err(error.into())))};if effect.remaining_work_units()?<1||!crate::retained_clone_grant_admits(effect.grant(),demand){return Ok(reply.complete(Ok(crate::retirement::RetirementStep::BudgetExhausted)))}if !effect.performed(1)?{return Ok(reply.complete(Err(ValueError::literal(crate::ValueRefusalKind::WorkLimit,"original receiver close exceeded its Work").into())))}self.frame.take();Ok(reply.complete(Ok(crate::retirement::RetirementStep::Progress(crate::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()},1))))}
  fn terminal_is_empty(&self)->bool{self.frame.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.next_demand(0)?.copy_bytes)}
  fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
@@ -282,5 +294,36 @@ mod receiver_frame_tests{
  fn paired_partial_admission_commits_only_original_accepted_extent(){
   struct Parent(bool);impl crate::NativeAllocationAuthorityPort for Parent{type Context<'turn,'source>=() where 'source:'turn;fn validate_context<'turn,'source>(&self,_:&())->Result<(),ValueError> where 'source:'turn{Ok(())}fn source_turn<'turn,'source>(&self,_:&())->Option<crate::OriginalSourceTurnIdentity> where 'source:'turn{None}fn receive<'reply,'turn,'source>(&mut self,_:&mut (),event:crate::NativeAllocationEvent,reply:crate::NativeAllocationReply<'reply>)->Result<crate::NativeAllocationReplyComplete<'reply>,ValueError> where 'source:'turn{assert!(matches!(event,crate::NativeAllocationEvent::Admit(_)));let result=if self.0{Ok(())}else{Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original admission refused").into())};Ok(reply.complete(result))}fn recover<'reply,'turn,'source>(&mut self,_:&mut (),_:crate::NativeAllocationEvent,reply:crate::NativeAllocationReply<'reply>)->Result<crate::NativeAllocationReplyComplete<'reply>,ValueError> where 'source:'turn{Ok(reply.pending())}}
   for (first_ok,second_ok) in [(true,false),(false,true),(false,false)]{let mut first=crate::NativeAllocationAuthority::new(Parent(first_ok));let mut second=crate::NativeAllocationAuthority::new(Parent(second_ok));let mut ledger=NativeAllocationLedger::new(3);let request=crate::NativeAllocationRequest{bytes:5,owned_bytes:3,next_owned_bytes:8,maximum_bytes:8};let mut pairing=None;first.with_send_loan(&mut (),|left|second.with_send_loan(&mut (),|right|{ledger.pair(Some(&*left),Some(&*right),8,&mut pairing).unwrap();let pair=pairing.as_mut().unwrap();pair.begin(&ledger,Some(&*left),Some(&*right),request,false).unwrap();assert!(pair.advance(&mut ledger,Some(&mut *left),Some(&mut *right)).unwrap());let outcome=pair.take_outcome(&ledger,Some(&*left),Some(&*right)).unwrap();let expected=if first_ok||second_ok{8}else{3};assert_eq!(ledger.owned_bytes(),expected);assert_eq!(outcome.progress.admitted_bytes,expected);assert_eq!(outcome.forwarded_admission.is_none(),first_ok);assert_eq!(outcome.scoped_admission.is_none(),second_ok);pair.release(&mut ledger,Some(&*left),Some(&*right)).unwrap();close_pair_owner(outcome)}).unwrap()).unwrap();drop(pairing);assert!(first.into_port().is_ok());assert!(second.into_port().is_ok())}
+ }
+}
+
+#[cfg(test)]
+mod paired_completion_tests{
+ use super::*;
+ struct Work;
+ impl crate::OriginalWorkRecipient for Work{
+  type Context<'a,'b>=() where 'b:'a;
+  fn validate_context<'a,'b>(&self,_:&())->Result<(),ValueError> where 'b:'a{Ok(())}
+  fn source_turn<'a,'b>(&self,_:&())->Option<crate::OriginalSourceTurnIdentity> where 'b:'a{None}
+  fn admits<'r,'a,'b>(&mut self,_:&mut (),q:crate::OriginalWorkQuote<'r>,_:u64,_:u64)->crate::OriginalWorkQuoteComplete<'r> where 'b:'a{q.complete(Ok(true))}
+  fn settle_partial<'r,'a,'b>(&mut self,_:&mut (),q:crate::OriginalWorkPartialCheck<'r>)->crate::OriginalWorkPartialCheckComplete<'r> where 'b:'a{q.complete(Ok(()))}
+  fn recover_partial<'r,'a,'b>(&mut self,_:&mut (),q:crate::OriginalWorkPartialCheck<'r>)->crate::OriginalWorkPartialCheckComplete<'r> where 'b:'a{q.pending()}
+ }
+ struct Physical(Option<ValueError>);
+ impl crate::OriginalConstructionRecipient for Physical{
+  type Context<'a,'b>=() where 'b:'a;
+  fn validate_context<'a,'b>(&self,_:&())->Result<(),ValueError> where 'b:'a{Ok(())}
+  fn source_turn<'a,'b>(&self,_:&())->Option<crate::OriginalSourceTurnIdentity> where 'b:'a{None}
+  fn grant<'r,'a,'b>(&mut self,_:&mut (),q:crate::OriginalConstructionGrant<'r>)->crate::OriginalConstructionGrantComplete<'r> where 'b:'a{q.complete(Ok(crate::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:1,..Default::default()}))}
+  fn accept<'r,'a,'b>(&mut self,_:&mut (),r:crate::OriginalConstructionAccept<'r>)->crate::OriginalConstructionAcceptComplete<'r> where 'b:'a{r.complete(match self.0.take(){Some(error)=>Err(error),None=>Ok(())})}
+  fn submitted<'a,'b>(&self,_:&())->crate::RetainedCloneProgress where 'b:'a{Default::default()}
+ }
+ fn payout(work:&mut NativeEncodingReceiverWork<'_,'_,'_>,physical:&mut NativeEncodingReceiverConstruction<'_,'_>,demand:crate::RetirementDemand,operation:impl FnOnce(&mut NativeEncodingReceiverWork<'_,'_,'_>,&mut NativeEncodingReceiverConstruction<'_,'_>,&crate::OriginalConstructionAction,&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<Option<crate::RetainedCloneProgress>,ValueError>)->(Option<crate::OriginalConstructionAction>,Option<crate::OriginalWorkActionProof>){
+  let(mut action,mut receipt,mut proof,mut actual)=(None,None,None,None);physical.begin_payout(demand,&mut action,work).unwrap();physical.quote_payout(action.as_mut().unwrap()).unwrap();let grant=physical.recover_payout_grant(action.as_mut().unwrap()).unwrap().unwrap().unwrap();assert_eq!(work.prepare(1).unwrap(),Some(true));work.issue_payout_receipt(&mut receipt).unwrap();let progress={let mut effect=crate::RetainedAllocationEffect::new(grant,1,&mut actual,receipt.as_mut().unwrap());operation(work,physical,action.as_ref().unwrap(),&mut effect).result.unwrap().unwrap()};work.claim_payout_receipt(&mut receipt).unwrap();let mut partial=None;assert!(work.settle_payout_partial(&mut partial).unwrap());assert!(partial.as_ref().unwrap().source_refusal().is_none());drop(partial);assert!(work.commit_payout(1,&mut proof).unwrap());physical.post_payout(action.as_mut().unwrap(),progress,None).unwrap();assert_eq!(physical.recover_payout(action.as_mut().unwrap()).unwrap(),Some(crate::OriginalConstructionAcceptStatus::Accepted));(action,proof)
+ }
+ #[test]
+ fn paired_completion_preserves_actual_receipt_and_finished_child_work(){
+  let error=ValueError::new(crate::ValueRefusalKind::Canceled,String::from("paired original refusal"));let pointer=error.message.as_ptr();let mut authority=crate::OriginalConstructionAuthority::new(Physical(Some(error)));let mut payer=crate::OriginalWorkAuthority::new(Work);let mut original=None;let mut completion=None;let observed=std::sync::atomic::AtomicUsize::new(0);
+  payer.with_loan(&mut (),|loan|{let mut loan=loan.reborrow();let mut owner=crate::OriginalWork::empty();owner.recipient=Some(&mut loan);let(mut action,mut proof,mut receipt,mut actual)=(None,None,None,None);assert_eq!(owner.prepare_for_action(1,&mut action).unwrap(),Some(true));owner.issue_performed_for_action(action,&mut receipt).unwrap();{let mut effect=crate::RetainedAllocationEffect::new(Default::default(),1,&mut actual,receipt.as_mut().unwrap());assert!(effect.performed(1).unwrap())}owner.claim_performed_for_action(action,&mut receipt).unwrap();let mut partial=None;assert!(owner.settle_partial_for_action_into(action,&mut partial).unwrap());assert!(partial.as_ref().unwrap().source_refusal().is_none());drop(partial);assert!(owner.commit_for_action(1,action,&mut proof).unwrap());let mut work=NativeEncodingReceiverWork::new(&mut owner,None,&observed,&mut action,&mut proof);authority.with_loan(&mut (),|loan|{let mut physical=NativeEncodingReceiverConstruction::new(loan,&mut original);physical.begin(Default::default(),&mut work).unwrap();physical.quote().unwrap();physical.recover_grant().unwrap().unwrap().unwrap();physical.post(Default::default(),None).unwrap();assert_eq!(physical.recover_accept().unwrap(),Some(crate::OriginalConstructionAcceptStatus::Refused));work.finish_retained().unwrap();let(mut payment,mut payout_proof)=payout(&mut work,&mut physical,crate::OriginalConstructionCompletion::demand(),|_,physical,payout,effect|physical.stage_completion(payout,&mut completion,effect));assert!(completion.as_ref().unwrap().refusal().is_none());assert!(physical.publish_completion(completion.as_mut().unwrap(),payment.as_mut().unwrap(),&mut work,payout_proof.as_ref().unwrap()).unwrap());assert_eq!(completion.as_ref().unwrap().refusal().unwrap().message.as_ptr(),pointer);physical.finish_payout(&mut payment).unwrap();work.finish_payout(&mut payout_proof).unwrap();let demand=NativeEncodingReceiverConstruction::finished_work_proof_demand();let(mut payment,mut payout_proof)=payout(&mut work,&mut physical,demand,|work,physical,payout,effect|physical.retire_finished_work_proof(completion.as_ref().unwrap(),payout,work,effect));physical.finish_payout(&mut payment).unwrap();work.finish_payout(&mut payout_proof).unwrap();let demand=completion.as_ref().unwrap().release_demand();let(mut payment,mut payout_proof)=payout(&mut work,&mut physical,demand,|_,physical,payout,effect|physical.retire_completion(&mut completion,payout,effect));physical.finish_payout(&mut payment).unwrap();work.finish_payout(&mut payout_proof).unwrap();}).unwrap();assert!(proof.is_none());assert!(action.is_none())}).unwrap();assert!(completion.is_none());assert!(original.is_none());assert!(authority.into_recipient().is_ok());
  }
 }

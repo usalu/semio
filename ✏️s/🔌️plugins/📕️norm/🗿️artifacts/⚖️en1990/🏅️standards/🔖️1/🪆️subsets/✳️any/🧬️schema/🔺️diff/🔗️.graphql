@@ -1,3 +1,5 @@
+scalar UInt32
+
 scalar JSON
 
 type En1990Diff {
@@ -36,16 +38,16 @@ type En1990PermanentDelta {
 }
 type En1990PermanentRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1990PermanentInsertion {
-  index: Int!
+  index: UInt32!
   row: PermanentAction!
 }
 type En1990PermanentRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1990PermanentModification {
   id: String!
@@ -63,16 +65,16 @@ type En1990VariableDelta {
 }
 type En1990VariableRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1990VariableInsertion {
-  index: Int!
+  index: UInt32!
   row: VariableAction!
 }
 type En1990VariableRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1990VariableModification {
   id: String!
@@ -91,16 +93,16 @@ type En1990AccidentalDelta {
 }
 type En1990AccidentalRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1990AccidentalInsertion {
-  index: Int!
+  index: UInt32!
   row: AccidentalAction!
 }
 type En1990AccidentalRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1990AccidentalModification {
   id: String!
@@ -117,16 +119,16 @@ type En1990SeismicDelta {
 }
 type En1990SeismicRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1990SeismicInsertion {
-  index: Int!
+  index: UInt32!
   row: SeismicAction!
 }
 type En1990SeismicRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1990SeismicModification {
   id: String!
@@ -144,16 +146,16 @@ type En1990MemberDelta {
 }
 type En1990MemberRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1990MemberInsertion {
-  index: Int!
+  index: UInt32!
   row: Member!
 }
 type En1990MemberRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1990MemberModification {
   id: String!
@@ -201,16 +203,16 @@ type En1990BridgeSlsDelta {
 }
 type En1990BridgeSlsRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1990BridgeSlsInsertion {
-  index: Int!
+  index: UInt32!
   row: BridgeSls!
 }
 type En1990BridgeSlsRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1990BridgeSlsModification {
   id: String!
@@ -241,16 +243,16 @@ type En1990FatigueSpectrumDelta {
 }
 type En1990FatigueSpectrumRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1990FatigueSpectrumInsertion {
-  index: Int!
+  index: UInt32!
   row: FatigueSpectrum!
 }
 type En1990FatigueSpectrumRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1990FatigueSpectrumModification {
   id: String!
@@ -270,16 +272,16 @@ type En1990ReliabilityAnalysisDelta {
 }
 type En1990ReliabilityAnalysisRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1990ReliabilityAnalysisInsertion {
-  index: Int!
+  index: UInt32!
   row: ReliabilityAnalysis!
 }
 type En1990ReliabilityAnalysisRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1990ReliabilityAnalysisModification {
   id: String!
@@ -305,16 +307,16 @@ type En1990TestSeriesDelta {
 }
 type En1990TestSeriesRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1990TestSeriesInsertion {
-  index: Int!
+  index: UInt32!
   row: TestSeries!
 }
 type En1990TestSeriesRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1990TestSeriesModification {
   id: String!
@@ -341,16 +343,16 @@ type En1990PlacementDelta {
 }
 type En1990PlacementRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1990PlacementInsertion {
-  index: Int!
+  index: UInt32!
   row: Placement!
 }
 type En1990PlacementRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1990PlacementModification {
   id: String!
@@ -370,16 +372,16 @@ type En1990FactorOverrideDelta {
 }
 type En1990FactorOverrideRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1990FactorOverrideInsertion {
-  index: Int!
+  index: UInt32!
   row: FactorOverride!
 }
 type En1990FactorOverrideRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1990FactorOverrideModification {
   id: String!
@@ -399,16 +401,16 @@ type En1990TrafficGroupDelta {
 }
 type En1990TrafficGroupRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1990TrafficGroupInsertion {
-  index: Int!
+  index: UInt32!
   row: TrafficGroup!
 }
 type En1990TrafficGroupRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1990TrafficGroupModification {
   id: String!
@@ -425,7 +427,7 @@ enum En1990RowOp {
 }
 type En1990EffectEdit {
   op: En1990RowOp!
-  index: Int!
+  index: UInt32!
   id: String!
   value: MemberEffect
 }

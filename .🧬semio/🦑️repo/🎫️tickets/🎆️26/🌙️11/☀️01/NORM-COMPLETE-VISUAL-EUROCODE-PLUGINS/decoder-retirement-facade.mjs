@@ -1,0 +1,1 @@
+import{readFileSync,writeFileSync}from"node:fs";const p="🧰️framework/🔨️modules/🌱️value/🛬️decode/📦️packages/🦀️rust/🦀️.rs";let s=readFileSync(p,"utf8");s=s.replace('::{ErasedSnapshotRetirement,OriginalRetirementPoll,','::{OriginalRetirementFailure,OriginalRetirementCloseLoan,ErasedSnapshotRetirement,OriginalRetirementPoll,');writeFileSync(p,s);

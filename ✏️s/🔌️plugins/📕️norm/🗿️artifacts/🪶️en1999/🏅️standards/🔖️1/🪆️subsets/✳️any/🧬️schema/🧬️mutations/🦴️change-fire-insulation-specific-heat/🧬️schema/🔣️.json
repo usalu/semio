@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-fire-insulation-specific-heat/schema.json",
+  "title": "ChangeFireInsulationSpecificHeat",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "fireInsulationId",
+    "newSpecificHeat"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeFireInsulationSpecificHeat"
+    },
+    "fireInsulationId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "FireInsulationection",
+          "de": "Anschluss"
+        },
+        "description": {
+          "en": "The connection this mutation addresses, by id.",
+          "de": "Das adressierte Element (Anschluss), per Kennung."
+        },
+        "ref": {
+          "kind": "fire-insulation"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newSpecificHeat": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Rib specific_heat p",
+          "de": "Spezifische Wärmekapazität c_p"
+        },
+        "widget": "stepper",
+        "role": "value",
+        "group": "value",
+        "order": 20,
+        "precision": 0,
+        "step": 10
+      }
+    }
+  }
+}

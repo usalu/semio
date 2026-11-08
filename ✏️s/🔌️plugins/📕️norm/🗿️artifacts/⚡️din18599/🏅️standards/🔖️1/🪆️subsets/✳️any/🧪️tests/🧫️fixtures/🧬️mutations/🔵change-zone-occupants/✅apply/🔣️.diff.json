@@ -1,0 +1,41 @@
+{
+  "buildingCategory": null,
+  "attachment": null,
+  "useClass": null,
+  "method": null,
+  "netFloorAreaM2": null,
+  "heatedVolumeM3": null,
+  "gegQpFactor": null,
+  "deltaUWbWM2k": null,
+  "automationClass": null,
+  "zones": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "zone-living",
+        "patch": {
+          "labelEn": null,
+          "labelDe": null,
+          "usageProfile": null,
+          "areaM2": null,
+          "volumeM3": null,
+          "thetaIHeatC": null,
+          "thetaICoolC": null,
+          "occupants": 5,
+          "internalGainsWM2": null,
+          "lightingPowerWM2": null
+        }
+      }
+    ]
+  },
+  "elements": null,
+  "heating": null,
+  "dhw": null,
+  "ventilation": null,
+  "cooling": null,
+  "lighting": null,
+  "renewables": null,
+  "climate": null
+}

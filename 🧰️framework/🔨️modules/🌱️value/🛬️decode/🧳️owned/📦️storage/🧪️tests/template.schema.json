@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "payloadBytes",
+    "blockBytes",
+    "maximumCopyBytes",
+    "cancellationCuts",
+    "typedBeforeComplete",
+    "partialDestructorCalls",
+    "completeDestructorCalls",
+    "foreignWorkAccepted",
+    "foreignTemplateAccepted",
+    "zeroWorkMutation",
+    "stock",
+    "fieldPlan"
+  ],
+  "properties": {
+    "payloadBytes": {
+      "const": 8192
+    },
+    "blockBytes": {
+      "const": 1024
+    },
+    "maximumCopyBytes": {
+      "const": 4096
+    },
+    "cancellationCuts": {
+      "const": [
+        0,
+        1,
+        4,
+        8
+      ]
+    },
+    "typedBeforeComplete": {
+      "const": false
+    },
+    "partialDestructorCalls": {
+      "const": 0
+    },
+    "completeDestructorCalls": {
+      "const": 1
+    },
+    "foreignWorkAccepted": {
+      "const": false
+    },
+    "foreignTemplateAccepted": {
+      "const": false
+    },
+    "zeroWorkMutation": {
+      "const": false
+    },
+    "stock": {
+      "const": {
+        "items": 256,
+        "copyBytes": 1048576,
+        "capacityBytes": 1048576,
+        "releaseBytes": 1048576,
+        "depth": 128,
+        "fuel": 1024
+      }
+    },
+    "fieldPlan": {
+      "const": {
+        "parts": 10,
+        "maximumPartBytes": 1024,
+        "interiorMutable": true,
+        "cancellationCuts": [
+          0,
+          1,
+          4,
+          9
+        ],
+        "typedBeforeAllParts": false
+      }
+    }
+  }
+}

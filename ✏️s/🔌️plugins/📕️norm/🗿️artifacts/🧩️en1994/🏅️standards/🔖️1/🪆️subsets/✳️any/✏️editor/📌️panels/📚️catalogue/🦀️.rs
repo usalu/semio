@@ -138,6 +138,7 @@ fn stud_spacing_limits_table() -> CatalogueTable {
 pub fn render(examples: Vec<semio_plugin::ExampleSource>, locale: semio_ui_locale::Locale, controller_id: &'static str) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let mut tables = reference_tables();
     tables.push(semio_s_plugin_norm_app_surface::case_catalogue_table("en1994", &<semio_s_artifact_norm_en1994_checks::case_catalogue::En1994Cases as semio_s_plugin_norm_compliance::design_case::CaseCatalogue>::entries(), "", locale));
+    tables.push(semio_s_plugin_norm_app_surface::verification_catalogue_table::<semio_s_artifact_norm_en1994_checks::case_catalogue::En1994Cases>("EN 1994", AnnexChoice::En, "", locale));
     semio_s_plugin_norm_app_surface::render_catalogue(&examples, &tables, locale, controller_id, &semio_plugin::TreeWindows::unhosted())
 }
 //#endregion 🔖️Render

@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-zone-volume-m3/schema.json",
+  "title": "ChangeZoneVolumeM3",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "zoneId",
+    "newVolumeM3"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changezonevolumem3"
+    },
+    "zoneId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Thermal zone",
+          "de": "Thermische Zone"
+        },
+        "description": {
+          "en": "The zone this mutation addresses.",
+          "de": "Das Objekt (Zone), das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newVolumeM3": {
+      "type": "number",
+      "exclusiveMinimum": 0.0,
+      "maximum": 10000000.0,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Net air volume V",
+          "de": "Nettoluftvolumen V"
+        },
+        "widget": "stepper",
+        "unit": "m³",
+        "step": 10,
+        "precision": 0,
+        "group": "zone",
+        "order": 20
+      }
+    }
+  }
+}

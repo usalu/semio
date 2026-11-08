@@ -1,0 +1,5 @@
+{
+  "mutation": "changeCriticalRegionCoreDepthM",
+  "id": "cr-1",
+  "newCoreDepthM": 1.42
+}

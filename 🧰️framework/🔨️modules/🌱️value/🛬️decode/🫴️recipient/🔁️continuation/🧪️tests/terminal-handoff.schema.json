@@ -1,0 +1,44 @@
+{
+  "type": "array",
+  "minItems": 8,
+  "items": {
+    "type": "object",
+    "properties": {
+      "sameRecipient": {
+        "type": "boolean"
+      },
+      "sameWork": {
+        "type": "boolean"
+      },
+      "settled": {
+        "type": "boolean"
+      },
+      "empty": {
+        "type": "boolean"
+      },
+      "free": {
+        "type": "boolean"
+      },
+      "grant": {
+        "type": "boolean"
+      },
+      "work": {
+        "type": "boolean"
+      },
+      "moved": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "sameRecipient",
+      "sameWork",
+      "settled",
+      "empty",
+      "free",
+      "grant",
+      "work",
+      "moved"
+    ],
+    "additionalProperties": false
+  }
+}

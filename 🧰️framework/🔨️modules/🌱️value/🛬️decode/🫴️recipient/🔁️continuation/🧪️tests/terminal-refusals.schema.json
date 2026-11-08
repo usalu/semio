@@ -1,0 +1,34 @@
+{
+  "type": "array",
+  "minItems": 4,
+  "items": {
+    "type": "object",
+    "properties": {
+      "quote": {
+        "type": "boolean"
+      },
+      "work": {
+        "type": "boolean"
+      },
+      "overrun": {
+        "type": "boolean"
+      },
+      "post": {
+        "type": "boolean"
+      },
+      "mask": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 15
+      }
+    },
+    "required": [
+      "quote",
+      "work",
+      "overrun",
+      "post",
+      "mask"
+    ],
+    "additionalProperties": false
+  }
+}

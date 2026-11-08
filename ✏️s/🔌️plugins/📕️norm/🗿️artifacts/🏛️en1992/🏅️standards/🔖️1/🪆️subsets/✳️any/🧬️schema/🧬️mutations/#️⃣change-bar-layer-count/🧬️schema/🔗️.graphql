@@ -1,5 +1,7 @@
+scalar UInt32
+
 type ChangeBarLayerCount {
   memberId: String!
   layerId: String!
-  newCount: Int!
+  newCount: UInt32!
 }

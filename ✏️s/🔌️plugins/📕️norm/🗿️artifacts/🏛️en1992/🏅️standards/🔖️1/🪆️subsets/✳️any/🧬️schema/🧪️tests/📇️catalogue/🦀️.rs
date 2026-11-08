@@ -296,8 +296,14 @@ fn independent_python_oracle_matches_the_rust_catalogue() {
         for (k, v) in cv["list"].as_object().unwrap() { case = case.with_l(k, &v.as_array().unwrap().iter().map(|x| x.as_f64().unwrap()).collect::<Vec<_>>()); }
         let tol = cv["tol"].as_f64().unwrap();
         for (key, pv) in rv["values"].as_object().unwrap() {
-            let o = out_of(id, &case, key);
-            let rust = if key.starts_with("util") { o.utilization() } else { o.value() };
+            let (name, view) = key.split_once('@').unwrap_or((key.as_str(), ""));
+            let o = out_of(id, &case, name);
+            let rust = match view {
+                "util" => o.utilization(),
+                "cap" => o.capacity,
+                _ if name.starts_with("util") => o.utilization(),
+                _ => o.value(),
+            };
             let py = pv.as_f64().unwrap();
             assert!((rust - py).abs() <= tol * py.abs().max(1e-9) + 1e-12, "{id}.{key}: rust {rust} python {py} tol {tol}");
             compared += 1;

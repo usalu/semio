@@ -1,0 +1,37 @@
+# Encoder Paid Reply Frame
+
+The actual encoder now retains its original Core producer action and borrows the recorded physical facts through original Work and physical settlement. It no longer extracts the producer Result through an unpaid transfer/finish or exposes the old take_producer_reply method. NativeEncodeProducerReplyFrame captures exclusive borrows of the original state, actual authority and empty destination before header admission. It keeps the destination inaccessible through Pending and original Post recovery. Its specific native transfer uses the existing original performed receipt with an RAII claim guard and Core's authenticated whole-reply transfer; it creates no replacement producer callback, issuer, Source, wallet or synthetic invoice.
+
+The header transaction freezes actual Source/Work scope/issuer and exact metadata demand. It charges one real Work unit before moving the complete original Result and finishing that actual action. The quote covers the old action slot, caller destination and authority bookkeeping. Actual protocol, partial-Work and physical refusals stay resident. Successful intrinsic partial invoices can be acknowledged as Copy counts; an owned Source refusal is retained. A canceled untouched transfer stays distinct from a completed transfer. A checkpoint cancellation after admission returns the unused original quotes before releasing its borrowed slots; the same Source can explicitly retry without repeating the producer or debiting canceled Work.
+
+## Current Evidence
+
+| Gate | Actual result |
+| --- | --- |
+| Defining missing-frame API red10241 | Three intended missing Frame/Step diagnostics |
+| Initial paid Source successor40022 | Native1/1 across all eight earlier cases |
+| Idle cancellation red74267 then12750 | Genuine wrong transferred status repaired; native1/1 |
+| Recorded reply Post red2770, diagnostic13949, successor14512 | A completed Work quote was queried again after its physical Post unwound; native1/1 across nine cases after using the retained completed proof and checking original Work binding |
+| Quoted cancellation red20053 then33807 | Unused Work/physical quotes originally remained live after Canceled; final native1/1 across all ten cases, terminal0 |
+| Closed strict Ajv plus independent SQLite | Native-language-neutral1/62, terminal0 |
+| Current paged-text production78238 | Six actual old reserve/read encoder compiler errors, terminal1; no native body acceptance |
+
+The ten cases retain ordinary bytes, checkpoint Pending, checkpoint recorded-reply unwind, physical quote recorded-reply unwind, producer recorded-reply unwind, genuine producer Pending with exact [2,3] partials, checkpoint cancellation/refusal, and add reply Post recorded-unwind plus quoted reply cancellation/retry. Every case first proves zero-item denial does no Work or quote. Ready producers copy the same five real bytes with five performed units, then use one separately quoted native reply unit. Their complete initial Source budget is explicitly five body units plus one header unit; no existing policy cap or original quote/loop bound was raised to conceal a failure. The byte body quote remains five. NativeOutcome's unchanged independent five-unit Source law still covers0/0,1/1,5/5 and rejects6/0 in its actual full5/5 current capture6452. Root's separate4710 attempt captured an earlier worker fixture import failure before any body; it is excluded from acceptance.
+
+The final full transfer checks one producer entry, one physical body Post and one physical header Post, exact original bytes, six total actual Work, no replay after recorded Post unwind, and no live original authority actions. Successful reply observations borrow the actual published slot. The quoted-cancel case proves zero new physical Post/Work before retry and then completes under the same finite Source. All original cases remain mounted.
+
+## Fixed Source Ownership And Limits
+
+Official three-platform cfg(test) census initially found NativeEncoding266615B,4471 above its unchanged262144B boundary. The existing lower NativeOutcome owner already owned the concrete settlement/producer/refusal machinery. The actual contiguous7069B producer Work engine and performed-claim RAII were moved there as a production macro, byte-identical at extraction (SHA256 a65fded47d03ac66aee54dfe6b2ad82c5f17a03299fbd275844ae534b0b0c163), removing6999 higher bytes. Native62655 verified the same eight-case pre-feature body; later paid-frame changes intentionally extend that real engine. There is one implementation, no runtime wrapper and no removed test.
+
+Current worker official census, including the Source Work guard and new settlement adapter, admits all three platforms identically: NativeEncoding261591B/24files/1249lines (553B headroom), NativeOutcome171933B/19files/813lines. All original limits remain unchanged. New engine work must stay with its coherent lower owner or introduce another genuine component boundary, not expand the cap. Root inventory now includes the actual lower producer engine.
+
+## Remaining Concrete Caller And Failure Gates
+
+This accepted law owns intrinsic byte buffers; it does not allocate a text page, publish the public text payload or prove retirement of such backing. The current actual paged-text production check still reaches exactly six old callback signature errors. Its reserve/read/publication paths must become real resident typed producers, receive the genuine Source witness explicitly, use actual PagedList allocation/copy/depth/Work demands, and retain the original result through paid header publication. Native-rig Context=()/Source=None/unconditional Work admission remains unaccepted for that path.
+
+The borrowed reply frame fits callers whose actual producer/state/output slots live outside the frame. An owned paged parent cannot store a frame borrowing its own fields. The next coherent integration needs one owning producer/driver containing all actual data, authority, original state and private reply/header slots from construction. A shared private header kernel can be used only by that owning driver or this public exclusive-borrow frame; it must not expose a per-turn mutable output row or a copied-ID custody substitute. Public mutation, take and close must reject active and ready-but-untransferred results. A genuine typed retained projection can preserve the source; existing reference_identity is only a read-only frozen request key and grants no source authority. RetainedOwnedProjectionAdmission supplies the actual strong owned projection and typed pointer.
+
+Header checkpoint/protocol/partial failures and physical-refusal publication still require their complete paid failure/retirement path; a Refused step keeps its owner resident and is not a free handback. Allocation's new NativeOutcome5/5 has actual same-Source two-stage physical payout, independent payout rejection/capture/retry, recorded Source Post unwind, paid whole reply, and paid retirement of receipt owners and the heap child error. Its concrete NativeEncodeControl adapter/Source payout owner is still being integrated; success of the lower law does not establish that caller.
+
+All fifteen native norm editors, original constructor,35-field Create/Add under the unchanged32-member cap, mounted render-work/page publication and actual English/German browser behavior remain open. Norm's full70-file TypeScript result remains11971tests/108198assertions with one75-root strict Program. Goal active; ticket open; full fleet continues the real remaining native work.

@@ -1,0 +1,23 @@
+{
+  "input": [
+    1,
+    2
+  ],
+  "insert": 9,
+  "index": 1,
+  "expected": [
+    1,
+    9,
+    2
+  ],
+  "denied": "completedNoProgress",
+  "stock": {
+    "items": 128,
+    "copyBytes": 16384,
+    "capacityBytes": 16384,
+    "releaseBytes": 16384,
+    "depth": 64,
+    "fuel": 128,
+    "maximumTurns": 128
+  }
+}

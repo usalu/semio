@@ -25,32 +25,7 @@ pub mod change_fastened_joint_member_id;
 pub mod change_panel_steel_grade;
 #[path = "../🧱️change-panel-steel-subgrade/🦀️.rs"]
 pub mod change_panel_steel_subgrade;
-#[path = "../🧱️change-fastened-joint-shear-resistance/🦀️.rs"]
-pub mod change_fastened_joint_shear_resistance;
-#[path = "../🧱️change-fastened-joint-tension-force/🦀️.rs"]
-pub mod change_fastened_joint_tension_force;
-#[path = "../🧱️change-fastened-joint-shear-force/🦀️.rs"]
-pub mod change_fastened_joint_shear_force;
-#[path = "../🧱️change-fastened-joint-sheet-width/🦀️.rs"]
-pub mod change_fastened_joint_sheet_width;
-#[path = "../🧱️change-fastened-joint-gauge/🦀️.rs"]
-pub mod change_fastened_joint_gauge;
-#[path = "../🧱️change-fastened-joint-pitch/🦀️.rs"]
-pub mod change_fastened_joint_pitch;
-#[path = "../🧱️change-fastened-joint-edge-distance/🦀️.rs"]
-pub mod change_fastened_joint_edge_distance;
-#[path = "../🧱️change-fastened-joint-end-distance/🦀️.rs"]
-pub mod change_fastened_joint_end_distance;
-#[path = "../🧱️change-fastened-joint-base-strength/🦀️.rs"]
-pub mod change_fastened_joint_base_strength;
-#[path = "../🧱️change-fastened-joint-head-strength/🦀️.rs"]
-pub mod change_fastened_joint_head_strength;
-#[path = "../🧱️change-fastened-joint-base-thickness/🦀️.rs"]
-pub mod change_fastened_joint_base_thickness;
-#[path = "../🧱️change-fastened-joint-head-thickness/🦀️.rs"]
-pub mod change_fastened_joint_head_thickness;
-#[path = "../🧱️change-fastened-joint-washer-diameter/🦀️.rs"]
-pub mod change_fastened_joint_washer_diameter;
-#[path = "../🧱️change-fastened-joint-diameter/🦀️.rs"]
-pub mod change_fastened_joint_diameter;
 //#endregion 🪢️Mounts
+
+pub use semio_s_artifact_norm_en1993_mut_fastened_joints_2::{change_fastened_joint_shear_resistance, change_fastened_joint_tension_force, change_fastened_joint_shear_force, change_fastened_joint_sheet_width, change_fastened_joint_gauge, change_fastened_joint_pitch, change_fastened_joint_edge_distance, change_fastened_joint_end_distance};
+pub use semio_s_artifact_norm_en1993_mut_fastened_joints_3::{change_fastened_joint_base_strength, change_fastened_joint_head_strength, change_fastened_joint_base_thickness, change_fastened_joint_head_thickness, change_fastened_joint_washer_diameter, change_fastened_joint_diameter};

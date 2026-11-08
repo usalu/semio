@@ -103,11 +103,7 @@ fn projection_is_deterministic_and_incremental() {
 #[test]
 fn golden_scene_matches_committed_bytes() {
     let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🧪️tests/🧫️fixtures/🏛️scene/🔣️.json");
-    let json = canonical_json(&scene_of(&compliant_demo()));
-    if std::env::var("SEMIO_UPDATE_GOLDEN").is_ok() {
-        std::fs::write(&path, &json).expect("write golden");
-    }
-    assert_eq!(std::fs::read_to_string(&path).expect("golden"), json);
+    scene::projection_kit::test_support::assert_golden(path, &canonical_json(&scene_of(&compliant_demo())));
 }
 
 #[test]

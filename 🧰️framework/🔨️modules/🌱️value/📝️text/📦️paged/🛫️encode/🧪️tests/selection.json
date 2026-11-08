@@ -1,0 +1,44 @@
+[
+  {
+    "bound": false,
+    "phase": 0,
+    "slot": false,
+    "finished": false,
+    "operation": "bind"
+  },
+  {
+    "bound": true,
+    "phase": 1,
+    "slot": false,
+    "finished": false,
+    "operation": "validate"
+  },
+  {
+    "bound": true,
+    "phase": 2,
+    "slot": false,
+    "finished": false,
+    "operation": "reserve"
+  },
+  {
+    "bound": true,
+    "phase": 2,
+    "slot": true,
+    "finished": false,
+    "operation": "copy"
+  },
+  {
+    "bound": true,
+    "phase": 2,
+    "slot": true,
+    "finished": true,
+    "operation": "finish"
+  },
+  {
+    "bound": true,
+    "phase": 3,
+    "slot": true,
+    "finished": true,
+    "operation": "publish"
+  }
+]

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeCriticalRegionHoopSpacingM",
+  "id": "cr-1",
+  "newHoopSpacingM": 1.08
+}

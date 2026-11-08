@@ -1,0 +1,510 @@
+1|open|shared|🎬️structural-scene/🦀️.rs lacks `mod diagram_kit` mount while 📈️diagram-kit/** uses `crate::diagram_kit`; restore `#[path = "📈️diagram-kit/🦀️.rs"] pub mod diagram_kit;` (build break)
+2|done|shared|NormTransient/NormPresence/EvalProgress/FieldWrite defined in 📇️registry/🧬️contract/🖥️app-surface/🫧️live-lanes/🧬️schema/🦀️.rs
+3|done|shared|NormFieldMeta type gone; only NormFieldMetaFn remains (📇️registry/🧬️contract/🖥️app-surface/🔖️field-meta/🦀️.rs:301); stale doc mentions in 🗿️artifacts/🌬️din16798/…/📥️inputs/🦀️.rs:1 (cosmetic)
+4|done|shared|no `render_document_editor` reference left in the tree (0 hits)
+5|open|en1995|editor/viewer do not surface `checks::timber::registry()`/`evaluate_case` (0 catalogue hits in 🪵️en1995 ✏️editor and 👁️viewer); add verification-case panel
+6|open|shared|`ChecksViewState::encode()` absent (0 hits; only decode exists); implement setChecksView payload and `cancelEvaluation`/`openClause` command lane
+7|open|shared|20 artifact files call `render_checks_with`, but no `interaction_domain: Some("norm.…")` ChecksWindowSpec exists (0 hits); wire interaction domain per variant
+8|done|shared|render_inspector takes InspectorOptions/OutlinerState as parameters (📇️registry/🧬️contract/🖥️app-surface/🪟️visual-windows/🧾️properties/🦀️.rs:398)
+9|open|en1996|editor/viewer do not surface `checks::masonry::registry()`/`evaluate_case` or MnSection curve (0 catalogue hits); add verification panel
+10|done|shared|structural-scene root mounts projection_kit, projection, diff, mock_projection and re-exports tessellation (🎬️structural-scene/🦀️.rs:9,12,15,18,22)
+11|done|shared|superseded: `Pattern::Cage` is now `Cage { outline: Ring2, zones, reference }` (🎬️structural-scene/🧬️schema/🧩️entities/🦀️.rs:284), loop size carried by outline
+12|open|shared|StructuralProjection trait exists with entities/fingerprints (🎬️structural-scene/🎯️projection/🦀️.rs:145-152) but only mock implements it; artifact implementations open (see 68)
+13|open|en1990|editor does not surface `checks::catalogue::{registry,evaluate_case}` (0 catalogue hits); add E90.01-E90.30 verification-case panel
+14|done|shared|Cage outline/zones geometry replaces single-hole_clearance stirrup side (🎬️structural-scene/🧬️schema/🧩️entities/🦀️.rs:284)
+15|done|shared|en1997 snapshot has `placements: Vec<Placement>` with id,x,y,z,yaw (🗿️artifacts/🌍️en1997/…/📸️snapshot/🦀️.rs:103,375); shape differs from requested origin/Vec3, acceptable
+16|done|shared|`pub fn slices` is public (🧮️mechanics/🌍️geotechnics/⛰️slope/🦀️.rs:79); scene reuse not re-verified
+17|open|shared|field-meta rows for placements[].origin.x|y, footings[].loadCases[].horizontalVariable and layers[].depthTop not confirmed in lookup_field_meta; add rows (unverified)
+18|done|shared|per-artifact `🎬️scene/🧰️kit` exists in 8 artifacts and shared 🎬️structural-scene/🧰️projection-kit exists
+19|open|shared|editor still commits via setField; no `setFields` (0 hits) and previewRemedy batch commit missing
+20|open|shared|visual_layout(variant, device) still builds WindowLayout (📇️registry/…/🪟️manifest-and-media/🦀️.rs:122); outliner-role mismatch not verified as fixed
+21|open|shared|Viewport3dWindowConfig still a plain value (…/🪟️visual-windows/🧊️viewport3d/🎚️config/🦀️.rs:103); persisted config crate 🪟️viewport/🎚️config exists but is not wired
+22|open|shared|render path still receives only `handle` with InteractionView; focus derivation via setSelectedCheckIndex remains (unverified fix)
+23|done|en1993|en1993 snapshot has Placement and change-placement kinds (16 files)
+24|open|en1997|editor/viewer do not surface `checks::catalogue::registry()`/`evaluate_case` (0 hits); add verification-case panel
+25|open|en1997|nested-row patch lane for load cases/test profiles in 🔺️diff not verified; CaseRowDelta exists only as bare lane (unverified)
+26|done|shared|imposed_qk_pa/ground_snow_pa return Option (7/8 hits); na_b3_qp_pa removed (0 hits)
+27|done|en1990|legacy 🪟️windows/{📥️inputs,📊️results} dirs no longer present in en1990/en1995 editor and viewer; only checks/diagrams/outliner/properties/viewport remain
+28|open|shared|view.activeCombination const exists (🗿️artifacts/⚖️en1990/…/🕹️handles/🦀️.rs:91) but routing of view.* writes to view state in viewport interaction not verified
+29|open|shared|CheckResult still has no structured combination link; scene parses `leading=` (combinations::column_for_check, 4 hits); add combination field to CheckResult
+30|done|shared|report_helpers re-export status note; treated as done (not re-verified)
+31|done|shared|no `norm-en1996-results`/`norm-en1996-inputs` references remain in the norm tree (0 hits)
+32|open|en1991|roofs[] handles (pitchDeg, parapetHeight, driftObstructionHeight) lack EDIT_RULES set-field rows (unverified owner; roofs[] appears in en1991/en1996 scenes)
+33|done|en1991|bridgeTandemX/craneX fields present in model and fixtures (1027 hits); handles exist
+34|open|en1997|editor commands still use mutations::resolve_edit (51 hits); checklist step 5 (footings/retainingWalls/slopes handle writes) not completed
+35|done|shared|SURFACE/🌲️outliner/🪟️window/🦀️.rs exists with render_outliner (24 hits); keep as is
+36|open|en1992|editor/viewer do not surface `checks::registry()`/`evaluate_case` for VZ-03/VZ-14 section_resistance (0 catalogue hits)
+37|open|shared|CheckResult.stations exists (Station type in 🎬️structural-scene/🧮️tessellation and en1993 frame-eigen) but `utilization == max(stations)` contract and per-station binding not verified
+38|open|shared|binding_of_check exists but UtilisationBinding.per_station absent (0 hits); add per_station to UtilisationBinding
+39|done|shared|status note: NDP edits preserved; no action
+40|done|en1999|WeldRun used in en1999 diagrams and handles (790 hits); per-edge Weld replacement in place
+41|open|en1992|tendon P(x) ColourChannel::Fields with FieldSamples::Station exists (101/15 hits) but stirrup link zones from stirrups.zones[] not wired in en1992 visual
+42|done|shared|StructuralScene.tracks present in 🔺️diff and scene (tracks: Vec<ParameterTrack>); SurfaceSample grid note unverified
+43|done|shared|load_factor/frequency fields used by visual agents (93 hits); Motion semantics in place
+44|open|shared|LiveView still calls synchronous live::report (74 hits); switch to responsive lane (responsive exists in compliance macro 🛰️live/🦀️.rs:52)
+45|done|shared|render_with(..ViewportView..) present in 30 artifact files across all ten artifacts
+46|open|shared|member_modes::modal absent in 🧮️mechanics (only buckling/deflection); en1995 scene still needs modal helper
+47|done|shared|🫧️live-lanes/🧱️lane-stores exists; norm_lane_stores! used in en1991/en1994/en1996 editors
+48|open|en1993|`:check`/`:test` of norm-en1993-rs never confirmed green; first-compile fixes pending (no build evidence in tree)
+49|open|shared|NoTransient reducer still used by vdi3805 and din18599 viewers/editors (30 hits); viewer ephemeral lane missing
+50|open|shared|lane-clock exists (⏱️lane-clock) but 🕹️direct-manipulation/➕insert-tool present, LiveView::with_lanes not verified; compile status unknown
+51|done|shared|PresenceView (22 hits) and render_with_request_context (20 hits) present
+52|open|host-runtime|world-3d bindings still need handle/s/origin/modifiers/at/key args; referenced audit doc 🔍️audits/direct-manipulation-rollout.md missing
+53|open|shared|en1993.mechanics.portal-sway case not located as test row; mechanics kernel owner to confirm (unverified)
+54|open|en1995|CatalogueCase/labelEn/labelDe entity: CatalogueCase present in en1995 snapshot per request 450; cases entity rollout unverified
+55|open|en1995|timber document-case shape (`cases`, num/text maps, T-nn) not adopted as checks::timber::Case mapping (0 hits for checks::timber::Case in norm)
+56|done|en1993|Storey entity, En1993StoreyPatch/Delta and insert-storey kinds present (insert-storey 42 files)
+57|open|shared|binary mutation codec tag_u8 still used (89 hits); no varint codec found; 366 en1993 leaf kinds blocker unverified
+58|open|en1993|template test `every_special_part_leaf_resolves_to_its_whole_entity_update` not found (0 hits)
+59|done|en1997|anchors entity present in en1997 snapshot, scene and handles (anchors in diagrams/handles)
+60|open|en1997|SEMIO_REGEN_EN1997_ASSETS=1 never run: regen_example_assets test exists but env hook not exercised; packs stale
+61|done|en1996|55 wave-2 mutation kinds present in en1996 mutations tree (🧬️mutations/…)
+62|done|en1998|change-site-s-ap-r present (19 files); change-site-seismic-zone gone (0 hits)
+63|open|shared|live_scene! macro used by only 3 scenes (en1991, en1994, en1996); roll out to all ten artifacts
+64|done|en1999|materials[].productForm, PRODUCT_FORMS and change-material-product-form present (18 files)
+65|done|en1999|placements entity present; insert-placement kinds in en1999 (➕insert-placement lanes)
+66|done|en1991|change-bridge-tandem-x, change-rail-alpha, change-assumed-rail-lm71 present (15-21 files)
+67|open|en1998|298 f64 fields hand-fixed; generated set-field kinds for new f64 leaves not verified; field-adder script path not found
+68|open|shared|only 🎬️structural-scene mock-projection implements StructuralProjection; no artifact implements it
+69|done|shared|projection_kit::placements_of (32 hits) and revision_of (21 hits) used by viewports
+70|done|en1993|restraints collection and insert-restraint kinds present (17 files)
+71|open|shared|8 mutation fixture paths are 257 bytes from /home/deck/semio (limit 256); shorten fixture folder names (see report section 6)
+72|done|en1999|-2 mutation group crates (❄️cold-formed-action, 🔗️connection-action, …) present
+73|open|shared|artifact scenes still monolithic; project_entity appears 4 times, Out::wants absent (1 def only); per-entity projection not done
+74|done|en1993|BuiltUpMember entity and insert/remove-built-up-member kinds present (17 files)
+75|done|en1993|WeldGroup entity and insert-weld-group kinds present (17 files)
+76|open|shared|per-entity projection (Out::wants(id) checks) not implemented (1 definition only)
+77|open|en1999|en1999 Placements diff twins were hand-added; generator re-run reproduction not verified (ts-schema lane)
+78|done|en1999|add-placement is named insert-placement in the tree (➕insert-placement lanes present); remove-placement present
+79|open|shared|third-party*extended.json oracle cases not confirmed; feed inputs to evaluator (unverified)
+80|done|en1999|ParametricSection and HollowJoint entities present (282/335 hits), insert-parametric-section present
+81|open|shared|scene_of still used at 648 sites; viewport call sites not switched to live_scene!
+82|stale|shared|`resolve_row_leaf`/`SetFieldRule` do not exist (0 hits); edit rules now use EDIT_RULES in 🧭️edit-rules
+83|done|en1997|slope circle fields present (circleRadius/circleCentreX 545 hits) and change-slope-circle-radius (17 files)
+84|done|en1998|towers eiNm2 field present (3 hits in model/twins)
+85|done|en1997|slope circle leaves and change-slope-circle-radius present (17 files)
+86|done|en1997|placements with x,y present in en1997 snapshot (see 15)
+87|open|shared|catalogue evaluators still return English `missing input {key}` reasons (≥3 evaluator files); localise reason codes
+88|open|shared|"The site already has this value." still English in en1998 diff files; MutationOutcome message needs fault-notice keying
+89|done|en1990|insert-placement/remove-placement present in en1990 (7/9 files); change-placement kinds present (16)
+90|done|shared|semio-s-plugin-norm-compliance now 3441 lines / 20 files (OK in source-boundary scan)
+91|open|en1996|scene handle writes (isothermDepthM, concentrated[].positionM, distanceA1M, planXM) need edit rules and field-meta rows confirmed (unverified)
+92|done|en1996|isotherm-zone and wedge-<lc>-<load> derived tags present in scene (2/4 files)
+93|done|shared|sqlite fixtures carry fatigueSpectra, reliabilityAnalyses, testSeries rows (552/578/590 hits)
+94|open|en1992|no `registry`/`evaluate_case` catalogue in en1992 (0 hits); add German-reasons test once a catalogue exists
+95|done|en1997|en1997 snapshot now has placements (see 15); superseded
+96|done|en1991|silo:hopper and silo:field-i-j landed (2 hits); crane/silo handles and rail-influence diagram present
+97|done|en1993|JointRow entity and insert-joint-row kinds present (389 hits, 17 files)
+98|open|host-runtime|shell dock switch on resize via device_profiles::device_view not wired in host (device_view used only in 3 files)
+99|done|shared|dispatch_shortcut mounted in panels crate and shortcut_route used by host (22 hits)
+100|open|shared|adapters for mechanics.cracked-continuous / PyNite split-member cross-checks absent (0 hits)
+101|open|en1994|facts.layout (catalogue::continuous::Layout) not consumed by beam scene (facts.layout 1 hit); supports/hogging from layout unverified
+102|open|en1996|add/remove placement named insert-/remove-placement present; change-placement kinds present; en1996 lanes exist: verify en1997 lanes and grips (unverified)
+103|open|shared|36 new f64 fields across model/twins/SQLite/fixtures not verified; treat as open pending generator run
+104|done|shared|status note: no kind change for chordRotation fields
+105|open|en1997|slopes[].width field and en1997_profile.py adder not verified (script path missing)
+106|done|en1998|soilLayers collection present across tree (1064 hits), soil_layers rust lane present
+107|open|ts-schema|placement kinds still missing for en1991, en1993, en1994, en1995, en1998 (insert-placement exists for all; verify per artifact)
+108|done|en1993|frameNodes/frameBars entities and insert-frame-node present (577/617 hits)
+109|done|shared|oracle 🔮️oracles/🕸️frame-eigen/🐍️.py exists
+110|done|en1993|insert-placement/remove-placement and change-placement present in en1993 (9/16 files)
+111|open|en1998|scene handle writes soilLayers[id=<layer>].thicknessM and n160 remedy targets not present (0 hits)
+112|open|shared|QuantityKind has no Velocity kind (site response reports period only); add Velocity kind through VdiQuantityKind mapping
+113|open|shared|no host turns a drag on an entity without a row into PlacementCommit::of + insert batch (PlacementCommit::of exists, 35 hits)
+114|done|en1994|insert-placement/remove-placement present in en1994 and en1998 (6/9 and 9/11 files)
+115|open|shared|many literal EN 1991/1993/1996 tables not in NDP registry (cpe/Cf, stainless ladder, K/f_vk0 etc.)
+116|done|shared|🔮️oracles/⚖️compliance/🐍️.py exists with geometry mode; python_oracle tests referenced
+117|open|shared|scene golden 🎬️structural-scene/…/🏛️scene/🔣️.json is 0 bytes; StructuralScene diagrams not wired (scene-law unbound)
+118|done|en1995|third-party oracle module 🔮️oracles/📐️third-party/🐍️.py exists in en1995 artifact
+119|done|en1994|no en1994 fixture path exceeds 256 bytes now (long-path scan); the 256-byte case is at the limit
+120|open|shared|structuralcodes adapter ignores t0_adj/alpha_cement (Eq. B.9) for en1992.3.1.creep-shrinkage; fix adapter and re-bless
+121|done|shared|solve_continuous_beam present in mechanics (1 hit); typed API exists
+122|open|shared|SceneKit scalar_owner default method not found (0 hits); add to SceneKit trait
+123|done|shared|vids oracle and feature (🧪️tests/🧾️vid-checks/🥒️.feature) present; case ids registered by file
+124|open|shared|sectionproperties adapter get_beta_p not exposed (1 hit only); expose Wagner coefficients and bless free-outline-tee-wagner
+125|open|shared|no Rust subject adapter for E1-xx catalogue rows (girder_cross, girder_as_min, end_plate, crack_band_k6) found (0 hits)
+126|done|en1991|🎬️scene/🌪️wave3 module present (keep as is)
+127|open|en1991|E13.13 spec entry exists in en1991 spec-trace (🧭️spec-trace/🦀️.rs:42); anchor of cases collection after thermalSections still to verify
+128|open|shared|scalar_text still formats with Locale::En (📇️registry/…/🧾️properties/🦀️.rs:121 pattern); DE number separators not localised
+129|open|shared|English-only Err/ok_or diagnostics in edit-rules/command-args/value-path not localised (paths moved; unverified)
+130|open|shared|SEMIO_REGEN_EN1997_ASSETS / SEMIO_UPDATE_GOLDEN re-bless still pending: scene golden 0 bytes, pack assets stale
+131|done|shared|app-surface split into foundation/viewport3d/visual-chrome/live-core/panels/live-editor sibling crates present
+132|open|en1996|field-adder has no en1996 profile; M-95 bracing/diaphragm snapshot fields absent
+133|open|en1996|scene Spec.path hard-wired to walls[id=..]; chase/joint entities need cases[id=..] owner path
+134|open|en1997|flow-net streamline/equipotential golden and pack regeneration pending (golden 0 bytes)
+135|open|en1994|En1994{Beams,Columns,Slabs}ActionsRows carry only modified (no removed/inserted); nested action insert/remove not implemented
+136|open|shared|UnitSpec N/m not added to UNITS (N/m only used as literal in en1996 diaphragm scene)
+137|open|shared|one_leaf_edit_rebuilds test and kit::dependencies_of coverage not verified (incremental-evaluation)
+138|done|en1995|🧭️spec-trace/🔣️.json of en1995 names entity collections for T-18..T-97
+139|open|shared|Rows::row extra dependency on referenced member is coarse; refine incremental dependency declaration
+140|open|shared|unit-converted remedies still applicable=false; add unit-aware remedy applicability
+141|open|shared|Emitted::with_case_catalogue absent (0 hits); add API to feed demo rows
+142|open|en1992|oracle rows 7.2.sigma-s/sigma-c and 5.10.prestress rely on current bar conventions; 5.10.decompression oracle missing
+143|open|en1993|second_order in frame-eigen uses non-public kernel items (System::assemble and Element::{k,geometric} absent); refactor to public kernel API
+144|open|en1993|member-checks lambda_y/z sqrt(A_eff/A) for class 4 and ΔM = N e_N in mn_interaction_eta not verified (correctness)
+145|done|en1995|design decision recorded: change-case-number/text upsert; no insert/remove kinds by design
+146|open|shared|older compliance oracle ignores weldRuns[].hazExtent; port hazExtent to ⚖️compliance/🐍️.py or retire oracle
+147|open|en1995|misleading KN names (nKN, mKNm, vKN, nTKN, fC90KN) still present (976 hits); rename to N/Nm conventions
+148|open|en1995|T-97 rolling shear and T-120/T-121 document rows absent; CLT gamma method needs independent derivation
+149|open|shared|EN annex branch S/TB/TC/TD and gamma_I issues in old compliance oracle (⚖️compliance/🐍️.py) unverified; check against current annex code
+150|open|shared|a14.deflection* .sampled(10,…) utilisation semantics unverified; confirm sampled max replaces utilisation correctly
+151|open|shared|FieldBinding is numeric only; text leaves (panels[].layup) cannot be dragged; add string-capable write for layer thickness grips
+152|open|shared|bottom-face notch (cutouts[].face = bottom) input absent in case engine; add face input
+153|open|en1992|FastenerKind::Rebar has no bend_start (0 hits); EN 1992 two-ended hooks not modelled
+154|open|en1996|inPlaneShearN/inPlaneMomentNm never enter shear() (469/462 hits, only design_effects used); wire into V_Ed
+155|open|en1996|N_Rd floored at 1e-9 N gives utilisation 6.6e14 for Phi=0 (change-support-sides fixture); return capped status and sane utilisation
+156|open|en1997|status-only earth-pressure and bearing rows have no numeric utilisation row; add numeric row or declare
+157|open|shared|mechanics::section::torsion_constants, pub evaluate_case_file and scene_law_rows absent (0 hits); oracle-harness adapters for en1994/en1999 open
+158|open|shared|Rows::global/Rows::part still read `*` (global_reading absent); T0 verdict units re-run on every drag
+159|open|en1992|spec ids BR-09, LQ-08, DI-01 not in spec-trace/📐️specs; add as document-level checks
+160|open|shared|checks-special-frames mounts thin-walled checks (file exists); its test not verified green; crate status unknown
+161|open|en1997|mutations::resolve used by editor commands is absent from en1997 mutations crate; route through resolve_edit or add resolve
+162|done|shared|🎬️scene/🧪️tests/🗂️cases/🦀️.rs exists (directory no longer empty)
+163|open|en1999|🔺️diff dev-dependency en1999-mut-member depends on en1999-diff (cycle); remove or move test types
+164|open|shared|Cargo.lock of en1995 lacks new mut-* packages; run lock sync
+165|open|shared|HandleKind has no 2D translate; fasteners need two ScalarAlong grips; add planar handle kind
+166|open|en1995|GrainLayer grain direction has no hatch cue; add directional hatch
+167|done|en1995|status note: proto oneof renumbering was a no-change
+168|open|en1995|T-94/T-95/T-96 typed entities not built; schema.py and kinds.py generator scripts absent (MISSING)
+169|done|en1994|status note: E0063 nested set-kind diffs fixed (..Default::default() used 5234 times)
+170|open|en1994|point-load xM honoured only for simply supported beams (action_internals 47 hits); continuous spans still mid-span idealisation
+171|open|ts-schema|521 raw String schema fields with closed value sets remain (report-only candidate list); convert to enums
+172|done|en1997|GEO-F01/F04, SLS-01, PILE-04, RW-01/06, SLOPE-01 remain as stand-alone catalogue calculators (status note)
+173|open|en1997|17 en1997 leaves without mutation kinds untouched; add set-field kinds
+174|open|en1998|soil layer nSpt, cuKpa and site flags (liquefiableOrSensitive, softClayPlasticityIndex, alluviumVsMS) absent (0 hits for flags)
+175|open|en1995|E0277 risk in mutation unit tests (ChangeAnnex, ChangeConnectionActionFK ... 500+ hits) not verified fixed
+176|stale|en1990|kFiDeclared field no longer present (0 hits); change-k-fi-declared removed (see 317)
+177|done|en1990|typed trafficGroups collection present (543 hits)
+178|open|shared|spec_trace::Emitted::with_report absent (0 hits); add next to with_checks (35 hits)
+179|open|en1996|diaphragm solved by 200-element shear-beam tridiagonal in catalogue crate; no mechanics dependency (🥞️diaphragm)
+180|stale|ts-schema|en1992_run.py not in tree (MISSING); group_kinds never sees existing crates; script retired
+181|open|en1992|bar-cover row en1992.4.4.bar-cover realises D-03 but no oracle row exists
+182|open|en1994|studRings[] ring parameters only; per-stud collection or phase angle not added (0 studRings hits in fixtures)
+183|stale|en1994|en1994-continuous-points-oracle.py not in tree (MISSING); PyNite cross-check values hard-coded elsewhere
+184|open|ts-schema|proto and graphql twins lack fire fields (proto ends tag 56 before floors); add fire fields to all twins
+185|done|en1996|v7 uses existing walls[].diaphragmStiffnessNPerM (3 hits); no new kind
+186|open|en1997|scene golden needs SEMIO_UPDATE_GOLDEN=1 after green build (golden 0 bytes); consolidation troughs and ewall-E1 pore-pressure section pending
+187|open|shared|oracle harness has no adapter for geotechnics design cases (🧪️tests/🧫️fixtures/🌍️geotechnics/🔣️.json present)
+188|open|en1995|enum families still open: members/connections actions kind, category, loadDuration, fastenerType (0 hits for kind-enum fields)
+189|open|en1998|wallStorey f64 and liquefiableThicknessM indicator need typed storey reference and wall direction enum
+190|stale|en1998|field_adder.py and en1998_root.py not in tree (MISSING); adder scripts retired
+191|open|host-runtime|LiveCommand::Edit(EditCommand) absent (0 hits); add entity-edit live command for duplicate/paste
+192|open|host-runtime|handle_key shortcut ids not mapped to ArtifactCommand::Undo/Redo (0 hits); map copy/paste/duplicate/undo/redo
+193|open|shared|with_scene_targets snapping: live_handles present (38 hits) but grips snapping to member ends not confirmed
+194|open|en1992|per-stud positions (rail id collection) not persisted; schema/twins/kinds/fixtures missing
+195|open|shared|RemedyBound::Insert absent (0 hits); add insert remedy for stiffeners in compliance Remedy
+196|open|host-runtime|ArtifactCommand::Undo/Redo not sent for History chords (0 hits); shortcut_route (22 hits) not connected to store
+197|open|shared|drag-to-reorder: move_item_edit exists (10 hits) but no moveItem tool commit path (case-edits ui error); outliner UI commit
+198|open|ts-schema|typed-enum candidates: executionImperfections, tieRuns[].kind, constructionLoads[].kind/stage (tieRuns 1023 hits, kind 3)
+199|open|en1991|scalar-owner classification for altitude, tMax, tMin of en1991.1-5.isotherm check; golden/law bless pending
+200|open|en1997|41 gate(cond, "EN reason") English reasons in wall-sections/walls-and-anchors/investigation/piles/hydraulics catalogue (unverified path); localise gate reasons
+201|open|shared|SpecTrace::new takes one EN-only &str; add LocalizedCopy description (LocalizedCopy in 1050 hits, SpecTrace still EN-only)
+202|open|shared|EN-only check texts in en1990 catalogue (line 364, 742-743) and en1993 built-up checks (line 76)
+203|open|shared|steps("…") takes EN-only String (9+ calls, e.g. snow/🦀️.rs:68); add bilingual steps like steps_de
+204|open|shared|ClauseRef "Annex X" labels are EN-only; add bilingual section label or Annex enum
+205|open|en1992|snapshot titles EN-only ("Failing/Compliant prestressed beam" en1992 snapshot 🦀️.rs:344, "Weak RC frame" en1998 🦀️.rs:197); make bilingual
+206|open|shared|family and part labels are EN-only in clause column; use stable id or bilingual label
+207|open|shared|mesh, thin-walled and other EN-only error strings (🕸️mesh/🦀️.rs:93, 🪶️thin-walled/🦀️.rs:56) not localised
+208|done|shared|Lang enum has no #[default] (viewport3d/🎚️config/🦀️.rs:72-74); no default language remains
+209|open|en1994|columns[].reinforcementProduct (choice hot_rolled|cold_worked) not added: field-adder limitation (choice leaves unsupported)
+210|open|en1990|KitDoc.option packs traffic group into one string (view_option/split_option); add typed group option
+211|open|shared|ndp_awaits_value lives in en1990 checks (7 hits); move next to ndp_number_opt in compliance annex module (absent)
+212|open|en1998|en1998 umbrella script.ts package list lacks mut-site-ground and mut-members-wall-rows (unverified)
+213|open|shared|oracle harness tolerance checks at 🔮️oracles/🏃️harness tests (path absent); tighten tolerances or justify
+214|open|shared|app-surface edit-rules match RemedyBound with `_` arm hiding AtLeast/AtMost/Exactly (RemedyBound 183 hits); add explicit arms
+215|open|en1994|edit-rules `_ => resolve_with_id_removals` swallows MoveItem (MoveItem 31 hits); add explicit MoveItem arm
+216|open|en1998|other String fields of en1998 (material, importanceClass, enGroundType, t1Method) untouched; convert to typed enums
+217|open|shared|reliabilityClass project setting: ReliabilityClass present in en1990 snapshot only; add to en1992/1994/1995/1996 documents and K_FI lookup
+218|open|shared|geotechnics fixtures: en1997.G.pile-dynamic-tests and downdrag cases present in fixture file but adapter not wired
+219|open|host-runtime|framework select-all needs plugin write API for interaction-domain selection
+220|open|host-runtime|wgpu shell drop targets: drop_target_action reads Stack nodes only; outliner drag-drop not wired
+221|open|en1992|MoveItemRule absent (0 hits); only members list has reorder rules; add rules and with_reorderable for en1992 outliner
+222|done|shared|status note: wave-2 triage superseded by this audit
+223|open|shared|regenerate generated indexes build-owners.json and dependencies.json for new crates (verify build-owners sync)
+224|open|host-runtime|hub component manifests (🌎️hub/…/📕️norm) still list norm-en1996-inputs/results; regenerate
+225|open|shared|project target @semio-s/plugin-norm-structural-scene:test unverified; run after build owner confirms project name
+226|open|shared|structural-scene projection-kit mounted (root line 12) but rebuild and contract build not reported
+227|open|shared|compliance and structural-scene rebuild/test pending (Station and CheckResult.stations exist)
+228|done|shared|status note: CheckResult built only via builder; no literal constructions
+229|open|shared|compliance and app-surface compile/test not reported green
+230|open|ts-schema|norm-enXXXX-outliner window kinds not in fixtures (0 hits); regenerate window-ownership fixtures and hub manifests
+231|open|shared|structural-scene unit tests (cages_points_and_weld_runs…) compile/test not reported
+232|open|shared|SURFACE checks/report-tree/catalogue tests not reported green via norm-artifact-contract-rs
+233|open|shared|SURFACE direct-manipulation code (🕹️direct-manipulation exists) check/test pending
+234|open|shared|compliance incremental-evaluation WP-05 compile/test pending
+235|open|shared|structural-scene parameter_tracks test and ParameterTrack types: build/test pending
+236|open|shared|compliance rows (🧱️rows) and Scope kinds compile/test pending
+237|open|shared|rebuild norm-en1992/en1995/en1996-rs for scene fidelity; new EN 1995 scene dependency edge
+238|open|shared|ViewLane in NormTransient present (79 hits); twin check and compile pending
+239|open|shared|CheckStatus::Info and CheckBuilder::informative absent (0 hits); add kernel change and rebuild dependents
+240|open|en1993|source boundary: en1993-mut-fastened-joints (67 files), mut-buckling-lengths (34), mut-fatigue-stresses (34) are OVER budget; split crates
+241|done|shared|app-surface canvas-lowering no longer flagged by source-boundary scan
+242|done|shared|app-surface is a facade over sibling crates (scan OK, 5018 bytes)
+243|open|shared|groundhog imports plotly/pyproj/jinja2 at module level; harness inert-import finder must be reviewed
+244|open|en1996|en1996 build run 6 died at NX cache capacity; rerun build (gate unverified)
+245|open|ts-schema|committed binary pack 🖼️assets/🏢️seismic-rc-frame/🎒️.pack.semio needs codec regeneration (SEMIO_UPDATE_GOLDEN run)
+246|open|ts-schema|44 norm crates lack build-owners rows; regenerate via generator and verify
+247|open|shared|contract-rs build+test (view lane units, unit picker, ViewUnits) and norm-enXXXX-rs rebuilds pending
+248|open|shared|Cargo.lock sync for en1991/en1996 scene dependency on mechanics; dependencies.json regenerate
+249|open|shared|bless committed pack assets after first green compile (4 pack files and glulam-footbridge assets)
+250|open|shared|contract-rs scene memo and tests rebuild pending
+251|done|en1991|rail kinds moved to semio-s-artifact-norm-en1991-mut-rail-load-models (present, 16 files, scan OK)
+252|done|shared|structural-scene now 18 files/2372 lines (scan OK, under 32-file budget)
+253|open|ts-schema|schema generate pending for FatigueSpectrum, ReliabilityAnalysis, TestSeries, VariableAction.group diff lanes
+254|done|shared|viewport config crate semio-s-plugin-norm-viewport-config present (11 files, scan OK)
+255|done|shared|status note: SQLite extents set (sqlite/snapshot admission); no open action recorded
+256|done|shared|viewport config registered in norm Cargo.toml and contract project.json (Cargo.toml OK)
+257|open|en1996|en1996 scene golden and EN 1996 binary pack regeneration pending (golden 0 bytes)
+258|open|en1990|include en1990 in next build run and bless scene golden (en1990 golden 0 bytes)
+259|open|en1994|Cargo.lock synchronize for en1994 (63+6 kinds, 9 group crates) and first compile
+260|open|shared|contract-rs scene memo and tests rebuild pending
+261|open|shared|viewport config crate not reported green; unit picker persistence blocked
+262|open|ts-schema|seismic-rc-frame pack regeneration for soil-layers DSL table and committed_pack_twin test bless
+263|open|en1993|en1993 scene golden (0 bytes) and DSL/pack regeneration pending
+264|open|shared|scene registry goldens need SEMIO_UPDATE_GOLDEN once after soilLayer kind added (golden 0 bytes)
+265|open|en1999|six new en1999 crates (mut-weld-run, mut-outline-vertex, mut-placement, section-solver, …) need Cargo.lock/umbrella registration
+266|done|shared|independent catalogue oracle moved to 🔮️oracles/⚖️compliance/🐍️.py and feature exists under 🧪️tests/📇️en1992-catalogue
+267|open|shared|scene golden re-bless after first green build (section-geometry, zone-section diagrams); golden 0 bytes
+268|done|en1998|en1998-mutations now 2172 lines (scan OK)
+269|done|shared|10 registry rows added to 🔖️ndp/🔣️.json (registry file present)
+270|open|en1992|sqlite snapshot still builds RcMember/Anchor with placement_x|y|z|yaw (🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs:110,112); finish placement conversion
+271|done|en1994|en1994-diff now 480 lines (scan OK)
+272|open|shared|first green build of nine live_law test modules and p95 report pending
+273|open|en1993|en1993 scene golden re-bless for tf-buckling, fire-ltb, block-tearing diagrams pending (golden 0 bytes)
+274|open|shared|codec impls in crates other than the defining crate (orphan rule); io/📝️text/📸️snapshot impl placement unresolved
+275|open|en1990|first rustc log for en1990 never produced; closure-capture errors in rail-and-frame-sls expected; run build
+276|done|en1999|semio-s-artifact-norm-en1999-fatigue-math crate present (scan OK, 71 lines)
+277|open|shared|Cargo.lock entries for new mutation crates and clauses-annex; verify via lock tooling
+278|open|shared|scene golden re-bless for ROW_DECKS and ring/web/deck entities (golden 0 bytes)
+279|open|en1992|cargo:update failed: semio-s-plugin-norm-mechanics missing from en1992 workspace.dependencies; add dependency
+280|open|shared|scene golden re-bless for fatigue, strut-and-tie and prestress-loss entities (golden 0 bytes)
+281|open|shared|LocalizedCopy::new("", "") placeholders in structural-scene projection and scene-builder not verified overwritten
+282|done|en1997|en1997-mut-pile now 19 files/480 lines and en1997-model 1784 lines (scan OK)
+283|done|shared|en1998-mutations, en1999-mutations and en1991-diff within budget (scan OK)
+284|open|shared|Cargo.lock synchronise for en1999 mut-collection-rows, hub, bridge and fixture-sweep locks; verify build-owners sync
+285|open|en1999|nested collections members|connections|coldFormed|shells[].actions and sections[].elements lack insert/remove kinds
+286|open|shared|19 crates have no umbrella script.ts packages entry; add umbrella or entry
+287|open|en1996|scene golden re-bless for annex-e wall entities, chase and joint entities (golden 0 bytes)
+288|open|ts-schema|repo schema generate for FactorOverride, 10 member/bridge leaves and 16 kinds; verify build-owners sync
+289|open|shared|en1992 build timed out in nx daemon journal replay (infra, no rustc output)
+290|open|en1991|EN 1991 scene golden re-bless for trafficTravel layer and overlay (golden 0 bytes)
+291|done|en1990|status note: no mutation or selector edits by that agent
+292|open|en1995|en1995 rebuild pending for 5 new snapshot collections (tapers, cutouts, fasteners, panels, floors)
+293|open|shared|verify build-owners sync for en1993-mut-plated-stiffener-spacing crate (present, 91 lines)
+294|open|en1998|soft-storey and mass-variation rows only emitted when plan dims > 0; move loop outside the guard
+295|open|en1990|bridge-sls-rail generator rewrote mounts; restore other mounts and derive mounts from leaf dirs
+296|open|shared|Cargo.lock sync: en1999 lacks 7 mut-* packages; en1995 umbrella dev-dependency edges
+297|open|shared|en1993 build stalled in nx journal replay (infra); no diagnostics
+298|open|shared|viewport-config crate not reported green; unit picker persistence still blocked (duplicate of 261)
+299|open|ts-schema|regenerate scene goldens, example packs and DSL assets for pier/bearing kinds and new fields
+300|open|ts-schema|regenerate DSL packs via write_committed_example_assets and schema generate root twins
+301|open|shared|contract-rs (view lane check, view-steps, check-parameters) and norm-enXXXX-rs rebuild pending
+302|done|en1998|no mutation fixture paths currently exceed 256 bytes in en1998 (only 8 paths at 257 bytes, see 71)
+303|open|shared|regenerate scene goldens, bar and lintel bindings, detailing rows after first green build
+304|done|en1991|en1991-diff within budget (scan OK, 5 files, 1800 lines)
+305|open|shared|bless scene golden (fire:wall, fire:window, fire:opening, dynamic-cscd-frequency) after first green build
+306|done|en1998|new crates mut-site-ground and mut-members-wall-rows present (scan OK)
+307|open|ts-schema|schema generate for en1990 snapshot/diff/mutation (ReliabilityClass, LoadGroup, trafficGroups); schema-catalog.json update
+308|open|ts-schema|EN1995_REGEN_PACKS, REGEN_EN1999_ASSETS regen tests not moved to shared helper; no semantic.json for en1992/en1998
+309|open|ts-schema|aluminium-roof-purlin and noncompliant-multi-fail .pack.semio assets still hold member column; regenerate
+310|open|shared|io/🦀️.rs ends with pub use mutation_bridge::* after module moved to mutations crate; resolve import (E0432)
+311|open|en1994|edit-rules resolve_edit regenerated with two `_` arms; remove shadowing arm and keep nested removals
+312|done|en1994|en1994-checks now 1948 lines/141 kB (scan OK)
+313|open|ts-schema|framework schema-catalog.json still lists change-site-liquefiable-thickness-m and change-member-wall-storey payloads; schema generate
+314|open|en1995|en1995 scene golden (case-kser) changed by form-drawn case; bless after rebuild (golden 0 bytes)
+315|open|shared|register unverified EN 1995 NDP rows from en1995-completion in compliance annex-and-tables / ndp registry (printed standards needed)
+316|open|shared|NDP provenance glyph and description segment in CheckResult/UtilisationBand (UnverifiedBasis exists, 105 hits; glyph unverified)
+317|open|shared|register unverified EN 1996 NDP rows (UNVERIFIED_NDP) in ndp registry
+318|open|shared|adopt EN 1990 NDP rows from ndp-tables into compliance registry (printed standard values)
+319|open|en1998|NA-DE vertical spectrum values unverified (en1998-completion.md); verify against DIN EN 1998-1/NA
+320|open|en1997|register EN 1997 NDP rows (DIN 1054 Tables A 2.1-A 2.x) from en1997-completion into registry
+321|done|shared|CheckResult carries UnverifiedBasis outcomes (105 hits); UNVERIFIED list in catalogue no longer required
+322|open|en1991|EN 1991 TypeScript twins under editor/viewer (pretty-printed JSON inputs, seven-column report) stale; regenerate
+323|done|shared|kernel NDP registry ownership recorded (🔖️ndp crate present, scan OK); recipe note only
+324|open|shared|adopt EN 1992 NDPS table rows into compliance registry (ec_verified/de_verified fields)
+325|open|en1995|EN 338 C16/C24/C30 values (f_t,0, f_c,90, G) need printed-standard check against registry
+326|open|en1997|DIN 1054:2010-12 withdrawn; re-base ndp.en1997.l45.1 and l183.1 to DIN 1054:2021-04 Tables A 2.1/A 7.1
+327|open|en1998|DIN EN 1998-1/NA:2023-11 S_aP,R replaces a_gR zone table; SaPR.csv annex absent (0 hits); implement
+328|open|shared|NDP public verification second pass: no registry statuses flipped; code still contradicts verified-public values
+329|open|en1992|effect-profile and member-evaluation additions (📉️effect-profile) not found; implement profile module for member checks
+330|open|shared|30 NDP ids cited by wired checks (ndp.en1993.v-250.1 …) not in NDP_TABLE; add and verify
+331|open|en1998|Rayleigh T1 uses normalised shape (~1.7 s); compute from storey stiffness and fix Table 4.2 phi
+332|open|en1990|EN 1990 S1: gamma_G sup/inf chosen by action kind not effect sign; review-en1990-en1991.md audit absent
+333|open|en1995|ContinuousTwoSpan coefficients (q l^2/14, F l/6, 0.6 V) wrong vs exact support values; fix load-combinations
+334|open|en1996|f_vk0 material-independent table (normative-tables 204-225) wrong for CS/concrete/AAC; fix per printed table
+335|done|shared|InspectorOptions has preset, tier and clause_links; FieldSpec rows in use (30/2361 hits)
+336|open|en1990|PSI_TABLE only in en1990 ndp-tables; en1991 psi_1_2 separate; move psi table into compliance registry
+337|open|en1995|nine EN 338 rows with differences (C20 rho_mean, C27/C35/C40/C45/C50 values); resolve against printed EN 338
+338|stale|shared|ndp::REGISTRY absent (0 hits); registry now NDP_TABLE/ndp crate
+339|open|en1996|add ndp.en1996 m70.bed-joint-bar row (bed joint thickness ≥ bar diameter + 5 mm)
+340|open|en1992|ndp.en1992.kk-ageing-chi default 0.8 vs Volterra 0.82-0.86; informational, decide value
+341|open|en1997|Outcome-level NDP flag missing; PILE-10 xi_basis_unverified info outcome needs ndp.en1997.xi rows
+342|done|shared|mechanics.rail-lm71-mid-moment adapters added to pynite/anastruct/numerical adapters
+343|open|en1993|ids ndp.en1993.v-026.2 and v-420.2 are empty placeholders (symbol ?, no value); key with values
+344|done|shared|ndplib.py put() process guidance; no open code action
+345|done|shared|all wave unverified ids for en1994 registered (status note)
+346|open|shared|46 prose feature files parse clean; discovered test dirs (check-stations, ndp-adoption) need step coverage
+347|open|en1995|three blessed en1995 strength-class cases (t14/t22/t30) lack evaluator entry (e_t_0_mean/e_t_0_k lookup)
+348|open|en1993|materials[].rambergOsgoodN (3 hits) lacks field-meta row and per-leaf kind verification; add EN/DE label
+349|done|en1993|registry rows ndp.en1993.v-300.2 added to annex-and-tables ndp table (status note)
+350|open|en1992|fire and serviceability constants (ndp.en1992.psi-fire-lead …) still local constants; register as unverified rows
+351|open|en1996|review NDP tagging of wall evaluators (load-case-checks, fire-durability) for clause assignment
+352|open|en1993|annex-block-checks cite ndp.en1993.v-258.1, v-376.1, v-806.1, v-881.* not in registry; register
+353|open|en1997|register ndp.en1997.7.7.lateral-deflection-limit and ndp.en1997.9.seismic.gamma-sliding (fallbacks in code)
+354|open|en1996|register ndp.en1996.annex-e.<class> rows (36 classes, value null) and m70.bed-joint
+355|open|en1995|register unverified creep time-constant, floor f1-limit rows (from memory; needs printed NA)
+356|open|en1991|oracle gaps: wind faces and snow rows only in older compliance oracle (snapshot_checks); add differential tests
+357|open|shared|every artifact owner: add annex-dependent normative numbers to registry JSON and read via ndp_number(id, annex)
+358|open|browser-e2e|renderer wiring of screen_reader check_row_node/handle_node/diagram_nodes and help overlay (focus_order::chord_text 0 hits) and NDP Annex inspector section
+359|open|shared|NDP conflicts with blue-prints library (EN 338 tables); human decision against printed standard
+360|open|shared|registry hygiene: 36 ndp.en1997.xi.* and sls.* rows carry code EN 1998; correct code field
+361|open|shared|unit test asserts unverified_ndp_entries().count() == NDP_TABLE.len(); false once rows verified; fix test
+362|done|shared|ndp verify status: 174 rows verified, 86 EN-confirmed/NA-open (status note)
+363|open|shared|119 max/min calls on NDP values without clause citation (report-only check 19); add citations
+364|open|shared|38 explanation strings say unverified/ungeprüft without an unverified registry row (report-only check 20a)
+365|open|shared|62 artifact files use unverified rows without UnverifiedBasis path (heuristic check 20b); add outcome path
+366|open|en1997|ndp.en1997.r3.a gamma_a prestressed anchors read by anc-01/02 through EN=DE row; split by DA/R set
+367|open|en1995|117 k_mod/k_def rows marked verified without source; downgrade to unverified or add source
+368|open|en1996|nested masonry wall row kinds (length, thickness, direction, storey) needed for masonry.simple 9.7.2
+369|open|en1996|Table 9.3 minimum wall area not available; masonry.simple still applies five unverified ratio rows
+370|open|en1994|beam fire module reuses NDP rows; unexposed-surface exchange 9 W/m²K recalled from memory, verify
+371|open|shared|local gamma constants (gG, gQ, xi) in several artifacts instead of ndp_number registry rows (cross-artifact)
+372|open|en1999|ndp.en1999.web-stiffener.* remain unverified; verify EN 1993-1-5 clause values
+373|open|en1995|bracing drawing keyed on case count; n_braced not used and "0.35 N/mm²" hand-written in diagrams; read from ndp
+374|open|en1993|gamma_mf(method) literals 1.0/1.15/1.35 instead of registry rows (only ndp.en1993.gamma-mf)
+375|open|en1992|materials_and_time::conc uses private tuple array; read ndp.en1992.t3-1.ecm.* rows
+376|open|en1990|persisted editable combination groups and action group field, TestSeries/ReliabilityAnalysis wiring for Annex D; generator supports exclusive groups, snapshot does not
+377|done|en1990|ReliabilityAnalysis table present (289 hits) and form_r_minus_e referenced (11 hits)
+378|open|en1990|field-meta rows for handle/marker leaves (members span/precamber, permanents gk, variables qk) not verified in field-meta
+379|open|en1990|e90-26.1 EQU γG sup/inf 1.05/0.95 vs EN 1.10/0.90; confirm against printed EN 1990 and correct
+380|done|en1990|status note: no installed library covers EN 1990/1991/1996/1998 values; sympy used for beta
+381|done|en1990|design case adopted: CaseCatalogue (149 hits), CaseRowDelta (153 hits)
+382|done|en1990|catalogue cases module 🗂️cases/🦀️.rs present; inputs module wired (status note)
+383|done|en1990|informational: KN_V_UNKNOWN interpolation note, no action required
+384|open|en1990|6 of 21 blessed oracle cases lack evaluator entry (mechanics.beam-envelope M_sag/M_hog/R_max/R_min); add continuous envelope API
+385|done|en1990|en1990-diff now 2518 lines (scan OK)
+386|open|en1990|unwired: en1993_cut_off_ranges (6 hits), exact_failure_probability (4 hits), en1991 tandem_reaction_n, rail_lm71_mid_moment_nm, drift_mu_w; wire into checks
+387|open|en1990|check-results LocalizedCopy::new("", "") at ⚖️compliance/✅️check-results/🦀️.rs:291 must be overwritten before render; verify
+388|open|en1990|E0063 factor_overrides in En1990Snapshot initializer (io sqlite snapshot read side); verify build fixed
+389|open|en1990|with_case_browser absent (0 hits) while render_inspector_with_cases used (30 render_body hits); wire case browser for add/duplicate/remove
+390|done|shared|design note on combination tracks; no open action
+391|done|en1990|root Cargo.toml dev-dependency semio-s-plugin-norm-compliance present
+392|open|en1990|scene side of traffic group: ViewLane.group read and combination handle absent (0 hits)
+393|open|shared|diff_text!/diff_binary! expansions impl foreign traits in io crates (orphan rule); move impls into defining crate
+394|open|shared|diff unit test calls mutation.diff(base) and diff.inverse() not provided by imported traits; fix imports or API
+395|open|en1990|dev-dependency cycle in inferences package (io, examples, schema depend on inferences); remove cycle
+396|open|en1991|face geometry (hipped roofs, zone polygons, windFaces[].polygon, LM1 tandem positions) absent (0 hits); add mechanics-ready member model
+397|open|en1991|coast WZ4 q_p 1.55 vs spec 1.50, islands WZ4 values and wind zone data (v_b0, q_b) need printed EN 1991-1-4 check
+398|open|en1991|lm1_tandem_moment_nm models one axle; LM1 tandem (1265.6 kNm, R_max 562.5 kN) not implemented
+399|open|en1991|8 blessed oracle cases lack evaluator (mechanics.lm1-tandem R_max, rail-lm71-mid-moment); add part_2 tandem_reaction_n
+400|done|en1991|placements present: Placement in snapshot, insert/remove-placement kinds (6/8 files) and change-placement kinds
+401|done|en1991|add/remove/change placement kinds present (insert-placement 6 files, change-placement 15 files)
+402|done|en1991|en1991-scene now 1520 lines/136 kB (scan OK)
+403|open|en1991|handles for windBridges, dynamicElements, internalExplosions, thermalSections not confirmed in handles (windBridges 25 hits)
+404|open|shared|set rules select rows by position (en1991 23, en1994 92, en1996 87, en1998 161); convert to id selectors
+405|open|shared|E0080 unit symbol in en1991 snapshot missing from framework UNITS (dsl/token); add UnitSpec
+406|open|en1992|add setField EDIT_RULES and mutations for prestress.eccentricity, punching.columnWidth/Depth, anchors.c1/d
+407|open|en1992|snapshot fields to own: Placement per member/anchor, section outline polygon, explicit bar positions (not in schema)
+408|open|en1992|CheckUnits by entity and per-station utilisation (flexure, shear, anchorage, punching); checks expose stations
+409|open|en1992|no creep/shrinkage, tendon loss or strut-and-tie data in snapshot; VZ-02/VZ-09/VZ-13 curves not drawn
+410|open|en1992|bars, section polygons, tendon control points, stud rings, anchor groups absent from schema
+411|open|en1992|shear DE values (k1 0.12, C_Rd,c 0.15/γc, v_min κ1 0.0525/0.0375) need printed DIN EN 1992 NA check
+412|open|en1992|helpers asw unit conversion (* 1e3 vs * 1e-3) and V_Rd,s min with V_Rd,max; fix member shear
+413|open|en1992|Python mirror flexural_resistance_nm 561.5 kNm vs Rust; S1 verify flexure with independent calc
+414|open|en1992|conc() rounded Table 3.1 values vs structuralcodes formulas (info; keep or evaluate formulas)
+415|done|en1992|en1992-diff 467 lines (scan OK); closure size no longer over gate
+416|open|en1992|18 blessed oracle cases lack evaluator entry (creep strain, A_sw,max, nu_1, tau_t, punching beta); add entries
+417|open|en1992|change-reinforcement-ductility fixture still carries newDuctility "b-alt"; update to DuctilityClass enum
+418|open|en1992|serviceability check steps are English-only (lines 35-333); add DE steps
+419|done|en1992|en1992-model 1651 lines (scan OK); en1997-model within budget
+420|open|en1992|members[].tightness optional set/clear kinds absent; nested_patch needs optional clause
+421|done|en1992|en1998-mutations 2172 lines (scan OK); en1993 checks-special budget per scan (only mut-fastened-joints etc. OVER)
+422|done|en1992|En1992ReinforcementGradesPatch.ductility is DuctilityClass (diff 🦀️.rs:130)
+423|open|shared|per-field classification of 121 check-21 enum/entity candidates in report; owners convert with template
+424|open|en1992|InsertPlacement/RemovePlacement inverse use index/placement field names; align naming convention
+425|done|en1993|informational: alpha_cr Eq 5.2 vs eigenvalue note; no action
+426|open|en1993|18 of 47 blessed oracle cases have gaps (section properties, mcr-i, a_w hollow, tau_Ed I)
+427|open|en1993|frame-eigen feature (5 scenarios) has no python/rust step adapter; add clause-vector adapters
+428|open|en1993|field-meta row for materials[].rambergOsgoodN missing (snapshot leaf ramberg_osgood_n); add EN/DE row
+429|open|en1993|joint-components governing text English-only (checks/🧮️clauses/🔗️joint-components/🦀️.rs:399); make bilingual
+430|done|en1993|en1993-scene 1834 lines (scan OK); en1993-clauses 20 lines OK
+431|open|en1993|verify_fixtures.py en1993 has 22 failures (nested insert/remove-action kinds addressed by id+index); fix addressing
+432|done|en1994|Placement in en1994 snapshot and change-placement kinds present (16 files)
+433|open|en1994|scene calls checks::{part_1_1,part_column,…} helpers; confirm API stability and tests for effective width/plastic moment changes
+434|open|en1994|facts scene effective_width_m b0 semantics (distance between outer connector rows) to verify in visual
+435|open|en1994|EDIT_RULES leaf coverage for en1994 (only 19 leaves per audit); add missing leaf mutations per en1994-completion.md
+436|open|en1994|two-span coefficients in checks/🦀️.rs:131,139 (UDL 9qL²/128, point load 5PL/32, V 11P/16) and pattern loading to verify and fix
+437|done|en1994|PyNite/anastruct agreement cases (en1994.mechanics.* and en1995.mechanics.*) recorded as status note
+438|done|en1994|no en1994 mutation fixture path currently over 256 bytes (long-path scan lists none for en1994)
+439|open|en1994|3 blessed ltb-restrained cases lack evaluator (quantity Iw); add catalogue::ISection::iw()
+440|open|en1994|part_1_1::section_class uses outstand (b - t_w)/2 without root fillet r (Table 5.2)
+441|open|en1994|warping constants from analyse_section(profiles::i_section) not wired; iw() absent (0 hits)
+442|done|en1994|mut-beam-design now 16 files/405 lines (scan OK)
+443|open|en1994|script.ts calls runArtifactRustPackageMain twice (stale subset at line 4); remove duplicate call
+444|open|en1994|nested action position leaf actions[].xM and change-{beam,slab}-action-position-m kinds not confirmed (6 hits)
+445|open|en1994|testkit demo_mutation_cases lacks ChangePlacementX/Y/Z/Yaw, InsertPlacement, RemovePlacement cases
+446|open|en1994|part_en1990 in 🧬️schema/💡️inferences/⚖️checks reported structurally broken (accumulate_column followed by beam match); blocker to verify
+447|open|en1995|fire module charring_rates and cladding_times not re-exported from ⚖️timber (only d_ef_mm); add pub use
+448|done|en1995|placements Vec<Placement> present in en1995 snapshot (Placement count 1) with insert/change kinds
+449|open|en1995|effect-profile module (Profile, deflection_at, row_shares) and Assessed::{along, fielded, timed} absent in ⚖️timber; implement
+450|open|en1995|CatalogueCase/CaseNumber/CaseText in snapshot; evaluation rows (En1995Units), evaluate_document and insert-catalogue-case kinds not wired
+451|open|en1995|DE title "Nicht nachweisbarer Mehrfachversagen-Holzbau" awkward; reword German title in 📚️examples/❌️multi-fail-timber/🟦️.ts
+452|done|en1995|en1995-mutations 1532 lines and en1995-model 2741 lines (scan OK)
+453|done|en1996|Placement in en1996 snapshot and change-placement kinds present (15 files)
+454|open|en1996|WallOpening has no horizontal offset and ConcentratedLoad no position along wall (offsetXM absent); scene spreads evenly
+455|open|en1996|cavity walls with ties, flange walls, bracing layout not snapshot entities; add model rows
+456|open|en1996|export public masonry::wall_profile(annex, class, situation, wall, lc) for scene and checks
+457|open|en1996|fire_state (μ_fi) and shear/flexure structs private (fire_state 0 pub hits); export for diagrams
+458|open|en1996|reinforcement bars at real positions via Pattern::Points (16 hits) partly used; offsetXM for lintels pending
+459|open|en1996|EN Table 3.3 K values (clay GP, thin layer, calcium silicate) inconsistent with F96 rows; fix per printed standard
+460|open|en1996|load-case-checks Compression sections/capacity and wall-phi stations (0, 0.5, 1 of height) to finish
+461|done|en1996|en1996-masonry now 1845 lines (scan OK)
+462|open|en1996|3 blessed phi-m cases (lambda, A_1, u) lack evaluator; add phi_m_terms
+463|done|en1996|en1996-diff 480 lines (scan OK)
+464|open|en1996|String::from("Invalid tie index.") English-only fatal text in change-tie-* diffs; make localised
+465|done|en1996|en1996-mutations 1184 lines (scan OK)
+466|open|en1997|snapshot piles[].positions[] (x,y per pile) and per-layer skin friction absent; add for positioned geometry
+467|done|en1997|informational: N_gamma formula comparison (EN 1997 Annex D.4); no action
+468|open|en1997|bearing_drained include_depth applies Hansen d_q (not EN 1997 Annex D); relabel or remove
+469|done|en1997|En1997Diff carries CaseRowDelta cases lane (153 hits) and snapshot cases
+470|open|en1997|8 blessed oracle cases lack evaluator (phase relations, anchor elongation/resistance, pile-group R_group, oedometer)
+471|open|en1997|taxonomy generator skips change-structure-id (descriptor identity mismatch); fix generator
+472|open|en1997|piles[].concreteClass enum (PILE_CONCRETE_CLASSES) not added; needs typed-enum support in field-adder and all layers
+473|open|en1998|Placement per spatial entity (buildings, bridges, silos, tanks, towers, walls) absent (0 Placement in en1998 snapshot)
+474|open|en1998|capacity design needs sum_m_rc_nm/sum_m_rb_nm or per-joint En1998Joint (0 hits)
+475|open|en1998|site.seismicZone enum: zone chart marker expects index 0..3 via Quantise::Choice; set-field path needs index mapping
+476|open|en1998|resolve_annex still pub(super) in seismic-helpers; expose or move to schema crate
+477|open|en1998|storey-forces plan_w uses direction swap bug (plan length vs width) in structural-system-checks
+478|open|en1998|capacity-design ratio per joint blocked on sum_m_rc_nm/sum_m_rb_nm or En1998Joint
+479|done|en1998|en1998-diff 3571 lines (scan OK, 5 files)
+480|done|en1998|en1998 schema/model/diff within scan budget (diff 3571 lines; include_str leaves no longer flagged)
+481|open|en1998|insert/remove kinds for buildings[].members|storeys|systems and five nested en1999-style collections not done
+482|open|en1998|check_storey_forces computes accidental-torsion delta then discards it (let _ = delta_torsion)
+483|open|en1998|check reports utilization Lx/Ly (1.5) but status Pass; set utilization 0 for positive dimensions
+484|open|en1998|planRegularity compares max(e0x,e0y) with 0.30·min(rx,ry); EN 1998-1 4.2.3.2 compares per direction
+485|open|iso-vdi|Velocity quantity kind needs VdiQuantityKind mapping (vdi3805 snapshot/sqlite, twins); VdiQuantityKind 125 hits but no Velocity
+486|open|en1998|test assertion messages still say "legacy" (scene unit tests 656; schema structures 139); reword
+487|done|en1999|Placement in en1999 snapshot and change-placement/insert-placement kinds present
+488|open|en1999|AluminiumSection has no free polygon/vertex/hole list; scene derives outline from kind; add polyline section editor model
+489|done|en1999|WeldRun in model/handles (790 hits) and weld runs drawn in diagrams (status: implemented)
+490|open|en1999|member_resistances(member, section, alloy, params) pure function to export for scene mirror
+491|open|en1999|CheckUnits by entity (member, connection, sheet, shell, fire, fatigue) and per-station utilisation
+492|open|en1999|member-checks multiply buckling_length_y/z/t by k_sup (0.7/2.0/1.0) against snapshot docs; resolve semantics
+493|open|en1999|web stress-gradient eta applied to internal flanges of RHS/box (MC99:226-229); class 4 flange misclassified
+494|done|en1999|no en1999 mutation fixture path currently over 256 bytes (long-path scan)
+495|done|en1999|en1999-diff 1839 lines (scan OK)
+496|open|en1999|7 blessed oracle cases lack evaluator (tee/elliptical hollow, channel y_sc, angle I_major, free outline It/Iw)
+497|done|en1999|en1999-checks 1329 lines (scan OK)
+498|done|en1999|en1999-mutations 2186 lines (scan OK)
+499|done|en1999|en1999-checks 1329 lines (scan OK; gate no longer hit)
+500|open|en1999|connections[id].bolts.boltsPerRow handle has no SetFieldRule or typed kind; add change-bolts-per-row
+501|open|en1999|mutations/🦀️.rs imports change_member_* from mut-member crate; stale imports to remove
+502|done|en1999|en1999-model 2555 lines (scan OK)
+503|open|en1999|five crates (mut-rows-sheet-action, connection-action, …) missing from umbrella script.ts packages list
+504|open|din-a|NormHost::from_artifact replaced by NormHost::live with full evaluate per paint; add live_fold_source!/live_report! pair for DIN 4108, DIN EN 16798, DIN V 18599, ISO 16757, VDI 3805
+505|open|shared|editor/viewer layout() hard-codes desktop 22/50/28 tree in all artifacts; replace with visual_layout_with per device
+506|done|shared|oracle_wiring pub mod registries exposed in all en1990-en1999 checks crates (62 hits)
+507|open|en1991|part_1_6 construction_qk values (machinery, concreting 3.0 kN/m²) not in EN 1991-1-6 Table 4.1; correct against printed standard
+508|open|ts-schema|enum families (action kind/category, fastenerType, ulsEquation, strengthClass), catalogue-id newtype and case-scene unification not done (~300 strings)
+509|done|shared|status note: shared crates changed under review; no open action beyond items already listed
+510|stale|ts-schema|🧰️scripts/en1995-collections/schema.py missing from tree (MISSING); drift note obsolete

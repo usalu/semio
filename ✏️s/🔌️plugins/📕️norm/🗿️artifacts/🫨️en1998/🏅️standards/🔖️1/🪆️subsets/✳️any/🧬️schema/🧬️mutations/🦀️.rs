@@ -327,6 +327,45 @@ use semio_s_artifact_norm_en1998_mut_tie_beams::change_tie_beam_steel_area;
 use semio_s_artifact_norm_en1998_mut_tie_beams::change_tie_beam_depth;
 use semio_s_artifact_norm_en1998_mut_tie_beams::change_tie_beam_width;
 use semio_s_artifact_norm_en1998_mut_tie_beams::change_tie_beam_span;
+use semio_s_artifact_norm_en1998_mut_tie_beams::insert_isolation_system;
+use semio_s_artifact_norm_en1998_mut_tie_beams::remove_isolation_system;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_isolation_system_bridge_id;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_isolation_system_building_id;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_isolation_system_strength_n;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_isolation_system_stiffness;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_isolation_system_yield_disp_m;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_isolation_system_capacity_m;
+use semio_s_artifact_norm_en1998_mut_tie_beams::insert_pier_base;
+use semio_s_artifact_norm_en1998_mut_tie_beams::remove_pier_base;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_pier_base_bridge_id;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_pier_base_pier_id;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_pier_base_radius_m;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_pier_base_soil_vs_m_s;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_pier_base_soil_unit_weight_n_m3;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_pier_base_poisson_ratio;
+use semio_s_artifact_norm_en1998_mut_tie_beams::insert_critical_region;
+use semio_s_artifact_norm_en1998_mut_tie_beams::remove_critical_region;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_critical_region_building_id;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_critical_region_member_id;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_critical_region_section_width_m;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_critical_region_section_depth_m;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_critical_region_clear_length_m;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_critical_region_hooped_length_m;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_critical_region_core_width_m;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_critical_region_core_depth_m;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_critical_region_axial_force_n;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_critical_region_concrete_fcd;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_critical_region_steel_fyd;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_critical_region_hoop_fywd;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_critical_region_long_steel_area;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_critical_region_long_bar_dia;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_critical_region_long_bar_max;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_critical_region_hoop_diameter_m;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_critical_region_hoop_spacing_m;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_critical_region_hoop_legs_x;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_critical_region_hoop_legs_y;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_critical_region_restr_bar_count;
+use semio_s_artifact_norm_en1998_mut_tie_beams::change_critical_region_restr_bar_space;
 use semio_s_artifact_norm_en1998_mut_seismic_slopes::change_seismic_slope_circle_radius;
 use semio_s_artifact_norm_en1998_mut_seismic_slopes::change_seismic_slope_circle_centre_z;
 use semio_s_artifact_norm_en1998_mut_seismic_slopes::change_seismic_slope_circle_centre_x;
@@ -584,6 +623,45 @@ pub enum En1998Mutation {
     ChangeTieBeamDepth(change_tie_beam_depth::ChangeTieBeamDepth),
     ChangeTieBeamWidth(change_tie_beam_width::ChangeTieBeamWidth),
     ChangeTieBeamSpan(change_tie_beam_span::ChangeTieBeamSpan),
+    InsertIsolationSystem(insert_isolation_system::InsertIsolationSystem),
+    RemoveIsolationSystem(remove_isolation_system::RemoveIsolationSystem),
+    ChangeIsolationSystemBridgeId(change_isolation_system_bridge_id::ChangeIsolationSystemBridgeId),
+    ChangeIsolationSystemBuildingId(change_isolation_system_building_id::ChangeIsolationSystemBuildingId),
+    ChangeIsolationSystemStrengthN(change_isolation_system_strength_n::ChangeIsolationSystemStrengthN),
+    ChangeIsolationSystemStiffnessNPerM(change_isolation_system_stiffness::ChangeIsolationSystemStiffnessNPerM),
+    ChangeIsolationSystemYieldDisplacementM(change_isolation_system_yield_disp_m::ChangeIsolationSystemYieldDisplacementM),
+    ChangeIsolationSystemCapacityM(change_isolation_system_capacity_m::ChangeIsolationSystemCapacityM),
+    InsertPierBase(insert_pier_base::InsertPierBase),
+    RemovePierBase(remove_pier_base::RemovePierBase),
+    ChangePierBaseBridgeId(change_pier_base_bridge_id::ChangePierBaseBridgeId),
+    ChangePierBasePierId(change_pier_base_pier_id::ChangePierBasePierId),
+    ChangePierBaseRadiusM(change_pier_base_radius_m::ChangePierBaseRadiusM),
+    ChangePierBaseSoilVsMS(change_pier_base_soil_vs_m_s::ChangePierBaseSoilVsMS),
+    ChangePierBaseSoilUnitWeightNM3(change_pier_base_soil_unit_weight_n_m3::ChangePierBaseSoilUnitWeightNM3),
+    ChangePierBasePoissonRatio(change_pier_base_poisson_ratio::ChangePierBasePoissonRatio),
+    InsertCriticalRegion(insert_critical_region::InsertCriticalRegion),
+    RemoveCriticalRegion(remove_critical_region::RemoveCriticalRegion),
+    ChangeCriticalRegionBuildingId(change_critical_region_building_id::ChangeCriticalRegionBuildingId),
+    ChangeCriticalRegionMemberId(change_critical_region_member_id::ChangeCriticalRegionMemberId),
+    ChangeCriticalRegionSectionWidthM(change_critical_region_section_width_m::ChangeCriticalRegionSectionWidthM),
+    ChangeCriticalRegionSectionDepthM(change_critical_region_section_depth_m::ChangeCriticalRegionSectionDepthM),
+    ChangeCriticalRegionClearLengthM(change_critical_region_clear_length_m::ChangeCriticalRegionClearLengthM),
+    ChangeCriticalRegionHoopedLengthM(change_critical_region_hooped_length_m::ChangeCriticalRegionHoopedLengthM),
+    ChangeCriticalRegionCoreWidthM(change_critical_region_core_width_m::ChangeCriticalRegionCoreWidthM),
+    ChangeCriticalRegionCoreDepthM(change_critical_region_core_depth_m::ChangeCriticalRegionCoreDepthM),
+    ChangeCriticalRegionAxialForceN(change_critical_region_axial_force_n::ChangeCriticalRegionAxialForceN),
+    ChangeCriticalRegionConcreteDesignStrengthMpa(change_critical_region_concrete_fcd::ChangeCriticalRegionConcreteDesignStrengthMpa),
+    ChangeCriticalRegionSteelDesignYieldMpa(change_critical_region_steel_fyd::ChangeCriticalRegionSteelDesignYieldMpa),
+    ChangeCriticalRegionHoopDesignYieldMpa(change_critical_region_hoop_fywd::ChangeCriticalRegionHoopDesignYieldMpa),
+    ChangeCriticalRegionLongitudinalSteelAreaM2(change_critical_region_long_steel_area::ChangeCriticalRegionLongitudinalSteelAreaM2),
+    ChangeCriticalRegionLongitudinalBarDiameterM(change_critical_region_long_bar_dia::ChangeCriticalRegionLongitudinalBarDiameterM),
+    ChangeCriticalRegionLongitudinalBarMaxDiameterM(change_critical_region_long_bar_max::ChangeCriticalRegionLongitudinalBarMaxDiameterM),
+    ChangeCriticalRegionHoopDiameterM(change_critical_region_hoop_diameter_m::ChangeCriticalRegionHoopDiameterM),
+    ChangeCriticalRegionHoopSpacingM(change_critical_region_hoop_spacing_m::ChangeCriticalRegionHoopSpacingM),
+    ChangeCriticalRegionHoopLegsX(change_critical_region_hoop_legs_x::ChangeCriticalRegionHoopLegsX),
+    ChangeCriticalRegionHoopLegsY(change_critical_region_hoop_legs_y::ChangeCriticalRegionHoopLegsY),
+    ChangeCriticalRegionRestrainedBarCount(change_critical_region_restr_bar_count::ChangeCriticalRegionRestrainedBarCount),
+    ChangeCriticalRegionRestrainedBarSpacingM(change_critical_region_restr_bar_space::ChangeCriticalRegionRestrainedBarSpacingM),
     ChangeSeismicSlopeCircleRadius(change_seismic_slope_circle_radius::ChangeSeismicSlopeCircleRadius),
     ChangeSeismicSlopeCircleCentreZ(change_seismic_slope_circle_centre_z::ChangeSeismicSlopeCircleCentreZ),
     ChangeSeismicSlopeCircleCentreX(change_seismic_slope_circle_centre_x::ChangeSeismicSlopeCircleCentreX),
@@ -908,6 +986,45 @@ pub const KINDS: &[&str] = &[
     "change-tie-beam-depth",
     "change-tie-beam-width",
     "change-tie-beam-span",
+    "insert-isolation-system",
+    "remove-isolation-system",
+    "change-isolation-system-bridge-id",
+    "change-isolation-system-building-id",
+    "change-isolation-system-strength-n",
+    "change-isolation-system-stiffness",
+    "change-isolation-system-yield-disp-m",
+    "change-isolation-system-capacity-m",
+    "insert-pier-base",
+    "remove-pier-base",
+    "change-pier-base-bridge-id",
+    "change-pier-base-pier-id",
+    "change-pier-base-radius-m",
+    "change-pier-base-soil-vs-m-s",
+    "change-pier-base-soil-unit-weight-n-m3",
+    "change-pier-base-poisson-ratio",
+    "insert-critical-region",
+    "remove-critical-region",
+    "change-critical-region-building-id",
+    "change-critical-region-member-id",
+    "change-critical-region-section-width-m",
+    "change-critical-region-section-depth-m",
+    "change-critical-region-clear-length-m",
+    "change-critical-region-hooped-length-m",
+    "change-critical-region-core-width-m",
+    "change-critical-region-core-depth-m",
+    "change-critical-region-axial-force-n",
+    "change-critical-region-concrete-fcd",
+    "change-critical-region-steel-fyd",
+    "change-critical-region-hoop-fywd",
+    "change-critical-region-long-steel-area",
+    "change-critical-region-long-bar-dia",
+    "change-critical-region-long-bar-max",
+    "change-critical-region-hoop-diameter-m",
+    "change-critical-region-hoop-spacing-m",
+    "change-critical-region-hoop-legs-x",
+    "change-critical-region-hoop-legs-y",
+    "change-critical-region-restr-bar-count",
+    "change-critical-region-restr-bar-space",
     "change-seismic-slope-circle-radius",
     "change-seismic-slope-circle-centre-z",
     "change-seismic-slope-circle-centre-x",

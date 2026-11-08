@@ -1,0 +1,62 @@
+[
+  {
+    "name": "unfunded",
+    "items": 0,
+    "copy": 16,
+    "required": 16,
+    "work": 1,
+    "requiredWork": 1,
+    "aliases": 0,
+    "occupied": false,
+    "entered": false,
+    "transferred": false
+  },
+  {
+    "name": "occupied owner slot",
+    "items": 1,
+    "copy": 16,
+    "required": 16,
+    "work": 1,
+    "requiredWork": 1,
+    "aliases": 0,
+    "occupied": true,
+    "entered": false,
+    "transferred": false
+  },
+  {
+    "name": "live alias",
+    "items": 1,
+    "copy": 16,
+    "required": 16,
+    "work": 1,
+    "requiredWork": 1,
+    "aliases": 1,
+    "occupied": false,
+    "entered": true,
+    "transferred": false
+  },
+  {
+    "name": "unique source",
+    "items": 1,
+    "copy": 16,
+    "required": 16,
+    "work": 1,
+    "requiredWork": 1,
+    "aliases": 0,
+    "occupied": false,
+    "entered": true,
+    "transferred": true
+  },
+  {
+    "name": "short work",
+    "items": 1,
+    "copy": 16,
+    "required": 16,
+    "work": 0,
+    "requiredWork": 1,
+    "aliases": 0,
+    "occupied": false,
+    "entered": false,
+    "transferred": false
+  }
+]

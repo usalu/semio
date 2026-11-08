@@ -102,6 +102,10 @@ pub mod io_registry {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️json-serializers/🦀️.rs"]
 mod json_serializers_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️diff-codecs/🦀️.rs"]
+mod diff_codecs_tests;
 //#endregion 🧪️JsonSerializersTests
 
 #[path = "💾️binary/🦀️.rs"]

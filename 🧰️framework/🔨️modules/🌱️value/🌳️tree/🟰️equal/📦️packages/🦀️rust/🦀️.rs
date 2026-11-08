@@ -1,12 +1,13 @@
 //! 🟰️ Structural equality over retained original values and scalar slices.
 use semio_framework_value_control_contract::{ValueError,ValueRefusalKind};
-pub use semio_framework_value_control_contract::{RetainedAllocationEffect,OriginalRetirementFailure,RetainedWorkOutcome,RetainedWorkPoll,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
+pub use semio_framework_value_control_contract::{RetainedAllocationEffect,RetainedWorkOutcome,RetainedWorkPoll,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
+pub use semio_framework_value_retirement_contract::{OriginalRetirementFailure,OriginalRetirementCloseLoan,OriginalRetirementPoll};
 pub use semio_framework_value_control_contract as retained_clone;
+pub use semio_framework_value_native_clone_engine::RetainedCursorRelease;
 
 use semio_framework_value_retirement::{retirement,RetirementDemand};
-pub use semio_framework_value_retirement::{OriginalRetirementOutcome,OriginalRetirementPoll};
-#[path = "../../../../📋️list/🟰️equal/🦀️.rs"]
-pub mod slice_equality;
+pub use semio_framework_value_retirement::OriginalRetirementOutcome;
+pub use semio_framework_value_native_slice_equality as slice_equality;
 pub use slice_equality::{RetainedEqualityElement,RetainedSliceEquality};
 #[path = "../../🦀️.rs"]
 pub mod retained_equality;
@@ -15,9 +16,11 @@ pub use retained_equality::{RetainedEquality,RetainedEqualityCursor,RetainedEqua
 #[path="../../🧪️tests/effect.rs"]
 pub(crate) mod eff;
 #[cfg(test)]
-pub use semio_framework_value_retirement::{retirement_fields_type,retirement_fields_seed,OriginalRetirementControl};
+pub use semio_framework_value_control_contract::{OriginalEffectReply,OriginalEffectReplyComplete};
 #[cfg(test)]
-pub use semio_framework_value_control_contract::OriginalRetirementCloseLoan;
+pub use semio_framework_value_retirement_contract::OriginalRetirementControl;
+#[cfg(test)]
+pub use semio_framework_value_retirement::{retirement_fields_type,retirement_fields_seed};
 #[cfg(test)]
 use semio_framework_value_derive::{RetainedEquality,RetireOwned,ToValue};
 #[cfg(test)]
@@ -29,4 +32,4 @@ pub(crate) use semio_framework_value_testing_allocator::observe_retirement_alloc
 
 #[path="../../🌱️intrinsic/🦀️.rs"]
 mod original_value_equality;
-pub use original_value_equality::{OriginalValueEquality,ValueEqualityStep};
+pub use original_value_equality::{OriginalValueEquality,IntrinsicFieldBirth,ValueField,TextBirth,BytesBirth,ArrayBirth,ObjectBirth};

@@ -1,0 +1,37 @@
+[
+  {
+    "ready": false,
+    "empty": true,
+    "work": 1,
+    "copy": true,
+    "transfer": false
+  },
+  {
+    "ready": true,
+    "empty": false,
+    "work": 1,
+    "copy": true,
+    "transfer": false
+  },
+  {
+    "ready": true,
+    "empty": true,
+    "work": 0,
+    "copy": true,
+    "transfer": false
+  },
+  {
+    "ready": true,
+    "empty": true,
+    "work": 1,
+    "copy": false,
+    "transfer": false
+  },
+  {
+    "ready": true,
+    "empty": true,
+    "work": 1,
+    "copy": true,
+    "transfer": true
+  }
+]

@@ -1,0 +1,22 @@
+{
+  "sameFrame": true,
+  "visibleBeforePost": false,
+  "closePosts": 2,
+  "maxItems": 1,
+  "copyLimit": 4096,
+  "preparePosts": 1,
+  "bindPosts": 1,
+  "bindingCancelPosts": 1,
+  "rearmPosts": 1,
+  "semanticActions": 2,
+  "seedParts": 80,
+  "cancelAfter": 3,
+  "stock": {
+    "items": 128,
+    "copyBytes": 524288,
+    "capacityBytes": 65536,
+    "releaseBytes": 65536,
+    "depth": 64,
+    "fuel": 128
+  }
+}

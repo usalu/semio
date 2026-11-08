@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Original Equality Child Work",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "leftCheck",
+    "rightCheck",
+    "childFirst",
+    "childRecovery",
+    "selected",
+    "parent",
+    "remainingChild",
+    "receives",
+    "recovers"
+  ],
+  "properties": {
+    "leftCheck": {
+      "const": 5
+    },
+    "rightCheck": {
+      "const": 5
+    },
+    "childFirst": {
+      "const": 2
+    },
+    "childRecovery": {
+      "const": 1
+    },
+    "selected": {
+      "const": 13
+    },
+    "parent": {
+      "const": 20
+    },
+    "remainingChild": {
+      "const": 1
+    },
+    "receives": {
+      "const": 1
+    },
+    "recovers": {
+      "const": 1
+    }
+  }
+}

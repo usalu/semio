@@ -659,6 +659,58 @@
           }
         }
       }
+    },
+    {
+      "name": "annotations-drag-handle-marker",
+      "def": "annotationLayer",
+      "value": {
+        "items": [
+          {
+            "kind": "marker",
+            "id": "handle:beam-1.xM",
+            "position": [
+              2,
+              0,
+              0
+            ],
+            "shape": "ring",
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "text": {
+              "en": "Move beam end",
+              "de": "Balkenende verschieben"
+            },
+            "tone": "info"
+          }
+        ]
+      },
+      "normalized": {
+        "items": [
+          {
+            "kind": "marker",
+            "id": "handle:beam-1.xM",
+            "position": [
+              2,
+              0,
+              0
+            ],
+            "shape": "ring",
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "text": {
+              "en": "Move beam end",
+              "de": "Balkenende verschieben"
+            },
+            "tone": "info"
+          }
+        ]
+      }
     }
   ],
   "invalid": [
@@ -1309,6 +1361,34 @@
       },
       "ajvAccepts": true,
       "reason": "normal is non-zero"
+    },
+    {
+      "name": "marker-zero-axis",
+      "def": "annotationLayer",
+      "value": {
+        "items": [
+          {
+            "kind": "marker",
+            "id": "handle:beam-1.xM",
+            "position": [
+              2,
+              0,
+              0
+            ],
+            "axis": [
+              0,
+              0,
+              0
+            ],
+            "text": {
+              "en": "Move",
+              "de": "Verschieben"
+            }
+          }
+        ]
+      },
+      "ajvAccepts": true,
+      "reason": "a drag handle axis is a non-zero direction"
     }
   ],
   "pickTargets": [

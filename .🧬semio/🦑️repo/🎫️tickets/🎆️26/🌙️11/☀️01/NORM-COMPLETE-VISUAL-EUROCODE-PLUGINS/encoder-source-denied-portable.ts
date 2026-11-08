@@ -1,0 +1,1 @@
+const p="🧰️framework/🔨️modules/🌱️value/🛫️encode/🎟️effect/🧪️tests/source.test.ts";let s=await Bun.file(p).text();const a='expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);';if(s.split(a).length!==2)throw Error("guard");s=s.replace(a,a+'expect(law.deniedItems).toBe(0);');await Bun.write(p,s);

@@ -21,6 +21,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-value-control-reply = { path = "../../../📨️reply/📦️packages/🦀️rust" }
 semio-framework-value-control-physical = { path = "../../📏️physical/📦️packages/🦀️rust" }
 semio-framework-value-source-turn = { path = "../../🎟️source-turn/📦️packages/🦀️rust" }
 serde = { version="1.0", features=["derive"] }

@@ -1,0 +1,11 @@
+{
+  "sourceCapacity": 65536,
+  "ownerMaximum": 4096,
+  "owned": 0,
+  "requested": 4097,
+  "kind": "OwnershipLimit",
+  "producerCalls": 0,
+  "sourceWork": 0,
+  "retainedPrimary": true,
+  "releasedOriginalAction": true
+}

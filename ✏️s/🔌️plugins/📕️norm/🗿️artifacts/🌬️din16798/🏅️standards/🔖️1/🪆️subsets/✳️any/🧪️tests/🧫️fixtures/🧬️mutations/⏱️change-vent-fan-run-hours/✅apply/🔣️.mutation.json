@@ -1,0 +1,6 @@
+{
+  "ChangeVentFanRunHours": {
+    "ventId": "vent-central",
+    "newFanTRunH": 3000.0
+  }
+}

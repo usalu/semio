@@ -1,0 +1,12 @@
+//! 🔗️ The native trait owner binds sealed and Arc receivers to their defining typed child seeds.
+use super::{NativeReceive,NativeRecordFields,NativeRecordSchema};
+use crate::shared_issuance::SealedShared;
+use semio_framework_value_native_shared_engine::NativeSharedReceiver;
+use semio_framework_value_native_receiver_protocol::NativeReceiverSeed;
+#[doc(hidden)]
+pub struct NativeReceiverSeedFor<I:?Sized,T>(std::marker::PhantomData<fn(&I)->T>);
+impl<I:Sync+'static+?Sized,T:NativeReceive<I>+Send+Sync+'static> NativeReceiverSeed<I,T,T::Receiver> for NativeReceiverSeedFor<I,T>{fn seed(subset:bool)->Option<T::Receiver>{if subset{T::record_subset_receiver()}else{Some(T::receiver())}}fn seed_template(subset:bool)->Option<semio_framework_value_native_storage::NativeSeedTemplate<T::Receiver>>{T::receiver_template(subset)}}
+unsafe impl<T:NativeRecordFields+Send+Sync+'static> NativeRecordFields for SealedShared<T>{fn native_schema_count()->usize{T::native_schema_count()}fn native_schema_field(index:usize)->Option<NativeRecordSchema>{T::native_schema_field(index)}}
+unsafe impl<T:NativeRecordFields+Send+Sync+'static> NativeRecordFields for crate::retirement::arc_custody::original::SharedOriginalStorage<T>{fn native_schema_count()->usize{T::native_schema_count()}fn native_schema_field(index:usize)->Option<NativeRecordSchema>{T::native_schema_field(index)}}
+impl<I:Sync+'static+?Sized,T:NativeReceive<I>+Send+Sync+'static> NativeReceive<I> for SealedShared<T>{type Receiver=NativeSharedReceiver<I,T,T::Receiver,NativeReceiverSeedFor<I,T>>;fn receiver()->Self::Receiver{Self::Receiver::new(false)}fn record_subset_receiver()->Option<Self::Receiver>{Some(Self::Receiver::new(true))}fn receiver_template(subset:bool)->Option<semio_framework_value_native_storage::NativeSeedTemplate<Self::Receiver>>{<Self::Receiver as semio_framework_value_native_receiver_protocol::NativeReceiver<I,Self>>::seed_template(subset)}}
+impl<I:Sync+'static+?Sized,T:NativeReceive<I>+Send+Sync+'static> NativeReceive<I> for crate::retirement::arc_custody::original::SharedOriginalStorage<T>{type Receiver=NativeSharedReceiver<I,T,T::Receiver,NativeReceiverSeedFor<I,T>,Self>;fn receiver()->Self::Receiver{Self::Receiver::new(false)}fn record_subset_receiver()->Option<Self::Receiver>{Some(Self::Receiver::new(true))}fn receiver_template(subset:bool)->Option<semio_framework_value_native_storage::NativeSeedTemplate<Self::Receiver>>{<Self::Receiver as semio_framework_value_native_receiver_protocol::NativeReceiver<I,Self>>::seed_template(subset)}}

@@ -1,0 +1,40 @@
+{
+  "stock": {
+    "items": 12,
+    "copyBytes": 8192,
+    "capacityBytes": 8192,
+    "releaseBytes": 8192,
+    "depth": 8,
+    "fuel": 12
+  },
+  "denied": [
+    "items",
+    "copy",
+    "capacity",
+    "depth",
+    "work",
+    "spent"
+  ],
+  "allocation": {
+    "work": 1,
+    "markerBefore": "zero",
+    "nullMarker": 0,
+    "nullOutput": false,
+    "successOutput": true
+  },
+  "release": {
+    "work": 1,
+    "preservesOnDenial": true
+  },
+  "nativePrimitive": {
+    "opaque": true,
+    "publicationBeforeReturn": true
+  },
+  "publication": {
+    "value": 73,
+    "work": 3,
+    "uniquenessWork": 1,
+    "transferWork": 2,
+    "reallocates": false
+  }
+}

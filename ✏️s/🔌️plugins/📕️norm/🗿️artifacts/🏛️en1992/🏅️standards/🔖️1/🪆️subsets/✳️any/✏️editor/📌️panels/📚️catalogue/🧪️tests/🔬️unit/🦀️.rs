@@ -29,3 +29,10 @@ fn renders_reference_tables_with_examples() {
     }
 }
 
+
+#[test]
+fn verification_table_has_one_row_per_catalogue_entry() {
+    let table = semio_s_plugin_norm_app_surface::verification_catalogue_table::<semio_s_artifact_norm_en1992_checks::En1992Cases>("EN 1992", semio_s_plugin_norm_compliance::AnnexChoice::En, "", semio_ui_locale::Locale::En);
+    let entries = <semio_s_artifact_norm_en1992_checks::En1992Cases as semio_s_plugin_norm_compliance::design_case::CaseCatalogue>::entries();
+    assert_eq!(table.rows.len(), entries.len());
+}

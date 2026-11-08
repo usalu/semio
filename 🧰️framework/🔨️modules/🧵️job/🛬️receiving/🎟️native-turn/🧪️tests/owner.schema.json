@@ -1,0 +1,43 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "frame",
+      "recipient",
+      "work",
+      "construction",
+      "sameSource",
+      "emptyOutput",
+      "paid",
+      "admit"
+    ],
+    "properties": {
+      "frame": {
+        "type": "boolean"
+      },
+      "recipient": {
+        "type": "boolean"
+      },
+      "work": {
+        "type": "boolean"
+      },
+      "construction": {
+        "type": "boolean"
+      },
+      "sameSource": {
+        "type": "boolean"
+      },
+      "emptyOutput": {
+        "type": "boolean"
+      },
+      "paid": {
+        "type": "boolean"
+      },
+      "admit": {
+        "type": "boolean"
+      }
+    }
+  }
+}

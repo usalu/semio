@@ -2,7 +2,7 @@
  * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
 import { normWireArray, normWireBoolean, normWireInteger, normWireLiteral, normWireNullable, normWireNumber, normWireObject, normWireOptional, normWireRange, normWireRef, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
-import { type ActionCategory, parseActionCategory, type ActionKind, parseActionKind, type ActionSource, parseActionSource, type AluminiumConnection, parseAluminiumConnection, type AluminiumMaterial, parseAluminiumMaterial, type AluminiumMember, parseAluminiumMember, type AluminiumSection, parseAluminiumSection, type AluminiumShell, parseAluminiumShell, type AnnexChoice, parseAnnexChoice, type ColdFormedSheet, parseColdFormedSheet, type ConnectionKind, parseConnectionKind, type DetailType, parseDetailType, type FabricationClass, parseFabricationClass, type FastenerForceMethod, parseFastenerForceMethod, type FatigueCategory, parseFatigueCategory, type FatigueDetail, parseFatigueDetail, type FireScenario, parseFireScenario, type MemberAction, parseMemberAction, type OutlineRing, parseOutlineRing, type PatchLoad, parsePatchLoad, type PatchLoadPosition, parsePatchLoadPosition, type Placement, parsePlacement, type PlateElement, parsePlateElement, type ProductForm, parseProductForm, type RingStiffener, parseRingStiffener, type SectionKind, parseSectionKind, type SectionVertex, parseSectionVertex, type StiffenerSides, parseStiffenerSides, type SupportCondition, parseSupportCondition, type TransverseStiffener, parseTransverseStiffener, type WeldDirection, parseWeldDirection, type WeldProcess, parseWeldProcess, type WeldRun, parseWeldRun } from "../📸️snapshot/🟦️.ts";
+import { type ActionCategory, parseActionCategory, type ActionKind, parseActionKind, type ActionSource, parseActionSource, type AluminiumConnection, parseAluminiumConnection, type AluminiumMaterial, parseAluminiumMaterial, type AluminiumMember, parseAluminiumMember, type AluminiumSection, parseAluminiumSection, type AluminiumShell, parseAluminiumShell, type AnnexChoice, parseAnnexChoice, type ColdFormedSheet, parseColdFormedSheet, type ConnectionKind, parseConnectionKind, type DetailType, parseDetailType, type FabricationClass, parseFabricationClass, type FastenerForceMethod, parseFastenerForceMethod, type FatigueCategory, parseFatigueCategory, type FatigueDetail, parseFatigueDetail, type FireInsulation, parseFireInsulation, type FireScenario, parseFireScenario, type MemberAction, parseMemberAction, type OutlineRing, parseOutlineRing, type PatchLoad, parsePatchLoad, type PatchLoadPosition, parsePatchLoadPosition, type Placement, parsePlacement, type PlateElement, parsePlateElement, type ProductForm, parseProductForm, type RingStiffener, parseRingStiffener, type SectionKind, parseSectionKind, type SectionVertex, parseSectionVertex, type SheetProfile, parseSheetProfile, type StiffenerSides, parseStiffenerSides, type SupportCondition, parseSupportCondition, type TransverseStiffener, parseTransverseStiffener, type WeldDirection, parseWeldDirection, type WeldProcess, parseWeldProcess, type WeldRun, parseWeldRun } from "../📸️snapshot/🟦️.ts";
 
 export interface En1999Diff {
   /** @state artifact */
@@ -35,6 +35,10 @@ export interface En1999Diff {
   patchLoads?: En1999PatchLoadsRows | null;
   /** @state artifact */
   ringStiffeners?: En1999RingStiffenersRows | null;
+  /** @state artifact */
+  sheetProfiles?: En1999SheetProfilesRows | null;
+  /** @state artifact */
+  fireInsulations?: En1999FireInsulationsRows | null;
   /** @state artifact */
   transverseStiffeners?: En1999TransverseStiffenersRows | null;
   /** @state artifact */
@@ -829,7 +833,79 @@ export interface En1999WeldRunsRows {
   modified: En1999WeldRunsModified[];
 }
 
-export const parseEn1999Diff: NormWireReader<En1999Diff> = normWireObject<En1999Diff>({ annex: normWireOptional(normWireNullable(parseAnnexChoice)), materials: normWireOptional(normWireNullable(normWireRef(() => parseEn1999MaterialsRows))), sections: normWireOptional(normWireNullable(normWireRef(() => parseEn1999SectionsRows))), members: normWireOptional(normWireNullable(normWireRef(() => parseEn1999MembersRows))), connections: normWireOptional(normWireNullable(normWireRef(() => parseEn1999ConnectionsRows))), fireScenarios: normWireOptional(normWireNullable(normWireRef(() => parseEn1999FireScenariosRows))), fatigueDetails: normWireOptional(normWireNullable(normWireRef(() => parseEn1999FatigueDetailsRows))), coldFormed: normWireOptional(normWireNullable(normWireRef(() => parseEn1999ColdFormedRows))), shells: normWireOptional(normWireNullable(normWireRef(() => parseEn1999ShellsRows))), placements: normWireOptional(normWireNullable(normWireRef(() => parseEn1999PlacementsRows))), weldRuns: normWireOptional(normWireNullable(normWireRef(() => parseEn1999WeldRunsRows))), outlineVertices: normWireOptional(normWireNullable(normWireRef(() => parseEn1999OutlineVerticesRows))), fatigueCategories: normWireOptional(normWireNullable(normWireRef(() => parseEn1999FatigueCategoriesRows))), patchLoads: normWireOptional(normWireNullable(normWireRef(() => parseEn1999PatchLoadsRows))), ringStiffeners: normWireOptional(normWireNullable(normWireRef(() => parseEn1999RingStiffenersRows))), transverseStiffeners: normWireOptional(normWireNullable(normWireRef(() => parseEn1999TransverseStiffenersRows))), reliabilityClass: normWireOptional(normWireNullable(normWireLiteral("RC1", "RC2", "RC3"))) });
+export interface En1999SheetProfilesInserted {
+  index: number;
+  row: SheetProfile;
+}
+
+export interface En1999SheetProfilesModified {
+  id: string;
+  patch: En1999SheetProfilesPatch;
+}
+
+export interface En1999SheetProfilesMoved {
+  id: string;
+  from: number;
+  to: number;
+}
+
+export interface En1999SheetProfilesRemoved {
+  id: string;
+  index: number;
+}
+
+export interface En1999SheetProfilesRows {
+  removed: En1999SheetProfilesRemoved[];
+  inserted: En1999SheetProfilesInserted[];
+  moved: En1999SheetProfilesMoved[];
+  modified: En1999SheetProfilesModified[];
+}
+
+export interface En1999SheetProfilesPatch {
+  sheetId?: string | null;
+  pitch?: number | null;
+  topFlange?: number | null;
+  bottomFlange?: number | null;
+  webHeight?: number | null;
+}
+
+export interface En1999FireInsulationsInserted {
+  index: number;
+  row: FireInsulation;
+}
+
+export interface En1999FireInsulationsModified {
+  id: string;
+  patch: En1999FireInsulationsPatch;
+}
+
+export interface En1999FireInsulationsMoved {
+  id: string;
+  from: number;
+  to: number;
+}
+
+export interface En1999FireInsulationsRemoved {
+  id: string;
+  index: number;
+}
+
+export interface En1999FireInsulationsRows {
+  removed: En1999FireInsulationsRemoved[];
+  inserted: En1999FireInsulationsInserted[];
+  moved: En1999FireInsulationsMoved[];
+  modified: En1999FireInsulationsModified[];
+}
+
+export interface En1999FireInsulationsPatch {
+  fireId?: string | null;
+  thickness?: number | null;
+  conductivity?: number | null;
+  specificHeat?: number | null;
+  density?: number | null;
+}
+
+export const parseEn1999Diff: NormWireReader<En1999Diff> = normWireObject<En1999Diff>({ annex: normWireOptional(normWireNullable(parseAnnexChoice)), materials: normWireOptional(normWireNullable(normWireRef(() => parseEn1999MaterialsRows))), sections: normWireOptional(normWireNullable(normWireRef(() => parseEn1999SectionsRows))), members: normWireOptional(normWireNullable(normWireRef(() => parseEn1999MembersRows))), connections: normWireOptional(normWireNullable(normWireRef(() => parseEn1999ConnectionsRows))), fireScenarios: normWireOptional(normWireNullable(normWireRef(() => parseEn1999FireScenariosRows))), fatigueDetails: normWireOptional(normWireNullable(normWireRef(() => parseEn1999FatigueDetailsRows))), coldFormed: normWireOptional(normWireNullable(normWireRef(() => parseEn1999ColdFormedRows))), shells: normWireOptional(normWireNullable(normWireRef(() => parseEn1999ShellsRows))), placements: normWireOptional(normWireNullable(normWireRef(() => parseEn1999PlacementsRows))), weldRuns: normWireOptional(normWireNullable(normWireRef(() => parseEn1999WeldRunsRows))), outlineVertices: normWireOptional(normWireNullable(normWireRef(() => parseEn1999OutlineVerticesRows))), fatigueCategories: normWireOptional(normWireNullable(normWireRef(() => parseEn1999FatigueCategoriesRows))), patchLoads: normWireOptional(normWireNullable(normWireRef(() => parseEn1999PatchLoadsRows))), ringStiffeners: normWireOptional(normWireNullable(normWireRef(() => parseEn1999RingStiffenersRows))), sheetProfiles: normWireOptional(normWireNullable(normWireRef(() => parseEn1999SheetProfilesRows))), fireInsulations: normWireOptional(normWireNullable(normWireRef(() => parseEn1999FireInsulationsRows))), transverseStiffeners: normWireOptional(normWireNullable(normWireRef(() => parseEn1999TransverseStiffenersRows))), reliabilityClass: normWireOptional(normWireNullable(normWireLiteral("RC1", "RC2", "RC3"))) });
 export const parseEn1999ColdFormedActionsInserted: NormWireReader<En1999ColdFormedActionsInserted> = normWireObject<En1999ColdFormedActionsInserted>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), row: normWireRequired(parseMemberAction) });
 export const parseEn1999ColdFormedActionsModified: NormWireReader<En1999ColdFormedActionsModified> = normWireObject<En1999ColdFormedActionsModified>({ id: normWireRequired(normWireString), patch: normWireRequired(normWireRef(() => parseEn1999ColdFormedActionsPatch)) });
 export const parseEn1999ColdFormedActionsMoved: NormWireReader<En1999ColdFormedActionsMoved> = normWireObject<En1999ColdFormedActionsMoved>({ id: normWireRequired(normWireString), from: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), to: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
@@ -950,3 +1026,15 @@ export const parseEn1999WeldRunsMoved: NormWireReader<En1999WeldRunsMoved> = nor
 export const parseEn1999WeldRunsPatch: NormWireReader<En1999WeldRunsPatch> = normWireObject<En1999WeldRunsPatch>({ memberId: normWireOptional(normWireNullable(normWireString)), elementId: normWireOptional(normWireNullable(normWireString)), start: normWireOptional(normWireNullable(normWireNumber)), length: normWireOptional(normWireNullable(normWireNumber)), offset: normWireOptional(normWireNullable(normWireNumber)), throat: normWireOptional(normWireNullable(normWireNumber)), process: normWireOptional(normWireNullable(parseWeldProcess)), tJunction: normWireOptional(normWireNullable(normWireBoolean)), direction: normWireOptional(normWireNullable(parseWeldDirection)), hazExtent: normWireOptional(normWireNullable(normWireNumber)) });
 export const parseEn1999WeldRunsRemoved: NormWireReader<En1999WeldRunsRemoved> = normWireObject<En1999WeldRunsRemoved>({ id: normWireRequired(normWireString), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
 export const parseEn1999WeldRunsRows: NormWireReader<En1999WeldRunsRows> = normWireObject<En1999WeldRunsRows>({ removed: normWireRequired(normWireArray(normWireRef(() => parseEn1999WeldRunsRemoved))), inserted: normWireRequired(normWireArray(normWireRef(() => parseEn1999WeldRunsInserted))), moved: normWireRequired(normWireArray(normWireRef(() => parseEn1999WeldRunsMoved))), modified: normWireRequired(normWireArray(normWireRef(() => parseEn1999WeldRunsModified))) });
+export const parseEn1999SheetProfilesInserted: NormWireReader<En1999SheetProfilesInserted> = normWireObject<En1999SheetProfilesInserted>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), row: normWireRequired(parseSheetProfile) });
+export const parseEn1999SheetProfilesModified: NormWireReader<En1999SheetProfilesModified> = normWireObject<En1999SheetProfilesModified>({ id: normWireRequired(normWireString), patch: normWireRequired(normWireRef(() => parseEn1999SheetProfilesPatch)) });
+export const parseEn1999SheetProfilesMoved: NormWireReader<En1999SheetProfilesMoved> = normWireObject<En1999SheetProfilesMoved>({ id: normWireRequired(normWireString), from: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), to: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export const parseEn1999SheetProfilesRemoved: NormWireReader<En1999SheetProfilesRemoved> = normWireObject<En1999SheetProfilesRemoved>({ id: normWireRequired(normWireString), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export const parseEn1999SheetProfilesRows: NormWireReader<En1999SheetProfilesRows> = normWireObject<En1999SheetProfilesRows>({ removed: normWireRequired(normWireArray(normWireRef(() => parseEn1999SheetProfilesRemoved))), inserted: normWireRequired(normWireArray(normWireRef(() => parseEn1999SheetProfilesInserted))), moved: normWireRequired(normWireArray(normWireRef(() => parseEn1999SheetProfilesMoved))), modified: normWireRequired(normWireArray(normWireRef(() => parseEn1999SheetProfilesModified))) });
+export const parseEn1999SheetProfilesPatch: NormWireReader<En1999SheetProfilesPatch> = normWireObject<En1999SheetProfilesPatch>({ sheetId: normWireOptional(normWireNullable(normWireString)), pitch: normWireOptional(normWireNullable(normWireRange(normWireNumber, {"maximum":10000,"exclusiveMinimum":0}))), topFlange: normWireOptional(normWireNullable(normWireRange(normWireNumber, {"maximum":10000,"exclusiveMinimum":0}))), bottomFlange: normWireOptional(normWireNullable(normWireRange(normWireNumber, {"maximum":10000,"exclusiveMinimum":0}))), webHeight: normWireOptional(normWireNullable(normWireRange(normWireNumber, {"maximum":10000,"exclusiveMinimum":0}))) });
+export const parseEn1999FireInsulationsInserted: NormWireReader<En1999FireInsulationsInserted> = normWireObject<En1999FireInsulationsInserted>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), row: normWireRequired(parseFireInsulation) });
+export const parseEn1999FireInsulationsModified: NormWireReader<En1999FireInsulationsModified> = normWireObject<En1999FireInsulationsModified>({ id: normWireRequired(normWireString), patch: normWireRequired(normWireRef(() => parseEn1999FireInsulationsPatch)) });
+export const parseEn1999FireInsulationsMoved: NormWireReader<En1999FireInsulationsMoved> = normWireObject<En1999FireInsulationsMoved>({ id: normWireRequired(normWireString), from: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), to: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export const parseEn1999FireInsulationsRemoved: NormWireReader<En1999FireInsulationsRemoved> = normWireObject<En1999FireInsulationsRemoved>({ id: normWireRequired(normWireString), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export const parseEn1999FireInsulationsRows: NormWireReader<En1999FireInsulationsRows> = normWireObject<En1999FireInsulationsRows>({ removed: normWireRequired(normWireArray(normWireRef(() => parseEn1999FireInsulationsRemoved))), inserted: normWireRequired(normWireArray(normWireRef(() => parseEn1999FireInsulationsInserted))), moved: normWireRequired(normWireArray(normWireRef(() => parseEn1999FireInsulationsMoved))), modified: normWireRequired(normWireArray(normWireRef(() => parseEn1999FireInsulationsModified))) });
+export const parseEn1999FireInsulationsPatch: NormWireReader<En1999FireInsulationsPatch> = normWireObject<En1999FireInsulationsPatch>({ fireId: normWireOptional(normWireNullable(normWireString)), thickness: normWireOptional(normWireNullable(normWireRange(normWireNumber, {"maximum":10000,"exclusiveMinimum":0}))), conductivity: normWireOptional(normWireNullable(normWireRange(normWireNumber, {"maximum":1000,"exclusiveMinimum":0}))), specificHeat: normWireOptional(normWireNullable(normWireRange(normWireNumber, {"maximum":100000,"exclusiveMinimum":0}))), density: normWireOptional(normWireNullable(normWireRange(normWireNumber, {"maximum":23000,"exclusiveMinimum":0}))) });

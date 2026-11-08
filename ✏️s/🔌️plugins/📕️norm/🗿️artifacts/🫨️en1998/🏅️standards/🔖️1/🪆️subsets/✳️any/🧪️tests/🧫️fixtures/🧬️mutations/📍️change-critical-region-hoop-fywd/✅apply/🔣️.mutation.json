@@ -1,0 +1,5 @@
+{
+  "mutation": "changeCriticalRegionHoopDesignYieldMpa",
+  "id": "cr-1",
+  "newHoopDesignYieldMpa": 435.8
+}

@@ -33,5 +33,7 @@
   "patchLoads": null,
   "ringStiffeners": null,
   "transverseStiffeners": null,
+  "sheetProfiles": null,
+  "fireInsulations": null,
   "reliabilityClass": "RC2"
 }

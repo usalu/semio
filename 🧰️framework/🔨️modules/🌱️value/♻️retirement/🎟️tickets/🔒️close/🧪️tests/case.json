@@ -1,0 +1,18 @@
+{
+  "fuel": 8,
+  "receive": 1,
+  "recover": 0,
+  "refusal": "original ticket child refusal",
+  "reportedRecoveryWork": 0,
+  "maximumTurns": 8,
+  "header": {
+    "work": 2,
+    "drops": 2,
+    "unknownRetained": true,
+    "foreignTypeRefused": true,
+    "foreignAddressRefused": true
+  },
+  "selectedBody": 4096,
+  "foreignBody": 1024,
+  "changedBodyDenied": true
+}

@@ -75,6 +75,15 @@ pub struct En1998Snapshot {
     #[dsl(table)]
     #[state(artifact)]
     pub slopes: Vec<En1998Slope>,
+    #[dsl(table)]
+    #[state(artifact)]
+    pub isolation_systems: Vec<En1998IsolationSystem>,
+    #[dsl(table)]
+    #[state(artifact)]
+    pub pier_bases: Vec<En1998PierBase>,
+    #[dsl(table)]
+    #[state(artifact)]
+    pub critical_regions: Vec<En1998CriticalRegion>,
 }
 //#endregion 🔖️Snapshot
 
@@ -224,6 +233,9 @@ impl En1998Snapshot {
             tie_beams: vec![],
             slopes: vec![],
             placements: vec![],
+            isolation_systems: vec![],
+            pier_bases: vec![],
+            critical_regions: vec![],
         }
     }
 
@@ -1643,4 +1655,67 @@ impl AnalysisDirection {
             Self::Y => "y",
         }
     }
+}
+
+/// 🛞 Seismic isolation system of a bridge or building: bilinear hysteresis (strength Q_d, post-yield stiffness K_d, yield displacement d_y) and the displacement capacity of the devices (EN 1998-2 7.6, EN 1998-1 10).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct En1998IsolationSystem {
+    pub id: String,
+    pub bridge_id: String,
+    pub building_id: String,
+    pub strength_n: f64,
+    pub stiffness_n_per_m: f64,
+    pub yield_displacement_m: f64,
+    pub capacity_m: f64,
+}
+
+/// 🪨 Circular footing under a bridge pier for the soil-structure interaction of the pier base (EN 1998-2 5.8, EN 1998-5 Annex C): radius and the soil shear-wave velocity, unit weight and Poisson ratio.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct En1998PierBase {
+    pub id: String,
+    pub bridge_id: String,
+    pub pier_id: String,
+    pub radius_m: f64,
+    pub soil_vs_m_s: f64,
+    pub soil_unit_weight_n_m3: f64,
+    pub poisson_ratio: f64,
+}
+
+/// 🔩 Local ductility detailing of one critical region of an RC beam or column (EN 1998-1 5.4.3, 5.5.3): section, confined core, hoops and restrained bars.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct En1998CriticalRegion {
+    pub id: String,
+    pub building_id: String,
+    pub member_id: String,
+    pub section_width_m: f64,
+    pub section_depth_m: f64,
+    pub clear_length_m: f64,
+    pub hooped_length_m: f64,
+    pub core_width_m: f64,
+    pub core_depth_m: f64,
+    pub axial_force_n: f64,
+    pub concrete_design_strength_mpa: f64,
+    pub steel_design_yield_mpa: f64,
+    pub hoop_design_yield_mpa: f64,
+    pub longitudinal_steel_area_m2: f64,
+    pub longitudinal_bar_diameter_m: f64,
+    pub longitudinal_bar_max_diameter_m: f64,
+    pub hoop_diameter_m: f64,
+    pub hoop_spacing_m: f64,
+    pub hoop_legs_x: f64,
+    pub hoop_legs_y: f64,
+    pub restrained_bar_count: f64,
+    pub restrained_bar_spacing_m: f64,
 }

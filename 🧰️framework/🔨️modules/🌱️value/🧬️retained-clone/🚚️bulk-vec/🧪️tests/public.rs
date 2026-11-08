@@ -1,183 +1,39 @@
-//! 🚚️ Bitwise vector clones move whole pages per turn: equal to the `Clone` oracle, O(bytes/page) turns, exact capacity accounting and leak-free cancellation at every turn.
+//! 🚚️ Public bulk clone laws use the original Source and paid resident producer.
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value_retained_clone::*;
-use semio_framework_value_retained_clone::retirement::RetireOwned;
-use semio_framework_value_clone_source_testing::{FixtureSource,FixtureSourceBirth};
-use std::mem::size_of;
+use semio_framework_value_clone_source_testing::{FixtureSource,FixtureSourceBirth,FixtureCloseStep};
 use semio_framework_value_testing_allocator::observe_retirement_allocations as observe;
-use std::{fmt::Debug, ops::Deref};
-#[path="../../🧬️contract/🧪️tests/⏱️effect/🦀️.rs"]
-mod effect;
-
-const CLOSE_COPY_BYTES: usize = RETAINED_CLONE_BULK_PAGE_BYTES;
-fn assert_actual_step<E:Debug>(outcome:RetainedWorkOutcome<RetainedCloneStep,E>)->RetainedCloneStep{let work=outcome.work;let step=outcome.result.unwrap_or_else(|error|panic!("retained work {work} failed: {error:?}"));assert!(step.progress()==RetainedCloneProgress::default()||work>0,"retained effects have no actual work");step}
-
-
-struct Held<T: RetainedClone>(FixtureSource<Vec<T>>);
-
-impl<T: RetainedClone> Held<T> {
-    fn new(owner: Vec<T>) -> Self {
-        Self(RetainedCloneSource::from_owner(owner))
-    }
-}
-
-impl<T: RetainedClone> Deref for Held<T> {
-    type Target = RetainedCloneSource<Vec<T>>;
-    fn deref(&self) -> &Self::Target { &self.0 }
-}
-
-impl<T: RetainedClone> Drop for Held<T> {
-    fn drop(&mut self) {
-        if std::thread::panicking() { return; }
-        for _ in 0..1_000_000 {
-            if self.0.terminal_is_empty() { return; }
-            let copy = self.0.next_close_copy_byte_demand().unwrap().max(CLOSE_COPY_BYTES);
-            let d = self.0.next_close_demand(copy).unwrap();
-            let grant = RetainedCloneGrant { maximum_items: copy, maximum_copy_bytes: copy.max(d.copy_bytes), maximum_capacity_bytes: d.capacity_bytes, maximum_release_bytes: d.release_bytes, maximum_depth: d.depth.max(1) };
-            assert!(assert_actual_step(effect::settle(grant,|e|self.0.close_step(e))).progress().fits(grant));
-        }
-        panic!("vector source did not close");
-    }
-}
-
-fn law() -> serde_json::Value { serde_json::from_str(fixture_text!("../../../🚚️bulk-vec/🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
-
-fn number(value: &serde_json::Value, name: &str) -> usize { value[name].as_u64().unwrap() as usize }
-fn ownership_copy()->usize{let law:serde_json::Value=serde_json::from_str(fixture_text!("../../📜️clone-and-cursor-traits/🧪️tests/take.json")).unwrap();number(&law,"ownershipCopyBytes")}
-
-fn samples(count: usize) -> Vec<u16> {
-    let law = law();
-    let (multiplier, offset, modulo) = (number(&law["sample"], "multiplier"), number(&law["sample"], "offset"), number(&law["sample"], "modulo"));
-    (0..count).map(|index| ((index * multiplier + offset) % modulo) as u16).collect()
-}
-
-fn close_all<T: RetainedClone>(cursor: &mut VecCursor<T>) {
-    effect::begin_close(cursor);
-    for _ in 0..1_000_000 {
-        if cursor.terminal_is_empty() { return; }
-        let copy = cursor.next_close_copy_byte_demand().unwrap().max(CLOSE_COPY_BYTES);
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: cursor.next_close_capacity_byte_demand(copy).unwrap(), maximum_release_bytes: cursor.next_close_release_byte_demand().unwrap(), maximum_depth: cursor.next_close_depth_demand().unwrap().max(1) };
-        let quote=cursor.close_work_demand(copy).unwrap();let turn=effect::close_step(cursor,grant);assert!(turn.work<=u128::from(quote));assert!(assert_actual_step(turn).progress().fits(grant));
-    }
-    panic!("vector clone close did not terminate");
-}
-
-struct Turn { work:u128, progress: RetainedCloneProgress, heap: (usize, usize), grant: RetainedCloneGrant }
-
-fn turn_grant<T:RetainedClone>(cursor:&VecCursor<T>,source:&Held<T>,_planned:usize,copy:usize)->RetainedCloneGrant{let d=cursor.advance_demands(source.borrow(),copy,effect::CPU).unwrap();RetainedCloneGrant{maximum_items:32,maximum_copy_bytes:copy.max(d.copy_bytes),maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
-fn advance_one<T: RetainedClone>(cursor: &mut VecCursor<T>, source: &Held<T>, planned: usize, copy: usize) -> (RetainedCloneStep, Turn) {
-    let grant = turn_grant(cursor, source, planned, copy);
-    let quoted=cursor.advance_work_demand(source.borrow(),copy,effect::CPU).unwrap();
-    let (result, heap) = observe(|| effect::advance(cursor,source.borrow(), copy,effect::CPU, grant));
-    assert!(result.work<=u128::from(quoted),"actual work {} exceeds its quote {quoted}",result.work);
-    let work=result.work;let step=assert_actual_step(result);
-    assert!(step.progress().fits(grant));
-    (step, Turn { work,progress: step.progress(), heap, grant })
-}
-
-fn drive<T: RetainedClone>(source: &Held<T>, copy: usize) -> (Vec<T>, Vec<Turn>, VecCursor<T>) {
-    let planned = source.borrow().get().len() * size_of::<T>();
-    let mut cursor = VecCursor::<T>::default();
-    let mut turns = Vec::new();
-    for _ in 0..1_000_000 {
-        let (step, turn) = advance_one(&mut cursor, source, planned, copy);
-        turns.push(turn);
-        if matches!(step, RetainedCloneStep::Complete(_)) { let d=cursor.take_demand().unwrap();let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};let quoted=cursor.take_work_demand().unwrap();let taken=effect::take(&mut cursor,g);assert_eq!(taken.work,u128::from(quoted));assert_eq!(taken.work,1);let(value,p)=taken.result.unwrap().unwrap();assert!(p.fits(g));assert_eq!(p.copied_bytes,d.copy_bytes);return (value,turns,cursor); }
-    }
-    panic!("vector clone did not terminate");
-}
-
-
-
-
-
-
-
-
+use std::{mem::size_of,ops::Deref};
+#[path="../../🧬️contract/🔤️string-cursor/🧪️tests/producer.rs"] mod producer;
+use producer::{Harness,Op};
+const CLOSE_COPY_BYTES:usize=RETAINED_CLONE_BULK_PAGE_BYTES;
+struct Held<T:RetainedClone>(FixtureSource<Vec<T>>);
+impl<T:RetainedClone> Held<T>{fn new(owner:Vec<T>)->Self{Self(funded_source(owner))}}
+impl<T:RetainedClone> Deref for Held<T>{type Target=RetainedCloneSource<Vec<T>>;fn deref(&self)->&Self::Target{&self.0}}
+impl<T:RetainedClone> Drop for Held<T>{fn drop(&mut self){if std::thread::panicking(){return}for _ in 0..1_000_000{if self.0.terminal_is_empty(){return}let grant=self.0.wallet().remaining();match self.0.close_with(CLOSE_COPY_BYTES,grant).expect("bulk source close"){FixtureCloseStep::Progress(p)=>assert!(p.fits(grant)),FixtureCloseStep::Complete|FixtureCloseStep::Pending=>{},other=>panic!("bulk source close refused: {other:?}, next {:?}, remaining {:?}, work {}",self.0.next_close_demand(4096),self.0.wallet().remaining(),self.0.wallet().remaining_work())}}panic!("bulk source did not close")}}
+fn law()->serde_json::Value{serde_json::from_str(fixture_text!("../../../🚚️bulk-vec/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
+fn number(value:&serde_json::Value,name:&str)->usize{value[name].as_u64().unwrap()as usize}
+fn funded_source<T:RetainedClone>(owner:T)->FixtureSource<T>{let law=law();let stock=&law["sourceStock"];let grant=RetainedCloneGrant{maximum_items:number(stock,"maximumItems"),maximum_copy_bytes:number(stock,"maximumCopyBytes"),maximum_capacity_bytes:number(stock,"maximumCapacityBytes"),maximum_release_bytes:number(stock,"maximumReleaseBytes"),maximum_depth:number(stock,"maximumDepth")};let mut bank=semio_framework_value_testing_effect_bank::EffectBank::new(semio_framework_value_testing_effect_bank::Wallet::new(grant,stock["work"].as_u64().unwrap()));let source={let turn=semio_framework_value_clone_source_testing::admit_owned(&mut bank,owner,(),grant);match turn.result{Ok((source,_))=>source,Err(_)=>panic!("original bulk Source admission refused")}};match FixtureSource::from_admitted(source,bank){Ok(source)=>source,Err(_)=>panic!("original bulk Source bank remained active")}}
+fn samples(count:usize)->Vec<u16>{let law=law();let(m,o,n)=(number(&law["sample"],"multiplier"),number(&law["sample"],"offset"),number(&law["sample"],"modulo"));(0..count).map(|i|((i*m+o)%n)as u16).collect()}
+fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:32,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
+fn action_with_limit<T:RetainedClone>(cursor:&mut Harness<T>,source:&mut FixtureSource<T>,op:Op,body:usize,issued:RetainedCloneGrant,maximum:u64)->(RetainedCloneStep,(usize,usize),u64){let(_,quoted)=cursor.quote(source,op,body,maximum);let before=source.wallet().remaining_work();let(step,heap)=cursor.drive(source,op,body,maximum,issued,quoted);let work=before.checked_sub(source.wallet().remaining_work()).expect("original bulk work stock regressed");assert!(work<=quoted);assert!(step.progress().fits(issued));if matches!(op,Op::Advance|Op::Close)&&step.progress()!=Default::default(){assert!(work>0,"retained effects have no actual work")} (step,heap,work)}
+fn action<T:RetainedClone>(cursor:&mut Harness<T>,source:&mut FixtureSource<T>,op:Op,body:usize,issued:RetainedCloneGrant)->(RetainedCloneStep,(usize,usize),u64){action_with_limit(cursor,source,op,body,issued,4096)}
+fn close_all<T:RetainedClone>(cursor:&mut Harness<T>,source:&mut FixtureSource<T>)->(usize,usize){let mut observed=(0usize,0usize);let mut record=|step:RetainedCloneStep,heap:(usize,usize)|{assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));observed.0=observed.0.checked_add(heap.0).unwrap();observed.1=observed.1.checked_add(heap.1).unwrap();};if cursor.has_output(){let(d,_)=cursor.quote(source,Op::OutputStart,0,4096);let(step,heap,_)=action(cursor,source,Op::OutputStart,0,grant(d));record(step,heap);for _ in 0..1_000_000{if cursor.output_close_empty(){break}let(d,_)=cursor.quote(source,Op::OutputClose,CLOSE_COPY_BYTES,4096);let(step,heap,_)=action(cursor,source,Op::OutputClose,CLOSE_COPY_BYTES,grant(d));record(step,heap)}assert!(cursor.output_close_empty(),"bulk output close exceeded one million funded turns")}let(d,_)=cursor.quote(source,Op::Start,0,4096);let(step,heap,_)=action(cursor,source,Op::Start,0,grant(d));record(step,heap);for _ in 0..1_000_000{if cursor.terminal(){cursor.release(source);return observed}let(d,_)=cursor.quote(source,Op::Close,CLOSE_COPY_BYTES,4096);let(step,heap,_)=action(cursor,source,Op::Close,CLOSE_COPY_BYTES,grant(d));record(step,heap)}panic!("bulk clone close did not terminate")}
+struct Turn{work:u64,progress:RetainedCloneProgress,heap:(usize,usize),grant:RetainedCloneGrant}
+fn turn_grant<T:RetainedClone>(cursor:&Harness<Vec<T>>,source:&Held<T>,copy:usize,maximum:u64)->RetainedCloneGrant{let(d,_)=cursor.quote(&source.0,Op::Advance,copy,maximum);RetainedCloneGrant{maximum_items:32,maximum_copy_bytes:copy.max(d.copy_bytes),maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
+fn advance_with_limit<T:RetainedClone>(cursor:&mut Harness<Vec<T>>,source:&mut Held<T>,copy:usize,maximum:u64)->(RetainedCloneStep,Turn){let issued=turn_grant(cursor,source,copy,maximum);let(step,heap,work)=action_with_limit(cursor,&mut source.0,Op::Advance,copy,issued,maximum);(step,Turn{work,progress:step.progress(),heap,grant:issued})}
+fn advance_one<T:RetainedClone>(cursor:&mut Harness<Vec<T>>,source:&mut Held<T>,copy:usize)->(RetainedCloneStep,Turn){advance_with_limit(cursor,source,copy,law()["originalWorkCeilings"]["throughput"].as_u64().unwrap())}
+fn take<T:RetainedClone>(cursor:&mut Harness<T>,source:&mut FixtureSource<T>)->(usize,usize){let(d,quote)=cursor.quote(source,Op::Take,0,4096);let issued=grant(d);let(step,heap,work)=action(cursor,source,Op::Take,0,issued);assert_eq!(work,quote);assert_eq!(work,1);assert!(step.progress().fits(issued));assert!(law()["publication"]["matchesDemand"].as_bool().unwrap());assert_eq!(step.progress().copied_bytes,d.copy_bytes);assert_eq!(work,law()["publication"]["work"].as_u64().unwrap());assert!(cursor.has_output());heap}
+fn drive<T:RetainedClone>(source:&mut Held<T>,copy:usize)->(Vec<Turn>,Harness<Vec<T>>){let mut cursor=Harness::new(&source.0);let mut turns=Vec::new();for _ in 0..1_000_000{let(step,turn)=advance_one(&mut cursor,source,copy);turns.push(turn);if matches!(step,RetainedCloneStep::Complete(_)){take(&mut cursor,&mut source.0);return(turns,cursor)}}panic!("vector clone did not terminate")}
+#[test]
+fn bulk_vector_work_quote_refuses_a_different_original_without_effects(){let mut original=Held::new(samples(8));let foreign=Held::new(samples(8));let mut cursor=Harness::<Vec<u16>>::new(&original.0);advance_one(&mut cursor,&mut original,4096);let before=cursor.inspect_cursor(|c|c.advance_demands(original.borrow(),4096,4096).unwrap());let(quote,heap)=observe(||cursor.inspect_cursor(|c|c.advance_work_demand(foreign.borrow(),4096,4096)));assert_eq!(quote.unwrap_err().kind,ValueRefusalKind::InvariantViolated);assert_eq!(heap,(0,0));assert_eq!(cursor.inspect_cursor(|c|c.advance_demands(original.borrow(),4096,4096).unwrap()),before);close_all(&mut cursor,&mut original.0);}
+#[test]
+fn nested_string_vector_quotes_each_child_and_closes_every_prefix(){let expected=vec![String::from("alpha"),String::from("βeta"),String::new()];for cutoff in 0..64{let mut source=Held::new(expected.clone());let mut cursor=Harness::<Vec<String>>::new(&source.0);let mut complete=false;for _ in 0..cutoff{let(step,_)=advance_one(&mut cursor,&mut source,4096);if matches!(step,RetainedCloneStep::Complete(_)){complete=true;break}}if complete{take(&mut cursor,&mut source.0);cursor.inspect_output(|output|assert_eq!(output.unwrap(),&expected));}close_all(&mut cursor,&mut source.0);}}
+#[test]
+fn bulk_vector_clone_turn_count_is_bytes_over_page(){let law=law();let(page,width,overhead)=(number(&law,"pageBytes"),number(&law,"elementBytes"),number(&law,"overheadTurns"));assert_eq!(page,RETAINED_CLONE_BULK_PAGE_BYTES);assert_eq!(width,size_of::<u16>());for count in law["sampleCounts"].as_array().unwrap(){let count=count.as_u64().unwrap()as usize;for copy in law["copyGrants"].as_array().unwrap(){let copy=copy.as_u64().unwrap()as usize;let elements=copy.min(page)/width;let chunks=count.div_ceil(elements);if chunks>40_000{continue}let mut source=Held::new(samples(count));let(turns,mut cursor)=drive(&mut source,copy);cursor.inspect_output(|output|assert_eq!(output.unwrap(),&samples(count)));assert_eq!(turns.len(),(if count==0{number(&law,"emptyOverheadTurns")}else{overhead})+chunks,"count {count} copy {copy}");for turn in turns.iter().skip(2).take(chunks){assert!(turn.work>0);assert!(turn.progress.copied_bytes.checked_sub(number(&law,"ownerHeaderBytes")).unwrap()<=copy.min(page));assert_eq!(turn.progress.copied_items,1);}close_all(&mut cursor,&mut source.0);}}let four_mebibytes=samples(2*1024*1024);assert_eq!(four_mebibytes.len()*width,4*1024*1024);let mut source=Held::new(four_mebibytes);let(turns,mut cursor)=drive(&mut source,1<<20);assert_eq!(turns.len(),number(&law,"maximumTurnsForFourMebibytes"));cursor.inspect_output(|output|assert!(turns.len()*1000<output.unwrap().len(),"4 MiB vec clone took {} turns for {} elements",turns.len(),output.unwrap().len()));close_all(&mut cursor,&mut source.0);}
+#[test]
+fn bulk_vector_clone_cancels_at_every_turn_and_releases_everything(){let count=40_000usize;let mut source=Held::new(samples(count));let planned=count*size_of::<u16>();let copy=1<<12;let total={let(turns,mut cursor)=drive(&mut source,copy);close_all(&mut cursor,&mut source.0);turns.len()};assert!(total>8);for stop in 0..=total{let(mut allocated,mut freed)=(0usize,0usize);let mut cursor=Harness::<Vec<u16>>::new(&source.0);for _ in 0..stop{let(step,turn)=advance_one(&mut cursor,&mut source,copy);allocated+=turn.heap.0;freed+=turn.heap.1;assert!(step.progress().fits(turn.grant));if matches!(step,RetainedCloneStep::Complete(_)){let heap=take(&mut cursor,&mut source.0);allocated+=heap.0;freed+=heap.1;break}}let heap=close_all(&mut cursor,&mut source.0);allocated+=heap.0;freed+=heap.1;assert_eq!(allocated,freed,"cancel after {stop} of {total} turns must release every allocation");assert_eq!(source.borrow().get(),&samples(count),"the original source stays intact");if stop>=2{assert!(allocated>=planned,"the reservation was made before cancel at turn {stop}")}}}
 
 #[test]
-fn bulk_vector_work_quote_refuses_a_different_original_without_effects() {
-    let original=Held::new(samples(8));let foreign=Held::new(samples(8));let mut cursor=VecCursor::<u16>::default();
-    advance_one(&mut cursor,&original,16,4096);
-    let before=cursor.advance_demands(original.borrow(),4096,effect::CPU).unwrap();
-    let (quote,heap)=observe(||cursor.advance_work_demand(foreign.borrow(),4096,effect::CPU));
-    assert_eq!(quote.unwrap_err().kind,ValueRefusalKind::InvariantViolated);assert_eq!(heap,(0,0));
-    assert_eq!(cursor.advance_demands(original.borrow(),4096,effect::CPU).unwrap(),before);
-    close_all(&mut cursor);
-}
-#[test]
-fn nested_string_vector_quotes_each_child_and_closes_every_prefix(){
- fn close_output<T:RetireOwned>(value:T){let mut original=Some(value);let mut close=RetainedCloneClose::default();for _ in 0..10000{if original.is_none()&&close.is_empty(){return}let d=close.next_owner_demands::<T>(original.is_some(),&None,4096).unwrap();let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096.max(d.copy_bytes),maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth.max(1)};let quote=close.next_owner_work::<T>(original.is_some(),&None,4096).unwrap();let turn=if close.is_empty(){let result=effect::begin_granted(&mut close,&mut original,g);RetainedWorkOutcome{result:result.result.map(|step|step.unwrap_or(RetainedCloneStep::Complete(Default::default()))).map_err(Into::into),work:result.work}}else{effect::step_granted(&mut close,g)};assert!(turn.work<=u128::from(quote));turn.result.unwrap();}panic!("original cloned output did not close")}
- let expected=vec![String::from("alpha"),String::from("βeta"),String::new()];
- for cutoff in 0..64{let source=Held::new(expected.clone());let mut cursor=VecCursor::<String>::default();let mut complete=false;
-  for _ in 0..cutoff{let(step,_)=advance_one(&mut cursor,&source,expected.len()*size_of::<String>(),4096);if matches!(step,RetainedCloneStep::Complete(_)){complete=true;break}}
-  if complete{let quote=cursor.take_work_demand().unwrap();let handoff=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:cursor.take_demand().unwrap().copy_bytes,maximum_depth:8,..Default::default()};let turn=effect::take(&mut cursor,handoff);assert_eq!(turn.work,u128::from(quote));let output=turn.result.unwrap().unwrap().0;assert_eq!(output,expected);close_output(output);}
-  close_all(&mut cursor);
- }
-}
-#[test]
-fn bulk_vector_clone_turn_count_is_bytes_over_page() {
-    let law = law();
-    let (page, width, overhead) = (number(&law, "pageBytes"), number(&law, "elementBytes"), number(&law, "overheadTurns"));
-    assert_eq!(page, RETAINED_CLONE_BULK_PAGE_BYTES);
-    assert_eq!(width, size_of::<u16>());
-    for count in law["sampleCounts"].as_array().unwrap() {
-        let count = count.as_u64().unwrap() as usize;
-        for copy in law["copyGrants"].as_array().unwrap() {
-            let copy = copy.as_u64().unwrap() as usize;
-            let elements = copy.min(page) / width;
-            let chunks = count.div_ceil(elements);
-            if chunks > 40_000 { continue; }
-            let source = Held::new(samples(count));
-            let (output, turns, mut cursor) = drive(&source, copy);
-            assert_eq!(output, samples(count));
-            assert_eq!(turns.len(), overhead + chunks, "count {count} copy {copy}");
-            for turn in &turns[2..turns.len()-1] { assert!(turn.work>0);assert!(turn.progress.copied_bytes <= copy.min(page)); assert_eq!(turn.progress.copied_items, 1); }
-            drop(output);
-            close_all(&mut cursor);
-        }
-    }
-    let four_mebibytes = samples(2 * 1024 * 1024);
-    assert_eq!(four_mebibytes.len() * width, 4 * 1024 * 1024);
-    let source = Held::new(four_mebibytes);
-    let (output, turns, mut cursor) = drive(&source, 1 << 20);
-    assert_eq!(turns.len(), number(&law, "maximumTurnsForFourMebibytes"));
-    assert!(turns.len() * 1000 < output.len(), "4 MiB vec clone took {} turns for {} elements", turns.len(), output.len());
-    drop(output);
-    close_all(&mut cursor);
-}
-
-#[test]
-fn bulk_vector_clone_cancels_at_every_turn_and_releases_everything() {
-    let count = 40_000usize;
-    let source = Held::new(samples(count));
-    let planned = count * size_of::<u16>();
-    let copy = 1 << 12;
-    let total = {
-        let (output, turns, mut cursor) = drive(&source, copy);
-        drop(output);
-        close_all(&mut cursor);
-        turns.len()
-    };
-    assert!(total > 8);
-    for stop in 0..=total {
-        let (_, (allocated, freed)) = observe(|| {
-            let mut cursor = VecCursor::<u16>::default();
-            for _ in 0..stop {
-                let grant = turn_grant(&cursor, &source, planned, copy);
-                let step = assert_actual_step(effect::advance(&mut cursor,source.borrow(),copy,effect::CPU,grant));
-                assert!(step.progress().fits(grant));
-                if matches!(step, RetainedCloneStep::Complete(_)) { let d=cursor.take_demand().unwrap();let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};let taken=effect::take(&mut cursor,g);assert_eq!(taken.work,1);let(value,p)=taken.result.unwrap().unwrap();assert!(p.fits(g));assert_eq!(p.copied_bytes,d.copy_bytes);drop(value);break; }
-            }
-            close_all(&mut cursor);
-        });
-        assert_eq!(allocated, freed, "cancel after {stop} of {total} turns must release every allocation");
-        assert_eq!(source.borrow().get(), &samples(count), "the original source stays intact");
-        if stop >= 2 { assert!(allocated >= planned, "the reservation was made before cancel at turn {stop}"); }
-    }
-}
-
-
-
-
+fn bulk_vector_respects_the_original_4096_work_ceiling(){let law=law();let budget=law["originalWorkCeilings"]["bounded"].as_u64().unwrap();assert_eq!(budget,4096);let mut source=Held::new(samples(10000));let mut cursor=Harness::<Vec<u16>>::new(&source.0);advance_with_limit(&mut cursor,&mut source,65536,budget);advance_with_limit(&mut cursor,&mut source,65536,budget);let issued=turn_grant(&cursor,&source,65536,budget);let(step,turn)=advance_with_limit(&mut cursor,&mut source,65536,budget);assert!(turn.work<=budget);assert_eq!(size_of::<Vec<u16>>(),number(&law,"ownerHeaderBytes"));assert_eq!(step.progress().copied_bytes-number(&law,"ownerHeaderBytes"),number(&law["originalWorkCeilings"],"boundedElements")*size_of::<u16>());assert!(step.progress().fits(issued));close_all(&mut cursor,&mut source.0);}
 

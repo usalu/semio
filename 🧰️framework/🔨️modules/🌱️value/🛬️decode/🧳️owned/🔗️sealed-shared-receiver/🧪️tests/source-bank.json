@@ -1,0 +1,30 @@
+{
+  "input": 37,
+  "maximumTurns": 512,
+  "maximumItems": 1,
+  "maximumCopyBytes": 4096,
+  "maximumWork": 16,
+  "stock": {
+    "items": 1024,
+    "copyBytes": 4194304,
+    "capacityBytes": 65536,
+    "releaseBytes": 65536,
+    "depth": 64,
+    "fuel": 16384
+  },
+  "postInterruptReplays": 0,
+  "postInterruptRecovers": 0,
+  "completedLocalPending": false,
+  "childCloseCalls": 1,
+  "childCloseRecovers": 1,
+  "vacantFrameFields": 36,
+  "seedInterruptReplays": 0,
+  "seedCancelCuts": [
+    1,
+    4
+  ],
+  "nestedSeedActions": 5,
+  "childTakeCalls": 1,
+  "childTakeRecovers": 1,
+  "parentCloseBeforePost": false
+}

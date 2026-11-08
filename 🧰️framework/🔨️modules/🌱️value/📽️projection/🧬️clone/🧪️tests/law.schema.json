@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "value",
+    "maximumCopyBytes",
+    "maximumTurns",
+    "cancellationCuts",
+    "deniedWork",
+    "deniedCopy",
+    "stock"
+  ],
+  "properties": {
+    "value": {
+      "const": 73
+    },
+    "maximumCopyBytes": {
+      "const": 4096
+    },
+    "maximumTurns": {
+      "const": 128
+    },
+    "cancellationCuts": {
+      "const": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ]
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "deniedCopy": {
+      "const": 0
+    },
+    "stock": {
+      "const": {
+        "items": 4096,
+        "copyBytes": 1048576,
+        "capacityBytes": 1048576,
+        "releaseBytes": 2097152,
+        "depth": 256,
+        "fuel": 16384
+      }
+    }
+  }
+}

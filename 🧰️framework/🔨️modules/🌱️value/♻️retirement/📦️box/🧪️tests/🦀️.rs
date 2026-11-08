@@ -1,12 +1,13 @@
 //! 📦️ Original Box allocation custody retires initialized fields without a whole-value transfer.
-use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
-use semio_framework_value::retirement::{RetireOwned,RetirementCursor,controlled::ControlledRetirement};
+use crate::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
+use crate::retirement::{RetireOwned,RetirementCursor,controlled::ControlledRetirement};
 use semio_framework_job::*;
 use std::{mem::size_of,sync::atomic::{AtomicUsize,Ordering}};
 static EXPECTED:[AtomicUsize;12]=[const{AtomicUsize::new(0)};12];
 struct Probe<const I:usize>([u8;2048]);
 impl<const I:usize> RetireOwned for Probe<I>{fn retirement(self)->Box<dyn RetirementCursor>{self.0.retirement()}fn retirement_birth_bytes(&self)->Option<usize>{assert_eq!(self as*const Self as usize,EXPECTED[I].load(Ordering::SeqCst),"field query left the original Box before its funded transfer");self.0.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{true}}
-#[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value_derive::RetireOwned)]
+#[value(crate="crate")]
 #[value(boxed_original,send_only)]
 struct Wide{f0:Probe<0>,f1:Probe<1>,f2:Probe<2>,f3:Probe<3>,f4:Probe<4>,f5:Probe<5>,f6:Probe<6>,f7:Probe<7>,f8:Probe<8>,f9:Probe<9>,f10:Probe<10>,f11:Probe<11>}
 const BIRTH:RetainedCloneGrant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:4096};

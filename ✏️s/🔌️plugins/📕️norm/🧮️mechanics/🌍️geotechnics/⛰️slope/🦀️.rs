@@ -101,8 +101,9 @@ pub fn slices(s: &Circle, n: usize) -> Option<Vec<Slice>> {
         let yg = ground.at(x);
         let height = (yg - yb).max(0.0);
         let wet = (yg.min(s.gwl_level) - yb).max(0.0).min(height);
-        let weight = s.gamma * (height - wet) * b + s.gamma_sat * wet * b + s.q * b;
-        let u = if s.ru > 0.0 { s.ru * s.gamma * height * b } else { 9_810.0 * wet * b };
+        let ponded = (s.gwl_level - yg).max(0.0);
+        let weight = s.gamma * (height - wet) * b + s.gamma_sat * wet * b + 9_810.0 * ponded * b + s.q * b;
+        let u = if s.ru > 0.0 { s.ru * s.gamma * height * b } else { 9_810.0 * (s.gwl_level - yb).max(0.0) * b };
         out.push(Slice { b, w: weight, alpha: ((s.xc - x) / s.r).asin(), u, x, yb, h: height, x0, x1, base: [edge(x0), edge(x1)], top: [ground.at(x0), ground.at(x1)] });
     }
     Some(out)

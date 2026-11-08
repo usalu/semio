@@ -26,10 +26,15 @@ pub fn vmin_coeff(annex: AnnexChoice, d: f64, gc: f64) -> f64 {
     }
 }
 
+/// 💢 EN ν = 0.6 (1 − f_ck/250) of Eq. 6.6N from the registry.
+pub fn nu_en(annex: AnnexChoice, fck: f64) -> f64 {
+    ndp(annex, "ndp.en1992.nu1-en-factor") * (1.0 - fck / ndp(annex, "ndp.en1992.nu1-en-divisor"))
+}
+
 /// 💢 Strut strength reduction factor ν1.
 pub fn nu1(annex: AnnexChoice, fck: f64) -> f64 {
     match annex {
-        AnnexChoice::En => 0.6 * (1.0 - fck / 250.0),
+        AnnexChoice::En => nu_en(annex, fck),
         AnnexChoice::De => ndp(annex, "ndp.en1992.nu1-factor") * (ndp(annex, "ndp.en1992.nu2-offset") - fck / ndp(annex, "ndp.en1992.nu2-fck-divisor")).min(1.0),
     }
 }
@@ -41,7 +46,7 @@ pub fn v_ed_max_unreinforced(bw: f64, d: f64, nu: f64, fcd: f64) -> f64 {
 
 /// 💢 Strut strength reduction factor ν_1 = 0.6 for f_ck ≤ 60 MPa, otherwise max(0.9 − f_ck/200, 0.5) (Eq. 6.10aN/bN), f_ck in MPa.
 pub fn nu1_strut(fck: f64) -> f64 {
-    if fck <= 60.0 { 0.6 } else { (0.9 - fck / 200.0).max(0.5) }
+    if fck <= 60.0 { ndp(AnnexChoice::En, "ndp.en1992.nu1-strut-factor") } else { (0.9 - fck / 200.0).max(0.5) }
 }
 
 /// 🧱 Upper limit of the shear link area A_sw,max = 0.5 α_cw ν_1 f_cd b_w s/f_ywd (Eq. 9.6N) with ν_1 of Eq. 6.6N; any consistent unit system.
@@ -143,7 +148,7 @@ pub fn v02(c: &Case) -> R {
     let scp = c.opt("sigma_cp").unwrap_or_else(|| c.o("n_ed", 0.0) / acp);
     let (vrdc, v, vmin, k, rho) = v_rd_c(c.annex, fck, bw, d, asl, scp);
     let fcd = f_cd(c.annex, fck, false);
-    let cap = v_ed_max_unreinforced(bw, d, nu1(c.annex, fck).max(0.6 * (1.0 - fck / 250.0)), fcd);
+    let cap = v_ed_max_unreinforced(bw, d, nu1(c.annex, fck).max(nu_en(c.annex, fck)), fcd);
     let mut out = vec![
         Outcome::n("v_rd_c", "V_Rd,c", "V_Rd,c", vrdc.min(cap), format!("v_Rd,c = {} MPa, v_min = {}, k = {}, ρ_l = {}", f(v), f(vmin), f(k), f(rho))),
         Outcome::n("v_rd_c_uncapped", "V_Rd,c before the upper limit", "V_Rd,c vor der oberen Grenze", vrdc, "Eq. 6.2".into()),
@@ -210,7 +215,7 @@ pub fn v05(c: &Case) -> R {
     if c.o("fatigue", 0.0) > 0.0 { cc = 0.0; }
     let sn = c.o("sigma_n", 0.0);
     let fcd = f_cd(c.annex, fck, false);
-    let nu = 0.6 * (1.0 - fck / 250.0);
+    let nu = nu_en(c.annex, fck);
     let fctd = f_ctd(c.annex, fck);
     let alpha = c.o("alpha_deg", 90.0).to_radians();
     let rho = c.o("rho", 0.0);
@@ -228,7 +233,7 @@ pub fn v06(c: &Case) -> R {
     let fyd = f_yd(c.annex, c.o("fyk", 500.0), false);
     let ved = dfd / (hf * dx);
     let fcd = f_cd(c.annex, fck, false);
-    let nu = 0.6 * (1.0 - fck / 250.0);
+    let nu = nu_en(c.annex, fck);
     let th = (1.0 / cot).atan();
     Ok(vec![
         Outcome::mpa("v_ed", "Longitudinal shear stress v_Ed", "Längsschubspannung v_Ed", ved, "ΔF_d/(h_f Δx)".into()),
@@ -241,7 +246,7 @@ pub fn v07(c: &Case) -> R {
     let (fck, bw, d, asl, av, ved) = (c.pos("fck")?, c.pos("bw")?, c.pos("d")?, c.pos("asl")?, c.pos("av")?, c.pos("v_ed")?);
     let beta = if av <= 2.0 * d && (!c.de() || av / d >= 0.5) { (av / (2.0 * d)).max(0.25) } else { 1.0 };
     let (vrdc, ..) = v_rd_c(c.annex, fck, bw, d, asl, c.o("sigma_cp", 0.0));
-    let nu = 0.6 * (1.0 - fck / 250.0);
+    let nu = nu_en(c.annex, fck);
     let cap = 0.5 * bw * d * nu * f_cd(c.annex, fck, false);
     Ok(vec![
         Outcome::num("beta", "β", "β", beta, "a_v/(2d) ≥ 0.25".into()),

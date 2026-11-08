@@ -10,7 +10,9 @@
       "work",
       "capacity",
       "requested",
-      "admitted"
+      "admitted",
+      "nextWork",
+      "opened"
     ],
     "properties": {
       "name": {
@@ -33,6 +35,13 @@
         "minimum": 0
       },
       "admitted": {
+        "type": "boolean"
+      },
+      "nextWork": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "opened": {
         "type": "boolean"
       }
     }

@@ -1,0 +1,43 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-value-native-shared-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "framework"
+id = "value-native-shared-engine"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-value-native-shared-slots = { path = "../../../../🏭️construction/🧳️slots/📦️packages/🦀️rust" }
+semio-framework-value-native-receiver-protocol = { path = "../../../🧬️protocol/📦️packages/🦀️rust" }
+semio-framework-value-control-contract = { path = "../../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-native-decoding = { path = "../../../../📦️packages/🦀️rust" }
+semio-framework-value-retained-clone = { path = "../../../../../🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-retirement = { path = "../../../../../♻️retirement/📦️packages/🦀️rust" }
+semio-framework-value-shared-issuance = { path = "../../../../../♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust" }
+
+semio-framework-value-native-storage = { path = "../../../📦️storage/📦️packages/🦀️rust" }
+
+semio-framework-value-native-shared-field = { path = "../../../../🏭️construction/🪡️field/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+semio-framework-value-testing-admission = { path = "../../../../../🧪️testing/📥️admission/📦️packages/🦀️rust" }
+semio-framework-value-intrinsic = { path = "../../../../../🌳️intrinsic/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../📦️packages/🦀️rust", features = ["testkit"] }
+serde_json = { workspace = true }
+

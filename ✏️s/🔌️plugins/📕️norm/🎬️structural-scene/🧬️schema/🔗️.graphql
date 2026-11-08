@@ -133,6 +133,9 @@ enum QuantityKind {
   Frequency
   ForcePerLength
   Stiffness
+  VentilationRate
+  HeatTransferCoefficient
+  Power
 }
 
 type Rgb {

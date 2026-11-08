@@ -1,0 +1,1 @@
+import {runTwins,renderTwinReport} from "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🧬️twin-projection/🟦️.ts";const report=runTwins("/home/deck/semio",["check","--under","✏️s/🔌️plugins/📕️norm","--explain"]);console.log(renderTwinReport("check",report));console.log(JSON.stringify(report));

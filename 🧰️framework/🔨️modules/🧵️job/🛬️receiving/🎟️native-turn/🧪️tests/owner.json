@@ -1,0 +1,52 @@
+[
+  {
+    "frame": true,
+    "recipient": true,
+    "work": true,
+    "construction": true,
+    "sameSource": true,
+    "emptyOutput": true,
+    "paid": true,
+    "admit": true
+  },
+  {
+    "frame": false,
+    "recipient": true,
+    "work": true,
+    "construction": true,
+    "sameSource": true,
+    "emptyOutput": true,
+    "paid": true,
+    "admit": false
+  },
+  {
+    "frame": true,
+    "recipient": true,
+    "work": true,
+    "construction": true,
+    "sameSource": false,
+    "emptyOutput": true,
+    "paid": true,
+    "admit": false
+  },
+  {
+    "frame": true,
+    "recipient": true,
+    "work": true,
+    "construction": true,
+    "sameSource": true,
+    "emptyOutput": false,
+    "paid": true,
+    "admit": false
+  },
+  {
+    "frame": true,
+    "recipient": true,
+    "work": true,
+    "construction": true,
+    "sameSource": true,
+    "emptyOutput": true,
+    "paid": false,
+    "admit": false
+  }
+]

@@ -39,8 +39,8 @@ fn set_every_word(snapshot: &mut En1990Snapshot, value: f64) {
     for bridge in &mut snapshot.bridge_sls { bridge.deck_acceleration = value; bridge.deck_acceleration_limit = value; bridge.deck_twist = value; bridge.deck_twist_limit = value; bridge.bridge_deflection = value; bridge.bridge_deflection_limit = value; bridge.track_gauge = value; bridge.line_speed = value; bridge.ballast_depth = value; bridge.deck_mass = value; bridge.natural_frequency = value; bridge.end_rotation = value; bridge.basic_wind_speed = value; bridge.damping_ratio = value; }
     for effect in &mut snapshot.effects { effect.influence = value; }
     for bin in &mut snapshot.fatigue_spectra { bin.detail_category = value; bin.stress_range = value; bin.cycles = value; }
-    for analysis in &mut snapshot.reliability_analyses { analysis.resistance_mean = value; analysis.resistance_sd = value; analysis.action_mean = value; analysis.action_sd = value; }
-    for series in &mut snapshot.test_series { series.mean = value; series.std_dev = value; series.variation_known = value; series.conversion_factor = value; series.required = value; }
+    for analysis in &mut snapshot.reliability_analyses { analysis.resistance_mean = value; analysis.resistance_sd = value; analysis.action_mean = value; analysis.action_sd = value; analysis.second_action_mean = value; analysis.second_action_sd = value; }
+    for series in &mut snapshot.test_series { series.mean = value; series.std_dev = value; series.variation_known = value; series.conversion_factor = value; series.required = value; series.theory_variation = value; series.theory_mean = value; }
     for placement in &mut snapshot.placements { placement.x = value; placement.y = value; placement.z = value; placement.yaw = value; }
     for row in &mut snapshot.factor_overrides { row.value = value; }
 }

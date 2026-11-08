@@ -1,0 +1,76 @@
+{
+  "items": 4,
+  "copyBytes": 4096,
+  "capacityBytes": 4096,
+  "releaseBytes": 4096,
+  "depth": 8,
+  "work": 3,
+  "performedCopy": 17,
+  "remainingWork": 2,
+  "remainingCopy": 4079,
+  "remainingItems": 3,
+  "body": "Grüße",
+  "prefix": "Set label to ",
+  "suffix": "",
+  "expected": "Set label to Grüße",
+  "utf8Bytes": 20,
+  "samples": [
+    {
+      "body": "",
+      "expected": "Set label to ",
+      "bytes": 13
+    },
+    {
+      "body": "x",
+      "expected": "Set label to x",
+      "bytes": 14
+    },
+    {
+      "body": "Grüße",
+      "expected": "Set label to Grüße",
+      "bytes": 20
+    }
+  ],
+  "sequential": {
+    "work": 3,
+    "quotes": [
+      1,
+      2
+    ],
+    "performed": [
+      1,
+      1
+    ],
+    "remaining": 1
+  },
+  "budgets": [
+    {
+      "bits": 64,
+      "bytes": 13,
+      "bind": 3,
+      "reserve": 108,
+      "work": 1616
+    },
+    {
+      "bits": 64,
+      "bytes": 8194,
+      "bind": 3,
+      "reserve": 108,
+      "work": 999698
+    },
+    {
+      "bits": 32,
+      "bytes": 13,
+      "bind": 3,
+      "reserve": 68,
+      "work": 1096
+    },
+    {
+      "bits": 32,
+      "bytes": 8194,
+      "bind": 3,
+      "reserve": 68,
+      "work": 671938
+    }
+  ]
+}

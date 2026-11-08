@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "version",
+    "value",
+    "maximumCopyBytes",
+    "cancellationCuts",
+    "samePayload",
+    "sameIssuer",
+    "readersFenceReturn",
+    "maximumReadBirthTotal"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "value": {
+      "const": "Original α 🌱"
+    },
+    "maximumCopyBytes": {
+      "const": 4096
+    },
+    "cancellationCuts": {
+      "const": [
+        0,
+        1,
+        2,
+        3,
+        5,
+        8,
+        12,
+        20,
+        24,
+        4096
+      ]
+    },
+    "samePayload": {
+      "const": true
+    },
+    "sameIssuer": {
+      "const": true
+    },
+    "readersFenceReturn": {
+      "const": true
+    },
+    "maximumReadBirthTotal": {
+      "const": 4096
+    }
+  }
+}

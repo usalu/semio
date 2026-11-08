@@ -74,7 +74,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "🐍️ Independent-formulation compliance oracle of EN1999: the python compliance script recomputes the Rust check chain and the shared harness (`✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️harness`) replays blessed oracle cases against the third-party references claimed in the norm root registry (`norm-eurocode-structuralcodes`, `-concreteproperties`, `-sectionproperties`, `-blue-prints`, `-sympy`, `-groundhog`, scipy numerics). Labelled honestly as independent formulation, not third-party validation, wherever no library covers the clause. The document-level script `🔮️oracles/🚦️check-outcome/🐍️.py` wraps the compliance oracle and adds the weld-run HAZ rows (A-02) and the welded-member buckling row (A-21); its `--self-check` compares the I-section constants with sectionproperties, the Ayrton-Perry root with scipy and the beam deflection with PyNite (check-outcome case).",
+      "rationale": "🐍️ Independent-formulation compliance oracle of EN1999: the python compliance script recomputes the Rust check chain and the shared harness (`✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️harness`) replays blessed oracle cases against the third-party references claimed in the norm root registry (`norm-eurocode-structuralcodes`, `-concreteproperties`, `-sectionproperties`, `-blue-prints`, `-sympy`, `-groundhog`, scipy numerics). Labelled honestly as independent formulation, not third-party validation, wherever no library covers the clause. The document-level script `🔮️oracles/🚦️check-outcome/🐍️.py` wraps the compliance oracle and adds the weld-run HAZ rows and the welded-member buckling row; its `--self-check` compares the I-section constants with sectionproperties, the Ayrton-Perry root with scipy and the beam deflection with PyNite (check-outcome case).",
       "engine": {
         "family": "none",
         "implementation": "in-repository independent formulation",
@@ -2353,6 +2353,14 @@
             {
               "id": "insert-ring-stiffener-dupe",
               "directoryName": "⛔dupe"
+            },
+            {
+              "id": "insert-sheet-profile-dupe",
+              "directoryName": "⛔dupe"
+            },
+            {
+              "id": "insert-fire-insulation-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
@@ -2360,6 +2368,28 @@
           "mutationId": "remove-ring-stiffener",
           "sourceMutationDirectoryName": "➖remove-ring-stiffener",
           "mutationDirectoryName": "➖remove-ring-stiffener",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-sheet-profile",
+          "sourceMutationDirectoryName": "➖remove-sheet-profile",
+          "mutationDirectoryName": "➖remove-sheet-profile",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-fire-insulation",
+          "sourceMutationDirectoryName": "➖remove-fire-insulation",
+          "mutationDirectoryName": "➖remove-fire-insulation",
           "scenarios": [
             {
               "id": "apply",
@@ -2509,6 +2539,28 @@
           ]
         },
         {
+          "mutationId": "change-sheet-profile-sheet-id",
+          "sourceMutationDirectoryName": "🦴️change-sheet-profile-sheet-id",
+          "mutationDirectoryName": "🦴️change-sheet-profile-sheet-id",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fire-insulation-fire-id",
+          "sourceMutationDirectoryName": "🦴️change-fire-insulation-fire-id",
+          "mutationDirectoryName": "🦴️change-fire-insulation-fire-id",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
           "mutationId": "change-transverse-position",
           "sourceMutationDirectoryName": "🦴️change-transverse-position",
           "mutationDirectoryName": "🦴️change-transverse-position",
@@ -2556,6 +2608,94 @@
           "mutationId": "change-conn-hole-stagger",
           "sourceMutationDirectoryName": "🦴️change-conn-hole-stagger",
           "mutationDirectoryName": "🦴️change-conn-hole-stagger",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-sheet-profile-web-height",
+          "sourceMutationDirectoryName": "🦴️change-sheet-profile-web-height",
+          "mutationDirectoryName": "🦴️change-sheet-profile-web-height",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-sheet-profile-bottom-flange",
+          "sourceMutationDirectoryName": "🦴️change-sheet-profile-bottom-flange",
+          "mutationDirectoryName": "🦴️change-sheet-profile-bottom-flange",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-sheet-profile-top-flange",
+          "sourceMutationDirectoryName": "🦴️change-sheet-profile-top-flange",
+          "mutationDirectoryName": "🦴️change-sheet-profile-top-flange",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-sheet-profile-pitch",
+          "sourceMutationDirectoryName": "🦴️change-sheet-profile-pitch",
+          "mutationDirectoryName": "🦴️change-sheet-profile-pitch",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fire-insulation-density",
+          "sourceMutationDirectoryName": "🦴️change-fire-insulation-density",
+          "mutationDirectoryName": "🦴️change-fire-insulation-density",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fire-insulation-specific-heat",
+          "sourceMutationDirectoryName": "🦴️change-fire-insulation-specific-heat",
+          "mutationDirectoryName": "🦴️change-fire-insulation-specific-heat",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fire-insulation-conductivity",
+          "sourceMutationDirectoryName": "🦴️change-fire-insulation-conductivity",
+          "mutationDirectoryName": "🦴️change-fire-insulation-conductivity",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fire-insulation-thickness",
+          "sourceMutationDirectoryName": "🦴️change-fire-insulation-thickness",
+          "mutationDirectoryName": "🦴️change-fire-insulation-thickness",
           "scenarios": [
             {
               "id": "apply",
@@ -2787,7 +2927,11 @@
         "insert-patch-load",
         "remove-patch-load",
         "insert-ring-stiffener",
+        "insert-sheet-profile",
+        "insert-fire-insulation",
         "remove-ring-stiffener",
+        "remove-sheet-profile",
+        "remove-fire-insulation",
         "insert-member-action",
         "remove-member-action",
         "insert-connection-action",
@@ -2799,11 +2943,21 @@
         "insert-shell-action",
         "remove-shell-action",
         "change-transverse-girder-id",
+        "change-sheet-profile-sheet-id",
+        "change-fire-insulation-fire-id",
         "change-transverse-position",
         "change-transverse-width",
         "change-transverse-thickness",
         "change-conn-load-eccentricity",
         "change-conn-hole-stagger",
+        "change-sheet-profile-web-height",
+        "change-sheet-profile-bottom-flange",
+        "change-sheet-profile-top-flange",
+        "change-sheet-profile-pitch",
+        "change-fire-insulation-density",
+        "change-fire-insulation-specific-heat",
+        "change-fire-insulation-conductivity",
+        "change-fire-insulation-thickness",
         "change-transverse-sides",
         "insert-transverse-stiffener",
         "remove-transverse-stiffener"
@@ -6520,6 +6674,46 @@
           ]
         },
         {
+          "id": "insert-sheet-profile",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "insert-sheet-profile",
+            "bridgeVersion": 1,
+            "variant": "InsertSheetProfile"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-fire-insulation",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "insert-fire-insulation",
+            "bridgeVersion": 1,
+            "variant": "InsertFireInsulation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
           "id": "remove-ring-stiffener",
           "capability": "en1999-1-mutate",
           "payloadSchema": "🧬️.schema.json",
@@ -6540,6 +6734,46 @@
           ]
         },
         {
+          "id": "remove-sheet-profile",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "remove-sheet-profile",
+            "bridgeVersion": 1,
+            "variant": "RemoveSheetProfile"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-fire-insulation",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "remove-fire-insulation",
+            "bridgeVersion": 1,
+            "variant": "RemoveFireInsulation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
           "id": "change-transverse-girder-id",
           "capability": "en1999-1-mutate",
           "payloadSchema": "🧬️.schema.json",
@@ -6551,6 +6785,46 @@
             "operation": "change-transverse-girder-id",
             "bridgeVersion": 1,
             "variant": "ChangeTransverseGirderId"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-sheet-profile-sheet-id",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-sheet-profile-sheet-id",
+            "bridgeVersion": 1,
+            "variant": "ChangeSheetProfileSheetId"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-fire-insulation-fire-id",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-fire-insulation-fire-id",
+            "bridgeVersion": 1,
+            "variant": "ChangeFireInsulationFireId"
           },
           "oracleRequirements": [
             {
@@ -6651,6 +6925,166 @@
             "operation": "change-conn-hole-stagger",
             "bridgeVersion": 1,
             "variant": "ChangeConnHoleStagger"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-sheet-profile-web-height",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-sheet-profile-web-height",
+            "bridgeVersion": 1,
+            "variant": "ChangeSheetProfileWebHeight"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-sheet-profile-bottom-flange",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-sheet-profile-bottom-flange",
+            "bridgeVersion": 1,
+            "variant": "ChangeSheetProfileBottomFlange"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-sheet-profile-top-flange",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-sheet-profile-top-flange",
+            "bridgeVersion": 1,
+            "variant": "ChangeSheetProfileTopFlange"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-sheet-profile-pitch",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-sheet-profile-pitch",
+            "bridgeVersion": 1,
+            "variant": "ChangeSheetProfilePitch"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-fire-insulation-density",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-fire-insulation-density",
+            "bridgeVersion": 1,
+            "variant": "ChangeFireInsulationDensity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-fire-insulation-specific-heat",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-fire-insulation-specific-heat",
+            "bridgeVersion": 1,
+            "variant": "ChangeFireInsulationSpecificHeat"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-fire-insulation-conductivity",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-fire-insulation-conductivity",
+            "bridgeVersion": 1,
+            "variant": "ChangeFireInsulationConductivity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-fire-insulation-thickness",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-fire-insulation-thickness",
+            "bridgeVersion": 1,
+            "variant": "ChangeFireInsulationThickness"
           },
           "oracleRequirements": [
             {
@@ -10430,6 +10864,46 @@
           ]
         },
         {
+          "id": "insert-sheet-profile",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "insert-sheet-profile",
+            "bridgeVersion": 1,
+            "variant": "InsertSheetProfile"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-fire-insulation",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "insert-fire-insulation",
+            "bridgeVersion": 1,
+            "variant": "InsertFireInsulation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
           "id": "remove-ring-stiffener",
           "capability": "en1999-1-mutate",
           "payloadSchema": "🧬️.schema.json",
@@ -10441,6 +10915,46 @@
             "operation": "remove-ring-stiffener",
             "bridgeVersion": 1,
             "variant": "RemoveRingStiffener"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-sheet-profile",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "remove-sheet-profile",
+            "bridgeVersion": 1,
+            "variant": "RemoveSheetProfile"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1999-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-fire-insulation",
+          "capability": "en1999-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "remove-fire-insulation",
+            "bridgeVersion": 1,
+            "variant": "RemoveFireInsulation"
           },
           "oracleRequirements": [
             {

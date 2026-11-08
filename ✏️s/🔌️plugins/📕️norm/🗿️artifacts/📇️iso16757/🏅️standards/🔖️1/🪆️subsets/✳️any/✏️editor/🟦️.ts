@@ -6,5 +6,7 @@ export const ISO16757_EDITOR_DIALECT = { artifactKind: "s.norm.iso16757", standa
 
 export const ISO16757_EDIT_MODE_ID = "edit" as const;
 
-export * as inputsWindow from "./🎭️modes/✏️edit/🪟️windows/📥️inputs/🟦️";
-export * as resultsWindow from "./🎭️modes/✏️edit/🪟️windows/📊️results/🟦️";
+export * as viewportWindow from "./🎭️modes/✏️edit/🪟️windows/🧊️viewport/🟦️";
+export * as diagramsWindow from "./🎭️modes/✏️edit/🪟️windows/📈️diagrams/🟦️";
+export * as propertiesWindow from "./🎭️modes/✏️edit/🪟️windows/🧾️properties/🟦️";
+export * as checksWindow from "./🎭️modes/✏️edit/🪟️windows/✅️checks/🟦️";

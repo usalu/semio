@@ -22,7 +22,7 @@ fn renders_reference_tables_with_examples() {
     let node = render(Vec::new(), semio_ui_locale::Locale::En, "norm.catalogue").expect("catalogue");
     let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("project");
     assert!(json.contains("norm-catalogue.examples") || json.contains("Examples") || json.contains("Beispiele") || json.contains("catalogue"), "{json}");
-    let tables = reference_tables();
+    let tables = reference_tables(semio_ui_locale::Locale::En);
     assert!(!tables.is_empty(), "reference_tables must publish normative lookup tables");
     for table in &tables {
         assert!(!table.id.is_empty());
@@ -35,7 +35,7 @@ fn renders_reference_tables_with_examples() {
 
 #[test]
 fn reference_table_gamma_and_area_match_evaluated_axial_limit() {
-    let tables = reference_tables();
+    let tables = reference_tables(semio_ui_locale::Locale::En);
     assert!(!tables.is_empty());
     let gamma = tables.iter().find(|t| t.id == "table-en1993-gamma-m").expect("γ_M table");
     let row = gamma.rows.iter().find(|r| r.id == "gammaM1").expect("γ_M1");
@@ -59,4 +59,14 @@ fn reference_table_gamma_and_area_match_evaluated_axial_limit() {
     let report = check_full_steel_structure(&doc);
     let matched = report.checks.iter().any(|c| (c.limit.value - expected).abs() / expected.max(1.0) < 1e-6);
     assert!(matched, "no evaluated limit equals A·fy/γ_M0 from shared consts; checks={:?}", report.checks.iter().map(|c| (c.id.clone(), c.limit.value)).collect::<Vec<_>>());
+}
+
+#[test]
+fn the_verification_catalogue_table_has_one_row_per_catalogue_entry() {
+    use semio_s_artifact_norm_en1993_checks::case_catalogue::En1993Cases;
+    use semio_s_plugin_norm_compliance::design_case::CaseCatalogue;
+    for locale in [semio_ui_locale::Locale::En, semio_ui_locale::Locale::De] {
+        let table = reference_tables(locale).into_iter().find(|t| t.id == "verification-cases").expect("verification table");
+        assert_eq!(table.rows.len(), En1993Cases::entries().len());
+    }
 }

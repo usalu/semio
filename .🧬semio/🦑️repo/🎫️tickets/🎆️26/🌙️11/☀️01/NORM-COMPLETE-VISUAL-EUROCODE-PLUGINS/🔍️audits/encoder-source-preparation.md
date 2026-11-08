@@ -1,0 +1,31 @@
+# Encoder Source Preparation
+
+The actual native encoder now prepares an effect through its original Source witness, existing Work scope and allocation, construction, span and checkpoint recipients. The resident request freezes their genuine identities, ledger/stage/counters, physical selection, grant/prior progress and computational maximum before entering a callback. Recovery rejects replacement Source, Work/request or shortened physical grants. This adds no authority getter, wallet, library dependency, compatibility adapter or policy increase.
+
+The private Source owner retains recorded checkpoint replies, including the actual refusal owner. Pending, Ready, Canceled and Refused remain distinct. A fresh insufficient or zero-item physical offer returns Denied before retaining the request or issuing either quote; it uses zero Work. Cancellation returns the original unused quotes through the existing same-Source cancellation path. The retained checkpoint reply participates in NativeEncodeEffectState retirement ownership.
+
+## Native Evidence
+
+Corrected native67251 reached eight genuine missing preparation API diagnostics after three fixture trait errors were fixed; those fixture errors are excluded from feature evidence. Native97173 then exposed a real partial Work settlement refusal; diagnostic48018 located settlement of an absent partial when recovering an already recorded producer reply. The production settlement now checks the original performed receipt before asking its payer to settle a partial. Native51534 passed all seven fixture cases.
+
+The strengthened zero-grant law83506 failed on the missing Denied variant. Final native63644 is terminal0, one test across the same seven cases: ordinary bytes, checkpoint Pending, checkpoint recorded-reply unwind, physical quote recorded-reply unwind, byte producer recorded-reply unwind, checkpoint cancellation and resident checkpoint refusal. Every case first proves no Work or quote under a zero-item grant, then checks foreign Source, changed maximum and shortened physical grant rejection. The actual producer increments its original performed receipt and copies each of the five bytes of hello, with a finite five-unit original Source. Ready cases prove one producer entry, exact bytes, one physical Post, cumulative actual Work five and no remaining original authority actions. Recorded replies are recovered without replay.
+
+Native encoding production64015 is terminal0. Strict third-party Ajv plus an independent SQLite aggregation passes one portable test/26 assertions over the closed JSON law. The first portable invocation used a filter-shaped operand and was rejected before execution; it is excluded from test evidence. The corrected explicit ./ path is terminal0. Logs remain under this ticket's generated directory while the task is active.
+
+## Scope And Remaining Work
+
+This law owns intrinsic five-byte buffers; it does not allocate a payload page, publish a public payload or prove paid teardown of such an allocation. The existing paged-text reserve/read callbacks still have six captured production compiler errors and require genuine owning producer integration. Generic paid checkpoint/producer refusal publication is not established by retaining its owner. The earlier complete native outcome suite remains three of four on its older physical-refusal publication expectation; there is no full native or browser acceptance.
+
+All fifteen native norm editors, the original constructor, thirty-five-field Create/Add under the unchanged thirty-two-member UI cap, mounted render-work/page publication and actual English/German browser behavior remain unverified. Norm TypeScript acceptance remains the prior full seventy-file result: 11971 tests/108198 assertions, including one seventy-five-root strict compiler Program. Goal active; ticket open; maximum fleet continues shared-file execution.
+
+
+## Source Checkpoint Gate And Pending Byte Successor
+
+The strengthened real law44300 failed at runtime because drive_original_effect accepted an unallocated producer while the actual Source checkpoint was Pending. The defining producer entry now requires the resident prepared request, recorded successful checkpoint and exact Source/ledger/stage/ownership/counter snapshot before issuing a performed receipt or entering the producer. Native43164 is terminal0 across the same seven cases. Pending calls explicitly prove no producer entry and zero actual Work; no alternate Source or cached user verdict is accepted.
+
+The final schema adds a genuine eighth producerPending case while retaining every earlier case and finite five-unit Source. Its actual resident byte producer copies two bytes on receive, returns a borrowed Pending reply, then copies the last three only on recover. Real partial outcomes are exactly [2,3], compared with the closed fixture; ordinary and recorded-reply unwind cases retain [5]. Native55570 is terminal0, one test over all eight cases, and its current production dependency graph compiles with the new checkpoint entry guard. The independent strict Ajv/SQLite suite passes one test/48 assertions, checks the exact two partial rows and confirms total five for every completed producer. It checks one receive, one recovery only for producerPending, no producer replay after recorded unwind, exact original bytes, one physical Post and no live original actions. No Source funding, physical cap or loop limit was increased.
+
+This adds actual Source-admission enforcement and interrupted byte production; it still does not establish concrete allocating paged-text producer custody or paid public output/header publication. The older seven-case evidence above is historical and superseded by this stronger eight-case current law.
+
+
+Current native Source successor2111 is terminal0 after the shared Core same-Work paid Copy-success changes: all eight Source cases still pass. Root also restored Cargo workspace/dependency ownership; [Workspace Ownership Restoration](workspace-ownership-restoration.md) records the actual resolved1690-package/614-member graph. The Root inventory now contains107 files. These are scoped accepted checkpoints; the full norm/native/browser objective and ticket remain active.

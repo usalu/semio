@@ -36,5 +36,12 @@
     "releaseWork": 1,
     "nodesAfterBirth": 1,
     "nodesAfterRelease": 0
+  },
+  "decoderChildBirth": {
+    "spareBefore": false,
+    "selected": "child",
+    "performed": 1,
+    "copyBytes": 1,
+    "freshSpareAllocated": false
   }
 }

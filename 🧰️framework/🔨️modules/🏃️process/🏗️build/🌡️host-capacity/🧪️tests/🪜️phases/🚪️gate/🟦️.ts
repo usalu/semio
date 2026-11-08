@@ -63,13 +63,30 @@ test("Marks are refused without a live grant, for an unknown phase and from a ne
   const environment={...process.env,...outer.environment,SEMIO_HOST_CAPACITY_DIRECTORY:directory};
   expect(outer.environment.SEMIO_HOST_CAPACITY_PHASE_MARKS).toBe("on");
   expect(markHostCapacityPhaseV1(environment,"bogus" as never)).toBe(false);
-  await withHostCapacityV1(options(directory,{environment,request:request({fixedMegabytes:100})}),async inner=>{
+  await withHostCapacityV1(options(directory,{environment,pid:process.pid+1,ppid:process.pid+2,request:request({fixedMegabytes:100})}),async inner=>{
    expect(inner.inherited).toBe(true);expect(inner.environment.SEMIO_HOST_CAPACITY_PHASE_MARKS).toBe("off");
    expect(markHostCapacityPhaseV1({...environment,...inner.environment},"execution")).toBe(false);
   });
   await sleep(80);
  });
  expect(runs[0]!.phases,"nothing the nested invocation tried reached the phases of its parent").toBeUndefined();
+},30000);
+
+test("The holder re-entering the gate and the process it re-executes itself into continue its invocation and marks the phases of the run; a deeper nested invocation stays refused",async()=>{
+ const directory=fresh(),runs:HostRunV1[]=[];
+ await withHostCapacityV1(options(directory,{request:request({fixedMegabytes:100}),learn:run=>{runs.push(run);},observe:async()=>500}),async outer=>{
+  const environment={...process.env,...outer.environment,SEMIO_HOST_CAPACITY_DIRECTORY:directory};
+  await withHostCapacityV1(options(directory,{environment,pid:process.pid+1,ppid:process.pid,request:request({fixedMegabytes:100})}),async continuation=>{
+   expect(continuation.inherited).toBe(true);expect(continuation.environment.SEMIO_HOST_CAPACITY_PHASE_MARKS,"the direct child of the holder keeps the marks").toBe("on");
+   expect(markHostCapacityPhaseV1({...environment,...continuation.environment},"plan")).toBe(true);await sleep(60);
+   expect(markHostCapacityPhaseV1({...environment,...continuation.environment},"execution")).toBe(true);
+  });
+  await withHostCapacityV1(options(directory,{environment,pid:process.pid+1,ppid:process.pid+2,request:request({fixedMegabytes:100})}),async nested=>{
+   expect(nested.environment.SEMIO_HOST_CAPACITY_PHASE_MARKS,"a process that is neither the holder nor its direct child is a nested invocation").toBe("off");
+  });
+  await sleep(120);
+ });
+ expect(runs[0]!.phases?.map(row=>row.phase),"the plan the continuation marked reaches the learned phases of the run").toEqual(expect.arrayContaining(["assembly","plan","execution"]));
 },30000);
 
 test("Marks beyond the bound of transitions are ignored, so a flapping process cannot grow the record of a run",async()=>{

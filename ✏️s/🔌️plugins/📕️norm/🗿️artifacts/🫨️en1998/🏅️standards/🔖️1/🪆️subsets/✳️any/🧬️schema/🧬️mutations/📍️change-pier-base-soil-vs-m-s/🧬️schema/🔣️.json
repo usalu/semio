@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-pier-base-soil-vs-m-s/schema.json",
+  "title": "ChangePierBaseSoilVsMS",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newSoilVsMS"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changePierBaseSoilVsMS"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "PierBase",
+          "de": "Pfeilerfundament"
+        },
+        "description": {
+          "en": "The pierBase this mutation addresses, by id.",
+          "de": "Das adressierte Element (Pfeilerfundament), per Kennung."
+        },
+        "ref": {
+          "kind": "pierBase"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newSoilVsMS": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Soil shear wave velocity",
+          "de": "Scherwellengeschwindigkeit des Bodens"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.01,
+        "precision": 3
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "stock": {
+    "items": 512,
+    "copyBytes": 2097152,
+    "capacityBytes": 65536,
+    "releaseBytes": 65536,
+    "depth": 64,
+    "fuel": 8192
+  },
+  "maximumCopyBytes": 4096,
+  "maximumTurns": 512,
+  "replyReplays": 0
+}

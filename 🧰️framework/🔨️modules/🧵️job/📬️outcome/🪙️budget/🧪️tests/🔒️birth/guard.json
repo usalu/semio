@@ -1,0 +1,10 @@
+[
+  {
+    "sameGate": true,
+    "owned": true
+  },
+  {
+    "sameGate": false,
+    "owned": false
+  }
+]

@@ -1,7 +1,8 @@
 //! 🧬️ Original retained-clone traits and standard concrete cursor/field owners.
+pub use semio_framework_value_retirement::{OriginalRetirementFailure,OriginalRetirementCloseLoan};
 pub use semio_framework_value_control_contract::*;
-pub use semio_framework_value_clone_source::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneBorrowAuthority,RetainedCloneBorrowAuthorityAdmission,RetainedCloneSourceAdmission,StagedSourceAdmission,RetainedCloneSource,RetainedCloneSourceTake,RetainedOwnedProjection};
-use crate::{ErasedSnapshotRetirement,retirement::RetireOwned};
+pub use semio_framework_value_clone_source::{RetainedCloneClose,RetainedEmptyOwner,RetainedCloseSelection,close_retained_binding,RetainedCloneRef,RetainedCloneBinding,RetainedCloneBorrowAuthority,RetainedCloneBorrowAuthorityAdmission,RetainedCloneSourceAdmission,StagedSourceAdmission,StagedProjectionSelection,OriginalSourceOwner,OriginalSourceMode,RetainedCloneSource,RetainedOwnedProjection,RetainedOwnedProjectionAdmission,RetainedNativeFieldProjection,RetainedNativeArrayIndexProjection,OriginalProjectionContext,OriginalProjectionFrame,OriginalProjectionProducer,OriginalProjectionReply,OriginalSourceProjection};
+use crate::{ErasedSnapshotRetirement,retirement,retirement::RetireOwned};
 use std::mem::{size_of,ManuallyDrop};
 #[path="🔗️alias/🦀️.rs"]mod alias;
 pub use alias::{RetainedAlias,RetainedAliasCursor};
@@ -9,9 +10,9 @@ pub use alias::{RetainedAlias,RetainedAliasCursor};
 pub mod dynamic;
 #[path="../📋️paged-list/🦀️.rs"]
 pub mod paged_list;
-#[path="../🧺️std-collections/🦀️.rs"]
-mod std_collections;
-pub use std_collections::{RetainedCloneEntries,RetainedCloneEntriesCursor};
+#[path="../🧺️collection/🦀️.rs"]
+mod native_collections;
+pub use native_collections::{NativeCollectionClone,NativeCollectionCursor,NativeSortedKey,NativeSortedMap,NativeSortedSet,NativeMapAdmission,NativeSetAdmission};
 #[path="../🔗️issuance-clone/🦀️.rs"]
 pub mod issuance_clone;
 #[path="../📋️field/🦀️.rs"]
@@ -102,9 +103,7 @@ pub fn nested_retained_clone_close_demands<T:RetainedClone>(child:&impl Retained
 /// 📤️ Quotes the actual child output move under one enclosing cursor frame.
 pub fn nested_retained_clone_take_demands<T:RetainedClone>(child:&impl RetainedCloneCursor<T>)->Result<RetirementDemand,ValueError>{let mut demand=child.take_demand()?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"nested clone take depth overflow"))?;Ok(demand)}
 
-fn allocate_clone_storage<T>(effect:&mut RetainedAllocationEffect<'_>)->Result<Box<std::mem::MaybeUninit<T>>,ValueError>{
- let layout=std::alloc::Layout::new::<T>();if layout.size()==0{return Ok(Box::new(std::mem::MaybeUninit::uninit()))}if effect.actual().is_some(){return Err(ValueError::invariant("original allocation attempt is occupied"))}let pointer=unsafe{std::alloc::alloc(layout)};*effect.actual()=Some(if pointer.is_null(){0}else{layout.size()});if pointer.is_null(){return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"retained clone storage allocation failed"))}Ok(unsafe{Box::from_raw(pointer.cast::<std::mem::MaybeUninit<T>>())})
-}
+use semio_framework_value_native_clone_engine::allocate_clone_storage;
 
 /// 🧷️ An advance outcome cannot carry an unresolved producer reply, so a child scaffold close that left its reply pending refuses typed.
 /// 🧮️ Narrows the u128 work already spent in a step to the u64 limit arithmetic of its original quote.
@@ -118,4 +117,14 @@ pub fn take_child_output<T:RetainedClone>(child:&mut impl RetainedCloneCursor<T>
 }
 fn child_close_start_demand<T:RetainedClone>(child:&impl RetainedCloneCursor<T>)->Result<RetirementDemand,ValueError>{if child.close_started(){Ok(RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()})}else{child.begin_close_demand()}}
 fn child_close_start_work<T:RetainedClone>(child:&impl RetainedCloneCursor<T>)->Result<u64,ValueError>{if child.close_started(){Ok(1)}else{child.begin_close_work_demand()}}
-fn start_child_close<T:RetainedClone>(child:&mut impl RetainedCloneCursor<T>,started:&mut bool,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress>{if !child.close_started(){return child.begin_close_paid(effect)}crate::start_retained_close(started,effect)}
+
+pub use semio_framework_value_clone_selection::{ArrayPrefixShape,ArrayPrefixSelection,select_array_prefix};
+
+#[cfg(test)]
+pub(crate) mod selection_observation{
+ use std::cell::Cell;
+ thread_local!{static ACTIVE:Cell<bool>=const{Cell::new(false)};static VISITS:Cell<usize>=const{Cell::new(0)};}
+ pub(crate) fn begin(){VISITS.with(|visits|visits.set(0));ACTIVE.with(|active|active.set(true));}
+ pub(crate) fn record(){ACTIVE.with(|active|{if active.get(){VISITS.with(|visits|visits.set(visits.get()+1))}});}
+ pub(crate) fn finish()->usize{ACTIVE.with(|active|active.set(false));VISITS.with(Cell::get)}
+}

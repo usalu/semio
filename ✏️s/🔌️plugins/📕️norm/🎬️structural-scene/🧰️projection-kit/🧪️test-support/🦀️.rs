@@ -108,6 +108,22 @@ pub fn assert_case_laws(case_ids: &[&str], scene: &StructuralScene, handles: &[H
 
 pub use super::case_laws::{assert_case_dimension_laws, assert_case_dimension_laws_with, assert_case_layout_clear};
 
+/// 🏺️ Compares `actual` with the committed golden at `path`, ignoring trailing whitespace. The golden is written when `SEMIO_UPDATE_GOLDEN` is set (the explicit bless) or when it is missing or empty (the first run, which needs no environment); a first-run write still fails the test once so the new bytes get reviewed, and the next run passes.
+pub fn assert_golden(path: impl AsRef<std::path::Path>, actual: &str) {
+    let path = path.as_ref();
+    let committed = std::fs::read_to_string(path).unwrap_or_default();
+    let explicit = std::env::var_os("SEMIO_UPDATE_GOLDEN").is_some();
+    if explicit || committed.trim().is_empty() {
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent).expect("create golden directory");
+        }
+        std::fs::write(path, format!("{}\n", actual.trim_end())).expect("bless golden");
+        assert!(explicit, "golden {} was empty and is now written; review it and rerun", path.display());
+        return;
+    }
+    assert_eq!(actual.trim_end(), committed.trim_end(), "golden {} differs; review the change and rerun with SEMIO_UPDATE_GOLDEN=1", path.display());
+}
+
 /// 🔁️ Two projections of the same input are byte-identical in canonical JSON.
 pub fn assert_deterministic(first: &StructuralScene, second: &StructuralScene) {
     assert_eq!(canonical_json(first), canonical_json(second));
@@ -150,6 +166,9 @@ fn kind_fits_unit(kind: QuantityKind, unit: &str) -> bool {
         F::Pressure => matches!(kind, K::Pressure | K::Stress),
         F::Moment => kind == K::Moment,
         F::Energy => kind == K::Energy,
+        F::VolumeFlow => kind == K::VentilationRate,
+        F::HeatTransfer => kind == K::HeatTransferCoefficient,
+        F::Power => kind == K::Power,
         F::Rate => matches!(kind, K::Frequency | K::Dimensionless),
         F::InverseLength => kind == K::Dimensionless,
         _ => true,

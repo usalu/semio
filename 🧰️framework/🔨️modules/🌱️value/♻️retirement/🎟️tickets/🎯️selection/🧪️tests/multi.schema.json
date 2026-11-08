@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "count",
+    "items",
+    "deniedItems",
+    "wordBytes",
+    "lengthHeaderBytes",
+    "copiedItems",
+    "remaining",
+    "work",
+    "stock"
+  ],
+  "properties": {
+    "count": {
+      "const": 96
+    },
+    "items": {
+      "const": 32
+    },
+    "deniedItems": {
+      "const": 0
+    },
+    "wordBytes": {
+      "const": 1
+    },
+    "lengthHeaderBytes": {
+      "const": 8
+    },
+    "copiedItems": {
+      "const": 32
+    },
+    "remaining": {
+      "const": 64
+    },
+    "work": {
+      "const": 1
+    },
+    "stock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth",
+        "work"
+      ],
+      "properties": {
+        "items": {
+          "const": 1024
+        },
+        "copyBytes": {
+          "const": 65536
+        },
+        "capacityBytes": {
+          "const": 65536
+        },
+        "releaseBytes": {
+          "const": 65536
+        },
+        "depth": {
+          "const": 64
+        },
+        "work": {
+          "const": 512
+        }
+      }
+    }
+  }
+}

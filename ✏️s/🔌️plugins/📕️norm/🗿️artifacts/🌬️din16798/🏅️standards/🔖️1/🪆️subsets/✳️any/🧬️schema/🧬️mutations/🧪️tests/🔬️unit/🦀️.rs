@@ -64,6 +64,15 @@ fn all_sample_mutations(base: &Din16798Snapshot) -> Vec<(&'static str, Din16798M
         ("change-vent-design-airflow", Din16798Mutation::ChangeVentDesignAirflow(change_vent_design_airflow::ChangeVentDesignAirflow { vent_id: base.vent_systems[0].id.clone(), new_design_airflow_m3_h: base.vent_systems[0].design_airflow_m3_h + 50.0 })),
         ("change-zone-turbulence", Din16798Mutation::ChangeZoneTurbulence(change_zone_turbulence::ChangeZoneTurbulence { zone_id: base.zones[0].id.clone(), new_turbulence_intensity_percent: base.zones[0].turbulence_intensity_percent + 5.0 })),
         ("change-zone-vent-method", Din16798Mutation::ChangeZoneVentMethod(change_zone_vent_method::ChangeZoneVentMethod { zone_id: base.zones[0].id.clone(), new_vent_method: "method_3_predefined_rates".into() })),
+        ("change-zone-name", Din16798Mutation::ChangeZoneName(change_zone_name::ChangeZoneName { zone_id: base.zones[0].id.clone(), new_name: format!("{} B", base.zones[0].name) })),
+        ("change-zone-id", Din16798Mutation::ChangeZoneId(change_zone_id::ChangeZoneId { zone_id: base.zones[0].id.clone(), new_id: "zone-office-1".into() })),
+        ("change-vent-name", Din16798Mutation::ChangeVentName(change_vent_name::ChangeVentName { vent_id: base.vent_systems[0].id.clone(), new_name: format!("{} B", base.vent_systems[0].name) })),
+        ("change-vent-id", Din16798Mutation::ChangeVentId(change_vent_id::ChangeVentId { vent_id: base.vent_systems[0].id.clone(), new_id: "vent-main".into() })),
+        ("change-vent-fan-flow", Din16798Mutation::ChangeVentFanFlow(change_vent_fan_flow::ChangeVentFanFlow { vent_id: base.vent_systems[0].id.clone(), new_fan_q_v_m3_s: base.vent_systems[0].fan_q_v_m3_s + 1.0 })),
+        ("change-vent-fan-run-hours", Din16798Mutation::ChangeVentFanRunHours(change_vent_fan_run_hours::ChangeVentFanRunHours { vent_id: base.vent_systems[0].id.clone(), new_fan_t_run_h: base.vent_systems[0].fan_t_run_h + 1.0 })),
+        ("change-vent-duct-test-pressure", Din16798Mutation::ChangeVentDuctTestPressure(change_vent_duct_test_pressure::ChangeVentDuctTestPressure { vent_id: base.vent_systems[0].id.clone(), new_duct_test_pressure_pa: base.vent_systems[0].duct_test_pressure_pa + 1.0 })),
+        ("change-vent-humidification-required", Din16798Mutation::ChangeVentHumidificationRequired(change_vent_humidification_required::ChangeVentHumidificationRequired { vent_id: base.vent_systems[0].id.clone(), new_humidification_required_kg_h: base.vent_systems[0].humidification_required_kg_h + 1.0 })),
+        ("change-vent-humidification-provided", Din16798Mutation::ChangeVentHumidificationProvided(change_vent_humidification_provided::ChangeVentHumidificationProvided { vent_id: base.vent_systems[0].id.clone(), new_humidification_provided_kg_h: base.vent_systems[0].humidification_provided_kg_h + 1.0 })),
     ]
 }
 
@@ -76,8 +85,30 @@ async fn kinds_nonempty() {
 async fn every_mutation_kind_changes_intended_leaf_and_inverse_restores() {
     let base = Din16798Snapshot::default();
     let cases = all_sample_mutations(&base);
-    assert_eq!(cases.len(), 41, "expected one sample per mutation kind");
+    assert_eq!(cases.len(), 50, "expected one sample per mutation kind");
     for (label, mutation) in cases {
         assert_mutates_and_restores(label, &base, mutation);
     }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn renaming_a_ventilation_system_points_its_zones_at_the_new_id_and_the_inverse_restores_them() {
+    let base = Din16798Snapshot::default();
+    let rename = Din16798Mutation::ChangeVentId(change_vent_id::ChangeVentId { vent_id: base.vent_systems[0].id.clone(), new_id: "vent-main".into() });
+    let after = apply(&rename, &base);
+    assert_eq!(after.vent_systems[0].id, "vent-main");
+    assert!(after.zones.iter().all(|zone| zone.vent_system_id == "vent-main"), "every zone served by the system follows");
+    assert_mutates_and_restores("change-vent-id", &base, rename);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn an_identifier_that_is_taken_is_refused() {
+    let mut base = Din16798Snapshot::default();
+    let mut second = base.zones[0].clone();
+    second.id = "zone-second".into();
+    base.zones.push(second);
+    let refused = Din16798Mutation::ChangeZoneId(change_zone_id::ChangeZoneId { zone_id: "zone-office".into(), new_id: "zone-second".into() });
+    assert!(<Din16798Mutation as protocol::ColdMutation<Din16798Snapshot>>::diff(&refused, &base).worst_level().is_some(), "a taken identifier is refused");
+    let vent = Din16798Mutation::ChangeVentId(change_vent_id::ChangeVentId { vent_id: "vent-central".into(), new_id: "vent-central".into() });
+    assert_eq!(apply(&vent, &base), base, "renaming to the same id changes nothing");
 }

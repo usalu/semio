@@ -1,0 +1,28 @@
+{
+  "stages": [
+    {
+      "name": "empty",
+      "backing": false,
+      "initialized": false,
+      "typed": false
+    },
+    {
+      "name": "reserved",
+      "backing": true,
+      "initialized": false,
+      "typed": false
+    },
+    {
+      "name": "seeded",
+      "backing": true,
+      "initialized": true,
+      "typed": false
+    },
+    {
+      "name": "typed",
+      "backing": false,
+      "initialized": false,
+      "typed": true
+    }
+  ]
+}

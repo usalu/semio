@@ -33,6 +33,10 @@ semio-s-artifact-norm-din18599-inferences = { workspace = true }
 semio-s-artifact-norm-din18599-io = { workspace = true }
 semio-s-artifact-norm-din18599-model = { workspace = true }
 semio-s-artifact-norm-din18599-mutations = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-s-plugin-norm-structural-scene = { workspace = true }
+semio-s-artifact-norm-din18599-scene = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true }
 semio-s-plugin-norm-app-surface = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }

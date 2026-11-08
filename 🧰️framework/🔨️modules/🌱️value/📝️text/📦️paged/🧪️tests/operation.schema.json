@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "events"
+  ],
+  "properties": {
+    "events": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "request",
+          "producer",
+          "operation"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "request": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "Finish",
+                  "Publish"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "producer": {
+            "type": "string",
+            "enum": [
+              "Finish",
+              "Publish"
+            ]
+          },
+          "operation": {
+            "type": "string",
+            "enum": [
+              "Finish",
+              "Publish"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

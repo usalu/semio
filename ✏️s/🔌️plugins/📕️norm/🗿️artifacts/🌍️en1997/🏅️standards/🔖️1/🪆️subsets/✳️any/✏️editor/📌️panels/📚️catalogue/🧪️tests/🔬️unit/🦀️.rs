@@ -64,3 +64,13 @@ fn reference_tables_partial_factors_match_resolve_params() {
     assert!((gamma_r_v - expected.gamma_r_v).abs() < 1e-12);
     assert!((gamma_r_h - expected.gamma_r_h).abs() < 1e-12);
 }
+
+#[test]
+fn verification_catalogue_table_has_one_row_per_case_entry() {
+    use semio_s_plugin_norm_compliance::design_case::CaseCatalogue;
+    let expected = semio_s_artifact_norm_en1997_checks::catalogue::En1997Cases::entries().len();
+    for locale in [semio_ui_locale::Locale::En, semio_ui_locale::Locale::De] {
+        let table = tables(locale).into_iter().find(|table| table.id == "verification-cases").expect("verification table");
+        assert_eq!(table.rows.len(), expected);
+    }
+}

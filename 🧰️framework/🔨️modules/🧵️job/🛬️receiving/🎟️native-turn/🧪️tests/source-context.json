@@ -1,0 +1,17 @@
+[
+  {
+    "actualSource": true,
+    "lockReleased": true,
+    "callback": true
+  },
+  {
+    "actualSource": false,
+    "lockReleased": true,
+    "callback": false
+  },
+  {
+    "actualSource": true,
+    "lockReleased": false,
+    "callback": false
+  }
+]

@@ -1,0 +1,48 @@
+{
+  "annex": null,
+  "materials": null,
+  "sections": null,
+  "members": null,
+  "connections": null,
+  "fireScenarios": null,
+  "fatigueDetails": null,
+  "coldFormed": null,
+  "shells": null,
+  "placements": null,
+  "weldRuns": null,
+  "outlineVertices": null,
+  "fatigueCategories": null,
+  "patchLoads": null,
+  "ringStiffeners": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "transverseStiffeners": null,
+  "reliabilityClass": null,
+  "sheetProfiles": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "fireInsulations": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 1,
+        "row": {
+          "id": "fire-insulation-2",
+          "fireId": "fire-1",
+          "thickness": 0.02,
+          "conductivity": 0.2,
+          "specificHeat": 1200.0,
+          "density": 800.0
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  }
+}

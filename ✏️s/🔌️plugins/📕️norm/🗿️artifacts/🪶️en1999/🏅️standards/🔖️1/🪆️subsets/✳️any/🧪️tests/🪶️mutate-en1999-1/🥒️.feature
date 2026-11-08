@@ -11,7 +11,7 @@ Feature: Apply every typed EN 1999 mutation against an independent Python implem
   rules) and imports nothing from the Rust it judges.
 
   Both implementations read the SAME committed bytes: every `(before, mutation, after, outcome)` path below is a
-  declared `shared://` fixture, so neither side holds a transcription that could drift. The 142 `✅apply` vectors
+  declared `shared://` fixture, so neither side holds a transcription that could drift. The 156 `✅apply` vectors
   cover every kind of the current vocabulary (133 `change`, 4 `add`, 4 `remove`, 1 annex) on an aluminium roof purlin with its connections; each vector's after-snapshot and
   diff were written by production dispatch and its mutation is the canonical Rust wire. Each side asserts the same
   laws in role — the applied document must BE the committed after-snapshot, an `applied` vector must move the
@@ -57,6 +57,8 @@ Feature: Apply every typed EN 1999 mutation against an independent Python implem
       | insert-fatigue-category-dupe | ➕insert-fatigue-category | ⛔dupe  |
       | insert-patch-load-dupe | ➕insert-patch-load | ⛔dupe  |
       | insert-ring-stiffener-dupe | ➕insert-ring-stiffener | ⛔dupe  |
+      | insert-sheet-profile-dupe | ➕insert-sheet-profile | ⛔dupe  |
+      | insert-fire-insulation-dupe | ➕insert-fire-insulation | ⛔dupe  |
       | insert-material-dupe | ➕insert-material | ⛔dupe  |
       | insert-section-dupe | ➕insert-section | ⛔dupe  |
       | insert-connection-dupe | ➕insert-connection | ⛔dupe  |
@@ -78,11 +80,21 @@ Feature: Apply every typed EN 1999 mutation against an independent Python implem
       | insert-transverse-stiffener | ➕insert-transverse-stiffener | ✅apply  |
       | remove-transverse-stiffener | ➖remove-transverse-stiffener | ✅apply  |
       | change-transverse-girder-id | 🦴️change-transverse-girder-id | ✅apply  |
+      | change-sheet-profile-sheet-id | 🦴️change-sheet-profile-sheet-id | ✅apply  |
+      | change-fire-insulation-fire-id | 🦴️change-fire-insulation-fire-id | ✅apply  |
       | change-transverse-position | 🦴️change-transverse-position | ✅apply  |
       | change-transverse-width | 🦴️change-transverse-width | ✅apply  |
       | change-transverse-thickness | 🦴️change-transverse-thickness | ✅apply  |
       | change-conn-load-eccentricity | 🦴️change-conn-load-eccentricity | ✅apply  |
       | change-conn-hole-stagger | 🦴️change-conn-hole-stagger | ✅apply  |
+      | change-sheet-profile-web-height | 🦴️change-sheet-profile-web-height | ✅apply  |
+      | change-sheet-profile-bottom-flange | 🦴️change-sheet-profile-bottom-flange | ✅apply  |
+      | change-sheet-profile-top-flange | 🦴️change-sheet-profile-top-flange | ✅apply  |
+      | change-sheet-profile-pitch | 🦴️change-sheet-profile-pitch | ✅apply  |
+      | change-fire-insulation-density | 🦴️change-fire-insulation-density | ✅apply  |
+      | change-fire-insulation-specific-heat | 🦴️change-fire-insulation-specific-heat | ✅apply  |
+      | change-fire-insulation-conductivity | 🦴️change-fire-insulation-conductivity | ✅apply  |
+      | change-fire-insulation-thickness | 🦴️change-fire-insulation-thickness | ✅apply  |
       | change-transverse-sides | 🦴️change-transverse-sides | ✅apply  |
       | insert-member-action | ➕insert-member-action | ✅apply  |
       | remove-member-action | ➖remove-member-action | ✅apply  |
@@ -100,6 +112,10 @@ Feature: Apply every typed EN 1999 mutation against an independent Python implem
       | remove-patch-load | ➖remove-patch-load | ✅apply  |
       | insert-ring-stiffener | ➕insert-ring-stiffener | ✅apply  |
       | remove-ring-stiffener | ➖remove-ring-stiffener | ✅apply  |
+      | insert-sheet-profile | ➕insert-sheet-profile | ✅apply  |
+      | remove-sheet-profile | ➖remove-sheet-profile | ✅apply  |
+      | insert-fire-insulation | ➕insert-fire-insulation | ✅apply  |
+      | remove-fire-insulation | ➖remove-fire-insulation | ✅apply  |
       | change-category-member-id | 🎯️change-category-member-id | ✅apply  |
       | change-category-element-id | 🎯️change-category-element-id | ✅apply  |
       | change-category-detail-category | 🎯️change-category-detail-category | ✅apply  |
@@ -297,11 +313,21 @@ Feature: Apply every typed EN 1999 mutation against an independent Python implem
       | insert-transverse-stiffener | ➕insert-transverse-stiffener | ✅apply  |
       | remove-transverse-stiffener | ➖remove-transverse-stiffener | ✅apply  |
       | change-transverse-girder-id | 🦴️change-transverse-girder-id | ✅apply  |
+      | change-sheet-profile-sheet-id | 🦴️change-sheet-profile-sheet-id | ✅apply  |
+      | change-fire-insulation-fire-id | 🦴️change-fire-insulation-fire-id | ✅apply  |
       | change-transverse-position | 🦴️change-transverse-position | ✅apply  |
       | change-transverse-width | 🦴️change-transverse-width | ✅apply  |
       | change-transverse-thickness | 🦴️change-transverse-thickness | ✅apply  |
       | change-conn-load-eccentricity | 🦴️change-conn-load-eccentricity | ✅apply  |
       | change-conn-hole-stagger | 🦴️change-conn-hole-stagger | ✅apply  |
+      | change-sheet-profile-web-height | 🦴️change-sheet-profile-web-height | ✅apply  |
+      | change-sheet-profile-bottom-flange | 🦴️change-sheet-profile-bottom-flange | ✅apply  |
+      | change-sheet-profile-top-flange | 🦴️change-sheet-profile-top-flange | ✅apply  |
+      | change-sheet-profile-pitch | 🦴️change-sheet-profile-pitch | ✅apply  |
+      | change-fire-insulation-density | 🦴️change-fire-insulation-density | ✅apply  |
+      | change-fire-insulation-specific-heat | 🦴️change-fire-insulation-specific-heat | ✅apply  |
+      | change-fire-insulation-conductivity | 🦴️change-fire-insulation-conductivity | ✅apply  |
+      | change-fire-insulation-thickness | 🦴️change-fire-insulation-thickness | ✅apply  |
       | change-transverse-sides | 🦴️change-transverse-sides | ✅apply  |
       | insert-member-action | ➕insert-member-action | ✅apply  |
       | remove-member-action | ➖remove-member-action | ✅apply  |
@@ -319,6 +345,10 @@ Feature: Apply every typed EN 1999 mutation against an independent Python implem
       | remove-patch-load | ➖remove-patch-load | ✅apply  |
       | insert-ring-stiffener | ➕insert-ring-stiffener | ✅apply  |
       | remove-ring-stiffener | ➖remove-ring-stiffener | ✅apply  |
+      | insert-sheet-profile | ➕insert-sheet-profile | ✅apply  |
+      | remove-sheet-profile | ➖remove-sheet-profile | ✅apply  |
+      | insert-fire-insulation | ➕insert-fire-insulation | ✅apply  |
+      | remove-fire-insulation | ➖remove-fire-insulation | ✅apply  |
       | change-category-member-id | 🎯️change-category-member-id | ✅apply  |
       | change-category-element-id | 🎯️change-category-element-id | ✅apply  |
       | change-category-detail-category | 🎯️change-category-detail-category | ✅apply  |

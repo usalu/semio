@@ -494,6 +494,114 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-design-airflow/schema.json"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneName"
+      ],
+      "properties": {
+        "ChangeZoneName": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-name/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeZoneId"
+      ],
+      "properties": {
+        "ChangeZoneId": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-id/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeVentName"
+      ],
+      "properties": {
+        "ChangeVentName": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-name/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeVentId"
+      ],
+      "properties": {
+        "ChangeVentId": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-id/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeVentFanFlow"
+      ],
+      "properties": {
+        "ChangeVentFanFlow": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-fan-flow/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeVentFanRunHours"
+      ],
+      "properties": {
+        "ChangeVentFanRunHours": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-fan-run-hours/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeVentDuctTestPressure"
+      ],
+      "properties": {
+        "ChangeVentDuctTestPressure": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-duct-test-pressure/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeVentHumidificationRequired"
+      ],
+      "properties": {
+        "ChangeVentHumidificationRequired": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-humidification-required/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeVentHumidificationProvided"
+      ],
+      "properties": {
+        "ChangeVentHumidificationProvided": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-humidification-provided/schema.json"
+        }
+      }
     }
   ]
 }

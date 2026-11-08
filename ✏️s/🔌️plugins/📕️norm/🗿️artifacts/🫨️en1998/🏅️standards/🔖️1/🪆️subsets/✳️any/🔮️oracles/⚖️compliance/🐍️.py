@@ -831,6 +831,30 @@ def exact_t1(masses: list[float], stiffness: list[float]) -> float:
     return 2.0 * math.pi / math.sqrt(w2[0])
 
 
+def tie_reference() -> dict[str, float]:
+    """🔗 EN 1998-5 5.4.1.2 tie beams: N = coefficient alpha S N_Ed with 0.3, 0.4, 0.6 for ground types B, C, D, the steel resistance A_s f_yd by sympy, the load factor at the resistance by scipy brentq; independent closed form, no library covers the clause."""
+    import sympy
+    from scipy import optimize
+
+    alpha, s_soil, n_ed, a_s, f_yd = sympy.symbols("alpha S N_Ed A_s f_yd", positive=True)
+    force = alpha * s_soil * n_ed
+    values = {"B": 0.3, "C": 0.4, "D": 0.6}
+    out = {f"tie_force_{t.lower()}": float(force.subs({alpha: c, s_soil: 1.2, n_ed: 2.0e6})) for t, c in values.items()}
+    resistance = float((a_s * f_yd).subs({a_s: 6.0e-4, f_yd: 435.0e6}))
+    out["tie_util_c"] = out["tie_force_c"] / resistance
+    out["tie_load_factor_c"] = optimize.brentq(lambda x: x * out["tie_force_c"] - resistance, 0.0, 10.0)
+    return out
+
+
+def silo_reference() -> dict[str, float]:
+    """🏭 EN 1998-4 3 silo: N_Ed = m (g + 0.9 a_g) against N_Rd and F_h = m S_d(T) against V_Rd with the filled mass of the storage psi_E; independent closed form, no library covers the clause."""
+    import sympy
+
+    m, g, a_g, s_d = sympy.symbols("m g a_g S_d", positive=True)
+    point = {m: 1.5e6 / 9.81, g: 9.81, a_g: 0.6, s_d: 0.6 * 1.25 * 2.5 / 1.5}
+    return {"silo_n_ed": float((m * (g + 0.9 * a_g)).subs(point)), "silo_f_h": float((m * s_d).subs(point))}
+
+
 def formulas() -> dict[str, float]:
     """📘️ Independent reference values: closed forms and a characteristic polynomial for the two storey shear building."""
     a_g, s, tb, tc, td = 0.6, 1.25, 0.05, 0.25, 2.0
@@ -928,10 +952,40 @@ def formulas() -> dict[str, float]:
         "two_storey_t2": 2 * pi / math.sqrt(lam2),
         "two_storey_meff_sum": 2 * m,
         "fa": max(alpha, 0.06 * 1.25) * 1000.0 * 1.0 / 2.0,
-    } | rc_reference() | liquefaction_reference() | annex_f_reference() | pile_reference() | n2_reference() | cantilever_reference() | soil_profile_reference() | time_history_reference() | cracked_reference() | wall_plan_reference() | joint_reference() | horizontal_reference() | ground_reference() | masonry_reference() | bridge_reference() | tank_reference() | tower_reference()
+    } | rc_reference() | liquefaction_reference() | annex_f_reference() | pile_reference() | n2_reference() | cantilever_reference() | soil_profile_reference() | time_history_reference() | tie_reference() | silo_reference() | cracked_reference() | wall_plan_reference() | joint_reference() | horizontal_reference() | ground_reference() | masonry_reference() | bridge_reference() | tank_reference() | tower_reference()
+
+
+SPEC_ROWS = {
+    "SEI-06": {"checks": [".timeHistory."], "library": "scipy.signal.lsim", "reference": "horizontal_reference", "keys": ("th_",)},
+    "SEI-48": {"checks": [".diaphragm"], "library": "scipy.integrate.quad", "reference": "horizontal_reference", "keys": ("dia_",)},
+    "SEI-52": {"checks": [".timberConnection", ".masonryWall", ".masonry.simple"], "library": "numpy", "reference": "masonry_reference", "keys": ("mw_", "timber_util", "masonry_util")},
+    "GE-06": {"checks": [".annexF"], "library": "scipy.optimize.brentq", "reference": "annex_f_reference", "keys": ("annexf_",)},
+    "GE-08": {"checks": [".tie", ".displacement"], "library": "closed form + sympy + scipy.optimize.brentq (EN 1998-5 5.4.1.2)", "reference": "tie_reference", "keys": ("tie_",)},
+    "BR-04": {"checks": [".analysis.massParticipation"], "library": "scipy.linalg.eigh", "reference": "bridge_reference", "keys": ("br_t_trans_", "br_meff_trans_")},
+    "BR-05": {"checks": [".action.stiffness"], "library": "concreteproperties + sectionproperties (🌉️pier-stiffness)", "reference": "bridge_action_reference", "keys": ("br_k_cracked_half", "br_k_pier_")},
+    "AS-04": {"checks": [".chordRotation.derivation"], "library": "scipy.optimize.brentq", "reference": "rc_reference", "keys": ("rc_theta_y", "rc_phi_y", "rc_xi_y")},
+    "AS-05": {"checks": [".chordRotation.derivation", ".chordRotation"], "library": "scipy.optimize.brentq", "reference": "rc_reference", "keys": ("rc_theta_um", "rc_alpha")},
+    "ST-01": {"checks": [".wall", ".anchor"], "library": "closed form + sympy (EN 1998-4 3)", "reference": "silo_reference", "keys": ("silo_",)},
+    "TW-03": {"checks": [".modal.massParticipation", ".modal.overturning"], "library": "scipy.linalg.eigh + scipy.optimize.brentq", "reference": "tower_reference", "keys": ("tw_",)},
+}
+
+
+def spec_rows() -> dict[str, dict[str, Any]]:
+    """🧾 Spec row id -> check id fragment -> third-party library -> the reference values (keys of `--formulas`) that carry the cross-check; a row with no key would fail loudly."""
+    values = formulas()
+    out = {}
+    for row, spec in SPEC_ROWS.items():
+        keys = sorted(k for k in values if k.startswith(spec["keys"]))
+        assert keys, f"{row}: no reference value for {spec['keys']}"
+        assert all(math.isfinite(values[k]) for k in keys), row
+        out[row] = {"checks": spec["checks"], "library": spec["library"], "reference": spec["reference"], "values": {k: values[k] for k in keys}}
+    return out
 
 
 def main() -> None:
+    if "--spec-rows" in sys.argv:
+        json.dump(spec_rows(), sys.stdout)
+        return
     if "--formulas" in sys.argv:
         json.dump(formulas(), sys.stdout)
         return

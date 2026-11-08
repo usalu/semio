@@ -270,7 +270,7 @@ pub mod part_1_1 {
 
     /// 🏗️ Structural class delta vs S4 (Table 4.3N) from design life, strength, exposure and member kind.
     pub fn structural_class_delta(design_life_years: f64, f_ck_pa: f64, exposure: ExposureClass, member_kind: MemberKind) -> i32 {
-        materials_and_time::structural_class(design_life_years, mpa(f_ck_pa), exposure_row(exposure), matches!(member_kind, MemberKind::Slab | MemberKind::FlatSlab), false, false) as i32 - 4
+        materials_and_time::structural_class(design_life_years, mpa(f_ck_pa), exposure_row(exposure), matches!(member_kind, MemberKind::Slab | MemberKind::FlatSlab), false) as i32 - 4
     }
 
     /// 📏 c_min,dur [m] of the structural class derived from the member.

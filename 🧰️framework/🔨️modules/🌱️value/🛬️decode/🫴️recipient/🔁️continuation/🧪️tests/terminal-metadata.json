@@ -1,0 +1,30 @@
+[
+  {
+    "original": 10,
+    "metadata": 0,
+    "moved": false,
+    "settled": false,
+    "visible": false
+  },
+  {
+    "original": 10,
+    "metadata": 0,
+    "moved": true,
+    "settled": false,
+    "visible": false
+  },
+  {
+    "original": 10,
+    "metadata": 8,
+    "moved": true,
+    "settled": false,
+    "visible": false
+  },
+  {
+    "original": 10,
+    "metadata": 0,
+    "moved": true,
+    "settled": true,
+    "visible": true
+  }
+]

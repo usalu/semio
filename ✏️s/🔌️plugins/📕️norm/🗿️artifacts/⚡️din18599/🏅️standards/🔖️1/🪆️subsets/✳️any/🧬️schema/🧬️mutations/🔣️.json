@@ -49,10 +49,76 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/update-renewables/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/replace-zones/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/insert-zone/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/replace-elements/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/remove-zone/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-zone-label-en/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-zone-label-de/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-zone-usage-profile/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-zone-occupants/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-zone-area-m2/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-zone-volume-m3/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-zone-theta-i-heat-c/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-zone-theta-i-cool-c/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-zone-internal-gains-w-m2/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-zone-lighting-power-w-m2/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/insert-element/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/remove-element/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-element-label-en/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-element-label-de/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-element-kind/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-element-zone-id/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-element-area-m2/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-element-orientation-deg/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-element-tilt-deg/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-element-g-value/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-element-fc/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-element-adjacency/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-element-u/schema.json"

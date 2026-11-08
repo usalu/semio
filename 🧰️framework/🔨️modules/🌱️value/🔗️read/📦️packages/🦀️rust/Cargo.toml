@@ -26,12 +26,17 @@ path = "🦀️.rs"
 testkit = []
 
 [dependencies]
+semio-framework-value-native-array-backing = { path = "../../../🧬️retained-clone/⚙️engine/📋️backing/📦️packages/🦀️rust" }
+semio-framework-value-retirement-contract = { path = "../../../♻️retirement/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path = "../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-retained-clone = { path = "../../../🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-retirement = { path = "../../../♻️retirement/📦️packages/🦀️rust" }
 semio-framework-value-factory = { path = "../../../♻️retirement/🏭️factory/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-native-decoding = { path = "../../../🛬️decode/📦️packages/🦀️rust" }
+semio-framework-value-native-decode-handoff = { path = "../../../🛬️decode/📦️handoff/📦️packages/🦀️rust" }
+semio-framework-value-testing-effect-bank = { path = "../../../🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 semio-framework-value-testing-allocator = { path = "../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 
@@ -43,3 +48,7 @@ path = "../../🧪️tests/🦀️.rs"
 [[test]]
 name = "value-read-work"
 path = "../../🎟️work/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "read-registry-birth"
+path = "../../🏗️birth/🧪️tests/native.rs"

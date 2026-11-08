@@ -1,5 +1,6 @@
 //! 🔎️ Source-free array prefix selection bounds payload, initialized-prefix metadata and actual copy work.
-use super::{ValueError,RETAINED_CLONE_BULK_PAGE_BYTES,RETAINED_CLONE_BULK_PAGE_ITEMS};
+use semio_framework_value_control_contract::{ValueError,RETAINED_CLONE_BULK_PAGE_BYTES};
+const RETAINED_CLONE_BULK_PAGE_ITEMS:usize=1024;
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct ArrayPrefixShape{pub length:usize,pub index:usize,pub element_bytes:usize,pub index_bytes:usize,pub binding_work:u64}
 #[derive(Clone,Copy,Debug,Default,PartialEq,Eq)]

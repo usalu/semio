@@ -6,5 +6,3 @@ export const VDI3805_EDITOR_DIALECT = { artifactKind: "s.norm.vdi3805", standard
 
 export const VDI3805_EDIT_MODE_ID = "edit" as const;
 
-export * as inputsWindow from "./🎭️modes/✏️edit/🪟️windows/📥️inputs/🟦️";
-export * as resultsWindow from "./🎭️modes/✏️edit/🪟️windows/📊️results/🟦️";

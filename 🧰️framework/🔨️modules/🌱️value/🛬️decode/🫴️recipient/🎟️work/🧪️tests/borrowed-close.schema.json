@@ -1,0 +1,28 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "remaining",
+      "grant",
+      "paid",
+      "changed"
+    ],
+    "properties": {
+      "remaining": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "grant": {
+        "type": "boolean"
+      },
+      "paid": {
+        "type": "boolean"
+      },
+      "changed": {
+        "type": "boolean"
+      }
+    }
+  }
+}

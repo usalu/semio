@@ -184,3 +184,35 @@ async fn semantic_kinds_cover_every_variant() {
 // sibling facet `iso16757`'s migration made the same call), and step (e) of the fan-out recipe
 // says to skip rather than add a new Cargo dependency. The `round_trip` helper above and its
 // per-variant assertions already exercise the same diff/inverse laws directly.
+
+#[test]
+fn a_radiator_attribute_edit_is_one_mutation_that_rewrites_the_native_record() {
+    use semio_s_artifact_norm_vdi3805_model::{attributes_from_records, conforming_blatt_3_dataset, SheetAttributes};
+    let base = conforming_blatt_3_dataset();
+    let edit = semio_s_plugin_norm_app_surface::NormEdit::SetField { path: "catalog.products[id=RAD-600].configuration.attributes.lengthM".into(), value: semio_framework_value::DslValue::float(0.8) };
+    let steps = resolve_edit(&base, &edit).expect("resolves");
+    let [step] = steps.as_slice() else { panic!("one mutation") };
+    assert!(matches!(step, Vdi3805Mutation::ChangeProductConfiguration(_)));
+    let (next, _) = apply_vdi3805_mutation(&base, step).expect("applies");
+    let product = &next.catalog.products[0];
+    let SheetAttributes::Radiator(typed) = &product.configuration.attributes else { panic!("radiator") };
+    let SheetAttributes::Radiator(native) = attributes_from_records(product.sheet, &product.records) else { panic!("radiator records") };
+    assert_eq!((typed.length_m, native.length_m), (0.8, 0.8), "the typed attribute and the native 210 record agree");
+    let undo = inverse_vdi3805_mutation(step, &base).expect("inverse");
+    let restored = undo.iter().fold(next, |document, step| apply_vdi3805_mutation(&document, step).expect("undoes").0);
+    assert_eq!(restored, base, "the inverse restores the attribute and its record");
+}
+
+#[test]
+fn a_configuration_edit_leaves_a_diverged_record_alone() {
+    use semio_s_artifact_norm_vdi3805_model::{conforming_blatt_3_dataset, SheetAttributes};
+    let mut base = conforming_blatt_3_dataset();
+    base.catalog.products[0].records.iter_mut().filter(|r| r.family.0 == "210").for_each(|r| r.fields[2] = "123456".into());
+    let SheetAttributes::Radiator(mut attributes) = base.catalog.products[0].configuration.attributes.clone() else { panic!("radiator") };
+    attributes.length_m = 0.8;
+    let mut configuration = base.catalog.products[0].configuration.clone();
+    configuration.attributes = SheetAttributes::Radiator(attributes);
+    let step = Vdi3805Mutation::ChangeProductConfiguration(change_product_configuration::ChangeProductConfiguration { id: "RAD-600".into(), new_configuration: configuration });
+    let (next, _) = apply_vdi3805_mutation(&base, &step).expect("applies");
+    assert_eq!(next.catalog.products[0].records, base.catalog.products[0].records, "a record that never mirrored the attributes is not rewritten");
+}

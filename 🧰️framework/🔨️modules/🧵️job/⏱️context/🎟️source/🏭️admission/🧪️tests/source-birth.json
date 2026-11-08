@@ -1,0 +1,30 @@
+[
+  {
+    "admitted": false,
+    "performed": false,
+    "born": false,
+    "original": true,
+    "clock": false
+  },
+  {
+    "admitted": true,
+    "performed": true,
+    "born": false,
+    "original": true,
+    "clock": false
+  },
+  {
+    "admitted": true,
+    "performed": true,
+    "born": true,
+    "original": false,
+    "clock": false
+  },
+  {
+    "admitted": true,
+    "performed": true,
+    "born": true,
+    "original": false,
+    "clock": true
+  }
+]

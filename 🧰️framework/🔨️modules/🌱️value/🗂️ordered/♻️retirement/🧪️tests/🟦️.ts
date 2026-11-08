@@ -4,7 +4,8 @@ import stableStringify from "fast-json-stable-stringify";
 import "../../../♻️retirement/📋️queue/🧪️tests/🟦️.ts";
 
 test("original ordered mixed receipt keeps independent copy, retained capacity and release",async()=>{
-  const fixture=await Bun.file(new URL("🧫️fixtures/📦️full-receipt/🔣️.json",import.meta.url)).json();
+  const fixture=(await Bun.file(new URL("../../🧪️tests/🧫️fixtures/🔣️ordered-map.json",import.meta.url)).json()).fullReceiptFixture;
+  const layout=fixture.nativeLayout;const validate=new Ajv({strict:true}).compile({type:"object",additionalProperties:false,required:["wordBytes","vectorWords","optionVectorBytes","mixedResidentHeaders","mixedPayloadCopyBytes","mixedPhysicalCopyBytes"],properties:{wordBytes:{const:8},vectorWords:{const:3},optionVectorBytes:{const:24},mixedResidentHeaders:{const:2},mixedPayloadCopyBytes:{const:1},mixedPhysicalCopyBytes:{const:49}}});expect(validate(layout)).toBe(true);expect(layout.wordBytes*layout.vectorWords).toBe(layout.optionVectorBytes);expect(layout.mixedResidentHeaders*layout.optionVectorBytes+layout.mixedPayloadCopyBytes).toBe(layout.mixedPhysicalCopyBytes);
   const source=Buffer.alloc(fixture.sourceCapacityBytes);source[0]=fixture.payloadByte;
   const replacement=Buffer.alloc(fixture.replacementCapacityBytes);source.copy(replacement,0,0,1);
   const independent={copiedItems:1,copiedBytes:1,retainedCapacityBytes:replacement.byteLength,releasedBytes:source.byteLength};
@@ -17,7 +18,7 @@ test("original ordered mixed receipt keeps independent copy, retained capacity a
 });
 
 type Corpus={cases:{id:string,key:string,keyCapacity:number,value:string,valueCapacity:number}[],grants:number[],expected:{terminalOwners:number,stepBirthBytes:number,reportedReleaseEqualsAllocator:boolean,actualReleaseFitsGrant:boolean,sourcePayloadPointerPreserved:boolean}};
-const fixture:Corpus=await Bun.file(new URL("🧫️fixtures/🔣️.json",import.meta.url)).json();
+const fixture:Corpus=(await Bun.file(new URL("../../🧪️tests/🧫️fixtures/🔣️ordered-map.json",import.meta.url)).json()).retirementFixture;
 const schema=await Bun.file(new URL("../🧬️schema/🔣️.json",import.meta.url)).json();
 test("ordered retirement grants separate logical work from whole physical release",()=>{
   const ajv=new Ajv({strict:true});ajv.addSchema(schema);const grant=ajv.compile({$ref:schema.$id+"#/$defs/Grant"});const progress=ajv.compile({$ref:schema.$id+"#/$defs/Progress"});

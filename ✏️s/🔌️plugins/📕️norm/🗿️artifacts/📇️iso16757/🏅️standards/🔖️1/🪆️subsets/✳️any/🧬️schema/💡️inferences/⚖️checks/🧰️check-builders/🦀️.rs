@@ -12,6 +12,17 @@ use semio_s_plugin_norm_compliance::{AnnexChoice, CheckResult, CheckStatus, Clau
 use semio_s_artifact_norm_iso16757_model::Names;
 use semio_s_plugin_norm_compliance::LocalizedText;
 
+/// 🧮️ One evaluation section of the ISO 16757 catalogue: a named run of consecutive checks and the document facets (top-level fields) it reads; the full evaluation and the incremental units both iterate the same table, so their report order cannot drift.
+#[derive(Clone, Copy)]
+pub struct Section {
+    pub id: &'static str,
+    pub reads: &'static [&'static str],
+    pub run: fn(&semio_s_artifact_norm_iso16757_model::Iso16757Snapshot, &mut semio_s_plugin_norm_compliance::CheckReport),
+}
+
+/// 📖️ Every top-level field of the document, the read set of a section that takes the whole document.
+pub const ALL_FACETS: &[&str] = &["catalogue", "dictionary", "geometry", "selection", "partNumberRule", "partNumberInputs", "scriptLimits", "exchangeProcess"];
+
 pub fn clause(part: &str, section: &str) -> ClauseId {
     ClauseId::new("ISO 16757", part, section)
 }

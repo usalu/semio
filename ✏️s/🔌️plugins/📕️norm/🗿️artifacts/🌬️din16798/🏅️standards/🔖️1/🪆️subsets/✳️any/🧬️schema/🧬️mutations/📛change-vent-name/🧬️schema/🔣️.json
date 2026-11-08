@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-name/schema.json",
+  "title": "ChangeVentName",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ventId",
+    "newName"
+  ],
+  "properties": {
+    "ventId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Ventilation system",
+          "de": "Lüftungsanlage"
+        },
+        "description": {
+          "en": "The ventilation system this mutation addresses.",
+          "de": "Die Lüftungsanlage, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "ventSystem"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newName": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "System name",
+          "de": "Anlagenname"
+        },
+        "description": {
+          "en": "The display name of the ventilation system.",
+          "de": "Der Anzeigename der Lüftungsanlage."
+        },
+        "group": "identity",
+        "order": 20
+      }
+    }
+  }
+}

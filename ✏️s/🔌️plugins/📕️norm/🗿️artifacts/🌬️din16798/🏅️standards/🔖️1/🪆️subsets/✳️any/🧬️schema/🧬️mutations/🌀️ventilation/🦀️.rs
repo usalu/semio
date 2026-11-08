@@ -24,3 +24,5 @@ pub mod insert_vent_system;
 #[path = "../🗑️remove-vent-system/🦀️.rs"]
 pub mod remove_vent_system;
 //#endregion 🪢️Mounts
+
+pub use semio_s_artifact_norm_din16798_mut_ventilation_more::{change_vent_duct_test_pressure, change_vent_fan_flow, change_vent_fan_run_hours, change_vent_humidification_provided, change_vent_humidification_required, change_vent_id, change_vent_name};

@@ -565,13 +565,36 @@ def parse_line(line: str):
     return entry, case, annex, n, s, v
 
 
+def _closed_forms():
+    import importlib.util
+
+    path = Path(__file__).resolve().parents[1] / "🧮️closed-forms" / "🐍️.py"
+    spec = importlib.util.spec_from_file_location("en1991_closed_forms", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+THIRD_PARTY_TOLERANCE = {"E13.10": 2e-3, "E16.01": 2e-3, "E14.01": 2e-4, "E4.03": 1e-6}
+
+
 def catalogue_main() -> None:
+    closed = _closed_forms()
+    failures = []
     for line in sys.stdin:
         if not line.strip():
             continue
         entry, case, annex, n, s, v = parse_line(line)
-        for key, value in ev(entry, annex, n, s, v).items():
+        values = ev(entry, annex, n, s, v)
+        for key, value in closed.derive(entry, annex, n, s, ndp).items():
+            if key in values and abs(values[key] - value) > THIRD_PARTY_TOLERANCE.get(entry, 1e-7) * max(abs(value), 1e-9):
+                failures.append(f"{entry}|{case}|{key}|stdlib {values[key]!r}|sympy-scipy {value!r}")
+            values[key] = value
+        for key, value in values.items():
             print(f"{entry}|{case}|{key}|{float(value)!r}")
+    if failures:
+        print("\n".join("[oracle-disagreement] " + f for f in failures), file=sys.stderr)
+        sys.exit(3)
 
 
 def snapshot_checks(doc: dict) -> list[dict]:

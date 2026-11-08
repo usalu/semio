@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sameChild",
+    "foreignChild",
+    "wrongMode",
+    "foreignSource",
+    "foreignPath",
+    "proofWork"
+  ],
+  "properties": {
+    "sameChild": {
+      "const": true
+    },
+    "foreignChild": {
+      "const": false
+    },
+    "wrongMode": {
+      "const": false
+    },
+    "foreignSource": {
+      "const": false
+    },
+    "foreignPath": {
+      "const": false
+    },
+    "proofWork": {
+      "const": 1
+    }
+  }
+}

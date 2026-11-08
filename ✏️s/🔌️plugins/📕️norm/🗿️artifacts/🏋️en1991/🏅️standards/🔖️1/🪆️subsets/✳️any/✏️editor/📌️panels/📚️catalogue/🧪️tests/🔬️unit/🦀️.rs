@@ -59,3 +59,16 @@ fn reference_tables_cells_match_imposed_and_evaluate_limit() {
     let check = report.checks.iter().find(|c| c.id == "en1991.1-1.imposed.b1").expect("imposed B1 check");
     assert!((check.computed.value - *cell_qk).abs() < 1e-9, "evaluated requirement {} != table cell {}", check.computed.value, cell_qk);
 }
+
+#[test]
+fn verification_table_has_one_row_per_catalogue_entry_and_renders() {
+    let entries = <semio_s_artifact_norm_en1991_checks::catalogue::En1991Cases as semio_s_plugin_norm_compliance::design_case::CaseCatalogue>::entries();
+    for locale in [semio_ui_locale::Locale::En, semio_ui_locale::Locale::De] {
+        let table = verification_table(locale);
+        assert_eq!(table.rows.len(), entries.len());
+        assert_eq!(table.id, "verification-cases");
+    }
+    let node = render(Vec::new(), semio_ui_locale::Locale::De, "norm.catalogue").expect("catalogue");
+    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("project");
+    assert!(json.contains("verification-cases") || json.contains("Nachweisfälle"), "{json}");
+}

@@ -26,4 +26,13 @@ semio-framework-value-control-contract = { path = "../../../../🎟️control/�
 semio-framework-value-retirement = { path = "../../../../♻️retirement/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-testing-allocator = { path = "../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
+
+[[test]]
+name = "receiving_failure"
+path = "../../🛬️receiving/🧪️tests/failure.rs"
+
+[[test]]
+name = "accepted-construction-proof"
+path = "../../🛬️receiving/📦️effect/🧪️tests/accepted-proof.rs"

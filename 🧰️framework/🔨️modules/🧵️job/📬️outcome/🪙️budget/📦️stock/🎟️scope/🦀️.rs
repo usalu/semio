@@ -38,7 +38,7 @@ impl<I:OriginalReturnOrigin> OriginalReturnBudget<I>{
 }
 
 /// 📏️ Quotes the next actual owner phase; setup progress never enters the native callback.
-pub fn original_return_scope_setup_demand(bound:bool,table:bool)->Option<(usize,semio_framework_value_retained_clone::RetirementDemand,u64)>{if !bound{return Some((1,semio_framework_value_retained_clone::RetirementDemand{depth:1,..Default::default()},1))}if table{return None}let(copy,capacity,work)=OriginalReturnEscrowTable::birth_demand();Some((1,semio_framework_value_retained_clone::RetirementDemand{copy_bytes:copy,capacity_bytes:capacity,release_bytes:capacity,depth:1},work))}
+pub fn original_return_scope_setup_demand(bound:bool,table:bool)->Option<(usize,semio_framework_value_retained_clone::RetirementDemand,u64)>{if !bound{return Some((1,semio_framework_value_retained_clone::RetirementDemand{depth:1,..Default::default()},1))}if table{return None}let(copy,capacity,work)=OriginalReturnEscrowTable::birth_demand();Some((work as usize,semio_framework_value_retained_clone::RetirementDemand{copy_bytes:copy,capacity_bytes:capacity,release_bytes:capacity,depth:1},work))}
 
 /// 📊️ The genuine Context lends its actual accounting destinations; this data view mints no authority.
 pub struct OriginalReturnScopeCounters<'a>{pub physical:&'a mut P,pub work:&'a mut u128,pub fuel:&'a mut u64,pub reserved:&'a mut P,pub reserved_work:&'a mut u64,pub aggregate_physical:Option<(&'a P,P)>,pub aggregate_work:Option<&'a u128>,pub reserved_observer:Option<(&'a mut P,&'a mut u128)>,pub grant:RetainedCloneGrant}

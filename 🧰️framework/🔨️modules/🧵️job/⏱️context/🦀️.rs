@@ -17,8 +17,9 @@ pub use semio_framework_value_control_contract::{OriginalSourceTurn,OriginalSour
 use semio_framework_value_retained_clone::{ValueError, ValueRefusalKind};
 #[path="../📬️outcome/⏸️continuation/🦀️.rs"]
 pub(crate) mod original_job_continuation;
-pub use original_job_continuation::{OriginalJobReturnOrigin,OriginalJobReturnReceiver,OriginalJobReturnClaim,InteractiveJobStep,OriginalJobReturn,OriginalJobContinuation,OriginalJobContinuationView,OriginalJobOutcomeReturn,OriginalJobOutcome};
-pub use semio_framework_job_failure::{OriginalFailureContext,OriginalWorkFailure,OriginalTurnFailure,OriginalTurnPrimary,OriginalReceivingPrimary,OriginalRetirementReceivingPrimary,OriginalClosureFailure,OriginalDomainFailure,OriginalDomainPrimary,OriginalDomainReservation,OriginalDomainProjection,OriginalDomainView,admit_original_domain_failure,original_domain_failure_demand,project_original_turn_failure,key_original_turn_failure,project_original_value_error,key_original_value_error,project_original_fault,key_original_fault,project_original_retirement_failure,key_original_retirement_failure,project_original_retirement_receiving,key_original_retirement_receiving,project_original_receiving_primary,key_original_receiving_primary};
+#[doc(hidden)]
+pub use original_job_continuation::source as original_return_source;
+pub use semio_framework_job_failure::{OriginalSourceCloseFailure,project_original_source_close_failure,key_original_source_close_failure,OriginalFailureContext,OriginalWorkFailure,OriginalTurnFailure,OriginalTurnPrimary,OriginalReceivingPrimary,OriginalRetirementReceivingPrimary,OriginalClosureFailure,OriginalDomainFailure,OriginalDomainPrimary,OriginalDomainReservation,OriginalDomainProjection,OriginalDomainView,admit_original_domain_failure,original_domain_failure_demand,project_original_turn_failure,key_original_turn_failure,project_original_value_error,key_original_value_error,project_original_fault,key_original_fault,project_original_retirement_failure,key_original_retirement_failure,project_original_retirement_receiving,key_original_retirement_receiving,project_original_receiving_primary,key_original_receiving_primary};
 #[path="../♻️retirement/🎟️context/🦀️.rs"]
 mod original_close_context;
 pub use original_close_context::{close_original_quoted_retained_step,receive_original_retained_work,receive_original_receiving_work,close_original_granted_step,close_original_nested_step,close_original_retained_step,close_original_retained_turn,close_original_effect_step};
@@ -29,25 +30,19 @@ use std::time::Instant;
 use semio_framework_trace::TraceEvent;
 #[cfg(test)] use semio_framework_trace::{record_operation_started};
 
-pub use semio_framework_async::CancelToken;
+pub use semio_framework_async::{CancelToken,OriginalCancelRootAdmission,OriginalCancelRootIdentity};
 pub use semio_framework_async::{Lane, ProcessKind, WorkerPool, WorkerPoolConfig};
 pub use semio_framework_trace::{Generation, InteractiveStage, OperationId, allocate_operation_id, allocate_operation_id_in_slot, interactive_step_contract_violated, runtime_diagnostics_enabled, set_runtime_diagnostics, INTERACTIVE_STEP_CEILING_US, RUNTIME_DIAGNOSTICS_ENV, SUSTAINED_OVERRUN_QUARANTINE_STEPS};
 
-pub use semio_framework_job_payload::{JobPayloadStep, JobPayloadAuthority, JobPayloadOperationLedger, JobPayloadPage, JobPayloadPageSource, JobPayloadStream, JobPayloadAdmissionFault, JobPayloadRejectedPage, RetainedJobPayload, RetainedJobPayloadReader, RetainedPayloadBuilder, OriginalPayloadSourceIdentity, OriginalPayloadBuilderIdentity, JOB_PAYLOAD_PROCESS_OWNED_BYTES, JOB_PAYLOAD_PAGE_BYTES, JOB_PAYLOAD_OPERATION_PAGES, JOB_PAYLOAD_OPERATION_BYTES, JOB_PAYLOAD_PROCESS_BYTES};
+pub use semio_framework_job_payload::{JobPayloadStep, OriginalJobPayloadAdmission, JobPayloadAuthority, JobPayloadOperationLedger, JobPayloadPage, JobPayloadPageSource, JobPayloadStream, JobPayloadAdmissionFault, JobPayloadRejectedPage, RetainedJobPayload, RetainedJobPayloadReader, RetainedPayloadBuilder, OriginalPayloadSourceIdentity, OriginalPayloadBuilderIdentity, JOB_PAYLOAD_PROCESS_OWNED_BYTES, JOB_PAYLOAD_PAGE_BYTES, JOB_PAYLOAD_OPERATION_PAGES, JOB_PAYLOAD_OPERATION_BYTES, JOB_PAYLOAD_PROCESS_BYTES};
 
 pub use semio_framework_job_clock::{BACKGROUND_LANE_FUEL, BACKGROUND_LANE_WALL_US, CommitValidation, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US, JobSequenceExhausted, MAINTENANCE_LANE_FUEL, MAINTENANCE_LANE_WALL_US, Operation, RevisionId, StepBudget, USER_VISIBLE_LANE_FUEL, USER_VISIBLE_LANE_WALL_US, child_cancel_token, default_now_ms, default_now_us, install_microsecond_clock, logical_now_us, microseconds_from_milliseconds, root_cancel_token, validate_commit};
 
-#[path = "../🚦️clock-stride-and-job-protocol/🦀️.rs"]
-mod clock_stride_and_job_protocol;
-pub use clock_stride_and_job_protocol::{Checkpoint, CommitCandidate, InteractiveJob, InteractiveJobCloseStep, JobFault, StepOutcome};
+pub use semio_framework_job_payload::{Checkpoint,CommitCandidate,InteractiveJobCloseStep,JobFault,StepOutcome};
 pub use semio_framework_job_clock::ClockStride;
 pub use semio_framework_job_clock::{OriginalClockAction,OriginalClockAuthority,OriginalClockDeadline,OriginalClockObservation,OriginalClockDecisionFrame,OriginalClockDecisionStatus,OriginalClockProducer,OriginalClockReply,OriginalClockReplyComplete,OriginalSystemClockContext};
 #[cfg(any(not(target_arch="wasm32"),target_env="p2"))]
 pub use semio_framework_job_clock::OriginalSystemClock;
-#[cfg(all(target_arch="wasm32",not(target_env="p2")))]
-pub use clock_stride_and_job_protocol::JobThreadTransfer;
-#[cfg(not(all(target_arch="wasm32",not(target_env="p2"))))]
-pub use clock_stride_and_job_protocol::JobThreadTransfer;
 
 //#region 🕰️Clock
 
@@ -80,12 +75,14 @@ enum JobPayloadLedgerReference<'a>{Owned(Arc<JobPayloadOperationLedger>),Borrowe
 impl std::ops::Deref for JobPayloadLedgerReference<'_>{type Target=Arc<JobPayloadOperationLedger>;fn deref(&self)->&Self::Target{match self{Self::Owned(original)=>original,Self::Borrowed(authority)=>authority.original().expect("original context outlived its payload authority")}}}
 enum StepCancelReference<'a>{Owned(CancelToken),Borrowed(&'a CancelToken),Observed(&'a CancelToken)}
 impl std::ops::Deref for StepCancelReference<'_>{type Target=CancelToken;fn deref(&self)->&Self::Target{match self{Self::Owned(original)=>original,Self::Borrowed(original)|Self::Observed(original)=>original}}}
-use semio_framework_async::{CancelTokenRetirement,CancelTokenRetirementError};
 #[path="🎟️source/🦀️.rs"]
 mod owned_source;
 /// 🧿️ Names the actual borrowed roots of one live caller context without lending or renewing them.
 pub struct OriginalCallerSource<'source>{pub ledger:&'source Arc<JobPayloadOperationLedger>,pub cancel:&'source CancelToken,pub operation:OperationId,pub generation:Generation,pub clock:fn()->Option<u64>,pub deadline:u64}
-pub use owned_source::{OriginalCallerCloseReturn,OriginalCallerSourceParent,OriginalCallerSourceLoan,OriginalCallerChildSource,OriginalChildTurnReturn,ORIGINAL_NATIVE_SOURCE_CAPACITY,OriginalNativeLease,OriginalNativeRetirement,OriginalNativeBorrow,OriginalNativeBorrowed,OriginalNativeRecipientIdentity,OriginalNativeRecipientClosed,OriginalNativeRetiredWitness};
+pub use owned_source::{OriginalCallerCloseReturn,source_loan_transfer_demand,OriginalCallerSourceAdmission,OriginalSourceCloseContext,OriginalSourceCloseProducer,OriginalCallerSourceParent,OriginalCallerSourceLoan,OriginalCallerChildSource,OriginalChildTurnReturn,ORIGINAL_NATIVE_SOURCE_CAPACITY,OriginalNativeLease,OriginalNativeRetirement,OriginalNativeBorrow,OriginalNativeBorrowed,OriginalNativeRecipientIdentity,OriginalNativeRecipientClosed,OriginalNativeRetiredWitness};
+#[path="📸️capture/🦀️.rs"]
+mod original_caller_capture;
+pub use original_caller_capture::{OriginalCallerCapture,CapturedOriginalCaller,OriginalCallerIssuer,OriginalCallerTurn};
 #[path="🛬️owned/🦀️.rs"]
 mod original_job_decoder;
 pub use original_job_decoder::{OriginalJobDecodeOwner,OriginalCreditedOutput};
@@ -349,6 +346,8 @@ impl<'a> StepContext<'a> {
     }
 
     /// 🔖️ Borrows the actual Source-issued dispatch token retained by this caller.
+    pub fn original_return_budget_is_borrowed(&self)->bool{matches!(&self.return_budget,Some(original_job_continuation::source::OriginalReturnBudgetReference::Borrowed(_)))}
+    /// 🔖️ Borrows the actual Source-issued dispatch token retained by this caller.
     pub fn original_source_turn(&self)->Result<&OriginalSourceTurn,ValueError>{self.source_turn.as_ref().map(SourceTurnReference::token).ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"caller context has no original Source dispatch"))}
     /// 🧵️ Lends the original dispatch to a shorter native continuation turn.
     pub fn original_source_turn_witness(&self)->Result<OriginalSourceTurnWitness<'_>,ValueError>{Ok(self.original_source_turn()?.witness())}
@@ -406,7 +405,7 @@ impl<'a> StepContext<'a> {
     pub fn original_source_fuel_remaining(&self)->u64{self.return_budget.as_ref().filter(|budget|budget.get().is_bound()).map_or(self.fuel_remaining,|budget|budget.get().raw_remaining().map_or(0,|remaining|remaining.1))}
     /// 🧾️ Observes authentic redemptions in the persistent actor without narrowing their aggregate wire receipt.
     pub fn bind_original_reserved_recipient(&mut self,progress:&'a mut RetainedCloneProgress,work:&'a mut u128)->Result<(),ValueError>{self.original_source_parent()?;if self.original_physical_recipient.is_none()||self.original_work_recipient.is_none()||self.reserved_observer.is_some()||self.reserved_return_progress!=Default::default()||self.reserved_return_work!=0{return Err(ValueError::invariant("reserved observer must bind before any redemption"))}self.reserved_observer=Some((progress,work));Ok(())}
-    fn preflight_original_reserved_return(&self,progress:RetainedCloneProgress,work:u64)->Result<(),ValueError>{if let Some((recipient,start))=&self.original_physical_recipient{let delta=semio_framework_job_return_budget::source_fresh_progress(*self.retained_progress,*start).ok_or_else(||ValueError::invariant("original aggregate observer baseline changed"))?;recipient.checked_add(delta)?.checked_add(progress)?;}if let Some(recipient)=&self.original_work_recipient{recipient.checked_add(self.work_units_spent).and_then(|n|n.checked_add(u128::from(work))).ok_or_else(||ValueError::invariant("original aggregate work observer overflow"))?;}if let Some((p,w))=&self.reserved_observer{p.checked_add(progress)?;w.checked_add(u128::from(work)).ok_or_else(||ValueError::invariant("reserved observer work overflow"))?;}self.retained_progress.checked_add(progress)?;self.reserved_return_progress.checked_add(progress)?;self.reserved_return_work.checked_add(work).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original reserved return CPU observer overflow"))?;self.work_units_spent.checked_add(u128::from(work)).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original return actual CPU counter overflow"))?;Ok(())}
+    pub fn preflight_original_reserved_return(&self,progress:RetainedCloneProgress,work:u64)->Result<(),ValueError>{if let Some((recipient,start))=&self.original_physical_recipient{let delta=semio_framework_job_return_budget::source_fresh_progress(*self.retained_progress,*start).ok_or_else(||ValueError::invariant("original aggregate observer baseline changed"))?;recipient.checked_add(delta)?.checked_add(progress)?;}if let Some(recipient)=&self.original_work_recipient{recipient.checked_add(self.work_units_spent).and_then(|n|n.checked_add(u128::from(work))).ok_or_else(||ValueError::invariant("original aggregate work observer overflow"))?;}if let Some((p,w))=&self.reserved_observer{p.checked_add(progress)?;w.checked_add(u128::from(work)).ok_or_else(||ValueError::invariant("reserved observer work overflow"))?;}self.retained_progress.checked_add(progress)?;self.reserved_return_progress.checked_add(progress)?;self.reserved_return_work.checked_add(work).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original reserved return CPU observer overflow"))?;self.work_units_spent.checked_add(u128::from(work)).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original return actual CPU counter overflow"))?;Ok(())}
     fn receive_original_reserved_return(&mut self,progress:RetainedCloneProgress,work:u64)->Result<(),ValueError>{
         self.preflight_original_reserved_return(progress,work)?;
         let recipient=self.retained_progress.checked_add(progress)?;let reserved=self.reserved_return_progress.checked_add(progress)?;let reserved_work=self.reserved_return_work.checked_add(work).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original reserved return CPU observer overflow"))?;let total_work=self.work_units_spent.checked_add(u128::from(work)).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original return actual CPU counter overflow"))?;
@@ -422,6 +421,9 @@ impl<'a> StepContext<'a> {
     pub fn consume_fuel(&mut self, units: u64) {
         self.work_units_spent+=u128::from(units);self.fuel_remaining = self.fuel_remaining.saturating_sub(units);if let Some(budget)=self.return_budget.as_mut(){budget.get_mut().record_work(units);}
     }
+
+    /// ⏱️ Settles the full original performed-work receipt without narrowing its aggregate.
+    pub(crate) fn settle_original_work_exact(&mut self,units:u128)->Result<(),ValueError>{let total=self.work_units_spent.checked_add(units).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original Source Work total overflow"))?;self.work_units_spent=total;self.fuel_remaining=if units>=u128::from(self.fuel_remaining){0}else{self.fuel_remaining-u64::try_from(units).expect("bounded by actual Source fuel")};if let Some(budget)=self.return_budget.as_mut(){budget.get_mut().record_work_exact(units)?}Ok(())}
 
     pub fn fuel_exhausted(&self) -> bool {
         self.fuel_remaining() == 0
@@ -479,8 +481,57 @@ pub(crate) const TEST_RETAINED_POLICY:RetainedCloneGrant=RetainedCloneGrant{maxi
 //#region 🧪️Tests
 
 #[cfg(any(test,feature="testkit"))]
-#[path="🧪️testkit/🦀️.rs"]
-pub mod testkit;
+pub mod testkit {
+    use super::*;
+    thread_local!{static NEXT_LOAN_REFUSAL:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};static NEXT_CANCEL_REFUSAL:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};}
+    pub use semio_framework_job_receiving::testkit::{with_native_decode_progress,observe_native_decode_progress};
+    pub fn set_loan_receipt_refusal(value:bool){NEXT_LOAN_REFUSAL.with(|flag|flag.set(value))}
+    pub fn set_cancel_receipt_refusal(value:bool){NEXT_CANCEL_REFUSAL.with(|flag|flag.set(value))}
+    pub(crate) fn narrow_loan_receipt(cx:&mut StepContext<'_>){if NEXT_LOAN_REFUSAL.with(|flag|flag.replace(false)){cx.retained.maximum_items=cx.retained_progress().copied_items}}
+    pub(crate) fn narrow_cancel_receipt(cx:&mut StepContext<'_>){if NEXT_CANCEL_REFUSAL.with(|flag|flag.replace(false)){cx.retained_policy=Some((RetainedCloneGrant::default(),cx.retained_progress()))}}
+    pub fn renew_payload_page_grant(cx:&mut StepContext<'_>){cx.payload_page_granted=false}
+    pub fn renew_turn(cx:&mut StepContext<'_>,fuel:u64,grant:RetainedCloneGrant)->Result<(),ValueError>{
+        let current=retained_delta(*cx.retained_progress,cx.reserved_return_progress);
+        if let Some(budget)=cx.return_budget.as_mut().filter(|budget|budget.get().is_bound()){budget.get_mut().renew_turn()?}
+        let refill=fuel.saturating_sub(cx.fuel_remaining);cx.fuel_remaining=fuel;cx.payload_page_granted=false;
+        cx.retained=RetainedCloneGrant{maximum_items:current.copied_items.saturating_add(grant.maximum_items),maximum_copy_bytes:current.copied_bytes.saturating_add(grant.maximum_copy_bytes),maximum_capacity_bytes:current.retained_capacity_bytes.saturating_add(grant.maximum_capacity_bytes),maximum_release_bytes:current.released_bytes.saturating_add(grant.maximum_release_bytes),maximum_depth:grant.maximum_depth};
+        cx.original_total_retained_start=current;
+        match cx.return_budget.as_ref().filter(|budget|budget.get().is_bound()){
+            Some(budget)=>{let(retained,total)=budget.get().remaining()?;cx.original_total_retained=retained;cx.original_total_fuel=total;cx.original_total_work_start=cx.work_units_spent.saturating_sub(u128::from(cx.reserved_return_work));}
+            None=>{cx.original_total_fuel=cx.original_total_fuel.saturating_add(refill);}
+        }
+        Ok(())
+    }
+    pub fn child_source_status(child:&OriginalCallerChildSource)->(bool,bool,usize,OriginalSourceBinding){child.test_status()}
+    pub fn source_return_budget_is_bound(parent:&OriginalCallerSourceParent)->Result<bool,ValueError>{Ok(parent.return_source()?.try_borrow().ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"actual source budget is borrowed"))?.get().is_bound())}
+    pub fn return_budget_is_inherited(cx:&StepContext<'_>)->bool{matches!(cx.return_budget.as_ref(),Some(original_return_source::OriginalReturnBudgetReference::Borrowed(_)))}
+
+    pub use super::original_job_continuation::source as original_return_source;
+    pub fn operation_mut<'a>(cx:&'a mut StepContext<'_>)->&'a mut OperationId{&mut cx.operation}
+    pub fn retained_grant_mut<'a>(cx:&'a mut StepContext<'_>)->&'a mut RetainedCloneGrant{&mut cx.retained}
+    pub fn retained_progress_mut<'a>(cx:&'a mut StepContext<'_>)->&'a mut RetainedCloneProgress{cx.retained_progress}
+    pub fn return_budget_snapshot(cx:&StepContext<'_>)->original_return_source::OriginalReturnBudgetSnapshot{cx.return_budget.as_ref().expect("actual original source budget").get().snapshot()}
+    pub fn return_budget_is_bound(cx:&StepContext<'_>)->bool{cx.return_budget.as_ref().is_some_and(|budget|budget.get().is_bound())}
+    pub fn original_total_retained_start(cx:&StepContext<'_>)->RetainedCloneProgress{cx.original_total_retained_start}
+    pub fn return_source_is_borrowed(parent:&OriginalCallerSourceParent)->Result<bool,ValueError>{Ok(parent.return_source()?.try_borrow().is_none())}
+    pub fn admit_return_origin(cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{cx.original_source_parent()?.admit_return_origin(cx)}
+
+    pub fn with_original_work_refusals<T>(cx:&mut StepContext<'_>,operation:Option<OperationId>,capacity:Option<usize>,run:impl FnOnce(&mut StepContext<'_>)->T)->T{
+        struct Restore<'a>{context:*mut StepContext<'a>,operation:OperationId,retained:RetainedCloneGrant}
+        impl Drop for Restore<'_>{fn drop(&mut self){unsafe{(*self.context).operation=self.operation;(*self.context).retained=self.retained}}}
+        let restore=Restore{context:std::ptr::addr_of_mut!(*cx),operation:cx.operation,retained:cx.retained};
+        if let Some(operation)=operation{cx.operation=operation}if let Some(capacity)=capacity{cx.retained.maximum_capacity_bytes=capacity}
+        let value=run(cx);drop(restore);value
+    }
+
+    pub fn with_retained_receipt_policy<T>(cx:&mut StepContext<'_>,run:impl FnOnce(&mut StepContext<'_>)->T)->T{let original=cx.retained_policy;let result=run(cx);cx.retained_policy=original;result}
+    pub fn refuse_current_retained_receipt(cx:&mut StepContext<'_>){cx.retained_policy=Some((RetainedCloneGrant{maximum_items:0,..cx.retained_grant()},cx.retained_progress()));}
+
+    pub fn payload_ledger(operation:OperationId,generation:Generation)->Arc<JobPayloadOperationLedger>{Arc::new(JobPayloadOperationLedger::new(operation,generation))}
+    pub fn payload_ledger_terminal_is_empty(ledger:&JobPayloadOperationLedger)->bool{ledger.terminal_is_empty()}
+    pub fn ledger_demands(ledger:&Option<Arc<JobPayloadOperationLedger>>)->RetirementDemand{semio_framework_job_payload::ledger_demands(ledger)}
+    pub fn close_ledger(ledger:&mut Option<Arc<JobPayloadOperationLedger>>,grant:RetainedCloneGrant)->semio_framework_value_retained_clone::RetainedWorkOutcome{semio_framework_job_payload::close_ledger(ledger,grant)}
+}
 //#endregion 🧪️Tests
 
 #[path="📦️return/🎟️place/🦀️.rs"]

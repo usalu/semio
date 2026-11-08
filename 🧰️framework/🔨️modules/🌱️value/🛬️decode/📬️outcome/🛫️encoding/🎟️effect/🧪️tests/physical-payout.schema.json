@@ -1,0 +1,29 @@
+{
+  "type": "array",
+  "minItems": 4,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "phase",
+      "payout",
+      "visible"
+    ],
+    "properties": {
+      "phase": {
+        "enum": [
+          "refused",
+          "sealed",
+          "published",
+          "retry"
+        ]
+      },
+      "payout": {
+        "type": "boolean"
+      },
+      "visible": {
+        "type": "boolean"
+      }
+    }
+  }
+}

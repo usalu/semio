@@ -1,0 +1,5 @@
+{
+  "mutation": "changeCriticalRegionLongitudinalBarDiameterM",
+  "id": "cr-1",
+  "newLongitudinalBarDiameterM": 1.016
+}

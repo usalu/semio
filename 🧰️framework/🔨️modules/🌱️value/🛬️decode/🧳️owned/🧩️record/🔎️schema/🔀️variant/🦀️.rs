@@ -4,7 +4,7 @@ use semio_framework_value_native_source::NativeTreeKind;
 fn nested(mut d:RetirementDemand)->Result<RetirementDemand,ValueError>{d.depth=d.depth.checked_add(1).ok_or_else(invalid)?;Ok(d)}
 fn child(mut g:RetainedCloneGrant)->RetainedCloneGrant{g.maximum_depth=g.maximum_depth.saturating_sub(1);g}
 fn progress(copy:usize)->RetainedCloneProgress{RetainedCloneProgress{copied_items:usize::from(copy!=0),copied_bytes:copy,..Default::default()}}
-#[derive(Clone,Copy)]pub struct NativeVariantSpec{pub all:fn(usize)->Option<NativeRecordSchema>,pub units:fn(usize)->Option<NativeRecordSchema>,pub data:fn(usize)->Option<NativeRecordSchema>,pub count:usize,pub tag:Option<fn(usize)->Option<NativeRecordSchema>>}
+#[derive(Clone,Copy)]pub struct NativeVariantSpec{pub all:NativeSchemaFields,pub units:NativeSchemaFields,pub data:NativeSchemaFields,pub count:usize,pub tag:Option<NativeSchemaFields>}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]pub struct NativeVariantSelection{pub index:usize,pub direct:bool}
 pub struct NativeVariantSelector<I:NativeValueSource+?Sized>{binding:Option<RetainedCloneBinding>,matcher:Option<NativeRecordMatcher<I>>,spec:NativeVariantSpec,selection:Option<NativeVariantSelection>,tag:Option<usize>,record_len:Option<usize>,scan:usize,phase:u8,direct:bool,closing:bool,failed:bool,effect:NativeReceivingEffect,retirement_effect:NativeReceivingEffect<OriginalRetirementFailure>}
 impl<I:NativeValueSource+?Sized>NativeVariantSelector<I>{

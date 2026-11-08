@@ -1,6 +1,8 @@
 """🔮️ Independent oracle for the EN 1993 special-part clause functions (1-3, 1-4, 1-5, 1-6, 1-8 components, 1-10, 1-11, 2, 3, 4, 5, 6): scipy and numpy formulations that differ from the Rust code (fixed-point solver, linear programming for base plates, numerical quadrature for Janssen, interpolation by numpy)."""
+import importlib.util
 import json
 import math
+import pathlib
 
 import numpy as np
 from scipy import integrate, optimize
@@ -375,10 +377,20 @@ def wired():
     }
 
 
+def spec_rows():
+    """🧭 The spec-row cross-checks of the sibling folder, loaded by path (the isolated interpreter has no script directory on its path)."""
+    path = pathlib.Path(__file__).resolve().parent / "🧭️spec-rows" / "🐍️.py"
+    spec = importlib.util.spec_from_file_location("en1993_spec_rows", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def main():
     out = {}
     for f in (cold_formed, stainless, plated, shells, toughness, tension, joints, bridges, towers, containment, piling, crane, sections, wired):
         out.update(f())
+    out.update(spec_rows().cross_checks(out))
     print(json.dumps(out))
 
 

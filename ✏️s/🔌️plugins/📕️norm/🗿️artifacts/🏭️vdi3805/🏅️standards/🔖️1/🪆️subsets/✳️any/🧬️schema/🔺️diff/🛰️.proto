@@ -9,7 +9,59 @@ message Vdi3805ManufacturerFilePatch {
   optional uint32 record_count = 5;
 }
 
+message Vdi3805PatchLocalizedText { string locale = 1; string text = 2; }
+message Vdi3805PatchExtensionFields { map<string, string> fields = 1; }
+message Vdi3805PatchNativeRecord { string family = 1; repeated string fields = 2; Vdi3805PatchExtensionFields extensions = 3; }
+message Vdi3805PatchValveHeatingAttributes {
+  uint32 dn = 1; double kvs_m3_s = 2; string pressure_class = 3; string connection_type = 4; double authority_min = 5; double authority_max = 6;
+}
+message Vdi3805PatchRadiatorAttributes {
+  double standard_output_w = 1; double heat_exponent_n = 2; double length_m = 3; double height_m = 4; double depth_m = 5; string connection_type = 6;
+}
+message Vdi3805PatchPumpHeatingAttributes {
+  uint32 dn_suction = 1; uint32 dn_discharge = 2; double nominal_flow_m3_s = 3; double nominal_head_m = 4; double motor_power_w = 5; double hydraulic_efficiency = 6; optional string qh_curve_ref = 7;
+}
+message Vdi3805PatchHeatGeneratorAttributes {
+  double nominal_heat_output_w = 1; string fuel_type = 2; double flow_temp_max_c = 3; double return_temp_min_c = 4;
+}
+message Vdi3805PatchGenericAttribute { string key = 1; string value = 2; optional string unit = 3; }
+message Vdi3805PatchGenericAttributes { repeated Vdi3805PatchGenericAttribute entries = 1; }
+message Vdi3805PatchSheetAttributes {
+  oneof payload {
+    Vdi3805PatchValveHeatingAttributes valve_heating = 1;
+    Vdi3805PatchRadiatorAttributes radiator = 2;
+    Vdi3805PatchPumpHeatingAttributes pump_heating = 3;
+    Vdi3805PatchHeatGeneratorAttributes heat_generator = 4;
+    Vdi3805PatchGenericAttributes generic = 5;
+  }
+}
+message Vdi3805PatchConfiguration {
+  string id = 1;
+  Vdi3805PatchSheetAttributes attributes = 2;
+  optional string geometry_ref = 3;
+  repeated string function_refs = 4;
+}
+message Vdi3805PatchProductIdentity { string manufacturer_code = 1; string product_group = 2; string article_number = 3; }
+message Vdi3805PatchAccessoryLink { string accessory_id = 1; bool required = 2; uint32 quantity = 3; }
+message Vdi3805PatchCompositionLink { string component_id = 1; uint32 quantity = 2; }
+message Vdi3805PatchProduct {
+  string id = 1;
+  Vdi3805PatchProductIdentity identity = 2;
+  repeated Vdi3805PatchLocalizedText title = 3;
+  uint32 sheet = 4;
+  repeated Vdi3805PatchNativeRecord records = 5;
+  Vdi3805PatchConfiguration configuration = 6;
+  repeated Vdi3805PatchAccessoryLink accessories = 7;
+  repeated Vdi3805PatchCompositionLink components = 8;
+  Vdi3805PatchExtensionFields extensions = 9;
+}
+message Vdi3805PatchTitle { repeated Vdi3805PatchLocalizedText items = 1; }
+message Vdi3805PatchRecords { repeated Vdi3805PatchNativeRecord items = 1; }
+
 message Vdi3805ProductsPatch {
+  optional Vdi3805PatchTitle title = 1;
+  optional Vdi3805PatchConfiguration configuration = 2;
+  optional Vdi3805PatchRecords records = 3;
 }
 
 message Vdi3805ProductsRemoved {
@@ -19,6 +71,7 @@ message Vdi3805ProductsRemoved {
 
 message Vdi3805ProductsInserted {
   uint64 index = 1;
+  Vdi3805PatchProduct row = 2;
 }
 
 message Vdi3805ProductsMoved {

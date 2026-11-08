@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-critical-region-building-id/schema.json",
+  "title": "ChangeCriticalRegionBuildingId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newBuildingId"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeCriticalRegionBuildingId"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "CriticalRegion",
+          "de": "Kritischer Bereich"
+        },
+        "description": {
+          "en": "The criticalRegion this mutation addresses, by id.",
+          "de": "Das adressierte Element (Kritischer Bereich), per Kennung."
+        },
+        "ref": {
+          "kind": "criticalRegion"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newBuildingId": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Owning building",
+          "de": "Zugehöriges Gebäude"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20,
+        "widget": "text"
+      }
+    }
+  }
+}

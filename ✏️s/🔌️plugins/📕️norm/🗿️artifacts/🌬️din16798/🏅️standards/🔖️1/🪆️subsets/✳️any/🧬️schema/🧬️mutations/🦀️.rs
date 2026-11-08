@@ -56,6 +56,15 @@ use semio_s_artifact_norm_din16798_mut_air_hygiene::change_vent_inspection;
 use semio_s_artifact_norm_din16798_mut_air_hygiene::change_vent_duct_class;
 use semio_s_artifact_norm_din16798_mut_air_hygiene::change_vent_duct_leakage;
 use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_design_airflow;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_name;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_id;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_name;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_id;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_fan_flow;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_fan_run_hours;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_duct_test_pressure;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_humidification_required;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_humidification_provided;
 
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -103,6 +112,15 @@ pub enum Din16798Mutation {
     ChangeVentDuctClass(change_vent_duct_class::ChangeVentDuctClass),
     ChangeVentDuctLeakage(change_vent_duct_leakage::ChangeVentDuctLeakage),
     ChangeVentDesignAirflow(change_vent_design_airflow::ChangeVentDesignAirflow),
+    ChangeZoneName(change_zone_name::ChangeZoneName),
+    ChangeZoneId(change_zone_id::ChangeZoneId),
+    ChangeVentName(change_vent_name::ChangeVentName),
+    ChangeVentId(change_vent_id::ChangeVentId),
+    ChangeVentFanFlow(change_vent_fan_flow::ChangeVentFanFlow),
+    ChangeVentFanRunHours(change_vent_fan_run_hours::ChangeVentFanRunHours),
+    ChangeVentDuctTestPressure(change_vent_duct_test_pressure::ChangeVentDuctTestPressure),
+    ChangeVentHumidificationRequired(change_vent_humidification_required::ChangeVentHumidificationRequired),
+    ChangeVentHumidificationProvided(change_vent_humidification_provided::ChangeVentHumidificationProvided),
 }
 
 pub const KINDS: &[&str] = &[
@@ -147,6 +165,15 @@ pub const KINDS: &[&str] = &[
     "change-vent-duct-class",
     "change-vent-duct-leakage",
     "change-vent-design-airflow",
+    "change-zone-name",
+    "change-zone-id",
+    "change-vent-name",
+    "change-vent-id",
+    "change-vent-fan-flow",
+    "change-vent-fan-run-hours",
+    "change-vent-duct-test-pressure",
+    "change-vent-humidification-required",
+    "change-vent-humidification-provided",
 ];
 
 #[cfg(test)]

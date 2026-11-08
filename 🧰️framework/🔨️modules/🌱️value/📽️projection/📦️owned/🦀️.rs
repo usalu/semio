@@ -4,59 +4,71 @@ use crate::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{Retain
 use std::mem::size_of;
 
 /// 🧺️ One explicitly owned field retains its original issuer and funds every copied fragment.
-pub struct OwnedFieldProjection<T:RetainedClone>{cursor:RetainedFieldCursor<T>,taken:bool,closing:bool,child_started:bool}
+pub struct OwnedFieldProjection<T:RetainedClone>{cursor:RetainedFieldCursor<T>,closing:bool,close_route:Option<(crate::retained_clone::OriginalEffectInvocationIdentity,u8,Option<(semio_framework_value_control_contract::NativeAllocationIdentity,Option<u64>,crate::retained_clone::OriginalWorkBindingIdentity)>,RetainedCloneGrant,usize)>}
 impl<T:RetainedClone> OwnedFieldProjection<T>{
  /// 📏️ Quotes the fixed original-field projection body before any source is inspected.
- pub fn birth_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Self>()*2,depth:1,..Default::default()}}
- /// 🌱️ Constructs the original-field projection only after its complete birth grant.
- pub fn begin(effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<(Self,RetainedCloneProgress),ValueError>{let grant=effect.grant();let mut work=0;let result=(||{if effect.maximum_work_units()==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original projection birth work is not funded"))}let d=Self::birth_demand();if !retained_clone_grant_admits(grant,d){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"owned field projection birth is not funded"));}work=1;Ok((Self{cursor:Default::default(),taken:false,closing:false,child_started:false},RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))})();crate::RetainedWorkOutcome{result,work}}
+ pub fn birth_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Option<Self>>(),depth:1,..Default::default()}}
+
+}
+impl<T:RetainedClone> OwnedFieldProjection<T>{
+ fn close_dispatch<'r>(&mut self,mut original:Option<&mut crate::retained_clone::OriginalRetirementCloseLoan<'_>>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalEffectReply<'r,RetainedCloneStep,crate::OriginalRetirementFailure>,recover:bool)->Result<crate::retained_clone::OriginalEffectReplyComplete<'r,RetainedCloneStep,crate::OriginalRetirementFailure>,ValueError>{use crate::retained_clone::OriginalEffectCallbackMode;if !self.closing{return Err(invalid())}let invocation=effect.invocation().ok_or_else(||ValueError::invariant("projection close lacks original invocation"))?;let mode=if recover{OriginalEffectCallbackMode::Recover}else{OriginalEffectCallbackMode::Receive};if invocation.mode()!=mode||invocation.source_turn()!=effect.work_source_turn(){return Err(ValueError::invariant("projection close changed original action"))}let binding=match original.as_mut(){Some(loan)=>{let binding=loan.original_work().binding_identity()?;if !binding.matches_effect(effect){return Err(ValueError::invariant("projection original loan changed Work"))}Some((loan.ledger_identity(),loan.retirement_recipient_identity(),binding))},None=>None};let route=if recover{let key=self.close_route.ok_or_else(||ValueError::invariant("projection close recovery absent"))?;if key.0!=invocation.identity()||key.2!=binding||key.3!=effect.grant()||key.4!=body{return Err(ValueError::invariant("projection close recovery changed owner"))}key.1}else{if self.close_route.is_some(){return Err(ValueError::invariant("projection close action occupied"))}if !self.cursor.close_started(){if original.is_some(){return Err(invalid())}1}else if original.is_some(){3}else{2}};let key=(invocation.identity(),route,binding,effect.grant(),body);let state=self;let mut scope=reply.progress().scope(&mut state.close_route,key)?;let done=match(route,recover,original){(1,false,None)=>state.cursor.begin_close_into(effect,scope.borrow()?)?,(1,true,None)=>state.cursor.recover_begin_close_into(effect,scope.borrow()?)?,(2,false,None)=>state.cursor.close_into(body,effect,scope.borrow()?)?,(2,true,None)=>state.cursor.recover_close_into(body,effect,scope.borrow()?)?,(3,false,Some(loan))=>state.cursor.close_original_into(loan,body,effect,scope.borrow()?)?,(3,true,Some(loan))=>state.cursor.recover_close_original_into(loan,body,effect,scope.borrow()?)?,_=>return Err(invalid())};drop(done);Ok(scope.forwarded())}
 }
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"owned field projection is closing, transferred or incomplete")}
 impl<T:RetainedClone+SnapshotProjection<Output=T>> SnapshotProjectionCursor<T> for OwnedFieldProjection<T>{
- fn demands(&self,original:RetainedCloneRef<'_,T>,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{if self.closing||self.taken{return Err(invalid());}self.cursor.advance_demands(original,body,maximum_work_units)}
- fn advance_work_demand(&self,original:RetainedCloneRef<'_,T>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{self.demands(original,body,maximum_work_units)?;self.cursor.advance_work_demand(original,body,maximum_work_units)}
- fn advance(&mut self,original:RetainedCloneRef<'_,T>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let grant=effect.grant();let maximum_work_units=effect.maximum_work_units();let mut work=0;let result:Result<_,crate::OriginalRetirementFailure>=(||{let d=self.demands(original,body,maximum_work_units)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()));}let step={let turn=self.cursor.advance(original,body,maximum_work_units,effect);work+=turn.work;turn.result}?;admit_retained_clone_progress(grant,step.progress(),"original owned field projection")?;Ok(step)})();crate::RetainedWorkOutcome{result,work}}
- fn ready(&self)->bool{!self.closing&&!self.taken&&self.cursor.output_ready()}
- fn take_demand(&self)->Result<RetirementDemand,ValueError>{if !self.ready(){return Err(invalid());}self.cursor.take_demand()}
+ fn demands(&self,original:RetainedCloneRef<'_,T>,body:usize,maximum:u64)->Result<RetirementDemand,ValueError>{if self.closing{return Err(invalid())}self.cursor.advance_demands(original,body,maximum)}
+ fn advance_work_demand(&self,original:RetainedCloneRef<'_,T>,body:usize,maximum:u64)->Result<u64,ValueError>{self.demands(original,body,maximum)?;self.cursor.advance_work_demand(original,body,maximum)}
+ fn advance_into<'r>(&mut self,original:RetainedCloneRef<'_,T>,body:usize,maximum:u64,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalEffectReply<'r,RetainedCloneStep,crate::OriginalRetirementFailure>)->Result<crate::retained_clone::OriginalEffectReplyComplete<'r,RetainedCloneStep,crate::OriginalRetirementFailure>,ValueError>{if self.closing{return Err(invalid())}self.cursor.advance_into(original,body,maximum,effect,reply)}
+ fn recover_advance_into<'r>(&mut self,original:RetainedCloneRef<'_,T>,body:usize,maximum:u64,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalEffectReply<'r,RetainedCloneStep,crate::OriginalRetirementFailure>)->Result<crate::retained_clone::OriginalEffectReplyComplete<'r,RetainedCloneStep,crate::OriginalRetirementFailure>,ValueError>{self.cursor.recover_advance_into(original,body,maximum,effect,reply)}
+ fn ready(&self)->bool{!self.closing&&self.cursor.output_ready()}
+ fn take_demand(&self)->Result<RetirementDemand,ValueError>{if !self.ready(){return Err(invalid())}self.cursor.take_demand()}
  fn take_work_demand(&self)->Result<u64,ValueError>{self.take_demand()?;self.cursor.take_work_demand()}
- fn take(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<Option<(T,RetainedCloneProgress)>,ValueError>{if !self.ready(){return crate::RetainedWorkOutcome{result:Err(invalid()),work:0}}let before=effect.performed_work();let mut slot=None;let mut output=None;let result=(||{let reply=crate::retained_clone::OriginalEffectReply::borrow(&mut slot)?;drop(self.cursor.take(&mut output,effect,reply)?);match slot.take(){Some(Ok(RetainedCloneStep::Complete(progress)))=>{self.taken=true;Ok(output.take().map(|value|(value,progress)))},Some(Ok(RetainedCloneStep::Progress(_)))|None=>Ok(None),Some(Err(error))=>Err(error)}})();crate::RetainedWorkOutcome{result,work:effect.performed_work().saturating_sub(before)}}
- 
+ fn take_into<'r>(&mut self,output:&mut Option<T>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalEffectReply<'r,RetainedCloneStep,ValueError>)->Result<crate::retained_clone::OriginalEffectReplyComplete<'r,RetainedCloneStep,ValueError>,ValueError>{if !self.ready(){return Err(invalid())}self.cursor.take(output,effect,reply)}
+ fn recover_take_into<'r>(&mut self,output:&mut Option<T>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalEffectReply<'r,RetainedCloneStep,ValueError>)->Result<crate::retained_clone::OriginalEffectReplyComplete<'r,RetainedCloneStep,ValueError>,ValueError>{self.cursor.recover_take(output,effect,reply)}
  fn close_started(&self)->bool{self.closing}
+ fn begin_close_demand(&self)->Result<RetirementDemand,ValueError>{Ok(if self.closing{Default::default()}else{RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()}})}
  fn begin_close_work_demand(&self)->Result<u64,ValueError>{Ok(u64::from(!self.closing))}
- fn begin_close_demand(&self)->Result<crate::RetirementDemand,crate::ValueError>{let flags=usize::from(!self.closing);Ok(crate::RetirementDemand{copy_bytes:flags*std::mem::size_of::<bool>(),depth:usize::from(flags!=0),..Default::default()})}
-fn begin_close_paid(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<crate::RetainedCloneProgress,crate::ValueError>{let grant=effect.grant();let mut work=0;let result=(||{let demand=self.begin_close_demand()?;if demand.copy_bytes==0||!crate::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(Default::default())}self.closing=true;work=1;Ok(crate::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})})();crate::RetainedWorkOutcome{result,work}}
- fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Err(invalid());}if !self.child_started{return if self.cursor.close_started(){Ok(RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()})}else{self.cursor.begin_close_demand()}}retained_clone_close_demands::<T>(&self.cursor,body)}
- fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{self.close_demands(body)?;if !self.child_started{return if self.cursor.close_started(){Ok(1)}else{self.cursor.begin_close_work_demand()}}self.cursor.close_work_demand(body)}
- fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementOutcome{let grant=effect.grant();let mut work=0;let result:Result<_,crate::OriginalRetirementFailure>=(||{if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}let d=self.close_demands(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()));}if !self.child_started{if !self.cursor.close_started(){let turn=self.cursor.begin_close_paid(effect);work+=turn.work;return turn.result.map(RetainedCloneStep::Progress).map_err(Into::into)}self.child_started=true;work=1;let progress=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<bool>(),..Default::default()};return Ok(RetainedCloneStep::Progress(progress));}let step={let turn=self.cursor.close_step(&mut effect.nested(grant));work+=turn.work();match turn{crate::retained_clone::RetainedWorkPoll::Complete(done)=>done.result,crate::retained_clone::RetainedWorkPoll::Pending{..}=>return Ok(RetainedCloneStep::Progress(Default::default()))}}?;Ok(admit_retained_clone_close(grant,step,self.terminal_is_empty(),"original owned field projection closure")?)})();crate::RetainedWorkOutcome{result,work}}
- fn terminal_is_empty(&self)->bool{self.closing&&self.cursor.terminal_is_empty()}
+ fn begin_close_into<'r>(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalEffectReply<'r,RetainedCloneStep,crate::OriginalRetirementFailure>)->Result<crate::retained_clone::OriginalEffectReplyComplete<'r,RetainedCloneStep,crate::OriginalRetirementFailure>,ValueError>{let d=self.begin_close_demand()?;if self.closing{return Ok(reply.complete(Ok(RetainedCloneStep::Complete(Default::default()))))}if effect.remaining_work_units()?<1||!retained_clone_grant_admits(effect.grant(),d){return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}if !effect.performed(1)?{return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::WorkLimit,"projection close start exceeded original Work").into())))}self.closing=true;Ok(reply.complete(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))))}
+ fn recover_begin_close_into<'r>(&mut self,_:&mut crate::RetainedAllocationEffect<'_>,_:crate::retained_clone::OriginalEffectReply<'r,RetainedCloneStep,crate::OriginalRetirementFailure>)->Result<crate::retained_clone::OriginalEffectReplyComplete<'r,RetainedCloneStep,crate::OriginalRetirementFailure>,ValueError>{Err(ValueError::invariant("native projection close start has no unrecorded callback"))}
+ fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing||self.close_route.is_some(){return Err(invalid())}if !self.cursor.close_started(){self.cursor.begin_close_demand()}else{self.cursor.close_demands(body)}}
+ fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{self.close_demands(body)?;if !self.cursor.close_started(){self.cursor.begin_close_work_demand()}else{self.cursor.close_work_demand(body)}}
+ fn close_into<'r>(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalEffectReply<'r,RetainedCloneStep,crate::OriginalRetirementFailure>)->Result<crate::retained_clone::OriginalEffectReplyComplete<'r,RetainedCloneStep,crate::OriginalRetirementFailure>,ValueError>{self.close_dispatch(None,body,effect,reply,false)}
+ fn recover_close_into<'r>(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalEffectReply<'r,RetainedCloneStep,crate::OriginalRetirementFailure>)->Result<crate::retained_clone::OriginalEffectReplyComplete<'r,RetainedCloneStep,crate::OriginalRetirementFailure>,ValueError>{self.close_dispatch(None,body,effect,reply,true)}
+ fn requires_original_birth(&self)->bool{self.closing&&self.close_route.is_none()&&self.cursor.close_started()&&self.cursor.requires_original_birth()}
+ fn close_original_birth_step(&mut self,original:&mut crate::retained_clone::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->crate::OriginalRetirementPoll{self.cursor.close_original_birth_step(original,grant)}
+ fn requires_original_control(&self)->bool{self.closing&&(self.close_route.is_some_and(|(_,route,_,_,_)|route==3)||self.cursor.close_started()&&self.cursor.requires_original_control())}
+ fn close_original_into<'r>(&mut self,original:&mut crate::retained_clone::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalEffectReply<'r,RetainedCloneStep,crate::OriginalRetirementFailure>)->Result<crate::retained_clone::OriginalEffectReplyComplete<'r,RetainedCloneStep,crate::OriginalRetirementFailure>,ValueError>{self.close_dispatch(Some(original),body,effect,reply,false)}
+ fn recover_close_original_into<'r>(&mut self,original:&mut crate::retained_clone::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalEffectReply<'r,RetainedCloneStep,crate::OriginalRetirementFailure>)->Result<crate::retained_clone::OriginalEffectReplyComplete<'r,RetainedCloneStep,crate::OriginalRetirementFailure>,ValueError>{self.close_dispatch(Some(original),body,effect,reply,true)}
+ fn terminal_is_empty(&self)->bool{self.closing&&self.close_route.is_none()&&self.cursor.terminal_is_empty()}
+ fn native_terminal_release(&self)->Option<crate::retained_clone::RetainedCursorRelease<Self>>{let witness=self.cursor.native_terminal_release()?;if !self.closing||self.close_route.is_some()||!witness.validates(&self.cursor){return None}Some(unsafe{crate::retained_clone::RetainedCursorRelease::native(|owner:&Self|owner.closing&&owner.close_route.is_none()&&owner.cursor.native_terminal_release().is_some_and(|witness|witness.validates(&owner.cursor)))})}
 }
-impl SnapshotProjection for String{
+unsafe impl SnapshotProjection for String{
  type Output=Self;
  type Projection=OwnedFieldProjection<Self>;
  fn projection_birth_demand()->RetirementDemand{Self::Projection::birth_demand()}
  fn projection_birth_work_demand()->Result<u64,ValueError>{Ok(1)}
- fn begin_projection(effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<(Self::Projection,RetainedCloneProgress)>{Self::Projection::begin(effect)}
+ fn projection_seed()->Self::Projection{Self::Projection{cursor:Default::default(),closing:false,close_route:None}}
 }
-impl<T:RetainedClone> SnapshotProjection for Vec<T>{
+unsafe impl<T:RetainedClone> SnapshotProjection for Vec<T>{
  type Output=Self;
  type Projection=OwnedFieldProjection<Self>;
  fn projection_birth_demand()->RetirementDemand{Self::Projection::birth_demand()}
  fn projection_birth_work_demand()->Result<u64,ValueError>{Ok(1)}
- fn begin_projection(effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<(Self::Projection,RetainedCloneProgress)>{Self::Projection::begin(effect)}
+ fn projection_seed()->Self::Projection{Self::Projection{cursor:Default::default(),closing:false,close_route:None}}
 }
 
-impl<T:RetainedClone> SnapshotProjection for Option<T>{
+unsafe impl<T:RetainedClone> SnapshotProjection for Option<T>{
  type Output=Self;
  type Projection=OwnedFieldProjection<Self>;
  fn projection_birth_demand()->RetirementDemand{Self::Projection::birth_demand()}
  fn projection_birth_work_demand()->Result<u64,ValueError>{Ok(1)}
- fn begin_projection(effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<(Self::Projection,RetainedCloneProgress)>{Self::Projection::begin(effect)}
+ fn projection_seed()->Self::Projection{Self::Projection{cursor:Default::default(),closing:false,close_route:None}}
 }
 
-impl<T:RetainedClone,const N:usize> SnapshotProjection for [T;N]{
- type Output=Self;
- type Projection=OwnedFieldProjection<Self>;
- fn projection_birth_demand()->RetirementDemand{Self::Projection::birth_demand()}
+unsafe impl<T:RetainedClone,const N:usize> SnapshotProjection for [T;N]{
+ type Output=Box<Self>;
+ type Projection=super::BoundedArrayProjection<T,N>;
+ fn projection_birth_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Option<Self::Projection>>(),depth:1,..Default::default()}}
  fn projection_birth_work_demand()->Result<u64,ValueError>{Ok(1)}
- fn begin_projection(effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<(Self::Projection,RetainedCloneProgress)>{Self::Projection::begin(effect)}
+ fn projection_seed()->Self::Projection{super::BoundedArrayProjection::new()}
+ fn native_copy()->Option<crate::retained_clone::RetainedCopy<Self>>{T::native_copy().map(|copy|copy.array_witness::<N>())}
 }

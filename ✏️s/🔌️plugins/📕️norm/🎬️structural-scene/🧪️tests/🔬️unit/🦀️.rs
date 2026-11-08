@@ -115,8 +115,7 @@ fn variant_wire_shape_is_kind_and_data_with_camel_case() {
 
 #[test]
 fn golden_scene_matches_committed_bytes() {
-    let golden = include_str!("../🧫️fixtures/🏛️scene/🔣️.json");
-    assert_eq!(canonical_json(&scene()), golden.trim_end());
+    crate::projection_kit::test_support::assert_golden(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🧫️fixtures/🏛️scene/🔣️.json"), &canonical_json(&scene()));
 }
 
 #[test]
@@ -362,4 +361,20 @@ fn utilisation_tone_and_status_agree_with_the_shared_limit_rule() {
     assert_eq!(utilisation_tone(0.5), Tone::Info);
     assert_eq!(utilisation_status(0.95, 0.9), CheckStatus::Warning);
     assert_eq!(utilisation_status(0.5, 0.9), CheckStatus::Pass);
+}
+
+#[test]
+fn quantity_kinds_are_declared_in_every_twin_with_their_wire_names() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📏️quantity-kinds/🔣️.json")).expect("fixture");
+    let (ts, graphql, proto) = (include_str!("../../🧬️schema/🟦️.ts"), include_str!("../../🧬️schema/🔗️.graphql"), include_str!("../../🧬️schema/🛰️.proto"));
+    let kinds = [("velocity", QuantityKind::Velocity), ("ventilationRate", QuantityKind::VentilationRate), ("heatTransferCoefficient", QuantityKind::HeatTransferCoefficient), ("power", QuantityKind::Power)];
+    let rows = fixture["rows"].as_array().expect("rows");
+    assert_eq!(rows.len(), kinds.len());
+    for (row, (wire, kind)) in rows.iter().zip(kinds) {
+        assert_eq!(row["kind"], wire);
+        assert_eq!(canonical_json(&kind), format!("\"{wire}\""));
+        assert!(ts.contains(&format!("\"{wire}\"")), "{wire} missing in the TypeScript twin");
+        assert!(graphql.contains(&format!("\n  {}\n", row["graphql"].as_str().expect("graphql"))), "{wire} missing in the GraphQL twin");
+        assert!(proto.contains(&format!("{} = ", row["proto"].as_str().expect("proto"))), "{wire} missing in the proto twin");
+    }
 }

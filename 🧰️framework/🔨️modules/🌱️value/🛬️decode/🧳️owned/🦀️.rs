@@ -3,12 +3,13 @@
 use crate::{RetainedWorkOutcome,OriginalReceivingPrimary,NativeDecodeControl,RetirementDemand,ValueError,retirement::RetireOwned,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep}};
 pub use semio_framework_value_native_shared_field::NativeIntrinsicSharedField;
 pub use semio_framework_value_native_schema_engine::record;
-pub use record::{NativeRecordKey,NativeRecordField,NativeSchemaLeaf,NativeSchemaKeySource,NativeRecordSchema,NativeFieldMatch,NativeRecordMatcher,NativeRecordStorage};
-#[path="📋️list/🦀️.rs"]mod list;
-pub use list::{NativeListSource,NativePersistentListReceiver};
+pub use record::{NativeRecordKey,NativeRecordField,NativeSourceKeyValue,NativeSchemaLeaf,NativeSchemaFields,NativeSchemaKeyPoll,NativeSchemaKeyMetadata,NativeSchemaMatchSelection,NativeSchemaKeySource,NativeRecordSchema,NativeFieldMatch,NativeRecordMatcher,NativeRecordStorage};
+#[path="📋️list-impl/🦀️.rs"]mod list_impl;
+pub use semio_framework_value_native_list_receiver::{NativeListSource,NativePersistentListReceiver};
 
-#[path="🔗️sealed-shared-receiver/🦀️.rs"]mod shared;
-pub use shared::{NativeSharedReceiver,NativeSharedRoot};
+#[path="🔗️sealed-shared-impl/🦀️.rs"]mod shared_impl;
+#[doc(hidden)]pub use shared_impl::NativeReceiverSeedFor;
+pub use semio_framework_value_native_shared_engine::{NativeSharedReceiver,NativeSharedRoot};
 pub use semio_framework_value_native_default::{NativeDefault,NativeDefaultCursor,NativeDefaultValue,NativeDefaultValueCursor,NativeDefaultSlot,NativeArrayDefaultCursor,NativePairDefaultCursor};
 
 #[path="🌳️value/🦀️.rs"]pub mod tree;
@@ -25,13 +26,20 @@ pub trait NativeReceive<I:?Sized>:RetireOwned+Sized{
  fn receiver()->Self::Receiver;
  /// 🌱️ Produces the optional inline original subset seed with the same pure contract.
  fn record_subset_receiver()->Option<Self::Receiver>{None}
+ /// 🧬️ Returns only the matching factory-owned immutable seed template, when available.
+ fn receiver_template(_subset:bool)->Option<semio_framework_value_native_storage::NativeSeedTemplate<Self::Receiver>>{None}
 }
 
 pub use semio_framework_value_native_receiver_protocol::NativeReceivingBatch;
 
-pub trait NativeRecordFields{
+/// 🧾️ Declares a native fixed record descriptor table.
+///
+/// # Safety
+/// The count and every reachable descriptor table must be bounded, deterministic, allocation-free, callback-free and non-unwinding.
+pub unsafe trait NativeRecordFields{
  fn native_schema_count()->usize;
  fn native_schema_field(index:usize)->Option<NativeRecordSchema>;
+ fn native_schema_fields()->NativeSchemaFields{unsafe{NativeSchemaFields::native(Self::native_schema_field)}}
 }
 
 pub use semio_framework_value_native_receiver_protocol::{NativeAdvanceSelection,NativeReceiver};

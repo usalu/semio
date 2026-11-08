@@ -8,7 +8,7 @@ mod custody_tests{
  use crate::{NativeAllocationRefusal as Refusal,NativeAllocationRefusalVault as Vault,OriginalRetirementFailure as Failure};
  #[test]
  fn receiving_refuses_retirement_until_original_refusal_vault_returns_its_owner(){
-  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🎟️control/🧬️contract/♻️failure/🧪️tests/allocation-custody.json")).unwrap();
+  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../♻️retirement/🧬️contract/♻️failure/🧪️tests/allocation-custody.json")).unwrap();
   for slot in 0..4{
    let error=ValueError::new(crate::ValueRefusalKind::OwnershipLimit,fixture[0]["receipt"].as_str().unwrap().to_owned());let pointer=error.message.as_ptr();let mut vault=Vault::default();let handle=vault.retain(error).unwrap();
    let mut effect=crate::native_decoding::NativeReceivingEffectFailure::<Failure>{child:None,producer_refusal:None,work_refusal:None,receiving:OriginalReceivingPrimary::from(ValueError::literal(crate::ValueRefusalKind::Canceled,"original context"))};

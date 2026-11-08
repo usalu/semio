@@ -1,0 +1,11 @@
+{
+  "variants": [
+    "Ok",
+    "Err"
+  ],
+  "value": 73,
+  "fuel": 256,
+  "maximumTurns": 128,
+  "deniedWork": 0,
+  "metadataWork": 1
+}

@@ -22,6 +22,30 @@ targets.push("🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭
 targets.push("🧰️framework/🔨️modules/🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust/Cargo.toml");
 targets.push("🧰️framework/🔨️modules/🌱️value/🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust/Cargo.toml");
 targets.push("🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📏️physical/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/🎟️control/📨️reply/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧮️array-cursor/🔎️selection/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/📦️effect/🧳️frame/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/⚙️engine/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/🧺️collection/📐️sorted/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🪪️lease/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🧵️job/🛬️receiving/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/📋️list/🟰️equal/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🧳️preparation/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/⚙️engine/📋️backing/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/🗂️ordered/⚙️engine/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/⚙️engine/🌱️dynamic/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔢️bounded-ord/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️backing/📦️packages/🦀️rust/Cargo.toml");
+targets.push("🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️backing/📦️storage/📦️packages/🦀️rust/Cargo.toml");
 const selected=new Set(process.argv.slice(2));const out=[];
-for(const manifest of targets){const doc=Bun.TOML.parse(await fs.readFile(manifest,"utf8")) as any;if(selected.size&&!selected.has(doc.package.name))continue;for(const os of ["linux","windows","macos"]){const cfg=["test","debug_assertions","target_arch=x86_64","target_os="+os,"target_family="+(os==="windows"?"windows":"unix"),os==="windows"?"windows":"unix","target_env="+(os==="linux"?"gnu":os==="windows"?"msvc":""),"target_pointer_width=64","target_endian=little","target_has_atomic=8","target_has_atomic=16","target_has_atomic=32","target_has_atomic=64","target_has_atomic=ptr"];const rows=await readRustSourceClosureV1([path.resolve(path.dirname(manifest),doc.lib.path)],process.cwd(),cfg,async file=>{try{return new Uint8Array(await fs.readFile(file))}catch(e){if((e as any).code==="ENOENT")return null;throw e}},{manifestDirectory:path.resolve(path.dirname(manifest)),generated:()=>{}});const bytes=rows.reduce((n,r)=>n+r.bytes,0),lines=rows.reduce((n,r)=>n+r.activeLines,0),limits=doc.package.metadata?.semio?.["rust-source-boundary"];out.push({package:doc.package.name,os,files:rows.length,bytes,lines,limits,admitted:limits?rows.length<=limits.maxSourceFiles&&bytes<=limits.maxSourceBytes&&lines<=limits.maxActiveLines:null,hashes:await Promise.all(rows.map(async r=>({path:r.path,sha:createHash("sha256").update(await fs.readFile(path.resolve(r.path))).digest("hex")})))});}}
+for(const manifest of targets){const doc=Bun.TOML.parse(await fs.readFile(manifest,"utf8")) as any;if(selected.size&&!selected.has(doc.package.name))continue;for(const os of ["linux","windows","macos"]){const cfg=[...(doc.lib["proc-macro"]?["proc_macro"]:[]),"test","debug_assertions","target_arch=x86_64","target_os="+os,"target_family="+(os==="windows"?"windows":"unix"),os==="windows"?"windows":"unix","target_env="+(os==="linux"?"gnu":os==="windows"?"msvc":""),"target_pointer_width=64","target_endian=little","target_has_atomic=8","target_has_atomic=16","target_has_atomic=32","target_has_atomic=64","target_has_atomic=ptr"];const rows=await readRustSourceClosureV1([path.resolve(path.dirname(manifest),doc.lib.path)],process.cwd(),cfg,async file=>{try{return new Uint8Array(await fs.readFile(file))}catch(e){if((e as any).code==="ENOENT")return null;throw e}},{manifestDirectory:path.resolve(path.dirname(manifest)),generated:()=>{}});const bytes=rows.reduce((n,r)=>n+r.bytes,0),lines=rows.reduce((n,r)=>n+r.activeLines,0),limits=doc.package.metadata?.semio?.["rust-source-boundary"];out.push({package:doc.package.name,os,files:rows.length,bytes,lines,limits,admitted:limits?rows.length<=limits.maxSourceFiles&&bytes<=limits.maxSourceBytes&&lines<=limits.maxActiveLines:null,hashes:await Promise.all(rows.map(async r=>({path:r.path,sha:createHash("sha256").update(await fs.readFile(path.resolve(r.path))).digest("hex")})))});}}
+for(const name of selected)if(!out.some(row=>row.package===name))throw new Error("Unknown requested census owner: "+name);
 await fs.writeFile("/home/deck/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️01/NORM-COMPLETE-VISUAL-EUROCODE-PLUGINS/🗑️generated/"+(selected.size?"native-value-selected-census.json":"native-value-source-census.json"),JSON.stringify(out,null,2));console.log(JSON.stringify(out.map(({hashes,...r})=>r),null,2));

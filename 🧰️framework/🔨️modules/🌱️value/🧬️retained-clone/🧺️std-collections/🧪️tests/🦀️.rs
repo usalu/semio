@@ -1,22 +1,19 @@
-const MAXIMUM_CLONE_WORK:u64=4096;
-fn actual_step<E:std::fmt::Debug>(turn:crate::RetainedWorkOutcome<RetainedCloneStep,E>)->RetainedCloneStep{let work=turn.work;let step=turn.result.unwrap();assert!(step.progress()==Default::default()||work>0);step}
 use super::*;
+use crate::observe_retirement_allocations as observe;
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_value_clone_source_testing::FixtureSourceBirth;
-use crate::retained_clone::{RetainedCloneSource,effect};
-
-fn close_all<M: RetainedClone>(cursor: &mut M::Cursor) {
-    {let d=cursor.begin_close_demand().unwrap();let started=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};effect::begin_close_paid(cursor,started).result.unwrap();}
-    for _ in 0..100_000 {
-        if cursor.terminal_is_empty() { return; }
-        let d=cursor.close_demands(1<<16).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};assert_eq!(cursor.close_demands(grant.maximum_copy_bytes).unwrap(),d);
-        let step = actual_step(effect::close_step(cursor,grant));
-        assert!(step.progress().fits(grant));
-    }
-    panic!("standard collection clone close did not terminate");
-}
-
+use semio_framework_value_clone_source_testing::{FixtureSourceBirth,FixtureCloseStep,observe_fixture_source_allocations};
+#[path="../../🧬️contract/🔤️string-cursor/🧪️tests/producer.rs"] mod producer;
+use producer::{Harness,Op};
+fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 #[test]
 fn reselected_string_copy_budget_matches_exact_utf8_prefix_and_actual_maximum(){
- let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧺️std-collections/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();for row in fixture["copySelection"].as_array().unwrap(){let text=row["source"].as_str().unwrap();let source=RetainedCloneSource::<String>::from_owner(text.to_owned());let mut cursor=String::retained_clone_cursor();for _ in 0..4{if cursor.phase==1{break}let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:source.borrow().binding_copy_bytes(),maximum_capacity_bytes:text.len(),maximum_depth:1,..Default::default()};assert!(actual_step(effect::advance(&mut cursor,source.borrow(), text.len(),MAXIMUM_CLONE_WORK, grant)).progress().fits(grant));}assert_eq!(cursor.phase,1);let requested=row["requestedBytes"].as_u64().unwrap()as usize;let maximum=row["admittedBytes"].as_u64().unwrap()as usize;let original=cursor.advance_demands(source.borrow(),requested,MAXIMUM_CLONE_WORK).unwrap();let selected=cursor.advance_demands(source.borrow(),maximum,MAXIMUM_CLONE_WORK).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:selected.copy_bytes,maximum_depth:selected.depth,..Default::default()};let step=actual_step(effect::advance(&mut cursor,source.borrow(), maximum,MAXIMUM_CLONE_WORK, grant));assert!(step.progress().fits(grant));assert_eq!(step.progress().copied_bytes-size_of::<usize>(),row["expectedCopiedBytes"].as_u64().unwrap()as usize);assert!(step.progress().copied_bytes<=selected.copy_bytes);assert!(maximum<original.copy_bytes);let prefix:Vec<u8>=row["expectedPrefixBytes"].as_array().unwrap().iter().map(|b|b.as_u64().unwrap()as u8).collect();assert_eq!(cursor.bytes.as_deref().unwrap(),prefix.as_slice());assert_eq!(cursor.bytes.as_deref().unwrap(),&text.as_bytes()[..prefix.len()]);close_all::<String>(&mut cursor);}
+ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧺️std-collections/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+ for row in fixture["copySelection"].as_array().unwrap(){
+  let text=row["source"].as_str().unwrap();let mut source=RetainedCloneSource::<String>::from_owner(text.to_owned());let mut cursor=Harness::<String>::new(&source);
+  for _ in 0..4{if cursor.inspect_cursor(|c|c.test_copy_phase()){break}let maximum=source.wallet().remaining_work();let(d,work)=cursor.quote(&source,Op::Advance,text.len(),maximum);let g=grant(d);let(step,heap)=cursor.drive(&mut source,Op::Advance,text.len(),maximum,g,work);assert!(step.progress().fits(g));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));}
+  assert!(cursor.inspect_cursor(|c|c.test_copy_phase()));let requested=row["requestedBytes"].as_u64().unwrap()as usize;let body=row["admittedBytes"].as_u64().unwrap()as usize;let maximum=source.wallet().remaining_work();let original=cursor.quote(&source,Op::Advance,requested,maximum).0;let(selected,work)=cursor.quote(&source,Op::Advance,body,maximum);let g=grant(selected);let(step,heap)=cursor.drive(&mut source,Op::Advance,body,maximum,g,work);assert_eq!(heap,(0,0));assert!(step.progress().fits(g));let expected=row["expectedCopiedBytes"].as_u64().unwrap()as usize;let copied=if expected==0{0}else{step.progress().copied_bytes.checked_sub(std::mem::size_of::<usize>()).unwrap()};assert_eq!(copied,expected);assert!(step.progress().copied_bytes<=selected.copy_bytes);assert!(selected.copy_bytes<original.copy_bytes);let prefix=row["expectedPrefix"].as_str().unwrap();cursor.inspect_cursor(|c|assert_eq!(c.test_partial_bytes().unwrap(),prefix.as_bytes()));let oracle=String::from_utf8(text.as_bytes()[..prefix.len()].to_vec()).unwrap();cursor.inspect_cursor(|c|assert_eq!(c.test_partial_bytes().unwrap(),oracle.as_bytes()));
+  let maximum=source.wallet().remaining_work();let(d,work)=cursor.quote(&source,Op::Start,0,maximum);cursor.drive(&mut source,Op::Start,0,maximum,grant(d),work);
+  for turn in 0..100000{if cursor.terminal(){break}let maximum=source.wallet().remaining_work();let(d,work)=cursor.quote(&source,Op::Close,65536,maximum);let g=grant(d);let(step,heap)=cursor.drive(&mut source,Op::Close,65536,maximum,g,work);assert!(step.progress().fits(g));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(turn+1<100000||cursor.terminal());}assert!(cursor.terminal());cursor.release(&mut source);assert_eq!(observe(||drop(cursor)).1,(0,0));
+  let mut heap=(0usize,0usize);for _ in 0..100000{if source.terminal_is_empty(){break}let d=source.next_close_demand(65536).unwrap();let(state,observed)=observe_fixture_source_allocations(||source.close_with(65536,grant(d)).unwrap());heap.0+=observed.0;heap.1+=observed.1;let progress=match state{FixtureCloseStep::Pending=>continue,FixtureCloseStep::Progress(p)=>p,FixtureCloseStep::Complete=>Default::default(),_=>panic!("String Source exact close was refused")};assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));heap=(0,0);}assert!(source.terminal_is_empty());assert_eq!(observe_fixture_source_allocations(||drop(source)).1,(0,0));
+ }
 }

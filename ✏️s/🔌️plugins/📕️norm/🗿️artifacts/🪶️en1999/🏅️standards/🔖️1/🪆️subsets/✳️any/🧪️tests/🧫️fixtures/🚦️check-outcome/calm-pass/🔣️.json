@@ -332,6 +332,8 @@
       "sides": "one"
     }
   ],
+  "sheetProfiles": [],
+  "fireInsulations": [],
   "shells": [
     {
       "id": "shell-pass",

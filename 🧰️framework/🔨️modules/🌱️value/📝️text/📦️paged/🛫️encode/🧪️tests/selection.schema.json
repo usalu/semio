@@ -1,0 +1,44 @@
+{
+  "type": "array",
+  "minItems": 6,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "bound",
+      "phase",
+      "slot",
+      "finished",
+      "operation"
+    ],
+    "properties": {
+      "bound": {
+        "type": "boolean"
+      },
+      "phase": {
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      "slot": {
+        "type": "boolean"
+      },
+      "finished": {
+        "type": "boolean"
+      },
+      "operation": {
+        "enum": [
+          "bind",
+          "validate",
+          "reserve",
+          "copy",
+          "finish",
+          "publish"
+        ]
+      }
+    }
+  }
+}

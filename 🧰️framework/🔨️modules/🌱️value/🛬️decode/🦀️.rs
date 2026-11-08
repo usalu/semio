@@ -13,7 +13,8 @@ pub use crate::{NativeAllocationAuthority,NativeAllocationAuthorityPort,NativeAl
 pub use allocation::{NativeAllocationRequest,NativeAllocationEvent,NativeDecodeAdmissionPhase,NativeDecodeAdmissionProgress,NativeDecodeAllocationOutcome,NativeDecodeAllocationProgress,NativeDecodeAllocationPhase,NativeDecodeAllocationRecovery,NativeSendAllocationLoan,NativeForwardedDecodeControl,NativeForwardedDecodeContinuation,NativeForwardedDecodeFrame};
 #[path="🏭️construction/🦀️.rs"]
 pub mod construction;
-pub use construction::{OriginalConstructionAuthority,OriginalConstructionRecipient,OriginalConstructionLoan,OriginalConstructionIssuerIdentity,OriginalConstructionAction,OriginalConstructionPhase,OriginalConstructionGrant,OriginalConstructionGrantComplete,OriginalConstructionAccept,OriginalConstructionAcceptComplete,NativeBackingTurn,allocate_empty_vec,OriginalEffectAction,OriginalEffectAuthority,OriginalEffectCallbackMode,OriginalEffectProducer,OriginalEffectReply,OriginalEffectReplyComplete,NativeReceivingEffect,NativeReceivingEffectPoll,NativeReceivingEffectError,NativeReceivingEffectFailure,NativeReceivingEffectPhase,NativeSharedAdmission,NativeOwnedDecodeControl,NativeConstructionStepResult,NativeConstructionStepOutcome,NativeConstructionStepFailure,OriginalReceivingPrimary};
+pub use construction::{OriginalConstructionAuthority,OriginalConstructionRecipient,OriginalConstructionLoan,OriginalConstructionIssuerIdentity,OriginalConstructionAction,OriginalConstructionPhase,OriginalConstructionGrant,OriginalConstructionGrantComplete,OriginalConstructionAccept,OriginalConstructionAcceptComplete,NativeBackingTurn,allocate_empty_vec,OriginalEffectAction,OriginalEffectAuthority,OriginalEffectCallbackMode,OriginalEffectProducer,OriginalEffectReply,OriginalEffectReplyComplete,NativeReceivingEffect,NativeReceivingEffectPoll,NativeReceivingEffectError,NativeReceivingEffectFailure,NativeReceivingEffectPhase,NativeSharedAdmission,NativeOwnedDecodeControl,NativeConstructionStepResult,NativeConstructionStepOutcome,NativeConstructionStepFailure,OriginalReceivingPrimary,NativeReceivingConstructionBinding,NativeReceivingSuccessIdentity,NativeResidentSuccessAck,NativeReceivingEffectState,NativeReceivingEffectOutcome,NativeEffectCapturePlan};
+pub use semio_framework_value_native_outcome::OriginalConstructionAcceptedProof;
 #[path = "🫴️recipient/🦀️.rs"]
 mod recipient;
 #[path="🧬️child/🦀️.rs"]
@@ -21,7 +22,7 @@ mod child;
 pub use recipient::NativeDecodeRetirementRecipient;
 #[path="🫴️recipient/🔁️continuation/🦀️.rs"]
 mod retirement_continuation;
-pub use retirement_continuation::{NativeRetirementDecodeContinuation,NativeDetachedRetirementDecodeContinuation};
+pub use retirement_continuation::{NativeRetirementDecodeContinuation,NativeDetachedRetirementDecodeContinuation,NativeDecodeFrame};
 pub use semio_framework_value_call::NativeCallFailure;
 #[path="♻️retirement/🦀️.rs"]mod retirement_loan;
 pub use retirement_loan::{NativeRetirementDecodeControl,NativeDecodeCloseControl,NativePreparedDecodeControl};
@@ -49,8 +50,8 @@ pub struct NativeDecodeControl<'a> { work:work::Work<'a>, ledger:Option<semio_fr
 struct StageScope<'owner,'control>{control:&'owner mut NativeDecodeControl<'control>,parent:(usize,usize,bool,u64)}
 impl Drop for StageScope<'_, '_>{fn drop(&mut self){if self.control.stage!=self.parent.3{self.control.completed=self.parent.0;self.control.total=self.parent.1;self.control.started=self.parent.2;self.control.stage=self.parent.3;}}}
 
-impl std::fmt::Debug for NativeDecodeControl<'_>{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{f.debug_struct("NativeDecodeControl").field("ledger",&self.ledger).field("actual_work",&self.work.state.actual()).field("pending_work",&self.work.state.has_live_actions()).finish()}}
-impl Drop for NativeDecodeControl<'_>{fn drop(&mut self){assert!(std::thread::panicking()||self.ledger.as_ref().is_none_or(|ledger|!ledger.is_bound())&&!self.work.state.has_live_actions(),"native decoder control retains original paired ledger or pending work")}}
+impl std::fmt::Debug for NativeDecodeControl<'_>{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{f.debug_struct("NativeDecodeControl").field("ledger",&self.ledger).field("actual_work",&self.work.actual()).field("pending_work",&self.work.has_live_actions()).finish()}}
+impl Drop for NativeDecodeControl<'_>{fn drop(&mut self){assert!(std::thread::panicking()||self.ledger.as_ref().is_none_or(|ledger|!ledger.is_bound())&&!self.work.has_live_actions(),"native decoder control retains original paired ledger or pending work")}}
 
 impl<'a> NativeDecodeControl<'a> {
 
@@ -102,7 +103,7 @@ impl<'a> NativeDecodeControl<'a> {
     /// 🚦️ Observes a resident failure-node birth without admitting another turn.
     pub fn failure_storage_birth_pending(&self)->bool{self.retirement.as_ref().is_some_and(|recipient|!recipient.funding.failure_birth.terminal_is_empty())}
     /// ♻️ Drains one original return turn after forwarding its exact physical capacity demand.
-    pub fn close_retirement_recipient(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->semio_framework_value_retirement::OriginalRetirementPoll{let grant=effect.grant();if grant.maximum_items==0||grant.maximum_depth==0{return crate::RetainedWorkPoll::Pending{work:0}}match self.with_retirement::<_,ValueError>(grant,|original|Ok(original.close_retirement_recipient(effect))){Ok(poll)=>poll,Err(error)=>crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome{result:Err(error.into()),work:0})}}
+    pub fn close_retirement_recipient(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->semio_framework_value_retirement::OriginalRetirementPoll{let grant=effect.grant();if grant.maximum_items==0||grant.maximum_depth==0{return crate::RetainedWorkPoll::Pending{work:0}}match self.with_retirement::<_,ValueError>(grant,|original|Ok(original.close_retirement_recipient(body,effect))){Ok(poll)=>poll,Err(error)=>crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome{result:Err(error.into()),work:0})}}
 
     /// 🆕️ Installs one explicit caller recipient before any retained decoder ownership is created.
     pub fn install_retirement_recipient(&mut self,recipient:&'a mut NativeDecodeRetirementRecipient)->Result<(),ValueError>{
@@ -126,7 +127,7 @@ impl<'a> NativeDecodeControl<'a> {
         match self.continuation(){Ok(receipt)=>{Ok(receipt)},Err(error)=>Err((error,self))}
     }
     fn validate_continuation(&self)->Result<(),ValueError>{
-        if self.ledger.as_ref().is_none_or(|ledger|ledger.is_bound())||self.work.recipient.is_some()||self.work.state.has_live_actions()||self.depth!=0||(self.total!=0&&self.completed>self.total){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native decode continuation lacks valid cumulative accounting"));}
+        if self.ledger.as_ref().is_none_or(|ledger|ledger.is_bound())||self.work.recipient.is_some()||self.depth!=0||(self.total!=0&&self.completed>self.total){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native decode continuation lacks valid cumulative accounting"));}
         Ok(())
     }
     fn continuation(&mut self)->Result<NativeDecodeContinuation,ValueError>{self.validate_continuation()?;
@@ -221,3 +222,5 @@ impl<'a> NativeDecodeControl<'a> {
 mod continuation_retirement;
 
 pub use semio_framework_value_native_number::OriginalFloatWord;
+
+pub use semio_framework_value_native_outcome::NativeReceivingFailure;

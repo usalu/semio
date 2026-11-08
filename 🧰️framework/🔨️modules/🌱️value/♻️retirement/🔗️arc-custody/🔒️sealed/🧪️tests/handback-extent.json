@@ -1,0 +1,18 @@
+[
+  {
+    "payload": 8,
+    "outputHeader": 16,
+    "ownerHeader": 8,
+    "flag": 1,
+    "aliases": 16,
+    "expected": 49
+  },
+  {
+    "payload": 24,
+    "outputHeader": 32,
+    "ownerHeader": 8,
+    "flag": 1,
+    "aliases": 16,
+    "expected": 81
+  }
+]

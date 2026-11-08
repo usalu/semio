@@ -1,0 +1,5 @@
+{
+  "mutation": "changeCriticalRegionRestrainedBarCount",
+  "id": "cr-1",
+  "newRestrainedBarCount": 9.0
+}

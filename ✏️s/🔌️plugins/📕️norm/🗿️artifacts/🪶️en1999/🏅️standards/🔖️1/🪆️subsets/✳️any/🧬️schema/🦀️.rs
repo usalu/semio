@@ -10,7 +10,7 @@ extern crate semio_framework_value_derive as value_derive;
 
 use semio_s_plugin_norm_compliance::{AnnexChoice, CheckReport, CheckResult, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
 #[cfg(test)] use semio_s_plugin_norm_compliance::CheckStatus;
-use semio_s_artifact_norm_en1999_model::{ColdFormedSheet, AluminiumShell, Placement, WeldRun, SectionVertex, FatigueCategory, PatchLoad, RingStiffener, TransverseStiffener, AluminiumConnection, AluminiumMaterial, AluminiumMember, AluminiumSection, FatigueDetail, FireScenario, SupportCondition};
+use semio_s_artifact_norm_en1999_model::{AluminiumConnection, AluminiumMaterial, AluminiumMember, AluminiumSection, AluminiumShell, ColdFormedSheet, FatigueCategory, FatigueDetail, FireInsulation, FireScenario, PatchLoad, Placement, RingStiffener, SectionVertex, SheetProfile, SupportCondition, TransverseStiffener, WeldRun};
 use semio_s_artifact_norm_en1999_model::En1999Snapshot;
 use framework_schema::ArtifactSchema;
 
@@ -56,6 +56,10 @@ pub struct En1999Artifact {
     pub transverse_stiffeners: Vec<TransverseStiffener>,
     #[state(artifact)]
     pub reliability_class: semio_s_plugin_norm_compliance::ReliabilityClass,
+    #[state(artifact)]
+    pub sheet_profiles: Vec<SheetProfile>,
+    #[state(artifact)]
+    pub fire_insulations: Vec<FireInsulation>,
 }
 //#endregion 🔖️Artifact
 
@@ -91,6 +95,8 @@ impl En1999Artifact {
             fatigue_categories: self.fatigue_categories.clone(),
             patch_loads: self.patch_loads.clone(),
             ring_stiffeners: self.ring_stiffeners.clone(),
+            sheet_profiles: vec![],
+            fire_insulations: vec![],
             transverse_stiffeners: self.transverse_stiffeners.clone(),
         }
     }
@@ -113,6 +119,8 @@ impl En1999Artifact {
             fatigue_categories: snapshot.fatigue_categories,
             patch_loads: snapshot.patch_loads,
             ring_stiffeners: snapshot.ring_stiffeners,
+            sheet_profiles: vec![],
+            fire_insulations: vec![],
             transverse_stiffeners: snapshot.transverse_stiffeners,
         }
     }

@@ -1,0 +1,41 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "payload",
+      "outputHeader",
+      "ownerHeader",
+      "flag",
+      "aliases",
+      "expected"
+    ],
+    "properties": {
+      "payload": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "outputHeader": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "ownerHeader": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "flag": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "aliases": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "expected": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  }
+}

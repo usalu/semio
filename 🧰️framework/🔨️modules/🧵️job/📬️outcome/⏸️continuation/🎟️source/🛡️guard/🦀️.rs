@@ -2,7 +2,7 @@
 use super::*;
 fn bad()->ValueError{refused("header guard changed its actual Source, permit or receipt")}
 pub use semio_framework_job_payload::OriginalReturnGuardPermit;
-fn source(cx:&StepContext<'_>)->Result<(usize,u64,usize),OriginalTurnFailure>{let parent=cx.original_source_parent()?;parent.validate_borrowed_context(cx)?;OriginalReturnSourceInput::capture(cx)?;let b=cx.return_budget.as_ref().ok_or_else(bad)?.get();let origin=b.origin.ok_or_else(bad)?;if origin.source!=parent.source_identity()?||origin.recipient!=b as*const _ as usize{return Err(bad().into())}Ok((origin.source,b.birth,origin.recipient))}
+fn source(cx:&StepContext<'_>)->Result<(usize,u64,usize),OriginalTurnFailure>{let parent=cx.original_source_parent()?;parent.validate_borrowed_context(cx)?;OriginalReturnSourceInput::capture(cx)?;let b=cx.return_budget.as_ref().ok_or_else(bad)?.get();let origin=b.origin().ok_or_else(bad)?;if origin.source!=parent.source_identity()?||origin.recipient!=b as*const _ as usize{return Err(bad().into())}Ok((origin.source,b.birth,origin.recipient))}
 /// 🌱️ The same Source reserves exact guard metadata and two work units before publishing its header.
 pub fn prepare_original_header_guard(cx:&mut StepContext<'_>,permit:&mut Option<OriginalReturnGuardPermit>,length:usize)->Result<bool,OriginalTurnFailure>{
  let(source_id,birth,recipient)=source(cx)?;let epoch=cx.original_source_epoch().filter(|e|*e!=0).ok_or_else(bad)?;if !matches!(length,144|152|184){return Err(bad().into())}
@@ -18,7 +18,7 @@ pub fn qualify_original_header_guard(cx:&StepContext<'_>,permit:&Option<Original
 }
 impl OriginalReturnSource{
  /// ⚡️ Only an already selected physical header loan may spend this no-context probe.
- pub fn check_header_guard(&self,permit:&mut Option<OriginalReturnGuardPermit>,pointer:usize)->Result<bool,ValueError>{let mut budget=self.try_borrow().ok_or_else(bad)?;let b=budget.get_mut();let origin=b.origin.ok_or_else(bad)?;let id=permit.as_ref().ok_or_else(bad)?.identity();let publisher=b.publisher.as_ref().ok_or_else(bad)?;if id.source!=origin.source as u64||id.source_birth!=b.birth||id.recipient!=origin.recipient as u64||id.destination!=publisher.preborn_header_address()as u64||b.publication.is_none()||b.publisher_fenced{return Err(bad())}let address=id.destination as usize;b.table.as_mut().ok_or_else(bad)?.begin_guard_check(permit,address)?;Ok(b.publisher.as_ref().unwrap().owns_header_pointer(pointer))}
+ pub fn check_header_guard(&self,permit:&mut Option<OriginalReturnGuardPermit>,pointer:usize)->Result<bool,ValueError>{let mut budget=self.try_borrow().ok_or_else(bad)?;let b=budget.get_mut();let origin=b.origin().ok_or_else(bad)?;let id=permit.as_ref().ok_or_else(bad)?.identity();let publisher=b.publisher.as_ref().ok_or_else(bad)?;if id.source!=origin.source as u64||id.source_birth!=b.birth||id.recipient!=origin.recipient as u64||id.destination!=publisher.preborn_header_address()as u64||b.publication.is_none()||b.publisher_fenced{return Err(bad())}let address=id.destination as usize;b.table.as_mut().ok_or_else(bad)?.begin_guard_check(permit,address)?;Ok(b.publisher.as_ref().unwrap().owns_header_pointer(pointer))}
 }
 /// 🧾️ Actual observation posts the prepaid probe separately from fresh receipt effects.
 pub fn observe_original_header_guard(cx:&mut StepContext<'_>,permit:&mut Option<OriginalReturnGuardPermit>)->Result<bool,OriginalTurnFailure>{settle(cx,permit,false)}

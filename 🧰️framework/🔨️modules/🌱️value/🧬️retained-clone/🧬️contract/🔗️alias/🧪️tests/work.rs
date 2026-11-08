@@ -12,7 +12,7 @@ impl RetainedClone for Alias{type Cursor=RetainedAliasCursor<Self>;fn retained_c
 impl RetainedAlias for Alias{
  fn alias_demand(&self)->RetirementDemand{RetirementDemand{depth:1,..Default::default()}}
  fn alias_work_demand(&self)->u64{1}
- fn admit_alias(&self,_:RetainedCloneGrant)->RetainedWorkOutcome<(Self,RetainedCloneProgress)>{RetainedWorkOutcome{result:Ok((Self(self.0),RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
+ fn admit_alias_into<'reply>(&self,output:&mut Option<Self>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{let result=if output.is_some(){Err(ValueError::invariant("alias output occupied").into())}else if !effect.performed(1)?{Err(ValueError::literal(ValueRefusalKind::WorkLimit,"alias work refused").into())}else{*output=Some(Self(self.0));Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))};Ok(reply.complete(result))} fn recover_alias_into<'reply>(&self,_output:&mut Option<Self>,_effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{Ok(reply.pending())}
 }
 fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 #[test]

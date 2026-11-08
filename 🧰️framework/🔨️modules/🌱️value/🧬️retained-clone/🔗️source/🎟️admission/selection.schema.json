@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "arrayEdges",
+    "rootSelectors",
+    "selectorsPerEdge",
+    "maximumSelectors",
+    "perTurnWork"
+  ],
+  "properties": {
+    "arrayEdges": {
+      "const": 2
+    },
+    "rootSelectors": {
+      "const": 1
+    },
+    "selectorsPerEdge": {
+      "const": 4
+    },
+    "maximumSelectors": {
+      "const": 9
+    },
+    "perTurnWork": {
+      "const": 4096
+    }
+  }
+}

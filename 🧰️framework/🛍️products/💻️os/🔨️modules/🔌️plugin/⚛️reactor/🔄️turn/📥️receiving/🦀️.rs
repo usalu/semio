@@ -13,7 +13,7 @@ use semio_framework_job::{OriginalCallerSourceLoan, OriginalTurnFailure, StepCon
 use semio_framework_value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use std::mem::ManuallyDrop;
-pub use semio_plugin_reactor_staged_forms::{auxiliary,forms};
+pub use semio_framework_plugin_reactor_staged_forms::{auxiliary,forms};
 
 #[doc(hidden)]
 pub fn metadata(cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);Ok(true)}
@@ -21,7 +21,7 @@ type ResponseFields=(Option<String>,Option<semio_framework_value::DslValue>,Opti
 #[doc(hidden)]
 #[path="📦️completed/🦀️.rs"]
 pub mod completed;
-pub use semio_plugin_reactor_staged_forms::staged;
+pub use semio_framework_plugin_reactor_staged_forms::staged;
 #[doc(hidden)]
 pub struct RetainedResponse{pub metadata:ManuallyDrop<Option<Box<semio_framework_plugin_runtime_ops::ops_typed_operations::OriginalResponseActionSource>>>,pub instance:Option<u32>,pub key:Option<instance_lifetime::NativeCloseKey>,pub witness:ReceivingSource,pub request:Option<semio_framework::kernel::RequestId>,pub input:ManuallyDrop<Option<completed::CompletedInput>>,pub fields:ManuallyDrop<Option<ResponseFields>>,pub request_result:ManuallyDrop<Option<Result<Vec<u8>,semio_framework::Fault>>>,pub request_closing:ManuallyDrop<Option<ControlledRetirement<Result<Vec<u8>,semio_framework::Fault>>>>,pub closing:ManuallyDrop<Option<ControlledRetirement<ResponseFields>>>,pub output:ManuallyDrop<Option<semio_framework_plugin_runtime_ops::ops_ingress::PluginExchangeOutput>>,pub failure:ManuallyDrop<Option<OriginalTurnFailure>>,pub finished:bool}
 impl RetainedResponse{

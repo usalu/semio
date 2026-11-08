@@ -1,0 +1,24 @@
+//! 🧪️ Native sorted admission preserves the original backing through every funded native phase.
+use super::*;
+use semio_framework_value_control_contract::*;
+use semio_framework_value_testing_effect_bank::{EffectBank,Wallet};
+use semio_framework_value_testing_allocator::observe_retirement_allocations;
+fn apply(bank:&mut EffectBank,d:RetirementDemand,work:u64,body:impl FnOnce(&mut RetainedAllocationEffect<'_>,OriginalEffectReply<'_,RetainedCloneStep,ValueError>))->Result<RetainedCloneStep,ValueError>{
+ let grant=bank.loan(1,d.copy_bytes);let mut reply=None;let((poll,actual),heap)=observe_retirement_allocations(||bank.run(grant,work,|effect|{let before=effect.performed_work();body(effect,OriginalEffectReply::borrow(&mut reply).unwrap());RetainedWorkPoll::Complete(RetainedWorkOutcome::<(),ValueError>{result:Ok(()),work:effect.performed_work()-before})}));let RetainedWorkPoll::Complete(turn)=poll else{panic!("native bounded admission remained pending")};turn.result.unwrap();assert_eq!(heap,(0,0));assert_eq!(actual,None);assert_eq!(bank.take_admitted(),if turn.work==0{None}else{Some(true)});let result=reply.expect("native reply deposited before returning");let progress=result.as_ref().map(|step|step.progress()).unwrap_or_else(|error|error.retained_progress());bank.post(progress,grant,heap);result
+}
+#[test]fn original_sorted_vector_is_published_or_returned_without_reallocation(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("cases.json")).unwrap();
+ for row in law["cases"].as_array().unwrap(){let mut bank=EffectBank::new(Wallet::from_profile(&law["stock"]));let mut input=Some(row["keys"].as_array().unwrap().iter().enumerate().map(|(i,key)|(key.as_str().unwrap().to_owned(),i as u64)).collect::<Vec<_>>());let pointer=input.as_ref().unwrap().as_ptr();let mut admission=NativeMapAdmission::<String,u64>::default();let d=admission.capture_demand();let denied=apply(&mut bank,d,0,|e,r|{admission.capture_from(&mut input,e,r).unwrap();}).unwrap();assert_eq!(denied.progress(),Default::default());assert_eq!(input.as_ref().unwrap().as_ptr(),pointer);apply(&mut bank,d,1,|e,r|{admission.capture_from(&mut input,e,r).unwrap();}).unwrap();assert!(input.is_none());let mut refused=false;let mut comparisons=0;
+  for _ in 0..256{if admission.is_validated(){break}let d=admission.advance_demand().unwrap();let result=apply(&mut bank,d,1,|e,r|{admission.advance_into(e,r).unwrap();});if result.is_err(){refused=true;break}comparisons+=usize::from(admission.last_compared());}
+  assert_eq!(comparisons,row["comparisons"].as_u64().unwrap()as usize);assert_eq!(!refused,row["valid"].as_bool().unwrap());
+  if refused{let d=admission.return_demand();apply(&mut bank,d,1,|e,r|{admission.return_input_into(&mut input,e,r).unwrap();}).unwrap();assert_eq!(input.as_ref().unwrap().as_ptr(),pointer);}
+  else{let mut output=None;let d=admission.publication_demand();apply(&mut bank,d,0,|e,r|{admission.publish_into(&mut output,e,r).unwrap();}).unwrap();assert!(output.is_none());apply(&mut bank,d,1,|e,r|{admission.publish_into(&mut output,e,r).unwrap();}).unwrap();let mut output:NativeSortedMap<String,u64>=output.unwrap();assert_eq!(output.entries().as_ptr(),pointer);assert_eq!(output.len(),row["keys"].as_array().unwrap().len());let d=output.return_entries_demand();apply(&mut bank,d,1,|e,r|{output.return_entries_into(&mut input,e,r).unwrap();}).unwrap();assert_eq!(input.as_ref().unwrap().as_ptr(),pointer);}
+  assert!(admission.terminal_is_empty());
+ }
+}
+
+#[test]fn signed_native_set_order_and_backing_match_the_independent_numeric_oracle(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("cases.json")).unwrap();let mut bank=EffectBank::new(Wallet::from_profile(&law["stock"]));let keys=law["numericSet"].as_array().unwrap().iter().map(|v|v.as_i64().unwrap()).collect::<Vec<_>>();let mut input=Some(keys);let pointer=input.as_ref().unwrap().as_ptr();let mut admission=NativeSetAdmission::<i64>::default();let d=admission.capture_demand();apply(&mut bank,d,1,|e,r|{admission.capture_from(&mut input,e,r).unwrap();}).unwrap();
+ for _ in 0..256{if admission.is_validated(){break}let d=admission.advance_demand().unwrap();apply(&mut bank,d,1,|e,r|{admission.advance_into(e,r).unwrap();}).unwrap();}
+ assert!(admission.is_validated());let mut output=None;let d=admission.publication_demand();apply(&mut bank,d,1,|e,r|{admission.publish_into(&mut output,e,r).unwrap();}).unwrap();let mut set=output.unwrap();assert_eq!(set.entries().as_ptr(),pointer);assert_eq!(set.entries(),law["numericSet"].as_array().unwrap().iter().map(|v|v.as_i64().unwrap()).collect::<Vec<_>>());let d=set.return_entries_demand();apply(&mut bank,d,1,|e,r|{set.return_entries_into(&mut input,e,r).unwrap();}).unwrap();assert_eq!(input.as_ref().unwrap().as_ptr(),pointer);assert!(admission.terminal_is_empty());
+}

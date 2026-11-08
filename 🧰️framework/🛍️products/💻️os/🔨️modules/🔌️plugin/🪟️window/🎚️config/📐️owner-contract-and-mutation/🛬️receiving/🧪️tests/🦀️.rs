@@ -32,10 +32,10 @@ impl OriginalArtifactSnapshotReceiving<Probe> for Receiving{
   if self.phase==0{
    let mut work=0;let turn=n.receive_construction_step(d,|n,_|{
     if !n.prepare_work(1).unwrap(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}n.commit_work(1).unwrap();work=1;
-    *self.failure.value=Some(OriginalReceivingPrimary{retirement_failure:None,work_refusal:None,work_overrun:None,primary:Some(ValueError::new(ValueRefusalKind::InvalidValue,"semantic")),quote_refusal:Some(ValueError::new(ValueRefusalKind::WorkLimit,"quote")),allocation_refusal:Some(ValueError::new(ValueRefusalKind::AllocationFailed,"allocation")),allocation_failure:None,native_allocation:None,receipt_refusal:None,progress:Default::default()});self.phase=1;let mut p=progress(d);p.retained_capacity_bytes=MESSAGE_BYTES;
+    *self.failure.value=Some(OriginalReceivingPrimary::from_fields(Some(ValueError::new(ValueRefusalKind::InvalidValue,"semantic")),Some(ValueError::new(ValueRefusalKind::WorkLimit,"quote")),Some(ValueError::new(ValueRefusalKind::AllocationFailed,"allocation")),None,None,None,None,None,None,Default::default()));self.phase=1;let mut p=progress(d);p.retained_capacity_bytes=MESSAGE_BYTES;
     RetainedWorkOutcome{result:n.record_constructed_allocation(MESSAGE_BYTES).map(|()|RetainedCloneStep::Progress(p)).map_err(|e|e.with_retained_progress(p)),work}
    });
-   return RetainedWorkOutcome{result:turn.result.map(|s|s.progress()).map_err(|e|OriginalReceivingPrimary{retirement_failure:None,work_refusal:None,work_overrun:None,primary:e.primary,quote_refusal:None,allocation_refusal:None,allocation_failure:None,native_allocation:None,receipt_refusal:e.receipt_refusal,progress:e.progress}),work:turn.work}
+   return RetainedWorkOutcome{result:turn.result.map(|s|s.progress()).map_err(|e|OriginalReceivingPrimary::from_fields(e.primary,None,None,None,None,None,None,None,e.receipt_refusal,e.progress)),work:turn.work}
   }
   if !n.prepare_work(1).unwrap(){return RetainedWorkOutcome{result:Ok(Default::default()),work:0}}
   let mut failure=self.failure.value.take().unwrap();let p=progress(d);failure.progress=p;n.commit_work(1).unwrap();

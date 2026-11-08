@@ -75,6 +75,7 @@ VECTORS = {
     "change-curve-points": ("📍️change-curve-points", "✅apply"),
     "remove-geometry-connection-middle": ("remove-geometry-connection", "✂️remove-geometry-connection", "🧭️middle"),
     "remove-product-middle": ("remove-product", "🗑️remove-product", "🧭️middle"),
+    "change-product-configuration-synced": ("change-product-configuration", "🎛️change-product-configuration", "🔗️synced"),
 }
 
 #: 🗣️ The real committed VDI 3805 document, read where the domain already keeps it.

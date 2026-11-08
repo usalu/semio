@@ -1,0 +1,38 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "bodyQuote",
+    "reportedWork",
+    "recoveryWork",
+    "maximumCopy",
+    "originalItems",
+    "originalBytes"
+  ],
+  "properties": {
+    "bodyQuote": {
+      "type": "integer",
+      "const": 2
+    },
+    "reportedWork": {
+      "type": "integer",
+      "const": 3
+    },
+    "recoveryWork": {
+      "type": "integer",
+      "const": 2
+    },
+    "maximumCopy": {
+      "type": "integer",
+      "const": 4096
+    },
+    "originalItems": {
+      "type": "integer",
+      "const": 7
+    },
+    "originalBytes": {
+      "type": "integer",
+      "const": 13
+    }
+  }
+}

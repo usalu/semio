@@ -625,6 +625,51 @@ pub struct RingStiffener {
     pub internal: bool,
 }
 
+/// 🪗️ 🪗 Trapezoidal profile of a cold-formed sheet (EN 1999-1-4 5.5, 6.1): one rib of two webs between a top and a bottom flange, so that the bending, shear and deflection checks use the profiled section instead of the flat strip.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct SheetProfile {
+    pub id: String,
+    /// 🔗 Id of the cold-formed sheet that carries this profile; the sheet thickness is the profile thickness.
+    pub sheet_id: String,
+    /// ↔️ Pitch p [m] of one rib (top flange, web, bottom flange, web), measured between the mid-lines.
+    #[dsl(unit = "m")]
+    pub pitch: f64,
+    /// ⬜️ Flat width b_t [m] of the top flange between the web corners (mid-line).
+    #[dsl(unit = "m")]
+    pub top_flange: f64,
+    /// ⬜️ Flat width b_b [m] of the bottom flange between the web corners (mid-line).
+    #[dsl(unit = "m")]
+    pub bottom_flange: f64,
+    /// ↕️ Vertical distance h [m] between the mid-lines of the flanges; the web inclination follows from the pitch and the flange widths.
+    #[dsl(unit = "m")]
+    pub web_height: f64,
+}
+
+/// 🧱️ 🧱 Fire protection (insulation) of the member of a fire scenario (EN 1999-1-2 4.3.4): thickness, conductivity, specific heat and density of the insulating material for the temperature of a protected member.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct FireInsulation {
+    pub id: String,
+    /// 🔗 Id of the fire scenario whose member is protected.
+    pub fire_id: String,
+    /// 📏 Thickness d_p [m] of the insulation.
+    #[dsl(unit = "m")]
+    pub thickness: f64,
+    /// 🌡️ Thermal conductivity λ_p [W/(m·K)] of the insulation.
+    pub conductivity: f64,
+    /// 🔥 Specific heat c_p [J/(kg·K)] of the insulation.
+    pub specific_heat: f64,
+    /// ⚖️ Density ρ_p [kg/m³] of the insulation.
+    pub density: f64,
+}
+
 /// 🦴 Sides of the web a transverse stiffener is welded to.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -716,6 +761,12 @@ pub struct En1999Snapshot {
     pub transverse_stiffeners: Vec<TransverseStiffener>,
     #[state(artifact)]
     pub reliability_class: semio_s_plugin_norm_compliance::ReliabilityClass,
+    #[dsl(table)]
+    #[state(artifact)]
+    pub sheet_profiles: Vec<SheetProfile>,
+    #[dsl(table)]
+    #[state(artifact)]
+    pub fire_insulations: Vec<FireInsulation>,
 }
 
 //#endregion 🔖️Snapshot
@@ -773,6 +824,8 @@ impl En1999Snapshot {
             fatigue_categories: Vec::new(),
             patch_loads: Vec::new(),
             ring_stiffeners: Vec::new(),
+            sheet_profiles: Vec::new(),
+            fire_insulations: Vec::new(),
             transverse_stiffeners: Vec::new(),
         }
     }
@@ -950,6 +1003,8 @@ impl En1999Snapshot {
             fatigue_categories: Vec::new(),
             patch_loads: Vec::new(),
             ring_stiffeners: Vec::new(),
+            sheet_profiles: Vec::new(),
+            fire_insulations: Vec::new(),
             transverse_stiffeners: Vec::new(),
         }
     }
@@ -1146,6 +1201,8 @@ impl En1999Snapshot {
             fatigue_categories: Vec::new(),
             patch_loads: Vec::new(),
             ring_stiffeners: Vec::new(),
+            sheet_profiles: Vec::new(),
+            fire_insulations: Vec::new(),
             transverse_stiffeners: Vec::new(),
         }
     }

@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "wordBytes",
+    "borrowWords",
+    "counters",
+    "flagBytes",
+    "alignment",
+    "constructorCopy",
+    "compareMetadataCopy",
+    "hopCopy",
+    "completeCopy",
+    "emptyCopy",
+    "closeCopy",
+    "body",
+    "maximumReadBatch",
+    "metadataWork",
+    "maximumTurnWork",
+    "stock"
+  ],
+  "properties": {
+    "wordBytes": {
+      "const": 8
+    },
+    "borrowWords": {
+      "const": 3
+    },
+    "counters": {
+      "const": 4
+    },
+    "flagBytes": {
+      "const": 5
+    },
+    "alignment": {
+      "const": 8
+    },
+    "constructorCopy": {
+      "const": 64
+    },
+    "compareMetadataCopy": {
+      "const": 27
+    },
+    "hopCopy": {
+      "const": 35
+    },
+    "completeCopy": {
+      "const": 17
+    },
+    "emptyCopy": {
+      "const": 9
+    },
+    "closeCopy": {
+      "const": 65
+    },
+    "body": {
+      "const": 1
+    },
+    "maximumReadBatch": {
+      "const": 64
+    },
+    "metadataWork": {
+      "const": 1
+    },
+    "maximumTurnWork": {
+      "const": 2
+    },
+    "stock": {
+      "const": {
+        "items": 100000,
+        "copyBytes": 33554432,
+        "capacityBytes": 33554432,
+        "releaseBytes": 33554432,
+        "depth": 512,
+        "work": 100000
+      }
+    }
+  }
+}

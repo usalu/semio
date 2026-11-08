@@ -2,7 +2,7 @@
  * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
 import { normWireArray, normWireBoolean, normWireDefault, normWireInteger, normWireLiteral, normWireMap, normWireNullable, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
-import { type BoundingBox, type BuildingSystemNumber, type CharacteristicCurve, type Configuration, type CurvePoint, type EditionId, type ExtensionFields, type LocalizedText, type ParametricGeometry, parseBoundingBox, parseBuildingSystemNumber, parseCharacteristicCurve, parseConfiguration, parseCurvePoint, parseEditionId, parseExtensionFields, parseLocalizedText, parseParametricGeometry, parseVdi3805CatalogueProduct, parseVdi3805ConnectionPoint, parseVdi3805ExtensionBag, type Vdi3805CatalogueProduct, type Vdi3805ConnectionPoint, type Vdi3805ExtensionBag } from "../📸️snapshot/🟦️.ts";
+import { type BoundingBox, type BuildingSystemNumber, type CharacteristicCurve, type Configuration, type CurvePoint, type EditionId, type ExtensionFields, type LocalizedText, type NativeRecord, type ParametricGeometry, parseBoundingBox, parseBuildingSystemNumber, parseCharacteristicCurve, parseConfiguration, parseCurvePoint, parseEditionId, parseExtensionFields, parseLocalizedText, parseNativeRecord, parseParametricGeometry, parseVdi3805CatalogueProduct, parseVdi3805ConnectionPoint, parseVdi3805ExtensionBag, type Vdi3805CatalogueProduct, type Vdi3805ConnectionPoint, type Vdi3805ExtensionBag } from "../📸️snapshot/🟦️.ts";
 
 export interface Vdi3805Diff {
   /** 📄️ @state artifact */
@@ -145,6 +145,7 @@ export interface Vdi3805ProductsMoved {
 export interface Vdi3805ProductsPatch {
   title: LocalizedText[] | null;
   configuration: Configuration | null;
+  records: NativeRecord[] | null;
 }
 
 export interface Vdi3805ProductsRemoved {
@@ -180,6 +181,6 @@ export const parseVdi3805ManufacturerFilePatch: NormWireReader<Vdi3805Manufactur
 export const parseVdi3805ProductsInserted: NormWireReader<Vdi3805ProductsInserted> = normWireObject<Vdi3805ProductsInserted>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), row: normWireRequired(parseVdi3805CatalogueProduct) });
 export const parseVdi3805ProductsModified: NormWireReader<Vdi3805ProductsModified> = normWireObject<Vdi3805ProductsModified>({ id: normWireRequired(normWireString), patch: normWireRequired(normWireRef(() => parseVdi3805ProductsPatch)) });
 export const parseVdi3805ProductsMoved: NormWireReader<Vdi3805ProductsMoved> = normWireObject<Vdi3805ProductsMoved>({ id: normWireRequired(normWireString), from: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), to: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
-export const parseVdi3805ProductsPatch: NormWireReader<Vdi3805ProductsPatch> = normWireObject<Vdi3805ProductsPatch>({ title: normWireRequired(normWireNullable(normWireArray(parseLocalizedText))), configuration: normWireRequired(normWireNullable(parseConfiguration)) });
+export const parseVdi3805ProductsPatch: NormWireReader<Vdi3805ProductsPatch> = normWireObject<Vdi3805ProductsPatch>({ title: normWireRequired(normWireNullable(normWireArray(parseLocalizedText))), configuration: normWireRequired(normWireNullable(parseConfiguration)), records: normWireRequired(normWireNullable(normWireArray(parseNativeRecord))) });
 export const parseVdi3805ProductsRemoved: NormWireReader<Vdi3805ProductsRemoved> = normWireObject<Vdi3805ProductsRemoved>({ id: normWireRequired(normWireString), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
 export const parseVdi3805ProductsRows: NormWireReader<Vdi3805ProductsRows> = normWireObject<Vdi3805ProductsRows>({ removed: normWireRequired(normWireArray(normWireRef(() => parseVdi3805ProductsRemoved))), inserted: normWireRequired(normWireArray(normWireRef(() => parseVdi3805ProductsInserted))), moved: normWireRequired(normWireArray(normWireRef(() => parseVdi3805ProductsMoved))), modified: normWireRequired(normWireArray(normWireRef(() => parseVdi3805ProductsModified))) });

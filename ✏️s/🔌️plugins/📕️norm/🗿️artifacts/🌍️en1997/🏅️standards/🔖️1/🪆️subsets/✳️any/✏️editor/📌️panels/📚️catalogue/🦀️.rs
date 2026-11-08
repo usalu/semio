@@ -2,6 +2,7 @@
 
 use semio_s_plugin_norm_app_surface::{spec_trace_table, CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
 use semio_s_artifact_norm_en1997_checks::spec_trace::TABLE as SPEC_TRACE;
+use semio_s_artifact_norm_en1997_checks::catalogue::En1997Cases;
 use semio_s_artifact_norm_en1997_checks::{part_1, resolve_params, resolve_upl_params, DesignApproach};
 use semio_s_plugin_norm_compliance::{AnnexChoice, ClauseId};
 use semio_ui_locale::LocalizedLabel;
@@ -24,6 +25,13 @@ pub fn definition() -> PanelTabDefinition {
 /// 📚️ Normative reference tables (partial factors, UPL/HYD, Annex D bearing factors).
 pub fn reference_tables() -> Vec<CatalogueTable> {
     vec![partial_factors_table(), upl_hyd_factors_table(), bearing_n_factors_table(), spec_trace_table(&SPEC_TRACE)]
+}
+
+/// 📚️ The reference tables followed by the verification-case catalogue evaluated for `locale`.
+pub fn tables(locale: semio_ui_locale::Locale) -> Vec<CatalogueTable> {
+    let mut tables = reference_tables();
+    tables.push(semio_s_plugin_norm_app_surface::verification_catalogue_table::<En1997Cases>("EN 1997", AnnexChoice::En, "", locale));
+    tables
 }
 
 fn partial_factors_table() -> CatalogueTable {
@@ -141,7 +149,7 @@ pub fn render(
     controller_id: &'static str,
     windows: &TreeWindows<'_>,
 ) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
-    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, windows)
+    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &tables(locale), locale, controller_id, windows)
 }
 //#endregion 🔖️Render
 

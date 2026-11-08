@@ -1,0 +1,23 @@
+{
+  "value": "Grüße",
+  "authorityTag": 97,
+  "projectedType": "text",
+  "authorityType": "envelope",
+  "maximumCopyBytes": 4096,
+  "modes": [
+    "original",
+    "unique"
+  ],
+  "cancellationCuts": [
+    0,
+    1,
+    2,
+    3,
+    5,
+    8,
+    12,
+    20,
+    24,
+    4096
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "attempted",
+      "actual",
+      "backing",
+      "input"
+    ],
+    "properties": {
+      "attempted": {
+        "type": "boolean"
+      },
+      "actual": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "minimum": 0
+      },
+      "backing": {
+        "type": "boolean"
+      },
+      "input": {
+        "type": "boolean"
+      }
+    }
+  }
+}

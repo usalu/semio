@@ -1,0 +1,483 @@
+{
+  "iso7730_table_d1": [
+    {
+      "t_op": 22.0,
+      "rh": 60,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 0.5,
+      "pmv": -0.75
+    },
+    {
+      "t_op": 27.0,
+      "rh": 60,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 0.5,
+      "pmv": 0.77
+    },
+    {
+      "t_op": 19.0,
+      "rh": 40,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 1.0,
+      "pmv": -0.6
+    },
+    {
+      "t_op": 23.5,
+      "rh": 60,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 0.5,
+      "pmv": -0.3
+    }
+  ],
+  "pmv": [
+    {
+      "t_op": 24.5,
+      "rh": 45,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 0.5,
+      "pmv": -0.09897697561264521,
+      "ppd": 5.202879998295558
+    },
+    {
+      "t_op": 22.0,
+      "rh": 45,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 1.0,
+      "pmv": 0.0675942855535633,
+      "ppd": 5.094599688907266
+    },
+    {
+      "t_op": 26.0,
+      "rh": 60,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 0.5,
+      "pmv": 0.4588057113753588,
+      "ppd": 9.393804208429458
+    },
+    {
+      "t_op": 28.5,
+      "rh": 75,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 0.5,
+      "pmv": 1.3601736567537905,
+      "ppd": 43.40159998771707
+    },
+    {
+      "t_op": 20.0,
+      "rh": 30,
+      "v": 0.2,
+      "met": 1.6,
+      "clo": 0.7,
+      "pmv": -0.37425990871121795,
+      "ppd": 7.916324102220997
+    },
+    {
+      "t_op": 23.0,
+      "rh": 50,
+      "v": 0.05,
+      "met": 1.0,
+      "clo": 0.0,
+      "pmv": -3.6136436748667915,
+      "ppd": 99.98185149905625
+    },
+    {
+      "t_op": 22.0,
+      "rh": 75,
+      "v": 0.1,
+      "met": 1.2,
+      "clo": 1.0,
+      "pmv": 0.24419068175382327,
+      "ppd": 6.237546545193226
+    }
+  ],
+  "adaptive": [
+    {
+      "theta_rm": 10.0,
+      "category": 1,
+      "lower": 20.1,
+      "centre": 22.1,
+      "upper": 24.1
+    },
+    {
+      "theta_rm": 10.0,
+      "category": 2,
+      "lower": 19.1,
+      "centre": 22.1,
+      "upper": 25.1
+    },
+    {
+      "theta_rm": 10.0,
+      "category": 3,
+      "lower": 18.1,
+      "centre": 22.1,
+      "upper": 26.1
+    },
+    {
+      "theta_rm": 10.0,
+      "category": 4,
+      "lower": 17.1,
+      "centre": 22.1,
+      "upper": 27.1
+    },
+    {
+      "theta_rm": 15.0,
+      "category": 1,
+      "lower": 21.75,
+      "centre": 23.75,
+      "upper": 25.75
+    },
+    {
+      "theta_rm": 15.0,
+      "category": 2,
+      "lower": 20.75,
+      "centre": 23.75,
+      "upper": 26.75
+    },
+    {
+      "theta_rm": 15.0,
+      "category": 3,
+      "lower": 19.75,
+      "centre": 23.75,
+      "upper": 27.75
+    },
+    {
+      "theta_rm": 15.0,
+      "category": 4,
+      "lower": 18.75,
+      "centre": 23.75,
+      "upper": 28.75
+    },
+    {
+      "theta_rm": 22.5,
+      "category": 1,
+      "lower": 24.225,
+      "centre": 26.225,
+      "upper": 28.225
+    },
+    {
+      "theta_rm": 22.5,
+      "category": 2,
+      "lower": 23.225,
+      "centre": 26.225,
+      "upper": 29.225
+    },
+    {
+      "theta_rm": 22.5,
+      "category": 3,
+      "lower": 22.225,
+      "centre": 26.225,
+      "upper": 30.225
+    },
+    {
+      "theta_rm": 22.5,
+      "category": 4,
+      "lower": 21.225,
+      "centre": 26.225,
+      "upper": 31.225
+    },
+    {
+      "theta_rm": 30.0,
+      "category": 1,
+      "lower": 26.700000000000003,
+      "centre": 28.700000000000003,
+      "upper": 30.700000000000003
+    },
+    {
+      "theta_rm": 30.0,
+      "category": 2,
+      "lower": 25.700000000000003,
+      "centre": 28.700000000000003,
+      "upper": 31.700000000000003
+    },
+    {
+      "theta_rm": 30.0,
+      "category": 3,
+      "lower": 24.700000000000003,
+      "centre": 28.700000000000003,
+      "upper": 32.7
+    },
+    {
+      "theta_rm": 30.0,
+      "category": 4,
+      "lower": 23.700000000000003,
+      "centre": 28.700000000000003,
+      "upper": 33.7
+    }
+  ],
+  "ventilation": [
+    {
+      "occupants": 20,
+      "area": 200.0,
+      "category": 1,
+      "pollution": "low",
+      "persons": 720.0,
+      "building": 720.0
+    },
+    {
+      "occupants": 20,
+      "area": 200.0,
+      "category": 2,
+      "pollution": "low",
+      "persons": 504.0,
+      "building": 504.0
+    },
+    {
+      "occupants": 20,
+      "area": 200.0,
+      "category": 3,
+      "pollution": "low",
+      "persons": 288.0,
+      "building": 288.0
+    },
+    {
+      "occupants": 20,
+      "area": 200.0,
+      "category": 4,
+      "pollution": "low",
+      "persons": 180.0,
+      "building": 216.0
+    },
+    {
+      "occupants": 3,
+      "area": 80.0,
+      "category": 1,
+      "pollution": "very_low",
+      "persons": 108.0,
+      "building": 144.0
+    },
+    {
+      "occupants": 3,
+      "area": 80.0,
+      "category": 2,
+      "pollution": "very_low",
+      "persons": 75.60000000000001,
+      "building": 100.8
+    },
+    {
+      "occupants": 3,
+      "area": 80.0,
+      "category": 3,
+      "pollution": "very_low",
+      "persons": 43.2,
+      "building": 57.6
+    },
+    {
+      "occupants": 3,
+      "area": 80.0,
+      "category": 4,
+      "pollution": "very_low",
+      "persons": 27.0,
+      "building": 43.2
+    },
+    {
+      "occupants": 45,
+      "area": 120.0,
+      "category": 1,
+      "pollution": "non_low",
+      "persons": 1620.0,
+      "building": 864.0
+    },
+    {
+      "occupants": 45,
+      "area": 120.0,
+      "category": 2,
+      "pollution": "non_low",
+      "persons": 1134.0,
+      "building": 604.8000000000001
+    },
+    {
+      "occupants": 45,
+      "area": 120.0,
+      "category": 3,
+      "pollution": "non_low",
+      "persons": 648.0,
+      "building": 345.6
+    },
+    {
+      "occupants": 45,
+      "area": 120.0,
+      "category": 4,
+      "pollution": "non_low",
+      "persons": 405.0,
+      "building": 259.2
+    }
+  ],
+  "co2": [
+    {
+      "annex": "de",
+      "usage": "office",
+      "category": 1,
+      "outdoor": 400.0,
+      "limit_above": 500.0
+    },
+    {
+      "annex": "de",
+      "usage": "office",
+      "category": 2,
+      "outdoor": 400.0,
+      "limit_above": 500.0
+    },
+    {
+      "annex": "de",
+      "usage": "office",
+      "category": 3,
+      "outdoor": 400.0,
+      "limit_above": 500.0
+    },
+    {
+      "annex": "de",
+      "usage": "office",
+      "category": 4,
+      "outdoor": 400.0,
+      "limit_above": 500.0
+    },
+    {
+      "annex": "de",
+      "usage": "residential",
+      "category": 1,
+      "outdoor": 400.0,
+      "limit_above": 550.0
+    },
+    {
+      "annex": "de",
+      "usage": "residential",
+      "category": 2,
+      "outdoor": 400.0,
+      "limit_above": 800.0
+    },
+    {
+      "annex": "de",
+      "usage": "residential",
+      "category": 3,
+      "outdoor": 400.0,
+      "limit_above": 800.0
+    },
+    {
+      "annex": "de",
+      "usage": "residential",
+      "category": 4,
+      "outdoor": 400.0,
+      "limit_above": 800.0
+    },
+    {
+      "annex": "de",
+      "usage": "classroom",
+      "category": 1,
+      "outdoor": 400.0,
+      "limit_above": 400.0
+    },
+    {
+      "annex": "de",
+      "usage": "classroom",
+      "category": 2,
+      "outdoor": 400.0,
+      "limit_above": 400.0
+    },
+    {
+      "annex": "de",
+      "usage": "classroom",
+      "category": 3,
+      "outdoor": 400.0,
+      "limit_above": 400.0
+    },
+    {
+      "annex": "de",
+      "usage": "classroom",
+      "category": 4,
+      "outdoor": 400.0,
+      "limit_above": 400.0
+    },
+    {
+      "annex": "en",
+      "usage": "office",
+      "category": 1,
+      "outdoor": 400.0,
+      "limit_above": 550.0
+    },
+    {
+      "annex": "en",
+      "usage": "office",
+      "category": 2,
+      "outdoor": 400.0,
+      "limit_above": 800.0
+    },
+    {
+      "annex": "en",
+      "usage": "office",
+      "category": 3,
+      "outdoor": 400.0,
+      "limit_above": 1350.0
+    },
+    {
+      "annex": "en",
+      "usage": "office",
+      "category": 4,
+      "outdoor": 400.0,
+      "limit_above": 1350.0
+    },
+    {
+      "annex": "en",
+      "usage": "residential",
+      "category": 1,
+      "outdoor": 400.0,
+      "limit_above": 550.0
+    },
+    {
+      "annex": "en",
+      "usage": "residential",
+      "category": 2,
+      "outdoor": 400.0,
+      "limit_above": 800.0
+    },
+    {
+      "annex": "en",
+      "usage": "residential",
+      "category": 3,
+      "outdoor": 400.0,
+      "limit_above": 1350.0
+    },
+    {
+      "annex": "en",
+      "usage": "residential",
+      "category": 4,
+      "outdoor": 400.0,
+      "limit_above": 1350.0
+    },
+    {
+      "annex": "en",
+      "usage": "classroom",
+      "category": 1,
+      "outdoor": 400.0,
+      "limit_above": 550.0
+    },
+    {
+      "annex": "en",
+      "usage": "classroom",
+      "category": 2,
+      "outdoor": 400.0,
+      "limit_above": 800.0
+    },
+    {
+      "annex": "en",
+      "usage": "classroom",
+      "category": 3,
+      "outdoor": 400.0,
+      "limit_above": 1350.0
+    },
+    {
+      "annex": "en",
+      "usage": "classroom",
+      "category": 4,
+      "outdoor": 400.0,
+      "limit_above": 1350.0
+    }
+  ]
+}

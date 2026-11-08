@@ -1,0 +1,5 @@
+{
+  "mutation": "changeelementorientationdeg",
+  "elementId": "ghost",
+  "newOrientationDeg": 45.0
+}

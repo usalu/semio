@@ -1,3 +1,5 @@
+scalar UInt32
+
 union En1995Mutation = ChangeAnnex | ChangeReliabilityClass | InsertMember | RemoveMember | ChangeMemberLabelEn | ChangeMemberLabelDe | ChangeMemberRole | ChangeMemberStrengthClass | ChangeMemberServiceClass | ChangeMemberSupport | ChangeMemberB | ChangeMemberH | ChangeMemberSpan | ChangeMemberSupportLength | ChangeMemberBearingLength | ChangeMemberBucklingLengthY | ChangeMemberBucklingLengthZ | ChangeMemberRestraintSpacing | ChangeMemberNotchDepth | ChangeMemberNotchDistance | ChangeMemberMassKgPerM | ChangeMemberMassKgPerM2 | ChangeMemberDampingXi | ChangeMemberFireDuration | ChangeMemberBridgeNObs | ChangeMemberBridgeTLYears | ChangeMemberBridgeBeta | ChangeMemberBridgeA | ChangeMemberBridgeB | ChangeMemberBridgeCrowd | InsertMemberAction | RemoveMemberAction | ChangeMemberActionKind | ChangeMemberActionCategory | ChangeMemberLoadDuration | ChangeMemberActionQLine | ChangeMemberActionFPoint | ChangeMemberActionMK | ChangeMemberActionVK | ChangeMemberActionNK | ChangeMemberActionNTK | ChangeMemberActionFC90K | InsertConnection | RemoveConnection | ChangeConnectionLabelEn | ChangeConnectionLabelDe | ChangeConnectionFastenerType | ChangeConnectionStrengthClass | ChangeConnectionServiceClass | ChangeConnectionDiameter | ChangeConnectionNumber | ChangeConnectionRows | ChangeConnectionSpacing | ChangeConnectionEdgeDistance | ChangeConnectionEndDistance | ChangeConnectionT1 | ChangeConnectionT2 | ChangeConnectionSteelPlate | ChangeConnectionPlateThickness | ChangeConnectionShearPlanes | ChangeConnectionFUK | InsertConnectionAction | RemoveConnectionAction | ChangeConnectionActionKind | ChangeConnectionLoadDuration | ChangeConnectionActionFK | ChangeUlsEquation | InsertCase | RemoveCase | ChangeCaseLabelEn | ChangeCaseLabelDe | ChangeCaseEntryId | ChangeCaseNumber | ChangeCaseText | ChangePlacementX | ChangePlacementY | ChangePlacementZ | ChangePlacementYaw | InsertPlacement | RemovePlacement | InsertTaper | RemoveTaper | ChangeTaperMember | ChangeTaperKind | ChangeTaperTaperAngle | ChangeTaperApexDepth | ChangeTaperInnerRadius | ChangeTaperLamella | ChangeTaperApexAngle | ChangeTaperSide | ChangeTaperRods | ChangeTaperRodResistance | InsertCutout | RemoveCutout | ChangeCutoutMember | ChangeCutoutKind | ChangeCutoutFace | ChangeCutoutDistance | ChangeCutoutLength | ChangeCutoutDepth | ChangeCutoutCentreHeight | ChangeCutoutSlope | ChangeCutoutRods | ChangeCutoutRodResistance | InsertFastener | RemoveFastener | ChangeFastenerConnection | ChangeFastenerMember | ChangeFastenerColumns | ChangeFastenerLines | ChangeFastenerSpacingPar | ChangeFastenerSpacingPerp | ChangeFastenerEndDistance | ChangeFastenerEdgeDistance | ChangeFastenerOffsetX | ChangeFastenerOffsetY | ChangeFastenerLoadAngle | InsertPanel | RemovePanel | ChangePanelStrengthClass | ChangePanelSpan | ChangePanelWidth | ChangePanelLoad | ChangePanelFireDuration | InsertFloor | RemoveFloor | ChangeFloorMember | ChangeFloorSpan | ChangeFloorWidth | ChangeFloorJoistSpacing | ChangeFloorEiL | ChangeFloorEiB | ChangeFloorMass | ChangeFloorDamping | ChangeFloorPermanentLoad | ChangeFloorImposedLoad | ChangeFloorPsi2 | InsertPanelLayer | RemovePanelLayer | ChangePanelLayerThickness | ChangePanelLayerOrientation | ChangePanelLayerGrade | InsertFastenerPosition | RemoveFastenerPosition | ChangeFastenerPositionX | ChangeFastenerPositionY | InsertDiaphragm | RemoveDiaphragm | ChangeDiaphragmKind | ChangeDiaphragmMethod | ChangeDiaphragmPanelWidth | ChangeDiaphragmWallHeight | ChangeDiaphragmFastenerSpacing | ChangeDiaphragmPanels | ChangeDiaphragmFastenerCapacity | ChangeDiaphragmShearEd | ChangeDiaphragmHoldDown | ChangeDiaphragmForce | ChangeDiaphragmLength | ChangeDiaphragmShearResistance | InsertTruss | RemoveTruss | ChangeTrussKind | ChangeTrussProduct | ChangeTrussSpan | ChangeTrussHeight | ChangeTrussBays | ChangeTrussChordWidth | ChangeTrussChordDepth | ChangeTrussWebWidth | ChangeTrussWebDepth | ChangeTrussChordForce | ChangeTrussRestraintLength | ChangeTrussBracingCapacity | InsertBracing | RemoveBracing | ChangeBracingKind | ChangeBracingMember | ChangeBracingStabilisedCount | ChangeBracingSpacing | ChangeBracingLength | ChangeBracingBraceWidth | ChangeBracingBraceDepth | ChangeBracingCompression | ChangeBracingResistance | ChangeBracingStiffness | InsertDeck | RemoveDeck | ChangeDeckLaminationProduct | ChangeDeckBarProduct | ChangeDeckSpan | ChangeDeckDeckWidth | ChangeDeckDeckDepth | ChangeDeckLaminationWidth | ChangeDeckBarSpacing | ChangeDeckBarDiameter | ChangeDeckPlateSide | ChangeDeckInitialPrestress | ChangeDeckLossRelaxation | ChangeDeckLossCreep | ChangeDeckLossMoisture | ChangeDeckBarResistance | ChangeDeckShearStress | ChangeDeckCompressionC90 | ChangeDeckWheelLoad | ChangeDeckWheelContact
 type ChangeAnnex {
   newAnnex: AnnexChoice!
@@ -208,11 +210,11 @@ type ChangeConnectionDiameter {
 }
 type ChangeConnectionNumber {
   connectionId: String!
-  newValue: Int!
+  newValue: UInt32!
 }
 type ChangeConnectionRows {
   connectionId: String!
-  newValue: Int!
+  newValue: UInt32!
 }
 type ChangeConnectionSpacing {
   connectionId: String!
@@ -244,7 +246,7 @@ type ChangeConnectionPlateThickness {
 }
 type ChangeConnectionShearPlanes {
   connectionId: String!
-  newValue: Int!
+  newValue: UInt32!
 }
 type ChangeConnectionFUK {
   connectionId: String!
@@ -370,7 +372,7 @@ type ChangeTaperSide {
 }
 type ChangeTaperRods {
   taperId: String!
-  newValue: Int!
+  newValue: UInt32!
 }
 type ChangeTaperRodResistance {
   taperId: String!
@@ -417,7 +419,7 @@ type ChangeCutoutSlope {
 }
 type ChangeCutoutRods {
   cutoutId: String!
-  newValue: Int!
+  newValue: UInt32!
 }
 type ChangeCutoutRodResistance {
   cutoutId: String!
@@ -440,11 +442,11 @@ type ChangeFastenerMember {
 }
 type ChangeFastenerColumns {
   fastenerId: String!
-  newValue: Int!
+  newValue: UInt32!
 }
 type ChangeFastenerLines {
   fastenerId: String!
-  newValue: Int!
+  newValue: UInt32!
 }
 type ChangeFastenerSpacingPar {
   fastenerId: String!
@@ -624,7 +626,7 @@ type ChangeDiaphragmFastenerSpacing {
 }
 type ChangeDiaphragmPanels {
   diaphragmId: String!
-  newValue: Int!
+  newValue: UInt32!
 }
 type ChangeDiaphragmFastenerCapacity {
   diaphragmId: String!
@@ -675,7 +677,7 @@ type ChangeTrussHeight {
 }
 type ChangeTrussBays {
   trussId: String!
-  newValue: Int!
+  newValue: UInt32!
 }
 type ChangeTrussChordWidth {
   trussId: String!
@@ -722,7 +724,7 @@ type ChangeBracingMember {
 }
 type ChangeBracingStabilisedCount {
   bracingId: String!
-  newValue: Int!
+  newValue: UInt32!
 }
 type ChangeBracingSpacing {
   bracingId: String!

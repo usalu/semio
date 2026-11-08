@@ -11,7 +11,9 @@
     "cachedWork",
     "maximumTurnWork",
     "serdeOracle",
-    "birth"
+    "birth",
+    "nativePhases",
+    "logicalCounters"
   ],
   "properties": {
     "version": {
@@ -71,6 +73,30 @@
         ],
         "capacityBytes": 0
       }
+    },
+    "nativePhases": {
+      "const": {
+        "bindingStateChecks": 1,
+        "bindingCoordinates": 4,
+        "sourceCount": 2,
+        "comparisonPrimitiveWork": 1,
+        "semanticMaximumBytes": 1,
+        "maximumAuthenticatedWork": 12,
+        "orderingTransferWork": 1,
+        "deniedWork": 0,
+        "foreignSourceWork": 0,
+        "comparisonCounterWork": 1
+      }
+    },
+    "logicalCounters": {
+      "const": [
+        {
+          "left": "prefix",
+          "right": "prefixz",
+          "comparedItems": 2,
+          "comparedBytes": 6
+        }
+      ]
     }
   }
 }

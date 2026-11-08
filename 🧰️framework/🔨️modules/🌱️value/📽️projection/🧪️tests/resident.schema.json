@@ -1,0 +1,71 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "states",
+    "failure",
+    "value"
+  ],
+  "properties": {
+    "states": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "phase",
+          "child",
+          "output",
+          "reply",
+          "source"
+        ],
+        "properties": {
+          "phase": {
+            "enum": [
+              "pending",
+              "recorded",
+              "denied",
+              "transferred"
+            ]
+          },
+          "child": {
+            "type": "boolean"
+          },
+          "output": {
+            "type": "boolean"
+          },
+          "reply": {
+            "type": "boolean"
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "message",
+        "copied"
+      ],
+      "properties": {
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "copied": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "value": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

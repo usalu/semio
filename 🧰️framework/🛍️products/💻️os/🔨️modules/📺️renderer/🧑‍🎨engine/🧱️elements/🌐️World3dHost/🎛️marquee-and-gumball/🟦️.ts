@@ -6,6 +6,7 @@ import { type WorldGumballEvent, worldGumballStep } from "../🧮️gumball-math
 import { mergeIdSet, raycastGroundPoint, resolveClickInstanceId, resolveMarqueeComponentIds, resolveMarqueeInstanceIds } from "../🎯️marquee-and-bridges/🟦️.tsx";
 import { clearWorldCatalogueDropPreview, clearWorldSelectionPreview, setWorldCatalogueDropPreview, setWorldSelectionPreview, world3dRelocateDispatchArgsV1, world3dRelocateDragTargetV1 } from "../🗂️catalogue-drop/🟦️.tsx";
 import type { WorldCore5 } from "../🔀️paint-and-projection/🟦️.ts";
+import { useWorldHandleDrag } from "../🧲️handle-drag/🪝️session/🟦️.ts";
 
 // #region World3dHost
 /**
@@ -220,7 +221,8 @@ export function useWorldMarqueeAndGumball(core: WorldCore5) {
     },
     [endRelocateDrag, gestureRecognizer],
   );
-  return { beginRelocateDrag, endRelocateDrag, handleFaceDragStart, handleGumballDrag, handleGumballDragEnd, handleGumballDragStart, marqueeDragActiveRef, marqueeFinalizeOnceRef, marqueePreviewRef, toLocalPoint, updateRelocateDrag, visibleSelectionPreview, yieldToPinch };
+  const { beginHandleDrag, endHandleDrag, updateHandleDrag } = useWorldHandleDrag(core);
+  return { beginHandleDrag, beginRelocateDrag, endHandleDrag, endRelocateDrag, handleFaceDragStart, handleGumballDrag, handleGumballDragEnd, handleGumballDragStart, marqueeDragActiveRef, marqueeFinalizeOnceRef, marqueePreviewRef, toLocalPoint, updateHandleDrag, updateRelocateDrag, visibleSelectionPreview, yieldToPinch };
 }
 
 export type WorldCore6 = WorldCore5 & ReturnType<typeof useWorldMarqueeAndGumball>;

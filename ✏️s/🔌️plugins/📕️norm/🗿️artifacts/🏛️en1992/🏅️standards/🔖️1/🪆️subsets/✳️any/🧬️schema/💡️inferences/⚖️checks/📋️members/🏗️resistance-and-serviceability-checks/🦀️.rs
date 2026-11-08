@@ -223,11 +223,11 @@ pub(super) fn check_ultimate_resistances(
                 let v_rd_max_pa = part_1_1::punching_v_rd_max_pa(v_rd_c_pa, f_ck, annex);
                 let v_ed_pa = if u1 * d > 0.0 { beta * up.v_ed_punch / (u1 * d) } else { 0.0 };
                 let v_ed_ref = if matches!(annex, AnnexChoice::De) || u0 * d <= 0.0 { v_ed_pa } else { beta * up.v_ed_punch / (u0 * d) };
-                let fywd_ef = (250.0e6 + 0.25 * d * 1.0e3 * 1.0e6).min(params.f_yd_pa(f_yk));
+                let fywd_ef = (ndp(annex, "ndp.en1992.punch-fywd-ef-base") * 1.0e6 + ndp(annex, "ndp.en1992.punch-fywd-ef-slope") * d * 1.0e3 * 1.0e6).min(params.f_yd_pa(f_yk));
                 let asw = member.stud_asw().unwrap_or(p.asw);
                 let s_r = member.stud_radial_spacing().unwrap_or(0.75 * d);
                 let v_rd_cs_pa = if asw > 0.0 {
-                    0.75 * v_rd_c_pa + 1.5 * (d / s_r) * asw * fywd_ef / (u1 * d).max(1e-9)
+                    ndp(annex, "ndp.en1992.punch-cs-vrdc-factor") * v_rd_c_pa + ndp(annex, "ndp.en1992.punch-cs-asw-factor") * (d / s_r) * asw * fywd_ef / (u1 * d).max(1e-9)
                 } else {
                     v_rd_c_pa
                 };

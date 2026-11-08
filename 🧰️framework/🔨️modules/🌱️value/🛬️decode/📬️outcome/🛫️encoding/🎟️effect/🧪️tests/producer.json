@@ -1,0 +1,14 @@
+{
+  "input": "receipt!",
+  "success": {
+    "performed": true,
+    "copiedItems": 1,
+    "copiedBytes": 8
+  },
+  "failure": {
+    "performed": true,
+    "copiedItems": 1,
+    "copiedBytes": 8,
+    "cause": "actual producer refusal"
+  }
+}

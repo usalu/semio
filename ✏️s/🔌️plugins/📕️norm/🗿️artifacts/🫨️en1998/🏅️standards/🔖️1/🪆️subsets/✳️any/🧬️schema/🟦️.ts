@@ -42,6 +42,12 @@ export interface En1998Artifact {
   tieBeams: En1998TieBeam[];
   /** @state artifact */
   slopes: En1998Slope[];
+  /** @state artifact */
+  isolationSystems: En1998IsolationSystem[];
+  /** @state artifact */
+  pierBases: En1998PierBase[];
+  /** @state artifact */
+  criticalRegions: En1998CriticalRegion[];
 }
 
 export type EnGroundType = "a" | "b" | "c" | "d" | "e";
@@ -444,7 +450,52 @@ export interface En1998Slope {
 
 export type AnalysisMethodChoice = "derived" | "lf" | "mrs" | "pushover" | "nlth";
 
-export const parseEn1998Artifact: NormWireReader<En1998Artifact> = normWireObject<En1998Artifact>({ annex: normWireRequired(normWireString), site: normWireRequired(normWireRef(() => parseEn1998Site)), buildings: normWireRequired(normWireArray(normWireRef(() => parseEn1998Building))), bridges: normWireRequired(normWireArray(normWireRef(() => parseEn1998Bridge))), assessments: normWireRequired(normWireArray(normWireRef(() => parseEn1998Assessment))), silos: normWireRequired(normWireArray(normWireRef(() => parseEn1998Silo))), tanks: normWireRequired(normWireArray(normWireRef(() => parseEn1998Tank))), foundations: normWireRequired(normWireArray(normWireRef(() => parseEn1998Foundation))), retainingWalls: normWireRequired(normWireArray(normWireRef(() => parseEn1998RetainingWall))), towers: normWireRequired(normWireArray(normWireRef(() => parseEn1998Tower))), soilLayers: normWireRequired(normWireArray(normWireRef(() => parseEn1998SoilLayer))), diaphragms: normWireRequired(normWireArray(normWireRef(() => parseEn1998Diaphragm))), accelerograms: normWireRequired(normWireArray(normWireRef(() => parseEn1998Accelerogram))), piers: normWireRequired(normWireArray(normWireRef(() => parseEn1998Pier))), bearings: normWireRequired(normWireArray(normWireRef(() => parseEn1998Bearing))), joints: normWireRequired(normWireArray(normWireRef(() => parseEn1998Joint))), placements: normWireRequired(normWireArray(normWireRef(() => parseEn1998Placement))), tieBeams: normWireRequired(normWireArray(normWireRef(() => parseEn1998TieBeam))), slopes: normWireRequired(normWireArray(normWireRef(() => parseEn1998Slope))) });
+export interface En1998IsolationSystem {
+  id: string;
+  bridgeId: string;
+  buildingId: string;
+  strengthN: number;
+  stiffnessNPerM: number;
+  yieldDisplacementM: number;
+  capacityM: number;
+}
+
+export interface En1998PierBase {
+  id: string;
+  bridgeId: string;
+  pierId: string;
+  radiusM: number;
+  soilVsMS: number;
+  soilUnitWeightNM3: number;
+  poissonRatio: number;
+}
+
+export interface En1998CriticalRegion {
+  id: string;
+  buildingId: string;
+  memberId: string;
+  sectionWidthM: number;
+  sectionDepthM: number;
+  clearLengthM: number;
+  hoopedLengthM: number;
+  coreWidthM: number;
+  coreDepthM: number;
+  axialForceN: number;
+  concreteDesignStrengthMpa: number;
+  steelDesignYieldMpa: number;
+  hoopDesignYieldMpa: number;
+  longitudinalSteelAreaM2: number;
+  longitudinalBarDiameterM: number;
+  longitudinalBarMaxDiameterM: number;
+  hoopDiameterM: number;
+  hoopSpacingM: number;
+  hoopLegsX: number;
+  hoopLegsY: number;
+  restrainedBarCount: number;
+  restrainedBarSpacingM: number;
+}
+
+export const parseEn1998Artifact: NormWireReader<En1998Artifact> = normWireObject<En1998Artifact>({ annex: normWireRequired(normWireString), site: normWireRequired(normWireRef(() => parseEn1998Site)), buildings: normWireRequired(normWireArray(normWireRef(() => parseEn1998Building))), bridges: normWireRequired(normWireArray(normWireRef(() => parseEn1998Bridge))), assessments: normWireRequired(normWireArray(normWireRef(() => parseEn1998Assessment))), silos: normWireRequired(normWireArray(normWireRef(() => parseEn1998Silo))), tanks: normWireRequired(normWireArray(normWireRef(() => parseEn1998Tank))), foundations: normWireRequired(normWireArray(normWireRef(() => parseEn1998Foundation))), retainingWalls: normWireRequired(normWireArray(normWireRef(() => parseEn1998RetainingWall))), towers: normWireRequired(normWireArray(normWireRef(() => parseEn1998Tower))), soilLayers: normWireRequired(normWireArray(normWireRef(() => parseEn1998SoilLayer))), diaphragms: normWireRequired(normWireArray(normWireRef(() => parseEn1998Diaphragm))), accelerograms: normWireRequired(normWireArray(normWireRef(() => parseEn1998Accelerogram))), piers: normWireRequired(normWireArray(normWireRef(() => parseEn1998Pier))), bearings: normWireRequired(normWireArray(normWireRef(() => parseEn1998Bearing))), joints: normWireRequired(normWireArray(normWireRef(() => parseEn1998Joint))), placements: normWireRequired(normWireArray(normWireRef(() => parseEn1998Placement))), tieBeams: normWireRequired(normWireArray(normWireRef(() => parseEn1998TieBeam))), slopes: normWireRequired(normWireArray(normWireRef(() => parseEn1998Slope))), isolationSystems: normWireRequired(normWireArray(normWireRef(() => parseEn1998IsolationSystem))), pierBases: normWireRequired(normWireArray(normWireRef(() => parseEn1998PierBase))), criticalRegions: normWireRequired(normWireArray(normWireRef(() => parseEn1998CriticalRegion))) });
 export const parseEnGroundType: NormWireReader<EnGroundType> = normWireLiteral("a", "b", "c", "d", "e");
 export const parseEnSpectrumType: NormWireReader<EnSpectrumType> = normWireLiteral("type1", "type2");
 export const parseImportanceClass: NormWireReader<ImportanceClass> = normWireLiteral("i", "ii", "iii", "iv");
@@ -486,3 +537,6 @@ export const parseDeGroundCombo: NormWireReader<DeGroundCombo> = normWireLiteral
 export const parseEn1998TieBeam: NormWireReader<En1998TieBeam> = normWireObject<En1998TieBeam>({ id: normWireRequired(normWireString), foundationAId: normWireRequired(normWireString), foundationBId: normWireRequired(normWireString), span: normWireRequired(normWireNumber), width: normWireRequired(normWireNumber), depth: normWireRequired(normWireNumber), steelArea: normWireRequired(normWireNumber), steelDesignStrength: normWireRequired(normWireNumber), relativeDisplacement: normWireRequired(normWireNumber), displacementLimit: normWireRequired(normWireNumber) });
 export const parseEn1998Slope: NormWireReader<En1998Slope> = normWireObject<En1998Slope>({ id: normWireRequired(normWireString), governingLayerId: normWireRequired(normWireString), height: normWireRequired(normWireNumber), angle: normWireRequired(normWireNumber), frictionAngle: normWireRequired(normWireNumber), cohesion: normWireRequired(normWireNumber), topographicAmplification: normWireRequired(normWireNumber), circleCentreX: normWireRequired(normWireNumber), circleCentreZ: normWireRequired(normWireNumber), circleRadius: normWireRequired(normWireNumber) });
 export const parseAnalysisMethodChoice: NormWireReader<AnalysisMethodChoice> = normWireLiteral("derived", "lf", "mrs", "pushover", "nlth");
+export const parseEn1998IsolationSystem: NormWireReader<En1998IsolationSystem> = normWireObject<En1998IsolationSystem>({ id: normWireRequired(normWireString), bridgeId: normWireRequired(normWireString), buildingId: normWireRequired(normWireString), strengthN: normWireRequired(normWireNumber), stiffnessNPerM: normWireRequired(normWireNumber), yieldDisplacementM: normWireRequired(normWireNumber), capacityM: normWireRequired(normWireNumber) });
+export const parseEn1998PierBase: NormWireReader<En1998PierBase> = normWireObject<En1998PierBase>({ id: normWireRequired(normWireString), bridgeId: normWireRequired(normWireString), pierId: normWireRequired(normWireString), radiusM: normWireRequired(normWireNumber), soilVsMS: normWireRequired(normWireNumber), soilUnitWeightNM3: normWireRequired(normWireNumber), poissonRatio: normWireRequired(normWireNumber) });
+export const parseEn1998CriticalRegion: NormWireReader<En1998CriticalRegion> = normWireObject<En1998CriticalRegion>({ id: normWireRequired(normWireString), buildingId: normWireRequired(normWireString), memberId: normWireRequired(normWireString), sectionWidthM: normWireRequired(normWireNumber), sectionDepthM: normWireRequired(normWireNumber), clearLengthM: normWireRequired(normWireNumber), hoopedLengthM: normWireRequired(normWireNumber), coreWidthM: normWireRequired(normWireNumber), coreDepthM: normWireRequired(normWireNumber), axialForceN: normWireRequired(normWireNumber), concreteDesignStrengthMpa: normWireRequired(normWireNumber), steelDesignYieldMpa: normWireRequired(normWireNumber), hoopDesignYieldMpa: normWireRequired(normWireNumber), longitudinalSteelAreaM2: normWireRequired(normWireNumber), longitudinalBarDiameterM: normWireRequired(normWireNumber), longitudinalBarMaxDiameterM: normWireRequired(normWireNumber), hoopDiameterM: normWireRequired(normWireNumber), hoopSpacingM: normWireRequired(normWireNumber), hoopLegsX: normWireRequired(normWireNumber), hoopLegsY: normWireRequired(normWireNumber), restrainedBarCount: normWireRequired(normWireNumber), restrainedBarSpacingM: normWireRequired(normWireNumber) });

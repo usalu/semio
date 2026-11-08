@@ -1,0 +1,40 @@
+{
+  "type": "array",
+  "minItems": 6,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "sameSource",
+      "started",
+      "recorded",
+      "funded",
+      "recover",
+      "publish",
+      "replay"
+    ],
+    "properties": {
+      "sameSource": {
+        "type": "boolean"
+      },
+      "started": {
+        "type": "boolean"
+      },
+      "recorded": {
+        "type": "boolean"
+      },
+      "funded": {
+        "type": "boolean"
+      },
+      "recover": {
+        "type": "boolean"
+      },
+      "publish": {
+        "type": "boolean"
+      },
+      "replay": {
+        "const": false
+      }
+    }
+  }
+}

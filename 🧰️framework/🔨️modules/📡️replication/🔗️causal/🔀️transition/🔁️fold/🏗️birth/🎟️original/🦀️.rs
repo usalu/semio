@@ -32,8 +32,8 @@ impl<'a, T: RetireOwned> HistoryFoldJob<'a, T> {
             job.native_binding = Some((native.ledger_identity(), native.retirement_recipient_identity()));
             *output = Some(job);
             let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, retained_capacity_bytes: demand.capacity_bytes, released_bytes: 0 };
-            let allocation_refusal = None;
-            let result = if allocation_refusal.is_none() { Ok(true) } else { Err(OriginalReceivingPrimary {retirement_failure:None,work_refusal:None,work_overrun:None, primary: None, quote_refusal: None, allocation_refusal, allocation_failure: None, native_allocation: None, receipt_refusal: None, progress }) };
+            let allocation_refusal = native.record_constructed_allocation(progress.retained_capacity_bytes).err();
+            let result = if allocation_refusal.is_none() { Ok(true) } else { Err(OriginalReceivingPrimary::from_fields(None,None,allocation_refusal,None,None,None,None,None,None,progress)) };
             NativeConstructionStepResult { work: 1, result, progress }
         })
     }
@@ -80,7 +80,7 @@ impl<'a, T: RetireOwned> HistoryFoldJob<'a, T> {
             let allocation_refusal = None;
             let result = match result {
                 Ok(step) if quote_refusal.is_none() && allocation_refusal.is_none() => Ok(step),
-                result => Err(OriginalReceivingPrimary {retirement_failure:None,work_refusal:None,work_overrun:None, primary: result.err(), quote_refusal, allocation_refusal, allocation_failure: None, native_allocation: None, receipt_refusal: None, progress }),
+                result => Err(OriginalReceivingPrimary::from_fields(result.err(),quote_refusal,allocation_refusal,None,None,None,None,None,None,progress)),
             };
             NativeConstructionStepResult { work: u128::from(self.last_work), result, progress }
         })

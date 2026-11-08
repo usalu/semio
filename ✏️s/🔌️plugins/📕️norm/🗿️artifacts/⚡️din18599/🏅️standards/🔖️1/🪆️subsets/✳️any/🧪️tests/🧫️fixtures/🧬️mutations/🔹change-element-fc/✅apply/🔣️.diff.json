@@ -1,0 +1,42 @@
+{
+  "buildingCategory": null,
+  "attachment": null,
+  "useClass": null,
+  "method": null,
+  "netFloorAreaM2": null,
+  "heatedVolumeM3": null,
+  "gegQpFactor": null,
+  "deltaUWbWM2k": null,
+  "automationClass": null,
+  "zones": null,
+  "elements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "wall-n",
+        "patch": {
+          "labelEn": null,
+          "labelDe": null,
+          "kind": null,
+          "zoneId": null,
+          "areaM2": null,
+          "uValueWM2k": null,
+          "orientationDeg": null,
+          "tiltDeg": null,
+          "gValue": null,
+          "fc": 0.8,
+          "adjacency": null
+        }
+      }
+    ]
+  },
+  "heating": null,
+  "dhw": null,
+  "ventilation": null,
+  "cooling": null,
+  "lighting": null,
+  "renewables": null,
+  "climate": null
+}

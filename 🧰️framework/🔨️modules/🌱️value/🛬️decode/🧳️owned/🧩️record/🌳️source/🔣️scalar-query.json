@@ -7,7 +7,13 @@
     "events",
     "calls",
     "work",
-    "preserveError"
+    "preserveError",
+    "destination",
+    "operation",
+    "transfer",
+    "binding",
+    "bindWork",
+    "transferWork"
   ],
   "properties": {
     "queries": {
@@ -23,6 +29,7 @@
     },
     "events": {
       "const": [
+        "bind",
         "receive",
         "performed",
         "recordError",
@@ -40,6 +47,24 @@
     },
     "preserveError": {
       "const": true
+    },
+    "destination": {
+      "const": "residentFrame"
+    },
+    "operation": {
+      "const": "immutable"
+    },
+    "transfer": {
+      "const": "separatelyPaid"
+    },
+    "binding": {
+      "const": "originalRetainedSource"
+    },
+    "bindWork": {
+      "const": 1
+    },
+    "transferWork": {
+      "const": 1
     }
   }
 }

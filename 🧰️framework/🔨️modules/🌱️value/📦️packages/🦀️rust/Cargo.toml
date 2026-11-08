@@ -26,6 +26,7 @@ path = "🦀️.rs"
 testkit = ["semio-framework-value-read/testkit","dep:semio-framework-value-testing-effect-bank"]
 
 [dependencies]
+semio-framework-value-retirement-contract = { path = "../../♻️retirement/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-equality = { path = "../../🌳️tree/🟰️equal/📦️packages/🦀️rust" }
 semio-framework-value-read = { path = "../../🔗️read/📦️packages/🦀️rust" }
 semio-framework-value-sort = { path = "../../📶️sort/📦️packages/🦀️rust" }

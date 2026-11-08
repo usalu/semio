@@ -1,0 +1,32 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "sameSource",
+      "decision",
+      "fuel",
+      "quote",
+      "settle"
+    ],
+    "properties": {
+      "sameSource": {
+        "type": "boolean"
+      },
+      "decision": {
+        "type": "boolean"
+      },
+      "fuel": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "quote": {
+        "type": "boolean"
+      },
+      "settle": {
+        "type": "boolean"
+      }
+    }
+  }
+}

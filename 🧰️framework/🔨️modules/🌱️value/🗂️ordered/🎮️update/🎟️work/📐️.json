@@ -80,7 +80,7 @@
   "maximumTurns": 100000,
   "deniedWork": 0,
   "nullWork": 1,
-  "maximumTurnWork": 1,
+  "maximumTurnWork": 10,
   "stock": {
     "items": 100000,
     "copyBytes": 33554432,
@@ -88,5 +88,13 @@
     "releaseBytes": 33554432,
     "depth": 512,
     "fuel": 100000
+  },
+  "maximumMetadataEvents": 1,
+  "constructor": {
+    "nonemptyAliases": 2,
+    "metadataWork": 1,
+    "aliasWork": 3,
+    "emptyWork": 1,
+    "nonemptyWork": 7
   }
 }

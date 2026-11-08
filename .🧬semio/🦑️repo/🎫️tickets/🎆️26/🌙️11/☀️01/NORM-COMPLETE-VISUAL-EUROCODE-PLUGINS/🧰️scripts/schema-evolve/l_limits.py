@@ -195,6 +195,7 @@ OVERRIDES = {
     "nonstructuralWeightN": N(1e12), "nonstructuralQ": P(100), "nonstructuralResistanceN": N(1e12), "overturningBaseXM": N(1e4), "overturningBaseYM": N(1e4), "periodRatio": P(1e3), "pierShearRdN": N(1e12),
     "axialForceN": S(1e12), "restrainedBarCount": N(1e3), "shearCrackingBeforeYield": R(0, 1), "shearForceDemandN": N(1e12), "qNominal": P(100), "kFoundation": N(1e16), "kSoil": N(1e16),
     "liqN160": N(1e3), "liqMagnitude": R(0, 10), "bearingAxialN": S(1e12), "bearingShearN": N(1e12), "bearingNMaxN": N(1e12), "pileHeadShearN": N(1e12), "pileHeadFixed": R(0, 1), "r": P(100), "n160": N(1e3),
+    "FireInsulation.conductivity": P(1e3), "FireInsulation.specificHeat": P(1e5), "FireInsulation.density": P(2.3e4),
     "scaleFactor": P(1e6), "backfillGamma": P(1e9), "importanceClass": R(1, 4), "logDecrement": N(10), "topographicAmplification": P(10),
 }
 

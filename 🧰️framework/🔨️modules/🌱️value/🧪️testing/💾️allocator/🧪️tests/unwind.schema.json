@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "afterBytes",
+    "clearedAfterUnwind",
+    "nestedReplacesOriginal",
+    "successfulOperationsPreserveObservers"
+  ],
+  "properties": {
+    "afterBytes": {
+      "const": 19
+    },
+    "clearedAfterUnwind": {
+      "const": true
+    },
+    "nestedReplacesOriginal": {
+      "const": false
+    },
+    "successfulOperationsPreserveObservers": {
+      "const": true
+    }
+  }
+}

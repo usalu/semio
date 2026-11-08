@@ -750,13 +750,13 @@ Feature: Apply every typed EN 1993 mutation against an independent Python implem
       | change-fatigue-stress-fibre-y | 🧱️change-fatigue-stress-fibre-y | ✅apply  |
       | change-fatigue-stress-fibre-z | 🧱️change-fatigue-stress-fibre-z | ✅apply  |
       | change-buckling-length-beam-stiffness-b | 🧱️change-buckling-length-beam-stiffness-b | ✅apply  |
-      | change-buckling-length-column-stiffness-b | 🧱️change-buckling-length-column-stiffness-b | ✅apply  |
+      | change-buckling-length-column-stiffness-b | 🧱️change-buckling-column-stiffness-b | ✅apply  |
       | change-buckling-length-beam-stiffness-a | 🧱️change-buckling-length-beam-stiffness-a | ✅apply  |
-      | change-buckling-length-column-stiffness-a | 🧱️change-buckling-length-column-stiffness-a | ✅apply  |
+      | change-buckling-length-column-stiffness-a | 🧱️change-buckling-column-stiffness-a | ✅apply  |
       | change-forming-gain-gross-area | 🧱️change-forming-gain-gross-area | ✅apply  |
       | change-forming-gain-ultimate-strength | 🧱️change-forming-gain-ultimate-strength | ✅apply  |
       | change-forming-gain-used-yield | 🧱️change-forming-gain-used-yield | ✅apply  |
-      | change-material-ductility-ultimate-strain | 🧱️change-material-ductility-ultimate-strain | ✅apply  |
+      | change-material-ductility-ultimate-strain | 🧱️change-ductility-ultimate-strain | ✅apply  |
       | change-material-ductility-elongation | 🧱️change-material-ductility-elongation | ✅apply  |
       | change-fastened-joint-shear-resistance | 🧱️change-fastened-joint-shear-resistance | ✅apply  |
       | change-fastened-joint-tension-force | 🧱️change-fastened-joint-tension-force | ✅apply  |

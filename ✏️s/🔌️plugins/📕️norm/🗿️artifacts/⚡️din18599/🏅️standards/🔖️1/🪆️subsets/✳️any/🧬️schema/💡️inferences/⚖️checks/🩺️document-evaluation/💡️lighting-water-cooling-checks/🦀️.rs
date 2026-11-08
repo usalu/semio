@@ -3,9 +3,9 @@
 use super::*;
 
 /// 💡 Checks the installed lighting power against the profile limit.
-pub(super) fn check_lighting(doc: &Din18599Snapshot, report: &mut CheckReport, annex: AnnexChoice) {
+pub(super) fn check_lighting(doc: &Din18599Snapshot, report: &mut CheckReport, annex: AnnexChoice, scope: Scope<'_>) {
     {
-        for zone in &doc.zones {
+        for zone in doc.zones.iter().enumerate().filter(|(index, _)| scope.admits("lighting", *index)).map(|(_, zone)| zone) {
             let row = usage_profile_row(zone.usage_profile);
             let lpd = zone.lighting_power_w_m2;
             let limit = row.lighting_lpd_limit_w_m2;
@@ -141,11 +141,11 @@ pub(super) fn check_hot_water(doc: &Din18599Snapshot, report: &mut CheckReport, 
 }
 
 /// 🌡 Checks the cooling set temperature against the zone defaults.
-pub(super) fn check_cooling_temperature(doc: &Din18599Snapshot, report: &mut CheckReport, annex: AnnexChoice, derived: &BalanceDerived) {
+pub(super) fn check_cooling_temperature(doc: &Din18599Snapshot, report: &mut CheckReport, annex: AnnexChoice, derived: &BalanceDerived, scope: Scope<'_>) {
     {
         let q_c = derived.q_c_nd_kwh;
         let min_theta = din_v_18599_10_zone_defaults::THETA_I_COOL_C;
-        for zone in &doc.zones {
+        for zone in doc.zones.iter().enumerate().filter(|(index, _)| scope.admits("cooling-need", *index)).map(|(_, zone)| zone) {
             let path = format!("zones[id={}].thetaICoolC", zone.id);
             let mut b = CheckResult::assess(
                 format!("din18599.2.cooling-need.{}", zone.id),

@@ -1,0 +1,58 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "input",
+    "success",
+    "failure"
+  ],
+  "properties": {
+    "input": {
+      "const": "receipt!"
+    },
+    "success": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "performed",
+        "copiedItems",
+        "copiedBytes"
+      ],
+      "properties": {
+        "performed": {
+          "const": true
+        },
+        "copiedItems": {
+          "const": 1
+        },
+        "copiedBytes": {
+          "const": 8
+        }
+      }
+    },
+    "failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "performed",
+        "copiedItems",
+        "copiedBytes",
+        "cause"
+      ],
+      "properties": {
+        "performed": {
+          "const": true
+        },
+        "copiedItems": {
+          "const": 1
+        },
+        "copiedBytes": {
+          "const": 8
+        },
+        "cause": {
+          "const": "actual producer refusal"
+        }
+      }
+    }
+  }
+}

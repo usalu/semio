@@ -1,0 +1,496 @@
+{
+  "parameter": [
+    {
+      "name": "ray straight down onto an x axis",
+      "rayOrigin": [
+        3,
+        0,
+        5
+      ],
+      "rayDirection": [
+        0,
+        0,
+        -1
+      ],
+      "axisOrigin": [
+        0,
+        0,
+        0
+      ],
+      "axis": [
+        1,
+        0,
+        0
+      ],
+      "s": 3
+    },
+    {
+      "name": "axis direction is normalised",
+      "rayOrigin": [
+        3,
+        0,
+        5
+      ],
+      "rayDirection": [
+        0,
+        0,
+        -2
+      ],
+      "axisOrigin": [
+        1,
+        0,
+        0
+      ],
+      "axis": [
+        4,
+        0,
+        0
+      ],
+      "s": 2
+    },
+    {
+      "name": "skew ray reads the closest approach",
+      "rayOrigin": [
+        2,
+        -5,
+        1
+      ],
+      "rayDirection": [
+        0,
+        1,
+        0
+      ],
+      "axisOrigin": [
+        0,
+        0,
+        0
+      ],
+      "axis": [
+        1,
+        0,
+        0
+      ],
+      "s": 2
+    },
+    {
+      "name": "negative side of the origin",
+      "rayOrigin": [
+        -1.5,
+        0,
+        4
+      ],
+      "rayDirection": [
+        0,
+        0,
+        -1
+      ],
+      "axisOrigin": [
+        0,
+        0,
+        0
+      ],
+      "axis": [
+        1,
+        0,
+        0
+      ],
+      "s": -1.5
+    },
+    {
+      "name": "parallel ray has no parameter",
+      "rayOrigin": [
+        0,
+        1,
+        0
+      ],
+      "rayDirection": [
+        1,
+        0,
+        0
+      ],
+      "axisOrigin": [
+        0,
+        0,
+        0
+      ],
+      "axis": [
+        1,
+        0,
+        0
+      ],
+      "s": null
+    },
+    {
+      "name": "degenerate axis has no parameter",
+      "rayOrigin": [
+        0,
+        0,
+        5
+      ],
+      "rayDirection": [
+        0,
+        0,
+        -1
+      ],
+      "axisOrigin": [
+        0,
+        0,
+        0
+      ],
+      "axis": [
+        0,
+        0,
+        0
+      ],
+      "s": null
+    }
+  ],
+  "pick": [
+    {
+      "name": "nearest within radius",
+      "handles": [
+        {
+          "id": "handle:a",
+          "x": 10,
+          "y": 10
+        },
+        {
+          "id": "handle:b",
+          "x": 14,
+          "y": 10
+        }
+      ],
+      "x": 13,
+      "y": 10,
+      "radiusPx": 12,
+      "expected": "handle:b"
+    },
+    {
+      "name": "first wins a tie",
+      "handles": [
+        {
+          "id": "handle:a",
+          "x": 10,
+          "y": 10
+        },
+        {
+          "id": "handle:b",
+          "x": 14,
+          "y": 10
+        }
+      ],
+      "x": 12,
+      "y": 10,
+      "radiusPx": 12,
+      "expected": "handle:a"
+    },
+    {
+      "name": "outside the radius",
+      "handles": [
+        {
+          "id": "handle:a",
+          "x": 10,
+          "y": 10
+        }
+      ],
+      "x": 40,
+      "y": 10,
+      "radiusPx": 12,
+      "expected": null
+    }
+  ],
+  "sequences": [
+    {
+      "name": "drag streams deltas then commits once",
+      "events": [
+        {
+          "kind": "press",
+          "handle": "handle:beam-1.xM",
+          "s": 2
+        },
+        {
+          "kind": "move",
+          "s": 2.5,
+          "modifiers": {
+            "shift": false,
+            "alt": false,
+            "ctrl": false
+          },
+          "at": [
+            2.5,
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "move",
+          "s": 2.5,
+          "modifiers": {
+            "shift": false,
+            "alt": false,
+            "ctrl": false
+          },
+          "at": [
+            2.5,
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "move",
+          "s": 3,
+          "modifiers": {
+            "shift": false,
+            "alt": true,
+            "ctrl": false
+          },
+          "at": [
+            3,
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "release",
+          "s": 3,
+          "modifiers": {
+            "shift": false,
+            "alt": true,
+            "ctrl": false
+          },
+          "at": [
+            3,
+            0,
+            0
+          ]
+        }
+      ],
+      "dispatches": [
+        null,
+        {
+          "trigger": "delta",
+          "input": {
+            "handle": "handle:beam-1.xM",
+            "s": 2.5,
+            "origin": 2,
+            "modifiers": {
+              "shift": false,
+              "alt": false,
+              "ctrl": false
+            },
+            "at": [
+              2.5,
+              0,
+              0
+            ]
+          }
+        },
+        null,
+        {
+          "trigger": "delta",
+          "input": {
+            "handle": "handle:beam-1.xM",
+            "s": 3,
+            "origin": 2,
+            "modifiers": {
+              "shift": false,
+              "alt": true,
+              "ctrl": false
+            },
+            "at": [
+              3,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "trigger": "commit",
+          "input": {
+            "handle": "handle:beam-1.xM",
+            "s": 3,
+            "origin": 2,
+            "modifiers": {
+              "shift": false,
+              "alt": true,
+              "ctrl": false
+            },
+            "at": [
+              3,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a click without travel dispatches nothing",
+      "events": [
+        {
+          "kind": "press",
+          "handle": "handle:beam-1.xM",
+          "s": 2
+        },
+        {
+          "kind": "release",
+          "s": 2,
+          "modifiers": {
+            "shift": false,
+            "alt": false,
+            "ctrl": false
+          },
+          "at": [
+            2,
+            0,
+            0
+          ]
+        }
+      ],
+      "dispatches": [
+        null,
+        null
+      ]
+    },
+    {
+      "name": "cancel after movement aborts at the last parameter",
+      "events": [
+        {
+          "kind": "press",
+          "handle": "handle:beam-1.xM",
+          "s": 2
+        },
+        {
+          "kind": "move",
+          "s": 1,
+          "modifiers": {
+            "shift": false,
+            "alt": false,
+            "ctrl": false
+          },
+          "at": [
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "cancel",
+          "modifiers": {
+            "shift": false,
+            "alt": false,
+            "ctrl": false
+          },
+          "at": [
+            9,
+            9,
+            9
+          ]
+        }
+      ],
+      "dispatches": [
+        null,
+        {
+          "trigger": "delta",
+          "input": {
+            "handle": "handle:beam-1.xM",
+            "s": 1,
+            "origin": 2,
+            "modifiers": {
+              "shift": false,
+              "alt": false,
+              "ctrl": false
+            },
+            "at": [
+              1,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "trigger": "abort",
+          "input": {
+            "handle": "handle:beam-1.xM",
+            "s": 1,
+            "origin": 2,
+            "modifiers": {
+              "shift": false,
+              "alt": false,
+              "ctrl": false
+            },
+            "at": [
+              9,
+              9,
+              9
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "cancel without movement dispatches nothing",
+      "events": [
+        {
+          "kind": "press",
+          "handle": "handle:beam-1.xM",
+          "s": 2
+        },
+        {
+          "kind": "cancel",
+          "modifiers": {
+            "shift": false,
+            "alt": false,
+            "ctrl": false
+          },
+          "at": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "dispatches": [
+        null,
+        null
+      ]
+    },
+    {
+      "name": "events without a press are ignored",
+      "events": [
+        {
+          "kind": "move",
+          "s": 1,
+          "modifiers": {
+            "shift": false,
+            "alt": false,
+            "ctrl": false
+          },
+          "at": [
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "release",
+          "s": 1,
+          "modifiers": {
+            "shift": false,
+            "alt": false,
+            "ctrl": false
+          },
+          "at": [
+            1,
+            0,
+            0
+          ]
+        }
+      ],
+      "dispatches": [
+        null,
+        null
+      ]
+    }
+  ]
+}

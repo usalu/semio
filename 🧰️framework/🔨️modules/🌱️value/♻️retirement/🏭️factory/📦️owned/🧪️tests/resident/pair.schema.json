@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "body",
+    "maximumCopyBytes",
+    "deniedAxes",
+    "samePayload",
+    "sameIssuer"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "body": {
+      "const": "Original α 🌱"
+    },
+    "maximumCopyBytes": {
+      "const": 4096
+    },
+    "deniedAxes": {
+      "const": [
+        "items",
+        "copy",
+        "depth",
+        "work"
+      ]
+    },
+    "samePayload": {
+      "const": true
+    },
+    "sameIssuer": {
+      "const": true
+    }
+  }
+}

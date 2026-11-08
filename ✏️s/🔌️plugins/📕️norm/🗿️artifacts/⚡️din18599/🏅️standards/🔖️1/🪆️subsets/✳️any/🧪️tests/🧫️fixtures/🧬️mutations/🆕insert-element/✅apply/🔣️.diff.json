@@ -1,0 +1,43 @@
+{
+  "buildingCategory": null,
+  "attachment": null,
+  "useClass": null,
+  "method": null,
+  "netFloorAreaM2": null,
+  "heatedVolumeM3": null,
+  "gegQpFactor": null,
+  "deltaUWbWM2k": null,
+  "automationClass": null,
+  "zones": null,
+  "elements": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 1,
+        "row": {
+          "id": "element-extra",
+          "labelEn": "Extra",
+          "labelDe": "Zusatz",
+          "kind": "Wall",
+          "zoneId": "zone-living",
+          "areaM2": 42.0,
+          "uValueWM2k": 0.2,
+          "orientationDeg": 0.0,
+          "tiltDeg": 90.0,
+          "gValue": 0.6,
+          "fc": 1.0,
+          "adjacency": "Outdoor"
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "heating": null,
+  "dhw": null,
+  "ventilation": null,
+  "cooling": null,
+  "lighting": null,
+  "renewables": null,
+  "climate": null
+}

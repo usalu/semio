@@ -19,4 +19,8 @@ pub mod change_zone_vent_system_id;
 pub mod insert_zone;
 #[path = "../➖️remove-zone/🦀️.rs"]
 pub mod remove_zone;
+#[path = "../🏷️change-zone-name/🦀️.rs"]
+pub mod change_zone_name;
+#[path = "../🆔️change-zone-id/🦀️.rs"]
+pub mod change_zone_id;
 //#endregion 🪢️Mounts

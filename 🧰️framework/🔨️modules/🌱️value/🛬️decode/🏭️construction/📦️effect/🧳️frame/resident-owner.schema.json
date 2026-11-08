@@ -1,0 +1,89 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sameFrame",
+    "visibleBeforePost",
+    "closePosts",
+    "maxItems",
+    "copyLimit",
+    "preparePosts",
+    "bindPosts",
+    "bindingCancelPosts",
+    "rearmPosts",
+    "semanticActions",
+    "seedParts",
+    "cancelAfter",
+    "stock"
+  ],
+  "properties": {
+    "sameFrame": {
+      "const": true
+    },
+    "visibleBeforePost": {
+      "const": false
+    },
+    "closePosts": {
+      "const": 2
+    },
+    "maxItems": {
+      "const": 1
+    },
+    "copyLimit": {
+      "const": 4096
+    },
+    "preparePosts": {
+      "const": 1
+    },
+    "bindPosts": {
+      "const": 1
+    },
+    "bindingCancelPosts": {
+      "const": 1
+    },
+    "rearmPosts": {
+      "const": 1
+    },
+    "semanticActions": {
+      "const": 2
+    },
+    "seedParts": {
+      "const": 80
+    },
+    "cancelAfter": {
+      "const": 3
+    },
+    "stock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth",
+        "fuel"
+      ],
+      "properties": {
+        "items": {
+          "const": 128
+        },
+        "copyBytes": {
+          "const": 524288
+        },
+        "capacityBytes": {
+          "const": 65536
+        },
+        "releaseBytes": {
+          "const": 65536
+        },
+        "depth": {
+          "const": 64
+        },
+        "fuel": {
+          "const": 128
+        }
+      }
+    }
+  }
+}

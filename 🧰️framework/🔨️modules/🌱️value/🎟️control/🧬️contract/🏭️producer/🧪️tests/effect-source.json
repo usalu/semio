@@ -1,0 +1,32 @@
+[
+  {
+    "producer": false,
+    "payer": false,
+    "same": false,
+    "accepted": true
+  },
+  {
+    "producer": false,
+    "payer": true,
+    "same": false,
+    "accepted": true
+  },
+  {
+    "producer": true,
+    "payer": false,
+    "same": false,
+    "accepted": false
+  },
+  {
+    "producer": true,
+    "payer": true,
+    "same": true,
+    "accepted": true
+  },
+  {
+    "producer": true,
+    "payer": true,
+    "same": false,
+    "accepted": false
+  }
+]

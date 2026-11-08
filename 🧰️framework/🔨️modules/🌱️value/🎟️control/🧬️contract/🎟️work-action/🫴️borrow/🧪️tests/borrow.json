@@ -1,0 +1,96 @@
+{
+  "events": [
+    "prepare",
+    "perform",
+    "mutate",
+    "unwind",
+    "claim",
+    "partial",
+    "commit",
+    "finish"
+  ],
+  "scope": {
+    "quoted": 1,
+    "performed": 1,
+    "claimedBeforeSource": 1,
+    "checks": 1,
+    "marker": null
+  },
+  "window": {
+    "quoted": 1,
+    "requested": 2,
+    "performed": 0,
+    "marker": null,
+    "cancelled": true
+  },
+  "occupied": {
+    "performed": 0,
+    "replacesRefusal": false
+  },
+  "limit": {
+    "maximum": 1,
+    "widenTo": 10,
+    "performed": 1,
+    "afterRemaining": 0,
+    "deniedNewAction": true
+  },
+  "spentAllocation": {
+    "quoted": 1,
+    "alreadyPerformed": 1,
+    "allocatorAttempts": 0,
+    "extraWork": 0,
+    "marker": null
+  },
+  "binding": {
+    "stableThroughAction": true,
+    "foreignIssuerMatches": false,
+    "constructedFromScalar": false,
+    "preAction": true,
+    "fromOriginalEffect": true
+  },
+  "effectBinding": [
+    {
+      "id": "initial",
+      "scope": true,
+      "issuer": true,
+      "source": true,
+      "matches": true
+    },
+    {
+      "id": "laterAction",
+      "scope": true,
+      "issuer": true,
+      "source": true,
+      "matches": true
+    },
+    {
+      "id": "foreignScope",
+      "scope": false,
+      "issuer": true,
+      "source": true,
+      "matches": false
+    },
+    {
+      "id": "foreignIssuer",
+      "scope": true,
+      "issuer": false,
+      "source": true,
+      "matches": false
+    },
+    {
+      "id": "foreignSource",
+      "scope": true,
+      "issuer": true,
+      "source": false,
+      "matches": false
+    }
+  ],
+  "issuedReceipt": {
+    "original": 1,
+    "narrowed": 0,
+    "performed": 1,
+    "remaining": 0,
+    "admitted": false,
+    "claimed": 1
+  }
+}

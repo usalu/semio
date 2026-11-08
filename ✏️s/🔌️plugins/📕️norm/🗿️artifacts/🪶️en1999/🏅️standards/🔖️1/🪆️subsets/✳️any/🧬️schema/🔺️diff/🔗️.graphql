@@ -16,6 +16,8 @@ type En1999Diff {
   fatigueCategories: En1999FatigueCategoriesRows
   patchLoads: En1999PatchLoadsRows
   ringStiffeners: En1999RingStiffenersRows
+  sheetProfiles: En1999SheetProfilesRows
+  fireInsulations: En1999FireInsulationsRows
   transverseStiffeners: En1999TransverseStiffenersRows
   reliabilityClass: JSON
 }
@@ -686,4 +688,64 @@ type En1999WeldRunsRows {
   inserted: [En1999WeldRunsInserted!]!
   moved: [En1999WeldRunsMoved!]!
   modified: [En1999WeldRunsModified!]!
+}
+type En1999SheetProfilesInserted {
+  index: Int!
+  row: SheetProfile!
+}
+type En1999SheetProfilesModified {
+  id: String!
+  patch: En1999SheetProfilesPatch!
+}
+type En1999SheetProfilesMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1999SheetProfilesRemoved {
+  id: String!
+  index: Int!
+}
+type En1999SheetProfilesRows {
+  removed: [En1999SheetProfilesRemoved!]!
+  inserted: [En1999SheetProfilesInserted!]!
+  moved: [En1999SheetProfilesMoved!]!
+  modified: [En1999SheetProfilesModified!]!
+}
+type En1999SheetProfilesPatch {
+  sheetId: JSON
+  pitch: JSON
+  topFlange: JSON
+  bottomFlange: JSON
+  webHeight: JSON
+}
+type En1999FireInsulationsInserted {
+  index: Int!
+  row: FireInsulation!
+}
+type En1999FireInsulationsModified {
+  id: String!
+  patch: En1999FireInsulationsPatch!
+}
+type En1999FireInsulationsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1999FireInsulationsRemoved {
+  id: String!
+  index: Int!
+}
+type En1999FireInsulationsRows {
+  removed: [En1999FireInsulationsRemoved!]!
+  inserted: [En1999FireInsulationsInserted!]!
+  moved: [En1999FireInsulationsMoved!]!
+  modified: [En1999FireInsulationsModified!]!
+}
+type En1999FireInsulationsPatch {
+  fireId: JSON
+  thickness: JSON
+  conductivity: JSON
+  specificHeat: JSON
+  density: JSON
 }

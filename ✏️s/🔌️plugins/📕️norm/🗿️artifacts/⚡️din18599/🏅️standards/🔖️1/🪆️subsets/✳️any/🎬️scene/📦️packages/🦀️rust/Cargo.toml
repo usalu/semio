@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-norm-din18599-scene"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "DIN V 18599 structural scene: thermal zones and envelope elements with monthly balance and energy-flow diagrams and handles"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-artifact-norm-din18599-checks = { workspace = true }
+semio-s-artifact-norm-din18599-model = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }
+semio-s-plugin-norm-structural-scene = { workspace = true }
+
+[dev-dependencies]
+semio-s-artifact-norm-din18599-model = { workspace = true, features = ["test-support"] }
+semio-s-plugin-norm-compliance = { workspace = true, features = ["test-support", "compliance-testing"] }
+serde_json = { workspace = true }
+semio-s-artifact-norm-din18599-io = { workspace = true }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

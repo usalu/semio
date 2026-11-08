@@ -1,6 +1,5 @@
 //! 👁️ Actual projected post custody lends original reads and returns the same owner before mutable commit.
-use crate::{RetirementDemand,ValueError,ValueRefusalKind,retirement::RetireOwned,retained_clone::{RetainedCloneSource,RetainedCloneSourceAdmission,RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneSourceTake,retained_clone_grant_admits,admit_retained_clone_progress}};
-use std::mem::{ManuallyDrop,size_of};
+use crate::{RetirementDemand,ValueError,ValueRefusalKind,retirement::RetireOwned,retained_clone::{RetainedCloneSource,RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,retained_clone_grant_admits}};
 #[derive(Clone,Copy,PartialEq,Eq,Debug)]
 pub enum PagedOneItemPostMode{Original,Mutable}
 pub enum PagedOneItemPostRead<'a,S>{Original(RetainedCloneRef<'a,S>),Mutable(&'a S)}
@@ -15,55 +14,33 @@ impl<'a,S>PagedOneItemPost<'a,S>{
  pub fn mutable(self)->Result<&'a mut S,ValueError>{match self{Self::Mutable(value)=>Ok(value),Self::Original(_)=>Err(invalid("mutable post access requires all original reads to close"))}}
 }
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
-/// 🧳️ Only the genuine projected owner is sealed; cancellation returns it to its original snapshot issuer.
-pub struct OriginalPostRead<S:RetireOwned+Sync>{admission:ManuallyDrop<Option<RetainedCloneSourceAdmission<S,S>>>,source:ManuallyDrop<Option<RetainedCloneSource<S,S>>>,actual:Option<usize>}
-impl<S:RetireOwned+Sync>Default for OriginalPostRead<S>{fn default()->Self{Self{admission:ManuallyDrop::new(None),source:ManuallyDrop::new(None),actual:None}}}
-impl<S:RetireOwned+Sync>OriginalPostRead<S>{
- fn movement_bytes()->usize{size_of::<Self>()*2+size_of::<Option<S>>()*2+size_of::<RetainedCloneSource<S,S>>()*2}
- fn child_error(error:crate::OriginalRetirementFailure,performed:bool)->crate::OriginalRetirementFailure{if !performed{return error}let mut progress=error.retained_progress();progress.copied_items=progress.copied_items.max(1);progress.copied_bytes=progress.copied_bytes.saturating_add(Self::movement_bytes());error.with_retained_progress(progress)}
- pub fn demand(&self,post:&Option<S>,mode:PagedOneItemPostMode,body:usize)->Result<Option<RetirementDemand>,ValueError>{
-  if post.is_some()==(self.source.is_some()||self.admission.is_some()){return Err(invalid("exactly one original post owner is required"));}
-  if self.actual.is_some(){return Ok(Some(RetirementDemand{copy_bytes:size_of::<Option<usize>>(),depth:1,..Default::default()}))}
-  let mut demand=match(mode,self.source.as_ref(),self.admission.as_ref()){
-   (PagedOneItemPostMode::Original,None,None)=>RetirementDemand{depth:1,..Default::default()},
-   (PagedOneItemPostMode::Original,None,Some(admission))=>admission.next_demand()?,
-   (PagedOneItemPostMode::Mutable,Some(source),None)=>source.next_take_demand(body.saturating_sub(Self::movement_bytes()))?,
-   (PagedOneItemPostMode::Mutable,None,Some(admission))=>admission.next_return_demand()?,
-   _=>return Ok(None),
-  };
-  demand.copy_bytes=demand.copy_bytes.checked_add(Self::movement_bytes()).ok_or_else(||invalid("original post movement quote overflow"))?;
-  demand.depth=demand.depth.checked_add(1).ok_or_else(||invalid("original post depth quote overflow"))?;
-  Ok(Some(demand))
- }
- /// \u26FD\uFE0F Quotes the actual selected source admission or original-authority handback work.
- pub fn work_demand(&self,post:&Option<S>,mode:PagedOneItemPostMode,body:usize)->Result<u64,ValueError>{if self.demand(post,mode,body)?.is_none(){return Ok(0)}if self.actual.is_some(){return Ok(1)}match mode{PagedOneItemPostMode::Original=>match self.admission.as_ref(){None=>Ok(1),Some(admission)if admission.phase()=="ready"=>Ok(1),Some(admission)=>admission.advance_work_demand()},PagedOneItemPostMode::Mutable=>if let Some(admission)=self.admission.as_ref(){if admission.terminal_is_empty(){Ok(1)}else{admission.return_work_demand()}}else{self.source.as_ref().ok_or_else(||invalid("original post source is absent"))?.next_take_work_demand(body.saturating_sub(Self::movement_bytes()))}}}
- pub fn prepare(&mut self,post:&mut Option<S>,mode:PagedOneItemPostMode,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<Option<RetainedCloneProgress>,crate::OriginalRetirementFailure>{let grant=effect.grant();let maximum_work_units=effect.maximum_work_units();let mut work=0;let result:Result<_,crate::OriginalRetirementFailure>=(||{
-  if self.work_demand(post,mode,body)?>maximum_work_units{return Ok(Some(Default::default()))}
-  let Some(demand)=self.demand(post,mode,body)?else{return Ok(None);};
-  if !retained_clone_grant_admits(grant,demand){return Ok(Some(Default::default()));}
-  if self.actual.is_some(){self.actual=None;work=1;return Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<usize>>(),..Default::default()}))}
-  let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-Self::movement_bytes(),maximum_depth:grant.maximum_depth-1,..grant};
-  let mut progress=match mode{
-   PagedOneItemPostMode::Original=>match self.admission.as_mut(){
-    None=>{let original=post.take().ok_or_else(||invalid("original projected post is absent"))?;*self.admission=Some(RetainedCloneSource::<S,S>::admission_borrowed(original,|value:&S|value));work+=1;RetainedCloneProgress{copied_items:1,..Default::default()}},
-    Some(admission)=>{let turn=if admission.phase()=="ready"{admission.take_output(&mut self.source,child)}else{admission.advance(&mut effect.nested_within(child,maximum_work_units))};work+=turn.work;let step=turn.result.map_err(|error|Self::child_error(error.into(),turn.work!=0))?;if admission.terminal_is_empty(){if turn.work==0{work+=1}*self.admission=None;}step.progress()}
-   },
-   PagedOneItemPostMode::Mutable=>if let Some(admission)=self.admission.as_mut(){let mut returned=None;let turn=admission.return_inputs(&mut returned,&mut effect.nested_within(child,maximum_work_units.saturating_sub(u64::try_from(work).unwrap_or(u64::MAX))));work+=turn.work;let step=turn.result.map_err(|error|Self::child_error(error.into(),turn.work!=0))?;if let Some((original,()))=returned{*post=Some(original);}if admission.terminal_is_empty(){if turn.work==0{work+=1}*self.admission=None;}step.progress()}else{   match {let turn=self.source.as_mut().ok_or_else(||invalid("original post source is absent"))?.take_authority(&mut effect.nested_within(child,maximum_work_units.saturating_sub(u64::try_from(work).unwrap_or(u64::MAX))));work+=turn.work();match turn{crate::retained_clone::RetainedWorkPoll::Complete(done)=>done.result,crate::retained_clone::RetainedWorkPoll::Pending{..}=>Ok(RetainedCloneSourceTake::Pending(Default::default()))}}.map_err(|error|Self::child_error(error,work!=0))?{RetainedCloneSourceTake::Pending(progress)=>progress,RetainedCloneSourceTake::Ready(original,progress)=>{*post=Some(original);*self.source=None;progress}}},
-  };
-  progress.copied_items=progress.copied_items.max(1);progress.copied_bytes=progress.copied_bytes.checked_add(Self::movement_bytes()).ok_or_else(||invalid("original post receipt overflow"))?;
-  Ok(Some(admit_retained_clone_progress(grant,progress,"actual projected post original custody")?))
- })();crate::RetainedWorkOutcome{result,work}}
- pub fn read<'a>(&'a self,post:&'a Option<S>,mode:PagedOneItemPostMode)->Result<PagedOneItemPostRead<'a,S>,ValueError>{
-  if self.demand(post,mode,0)?.is_some(){return Err(invalid("original post access has an unpaid ownership frontier"));}
-  Ok(match mode{PagedOneItemPostMode::Original=>PagedOneItemPostRead::Original(self.source.as_ref().unwrap().try_borrow()?),PagedOneItemPostMode::Mutable=>PagedOneItemPostRead::Mutable(post.as_ref().unwrap())})
- }
- pub fn access<'a>(&'a self,post:&'a mut Option<S>,mode:PagedOneItemPostMode)->Result<PagedOneItemPost<'a,S>,ValueError>{
-  if self.demand(post,mode,0)?.is_some(){return Err(invalid("original post access has an unpaid ownership frontier"));}
-  Ok(match mode{PagedOneItemPostMode::Original=>PagedOneItemPost::Original(self.source.as_ref().unwrap().try_borrow()?),PagedOneItemPostMode::Mutable=>PagedOneItemPost::Mutable(post.as_mut().unwrap())})
- }
- pub fn terminal_is_empty(&self)->bool{self.source.is_none()&&self.admission.is_none()&&self.actual.is_none()}
+/// 🧳️ Specializes the common Source owner to projected post access.
+pub struct OriginalPostRead<S:RetireOwned+Sync+'static>{owner:crate::retained_clone::OriginalSourceOwner<S,S>}
+impl<S:RetireOwned+Sync+'static> Default for OriginalPostRead<S>{fn default()->Self{Self{owner:Default::default()}}}
+impl<S:RetireOwned+Sync+'static> OriginalPostRead<S>{
+ fn mode(mode:PagedOneItemPostMode)->crate::retained_clone::OriginalSourceMode{match mode{PagedOneItemPostMode::Original=>crate::retained_clone::OriginalSourceMode::Original,PagedOneItemPostMode::Mutable=>crate::retained_clone::OriginalSourceMode::Unique}}
+ pub fn capture_demand()->RetirementDemand{crate::retained_clone::OriginalSourceOwner::<S,S>::capture_demand()}
+ pub fn capture_into<'r>(&mut self,input:&mut Option<S>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalEffectReply<'r,crate::retained_clone::RetainedCloneStep,ValueError>)->Result<crate::retained_clone::OriginalEffectReplyComplete<'r,crate::retained_clone::RetainedCloneStep,ValueError>,ValueError>{self.owner.capture_into(input,effect,reply)}
+ pub fn projection_drive_required(&self)->Result<bool,ValueError>{self.owner.projection_drive_required()}
+ pub fn projection_frame(&mut self,effect:&crate::RetainedAllocationEffect<'_>)->Result<&mut crate::retained_clone::OriginalProjectionFrame<S,S>,ValueError>{self.owner.projection_frame(effect)}
+ pub fn demand(&self,mode:PagedOneItemPostMode,body:usize)->Result<Option<RetirementDemand>,ValueError>{self.owner.demand(Self::mode(mode),body)}
+ pub fn work_demand(&self,mode:PagedOneItemPostMode,body:usize)->Result<u64,ValueError>{self.owner.work_demand(Self::mode(mode),body)}
+ pub fn failure(&self)->Option<&ValueError>{self.owner.failure()}
+ pub fn failure_demand(&self)->RetirementDemand{self.owner.failure_demand()}
+ pub fn take_failure_into<'r>(&mut self,output:&mut Option<ValueError>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalEffectReply<'r,crate::retained_clone::RetainedCloneStep,ValueError>)->Result<crate::retained_clone::OriginalEffectReplyComplete<'r,crate::retained_clone::RetainedCloneStep,ValueError>,ValueError>{self.owner.take_failure_into(output,effect,reply)}
+ pub fn prepare_into<'r>(&mut self,mode:PagedOneItemPostMode,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalEffectReply<'r,crate::retained_clone::RetainedCloneStep,crate::OriginalRetirementFailure>)->Result<crate::retained_clone::OriginalEffectReplyComplete<'r,crate::retained_clone::RetainedCloneStep,crate::OriginalRetirementFailure>,ValueError>{self.owner.prepare_into(Self::mode(mode),body,effect,reply)}
+ pub fn recover_prepare_into<'r>(&mut self,mode:PagedOneItemPostMode,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalEffectReply<'r,crate::retained_clone::RetainedCloneStep,crate::OriginalRetirementFailure>)->Result<crate::retained_clone::OriginalEffectReplyComplete<'r,crate::retained_clone::RetainedCloneStep,crate::OriginalRetirementFailure>,ValueError>{self.owner.recover_prepare_into(Self::mode(mode),body,effect,reply)}
+ pub fn prepare_original_into<'r>(&mut self,mode:PagedOneItemPostMode,body:usize,original:&mut crate::retained_clone::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalEffectReply<'r,crate::retained_clone::RetainedCloneStep,crate::OriginalRetirementFailure>)->Result<crate::retained_clone::OriginalEffectReplyComplete<'r,crate::retained_clone::RetainedCloneStep,crate::OriginalRetirementFailure>,ValueError>{self.owner.prepare_original_into(Self::mode(mode),body,original,effect,reply)}
+ pub fn recover_prepare_original_into<'r>(&mut self,mode:PagedOneItemPostMode,body:usize,original:&mut crate::retained_clone::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalEffectReply<'r,crate::retained_clone::RetainedCloneStep,crate::OriginalRetirementFailure>)->Result<crate::retained_clone::OriginalEffectReplyComplete<'r,crate::retained_clone::RetainedCloneStep,crate::OriginalRetirementFailure>,ValueError>{self.owner.recover_prepare_original_into(Self::mode(mode),body,original,effect,reply)}
+ pub fn requires_original_birth(&self)->bool{self.owner.requires_original_birth()}
+ pub fn original_birth_step(&mut self,original:&mut crate::retained_clone::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->crate::OriginalRetirementPoll{self.owner.original_birth_step(original,grant)}
+ pub fn requires_original_control(&self)->bool{self.owner.requires_original_control()}
+ pub fn read(&self,mode:PagedOneItemPostMode)->Result<PagedOneItemPostRead<'_,S>,ValueError>{match mode{PagedOneItemPostMode::Original=>self.owner.original().map(PagedOneItemPostRead::Original),PagedOneItemPostMode::Mutable=>self.owner.unique().map(PagedOneItemPostRead::Mutable)}}
+ pub fn access(&mut self,mode:PagedOneItemPostMode)->Result<PagedOneItemPost<'_,S>,ValueError>{match mode{PagedOneItemPostMode::Original=>self.owner.original().map(PagedOneItemPost::Original),PagedOneItemPostMode::Mutable=>self.owner.unique_mut().map(PagedOneItemPost::Mutable)}}
+ pub fn return_demand(&self)->RetirementDemand{self.owner.return_demand()}
+ pub fn return_into<'r>(&mut self,output:&mut Option<S>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalEffectReply<'r,crate::retained_clone::RetainedCloneStep,ValueError>)->Result<crate::retained_clone::OriginalEffectReplyComplete<'r,crate::retained_clone::RetainedCloneStep,ValueError>,ValueError>{self.owner.return_into(output,effect,reply)}
+ pub fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()}
 }
-impl<S:RetireOwned+Sync>Drop for OriginalPostRead<S>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original post must return to its exact snapshot issuer");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.admission);ManuallyDrop::drop(&mut self.source);}}}}
 
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]

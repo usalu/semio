@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "value": "Original α 🌱",
+  "maximumCopyBytes": 4096,
+  "cancellationCuts": [
+    0,
+    1,
+    2,
+    3,
+    5,
+    8,
+    12,
+    20,
+    24,
+    4096
+  ],
+  "samePayload": true,
+  "sameIssuer": true,
+  "readersFenceReturn": true,
+  "maximumReadBirthTotal": 4096
+}

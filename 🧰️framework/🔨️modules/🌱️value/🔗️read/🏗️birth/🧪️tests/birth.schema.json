@@ -1,0 +1,92 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "capacity",
+    "chunk",
+    "initialized",
+    "firstIssued",
+    "returned",
+    "nextIssued",
+    "deniedUnchanged",
+    "nonemptyDiscardRefused",
+    "issueDenialRetains",
+    "rootAliasSame",
+    "registryAliasSame",
+    "maximumCopy",
+    "cursorRecordedPostCalls",
+    "cursorReplayCalls",
+    "cursorUnwindRetainsOriginal"
+  ],
+  "properties": {
+    "capacity": {
+      "type": "integer",
+      "const": 1024
+    },
+    "chunk": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "initialized": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 2
+    },
+    "firstIssued": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "returned": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "nextIssued": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "deniedUnchanged": {
+      "type": "boolean",
+      "const": true
+    },
+    "nonemptyDiscardRefused": {
+      "type": "boolean",
+      "const": true
+    },
+    "issueDenialRetains": {
+      "type": "boolean",
+      "const": true
+    },
+    "rootAliasSame": {
+      "type": "boolean",
+      "const": true
+    },
+    "registryAliasSame": {
+      "type": "boolean",
+      "const": true
+    },
+    "maximumCopy": {
+      "type": "integer",
+      "const": 4096
+    },
+    "cursorRecordedPostCalls": {
+      "type": "integer",
+      "const": 1
+    },
+    "cursorReplayCalls": {
+      "type": "integer",
+      "const": 0
+    },
+    "cursorUnwindRetainsOriginal": {
+      "type": "boolean",
+      "const": true
+    }
+  }
+}

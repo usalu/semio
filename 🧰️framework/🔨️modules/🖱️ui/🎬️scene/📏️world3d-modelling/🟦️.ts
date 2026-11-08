@@ -19,7 +19,7 @@ export type World3dTone = "neutral" | "primary" | "secondary" | "tertiary" | "su
 export type World3dDimension = { readonly kind: "dimension"; readonly id: string; readonly from: World3dVec3; readonly to: World3dVec3; readonly offset: World3dVec3; readonly text: World3dText; readonly tone: World3dTone };
 export type World3dAngle = { readonly kind: "angle"; readonly id: string; readonly vertex: World3dVec3; readonly directionA: World3dVec3; readonly directionB: World3dVec3; readonly radiusPx: number; readonly text: World3dText; readonly tone: World3dTone };
 export type World3dMarkerShape = "dot" | "cross" | "ring";
-export type World3dMarker = { readonly kind: "marker"; readonly id: string; readonly position: World3dVec3; readonly shape: World3dMarkerShape; readonly text: World3dText; readonly tone: World3dTone };
+export type World3dMarker = { readonly kind: "marker"; readonly id: string; readonly position: World3dVec3; readonly shape: World3dMarkerShape; readonly axis?: World3dVec3; readonly text: World3dText; readonly tone: World3dTone };
 export type World3dLeader = { readonly kind: "leader"; readonly id: string; readonly anchor: World3dVec3; readonly labelOffsetPx: World3dVec2; readonly text: World3dText; readonly tone: World3dTone };
 export type World3dAnnotation = World3dDimension | World3dAngle | World3dMarker | World3dLeader;
 
@@ -121,12 +121,13 @@ function annotation(value: unknown): World3dAnnotation | null {
     return nonZero(directionA) && nonZero(directionB) ? { kind, id: identity, vertex, directionA, directionB, radiusPx, text: label, tone: color } : null;
   }
   if (kind === "marker") {
-    const entries = record(value, ["kind", "id", "position", "shape", "text", "tone"]);
+    const entries = record(value, ["kind", "id", "position", "shape", "axis", "text", "tone"]);
     if (!entries) return null;
     const shape = entries.shape === undefined ? "dot" : entries.shape;
+    const axis = entries.axis === undefined ? undefined : vec(entries.axis, 3);
     const [identity, position, label, color] = [id(entries.id), vec(entries.position, 3), text(entries.text), tone(entries.tone, "neutral")];
-    if (!identity || !position || !label || !color || typeof shape !== "string" || !MARKER_SHAPES.has(shape)) return null;
-    return { kind, id: identity, position, shape: shape as World3dMarkerShape, text: label, tone: color };
+    if (!identity || !position || !label || !color || typeof shape !== "string" || !MARKER_SHAPES.has(shape) || axis === null || (axis && !nonZero(axis))) return null;
+    return { kind, id: identity, position, shape: shape as World3dMarkerShape, ...(axis ? { axis } : {}), text: label, tone: color };
   }
   if (kind === "leader") {
     const entries = record(value, ["kind", "id", "anchor", "labelOffsetPx", "text", "tone"]);

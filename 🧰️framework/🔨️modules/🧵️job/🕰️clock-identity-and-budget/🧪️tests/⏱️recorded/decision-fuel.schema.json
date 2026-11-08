@@ -1,0 +1,36 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "initialFuel",
+      "currentFuel",
+      "expired",
+      "valid",
+      "shouldYield"
+    ],
+    "properties": {
+      "initialFuel": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "currentFuel": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "expired": {
+        "type": "boolean"
+      },
+      "valid": {
+        "type": "boolean"
+      },
+      "shouldYield": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      }
+    }
+  }
+}

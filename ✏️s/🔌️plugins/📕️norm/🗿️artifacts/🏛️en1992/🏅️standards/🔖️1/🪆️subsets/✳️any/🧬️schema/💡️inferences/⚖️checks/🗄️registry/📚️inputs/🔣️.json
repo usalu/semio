@@ -1026,9 +1026,14 @@
       "note": "pre:pr07",
       "choices": [
         {
-          "value": "bonded",
-          "en": "Bonded",
-          "de": "Mit Verbund"
+          "value": "post_bonded",
+          "en": "Post-tensioned, bonded",
+          "de": "Nachträglicher Verbund"
+        },
+        {
+          "value": "pre_tensioned",
+          "en": "Pre-tensioned",
+          "de": "Sofortiger Verbund"
         },
         {
           "value": "unbonded",
@@ -1036,7 +1041,7 @@
           "de": "Ohne Verbund"
         }
       ],
-      "example": "bonded"
+      "example": "post_bonded"
     },
     {
       "key": "box",
@@ -4489,20 +4494,6 @@
       "unit": "N",
       "unitId": "Newton",
       "example": 150000.0
-    },
-    {
-      "key": "quality",
-      "scope": "",
-      "kind": "number",
-      "en": "Production quality control ensured (1 = yes)",
-      "de": "Qualitätskontrolle der Herstellung gesichert (1 = ja)",
-      "confidence": "high",
-      "note": "mat:d04",
-      "unit": "1",
-      "unitId": "One",
-      "min": 0.0,
-      "max": 1.0,
-      "example": 0.0
     },
     {
       "key": "qk",

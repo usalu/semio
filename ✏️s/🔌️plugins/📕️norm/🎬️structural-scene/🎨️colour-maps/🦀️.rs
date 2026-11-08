@@ -2,7 +2,7 @@
 //!
 //! 🔗️ See `🎨️appearance` for `ColourMapRef`, `Hatch` and `CheckStatus`, and `visual-editor-architecture.md` §3.4 and §8.2.
 
-use crate::{CheckStatus, Hatch, LocalizedCopy, Rgb};
+use crate::{CheckStatus, Hatch, LocalizedCopy, QuantityKind, Rgb};
 
 #[path = "👁️metrics/🦀️.rs"]
 pub mod metrics;
@@ -68,14 +68,28 @@ pub enum ResultField {
     Temperature,
     Pressure,
     Settlement,
+    Airflow,
+    HeatFlow,
 }
 
 impl ResultField {
     pub fn ramp(self) -> RampId {
         match self {
             Self::Stress | Self::Pressure => RampId::Diverging,
-            Self::Temperature => RampId::Warm,
-            Self::Settlement => RampId::Cool,
+            Self::Temperature | Self::HeatFlow => RampId::Warm,
+            Self::Settlement | Self::Airflow => RampId::Cool,
+        }
+    }
+
+    /// 🧪️ The result field a scalar of `kind` is shown as; kinds without an overlay have none.
+    pub fn of(kind: QuantityKind) -> Option<Self> {
+        match kind {
+            QuantityKind::Stress => Some(Self::Stress),
+            QuantityKind::Temperature => Some(Self::Temperature),
+            QuantityKind::Pressure => Some(Self::Pressure),
+            QuantityKind::VentilationRate => Some(Self::Airflow),
+            QuantityKind::HeatTransferCoefficient | QuantityKind::Power => Some(Self::HeatFlow),
+            _ => None,
         }
     }
 }

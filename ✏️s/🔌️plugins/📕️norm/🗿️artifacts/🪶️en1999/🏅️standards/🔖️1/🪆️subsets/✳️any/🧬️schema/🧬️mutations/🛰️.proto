@@ -186,27 +186,41 @@ message En1999Mutation {
     InsertPatchLoad insert_patch_load = 182;
     RemovePatchLoad remove_patch_load = 183;
     InsertRingStiffener insert_ring_stiffener = 184;
-    RemoveRingStiffener remove_ring_stiffener = 185;
-    InsertMemberAction insert_member_action = 186;
-    RemoveMemberAction remove_member_action = 187;
-    InsertConnectionAction insert_connection_action = 188;
-    RemoveConnectionAction remove_connection_action = 189;
-    InsertSectionElement insert_section_element = 190;
-    RemoveSectionElement remove_section_element = 191;
-    InsertSheetAction insert_sheet_action = 192;
-    RemoveSheetAction remove_sheet_action = 193;
-    InsertShellAction insert_shell_action = 194;
-    RemoveShellAction remove_shell_action = 195;
-    ChangeTransverseGirderId change_transverse_girder_id = 196;
-    ChangeTransversePosition change_transverse_position = 197;
-    ChangeTransverseWidth change_transverse_width = 198;
-    ChangeTransverseThickness change_transverse_thickness = 199;
-    ChangeConnLoadEccentricity change_conn_load_eccentricity = 200;
-    ChangeConnHoleStagger change_conn_hole_stagger = 201;
-    ChangeTransverseSides change_transverse_sides = 202;
-    InsertTransverseStiffener insert_transverse_stiffener = 203;
-    RemoveTransverseStiffener remove_transverse_stiffener = 204;
-    ChangeReliabilityClass change_reliability_class = 205;
+    InsertSheetProfile insert_sheet_profile = 185;
+    InsertFireInsulation insert_fire_insulation = 186;
+    RemoveRingStiffener remove_ring_stiffener = 187;
+    RemoveSheetProfile remove_sheet_profile = 188;
+    RemoveFireInsulation remove_fire_insulation = 189;
+    InsertMemberAction insert_member_action = 190;
+    RemoveMemberAction remove_member_action = 191;
+    InsertConnectionAction insert_connection_action = 192;
+    RemoveConnectionAction remove_connection_action = 193;
+    InsertSectionElement insert_section_element = 194;
+    RemoveSectionElement remove_section_element = 195;
+    InsertSheetAction insert_sheet_action = 196;
+    RemoveSheetAction remove_sheet_action = 197;
+    InsertShellAction insert_shell_action = 198;
+    RemoveShellAction remove_shell_action = 199;
+    ChangeTransverseGirderId change_transverse_girder_id = 200;
+    ChangeSheetProfileSheetId change_sheet_profile_sheet_id = 201;
+    ChangeFireInsulationFireId change_fire_insulation_fire_id = 202;
+    ChangeTransversePosition change_transverse_position = 203;
+    ChangeTransverseWidth change_transverse_width = 204;
+    ChangeTransverseThickness change_transverse_thickness = 205;
+    ChangeConnLoadEccentricity change_conn_load_eccentricity = 206;
+    ChangeConnHoleStagger change_conn_hole_stagger = 207;
+    ChangeSheetProfileWebHeight change_sheet_profile_web_height = 208;
+    ChangeSheetProfileBottomFlange change_sheet_profile_bottom_flange = 209;
+    ChangeSheetProfileTopFlange change_sheet_profile_top_flange = 210;
+    ChangeSheetProfilePitch change_sheet_profile_pitch = 211;
+    ChangeFireInsulationDensity change_fire_insulation_density = 212;
+    ChangeFireInsulationSpecificHeat change_fire_insulation_specific_heat = 213;
+    ChangeFireInsulationConductivity change_fire_insulation_conductivity = 214;
+    ChangeFireInsulationThickness change_fire_insulation_thickness = 215;
+    ChangeTransverseSides change_transverse_sides = 216;
+    InsertTransverseStiffener insert_transverse_stiffener = 217;
+    RemoveTransverseStiffener remove_transverse_stiffener = 218;
+    ChangeReliabilityClass change_reliability_class = 219;
   }
 }
 message ChangeAnnex {
@@ -991,7 +1005,21 @@ message InsertRingStiffener {
   uint32 index = 1;
   RingStiffener ring_stiffener = 2;
 }
+message InsertSheetProfile {
+  uint32 index = 1;
+  SheetProfile sheet_profile = 2;
+}
+message InsertFireInsulation {
+  uint32 index = 1;
+  FireInsulation fire_insulation = 2;
+}
 message RemoveRingStiffener {
+  string id = 1;
+}
+message RemoveSheetProfile {
+  string id = 1;
+}
+message RemoveFireInsulation {
   string id = 1;
 }
 message InsertMemberAction {
@@ -1043,6 +1071,14 @@ message ChangeTransverseGirderId {
   string transverse_stiffener_id = 1;
   string new_girder_id = 2;
 }
+message ChangeSheetProfileSheetId {
+  string sheet_profile_id = 1;
+  string new_sheet_id = 2;
+}
+message ChangeFireInsulationFireId {
+  string fire_insulation_id = 1;
+  string new_fire_id = 2;
+}
 message ChangeTransversePosition {
   string transverse_stiffener_id = 1;
   double new_position = 2;
@@ -1062,6 +1098,38 @@ message ChangeConnLoadEccentricity {
 message ChangeConnHoleStagger {
   string aluminium_connection_id = 1;
   double new_hole_stagger = 2;
+}
+message ChangeSheetProfileWebHeight {
+  string sheet_profile_id = 1;
+  double new_web_height = 2;
+}
+message ChangeSheetProfileBottomFlange {
+  string sheet_profile_id = 1;
+  double new_bottom_flange = 2;
+}
+message ChangeSheetProfileTopFlange {
+  string sheet_profile_id = 1;
+  double new_top_flange = 2;
+}
+message ChangeSheetProfilePitch {
+  string sheet_profile_id = 1;
+  double new_pitch = 2;
+}
+message ChangeFireInsulationDensity {
+  string fire_insulation_id = 1;
+  double new_density = 2;
+}
+message ChangeFireInsulationSpecificHeat {
+  string fire_insulation_id = 1;
+  double new_specific_heat = 2;
+}
+message ChangeFireInsulationConductivity {
+  string fire_insulation_id = 1;
+  double new_conductivity = 2;
+}
+message ChangeFireInsulationThickness {
+  string fire_insulation_id = 1;
+  double new_thickness = 2;
 }
 message ChangeTransverseSides {
   string transverse_stiffener_id = 1;

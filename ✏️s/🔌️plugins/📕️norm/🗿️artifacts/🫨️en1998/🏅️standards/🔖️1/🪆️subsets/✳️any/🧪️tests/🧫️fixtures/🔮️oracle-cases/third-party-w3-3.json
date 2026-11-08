@@ -1,0 +1,384 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1998",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1998.4.3.3.3.w3-3-modal-base-shear-three-storey-type1-b",
+      "check": "en1998.4.3.3.3.modal-base-shear",
+      "citation": {
+        "standard": "EN 1998-1",
+        "edition": "2004",
+        "clause": "4.3.3.3 modal response spectrum analysis, F_b,j = M_eff,j S_d(T_j), 4.3.3.3.2 SRSS and CQC combination"
+      },
+      "inputs": {
+        "m": [
+          100000.0,
+          100000.0,
+          80000.0
+        ],
+        "k": [
+          60000000.0,
+          50000000.0,
+          40000000.0
+        ],
+        "a_g": 1.5,
+        "S": 1.2,
+        "T_B": 0.15,
+        "T_C": 0.5,
+        "T_D": 2.0,
+        "q": 3.0,
+        "xi": 0.05
+      },
+      "expected": {
+        "F_b_1": {
+          "value": 324002.09543147305,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "F_b_2": {
+          "value": 37477.737070468735,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "F_b_3": {
+          "value": 10010.598829192422,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "V_srss": {
+          "value": 326316.0288873772,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "V_cqc": {
+          "value": 326787.08577353077,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1998.4.3.3.3.w3-3-modal-base-shear-four-storey-soft-ground",
+      "check": "en1998.4.3.3.3.modal-base-shear",
+      "citation": {
+        "standard": "EN 1998-1",
+        "edition": "2004",
+        "clause": "4.3.3.3 modal response spectrum analysis, F_b,j = M_eff,j S_d(T_j), 4.3.3.3.2 SRSS and CQC combination"
+      },
+      "inputs": {
+        "m": [
+          120000.0,
+          110000.0,
+          110000.0,
+          90000.0
+        ],
+        "k": [
+          90000000.0,
+          80000000.0,
+          70000000.0,
+          55000000.0
+        ],
+        "a_g": 2.4,
+        "S": 1.35,
+        "T_B": 0.2,
+        "T_C": 0.6,
+        "T_D": 2.0,
+        "q": 2.0,
+        "xi": 0.05
+      },
+      "expected": {
+        "F_b_1": {
+          "value": 1398210.482084785,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "F_b_2": {
+          "value": 177109.8686877526,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "F_b_3": {
+          "value": 43892.99730178176,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "F_b_4": {
+          "value": 12613.369810888986,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "V_srss": {
+          "value": 1410122.7429229273,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "V_cqc": {
+          "value": 1412258.547394626,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1998.4.3.3.3.w3-3-modal-base-shear-two-storey-low-q",
+      "check": "en1998.4.3.3.3.modal-base-shear",
+      "citation": {
+        "standard": "EN 1998-1",
+        "edition": "2004",
+        "clause": "4.3.3.3 modal response spectrum analysis, F_b,j = M_eff,j S_d(T_j), 4.3.3.3.2 SRSS and CQC combination"
+      },
+      "inputs": {
+        "m": [
+          200000.0,
+          150000.0
+        ],
+        "k": [
+          120000000.0,
+          80000000.0
+        ],
+        "a_g": 1.0,
+        "S": 1.0,
+        "T_B": 0.15,
+        "T_C": 0.4,
+        "T_D": 2.0,
+        "q": 1.5,
+        "xi": 0.03
+      },
+      "expected": {
+        "F_b_1": {
+          "value": 530541.4156236415,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "F_b_2": {
+          "value": 52791.91770969194,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "V_srss": {
+          "value": 533161.4954846273,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "V_cqc": {
+          "value": 533405.4556080641,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1998.3.2.2.5.w3-3-design-spectrum-q-1-5-rising",
+      "check": "en1998.3.2.2.5.design-spectrum",
+      "citation": {
+        "standard": "EN 1998-1",
+        "edition": "2004",
+        "clause": "3.2.2.2 Eq. 3.2 to 3.5 elastic spectrum, 3.2.2.5 Eq. 3.12 to 3.15 design spectrum with lower bound beta = 0.2"
+      },
+      "inputs": {
+        "a_g": 1.5,
+        "S": 1.15,
+        "T_B": 0.15,
+        "T_C": 0.5,
+        "T_D": 2.0,
+        "q": 1.5,
+        "beta": 0.2,
+        "T": 0.08
+      },
+      "expected": {
+        "S_d": {
+          "value": 2.07,
+          "unit": "m/s^2",
+          "profile": "eurocode-quantities-v1"
+        },
+        "S_e": {
+          "value": 3.105,
+          "unit": "m/s^2",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1998.3.2.2.5.w3-3-design-spectrum-q-4-0-plateau",
+      "check": "en1998.3.2.2.5.design-spectrum",
+      "citation": {
+        "standard": "EN 1998-1",
+        "edition": "2004",
+        "clause": "3.2.2.2 Eq. 3.2 to 3.5 elastic spectrum, 3.2.2.5 Eq. 3.12 to 3.15 design spectrum with lower bound beta = 0.2"
+      },
+      "inputs": {
+        "a_g": 2.0,
+        "S": 1.0,
+        "T_B": 0.2,
+        "T_C": 0.6,
+        "T_D": 2.0,
+        "q": 4.0,
+        "beta": 0.2,
+        "T": 0.4
+      },
+      "expected": {
+        "S_d": {
+          "value": 1.25,
+          "unit": "m/s^2",
+          "profile": "eurocode-quantities-v1"
+        },
+        "S_e": {
+          "value": 5.0,
+          "unit": "m/s^2",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1998.3.2.2.5.w3-3-design-spectrum-q-1-0-constant-velocity",
+      "check": "en1998.3.2.2.5.design-spectrum",
+      "citation": {
+        "standard": "EN 1998-1",
+        "edition": "2004",
+        "clause": "3.2.2.2 Eq. 3.2 to 3.5 elastic spectrum, 3.2.2.5 Eq. 3.12 to 3.15 design spectrum with lower bound beta = 0.2"
+      },
+      "inputs": {
+        "a_g": 1.2,
+        "S": 1.4,
+        "T_B": 0.2,
+        "T_C": 0.8,
+        "T_D": 2.0,
+        "q": 1.0,
+        "beta": 0.2,
+        "T": 1.5
+      },
+      "expected": {
+        "S_d": {
+          "value": 2.24,
+          "unit": "m/s^2",
+          "profile": "eurocode-quantities-v1"
+        },
+        "S_e": {
+          "value": 2.24,
+          "unit": "m/s^2",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1998.3.2.2.5.w3-3-design-spectrum-q-3-0-constant-displacement",
+      "check": "en1998.3.2.2.5.design-spectrum",
+      "citation": {
+        "standard": "EN 1998-1",
+        "edition": "2004",
+        "clause": "3.2.2.2 Eq. 3.2 to 3.5 elastic spectrum, 3.2.2.5 Eq. 3.12 to 3.15 design spectrum with lower bound beta = 0.2"
+      },
+      "inputs": {
+        "a_g": 1.0,
+        "S": 1.2,
+        "T_B": 0.15,
+        "T_C": 0.5,
+        "T_D": 2.0,
+        "q": 3.0,
+        "beta": 0.2,
+        "T": 3.2
+      },
+      "expected": {
+        "S_d": {
+          "value": 0.2,
+          "unit": "m/s^2",
+          "profile": "eurocode-quantities-v1"
+        },
+        "S_e": {
+          "value": 0.29296874999999994,
+          "unit": "m/s^2",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1998.3.2.2.5.w3-3-design-spectrum-q-5-0-lower-bound-floor",
+      "check": "en1998.3.2.2.5.design-spectrum",
+      "citation": {
+        "standard": "EN 1998-1",
+        "edition": "2004",
+        "clause": "3.2.2.2 Eq. 3.2 to 3.5 elastic spectrum, 3.2.2.5 Eq. 3.12 to 3.15 design spectrum with lower bound beta = 0.2"
+      },
+      "inputs": {
+        "a_g": 1.0,
+        "S": 1.2,
+        "T_B": 0.15,
+        "T_C": 0.5,
+        "T_D": 2.0,
+        "q": 5.0,
+        "beta": 0.2,
+        "T": 3.8
+      },
+      "expected": {
+        "S_d": {
+          "value": 0.2,
+          "unit": "m/s^2",
+          "profile": "eurocode-quantities-v1"
+        },
+        "S_e": {
+          "value": 0.20775623268698062,
+          "unit": "m/s^2",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    }
+  ]
+}

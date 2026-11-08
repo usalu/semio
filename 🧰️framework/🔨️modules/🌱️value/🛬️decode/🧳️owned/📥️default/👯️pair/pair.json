@@ -1,0 +1,13 @@
+{
+  "phases": [
+    "first",
+    "firstClose",
+    "second",
+    "secondClose",
+    "publish"
+  ],
+  "closeReply": "record-before-parent",
+  "birth": "original-before-effect",
+  "failure": "retain-original",
+  "pending": "same-action"
+}

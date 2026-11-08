@@ -1,0 +1,17 @@
+{
+  "maximumCopyBytes": 4096,
+  "maximumItems": 1,
+  "maximumTurns": 512,
+  "childCount": 1,
+  "phases": [
+    "capture",
+    "prepare",
+    "transfer",
+    "close"
+  ],
+  "interruptedPhase": "prepare",
+  "receiveCount": 1,
+  "recoveryCount": 0,
+  "pendingReceiveCount": 1,
+  "pendingRecoveryCount": 1
+}

@@ -23,15 +23,26 @@ name = "semio_framework_value_equality"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value-native-storage = { path = "../../../../🛬️decode/🧳️owned/📦️storage/📦️packages/🦀️rust" }
+semio-framework-value-retirement-contract = { path = "../../../../♻️retirement/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-intrinsic = { path = "../../../../🌳️intrinsic/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path = "../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-native-slice-equality = { path = "../../../../📋️list/🟰️equal/📦️packages/🦀️rust" }
+semio-framework-value-native-clone-engine = { path = "../../../../🧬️retained-clone/⚙️engine/📦️packages/🦀️rust" }
 semio-framework-value-clone-source = { path = "../../../../🧬️retained-clone/🔗️source/📦️packages/🦀️rust" }
 semio-framework-value-retirement = { path = "../../../../♻️retirement/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-retained-clone = { path = "../../../../🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-clone-source-testing = { path = "../../../../🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }
+semio-framework-value-testing-effect-bank = { path = "../../../../🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../✨️derive/📦️packages/🦀️rust" }
 semio-framework-value-native-encoding = { path = "../../../../🛫️encode/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value-testing-allocator = { path = "../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
+
+[[test]]
+name = "sequence_original"
+path = "../../📋️sequence/🧪️tests/original.rs"

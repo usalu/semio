@@ -6,11 +6,13 @@ use semio_plugin::PanelTabDefinition;
 use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
 use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
-use semio_s_plugin_norm_app_surface::{spec_trace_table, CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
+use semio_s_plugin_norm_app_surface::{spec_trace_table, verification_catalogue_table, CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
 use semio_s_plugin_norm_compliance::ClauseId;
 use semio_s_artifact_norm_en1993_model::rolled_heb_catalogue;
 use semio_s_artifact_norm_en1993_checks::spec_trace::TABLE as SPEC_TRACE;
+use semio_s_artifact_norm_en1993_checks::case_catalogue::En1993Cases;
 use semio_s_artifact_norm_en1993_checks::AnnexParams;
+use semio_s_plugin_norm_compliance::AnnexChoice;
 
 //#region 🔖️Constants
 pub const BODY_CATALOGUE: &str = "norm.en1993.play.catalogue";
@@ -23,8 +25,8 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 /// 📚️ Normative reference tables — same γ_M and rolled HEB properties `evaluate()` reads.
-pub fn reference_tables() -> Vec<CatalogueTable> {
-    vec![partial_factor_table(), section_property_table(), spec_trace_table(&SPEC_TRACE)]
+pub fn reference_tables(locale: semio_ui_locale::Locale) -> Vec<CatalogueTable> {
+    vec![partial_factor_table(), section_property_table(), spec_trace_table(&SPEC_TRACE), verification_catalogue_table::<En1993Cases>("EN 1993", AnnexChoice::En, "", locale)]
 }
 
 fn partial_factor_table() -> CatalogueTable {
@@ -77,7 +79,7 @@ fn section_property_table() -> CatalogueTable {
 
 //#region 🔖️Render
 pub fn render(examples: Vec<semio_plugin::ExampleSource>, locale: semio_ui_locale::Locale, controller_id: &'static str) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
-    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, &semio_plugin::TreeWindows::unhosted())
+    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &reference_tables(locale), locale, controller_id, &semio_plugin::TreeWindows::unhosted())
 }
 //#endregion 🔖️Render
 

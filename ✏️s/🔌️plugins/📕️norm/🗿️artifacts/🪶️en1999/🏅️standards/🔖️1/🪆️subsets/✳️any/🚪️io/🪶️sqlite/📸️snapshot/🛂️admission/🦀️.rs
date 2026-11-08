@@ -26,6 +26,8 @@ fn write(root:&R,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  for(index,x)in n::list(n::field(root,13)?)?.iter().enumerate(){n::entity(out,"en1999_patch_load",1,index,&n::cells(n::record(x)?,[Text(0),Text(1),Text(2),Real(3),Real(4),Real(5),Real(6),Real(7),Real(8)])?,PATCH)?;}
  for(index,x)in n::list(n::field(root,14)?)?.iter().enumerate(){n::entity(out,"en1999_ring_stiffener",1,index,&n::cells(n::record(x)?,[Text(0),Text(1),Real(2),Real(3),Real(4),Boolean(5)])?,RING)?;}
  for(index,x)in n::list(n::field(root,15)?)?.iter().enumerate(){n::entity(out,"en1999_transverse_stiffener",1,index,&n::cells(n::record(x)?,[Text(0),Text(1),Real(2),Real(3),Real(4),Text(5)])?,STIFFENER)?;}
+for(index,x)in n::list(n::field(root,17)?)?.iter().enumerate(){n::entity(out,"en1999_sheet_profile",1,index,&n::cells(n::record(x)?,[Text(0),Text(1),Real(2),Real(3),Real(4),Real(5)])?,STIFFENER)?;}
+for(index,x)in n::list(n::field(root,18)?)?.iter().enumerate(){n::entity(out,"en1999_fire_insulation",1,index,&n::cells(n::record(x)?,[Text(0),Text(1),Real(2),Real(3),Real(4),Real(5)])?,STIFFENER)?;}
  Ok(())
 }
 /// 🛂️ Nineteen authored tables and complete copied semantic controls.

@@ -1,0 +1,27 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "entered",
+      "recorded",
+      "same",
+      "recover"
+    ],
+    "properties": {
+      "entered": {
+        "type": "boolean"
+      },
+      "recorded": {
+        "type": "boolean"
+      },
+      "same": {
+        "type": "boolean"
+      },
+      "recover": {
+        "type": "boolean"
+      }
+    }
+  }
+}

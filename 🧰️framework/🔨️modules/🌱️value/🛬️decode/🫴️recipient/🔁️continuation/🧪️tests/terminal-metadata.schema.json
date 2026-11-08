@@ -1,0 +1,34 @@
+{
+  "type": "array",
+  "minItems": 4,
+  "items": {
+    "type": "object",
+    "properties": {
+      "original": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "metadata": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "moved": {
+        "type": "boolean"
+      },
+      "settled": {
+        "type": "boolean"
+      },
+      "visible": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "original",
+      "metadata",
+      "moved",
+      "settled",
+      "visible"
+    ],
+    "additionalProperties": false
+  }
+}

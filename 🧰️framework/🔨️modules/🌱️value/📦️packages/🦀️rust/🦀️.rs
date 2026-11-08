@@ -57,7 +57,8 @@ pub use retained_utf8::{RetainedUtf8Cursor,RetainedUtf8CursorStep,RetainedUtf8Bu
 
 pub use semio_framework_value_sort as sort;
 
-pub use semio_framework_value_control_contract::{AuthoringWallet,AuthoredEffect,RetainedWorkPoll,OriginalRetirementCloseLoan,OriginalFailureStorage,OriginalFailureStoragePool,run_with_failure_storage};
+pub use semio_framework_value_control_contract::{AuthoringWallet,AuthoredEffect,RetainedWorkPoll};
+pub use semio_framework_value_retirement_contract::{OriginalRetirementCloseLoan,OriginalFailureStorage,OriginalFailureStoragePool,run_with_failure_storage};
 
 #[cfg(test)]
 use semio_framework_value_testing_allocator as _;

@@ -7,7 +7,8 @@
     "values",
     "layouts",
     "flow",
-    "denied"
+    "denied",
+    "callerFlag"
   ],
   "properties": {
     "stock": {
@@ -67,6 +68,13 @@
       "const": {
         "work": 0,
         "retainsOriginal": true
+      }
+    },
+    "callerFlag": {
+      "const": {
+        "copyBytes": 1,
+        "flowWork": 5,
+        "deniedChanged": false
       }
     }
   }

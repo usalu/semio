@@ -2,6 +2,8 @@
 pub use semio_framework_job_context::*;
 pub use semio_framework_job_park::*;
 pub use semio_framework_job_capture::*;
+pub use semio_framework_job_native_turn::*;
+pub use semio_framework_job_return::*;
 pub use semio_framework_job_native_encoding::*;
 #[cfg(any(test,feature="testkit"))]
 pub use semio_framework_job_testing_caller::OriginalJobFixtureCaller;

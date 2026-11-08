@@ -1,0 +1,40 @@
+{
+  "type": "array",
+  "minItems": 7,
+  "items": {
+    "type": "object",
+    "properties": {
+      "priorPublished": {
+        "type": "boolean"
+      },
+      "sameAction": {
+        "type": "boolean"
+      },
+      "sameWork": {
+        "type": "boolean"
+      },
+      "free": {
+        "type": "boolean"
+      },
+      "grant": {
+        "type": "boolean"
+      },
+      "work": {
+        "type": "boolean"
+      },
+      "moved": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "priorPublished",
+      "sameAction",
+      "sameWork",
+      "free",
+      "grant",
+      "work",
+      "moved"
+    ],
+    "additionalProperties": false
+  }
+}

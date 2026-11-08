@@ -1,0 +1,36 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "work",
+    "posts",
+    "maxCopyBytes",
+    "maxItems",
+    "deniedWork",
+    "replyRecordedBeforeUnwind",
+    "sameSource"
+  ],
+  "properties": {
+    "work": {
+      "const": 5
+    },
+    "posts": {
+      "const": 5
+    },
+    "maxCopyBytes": {
+      "const": 4096
+    },
+    "maxItems": {
+      "const": 1
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "replyRecordedBeforeUnwind": {
+      "const": true
+    },
+    "sameSource": {
+      "const": true
+    }
+  }
+}

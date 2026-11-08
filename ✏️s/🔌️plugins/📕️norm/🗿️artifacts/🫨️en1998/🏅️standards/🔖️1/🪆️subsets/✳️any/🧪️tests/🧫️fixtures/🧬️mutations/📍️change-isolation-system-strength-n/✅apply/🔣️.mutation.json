@@ -1,0 +1,5 @@
+{
+  "mutation": "changeIsolationSystemStrengthN",
+  "id": "iso-1",
+  "newStrengthN": 300001.0
+}

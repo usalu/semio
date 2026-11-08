@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "keyword": "x-semio-twin",
+  "metaSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "emoji": {
+        "type": "string"
+      },
+      "summary": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "doc": {
+        "type": "string"
+      }
+    }
+  },
+  "cases": [
+    {
+      "value": {},
+      "valid": true
+    },
+    {
+      "value": {
+        "emoji": "⚖️",
+        "summary": "Compliance report"
+      },
+      "valid": true
+    },
+    {
+      "value": {
+        "name": "CheckReport",
+        "doc": "Owned schema twin"
+      },
+      "valid": true
+    },
+    {
+      "value": {
+        "emoji": "",
+        "summary": "",
+        "name": "",
+        "doc": ""
+      },
+      "valid": true
+    },
+    {
+      "value": "report",
+      "valid": false
+    },
+    {
+      "value": null,
+      "valid": false
+    },
+    {
+      "value": {
+        "summary": 1
+      },
+      "valid": false
+    },
+    {
+      "value": {
+        "emoji": false
+      },
+      "valid": false
+    },
+    {
+      "value": {
+        "doc": []
+      },
+      "valid": false
+    },
+    {
+      "value": {
+        "name": {}
+      },
+      "valid": false
+    },
+    {
+      "value": {
+        "summery": "Misspelled metadata"
+      },
+      "valid": false
+    }
+  ]
+}

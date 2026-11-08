@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSheetProfileTopFlange",
+  "sheetProfileId": "sheet-profile-1",
+  "newTopFlange": 1.06
+}

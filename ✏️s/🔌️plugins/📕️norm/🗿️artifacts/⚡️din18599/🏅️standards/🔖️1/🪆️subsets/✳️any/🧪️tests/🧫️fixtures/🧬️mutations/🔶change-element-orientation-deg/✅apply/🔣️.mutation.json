@@ -1,0 +1,5 @@
+{
+  "mutation": "changeelementorientationdeg",
+  "elementId": "wall-n",
+  "newOrientationDeg": 45.0
+}

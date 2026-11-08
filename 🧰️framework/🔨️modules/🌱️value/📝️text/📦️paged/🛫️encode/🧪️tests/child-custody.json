@@ -1,0 +1,56 @@
+[
+  {
+    "sameSource": true,
+    "started": true,
+    "recorded": false,
+    "funded": true,
+    "recover": true,
+    "publish": false,
+    "replay": false
+  },
+  {
+    "sameSource": true,
+    "started": true,
+    "recorded": true,
+    "funded": false,
+    "recover": false,
+    "publish": false,
+    "replay": false
+  },
+  {
+    "sameSource": true,
+    "started": true,
+    "recorded": true,
+    "funded": true,
+    "recover": false,
+    "publish": true,
+    "replay": false
+  },
+  {
+    "sameSource": false,
+    "started": true,
+    "recorded": true,
+    "funded": true,
+    "recover": false,
+    "publish": false,
+    "replay": false
+  },
+  {
+    "sameSource": true,
+    "started": false,
+    "recorded": false,
+    "funded": true,
+    "recover": false,
+    "publish": false,
+    "replay": false
+  },
+  {
+    "sameSource": true,
+    "started": true,
+    "recorded": false,
+    "funded": false,
+    "recover": true,
+    "publish": false,
+    "replay": false
+  }
+]

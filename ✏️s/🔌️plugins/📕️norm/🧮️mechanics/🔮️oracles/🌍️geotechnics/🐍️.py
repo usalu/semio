@@ -65,7 +65,8 @@ def slices(h, beta, xc, yc, rad, gamma, gamma_sat, gwl, n):
         yb, yg = lower(x), ground(x)
         height = max(yg - yb, 0.0)
         wet = min(max(min(yg, gwl) - yb, 0.0), height)
-        out.append(dict(b=width, w=gamma * (height - wet) * width + gamma_sat * wet * width, alpha=math.asin((xc - x) / rad), u=G_W * wet * width, ycg=yb + 0.5 * height))
+        ponded = max(gwl - yg, 0.0)
+        out.append(dict(b=width, w=gamma * (height - wet) * width + gamma_sat * wet * width + G_W * ponded * width, alpha=math.asin((xc - x) / rad), u=G_W * max(gwl - yb, 0.0) * width, ycg=yb + 0.5 * height))
     return out
 
 
@@ -97,7 +98,24 @@ def slope():
             emit(f"slope.{method}.seismic.{'down' if sign > 0 else 'up'}", factor(method, sl, yc, rad, tan_phi, c, 0.08, 0.5, sign))
 
 
+def janbu_ponded():
+    h, beta, xc, yc, rad, n = 6.0, 30.0, 6.0, 10.0, 11.0, 120
+    sl = slices(h, beta, xc, yc, rad, 18000.0, 20000.0, 2.0, n)
+    tan_phi, c = math.tan(r(30.0)), 5000.0
+    width = sl[0]["b"]
+    xs = [xc - rad * math.sin(k["alpha"]) for k in sl]
+    tb = math.tan(r(beta))
+    ground = lambda x: h if x <= 0 else (0.0 if x >= h / tb else h - x * tb)
+    depth = max(ground(x) - (yc - math.sqrt(max(rad * rad - (x - xc) ** 2, 0.0))) for x in xs)
+    ratio = depth / (xs[-1] - xs[0] + width)
+    f0 = 1 + 0.69 * (ratio - 1.4 * ratio * ratio)
+    drive = sum(k["w"] * math.tan(k["alpha"]) for k in sl)
+    resid = lambda f: f0 * sum((c * k["b"] + max(k["w"] - k["u"], 0.0) * tan_phi) / (math.cos(k["alpha"]) ** 2 * (1 + math.tan(k["alpha"]) * tan_phi / f)) for k in sl) / drive - f
+    emit("slope.janbu.ponded", optimize.brentq(resid, 0.3, 20.0, xtol=1e-13))
+
+
 if __name__ == "__main__":
     earth_pressure()
     slope()
+    janbu_ponded()
     print("\n".join(OUT))

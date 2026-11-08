@@ -122,6 +122,45 @@ Feature: Apply every typed EN 1998 mutation against an independent Python implem
       | change-tie-beam-steel-area | 📍️change-tie-beam-steel-area | ✅apply  |
       | change-tie-beam-steel-design-strength | 📍️change-tie-beam-steel-design-strength | ✅apply  |
       | change-tie-beam-width | 📍️change-tie-beam-width | ✅apply  |
+      | insert-isolation-system | ➕️insert-isolation-system | ✅apply  |
+      | remove-isolation-system | ➖️remove-isolation-system | ✅apply  |
+      | change-isolation-system-bridge-id | ✏️change-isolation-system-bridge-id | ✅apply  |
+      | change-isolation-system-building-id | ✏️change-isolation-system-building-id | ✅apply  |
+      | change-isolation-system-strength-n | 📍️change-isolation-system-strength-n | ✅apply  |
+      | change-isolation-system-stiffness | 📍️change-isolation-system-stiffness | ✅apply  |
+      | change-isolation-system-yield-disp-m | 📍️change-isolation-system-yield-disp-m | ✅apply  |
+      | change-isolation-system-capacity-m | 📍️change-isolation-system-capacity-m | ✅apply  |
+      | insert-pier-base | ➕️insert-pier-base | ✅apply  |
+      | remove-pier-base | ➖️remove-pier-base | ✅apply  |
+      | change-pier-base-bridge-id | ✏️change-pier-base-bridge-id | ✅apply  |
+      | change-pier-base-pier-id | ✏️change-pier-base-pier-id | ✅apply  |
+      | change-pier-base-radius-m | 📍️change-pier-base-radius-m | ✅apply  |
+      | change-pier-base-soil-vs-m-s | 📍️change-pier-base-soil-vs-m-s | ✅apply  |
+      | change-pier-base-soil-unit-weight-n-m3 | 📍️change-pier-base-soil-unit-weight-n-m3 | ✅apply  |
+      | change-pier-base-poisson-ratio | 📍️change-pier-base-poisson-ratio | ✅apply  |
+      | insert-critical-region | ➕️insert-critical-region | ✅apply  |
+      | remove-critical-region | ➖️remove-critical-region | ✅apply  |
+      | change-critical-region-building-id | ✏️change-critical-region-building-id | ✅apply  |
+      | change-critical-region-member-id | ✏️change-critical-region-member-id | ✅apply  |
+      | change-critical-region-section-width-m | 📍️change-critical-region-section-width-m | ✅apply  |
+      | change-critical-region-section-depth-m | 📍️change-critical-region-section-depth-m | ✅apply  |
+      | change-critical-region-clear-length-m | 📍️change-critical-region-clear-length-m | ✅apply  |
+      | change-critical-region-hooped-length-m | 📍️change-critical-region-hooped-length-m | ✅apply  |
+      | change-critical-region-core-width-m | 📍️change-critical-region-core-width-m | ✅apply  |
+      | change-critical-region-core-depth-m | 📍️change-critical-region-core-depth-m | ✅apply  |
+      | change-critical-region-axial-force-n | 📍️change-critical-region-axial-force-n | ✅apply  |
+      | change-critical-region-concrete-fcd | 📍️change-critical-region-concrete-fcd | ✅apply  |
+      | change-critical-region-steel-fyd | 📍️change-critical-region-steel-fyd | ✅apply  |
+      | change-critical-region-hoop-fywd | 📍️change-critical-region-hoop-fywd | ✅apply  |
+      | change-critical-region-long-steel-area | 📍️change-critical-region-long-steel-area | ✅apply  |
+      | change-critical-region-long-bar-dia | 📍️change-critical-region-long-bar-dia | ✅apply  |
+      | change-critical-region-long-bar-max | 📍️change-critical-region-long-bar-max | ✅apply  |
+      | change-critical-region-hoop-diameter-m | 📍️change-critical-region-hoop-diameter-m | ✅apply  |
+      | change-critical-region-hoop-spacing-m | 📍️change-critical-region-hoop-spacing-m | ✅apply  |
+      | change-critical-region-hoop-legs-x | 📍️change-critical-region-hoop-legs-x | ✅apply  |
+      | change-critical-region-hoop-legs-y | 📍️change-critical-region-hoop-legs-y | ✅apply  |
+      | change-critical-region-restr-bar-count | 📍️change-critical-region-restr-bar-count | ✅apply  |
+      | change-critical-region-restr-bar-space | 📍️change-critical-region-restr-bar-space | ✅apply  |
       | change-tower-base-rot-stiff-nm | ✏️change-tower-base-rot-stiff-nm | ✅apply  |
       | change-tank-shell-tm | ✏️change-tank-shell-tm | ✅apply  |
       | change-tank-shell-str-mpa | ✏️change-tank-shell-str-mpa | ✅apply  |
@@ -456,6 +495,45 @@ Feature: Apply every typed EN 1998 mutation against an independent Python implem
       | change-tie-beam-steel-area | 📍️change-tie-beam-steel-area | ✅apply  |
       | change-tie-beam-steel-design-strength | 📍️change-tie-beam-steel-design-strength | ✅apply  |
       | change-tie-beam-width | 📍️change-tie-beam-width | ✅apply  |
+      | insert-isolation-system | ➕️insert-isolation-system | ✅apply  |
+      | remove-isolation-system | ➖️remove-isolation-system | ✅apply  |
+      | change-isolation-system-bridge-id | ✏️change-isolation-system-bridge-id | ✅apply  |
+      | change-isolation-system-building-id | ✏️change-isolation-system-building-id | ✅apply  |
+      | change-isolation-system-strength-n | 📍️change-isolation-system-strength-n | ✅apply  |
+      | change-isolation-system-stiffness | 📍️change-isolation-system-stiffness | ✅apply  |
+      | change-isolation-system-yield-disp-m | 📍️change-isolation-system-yield-disp-m | ✅apply  |
+      | change-isolation-system-capacity-m | 📍️change-isolation-system-capacity-m | ✅apply  |
+      | insert-pier-base | ➕️insert-pier-base | ✅apply  |
+      | remove-pier-base | ➖️remove-pier-base | ✅apply  |
+      | change-pier-base-bridge-id | ✏️change-pier-base-bridge-id | ✅apply  |
+      | change-pier-base-pier-id | ✏️change-pier-base-pier-id | ✅apply  |
+      | change-pier-base-radius-m | 📍️change-pier-base-radius-m | ✅apply  |
+      | change-pier-base-soil-vs-m-s | 📍️change-pier-base-soil-vs-m-s | ✅apply  |
+      | change-pier-base-soil-unit-weight-n-m3 | 📍️change-pier-base-soil-unit-weight-n-m3 | ✅apply  |
+      | change-pier-base-poisson-ratio | 📍️change-pier-base-poisson-ratio | ✅apply  |
+      | insert-critical-region | ➕️insert-critical-region | ✅apply  |
+      | remove-critical-region | ➖️remove-critical-region | ✅apply  |
+      | change-critical-region-building-id | ✏️change-critical-region-building-id | ✅apply  |
+      | change-critical-region-member-id | ✏️change-critical-region-member-id | ✅apply  |
+      | change-critical-region-section-width-m | 📍️change-critical-region-section-width-m | ✅apply  |
+      | change-critical-region-section-depth-m | 📍️change-critical-region-section-depth-m | ✅apply  |
+      | change-critical-region-clear-length-m | 📍️change-critical-region-clear-length-m | ✅apply  |
+      | change-critical-region-hooped-length-m | 📍️change-critical-region-hooped-length-m | ✅apply  |
+      | change-critical-region-core-width-m | 📍️change-critical-region-core-width-m | ✅apply  |
+      | change-critical-region-core-depth-m | 📍️change-critical-region-core-depth-m | ✅apply  |
+      | change-critical-region-axial-force-n | 📍️change-critical-region-axial-force-n | ✅apply  |
+      | change-critical-region-concrete-fcd | 📍️change-critical-region-concrete-fcd | ✅apply  |
+      | change-critical-region-steel-fyd | 📍️change-critical-region-steel-fyd | ✅apply  |
+      | change-critical-region-hoop-fywd | 📍️change-critical-region-hoop-fywd | ✅apply  |
+      | change-critical-region-long-steel-area | 📍️change-critical-region-long-steel-area | ✅apply  |
+      | change-critical-region-long-bar-dia | 📍️change-critical-region-long-bar-dia | ✅apply  |
+      | change-critical-region-long-bar-max | 📍️change-critical-region-long-bar-max | ✅apply  |
+      | change-critical-region-hoop-diameter-m | 📍️change-critical-region-hoop-diameter-m | ✅apply  |
+      | change-critical-region-hoop-spacing-m | 📍️change-critical-region-hoop-spacing-m | ✅apply  |
+      | change-critical-region-hoop-legs-x | 📍️change-critical-region-hoop-legs-x | ✅apply  |
+      | change-critical-region-hoop-legs-y | 📍️change-critical-region-hoop-legs-y | ✅apply  |
+      | change-critical-region-restr-bar-count | 📍️change-critical-region-restr-bar-count | ✅apply  |
+      | change-critical-region-restr-bar-space | 📍️change-critical-region-restr-bar-space | ✅apply  |
       | change-tower-base-rot-stiff-nm | ✏️change-tower-base-rot-stiff-nm | ✅apply  |
       | change-tank-shell-tm | ✏️change-tank-shell-tm | ✅apply  |
       | change-tank-shell-str-mpa | ✏️change-tank-shell-str-mpa | ✅apply  |

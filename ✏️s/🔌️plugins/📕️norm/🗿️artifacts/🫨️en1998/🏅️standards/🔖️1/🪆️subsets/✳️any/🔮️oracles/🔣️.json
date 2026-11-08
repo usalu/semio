@@ -3832,6 +3832,435 @@
               "directoryName": "✅apply"
             }
           ]
+        },
+        {
+          "mutationId": "insert-isolation-system",
+          "sourceMutationDirectoryName": "➕️insert-isolation-system",
+          "mutationDirectoryName": "➕️insert-isolation-system",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-isolation-system",
+          "sourceMutationDirectoryName": "➖️remove-isolation-system",
+          "mutationDirectoryName": "➖️remove-isolation-system",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-isolation-system-bridge-id",
+          "sourceMutationDirectoryName": "✏️change-isolation-system-bridge-id",
+          "mutationDirectoryName": "✏️change-isolation-system-bridge-id",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-isolation-system-building-id",
+          "sourceMutationDirectoryName": "✏️change-isolation-system-building-id",
+          "mutationDirectoryName": "✏️change-isolation-system-building-id",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-isolation-system-strength-n",
+          "sourceMutationDirectoryName": "📍️change-isolation-system-strength-n",
+          "mutationDirectoryName": "📍️change-isolation-system-strength-n",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-isolation-system-stiffness",
+          "sourceMutationDirectoryName": "📍️change-isolation-system-stiffness",
+          "mutationDirectoryName": "📍️change-isolation-system-stiffness",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-isolation-system-yield-disp-m",
+          "sourceMutationDirectoryName": "📍️change-isolation-system-yield-disp-m",
+          "mutationDirectoryName": "📍️change-isolation-system-yield-disp-m",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-isolation-system-capacity-m",
+          "sourceMutationDirectoryName": "📍️change-isolation-system-capacity-m",
+          "mutationDirectoryName": "📍️change-isolation-system-capacity-m",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-pier-base",
+          "sourceMutationDirectoryName": "➕️insert-pier-base",
+          "mutationDirectoryName": "➕️insert-pier-base",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-pier-base",
+          "sourceMutationDirectoryName": "➖️remove-pier-base",
+          "mutationDirectoryName": "➖️remove-pier-base",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-pier-base-bridge-id",
+          "sourceMutationDirectoryName": "✏️change-pier-base-bridge-id",
+          "mutationDirectoryName": "✏️change-pier-base-bridge-id",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-pier-base-pier-id",
+          "sourceMutationDirectoryName": "✏️change-pier-base-pier-id",
+          "mutationDirectoryName": "✏️change-pier-base-pier-id",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-pier-base-radius-m",
+          "sourceMutationDirectoryName": "📍️change-pier-base-radius-m",
+          "mutationDirectoryName": "📍️change-pier-base-radius-m",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-pier-base-soil-vs-m-s",
+          "sourceMutationDirectoryName": "📍️change-pier-base-soil-vs-m-s",
+          "mutationDirectoryName": "📍️change-pier-base-soil-vs-m-s",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-pier-base-soil-unit-weight-n-m3",
+          "sourceMutationDirectoryName": "📍️change-pier-base-soil-unit-weight-n-m3",
+          "mutationDirectoryName": "📍️change-pier-base-soil-unit-weight-n-m3",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-pier-base-poisson-ratio",
+          "sourceMutationDirectoryName": "📍️change-pier-base-poisson-ratio",
+          "mutationDirectoryName": "📍️change-pier-base-poisson-ratio",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-critical-region",
+          "sourceMutationDirectoryName": "➕️insert-critical-region",
+          "mutationDirectoryName": "➕️insert-critical-region",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-critical-region",
+          "sourceMutationDirectoryName": "➖️remove-critical-region",
+          "mutationDirectoryName": "➖️remove-critical-region",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-critical-region-building-id",
+          "sourceMutationDirectoryName": "✏️change-critical-region-building-id",
+          "mutationDirectoryName": "✏️change-critical-region-building-id",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-critical-region-member-id",
+          "sourceMutationDirectoryName": "✏️change-critical-region-member-id",
+          "mutationDirectoryName": "✏️change-critical-region-member-id",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-critical-region-section-width-m",
+          "sourceMutationDirectoryName": "📍️change-critical-region-section-width-m",
+          "mutationDirectoryName": "📍️change-critical-region-section-width-m",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-critical-region-section-depth-m",
+          "sourceMutationDirectoryName": "📍️change-critical-region-section-depth-m",
+          "mutationDirectoryName": "📍️change-critical-region-section-depth-m",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-critical-region-clear-length-m",
+          "sourceMutationDirectoryName": "📍️change-critical-region-clear-length-m",
+          "mutationDirectoryName": "📍️change-critical-region-clear-length-m",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-critical-region-hooped-length-m",
+          "sourceMutationDirectoryName": "📍️change-critical-region-hooped-length-m",
+          "mutationDirectoryName": "📍️change-critical-region-hooped-length-m",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-critical-region-core-width-m",
+          "sourceMutationDirectoryName": "📍️change-critical-region-core-width-m",
+          "mutationDirectoryName": "📍️change-critical-region-core-width-m",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-critical-region-core-depth-m",
+          "sourceMutationDirectoryName": "📍️change-critical-region-core-depth-m",
+          "mutationDirectoryName": "📍️change-critical-region-core-depth-m",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-critical-region-axial-force-n",
+          "sourceMutationDirectoryName": "📍️change-critical-region-axial-force-n",
+          "mutationDirectoryName": "📍️change-critical-region-axial-force-n",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-critical-region-concrete-fcd",
+          "sourceMutationDirectoryName": "📍️change-critical-region-concrete-fcd",
+          "mutationDirectoryName": "📍️change-critical-region-concrete-fcd",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-critical-region-steel-fyd",
+          "sourceMutationDirectoryName": "📍️change-critical-region-steel-fyd",
+          "mutationDirectoryName": "📍️change-critical-region-steel-fyd",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-critical-region-hoop-fywd",
+          "sourceMutationDirectoryName": "📍️change-critical-region-hoop-fywd",
+          "mutationDirectoryName": "📍️change-critical-region-hoop-fywd",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-critical-region-long-steel-area",
+          "sourceMutationDirectoryName": "📍️change-critical-region-long-steel-area",
+          "mutationDirectoryName": "📍️change-critical-region-long-steel-area",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-critical-region-long-bar-dia",
+          "sourceMutationDirectoryName": "📍️change-critical-region-long-bar-dia",
+          "mutationDirectoryName": "📍️change-critical-region-long-bar-dia",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-critical-region-long-bar-max",
+          "sourceMutationDirectoryName": "📍️change-critical-region-long-bar-max",
+          "mutationDirectoryName": "📍️change-critical-region-long-bar-max",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-critical-region-hoop-diameter-m",
+          "sourceMutationDirectoryName": "📍️change-critical-region-hoop-diameter-m",
+          "mutationDirectoryName": "📍️change-critical-region-hoop-diameter-m",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-critical-region-hoop-spacing-m",
+          "sourceMutationDirectoryName": "📍️change-critical-region-hoop-spacing-m",
+          "mutationDirectoryName": "📍️change-critical-region-hoop-spacing-m",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-critical-region-hoop-legs-x",
+          "sourceMutationDirectoryName": "📍️change-critical-region-hoop-legs-x",
+          "mutationDirectoryName": "📍️change-critical-region-hoop-legs-x",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-critical-region-hoop-legs-y",
+          "sourceMutationDirectoryName": "📍️change-critical-region-hoop-legs-y",
+          "mutationDirectoryName": "📍️change-critical-region-hoop-legs-y",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-critical-region-restr-bar-count",
+          "sourceMutationDirectoryName": "📍️change-critical-region-restr-bar-count",
+          "mutationDirectoryName": "📍️change-critical-region-restr-bar-count",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-critical-region-restr-bar-space",
+          "sourceMutationDirectoryName": "📍️change-critical-region-restr-bar-space",
+          "mutationDirectoryName": "📍️change-critical-region-restr-bar-space",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -4155,7 +4584,46 @@
         "change-retaining-wall-saturated-gamma",
         "change-retaining-wall-permeability-ms",
         "change-foundation-base-friction-deg",
-        "change-foundation-base-pore-pressure-pa"
+        "change-foundation-base-pore-pressure-pa",
+        "insert-isolation-system",
+        "remove-isolation-system",
+        "change-isolation-system-bridge-id",
+        "change-isolation-system-building-id",
+        "change-isolation-system-strength-n",
+        "change-isolation-system-stiffness",
+        "change-isolation-system-yield-disp-m",
+        "change-isolation-system-capacity-m",
+        "insert-pier-base",
+        "remove-pier-base",
+        "change-pier-base-bridge-id",
+        "change-pier-base-pier-id",
+        "change-pier-base-radius-m",
+        "change-pier-base-soil-vs-m-s",
+        "change-pier-base-soil-unit-weight-n-m3",
+        "change-pier-base-poisson-ratio",
+        "insert-critical-region",
+        "remove-critical-region",
+        "change-critical-region-building-id",
+        "change-critical-region-member-id",
+        "change-critical-region-section-width-m",
+        "change-critical-region-section-depth-m",
+        "change-critical-region-clear-length-m",
+        "change-critical-region-hooped-length-m",
+        "change-critical-region-core-width-m",
+        "change-critical-region-core-depth-m",
+        "change-critical-region-axial-force-n",
+        "change-critical-region-concrete-fcd",
+        "change-critical-region-steel-fyd",
+        "change-critical-region-hoop-fywd",
+        "change-critical-region-long-steel-area",
+        "change-critical-region-long-bar-dia",
+        "change-critical-region-long-bar-max",
+        "change-critical-region-hoop-diameter-m",
+        "change-critical-region-hoop-spacing-m",
+        "change-critical-region-hoop-legs-x",
+        "change-critical-region-hoop-legs-y",
+        "change-critical-region-restr-bar-count",
+        "change-critical-region-restr-bar-space"
       ]
     }
   ],
@@ -10901,6 +11369,825 @@
             "operation": "change-foundation-base-pore-pressure-pa",
             "bridgeVersion": 1,
             "variant": "ChangeFoundationBasePorePressurePa"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-isolation-system",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-isolation-system",
+            "bridgeVersion": 1,
+            "variant": "InsertIsolationSystem"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-isolation-system",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-isolation-system",
+            "bridgeVersion": 1,
+            "variant": "RemoveIsolationSystem"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-isolation-system-bridge-id",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-isolation-system-bridge-id",
+            "bridgeVersion": 1,
+            "variant": "ChangeIsolationSystemBridgeId"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-isolation-system-building-id",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-isolation-system-building-id",
+            "bridgeVersion": 1,
+            "variant": "ChangeIsolationSystemBuildingId"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-isolation-system-strength-n",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-isolation-system-strength-n",
+            "bridgeVersion": 1,
+            "variant": "ChangeIsolationSystemStrengthN"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-isolation-system-stiffness",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-isolation-system-stiffness",
+            "bridgeVersion": 1,
+            "variant": "ChangeIsolationSystemStiffness"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-isolation-system-yield-disp-m",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-isolation-system-yield-disp-m",
+            "bridgeVersion": 1,
+            "variant": "ChangeIsolationSystemYieldDispM"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-isolation-system-capacity-m",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-isolation-system-capacity-m",
+            "bridgeVersion": 1,
+            "variant": "ChangeIsolationSystemCapacityM"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-pier-base",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-pier-base",
+            "bridgeVersion": 1,
+            "variant": "InsertPierBase"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-pier-base",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-pier-base",
+            "bridgeVersion": 1,
+            "variant": "RemovePierBase"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-pier-base-bridge-id",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-pier-base-bridge-id",
+            "bridgeVersion": 1,
+            "variant": "ChangePierBaseBridgeId"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-pier-base-pier-id",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-pier-base-pier-id",
+            "bridgeVersion": 1,
+            "variant": "ChangePierBasePierId"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-pier-base-radius-m",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-pier-base-radius-m",
+            "bridgeVersion": 1,
+            "variant": "ChangePierBaseRadiusM"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-pier-base-soil-vs-m-s",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-pier-base-soil-vs-m-s",
+            "bridgeVersion": 1,
+            "variant": "ChangePierBaseSoilVsMS"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-pier-base-soil-unit-weight-n-m3",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-pier-base-soil-unit-weight-n-m3",
+            "bridgeVersion": 1,
+            "variant": "ChangePierBaseSoilUnitWeightNM3"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-pier-base-poisson-ratio",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-pier-base-poisson-ratio",
+            "bridgeVersion": 1,
+            "variant": "ChangePierBasePoissonRatio"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-critical-region",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-critical-region",
+            "bridgeVersion": 1,
+            "variant": "InsertCriticalRegion"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-critical-region",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-critical-region",
+            "bridgeVersion": 1,
+            "variant": "RemoveCriticalRegion"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-critical-region-building-id",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-critical-region-building-id",
+            "bridgeVersion": 1,
+            "variant": "ChangeCriticalRegionBuildingId"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-critical-region-member-id",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-critical-region-member-id",
+            "bridgeVersion": 1,
+            "variant": "ChangeCriticalRegionMemberId"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-critical-region-section-width-m",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-critical-region-section-width-m",
+            "bridgeVersion": 1,
+            "variant": "ChangeCriticalRegionSectionWidthM"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-critical-region-section-depth-m",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-critical-region-section-depth-m",
+            "bridgeVersion": 1,
+            "variant": "ChangeCriticalRegionSectionDepthM"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-critical-region-clear-length-m",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-critical-region-clear-length-m",
+            "bridgeVersion": 1,
+            "variant": "ChangeCriticalRegionClearLengthM"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-critical-region-hooped-length-m",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-critical-region-hooped-length-m",
+            "bridgeVersion": 1,
+            "variant": "ChangeCriticalRegionHoopedLengthM"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-critical-region-core-width-m",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-critical-region-core-width-m",
+            "bridgeVersion": 1,
+            "variant": "ChangeCriticalRegionCoreWidthM"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-critical-region-core-depth-m",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-critical-region-core-depth-m",
+            "bridgeVersion": 1,
+            "variant": "ChangeCriticalRegionCoreDepthM"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-critical-region-axial-force-n",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-critical-region-axial-force-n",
+            "bridgeVersion": 1,
+            "variant": "ChangeCriticalRegionAxialForceN"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-critical-region-concrete-fcd",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-critical-region-concrete-fcd",
+            "bridgeVersion": 1,
+            "variant": "ChangeCriticalRegionConcreteFcd"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-critical-region-steel-fyd",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-critical-region-steel-fyd",
+            "bridgeVersion": 1,
+            "variant": "ChangeCriticalRegionSteelFyd"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-critical-region-hoop-fywd",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-critical-region-hoop-fywd",
+            "bridgeVersion": 1,
+            "variant": "ChangeCriticalRegionHoopFywd"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-critical-region-long-steel-area",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-critical-region-long-steel-area",
+            "bridgeVersion": 1,
+            "variant": "ChangeCriticalRegionLongSteelArea"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-critical-region-long-bar-dia",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-critical-region-long-bar-dia",
+            "bridgeVersion": 1,
+            "variant": "ChangeCriticalRegionLongBarDia"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-critical-region-long-bar-max",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-critical-region-long-bar-max",
+            "bridgeVersion": 1,
+            "variant": "ChangeCriticalRegionLongBarMax"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-critical-region-hoop-diameter-m",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-critical-region-hoop-diameter-m",
+            "bridgeVersion": 1,
+            "variant": "ChangeCriticalRegionHoopDiameterM"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-critical-region-hoop-spacing-m",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-critical-region-hoop-spacing-m",
+            "bridgeVersion": 1,
+            "variant": "ChangeCriticalRegionHoopSpacingM"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-critical-region-hoop-legs-x",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-critical-region-hoop-legs-x",
+            "bridgeVersion": 1,
+            "variant": "ChangeCriticalRegionHoopLegsX"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-critical-region-hoop-legs-y",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-critical-region-hoop-legs-y",
+            "bridgeVersion": 1,
+            "variant": "ChangeCriticalRegionHoopLegsY"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-critical-region-restr-bar-count",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-critical-region-restr-bar-count",
+            "bridgeVersion": 1,
+            "variant": "ChangeCriticalRegionRestrBarCount"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-critical-region-restr-bar-space",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-critical-region-restr-bar-space",
+            "bridgeVersion": 1,
+            "variant": "ChangeCriticalRegionRestrBarSpace"
           },
           "oracleRequirements": [
             {

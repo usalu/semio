@@ -1,0 +1,54 @@
+{
+  "type": "object",
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximumBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "ownedBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "items": {
+      "const": 1
+    },
+    "work": {
+      "const": 1
+    },
+    "copyBytes": {
+      "const": "native-header"
+    },
+    "capacityBytes": {
+      "const": 0
+    },
+    "releaseBytes": {
+      "const": 0
+    },
+    "depth": {
+      "const": 1
+    },
+    "deniedMutations": {
+      "const": 0
+    },
+    "terminalDropBytes": {
+      "const": 0
+    }
+  },
+  "required": [
+    "version",
+    "maximumBytes",
+    "ownedBytes",
+    "items",
+    "work",
+    "copyBytes",
+    "capacityBytes",
+    "releaseBytes",
+    "depth",
+    "deniedMutations",
+    "terminalDropBytes"
+  ],
+  "additionalProperties": false
+}

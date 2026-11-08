@@ -1,0 +1,127 @@
+{
+  "work": 5,
+  "text": "hello",
+  "cases": [
+    {
+      "mode": "complete",
+      "result": "ready",
+      "checkpointCalls": 1,
+      "checkpointRecoveries": 0,
+      "producerCalls": 1,
+      "producerRecoveries": 0,
+      "partialWork": [
+        5
+      ],
+      "retryCanceledReply": false
+    },
+    {
+      "mode": "checkpointPending",
+      "result": "ready",
+      "checkpointCalls": 1,
+      "checkpointRecoveries": 1,
+      "producerCalls": 1,
+      "producerRecoveries": 0,
+      "partialWork": [
+        5
+      ],
+      "retryCanceledReply": false
+    },
+    {
+      "mode": "checkpointUnwind",
+      "result": "ready",
+      "checkpointCalls": 1,
+      "checkpointRecoveries": 0,
+      "producerCalls": 1,
+      "producerRecoveries": 0,
+      "partialWork": [
+        5
+      ],
+      "retryCanceledReply": false
+    },
+    {
+      "mode": "quoteUnwind",
+      "result": "ready",
+      "checkpointCalls": 1,
+      "checkpointRecoveries": 0,
+      "producerCalls": 1,
+      "producerRecoveries": 0,
+      "partialWork": [
+        5
+      ],
+      "retryCanceledReply": false
+    },
+    {
+      "mode": "producerUnwind",
+      "result": "ready",
+      "checkpointCalls": 1,
+      "checkpointRecoveries": 0,
+      "producerCalls": 1,
+      "producerRecoveries": 0,
+      "partialWork": [
+        5
+      ],
+      "retryCanceledReply": false
+    },
+    {
+      "mode": "producerPending",
+      "result": "ready",
+      "checkpointCalls": 1,
+      "checkpointRecoveries": 0,
+      "producerCalls": 1,
+      "producerRecoveries": 1,
+      "partialWork": [
+        2,
+        3
+      ],
+      "retryCanceledReply": false
+    },
+    {
+      "mode": "replyPostUnwind",
+      "result": "ready",
+      "checkpointCalls": 1,
+      "checkpointRecoveries": 0,
+      "producerCalls": 1,
+      "producerRecoveries": 0,
+      "partialWork": [
+        5
+      ],
+      "retryCanceledReply": false
+    },
+    {
+      "mode": "replyCheckpointCancel",
+      "result": "ready",
+      "checkpointCalls": 1,
+      "checkpointRecoveries": 0,
+      "producerCalls": 1,
+      "producerRecoveries": 0,
+      "partialWork": [
+        5
+      ],
+      "retryCanceledReply": true
+    },
+    {
+      "mode": "checkpointCancel",
+      "result": "canceled",
+      "checkpointCalls": 1,
+      "checkpointRecoveries": 0,
+      "producerCalls": 0,
+      "producerRecoveries": 0,
+      "partialWork": [],
+      "retryCanceledReply": false
+    },
+    {
+      "mode": "checkpointRefusal",
+      "result": "refused",
+      "checkpointCalls": 1,
+      "checkpointRecoveries": 0,
+      "producerCalls": 0,
+      "producerRecoveries": 0,
+      "partialWork": [],
+      "retryCanceledReply": false
+    }
+  ],
+  "deniedItems": 0,
+  "producerBeforeCheckpoint": "refused",
+  "replyWork": 1,
+  "idleReplyCancel": true
+}

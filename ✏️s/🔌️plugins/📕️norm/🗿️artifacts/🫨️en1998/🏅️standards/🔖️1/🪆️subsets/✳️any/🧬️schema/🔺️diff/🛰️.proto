@@ -39,6 +39,12 @@ message En1998Diff {
   bytes slopes = 18;
   // @state artifact
   bytes placements = 19;
+  // @state artifact
+  bytes isolation_systems = 20;
+  // @state artifact
+  bytes pier_bases = 21;
+  // @state artifact
+  bytes critical_regions = 22;
 }
 message En1998SystemDelta {
   repeated En1998SystemRemoval removed = 1;
@@ -824,4 +830,112 @@ message En1998SlopePatch {
   optional double circle_centre_x = 7;
   optional double circle_centre_z = 8;
   optional double circle_radius = 9;
+}
+message En1998IsolationSystemDelta {
+  repeated En1998IsolationSystemRemoval removed = 1;
+  repeated En1998IsolationSystemInsertion inserted = 2;
+  repeated En1998IsolationSystemRelocation moved = 3;
+  repeated En1998IsolationSystemModification modified = 4;
+}
+message En1998IsolationSystemRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1998IsolationSystemInsertion {
+  uint32 index = 1;
+  En1998IsolationSystem row = 2;
+}
+message En1998IsolationSystemRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1998IsolationSystemModification {
+  string id = 1;
+  En1998IsolationSystemPatch patch = 2;
+}
+message En1998IsolationSystemPatch {
+  optional string bridge_id = 1;
+  optional string building_id = 2;
+  optional double strength_n = 3;
+  optional double stiffness_n_per_m = 4;
+  optional double yield_displacement_m = 5;
+  optional double capacity_m = 6;
+}
+message En1998PierBaseDelta {
+  repeated En1998PierBaseRemoval removed = 1;
+  repeated En1998PierBaseInsertion inserted = 2;
+  repeated En1998PierBaseRelocation moved = 3;
+  repeated En1998PierBaseModification modified = 4;
+}
+message En1998PierBaseRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1998PierBaseInsertion {
+  uint32 index = 1;
+  En1998PierBase row = 2;
+}
+message En1998PierBaseRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1998PierBaseModification {
+  string id = 1;
+  En1998PierBasePatch patch = 2;
+}
+message En1998PierBasePatch {
+  optional string bridge_id = 1;
+  optional string pier_id = 2;
+  optional double radius_m = 3;
+  optional double soil_vs_m_s = 4;
+  optional double soil_unit_weight_n_m3 = 5;
+  optional double poisson_ratio = 6;
+}
+message En1998CriticalRegionDelta {
+  repeated En1998CriticalRegionRemoval removed = 1;
+  repeated En1998CriticalRegionInsertion inserted = 2;
+  repeated En1998CriticalRegionRelocation moved = 3;
+  repeated En1998CriticalRegionModification modified = 4;
+}
+message En1998CriticalRegionRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1998CriticalRegionInsertion {
+  uint32 index = 1;
+  En1998CriticalRegion row = 2;
+}
+message En1998CriticalRegionRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1998CriticalRegionModification {
+  string id = 1;
+  En1998CriticalRegionPatch patch = 2;
+}
+message En1998CriticalRegionPatch {
+  optional string building_id = 1;
+  optional string member_id = 2;
+  optional double section_width_m = 3;
+  optional double section_depth_m = 4;
+  optional double clear_length_m = 5;
+  optional double hooped_length_m = 6;
+  optional double core_width_m = 7;
+  optional double core_depth_m = 8;
+  optional double axial_force_n = 9;
+  optional double concrete_design_strength_mpa = 10;
+  optional double steel_design_yield_mpa = 11;
+  optional double hoop_design_yield_mpa = 12;
+  optional double longitudinal_steel_area_m2 = 13;
+  optional double longitudinal_bar_diameter_m = 14;
+  optional double longitudinal_bar_max_diameter_m = 15;
+  optional double hoop_diameter_m = 16;
+  optional double hoop_spacing_m = 17;
+  optional double hoop_legs_x = 18;
+  optional double hoop_legs_y = 19;
+  optional double restrained_bar_count = 20;
+  optional double restrained_bar_spacing_m = 21;
 }

@@ -23,6 +23,7 @@ path = "🦀️.rs"
 [dependencies]
 serde = { workspace = true }
 semio-framework-value-control-contract = { path="../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-retirement-contract = { path="../../../♻️retirement/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-allocation-return = { path="../../../♻️retirement/📦️allocation-return/📦️packages/🦀️rust" }
 
 [dev-dependencies]
@@ -38,3 +39,7 @@ path = "../../🎟️reservation/🧪️tests/attempt.rs"
 [[test]]
 name = "plain-tail-discard"
 path = "../../📤️discard/🧪️tests/native.rs"
+
+[[test]]
+name = "original-paid-edit"
+path = "../../🎮️edit/🧪️tests/native.rs"

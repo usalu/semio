@@ -1,0 +1,5 @@
+{
+  "mutation": "changeelementzoneid",
+  "elementId": "ghost",
+  "newZoneId": "zone-annex"
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "entered": false,
+    "recorded": false,
+    "same": true,
+    "recover": false
+  },
+  {
+    "entered": true,
+    "recorded": false,
+    "same": true,
+    "recover": true
+  },
+  {
+    "entered": true,
+    "recorded": true,
+    "same": true,
+    "recover": false
+  },
+  {
+    "entered": true,
+    "recorded": false,
+    "same": false,
+    "recover": false
+  }
+]

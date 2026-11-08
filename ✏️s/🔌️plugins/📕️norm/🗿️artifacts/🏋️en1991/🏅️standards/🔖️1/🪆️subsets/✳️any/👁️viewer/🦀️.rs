@@ -6,9 +6,9 @@
 
 #![allow(async_fn_in_trait)]
 
-extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
@@ -16,13 +16,13 @@ use crate::modes::view;
 use crate::modes::view::windows::{checks, diagrams, viewport};
 use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 use semio_s_artifact_norm_en1991_model::{EN1991_DIALECT, EN1991_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, ViewEmit, Viewer};
-use semio_framework_plugin::app::{Dialect, InteractionView};
+use semio_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, ViewEmit, Viewer};
+use semio_plugin::app::{Dialect, InteractionView};
 use semio_ui_locale::Label;
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
-semio_framework_plugin::view_commands! {
+semio_plugin::view_commands! {
     /// 👁️ `En1991Viewer::Command`: the sole dispatch surface of this read-only viewer, `viewportAct` (stepping, field, track, playback). `dispatch` returns `ViewEmit`, so no row can carry an artifact or draft mutation; the step itself only folds into the ephemeral local view lane (`ephemeral`).
     pub enum En1991ViewCommand for En1991Snapshot, NoConfig, NoConfigMutation {
         "viewportAct" as "viewport-act" => viewport_act::ViewportAct,
@@ -33,7 +33,7 @@ semio_s_plugin_norm_app_surface::norm_viewer_commands!(En1991Snapshot);
 
 semio_s_plugin_norm_app_surface::norm_owned_view_tool_job_factory!(En1991ViewBoundedCommandJobFactory, En1991Viewer);
 
-semio_s_plugin_norm_app_surface::norm_viewer_surface!(En1991Viewer, En1991ViewCommand, variant = "en1991", report = |d: &En1991Snapshot| semio_s_artifact_norm_en1991_inferences::live::report(d), scene = |d: &En1991Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, _| semio_s_artifact_norm_en1991_scene::live_scene_of(d, r), diagrams = |d: &En1991Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, focus: Option<&str>| semio_s_plugin_norm_structural_scene::projection::memo_diagrams("en1991", d, r, focus.unwrap_or("\u{0}"), || semio_s_artifact_norm_en1991_scene::diagrams(d, r, focus)).to_vec());
+semio_s_plugin_norm_app_surface::norm_viewer_surface!(En1991Viewer, En1991ViewCommand, variant = "en1991", report = |d: &En1991Snapshot| semio_s_plugin_norm_app_surface::paint_report_of(|budget| semio_s_artifact_norm_en1991_inferences::live::responsive(d, budget)), scene = |d: &En1991Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, _| semio_s_artifact_norm_en1991_scene::live_scene_of(d, r), diagrams = |d: &En1991Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, focus: Option<&str>| semio_s_plugin_norm_structural_scene::projection::memo_diagrams("en1991", d, r, focus.unwrap_or("\u{0}"), || semio_s_artifact_norm_en1991_scene::diagrams(d, r, focus)).to_vec());
 //#endregion 🔖️Command
 
 //#region 🔖️Viewer
@@ -65,16 +65,16 @@ impl ArtifactViewer for En1991Viewer {
 
     semio_s_plugin_norm_app_surface::norm_exact_viewer_store_ownership!(lanes);
 
-    fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::ViewerApp<Self>>) -> Result<(), Fault> {
+    fn register_tool_job_factories(registry: &mut semio_plugin::ArtifactToolFactoryRegistry<'_, semio_plugin::ViewerApp<Self>>) -> Result<(), Fault> {
         En1991ViewBoundedCommandJobFactory::register(registry)
     }
 
-    fn build_tool_job(request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::ViewerApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+    fn build_tool_job(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::ViewerApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
         semio_s_plugin_norm_app_surface::build_norm_view_tool_job::<Self>(request, output, cx)
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::ViewerApp<En1991Viewer>,
+    semio_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_plugin::ViewerApp<En1991Viewer>,
         owner_file: "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
         controller: "s.norm.en1991@1/*#viewer",
         artifact_schema: "semio.norm.en1991/v1",
@@ -84,7 +84,7 @@ impl ArtifactViewer for En1991Viewer {
         tools: ["viewportAct"]
     }
 
-    fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Result<semio_framework_plugin::InteractionTopology, semio_framework_value::ValueError> {
+    fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Result<semio_plugin::InteractionTopology, semio_framework_value::ValueError> {
         Ok(semio_s_plugin_norm_app_surface::viewer_interaction_topology::<Self>(doc.snapshot))
     }
 
@@ -99,13 +99,13 @@ impl ArtifactViewer for En1991Viewer {
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
-        _presence: &semio_framework_plugin::PresenceView<'_, Self::Presence>,
-        transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        _presence: &semio_plugin::PresenceView<'_, Self::Presence>,
+        transient: &semio_plugin::TransientView<'_, Self::Transient>,
     ) -> (Vec<Self::PresenceMutation>, Vec<Self::TransientMutation>) {
         semio_s_plugin_norm_app_surface::viewer_ephemeral::<Self>(command, doc, transient)
     }
 
-    fn reference_birth()->Option<fn()->Result<En1991Snapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<En1991Snapshot,semio_plugin::Fault>>{Some(||{
         Ok(En1991Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De))
     })}
 
@@ -115,38 +115,38 @@ impl ArtifactViewer for En1991Viewer {
         doc: &ArtifactView<'_, Self::Snapshot>,
         cfg: &ConfigView<'_, Self::Config>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _engines: &EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
     fn render_with_request_context(
-        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        _owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, Self::Snapshot>,
         cfg: &ConfigView<'_, Self::Config>,
-        view_state: &semio_framework_plugin::ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        view_state: &semio_plugin::ViewModel,
+        transient: &semio_plugin::TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
-        _cx: &mut semio_framework_plugin::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        _cx: &mut semio_plugin::StepContext<'_>,
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
         semio_s_plugin_norm_app_surface::render_norm_viewer::<Self>(body_key, doc, cfg, view_state, transient, interaction)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
-            viewport::BODY_VIEWPORT => viewport::render(doc.snapshot, view_state.locale).map(semio_framework_plugin::built_to_component_tree),
-            diagrams::BODY_DIAGRAMS => diagrams::render(doc.snapshot, &semio_framework_plugin::TreeWindows::for_body(view_state, diagrams::BODY_DIAGRAMS), view_state.locale).map(semio_framework_plugin::built_to_component_tree),
-            checks::BODY_CHECKS => checks::render(doc.snapshot, &semio_framework_plugin::TreeWindows::for_body(view_state, checks::BODY_CHECKS), view_state.locale).map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            viewport::BODY_VIEWPORT => viewport::render(doc.snapshot, view_state.locale).map(semio_plugin::built_to_component_tree),
+            diagrams::BODY_DIAGRAMS => diagrams::render(doc.snapshot, &semio_plugin::TreeWindows::for_body(view_state, diagrams::BODY_DIAGRAMS), view_state.locale).map(semio_plugin::built_to_component_tree),
+            checks::BODY_CHECKS => checks::render(doc.snapshot, &semio_plugin::TreeWindows::for_body(view_state, checks::BODY_CHECKS), view_state.locale).map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub fn create_en1991_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_en1991_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(EN1991_DIALECT)
         .document(["semio", "norm", "en1991"])
         .interaction(semio_s_plugin_norm_app_surface::viewer_interaction_definition("en1991"))
@@ -161,13 +161,13 @@ pub fn create_en1991_viewer() -> semio_framework_plugin::AppDefinition {
         .named_layout(semio_s_plugin_norm_app_surface::view_named_layout("en1991", "mobile"))
         .named_layout(semio_s_plugin_norm_app_surface::view_named_layout("en1991", "tablet"))
         .action_with(
-            semio_framework_plugin::ActionDefinition::new_catalog("viewportAct", semio_ui_locale::LocalizedLabel::native("Viewport Action", "Viewport-Aktion"), semio_framework_plugin::ActionKind::View).with_args(vec![
-                semio_framework_plugin::ActionArgDef::text("action", semio_ui_locale::LocalizedLabel::native("Action", "Aktion")),
-                semio_framework_plugin::ActionArgDef::text("text", semio_ui_locale::LocalizedLabel::native("Text", "Text")),
-                semio_framework_plugin::ActionArgDef::any("number", semio_ui_locale::LocalizedLabel::native("Number", "Zahl")),
+            semio_plugin::ActionDefinition::new_catalog("viewportAct", semio_ui_locale::LocalizedLabel::native("Viewport Action", "Viewport-Aktion"), semio_plugin::ActionKind::View).with_args(vec![
+                semio_plugin::ActionArgDef::text("action", semio_ui_locale::LocalizedLabel::native("Action", "Aktion")),
+                semio_plugin::ActionArgDef::text("text", semio_ui_locale::LocalizedLabel::native("Text", "Text")),
+                semio_plugin::ActionArgDef::any("number", semio_ui_locale::LocalizedLabel::native("Number", "Zahl")),
             ]),
         )
-        .action_interactive_job("viewportAct", semio_framework_plugin::InteractiveJobClassification::Migrated)
+        .action_interactive_job("viewportAct", semio_plugin::InteractiveJobClassification::Migrated)
         .action_describe("viewportAct", semio_ui_locale::LocalizedLabel::native("Steps the checks and combinations or changes the colour field, track and playback of the viewport; only this client's ephemeral view changes, never the document.", "Schaltet Nachweise und Kombinationen weiter oder ändert Farbfeld, Verlauf und Wiedergabe des Viewports; nur die flüchtige Ansicht dieses Clients ändert sich, nie das Dokument."))
         .build_definition()
 }

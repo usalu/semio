@@ -1,3 +1,5 @@
+scalar UInt32
+
 type En1992Snapshot {
   annex: AnnexChoice!
   title: String!
@@ -47,7 +49,7 @@ enum BarPosition {
 type BarLayer {
   id: String!
   diameter: Float!
-  count: Int!
+  count: UInt32!
   position: BarPosition!
   anchorageLength: Float!
   lapLength: Float!
@@ -84,7 +86,7 @@ type TendonPoint {
 type StudRow {
   id: String!
   angle: Float!
-  count: Int!
+  count: UInt32!
   spacingFirst: Float!
   spacingRadial: Float!
   diameter: Float!
@@ -99,7 +101,7 @@ type Opening {
 type Stirrups {
   diameter: Float!
   spacing: Float!
-  legs: Int!
+  legs: UInt32!
 }
 enum ColumnPosition {
   Interior

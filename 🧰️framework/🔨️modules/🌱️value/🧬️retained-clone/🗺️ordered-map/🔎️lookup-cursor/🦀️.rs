@@ -1,97 +1,130 @@
-//! 🔎️ Lookup cursor of the retained ordered map: the lookup outcome and the resumable key lookup. See [`super`].
-
+//! 🔎️ Binary lookup retains its comparator, projection and original borrowed reply through every child action.
 use super::*;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum RetainedOrderedMapLookup {
-    Found(usize),
-    Missing(usize),
+use semio_framework_value_control_contract::{OriginalEffectReply,OriginalEffectReplyComplete,OriginalEffectInvocationIdentity,NativeAllocationIdentity};
+use semio_framework_value_retirement::{OriginalRetirementFailure,OriginalRetirementCloseLoan};
+use std::mem::ManuallyDrop;
+use semio_framework_value_retained_clone::RetainedOwnedProjectionAdmission;
+type Reply<'r>=OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>;
+type Complete<'r>=OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>;
+type Route=(OriginalEffectInvocationIdentity,u8,usize,BoundedOrdGrant,RetainedCloneGrant,Option<(NativeAllocationIdentity,Option<u64>)>,crate::RetirementDemand,u64);
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+pub enum RetainedOrderedMapLookup{Found(usize),Missing(usize)}
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+enum Phase{Select,Birth,Project,Compare,Take,Close,Release,Projection,Transition}
+pub struct RetainedOrderedMapLookupCursor<K:BoundedOrd>{
+ pub(super) initialized:bool,low:usize,high:usize,pub(super) middle:usize,
+ pub(super) comparison:ManuallyDrop<Option<K::Cursor>>,pending:Option<Ordering>,
+ pub(super) source:ManuallyDrop<Option<RetainedCloneBinding>>,pub(super) target:ManuallyDrop<Option<RetainedCloneBinding>>,
+ pub(super) complete:Option<RetainedOrderedMapLookup>,pub(super) closing:bool,
+ archived:BoundedOrdProgress,comparison_archived:bool,taken:bool,phase:Phase,projection:ManuallyDrop<RetainedOwnedProjectionAdmission<K>>,route:Option<Route>,
 }
-
-pub struct RetainedOrderedMapLookupCursor<K: BoundedOrd> {
-    pub(super) initialized:bool,
-    low: usize,
-    high: usize,
-    pub(super) middle: usize,
-    pub(super) comparison: Option<K::Cursor>,
-    pending: Option<Ordering>,
-    pub(super) source: Option<RetainedCloneBinding>,
-    pub(super) target: Option<RetainedCloneBinding>,
-    pub(super) complete: Option<RetainedOrderedMapLookup>,
-    pub(super) closing:bool,
-}
-
-impl<K: BoundedOrd> Default for RetainedOrderedMapLookupCursor<K> {
-    fn default() -> Self {
-        Self { initialized:false,low: 0, high: 0, middle: 0, comparison: None, pending: None, source: None, target:None, complete: None, closing:false }
-    }
-}
-
+impl<K:BoundedOrd> Default for RetainedOrderedMapLookupCursor<K>{fn default()->Self{Self{initialized:false,low:0,high:0,middle:0,comparison:ManuallyDrop::new(None),pending:None,source:ManuallyDrop::new(None),target:ManuallyDrop::new(None),complete:None,closing:false,archived:Default::default(),comparison_archived:false,taken:false,phase:Phase::Select,projection:ManuallyDrop::new(Default::default()),route:None}}}
+fn invalid(message:&'static str)->ValueError{ValueError::invariant(message)}
+fn physical(copy_bytes:usize)->crate::RetirementDemand{crate::RetirementDemand{copy_bytes,depth:usize::from(copy_bytes!=0),..Default::default()}}
+fn permits(effect:&crate::RetainedAllocationEffect<'_>,d:crate::RetirementDemand,work:u64)->Result<bool,ValueError>{Ok(retained_clone_grant_admits(effect.grant(),d)&&effect.remaining_work_units()?>=work)}
+fn step(copy_bytes:usize)->RetainedCloneStep{RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(copy_bytes!=0),copied_bytes:copy_bytes,..Default::default()})}
 impl<K:BoundedOrd> RetainedOrderedMapLookupCursor<K>{
-    pub fn advance<V>(&mut self,source:RetainedCloneRef<'_,RetainedOrderedMap<K,V>>,target:RetainedCloneRef<'_,K>,grant:BoundedOrdGrant,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<(Option<RetainedOrderedMapLookup>,BoundedOrdProgress,RetainedCloneProgress),ValueError>{let retirement=effect.grant();let mut work=0;let result=(||{
-        if self.closing{return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"lookup is closing"));}
-        let first=!self.initialized;
-        if first&&grant.maximum_items==0{return Ok((None,Default::default(),Default::default()));}
-        if let Some(progress)={let turn=source.bind(&mut self.source,effect);work+=turn.work;turn.result}?{return Ok((None,Default::default(),progress));}
-        if let Some(progress)={let turn=target.bind(&mut self.target,effect);work+=turn.work;turn.result}?{return Ok((None,Default::default(),progress));}
-        if let Some(result)=self.complete{return Ok((Some(result),Default::default(),Default::default()));}
-        let map=source.get();
-        if first{work+=1;self.initialized=true;self.high=map.len();return Ok((None,BoundedOrdProgress{compared_items:1,compared_bytes:0},Default::default()));}
-        if let Some(ordering)=self.pending{
-            if let Some(comparison)=self.comparison.as_mut(){
-                comparison.begin_close();let step={let turn=super::bounded_ord::flatten_poll(comparison.close_step(&mut effect.nested(retirement)));work+=turn.work;turn.result}?;
-                if comparison.terminal_is_empty(){self.comparison=None;}
-                return Ok((None,Default::default(),step.progress()));
-            }
-            if grant.maximum_items==0{return Ok((None,Default::default(),Default::default()));}
-            work+=1;self.pending=None;
-            match ordering{Ordering::Less=>self.low=self.middle+1,Ordering::Greater=>self.high=self.middle,Ordering::Equal=>unreachable!()}
-            return Ok((None,BoundedOrdProgress{compared_items:1,compared_bytes:0},Default::default()));
-        }
-        if self.low==self.high{
-            if grant.maximum_items==0{return Ok((None,Default::default(),Default::default()));}
-            work+=1;let result=RetainedOrderedMapLookup::Missing(self.low);self.complete=Some(result);
-            return Ok((Some(result),BoundedOrdProgress{compared_items:1,compared_bytes:0},Default::default()));
-        }
-        if self.comparison.is_none(){if grant.maximum_items==0{return Ok((None,Default::default(),Default::default()));}let turn=K::admit_bounded_ord_cursor(retirement);work+=turn.work;let Some((comparison,p))=turn.result?else{return Ok((None,Default::default(),Default::default()));};self.middle=self.low+(self.high-self.low)/2;self.comparison=Some(comparison);return Ok((None,Default::default(),p));}
-        let comparison=self.comparison.as_mut().ok_or_else(||ValueError::invariant("comparison absent"))?;
-        match {let turn=comparison.compare(source.try_project(self.middle+1,|map|map.get_index(self.middle).map(|entry|entry.0).ok_or_else(||ValueError::invariant("ordered map lookup index is absent")))?,target,grant,&mut effect.nested(retirement));work+=turn.work;turn.result}?{
-            BoundedOrdStep::Authority(progress)=>Ok((None,Default::default(),progress)),
-            BoundedOrdStep::Progress(p)=>Ok((None,p,Default::default())),
-            BoundedOrdStep::Complete{ordering:Ordering::Equal,progress}=>{let result=RetainedOrderedMapLookup::Found(self.middle);self.complete=Some(result);Ok((Some(result),progress,Default::default()))},
-            BoundedOrdStep::Complete{ordering,progress}=>{self.pending=Some(ordering);Ok((None,progress,Default::default()))}
-        }
-    })();crate::RetainedWorkOutcome{result,work}}
-    pub fn advance_retirement_demands(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{
-        if self.complete.is_some(){return Ok(Default::default());}
-        if self.source.is_none()||self.target.is_none(){return Ok(crate::RetirementDemand{copy_bytes:RetainedCloneBinding::alias_copy_bytes(),depth:1,..Default::default()});}
-        if self.pending.is_some(){return self.comparison.as_ref().map_or(Ok(Default::default()),|cursor|cursor.close_demands(body));}
-        if !self.initialized||self.low==self.high{return Ok(Default::default());}
-        self.comparison.as_ref().map_or_else(||Ok(K::bounded_ord_birth_demand()),|cursor|cursor.advance_retirement_demands(body))
-    }
-    pub fn begin_close(&mut self)->bool{let started=!self.closing;self.closing=true;if let Some(c)=self.comparison.as_mut(){c.begin_close();}started}
-    /// 🎟️ Retains the original comparator or projected binding through one complete next-action quote.
-    pub(super) fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{
-        if let Some(cursor)=self.comparison.as_ref(){if cursor.terminal_is_empty(){return Ok(crate::RetirementDemand{copy_bytes:size_of::<K::Cursor>(),depth:1,..Default::default()});}let mut d=cursor.close_demands(body)?;d.depth=d.depth.checked_add(1).ok_or_else(||ValueError::literal(crate::ValueRefusalKind::DepthLimit,"original lookup comparator close depth overflow"))?;return Ok(d);}
-        RetainedCloneBinding::close_demand(if self.source.is_some(){&self.source}else{&self.target},body)
-    }    pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{if let Some(c)=self.comparison.as_ref(){if c.terminal_is_empty(){Ok(size_of::<K::Cursor>())}else{c.next_close_copy_byte_demand()}}else{RetainedCloneBinding::copy_demand(if self.source.is_some(){&self.source}else{&self.target})}}
-    pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{if let Some(c)=self.comparison.as_ref(){if c.terminal_is_empty(){Ok(0)}else{c.next_close_capacity_byte_demand(body)}}else{RetainedCloneBinding::capacity_demand(if self.source.is_some(){&self.source}else{&self.target},body)}}
-    pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{if let Some(c)=self.comparison.as_ref(){if c.terminal_is_empty(){Ok(0)}else{c.next_close_release_byte_demand()}}else{RetainedCloneBinding::release_demand(if self.source.is_some(){&self.source}else{&self.target})}}
-    pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{if let Some(c)=self.comparison.as_ref(){if c.terminal_is_empty(){Ok(1)}else{c.next_close_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(crate::ValueRefusalKind::DepthLimit,"original lookup comparator close depth overflow"))}}else{RetainedCloneBinding::depth_demand(if self.source.is_some(){&self.source}else{&self.target})}}
-    pub(super) fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if let Some(cursor)=self.comparison.as_ref(){return if cursor.terminal_is_empty(){Ok(1)}else{cursor.close_work_demand(body)}}RetainedCloneBinding::close_work_demand(if self.source.is_some(){&self.source}else{&self.target},body)}
-    pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let grant=effect.grant();let mut work=0;let result=(||->Result<RetainedCloneStep,crate::RetirementPollExit>{
-        if !self.closing{return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"lookup must begin close").into());}
-        let demand=self.close_demands(grant.maximum_copy_bytes)?;
-        if !retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if let Some(c)=self.comparison.as_mut(){
-            if c.terminal_is_empty(){work+=1;self.comparison=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
-            let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-            let step={let turn=crate::RetirementPollExit::settled(c.close_step(&mut effect.nested(child)))?;work+=turn.work;turn.result}?;
-            let step=admit_retained_clone_close(child,step,c.terminal_is_empty(),"original lookup comparator close")?;
-            return Ok(RetainedCloneStep::Progress(step.progress()));
-        }
-        let step={let turn=crate::RetirementPollExit::settled(close_retained_binding(if self.source.is_some(){&mut self.source}else{&mut self.target},effect))?;work+=turn.work;turn.result}?;
-        Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
-    })();crate::RetirementPollExit::finish(result,work)}
-    pub fn terminal_is_empty(&self)->bool{self.comparison.is_none()&&self.source.is_none()&&self.target.is_none()}
+ fn native<'r>(&mut self,d:crate::RetirementDemand,effect:&mut crate::RetainedAllocationEffect<'_>,reply:Reply<'r>,update:fn(&mut Self)->Result<(),ValueError>)->Result<Complete<'r>,ValueError>{if !permits(effect,d,1)?{return Ok(reply.complete(Ok(step(0))))}if !effect.performed(1)?{return Err(invalid("native lookup metadata lost original Work"))}update(self)?;Ok(reply.complete(Ok(step(d.copy_bytes))))}
+ fn validate<V>(&self,source:RetainedCloneRef<'_,RetainedOrderedMap<K,V>>,target:RetainedCloneRef<'_,K>)->Result<(),ValueError>{source.binding_demand(&self.source)?;target.binding_demand(&self.target)?;Ok(())}
+ fn projected<'a,V>(&self,source:RetainedCloneRef<'a,RetainedOrderedMap<K,V>>)->Result<RetainedCloneRef<'a,K>,ValueError>{if source.get().get_index(self.middle).is_none(){return Err(invalid("lookup middle is outside its retained map"))}Ok(source.project(self.middle.checked_add(1).ok_or_else(||invalid("lookup projection index overflow"))?,|map|map.get_index(self.middle).expect("validated native ordered index").0))}
+ fn archive_demand()->crate::RetirementDemand{physical(size_of::<BoundedOrdProgress>()+size_of::<bool>())}
+ /// 🧮️ Returns actual logical comparison totals across live and paid-released child comparators.
+ pub fn comparison_totals(&self)->BoundedOrdProgress{let mut total=self.archived;if !self.comparison_archived{if let Some(c)=self.comparison.as_ref(){let next=c.comparison_totals();total.compared_items=total.compared_items.checked_add(next.compared_items).expect("actual comparison item total");total.compared_bytes=total.compared_bytes.checked_add(next.compared_bytes).expect("actual comparison byte total")}}total}
+ fn native_demand(&self)->crate::RetirementDemand{let bytes=if !self.initialized{size_of::<usize>()+size_of::<bool>()}else{match self.phase{Phase::Select if self.low==self.high=>size_of::<Option<RetainedOrderedMapLookup>>(),Phase::Select=>size_of::<usize>()+size_of::<Phase>(),Phase::Transition=>size_of::<Option<Ordering>>()+size_of::<Phase>()+if self.pending==Some(Ordering::Equal){size_of::<Option<RetainedOrderedMapLookup>>()}else{size_of::<usize>()},Phase::Release=>size_of::<Phase>()+size_of::<bool>(),_=>size_of::<Phase>()}};physical(bytes)}
+ fn advance_operation(&self)->u8{match self.phase{Phase::Birth if self.comparison.is_none()=>1,Phase::Compare if self.comparison.as_ref().is_some_and(|c|c.ordering().is_none())=>2,Phase::Take if self.pending.is_none()=>3,Phase::Close if self.comparison.as_ref().is_some_and(|c|!c.close_started())=>4,Phase::Close if self.comparison.as_ref().is_some_and(|c|!c.terminal_is_empty())=>5,Phase::Projection if !self.projection.terminal_is_empty()=>6,_=>0}}
+ pub fn next_demand<V>(&self,source:RetainedCloneRef<'_,RetainedOrderedMap<K,V>>,target:RetainedCloneRef<'_,K>,comparison:BoundedOrdGrant,body:usize)->Result<crate::RetirementDemand,ValueError>{
+  self.validate(source,target)?;if self.closing{return Err(invalid("lookup is closing"))}if let Some(route)=self.route{if route.2!=body||route.3!=comparison{return Err(invalid("lookup query changed its selected body or comparison"))}return Ok(route.6)}
+  if self.complete.is_some()||self.taken{return Ok(Default::default())}if let Some(d)=source.binding_demand(&self.source)?{return Ok(d)}if let Some(d)=target.binding_demand(&self.target)?{return Ok(d)}
+  if !self.initialized||comparison.maximum_items==0{return Ok(if comparison.maximum_items==0{Default::default()}else{self.native_demand()})}
+  match self.phase{
+   Phase::Birth if self.comparison.is_none()=>Ok(K::bounded_ord_birth_demand()),
+   Phase::Project if self.projection.terminal_is_empty()=>{let key=self.projected(source)?;let mut d=self.projection.demand(key)?;d.copy_bytes=d.copy_bytes.checked_add(size_of::<RetainedCloneRef<'_,K>>()).ok_or_else(||invalid("lookup projection copy overflow"))?;Ok(d)},
+   Phase::Compare if self.comparison.as_ref().is_some_and(|c|c.ordering().is_none())=>self.comparison.as_ref().unwrap().compare_demands(self.projection.borrow()?,target,comparison,body),
+   Phase::Take if self.pending.is_none()=>Ok(self.comparison.as_ref().ok_or_else(||invalid("lookup lost comparator"))?.take_ordering_demand()),
+   Phase::Close=>{let c=self.comparison.as_ref().ok_or_else(||invalid("lookup close lost comparator"))?;if !c.close_started(){Ok(c.begin_close_demand())}else if !c.terminal_is_empty(){c.close_demands(body)}else{Ok(self.native_demand())}},
+   Phase::Release if self.comparison.is_some()=>if self.comparison_archived{Ok(self.comparison.as_ref().unwrap().terminal_release().ok_or_else(||invalid("comparator lacks its native terminal lifecycle"))?.inline_demand())}else{Ok(Self::archive_demand())},
+   Phase::Projection if !self.projection.terminal_is_empty()=>self.projection.close_demand(body),
+   _=>Ok(self.native_demand())
+  }
+ }
+ pub fn next_work_demand<V>(&self,source:RetainedCloneRef<'_,RetainedOrderedMap<K,V>>,target:RetainedCloneRef<'_,K>,comparison:BoundedOrdGrant,body:usize)->Result<u64,ValueError>{
+  let d=self.next_demand(source,target,comparison,body)?;if let Some(route)=self.route{return Ok(route.7)}if d==Default::default(){return Ok(0)}if self.source.is_none(){return source.binding_work_demand(&self.source)}if self.target.is_none(){return target.binding_work_demand(&self.target)}if !self.initialized{return Ok(RetainedCloneRef::<RetainedOrderedMap<K,V>>::check_binding_work(&self.source)+1)}
+  match self.phase{
+   Phase::Birth if self.comparison.is_none()=>Ok(K::bounded_ord_birth_work_demand()),
+   Phase::Project if self.projection.terminal_is_empty()=>self.projection.work_demand(self.projected(source)?)?.checked_add(1+RetainedCloneRef::<RetainedOrderedMap<K,V>>::check_binding_work(&self.source)).ok_or_else(||invalid("projection Work overflow")),
+   Phase::Compare if self.comparison.as_ref().is_some_and(|c|c.ordering().is_none())=>self.comparison.as_ref().unwrap().compare_work_demand(self.projection.borrow()?,target,comparison,body),
+   Phase::Take if self.pending.is_none()=>Ok(self.comparison.as_ref().ok_or_else(||invalid("lookup lost comparator"))?.take_ordering_work_demand()),
+   Phase::Close=>{let c=self.comparison.as_ref().ok_or_else(||invalid("lookup close lost comparator"))?;if !c.close_started(){Ok(c.begin_close_work_demand())}else if !c.terminal_is_empty(){c.close_work_demand(body)}else{Ok(1)}},
+   Phase::Projection if !self.projection.terminal_is_empty()=>self.projection.close_work_demand(body),
+   _=>Ok(1)
+  }
+ }
+ fn child_quote(&self,operation:u8,g:BoundedOrdGrant,body:usize,target:Option<RetainedCloneRef<'_,K>>)->Result<(crate::RetirementDemand,u64),ValueError>{Ok(match operation{1=>(K::bounded_ord_birth_demand(),K::bounded_ord_birth_work_demand()),2=>{let c=self.comparison.as_ref().ok_or_else(||invalid("lookup quote lost comparator"))?;let l=self.projection.borrow()?;let r=target.ok_or_else(||invalid("lookup quote lost target"))?;(c.compare_demands(l,r,g,body)?,c.compare_work_demand(l,r,g,body)?)},3=>{let c=self.comparison.as_ref().ok_or_else(||invalid("lookup quote lost ordering"))?;(c.take_ordering_demand(),c.take_ordering_work_demand())},4=>{let c=self.comparison.as_ref().ok_or_else(||invalid("lookup quote lost close selector"))?;(c.begin_close_demand(),c.begin_close_work_demand())},5=>{let c=self.comparison.as_ref().ok_or_else(||invalid("lookup quote lost close child"))?;(c.close_demands(body)?,c.close_work_demand(body)?)},6=>(self.projection.close_demand(body)?,self.projection.close_work_demand(body)?),7|8=>{let b=if operation==7{&self.source}else{&self.target};(RetainedCloneBinding::close_demand(b,body)?,RetainedCloneBinding::close_work_demand(b,body)?)},_=>return Err(invalid("lookup quote has no selected child"))})}
+ fn child<'r>(&mut self,operation:u8,comparison:BoundedOrdGrant,body:usize,target:RetainedCloneRef<'_,K>,mut original:Option<&mut OriginalRetirementCloseLoan<'_>>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:Reply<'r>,recover:bool)->Result<Complete<'r>,ValueError>{
+  let invocation=effect.invocation().ok_or_else(||invalid("lookup child requires its original invocation"))?.identity();let loan=original.as_ref().map(|o|(o.ledger_identity(),o.retirement_recipient_identity()));if let Some(o)=original.as_deref_mut(){if !o.original_work().binding_identity()?.matches_effect(effect){return Err(invalid("lookup child changed its actual original Work"))}}
+  let selected=if recover{let route=self.route.ok_or_else(||invalid("lookup recovery lost its selected quote"))?;(route.6,route.7)}else{self.child_quote(operation,comparison,body,Some(target))?};let key=(invocation,operation,body,comparison,effect.grant(),loan,selected.0,selected.1);if recover&&self.route!=Some(key){return Err(invalid("lookup recovery changed its original child body or authority"))}if !recover&&self.route.is_some(){return Err(invalid("lookup child is already pending"))}
+  let mut scope=reply.progress().scope(&mut self.route,key)?;
+  let done=match operation{
+   1=>if recover{K::recover_admit_bounded_ord_cursor_into(&mut self.comparison,effect,scope.borrow()?)?}else{K::admit_bounded_ord_cursor_into(&mut self.comparison,effect,scope.borrow()?)?},
+   2=>{let left=self.projection.borrow()?;let c=self.comparison.as_mut().ok_or_else(||invalid("lookup comparator disappeared"))?;if recover{c.recover_compare_into(left,target,comparison,body,effect,scope.borrow()?)?}else{c.compare_into(left,target,comparison,body,effect,scope.borrow()?)?}},
+   3=>{let c=self.comparison.as_mut().ok_or_else(||invalid("lookup ordering disappeared"))?;if recover{c.recover_take_ordering_into(&mut self.pending,effect,scope.borrow()?)?}else{c.take_ordering_into(&mut self.pending,effect,scope.borrow()?)?}},
+   4=>{let c=self.comparison.as_mut().ok_or_else(||invalid("lookup close comparator disappeared"))?;if recover{c.recover_begin_close_into(effect,scope.borrow()?)?}else{c.begin_close_into(effect,scope.borrow()?)?}},
+   5=>{let c=self.comparison.as_mut().ok_or_else(||invalid("lookup close child disappeared"))?;match(original.as_deref_mut(),recover){(Some(o),false)=>c.close_original_into(o,body,effect,scope.borrow()?)?,(Some(o),true)=>c.recover_close_original_into(o,body,effect,scope.borrow()?)?,(None,false)=>c.close_into(body,effect,scope.borrow()?)?,(None,true)=>c.recover_close_into(body,effect,scope.borrow()?)?}},
+   6=>match(original.as_deref_mut(),recover){(Some(o),false)=>self.projection.close_original_into(o,body,effect,scope.borrow()?)?,(Some(o),true)=>self.projection.recover_close_original_into(o,body,effect,scope.borrow()?)?,(None,false)=>self.projection.close_into(body,effect,scope.borrow()?)?,(None,true)=>self.projection.recover_close_into(body,effect,scope.borrow()?)?},
+   7|8=>{let binding=if operation==7{&mut *self.source}else{&mut *self.target};match(original.as_deref_mut(),recover){(Some(o),false)=>RetainedCloneBinding::close_original_into(binding,o,body,effect,scope.borrow()?)?,(Some(o),true)=>RetainedCloneBinding::recover_close_original_into(binding,o,body,effect,scope.borrow()?)?,(None,false)=>RetainedCloneBinding::close_into(binding,body,effect,scope.borrow()?)?,(None,true)=>RetainedCloneBinding::recover_close_into(binding,body,effect,scope.borrow()?)?}},
+   _=>return Err(invalid("lookup selected an unknown child"))
+  };drop(done);Ok(scope.forwarded())
+ }
+ pub fn advance_into<'r,V>(&mut self,source:RetainedCloneRef<'_,RetainedOrderedMap<K,V>>,target:RetainedCloneRef<'_,K>,comparison:BoundedOrdGrant,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{
+  let d=match self.next_demand(source,target,comparison,body){Ok(d)=>d,Err(error)=>return Ok(reply.complete(Err(error.into())))};let work=match self.next_work_demand(source,target,comparison,body){Ok(work)=>work,Err(error)=>return Ok(reply.complete(Err(error.into())))};if self.route.is_some(){return Err(invalid("lookup requires recovery of its selected child"))}if self.complete.is_some()||self.taken{return Ok(reply.complete(Ok(RetainedCloneStep::Complete(Default::default()))))}if work==0||!permits(effect,d,work)?{return Ok(reply.complete(Ok(step(0))))}
+  if self.source.is_none(){let turn=source.bind(&mut self.source,effect);return Ok(reply.complete(turn.result.map(|p|RetainedCloneStep::Progress(p.unwrap_or_default())).map_err(Into::into)))}
+  if self.target.is_none(){let turn=target.bind(&mut self.target,effect);return Ok(reply.complete(turn.result.map(|p|RetainedCloneStep::Progress(p.unwrap_or_default())).map_err(Into::into)))}
+  if !self.initialized{if source.check_binding_paid(&self.source,effect).result?!=Some(true){return Err(invalid("lookup initialization lacks its original Source"))}if !effect.performed(1)?{return Err(invalid("lookup initialization lost original Work"))}self.high=source.get().len();self.initialized=true;return Ok(reply.complete(Ok(step(d.copy_bytes))))}
+  let operation=self.advance_operation();if operation!=0{return self.child(operation,comparison,body,target,None,effect,reply,false)}
+  if self.phase==Phase::Project&&self.projection.terminal_is_empty(){if source.check_binding_paid(&self.source,effect).result?!=Some(true){return Err(invalid("lookup projection lacks its original Source"))}if !effect.performed(1)?{return Err(invalid("lookup projection getter lost original Work"))}let key=self.projected(source)?;let mut native_reply=None;drop(self.projection.admit(key,effect,OriginalEffectReply::borrow(&mut native_reply)? )?);let result=native_reply.take().ok_or_else(||invalid("native projection admission failed to record"))?.map(|value|{let mut p=value.progress();p.copied_bytes=p.copied_bytes.checked_add(size_of::<RetainedCloneRef<'_,K>>()).expect("preflighted projection extent");RetainedCloneStep::Progress(p)}).map_err(Into::into);return Ok(reply.complete(result))}
+  if self.phase==Phase::Release&&self.comparison.is_some(){return self.release_comparator(effect,reply)}
+  self.native(d,effect,reply,|this|{match this.phase{
+   Phase::Select=>{if this.low==this.high{this.complete=Some(RetainedOrderedMapLookup::Missing(this.low))}else{this.middle=this.low+(this.high-this.low)/2;this.phase=Phase::Birth}},
+   Phase::Birth=>this.phase=Phase::Project,
+   Phase::Project=>this.phase=Phase::Compare,
+   Phase::Compare=>this.phase=Phase::Take,
+   Phase::Take=>{if this.pending.is_none(){return Err(invalid("lookup native transition lost its resident ordering"))}this.phase=Phase::Close},
+   Phase::Close=>this.phase=Phase::Release,
+   Phase::Release=>{this.phase=Phase::Projection;this.comparison_archived=false},
+   Phase::Projection=>this.phase=Phase::Transition,
+   Phase::Transition=>{let ordering=this.pending.take().ok_or_else(||invalid("lookup transition lost its ordering"))?;match ordering{Ordering::Equal=>this.complete=Some(RetainedOrderedMapLookup::Found(this.middle)),Ordering::Less=>this.low=this.middle.checked_add(1).ok_or_else(||invalid("lookup rank overflow"))?,Ordering::Greater=>this.high=this.middle}this.phase=Phase::Select}
+  }Ok(())})
+ }
+ pub fn recover_advance_into<'r,V>(&mut self,source:RetainedCloneRef<'_,RetainedOrderedMap<K,V>>,target:RetainedCloneRef<'_,K>,comparison:BoundedOrdGrant,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{self.validate(source,target)?;let route=self.route.ok_or_else(||invalid("lookup has no pending original child"))?;self.child(route.1,comparison,body,target,None,effect,reply,true)}
+ fn release_comparator<'r>(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{if !self.comparison_archived{let total=self.comparison_totals();let d=Self::archive_demand();if !permits(effect,d,1)?{return Ok(reply.complete(Ok(step(0))))}if !effect.performed(1)?{return Err(invalid("lookup comparison archive lost original Work"))}self.archived=total;self.comparison_archived=true;return Ok(reply.complete(Ok(step(d.copy_bytes))))}let witness=self.comparison.as_ref().ok_or_else(||invalid("lookup lost terminal comparator"))?.terminal_release().ok_or_else(||invalid("comparator lacks its explicit native terminal lifecycle"))?;let mut native_reply=None;drop(witness.inline_into(&mut self.comparison,effect,OriginalEffectReply::borrow(&mut native_reply)?)?);semio_framework_value_retirement::forward_original_value_reply(&mut native_reply,reply)}
+ pub fn outcome(&self)->Option<RetainedOrderedMapLookup>{self.complete}
+ pub fn take_output_demand(&self)->crate::RetirementDemand{physical(2*size_of::<Option<RetainedOrderedMapLookup>>()+size_of::<bool>())}
+ pub fn take_output_work_demand(&self)->u64{1}
+ pub fn take_output_into<'r>(&mut self,output:&mut Option<RetainedOrderedMapLookup>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{if self.route.is_some()||output.is_some()||self.complete.is_none(){return Err(invalid("lookup output is not vacant and ready"))}let d=self.take_output_demand();if !permits(effect,d,1)?{return Ok(reply.complete(Ok(step(0))))}if !effect.performed(1)?{return Err(invalid("lookup output transfer lost original Work"))}*output=self.complete.take();self.taken=true;Ok(reply.complete(Ok(step(d.copy_bytes))))}
+ pub fn recover_take_output_into<'r>(&mut self,_output:&mut Option<RetainedOrderedMapLookup>,_effect:&mut crate::RetainedAllocationEffect<'_>,_reply:Reply<'r>)->Result<Complete<'r>,ValueError>{Err(invalid("native lookup output transfer has no unrecorded callback"))}
+ pub fn close_started(&self)->bool{self.closing}
+ pub fn terminal_release(&self)->Option<semio_framework_value_retained_clone::RetainedCursorRelease<Self>>{self.terminal_is_empty().then(||unsafe{semio_framework_value_retained_clone::RetainedCursorRelease::native(Self::terminal_is_empty)})}
+ pub fn begin_close_demand(&self)->crate::RetirementDemand{physical(usize::from(!self.closing)*size_of::<bool>())}
+ pub fn begin_close_work_demand(&self)->u64{u64::from(!self.closing)}
+ pub fn begin_close_into<'r>(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{if self.route.is_some(){return Err(invalid("lookup must recover its original child before close"))}if self.closing{return Ok(reply.complete(Ok(step(0))))}let d=self.begin_close_demand();self.native(d,effect,reply,|this|{this.closing=true;Ok(())})}
+ pub fn recover_begin_close_into<'r>(&mut self,_effect:&mut crate::RetainedAllocationEffect<'_>,_reply:Reply<'r>)->Result<Complete<'r>,ValueError>{Err(invalid("native lookup close selection has no unrecorded callback"))}
+ fn close_operation(&self)->u8{if let Some(c)=self.comparison.as_ref(){if !c.close_started(){4}else if !c.terminal_is_empty(){5}else{0}}else if !self.projection.terminal_is_empty(){6}else if self.source.is_some(){7}else if self.target.is_some(){8}else{0}}
+ pub fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{if let Some(r)=self.route{if r.2!=body{return Err(invalid("lookup close quote changed its selected body"))}return Ok(r.6)}if let Some(c)=self.comparison.as_ref(){if !c.close_started(){Ok(c.begin_close_demand())}else if !c.terminal_is_empty(){c.close_demands(body)}else if self.comparison_archived{Ok(c.terminal_release().ok_or_else(||invalid("comparator lacks terminal lifecycle"))?.inline_demand())}else{Ok(Self::archive_demand())}}else if !self.projection.terminal_is_empty(){self.projection.close_demand(body)}else{RetainedCloneBinding::close_demand(if self.source.is_some(){&self.source}else{&self.target},body)}}
+ pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{self.close_demands(body)?;if let Some(route)=self.route{return Ok(route.7)}if let Some(c)=self.comparison.as_ref(){if !c.close_started(){Ok(c.begin_close_work_demand())}else if !c.terminal_is_empty(){c.close_work_demand(body)}else{Ok(1)}}else if !self.projection.terminal_is_empty(){self.projection.close_work_demand(body)}else{RetainedCloneBinding::close_work_demand(if self.source.is_some(){&self.source}else{&self.target},body)}}
+ fn close_selected<'r>(&mut self,mut original:Option<&mut OriginalRetirementCloseLoan<'_>>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:Reply<'r>,recover:bool)->Result<Complete<'r>,ValueError>{if let Some(o)=original.as_deref_mut(){if !o.original_work().binding_identity()?.matches_effect(effect){return Err(invalid("lookup close changed its actual original Work"))}}if !self.closing{return Err(invalid("lookup must begin paid close"))}let operation=if recover{self.route.ok_or_else(||invalid("lookup close has no pending child"))?.1}else{self.close_operation()};if operation==0{if self.comparison.is_some(){return self.release_comparator(effect,reply)}return Ok(reply.complete(Ok(RetainedCloneStep::Complete(Default::default()))))}let invocation=effect.invocation().ok_or_else(||invalid("lookup close requires original invocation"))?.identity();let loan=original.as_ref().map(|o|(o.ledger_identity(),o.retirement_recipient_identity()));let selected=if recover{let route=self.route.ok_or_else(||invalid("lookup close recovery lost its quote"))?;(route.6,route.7)}else{self.child_quote(operation,BoundedOrdGrant::default(),body,None)?};let key=(invocation,operation,body,BoundedOrdGrant::default(),effect.grant(),loan,selected.0,selected.1);if recover&&self.route!=Some(key){return Err(invalid("lookup close recovery changed its original route"))}if !recover&&self.route.is_some(){return Err(invalid("lookup close requires its actual recovery"))}let mut scope=reply.progress().scope(&mut self.route,key)?;let done=match operation{
+  4=>{let c=self.comparison.as_mut().unwrap();if recover{c.recover_begin_close_into(effect,scope.borrow()?)?}else{c.begin_close_into(effect,scope.borrow()?)?}},
+  5=>{let c=self.comparison.as_mut().unwrap();match(original,recover){(Some(o),false)=>c.close_original_into(o,body,effect,scope.borrow()?)?,(Some(o),true)=>c.recover_close_original_into(o,body,effect,scope.borrow()?)?,(None,false)=>c.close_into(body,effect,scope.borrow()?)?,(None,true)=>c.recover_close_into(body,effect,scope.borrow()?)?}},
+  6=>match(original,recover){(Some(o),false)=>self.projection.close_original_into(o,body,effect,scope.borrow()?)?,(Some(o),true)=>self.projection.recover_close_original_into(o,body,effect,scope.borrow()?)?,(None,false)=>self.projection.close_into(body,effect,scope.borrow()?)?,(None,true)=>self.projection.recover_close_into(body,effect,scope.borrow()?)?},
+  7|8=>{let binding=if operation==7{&mut*self.source}else{&mut*self.target};match(original,recover){(Some(o),false)=>RetainedCloneBinding::close_original_into(binding,o,body,effect,scope.borrow()?)?,(Some(o),true)=>RetainedCloneBinding::recover_close_original_into(binding,o,body,effect,scope.borrow()?)?,(None,false)=>RetainedCloneBinding::close_into(binding,body,effect,scope.borrow()?)?,(None,true)=>RetainedCloneBinding::recover_close_into(binding,body,effect,scope.borrow()?)?}},
+  _=>return Err(invalid("lookup close selected unknown child"))
+ };drop(done);Ok(scope.forwarded())}
+ pub fn close_into<'r>(&mut self,b:usize,e:&mut crate::RetainedAllocationEffect<'_>,r:Reply<'r>)->Result<Complete<'r>,ValueError>{self.close_selected(None,b,e,r,false)}
+ pub fn recover_close_into<'r>(&mut self,b:usize,e:&mut crate::RetainedAllocationEffect<'_>,r:Reply<'r>)->Result<Complete<'r>,ValueError>{self.close_selected(None,b,e,r,true)}
+ pub fn close_original_into<'r>(&mut self,o:&mut OriginalRetirementCloseLoan<'_>,b:usize,e:&mut crate::RetainedAllocationEffect<'_>,r:Reply<'r>)->Result<Complete<'r>,ValueError>{self.close_selected(Some(o),b,e,r,false)}
+ pub fn recover_close_original_into<'r>(&mut self,o:&mut OriginalRetirementCloseLoan<'_>,b:usize,e:&mut crate::RetainedAllocationEffect<'_>,r:Reply<'r>)->Result<Complete<'r>,ValueError>{self.close_selected(Some(o),b,e,r,true)}
+ pub fn requires_original_birth(&self)->bool{if self.route.is_some(){return false}if let Some(c)=self.comparison.as_ref(){return c.requires_original_birth()}if !self.projection.terminal_is_empty(){return self.projection.requires_original_birth()}RetainedCloneBinding::requires_original_birth(if self.source.is_some(){&self.source}else{&self.target})}
+ pub fn requires_original_control(&self)->bool{if let Some(c)=self.comparison.as_ref(){return c.requires_original_control()}if !self.projection.terminal_is_empty(){return self.projection.requires_original_control()}RetainedCloneBinding::requires_original_control(if self.source.is_some(){&self.source}else{&self.target})}
+ pub fn close_original_birth_step(&mut self,o:&mut OriginalRetirementCloseLoan<'_>,g:RetainedCloneGrant)->crate::OriginalRetirementPoll{if let Some(c)=self.comparison.as_mut(){return c.close_original_birth_step(o,g)}if !self.projection.terminal_is_empty(){return self.projection.close_original_birth_step(o,g)}RetainedCloneBinding::close_original_birth_step(if self.source.is_some(){&mut self.source}else{&mut self.target},o,g)}
+ pub fn terminal_is_empty(&self)->bool{self.comparison.is_none()&&self.projection.terminal_is_empty()&&self.source.is_none()&&self.target.is_none()&&self.route.is_none()}
 }
+impl<K:BoundedOrd> Drop for RetainedOrderedMapLookupCursor<K>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(empty||std::thread::panicking(),"retained lookup requires paid close");if empty{unsafe{ManuallyDrop::drop(&mut self.comparison);ManuallyDrop::drop(&mut self.projection);ManuallyDrop::drop(&mut self.source);ManuallyDrop::drop(&mut self.target)}}}}

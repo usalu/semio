@@ -1,0 +1,5 @@
+{
+  "mutation": "changeelementadjacency",
+  "elementId": "ghost",
+  "newAdjacency": "Unheated"
+}

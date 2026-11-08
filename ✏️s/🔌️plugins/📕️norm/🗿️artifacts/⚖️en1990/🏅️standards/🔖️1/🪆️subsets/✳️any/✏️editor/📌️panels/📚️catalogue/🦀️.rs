@@ -111,6 +111,11 @@ fn importance_gamma_i() -> CatalogueTable {
     }
 }
 
+/// 🧪️ Verification-case catalogue of EN 1990, each entry evaluated once on its example inputs.
+pub fn verification_table(locale: semio_ui_locale::Locale) -> CatalogueTable {
+    semio_s_plugin_norm_app_surface::verification_catalogue_table::<semio_s_artifact_norm_en1990_checks::catalogue::En1990Cases>("EN 1990", semio_s_plugin_norm_compliance::AnnexChoice::En, "", locale)
+}
+
 pub fn render(
     examples: Vec<semio_plugin::ExampleSource>,
     locale: semio_ui_locale::Locale,
@@ -119,6 +124,7 @@ pub fn render(
 ) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let mut tables = reference_tables();
     tables.push(semio_s_plugin_norm_app_surface::case_catalogue_table("en1990", &<semio_s_artifact_norm_en1990_checks::catalogue::En1990Cases as semio_s_plugin_norm_compliance::design_case::CaseCatalogue>::entries(), "", locale));
+    tables.push(verification_table(locale));
     semio_s_plugin_norm_app_surface::render_catalogue(&examples, &tables, locale, controller_id, windows)
 }
 

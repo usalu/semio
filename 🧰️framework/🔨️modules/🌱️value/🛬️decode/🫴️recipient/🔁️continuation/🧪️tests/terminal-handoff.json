@@ -1,0 +1,82 @@
+[
+  {
+    "sameRecipient": true,
+    "sameWork": true,
+    "settled": true,
+    "empty": true,
+    "free": true,
+    "grant": true,
+    "work": true,
+    "moved": true
+  },
+  {
+    "sameRecipient": false,
+    "sameWork": true,
+    "settled": true,
+    "empty": true,
+    "free": true,
+    "grant": true,
+    "work": true,
+    "moved": false
+  },
+  {
+    "sameRecipient": true,
+    "sameWork": false,
+    "settled": true,
+    "empty": true,
+    "free": true,
+    "grant": true,
+    "work": true,
+    "moved": false
+  },
+  {
+    "sameRecipient": true,
+    "sameWork": true,
+    "settled": false,
+    "empty": true,
+    "free": true,
+    "grant": true,
+    "work": true,
+    "moved": false
+  },
+  {
+    "sameRecipient": true,
+    "sameWork": true,
+    "settled": true,
+    "empty": false,
+    "free": true,
+    "grant": true,
+    "work": true,
+    "moved": false
+  },
+  {
+    "sameRecipient": true,
+    "sameWork": true,
+    "settled": true,
+    "empty": true,
+    "free": false,
+    "grant": true,
+    "work": true,
+    "moved": false
+  },
+  {
+    "sameRecipient": true,
+    "sameWork": true,
+    "settled": true,
+    "empty": true,
+    "free": true,
+    "grant": false,
+    "work": true,
+    "moved": false
+  },
+  {
+    "sameRecipient": true,
+    "sameWork": true,
+    "settled": true,
+    "empty": true,
+    "free": true,
+    "grant": true,
+    "work": false,
+    "moved": false
+  }
+]

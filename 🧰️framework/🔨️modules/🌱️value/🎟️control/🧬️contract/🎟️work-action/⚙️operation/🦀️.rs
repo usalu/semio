@@ -7,7 +7,10 @@ impl OriginalWorkState{
  fn vacant()->Self{Self{baseline:0,quote_pending:false,scope:None,action:None}}
  pub fn take(&mut self)->Self{std::mem::replace(self,Self::vacant())}
  fn clear(&mut self){self.quote_pending=false}
+ pub(crate) fn scope_identity(&self)->Option<super::OriginalWorkScopeIdentity>{self.scope.as_ref().map(OriginalWorkScope::identity)}
  pub fn has_live_actions(&self)->bool{self.scope.as_ref().is_some_and(OriginalWorkScope::has_live_actions)}
+ /// 🪪️ Checks that the single live action is the actual retained reservation.
+ pub fn owns_only_action(&self,identity:OriginalWorkActionIdentity)->bool{self.scope.as_ref().is_some_and(|scope|scope.open==1)&&self.action_identity()==Some(identity)}
  pub fn begin_turn(&mut self){self.baseline=self.actual()}
  pub fn quote_pending(&self)->bool{self.quote_pending}
  pub fn actual(&self)->u128{self.scope.as_ref().map_or(0,OriginalWorkScope::actual_work)}
@@ -36,6 +39,7 @@ impl OriginalWorkPerformedIdentity{
 /// 🧾️ Caller-owned evidence of actual work against one original issued action.
 pub struct OriginalWorkPerformedReceipt{identity:OriginalWorkActionIdentity,serial:u64,source_turn:Option<crate::OriginalSourceTurnIdentity>,base:u128,ceiling:u64,delta:u128,unaccounted:Option<u64>,performed:bool,claimed:bool}
 impl OriginalWorkPerformedReceipt{
+ pub(super) fn narrow_remaining(&mut self,maximum:u128){let ceiling=self.base.checked_add(self.delta).and_then(|used|used.checked_add(maximum)).and_then(|total|u64::try_from(total).ok()).unwrap_or(u64::MAX);self.ceiling=self.ceiling.min(ceiling)}
  /// 🪪️ Identifies this original performed-work receipt.
  pub fn identity(&self)->OriginalWorkPerformedIdentity{OriginalWorkPerformedIdentity{action:self.identity,serial:self.serial}}
  /// ⏱️ Observes the exact staged work before the receipt is claimed.
@@ -55,6 +59,7 @@ impl OriginalWorkSink for OriginalWorkPerformedReceipt{
  fn identity(&self)->OriginalWorkPerformedIdentity{OriginalWorkPerformedReceipt::identity(self)}
  fn source_turn(&self)->Option<crate::OriginalSourceTurnIdentity>{self.source_turn}
 }
+semio_framework_value_control_reply::original_work_lender_engine!();
 /// 🧵️ Borrows one original work owner without exposing or replacing its state or issuer.
 pub struct OriginalWorkTurn<'turn,'source>{original:&'turn mut OriginalWork<'source>}
 impl<'turn,'source> OriginalWorkTurn<'turn,'source>{
@@ -62,6 +67,8 @@ impl<'turn,'source> OriginalWorkTurn<'turn,'source>{
  pub fn new(original:&'turn mut OriginalWork<'source>)->Self{Self{original}}
  /// 📊️ Observes the original committed work count.
  pub fn actual(&self)->u128{self.original.actual()}
+ /// 🏭️ Issues construction only through this same original Work owner.
+ pub fn begin_construction(&mut self,loan:&mut crate::OriginalConstructionLoan<'_>,demand:crate::RetirementDemand,action:&mut Option<crate::OriginalConstructionAction>)->Result<(),ValueError>{loan.begin(demand,action,&crate::OriginalWorkBorrow::new(self.original))}
  /// 🎟️ Begins or recovers the same issuer-bound action in its caller-owned slot.
  pub fn prepare(&mut self,amount:u64,action:&mut Option<OriginalWorkActionIdentity>)->Result<Option<bool>,ValueError>{self.original.prepare_for_action(amount,action)}
  /// 📊️ Reads claimed work from the same original action.
@@ -81,10 +88,16 @@ impl<'turn,'source> OriginalWorkTurn<'turn,'source>{
  pub fn commit(&mut self,actual:u128,action:Option<OriginalWorkActionIdentity>,proof:&mut Option<OriginalWorkActionProof>)->Result<bool,ValueError>{self.original.commit_for_action(actual,action,proof)}
  /// 🔎️ Validates an existing proof against this same original issuer and scope.
  pub fn validates(&self,proof:&OriginalWorkActionProof,actual:u128)->Result<bool,ValueError>{self.original.validates(proof,actual)}
+ /// 🔎️ Validates the retained finished proof against the same original Source and scope.
+ pub fn validates_finished(&self,proof:&OriginalWorkActionProof,actual:u128)->Result<bool,ValueError>{self.original.validates_finished(proof,actual)}
  /// ↩️ Cancels only the same original outstanding action.
  pub fn cancel(&mut self,action:&mut Option<OriginalWorkActionIdentity>)->Result<(),ValueError>{self.original.cancel_for_action(action)}
  /// 🏁️ Returns the proof to the same original issuer.
  pub fn finish(&mut self,proof:&mut Option<OriginalWorkActionProof>,action:&mut Option<OriginalWorkActionIdentity>)->Result<(),ValueError>{self.original.finish_for_action(proof,action)}
+ /// 🧾️ Returns this action while retaining its genuine proof in the same slot.
+ pub fn finish_retained(&mut self,proof:&mut Option<OriginalWorkActionProof>,action:&mut Option<OriginalWorkActionIdentity>)->Result<(),ValueError>{self.original.finish_retained_for_action(proof,action)}
+ /// 🔓️ Publishes a completion only through this same original Work owner and proof.
+ pub fn publish_construction_completion(&mut self,loan:&crate::OriginalConstructionLoan<'_>,completion:&mut crate::OriginalConstructionCompletion,payout:&mut crate::OriginalConstructionAction,proof:&OriginalWorkActionProof)->Result<bool,ValueError>{loan.publish_completion(completion,payout,&crate::OriginalWorkBorrow::new(self.original),proof)}
 }
 pub struct OriginalWork<'a>{pub state:OriginalWorkState,pub recipient:Option<&'a mut OriginalWorkLoan<'a>>}
 impl std::ops::Deref for OriginalWork<'_>{type Target=OriginalWorkState;fn deref(&self)->&OriginalWorkState{&self.state}}
@@ -111,6 +124,10 @@ impl OriginalWork<'_>{
  }
  pub fn cancel_for_action(&mut self,action:&mut Option<OriginalWorkActionIdentity>)->Result<(),ValueError>{if action.is_none()||*action!=self.state.action_identity(){return Err(invalid())}if self.quote_pending{if !self.same_issuer(){return Err(invalid())}self.cancel_action()?}else{self.cancel()?}*action=None;Ok(())}
  pub fn commit_for_action(&mut self,actual:u128,action:Option<OriginalWorkActionIdentity>,output:&mut Option<OriginalWorkActionProof>)->Result<bool,ValueError>{if action.is_none()||action!=self.state.action_identity(){return Err(invalid())}self.commit_retained(actual,output)}
+ /// 🧾️ Returns the live action in place while preserving its exact original proof.
+ pub fn finish_retained_for_action(&mut self,proof:&mut Option<OriginalWorkActionProof>,action:&mut Option<OriginalWorkActionIdentity>)->Result<(),ValueError>{if action.is_none()||proof.as_ref().map(OriginalWorkActionProof::action_identity)!=*action{return Err(invalid())}let loan=self.recipient.as_deref_mut().ok_or_else(invalid)?;let scope=self.state.scope.as_mut().ok_or_else(invalid)?;loan.finish_retained(scope,proof)?;*action=None;Ok(())}
+ /// 🔎️ Validates the returned nonclone proof against the live original Source and scope.
+ pub fn validates_finished(&self,proof:&OriginalWorkActionProof,actual:u128)->Result<bool,ValueError>{let loan=self.recipient.as_ref().ok_or_else(invalid)?;let scope=self.state.scope.as_ref().ok_or_else(invalid)?;loan.validates_finished(scope,proof,actual)}
  pub fn finish_for_action(&mut self,proof:&mut Option<OriginalWorkActionProof>,action:&mut Option<OriginalWorkActionIdentity>)->Result<(),ValueError>{if action.is_none()||proof.as_ref().map(OriginalWorkActionProof::action_identity)!=*action{return Err(invalid())}self.finish_proof(proof)?;*action=None;Ok(())}
  pub fn prepare(&mut self,additional:u64,output:Option<&mut Option<OriginalWorkActionIdentity>>)->Result<bool,ValueError>{
   if self.state.action.is_some()||output.as_ref().is_some_and(|slot|slot.is_some()){return Err(invalid())}

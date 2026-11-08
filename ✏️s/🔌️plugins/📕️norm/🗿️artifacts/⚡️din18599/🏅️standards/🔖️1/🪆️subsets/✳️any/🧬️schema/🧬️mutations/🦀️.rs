@@ -31,9 +31,31 @@ use semio_s_artifact_norm_din18599_mut_systems::update_ventilation;
 use semio_s_artifact_norm_din18599_mut_systems::update_cooling;
 use semio_s_artifact_norm_din18599_mut_systems::update_lighting;
 use semio_s_artifact_norm_din18599_mut_systems::update_renewables;
-use semio_s_artifact_norm_din18599_mut_zoning::replace_zones;
-use semio_s_artifact_norm_din18599_mut_zoning::replace_elements;
 use semio_s_artifact_norm_din18599_mut_zoning::change_element_u;
+use semio_s_artifact_norm_din18599_mut_zone_rows::insert_zone;
+use semio_s_artifact_norm_din18599_mut_zone_rows::remove_zone;
+use semio_s_artifact_norm_din18599_mut_zone_rows::change_zone_label_en;
+use semio_s_artifact_norm_din18599_mut_zone_rows::change_zone_label_de;
+use semio_s_artifact_norm_din18599_mut_zone_rows::change_zone_usage_profile;
+use semio_s_artifact_norm_din18599_mut_zone_rows::change_zone_occupants;
+use semio_s_artifact_norm_din18599_mut_zone_fields::change_zone_area_m2;
+use semio_s_artifact_norm_din18599_mut_zone_fields::change_zone_volume_m3;
+use semio_s_artifact_norm_din18599_mut_zone_fields::change_zone_theta_i_heat_c;
+use semio_s_artifact_norm_din18599_mut_zone_fields::change_zone_theta_i_cool_c;
+use semio_s_artifact_norm_din18599_mut_zone_fields::change_zone_internal_gains_w_m2;
+use semio_s_artifact_norm_din18599_mut_zone_fields::change_zone_lighting_power_w_m2;
+use semio_s_artifact_norm_din18599_mut_element_rows::insert_element;
+use semio_s_artifact_norm_din18599_mut_element_rows::remove_element;
+use semio_s_artifact_norm_din18599_mut_element_rows::change_element_label_en;
+use semio_s_artifact_norm_din18599_mut_element_rows::change_element_label_de;
+use semio_s_artifact_norm_din18599_mut_element_rows::change_element_kind;
+use semio_s_artifact_norm_din18599_mut_element_rows::change_element_zone_id;
+use semio_s_artifact_norm_din18599_mut_element_fields::change_element_area_m2;
+use semio_s_artifact_norm_din18599_mut_element_fields::change_element_orientation_deg;
+use semio_s_artifact_norm_din18599_mut_element_fields::change_element_tilt_deg;
+use semio_s_artifact_norm_din18599_mut_element_fields::change_element_g_value;
+use semio_s_artifact_norm_din18599_mut_element_fields::change_element_fc;
+use semio_s_artifact_norm_din18599_mut_element_fields::change_element_adjacency;
 use semio_s_artifact_norm_din18599_mut_zoning::update_climate;
 //#endregion 🔖️Leaves
 
@@ -61,8 +83,30 @@ pub enum Din18599Mutation {
     UpdateCooling(update_cooling::UpdateCooling),
     UpdateLighting(update_lighting::UpdateLighting),
     UpdateRenewables(update_renewables::UpdateRenewables),
-    ReplaceZones(replace_zones::ReplaceZones),
-    ReplaceElements(replace_elements::ReplaceElements),
+    InsertZone(insert_zone::InsertZone),
+    RemoveZone(remove_zone::RemoveZone),
+    ChangeZoneLabelEn(change_zone_label_en::ChangeZoneLabelEn),
+    ChangeZoneLabelDe(change_zone_label_de::ChangeZoneLabelDe),
+    ChangeZoneUsageProfile(change_zone_usage_profile::ChangeZoneUsageProfile),
+    ChangeZoneOccupants(change_zone_occupants::ChangeZoneOccupants),
+    ChangeZoneAreaM2(change_zone_area_m2::ChangeZoneAreaM2),
+    ChangeZoneVolumeM3(change_zone_volume_m3::ChangeZoneVolumeM3),
+    ChangeZoneThetaIHeatC(change_zone_theta_i_heat_c::ChangeZoneThetaIHeatC),
+    ChangeZoneThetaICoolC(change_zone_theta_i_cool_c::ChangeZoneThetaICoolC),
+    ChangeZoneInternalGainsWM2(change_zone_internal_gains_w_m2::ChangeZoneInternalGainsWM2),
+    ChangeZoneLightingPowerWM2(change_zone_lighting_power_w_m2::ChangeZoneLightingPowerWM2),
+    InsertElement(insert_element::InsertElement),
+    RemoveElement(remove_element::RemoveElement),
+    ChangeElementLabelEn(change_element_label_en::ChangeElementLabelEn),
+    ChangeElementLabelDe(change_element_label_de::ChangeElementLabelDe),
+    ChangeElementKind(change_element_kind::ChangeElementKind),
+    ChangeElementZoneId(change_element_zone_id::ChangeElementZoneId),
+    ChangeElementAreaM2(change_element_area_m2::ChangeElementAreaM2),
+    ChangeElementOrientationDeg(change_element_orientation_deg::ChangeElementOrientationDeg),
+    ChangeElementTiltDeg(change_element_tilt_deg::ChangeElementTiltDeg),
+    ChangeElementGValue(change_element_g_value::ChangeElementGValue),
+    ChangeElementFc(change_element_fc::ChangeElementFc),
+    ChangeElementAdjacency(change_element_adjacency::ChangeElementAdjacency),
     ChangeElementU(change_element_u::ChangeElementU),
     UpdateClimate(update_climate::UpdateClimate),
 }
@@ -83,8 +127,30 @@ pub const KINDS: &[&str] = &[
     "update-cooling",
     "update-lighting",
     "update-renewables",
-    "replace-zones",
-    "replace-elements",
+    "insert-zone",
+    "remove-zone",
+    "change-zone-label-en",
+    "change-zone-label-de",
+    "change-zone-usage-profile",
+    "change-zone-occupants",
+    "change-zone-area-m2",
+    "change-zone-volume-m3",
+    "change-zone-theta-i-heat-c",
+    "change-zone-theta-i-cool-c",
+    "change-zone-internal-gains-w-m2",
+    "change-zone-lighting-power-w-m2",
+    "insert-element",
+    "remove-element",
+    "change-element-label-en",
+    "change-element-label-de",
+    "change-element-kind",
+    "change-element-zone-id",
+    "change-element-area-m2",
+    "change-element-orientation-deg",
+    "change-element-tilt-deg",
+    "change-element-g-value",
+    "change-element-fc",
+    "change-element-adjacency",
     "change-element-u",
     "update-climate",
 ];

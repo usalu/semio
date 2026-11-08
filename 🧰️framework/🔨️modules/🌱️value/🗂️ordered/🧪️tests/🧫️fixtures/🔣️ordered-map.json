@@ -620,6 +620,14 @@
       "canonicalSource": "[\"雪😀\",\"retained\"]",
       "expectedMissingReleaseDemands": 0,
       "terminalDropReleasedBytes": 0
+    },
+    "nativeLayout": {
+      "wordBytes": 8,
+      "vectorWords": 3,
+      "optionVectorBytes": 24,
+      "mixedResidentHeaders": 2,
+      "mixedPayloadCopyBytes": 1,
+      "mixedPhysicalCopyBytes": 49
     }
   }
 }

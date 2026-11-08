@@ -1,0 +1,12 @@
+{
+  "mutation": "insertFireInsulation",
+  "index": 0,
+  "fireInsulation": {
+    "id": "fire-insulation-1",
+    "fireId": "fire-1",
+    "thickness": 0.02,
+    "conductivity": 0.2,
+    "specificHeat": 1200.0,
+    "density": 800.0
+  }
+}

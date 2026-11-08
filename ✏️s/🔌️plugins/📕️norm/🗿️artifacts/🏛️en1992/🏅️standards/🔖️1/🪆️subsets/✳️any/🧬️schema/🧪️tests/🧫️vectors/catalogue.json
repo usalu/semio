@@ -1397,6 +1397,2888 @@
    },
    "list": {},
    "tol": 1e-06
+  },
+  {
+   "id": "A-03",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "l_m": 6.0,
+    "m": 2.0,
+    "n_ed": 1000000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "A-03",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "l_m": 3.0,
+    "m": 1.0,
+    "l0": 2800.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "A-03",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "l_m": 12.0,
+    "m": 4.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "A-04",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "bw": 300.0,
+    "l0": 6000.0
+   },
+   "list": {
+    "b_i": [
+     900.0,
+     1200.0
+    ]
+   },
+   "text": {}
+  },
+  {
+   "id": "A-04",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "bw": 300.0,
+    "l0": 2000.0
+   },
+   "list": {
+    "b_i": [
+     100.0,
+     150.0
+    ]
+   },
+   "text": {}
+  },
+  {
+   "id": "A-05",
+   "annex": "De",
+   "tol": 1e-05,
+   "num": {
+    "b": 300.0,
+    "h": 600.0,
+    "d": 550.0,
+    "as": 1800.0,
+    "fck": 30.0,
+    "m": 200000000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "A-06",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "xu_d": 0.3,
+    "delta": 0.8
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "A-06",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "xu_d": 0.3,
+    "delta": 0.8
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "A-06",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 60.0,
+    "xu_d": 0.25,
+    "delta": 0.9
+   },
+   "text": {
+    "steel_class": "A"
+   },
+   "list": {}
+  },
+  {
+   "id": "A-07",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "xu_d": 0.2,
+    "theta_pl": 0.005,
+    "b": 300.0,
+    "h": 500.0,
+    "d": 450.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "A-07",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 60.0,
+    "xu_d": 0.2,
+    "theta_pl": 0.005,
+    "b": 300.0,
+    "h": 500.0,
+    "d": 450.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "A-08",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "e_d": 5000000.0,
+    "r_m": 7000000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "A-08",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "e_d": 4000000.0,
+    "r_m": 7000000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "A-09",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "b": 400.0,
+    "h": 400.0,
+    "n_ed": 1500000.0,
+    "l0": 5000.0,
+    "phi_ef": 1.5,
+    "as": 1600.0,
+    "rm": 0.4
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "A-09",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "b": 400.0,
+    "h": 400.0,
+    "n_ed": 1500000.0,
+    "k1": 0.3,
+    "k2": 0.5,
+    "l": 4000.0,
+    "lambda_y": 40.0,
+    "lambda_z": 30.0
+   },
+   "text": {
+    "bracing": "braced"
+   },
+   "list": {}
+  },
+  {
+   "id": "A-09",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "b": 400.0,
+    "h": 400.0,
+    "n_ed": 1500000.0,
+    "k1": 0.2,
+    "k2": 0.4,
+    "l": 4000.0
+   },
+   "text": {
+    "bracing": "unbraced"
+   },
+   "list": {}
+  },
+  {
+   "id": "A-11",
+   "annex": "De",
+   "tol": 1e-05,
+   "num": {
+    "fck": 30.0,
+    "b": 400.0,
+    "h": 400.0,
+    "n_ed": 1500000.0,
+    "l0": 5000.0,
+    "as": 1600.0,
+    "is_moment": 30000000.0,
+    "phi_ef": 1.2,
+    "m_0ed": 80000000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "A-11",
+   "annex": "En",
+   "tol": 1e-05,
+   "num": {
+    "fck": 30.0,
+    "b": 400.0,
+    "h": 400.0,
+    "n_ed": 1500000.0,
+    "l0": 4000.0,
+    "as": 400.0,
+    "is_moment": 10000000.0,
+    "m_0ed": 60000000.0,
+    "c0": 9.6
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "A-12",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "n_rd": 2000000.0,
+    "m_rdy": 150000.0,
+    "m_rdz": 120000.0,
+    "n_ed": 800000.0,
+    "m_edy": 60000.0,
+    "m_edz": 50000.0,
+    "amp_y": 1.2,
+    "amp_z": 1.1
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "A-14",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "f_v_ed": 1200000.0,
+    "sum_ecd_ic": 3e+16,
+    "l": 30000.0,
+    "n_s": 8.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "A-14",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "f_v_ed": 3000000.0,
+    "sum_ecd_ic": 3e+16,
+    "l": 30000.0,
+    "n_s": 3.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "BR-01",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 45.0,
+    "prestressed": 1.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "BR-01",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "fck": 80.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "BR-02",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 35.0,
+    "phi": 20.0,
+    "design_life": 100.0,
+    "c_provided": 60.0
+   },
+   "text": {
+    "exposure": "XD3"
+   },
+   "list": {}
+  },
+  {
+   "id": "BR-02",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "fck": 45.0,
+    "phi": 25.0,
+    "precast": 1.0,
+    "c_provided": 55.0
+   },
+   "text": {
+    "exposure": "XC4"
+   },
+   "list": {}
+  },
+  {
+   "id": "BR-03",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "bw": 300.0,
+    "z": 405.0,
+    "v_ed": 200000.0,
+    "bi": 800.0,
+    "sigma_n": 0.5,
+    "rho": 0.003
+   },
+   "text": {
+    "roughness": "rough"
+   },
+   "list": {}
+  },
+  {
+   "id": "BR-04",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "lambda1": 0.8,
+    "lambda2": 1.1,
+    "lambda3": 0.9,
+    "lambda4": 1.0,
+    "delta_sigma_71": 70.0,
+    "delta_sigma_tendon": 90.0
+   },
+   "text": {
+    "kind": "straight",
+    "tendon_kind": "post_curved_steel"
+   },
+   "list": {}
+  },
+  {
+   "id": "BR-05",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "b": 1000.0,
+    "h": 400.0,
+    "wk": 0.25,
+    "n_ed": 0.0,
+    "act": 200000.0,
+    "fyk": 500.0
+   },
+   "text": {
+    "exposure": "XC4"
+   },
+   "list": {}
+  },
+  {
+   "id": "BR-05",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "b": 1000.0,
+    "h": 400.0,
+    "act": 200000.0,
+    "prestressed_bonded": 1.0
+   },
+   "text": {
+    "exposure": "XC1"
+   },
+   "list": {}
+  },
+  {
+   "id": "BR-06",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "m_total": 900000000.0,
+    "p": 2000000.0,
+    "e_p": 300.0,
+    "sag": 0.2,
+    "l": 8.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "BR-07",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 35.0,
+    "d": 250.0,
+    "h": 300.0,
+    "q_wheel": 300000.0,
+    "wheel_print": 400.0,
+    "rho_ly": 0.01,
+    "rho_lz": 0.01
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "BR-07",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "fck": 35.0,
+    "d": 250.0,
+    "h": 300.0,
+    "q_wheel": 300000.0,
+    "rho_ly": 0.01,
+    "rho_lz": 0.01
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "BR-08",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "hef": 120.0,
+    "cracked": 1.0,
+    "dense_reinforcement": 0.0,
+    "b": 800.0,
+    "h": 800.0,
+    "n_ed": 3000000.0,
+    "l0": 9000.0,
+    "as": 2000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "LQ-01",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "class": 1.0,
+    "hd_over_h": 20.0,
+    "h": 400.0,
+    "wk": 0.1
+   },
+   "text": {
+    "exposure": "XC2"
+   },
+   "list": {}
+  },
+  {
+   "id": "LQ-01",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "class": 3.0,
+    "hd_over_h": 40.0,
+    "h": 150.0,
+    "x_compression": 40.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "LQ-01",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "class": 0.0,
+    "hd_over_h": 1.0,
+    "wk": 0.25
+   },
+   "text": {
+    "exposure": "XC1"
+   },
+   "list": {}
+  },
+  {
+   "id": "LQ-02",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "rax": 0.6,
+    "eps_ca": 5e-05,
+    "eps_cd": 1e-05,
+    "alpha_c": 1e-05,
+    "delta_t": 15.0,
+    "sr_max": 400.0,
+    "wk_lim": 0.2
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "LQ-02",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "rax": 0.8,
+    "eps_free": 0.00015,
+    "sr_max": 350.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "LQ-03",
+   "annex": "De",
+   "tol": 1e-05,
+   "num": {
+    "fck": 30.0,
+    "b": 1000.0,
+    "h": 400.0,
+    "d": 350.0,
+    "as": 2000.0,
+    "c": 40.0,
+    "phi": 16.0,
+    "m_qp": 120000000.0,
+    "alpha_e": 6.5,
+    "class": 1.0,
+    "hd_over_h": 10.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "LQ-04",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "wk": 0.15,
+    "hd_over_h": 3.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "LQ-04",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "wk": 0.15,
+    "hd_over_h": 12.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "LQ-05",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 35.0,
+    "phi": 16.0,
+    "design_life": 50.0,
+    "c_provided": 55.0
+   },
+   "text": {
+    "exposure": "XC4"
+   },
+   "list": {}
+  },
+  {
+   "id": "LQ-05",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "fck": 35.0,
+    "phi": 16.0,
+    "c_provided": 55.0
+   },
+   "text": {
+    "exposure": "XC4"
+   },
+   "list": {}
+  },
+  {
+   "id": "LQ-06",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "pressure": 0.5,
+    "radius": 8000.0,
+    "t": 300.0,
+    "pm_t_per_m": 6000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "FA-01",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "n_ed": 40000.0,
+    "m_x": 6000000.0,
+    "m_y": 2000000.0,
+    "v_ed": 20000.0
+   },
+   "list": {
+    "ax": [
+     -100.0,
+     100.0,
+     -100.0,
+     100.0
+    ],
+    "ay": [
+     -75.0,
+     -75.0,
+     75.0,
+     75.0
+    ]
+   },
+   "text": {}
+  },
+  {
+   "id": "FA-06",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "c1": 60.0,
+    "hef": 200.0,
+    "dh": 30.0,
+    "d": 16.0,
+    "s2": 80.0,
+    "n_ed": 20000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "FA-06",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "c1": 150.0,
+    "hef": 200.0,
+    "dh": 30.0,
+    "d": 16.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "FA-11",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "hef": 120.0,
+    "cracked": 1.0,
+    "dense_reinforcement": 0.0
+   },
+   "list": {
+    "ax": [
+     -100.0,
+     100.0,
+     -100.0,
+     100.0
+    ],
+    "ay": [
+     -75.0,
+     -75.0,
+     75.0,
+     75.0
+    ],
+    "ni": [
+     10000.0,
+     30000.0,
+     0.0,
+     20000.0
+    ]
+   },
+   "text": {}
+  },
+  {
+   "id": "FA-12",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "delta_n_rk_s_0": 20000.0,
+    "delta_n_ed": 8000.0,
+    "alpha_seis": 1.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "FA-13",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "hef": 120.0,
+    "cracked": 1.0,
+    "dense_reinforcement": 0.0,
+    "v_ed": 20000.0
+   },
+   "list": {
+    "ax": [
+     0.0
+    ],
+    "ay": [
+     0.0
+    ]
+   },
+   "text": {}
+  },
+  {
+   "id": "FA-13",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "hef": 50.0,
+    "cracked": 1.0,
+    "dense_reinforcement": 0.0
+   },
+   "list": {
+    "ax": [
+     -100.0,
+     100.0
+    ],
+    "ay": [
+     0.0,
+     0.0
+    ]
+   },
+   "text": {}
+  },
+  {
+   "id": "FA-14",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "n_ed_re": 60000.0,
+    "fyk": 500.0,
+    "as_provided": 160.0,
+    "l_bd": 300.0,
+    "l_s": 350.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "B-04",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "phi": 20.0,
+    "cd": 45.0,
+    "rho1": 50.0,
+    "l_available": 1100.0,
+    "clear_distance": 30.0,
+    "sum_ast": 300.0,
+    "as": 314.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "B-04",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "fck": 25.0,
+    "phi": 16.0,
+    "rho1": 25.0,
+    "p_transverse": 2.0,
+    "alpha3": 0.8,
+    "fyk": 500.0
+   },
+   "text": {
+    "bond": "poor"
+   },
+   "list": {}
+  },
+  {
+   "id": "B-04",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "phi": 25.0,
+    "cd": 40.0
+   },
+   "text": {
+    "loading": "compression"
+   },
+   "list": {}
+  },
+  {
+   "id": "B-05",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "phi": 20.0,
+    "nb": 2.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "B-05",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "phi": 32.0,
+    "nb": 4.0
+   },
+   "text": {
+    "situation": "compression"
+   },
+   "list": {}
+  },
+  {
+   "id": "B-05",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "phi": 32.0,
+    "nb": 3.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "B-06",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "phi": 40.0,
+    "act_ext": 90000.0,
+    "as_surf_provided": 1000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "B-06",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "phi": 25.0,
+    "act_ext": 90000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "B-08",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "phi": 10.0
+   },
+   "text": {
+    "angle": "135"
+   },
+   "list": {}
+  },
+  {
+   "id": "B-08",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "phi": 12.0
+   },
+   "text": {
+    "angle": "90"
+   },
+   "list": {}
+  },
+  {
+   "id": "B-09",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "phi": 25.0,
+    "dg": 16.0,
+    "clear": 30.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "B-09",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "phi": 12.0,
+    "dg": 32.0,
+    "clear": 50.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "DT-02",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "v_ed": 250000.0,
+    "z": 405.0,
+    "as_span": 1200.0,
+    "cot_theta": 2.0,
+    "cot_alpha": 0.0,
+    "n_ed": 10000.0,
+    "as_support": 400.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "DT-02",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "v_ed": 100000.0,
+    "z": 300.0,
+    "as_span": 800.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "DT-03",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "bw": 300.0,
+    "d": 450.0,
+    "alpha_deg": 90.0,
+    "fyk": 500.0,
+    "asw": 100.0,
+    "s": 250.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "DT-03",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "bw": 300.0,
+    "d": 450.0,
+    "alpha_deg": 60.0,
+    "asw": 100.0,
+    "s": 250.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "DT-03",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 50.0,
+    "bw": 300.0,
+    "d": 900.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "DT-04",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "u": 1600.0,
+    "b": 300.0,
+    "d": 450.0,
+    "s": 150.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "DT-04",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "u": 1600.0,
+    "b": 300.0,
+    "d": 450.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "DT-05",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "act_ext": 120000.0,
+    "as_provided": 1500.0,
+    "s": 120.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "DT-05",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "act_ext": 120000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "DT-06",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "h": 200.0,
+    "d": 160.0,
+    "as_main": 500.0,
+    "s": 150.0,
+    "as_secondary": 120.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "DT-06",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "h": 300.0,
+    "d": 260.0,
+    "as_main": 800.0,
+    "s": 200.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "DT-06",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "fck": 25.0,
+    "h": 300.0,
+    "d": 260.0,
+    "as_main": 800.0,
+    "s": 200.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "DT-07",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "h": 220.0,
+    "v_ed": 90000.0,
+    "v_rd_max": 300000.0,
+    "v_rd_c": 85000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "DT-08",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "v_ed": 400000.0,
+    "a_t": 1800.0,
+    "fyk": 500.0,
+    "as_through": 900.0,
+    "m_edge": 60000000.0,
+    "b_e": 800.0,
+    "d": 220.0,
+    "fck": 30.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "DT-08",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "v_ed": 250000.0,
+    "a_t": 1000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "DT-10",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "ac": 200000.0,
+    "tw": 200.0,
+    "asv": 500.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "DT-10",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "ac": 200000.0,
+    "tw": 100.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "DT-11",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "ac_per_m": 300000.0,
+    "h": 600.0,
+    "as_provided": 400.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "DT-11",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "ac_per_m": 100000.0,
+    "h": 200.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "DT-12",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "n_ed": 800000.0,
+    "d": 400.0,
+    "b": 2000.0,
+    "a": 400.0,
+    "fyk": 500.0,
+    "as_provided": 900.0
+   },
+   "text": {
+    "kind": "strip"
+   },
+   "list": {}
+  },
+  {
+   "id": "DT-12",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "n_ed": 1500000.0,
+    "d": 700.0,
+    "s": 1800.0,
+    "c": 400.0
+   },
+   "text": {
+    "kind": "pile_cap_2"
+   },
+   "list": {}
+  },
+  {
+   "id": "DT-13",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "f_bt": 100000.0,
+    "a_b": 100.0,
+    "phi": 16.0,
+    "fck": 30.0,
+    "phi_m": 150.0,
+    "m_ed": 40000000.0,
+    "z": 300.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "DT-13",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "f_bt": 60000.0,
+    "a_b": 150.0,
+    "phi": 12.0,
+    "fck": 25.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "R-01",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "r_class": 90.0,
+    "dim": 250.0,
+    "a": 50.0
+   },
+   "text": {
+    "kind": "beam"
+   },
+   "list": {}
+  },
+  {
+   "id": "R-01",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "r_class": 75.0,
+    "dim": 400.0,
+    "a": 30.0
+   },
+   "text": {
+    "kind": "beam_ss"
+   },
+   "list": {}
+  },
+  {
+   "id": "R-01",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "r_class": 120.0,
+    "dim": 130.0,
+    "a": 30.0,
+    "fck": 30.0
+   },
+   "text": {
+    "kind": "beam"
+   },
+   "list": {}
+  },
+  {
+   "id": "R-01",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "r_class": 90.0,
+    "dim": 120.0,
+    "a": 35.0
+   },
+   "text": {
+    "kind": "slab",
+    "sub": "one_way"
+   },
+   "list": {}
+  },
+  {
+   "id": "R-01",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "r_class": 60.0,
+    "dim": 90.0,
+    "a": 12.0
+   },
+   "text": {
+    "kind": "slab",
+    "sub": "two_way"
+   },
+   "list": {}
+  },
+  {
+   "id": "R-01",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "r_class": 120.0,
+    "dim": 200.0,
+    "a": 36.0
+   },
+   "text": {
+    "kind": "flat_slab"
+   },
+   "list": {}
+  },
+  {
+   "id": "R-01",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "r_class": 90.0,
+    "dim": 350.0,
+    "a": 50.0,
+    "mu_fi": 0.4
+   },
+   "text": {
+    "kind": "column"
+   },
+   "list": {}
+  },
+  {
+   "id": "R-01",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "r_class": 120.0,
+    "dim": 300.0,
+    "a": 50.0,
+    "mu_fi": 0.7,
+    "fck": 75.0
+   },
+   "text": {
+    "kind": "column"
+   },
+   "list": {}
+  },
+  {
+   "id": "R-01",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "r_class": 60.0,
+    "dim": 150.0,
+    "a": 12.0
+   },
+   "text": {
+    "kind": "wall"
+   },
+   "list": {}
+  },
+  {
+   "id": "R-01",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "r_class": 120.0,
+    "dim": 150.0,
+    "a": 60.0
+   },
+   "text": {
+    "kind": "tension"
+   },
+   "list": {}
+  },
+  {
+   "id": "R-01",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "r_class": 90.0,
+    "dim": 200.0,
+    "a": 30.0
+   },
+   "text": {
+    "kind": "beam_cont"
+   },
+   "list": {}
+  },
+  {
+   "id": "D-06",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "r_class": 60.0,
+    "dim": 150.0,
+    "a": 30.0
+   },
+   "text": {
+    "kind": "beam"
+   },
+   "list": {}
+  },
+  {
+   "id": "R-02",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "b": 300.0,
+    "h": 500.0,
+    "t_min": 90.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "R-02",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "b": 300.0,
+    "h": 500.0,
+    "t_min": 30.0
+   },
+   "text": {
+    "faces": "bt"
+   },
+   "list": {}
+  },
+  {
+   "id": "R-06",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "gk": 100.0,
+    "qk": 50.0,
+    "psi_fi": 0.3
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "R-06",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "gk": 100.0,
+    "qk": 0.0,
+    "gamma_g": 1.35,
+    "gamma_q": 1.5
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "R-07",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "theta": 20.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "R-07",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "theta": 450.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "R-07",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "theta": 750.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "M-13",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "theta": 1150.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "R-08",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "R-08",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 75.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "R-08",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 90.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "M-01",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "M-01",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "M-01",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 50.0
+   },
+   "text": {
+    "situation": "accidental"
+   },
+   "list": {}
+  },
+  {
+   "id": "M-03",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "M-03",
+   "annex": "De",
+   "tol": 1e-09,
+   "num": {
+    "fck": 27.5
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "M-04",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "t": 7.0
+   },
+   "text": {
+    "cement": "N"
+   },
+   "list": {}
+  },
+  {
+   "id": "M-04",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "t": 91.0
+   },
+   "text": {
+    "cement": "S"
+   },
+   "list": {}
+  },
+  {
+   "id": "M-04",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 40.0,
+    "t": 3.0
+   },
+   "text": {
+    "cement": "R"
+   },
+   "list": {}
+  },
+  {
+   "id": "M-06",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "eps": 1.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "M-06",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "eps": 3.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "M-06",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 60.0,
+    "eps": 2.5
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "M-07",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "b": 300.0,
+    "x": 150.0,
+    "d": 450.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "M-07",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 70.0,
+    "b": 300.0,
+    "x": 150.0,
+    "d": 450.0,
+    "narrowing": 1.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "M-09",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fp01k": 1640.0,
+    "fpk": 1860.0,
+    "eps": 5.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "M-09",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "fp01k": 1640.0,
+    "fpk": 1860.0,
+    "eps": 12.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "M-09",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fp01k": 1640.0,
+    "fpk": 1860.0,
+    "eps": -3.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "M-10",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "rh": 50.0,
+    "h0": 200.0,
+    "t0": 28.0,
+    "t": 10000.0
+   },
+   "text": {
+    "cement": "N"
+   },
+   "list": {}
+  },
+  {
+   "id": "M-12",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "phi_inf": 2.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "S-12",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 40.0,
+    "phi_inf": 1.5,
+    "es": 200000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "M-14",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "b": 300.0,
+    "h": 500.0,
+    "p": 800000.0,
+    "e_p": 120.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "M-14",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 40.0,
+    "b": 250.0,
+    "h": 1800.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "D-01",
+   "annex": "De",
+   "tol": 1e-06,
+   "text": {
+    "classes": "XC1,XC4,XD2,XF1"
+   },
+   "list": {},
+   "num": {}
+  },
+  {
+   "id": "D-01",
+   "annex": "De",
+   "tol": 1e-06,
+   "text": {
+    "classes": "X0,XC3"
+   },
+   "list": {},
+   "num": {}
+  },
+  {
+   "id": "D-02",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 25.0
+   },
+   "text": {
+    "classes": "XC4,XD1"
+   },
+   "list": {}
+  },
+  {
+   "id": "D-02",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 40.0
+   },
+   "text": {
+    "classes": "XF3,XC3"
+   },
+   "list": {}
+  },
+  {
+   "id": "D-02",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 40.0,
+    "air_entrained": 1.0
+   },
+   "text": {
+    "classes": "XF3,XA2"
+   },
+   "list": {}
+  },
+  {
+   "id": "D-03",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "phi": 20.0,
+    "nb": 4.0,
+    "structural_class": 4.0
+   },
+   "text": {
+    "exposure": "XC4"
+   },
+   "list": {}
+  },
+  {
+   "id": "D-03",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "phi": 16.0,
+    "structural_class": 4.0,
+    "dc_gamma": 0.0,
+    "dc_st": 5.0
+   },
+   "text": {
+    "exposure": "XD3"
+   },
+   "list": {}
+  },
+  {
+   "id": "D-03",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "phi": 12.0,
+    "dg": 32.0
+   },
+   "text": {
+    "exposure": "XC1"
+   },
+   "list": {}
+  },
+  {
+   "id": "D-04",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "phi": 20.0,
+    "design_life": 50.0,
+    "c_provided": 40.0
+   },
+   "text": {
+    "exposure": "XC3"
+   },
+   "list": {}
+  },
+  {
+   "id": "D-04",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "fck": 25.0,
+    "phi": 25.0,
+    "design_life": 100.0,
+    "slab": 1.0,
+    "c_provided": 50.0
+   },
+   "text": {
+    "exposure": "XD2"
+   },
+   "list": {}
+  },
+  {
+   "id": "D-05",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "c_provided": 60.0
+   },
+   "text": {
+    "ground": "soil"
+   },
+   "list": {}
+  },
+  {
+   "id": "D-05",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "c_provided": 60.0
+   },
+   "text": {
+    "ground": "blinding"
+   },
+   "list": {}
+  },
+  {
+   "id": "D-07",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "design_life": 8.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "D-07",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "design_life": 20.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "D-07",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "design_life": 45.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "D-07",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "design_life": 100.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "PR-01",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "ap": 1500.0,
+    "fpk": 1860.0,
+    "fp01k": 1640.0,
+    "sigma_jack": 1400.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "PR-01",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "ap": 1500.0,
+    "fpk": 1860.0,
+    "fp01k": 1640.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "PR-02",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "ap": 1500.0,
+    "fpk": 1860.0,
+    "fp01k": 1640.0,
+    "pm0": 1900000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "PR-02",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "ap": 1500.0,
+    "fpk": 1860.0,
+    "fp01k": 1640.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "PR-06",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "sigma_pm_inf": 1000.0,
+    "fpk": 1860.0,
+    "fp01k": 1640.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "PR-06",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "sigma_pm_inf": 1000.0,
+    "fpk": 1860.0,
+    "fp01k": 1640.0,
+    "delta_sigma": 80.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "PR-07",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "pm_t": 1500000.0
+   },
+   "text": {
+    "bond": "post_bonded"
+   },
+   "list": {}
+  },
+  {
+   "id": "PR-07",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "pm_t": 1500000.0
+   },
+   "text": {
+    "bond": "pre"
+   },
+   "list": {}
+  },
+  {
+   "id": "PR-08",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "p": 1200000.0,
+    "sag": 0.15,
+    "l": 6.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "PR-08",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "p": 1200000.0,
+    "radius": 8000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "PR-09",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "pmax": 2000000.0,
+    "a": 200.0,
+    "h": 600.0,
+    "fyk": 500.0,
+    "as_provided": 900.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "PR-09",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "pmax": 1500000.0,
+    "a": 150.0,
+    "h": 500.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "PR-10",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "sigma_c": 14.0,
+    "fck_t": 30.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "PR-10",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "sigma_c": 14.0,
+    "fck_t": 30.0,
+    "nonlinear_creep_proven": 1.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "F-01",
+   "annex": "De",
+   "tol": 1e-06,
+   "text": {
+    "structure": "bridge"
+   },
+   "list": {},
+   "num": {}
+  },
+  {
+   "id": "F-01",
+   "annex": "De",
+   "tol": 1e-06,
+   "text": {
+    "structure": "building"
+   },
+   "list": {},
+   "num": {}
+  },
+  {
+   "id": "F-02",
+   "annex": "De",
+   "tol": 1e-05,
+   "num": {
+    "b": 300.0,
+    "h": 600.0,
+    "d": 550.0,
+    "as": 1800.0,
+    "alpha_e": 6.5,
+    "m_max": 250000000.0,
+    "m_min": 120000000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "F-02",
+   "annex": "De",
+   "tol": 1e-05,
+   "num": {
+    "b": 300.0,
+    "h": 600.0,
+    "d": 550.0,
+    "as": 1800.0,
+    "alpha_e": 6.5,
+    "m_max": 250000000.0,
+    "m_min": -10000000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "F-03",
+   "annex": "De",
+   "tol": 1e-06,
+   "text": {
+    "kind": "straight"
+   },
+   "list": {},
+   "num": {}
+  },
+  {
+   "id": "F-03",
+   "annex": "En",
+   "tol": 1e-06,
+   "text": {
+    "kind": "welded"
+   },
+   "list": {},
+   "num": {}
+  },
+  {
+   "id": "F-03",
+   "annex": "De",
+   "tol": 1e-06,
+   "text": {
+    "kind": "post_curved_steel"
+   },
+   "list": {},
+   "num": {}
+  },
+  {
+   "id": "F-05",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "sigma_c_max": 12.0,
+    "sigma_c_min": 3.0,
+    "beta_cc_t0": 0.9
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "F-05",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "fck": 60.0,
+    "sigma_c_max": 18.0,
+    "sigma_c_min": 2.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "F-06",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "v_max": 80000.0,
+    "v_min": 30000.0,
+    "v_rd_c": 110000.0,
+    "cot_theta": 3.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "F-06",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 60.0,
+    "v_max": 80000.0,
+    "v_min": 30000.0,
+    "v_rd_c": 110000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "F-07",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "lambda1": 0.8,
+    "lambda2": 1.1,
+    "lambda3": 0.9,
+    "lambda4": 1.0,
+    "lambda_max": 1.4,
+    "delta_sigma_71": 70.0,
+    "phi_fat": 1.2
+   },
+   "text": {
+    "kind": "straight"
+   },
+   "list": {}
+  },
+  {
+   "id": "F-07",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "lambda1": 1.6,
+    "lambda2": 1.1,
+    "lambda3": 1.1,
+    "lambda4": 1.0,
+    "lambda_max": 2.0,
+    "delta_sigma_71": 60.0
+   },
+   "text": {
+    "kind": "welded"
+   },
+   "list": {}
+  },
+  {
+   "id": "P-01",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "c1": 400.0,
+    "c2": 300.0,
+    "d": 200.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "P-01",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "c1": 500.0,
+    "d": 250.0,
+    "circular": 1.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "P-01",
+   "annex": "En",
+   "tol": 0.0001,
+   "num": {
+    "c1": 400.0,
+    "c2": 300.0,
+    "d": 200.0,
+    "e1": 150.0
+   },
+   "text": {
+    "position": "edge"
+   },
+   "list": {}
+  },
+  {
+   "id": "P-01",
+   "annex": "De",
+   "tol": 0.0001,
+   "num": {
+    "c1": 400.0,
+    "c2": 300.0,
+    "d": 200.0,
+    "e1": 600.0
+   },
+   "text": {
+    "position": "edge"
+   },
+   "list": {}
+  },
+  {
+   "id": "P-01",
+   "annex": "En",
+   "tol": 0.0001,
+   "num": {
+    "c1": 350.0,
+    "c2": 350.0,
+    "d": 220.0,
+    "e1": 100.0,
+    "e2": 250.0
+   },
+   "text": {
+    "position": "corner"
+   },
+   "list": {}
+  },
+  {
+   "id": "P-05",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "d": 210.0,
+    "c1": 400.0,
+    "rho_ly": 0.01,
+    "rho_lz": 0.01,
+    "v_ed": 900000.0,
+    "approval": 1.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "P-05",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "d": 210.0,
+    "c1": 400.0,
+    "rho_ly": 0.01,
+    "rho_lz": 0.01,
+    "v_ed": 800000.0,
+    "approval": 1.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "P-05",
+   "annex": "De",
+   "tol": 0.0001,
+   "num": {
+    "fck": 30.0,
+    "d": 210.0,
+    "c1": 400.0,
+    "rho_ly": 0.01,
+    "rho_lz": 0.01,
+    "c2": 600.0,
+    "v_ed": 600000.0,
+    "delta_v": 50000.0
+   },
+   "text": {
+    "position": "edge"
+   },
+   "list": {}
+  },
+  {
+   "id": "P-06",
+   "annex": "De",
+   "tol": 0.002,
+   "num": {
+    "fck": 25.0,
+    "d": 450.0,
+    "v_ed": 1500000.0,
+    "c1": 400.0,
+    "c2": 400.0,
+    "rho_ly": 0.005,
+    "rho_lz": 0.005,
+    "sigma_gd": 0.2,
+    "beta": 1.1
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "P-07",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "d": 210.0,
+    "c1": 400.0,
+    "rho_ly": 0.01,
+    "rho_lz": 0.01,
+    "v_ed": 700000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "P-07",
+   "annex": "En",
+   "tol": 0.0001,
+   "num": {
+    "fck": 30.0,
+    "d": 210.0,
+    "c1": 400.0,
+    "rho_ly": 0.01,
+    "rho_lz": 0.01,
+    "v_ed": 700000.0,
+    "p_force": 200000.0,
+    "tendon_angle": 0.1,
+    "sigma_cp": 0.5
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "SL-03",
+   "annex": "De",
+   "tol": 1e-05,
+   "num": {
+    "fck": 30.0,
+    "b": 300.0,
+    "h": 500.0,
+    "d": 450.0,
+    "as": 1500.0,
+    "m_ed": 120000000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "SL-03",
+   "annex": "De",
+   "tol": 1e-05,
+   "num": {
+    "fck": 30.0,
+    "b": 300.0,
+    "h": 500.0,
+    "d": 450.0,
+    "as": 1500.0,
+    "m_ed": 20000000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "SL-03",
+   "annex": "De",
+   "tol": 1e-05,
+   "num": {
+    "fck": 35.0,
+    "b": 250.0,
+    "h": 600.0,
+    "d": 550.0,
+    "as": 2000.0,
+    "m_ed": 200000000.0,
+    "phi_inf": 2.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "SL-04",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "b": 1000.0,
+    "h": 250.0,
+    "n_ed": 0.0,
+    "act": 125000.0,
+    "as_provided": 600.0,
+    "fyk": 500.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "SL-04",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "b": 400.0,
+    "h": 600.0,
+    "n_ed": 300000.0,
+    "h_member": 600.0,
+    "sigma_s_allowed": 280.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "SL-04",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 25.0,
+    "b": 300.0,
+    "h": 400.0,
+    "pure_tension": 1.0,
+    "fct_eff": 1.8,
+    "h_member": 900.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "SL-04",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "b": 2000.0,
+    "h": 200.0,
+    "f_cr": 120000.0,
+    "act": 200000.0
+   },
+   "text": {
+    "part": "flange"
+   },
+   "list": {}
+  },
+  {
+   "id": "SL-05",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "sigma_s": 240.0,
+    "wk_lim": 0.3,
+    "phi": 14.0,
+    "s": 180.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "SL-05",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "sigma_s": 300.0,
+    "wk_lim": 0.4,
+    "phi": 12.0,
+    "s": 150.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "SL-05",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "sigma_s": 190.0,
+    "wk_lim": 0.2,
+    "phi": 20.0,
+    "s": 100.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "S-05",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "n_rd": 2000000.0,
+    "m_rdy": 150000.0,
+    "m_rdz": 120000.0,
+    "n_ed": 800000.0,
+    "m_edy": 60000.0,
+    "m_edz": 50000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "S-05",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "n_rd": 2000000.0,
+    "m_rdy": 150000.0,
+    "m_rdz": 120000.0,
+    "n_ed": 1700000.0,
+    "m_edy": 40000.0,
+    "m_edz": 30000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "S-08",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "h": 400.0,
+    "n_ed": 1000000.0,
+    "m_ed": 10000000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "S-08",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "h": 900.0,
+    "n_ed": -500000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "S-09",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "b": 1000.0,
+    "hw": 200.0,
+    "fck": 25.0,
+    "l0": 2500.0,
+    "e_tot": 15.0,
+    "n_ed": 300000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "S-09",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "b": 1000.0,
+    "hw": 150.0,
+    "fck": 30.0,
+    "l0": 3000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "V-01",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "av": 600.0,
+    "d": 450.0,
+    "v_ed": 300000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "V-01",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "av": 150.0,
+    "d": 450.0,
+    "v_ed": 300000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "V-01",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "av": 1200.0,
+    "d": 450.0,
+    "v_ed": 300000.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "V-05",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "bi": 1000.0,
+    "z": 400.0,
+    "v_ed": 300000.0,
+    "beta": 0.5,
+    "sigma_n": 0.5,
+    "rho": 0.003,
+    "alpha_deg": 90.0,
+    "fyk": 500.0
+   },
+   "text": {
+    "roughness": "rough"
+   },
+   "list": {}
+  },
+  {
+   "id": "V-05",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 40.0,
+    "bi": 800.0,
+    "z": 500.0,
+    "v_ed": 900000.0,
+    "rho": 0.005,
+    "alpha_deg": 60.0,
+    "sigma_n": -1.0
+   },
+   "text": {
+    "roughness": "indented"
+   },
+   "list": {}
+  },
+  {
+   "id": "V-05",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "bi": 800.0,
+    "z": 500.0,
+    "v_ed": 400000.0,
+    "fatigue": 1.0,
+    "sigma_n": 0.3
+   },
+   "text": {
+    "roughness": "smooth"
+   },
+   "list": {}
+  },
+  {
+   "id": "V-06",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "fck": 30.0,
+    "hf": 150.0,
+    "delta_fd": 250000.0,
+    "delta_x": 2000.0,
+    "cot_theta_f": 1.8,
+    "fyk": 500.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "V-06",
+   "annex": "En",
+   "tol": 1e-06,
+   "num": {
+    "fck": 40.0,
+    "hf": 120.0,
+    "delta_fd": 100000.0,
+    "delta_x": 1500.0,
+    "cot_theta_f": 1.9,
+    "tension_flange": 1.0
+   },
+   "text": {},
+   "list": {}
+  },
+  {
+   "id": "T-03",
+   "annex": "De",
+   "tol": 1e-06,
+   "num": {
+    "t_ed": 30000000.0
+   },
+   "list": {
+    "stiffness": [
+     1.0,
+     3.0,
+     4.0
+    ]
+   },
+   "text": {}
   }
  ]
 }

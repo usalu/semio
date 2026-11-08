@@ -191,6 +191,7 @@ export function renderComponentSceneHost(
   surface: SurfaceId,
   requestContextMenu?: UiInterpreterContext["requestContextMenu"],
   assemble?: SurfaceSceneAssembler,
+  onTrigger?: ComponentSceneHostProps["onTrigger"],
 ): ReactNode {
   const onAction = gestureOnActionFor(funnel);
   const node = surfacePropsToComponentSceneNode(record, props, surface, assemble);
@@ -218,7 +219,7 @@ export function renderComponentSceneHost(
   }
   return (
     <ShellFaultBoundary boundaryId={`surface-${props.kind}`} fallbackLabel={shellLabel("ui.common.renderError")}>
-      <Host node={node} onAction={onAction} requestContextMenu={requestContextMenu} />
+      <Host node={node} onAction={onAction} requestContextMenu={requestContextMenu} onTrigger={onTrigger} />
     </ShellFaultBoundary>
   );
 }

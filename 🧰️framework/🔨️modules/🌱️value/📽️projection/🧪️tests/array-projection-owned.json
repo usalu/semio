@@ -1,0 +1,8 @@
+{
+  "values": [
+    "first β",
+    "second γ"
+  ],
+  "maximumCopy": 4096,
+  "maximumWork": 4096
+}

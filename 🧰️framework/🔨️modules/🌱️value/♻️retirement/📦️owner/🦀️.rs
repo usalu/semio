@@ -29,7 +29,7 @@ mod tests{
  use super::effect::{settled,with_effect};
  struct Leaf(bool);
  impl ErasedSnapshotRetirement for Leaf{
-  fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{if effect.grant().maximum_items==0{return empty()}let work=match semio_framework_value::retirement::record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return failed(error,work)};self.0=false;done(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work})}
+  fn close_step(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->OriginalRetirementOutcome{let g=effect.grant();if g.maximum_items==0{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.0=false;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
   fn terminal_is_empty(&self)->bool{!self.0}fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}fn next_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Ok(0)}fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(usize::from(self.0))}
   fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(1)}
  }

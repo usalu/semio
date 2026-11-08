@@ -8,6 +8,7 @@ extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
+use semio_s_plugin_norm_compliance::incremental_evaluation::Scope;
 use semio_s_plugin_norm_compliance::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, LocalizedCopy, OccupancyType, Quantity, QuantityKind, Remedy, RemedyBound, SubjectRef};
 use semio_s_artifact_norm_din16798_model::{VentSystemDocument, ZoneDocument};
 
@@ -33,4 +34,12 @@ use zone_evaluation::*;
 mod vent_and_envelope_evaluation;
 use vent_and_envelope_evaluation::*;
 
+#[path = "🧮️units/🦀️.rs"]
+mod units;
+pub use units::Din16798Units;
+
 //#endregion 🔖️ComplianceHelpers
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️comfort-vectors/🦀️.rs"]
+mod comfort_vectors;

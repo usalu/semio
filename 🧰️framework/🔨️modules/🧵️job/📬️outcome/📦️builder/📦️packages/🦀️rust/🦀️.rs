@@ -24,7 +24,7 @@ pub use original_step_outcome::{Checkpoint,CommitCandidate,JobFault,StepOutcome,
 
 #[path = "../../🪙️return-escrow/🦀️.rs"]
 pub mod original_return_escrow;
-pub use original_return_escrow::{original_retained_delta,original_retained_remaining,original_retained_min,original_retained_is_subset,OriginalReturnEscrowMessages,require_return_structure,OriginalReturnStructure,OriginalReturnEscrowAccounting,OriginalReturnRedemptionPlan,OriginalReturnClaimPlan,OriginalReturnBudgetSnapshot,OriginalReturnLedgerIssue,OriginalReturnEscrowAmounts,OriginalReturnEscrowIdentity,OriginalReturnEscrowRow,OriginalReturnEscrowStage,OriginalReturnEscrowTable,OriginalReturnGuardPermit,OriginalReturnGuardDemand,OriginalReturnGuardPlan,OriginalReturnGuardSettlementPlan,ORIGINAL_RETURN_ESCROW_CELLS,ORIGINAL_RETURN_ESCROW_HEADER_BYTES,ORIGINAL_RETURN_ESCROW_ROW_BYTES,ORIGINAL_RETURN_ESCROW_RECLAIM_COPY_BYTES};
+pub use original_return_escrow::{original_retained_delta,original_retained_remaining,original_retained_min,original_retained_is_subset,OriginalReturnEscrowMessages,require_return_structure,OriginalReturnStructure,OriginalReturnEscrowAccounting,OriginalReturnRedemptionPlan,OriginalReturnClaimPlan,OriginalReturnBudgetSnapshot,OriginalReturnLedgerIssue,OriginalReturnEscrowAmounts,OriginalReturnEscrowIdentity,OriginalReturnEscrowRow,OriginalReturnEscrowStage,OriginalReturnEscrowTable,OriginalReturnEscrowBirth,OriginalReturnGuardPermit,OriginalReturnGuardDemand,OriginalReturnGuardPlan,OriginalReturnGuardSettlementPlan,ORIGINAL_RETURN_ESCROW_CELLS,ORIGINAL_RETURN_ESCROW_HEADER_BYTES,ORIGINAL_RETURN_ESCROW_ROW_BYTES,ORIGINAL_RETURN_ESCROW_RECLAIM_COPY_BYTES};
 
 #[path = "../../../../📄️payload-pages-and-ledger/🦀️.rs"]
 pub mod payload_pages_and_ledger;
@@ -43,7 +43,7 @@ mod original_payload_source;
 
 #[path = "../../🦀️.rs"]
 pub mod payload_builder;
-pub use payload_builder::{JobPayloadAuthority, OriginalPayloadBuilderIdentity, OriginalPayloadSourceIdentity, RetainedPayloadBuilder};
+pub use payload_builder::{OriginalJobPayloadAdmission,JobPayloadAuthority, OriginalPayloadBuilderIdentity, OriginalPayloadSourceIdentity, RetainedPayloadBuilder};
 
 #[path = "../../../../♻️retirement/📄️payload/🧱️payload-owner/🦀️.rs"]
 mod payload_owner_retirement;

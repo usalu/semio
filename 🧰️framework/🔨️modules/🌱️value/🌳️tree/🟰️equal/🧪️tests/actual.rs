@@ -46,15 +46,15 @@ fn string_cursor_stages_source_headers_under_the_neutral_admission_vectors(){
  }
 }
 
-std::thread_local!{static FIELD_BIRTHS:std::cell::Cell<usize>=const{std::cell::Cell::new(0)};}
+static FIELD_BIRTHS:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);
 struct TestEqualityBirth;
-impl RetainedEqualityBirth for TestEqualityBirth{type Output=u64;fn work()->Result<u64,ValueError>{Ok(1)}fn birth()->u64{FIELD_BIRTHS.with(|n|n.set(n.get()+1));7}}
+unsafe impl RetainedEqualityBirth for TestEqualityBirth{type Output=u64;fn work()->Result<u64,ValueError>{Ok(1)}fn birth()->u64{FIELD_BIRTHS.fetch_add(1,std::sync::atomic::Ordering::Relaxed);7}}
 #[test]
 fn equality_cursor_birth_reports_real_allocation_and_never_constructs_on_refusal(){
  let rows:serde_json::Value=serde_json::from_str(include_str!("birth.json")).unwrap();
- for row in rows.as_array().unwrap(){let d=RetirementDemand{copy_bytes:size_of::<u64>()*2,capacity_bytes:size_of::<u64>(),depth:1,..Default::default()};let mut g=grant(d);if !row["admitted"].as_bool().unwrap(){g.maximum_items=0}let before=FIELD_BIRTHS.with(|n|n.get());let mut actual=None;
+ for row in rows.as_array().unwrap(){let d=RetirementDemand{copy_bytes:size_of::<u64>()*2,capacity_bytes:size_of::<u64>(),depth:1,..Default::default()};let mut g=grant(d);if !row["admitted"].as_bool().unwrap(){g.maximum_items=0}let before=FIELD_BIRTHS.load(std::sync::atomic::Ordering::Relaxed);let mut actual=None;
   let(turn,heap)=if row["allocationFails"].as_bool().unwrap(){let((turn,attempts),heap)=observe(||refuse(||equality_box::<TestEqualityBirth>(2+u64::try_from(size_of::<u64>()*2).unwrap(),g,&mut actual)));assert_eq!(attempts,1);(turn,heap)}else{observe(||equality_box::<TestEqualityBirth>(2+u64::try_from(size_of::<u64>()*2).unwrap(),g,&mut actual))};
-  let marker=match actual{None=>"none",Some(0)=>"failed",Some(n)if n==size_of::<u64>()=>"bytes",_=>panic!("unexpected actual marker")};assert_eq!(marker,row["marker"].as_str().unwrap());assert_eq!(FIELD_BIRTHS.with(|n|n.get())>before,row["constructed"].as_bool().unwrap());
+  let marker=match actual{None=>"none",Some(0)=>"failed",Some(n)if n==size_of::<u64>()=>"bytes",_=>panic!("unexpected actual marker")};assert_eq!(marker,row["marker"].as_str().unwrap());assert_eq!(FIELD_BIRTHS.load(std::sync::atomic::Ordering::Relaxed)>before,row["constructed"].as_bool().unwrap());
   if let Ok(Some((value,p)))=turn.result{assert_eq!(*value,7);assert_eq!(heap.0,p.retained_capacity_bytes);drop(value)}else{assert_eq!(heap,(0,0));}
  }
 }

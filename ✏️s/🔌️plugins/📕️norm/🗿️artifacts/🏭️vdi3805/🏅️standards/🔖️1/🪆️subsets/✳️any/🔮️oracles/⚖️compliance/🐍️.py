@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import sys
+from decimal import Decimal
 from pathlib import Path
 
 VALVE_DN_SERIES = [10, 15, 20, 25, 32, 40, 50, 65, 80, 100, 125, 150, 200, 250, 300]
@@ -41,6 +42,39 @@ def valve_min_kvs_m3_h(dn: int) -> float:
         300: 100.0,
     }
     return table.get(dn, 0.63)
+
+
+def number(value: float) -> str:
+    """The decimal text of a number in a native record: shortest round-trip digits, never an exponent, no trailing `.0` (the native writer prints `8`, not `8.0`)."""
+    text = format(Decimal(repr(float(value))), "f")
+    return text[:-2] if text.endswith(".0") else text
+
+
+def native_210(attributes: dict) -> list[str]:
+    """The mandatory `210` record fields that mirror the typed sheet attributes (Part 1, the attribute and record sync)."""
+    kind = attributes.get("kind")
+    if kind == "valveHeating":
+        return ["210", "dn", str(attributes["dn"]), "kvs", number(attributes["kvsM3S"] * 3600.0), "pressure_class", attributes["pressureClass"], "connection_type", attributes["connectionType"], "authority_min", number(attributes["authorityMin"]), "authority_max", number(attributes["authorityMax"])]
+    if kind == "radiator":
+        return ["210", "standard_output_w", number(attributes["standardOutputW"]), "n", number(attributes["heatExponentN"]), "length_m", number(attributes["lengthM"]), "height_m", number(attributes["heightM"]), "depth_m", number(attributes["depthM"]), "connection_type", attributes["connectionType"]]
+    if kind == "pumpHeating":
+        fields = ["210", "dn_suction", str(attributes["dnSuction"]), "dn_discharge", str(attributes["dnDischarge"]), "nominal_flow_m3_s", number(attributes["nominalFlowM3S"]), "nominal_head_m", number(attributes["nominalHeadM"]), "motor_power_w", number(attributes["motorPowerW"]), "hydraulic_efficiency", number(attributes["hydraulicEfficiency"])]
+        return fields + (["qh_curve_ref", attributes["qhCurveRef"]] if attributes.get("qhCurveRef") else [])
+    if kind == "heatGenerator":
+        return ["210", "nominal_heat_output_w", number(attributes["nominalHeatOutputW"]), "fuel_type", attributes["fuelType"], "flow_temp_max_c", number(attributes["flowTempMaxC"]), "return_temp_min_c", number(attributes["returnTempMinC"])]
+    return ["210"] + [text for entry in attributes.get("entries", []) for text in (entry["key"], entry["value"])]
+
+
+def synced_records(product: dict, configuration: dict | None = None) -> list[dict]:
+    """The records of `product` with the `210` record rewritten from `configuration` (default: its own) attributes, appended when absent; the other records stay as they are."""
+    attributes = (configuration or product["configuration"])["attributes"]
+    fields = native_210(attributes)
+    records = [dict(record) for record in product.get("records") or []]
+    for record in records:
+        if record.get("family") == "210":
+            record["fields"] = fields
+            return records
+    return records + [{"family": "210", "fields": fields, "extensions": {"fields": {}}}]
 
 
 def count_records(catalog: dict) -> int:
@@ -172,6 +206,10 @@ def compare_report(oracle: list[dict], report: dict | None) -> list[dict]:
 
 
 def main() -> int:
+    if len(sys.argv) == 3 and sys.argv[1] == "--synced-records":
+        request = json.loads(Path(sys.argv[2]).read_text())
+        print(json.dumps(synced_records(request["product"], request.get("configuration")), ensure_ascii=False))
+        return 0
     if len(sys.argv) < 2:
         print("usage: 🐍️.py <snapshot.json> [report.json]", file=sys.stderr)
         return 2

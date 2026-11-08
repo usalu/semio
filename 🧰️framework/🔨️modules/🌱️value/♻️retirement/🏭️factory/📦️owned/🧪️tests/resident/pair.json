@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "body": "Original α 🌱",
+  "maximumCopyBytes": 4096,
+  "deniedAxes": [
+    "items",
+    "copy",
+    "depth",
+    "work"
+  ],
+  "samePayload": true,
+  "sameIssuer": true
+}

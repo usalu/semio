@@ -1,0 +1,7 @@
+{
+  "pendingBlocksClose": true,
+  "receiveCalls": 1,
+  "recoverCalls": 1,
+  "outputBeforeReply": false,
+  "emptyBeforeReply": false
+}

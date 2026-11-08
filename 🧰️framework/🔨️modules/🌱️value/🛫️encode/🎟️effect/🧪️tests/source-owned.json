@@ -1,0 +1,106 @@
+{
+  "text": "hello",
+  "bodyWork": 5,
+  "replyWork": 1,
+  "ownerWork": 1,
+  "sourceWork": 7,
+  "cases": [
+    {
+      "mode": "complete",
+      "partialWork": [
+        5
+      ]
+    },
+    {
+      "mode": "producerPending",
+      "partialWork": [
+        2,
+        3
+      ]
+    },
+    {
+      "mode": "producerUnwind",
+      "partialWork": [
+        5
+      ]
+    }
+  ],
+  "reuse": {
+    "text": "helloworld",
+    "operations": 2,
+    "bodyWork": 5,
+    "replyWork": 1,
+    "rearmWork": 1,
+    "ownerWork": 1,
+    "sourceWork": 14,
+    "posts": 6,
+    "drivers": [
+      "paidPrimitive",
+      "residentPayment"
+    ],
+    "recoveryCases": [
+      "complete",
+      "rearmCheckpointPending",
+      "rearmCheckpointUnwind",
+      "rearmPostUnwind"
+    ],
+    "maximumCopyBytes": 4096
+  },
+  "failure": {
+    "message": "actual original producer refusal",
+    "bodyWork": 1,
+    "replyWork": 1,
+    "publicationWork": 1,
+    "ownerWork": 1,
+    "retirementWork": 1,
+    "sourceWork": 5,
+    "posts": 5
+  },
+  "overrun": {
+    "message": "actual original producer refusal",
+    "quotedBodyWork": 2,
+    "actualBodyWork": 3,
+    "failurePayoutWork": 1,
+    "replyWork": 1,
+    "publicationWork": 1,
+    "ownerWork": 1,
+    "retirementWork": 2,
+    "sourceWork": 9,
+    "posts": 7,
+    "valueSlots": [
+      "primary",
+      "context",
+      "invariant",
+      "physicalInvariant",
+      "capacityInvariant",
+      "markerFailure",
+      "work",
+      "workOverrun",
+      "local",
+      "physical"
+    ]
+  },
+  "residentRecovery": {
+    "message": "actual original producer refusal",
+    "quotedBodyWork": 2,
+    "actualBodyWork": 3,
+    "failurePayoutWork": 1,
+    "replyWork": 1,
+    "publicationWork": 1,
+    "ownerWork": 1,
+    "retirementWork": 2,
+    "sourceWork": 11,
+    "posts": 8,
+    "recoveryWork": 2,
+    "cases": [
+      "complete",
+      "recordedReplyUnwind"
+    ],
+    "causeProgress": {
+      "copiedItems": 7,
+      "copiedBytes": 13,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0
+    }
+  }
+}

@@ -1,0 +1,86 @@
+[
+  {
+    "recorded": false,
+    "same": false,
+    "free": true,
+    "grant": true,
+    "work": true,
+    "moved": false,
+    "postAccepted": false,
+    "originalRefusal": "original",
+    "payoutRefusal": null,
+    "published": false
+  },
+  {
+    "recorded": true,
+    "same": false,
+    "free": true,
+    "grant": true,
+    "work": true,
+    "moved": false,
+    "postAccepted": false,
+    "originalRefusal": "original",
+    "payoutRefusal": null,
+    "published": false
+  },
+  {
+    "recorded": true,
+    "same": true,
+    "free": false,
+    "grant": true,
+    "work": true,
+    "moved": false,
+    "postAccepted": false,
+    "originalRefusal": "original",
+    "payoutRefusal": null,
+    "published": false
+  },
+  {
+    "recorded": true,
+    "same": true,
+    "free": true,
+    "grant": false,
+    "work": true,
+    "moved": false,
+    "postAccepted": false,
+    "originalRefusal": "original",
+    "payoutRefusal": null,
+    "published": false
+  },
+  {
+    "recorded": true,
+    "same": true,
+    "free": true,
+    "grant": true,
+    "work": false,
+    "moved": false,
+    "postAccepted": false,
+    "originalRefusal": "original",
+    "payoutRefusal": null,
+    "published": false
+  },
+  {
+    "recorded": true,
+    "same": true,
+    "free": true,
+    "grant": true,
+    "work": true,
+    "moved": true,
+    "postAccepted": true,
+    "originalRefusal": "original",
+    "payoutRefusal": null,
+    "published": true
+  },
+  {
+    "recorded": true,
+    "same": true,
+    "free": true,
+    "grant": true,
+    "work": true,
+    "moved": true,
+    "postAccepted": false,
+    "originalRefusal": "original",
+    "payoutRefusal": "payout",
+    "published": false
+  }
+]

@@ -1,8 +1,10 @@
+scalar UInt32
+
 type En1992Inference {
   outline: En1992Outline!
 }
 type En1992Outline {
   sectionOutline: [String!]!
-  fieldCount: Int!
-  entryCount: Int!
+  fieldCount: UInt32!
+  entryCount: UInt32!
 }

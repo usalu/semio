@@ -10,3 +10,11 @@ fn original_page_attempt_comes_from_the_physical_allocator(){
   while !values.terminal_is_empty(){let copy=values.next_release_copy_byte_demand().unwrap();let depth=values.next_release_depth_demand().unwrap();let release=values.next_release_allocation_bytes().unwrap();let mut grant=bank.loan(1,copy);grant.maximum_depth=depth;grant.maximum_release_bytes=release;let((poll,actual),heap)=observe(||bank.run(grant,1,|effect|RetainedWorkPoll::Complete(values.release_empty_page(effect))));let turn=match poll{RetainedWorkPoll::Complete(turn)=>turn,RetainedWorkPoll::Pending{..}=>panic!("synchronous original page release remained pending")};let step=match turn.result.unwrap(){PagedListReleaseOutcome::Ready(step)=>step,PagedListReleaseOutcome::Denied=>panic!("exact original release was denied")};assert_eq!(actual,None);assert_eq!(bank.take_admitted(),Some(true));let progress=RetainedCloneProgress{copied_items:usize::from(step.progressed),copied_bytes:step.placed_bytes,released_bytes:step.released_allocation_bytes,..Default::default()};assert_eq!(heap,(0,progress.released_bytes));bank.post(progress,grant,heap);}
  }
 }
+
+
+/// ⛽️ The capacity quote follows the same real reservation frontier as the one-slot service.
+#[test]
+fn capacity_work_quote_uses_the_original_selected_frontier(){
+ let rows:serde_json::Value=serde_json::from_str(include_str!("capacity-quote.json")).unwrap();let list=PagedList::<u8,4>::default();let selected=list.reserve_one_work_demand().unwrap();
+ for row in rows.as_array().unwrap(){let capacity=row["capacity"].as_u64().unwrap()as usize;match row["expected"].as_str().unwrap(){"zero"=>assert_eq!(list.reserve_capacity_one_work_demand(capacity).unwrap(),0),"same-selected"=>assert_eq!(list.reserve_capacity_one_work_demand(capacity).unwrap(),selected),"refused"=>assert!(list.reserve_capacity_one_work_demand(capacity).is_err()),_=>panic!("unknown quoted frontier")}}
+}

@@ -23,6 +23,7 @@ name = "semio_framework_job_failure"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-async = { workspace = true }
 semio-framework-job-receiving = { path = "../../../🛬️receiving/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }

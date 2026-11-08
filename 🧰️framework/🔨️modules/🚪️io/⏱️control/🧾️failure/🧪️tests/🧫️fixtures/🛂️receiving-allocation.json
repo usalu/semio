@@ -24,5 +24,6 @@
   "requestedBytes": 73,
   "maximumBytes": 1024,
   "workRefusal": "receiving original work",
-  "workOverrun": "receiving original overrun"
+  "workOverrun": "receiving original overrun",
+  "receiptCompletion": "published original construction refusal"
 }

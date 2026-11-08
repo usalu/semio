@@ -9,7 +9,8 @@
     "expected",
     "recipientClose",
     "controlledBirth",
-    "failureBirth"
+    "failureBirth",
+    "decoderChildBirth"
   ],
   "properties": {
     "quoted": {
@@ -84,6 +85,15 @@
         "releaseWork": 1,
         "nodesAfterBirth": 1,
         "nodesAfterRelease": 0
+      }
+    },
+    "decoderChildBirth": {
+      "const": {
+        "spareBefore": false,
+        "selected": "child",
+        "performed": 1,
+        "copyBytes": 1,
+        "freshSpareAllocated": false
       }
     }
   }

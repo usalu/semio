@@ -1,0 +1,8 @@
+import {test,expect} from "bun:test";
+import {Database} from "bun:sqlite";
+import {semioSchemaAjvV1} from "@semio-tech/framework/schema/oracles/validator";
+import law from "./template.json";
+import schema from "./template.schema.json";
+test("native empty seed prefixes have bounded copy and no typed partial owner",()=>{expect(semioSchemaAjvV1({strict:true}).validate(schema,law)).toBe(true);const db=new Database(":memory:");try{db.run("create table prefixes(cut integer,bytes integer,typed integer,drops integer)");for(const cut of law.cancellationCuts)db.run("insert into prefixes values(?,?,?,?)",cut,cut*law.blockBytes,Number(law.typedBeforeComplete),law.partialDestructorCalls);expect(db.query("select count(*) rows,sum(typed) typed,sum(drops) drops,max(bytes) prefix from prefixes").get()).toEqual({rows:4,typed:0,drops:0,prefix:8192});expect(law.blockBytes<=law.maximumCopyBytes).toBe(true);expect([law.foreignWorkAccepted,law.foreignTemplateAccepted,law.zeroWorkMutation]).toEqual([false,false,false]);expect(law.completeDestructorCalls).toBe(1)}finally{db.close()}});
+
+test("field plans initialize mutable metadata only after every paid part",()=>{expect(semioSchemaAjvV1({strict:true}).validate(schema,law)).toBe(true);const db=new Database(":memory:");try{db.run("create table stages(part integer,typed integer)");for(let part=0;part<=law.fieldPlan.parts;part++)db.run("insert into stages values(?,?)",part,Number(part===law.fieldPlan.parts));expect(db.query("select sum(typed) owners,max(case when typed=1 then part end) published from stages").get()).toEqual({owners:1,published:10});expect(law.fieldPlan.maximumPartBytes<=law.maximumCopyBytes).toBe(true);expect(law.fieldPlan.typedBeforeAllParts).toBe(false)}finally{db.close()}});

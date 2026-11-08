@@ -19,5 +19,11 @@
     "performed": 0,
     "sourceChecks": 1,
     "remainingWork": 5
+  },
+  "walletReturn": {
+    "pendingDenied": true,
+    "uninspectedDenied": true,
+    "spent": 3,
+    "remaining": 2
   }
 }

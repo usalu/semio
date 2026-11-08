@@ -35,8 +35,8 @@
             "weldProcess": "mig",
             "weldTJunction": false,
             "weldDirection": "longitudinal",
-            "edgeStiffenerDepth": 0.0,
-            "edgeStiffenerThickness": 0.0
+            "edgeStiffenerDepth": 0,
+            "edgeStiffenerThickness": 0
           }
         ]
       }
@@ -54,9 +54,9 @@
         "ltbLength": 13.4,
         "c1": 14.5,
         "restrainedLtb": true,
-        "bearingLength": 0.0,
+        "bearingLength": 0,
         "transverseWeld": false,
-        "transverseWeldOffset": 0.0,
+        "transverseWeldOffset": 0,
         "actions": [
           {
             "id": "member action",
@@ -70,8 +70,8 @@
             "vZK": 19.1,
             "mYK": 20.2,
             "mZK": 21.3,
-            "torsionK": 0.0,
-            "localLoadK": 0.0
+            "torsionK": 0,
+            "localLoadK": 0
           }
         ]
       }
@@ -95,8 +95,8 @@
             "vZK": 26.8,
             "mYK": 27.9,
             "mZK": 28.1,
-            "torsionK": 0.0,
-            "localLoadK": 0.0
+            "torsionK": 0,
+            "localLoadK": 0
           }
         ],
         "bolts": {
@@ -116,8 +116,8 @@
           "betaW": 36.9,
           "hazExtent": 37.1
         },
-        "loadEccentricity": 0.0,
-        "holeStagger": 0.0,
+        "loadEccentricity": 0,
+        "holeStagger": 0,
         "forceMethod": "elastic"
       }
     ],
@@ -162,8 +162,8 @@
             "vZK": 52.7,
             "mYK": 53.8,
             "mZK": 54.9,
-            "torsionK": 0.0,
-            "localLoadK": 0.0
+            "torsionK": 0,
+            "localLoadK": 0
           }
         ]
       }
@@ -190,8 +190,8 @@
             "vZK": 62.8,
             "mYK": 63.9,
             "mZK": 64.1,
-            "torsionK": 0.0,
-            "localLoadK": 0.0
+            "torsionK": 0,
+            "localLoadK": 0
           }
         ]
       }
@@ -201,7 +201,7 @@
         "id": "placed 日本",
         "x": 1.5,
         "y": -2.5,
-        "z": 0.0,
+        "z": 0,
         "yaw": 0.25
       }
     ],
@@ -217,7 +217,7 @@
         "process": "tig",
         "tJunction": true,
         "direction": "longitudinal",
-        "hazExtent": 0.0
+        "hazExtent": 0
       }
     ],
     "outlineVertices": [
@@ -226,8 +226,8 @@
         "sectionId": "section",
         "ring": "outer",
         "elementId": "web",
-        "y": 0.0,
-        "z": 0.0
+        "y": 0,
+        "z": 0
       },
       {
         "id": "v2",
@@ -235,7 +235,7 @@
         "ring": "outer",
         "elementId": "",
         "y": 0.1,
-        "z": 0.0
+        "z": 0
       },
       {
         "id": "v3",
@@ -263,19 +263,19 @@
         "id": "patch-1",
         "subjectId": "member",
         "position": "end",
-        "x": 0.0,
+        "x": 0,
         "bearingLength": 0.05,
-        "webHeight": 0.0,
-        "webAngle": 0.0,
+        "webHeight": 0,
+        "webAngle": 0,
         "cornerRadius": 0.004,
-        "load": 12000.0
+        "load": 12000
       }
     ],
     "ringStiffeners": [
       {
         "id": "ring-1",
         "shellId": "shell",
-        "x": 1.0,
+        "x": 1,
         "depth": 0.06,
         "thickness": 0.006,
         "internal": false
@@ -290,7 +290,9 @@
         "thickness": 0.008,
         "sides": "two"
       }
-    ]
+    ],
+    "sheetProfiles": [],
+    "fireInsulations": []
   },
   "binary64Words": [
     "0000000000000000",

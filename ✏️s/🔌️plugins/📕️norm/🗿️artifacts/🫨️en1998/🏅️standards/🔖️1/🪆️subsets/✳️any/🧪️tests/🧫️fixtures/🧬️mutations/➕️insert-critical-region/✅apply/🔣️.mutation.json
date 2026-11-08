@@ -1,0 +1,28 @@
+{
+  "mutation": "insertCriticalRegion",
+  "index": 0,
+  "criticalRegion": {
+    "id": "cr-1",
+    "buildingId": "bldg-office",
+    "memberId": "col-c1",
+    "sectionWidthM": 0.4,
+    "sectionDepthM": 0.5,
+    "clearLengthM": 3.0,
+    "hoopedLengthM": 0.75,
+    "coreWidthM": 0.32,
+    "coreDepthM": 0.42,
+    "axialForceN": 800000.0,
+    "concreteDesignStrengthMpa": 20.0,
+    "steelDesignYieldMpa": 434.8,
+    "hoopDesignYieldMpa": 434.8,
+    "longitudinalSteelAreaM2": 0.0048,
+    "longitudinalBarDiameterM": 0.016,
+    "longitudinalBarMaxDiameterM": 0.02,
+    "hoopDiameterM": 0.01,
+    "hoopSpacingM": 0.08,
+    "hoopLegsX": 3.0,
+    "hoopLegsY": 3.0,
+    "restrainedBarCount": 8.0,
+    "restrainedBarSpacingM": 0.11
+  }
+}

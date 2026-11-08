@@ -1,0 +1,89 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases",
+    "actions",
+    "totalWork",
+    "totalPosts"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "matching",
+          "refused",
+          "free",
+          "post",
+          "published",
+          "retry"
+        ],
+        "properties": {
+          "matching": {
+            "type": "boolean"
+          },
+          "refused": {
+            "type": "boolean"
+          },
+          "free": {
+            "type": "boolean"
+          },
+          "post": {
+            "enum": [
+              "pending",
+              "refused",
+              "accepted"
+            ]
+          },
+          "published": {
+            "type": "boolean"
+          },
+          "retry": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "actions": {
+      "type": "array",
+      "minItems": 11,
+      "maxItems": 11,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "work",
+          "posts"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "work": {
+            "enum": [
+              1,
+              5
+            ]
+          },
+          "posts": {
+            "const": 1
+          }
+        }
+      }
+    },
+    "totalWork": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "totalPosts": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

@@ -137,6 +137,9 @@ fn scalar_fields_pick_the_right_ramp_and_centre_diverging_at_zero() {
         assert_eq!(scalar_rgb(ResultField::Stress, v, 200.0, -50.0, 200.0), ramp(RampId::Diverging, v).sample(1.0));
         assert_eq!(scalar_rgb(ResultField::Temperature, v, 20.0, 20.0, 800.0), ramp(RampId::Warm, v).sample(0.0));
         assert_eq!(scalar_rgb(ResultField::Settlement, v, 30.0, 0.0, 30.0), ramp(RampId::Cool, v).sample(1.0));
+        assert_eq!(scalar_rgb(ResultField::of(QuantityKind::VentilationRate).expect("airflow"), v, 1.0, 0.0, 1.0), ramp(RampId::Cool, v).sample(1.0));
+        assert_eq!(scalar_rgb(ResultField::of(QuantityKind::Power).expect("heat"), v, 0.0, 0.0, 1.0), ramp(RampId::Warm, v).sample(0.0));
+        assert_eq!(ResultField::of(QuantityKind::Length), None);
         let l = legend(ResultField::Pressure, v, -1.0, 3.0, 5);
         assert_eq!(l.len(), 5);
         assert_eq!((l[0].0, l[4].0), (-3.0, 3.0));

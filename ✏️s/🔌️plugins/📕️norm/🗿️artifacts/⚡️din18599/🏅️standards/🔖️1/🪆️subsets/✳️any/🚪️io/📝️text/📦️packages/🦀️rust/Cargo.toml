@@ -32,6 +32,10 @@ semio-s-artifact-norm-din18599-model = { workspace = true }
 semio-s-artifact-norm-din18599-mut-building = { workspace = true }
 semio-s-artifact-norm-din18599-mut-systems = { workspace = true }
 semio-s-artifact-norm-din18599-mut-zoning = { workspace = true }
+semio-s-artifact-norm-din18599-mut-zone-rows = { workspace = true }
+semio-s-artifact-norm-din18599-mut-zone-fields = { workspace = true }
+semio-s-artifact-norm-din18599-mut-element-rows = { workspace = true }
+semio-s-artifact-norm-din18599-mut-element-fields = { workspace = true }
 semio-s-artifact-norm-din18599-mutations = { workspace = true }
 
 [dev-dependencies]

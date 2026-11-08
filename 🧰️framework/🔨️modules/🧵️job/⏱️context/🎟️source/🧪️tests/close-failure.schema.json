@@ -1,0 +1,25 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "kind",
+      "detail"
+    ],
+    "properties": {
+      "kind": {
+        "enum": [
+          "value",
+          "cancellationBlocked",
+          "cancellationRefused",
+          "retirement"
+        ]
+      },
+      "detail": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

@@ -216,7 +216,7 @@ impl MemberHistoryReceiving {
    (Ok(_),Some(mut refusal))=>{self.closing=true;refusal.effects=progress;Err(refusal)},
    (Err(RetainedHistoryOpMetaFault::Value(primary)),None)=>{self.closing=true;Err(primary.with_retained_progress(progress).into())},
    (Err(RetainedHistoryOpMetaFault::Value(primary)),Some(OriginalTurnFailure{primary:semio_framework_job::OriginalTurnPrimary::Value(quote),receipt_refusal,context_refusal,work_refusal,..}))=>{
-    self.closing=true;Err(OriginalTurnFailure{effects:progress,primary:semio_framework_job::OriginalTurnPrimary::Receiving(semio_framework_job::OriginalReceivingPrimary{retirement_failure:None,work_refusal:None,work_overrun:None,primary:Some(primary),quote_refusal:Some(quote),allocation_refusal:None,allocation_failure:None,native_allocation:None,receipt_refusal:None,progress}),receipt_refusal,context_refusal,work_refusal})
+    self.closing=true;Err(OriginalTurnFailure{effects:progress,primary:semio_framework_job::OriginalTurnPrimary::Receiving(semio_framework_job::OriginalReceivingPrimary::from_fields(Some(primary),Some(quote),None,None,None,None,None,None,None,progress)),receipt_refusal,context_refusal,work_refusal})
    },
    (Err(primary),refusal)=>{*self.fault=Some(primary);self.closing=true;match refusal{Some(mut refusal)=>{refusal.effects=progress;Err(refusal)},None=>Ok(RetainedHistorySourceStep::Fault)}},
   }

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "error",
+    "pendingRetainsKey",
+    "completionClearsKey",
+    "foreignRejected",
+    "nestedKeys",
+    "childCompleteBecomes",
+    "sendOnly"
+  ],
+  "properties": {
+    "error": {
+      "const": "original recorded reply"
+    },
+    "pendingRetainsKey": {
+      "const": true
+    },
+    "completionClearsKey": {
+      "const": true
+    },
+    "foreignRejected": {
+      "const": true
+    },
+    "nestedKeys": {
+      "const": 2
+    },
+    "childCompleteBecomes": {
+      "const": "progress"
+    },
+    "sendOnly": {
+      "const": {
+        "value": 73,
+        "recorded": true,
+        "keyClearedBeforeUnwind": true
+      }
+    }
+  }
+}

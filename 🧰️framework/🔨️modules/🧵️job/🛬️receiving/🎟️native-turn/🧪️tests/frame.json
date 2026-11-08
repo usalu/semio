@@ -1,0 +1,26 @@
+[
+  {
+    "work": true,
+    "construction": true,
+    "recipient": true,
+    "entered": true
+  },
+  {
+    "work": false,
+    "construction": true,
+    "recipient": true,
+    "entered": false
+  },
+  {
+    "work": true,
+    "construction": false,
+    "recipient": true,
+    "entered": false
+  },
+  {
+    "work": true,
+    "construction": true,
+    "recipient": false,
+    "entered": false
+  }
+]

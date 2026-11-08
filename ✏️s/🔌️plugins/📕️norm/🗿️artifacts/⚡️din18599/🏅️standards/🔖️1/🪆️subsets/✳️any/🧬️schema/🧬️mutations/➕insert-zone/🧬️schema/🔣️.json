@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/insert-zone/schema.json",
+  "title": "InsertZone",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "index",
+    "zone"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "insertzone"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based list position at which the record is inserted.",
+          "de": "Nullbasierte Listenposition, an der der Datensatz eingefügt wird."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "zone": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/snapshot/schema.json#/$defs/ThermalZone",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Thermal zone",
+          "de": "Thermische Zone"
+        },
+        "description": {
+          "en": "The complete zone record to insert.",
+          "de": "Der vollständige einzufügende Datensatz (Zone)."
+        },
+        "group": "record",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "type": "array",
+  "minItems": 5,
+  "items": {
+    "type": "object",
+    "required": [
+      "sameIssuer",
+      "published",
+      "accepted",
+      "finishedWork",
+      "valid"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "sameIssuer": {
+        "type": "boolean"
+      },
+      "published": {
+        "type": "boolean"
+      },
+      "accepted": {
+        "type": "boolean"
+      },
+      "finishedWork": {
+        "type": "boolean"
+      },
+      "valid": {
+        "type": "boolean"
+      }
+    }
+  }
+}

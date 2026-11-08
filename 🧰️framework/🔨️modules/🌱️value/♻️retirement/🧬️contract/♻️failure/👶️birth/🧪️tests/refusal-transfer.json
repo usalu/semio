@@ -1,0 +1,37 @@
+{
+  "cases": [
+    {
+      "name": "deniedCopy",
+      "copy": false,
+      "occupied": false,
+      "alreadySpent": 0,
+      "transferred": false,
+      "work": 0
+    },
+    {
+      "name": "occupiedOutput",
+      "copy": true,
+      "occupied": true,
+      "alreadySpent": 0,
+      "transferred": false,
+      "work": 0
+    },
+    {
+      "name": "spentReceipt",
+      "copy": true,
+      "occupied": false,
+      "alreadySpent": 1,
+      "transferred": false,
+      "work": 0
+    },
+    {
+      "name": "admitted",
+      "copy": true,
+      "occupied": false,
+      "alreadySpent": 0,
+      "transferred": true,
+      "work": 1
+    }
+  ],
+  "slots": 2
+}

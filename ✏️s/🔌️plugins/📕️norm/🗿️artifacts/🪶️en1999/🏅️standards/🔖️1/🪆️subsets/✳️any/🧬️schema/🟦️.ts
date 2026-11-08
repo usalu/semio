@@ -38,6 +38,10 @@ export interface En1999Artifact {
   transverseStiffeners: TransverseStiffener[];
   /** @state artifact */
   reliabilityClass: "RC1" | "RC2" | "RC3";
+  /** @state artifact */
+  sheetProfiles: SheetProfile[];
+  /** @state artifact */
+  fireInsulations: FireInsulation[];
 }
 
 export type ProductForm = "sheet" | "extrudedProfile" | "extrudedTube" | "extrudedBar" | "drawnTube" | "forging";
@@ -276,7 +280,25 @@ export interface PlateElement {
 
 export type FastenerForceMethod = "elastic" | "instantaneousCentre";
 
-export const parseEn1999Artifact: NormWireReader<En1999Artifact> = normWireObject<En1999Artifact>({ annex: normWireRequired(normWireLiteral("En", "De")), materials: normWireRequired(normWireArray(normWireRef(() => parseAluminiumMaterial))), sections: normWireRequired(normWireArray(normWireRef(() => parseAluminiumSection))), members: normWireRequired(normWireArray(normWireRef(() => parseAluminiumMember))), connections: normWireRequired(normWireArray(normWireRef(() => parseAluminiumConnection))), fireScenarios: normWireRequired(normWireArray(normWireRef(() => parseFireScenario))), fatigueDetails: normWireRequired(normWireArray(normWireRef(() => parseFatigueDetail))), coldFormed: normWireRequired(normWireArray(normWireRef(() => parseColdFormedSheet))), shells: normWireRequired(normWireArray(normWireRef(() => parseAluminiumShell))), placements: normWireRequired(normWireArray(normWireRef(() => parsePlacement))), weldRuns: normWireRequired(normWireArray(normWireRef(() => parseWeldRun))), outlineVertices: normWireRequired(normWireArray(normWireRef(() => parseSectionVertex))), fatigueCategories: normWireRequired(normWireArray(normWireRef(() => parseFatigueCategory))), patchLoads: normWireRequired(normWireArray(normWireRef(() => parsePatchLoad))), ringStiffeners: normWireRequired(normWireArray(normWireRef(() => parseRingStiffener))), transverseStiffeners: normWireRequired(normWireArray(normWireRef(() => parseTransverseStiffener))), reliabilityClass: normWireRequired(normWireLiteral("RC1", "RC2", "RC3")) });
+export interface SheetProfile {
+  id: string;
+  sheetId: string;
+  pitch: number;
+  topFlange: number;
+  bottomFlange: number;
+  webHeight: number;
+}
+
+export interface FireInsulation {
+  id: string;
+  fireId: string;
+  thickness: number;
+  conductivity: number;
+  specificHeat: number;
+  density: number;
+}
+
+export const parseEn1999Artifact: NormWireReader<En1999Artifact> = normWireObject<En1999Artifact>({ annex: normWireRequired(normWireLiteral("En", "De")), materials: normWireRequired(normWireArray(normWireRef(() => parseAluminiumMaterial))), sections: normWireRequired(normWireArray(normWireRef(() => parseAluminiumSection))), members: normWireRequired(normWireArray(normWireRef(() => parseAluminiumMember))), connections: normWireRequired(normWireArray(normWireRef(() => parseAluminiumConnection))), fireScenarios: normWireRequired(normWireArray(normWireRef(() => parseFireScenario))), fatigueDetails: normWireRequired(normWireArray(normWireRef(() => parseFatigueDetail))), coldFormed: normWireRequired(normWireArray(normWireRef(() => parseColdFormedSheet))), shells: normWireRequired(normWireArray(normWireRef(() => parseAluminiumShell))), placements: normWireRequired(normWireArray(normWireRef(() => parsePlacement))), weldRuns: normWireRequired(normWireArray(normWireRef(() => parseWeldRun))), outlineVertices: normWireRequired(normWireArray(normWireRef(() => parseSectionVertex))), fatigueCategories: normWireRequired(normWireArray(normWireRef(() => parseFatigueCategory))), patchLoads: normWireRequired(normWireArray(normWireRef(() => parsePatchLoad))), ringStiffeners: normWireRequired(normWireArray(normWireRef(() => parseRingStiffener))), transverseStiffeners: normWireRequired(normWireArray(normWireRef(() => parseTransverseStiffener))), reliabilityClass: normWireRequired(normWireLiteral("RC1", "RC2", "RC3")), sheetProfiles: normWireRequired(normWireArray(normWireRef(() => parseSheetProfile))), fireInsulations: normWireRequired(normWireArray(normWireRef(() => parseFireInsulation))) });
 export const parseProductForm: NormWireReader<ProductForm> = normWireLiteral("sheet", "extrudedProfile", "extrudedTube", "extrudedBar", "drawnTube", "forging");
 export const parseAluminiumMaterial: NormWireReader<AluminiumMaterial> = normWireObject<AluminiumMaterial>({ id: normWireRequired(normWireString), designation: normWireRequired(normWireString), productForm: normWireRequired(normWireRef(() => parseProductForm)) });
 export const parseSectionKind: NormWireReader<SectionKind> = normWireLiteral("extrudedI", "channel", "angle", "rhs", "box", "chs", "free");
@@ -310,3 +332,5 @@ export const parseWeldProcess: NormWireReader<WeldProcess> = normWireLiteral("mi
 export const parseWeldDirection: NormWireReader<WeldDirection> = normWireLiteral("longitudinal", "transverse");
 export const parsePlateElement: NormWireReader<PlateElement> = normWireObject<PlateElement>({ id: normWireRequired(normWireString), width: normWireRequired(normWireNumber), thickness: normWireRequired(normWireNumber), outstand: normWireRequired(normWireBoolean), welded: normWireRequired(normWireBoolean), weldPosition: normWireRequired(normWireNumber), weldProcess: normWireRequired(normWireRef(() => parseWeldProcess)), weldTJunction: normWireRequired(normWireBoolean), weldDirection: normWireRequired(normWireRef(() => parseWeldDirection)), edgeStiffenerDepth: normWireRequired(normWireNumber), edgeStiffenerThickness: normWireRequired(normWireNumber) });
 export const parseFastenerForceMethod: NormWireReader<FastenerForceMethod> = normWireLiteral("elastic", "instantaneousCentre");
+export const parseSheetProfile: NormWireReader<SheetProfile> = normWireObject<SheetProfile>({ id: normWireRequired(normWireString), sheetId: normWireRequired(normWireString), pitch: normWireRequired(normWireNumber), topFlange: normWireRequired(normWireNumber), bottomFlange: normWireRequired(normWireNumber), webHeight: normWireRequired(normWireNumber) });
+export const parseFireInsulation: NormWireReader<FireInsulation> = normWireObject<FireInsulation>({ id: normWireRequired(normWireString), fireId: normWireRequired(normWireString), thickness: normWireRequired(normWireNumber), conductivity: normWireRequired(normWireNumber), specificHeat: normWireRequired(normWireNumber), density: normWireRequired(normWireNumber) });

@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-element-tilt-deg/schema.json",
+  "title": "ChangeElementTiltDeg",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "elementId",
+    "newTiltDeg"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeelementtiltdeg"
+    },
+    "elementId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Envelope element",
+          "de": "Bauteil der Gebäudehülle"
+        },
+        "description": {
+          "en": "The element this mutation addresses.",
+          "de": "Das Objekt (Bauteil), das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "element"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newTiltDeg": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 180.0,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Tilt",
+          "de": "Neigung"
+        },
+        "widget": "stepper",
+        "unit": "°",
+        "step": 1,
+        "precision": 0,
+        "group": "element",
+        "order": 20
+      }
+    }
+  }
+}

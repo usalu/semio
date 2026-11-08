@@ -5,7 +5,9 @@
     "work": 1,
     "capacity": 0,
     "requested": 0,
-    "admitted": true
+    "admitted": true,
+    "nextWork": 1,
+    "opened": false
   },
   {
     "name": "native read denied before leaf",
@@ -13,7 +15,9 @@
     "work": 1,
     "capacity": 0,
     "requested": 0,
-    "admitted": false
+    "admitted": false,
+    "nextWork": 1,
+    "opened": false
   },
   {
     "name": "host physical grant denied",
@@ -21,7 +25,9 @@
     "work": 1,
     "capacity": 7,
     "requested": 8,
-    "admitted": false
+    "admitted": false,
+    "nextWork": 1,
+    "opened": false
   },
   {
     "name": "host physical grant admitted",
@@ -29,6 +35,28 @@
     "work": 1,
     "capacity": 8,
     "requested": 8,
+    "admitted": true,
+    "nextWork": 1,
+    "opened": false
+  },
+  {
+    "name": "pending host resumes within original remaining work",
+    "fuel": 1,
+    "work": 2,
+    "nextWork": 1,
+    "opened": true,
+    "capacity": 0,
+    "requested": 0,
     "admitted": true
+  },
+  {
+    "name": "new host cannot borrow only its first turn",
+    "fuel": 1,
+    "work": 2,
+    "nextWork": 1,
+    "opened": false,
+    "capacity": 0,
+    "requested": 0,
+    "admitted": false
   }
 ]

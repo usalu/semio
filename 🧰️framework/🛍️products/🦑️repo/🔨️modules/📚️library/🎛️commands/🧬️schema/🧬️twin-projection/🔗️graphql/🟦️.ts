@@ -24,6 +24,8 @@ export function renderGraphqlTwin(module: SchemaModule, index: ReadonlyMap<strin
     const text = renderGraphql(name, withoutMetaProperties(node), (candidate) => taken.has(candidate) && candidate !== name);
     return text === undefined ? [] : [text.replace(/^scalar JSON\n+/u, "").trimEnd()];
   });
-  const usesJson = blocks.some((block) => /\bJSON\b/u.test(block));
-  return [...(usesJson ? ["scalar JSON", ""] : []), ...blocks, ""].join("\n");
+  const scalars = new Set<string>();
+  const bodies = blocks.map((block) => block.replace(/^scalar (UInt32|UInt64|Int64)\n*/gmu, (_, name: string) => { scalars.add(name); return ""; }));
+  if (bodies.some((block) => /\bJSON\b/u.test(block))) scalars.add("JSON");
+  return [...[...scalars].flatMap((name) => [`scalar ${name}`, ""]), ...bodies, ""].join("\n");
 }

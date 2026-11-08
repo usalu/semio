@@ -86,7 +86,29 @@
     {
       "axis": "copy",
       "maximumCopyBytes": 0,
+      "admitted": false
+    },
+    {
+      "axis": "copy",
+      "exactHeaderQuote": true,
       "admitted": true
     }
-  ]
+  ],
+  "structuralCopy": {
+    "shortGrants": [
+      1,
+      3,
+      64
+    ],
+    "shortOutcome": "deny-retain-zero-work",
+    "resume": "exact-structural-demand",
+    "maximumCopyBytes": 4096
+  },
+  "authority": {
+    "root": "typed λ root",
+    "generation": 19,
+    "revisionOctet": 17
+  },
+  "erasedCancellationRoot": "erased λ🙂",
+  "closeOrderRoot": "last-reader λ🙂"
 }

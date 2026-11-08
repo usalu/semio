@@ -9,6 +9,7 @@
     "sequenceLength"
   ],
   "events": [
+    "bind",
     "receive",
     "performed",
     "recordError",
@@ -19,5 +20,11 @@
   ],
   "calls": 1,
   "work": 2,
-  "preserveError": true
+  "preserveError": true,
+  "destination": "residentFrame",
+  "operation": "immutable",
+  "transfer": "separatelyPaid",
+  "binding": "originalRetainedSource",
+  "bindWork": 1,
+  "transferWork": 1
 }

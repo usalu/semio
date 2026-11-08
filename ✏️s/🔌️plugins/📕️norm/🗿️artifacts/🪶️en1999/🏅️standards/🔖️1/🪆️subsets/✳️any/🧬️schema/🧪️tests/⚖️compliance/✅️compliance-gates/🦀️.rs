@@ -181,3 +181,49 @@ fn third_party_libraries_reproduce_the_blessed_oracle_cases() {
     let verified = semio_s_plugin_norm_compliance::python_oracle::verify_cases_above(env!("CARGO_MANIFEST_DIR"));
     assert!(verified >= 7, "expected at least 7 verified oracle cases, got {verified}");
 }
+
+/// 🎯️ EN 1999 third-party cross-check: the independent script recomputes A-02, A-21, A-22, A-60, A-62 and A-70..A-72 with sympy, shapely, scipy, numpy, sectionproperties and anastruct; the Rust evaluation of the very same documents must agree.
+#[test]
+fn third_party_cross_check_agrees_with_rust() {
+    let script = family_any_dir().join("🔮️oracles").join("🎯️third-party-crosscheck").join("🐍️.py");
+    let output = semio_s_plugin_norm_compliance::python_oracle::command().arg(script).output().unwrap_or_else(|e| panic!("cross-check spawn failed: {e}"));
+    assert!(output.status.success(), "cross-check stderr={}", String::from_utf8_lossy(&output.stderr));
+    let py: serde_json::Value = serde_json::from_slice(&output.stdout).expect("cross-check json");
+    let rows = py["rows"].as_array().expect("rows");
+    assert!(rows.len() >= 52, "expected >=52 cross-check rows, got {}", rows.len());
+    for row in rows {
+        let rel = row["rel"].as_f64().expect("rel");
+        assert!(rel <= 5e-2, "{} rel={rel}", row["name"]);
+    }
+    for (id, entry) in py["spec_rows"].as_object().expect("spec_rows") {
+        assert!(entry["checks"].as_array().is_some_and(|c| !c.is_empty()), "spec row {id} has no checks");
+    }
+    let template = serde_json::to_value(En1999Snapshot::compliant_roof_purlin()).unwrap();
+    let (mut documents, mut widths) = (0, 0);
+    for row in rows {
+        let name = row["name"].as_str().unwrap();
+        let theirs = row["theirs"].as_f64().unwrap();
+        if let Some(element) = row.get("element") {
+            let element: semio_s_artifact_norm_en1999_model::PlateElement = serde_json::from_value(element.clone()).unwrap_or_else(|e| panic!("{name}: {e}"));
+            let ours = part_1_1::haz_width_for(&element);
+            assert!((ours - theirs).abs() <= 1e-12, "{name}: rust={ours} sympy={theirs}");
+            widths += 1;
+        }
+        if let Some(document) = row.get("document") {
+            let mut tree = document.clone();
+            for (key, value) in template.as_object().unwrap() {
+                if value.is_array() {
+                    tree.as_object_mut().unwrap().entry(key.clone()).or_insert_with(|| serde_json::json!([]));
+                }
+            }
+            let snapshot: En1999Snapshot = serde_json::from_value(tree).unwrap_or_else(|e| panic!("{name}: {e}"));
+            let id = row["check_id"].as_str().unwrap();
+            let report = evaluate_structure(&snapshot);
+            let check = report.checks.iter().find(|c| c.id == id).unwrap_or_else(|| panic!("{name}: Rust has no check {id}"));
+            assert!((check.utilization - theirs).abs() <= 5e-3 * theirs.abs().max(1e-9), "{name}: rust={} third-party={theirs}", check.utilization);
+            documents += 1;
+        }
+    }
+    assert_eq!(widths, 10, "A-02 b_haz rows");
+    assert_eq!(documents, 11, "A-21 and A-22 utilisation rows");
+}

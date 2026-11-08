@@ -1,0 +1,31 @@
+{
+  "type": "array",
+  "minItems": 3,
+  "items": {
+    "type": "object",
+    "properties": {
+      "phase": {
+        "enum": [
+          "pending",
+          "accepted",
+          "refused"
+        ]
+      },
+      "recorded": {
+        "type": "boolean"
+      },
+      "succeeded": {
+        "type": [
+          "boolean",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "phase",
+      "recorded",
+      "succeeded"
+    ],
+    "additionalProperties": false
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-element-label-de/schema.json",
+  "title": "ChangeElementLabelDe",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "elementId",
+    "newLabelDe"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeelementlabelde"
+    },
+    "elementId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Envelope element",
+          "de": "Bauteil der Gebäudehülle"
+        },
+        "description": {
+          "en": "The element this mutation addresses.",
+          "de": "Das Objekt (Bauteil), das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "element"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newLabelDe": {
+      "type": "string",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Label (German)",
+          "de": "Bezeichnung (Deutsch)"
+        },
+        "widget": "text",
+        "group": "element",
+        "order": 20
+      }
+    }
+  }
+}

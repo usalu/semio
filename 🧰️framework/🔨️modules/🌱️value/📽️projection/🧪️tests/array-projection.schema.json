@@ -1,0 +1,29 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "length",
+    "value",
+    "maximumCopy",
+    "maximumWork"
+  ],
+  "properties": {
+    "length": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "value": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "maximumCopy": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maximumWork": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

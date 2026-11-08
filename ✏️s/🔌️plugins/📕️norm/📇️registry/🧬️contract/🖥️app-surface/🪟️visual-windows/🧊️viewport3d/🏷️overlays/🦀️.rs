@@ -96,7 +96,7 @@ fn tone(t: Tone) -> World3dTone {
 }
 
 fn marker(id: String, at: V3, shape: World3dMarkerShape, text: World3dText, tone: World3dTone) -> World3dAnnotation {
-    World3dAnnotation::Marker(World3dMarker { id, position: at, shape, text, tone })
+    World3dAnnotation::Marker(World3dMarker { id, position: at, shape, axis: None, text, tone })
 }
 
 fn anchor_of(scene: &StructuralScene, id: &str) -> V3 {

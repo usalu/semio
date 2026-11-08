@@ -1,87 +1,77 @@
-//! 🪪️ Erased publication views retain genuine typed factory ownership through full closure.
-use super::{ReadLease,ReadLeaseId,ReadOwnershipRegistry};
-use crate::{RetainedWorkOutcome,ErasedSnapshotRetirement,FactoryAuthority,FactoryRetirement,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{RetireOwned,RetirementCursor,RetirementStep}};
-use std::{any::Any,mem::ManuallyDrop,sync::Arc};
+//! 🔏️ A typed read authority retains the same issued registry alias until its paid retirement.
+use super::{IssuedReadRegistry,ReadOwnershipRegistry};
+use crate::{ErasedSnapshotRetirement,RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{OriginalEffectCallbackMode,OriginalEffectInvocationIdentity,OriginalEffectReply,OriginalEffectReplyComplete,OriginalWorkActionBoundary,OriginalWorkBindingIdentity,RetainedWorkPoll,retained_clone_grant_admits},retirement::{RetireOwned,RetirementCursor,RetirementStep,arc_custody::{admit_shared_retirement_into,shared_retirement_birth_demand,original::SharedOriginalStorage}}};
+use semio_framework_value_retirement::{OriginalRetirementCloseLoan,OriginalRetirementFailure,OriginalRetirementPoll,RetirementHeaderRelease};
+use std::mem::{size_of,ManuallyDrop};
+type Reply<'r>=OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>;
+type Complete<'r>=OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>;
+type CursorReply<'r>=OriginalEffectReply<'r,RetirementStep,OriginalRetirementFailure>;
+type CursorComplete<'r>=OriginalEffectReplyComplete<'r,RetirementStep,OriginalRetirementFailure>;
+fn invalid(message:&'static str)->ValueError{ValueError::invariant(message)}
+fn header(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
 
-trait Publication:FactoryRetirement+Any {
-    fn as_any(&self)->&dyn Any;
-    fn publish(&self,generation:u64,revision:[u8;32])->bool;
-    fn matches(&self,generation:u64,revision:[u8;32])->bool;
-    fn contains(&self,id:ReadLeaseId)->Result<bool,ValueError>;
-    fn occupied_count(&self)->Result<usize,ValueError>;
-    fn has_returned(&self)->bool;
+/// 🪪️ The exact issued registry alias remains resident through every close action.
+pub struct ReadAuthority<T:RetireOwned+Sync>{source:ManuallyDrop<Option<SharedOriginalStorage<ReadOwnershipRegistry<T>>>>,closing:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,work:Option<OriginalWorkBindingIdentity>}
+impl<T:RetireOwned+Sync> ReadAuthority<T>{
+ /// 📏️ Quotes direct publication of the original issued storage and its Source binding.
+ pub fn admission_demand()->RetirementDemand{header(size_of::<Option<IssuedReadRegistry<T>>>()+size_of::<Option<Self>>())}
+ /// 🫴️ Publishes the same original storage directly into an empty caller-owned slot.
+ pub fn admit_into<'r>(source:&mut Option<IssuedReadRegistry<T>>,output:&mut Option<Self>,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{let issued=source.as_ref().ok_or_else(||invalid("read issued registry absent"))?;issued.authenticate(effect)?;if issued.storage.is_none()||output.is_some(){return Err(invalid("read authority admission slots changed"))}let d=Self::admission_demand();if effect.remaining_work_units()?<1||!retained_clone_grant_admits(effect.grant(),d){return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}match effect.performed(1){Ok(true)=>{},Ok(false)=>return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::WorkLimit,"read authority admission exceeded original Work").into()))),Err(error)=>return Ok(reply.complete(Err(error.into())))}let issued=source.as_mut().ok_or_else(||invalid("read issued registry absent"))?;let storage=issued.storage.take();let work=issued.work.take();*output=Some(Self{source:ManuallyDrop::new(storage),closing:ManuallyDrop::new(None),work});drop(source.take());Ok(reply.complete(Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))))}
+ /// 👁️ Borrows the exact live typed registry without duplicating its authority.
+ pub fn registry(&self)->Result<&ReadOwnershipRegistry<T>,ValueError>{self.source.as_ref().map(SharedOriginalStorage::get).ok_or_else(||invalid("read authority is closing"))}
+ pub(crate) fn storage(&self)->Result<&SharedOriginalStorage<ReadOwnershipRegistry<T>>,ValueError>{self.source.as_ref().ok_or_else(||invalid("read authority is closing"))}
+ pub(crate) fn authenticate(&self,effect:&RetainedAllocationEffect<'_>)->Result<(),ValueError>{if !self.work.is_some_and(|work|work.matches_effect(effect)){return Err(invalid("read authority changed original Work"))}Ok(())}
+ /// 📏️ Quotes the caller-resident authority header and the genuine issued alias.
+ pub fn clone_demand(&self)->Result<RetirementDemand,ValueError>{self.storage()?;let child=SharedOriginalStorage::<ReadOwnershipRegistry<T>>::duplicate_demand();Ok(RetirementDemand{copy_bytes:child.copy_bytes.checked_add(size_of::<Option<Self>>()).ok_or_else(||invalid("read authority clone copy overflow"))?,..child})}
+ /// ⛽️ Quotes the actual authority header and alias duplication work.
+ pub fn clone_work_demand(&self)->Result<u64,ValueError>{self.storage()?.duplicate_work_demand()?.checked_add(1).ok_or_else(||invalid("read authority clone Work overflow"))}
+ /// 🫴️ Publishes the issued alias directly into the caller's resident slot.
+ pub fn clone_into<'r>(&self,output:&mut Option<Self>,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{self.authenticate(effect)?;if output.is_some(){return Err(invalid("read authority clone output occupied"))}let source=self.storage()?;let demand=self.clone_demand()?;let work=self.clone_work_demand()?;if effect.remaining_work_units()?<work||!retained_clone_grant_admits(effect.grant(),demand){return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}match effect.performed(1){Ok(true)=>{},Ok(false)=>return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::WorkLimit,"read authority clone header exceeded Work").into()))),Err(error)=>return Ok(reply.complete(Err(error.into())))}*output=Some(Self{source:ManuallyDrop::new(None),closing:ManuallyDrop::new(None),work:self.work});let child=source.duplicate_into(&mut output.as_mut().expect("published read authority clone").source,effect);let header=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<Self>>(),..Default::default()};match child.result{Ok(step)=>{let progress=step.progress();let copied=header.copied_bytes.checked_add(progress.copied_bytes).expect("preflight read authority clone quote");Ok(reply.complete(Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:copied,retained_capacity_bytes:progress.retained_capacity_bytes,released_bytes:progress.released_bytes,..Default::default()}))))},Err(error)=>Ok(reply.complete(Err(OriginalRetirementFailure::from_primary(error).with_retained_progress(header))))}}
+ /// 📏️ Selects the actual original alias, child or terminal Work header.
+ pub fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.source.is_some(){return Ok(shared_retirement_birth_demand::<ReadOwnershipRegistry<T>>())}if let Some(owner)=self.closing.as_ref(){return if owner.terminal_is_empty(){owner.native_header_release().ok_or_else(||invalid("read authority terminal witness absent"))?.demand(owner.as_ref())}else{owner.next_demand(body)}}Ok(if self.work.is_some(){header(size_of::<Option<OriginalWorkBindingIdentity>>())}else{Default::default()})}
+ fn work_demand(&self,body:usize)->Result<u64,ValueError>{self.demands(body)?;if self.source.is_some(){return Ok(1)}if let Some(owner)=self.closing.as_ref(){return if owner.terminal_is_empty(){owner.native_header_release().ok_or_else(||invalid("read authority terminal witness absent"))?.work()}else{owner.next_computational_work(body)}}Ok(u64::from(self.work.is_some()))}
+ /// ✅️ Reports when the issued alias, selected child and Work binding have all settled.
+ pub fn terminal_is_empty(&self)->bool{self.source.is_none()&&self.closing.is_none()&&self.work.is_none()}
 }
-impl<T:RetireOwned+Sync> Publication for ReadOwnershipRegistry<T> {
-    fn as_any(&self)->&dyn Any {self}
-    fn publish(&self,generation:u64,revision:[u8;32])->bool {self.publish_authority(generation,revision)}
-    fn matches(&self,generation:u64,revision:[u8;32])->bool {self.authority_matches(generation,revision)}
-    fn contains(&self,id:ReadLeaseId)->Result<bool,ValueError> {self.contains(id)}
-    fn occupied_count(&self)->Result<usize,ValueError> {self.occupied_count()}
-    fn has_returned(&self)->bool {self.has_returned()}
-}
-
-/// 🔏️ A sealed erased view and its original typed factory capability close as one managed owner.
-pub struct ReadAuthority {view:ManuallyDrop<Option<Arc<dyn Publication>>>,#[doc(hidden)] pub owner:FactoryAuthority}
-impl ReadAuthority {
-    pub fn terminal_is_empty(&self)->bool {self.view.is_none()&&self.owner.terminal_is_empty()}
-    pub fn constructor_capacity_bytes<T:RetireOwned+Sync>()->usize {ReadOwnershipRegistry::<T>::constructor_capacity_bytes()}
-    pub fn admit<T:RetireOwned+Sync>(grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),ValueError> {
-        let(root,p)=ReadOwnershipRegistry::<T>::admit(grant)?;let view:Arc<dyn Publication>=root;let factory:Arc<dyn FactoryRetirement>=view.clone();
-        Ok((Self {view:ManuallyDrop::new(Some(view)),owner:FactoryAuthority::new(factory)},p))
-    }
-    pub fn admit_clone(&self,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),ValueError> {
-        if grant.maximum_items==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"read authority clone requires an admitted item"));}
-        if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"read authority clone requires admitted depth"));}
-        let view=self.view.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"read authority cannot clone after closure began"))?.clone();let factory:Arc<dyn FactoryRetirement>=view.clone();
-        Ok((Self {view:ManuallyDrop::new(Some(view)),owner:FactoryAuthority::new(factory)},RetainedCloneProgress {copied_items:1,..Default::default()}))
-    }
-    pub fn publish_authority(&self,generation:u64,revision:[u8;32])->bool {self.view.as_ref().is_some_and(|view|view.publish(generation,revision))}
-    pub fn authority_matches(&self,generation:u64,revision:[u8;32])->bool {self.view.as_ref().is_some_and(|view|view.matches(generation,revision))}
-    pub fn contains(&self,id:ReadLeaseId)->Result<bool,ValueError> {self.view.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"read authority is closing"))?.contains(id)}
-    pub fn occupied_count(&self)->Result<usize,ValueError> {self.view.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"read authority is closing"))?.occupied_count()}
-    pub fn has_returned(&self)->bool {self.view.as_ref().is_some_and(|view|view.has_returned())}
-    /// 🎫️ The sealed publication family proves the concrete Arc payload before reconstructing its typed alias.
-    pub fn issue<T:RetireOwned+Sync>(&self,root:Arc<T>,grant:RetainedCloneGrant)->Result<(ReadLease<T>,RetainedCloneProgress),(ValueError,Arc<T>)> {
-        let Some(view)=self.view.as_ref().filter(|view|view.as_any().is::<ReadOwnershipRegistry<T>>())else{return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"read authority has a different concrete root type or is closing"),root));};
-        let pointer=Arc::into_raw(Arc::clone(view))as*const ReadOwnershipRegistry<T>;
-        let registry=unsafe{Arc::from_raw(pointer)};
-        registry.try_issue(root,grant)
-    }
-    pub fn take_returned<T:RetireOwned+Sync>(&self,grant:RetainedCloneGrant)->Result<(Option<Arc<T>>,RetainedCloneProgress),ValueError> {
-        self.view.as_ref().and_then(|view|view.as_any().downcast_ref::<ReadOwnershipRegistry<T>>()).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"read authority maintenance has a different concrete root type or is closing"))?.take_returned(grant)
-    }
-    pub fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError> {if self.view.is_some(){Ok(RetirementDemand {depth:1,..Default::default()})}else{self.owner.demands(copy)}}
-}
-impl ErasedSnapshotRetirement for ReadAuthority {
-    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->semio_framework_value_retirement::OriginalRetirementPoll {let grant=effect.grant();let done=|result:Result<RetainedCloneStep,crate::OriginalRetirementFailure>,work:u128|crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work});
-        if self.terminal_is_empty(){return done(Ok(RetainedCloneStep::Complete(Default::default())),0)}
-        if grant.maximum_items==0{return done(Ok(RetainedCloneStep::Progress(Default::default())),0)}
-        if self.view.is_some(){if grant.maximum_depth==0{return done(Err(ValueError::literal(ValueRefusalKind::DepthLimit,"read view closure requires admitted depth").into()),0)}drop(self.view.take());return done(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),1)}
-        self.owner.step(&mut effect.nested(grant))
-    }
-    fn next_computational_work(&self,_:usize)->Result<u64,crate::ValueError>{Ok(u64::from(!ErasedSnapshotRetirement::terminal_is_empty(self)))}
-    fn terminal_is_empty(&self)->bool {Self::terminal_is_empty(self)}
-    fn next_copy_byte_demand(&self)->Result<usize,ValueError> {Ok(self.demands(0)?.copy_bytes)}
-    fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {Ok(self.demands(copy)?.capacity_bytes)}
-    fn next_release_byte_demand(&self)->Result<usize,ValueError> {Ok(self.demands(0)?.release_bytes)}
-    fn next_depth_demand(&self)->Result<usize,ValueError> {Ok(self.demands(0)?.depth)}
-    fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError> {self.demands(body)}
-}
-impl RetirementCursor for ReadAuthority {
+impl<T:RetireOwned+Sync> ErasedSnapshotRetirement for ReadAuthority<T>{
+ fn native_header_release(&self)->Option<RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{RetirementHeaderRelease::native(self,0,0)})}
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.demands(body)}
-    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();crate::retirement::erased_cursor_turn(ErasedSnapshotRetirement::close_step(self,&mut effect.nested(grant)))}
-    fn terminal_is_empty(&self)->bool {ErasedSnapshotRetirement::terminal_is_empty(self)}
-    fn next_work_byte_demand(&self)->Result<usize,ValueError> {self.next_copy_byte_demand()}
-    fn next_birth_bytes(&self,copy:usize)->Option<usize> {self.next_capacity_byte_demand(copy).ok()}
-    fn next_close_byte_demand(&self)->Option<usize> {self.next_release_byte_demand().ok()}
-    fn next_depth_demand(&self)->Result<usize,ValueError> {ErasedSnapshotRetirement::next_depth_demand(self)}
-    fn allows_admitted_narrow_work(&self)->bool {true}
-    fn terminal_release_bytes(&self)->Option<usize> {ErasedSnapshotRetirement::terminal_is_empty(self).then_some(size_of::<Self>())}
+ fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.work_demand(body)}
+ fn close_into<'r>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{if self.terminal_is_empty(){return Ok(reply.complete(Ok(RetainedCloneStep::Complete(Default::default()))))}self.authenticate(effect)?;if let Some(owner)=self.closing.as_mut(){if !owner.terminal_is_empty(){if owner.requires_original_birth()||owner.requires_original_control(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"read authority requires original close"))}return owner.close_into(body,effect,reply.progress())}}if self.source.is_some(){return admit_shared_retirement_into(&mut self.source,&mut self.closing,effect,reply.progress())}if let Some(owner)=self.closing.as_ref(){if owner.terminal_is_empty(){let witness=owner.native_header_release().ok_or_else(||invalid("read authority terminal witness absent"))?;return witness.release_into(&mut self.closing,effect,reply.progress())}}let d=self.demands(body)?;if effect.remaining_work_units()?<1||!retained_clone_grant_admits(effect.grant(),d){return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}match effect.performed(1){Ok(true)=>{},Ok(false)=>return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::WorkLimit,"read authority close exceeded original Work").into()))),Err(error)=>return Ok(reply.complete(Err(error.into())))}self.work=None;Ok(reply.complete(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))))}
+ fn recover_close_into<'r>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{self.authenticate(effect)?;self.closing.as_mut().ok_or_else(||invalid("read authority recovery absent"))?.recover_close_into(body,effect,reply.progress())}
+ fn requires_original_birth(&self)->bool{self.closing.as_ref().is_some_and(|owner|owner.requires_original_birth())}
+ fn close_original_birth_step(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->OriginalRetirementPoll{let work=match original.original_work().binding_identity(){Ok(work)=>work,Err(error)=>return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})};if self.work!=Some(work){return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(invalid("read authority Birth changed Work").into()),work:0})}match self.closing.as_mut(){Some(owner)=>owner.close_original_birth_step(original,grant),None=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(invalid("read authority Birth absent").into()),work:0})}}
+ fn requires_original_control(&self)->bool{self.closing.as_ref().is_some_and(|owner|owner.requires_original_control())}
+ fn close_original_into<'r>(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{self.authenticate(effect)?;if !original.original_work().binding_identity()?.matches_effect(effect){return Err(invalid("read authority original loan changed Work"))}self.closing.as_mut().ok_or_else(||invalid("read authority original child absent"))?.close_original_into(original,body,effect,reply.progress())}
+ fn recover_close_original_into<'r>(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{self.authenticate(effect)?;if !original.original_work().binding_identity()?.matches_effect(effect){return Err(invalid("read authority original recovery changed Work"))}self.closing.as_mut().ok_or_else(||invalid("read authority original recovery absent"))?.recover_close_original_into(original,body,effect,reply.progress())}
+ fn close_step(&mut self,_:usize,_:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"read authority requires borrowed close").into()),work:0})}
+ fn terminal_is_empty(&self)->bool{Self::terminal_is_empty(self)}
+ fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
+ fn next_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.demands(body)?.capacity_bytes)}
+ fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.release_bytes)}
+ fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.depth)}
 }
-impl RetireOwned for ReadAuthority {
-    type RetirementCursor=Self;
-    fn retirement_seed(self)->Self::RetirementCursor {self}
-    fn retirement_birth_bytes(&self)->Option<usize> {Some(size_of::<Self>())}
-    fn controlled_retirement_supported()->bool {true}
+/// 🧳️ Keeps the typed authority and its child reply resident through arbitrary close callbacks.
+pub struct ReadAuthorityCursor<T:RetireOwned+Sync>{owner:ManuallyDrop<ReadAuthority<T>>,reply:ManuallyDrop<Option<Result<RetainedCloneStep,OriginalRetirementFailure>>>,route:Option<(OriginalEffectInvocationIdentity,OriginalWorkActionBoundary,RetainedCloneGrant,u64,Option<(semio_framework_value_control_contract::NativeAllocationIdentity,Option<u64>,OriginalWorkBindingIdentity)>,usize)>}
+impl<T:RetireOwned+Sync> ReadAuthorityCursor<T>{
+ fn drive<'r>(&mut self,mut original:Option<&mut OriginalRetirementCloseLoan<'_>>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:CursorReply<'r>,recover:bool)->Result<CursorComplete<'r>,ValueError>{let invocation=effect.invocation().ok_or_else(||invalid("read authority requires original invocation"))?;if invocation.mode()!=if recover{OriginalEffectCallbackMode::Recover}else{OriginalEffectCallbackMode::Receive}||invocation.source_turn()!=effect.work_source_turn(){return Err(invalid("read authority invocation changed"))}let binding=match original.as_mut(){Some(loan)=>{let work=loan.original_work().binding_identity()?;if !work.matches_effect(effect){return Err(invalid("read authority original Work changed"))}Some((loan.ledger_identity(),loan.retirement_recipient_identity(),work))},None=>None};let key=if recover{let key=self.route.ok_or_else(||invalid("read authority recovery absent"))?;if key.0!=invocation.identity()||key.2!=effect.grant()||key.3!=effect.maximum_work_units()||key.4!=binding||key.5!=body{return Err(invalid("read authority recovery changed original action"))}key}else{if self.route.is_some(){return Err(invalid("read authority action occupied"))}(invocation.identity(),effect.action_boundary(),effect.grant(),effect.maximum_work_units(),binding,body)};let Self{owner,reply:child,route}=self;let mut scope=reply.scope(route,key)?;if child.is_none(){let inner=OriginalEffectReply::borrow(child)?;let done=match(original,recover){(None,false)=>owner.close_into(body,effect,inner)?,(None,true)=>owner.recover_close_into(body,effect,inner)?,(Some(loan),false)=>owner.close_original_into(loan,body,effect,inner)?,(Some(loan),true)=>owner.recover_close_original_into(loan,body,effect,inner)?};drop(done)}if child.is_none(){return Ok(scope.forwarded())}let work=effect.performed_since_action(key.1)?;let output=scope.borrow()?;let Some(result)=child.take()else{return Err(ValueError::invariant("recorded read child reply disappeared"))};output.complete(result.map(|step|RetirementStep::Progress(step.progress(),work)));Ok(scope.forwarded())}
 }
-impl Drop for ReadAuthority {fn drop(&mut self){assert!(std::thread::panicking()||ErasedSnapshotRetirement::terminal_is_empty(self),"read authority must close its original typed root and factory frame");if self.view.is_none(){unsafe{ManuallyDrop::drop(&mut self.view);}}}}
+impl<T:RetireOwned+Sync> RetirementCursor for ReadAuthorityCursor<T>{
+ fn close_into<'r>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:CursorReply<'r>)->Result<CursorComplete<'r>,ValueError>{if self.terminal_is_empty(){return Ok(reply.complete(Ok(RetirementStep::Complete(0))))}self.drive(None,body,effect,reply,false)}
+ fn recover_close_into<'r>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:CursorReply<'r>)->Result<CursorComplete<'r>,ValueError>{self.drive(None,body,effect,reply,true)}
+ fn close_original_into<'r>(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:CursorReply<'r>)->Result<CursorComplete<'r>,ValueError>{self.drive(Some(original),body,effect,reply,false)}
+ fn recover_close_original_into<'r>(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:CursorReply<'r>)->Result<CursorComplete<'r>,ValueError>{self.drive(Some(original),body,effect,reply,true)}
+ fn requires_original_birth(&self)->bool{self.route.is_none()&&self.owner.requires_original_birth()}
+ fn close_original_birth_step(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->RetirementStep{match self.owner.close_original_birth_step(original,grant){RetainedWorkPoll::Pending{work}=>RetirementStep::Pending(work),RetainedWorkPoll::Complete(turn)=>match turn.result{Ok(step)=>RetirementStep::Progress(step.progress(),turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}}
+ fn requires_original_control(&self)->bool{self.route.map_or_else(||self.owner.requires_original_control(),|route|route.4.is_some())}
+ fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()&&self.reply.is_none()&&self.route.is_none()}
+ fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if let Some(route)=self.route{if route.5!=body{return Err(ValueError::invariant("read close query changed original body"))}return Ok(RetirementDemand{copy_bytes:route.2.maximum_copy_bytes,capacity_bytes:route.2.maximum_capacity_bytes,release_bytes:route.2.maximum_release_bytes,depth:route.2.maximum_depth})}self.owner.demands(body)}
+ fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.route.map_or_else(||self.owner.work_demand(body),|route|if route.5==body{Ok(route.3)}else{Err(ValueError::invariant("read close Work query changed original body"))})}
+ fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.next_demand(0)?.copy_bytes)}
+ fn next_birth_bytes(&self,body:usize)->Option<usize>{Some(self.next_demand(body).ok()?.capacity_bytes)}
+ fn next_close_byte_demand(&self)->Option<usize>{Some(self.next_demand(0).ok()?.release_bytes)}
+ fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
+}
+impl<T:RetireOwned+Sync> RetireOwned for ReadAuthority<T>{type RetirementCursor=ReadAuthorityCursor<T>;fn retirement_seed(self)->Self::RetirementCursor{ReadAuthorityCursor{owner:ManuallyDrop::new(self),reply:ManuallyDrop::new(None),route:None}}fn controlled_retirement_supported()->bool{true}}
+impl<T:RetireOwned+Sync> Drop for ReadAuthority<T>{fn drop(&mut self){if std::thread::panicking(){return}assert!(self.terminal_is_empty(),"read authority retains its original alias");unsafe{ManuallyDrop::drop(&mut self.source);ManuallyDrop::drop(&mut self.closing)}}}
+impl<T:RetireOwned+Sync> Drop for ReadAuthorityCursor<T>{fn drop(&mut self){if std::thread::panicking(){return}assert!(self.terminal_is_empty(),"read authority cursor retains its original action");unsafe{ManuallyDrop::drop(&mut self.owner);ManuallyDrop::drop(&mut self.reply)}}}

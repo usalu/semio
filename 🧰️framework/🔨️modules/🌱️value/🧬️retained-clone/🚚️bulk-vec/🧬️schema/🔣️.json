@@ -18,7 +18,16 @@
     "largeZeroSizedArrayCount",
     "grantCases",
     "logicalCases",
-    "workCases"
+    "workCases",
+    "publication",
+    "foreignQuote",
+    "emptyOverheadTurns",
+    "birthHeaderFields",
+    "sourceStock",
+    "sourceStockDerivation",
+    "originalWorkCeilings",
+    "arrayRetirement",
+    "throughputTerminalItems"
   ],
   "properties": {
     "version": {
@@ -124,10 +133,41 @@
       }
     },
     "workCases": {
-      "type": "array", "minItems": 4,
-      "items": {"type": "object", "additionalProperties": false, "required": ["body", "width", "remaining", "work", "elements"], "properties": {
-        "body": {"type": "integer", "minimum": 0}, "width": {"type": "integer", "minimum": 0}, "remaining": {"type": "integer", "minimum": 0}, "work": {"type": "integer", "minimum": 0}, "elements": {"type": "integer", "minimum": 0}
-      }}
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "body",
+          "width",
+          "remaining",
+          "work",
+          "elements"
+        ],
+        "properties": {
+          "body": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "remaining": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "work": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "elements": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
     },
     "logicalCases": {
       "type": "array",
@@ -169,6 +209,79 @@
             "maximum": 2147483647
           }
         }
+      }
+    },
+    "publication": {
+      "const": {
+        "matchesDemand": true,
+        "work": 1
+      }
+    },
+    "foreignQuote": {
+      "const": {
+        "kind": "InvariantViolated",
+        "work": 0
+      }
+    },
+    "emptyOverheadTurns": {
+      "const": 2
+    },
+    "birthHeaderFields": {
+      "const": [
+        "vector",
+        "phase"
+      ]
+    },
+    "sourceStock": {
+      "const": {
+        "maximumItems": 4198617,
+        "maximumCopyBytes": 16256080,
+        "maximumCapacityBytes": 6808192,
+        "maximumReleaseBytes": 8396800,
+        "maximumDepth": 256,
+        "work": 3742926
+      }
+    },
+    "sourceStockDerivation": {
+      "const": {
+        "cancellationRows": 40000,
+        "cases": 85,
+        "copyTurnsPerCase": 83,
+        "closeChunksPerCase": 1250,
+        "workPerMetadataTurn": 32,
+        "bytesPerMetadataTurn": 256,
+        "sourceBirthWork": 36,
+        "sourceHeaderBytes": 8192,
+        "perCaseFixedWork": 128,
+        "throughputRows": 2097152,
+        "throughputPageTurns": 67,
+        "throughputCloseChunks": 65536
+      }
+    },
+    "originalWorkCeilings": {
+      "const": {
+        "throughput": 65536,
+        "bounded": 4096,
+        "binding": 5,
+        "header": 1,
+        "boundedElements": 4090
+      }
+    },
+    "arrayRetirement": {
+      "const": {
+        "cutCases": 13,
+        "maximumRetiredElements": 53250,
+        "calibrationElements": 1,
+        "sameBankPerCut": true
+      }
+    },
+    "throughputTerminalItems": {
+      "const": {
+        "refusalStockItems": 4196576,
+        "selectedTailCopyBytes": 3994,
+        "nativeLengthHeaderBytes": 8,
+        "terminalTraceItems": 47,
+        "allocatedBufferReleaseItems": 1
       }
     }
   }

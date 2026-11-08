@@ -1,14 +1,20 @@
 //! 🛬️ Canonical retained native receiving and original-close protocol.
 pub use semio_framework_value_control_contract::*;
-pub use semio_framework_value_native_decoding::native_decoding::{NativeDecodeControl,OriginalReceivingPrimary,OriginalEffectReply,OriginalEffectReplyComplete};
+pub use semio_framework_value_native_decoding::native_decoding::{NativeDecodeControl,OriginalReceivingPrimary,NativeReceivingFailure,OriginalEffectReply,OriginalEffectReplyComplete};
 pub use semio_framework_value_retained_clone::retained_clone;
-pub use semio_framework_value_retirement::{OriginalRetirementOutcome,OriginalRetirementPoll};
+pub use semio_framework_value_retirement::{OriginalRetirementOutcome,OriginalRetirementPoll,OriginalRetirementFailure,OriginalRetirementCloseLoan};
 use retained_clone::RetainedCloneRef;
+pub use semio_framework_value_native_clone_engine::RetainedCursorRelease;
 
 pub fn receiving_capacity(control:&NativeDecodeControl<'_>,bytes:usize)->Result<(),ValueError>{if control.owned_bytes().checked_add(bytes).is_none_or(|next|next>control.maximum_bytes()){Err(ValueError::literal(crate::ValueRefusalKind::OwnershipLimit,"native decoding ownership exceeds caller limit"))}else{Ok(())}}
 
 /// 🧾️ The full original child, work and receiving causes remain independent.
 pub type NativeReceivingChildFailure<E:semio_framework_value_native_decoding::native_decoding::NativeReceivingEffectError=ValueError>=semio_framework_value_native_decoding::native_decoding::NativeReceivingEffectFailure<E>;
+/// 🧳️ Wraps one settled typed effect without flattening its independently owned causes.
+pub trait NativeReceivingChildError:semio_framework_value_native_decoding::native_decoding::NativeReceivingEffectError+Sized{fn into_native_failure(failure:NativeReceivingChildFailure<Self>)->NativeReceivingFailure;}
+impl NativeReceivingChildError for ValueError{fn into_native_failure(failure:NativeReceivingChildFailure<Self>)->NativeReceivingFailure{NativeReceivingFailure::ValueEffect(failure)}}
+impl NativeReceivingChildError for OriginalRetirementFailure{fn into_native_failure(failure:NativeReceivingChildFailure<Self>)->NativeReceivingFailure{NativeReceivingFailure::RetirementEffect(failure)}}
+impl NativeReceivingChildError for OriginalReceivingPrimary{fn into_native_failure(failure:NativeReceivingChildFailure<Self>)->NativeReceivingFailure{NativeReceivingFailure::ReceivingEffect(failure)}}
 /// 📬️ Resident receiving action and its complete original failure remain owned until funded settlement.
 pub struct NativeReceivingChild<E:semio_framework_value_native_decoding::native_decoding::NativeReceivingEffectError=ValueError>{
  pub effect:semio_framework_value_native_decoding::native_decoding::NativeReceivingEffect<E>,
@@ -18,28 +24,23 @@ pub struct NativeReceivingChild<E:semio_framework_value_native_decoding::native_
  pub ceiling:Option<u64>,
  pub request:Option<(usize,u64)>,
  pub tag:u8,
- pub failure:std::mem::ManuallyDrop<Option<NativeReceivingChildFailure<E>>>,
 }
-impl<E:semio_framework_value_native_decoding::native_decoding::NativeReceivingEffectError> Default for NativeReceivingChild<E>{fn default()->Self{Self{effect:Default::default(),demand:None,grant:None,work:None,ceiling:None,request:None,tag:0,failure:std::mem::ManuallyDrop::new(None)}}}
+impl<E:semio_framework_value_native_decoding::native_decoding::NativeReceivingEffectError> Default for NativeReceivingChild<E>{fn default()->Self{Self{effect:Default::default(),demand:None,grant:None,work:None,ceiling:None,request:None,tag:0}}}
 impl<E:semio_framework_value_native_decoding::native_decoding::NativeReceivingEffectError> NativeReceivingChild<E>{
  pub fn pending(&self)->bool{self.request.is_some()||self.demand.is_some()||self.effect.phase()!=semio_framework_value_native_decoding::native_decoding::NativeReceivingEffectPhase::Empty}
- pub fn terminal_is_empty(&self)->bool{!self.pending()&&self.failure.is_none()}
+ pub fn terminal_is_empty(&self)->bool{!self.pending()}
  /// 🚦️ Settles one exact original child effect and retains every independently owned refusal.
  /// 🪢️ Drives only the resident producer authority and retains its original action across Pending.
- pub fn poll<P>(&mut self,control:&mut NativeDecodeControl<'_>,demand:RetirementDemand,grant:retained_clone::RetainedCloneGrant,work:u64,maximum_work_units:u64,authority:&mut semio_framework_value_native_decoding::native_decoding::OriginalEffectAuthority<P>,invoke:impl FnOnce(&mut NativeDecodeControl<'_>,&mut crate::RetainedAllocationEffect<'_>,&mut semio_framework_value_native_decoding::native_decoding::OriginalEffectAuthority<P>,&mut Option<semio_framework_value_native_decoding::native_decoding::OriginalEffectAction<RetainedCloneStep,E>>)->Result<bool,ValueError>)->crate::RetainedWorkPoll<RetainedCloneStep,OriginalReceivingPrimary> where P:semio_framework_value_native_decoding::native_decoding::OriginalEffectProducer<Output=RetainedCloneStep,Failure=E>{
+ pub fn poll<P>(&mut self,control:&mut NativeDecodeControl<'_>,demand:RetirementDemand,grant:retained_clone::RetainedCloneGrant,work:u64,maximum_work_units:u64,authority:&mut semio_framework_value_native_decoding::native_decoding::OriginalEffectAuthority<P>,invoke:impl FnOnce(&mut NativeDecodeControl<'_>,&mut crate::RetainedAllocationEffect<'_>,&mut semio_framework_value_native_decoding::native_decoding::OriginalEffectAuthority<P>,&mut Option<semio_framework_value_native_decoding::native_decoding::OriginalEffectAction<RetainedCloneStep,E>>)->Result<bool,ValueError>)->crate::RetainedWorkPoll<RetainedCloneStep,NativeReceivingFailure> where E:NativeReceivingChildError,P:semio_framework_value_native_decoding::native_decoding::OriginalEffectProducer<Output=RetainedCloneStep,Failure=E>{
   use semio_framework_value_native_decoding::native_decoding::NativeReceivingEffectPoll;
-  if self.failure.is_some(){return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(crate::ValueRefusalKind::InvalidValue,"original receiving failure remains resident").into()),work:0})}
-  if self.ceiling.is_some_and(|old|maximum_work_units<old)||self.ceiling.unwrap_or(maximum_work_units)<work||self.grant.is_some_and(|old|old!=grant){return if self.pending(){crate::RetainedWorkPoll::Pending{work:0}}else{crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}}let _=*self.ceiling.get_or_insert(maximum_work_units);let grant=*self.grant.get_or_insert(grant);let selected=*self.demand.get_or_insert(demand);let units=*self.work.get_or_insert(work);match control.receive_original_effect(selected,units,&mut self.effect,authority,|control,effect,authority,action|{let selected=grant.restricted_by(effect.grant());let units=units.min(effect.maximum_work_units());let mut child=effect.nested_within(selected,units);invoke(control,&mut child,authority,action)}){
-   Ok(NativeReceivingEffectPoll::Pending{work})=>crate::RetainedWorkPoll::Pending{work},
-   Ok(NativeReceivingEffectPoll::Complete(turn))=>{self.demand=None;self.grant=None;self.work=None;self.ceiling=None;self.tag=0;match turn.result{Ok(step)=>crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(step),work:turn.work}),Err(failure)=>{let progress=failure.retained_progress();*self.failure=Some(failure);crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(crate::ValueRefusalKind::InvalidValue,"original receiving child refused").with_retained_progress(progress).into()),work:turn.work})}}},
+  if self.ceiling.is_some_and(|old|maximum_work_units!=old)||self.ceiling.unwrap_or(maximum_work_units)<work||self.grant.is_some_and(|old|old!=grant){return if self.pending(){crate::RetainedWorkPoll::Pending{work:0}}else{crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}}let _=*self.ceiling.get_or_insert(maximum_work_units);let grant=*self.grant.get_or_insert(grant);let selected=*self.demand.get_or_insert(demand);let units=*self.work.get_or_insert(work);match control.receive_original_effect(selected,units,&mut self.effect,authority,|control,effect,authority,action|{let selected=grant.restricted_by(effect.grant());let units=units.min(effect.maximum_work_units());let mut child=effect.reborrow(selected,units)?;invoke(control,&mut child,authority,action)}){   Ok(NativeReceivingEffectPoll::Pending{work})=>crate::RetainedWorkPoll::Pending{work},
+   Ok(NativeReceivingEffectPoll::Complete(turn))=>{self.demand=None;self.grant=None;self.work=None;self.ceiling=None;self.tag=0;match turn.result{Ok(step)=>crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(step),work:turn.work}),Err(failure)=>crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(E::into_native_failure(failure)),work:turn.work})}},
    Err(error)=>crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0}),
   }
  }
  /// 🪪️ Freezes and authenticates the actual resident local request before the original Source quote.
- pub fn poll_local<P>(&mut self,control:&mut NativeDecodeControl<'_>,demand:RetirementDemand,grant:retained_clone::RetainedCloneGrant,work:u64,body:usize,maximum_work_units:u64,authority:&mut semio_framework_value_native_decoding::native_decoding::OriginalEffectAuthority<P>,invoke:impl FnOnce(&mut NativeDecodeControl<'_>,&mut crate::RetainedAllocationEffect<'_>,&mut semio_framework_value_native_decoding::native_decoding::OriginalEffectAuthority<P>,&mut Option<semio_framework_value_native_decoding::native_decoding::OriginalEffectAction<RetainedCloneStep,E>>)->Result<bool,ValueError>)->crate::RetainedWorkPoll<RetainedCloneStep,OriginalReceivingPrimary> where P:semio_framework_value_native_decoding::native_decoding::OriginalEffectProducer<Output=RetainedCloneStep,Failure=E>{let request=(body,maximum_work_units);if self.request.is_some_and(|original|original!=request){return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::invariant("original local receiver request changed").into()),work:0})}self.request=Some(request);let turn=self.poll(control,demand,grant,work,maximum_work_units,authority,invoke);if matches!(turn,crate::RetainedWorkPoll::Complete(_))&&self.demand.is_none(){self.request=None}turn}
- pub fn failure_demand(&self,retirement:&retained_clone::RetainedCloneClose,body:usize)->Result<RetirementDemand,ValueError>{retirement.next_owner_demands::<NativeReceivingChildFailure<E>>(true,&None,body)}
- pub fn failure_work(&self,retirement:&retained_clone::RetainedCloneClose,body:usize)->Result<u64,ValueError>{retirement.next_owner_work::<NativeReceivingChildFailure<E>>(true,&None,body)}
- pub fn close_failure(&mut self,retirement:&mut retained_clone::RetainedCloneClose,effect:&mut crate::RetainedAllocationEffect<'_>)->OriginalRetirementOutcome{let turn=retirement.begin_granted(&mut self.failure,effect);RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into),work:turn.work}}
+ pub fn poll_local<P>(&mut self,control:&mut NativeDecodeControl<'_>,demand:RetirementDemand,grant:retained_clone::RetainedCloneGrant,work:u64,body:usize,maximum_work_units:u64,authority:&mut semio_framework_value_native_decoding::native_decoding::OriginalEffectAuthority<P>,invoke:impl FnOnce(&mut NativeDecodeControl<'_>,&mut crate::RetainedAllocationEffect<'_>,&mut semio_framework_value_native_decoding::native_decoding::OriginalEffectAuthority<P>,&mut Option<semio_framework_value_native_decoding::native_decoding::OriginalEffectAction<RetainedCloneStep,E>>)->Result<bool,ValueError>)->crate::RetainedWorkPoll<RetainedCloneStep,NativeReceivingFailure> where E:NativeReceivingChildError,P:semio_framework_value_native_decoding::native_decoding::OriginalEffectProducer<Output=RetainedCloneStep,Failure=E>{let request=(body,maximum_work_units);if self.request.is_some_and(|original|original!=request){return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::invariant("original local receiver request changed").into()),work:0})}self.request=Some(request);let turn=self.poll(control,demand,grant,work,maximum_work_units,authority,invoke);if matches!(turn,crate::RetainedWorkPoll::Complete(_))&&self.demand.is_none(){self.request=None}turn}
+
 }
 
 
@@ -61,16 +62,23 @@ pub fn native_record_pure_take<'reply>(turn:crate::RetainedWorkPoll<RetainedClon
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum NativeAdvanceSelection{Nested,Local{work:u64}}
 
+/// 🌱️ Supplies an inline child seed without allocating, releasing, calling out or unwinding.
+pub trait NativeReceiverSeed<I:?Sized,T,C:NativeReceiver<I,T>>:Send+'static{fn seed(subset:bool)->Option<C>;/// 🧬️ Selects only this factory’s exact optional immutable seed template.
+ fn seed_template(_subset:bool)->Option<semio_framework_value_native_storage::NativeSeedTemplate<C>>{None}}
 pub trait NativeReceiver<I:?Sized,T>:Send+'static{
+ /// 🧬️ Exposes an optional exact vacant native template for the requested seed variant.
+ fn seed_template(_subset:bool)->Option<semio_framework_value_native_storage::NativeSeedTemplate<Self>> where Self:Sized{None}
  fn demands(&self,original:RetainedCloneRef<'_,I>,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>;
  /// 🧭️ Selects the actual resident child or local action before any original callback.
  fn select_advance(&self,original:RetainedCloneRef<'_,I>,body:usize,maximum_work_units:u64)->Result<NativeAdvanceSelection,ValueError>;
  /// 🪢️ Polls only the selected resident child without mutating parent metadata.
- fn advance_nested(&mut self,original:RetainedCloneRef<'_,I>,control:&mut NativeDecodeControl<'_>,body:usize,maximum_work_units:u64,grant:RetainedCloneGrant)->crate::RetainedWorkPoll<RetainedCloneStep,OriginalReceivingPrimary>;
+ fn advance_nested(&mut self,original:RetainedCloneRef<'_,I>,control:&mut NativeDecodeControl<'_>,witness:semio_framework_value_control_contract::OriginalSourceTurnWitness<'_>,body:usize,maximum_work_units:u64,grant:RetainedCloneGrant)->crate::RetainedWorkPoll<RetainedCloneStep,NativeReceivingFailure>;
  /// 📬️ Records one local action before its original borrowed reply can unwind.
  fn advance_local<'reply>(&mut self,original:RetainedCloneRef<'_,I>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalReceivingPrimary>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalReceivingPrimary>,ValueError>;
  /// 🔁️ Recovers only the same resident local producer action.
  fn recover_advance_local<'reply>(&mut self,_original:RetainedCloneRef<'_,I>,_body:usize,_effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalReceivingPrimary>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalReceivingPrimary>,ValueError>{Ok(reply.pending())}
+ /// ⏳️ Reports only an actual resident original child/action that has begun and remains unresolved.
+ fn advance_pending(&self)->bool;
  fn output_ready(&self)->bool;
  /// 📐️ Quotes the exact original output-slot publication.
  fn take_demand(&self)->Result<RetirementDemand,ValueError>;
@@ -80,15 +88,27 @@ pub trait NativeReceiver<I:?Sized,T>:Send+'static{
  fn take<'reply>(&mut self,output:&mut Option<T>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalReceivingPrimary>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalReceivingPrimary>,ValueError>;
  /// 🔁️ Recovers only the same original producer action without replaying a completed transfer.
  fn recover_take<'reply>(&mut self,_output:&mut Option<T>,_effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalReceivingPrimary>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalReceivingPrimary>,ValueError>{Ok(reply.pending())}
- fn begin_close(&mut self);
+ /// 🚪️ Observes this owner's separately paid close-start flag.
+ fn is_closing(&self)->bool;
+ /// 📐️ Quotes only this owner's close-start flag.
+ fn begin_close_demand(&self)->Result<RetirementDemand,ValueError>;
+ /// ⏱️ Quotes the actual close-start work.
+ fn begin_close_work_demand(&self)->Result<u64,ValueError>;
+ /// 🪢️ Starts only this owner under the same original effect.
+ fn begin_close_into<'reply>(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>;
+ fn recover_begin_close_into<'reply>(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>;
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
  fn close_work_demand(&self,_body:usize)->Result<u64,ValueError>{Err(ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"native receiver lacks an original close work quote"))}
- fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll;
+ fn close_step<'reply>(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>;
+ fn recover_close_step<'reply>(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>;
  fn requires_original_control(&self)->bool{false}
  fn requires_original_birth(&self)->bool{false}
  fn close_original_birth_step(&mut self,_original:&mut crate::OriginalRetirementCloseLoan<'_>,_grant:RetainedCloneGrant)->crate::OriginalRetirementPoll{crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome{result:Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"native receiver has no original birth to settle").into()),work:0})}
- fn close_original_step(&mut self,_original:&mut crate::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{if self.requires_original_control(){return crate::RetainedWorkPoll::Complete(crate::RetainedWorkOutcome{result:Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"native receiver requires its original close port").into()),work:0})}self.close_step(effect)}
+ fn close_original_step<'reply>(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>;
+ fn recover_close_original_step<'reply>(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalRetirementFailure>,ValueError>;
  fn terminal_is_empty(&self)->bool;
+ /// ♻️ Supplies explicit evidence only for this actual empty receiver's bounded native destructor.
+ fn native_terminal_release(&self)->Option<RetainedCursorRelease<Self>> where Self:Sized{None}
 }
 
 pub struct NativeReceivingBatch{left:RetainedCloneGrant,progress:RetainedCloneProgress,work:u128}
@@ -108,7 +128,7 @@ impl NativeReceivingBatch{
 
 #[doc(hidden)]
 pub fn native_receiver_backing_demands<I:?Sized,T,C:NativeReceiver<I,T>>(storage:&semio_framework_value_native_storage::NativeOwnedStorage<C>,retired:&Option<Box<C>>,body:usize)->Result<RetirementDemand,ValueError>{
- if let Some(cursor)=retired.as_ref(){if !cursor.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"native receiving original type, field or phase is invalid"))}return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<Box<C>>>(),release_bytes:std::alloc::Layout::new::<C>().size(),depth:1,..Default::default()})}if let Some(cursor)=storage.get(){if !cursor.terminal_is_empty(){return {let mut d=cursor.close_demands(body)?;d.depth=d.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"native receiving original type, field or phase is invalid"))?;Ok(d)}}return Ok(semio_framework_value_native_storage::NativeOwnedStorage::<C>::box_demand())}Ok(storage.release_demand())
+ if let Some(cursor)=retired.as_ref(){if !cursor.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"native receiving original type, field or phase is invalid"))}return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<Box<C>>>(),release_bytes:std::alloc::Layout::new::<C>().size(),depth:1,..Default::default()})}if let Some(cursor)=storage.get(){if !cursor.terminal_is_empty(){return {let mut d=if cursor.is_closing(){cursor.close_demands(body)?}else{cursor.begin_close_demand()?};d.depth=d.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"native receiving original type, field or phase is invalid"))?;Ok(d)}}return Ok(semio_framework_value_native_storage::NativeOwnedStorage::<C>::box_demand())}Ok(storage.release_demand())
 }
 #[doc(hidden)]
 pub fn close_native_receiver_backing<I:?Sized,T,C:NativeReceiver<I,T>>(storage:&mut semio_framework_value_native_storage::NativeOwnedStorage<C>,retired:&mut Option<Box<C>>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{
@@ -117,8 +137,17 @@ pub fn close_native_receiver_backing<I:?Sized,T,C:NativeReceiver<I,T>>(storage:&
  if let Some(cursor)=storage.get_mut(){if !cursor.terminal_is_empty(){return match cursor.close_step(&mut effect.nested(RetainedCloneGrant{maximum_depth:g.maximum_depth-1,..g})){Pending{work}=>Pending{work},Complete(turn)=>Complete(RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work})}}return storage.take_box_into(retired,effect).map(|step|RetainedCloneStep::Progress(step.progress())).map_err(Into::into)}let turn=storage.release(effect);Complete(RetainedWorkOutcome{result:turn.result.map_err(Into::into),work:turn.work})
 }
 
-
 pub fn receiving_child_body_budget(body:usize,metadata:usize)->usize{body.saturating_sub(metadata)}
+
+/// 🚪️ Implements one owner's paid, nonrecursive close-start flag.
+#[macro_export]
+macro_rules! native_receiver_close_start{($vis:vis $field:ident)=>{
+ $vis fn is_closing(&self)->bool{self.$field}
+ $vis fn begin_close_demand(&self)->Result<$crate::RetirementDemand,$crate::ValueError>{Ok(if self.$field{Default::default()}else{$crate::RetirementDemand{copy_bytes:std::mem::size_of::<bool>(),depth:1,..Default::default()}})}
+ $vis fn begin_close_work_demand(&self)->Result<u64,$crate::ValueError>{Ok(u64::from(!self.$field))}
+ $vis fn begin_close_into<'reply>(&mut self,effect:&mut $crate::RetainedAllocationEffect<'_>,reply:$crate::OriginalEffectReply<'reply,$crate::RetainedCloneStep,$crate::OriginalRetirementFailure>)->Result<$crate::OriginalEffectReplyComplete<'reply,$crate::RetainedCloneStep,$crate::OriginalRetirementFailure>,$crate::ValueError>{if self.$field{return Ok(reply.complete(Ok($crate::RetainedCloneStep::Complete(Default::default()))))}let demand=$crate::RetirementDemand{copy_bytes:std::mem::size_of::<bool>(),depth:1,..Default::default()};if !$crate::retained_clone::retained_clone_grant_admits(effect.grant(),demand)||effect.remaining_work_units()?==0{return Ok(reply.complete(Ok($crate::RetainedCloneStep::Progress(Default::default()))))}match effect.performed(1){Ok(true)=>{},Ok(false)=>return Ok(reply.complete(Err($crate::ValueError::literal($crate::ValueRefusalKind::WorkLimit,"native receiver close start exceeded its work authority").into()))),Err(error)=>return Ok(reply.complete(Err(error.into())))}self.$field=true;Ok(reply.complete(Ok($crate::RetainedCloneStep::Complete($crate::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))))}
+ $vis fn recover_begin_close_into<'reply>(&mut self,effect:&mut $crate::RetainedAllocationEffect<'_>,reply:$crate::OriginalEffectReply<'reply,$crate::RetainedCloneStep,$crate::OriginalRetirementFailure>)->Result<$crate::OriginalEffectReplyComplete<'reply,$crate::RetainedCloneStep,$crate::OriginalRetirementFailure>,$crate::ValueError>{self.begin_close_into(effect,reply)}
+};}
 
 #[doc(hidden)]
 #[macro_export]
@@ -228,14 +257,13 @@ macro_rules! scalar_close_engine{()=>{ fn close_demands(&self,body:usize)->Resul
 #[doc(hidden)]
 #[macro_export]
 macro_rules! option_close_engine{()=>{
- fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.child.terminal_is_empty(){return self.child.close_demands(body)}if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<T>(false,&None,body)}if self.staged.is_some(){return self.retirement.next_owner_demands::<T>(true,&None,body)}RetainedCloneBinding::close_demand(&self.binding,body)}
- fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.child.terminal_is_empty(){return self.child.close_work_demand(body)}if !self.retirement.is_empty(){return self.retirement.next_owner_work::<T>(false,&None,body)}if self.staged.is_some(){return self.retirement.next_owner_work::<T>(true,&None,body)}RetainedCloneBinding::close_work_demand(&self.binding,body)}
- fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{use crate::RetainedWorkPoll::Complete;let g=effect.grant();let d=match self.close_demands(g.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})};if !retained_clone_grant_admits(g,d){return Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}if !self.child.terminal_is_empty(){return self.child.close_step(&mut effect.nested(g))}if !self.retirement.is_empty(){return self.retirement.step_granted(effect)}if self.staged.is_some(){let turn=self.retirement.begin_granted(&mut self.staged,effect);return Complete(RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into),work:turn.work})}RetainedCloneBinding::close_one(&mut self.binding,effect)}
- fn requires_original_birth(&self)->bool{if !self.child.terminal_is_empty(){self.child.requires_original_birth()}else{self.retirement.requires_original_birth()}}
- fn close_original_birth_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->crate::OriginalRetirementPoll{if !self.child.terminal_is_empty(){self.child.close_original_birth_step(original,grant)}else{self.retirement.step_original_birth(original,grant)}}
- fn requires_original_control(&self)->bool{if !self.child.terminal_is_empty(){self.child.requires_original_control()}else{self.retirement.requires_original_control()}}
- fn close_original_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{if !self.child.terminal_is_empty()&&self.child.requires_original_control(){return self.child.close_original_step(original,effect)}if !self.retirement.is_empty()&&self.retirement.requires_original_control(){return self.retirement.step_original(original,effect)}self.close_step(effect)}
-};}
+ fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if let Some(query)=self.query.as_ref(){if !query.close_started(){return Ok(query.begin_close_demand())}if !query.terminal_is_empty(){return nested(query.close_demand(body)?,0)}return Ok(fixed(std::mem::size_of::<Option<NativeScalarQueryFrame<I>>>()))}if !self.child.terminal_is_empty(){return if self.child.is_closing(){self.child.close_demands(body)}else{self.child.begin_close_demand()}}if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<T>(false,&None,body)}if self.query_output.is_some(){return self.retirement.next_owner_demands::<Result<NativeSourceScalar,ValueError>>(true,&None,body)}if self.staged.is_some(){return self.retirement.next_owner_demands::<T>(true,&None,body)}RetainedCloneBinding::close_demand(&self.binding,body)}
+ fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if let Some(query)=self.query.as_ref(){if !query.close_started(){return Ok(query.begin_close_work_demand())}if !query.terminal_is_empty(){return query.close_work_demand(body)}return Ok(1)}if !self.child.terminal_is_empty(){return if self.child.is_closing(){self.child.close_work_demand(body)}else{self.child.begin_close_work_demand()}}if !self.retirement.is_empty(){return self.retirement.next_owner_work::<T>(false,&None,body)}if self.query_output.is_some(){return self.retirement.next_owner_work::<Result<NativeSourceScalar,ValueError>>(true,&None,body)}if self.staged.is_some(){return self.retirement.next_owner_work::<T>(true,&None,body)}RetainedCloneBinding::close_work_demand(&self.binding,body)}
+ fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{use crate::RetainedWorkPoll::Complete;let g=effect.grant();let d=match self.close_demands(g.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})};if !retained_clone_grant_admits(g,d){return Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}if let Some(query)=self.query.as_mut(){if !query.close_started(){let turn=query.begin_close_paid(effect);return Complete(RetainedWorkOutcome{result:turn.result.map_err(Into::into),work:turn.work})}if !query.terminal_is_empty(){return query.close_step(&mut effect.reborrow(child_grant(g,0),effect.maximum_work_units()).expect("optional query close exceeds original effect")).map(|step|RetainedCloneStep::Progress(step.progress()))}if effect.maximum_work_units()==0{return Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}match effect.performed(1){Ok(true)=>{},Ok(false)=>return Complete(RetainedWorkOutcome{result:Err(ValueError::literal(crate::ValueRefusalKind::WorkLimit,"optional query header exceeded its work authority").into()),work:1}),Err(error)=>return Complete(RetainedWorkOutcome{result:Err(error.into()),work:1})}*self.query=None;return Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(receipt(d))),work:1})}if !self.child.terminal_is_empty(){let mut child=effect.reborrow(g,effect.maximum_work_units()).expect("retirement child exceeds original effect");if !self.child.is_closing(){let turn=self.child.begin_close_paid(&mut child);return Complete(RetainedWorkOutcome{result:turn.result.map_err(Into::into),work:turn.work})}return self.child.close_step(&mut child)}if !self.retirement.is_empty(){return self.retirement.step_granted(effect)}if self.query_output.is_some(){let turn=self.retirement.begin_granted(&mut self.query_output,effect);return Complete(RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into),work:turn.work})}if self.staged.is_some(){let turn=self.retirement.begin_granted(&mut self.staged,effect);return Complete(RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into),work:turn.work})}RetainedCloneBinding::close_one(&mut self.binding,effect)}
+ fn requires_original_birth(&self)->bool{if let Some(query)=self.query.as_ref(){return !query.terminal_is_empty()&&query.requires_original_birth()}if !self.child.terminal_is_empty(){self.child.requires_original_birth()}else{self.retirement.requires_original_birth()}}
+ fn close_original_birth_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->crate::OriginalRetirementPoll{if let Some(query)=self.query.as_mut(){if !query.terminal_is_empty(){if grant.maximum_items==0||grant.maximum_depth==0{return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}return query.close_original_birth_step(original,child_grant(grant,0))}}if !self.child.terminal_is_empty(){self.child.close_original_birth_step(original,grant)}else{self.retirement.step_original_birth(original,grant)}}
+ fn requires_original_control(&self)->bool{if let Some(query)=self.query.as_ref(){return !query.terminal_is_empty()&&query.requires_original_control()}if !self.child.terminal_is_empty(){self.child.requires_original_control()}else{self.retirement.requires_original_control()}}
+ fn close_original_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{if let Some(query)=self.query.as_mut(){if !query.terminal_is_empty()&&query.requires_original_control(){let g=effect.grant();if g.maximum_items==0||g.maximum_depth==0{return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}return query.close_original_step(original,&mut effect.reborrow(child_grant(g,0),effect.maximum_work_units()).expect("optional query close exceeds original effect"))}}if !self.child.terminal_is_empty()&&self.child.requires_original_control(){return self.child.close_original_step(original,effect)}if !self.retirement.is_empty()&&self.retirement.requires_original_control(){return self.retirement.step_original(original,effect)}self.close_step(effect)}};}
 
 #[doc(hidden)]
 #[macro_export]
@@ -309,7 +337,7 @@ macro_rules! result_close_engine{()=>{ fn close_demands(&self,body:usize)->Resul
 };}
 
 #[path="🎛️slot.rs"]mod slot;
-pub use slot::{NativeSlotOperation,NativeSlotProducer};
+pub use slot::{NativeSlotOperation,NativeSlotProducer,NativeSlotContext};
 #[path="🎛️local.rs"]mod local;
 pub use local::{NativeLocalOperation,NativeLocalProducer,NativeLocalAuthority,native_receive_local};
 /// 🧾️ Runs one grant-priced child step under the original effect and records the work it reports exactly once.
@@ -341,7 +369,7 @@ impl<I:'static+?Sized,T:NativeReceive<I>,U:NativeReceiveMap<T>>NativeReceiver<I,
  }
  fn output_ready(&self)->bool{!self.closing&&self.output.is_some()}
  semio_framework_value_native_receiver_protocol::native_owned_output!(U,invalid);
- fn begin_close(&mut self){self.closing=true;self.inner.begin_close();}
+ $crate::native_receiver_close_start!(closing);
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Err(invalid())}if !self.inner.terminal_is_empty(){return nested(self.inner.close_demands(body)?)}if !self.retirement.is_empty(){return self.retirement.demands(body)}if self.pending.is_some(){return self.retirement.next_owner_demands::<T>(true,&None,body)}if self.output.is_some(){return self.retirement.next_owner_demands::<U>(true,&None,body)}if self.binding.is_some(){return crate::retained_clone::RetainedCloneBinding::close_demand(&self.binding,body)}Ok(Default::default())}
  fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.closing{return Err(invalid())}if !self.inner.terminal_is_empty(){return self.inner.close_work_demand(body)}if !self.retirement.is_empty(){return self.retirement.next_owner_work::<()>(false,&None,body)}if self.pending.is_some(){return self.retirement.next_owner_work::<T>(true,&None,body)}if self.output.is_some(){return self.retirement.next_owner_work::<U>(true,&None,body)}crate::retained_clone::RetainedCloneBinding::close_work_demand(&self.binding,body)}
  fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{use crate::RetainedWorkPoll::Complete;if self.requires_original_control(){return Complete(RetainedWorkOutcome{result:Err(ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"native mapped child requires its original close port").into()),work:0})}if self.terminal_is_empty(){return Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0})}let g=effect.grant();let d=match self.close_demands(g.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})};if !retained_clone_grant_admits(g,d){return Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}if !self.inner.terminal_is_empty(){return self.inner.close_step(&mut effect.nested(child(g))).map(|step|RetainedCloneStep::Progress(step.progress()))}if !self.retirement.is_empty(){return self.retirement.step_granted(effect).map(|step|RetainedCloneStep::Progress(step.progress()))}if self.pending.is_none()&&self.output.is_none()&&self.binding.is_some(){return crate::retained_clone::RetainedCloneBinding::close_one(&mut self.binding,effect)}let turn=if self.pending.is_some(){self.retirement.begin_granted(&mut self.pending,effect)}else{self.retirement.begin_granted(&mut self.output,effect)};Complete(RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into),work:turn.work})}
@@ -352,3 +380,6 @@ impl<I:'static+?Sized,T:NativeReceive<I>,U:NativeReceiveMap<T>>NativeReceiver<I,
  fn terminal_is_empty(&self)->bool{self.inner.terminal_is_empty()&&self.pending.is_none()&&self.output.is_none()&&self.retirement.is_empty()&&self.binding.is_none()}
 }
 };}
+
+#[path="../../♻️backing/🦀️.rs"]mod backing;
+pub use backing::NativeReceiverBackingClose;

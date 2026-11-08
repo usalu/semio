@@ -1,0 +1,138 @@
+{
+  "states": [
+    {
+      "name": "empty",
+      "backing": false,
+      "initialized": false,
+      "output": false
+    },
+    {
+      "name": "reserved",
+      "backing": true,
+      "initialized": false,
+      "output": false
+    },
+    {
+      "name": "seeded",
+      "backing": true,
+      "initialized": true,
+      "output": false
+    },
+    {
+      "name": "published",
+      "backing": false,
+      "initialized": false,
+      "output": true
+    }
+  ],
+  "cancel": [
+    {
+      "from": "empty",
+      "next": "empty"
+    },
+    {
+      "from": "reserved",
+      "next": "empty"
+    },
+    {
+      "from": "seeded",
+      "next": "published"
+    },
+    {
+      "from": "published",
+      "next": "published"
+    }
+  ],
+  "comparisons": [
+    {
+      "left": [
+        1,
+        2,
+        3
+      ],
+      "right": [
+        1,
+        2,
+        3
+      ],
+      "equal": true
+    },
+    {
+      "left": [
+        1,
+        2,
+        3
+      ],
+      "right": [
+        1,
+        4,
+        3
+      ],
+      "equal": false
+    },
+    {
+      "left": [
+        1
+      ],
+      "right": [
+        1,
+        2
+      ],
+      "equal": false
+    }
+  ],
+  "nestedComparisons": [
+    {
+      "left": [
+        "alpha",
+        "β"
+      ],
+      "right": [
+        "alpha",
+        "β"
+      ],
+      "equal": true
+    },
+    {
+      "left": [
+        "alpha",
+        "β"
+      ],
+      "right": [
+        "alpha",
+        "γ"
+      ],
+      "equal": false
+    }
+  ],
+  "cancelCuts": [
+    0,
+    1,
+    2,
+    3,
+    5,
+    8,
+    13
+  ],
+  "failurePublication": {
+    "message": "original child refusal",
+    "originalCopied": 7,
+    "states": [
+      {
+        "phase": "recorded",
+        "child": true,
+        "outer": false
+      },
+      {
+        "phase": "denied",
+        "child": true,
+        "outer": false
+      },
+      {
+        "phase": "published",
+        "child": false,
+        "outer": true
+      }
+    ]
+  }
+}

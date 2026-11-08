@@ -1,0 +1,13 @@
+{
+  "mutation": "insertPierBase",
+  "index": 0,
+  "pierBase": {
+    "id": "pb-1",
+    "bridgeId": "br-1",
+    "pierId": "pier-1",
+    "radiusM": 2.5,
+    "soilVsMS": 250.0,
+    "soilUnitWeightNM3": 19000.0,
+    "poissonRatio": 0.35
+  }
+}

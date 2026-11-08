@@ -1,0 +1,22 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-value-control-reply"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+[package.metadata.semio]
+role = "framework"
+id = "value-control-reply"
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+[lints]
+workspace = true
+[lib]
+path = "../../🦀️.rs"
+[dependencies]
+semio-framework-value-control-physical = { path = "../../../🧬️contract/📏️physical/📦️packages/🦀️rust" }
+[dev-dependencies]
+serde_json.workspace = true
+semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

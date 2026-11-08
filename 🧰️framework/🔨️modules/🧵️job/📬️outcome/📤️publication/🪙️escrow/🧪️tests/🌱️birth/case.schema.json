@@ -1,0 +1,28 @@
+{
+  "type": "object",
+  "required": [
+    "chunk",
+    "maximumCopy",
+    "rows",
+    "headerBytes",
+    "rowBytes"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "chunk": {
+      "const": 1024
+    },
+    "maximumCopy": {
+      "const": 4096
+    },
+    "rows": {
+      "const": 32
+    },
+    "headerBytes": {
+      "const": 48
+    },
+    "rowBytes": {
+      "const": 184
+    }
+  }
+}

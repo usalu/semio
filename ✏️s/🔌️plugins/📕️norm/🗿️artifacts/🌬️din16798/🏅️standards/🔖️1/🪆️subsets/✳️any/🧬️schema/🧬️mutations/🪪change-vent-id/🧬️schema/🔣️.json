@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-id/schema.json",
+  "title": "ChangeVentId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ventId",
+    "newId"
+  ],
+  "properties": {
+    "ventId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Ventilation system",
+          "de": "Lüftungsanlage"
+        },
+        "description": {
+          "en": "The ventilation system this mutation addresses.",
+          "de": "Die Lüftungsanlage, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "ventSystem"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "System identifier",
+          "de": "Anlagenkennung"
+        },
+        "description": {
+          "en": "The new unique identifier; the zones served by the system follow.",
+          "de": "Die neue eindeutige Kennung; die versorgten Zonen folgen."
+        },
+        "group": "identity",
+        "order": 20
+      }
+    }
+  }
+}

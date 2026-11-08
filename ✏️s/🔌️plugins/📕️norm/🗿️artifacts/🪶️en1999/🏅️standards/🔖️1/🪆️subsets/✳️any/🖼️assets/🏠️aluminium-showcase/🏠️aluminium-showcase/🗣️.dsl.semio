@@ -79,3 +79,7 @@ transverse-stiffeners [id:TEXT girder-id:TEXT position:NUM width:NUM thickness:N
   stiffener-w3 purlin-welded 4.5 0.05 0.006 two
 }
 reliability-class=rc2
+sheet-profiles [id:TEXT sheet-id:TEXT pitch:QTY top-flange:QTY bottom-flange:QTY web-height:QTY] {
+}
+fire-insulations [id:TEXT fire-id:TEXT thickness:QTY conductivity:NUM specific-heat:NUM density:NUM] {
+}

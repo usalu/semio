@@ -1,6 +1,7 @@
 //! 🔺️ Indexed and named collection edit plans over persistent lists — wiring only. Domain lives at the owner `🦀️.rs` files.
 
-pub use semio_framework_value_control_contract::{RetainedWorkOutcome,RetainedAllocationEffect,OriginalRetirementCloseLoan,OriginalRetirementFailure};
+pub use semio_framework_value_control_contract::{RetainedWorkOutcome,RetainedAllocationEffect};
+pub use semio_framework_value_retirement_contract::{OriginalRetirementCloseLoan,OriginalRetirementFailure};
 pub use semio_framework_value_retirement::OriginalRetirementOutcome;
 #[cfg(test)]
 pub use semio_framework_value_retirement::{retirement_fields_type,retirement_fields_seed,OriginalRetirementControl,RetirementPollExit,OriginalRetirementPoll,RetainedWorkPoll};

@@ -1,0 +1,28 @@
+{
+  "type": "array",
+  "minItems": 5,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "producer",
+      "payer",
+      "same",
+      "accepted"
+    ],
+    "properties": {
+      "producer": {
+        "type": "boolean"
+      },
+      "payer": {
+        "type": "boolean"
+      },
+      "same": {
+        "type": "boolean"
+      },
+      "accepted": {
+        "type": "boolean"
+      }
+    }
+  }
+}

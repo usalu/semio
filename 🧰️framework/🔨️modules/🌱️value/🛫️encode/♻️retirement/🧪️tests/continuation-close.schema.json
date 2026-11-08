@@ -1,0 +1,28 @@
+{
+  "type": "array",
+  "minItems": 4,
+  "items": {
+    "type": "object",
+    "properties": {
+      "ready": {
+        "type": "boolean"
+      },
+      "grant": {
+        "type": "boolean"
+      },
+      "work": {
+        "type": "boolean"
+      },
+      "closed": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "ready",
+      "grant",
+      "work",
+      "closed"
+    ],
+    "additionalProperties": false
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeCriticalRegionConcreteDesignStrengthMpa",
+  "id": "cr-1",
+  "newConcreteDesignStrengthMpa": 21.0
+}

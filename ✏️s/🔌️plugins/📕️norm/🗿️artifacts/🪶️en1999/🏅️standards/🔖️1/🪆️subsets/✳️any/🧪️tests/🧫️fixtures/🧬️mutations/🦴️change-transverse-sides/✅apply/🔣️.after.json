@@ -397,5 +397,7 @@
       "sides": "one"
     }
   ],
+  "sheetProfiles": [],
+  "fireInsulations": [],
   "reliabilityClass": "RC2"
 }

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["work", "deniedWork", "deniedCalls", "selectedCalls", "unavailable", "selected", "retainsDestinationOnDenial"],
+  "properties": {
+    "work": {"const": 1},
+    "deniedWork": {"const": 0},
+    "deniedCalls": {"const": 0},
+    "selectedCalls": {"const": 1},
+    "unavailable": {"const": "missing"},
+    "selected": {"const": "leaf"},
+    "retainsDestinationOnDenial": {"const": true}
+  }
+}

@@ -259,13 +259,7 @@ fn check_zone_air_quality(
     linked_type: Option<VentSystemType>,
 ) {
     use part_1::*;
-    let dlim_for_method = co2_above_outdoor_ppm(cat);
-    let abs_lim_early = match usage {
-        OccupancyType::Residential => annex.co2_absolute_residential_ppm,
-        OccupancyType::Classroom => annex.co2_absolute_classroom_ppm,
-        _ => annex.co2_absolute_other_ppm,
-    };
-    let method_delta = if doc.annex == AnnexChoice::De { (abs_lim_early - doc.outdoor_co2_ppm).min(dlim_for_method) } else { dlim_for_method };
+    let method_delta = co2_limit_above_outdoor_ppm(annex, usage, cat, doc.outdoor_co2_ppm);
     let q_req = required_outdoor_air_for_method(method, zone.occupants, zone.floor_area_m2, cat, pollution, zone.metabolic_rate_met, method_delta);
     let q = zone.outdoor_air_supplied_m3_h;
     let method_clause = match method {
@@ -297,15 +291,7 @@ fn check_zone_air_quality(
     out.push(bv.build());
 
     let dco2 = (zone.co2_ppm - doc.outdoor_co2_ppm).max(0.0);
-    let dlim = co2_above_outdoor_ppm(cat);
-    let abs_lim = match usage {
-        OccupancyType::Residential => annex.co2_absolute_residential_ppm,
-        OccupancyType::Classroom => annex.co2_absolute_classroom_ppm,
-        _ => annex.co2_absolute_other_ppm,
-    };
-    let effective_limit_above = if doc.annex == AnnexChoice::De {
-        (abs_lim - doc.outdoor_co2_ppm).min(dlim)
-    } else { dlim };
+    let effective_limit_above = co2_limit_above_outdoor_ppm(annex, usage, cat, doc.outdoor_co2_ppm);
     let mut bc = CheckResult::assess(
         format!("din16798-1.co2.{}", zone.id), "DIN EN 16798-1", ClauseId::new("EN 16798-1", annex.choice.label(), "CO2"),
         zone_subject(zone, path("co2Ppm")), loc("CO₂ above outdoor", "CO₂ über Außenluft"),

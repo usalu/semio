@@ -1,0 +1,87 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "stock",
+    "values",
+    "large",
+    "maximumCopy",
+    "zst",
+    "text",
+    "chunk",
+    "discardChunk"
+  ],
+  "properties": {
+    "stock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth",
+        "fuel"
+      ],
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "fuel": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "values": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "large": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maximumCopy": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "zst": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "chunk": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "discardChunk": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

@@ -18,11 +18,15 @@ mod part5;
 use semio_s_plugin_norm_compliance::CheckReport;
 use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 
+pub use semio_s_artifact_norm_iso16757_checks_common::Section;
+
+/// 🧮️ Every evaluation section of Parts 1, 2, 4 and 5 in report order: the one table the full evaluation and the incremental units iterate.
+pub fn sections() -> Vec<Section> {
+    [semio_s_artifact_norm_iso16757_checks_part1::SECTIONS, crate::part2::SECTIONS, crate::part4::SECTIONS, crate::part5::SECTIONS].concat()
+}
+
 pub fn evaluate_all(document: &Iso16757Snapshot) -> CheckReport {
     let mut report = CheckReport::default();
-    semio_s_artifact_norm_iso16757_checks_part1::check_part_1(document, &mut report);
-    crate::part2::check_part_2(document, &mut report);
-    crate::part4::check_part_4(document, &mut report);
-    crate::part5::check_part_5(document, &mut report);
+    sections().iter().for_each(|section| (section.run)(document, &mut report));
     report
 }

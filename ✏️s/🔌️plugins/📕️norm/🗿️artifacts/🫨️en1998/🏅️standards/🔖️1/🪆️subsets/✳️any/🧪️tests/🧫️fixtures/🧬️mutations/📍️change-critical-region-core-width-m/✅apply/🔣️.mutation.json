@@ -1,0 +1,5 @@
+{
+  "mutation": "changeCriticalRegionCoreWidthM",
+  "id": "cr-1",
+  "newCoreWidthM": 1.32
+}

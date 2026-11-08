@@ -1,0 +1,18 @@
+[
+  {
+    "kind": "value",
+    "detail": "source"
+  },
+  {
+    "kind": "cancellationBlocked",
+    "detail": "weakAlias"
+  },
+  {
+    "kind": "cancellationRefused",
+    "detail": "original refusal"
+  },
+  {
+    "kind": "retirement",
+    "detail": "nested original"
+  }
+]

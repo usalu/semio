@@ -1,30 +1,230 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/norm/testing/engineering-witness.json",
-  "title": "NormEngineeringWitness",
+  "title": "NormEngineeringMatrix",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "variant", "example", "serves", "locales", "field", "check", "states", "journey"],
+  "required": [
+    "schemaVersion",
+    "locales",
+    "journey",
+    "windows",
+    "artifacts"
+  ],
   "properties": {
-    "schemaVersion": {"const": 1},
-    "variant": {"type": "string", "minLength": 1},
-    "example": {"type": "string", "minLength": 1},
-    "serves": {"type": "object", "additionalProperties": false, "required": ["react", "wgpu"], "properties": {"react": {"type": "string", "format": "uri"}, "wgpu": {"type": "string", "format": "uri"}}},
-    "locales": {"type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true, "items": {"enum": ["en", "de"]}},
-    "field": {
-      "type": "object", "additionalProperties": false,
-      "required": ["path", "key", "owner", "ownerWindow", "argument", "label", "limit", "unit"],
-      "properties": {
-        "path": {"type": "string", "minLength": 1}, "key": {"type": "string", "minLength": 1}, "owner": {"type": "string", "minLength": 1},
-        "ownerWindow": {"type": "string", "minLength": 1},
-        "argument": {"type": "string", "minLength": 1}, "unit": {"type": "string", "minLength": 1},
-        "limit": {"type": "number", "exclusiveMinimum": 0},
-        "label": {"type": "object", "additionalProperties": false, "required": ["en", "de"], "properties": {"en": {"type": "string", "minLength": 1}, "de": {"type": "string", "minLength": 1}}}
+    "schemaVersion": {
+      "const": 2
+    },
+    "locales": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "en",
+          "de"
+        ]
       }
     },
-    "check": {"type": "string", "minLength": 1},
-    "states": {"type": "object", "additionalProperties": false, "required": ["before", "after"], "properties": {"before": {"$ref": "#/$defs/State"}, "after": {"$ref": "#/$defs/State"}}},
-    "journey": {"const": ["boot", "edit", "undo", "redo", "reload"]}
+    "journey": {
+      "const": [
+        "boot",
+        "edit",
+        "undo",
+        "redo",
+        "reload"
+      ]
+    },
+    "windows": {
+      "const": [
+        "viewport",
+        "diagrams",
+        "properties",
+        "checks",
+        "outliner"
+      ]
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 15,
+      "maxItems": 15,
+      "items": {
+        "$ref": "#/$defs/Artifact"
+      }
+    }
   },
-  "$defs": {"State": {"type": "object", "additionalProperties": false, "required": ["value", "utilization"], "properties": {"value": {"type": "number", "minimum": 0}, "utilization": {"type": "number", "minimum": 0}}}}
+  "$defs": {
+    "State": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "utilization"
+      ],
+      "properties": {
+        "value": {
+          "type": "number",
+          "minimum": 0
+        },
+        "utilization": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "Port": {
+      "type": "integer",
+      "minimum": 1024,
+      "maximum": 65535
+    },
+    "Artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "variant",
+        "example",
+        "ports",
+        "pin"
+      ],
+      "properties": {
+        "variant": {
+          "type": "string",
+          "pattern": "^(en199[0-9]|din[0-9]+|iso[0-9]+|vdi[0-9]+)$"
+        },
+        "example": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ports": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "react",
+            "wgpu"
+          ],
+          "properties": {
+            "react": {
+              "$ref": "#/$defs/Port"
+            },
+            "wgpu": {
+              "$ref": "#/$defs/Port"
+            }
+          }
+        },
+        "pin": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/Pin"
+            }
+          ]
+        }
+      }
+    },
+    "Pin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "field",
+        "check",
+        "states",
+        "basis",
+        "linear"
+      ],
+      "properties": {
+        "field": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "key",
+            "owner",
+            "ownerWindow",
+            "argument",
+            "label",
+            "limit",
+            "unit"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "key": {
+              "type": "string",
+              "minLength": 1
+            },
+            "owner": {
+              "type": "string",
+              "minLength": 1
+            },
+            "ownerWindow": {
+              "type": "string",
+              "minLength": 1
+            },
+            "argument": {
+              "type": "string",
+              "minLength": 1
+            },
+            "unit": {
+              "type": "string",
+              "minLength": 1
+            },
+            "limit": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "label": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "en",
+                "de"
+              ],
+              "properties": {
+                "en": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "de": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        },
+        "check": {
+          "type": "string",
+          "minLength": 1
+        },
+        "states": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "before",
+            "after"
+          ],
+          "properties": {
+            "before": {
+              "$ref": "#/$defs/State"
+            },
+            "after": {
+              "$ref": "#/$defs/State"
+            }
+          }
+        },
+        "basis": {
+          "type": "string",
+          "minLength": 20
+        },
+        "linear": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
 }

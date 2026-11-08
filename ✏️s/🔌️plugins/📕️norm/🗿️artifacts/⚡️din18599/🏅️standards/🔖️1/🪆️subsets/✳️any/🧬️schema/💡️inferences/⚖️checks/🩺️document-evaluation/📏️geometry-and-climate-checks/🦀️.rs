@@ -122,10 +122,10 @@ pub(super) fn check_net_floor_area(doc: &Din18599Snapshot, report: &mut CheckRep
 }
 
 /// 🔗 Checks that every envelope element links to a declared zone.
-pub(super) fn check_element_zone_linkage(doc: &Din18599Snapshot, report: &mut CheckReport, annex: AnnexChoice) {
+pub(super) fn check_element_zone_linkage(doc: &Din18599Snapshot, report: &mut CheckReport, annex: AnnexChoice, scope: Scope<'_>) {
     {
         let zone_ids: Vec<String> = doc.zones.iter().map(|z| z.id.clone()).collect();
-        for el in &doc.elements {
+        for el in doc.elements.iter().enumerate().filter(|(index, _)| scope.admits("linkage", *index)).map(|(_, el)| el) {
             let path = format!("elements[id={}].zoneId", el.id);
             let ok = zone_ids.iter().any(|z| z == &el.zone_id);
             let mut b = CheckResult::assess(

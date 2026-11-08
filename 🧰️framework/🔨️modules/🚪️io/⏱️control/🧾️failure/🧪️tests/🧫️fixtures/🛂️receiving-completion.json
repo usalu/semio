@@ -1,0 +1,69 @@
+{
+  "cause": {
+    "type": "receiving",
+    "primary": null,
+    "quoteRefusal": null,
+    "allocationRefusal": null,
+    "workRefusal": {
+      "kind": "workLimit",
+      "message": "original work refusal",
+      "retainedProgress": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      }
+    },
+    "workOverrun": {
+      "kind": "workLimit",
+      "message": "original actual work overrun",
+      "retainedProgress": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      }
+    },
+    "nativeAllocation": null,
+    "retirementFailure": null,
+    "allocationFailure": null,
+    "receiptRefusal": {
+      "kind": "canceled",
+      "message": "independent outer receipt",
+      "retainedProgress": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      }
+    },
+    "progress": {
+      "copiedItems": 0,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0
+    },
+    "receiptCompletion": {
+      "kind": "canceled",
+      "message": "published original physical receipt",
+      "retainedProgress": {
+        "copiedItems": 1,
+        "copiedBytes": 7,
+        "retainedCapacityBytes": 0,
+        "releasedBytes": 0
+      }
+    }
+  },
+  "receiptRefusal": null,
+  "contextRefusal": null,
+  "workRefusal": null,
+  "progress": {
+    "copiedItems": 0,
+    "copiedBytes": 0,
+    "retainedCapacityBytes": 0,
+    "releasedBytes": 0
+  },
+  "settlementRefusal": null,
+  "allocation": null,
+  "encodeEffect": null
+}

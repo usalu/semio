@@ -288,5 +288,7 @@
       "sides": "two"
     }
   ],
+  "sheetProfiles": [],
+  "fireInsulations": [],
   "reliabilityClass": "RC3"
 }

@@ -23,6 +23,7 @@ name = "semio_framework_value_edit"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value-retirement-contract = { path = "../../../../♻️retirement/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-original-vector = { path = "../../../../♻️retirement/📋️original-vector/📦️packages/🦀️rust" }
 semio-framework-value-sort = { path = "../../../../📶️sort/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path = "../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }

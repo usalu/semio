@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-id/schema.json",
+  "title": "ChangeZoneId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "zoneId",
+    "newId"
+  ],
+  "properties": {
+    "zoneId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "The ventilation zone this mutation addresses.",
+          "de": "Die Lüftungszone, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Zone identifier",
+          "de": "Zonenkennung"
+        },
+        "description": {
+          "en": "The new unique identifier of the zone.",
+          "de": "Die neue eindeutige Kennung der Zone."
+        },
+        "group": "identity",
+        "order": 20
+      }
+    }
+  }
+}

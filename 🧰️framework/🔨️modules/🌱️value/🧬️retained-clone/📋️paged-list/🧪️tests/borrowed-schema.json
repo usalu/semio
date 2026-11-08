@@ -1,0 +1,108 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "values",
+    "phases",
+    "custody",
+    "recovery",
+    "nativeLifecycle",
+    "work",
+    "interruptions"
+  ],
+  "properties": {
+    "values": {
+      "const": [
+        13,
+        29,
+        47
+      ]
+    },
+    "phases": {
+      "const": [
+        "bind",
+        "reservePage",
+        "seedChild",
+        "advanceChild",
+        "takeChild",
+        "beginChildClose",
+        "closeChild",
+        "releaseChildHeader",
+        "adoptChild",
+        "publishList",
+        "takeList",
+        "closeSource"
+      ]
+    },
+    "custody": {
+      "const": {
+        "unknownTerminalDrop": false,
+        "occupiedOutput": false,
+        "shortWork": false,
+        "sourceReplacement": false,
+        "replyBeforeChildReturn": true,
+        "frozenRequest": true
+      }
+    },
+    "recovery": {
+      "const": [
+        {
+          "recorded": false,
+          "receiveCalls": 1,
+          "recoverCalls": 1
+        },
+        {
+          "recorded": true,
+          "receiveCalls": 1,
+          "recoverCalls": 0
+        }
+      ]
+    },
+    "nativeLifecycle": {
+      "const": {
+        "realDrop": true,
+        "forget": false,
+        "rejectsNonMatchingWitness": true
+      }
+    },
+    "work": {
+      "const": "sameOriginalBank"
+    },
+    "interruptions": {
+      "const": [
+        {
+          "mode": 0,
+          "name": "complete",
+          "receiveCalls": 1,
+          "recoverCalls": 0,
+          "childWork": 1,
+          "interruptions": 0
+        },
+        {
+          "mode": 1,
+          "name": "pending",
+          "receiveCalls": 1,
+          "recoverCalls": 1,
+          "childWork": 2,
+          "interruptions": 0
+        },
+        {
+          "mode": 2,
+          "name": "unwindBeforeReply",
+          "receiveCalls": 1,
+          "recoverCalls": 1,
+          "childWork": 2,
+          "interruptions": 1
+        },
+        {
+          "mode": 3,
+          "name": "unwindAfterReply",
+          "receiveCalls": 1,
+          "recoverCalls": 0,
+          "childWork": 1,
+          "interruptions": 1
+        }
+      ]
+    }
+  }
+}

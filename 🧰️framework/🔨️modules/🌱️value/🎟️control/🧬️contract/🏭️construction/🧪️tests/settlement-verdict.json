@@ -1,0 +1,17 @@
+[
+  {
+    "phase": "pending",
+    "recorded": false,
+    "succeeded": null
+  },
+  {
+    "phase": "accepted",
+    "recorded": true,
+    "succeeded": true
+  },
+  {
+    "phase": "refused",
+    "recorded": true,
+    "succeeded": false
+  }
+]

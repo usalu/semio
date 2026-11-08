@@ -1,33 +1,44 @@
-//! 🧪️ Original owned entries match neutral updates, real allocation receipts and every cancellation prefix.
+//! 🧪️ Original aliases, cancellation prefixes and byte frontiers use one genuine Source bank.
 use super::*;
-use crate::bank::{EffectBank,bank as open_bank,once,post};
-fn close<T:RetireOwned>(owner:T,bank:&mut EffectBank){let mut close=semio_framework_value_retirement::retirement::controlled::ControlledRetirement::new(owner).unwrap_or_else(|_|panic!("original test owner supports retained closure"));for _ in 0..10000{if close.terminal_is_empty(){return}let g=RetainedCloneGrant{maximum_items:1,..bank.wallet().remaining()};let units=close.next_computational_work(g.maximum_copy_bytes).unwrap();let((result,_),heap)=crate::observe_retirement_allocations(||once(bank,g,units,|effect|close.step(effect)));let p=result.result.as_ref().map_or_else(|e|e.retained_progress(),|s|s.progress());assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));post(bank,p,g,heap);result.result.unwrap();}panic!("original entry test close exhausted finite stock");}
+use semio_framework_value_testing_effect_bank::{EffectBank,Wallet};
+#[path="🧪️tests/effect-bank.rs"]mod bank;
+use bank::{Harness,Op,grant};
+fn funded_bank(corpus:&serde_json::Value)->EffectBank{let s=&corpus["stock"];EffectBank::new(Wallet::new(RetainedCloneGrant{maximum_items:s["items"].as_u64().unwrap()as usize,maximum_copy_bytes:s["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:s["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:s["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:s["depth"].as_u64().unwrap()as usize},s["fuel"].as_u64().unwrap()))}
+fn drain(h:&mut Harness<'_>,bank:&mut EffectBank){
+ for op in [Op::EntryStart,Op::EntryClose,Op::OutputStart,Op::OutputClose,Op::ExtraStart,Op::ExtraClose]{
+  for _ in 0..10000{
+   let empty=h.inspect(|p|match op{Op::EntryStart=>p.entry.is_none(),Op::EntryClose=>p.entry_close.is_empty(),Op::OutputStart=>p.output.is_none(),Op::OutputClose=>p.output_close.is_empty(),Op::ExtraStart=>p.extra.as_ref().unwrap().is_none(),Op::ExtraClose=>p.extra_close.as_ref().unwrap().is_empty(),_=>unreachable!()});if empty{break}
+   let(d,work)=h.quote(op);let g=grant(d);h.run(bank,op,g,0);assert_eq!(h.last_work,0);assert_eq!(h.last_heap,(0,0));assert_eq!(h.quote(op).0,d);h.run(bank,op,g,work);
+  }
+ }
+ assert!(h.inspect(|p|p.empty()));h.release(bank)
+}
 #[test]
 fn original_owned_entry_retains_real_map_updates_and_cancel_prefixes(){
  let corpus:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();
  for row in corpus["cases"].as_array().unwrap(){for cut in corpus["cancelAfter"].as_array().unwrap().iter().map(|n|Some(n.as_u64().unwrap())).chain([None]){
-  let mut bank=open_bank(&corpus["stock"]);
-  let base:OrderedMap<u64>=row["base"].as_array().unwrap().iter().map(|pair|(pair[0].as_str().unwrap().to_owned(),pair[1].as_u64().unwrap())).collect();let alias=base.clone();let identity=base.original_root_identity();let key=row["key"].as_str().unwrap().to_owned();let value=row["value"].as_u64().unwrap();
-  let(mut work,heap)=crate::observe_retirement_allocations(||OriginalOwnedEntry::new(base,key,value));assert_eq!(heap,(0,0));assert_eq!(work.fields.base.as_ref().unwrap().original_root_identity(),identity);let mut output=None;
-  for turn in 0..corpus["maximumTurns"].as_u64().unwrap(){if cut==Some(turn){break}let quote=work.next_demands(4096).unwrap();let stock=bank.wallet().remaining();let required=work.next_work_demand(stock.maximum_copy_bytes).unwrap();let fuel=bank.wallet().remaining_work();if required>0{let phase=work.phase;let((denied,actual),heap)=crate::observe_retirement_allocations(||once(&mut bank,RetainedCloneGrant{maximum_items:1,..stock},required-1,|effect|work.advance(effect)));assert!(denied.result.unwrap().is_none());assert_eq!(denied.work,0);assert!(actual.is_none());assert_eq!(heap,(0,0));assert_eq!(work.phase,phase);assert_eq!(work.next_demands(4096).unwrap(),quote);}let((paused,_),heap)=crate::observe_retirement_allocations(||once(&mut bank,RetainedCloneGrant{maximum_items:0,..stock},fuel,|effect|work.advance(effect)));assert!(paused.result.unwrap().is_none());assert_eq!(paused.work,0);assert_eq!(heap,(0,0));assert_eq!(work.next_demands(4096).unwrap(),quote);
-   let g=RetainedCloneGrant{maximum_items:1,..stock};let((outcome,actual),heap)=crate::observe_retirement_allocations(||once(&mut bank,g,fuel,|effect|work.advance(effect)));let p=work.step_progress();if let Some(actual)=work.last_allocation_attempt(){assert_eq!(actual,p.retained_capacity_bytes)}if let Some(actual)=actual{assert_eq!(actual,heap.0)}assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));post(&mut bank,p,g,heap);output=outcome.result.unwrap();if output.is_some(){break}assert!(turn+1<corpus["maximumTurns"].as_u64().unwrap());
+  let mut source=funded_bank(&corpus);let base:OrderedMap<u64>=row["base"].as_array().unwrap().iter().map(|p|(p[0].as_str().unwrap().to_owned(),p[1].as_u64().unwrap())).collect();let mut alias=Some(base.clone());let identity=base.original_root_identity();let key=row["key"].as_str().unwrap().to_owned();let value=row["value"].as_u64().unwrap();
+  let(work,heap)=crate::observe_retirement_allocations(||OriginalOwnedEntry::new(base,key,value));assert_eq!(heap,(0,0));assert_eq!(work.fields.base.as_ref().unwrap().original_root_identity(),identity);let mut work=Some(work);let mut output=None;let mut close=RetainedCloneClose::default();let mut output_close=RetainedCloneClose::default();let mut alias_close=RetainedCloneClose::default();let mut h=Harness::new_with_alias(&mut work,&mut output,&mut close,&mut output_close,&mut alias,&mut alias_close,&source);
+  for turn in 0..corpus["maximumTurns"].as_u64().unwrap(){
+   if cut==Some(turn){break}let(d,required)=h.quote(Op::Advance);let g=grant(d);let phase=h.inspect(|p|p.entry.as_ref().unwrap().phase);
+   if required>0{let step=h.run(&mut source,Op::Advance,g,required-1);assert_eq!(step.progress(),Default::default());assert_eq!(h.last_work,0);assert_eq!(h.last_heap,(0,0));assert_eq!(h.inspect(|p|p.entry.as_ref().unwrap().phase),phase);assert_eq!(h.quote(Op::Advance).0,d)}
+   let step=h.run(&mut source,Op::Advance,RetainedCloneGrant{maximum_items:0,..g},required);assert_eq!(step.progress(),Default::default());assert_eq!(h.last_work,0);assert_eq!(h.last_heap,(0,0));assert_eq!(h.quote(Op::Advance).0,d);
+   h.run(&mut source,Op::Advance,g,required);if h.inspect(|p|p.output.is_some()){break}assert!(turn+1<corpus["maximumTurns"].as_u64().unwrap())
   }
-  if cut.is_none(){let actual:Vec<_>=output.as_ref().unwrap().iter().map(|(k,v)|(k.clone(),*v)).collect();let expected:Vec<_>=row["expected"].as_array().unwrap().iter().map(|pair|(pair[0].as_str().unwrap().to_owned(),pair[1].as_u64().unwrap())).collect();assert_eq!(actual,expected)}
-  let original:Vec<_>=alias.iter().map(|(k,v)|(k.clone(),*v)).collect();let expected:Vec<_>=row["base"].as_array().unwrap().iter().map(|pair|(pair[0].as_str().unwrap().to_owned(),pair[1].as_u64().unwrap())).collect();assert_eq!(original,expected);
-  for turn in 0..10000{if work.terminal_is_empty(){break}let stock=bank.wallet().remaining();let quote=work.close_work_demand(stock.maximum_copy_bytes).unwrap();let fuel=bank.wallet().remaining_work();let g=RetainedCloneGrant{maximum_items:1,..stock};if quote>0{let((denied,_),heap)=crate::observe_retirement_allocations(||once(&mut bank,g,quote-1,|effect|work.close_step(effect)));assert_eq!(denied.work,0);assert_eq!(denied.result.unwrap().progress(),RetainedCloneProgress::default());assert_eq!(heap,(0,0));assert!(!work.terminal_is_empty());}let((outcome,_),heap)=crate::observe_retirement_allocations(||once(&mut bank,g,fuel,|effect|work.close_step(effect)));let p=outcome.result.as_ref().map_or_else(|e|e.retained_progress(),|s|s.progress());assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));post(&mut bank,p,g,heap);outcome.result.unwrap();assert!(turn+1<10000)}
-  assert!(work.terminal_is_empty());drop(work);if let Some(output)=output{close(output,&mut bank)}close(alias,&mut bank);
+  if cut.is_none(){h.inspect(|p|{let actual:Vec<_>=p.output.as_ref().unwrap().iter().map(|(k,v)|(k.clone(),*v)).collect();let expected:Vec<_>=serde_json::from_value::<Vec<(String,u64)>>(row["expected"].clone()).unwrap();assert_eq!(actual,expected)})}
+  h.inspect(|p|{let original:Vec<_>=p.extra.as_ref().unwrap().as_ref().unwrap().iter().map(|(k,v)|(k.clone(),*v)).collect();let expected:Vec<_>=serde_json::from_value::<Vec<(String,u64)>>(row["base"].clone()).unwrap();assert_eq!(original,expected)});
+  drain(&mut h,&mut source)
  }}
 }
-
 #[test]
 fn actual_ordered_comparison_denies_unfunded_source_bytes(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();let row=&corpus["comparison"];let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:4096};let base=OrderedMap::from([(row["key"].as_str().unwrap().to_owned(),1u64)]);let(key,_)=SharedOwner::admit(row["key"].as_str().unwrap().to_owned(),g, &mut None).result.unwrap_or_else(|_|panic!("original key header"));let(value,_)=SharedOwner::admit(2u64,g, &mut None).result.unwrap_or_else(|_|panic!("original value header"));let mut update=base.begin_set_shared(key,value);
- let(turn,heap)=crate::observe_retirement_allocations(||update.advance(RetainedCloneGrant{maximum_copy_bytes:0,..g},0));assert_eq!(turn.work,u128::from(row["zeroWork"].as_u64().unwrap()));assert_eq!(turn.result.unwrap().progress(),RetainedCloneProgress::default());assert_eq!(heap,(0,0));assert_eq!(update.last_compared_bytes(),0);assert_eq!(update.next_copy_byte_demand(),1);
- let quote=update.next_work_demand(1).unwrap();assert_eq!(quote,row["oneByteWork"].as_u64().unwrap());
- let(turn,heap)=crate::observe_retirement_allocations(||update.advance(RetainedCloneGrant{maximum_copy_bytes:1,..g},row["insufficientWork"].as_u64().unwrap()));assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap().progress(),RetainedCloneProgress::default());assert_eq!(heap,(0,0));assert_eq!(update.last_compared_bytes(),0);
- let(turn,heap)=crate::observe_retirement_allocations(||update.advance(RetainedCloneGrant{maximum_copy_bytes:1,..g},quote));assert_eq!(turn.work,u128::from(row["oneByteWork"].as_u64().unwrap()));assert_eq!(turn.result.unwrap().progress().copied_bytes,1);assert_eq!(heap,(0,0));assert_eq!(update.last_compared_bytes(),1);assert_eq!(update.state.left_byte,Some(row["firstByte"].as_u64().unwrap()as u8));
- let mut bank=open_bank(&corpus["stock"]);close(update,&mut bank);close(base,&mut bank);
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();let row=&corpus["comparison"];let mut source=funded_bank(&corpus);
+ let base=OrderedMap::from([(row["key"].as_str().unwrap().to_owned(),1u64)]);let mut alias=Some(base.clone());let mut entry=Some(OriginalOwnedEntry::new(base,row["key"].as_str().unwrap().to_owned(),2));let mut output=None;let mut close=RetainedCloneClose::default();let mut output_close=RetainedCloneClose::default();let mut alias_close=RetainedCloneClose::default();let mut h=Harness::new_with_alias(&mut entry,&mut output,&mut close,&mut output_close,&mut alias,&mut alias_close,&source);
+ while h.inspect(|p|p.entry.as_ref().unwrap().phase)!=3{let(d,w)=h.quote(Op::Advance);h.run_body(&mut source,Op::Advance,1,grant(d),w);}
+ let fixed=h.inspect(|p|p.entry.as_ref().unwrap().fields.update.as_ref().unwrap().state.native_copy_demand(0).unwrap());let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:fixed+1,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};
+ let step=h.run_body(&mut source,Op::Advance,1,RetainedCloneGrant{maximum_copy_bytes:0,..g},0);assert_eq!(h.last_work,row["zeroWork"].as_u64().unwrap()as u128);assert_eq!(step.progress(),Default::default());assert_eq!(h.last_heap,(0,0));assert_eq!(h.inspect(|p|p.entry.as_ref().unwrap().fields.update.as_ref().unwrap().last_compared_bytes()),0);
+ let quote=h.inspect(|p|p.entry.as_ref().unwrap().fields.update.as_ref().unwrap().native_work_demand(1).unwrap());assert_eq!(quote,row["oneByteWork"].as_u64().unwrap());let step=h.run_body(&mut source,Op::Advance,1,g,row["insufficientWork"].as_u64().unwrap());assert_eq!(h.last_work,0);assert_eq!(step.progress(),Default::default());assert_eq!(h.last_heap,(0,0));assert_eq!(h.inspect(|p|p.entry.as_ref().unwrap().fields.update.as_ref().unwrap().last_compared_bytes()),0);
+ let step=h.run_body(&mut source,Op::Advance,1,g,quote);assert_eq!(h.last_work,row["oneByteWork"].as_u64().unwrap()as u128);assert_eq!(step.progress().copied_bytes,fixed+1);assert_eq!(h.last_heap,(0,0));h.inspect(|p|{let cursor=p.entry.as_ref().unwrap().fields.update.as_ref().unwrap();assert_eq!(cursor.last_compared_bytes(),1);assert_eq!(cursor.state.left_byte,Some(row["firstByte"].as_u64().unwrap()as u8))});
+ drain(&mut h,&mut source)
 }
-
-#[path="➖remove/🧪️tests/🦀️.rs"]
-mod removal_laws;
+#[path="➖remove/🧪️tests/🦀️.rs"]mod removal_laws;

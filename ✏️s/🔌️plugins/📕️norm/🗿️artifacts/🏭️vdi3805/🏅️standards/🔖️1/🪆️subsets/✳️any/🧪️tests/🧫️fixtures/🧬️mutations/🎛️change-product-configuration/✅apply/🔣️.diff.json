@@ -24,7 +24,8 @@
             "functionRefs": [
               "curve-kvs"
             ]
-          }
+          },
+          "records": null
         }
       }
     ]

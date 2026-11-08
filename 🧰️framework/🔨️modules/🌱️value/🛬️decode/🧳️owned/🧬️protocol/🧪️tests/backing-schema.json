@@ -1,0 +1,50 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases",
+    "stock",
+    "shortWorkRetains",
+    "realDestructor",
+    "sameOriginalBank"
+  ],
+  "properties": {
+    "cases": {
+      "const": [
+        {
+          "name": "complete",
+          "unwind": false,
+          "closeCalls": 1,
+          "recoverCalls": 0,
+          "drops": 1
+        },
+        {
+          "name": "recordedCloseUnwind",
+          "unwind": true,
+          "closeCalls": 1,
+          "recoverCalls": 0,
+          "drops": 1
+        }
+      ]
+    },
+    "stock": {
+      "const": {
+        "items": 1000,
+        "copyBytes": 1048576,
+        "capacityBytes": 1048576,
+        "releaseBytes": 1048576,
+        "depth": 64,
+        "fuel": 1000
+      }
+    },
+    "shortWorkRetains": {
+      "const": true
+    },
+    "realDestructor": {
+      "const": true
+    },
+    "sameOriginalBank": {
+      "const": true
+    }
+  }
+}

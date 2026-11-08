@@ -48,7 +48,7 @@ placements [id:TEXT x:NUM y:NUM z:NUM yaw:NUM] {
 cases [id:TEXT label-en:TEXT label-de:TEXT entry-id:TEXT numbers:TABLE texts:TABLE] {
   case-pr-05 "Time-dependent losses" "Zeitabhängige Verluste" PR-05 [ {id=ac value=90000} {id=ap value=1000} {id=ecm value=33000} {id=ep value=195000} {id=eps_cs value=0.0003} {id=fpk value=1860} {id=ic value=6750000000} {id=phi value=2} {id=relax_class value=2} {id=rho1000 value=2.5} {id=sigma_c_qp value=8} {id=sigma_pi value=1300} {id=t_hours value=1000} {id=zcp value=100} ] [ ]
   case-pr-06 "Unbonded tendons at ULS" "Spannglieder ohne Verbund im GZT" PR-06 [ {id=delta_sigma value=30} {id=fp01k value=1640} {id=fpk value=1860} {id=sigma_pm_inf value=1100} ] [ ]
-  case-pr-07 "Characteristic prestress values" "Charakteristische Vorspannwerte" PR-07 [ {id=pm_t value=450000} ] [ {id=bond value=bonded} ]
+  case-pr-07 "Characteristic prestress values" "Charakteristische Vorspannwerte" PR-07 [ {id=pm_t value=450000} ] [ {id=bond value=post_bonded} ]
   case-pr-08 "Deviation forces" "Umlenkkräfte" PR-08 [ {id=l value=6000} {id=p value=500000} {id=radius value=15000} {id=sag value=40} ] [ ]
   case-pr-09 "Anchorage zones of post-tensioned members" Verankerungsbereiche PR-09 [ {id=a value=200} {id=as_provided value=1571} {id=fyk value=500} {id=h value=500} {id=pmax value=1000000} ] [ ]
   case-pr-10 "Concrete stress at release" "Betonspannung bei Vorspannung" PR-10 [ {id=fck_t value=20} {id=nonlinear_creep_proven value=0} {id=sigma_c value=10} ] [ ]

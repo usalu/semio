@@ -1,0 +1,432 @@
+{
+ "description": "Reviewed ledger of the resolved cross-check conflicts (ticket audits ndp-crosscheck-*.md): expected EN and NA-DE registry values and the strongest evidence basis. library = EN value encoded by a third-party library, public = public secondary sources only, open = nothing found. A row with another basis than library must not carry a verified flag. Written by 🧰️ndp/fleet1108_ledger.py.",
+ "rows": [
+  {
+   "conflict": "E92-02",
+   "id": "ndp.en1992.m-01.alpha-cc-accidental",
+   "en": 1.0,
+   "naDe": 0.85,
+   "basis": "open"
+  },
+  {
+   "conflict": "E92-02",
+   "id": "ndp.en1992.m-01.alpha-cc-persistent",
+   "en": 1.0,
+   "naDe": 0.85,
+   "basis": "library"
+  },
+  {
+   "conflict": "E92-02",
+   "id": "ndp.en1992.m-01.alpha-ct",
+   "en": 1.0,
+   "naDe": 0.85,
+   "basis": "library"
+  },
+  {
+   "conflict": "E92-05",
+   "id": "ndp.en1992.m-01.gamma-c-accidental",
+   "en": 1.2,
+   "naDe": 1.3,
+   "basis": "public"
+  },
+  {
+   "conflict": "E92-13",
+   "id": "ndp.en1992.d-04.class-fck.xc1",
+   "en": 30.0,
+   "naDe": 30.0,
+   "basis": "library"
+  },
+  {
+   "conflict": "E92-13",
+   "id": "ndp.en1992.d-04.class-fck.xc2-xc3",
+   "en": 35.0,
+   "naDe": null,
+   "basis": "library"
+  },
+  {
+   "conflict": "E92-13",
+   "id": "ndp.en1992.d-04.class-fck.xc4-xd1-xd2-xs1",
+   "en": 40.0,
+   "naDe": null,
+   "basis": "library"
+  },
+  {
+   "conflict": "E92-13",
+   "id": "ndp.en1992.d-04.class-fck.xd3-xs2-xs3",
+   "en": 45.0,
+   "naDe": null,
+   "basis": "library"
+  },
+  {
+   "conflict": "E92-24",
+   "id": "ndp.en1992.k1-shear",
+   "en": 0.15,
+   "naDe": 0.12,
+   "basis": "library"
+  },
+  {
+   "conflict": "E92-24",
+   "id": "ndp.en1992.crd-c-shear",
+   "en": 0.18,
+   "naDe": 0.15,
+   "basis": "library"
+  },
+  {
+   "conflict": "E92-25",
+   "id": "ndp.en1992.vmin-shear",
+   "en": 0.035,
+   "naDe": 0.0525,
+   "basis": "library"
+  },
+  {
+   "conflict": "E92-25",
+   "id": "ndp.en1992.vmin-shear-d800",
+   "en": 0.035,
+   "naDe": 0.0375,
+   "basis": "public"
+  },
+  {
+   "conflict": "E92-26",
+   "id": "ndp.en1992.cot-theta-min",
+   "en": 1.0,
+   "naDe": 1.0,
+   "basis": "library"
+  },
+  {
+   "conflict": "E92-26",
+   "id": "ndp.en1992.cot-theta-max",
+   "en": 2.5,
+   "naDe": 3.0,
+   "basis": "library"
+  },
+  {
+   "conflict": "E92-39",
+   "id": "ndp.en1992.crd-c-punch",
+   "en": 0.18,
+   "naDe": 0.18,
+   "basis": "library"
+  },
+  {
+   "conflict": "E92-39",
+   "id": "ndp.en1992.k1-punch",
+   "en": 0.1,
+   "naDe": 0.1,
+   "basis": "library"
+  },
+  {
+   "conflict": "E92-43",
+   "id": "ndp.en1992.punch-cs-vrdc-factor",
+   "en": 0.75,
+   "naDe": 0.75,
+   "basis": "library"
+  },
+  {
+   "conflict": "E92-43",
+   "id": "ndp.en1992.punch-cs-asw-factor",
+   "en": 1.5,
+   "naDe": 1.5,
+   "basis": "library"
+  },
+  {
+   "conflict": "E92-43",
+   "id": "ndp.en1992.punch-fywd-ef-base",
+   "en": 250.0,
+   "naDe": 250.0,
+   "basis": "library"
+  },
+  {
+   "conflict": "E92-43",
+   "id": "ndp.en1992.punch-fywd-ef-slope",
+   "en": 0.25,
+   "naDe": 0.25,
+   "basis": "library"
+  },
+  {
+   "conflict": "E92-47",
+   "id": "ndp.en1992.fbd-eta",
+   "en": 2.25,
+   "naDe": 2.25,
+   "basis": "library"
+  },
+  {
+   "conflict": "E92-59",
+   "id": "ndp.en1992.fatigue-straight",
+   "en": 162.5,
+   "naDe": 162.5,
+   "basis": "open"
+  },
+  {
+   "conflict": "E92-80",
+   "id": "ndp.en1992.cone-k-cast-cracked",
+   "en": 8.9,
+   "naDe": 8.9,
+   "basis": "open"
+  },
+  {
+   "conflict": "E92-80",
+   "id": "ndp.en1992.cone-k-cast-uncracked",
+   "en": 12.7,
+   "naDe": 12.7,
+   "basis": "open"
+  },
+  {
+   "conflict": "E92-80",
+   "id": "ndp.en1992.cone-k-post-cracked",
+   "en": 7.7,
+   "naDe": 7.7,
+   "basis": "open"
+  },
+  {
+   "conflict": "E92-80",
+   "id": "ndp.en1992.cone-k-post-uncracked",
+   "en": 11.0,
+   "naDe": 11.0,
+   "basis": "open"
+  },
+  {
+   "conflict": "E92-82",
+   "id": "ndp.en1992.nu1-en-factor",
+   "en": 0.6,
+   "naDe": null,
+   "basis": "library"
+  },
+  {
+   "conflict": "E92-82",
+   "id": "ndp.en1992.nu1-en-divisor",
+   "en": 250.0,
+   "naDe": null,
+   "basis": "library"
+  },
+  {
+   "conflict": "E92-82",
+   "id": "ndp.en1992.nu1-factor",
+   "en": 1.0,
+   "naDe": 0.75,
+   "basis": "public"
+  },
+  {
+   "conflict": "E92-82",
+   "id": "ndp.en1992.nu2-offset",
+   "en": null,
+   "naDe": 1.1,
+   "basis": "public"
+  },
+  {
+   "conflict": "E92-82",
+   "id": "ndp.en1992.nu2-fck-divisor",
+   "en": null,
+   "naDe": 500.0,
+   "basis": "public"
+  },
+  {
+   "conflict": "E92-PR",
+   "id": "ndp.en1992.p-r-sup.pre-or-unbonded",
+   "en": 1.05,
+   "naDe": null,
+   "basis": "library"
+  },
+  {
+   "conflict": "E92-PR",
+   "id": "ndp.en1992.p-r-sup.post-bonded",
+   "en": 1.1,
+   "naDe": null,
+   "basis": "library"
+  },
+  {
+   "conflict": "E92-PR",
+   "id": "ndp.en1992.p-r-inf.pre-or-unbonded",
+   "en": 0.95,
+   "naDe": null,
+   "basis": "library"
+  },
+  {
+   "conflict": "E92-PR",
+   "id": "ndp.en1992.p-r-inf.post-bonded",
+   "en": 0.9,
+   "naDe": null,
+   "basis": "library"
+  },
+  {
+   "conflict": "E95-01",
+   "id": "ndp.en1995.strength.c24.ft0k",
+   "en": 14.5,
+   "naDe": 14.5,
+   "basis": "library"
+  },
+  {
+   "conflict": "E95-02",
+   "id": "ndp.en1995.strength.c24.ft90k",
+   "en": 0.4,
+   "naDe": 0.4,
+   "basis": "library"
+  },
+  {
+   "conflict": "E95-04",
+   "id": "ndp.en1995.strength.c16.ft90k",
+   "en": 0.4,
+   "naDe": 0.4,
+   "basis": "library"
+  },
+  {
+   "conflict": "E95-05",
+   "id": "ndp.en1995.strength.c30.ft90k",
+   "en": 0.4,
+   "naDe": 0.4,
+   "basis": "library"
+  },
+  {
+   "conflict": "E95-05",
+   "id": "ndp.en1995.strength.c30.fc0k",
+   "en": 24.0,
+   "naDe": 24.0,
+   "basis": "library"
+  },
+  {
+   "conflict": "E95-05",
+   "id": "ndp.en1995.strength.c30.ft0k",
+   "en": 19.0,
+   "naDe": 19.0,
+   "basis": "library"
+  },
+  {
+   "conflict": "E95-06",
+   "id": "ndp.en1995.strength.gl24h.ft0k",
+   "en": 19.2,
+   "naDe": 19.2,
+   "basis": "public"
+  },
+  {
+   "conflict": "E95-06",
+   "id": "ndp.en1995.strength.gl24h.gmean",
+   "en": 650.0,
+   "naDe": 650.0,
+   "basis": "public"
+  },
+  {
+   "conflict": "E95-07",
+   "id": "ndp.en1995.strength.gl28h.ft0k",
+   "en": 22.3,
+   "naDe": 22.3,
+   "basis": "public"
+  },
+  {
+   "conflict": "E95-07",
+   "id": "ndp.en1995.strength.gl28h.gmean",
+   "en": 650.0,
+   "naDe": 650.0,
+   "basis": "public"
+  },
+  {
+   "conflict": "E95-08",
+   "id": "ndp.en1995.strength.gl32h.ft0k",
+   "en": 25.6,
+   "naDe": 25.6,
+   "basis": "public"
+  },
+  {
+   "conflict": "E95-08",
+   "id": "ndp.en1995.strength.gl32h.gmean",
+   "en": 650.0,
+   "naDe": 650.0,
+   "basis": "public"
+  },
+  {
+   "conflict": "E95-14",
+   "id": "ndp.en1995.gamma-m.glulam",
+   "en": 1.25,
+   "naDe": 1.3,
+   "basis": "public"
+  },
+  {
+   "conflict": "E95-15",
+   "id": "ndp.en1995.gamma-m.lvl",
+   "en": 1.2,
+   "naDe": 1.3,
+   "basis": "public"
+  },
+  {
+   "conflict": "E95-16",
+   "id": "ndp.en1995.gamma-m.plywood",
+   "en": 1.2,
+   "naDe": 1.3,
+   "basis": "public"
+  },
+  {
+   "conflict": "E95-21",
+   "id": "ndp.en1995.gamma-m.clt",
+   "en": 1.25,
+   "naDe": 1.3,
+   "basis": "open"
+  },
+  {
+   "conflict": "E95-44",
+   "id": "ndp.en1995.floor.f1-limit",
+   "en": 8.0,
+   "naDe": 6.0,
+   "basis": "public"
+  },
+  {
+   "conflict": "E95-45",
+   "id": "ndp.en1995.floor.a-limit",
+   "en": 1.5,
+   "naDe": 0.5,
+   "basis": "open"
+  },
+  {
+   "conflict": "E96-06",
+   "id": "ndp.en1996.k.gp.clay.g3",
+   "en": 0.35,
+   "naDe": 0.45,
+   "basis": "public"
+  },
+  {
+   "conflict": "E96-07",
+   "id": "ndp.en1996.k.gp.clay.g4",
+   "en": 0.35,
+   "naDe": 0.4,
+   "basis": "public"
+  },
+  {
+   "conflict": "E96-08",
+   "id": "ndp.en1996.k.tl.clay.g1",
+   "en": 0.75,
+   "naDe": 0.7,
+   "basis": "public"
+  },
+  {
+   "conflict": "E96-09",
+   "id": "ndp.en1996.k.tl.clay.g2",
+   "en": 0.7,
+   "naDe": 0.7,
+   "basis": "public"
+  },
+  {
+   "conflict": "E96-15",
+   "id": "ndp.en1996.fvk0.gp.clay.ge10",
+   "en": 0.3,
+   "naDe": 0.22,
+   "basis": "public"
+  },
+  {
+   "conflict": "E96-16",
+   "id": "ndp.en1996.fvk0.gp.clay.ge5",
+   "en": 0.2,
+   "naDe": 0.18,
+   "basis": "public"
+  },
+  {
+   "conflict": "E96-18",
+   "id": "ndp.en1996.fvk0.tl.clay.all",
+   "en": 0.3,
+   "naDe": 0.22,
+   "basis": "public"
+  },
+  {
+   "conflict": "E96-36",
+   "id": "ndp.en1996.gamma-m.c3",
+   "en": 2.0,
+   "naDe": 1.7,
+   "basis": "public"
+  }
+ ]
+}

@@ -8,7 +8,16 @@
     "maximumTurns",
     "maximumCpuWork",
     "stock",
-    "expected"
+    "expected",
+    "birthStages",
+    "ownedAdmissionDenied",
+    "sharedBankCheck",
+    "partialAdmission",
+    "admittedSource",
+    "dualProjection",
+    "pendingBank",
+    "closeDenial",
+    "cleanupRefusal"
   ],
   "properties": {
     "text": {
@@ -32,9 +41,86 @@
     "expected": {
       "const": {
         "deniedCpu": 0,
-        "birthCpu": 6,
+        "birthCpu": 36,
         "cachedCloseCpu": 0,
         "liveCloseMinimumDepth": 1
+      }
+    },
+    "birthStages": {
+      "const": [
+        5,
+        3,
+        1,
+        4,
+        4,
+        1,
+        1,
+        2,
+        1,
+        2,
+        1,
+        1,
+        4,
+        1,
+        4,
+        1
+      ]
+    },
+    "ownedAdmissionDenied": {
+      "const": {
+        "capacity": 0,
+        "work": 3,
+        "kind": "OwnershipLimit",
+        "inputPreserved": true,
+        "handbackWork": 2
+      }
+    },
+    "sharedBankCheck": {
+      "const": {
+        "work": 1,
+        "bound": false
+      }
+    },
+    "partialAdmission": {
+      "const": {
+        "allocatedBeforeRefusal": true,
+        "inputPreserved": true,
+        "deniedRecoveryWork": 0
+      }
+    },
+    "admittedSource": {
+      "const": {
+        "sourceIdentityPreserved": true,
+        "bankWorkPreserved": true,
+        "closeConsumesWork": true
+      }
+    },
+    "dualProjection": {
+      "const": {
+        "original": "fixture cancel request",
+        "projection": "fixture projection refusal",
+        "deniedWork": 0
+      }
+    },
+    "pendingBank": {
+      "const": {
+        "firstWork": 0,
+        "closeBlocked": true,
+        "recoveryWork": 1,
+        "sourcePreserved": true
+      }
+    },
+    "closeDenial": {
+      "const": {
+        "work": 0,
+        "sourcePreserved": true
+      }
+    },
+    "cleanupRefusal": {
+      "const": {
+        "message": "fixture cleanup refusal",
+        "deniedWork": 0,
+        "publicationWork": 1
       }
     }
   }

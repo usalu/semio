@@ -16,8 +16,8 @@ test("bulk bitwise vector clone chunks agree with an independent page-wise typed
     for(let start=0;start<bytes.byteLength;start+=law.pageBytes){target.set(bytes.subarray(start,Math.min(start+law.pageBytes,bytes.byteLength)),start);chunks++;}
     expect(Array.from(new Uint16Array(target.buffer))).toEqual(Array.from(source));
     expect(chunks).toBe(Math.ceil(bytes.byteLength/law.pageBytes));
-    const turns=law.overheadTurns+chunks;
-    expect(turns).toBeLessThanOrEqual(law.overheadTurns+Math.ceil(count*law.elementBytes/law.pageBytes));
+    const turns=(count===0?law.emptyOverheadTurns:law.overheadTurns)+chunks;
+    expect(turns).toBeLessThanOrEqual((count===0?law.emptyOverheadTurns:law.overheadTurns)+Math.ceil(count*law.elementBytes/law.pageBytes));
     if(count===2097152){expect(bytes.byteLength).toBe(4*1024*1024);expect(turns).toBe(law.maximumTurnsForFourMebibytes);expect(count*law.elementwiseTurnsPerElement/turns).toBeGreaterThan(400000);}
   }
   const zeroSized=Array.from({length:law.zeroSizedSampleCount},()=>null),zeroOracle=structuredClone(zeroSized),zeroCopy=[] as null[];
@@ -54,12 +54,15 @@ test("defining clone contract bounds zero-sized runs and retains only initialize
   expect(bulk).toContain("if width == 0 { return RETAINED_CLONE_BULK_PAGE_ITEMS; }");
   expect(bulk).not.toContain("usize::MAX");
   const array=source.slice(source.indexOf("pub struct ArrayCursor"),source.indexOf("impl<T: RetainedClone, const N: usize> RetainedClone for [T; N]"));
-  expect(array).toContain("slots: [std::mem::MaybeUninit<T>; N]");
+  const prefix=readFileSync(new URL("../../⚙️engine/📋️prefix/🦀️.rs",import.meta.url),"utf8");
+  const selection=readFileSync(new URL("../../🧬️contract/🧮️array-cursor/🔎️selection/🦀️.rs",import.meta.url),"utf8");
+  expect(array).toContain("prefix: NativeArrayPrefix<T,N>");
+  expect(prefix).toContain("slots:[std::mem::MaybeUninit<T>;N]");
   expect(array).toContain("N<=RETAINED_CLONE_BULK_PAGE_ITEMS");
-  expect(array).toContain("(N-self.index).min(bulk_run_elements(RetainedCloneGrant{maximum_copy_bytes:body,..grant},size_of::<T>()).max(1))");
-  expect(array).toContain("self.slots[self.index].assume_init_read()");
-  expect(array).not.toContain("self.slots.iter_mut()");
-  expect(array).toContain("self.index == 0");
+  expect(selection).toContain("remaining.min(RETAINED_CLONE_BULK_PAGE_ITEMS).min(by_work).min(by_copy)");
+  expect(prefix).toContain("assume_init_read()");
+  expect(prefix).not.toContain("self.slots.iter_mut()");
+  expect(prefix).toContain("self.initialized==0");
   expect(array).toContain("fn close_demands");
 });
 
@@ -92,22 +95,22 @@ test("logical clone bodies remain independent from admitted physical headers",()
   }
  }finally{db.close();}
  const source=readSourceFamilySource(new URL("../../🧬️contract/",import.meta.url));
- expect(source).toContain("source: RetainedCloneRef<'_, T>, body: usize, maximum_work_units:u64, grant: RetainedCloneGrant");
+ expect(source).toContain("source:RetainedCloneRef<'_,Vec<T>>,body:usize,maximum:u64,effect:&mut RetainedAllocationEffect");
  expect(source).not.toContain("self.advance_demands(source,grant.maximum_copy_bytes)");
- expect(source).toContain("self.advance_demands(source,body,maximum_work_units)?;");
- expect(source).toContain("remaining.min(demand.copy_bytes)");
+ expect(source).toContain("self.advance_demands(source,body,maximum)?;");
+ expect(source).toContain("body.min(RETAINED_CLONE_BULK_PAGE_BYTES)/width");
  expect(source).toContain("size_of::<[T;N]>()<=body");
- expect(source).toContain("if T::BITWISE && self.index==0");
+ expect(source).toContain("T::native_copy()");
  expect(source).toContain("maximum_work_units:u64");
- const field=readFileSync(new URL("../../📋️field/🦀️.rs",import.meta.url),"utf8");expect(field).toContain("child.advance(source,body,");
+ const field=readFileSync(new URL("../../⚙️engine/📋️field/🦀️.rs",import.meta.url),"utf8");expect(field).toContain("child.advance_into(source,body,maximum,&mut effect,reply)");
  const derive=readFileSync(new URL("../../../✨️derive/🧬️retained-clone/🦀️.rs",import.meta.url),"utf8");expect(derive).toContain("advance_demands(self,source,body,maximum_work_units)");
 });
 
 
 test("production clone wrappers require the original body through quoted child loans",()=>{
  const owner=(name:string)=>readFileSync(new URL("../../../../../../"+name,import.meta.url),"utf8");
- const projection=owner("🧰️framework/🔨️modules/🌱️value/📽️projection/🦀️.rs");expect(projection).toContain("body:usize,grant:RetainedCloneGrant");
- const field=owner("🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🦀️.rs");expect(field).toContain("self.cursor.advance(source,body,maximum_work_units,grant)");expect(field).not.toContain("self.demand(source, grant.maximum_copy_bytes)");
+ const projection=owner("🧰️framework/🔨️modules/🌱️value/📽️projection/🦀️.rs");expect(projection).toContain("body:usize,effect:&mut crate::RetainedAllocationEffect");
+ const field=owner("🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🦀️.rs");expect(field).toContain("self.cursor.advance_into(source,body,maximum_work_units");expect(field).not.toContain("self.demand(source, grant.maximum_copy_bytes)");
  const semantic=owner("🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/🦀️.rs");expect(semantic).toContain("self.demands(body)");expect(semantic).not.toContain("self.demands(grant.maximum_copy_bytes)");
  const drivers=owner("🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/🔌️drivers/🦀️.rs");expect(drivers).toContain("advance(s,body,g)");
 });
@@ -119,3 +122,5 @@ test("bulk selected work agrees with SQLite",()=>{
   for(const row of law.workCases){const oracle=q.get(row.remaining,row.width,row.body,law.pageBytes,law.maximumZeroSizedElementsPerTurn,row.work) as {elements:number};expect(oracle.elements).toBe(row.elements);expect(oracle.elements*Math.max(1,row.width)).toBeLessThanOrEqual(row.work);}
  }finally{db.close();}
 });
+
+test("publication and foreign original facts remain independent",()=>{expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);const db=new Database(":memory:");try{const array=law.arrayRetirement;expect(db.query("with recursive cuts(n) as (select 0 union all select n+1 from cuts where n+1<?) select count(*) as cases, sum(min(?,max(0,n-2)*?)) as elements from cuts").get(array.cutCases,law.largeZeroSizedArrayCount,law.maximumZeroSizedElementsPerTurn)).toEqual({cases:array.cutCases,elements:array.maximumRetiredElements});const w=law.originalWorkCeilings;expect(db.query("select min(?/?,?-?-?) as elements").get(law.pageBytes,law.elementBytes,w.bounded,w.binding,w.header)).toEqual({elements:w.boundedElements});expect(db.query("select ?>=(?/?+?+?) as funded").get(w.throughput,law.pageBytes,law.elementBytes,w.binding,w.header)).toEqual({funded:1});const d=law.sourceStockDerivation,st=law.sourceStock;const q=db.query("select ?+?*(?+?+?*?+?) as work, ?*(?*4+?*8+?*?) as copy, ?*?*2+? as capacity, (?+1)*?*2+? as release").get(d.sourceBirthWork,d.cases,d.cancellationRows,d.closeChunksPerCase,d.copyTurnsPerCase,d.workPerMetadataTurn,d.perCaseFixedWork,d.cases,d.cancellationRows,d.closeChunksPerCase,d.copyTurnsPerCase,d.bytesPerMetadataTurn,d.cases,d.cancellationRows,d.sourceHeaderBytes,d.cases,d.cancellationRows,d.sourceHeaderBytes);expect(q).toEqual({work:st.work,copy:st.maximumCopyBytes,capacity:st.maximumCapacityBytes,release:d.cases*d.cancellationRows*2+d.cancellationRows*2+d.sourceHeaderBytes});expect(db.query("select ?>=(?+2*?+?*?+?+?) as work, ?>=(3*?*?+2*?*8+?*?+?) as copy").get(st.work,d.throughputRows,d.throughputCloseChunks,d.throughputPageTurns,d.workPerMetadataTurn,d.perCaseFixedWork,d.sourceBirthWork,st.maximumCopyBytes,d.throughputRows,law.elementBytes,d.throughputCloseChunks,d.throughputPageTurns,d.bytesPerMetadataTurn,d.sourceHeaderBytes)).toEqual({work:1,copy:1});expect(db.query("select max(?,2*?+?*?+?) as items, max(?,2*?*?+?) as released").get(st.work-d.sourceBirthWork,d.throughputRows,d.throughputPageTurns,d.workPerMetadataTurn,d.perCaseFixedWork, (d.cases+1)*d.cancellationRows*2+d.sourceHeaderBytes,d.throughputRows,law.elementBytes,d.sourceHeaderBytes)).toEqual({items:law.throughputTerminalItems.refusalStockItems,released:st.maximumReleaseBytes});const terminal=law.throughputTerminalItems;expect(db.query("select ?+(?-?)/?+?+? as items").get(terminal.refusalStockItems,terminal.selectedTailCopyBytes,terminal.nativeLengthHeaderBytes,law.elementBytes,terminal.terminalTraceItems,terminal.allocatedBufferReleaseItems)).toEqual({items:st.maximumItems});expect(db.query("select ? >= ? as capacity, ? >= ? as work").get(law.sourceStock.maximumCapacityBytes,4*1024*1024,law.sourceStock.work,2*1024*1024)).toEqual({capacity:1,work:1});expect(db.query("select count(*) as fields from json_each(?)").get(JSON.stringify(law.birthHeaderFields))).toEqual({fields:2});expect(db.query("select case when ?=0 then ? else ? end as turns").get(0,law.emptyOverheadTurns,law.overheadTurns)).toEqual({turns:2});expect(db.query("select json_extract(?, '$.matchesDemand') as matched, json_extract(?, '$.work') as work").get(JSON.stringify(law.publication),JSON.stringify(law.publication))).toEqual({matched:1,work:1});expect(db.query("select json_extract(?, '$.kind') as kind, json_extract(?, '$.work') as work").get(JSON.stringify(law.foreignQuote),JSON.stringify(law.foreignQuote))).toEqual({kind:"InvariantViolated",work:0})}finally{db.close()}});

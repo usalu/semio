@@ -1,0 +1,37 @@
+{
+  "payloadBytes": 8192,
+  "blockBytes": 1024,
+  "maximumCopyBytes": 4096,
+  "cancellationCuts": [
+    0,
+    1,
+    4,
+    8
+  ],
+  "typedBeforeComplete": false,
+  "partialDestructorCalls": 0,
+  "completeDestructorCalls": 1,
+  "foreignWorkAccepted": false,
+  "foreignTemplateAccepted": false,
+  "zeroWorkMutation": false,
+  "stock": {
+    "items": 256,
+    "copyBytes": 1048576,
+    "capacityBytes": 1048576,
+    "releaseBytes": 1048576,
+    "depth": 128,
+    "fuel": 1024
+  },
+  "fieldPlan": {
+    "parts": 10,
+    "maximumPartBytes": 1024,
+    "interiorMutable": true,
+    "cancellationCuts": [
+      0,
+      1,
+      4,
+      9
+    ],
+    "typedBeforeAllParts": false
+  }
+}

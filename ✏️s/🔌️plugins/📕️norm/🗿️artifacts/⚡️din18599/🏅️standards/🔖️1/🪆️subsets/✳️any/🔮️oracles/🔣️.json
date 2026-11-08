@@ -247,24 +247,490 @@
           ]
         },
         {
-          "mutationId": "replace-zones",
-          "sourceMutationDirectoryName": "🗺️replace-zones",
-          "mutationDirectoryName": "🗺️replace-zones",
+          "mutationId": "insert-zone",
+          "sourceMutationDirectoryName": "➕insert-zone",
+          "mutationDirectoryName": "➕insert-zone",
           "scenarios": [
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-zone-dupe",
+              "directoryName": "⛔dupe"
             }
           ]
         },
         {
-          "mutationId": "replace-elements",
-          "sourceMutationDirectoryName": "🧩replace-elements",
-          "mutationDirectoryName": "🧩replace-elements",
+          "mutationId": "remove-zone",
+          "sourceMutationDirectoryName": "➖remove-zone",
+          "mutationDirectoryName": "➖remove-zone",
           "scenarios": [
             {
               "id": "apply",
               "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-zone-gone",
+              "directoryName": "❓gone"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-zone-label-en",
+          "sourceMutationDirectoryName": "🟠change-zone-label-en",
+          "mutationDirectoryName": "🟠change-zone-label-en",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "change-zone-label-en-noop",
+              "directoryName": "🟰noop"
+            },
+            {
+              "id": "change-zone-label-en-gone",
+              "directoryName": "❓gone"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-zone-label-de",
+          "sourceMutationDirectoryName": "🟡change-zone-label-de",
+          "mutationDirectoryName": "🟡change-zone-label-de",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "change-zone-label-de-noop",
+              "directoryName": "🟰noop"
+            },
+            {
+              "id": "change-zone-label-de-gone",
+              "directoryName": "❓gone"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-zone-usage-profile",
+          "sourceMutationDirectoryName": "🟢change-zone-usage-profile",
+          "mutationDirectoryName": "🟢change-zone-usage-profile",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "change-zone-usage-profile-noop",
+              "directoryName": "🟰noop"
+            },
+            {
+              "id": "change-zone-usage-profile-gone",
+              "directoryName": "❓gone"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-zone-occupants",
+          "sourceMutationDirectoryName": "🔵change-zone-occupants",
+          "mutationDirectoryName": "🔵change-zone-occupants",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "change-zone-occupants-noop",
+              "directoryName": "🟰noop"
+            },
+            {
+              "id": "change-zone-occupants-gone",
+              "directoryName": "❓gone"
+            },
+            {
+              "id": "change-zone-occupants-rule",
+              "directoryName": "🚫rule"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-zone-area-m2",
+          "sourceMutationDirectoryName": "🟣change-zone-area-m2",
+          "mutationDirectoryName": "🟣change-zone-area-m2",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "change-zone-area-m2-noop",
+              "directoryName": "🟰noop"
+            },
+            {
+              "id": "change-zone-area-m2-gone",
+              "directoryName": "❓gone"
+            },
+            {
+              "id": "change-zone-area-m2-rule",
+              "directoryName": "🚫rule"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-zone-volume-m3",
+          "sourceMutationDirectoryName": "🟤change-zone-volume-m3",
+          "mutationDirectoryName": "🟤change-zone-volume-m3",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "change-zone-volume-m3-noop",
+              "directoryName": "🟰noop"
+            },
+            {
+              "id": "change-zone-volume-m3-gone",
+              "directoryName": "❓gone"
+            },
+            {
+              "id": "change-zone-volume-m3-rule",
+              "directoryName": "🚫rule"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-zone-theta-i-heat-c",
+          "sourceMutationDirectoryName": "🔴change-zone-theta-i-heat-c",
+          "mutationDirectoryName": "🔴change-zone-theta-i-heat-c",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "change-zone-theta-i-heat-c-noop",
+              "directoryName": "🟰noop"
+            },
+            {
+              "id": "change-zone-theta-i-heat-c-gone",
+              "directoryName": "❓gone"
+            },
+            {
+              "id": "change-zone-theta-i-heat-c-rule",
+              "directoryName": "🚫rule"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-zone-theta-i-cool-c",
+          "sourceMutationDirectoryName": "🟥change-zone-theta-i-cool-c",
+          "mutationDirectoryName": "🟥change-zone-theta-i-cool-c",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "change-zone-theta-i-cool-c-noop",
+              "directoryName": "🟰noop"
+            },
+            {
+              "id": "change-zone-theta-i-cool-c-gone",
+              "directoryName": "❓gone"
+            },
+            {
+              "id": "change-zone-theta-i-cool-c-rule",
+              "directoryName": "🚫rule"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-zone-internal-gains-w-m2",
+          "sourceMutationDirectoryName": "🟧change-zone-internal-gains-w-m2",
+          "mutationDirectoryName": "🟧change-zone-internal-gains-w-m2",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "change-zone-internal-gains-w-m2-noop",
+              "directoryName": "🟰noop"
+            },
+            {
+              "id": "change-zone-internal-gains-w-m2-gone",
+              "directoryName": "❓gone"
+            },
+            {
+              "id": "change-zone-internal-gains-w-m2-rule",
+              "directoryName": "🚫rule"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-zone-lighting-power-w-m2",
+          "sourceMutationDirectoryName": "🟨change-zone-lighting-power-w-m2",
+          "mutationDirectoryName": "🟨change-zone-lighting-power-w-m2",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "change-zone-lighting-power-w-m2-noop",
+              "directoryName": "🟰noop"
+            },
+            {
+              "id": "change-zone-lighting-power-w-m2-gone",
+              "directoryName": "❓gone"
+            },
+            {
+              "id": "change-zone-lighting-power-w-m2-rule",
+              "directoryName": "🚫rule"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-element",
+          "sourceMutationDirectoryName": "🆕insert-element",
+          "mutationDirectoryName": "🆕insert-element",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "insert-element-dupe",
+              "directoryName": "⛔dupe"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-element",
+          "sourceMutationDirectoryName": "🚮remove-element",
+          "mutationDirectoryName": "🚮remove-element",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "remove-element-gone",
+              "directoryName": "❓gone"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-element-label-en",
+          "sourceMutationDirectoryName": "🟩change-element-label-en",
+          "mutationDirectoryName": "🟩change-element-label-en",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "change-element-label-en-noop",
+              "directoryName": "🟰noop"
+            },
+            {
+              "id": "change-element-label-en-gone",
+              "directoryName": "❓gone"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-element-label-de",
+          "sourceMutationDirectoryName": "🟦change-element-label-de",
+          "mutationDirectoryName": "🟦change-element-label-de",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "change-element-label-de-noop",
+              "directoryName": "🟰noop"
+            },
+            {
+              "id": "change-element-label-de-gone",
+              "directoryName": "❓gone"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-element-kind",
+          "sourceMutationDirectoryName": "🟪change-element-kind",
+          "mutationDirectoryName": "🟪change-element-kind",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "change-element-kind-noop",
+              "directoryName": "🟰noop"
+            },
+            {
+              "id": "change-element-kind-gone",
+              "directoryName": "❓gone"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-element-zone-id",
+          "sourceMutationDirectoryName": "🟫change-element-zone-id",
+          "mutationDirectoryName": "🟫change-element-zone-id",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "change-element-zone-id-noop",
+              "directoryName": "🟰noop"
+            },
+            {
+              "id": "change-element-zone-id-gone",
+              "directoryName": "❓gone"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-element-area-m2",
+          "sourceMutationDirectoryName": "⬜change-element-area-m2",
+          "mutationDirectoryName": "⬜change-element-area-m2",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "change-element-area-m2-noop",
+              "directoryName": "🟰noop"
+            },
+            {
+              "id": "change-element-area-m2-gone",
+              "directoryName": "❓gone"
+            },
+            {
+              "id": "change-element-area-m2-rule",
+              "directoryName": "🚫rule"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-element-orientation-deg",
+          "sourceMutationDirectoryName": "🔶change-element-orientation-deg",
+          "mutationDirectoryName": "🔶change-element-orientation-deg",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "change-element-orientation-deg-noop",
+              "directoryName": "🟰noop"
+            },
+            {
+              "id": "change-element-orientation-deg-gone",
+              "directoryName": "❓gone"
+            },
+            {
+              "id": "change-element-orientation-deg-rule",
+              "directoryName": "🚫rule"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-element-tilt-deg",
+          "sourceMutationDirectoryName": "🔷change-element-tilt-deg",
+          "mutationDirectoryName": "🔷change-element-tilt-deg",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "change-element-tilt-deg-noop",
+              "directoryName": "🟰noop"
+            },
+            {
+              "id": "change-element-tilt-deg-gone",
+              "directoryName": "❓gone"
+            },
+            {
+              "id": "change-element-tilt-deg-rule",
+              "directoryName": "🚫rule"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-element-g-value",
+          "sourceMutationDirectoryName": "🔸change-element-g-value",
+          "mutationDirectoryName": "🔸change-element-g-value",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "change-element-g-value-noop",
+              "directoryName": "🟰noop"
+            },
+            {
+              "id": "change-element-g-value-gone",
+              "directoryName": "❓gone"
+            },
+            {
+              "id": "change-element-g-value-rule",
+              "directoryName": "🚫rule"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-element-fc",
+          "sourceMutationDirectoryName": "🔹change-element-fc",
+          "mutationDirectoryName": "🔹change-element-fc",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "change-element-fc-noop",
+              "directoryName": "🟰noop"
+            },
+            {
+              "id": "change-element-fc-gone",
+              "directoryName": "❓gone"
+            },
+            {
+              "id": "change-element-fc-rule",
+              "directoryName": "🚫rule"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-element-adjacency",
+          "sourceMutationDirectoryName": "🔻change-element-adjacency",
+          "mutationDirectoryName": "🔻change-element-adjacency",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "change-element-adjacency-noop",
+              "directoryName": "🟰noop"
+            },
+            {
+              "id": "change-element-adjacency-gone",
+              "directoryName": "❓gone"
             }
           ]
         },
@@ -307,8 +773,30 @@
         "update-cooling",
         "update-lighting",
         "update-renewables",
-        "replace-zones",
-        "replace-elements",
+        "insert-zone",
+        "remove-zone",
+        "change-zone-label-en",
+        "change-zone-label-de",
+        "change-zone-usage-profile",
+        "change-zone-occupants",
+        "change-zone-area-m2",
+        "change-zone-volume-m3",
+        "change-zone-theta-i-heat-c",
+        "change-zone-theta-i-cool-c",
+        "change-zone-internal-gains-w-m2",
+        "change-zone-lighting-power-w-m2",
+        "insert-element",
+        "remove-element",
+        "change-element-label-en",
+        "change-element-label-de",
+        "change-element-kind",
+        "change-element-zone-id",
+        "change-element-area-m2",
+        "change-element-orientation-deg",
+        "change-element-tilt-deg",
+        "change-element-g-value",
+        "change-element-fc",
+        "change-element-adjacency",
         "change-element-u",
         "update-climate"
       ]
@@ -628,17 +1116,17 @@
           ]
         },
         {
-          "id": "replace-zones",
+          "id": "insert-zone",
           "capability": "din18599-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
-            "operation": "replace-zones",
+            "operation": "insert-zone",
             "bridgeVersion": 1,
-            "variant": "ReplaceZones"
+            "variant": "InsertZone"
           },
           "oracleRequirements": [
             {
@@ -648,17 +1136,477 @@
           ]
         },
         {
-          "id": "replace-elements",
+          "id": "remove-zone",
           "capability": "din18599-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "rejected"
           ],
           "productionDispatch": {
-            "operation": "replace-elements",
+            "operation": "remove-zone",
             "bridgeVersion": 1,
-            "variant": "ReplaceElements"
+            "variant": "RemoveZone"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-zone-label-en",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-zone-label-en",
+            "bridgeVersion": 1,
+            "variant": "ChangeZoneLabelEn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-zone-label-de",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-zone-label-de",
+            "bridgeVersion": 1,
+            "variant": "ChangeZoneLabelDe"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-zone-usage-profile",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-zone-usage-profile",
+            "bridgeVersion": 1,
+            "variant": "ChangeZoneUsageProfile"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-zone-occupants",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-zone-occupants",
+            "bridgeVersion": 1,
+            "variant": "ChangeZoneOccupants"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-zone-area-m2",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-zone-area-m2",
+            "bridgeVersion": 1,
+            "variant": "ChangeZoneAreaM2"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-zone-volume-m3",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-zone-volume-m3",
+            "bridgeVersion": 1,
+            "variant": "ChangeZoneVolumeM3"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-zone-theta-i-heat-c",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-zone-theta-i-heat-c",
+            "bridgeVersion": 1,
+            "variant": "ChangeZoneThetaIHeatC"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-zone-theta-i-cool-c",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-zone-theta-i-cool-c",
+            "bridgeVersion": 1,
+            "variant": "ChangeZoneThetaICoolC"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-zone-internal-gains-w-m2",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-zone-internal-gains-w-m2",
+            "bridgeVersion": 1,
+            "variant": "ChangeZoneInternalGainsWM2"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-zone-lighting-power-w-m2",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-zone-lighting-power-w-m2",
+            "bridgeVersion": 1,
+            "variant": "ChangeZoneLightingPowerWM2"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-element",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-element",
+            "bridgeVersion": 1,
+            "variant": "InsertElement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-element",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-element",
+            "bridgeVersion": 1,
+            "variant": "RemoveElement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-element-label-en",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-element-label-en",
+            "bridgeVersion": 1,
+            "variant": "ChangeElementLabelEn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-element-label-de",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-element-label-de",
+            "bridgeVersion": 1,
+            "variant": "ChangeElementLabelDe"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-element-kind",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-element-kind",
+            "bridgeVersion": 1,
+            "variant": "ChangeElementKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-element-zone-id",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-element-zone-id",
+            "bridgeVersion": 1,
+            "variant": "ChangeElementZoneId"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-element-area-m2",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-element-area-m2",
+            "bridgeVersion": 1,
+            "variant": "ChangeElementAreaM2"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-element-orientation-deg",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-element-orientation-deg",
+            "bridgeVersion": 1,
+            "variant": "ChangeElementOrientationDeg"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-element-tilt-deg",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-element-tilt-deg",
+            "bridgeVersion": 1,
+            "variant": "ChangeElementTiltDeg"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-element-g-value",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-element-g-value",
+            "bridgeVersion": 1,
+            "variant": "ChangeElementGValue"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-element-fc",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-element-fc",
+            "bridgeVersion": 1,
+            "variant": "ChangeElementFc"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-element-adjacency",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-element-adjacency",
+            "bridgeVersion": 1,
+            "variant": "ChangeElementAdjacency"
           },
           "oracleRequirements": [
             {

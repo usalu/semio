@@ -24,5 +24,18 @@ path = "../../🦀️.rs"
 semio-framework-value-control-contract = { path="../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-testing-effect-bank = { path = "../../../../🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 semio-framework-value-testing-allocator = { path = "../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+
+[[test]]
+name = "resident_arc"
+path = "../../🔗️shared/🧪️tests/resident-arc.rs"
+
+[[test]]
+name = "cold_issued_storage"
+path = "../../🔗️shared/📦️original/🧪️tests/cold.rs"
+
+[[test]]
+name = "issued_shared_work"
+path = "../../🔗️shared/📦️original/🎟️work/🧪️tests/🦀️.rs"

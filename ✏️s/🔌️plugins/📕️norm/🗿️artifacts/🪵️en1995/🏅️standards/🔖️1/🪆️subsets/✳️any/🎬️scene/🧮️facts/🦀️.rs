@@ -179,12 +179,11 @@ pub struct Dynamics {
 }
 
 pub fn dynamics(annex: AnnexChoice, m: &TimberMember, props: &TimberProperties) -> Option<Dynamics> {
-    let de = annex == AnnexChoice::De;
     match m.role {
         MemberRole::Floor => {
             let strip = if m.mass_kg_per_m > 0.0 && m.mass_kg_per_m2 > 0.0 { m.mass_kg_per_m / m.mass_kg_per_m2 } else { m.b_m.max(0.05) };
             let mass = if m.mass_kg_per_m2 > 0.0 { m.mass_kg_per_m2 } else { (if m.mass_kg_per_m > 0.0 { m.mass_kg_per_m } else { props.rho_k * t::area_m2(m) }) / strip };
-            Some(Dynamics { ei_l: props.e_0_mean * t::i_m4(m) / strip, ei_b: props.e_0_mean * 0.022_f64.powi(3) / 12.0, mass, zeta: if m.damping_xi > 0.0 { m.damping_xi } else { 0.01 }, f1_limit: if de { 6.0 } else { 8.0 }, unit_limit: if de { 0.5 } else { 1.5 }, bridge: false })
+            Some(Dynamics { ei_l: props.e_0_mean * t::i_m4(m) / strip, ei_b: props.e_0_mean * 0.022_f64.powi(3) / 12.0, mass, zeta: if m.damping_xi > 0.0 { m.damping_xi } else { 0.01 }, f1_limit: norm::ndp_number("ndp.en1995.floor.f1-limit", annex), unit_limit: norm::ndp_number("ndp.en1995.floor.a-limit", annex), bridge: false })
         }
         MemberRole::Bridge if m.mass_kg_per_m > 0.0 => Some(Dynamics { ei_l: props.e_0_mean * t::i_m4(m), ei_b: props.e_0_mean * 0.022_f64.powi(3) / 12.0, mass: m.mass_kg_per_m, zeta: m.damping_xi.max(1e-4), f1_limit: 5.0, unit_limit: 0.0, bridge: true }),
         _ => None,

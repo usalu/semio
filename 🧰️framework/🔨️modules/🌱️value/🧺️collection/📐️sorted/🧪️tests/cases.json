@@ -1,0 +1,73 @@
+{
+  "stock": {
+    "items": 128,
+    "copyBytes": 65536,
+    "capacityBytes": 65536,
+    "releaseBytes": 65536,
+    "depth": 32,
+    "fuel": 256
+  },
+  "cases": [
+    {
+      "name": "empty",
+      "keys": [],
+      "valid": true,
+      "comparisons": 0
+    },
+    {
+      "name": "different",
+      "keys": [
+        "a",
+        "b"
+      ],
+      "valid": true,
+      "comparisons": 1
+    },
+    {
+      "name": "prefix",
+      "keys": [
+        "alpha",
+        "alpine"
+      ],
+      "valid": true,
+      "comparisons": 4
+    },
+    {
+      "name": "duplicate",
+      "keys": [
+        "a",
+        "a"
+      ],
+      "valid": false,
+      "comparisons": 2
+    },
+    {
+      "name": "descending",
+      "keys": [
+        "b",
+        "a"
+      ],
+      "valid": false,
+      "comparisons": 1
+    },
+    {
+      "name": "utf8",
+      "keys": [
+        "γ",
+        "δ"
+      ],
+      "valid": true,
+      "comparisons": 2
+    }
+  ],
+  "deniedWork": 0,
+  "publishWork": 1,
+  "captureWork": 1,
+  "numericSet": [
+    -5,
+    -1,
+    0,
+    2,
+    34
+  ]
+}

@@ -1,1 +1,115 @@
-{"$schema":"http://json-schema.org/draft-07/schema#","type":"object","additionalProperties":false,"required":["value","body","deniedCopy","maximumTurns","selected","raw","cached"],"properties":{"value":{"const":{"kind":"bytes","value":[1,2,3,4,5]}},"body":{"const":5},"deniedCopy":{"const":4},"maximumTurns":{"const":128},"selected":{"const":{"work":0,"copiedBytes":0}},"raw":{"const":{"work":1,"copiedBytes":4,"remaining":1}},"cached":{"const":{"complete":true,"work":0,"copiedBytes":0}}}}
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "value",
+    "body",
+    "deniedCopy",
+    "maximumTurns",
+    "selected",
+    "raw",
+    "cached",
+    "lengthHeaderBytes",
+    "maximumItems"
+  ],
+  "properties": {
+    "value": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "value"
+      ],
+      "properties": {
+        "kind": {
+          "const": "bytes"
+        },
+        "value": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "body": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "deniedCopy": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "maximumTurns": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "selected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "work",
+        "copiedBytes"
+      ],
+      "properties": {
+        "work": {
+          "const": 0
+        },
+        "copiedBytes": {
+          "const": 0
+        }
+      }
+    },
+    "raw": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "work",
+        "copiedBytes",
+        "remaining"
+      ],
+      "properties": {
+        "work": {
+          "const": 1
+        },
+        "copiedBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "remaining": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "cached": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "complete",
+        "work",
+        "copiedBytes"
+      ],
+      "properties": {
+        "complete": {
+          "const": true
+        },
+        "work": {
+          "const": 0
+        },
+        "copiedBytes": {
+          "const": 0
+        }
+      }
+    },
+    "lengthHeaderBytes": {
+      "const": 8
+    },
+    "maximumItems": {
+      "const": 5
+    }
+  }
+}

@@ -1,0 +1,19 @@
+//! 🔭️ Original native encoder observer restores its actual scoped control.
+#[macro_export]
+macro_rules! original_native_encode_observer {()=>{
+use super::{NativeEncodeControl,NativeEncodeProgress};
+struct Scope<'owner,'call>{control:NativeEncodeControl<'call>,maximum:&'owner mut usize,scope_maximum:&'owner mut Option<usize>,ledger:&'owner mut Option<crate::native_receiving::NativeAllocationLedger>,completed:&'owner mut usize,total:&'owner mut usize,started:&'owner mut bool,stage:&'owner mut u64,depth:&'owner mut usize,work_state:&'owner mut super::action::WorkState}
+impl Drop for Scope<'_, '_>{fn drop(&mut self){*self.maximum=self.control.maximum_bytes;*self.scope_maximum=self.control.scope_maximum;*self.ledger=self.control.ledger.take();*self.completed=self.control.completed;*self.total=self.control.total;*self.started=self.control.started;*self.stage=self.control.stage;*self.depth=self.control.depth;*self.work_state=self.control.action.state.take();}}
+pub(super) fn run<T,E:From<super::ValueError>>(original:&mut NativeEncodeControl<'_>,observer:&mut dyn FnMut(NativeEncodeProgress)->bool,operation:impl FnOnce(&mut NativeEncodeControl<'_>)->Result<T,E>)->Result<T,E>{
+ let has_work=original.work.is_some();
+ let callback=original.callback.as_deref_mut().ok_or_else(||super::ValueError::literal(super::ValueRefusalKind::UnsupportedOwner,"recorded Source observer requires recorded progress"))?;
+ let mut callback=|event|callback(event)&&observer(event);
+ let mut work=|units,owned|match original.work.as_mut(){Some(port)=>(**port)(units,owned),None=>Ok(())};
+ let mut scoped=original.scoped_allocation.as_mut().map(|port|&mut **port as &mut (dyn super::NativeSendAllocationLoan+'_));
+ let mut forwarded=match &mut original.allocation{super::allocation::NativeEncodeAllocationBinding::Local=>None,super::allocation::NativeEncodeAllocationBinding::Forwarded(port)=>Some(&mut **port)};
+ let mut action_loan=original.action.recipient.as_mut().map(|loan|loan.reborrow());let mut construction=original.construction.as_mut().map(|loan|loan.reborrow());let control=NativeEncodeControl{scope_maximum:original.scope_maximum,retirement:original.retirement.as_deref_mut(),construction:construction.as_mut(),construction_identity:original.construction_identity,receiving:original.receiving,maximum_bytes:original.maximum_bytes,ledger:original.ledger.take(),completed:original.completed,total:original.total,started:original.started,stage:original.stage,depth:original.depth,source_depth:original.source_depth,callback:Some(&mut callback),allocation:match forwarded.as_mut(){Some(port)=>super::allocation::NativeEncodeAllocationBinding::Forwarded(&mut **port),None=>super::allocation::NativeEncodeAllocationBinding::Local},scoped_allocation:scoped.as_mut().map(|port|&mut **port),work:if has_work{Some(&mut work)}else{None},recorded_span:original.recorded_span.as_mut().map(|port|&mut **port as &mut (dyn crate::native_receiving::span::SendOriginalRecordedLoan<crate::native_receiving::span::OriginalSpanRequest,()>+'_)),recorded_checkpoint:original.recorded_checkpoint.as_mut().map(|port|&mut **port as &mut (dyn crate::native_receiving::span::SendOriginalRecordedLoan<crate::native_receiving::span::OriginalCheckpointRequest,bool>+'_)),source_turn:original.source_turn,action:super::action::Action{state:original.action.state.take(),recipient:action_loan.as_mut()}};
+ let mut scope=Scope{control,maximum:&mut original.maximum_bytes,scope_maximum:&mut original.scope_maximum,ledger:&mut original.ledger,completed:&mut original.completed,total:&mut original.total,started:&mut original.started,stage:&mut original.stage,depth:&mut original.depth,work_state:&mut original.action.state};
+ operation(&mut scope.control)
+}
+
+}}

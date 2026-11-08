@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-critical-region-hoop-fywd/schema.json",
+  "title": "ChangeCriticalRegionHoopDesignYieldMpa",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newHoopDesignYieldMpa"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeCriticalRegionHoopDesignYieldMpa"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "CriticalRegion",
+          "de": "Kritischer Bereich"
+        },
+        "description": {
+          "en": "The criticalRegion this mutation addresses, by id.",
+          "de": "Das adressierte Element (Kritischer Bereich), per Kennung."
+        },
+        "ref": {
+          "kind": "criticalRegion"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newHoopDesignYieldMpa": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Design yield strength of the hoops",
+          "de": "Bemessungs-Streckgrenze der Bügel"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.01,
+        "precision": 3
+      }
+    }
+  }
+}

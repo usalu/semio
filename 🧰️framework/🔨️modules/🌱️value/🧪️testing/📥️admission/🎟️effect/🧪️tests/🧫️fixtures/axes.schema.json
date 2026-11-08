@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "stock",
+    "refused",
+    "producerCalls",
+    "remainingWork",
+    "idle"
+  ],
+  "properties": {
+    "stock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth",
+        "fuel"
+      ],
+      "properties": {
+        "items": {
+          "const": 2
+        },
+        "copyBytes": {
+          "const": 8
+        },
+        "capacityBytes": {
+          "const": 16
+        },
+        "releaseBytes": {
+          "const": 32
+        },
+        "depth": {
+          "const": 4
+        },
+        "fuel": {
+          "const": 8
+        }
+      }
+    },
+    "refused": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "axis",
+              "request"
+            ],
+            "properties": {
+              "axis": {
+                "const": "items"
+              },
+              "request": {
+                "const": 3
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "axis",
+              "request"
+            ],
+            "properties": {
+              "axis": {
+                "const": "copyBytes"
+              },
+              "request": {
+                "const": 9
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "axis",
+              "request"
+            ],
+            "properties": {
+              "axis": {
+                "const": "capacityBytes"
+              },
+              "request": {
+                "const": 17
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "axis",
+              "request"
+            ],
+            "properties": {
+              "axis": {
+                "const": "releaseBytes"
+              },
+              "request": {
+                "const": 33
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "axis",
+              "request"
+            ],
+            "properties": {
+              "axis": {
+                "const": "depth"
+              },
+              "request": {
+                "const": 5
+              }
+            }
+          }
+        ]
+      }
+    },
+    "producerCalls": {
+      "const": 0
+    },
+    "remainingWork": {
+      "const": 8
+    },
+    "idle": {
+      "const": true
+    }
+  }
+}

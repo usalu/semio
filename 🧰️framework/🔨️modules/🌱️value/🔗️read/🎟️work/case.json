@@ -33,5 +33,11 @@
     "erased-read",
     "authority-view",
     "source-admission"
-  ]
+  ],
+  "nullAllocationAttemptWork": 1,
+  "nullReplyCaptureWork": 1,
+  "nullRetainsRoot": true,
+  "retirementEmptyScanWords": 17,
+  "retirementEmptyReleaseWork": 18,
+  "aliasElectionWork": 4
 }

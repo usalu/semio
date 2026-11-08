@@ -1,0 +1,8 @@
+{
+  "rows": [
+    {"kind": "velocity", "graphql": "Velocity", "proto": "QUANTITY_KIND_VELOCITY", "siUnit": "m/s", "family": "Velocity"},
+    {"kind": "ventilationRate", "graphql": "VentilationRate", "proto": "QUANTITY_KIND_VENTILATION_RATE", "siUnit": "m³/s", "family": "VolumeFlow"},
+    {"kind": "heatTransferCoefficient", "graphql": "HeatTransferCoefficient", "proto": "QUANTITY_KIND_HEAT_TRANSFER_COEFFICIENT", "siUnit": "W/(m²·K)", "family": "HeatTransfer"},
+    {"kind": "power", "graphql": "Power", "proto": "QUANTITY_KIND_POWER", "siUnit": "W", "family": "Power"}
+  ]
+}

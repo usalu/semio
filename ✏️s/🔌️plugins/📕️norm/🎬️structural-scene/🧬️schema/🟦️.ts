@@ -103,7 +103,7 @@ export type Path3 =
   | { kind: "arc"; data: Arc }
   | { kind: "spline"; data: Spline3 };
 
-export type QuantityKind = "dimensionless" | "length" | "area" | "volume" | "mass" | "time" | "temperature" | "angle" | "force" | "moment" | "pressure" | "stress" | "energy" | "acceleration" | "frequency" | "forcePerLength" | "stiffness";
+export type QuantityKind = "dimensionless" | "length" | "area" | "volume" | "mass" | "time" | "temperature" | "angle" | "force" | "moment" | "pressure" | "stress" | "energy" | "acceleration" | "frequency" | "forcePerLength" | "stiffness" | "velocity" | "ventilationRate" | "heatTransferCoefficient" | "power";
 
 export interface Rgb {
   r: number;

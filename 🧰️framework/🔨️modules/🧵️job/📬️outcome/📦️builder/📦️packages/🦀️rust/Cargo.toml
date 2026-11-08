@@ -30,6 +30,8 @@ semio-framework-trace = { workspace = true }
 semio-framework-value-retirement = { path = "../../../../../🌱️value/♻️retirement/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-testing-effect-bank = { path = "../../../../../🌱️value/🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
 semio-framework-trace-memory-testing = { path = "../../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true, features = ["testkit"] }
@@ -49,3 +51,7 @@ path = "../../🧪️tests/🏗️initialization/🦀️.rs"
 [[test]]
 name = "original-builder-close"
 path = "../../♻️close/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original_payload_admission"
+path = "../../🏭️admission/🧪️tests/🦀️.rs"

@@ -67,6 +67,13 @@ KINDS = [
     "change-vent-duct-class",
     "change-vent-duct-leakage",
     "change-vent-design-airflow",
+    "change-zone-name",
+    "change-vent-name",
+    "change-vent-fan-flow",
+    "change-vent-fan-run-hours",
+    "change-vent-duct-test-pressure",
+    "change-vent-humidification-required",
+    "change-vent-humidification-provided",
 ]
 
 #: 🧫️ The committed specification vector each kind is measured on, as (leaf directory, scenario directory), and each
@@ -115,6 +122,13 @@ VECTORS = {
     "change-vent-duct-class": ("🧱change-vent-duct-class", "✅apply"),
     "change-vent-duct-leakage": ("🕳️change-vent-duct-leakage", "✅apply"),
     "change-vent-design-airflow": ("🌬️change-vent-design-airflow", "✅apply"),
+    "change-zone-name": ("🏷️change-zone-name", "✅apply"),
+    "change-vent-name": ("📛change-vent-name", "✅apply"),
+    "change-vent-fan-flow": ("🌪️change-vent-fan-flow", "✅apply"),
+    "change-vent-fan-run-hours": ("⏱️change-vent-fan-run-hours", "✅apply"),
+    "change-vent-duct-test-pressure": ("🧪change-vent-duct-test-pressure", "✅apply"),
+    "change-vent-humidification-required": ("💦change-vent-humidification-required", "✅apply"),
+    "change-vent-humidification-provided": ("🚿change-vent-humidification-provided", "✅apply"),
     "insert-zone-dupe": ("insert-zone", "➕️insert-zone", "⛔dupe"),
     "insert-zone-clamp": ("insert-zone", "➕️insert-zone", "📏clamp"),
     "remove-zone-gone": ("remove-zone", "➖️remove-zone", "❓gone"),

@@ -1,0 +1,64 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "stock",
+    "denied",
+    "allocation",
+    "release",
+    "nativePrimitive",
+    "publication"
+  ],
+  "properties": {
+    "stock": {
+      "const": {
+        "items": 12,
+        "copyBytes": 8192,
+        "capacityBytes": 8192,
+        "releaseBytes": 8192,
+        "depth": 8,
+        "fuel": 12
+      }
+    },
+    "denied": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "depth",
+        "work",
+        "spent"
+      ]
+    },
+    "allocation": {
+      "const": {
+        "work": 1,
+        "markerBefore": "zero",
+        "nullMarker": 0,
+        "nullOutput": false,
+        "successOutput": true
+      }
+    },
+    "release": {
+      "const": {
+        "work": 1,
+        "preservesOnDenial": true
+      }
+    },
+    "nativePrimitive": {
+      "const": {
+        "opaque": true,
+        "publicationBeforeReturn": true
+      }
+    },
+    "publication": {
+      "const": {
+        "value": 73,
+        "work": 3,
+        "uniquenessWork": 1,
+        "transferWork": 2,
+        "reallocates": false
+      }
+    }
+  }
+}

@@ -200,6 +200,10 @@ use semio_s_artifact_norm_en1999_mut_rows_patch_load::insert_patch_load;
 use semio_s_artifact_norm_en1999_mut_rows_patch_load::remove_patch_load;
 use semio_s_artifact_norm_en1999_mut_rows_ring_stiffener::insert_ring_stiffener;
 use semio_s_artifact_norm_en1999_mut_rows_ring_stiffener::remove_ring_stiffener;
+use semio_s_artifact_norm_en1999_mut_sheet_profiles::insert_sheet_profile;
+use semio_s_artifact_norm_en1999_mut_sheet_profiles::remove_sheet_profile;
+use semio_s_artifact_norm_en1999_mut_fire_insulations::insert_fire_insulation;
+use semio_s_artifact_norm_en1999_mut_fire_insulations::remove_fire_insulation;
 use semio_s_artifact_norm_en1999_mut_rows_member_action::insert_member_action;
 use semio_s_artifact_norm_en1999_mut_rows_member_action::remove_member_action;
 use semio_s_artifact_norm_en1999_mut_rows_connection_action::insert_connection_action;
@@ -211,11 +215,21 @@ use semio_s_artifact_norm_en1999_mut_rows_sheet_action::remove_sheet_action;
 use semio_s_artifact_norm_en1999_mut_rows_shell_action::insert_shell_action;
 use semio_s_artifact_norm_en1999_mut_rows_shell_action::remove_shell_action;
 use semio_s_artifact_norm_en1999_mut_transverse_stiffener::change_transverse_girder_id;
+use semio_s_artifact_norm_en1999_mut_sheet_profiles::change_sheet_profile_sheet_id;
+use semio_s_artifact_norm_en1999_mut_fire_insulations::change_fire_insulation_fire_id;
 use semio_s_artifact_norm_en1999_mut_transverse_stiffener::change_transverse_position;
 use semio_s_artifact_norm_en1999_mut_transverse_stiffener::change_transverse_width;
 use semio_s_artifact_norm_en1999_mut_transverse_stiffener::change_transverse_thickness;
 use semio_s_artifact_norm_en1999_mut_transverse_stiffener::change_conn_load_eccentricity;
 use semio_s_artifact_norm_en1999_mut_transverse_stiffener::change_conn_hole_stagger;
+use semio_s_artifact_norm_en1999_mut_sheet_profiles::change_sheet_profile_web_height;
+use semio_s_artifact_norm_en1999_mut_sheet_profiles::change_sheet_profile_bottom_flange;
+use semio_s_artifact_norm_en1999_mut_sheet_profiles::change_sheet_profile_top_flange;
+use semio_s_artifact_norm_en1999_mut_sheet_profiles::change_sheet_profile_pitch;
+use semio_s_artifact_norm_en1999_mut_fire_insulations::change_fire_insulation_density;
+use semio_s_artifact_norm_en1999_mut_fire_insulations::change_fire_insulation_specific_heat;
+use semio_s_artifact_norm_en1999_mut_fire_insulations::change_fire_insulation_conductivity;
+use semio_s_artifact_norm_en1999_mut_fire_insulations::change_fire_insulation_thickness;
 use semio_s_artifact_norm_en1999_mut_transverse_stiffener::change_transverse_sides;
 use semio_s_artifact_norm_en1999_mut_rows_transverse_stiffener::insert_transverse_stiffener;
 use semio_s_artifact_norm_en1999_mut_rows_transverse_stiffener::remove_transverse_stiffener;
@@ -415,6 +429,10 @@ pub enum En1999Mutation {
     RemovePatchLoad(remove_patch_load::RemovePatchLoad),
     InsertRingStiffener(insert_ring_stiffener::InsertRingStiffener),
     RemoveRingStiffener(remove_ring_stiffener::RemoveRingStiffener),
+    InsertSheetProfile(insert_sheet_profile::InsertSheetProfile),
+    RemoveSheetProfile(remove_sheet_profile::RemoveSheetProfile),
+    InsertFireInsulation(insert_fire_insulation::InsertFireInsulation),
+    RemoveFireInsulation(remove_fire_insulation::RemoveFireInsulation),
     InsertMemberAction(insert_member_action::InsertMemberAction),
     RemoveMemberAction(remove_member_action::RemoveMemberAction),
     InsertConnectionAction(insert_connection_action::InsertConnectionAction),
@@ -426,11 +444,21 @@ pub enum En1999Mutation {
     InsertShellAction(insert_shell_action::InsertShellAction),
     RemoveShellAction(remove_shell_action::RemoveShellAction),
     ChangeTransverseGirderId(change_transverse_girder_id::ChangeTransverseGirderId),
+    ChangeSheetProfileSheetId(change_sheet_profile_sheet_id::ChangeSheetProfileSheetId),
+    ChangeFireInsulationFireId(change_fire_insulation_fire_id::ChangeFireInsulationFireId),
     ChangeTransversePosition(change_transverse_position::ChangeTransversePosition),
     ChangeTransverseWidth(change_transverse_width::ChangeTransverseWidth),
     ChangeTransverseThickness(change_transverse_thickness::ChangeTransverseThickness),
     ChangeConnLoadEccentricity(change_conn_load_eccentricity::ChangeConnLoadEccentricity),
     ChangeConnHoleStagger(change_conn_hole_stagger::ChangeConnHoleStagger),
+    ChangeSheetProfileWebHeight(change_sheet_profile_web_height::ChangeSheetProfileWebHeight),
+    ChangeSheetProfileBottomFlange(change_sheet_profile_bottom_flange::ChangeSheetProfileBottomFlange),
+    ChangeSheetProfileTopFlange(change_sheet_profile_top_flange::ChangeSheetProfileTopFlange),
+    ChangeSheetProfilePitch(change_sheet_profile_pitch::ChangeSheetProfilePitch),
+    ChangeFireInsulationDensity(change_fire_insulation_density::ChangeFireInsulationDensity),
+    ChangeFireInsulationSpecificHeat(change_fire_insulation_specific_heat::ChangeFireInsulationSpecificHeat),
+    ChangeFireInsulationConductivity(change_fire_insulation_conductivity::ChangeFireInsulationConductivity),
+    ChangeFireInsulationThickness(change_fire_insulation_thickness::ChangeFireInsulationThickness),
     ChangeTransverseSides(change_transverse_sides::ChangeTransverseSides),
     InsertTransverseStiffener(insert_transverse_stiffener::InsertTransverseStiffener),
     RemoveTransverseStiffener(remove_transverse_stiffener::RemoveTransverseStiffener),
@@ -623,6 +651,10 @@ pub const KINDS: &[&str] = &[
     "remove-patch-load",
     "insert-ring-stiffener",
     "remove-ring-stiffener",
+    "insert-sheet-profile",
+    "remove-sheet-profile",
+    "insert-fire-insulation",
+    "remove-fire-insulation",
     "insert-member-action",
     "remove-member-action",
     "insert-connection-action",
@@ -634,11 +666,21 @@ pub const KINDS: &[&str] = &[
     "insert-shell-action",
     "remove-shell-action",
     "change-transverse-girder-id",
+    "change-sheet-profile-sheet-id",
+    "change-fire-insulation-fire-id",
     "change-transverse-position",
     "change-transverse-width",
     "change-transverse-thickness",
     "change-conn-load-eccentricity",
     "change-conn-hole-stagger",
+    "change-sheet-profile-web-height",
+    "change-sheet-profile-bottom-flange",
+    "change-sheet-profile-top-flange",
+    "change-sheet-profile-pitch",
+    "change-fire-insulation-density",
+    "change-fire-insulation-specific-heat",
+    "change-fire-insulation-conductivity",
+    "change-fire-insulation-thickness",
     "change-transverse-sides",
     "insert-transverse-stiffener",
     "remove-transverse-stiffener",

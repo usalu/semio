@@ -25,6 +25,13 @@ semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-din4108-inferences = { workspace = true }
 semio-s-artifact-norm-din4108-model = { workspace = true }
+semio-s-artifact-norm-din4108-scene = { workspace = true }
+semio-s-plugin-norm-structural-scene = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
 semio-s-artifact-norm-din4108-mutations = { workspace = true }
 semio-s-plugin-norm-app-surface = { workspace = true }
 

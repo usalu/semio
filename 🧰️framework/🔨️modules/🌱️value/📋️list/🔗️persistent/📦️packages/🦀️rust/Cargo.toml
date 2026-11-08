@@ -23,6 +23,7 @@ name = "semio_framework_value_persistent"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value-retirement-contract = { path = "../../../../♻️retirement/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-original-vector = { path = "../../../../♻️retirement/📋️original-vector/📦️packages/🦀️rust" }
 semio-framework-value-retained-work = { path = "../../🎟️work/📦️packages/🦀️rust" }
 semio-framework-value-equality = { path = "../../../../🌳️tree/🟰️equal/📦️packages/🦀️rust" }
@@ -38,6 +39,7 @@ semio-framework-value-shared-issuance = { path = "../../../../♻️retirement/�
 semio-framework-value-snapshot-projection = { path = "../../../../📽️projection/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-testing-effect-bank = { path = "../../../../🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 semio-framework-value-clone-source-testing = { path = "../../../../🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
@@ -47,3 +49,11 @@ serde_json = { workspace = true }
 [[test]]
 name = "original-ranked-updates-and-reads"
 path = "../../🎟️update/🧪️tests/owning.rs"
+
+[[test]]
+name = "persistent-builder-resident"
+path = "../../📥️build/🧪️tests/resident.rs"
+
+[[test]]
+name = "original-vector-concat"
+path = "../../../🪢️concat/🧪️tests/owning.rs"

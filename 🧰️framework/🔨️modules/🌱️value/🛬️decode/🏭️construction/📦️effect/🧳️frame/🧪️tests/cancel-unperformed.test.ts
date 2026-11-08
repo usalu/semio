@@ -1,0 +1,3 @@
+import {test,expect} from "bun:test";import {Database} from "bun:sqlite";import Ajv from "ajv";import schema from "./cancel-unperformed.schema.json";import law from "./cancel-unperformed.json";
+/** ⏪️ A refused allocation returns only its genuine untouched Work reservation. */
+test("receiving refusal cancels original unperformed Work while preserving actual producers",()=>{expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);const db=new Database(":memory:");try{for(const c of law.cases)expect(db.query("select (? and ? and ? and not ? and not ? and not ? and ?) allowed").get(+c.effectFinished,+c.sameWork,+c.sameRecipient,+c.child,+c.actualMarker,+c.unallocatedStarted,+c.refusedOutcome)).toEqual({allowed:+c.allowed})}finally{db.close()}});

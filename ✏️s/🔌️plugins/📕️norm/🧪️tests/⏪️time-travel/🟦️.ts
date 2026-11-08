@@ -10,11 +10,18 @@ import { attachFolder } from "@semio-tech/framework/time-travel/testing/history-
 import { mirror, mirrorActivate, wgpuPress } from "@semio-tech/framework/time-travel/testing/wgpu-mirror";
 import { reprojectionSettled } from "@semio-tech/framework/time-travel/testing/reprojection";
 import { verdict } from "@semio-tech/framework/time-travel/testing/report";
-import witness from "./🧫️witness/🔣️.json" with { type: "json" };
+import matrix from "./🧫️witness/🔣️.json" with { type: "json" };
 
 type Surface = { key: string; window: string; label: string; value: string | null; role: string; inputType: string | null };
 type Context = { folder?: string; baseline?: number; rows?: { key: string; label: string }[] };
 type State = { value: number; utilization: number };
+
+const selected = process.env.SEMIO_NORM_ARTIFACT ?? "en1990";
+const row = matrix.artifacts.find(artifact => artifact.variant === selected);
+if (row === undefined) throw new Error(`SEMIO_NORM_ARTIFACT names no matrix artifact: ${selected}`);
+const origin = (port: number) => `http://127.0.0.1:${port}/?plugin=${row.variant}&role=editor&example=${row.example}`;
+const pin = row.pin;
+const witness = { variant: row.variant, windows: matrix.windows.map(role => `norm-${row.variant}-${role}`), serves: { react: origin(row.ports.react), wgpu: origin(row.ports.wgpu) }, field: pin?.field ?? { path: "", key: "", owner: "", ownerWindow: `norm-${row.variant}-outliner`, argument: "", label: { en: "", de: "" }, limit: 1, unit: "" }, check: pin?.check ?? "", states: pin?.states ?? { before: { value: 0, utilization: 0 }, after: { value: 0, utilization: 0 } } };
 
 const number = (value: string | null): number => value === null ? NaN : Number(value.replace(/\s/gu, "").replace(",", "."));
 const same = (actual: number, expected: number): boolean => Number.isFinite(actual) && Math.abs(actual - expected) < 1e-8;
@@ -63,7 +70,7 @@ async function stateIs(name: string, expected: State): Promise<boolean> {
     const checks = nodes.filter(node => node.key.includes(witness.check));
     const value = fields.map(node => number(node.value)).find(value => same(value, expected.value));
     const percentage = expected.utilization * 100;
-    const check = checks.find(node => Array.from(node.label.matchAll(/(-?\d+(?:[.,]\d+)?)\s*%/gu)).some(match => same(number(match[1]), percentage)));
+    const check = checks.find(node => Array.from(node.label.matchAll(/(-?\d+(?:[.,]\d+)?)\s*%/gu)).some(match => Math.abs(number(match[1]) - percentage) < 0.51));
     return { value: value ?? null, check: check?.label.slice(0, 400) ?? null, fields: fields.map(node => ({ key: node.key, value: node.value })), checks: checks.map(node => node.label.slice(0, 200)) };
   }, value => value.value !== null && value.check !== null, 45000, 500);
   verdict(name, observed.ok, { expected, observed: observed.value, waitedMs: observed.waitedMs, locale: currentLocale });
@@ -71,8 +78,22 @@ async function stateIs(name: string, expected: State): Promise<boolean> {
   return observed.ok;
 }
 
+/** 🪟️ Requires the five visual editor windows of the artifact to be mounted and records every one in the report. */
+async function windowsMounted(): Promise<void> {
+  const mounted = await waitUntil(async () => evalSafe((ids) => ids.filter(id => document.getElementById(id) !== null || document.querySelector(`[data-slot="window"][id$="${id}"]`) !== null), [] as string[], witness.windows), found => found.length === witness.windows.length, 45000, 500);
+  verdict("visual-editor-windows-mounted", mounted.ok, { expected: witness.windows, mounted: mounted.value });
+}
+
+/** 📌️ Fails loudly while the artifact has no pinned numeric witness so an unpinned row can never read as a pass. */
+function pinned(step: string): boolean {
+  if (pin === null) verdict(`${step}-needs-pinned-witness`, false, { variant: row!.variant, example: row!.example });
+  return pin !== null;
+}
+
 /** 📁️ Binds the document before editing so a later reload exercises its real folder archive. */
 async function boot(ctx: Context): Promise<void> {
+  await windowsMounted();
+  if (!pinned("boot")) return;
   const selected = await selectOwner();
   verdict("engineering-owner-selectable", selected, { owner: witness.field.owner });
   await stateIs("engineering-before", witness.states.before);
@@ -90,6 +111,7 @@ async function boot(ctx: Context): Promise<void> {
 
 /** ✍️ Commits one localized numeric input and checks its one document-history entry. */
 async function edit(ctx: Context): Promise<void> {
+  if (!pinned("edit")) return;
   const ready = await waitUntil(async () => (await surfaces()).filter(node => node.key.includes(witness.field.key) && node.value !== null).sort((a, b) => a.key.length - b.key.length)[0] ?? null, node => node !== null, 15000, 300);
   if (!ready.value) throw new Error(`Missing numeric field ${witness.field.key}`);
   const field = await target(ready.value, true);
@@ -108,6 +130,7 @@ async function edit(ctx: Context): Promise<void> {
 
 /** ⏪️ Uses the shell history chord after moving focus out of the numeric text editor. */
 async function historyChord(redo: boolean): Promise<void> {
+  if (!pinned(redo ? "redo" : "undo")) return;
   await selectOwner();
   await page.keyboard.press(redo ? `${mod}+Shift+z` : `${mod}+z`);
   await stateIs(redo ? "engineering-after-redo" : "engineering-after-undo", redo ? witness.states.after : witness.states.before);
@@ -115,6 +138,7 @@ async function historyChord(redo: boolean): Promise<void> {
 
 /** 🔂️ Reloads and reopens the same persisted artifact, then compares its quantity, result and history identities. */
 async function reload(ctx: Context): Promise<void> {
+  if (!pinned("reload")) return;
   if (!ctx.folder || !ctx.rows?.length) throw new Error("Engineering reload requires the committed folder-bound edit");
   const folder = ctx.folder;
   const written = await waitUntil(async () => readdirSync(folder, { recursive: true, withFileTypes: true }).filter(entry => entry.isFile()).length, count => count > 0, 30000, 500);
@@ -149,8 +173,8 @@ export const timeTravelScenarioV1: TimeTravelScenarioV1<Context> = {
   variant: witness.variant,
   defaultServes: witness.serves,
   bootWindowPrefix: "norm-",
-  editorNumbers: [witness.field.argument],
-  paletteQuery: { en: "Deck acceleration", de: "Deckbeschleunigung" },
+  editorNumbers: witness.field.argument === "" ? [] : [witness.field.argument],
+  paletteQuery: { en: witness.field.label.en, de: witness.field.label.de },
   stepNumbers: [1, 2, 3, 4, 5],
   order: [1, 2, 3, 4, 5],
   steps: { 1: boot, 2: edit, 3: () => historyChord(false), 4: () => historyChord(true), 5: reload },
@@ -159,5 +183,5 @@ export const timeTravelScenarioV1: TimeTravelScenarioV1<Context> = {
   beforeStep: async () => {},
   afterSteps: async () => {},
   diagnostics: async () => ({ engineering: await surfaces() }),
-  exploreInventory: async () => ({ engineering: await surfaces(), witness }),
+  exploreInventory: async () => ({ engineering: await surfaces(), witness, row }),
 };

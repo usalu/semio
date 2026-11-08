@@ -1,0 +1,59 @@
+{
+  "cases": [
+    {
+      "name": "refused-unentered-allocation",
+      "effectFinished": true,
+      "sameWork": true,
+      "sameRecipient": true,
+      "child": false,
+      "actualMarker": false,
+      "unallocatedStarted": false,
+      "refusedOutcome": true,
+      "allowed": true
+    },
+    {
+      "name": "real-null-attempt-marker",
+      "effectFinished": true,
+      "sameWork": true,
+      "sameRecipient": true,
+      "child": false,
+      "actualMarker": true,
+      "unallocatedStarted": false,
+      "refusedOutcome": true,
+      "allowed": false
+    },
+    {
+      "name": "retained-real-child",
+      "effectFinished": true,
+      "sameWork": true,
+      "sameRecipient": true,
+      "child": true,
+      "actualMarker": false,
+      "unallocatedStarted": false,
+      "refusedOutcome": true,
+      "allowed": false
+    },
+    {
+      "name": "started-unallocated-producer",
+      "effectFinished": true,
+      "sameWork": true,
+      "sameRecipient": true,
+      "child": false,
+      "actualMarker": false,
+      "unallocatedStarted": true,
+      "refusedOutcome": true,
+      "allowed": false
+    },
+    {
+      "name": "foreign-original-work",
+      "effectFinished": true,
+      "sameWork": false,
+      "sameRecipient": true,
+      "child": false,
+      "actualMarker": false,
+      "unallocatedStarted": false,
+      "refusedOutcome": true,
+      "allowed": false
+    }
+  ]
+}

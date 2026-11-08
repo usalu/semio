@@ -1,0 +1,36 @@
+{
+  "type": "array",
+  "minItems": 6,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "phase",
+      "same",
+      "slot",
+      "funded",
+      "performed"
+    ],
+    "properties": {
+      "phase": {
+        "enum": [
+          "allocation",
+          "row",
+          "publish"
+        ]
+      },
+      "same": {
+        "type": "boolean"
+      },
+      "slot": {
+        "type": "boolean"
+      },
+      "funded": {
+        "type": "boolean"
+      },
+      "performed": {
+        "type": "boolean"
+      }
+    }
+  }
+}

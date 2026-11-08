@@ -1,0 +1,36 @@
+{
+  "type": "array",
+  "minItems": 6,
+  "items": {
+    "type": "object",
+    "required": [
+      "sameAction",
+      "sameSource",
+      "sameWork",
+      "accepted",
+      "published",
+      "canPublish"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "sameAction": {
+        "type": "boolean"
+      },
+      "sameSource": {
+        "type": "boolean"
+      },
+      "sameWork": {
+        "type": "boolean"
+      },
+      "accepted": {
+        "type": "boolean"
+      },
+      "published": {
+        "type": "boolean"
+      },
+      "canPublish": {
+        "type": "boolean"
+      }
+    }
+  }
+}

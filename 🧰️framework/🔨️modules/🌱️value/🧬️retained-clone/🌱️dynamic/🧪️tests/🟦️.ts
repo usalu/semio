@@ -37,3 +37,9 @@ test("original UTF-8 bytes and numeric payload bits agree with independent nativ
 });
 
 test("original dynamic examples do not own a whole-trial schema",()=>{expect(existsSync(resolve(owner,"🧬️schema/🔣️.json"))).toBe(false);});
+
+import Ajv from "ajv/dist/2020";
+import {Database} from "bun:sqlite";
+import selected from "./🧫️fixtures/selected.json";
+import selectedSchema from "./🧫️fixtures/selected.schema.json";
+test("selected byte retirement keeps semantic payload and native header currencies distinct",()=>{expect(new Ajv({strict:true}).validate(selectedSchema,selected)).toBe(true);const db=new Database(":memory:");try{const physical=db.query("select ?+? selectedCopy,?+? rawCopy,? - ? remaining").get(selected.lengthHeaderBytes,selected.body,selected.lengthHeaderBytes,selected.deniedCopy,selected.value.value.length,selected.deniedCopy)as{selectedCopy:number,rawCopy:number,remaining:number};expect(physical.rawCopy).toBeLessThan(physical.selectedCopy);expect(physical.rawCopy-selected.lengthHeaderBytes).toBe(selected.raw.copiedBytes);expect(physical.remaining).toBe(selected.raw.remaining);expect(selected.maximumItems).toBeGreaterThanOrEqual(selected.deniedCopy)}finally{db.close()}});

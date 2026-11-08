@@ -1,6 +1,6 @@
 //! 🔄 ISO 16757-5 exchange process, part numbers, IFC/STEP, script limits.
 
-use semio_s_artifact_norm_iso16757_checks_common::{assess, copy, fail, na, pass, q_dim, subject, controlled_ordinal, reference_slot_score};
+use semio_s_artifact_norm_iso16757_checks_common::{Section, ALL_FACETS, assess, copy, fail, na, pass, q_dim, subject, controlled_ordinal, reference_slot_score};
 use semio_s_plugin_norm_compliance::{CheckReport, CheckStatus, Remedy, RemedyBound};
 use semio_s_artifact_norm_iso16757_model::part_5::{ExchangeProcess, PartNumberRule};
 use semio_s_artifact_norm_iso16757_checks_common::part_libraries::part_5::ScriptRuntime;
@@ -9,12 +9,17 @@ use semio_s_artifact_norm_iso16757_model::CatalogueValue;
 use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 use std::collections::HashMap;
 
+/// 🧮️ The sections of Part 5 in report order.
+pub const SECTIONS: &[Section] = &[
+    Section { id: "exchange-process", reads: ALL_FACETS, run: |d, r| check_exchange_process(d, r) },
+    Section { id: "ifc-exchange", reads: ALL_FACETS, run: |d, r| check_ifc_exchange(d, r) },
+    Section { id: "part-number", reads: ALL_FACETS, run: |d, r| check_part_number(d, r) },
+    Section { id: "script-limits", reads: ALL_FACETS, run: |d, r| check_script_limits(d, r) },
+    Section { id: "edition-profile", reads: &["catalogue"], run: |d, r| check_edition_profile(d, r) },
+];
+
 pub fn check_part_5(doc: &Iso16757Snapshot, report: &mut CheckReport) {
-    check_exchange_process(doc, report);
-    check_ifc_exchange(doc, report);
-    check_part_number(doc, report);
-    check_script_limits(doc, report);
-    check_edition_profile(doc, report);
+    SECTIONS.iter().for_each(|section| (section.run)(doc, report));
 }
 
 fn check_edition_profile(doc: &Iso16757Snapshot, report: &mut CheckReport) {

@@ -1,0 +1,51 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "priorHi",
+      "priorLo",
+      "deltaHi",
+      "deltaLo",
+      "fuel",
+      "nextHi",
+      "nextLo",
+      "remaining"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "priorHi": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "priorLo": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "deltaHi": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "deltaLo": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "fuel": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "nextHi": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "nextLo": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "remaining": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  }
+}

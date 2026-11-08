@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "minItems": 7,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "issuer",
+      "work",
+      "refusalPublished",
+      "retryPublished",
+      "sameRefusal",
+      "sameFrame",
+      "restore"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "issuer": {
+        "type": "boolean"
+      },
+      "work": {
+        "type": "boolean"
+      },
+      "refusalPublished": {
+        "type": "boolean"
+      },
+      "retryPublished": {
+        "type": "boolean"
+      },
+      "sameRefusal": {
+        "type": "boolean"
+      },
+      "sameFrame": {
+        "type": "boolean"
+      },
+      "restore": {
+        "type": "boolean"
+      }
+    }
+  }
+}

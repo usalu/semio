@@ -8,7 +8,8 @@
     "attachReleasedBytes",
     "cursorBirth",
     "spareSeed",
-    "allocationRetirementCauses"
+    "allocationRetirementCauses",
+    "nativeForwarding"
   ],
   "properties": {
     "leaf": {
@@ -109,6 +110,14 @@
         "receipt",
         "extent"
       ]
+    },
+    "nativeForwarding": {
+      "const": {
+        "refusal": "original native child refusal",
+        "pendingRetained": true,
+        "recorded": true,
+        "cloneCount": 0
+      }
     }
   }
 }

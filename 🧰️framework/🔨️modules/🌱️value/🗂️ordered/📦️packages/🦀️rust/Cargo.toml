@@ -21,6 +21,8 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value-native-ordered-engine = { path="../../../🗂️ordered/⚙️engine/📦️packages/🦀️rust" }
+semio-framework-value-retirement-contract = { path = "../../../♻️retirement/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-retained-clone = { path="../../../🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path="../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-retirement = { path="../../../♻️retirement/📦️packages/🦀️rust" }
@@ -29,6 +31,7 @@ semio-framework-value-intrinsic = { path="../../../🌳️intrinsic/📦️packa
 serde = { workspace = true }
 
 [dev-dependencies]
+semio-framework-value-testing-effect-bank = { path="../../../🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 semio-framework-value-testing-allocator = { path = "../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 semio-framework-value-testing-admission = { path = "../../../🧪️testing/📥️admission/📦️packages/🦀️rust" }

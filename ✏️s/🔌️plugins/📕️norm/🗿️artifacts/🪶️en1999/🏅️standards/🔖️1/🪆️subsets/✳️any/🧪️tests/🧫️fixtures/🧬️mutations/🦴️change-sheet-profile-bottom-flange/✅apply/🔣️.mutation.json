@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSheetProfileBottomFlange",
+  "sheetProfileId": "sheet-profile-1",
+  "newBottomFlange": 1.06
+}

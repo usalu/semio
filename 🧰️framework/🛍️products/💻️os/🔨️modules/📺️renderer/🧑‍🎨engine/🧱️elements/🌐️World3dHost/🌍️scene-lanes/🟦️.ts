@@ -16,7 +16,7 @@ import { parseJsonArray, WindowInstanceIdContext } from "../../🗣️Interprete
 
 // #region World3dHost
 /** 🌍️ Reads every lane of the assembled `node.world3d` scene into memoised, identity-stable values. */
-export function useWorldSceneLanes({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
+export function useWorldSceneLanes({ node, onAction, onTrigger, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.world3d;
   const interactionDomainId = scene?.domainId ? scene.domainId : undefined;
   const interactionGranularity = scene?.domainGranularityId ? scene.domainGranularityId : WORLD3D_DEFAULT_INTERACTION_GRANULARITY;
@@ -196,7 +196,7 @@ export function useWorldSceneLanes({ node, onAction, requestContextMenu }: Compo
   const environment = useMemo(() => parseEnvironment(scene?.environmentJson), [scene?.environmentJson]);
   const frame = useMemo(() => parseFrame(scene?.frameJson), [scene?.frameJson]);
   const fit = useMemo(() => parseFit(scene?.fitJson), [scene?.fitJson]);
-  return { annotationLayer, annotationStore, attractions, cameraNavigating, cameraSeedKey, cameraState, colors, contentBounds, emptySceneLabel, engagementPreview, environment, externalPendingProjectionSpec, fit, frame, geometryRevisionRef, heatmap, instances, interaction, interactionDomainId, interactionGranularity, lastDispatchedWorldCameraRef, liveFitRevisionRef, lod, meshStylePalette, meshVisuals, meshes, modellingOptions, node, noteUserMovedCamera, onAction, pendingProjectionSpecRef, persistentSelectionMode, projectionContentFrameSeededRef, projectionFramePending, references, requestContextMenu, retainViewport, retainedPendingProjectionSpecRef, scalarField, scene, sceneCamera, sceneCameraAttachJson, sectionCapHex, selection, setCameraNavigating, setDetachEpoch, setExternalPendingProjectionSpec, setProjectionFramePending, setViewportCamera, setViewportOwned, setWindowIcon, setWindowTitle, shellScope, subElementPaint, targetVolumes, userMovedFitRevision, viewportOwned, vortices, windowInstanceId };
+  return { annotationLayer, annotationStore, attractions, cameraNavigating, cameraSeedKey, cameraState, colors, contentBounds, emptySceneLabel, engagementPreview, environment, externalPendingProjectionSpec, fit, frame, geometryRevisionRef, heatmap, instances, interaction, interactionDomainId, interactionGranularity, lastDispatchedWorldCameraRef, liveFitRevisionRef, lod, meshStylePalette, meshVisuals, meshes, modellingOptions, node, noteUserMovedCamera, onAction, onTrigger, pendingProjectionSpecRef, persistentSelectionMode, projectionContentFrameSeededRef, projectionFramePending, references, requestContextMenu, retainViewport, retainedPendingProjectionSpecRef, scalarField, scene, sceneCamera, sceneCameraAttachJson, sectionCapHex, selection, setCameraNavigating, setDetachEpoch, setExternalPendingProjectionSpec, setProjectionFramePending, setViewportCamera, setViewportOwned, setWindowIcon, setWindowTitle, shellScope, subElementPaint, targetVolumes, userMovedFitRevision, viewportOwned, vortices, windowInstanceId };
 }
 
 export type WorldCore1 = ReturnType<typeof useWorldSceneLanes>;

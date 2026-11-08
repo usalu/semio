@@ -12,10 +12,10 @@ impl<T:RetireOwned> RetireOwned for std::sync::Mutex<T>{
 impl<T:RetireOwned> RetirementCursor for Cursor<T>{
  fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.owner.next_computational_work(body)}
  fn requires_original_control(&self)->bool{crate::ErasedSnapshotRetirement::requires_original_control(&self.owner)}
- fn close_step_controlled(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn crate::OriginalRetirementControl)->RetirementStep{let grant=effect.grant();super::erased_cursor_turn(crate::ErasedSnapshotRetirement::close_step_controlled(&mut self.owner,&mut effect.nested(grant),control))}
- fn close_original_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();super::erased_cursor_turn(crate::ErasedSnapshotRetirement::close_original_step(&mut self.owner,original,&mut effect.nested(grant)))}
+ fn close_step_controlled(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn crate::OriginalRetirementControl)->RetirementStep{let grant=effect.grant();super::erased_cursor_turn(crate::ErasedSnapshotRetirement::close_step_controlled(&mut self.owner,body,&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"),control))}
+ fn close_original_step(&mut self,original:&mut semio_framework_value_retirement_contract::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();super::erased_cursor_turn(crate::ErasedSnapshotRetirement::close_original_step(&mut self.owner,original,body,&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect")))}
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{self.owner.next_demand(body)}
- fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{super::erased_cursor_turn(self.owner.step(effect))}
+ 
  fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{self.owner.next_copy_byte_demand()}
  fn next_birth_bytes(&self,body:usize)->Option<usize>{self.owner.next_capacity_byte_demand(body).ok()}
@@ -23,7 +23,13 @@ impl<T:RetireOwned> RetirementCursor for Cursor<T>{
  fn next_depth_demand(&self)->Result<usize,ValueError>{self.owner.next_depth_demand()}
  fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
+impl<T:RetireOwned> Cursor<T>{
+ fn close_step(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{super::erased_cursor_turn(self.owner.step(body,effect))}
+}
+
 
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
+
+

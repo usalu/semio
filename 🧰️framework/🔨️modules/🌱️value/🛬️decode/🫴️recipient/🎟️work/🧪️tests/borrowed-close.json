@@ -1,0 +1,26 @@
+[
+  {
+    "remaining": 0,
+    "grant": false,
+    "paid": false,
+    "changed": false
+  },
+  {
+    "remaining": 0,
+    "grant": true,
+    "paid": false,
+    "changed": false
+  },
+  {
+    "remaining": 1,
+    "grant": false,
+    "paid": false,
+    "changed": false
+  },
+  {
+    "remaining": 1,
+    "grant": true,
+    "paid": true,
+    "changed": true
+  }
+]

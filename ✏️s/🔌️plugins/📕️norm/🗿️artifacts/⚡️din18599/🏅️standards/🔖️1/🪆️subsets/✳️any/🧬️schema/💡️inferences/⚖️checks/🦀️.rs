@@ -11,6 +11,7 @@ extern crate semio_framework_value_derive as value_derive;
 use semio_s_artifact_norm_din18599_model::{Adjacency, Attachment, AutomationClass, BuildingCategory, CalculationMethod, EnvelopeElement, MonthlyClimate, ThermalZone, UsageProfile, UseClass};
 
 //#region 🔖️ComplianceHelpers
+use semio_s_plugin_norm_compliance::incremental_evaluation::Scope;
 use semio_s_plugin_norm_compliance::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
 use semio_s_artifact_norm_din18599_model::{Din18599Snapshot, ElementKind};
 

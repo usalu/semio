@@ -1,0 +1,5 @@
+{
+  "mutation": "changeCriticalRegionSectionDepthM",
+  "id": "cr-1",
+  "newSectionDepthM": 1.5
+}

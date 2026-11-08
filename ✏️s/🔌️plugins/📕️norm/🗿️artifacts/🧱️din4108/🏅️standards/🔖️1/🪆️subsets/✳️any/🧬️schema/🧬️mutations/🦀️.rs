@@ -13,7 +13,7 @@ use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
-pub use crate::edit_rules::EDIT_RULES;
+pub use crate::edit_rules::{resolve, EDIT_RULES};
 
 use semio_s_artifact_norm_din4108_mut_building::change_climate_zone;
 use semio_s_artifact_norm_din4108_mut_building::change_usage;

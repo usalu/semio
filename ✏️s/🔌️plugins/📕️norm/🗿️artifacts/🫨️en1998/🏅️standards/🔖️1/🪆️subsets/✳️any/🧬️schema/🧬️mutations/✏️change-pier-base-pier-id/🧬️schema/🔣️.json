@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-pier-base-pier-id/schema.json",
+  "title": "ChangePierBasePierId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newPierId"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changePierBasePierId"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "PierBase",
+          "de": "Pfeilerfundament"
+        },
+        "description": {
+          "en": "The pierBase this mutation addresses, by id.",
+          "de": "Das adressierte Element (Pfeilerfundament), per Kennung."
+        },
+        "ref": {
+          "kind": "pierBase"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newPierId": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Pier on the base",
+          "de": "Pfeiler auf dem Fundament"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20,
+        "widget": "text"
+      }
+    }
+  }
+}

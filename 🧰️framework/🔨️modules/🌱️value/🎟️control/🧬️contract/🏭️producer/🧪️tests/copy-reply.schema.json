@@ -1,0 +1,46 @@
+{
+  "type": "array",
+  "minItems": 9,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "settled",
+      "success",
+      "occupied",
+      "matching",
+      "items",
+      "work",
+      "accepted",
+      "replace"
+    ],
+    "properties": {
+      "settled": {
+        "type": "boolean"
+      },
+      "success": {
+        "type": "boolean"
+      },
+      "occupied": {
+        "type": "boolean"
+      },
+      "matching": {
+        "type": "boolean"
+      },
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "work": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "accepted": {
+        "type": "boolean"
+      },
+      "replace": {
+        "type": "boolean"
+      }
+    }
+  }
+}

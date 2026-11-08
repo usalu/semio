@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/insert-sheet-profile/schema.json",
+  "title": "InsertSheetProfile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "index",
+    "sheetProfile"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "insertSheetProfile"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based list position at which the record is inserted.",
+          "de": "Nullbasierte Listenposition, an der der Datensatz eingefügt wird."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "sheetProfile": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/SheetProfile",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Sheet profile",
+          "de": "Blechprofil"
+        },
+        "description": {
+          "en": "The complete sheet profile record to add.",
+          "de": "Der vollständige hinzuzufügende Datensatz: Blechprofil."
+        },
+        "group": "record",
+        "order": 20
+      },
+      "x-semio-rust": {
+        "type": "SheetProfile"
+      }
+    }
+  }
+}

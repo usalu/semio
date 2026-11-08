@@ -1,0 +1,5 @@
+{
+  "mutation": "changePierBasePierId",
+  "id": "pb-1",
+  "newPierId": "pier-1-2"
+}

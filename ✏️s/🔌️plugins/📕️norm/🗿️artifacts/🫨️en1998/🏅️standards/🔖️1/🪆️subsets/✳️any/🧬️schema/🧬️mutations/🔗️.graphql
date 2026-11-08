@@ -1,4 +1,4 @@
-union En1998Mutation = ChangeAnnex | InsertBuilding | RemoveBuilding | ChangeSystemVRdN | ChangeStoreyPermanentGkN | ChangeStoreyStiffnessX | ChangeStoreyDriftXM | ChangeBuildingPlanRegular | ChangeElevationRegular | ChangeMemberDetailing | ChangeMasonryWallRatio | InsertBridge | ChangeBridgeVRdN | InsertAssessment | ChangeAssessmentRKN | InsertSilo | InsertTank | InsertFoundation | InsertRetainingWall | InsertTower | ChangeTowerMRdNm | RemoveBridge | RemoveAssessment | RemoveSilo | RemoveTank | RemoveFoundation | RemoveRetainingWall | RemoveTower | ChangeSiteSApR | ChangeSiteAGr | ChangeSiteDeGroundCombo | ChangeSiteEnGroundType | ChangeSiteEnSpectrumType | ChangeSiteImportanceClass | ChangeBuildingName | ChangeBuildingPlanWidthM | ChangeBuildingPlanLengthM | ChangeBuildingT1Method | ChangeBuildingT1GivenS | ChangeBuildingCt | ChangeBuildingDriftLimitClass | ChangeBuildingNu | ChangeBuildingMultiResistingSystems | ChangeBuildingClaimsSimpleMasonry | ChangeBuildingAccidentalEccRatio | ChangeSystemDirection | ChangeSystemSystemType | ChangeSystemMaterial | ChangeSystemDuctilityClass | ChangeSystemQ0 | ChangeSystemAlphaUOverAlpha1 | ChangeSystemKW | ChangeStoreyHeightM | ChangeStoreyCorrelatedOccupancy | ChangeStoreyStiffnessY | ChangeStoreyCentreOfMassXM | ChangeStoreyCentreOfMassYM | ChangeStoreyCentreOfStiffnessXM | ChangeStoreyCentreOfStiffnessYM | ChangeStoreyDriftYM | ChangeStoreyShearResistanceN | ChangeMemberMaterial | ChangeMemberRole | ChangeMemberMinDimensionM | ChangeMemberRho | ChangeMemberRhoPrime | ChangeMemberOmegaWd | ChangeMemberSteelSectionClass | ChangeBridgePeriodRatio | ChangeBridgeFundamentalPeriodS | ChangeBridgeBearingDRdM | ChangeBridgePermanentGkN | ChangeBridgeCorrelatedOccupancy | ChangeAssessmentKnowledgeLevel | ChangeAssessmentLimitState | ChangeAssessmentAnalysisMethod | ChangeAssessmentSupportedBuildingId | ChangeAssessmentGammaEl | ChangeTowerHeightM | ChangeTowerIsChimney | ChangeTowerQNominal | ChangeTowerPermanentGkN | ChangeTowerCorrelatedOccupancy | ChangeSiloHeightM | ChangeSiloRadiusM | ChangeSiloPermanentGkN | ChangeSiloContentQkN | ChangeSiloContentCategory | ChangeSiloFillingRatio | ChangeSiloNRdN | ChangeSiloVRdN | ChangeSiloQNominal | ChangeTankHeightM | ChangeTankRadiusM | ChangeTankPermanentGkN | ChangeTankContentQkN | ChangeTankContentCategory | ChangeTankFillingRatio | ChangeTankVRdN | ChangeFoundationSupportedBuildingId | ChangeTieBeamFoundationBId | ChangeTieBeamFoundationAId | ChangeSeismicSlopeGoverningLayerId | ChangeFoundationAreaM2 | ChangeFoundationPRdPa | ChangeFoundationPassiveResistanceN | ChangeFoundationKFoundation | ChangeFoundationKSoil | ChangeRetainingWallHeightM | ChangeRetainingWallPhiDeg | ChangeRetainingWallSoilGamma | ChangeRetainingWallR | ChangeRetainingWallHRdNPerM | ChangeSiteVS30MS | ChangeSiteNSpt | ChangeSiteCUKpa | ChangeSiteSoftClayThicknessM | ChangeSiteSoftClayPi | ChangeSiteLiquefiableLayer | ChangeSiteAlluviumThicknessM | ChangeSiteAlluviumVSMS | ChangeSiteBelowAlluviumVSMS | ChangeBuildingSetbackRatio | ChangeBuildingStoreyStiffnessRatio | ChangeBuildingStoreyStiffnessBasis | ChangeBuildingPlanEnvGapRatio | ChangeBuildingJointGapM | ChangeBuildingNsWeightN | ChangeBuildingNsHeightM | ChangeBuildingNsPeriodS | ChangeBuildingNsQ | ChangeBuildingNsResistanceN | ChangeBuildingColMomentSumNm | ChangeBuildingBeamMomentSumNm | ChangeMemberFastenerDiameterMm | ChangeMemberTimberThicknessMm | ChangeMemberWallThicknessM | ChangeMemberEffectiveStiffnessRatio | ChangeMemberEffectiveStiffnessBasis | ChangeMemberWallPoissonRatio | ChangeMemberWallStartXM | ChangeMemberWallStartYM | ChangeMemberWallLengthM | ChangeMemberWallDirectionRad | ChangeMemberWallStoreyId | ChangeMemberWallEffHeightM | ChangeBridgePierHeightM | ChangeBridgePierMomentRdNm | ChangeBridgePierShearRdN | ChangeBridgeImportanceClass | ChangeBridgeVerticalPeriodS | ChangeBridgePierCrackedInertiaRatio | ChangeBridgeDeckLengthM | ChangeBridgeDeckEiNm2 | ChangeAssessmentChordDemandRad | ChangeAssessmentChordYieldRad | ChangeAssessmentChordUltRad | ChangeTowerEiNm2 | ChangeFoundationLiqN160 | ChangeFoundationLiqFinesPercent | ChangeFoundationLiqDepthM | ChangeFoundationLiqWaterDepthM | ChangeFoundationLiqUnitWtNM3 | ChangeFoundationLiqMagnitude | ChangeAssessmentSectionDepthM | ChangeAssessmentSectionWidthM | ChangeAssessmentEffDepthM | ChangeAssessmentShearSpanM | ChangeAssessmentAxialForceN | ChangeAssessmentShearForceDemandN | ChangeAssessmentAs1AreaM2 | ChangeAssessmentAs2AreaM2 | ChangeAssessmentBarDiameterMm | ChangeAssessmentSteelYieldMpa | ChangeAssessmentFcMpa | ChangeAssessmentStrpLegAreaM2 | ChangeAssessmentStrpSpacingM | ChangeAssessmentStrpYieldMpa | ChangeAssessmentCoreWidthM | ChangeAssessmentCoreDepthM | ChangeAssessmentMidSteelAreaM2 | ChangeAssessmentRbarCount | ChangeAssessmentRbarSpacingM | ChangeAssessmentDiagReinfRatio | ChangeAssessmentShearCrack | ChangeFoundationLiqLayerM | ChangeFoundationFootingWidthM | ChangeFoundationBearAxialN | ChangeFoundationBearShearN | ChangeFoundationBearMomentNm | ChangeFoundationBearingNMaxN | ChangeFoundationSoilPhiDeg | ChangeFoundationPileDiameterM | ChangeFoundationPileLengthM | ChangeFoundationPileModulusPa | ChangeFoundationPileKsNM3 | ChangeFoundationPileHeadShearN | ChangeFoundationPileHeadFixed | ChangeFoundationPileIfaceM | ChangeFoundationPileUpVsMS | ChangeFoundationPileLowVsMS | ChangeFoundationPileMomentRdNm | ChangeStoreyVariableCategory | ChangeStoreyVariableQkN | ChangeBridgeVariableCategory | ChangeBridgeVariableQkN | ChangeTowerVariableCategory | ChangeTowerVariableQkN | InsertStoreyVariable | RemoveStoreyVariable | InsertBridgeVariable | RemoveBridgeVariable | InsertTowerVariable | RemoveTowerVariable | ChangeSoilLayerFoundationId | ChangeSoilLayerThicknessM | ChangeSoilUnitWtNM3 | ChangeSoilLayerVsMS | ChangeSoilLayerN160 | ChangeSoilLayerFinesPercent | InsertSoilLayer | RemoveSoilLayer | ChangePlacementX | ChangePlacementY | ChangePlacementZ | ChangePlacementYaw | InsertPlacement | RemovePlacement | ChangeBuildingOtBaseXM | ChangeBuildingOtBaseYM | ChangeBuildingTiedownNm | ChangeDiaphragmBuildingId | ChangeDiaphragmStoreyId | ChangeDiaphragmMaterial | ChangeDiaphragmThicknessM | ChangeDiaphragmSpanM | ChangeDiaphragmDepthM | ChangeDiaphragmOpeningWidthM | ChangeDiaphragmShearStrMpa | ChangeDiaphragmChordAreaM2 | ChangeDiaphragmChordStrMpa | ChangeDiaphragmGammaD | ChangeAccelerogramBuildingId | ChangeAccelerogramLabel | ChangeAccelerogramSamples | ChangeAccelerogramDtS | ChangeAccelerogramScaleFactor | InsertDiaphragm | RemoveDiaphragm | InsertAccelerogram | RemoveAccelerogram | ChangeTowerBaseRotStiffNm | ChangeTankShellTM | ChangeTankShellStrMpa | ChangePierBridgeId | ChangePierStiffnessBasis | ChangePierXM | ChangePierHeightM | ChangePierSectionBM | ChangePierSectionHM | ChangePierModulusMpa | ChangePierMomentRdNm | ChangePierShearRdN | ChangePierReinforcementRatio | ChangePierCoverM | ChangePierConcreteFckMpa | ChangePierSteelFykMpa | ChangePierAxialLoadN | ChangeBearingBridgeId | ChangeJointBuildingId | ChangeJointStoreyId | ChangeJointColumnId | ChangeJointBeamId | ChangeBearingPierId | ChangeBearingDevice | ChangeBearingXM | ChangeJointXM | ChangeJointYM | ChangeBearingStiffnessNPerM | ChangeBearingDRdM | ChangeBearingSeatLengthM | ChangeJointColumnMomentRdNm | ChangeJointBeamMomentRdNm | ChangeBearingMinSupportM | InsertPier | RemovePier | InsertBearing | InsertJoint | InsertTieBeam | InsertSeismicSlope | RemoveBearing | RemoveJoint | RemoveTieBeam | RemoveSeismicSlope | InsertMember | RemoveMember | InsertStorey | RemoveStorey | InsertSystem | RemoveSystem | ChangeJointColMomentRdNm | ChangeRetainingWallWaterHeightM | ChangeRetainingWallSaturatedGamma | ChangeRetainingWallPermeabilityMS | ChangeFoundationBaseFrictionDeg | ChangeFoundationBasePorePressurePa | ChangeSeismicSlopeAngle | ChangeSeismicSlopeCircleCentreX | ChangeSeismicSlopeCircleCentreZ | ChangeSeismicSlopeCircleRadius | ChangeSeismicSlopeCohesion | ChangeSeismicSlopeFrictionAngle | ChangeSeismicSlopeHeight | ChangeSeismicSlopeTopographicFactor | ChangeTieBeamDepth | ChangeTieBeamDisplacementLimit | ChangeTieBeamRelativeDisplacement | ChangeTieBeamSpan | ChangeTieBeamSteelArea | ChangeTieBeamSteelDesignStrength | ChangeTieBeamWidth
+union En1998Mutation = ChangeAnnex | InsertBuilding | RemoveBuilding | ChangeSystemVRdN | ChangeStoreyPermanentGkN | ChangeStoreyStiffnessX | ChangeStoreyDriftXM | ChangeBuildingPlanRegular | ChangeElevationRegular | ChangeMemberDetailing | ChangeMasonryWallRatio | InsertBridge | ChangeBridgeVRdN | InsertAssessment | ChangeAssessmentRKN | InsertSilo | InsertTank | InsertFoundation | InsertRetainingWall | InsertTower | ChangeTowerMRdNm | RemoveBridge | RemoveAssessment | RemoveSilo | RemoveTank | RemoveFoundation | RemoveRetainingWall | RemoveTower | ChangeSiteSApR | ChangeSiteAGr | ChangeSiteDeGroundCombo | ChangeSiteEnGroundType | ChangeSiteEnSpectrumType | ChangeSiteImportanceClass | ChangeBuildingName | ChangeBuildingPlanWidthM | ChangeBuildingPlanLengthM | ChangeBuildingT1Method | ChangeBuildingT1GivenS | ChangeBuildingCt | ChangeBuildingDriftLimitClass | ChangeBuildingNu | ChangeBuildingMultiResistingSystems | ChangeBuildingClaimsSimpleMasonry | ChangeBuildingAccidentalEccRatio | ChangeSystemDirection | ChangeSystemSystemType | ChangeSystemMaterial | ChangeSystemDuctilityClass | ChangeSystemQ0 | ChangeSystemAlphaUOverAlpha1 | ChangeSystemKW | ChangeStoreyHeightM | ChangeStoreyCorrelatedOccupancy | ChangeStoreyStiffnessY | ChangeStoreyCentreOfMassXM | ChangeStoreyCentreOfMassYM | ChangeStoreyCentreOfStiffnessXM | ChangeStoreyCentreOfStiffnessYM | ChangeStoreyDriftYM | ChangeStoreyShearResistanceN | ChangeMemberMaterial | ChangeMemberRole | ChangeMemberMinDimensionM | ChangeMemberRho | ChangeMemberRhoPrime | ChangeMemberOmegaWd | ChangeMemberSteelSectionClass | ChangeBridgePeriodRatio | ChangeBridgeFundamentalPeriodS | ChangeBridgeBearingDRdM | ChangeBridgePermanentGkN | ChangeBridgeCorrelatedOccupancy | ChangeAssessmentKnowledgeLevel | ChangeAssessmentLimitState | ChangeAssessmentAnalysisMethod | ChangeAssessmentSupportedBuildingId | ChangeAssessmentGammaEl | ChangeTowerHeightM | ChangeTowerIsChimney | ChangeTowerQNominal | ChangeTowerPermanentGkN | ChangeTowerCorrelatedOccupancy | ChangeSiloHeightM | ChangeSiloRadiusM | ChangeSiloPermanentGkN | ChangeSiloContentQkN | ChangeSiloContentCategory | ChangeSiloFillingRatio | ChangeSiloNRdN | ChangeSiloVRdN | ChangeSiloQNominal | ChangeTankHeightM | ChangeTankRadiusM | ChangeTankPermanentGkN | ChangeTankContentQkN | ChangeTankContentCategory | ChangeTankFillingRatio | ChangeTankVRdN | ChangeFoundationSupportedBuildingId | ChangeTieBeamFoundationBId | ChangeTieBeamFoundationAId | ChangeSeismicSlopeGoverningLayerId | ChangeFoundationAreaM2 | ChangeFoundationPRdPa | ChangeFoundationPassiveResistanceN | ChangeFoundationKFoundation | ChangeFoundationKSoil | ChangeRetainingWallHeightM | ChangeRetainingWallPhiDeg | ChangeRetainingWallSoilGamma | ChangeRetainingWallR | ChangeRetainingWallHRdNPerM | ChangeSiteVS30MS | ChangeSiteNSpt | ChangeSiteCUKpa | ChangeSiteSoftClayThicknessM | ChangeSiteSoftClayPi | ChangeSiteLiquefiableLayer | ChangeSiteAlluviumThicknessM | ChangeSiteAlluviumVSMS | ChangeSiteBelowAlluviumVSMS | ChangeBuildingSetbackRatio | ChangeBuildingStoreyStiffnessRatio | ChangeBuildingStoreyStiffnessBasis | ChangeBuildingPlanEnvGapRatio | ChangeBuildingJointGapM | ChangeBuildingNsWeightN | ChangeBuildingNsHeightM | ChangeBuildingNsPeriodS | ChangeBuildingNsQ | ChangeBuildingNsResistanceN | ChangeBuildingColMomentSumNm | ChangeBuildingBeamMomentSumNm | ChangeMemberFastenerDiameterMm | ChangeMemberTimberThicknessMm | ChangeMemberWallThicknessM | ChangeMemberEffectiveStiffnessRatio | ChangeMemberEffectiveStiffnessBasis | ChangeMemberWallPoissonRatio | ChangeMemberWallStartXM | ChangeMemberWallStartYM | ChangeMemberWallLengthM | ChangeMemberWallDirectionRad | ChangeMemberWallStoreyId | ChangeMemberWallEffHeightM | ChangeBridgePierHeightM | ChangeBridgePierMomentRdNm | ChangeBridgePierShearRdN | ChangeBridgeImportanceClass | ChangeBridgeVerticalPeriodS | ChangeBridgePierCrackedInertiaRatio | ChangeBridgeDeckLengthM | ChangeBridgeDeckEiNm2 | ChangeAssessmentChordDemandRad | ChangeAssessmentChordYieldRad | ChangeAssessmentChordUltRad | ChangeTowerEiNm2 | ChangeFoundationLiqN160 | ChangeFoundationLiqFinesPercent | ChangeFoundationLiqDepthM | ChangeFoundationLiqWaterDepthM | ChangeFoundationLiqUnitWtNM3 | ChangeFoundationLiqMagnitude | ChangeAssessmentSectionDepthM | ChangeAssessmentSectionWidthM | ChangeAssessmentEffDepthM | ChangeAssessmentShearSpanM | ChangeAssessmentAxialForceN | ChangeAssessmentShearForceDemandN | ChangeAssessmentAs1AreaM2 | ChangeAssessmentAs2AreaM2 | ChangeAssessmentBarDiameterMm | ChangeAssessmentSteelYieldMpa | ChangeAssessmentFcMpa | ChangeAssessmentStrpLegAreaM2 | ChangeAssessmentStrpSpacingM | ChangeAssessmentStrpYieldMpa | ChangeAssessmentCoreWidthM | ChangeAssessmentCoreDepthM | ChangeAssessmentMidSteelAreaM2 | ChangeAssessmentRbarCount | ChangeAssessmentRbarSpacingM | ChangeAssessmentDiagReinfRatio | ChangeAssessmentShearCrack | ChangeFoundationLiqLayerM | ChangeFoundationFootingWidthM | ChangeFoundationBearAxialN | ChangeFoundationBearShearN | ChangeFoundationBearMomentNm | ChangeFoundationBearingNMaxN | ChangeFoundationSoilPhiDeg | ChangeFoundationPileDiameterM | ChangeFoundationPileLengthM | ChangeFoundationPileModulusPa | ChangeFoundationPileKsNM3 | ChangeFoundationPileHeadShearN | ChangeFoundationPileHeadFixed | ChangeFoundationPileIfaceM | ChangeFoundationPileUpVsMS | ChangeFoundationPileLowVsMS | ChangeFoundationPileMomentRdNm | ChangeStoreyVariableCategory | ChangeStoreyVariableQkN | ChangeBridgeVariableCategory | ChangeBridgeVariableQkN | ChangeTowerVariableCategory | ChangeTowerVariableQkN | InsertStoreyVariable | RemoveStoreyVariable | InsertBridgeVariable | RemoveBridgeVariable | InsertTowerVariable | RemoveTowerVariable | ChangeSoilLayerFoundationId | ChangeSoilLayerThicknessM | ChangeSoilUnitWtNM3 | ChangeSoilLayerVsMS | ChangeSoilLayerN160 | ChangeSoilLayerFinesPercent | InsertSoilLayer | RemoveSoilLayer | ChangePlacementX | ChangePlacementY | ChangePlacementZ | ChangePlacementYaw | InsertPlacement | RemovePlacement | ChangeBuildingOtBaseXM | ChangeBuildingOtBaseYM | ChangeBuildingTiedownNm | ChangeDiaphragmBuildingId | ChangeDiaphragmStoreyId | ChangeDiaphragmMaterial | ChangeDiaphragmThicknessM | ChangeDiaphragmSpanM | ChangeDiaphragmDepthM | ChangeDiaphragmOpeningWidthM | ChangeDiaphragmShearStrMpa | ChangeDiaphragmChordAreaM2 | ChangeDiaphragmChordStrMpa | ChangeDiaphragmGammaD | ChangeAccelerogramBuildingId | ChangeAccelerogramLabel | ChangeAccelerogramSamples | ChangeAccelerogramDtS | ChangeAccelerogramScaleFactor | InsertDiaphragm | RemoveDiaphragm | InsertAccelerogram | RemoveAccelerogram | ChangeTowerBaseRotStiffNm | ChangeTankShellTM | ChangeTankShellStrMpa | ChangePierBridgeId | ChangePierStiffnessBasis | ChangePierXM | ChangePierHeightM | ChangePierSectionBM | ChangePierSectionHM | ChangePierModulusMpa | ChangePierMomentRdNm | ChangePierShearRdN | ChangePierReinforcementRatio | ChangePierCoverM | ChangePierConcreteFckMpa | ChangePierSteelFykMpa | ChangePierAxialLoadN | ChangeBearingBridgeId | ChangeJointBuildingId | ChangeJointStoreyId | ChangeJointColumnId | ChangeJointBeamId | ChangeBearingPierId | ChangeBearingDevice | ChangeBearingXM | ChangeJointXM | ChangeJointYM | ChangeBearingStiffnessNPerM | ChangeBearingDRdM | ChangeBearingSeatLengthM | ChangeJointColumnMomentRdNm | ChangeJointBeamMomentRdNm | ChangeBearingMinSupportM | InsertPier | RemovePier | InsertBearing | InsertJoint | InsertTieBeam | InsertSeismicSlope | RemoveBearing | RemoveJoint | RemoveTieBeam | RemoveSeismicSlope | InsertMember | RemoveMember | InsertStorey | RemoveStorey | InsertSystem | RemoveSystem | ChangeJointColMomentRdNm | ChangeRetainingWallWaterHeightM | ChangeRetainingWallSaturatedGamma | ChangeRetainingWallPermeabilityMS | ChangeFoundationBaseFrictionDeg | ChangeFoundationBasePorePressurePa | ChangeSeismicSlopeAngle | ChangeSeismicSlopeCircleCentreX | ChangeSeismicSlopeCircleCentreZ | ChangeSeismicSlopeCircleRadius | ChangeSeismicSlopeCohesion | ChangeSeismicSlopeFrictionAngle | ChangeSeismicSlopeHeight | ChangeSeismicSlopeTopographicFactor | ChangeTieBeamDepth | ChangeTieBeamDisplacementLimit | ChangeTieBeamRelativeDisplacement | ChangeTieBeamSpan | ChangeTieBeamSteelArea | ChangeTieBeamSteelDesignStrength | ChangeTieBeamWidth | InsertIsolationSystem | RemoveIsolationSystem | ChangeIsolationSystemBridgeId | ChangeIsolationSystemBuildingId | ChangeIsolationSystemStrengthN | ChangeIsolationSystemStiffnessNPerM | ChangeIsolationSystemYieldDisplacementM | ChangeIsolationSystemCapacityM | InsertPierBase | RemovePierBase | ChangePierBaseBridgeId | ChangePierBasePierId | ChangePierBaseRadiusM | ChangePierBaseSoilVsMS | ChangePierBaseSoilUnitWeightNM3 | ChangePierBasePoissonRatio | InsertCriticalRegion | RemoveCriticalRegion | ChangeCriticalRegionBuildingId | ChangeCriticalRegionMemberId | ChangeCriticalRegionSectionWidthM | ChangeCriticalRegionSectionDepthM | ChangeCriticalRegionClearLengthM | ChangeCriticalRegionHoopedLengthM | ChangeCriticalRegionCoreWidthM | ChangeCriticalRegionCoreDepthM | ChangeCriticalRegionAxialForceN | ChangeCriticalRegionConcreteDesignStrengthMpa | ChangeCriticalRegionSteelDesignYieldMpa | ChangeCriticalRegionHoopDesignYieldMpa | ChangeCriticalRegionLongitudinalSteelAreaM2 | ChangeCriticalRegionLongitudinalBarDiameterM | ChangeCriticalRegionLongitudinalBarMaxDiameterM | ChangeCriticalRegionHoopDiameterM | ChangeCriticalRegionHoopSpacingM | ChangeCriticalRegionHoopLegsX | ChangeCriticalRegionHoopLegsY | ChangeCriticalRegionRestrainedBarCount | ChangeCriticalRegionRestrainedBarSpacingM
 type ChangeAnnex {
   newAnnex: AnnexChoice!
 }
@@ -1305,4 +1305,157 @@ type ChangeTieBeamSteelDesignStrength {
 type ChangeTieBeamWidth {
   id: String!
   newWidth: Float!
+}
+type InsertIsolationSystem {
+  index: Int
+  isolationSystem: En1998IsolationSystem!
+}
+type RemoveIsolationSystem {
+  id: String!
+}
+type ChangeIsolationSystemBridgeId {
+  id: String!
+  newBridgeId: String!
+}
+type ChangeIsolationSystemBuildingId {
+  id: String!
+  newBuildingId: String!
+}
+type ChangeIsolationSystemStrengthN {
+  id: String!
+  newStrengthN: Float!
+}
+type ChangeIsolationSystemStiffnessNPerM {
+  id: String!
+  newStiffnessNPerM: Float!
+}
+type ChangeIsolationSystemYieldDisplacementM {
+  id: String!
+  newYieldDisplacementM: Float!
+}
+type ChangeIsolationSystemCapacityM {
+  id: String!
+  newCapacityM: Float!
+}
+type InsertPierBase {
+  index: Int
+  pierBase: En1998PierBase!
+}
+type RemovePierBase {
+  id: String!
+}
+type ChangePierBaseBridgeId {
+  id: String!
+  newBridgeId: String!
+}
+type ChangePierBasePierId {
+  id: String!
+  newPierId: String!
+}
+type ChangePierBaseRadiusM {
+  id: String!
+  newRadiusM: Float!
+}
+type ChangePierBaseSoilVsMS {
+  id: String!
+  newSoilVsMS: Float!
+}
+type ChangePierBaseSoilUnitWeightNM3 {
+  id: String!
+  newSoilUnitWeightNM3: Float!
+}
+type ChangePierBasePoissonRatio {
+  id: String!
+  newPoissonRatio: Float!
+}
+type InsertCriticalRegion {
+  index: Int
+  criticalRegion: En1998CriticalRegion!
+}
+type RemoveCriticalRegion {
+  id: String!
+}
+type ChangeCriticalRegionBuildingId {
+  id: String!
+  newBuildingId: String!
+}
+type ChangeCriticalRegionMemberId {
+  id: String!
+  newMemberId: String!
+}
+type ChangeCriticalRegionSectionWidthM {
+  id: String!
+  newSectionWidthM: Float!
+}
+type ChangeCriticalRegionSectionDepthM {
+  id: String!
+  newSectionDepthM: Float!
+}
+type ChangeCriticalRegionClearLengthM {
+  id: String!
+  newClearLengthM: Float!
+}
+type ChangeCriticalRegionHoopedLengthM {
+  id: String!
+  newHoopedLengthM: Float!
+}
+type ChangeCriticalRegionCoreWidthM {
+  id: String!
+  newCoreWidthM: Float!
+}
+type ChangeCriticalRegionCoreDepthM {
+  id: String!
+  newCoreDepthM: Float!
+}
+type ChangeCriticalRegionAxialForceN {
+  id: String!
+  newAxialForceN: Float!
+}
+type ChangeCriticalRegionConcreteDesignStrengthMpa {
+  id: String!
+  newConcreteDesignStrengthMpa: Float!
+}
+type ChangeCriticalRegionSteelDesignYieldMpa {
+  id: String!
+  newSteelDesignYieldMpa: Float!
+}
+type ChangeCriticalRegionHoopDesignYieldMpa {
+  id: String!
+  newHoopDesignYieldMpa: Float!
+}
+type ChangeCriticalRegionLongitudinalSteelAreaM2 {
+  id: String!
+  newLongitudinalSteelAreaM2: Float!
+}
+type ChangeCriticalRegionLongitudinalBarDiameterM {
+  id: String!
+  newLongitudinalBarDiameterM: Float!
+}
+type ChangeCriticalRegionLongitudinalBarMaxDiameterM {
+  id: String!
+  newLongitudinalBarMaxDiameterM: Float!
+}
+type ChangeCriticalRegionHoopDiameterM {
+  id: String!
+  newHoopDiameterM: Float!
+}
+type ChangeCriticalRegionHoopSpacingM {
+  id: String!
+  newHoopSpacingM: Float!
+}
+type ChangeCriticalRegionHoopLegsX {
+  id: String!
+  newHoopLegsX: Float!
+}
+type ChangeCriticalRegionHoopLegsY {
+  id: String!
+  newHoopLegsY: Float!
+}
+type ChangeCriticalRegionRestrainedBarCount {
+  id: String!
+  newRestrainedBarCount: Float!
+}
+type ChangeCriticalRegionRestrainedBarSpacingM {
+  id: String!
+  newRestrainedBarSpacingM: Float!
 }

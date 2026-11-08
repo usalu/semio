@@ -1,0 +1,5 @@
+{
+  "mutation": "changeIsolationSystemStiffnessNPerM",
+  "id": "iso-1",
+  "newStiffnessNPerM": 15000001.0
+}

@@ -121,7 +121,7 @@ pub fn b08(c: &Case) -> R {
     let hook = c.so("shape", "hook_135") != "welded";
     let straight_ext = if hook { (10.0 * phi).max(70.0) } else { 0.0 };
     let bend = if c.so("angle", "135") == "90" { (10.0 * phi).max(70.0) } else { (5.0 * phi).max(50.0) };
-    Ok(vec![Outcome::mm("hook_length", "Hook extension length", "Hakenlänge", bend.max(straight_ext.min(bend)), "5φ (135°) / 10φ (90°), at least 50/70 mm".into()).steps_de("5φ (135°) / 10φ (90°), mindestens 50/70 mm"), Outcome::mm("mandrel", "Mandrel diameter", "Biegerollendurchmesser", 4.0 * phi, "4φ for links".into()).steps_de("4φ für Bügel")])
+    Ok(vec![Outcome::mm("hook_length", "Hook extension length", "Hakenlänge", bend.max(straight_ext.min(bend)), "5φ (135°) / 10φ (90°), at least 50/70 mm".into()).steps_de("5φ (135°) / 10φ (90°), mindestens 50/70 mm"), Outcome::mm("mandrel", "Mandrel diameter", "Biegerollendurchmesser", if phi <= 16.0 { 4.0 } else { 7.0 } * phi, "4φ (φ ≤ 16 mm) / 7φ (φ > 16 mm), Table 8.1N".into()).steps_de("4φ (φ ≤ 16 mm) / 7φ (φ > 16 mm), Tabelle 8.1N")])
 }
 
 pub fn b09(c: &Case) -> R {

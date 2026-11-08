@@ -403,7 +403,7 @@
       "texts": [
         {
           "id": "bond",
-          "value": "bonded"
+          "value": "post_bonded"
         }
       ]
     },

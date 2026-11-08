@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSheetProfilePitch",
+  "sheetProfileId": "sheet-profile-1",
+  "newPitch": 1.2
+}

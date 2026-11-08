@@ -7,6 +7,10 @@ use std::sync::Arc;
 use std::task::{Context, Poll};
 use super::CancelWaiters;
 
+#[path="🏭️admission/🦀️.rs"]
+mod root_admission;
+pub use root_admission::{OriginalCancelRootAdmission,OriginalCancelRootIdentity};
+
 //#region 🛑️CancelToken
 /// ✖️ Tri-state a [`CancelToken`] can be in. `Park` is the suspend state — in-flight operations
 /// finish, new work is held — distinct from the terminal `Cancelled`. Ordered by severity

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "minItems": 7,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "pending",
+      "present",
+      "terminal",
+      "child",
+      "spare",
+      "expected"
+    ],
+    "properties": {
+      "pending": {
+        "type": "boolean"
+      },
+      "present": {
+        "type": "boolean"
+      },
+      "terminal": {
+        "type": "boolean"
+      },
+      "child": {
+        "type": "boolean"
+      },
+      "spare": {
+        "type": "boolean"
+      },
+      "expected": {
+        "enum": [
+          "failureStorage",
+          "child",
+          null
+        ]
+      }
+    }
+  }
+}

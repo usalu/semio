@@ -1,3 +1,5 @@
+scalar UInt32
+
 type En1999Artifact {
   annex: String!
   materials: [AluminiumMaterial!]!
@@ -16,6 +18,8 @@ type En1999Artifact {
   ringStiffeners: [RingStiffener!]!
   transverseStiffeners: [TransverseStiffener!]!
   reliabilityClass: String!
+  sheetProfiles: [SheetProfile!]!
+  fireInsulations: [FireInsulation!]!
 }
 enum ProductForm {
   sheet
@@ -245,8 +249,8 @@ type MemberAction {
 type BoltGroup {
   material: String!
   diameter: Float!
-  rows: Int!
-  boltsPerRow: Int!
+  rows: UInt32!
+  boltsPerRow: UInt32!
   edgeDistance: Float!
   pitch: Float!
   gauge: Float!
@@ -283,4 +287,20 @@ type PlateElement {
 enum FastenerForceMethod {
   elastic
   instantaneousCentre
+}
+type SheetProfile {
+  id: String!
+  sheetId: String!
+  pitch: Float!
+  topFlange: Float!
+  bottomFlange: Float!
+  webHeight: Float!
+}
+type FireInsulation {
+  id: String!
+  fireId: String!
+  thickness: Float!
+  conductivity: Float!
+  specificHeat: Float!
+  density: Float!
 }

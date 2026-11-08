@@ -1,0 +1,72 @@
+[
+  {
+    "id": "original",
+    "issuer": true,
+    "work": true,
+    "refusalPublished": true,
+    "retryPublished": true,
+    "sameRefusal": true,
+    "sameFrame": true,
+    "restore": true
+  },
+  {
+    "id": "foreign-issuer",
+    "issuer": false,
+    "work": true,
+    "refusalPublished": true,
+    "retryPublished": true,
+    "sameRefusal": true,
+    "sameFrame": true,
+    "restore": false
+  },
+  {
+    "id": "foreign-work",
+    "issuer": true,
+    "work": false,
+    "refusalPublished": true,
+    "retryPublished": true,
+    "sameRefusal": true,
+    "sameFrame": true,
+    "restore": false
+  },
+  {
+    "id": "unpublished-refusal",
+    "issuer": true,
+    "work": true,
+    "refusalPublished": false,
+    "retryPublished": true,
+    "sameRefusal": true,
+    "sameFrame": true,
+    "restore": false
+  },
+  {
+    "id": "unpublished-retry",
+    "issuer": true,
+    "work": true,
+    "refusalPublished": true,
+    "retryPublished": false,
+    "sameRefusal": true,
+    "sameFrame": true,
+    "restore": false
+  },
+  {
+    "id": "foreign-refusal",
+    "issuer": true,
+    "work": true,
+    "refusalPublished": true,
+    "retryPublished": true,
+    "sameRefusal": false,
+    "sameFrame": true,
+    "restore": false
+  },
+  {
+    "id": "foreign-frame",
+    "issuer": true,
+    "work": true,
+    "refusalPublished": true,
+    "retryPublished": true,
+    "sameRefusal": true,
+    "sameFrame": false,
+    "restore": false
+  }
+]

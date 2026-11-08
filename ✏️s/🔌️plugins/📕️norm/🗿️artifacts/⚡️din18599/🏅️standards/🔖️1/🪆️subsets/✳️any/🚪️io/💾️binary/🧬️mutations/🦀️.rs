@@ -29,7 +29,7 @@ mod native_codec {
 use crate::binary::mutations::*;
 use semio_s_artifact_norm_din18599_mutations::Din18599Mutation;
 #[cfg(test)] use semio_s_artifact_norm_din18599_mut_building::{change_attachment, change_automation_class, change_building_category, change_delta_u_wb, change_geg_qp_factor, change_heated_volume_m3, change_method, change_net_floor_area_m2, change_use_class};
-#[cfg(test)] use semio_s_artifact_norm_din18599_mut_zoning::{change_element_u, replace_elements, replace_zones, update_climate};
+#[cfg(test)] use semio_s_artifact_norm_din18599_mut_zoning::{change_element_u, update_climate};
 #[cfg(test)] use semio_s_artifact_norm_din18599_mut_systems::{update_cooling, specify_dhw_system, specify_heating_system, update_lighting, update_renewables, update_ventilation};
 use semio_s_artifact_norm_din18599_model::{Attachment, AutomationClass, BuildingCategory, CalculationMethod, CoolingSystem, DhwSystem, EnvelopeElement, HeatingSystem, LightingSystem, MonthlyClimate, Renewables, ThermalZone, UseClass, VentilationSystem};
 #[cfg(test)] use protocol::OpText;

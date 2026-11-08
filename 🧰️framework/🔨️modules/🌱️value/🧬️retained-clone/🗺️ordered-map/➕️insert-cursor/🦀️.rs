@@ -1,86 +1,37 @@
-//! ➕️ Insert cursor of the retained ordered map: the insertion step, grant and progress records, the workspace and state and the resumable insertion cursor with its drop guard. See [`super`].
-
+//! ➕️ Native insertion retains the original workspace through lookup, movement and cancellation.
 use super::*;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum RetainedOrderedMapInsertStep {
-    Progress(RetainedOrderedMapInsertProgress),
-    Complete { ordinal: usize, progress: RetainedOrderedMapInsertProgress },
+use super::edit_input::{EditInput,EditWorkspace};
+use super::edit_retirement::{CloseRoute,close_key};
+use crate::retained_clone::{OriginalEffectReply,OriginalEffectReplyComplete,OriginalRetirementCloseLoan};
+use std::mem::ManuallyDrop;
+type Reply<'r>=OriginalEffectReply<'r,RetainedCloneStep,crate::OriginalRetirementFailure>;
+type Complete<'r>=OriginalEffectReplyComplete<'r,RetainedCloneStep,crate::OriginalRetirementFailure>;
+type Effect<'a>=crate::RetainedAllocationEffect<'a>;
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+pub enum RetainedOrderedMapInsertStep{Progress(RetainedOrderedMapInsertProgress),Complete{ordinal:usize,progress:RetainedOrderedMapInsertProgress}}
+#[derive(Clone,Copy,Debug,Default,PartialEq,Eq)]
+pub struct RetainedOrderedMapInsertGrant{pub retirement:RetainedCloneGrant,pub comparison:BoundedOrdGrant,pub maximum_moved_items:usize,pub maximum_moved_bytes:usize,pub maximum_capacity_bytes:usize}
+#[derive(Clone,Copy,Debug,Default,PartialEq,Eq)]
+pub struct RetainedOrderedMapInsertProgress{pub retirement:RetainedCloneProgress,pub comparison:BoundedOrdProgress,pub moved_items:usize,pub moved_bytes:usize,pub retained_capacity_bytes:usize}
+impl RetainedOrderedMapInsertProgress{pub fn fits(self,g:RetainedOrderedMapInsertGrant)->bool{self.retirement.fits(g.retirement)&&self.comparison.fits(g.comparison)&&self.moved_items<=g.maximum_moved_items&&self.moved_bytes<=g.maximum_moved_bytes&&self.retained_capacity_bytes<=g.maximum_capacity_bytes}}
+pub(super) struct InsertState<K:BoundedOrd+RetireOwned,V:RetireOwned+Sync>{
+ input:EditInput<K,V>,workspace:Option<EditWorkspace<K,V>>,lookup_result:Option<RetainedOrderedMapLookup>,
+ pub(super) map:Option<RetainedOrderedMap<K,V>>,pub(super) output:Option<RetainedOrderedMap<K,V>>,pub(super) key:Option<K>,pub(super) value:Option<V>,pub(super) target:Option<usize>,
+ shift_page:Option<usize>,old_directory:Option<Vec<Vec<(K,V)>>>,new_directory:Option<Vec<Vec<(K,V)>>>,directory_index:usize,
+ pub(super) phase:u8,pub(super) spent:bool,pub(super) closing:bool,pub(super) close:RetainedCloneClose,close_route:Option<CloseRoute>,movement:RetainedOrderedMapInsertProgress,
 }
-
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub struct RetainedOrderedMapInsertGrant {
-    pub retirement:RetainedCloneGrant,
-    pub comparison: BoundedOrdGrant,
-    pub maximum_moved_items: usize,
-    pub maximum_moved_bytes: usize,
-    pub maximum_capacity_bytes: usize,
-}
-
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub struct RetainedOrderedMapInsertProgress {
-    pub retirement:RetainedCloneProgress,
-    pub comparison: BoundedOrdProgress,
-    pub moved_items: usize,
-    pub moved_bytes: usize,
-    pub retained_capacity_bytes: usize,
-}
-
-impl RetainedOrderedMapInsertProgress {
-    pub fn fits(self, grant: RetainedOrderedMapInsertGrant) -> bool {
-        self.retirement.fits(grant.retirement) && self.comparison.fits(grant.comparison) && self.moved_items <= grant.maximum_moved_items && self.moved_bytes <= grant.maximum_moved_bytes && self.retained_capacity_bytes <= grant.maximum_capacity_bytes
-    }
-}
-
-/// 🧯 Owns one exclusive unpublished workspace through completion or bounded cancellation.
-#[derive(crate::RetireOwned)]
-#[value(crate="crate")]
-pub(super) struct InsertWorkspace<K:BoundedOrd+RetireOwned,V:RetireOwned+Sync>{pub(super) map:RetainedOrderedMap<K,V>,pub(super) key:K,pub(super) value:V}
-
-pub(super) struct InsertState<K: BoundedOrd + RetireOwned, V: RetireOwned+Sync> {
-    pub(super) map: Option<RetainedOrderedMap<K, V>>,
-    pub(super) output: Option<RetainedOrderedMap<K, V>>,
-    pub(super) key: Option<K>,
-    pub(super) value: Option<V>,
-    pub(super) lookup: RetainedOrderedMapLookupCursor<K>,
-    lookup_lease: staged_lease::StagedLease<InsertWorkspace<K,V>>,
-    pub(super) target: Option<usize>,
-    shift_page: Option<usize>,
-    old_directory: Option<Vec<Vec<(K, V)>>>,
-    new_directory: Option<Vec<Vec<(K, V)>>>,
-    directory_index: usize,
-    pub(super) phase: u8,
-    pub(super) spent: bool,
-    pub(super) closing: bool,
-    pub(super) close: RetainedCloneClose,
-}
-
-pub struct RetainedOrderedMapInsertCursor<K:BoundedOrd+RetireOwned,V:RetireOwned+Sync>{pub(super) state:std::mem::ManuallyDrop<InsertState<K,V>>}
-
-impl<K: BoundedOrd + RetireOwned, V: RetireOwned+Sync> RetainedOrderedMapInsertCursor<K, V> {
-    pub fn constructor_capacity_bytes()->usize{0}
-    pub fn constructor_copy_bytes()->usize{0}
-    pub fn admit(map:RetainedOrderedMap<K,V>,key:K,value:V,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Self,RetainedCloneProgress),(ValueError,RetainedOrderedMap<K,V>,K,V)>{let work=0;let result=(||{
-        let(lookup_lease,receipt)=(staged_lease::StagedLease::new(InsertWorkspace{map,key,value}),RetainedCloneProgress::default());let _=grant;
-        Ok((Self {state:std::mem::ManuallyDrop::new(InsertState {
-            map: None,
-            output: None,
-            key: None,
-            value: None,
-            lookup: Default::default(),
-            lookup_lease,
-            target: None,
-            shift_page: None,
-            old_directory: None,
-            new_directory: None,
-            directory_index: 0,
-            phase: 0,
-            spent: false,
-            closing: false,
-            close: Default::default(),
-        })},receipt))
-    })();crate::RetainedWorkOutcome{result,work}}
-
+/// 🧯️ Owns every unpublished page and candidate until its actual funded output or retirement.
+pub struct RetainedOrderedMapInsertCursor<K:BoundedOrd+RetireOwned,V:RetireOwned+Sync>{pub(super) state:ManuallyDrop<InsertState<K,V>>}
+impl<K:BoundedOrd+RetireOwned,V:RetireOwned+Sync> RetainedOrderedMapInsertCursor<K,V>{
+ pub fn new(map:RetainedOrderedMap<K,V>,key:K,value:V)->Self{Self{state:ManuallyDrop::new(InsertState{input:EditInput::new(map,key,Some(value)),workspace:None,lookup_result:None,map:None,output:None,key:None,value:None,target:None,shift_page:None,old_directory:None,new_directory:None,directory_index:0,phase:0,spent:false,closing:false,close:RetainedCloneClose::vacant(),close_route:None,movement:Default::default()})}}
+ fn invalid()->ValueError{ValueError::invariant("native insertion changed its original ownership")}
+ fn overflow()->ValueError{ValueError::literal(crate::ValueRefusalKind::OwnershipLimit,"native insertion extent overflow")}
+ fn fixed(bytes:usize)->crate::RetirementDemand{crate::RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()}}
+ fn quote(d:crate::RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
+ fn unpack_demand()->crate::RetirementDemand{Self::fixed(size_of::<Option<EditWorkspace<K,V>>>()+size_of::<EditWorkspace<K,V>>()+size_of::<Option<RetainedOrderedMap<K,V>>>()+size_of::<Option<K>>()+size_of::<Option<V>>()+size_of::<Option<RetainedOrderedMapLookup>>()+size_of::<Option<usize>>()+size_of::<u8>())}
+ fn prefix_demand(&self,comparison:BoundedOrdGrant,body:usize)->Result<crate::RetirementDemand,ValueError>{let s=&*self.state;if s.workspace.is_some(){Ok(Self::unpack_demand())}else if s.input.ready(){s.input.take_demand()}else{s.input.next_demand(comparison,body)}}
+ fn funded(effect:&Effect<'_>,d:crate::RetirementDemand,work:u64)->Result<bool,ValueError>{Ok(retained_clone_grant_admits(effect.grant(),d)&&effect.remaining_work_units()?>=work)}
+ pub fn birth_complete(&self)->bool{self.state.phase!=0||self.state.input.birth_complete()}
     pub fn next_advance_demands(&self, maximum_copy_bytes: usize) -> Result<RetainedOrderedMapInsertGrant, ValueError> {
         let state = &*self.state;
         let overflow = || ValueError::literal(crate::ValueRefusalKind::OwnershipLimit, "ordered-map insertion next-action extent overflow");
@@ -89,12 +40,7 @@ impl<K: BoundedOrd + RetireOwned, V: RetireOwned+Sync> RetainedOrderedMapInsertC
             return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "ordered-map insertion cannot advance after close or transfer"));
         }
         match state.phase {
-            0 => {
-                let demand = self.advance_retirement_demands(maximum_copy_bytes)?;
-                grant.retirement = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes,
-                    maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-                grant.comparison = BoundedOrdGrant { maximum_items: 1, maximum_bytes: maximum_copy_bytes.min(64) };
-            }
+            0 => {grant.comparison=BoundedOrdGrant{maximum_items:1,maximum_bytes:maximum_copy_bytes.min(64)};grant.retirement=Self::quote(self.prefix_demand(grant.comparison,maximum_copy_bytes)?);}
             1 => {
                 let map = state.map.as_ref().ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "ordered-map insertion quote has no map"))?;
                 if map.len % RETAINED_ORDERED_MAP_PAGE_CAPACITY == 0 && map.pages.len() < map.pages.capacity() {
@@ -130,60 +76,39 @@ impl<K: BoundedOrd + RetireOwned, V: RetireOwned+Sync> RetainedOrderedMapInsertC
         }
         Ok(grant)
     }
-    /// 🎟️ Reports whether the staged authority birth has finished its funded turns.
-    pub fn birth_complete(&self)->bool{self.state.lookup_lease.ready()}
-    pub fn advance_retirement_demands(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{ let state=&*self.state;
-        if state.phase!=0{return Ok(Default::default());}
-        if !state.lookup_lease.ready(){return state.lookup_lease.birth_demand();}
-        if !state.lookup.closing{return state.lookup.advance_retirement_demands(body);}
-        if !state.lookup.terminal_is_empty(){return state.lookup.close_demands(body);}
-        state.lookup_lease.next_take_demands(body)
-    }
-    pub fn advance(&mut self, grant: RetainedOrderedMapInsertGrant, effect:&mut crate::RetainedAllocationEffect<'_>) -> crate::RetainedWorkOutcome<RetainedOrderedMapInsertStep, ValueError> {let mut work=0;let result=(||{ let state=&mut *self.state;
-        if state.closing {
-            return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion cursor is closing"));
-        }
-        if state.spent {
-            return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion cursor is spent"));
-        }
-        match state.phase {
-            0 => {
-                if !state.lookup_lease.ready(){let turn=state.lookup_lease.advance_birth(effect);work+=turn.work;let retirement=turn.result?.progress();return Ok(RetainedOrderedMapInsertStep::Progress(RetainedOrderedMapInsertProgress{retirement,..Default::default()}));}
-                if state.lookup.closing{
-                    if !state.lookup.terminal_is_empty(){let step={let turn=super::bounded_ord::flatten_poll(state.lookup.close_step(&mut effect.nested(grant.retirement)));work+=turn.work;turn.result}?;return Ok(RetainedOrderedMapInsertStep::Progress(RetainedOrderedMapInsertProgress{retirement:step.progress(),..Default::default()}));}
-                    let demand=state.lookup_lease.next_take_demands(grant.retirement.maximum_copy_bytes)?;
-                    if grant.retirement.maximum_items==0||demand.copy_bytes>grant.retirement.maximum_copy_bytes||demand.capacity_bytes>grant.retirement.maximum_capacity_bytes||demand.release_bytes>grant.retirement.maximum_release_bytes||demand.depth>grant.retirement.maximum_depth{return Ok(RetainedOrderedMapInsertStep::Progress(Default::default()));}
-                    match {let turn=super::bounded_ord::flatten_poll(state.lookup_lease.take_authority(&mut effect.nested(grant.retirement)));work+=turn.work;turn.result}?{
-                        super::super::RetainedCloneSourceTake::Pending(retirement)=>return Ok(RetainedOrderedMapInsertStep::Progress(RetainedOrderedMapInsertProgress{retirement,..Default::default()})),
-                        super::super::RetainedCloneSourceTake::Ready(InsertWorkspace{map,key,value},retirement)=>{state.map=Some(map);state.key=Some(key);state.value=Some(value);match state.lookup.complete.unwrap(){RetainedOrderedMapLookup::Found(_)=>{state.phase=255;},RetainedOrderedMapLookup::Missing(ordinal)=>{state.target=Some(ordinal);state.phase=1;}}return Ok(RetainedOrderedMapInsertStep::Progress(RetainedOrderedMapInsertProgress{retirement,..Default::default()}));}
-                    }
-                }
-                let map_ref=state.lookup_lease.borrow(1,|workspace|&workspace.map);
-                let key_ref=state.lookup_lease.borrow(2,|workspace|&workspace.key);
-                let(result,comparison,retirement)={let turn=state.lookup.advance(map_ref,key_ref,grant.comparison,effect);work+=turn.work;turn.result}?;
-                if result.is_some(){state.lookup.begin_close();}
-                Ok(RetainedOrderedMapInsertStep::Progress(RetainedOrderedMapInsertProgress{comparison,retirement,..Default::default()}))
-            }
+ pub fn advance_demands(&self,body:usize,grant:RetainedOrderedMapInsertGrant)->Result<crate::RetirementDemand,ValueError>{let s=&*self.state;if s.closing||s.spent||s.close_route.is_some(){return Err(Self::invalid())}if s.phase==0{return self.prefix_demand(grant.comparison,body)}if s.phase==4||s.phase==255{return Ok(Default::default())}let plan=self.next_advance_demands(body)?;let metadata=match s.phase{1=>size_of::<Option<usize>>()+size_of::<u8>()+if plan.maximum_capacity_bytes!=0{3*size_of::<Vec<(K,V)>>()+size_of::<Option<usize>>()}else{0},2=>2*size_of::<Vec<(K,V)>>()+size_of::<Option<usize>>()+size_of::<u8>(),3=>size_of::<Vec<(K,V)>>()+size_of::<Option<K>>()+size_of::<Option<V>>()+size_of::<usize>()+2*size_of::<Option<RetainedOrderedMap<K,V>>>()+size_of::<u8>(),10=>size_of::<Option<Vec<Vec<(K,V)>>>>()+size_of::<Option<usize>>()+size_of::<u8>(),11=>size_of::<Vec<Vec<(K,V)>>>()+size_of::<Option<Vec<Vec<(K,V)>>>>()+size_of::<u8>(),12=>2*size_of::<Vec<(K,V)>>()+size_of::<Vec<Vec<(K,V)>>>()+size_of::<usize>()+size_of::<u8>(),13=>size_of::<Vec<Vec<(K,V)>>>()+size_of::<Option<Vec<Vec<(K,V)>>>>()+size_of::<usize>()+size_of::<u8>(),4|255=>0,_=>return Err(Self::invalid())};let copy_bytes=plan.maximum_moved_bytes.checked_add(metadata).and_then(|n|n.checked_add(size_of::<RetainedOrderedMapInsertProgress>())).ok_or_else(Self::overflow)?;Ok(crate::RetirementDemand{copy_bytes,capacity_bytes:plan.maximum_capacity_bytes,depth:usize::from(copy_bytes!=0||plan.maximum_capacity_bytes!=0),..Default::default()})}
+ pub fn advance_work_demand(&self,body:usize,grant:RetainedOrderedMapInsertGrant)->Result<u64,ValueError>{self.advance_demands(body,grant)?;let s=&*self.state;if s.phase==0&&!s.workspace.is_some()&&!s.input.ready(){s.input.next_work_demand(grant.comparison,body)}else{Ok(u64::from(s.phase!=4&&s.phase!=255))}}
+ pub fn advance_into<'r>(&mut self,body:usize,grant:RetainedOrderedMapInsertGrant,effect:&mut Effect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{self.advance_dispatch(body,grant,None,effect,reply,false)}
+ pub fn recover_advance_into<'r>(&mut self,body:usize,grant:RetainedOrderedMapInsertGrant,effect:&mut Effect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{self.advance_dispatch(body,grant,None,effect,reply,true)}
+ pub fn advance_original_into<'r>(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,body:usize,grant:RetainedOrderedMapInsertGrant,effect:&mut Effect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{self.advance_dispatch(body,grant,Some(original),effect,reply,false)}
+ pub fn recover_advance_original_into<'r>(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,body:usize,grant:RetainedOrderedMapInsertGrant,effect:&mut Effect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{self.advance_dispatch(body,grant,Some(original),effect,reply,true)}
+ fn advance_dispatch<'r>(&mut self,body:usize,grant:RetainedOrderedMapInsertGrant,original:Option<&mut OriginalRetirementCloseLoan<'_>>,effect:&mut Effect<'_>,reply:Reply<'r>,recover:bool)->Result<Complete<'r>,ValueError>{
+  self.state.input.validate(effect)?;if self.state.closing||self.state.spent||self.state.close_route.is_some(){return Err(Self::invalid())}if recover{if self.state.phase!=0{return Err(Self::invalid())}return self.state.input.advance_into(grant.comparison,body,original,effect,reply.progress(),true)}
+  let demand=self.advance_demands(body,grant)?;let units=self.advance_work_demand(body,grant)?;if !Self::funded(effect,demand,units)?{return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}
+  if self.state.phase==0{if !retained_clone_grant_admits(grant.retirement,demand){return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}let s=&mut*self.state;if let Some(workspace)=s.workspace.as_ref(){if workspace.value.is_none()||s.lookup_result.is_none(){return Err(Self::invalid())}if !effect.performed(1)?{return Err(Self::invalid())}let EditWorkspace{map,key,value}=s.workspace.take().expect("original insertion workspace");s.map=Some(map);s.key=Some(key);s.value=value;match s.lookup_result.take().expect("original lookup result"){RetainedOrderedMapLookup::Found(_)=>s.phase=255,RetainedOrderedMapLookup::Missing(ordinal)=>{s.target=Some(ordinal);s.phase=1;}}return Ok(reply.complete(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))))}if s.input.ready(){return s.input.take_into(&mut s.workspace,&mut s.lookup_result,effect,reply.progress())}return s.input.advance_into(grant.comparison,body,original,effect,reply.progress(),false)}
+  if self.state.phase==255{return Ok(reply.complete(Err(ValueError::literal(crate::ValueRefusalKind::InvalidValue,"retained ordered-map insertion refused a duplicate key").into())))}if self.state.phase==4{return Ok(reply.complete(Ok(RetainedCloneStep::Complete(Default::default()))))}
+  let plan=self.next_advance_demands(body)?;if plan.maximum_moved_items>grant.maximum_moved_items||plan.maximum_moved_bytes>grant.maximum_moved_bytes||plan.maximum_capacity_bytes>grant.maximum_capacity_bytes{return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}if demand.capacity_bytes!=0&&effect.actual().is_some(){return Err(Self::invalid())}if self.state.phase==3&&(self.state.key.is_none()||self.state.value.is_none()){return Err(Self::invalid())}if !effect.performed(1)?{return Err(Self::invalid())}if demand.capacity_bytes!=0{*effect.actual()=Some(0)}let result=self.move_local(grant,effect);match result{Ok(step)=>{let(domain,complete)=match step{RetainedOrderedMapInsertStep::Progress(p)=>(p,false),RetainedOrderedMapInsertStep::Complete{progress,..}=>(progress,true)};self.state.movement=domain;let p=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:domain.retained_capacity_bytes,released_bytes:0};Ok(reply.complete(Ok(if complete{RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})))},Err(error)=>{let p=RetainedCloneProgress{copied_items:1,copied_bytes:if demand.capacity_bytes!=0&&effect.actual()==&mut Some(0){size_of::<Option<usize>>()}else{demand.copy_bytes},retained_capacity_bytes:effect.actual().unwrap_or(0),..Default::default()};Ok(reply.complete(Err(error.with_retained_progress(p).into())))}}
+ }
+ fn move_local(&mut self,grant:RetainedOrderedMapInsertGrant,effect:&mut Effect<'_>)->Result<RetainedOrderedMapInsertStep,ValueError>{let state=&mut*self.state;match state.phase{
             255=>Err(ValueError::literal(crate::ValueRefusalKind::InvalidValue,"retained ordered-map insertion refused a duplicate key")),
             1 => {
-                let map = state.map.as_mut().ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion workspace is missing"))?;
+                let map = state.map.as_mut().ok_or_else(|| Self::invalid())?;
                 if map.len % RETAINED_ORDERED_MAP_PAGE_CAPACITY == 0 {
                     if map.pages.len() == map.pages.capacity() {
-                        if grant.maximum_moved_items==0{return Ok(RetainedOrderedMapInsertStep::Progress(Default::default()));}work+=1;state.phase = 10;
+                        if grant.maximum_moved_items==0{return Ok(RetainedOrderedMapInsertStep::Progress(Default::default()));}state.phase = 10;
                         return Ok(RetainedOrderedMapInsertStep::Progress(Default::default()));
                     }
-                    let capacity = RETAINED_ORDERED_MAP_PAGE_CAPACITY.checked_mul(size_of::<(K, V)>()).ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::OwnershipLimit, "retained ordered-map insertion page capacity overflow"))?;
+                    let capacity = RETAINED_ORDERED_MAP_PAGE_CAPACITY.checked_mul(size_of::<(K, V)>()).ok_or_else(Self::overflow)?;
                     let progress = RetainedOrderedMapInsertProgress { retained_capacity_bytes: capacity, ..Default::default() };
                     if !progress.fits(grant) {
                         return Ok(RetainedOrderedMapInsertStep::Progress(Default::default()));
                     }
                     let mut page = Vec::new();
-                    work+=1;page.try_reserve_exact(RETAINED_ORDERED_MAP_PAGE_CAPACITY).map_err(|_| ValueError::literal(crate::ValueRefusalKind::AllocationFailed, "retained ordered-map insertion page allocation failed"))?;
-                    let actual = page.capacity().checked_mul(size_of::<(K, V)>()).ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::OwnershipLimit, "retained ordered-map insertion page actual capacity overflow"))?;
-                    if actual > grant.maximum_capacity_bytes {
-                        return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion page allocator exceeded its admitted capacity"));
-                    }
+                    page.try_reserve_exact(RETAINED_ORDERED_MAP_PAGE_CAPACITY).map_err(|_| ValueError::literal(crate::ValueRefusalKind::AllocationFailed, "retained ordered-map insertion page allocation failed"))?;
+                    let actual = page.capacity().checked_mul(size_of::<(K, V)>()).ok_or_else(Self::overflow)?;
+                    *effect.actual()=Some(actual);
                     map.pages.push(page);
+                    if actual > grant.maximum_capacity_bytes {state.shift_page=map.pages.len().checked_sub(1);state.phase=2;return Err(Self::invalid());}
                     state.shift_page = map.pages.len().checked_sub(1);
                     state.phase = 2;
                     return Ok(RetainedOrderedMapInsertStep::Progress(RetainedOrderedMapInsertProgress { retained_capacity_bytes: actual, ..progress }));
@@ -191,57 +116,57 @@ impl<K: BoundedOrd + RetireOwned, V: RetireOwned+Sync> RetainedOrderedMapInsertC
                 if grant.maximum_moved_items == 0 {
                     return Ok(RetainedOrderedMapInsertStep::Progress(Default::default()));
                 }
-                work+=1;state.shift_page = map.pages.len().checked_sub(1);
+                state.shift_page = map.pages.len().checked_sub(1);
                 state.phase = 2;
                 Ok(RetainedOrderedMapInsertStep::Progress(RetainedOrderedMapInsertProgress::default()))
             }
             2 => {
-                let map = state.map.as_mut().ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion workspace is missing"))?;
-                let ordinal = state.target.ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion target is missing"))?;
+                let map = state.map.as_mut().ok_or_else(|| Self::invalid())?;
+                let ordinal = state.target.ok_or_else(|| Self::invalid())?;
                 let target_page = ordinal / RETAINED_ORDERED_MAP_PAGE_CAPACITY;
-                let shift_page = state.shift_page.ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion shift page is missing"))?;
+                let shift_page = state.shift_page.ok_or_else(|| Self::invalid())?;
                 if shift_page == target_page {
-                    if grant.maximum_moved_items==0{return Ok(RetainedOrderedMapInsertStep::Progress(Default::default()));}work+=1;state.phase = 3;
+                    if grant.maximum_moved_items==0{return Ok(RetainedOrderedMapInsertStep::Progress(Default::default()));}state.phase = 3;
                     return Ok(RetainedOrderedMapInsertStep::Progress(RetainedOrderedMapInsertProgress::default()));
                 }
                 let (left, right) = map.pages.split_at_mut(shift_page);
-                let previous = left.get_mut(shift_page - 1).ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion previous page is missing"))?;
-                let current = right.first_mut().ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion current page is missing"))?;
+                let previous = left.get_mut(shift_page - 1).ok_or_else(|| Self::invalid())?;
+                let current = right.first_mut().ok_or_else(|| Self::invalid())?;
                 if current.len() >= RETAINED_ORDERED_MAP_PAGE_CAPACITY {
-                    return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion shift page has no admitted slot"));
+                    return Err(Self::invalid());
                 }
-                let moved_items = current.len().checked_add(1).ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::WorkLimit, "retained ordered-map insertion move count overflow"))?;
-                let moved_bytes = moved_items.checked_mul(size_of::<(K, V)>()).ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::WorkLimit, "retained ordered-map insertion shift overflow"))?;
+                let moved_items = current.len().checked_add(1).ok_or_else(Self::overflow)?;
+                let moved_bytes = moved_items.checked_mul(size_of::<(K, V)>()).ok_or_else(Self::overflow)?;
                 let progress = RetainedOrderedMapInsertProgress { moved_items, moved_bytes, ..Default::default() };
                 if !progress.fits(grant) {
                     return Ok(RetainedOrderedMapInsertStep::Progress(Default::default()));
                 }
-                work+=1;let entry = previous.pop().ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion previous page is empty"))?;
+                let entry = previous.pop().ok_or_else(|| Self::invalid())?;
                 current.insert(0, entry);
                 state.shift_page = Some(shift_page - 1);
                 Ok(RetainedOrderedMapInsertStep::Progress(progress))
             }
             3 => {
-                let map = state.map.as_mut().ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion workspace is missing"))?;
-                let ordinal = state.target.ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion target is missing"))?;
+                let map = state.map.as_mut().ok_or_else(|| Self::invalid())?;
+                let ordinal = state.target.ok_or_else(|| Self::invalid())?;
                 let page_index = ordinal / RETAINED_ORDERED_MAP_PAGE_CAPACITY;
                 let entry_index = ordinal % RETAINED_ORDERED_MAP_PAGE_CAPACITY;
-                let page = map.pages.get_mut(page_index).ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion target page is missing"))?;
+                let page = map.pages.get_mut(page_index).ok_or_else(|| Self::invalid())?;
                 if page.len() >= RETAINED_ORDERED_MAP_PAGE_CAPACITY {
-                    return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion target page has no admitted slot"));
+                    return Err(Self::invalid());
                 }
-                let moved_items = page.len().saturating_sub(entry_index).checked_add(1).ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::WorkLimit, "retained ordered-map insertion move count overflow"))?;
-                let moved_bytes = moved_items.checked_mul(size_of::<(K, V)>()).ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::WorkLimit, "retained ordered-map insertion target shift overflow"))?;
+                let moved_items = page.len().saturating_sub(entry_index).checked_add(1).ok_or_else(Self::overflow)?;
+                let moved_bytes = moved_items.checked_mul(size_of::<(K, V)>()).ok_or_else(Self::overflow)?;
                 let progress = RetainedOrderedMapInsertProgress { moved_items, moved_bytes, ..Default::default() };
                 if !progress.fits(grant) {
                     return Ok(RetainedOrderedMapInsertStep::Progress(Default::default()));
                 }
-                let new_len = map.len.checked_add(1).ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::OwnershipLimit, "retained ordered-map insertion length overflow"))?;
-                work+=1;page.insert(
+                let new_len = map.len.checked_add(1).ok_or_else(Self::overflow)?;
+                page.insert(
                     entry_index,
                     (
-                        state.key.take().ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion key owner is missing"))?,
-                        state.value.take().ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion value owner is missing"))?,
+                        state.key.take().ok_or_else(|| Self::invalid())?,
+                        state.value.take().ok_or_else(|| Self::invalid())?,
                     ),
                 );
                 map.len = new_len;
@@ -250,24 +175,23 @@ impl<K: BoundedOrd + RetireOwned, V: RetireOwned+Sync> RetainedOrderedMapInsertC
                 Ok(RetainedOrderedMapInsertStep::Complete { ordinal, progress })
             }
             4 => Ok(RetainedOrderedMapInsertStep::Complete {
-                ordinal: state.target.ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion target is missing"))?,
+                ordinal: state.target.ok_or_else(|| Self::invalid())?,
                 progress: RetainedOrderedMapInsertProgress::default(),
             }),
             10 => {
-                let map = state.map.as_ref().ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion workspace is missing"))?;
-                let planned = map.pages.len().checked_mul(2).and_then(|value| value.checked_add(1)).ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::OwnershipLimit, "retained ordered-map directory growth overflow"))?;
-                let capacity = planned.checked_mul(size_of::<Vec<(K, V)>>()).ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::OwnershipLimit, "retained ordered-map directory capacity overflow"))?;
+                let map = state.map.as_ref().ok_or_else(|| Self::invalid())?;
+                let planned = map.pages.len().checked_mul(2).and_then(|value| value.checked_add(1)).ok_or_else(Self::overflow)?;
+                let capacity = planned.checked_mul(size_of::<Vec<(K, V)>>()).ok_or_else(Self::overflow)?;
                 let progress = RetainedOrderedMapInsertProgress { retained_capacity_bytes: capacity, ..Default::default() };
                 if !progress.fits(grant) {
                     return Ok(RetainedOrderedMapInsertStep::Progress(Default::default()));
                 }
                 let mut directory = Vec::new();
-                work+=1;directory.try_reserve_exact(planned).map_err(|_| ValueError::literal(crate::ValueRefusalKind::AllocationFailed, "retained ordered-map directory growth allocation failed"))?;
-                let actual = directory.capacity().checked_mul(size_of::<Vec<(K, V)>>()).ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::OwnershipLimit, "retained ordered-map directory actual capacity overflow"))?;
-                if actual > grant.maximum_capacity_bytes {
-                    return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map directory allocator exceeded its admitted capacity"));
-                }
-                state.new_directory = Some(directory);
+                directory.try_reserve_exact(planned).map_err(|_| ValueError::literal(crate::ValueRefusalKind::AllocationFailed, "retained ordered-map directory growth allocation failed"))?;
+                let actual = directory.capacity().checked_mul(size_of::<Vec<(K, V)>>()).ok_or_else(Self::overflow)?;
+                *effect.actual()=Some(actual);
+                    state.new_directory=Some(directory);
+                if actual>grant.maximum_capacity_bytes{state.phase=11;return Err(Self::invalid());}
                 state.phase = 11;
                 Ok(RetainedOrderedMapInsertStep::Progress(RetainedOrderedMapInsertProgress { retained_capacity_bytes: actual, ..progress }))
             }
@@ -276,22 +200,22 @@ impl<K: BoundedOrd + RetireOwned, V: RetireOwned+Sync> RetainedOrderedMapInsertC
                 if !progress.fits(grant) {
                     return Ok(RetainedOrderedMapInsertStep::Progress(Default::default()));
                 }
-                let map = state.map.as_mut().ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion workspace is missing"))?;
-                work+=1;state.old_directory = Some(std::mem::take(&mut map.pages));
+                let map = state.map.as_mut().ok_or_else(|| Self::invalid())?;
+                state.old_directory = Some(std::mem::take(&mut map.pages));
                 state.phase = 12;
                 Ok(RetainedOrderedMapInsertStep::Progress(progress))
             }
             12 => {
-                let old = state.old_directory.as_mut().ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map old directory is missing"))?;
+                let old = state.old_directory.as_mut().ok_or_else(|| Self::invalid())?;
                 if state.directory_index == old.len() {
-                    if grant.maximum_moved_items==0{return Ok(RetainedOrderedMapInsertStep::Progress(Default::default()));}work+=1;state.phase = 13;
+                    if grant.maximum_moved_items==0{return Ok(RetainedOrderedMapInsertStep::Progress(Default::default()));}state.phase = 13;
                     return Ok(RetainedOrderedMapInsertStep::Progress(Default::default()));
                 }
                 let progress = RetainedOrderedMapInsertProgress { moved_items: 1, moved_bytes: size_of::<Vec<(K, V)>>(), ..Default::default() };
                 if !progress.fits(grant) {
                     return Ok(RetainedOrderedMapInsertStep::Progress(Default::default()));
                 }
-                work+=1;state.new_directory.as_mut().ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map new directory is missing"))?.push(std::mem::take(&mut old[state.directory_index]));
+                state.new_directory.as_mut().ok_or_else(|| Self::invalid())?.push(std::mem::take(&mut old[state.directory_index]));
                 state.directory_index += 1;
                 Ok(RetainedOrderedMapInsertStep::Progress(progress))
             }
@@ -300,88 +224,43 @@ impl<K: BoundedOrd + RetireOwned, V: RetireOwned+Sync> RetainedOrderedMapInsertC
                 if !progress.fits(grant) {
                     return Ok(RetainedOrderedMapInsertStep::Progress(Default::default()));
                 }
-                work+=1;state.map.as_mut().ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion workspace is missing"))?.pages =
-                    state.new_directory.take().ok_or_else(|| ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map relocated directory is missing"))?;
+                state.map.as_mut().ok_or_else(|| Self::invalid())?.pages =
+                    state.new_directory.take().ok_or_else(|| Self::invalid())?;
                 state.directory_index = 0;
                 state.phase = 1;
                 Ok(RetainedOrderedMapInsertStep::Progress(progress))
             }
-            _ => Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained ordered-map insertion state is invalid")),
+            _ => Err(Self::invalid()),
         }
-    })();crate::RetainedWorkOutcome{result,work}}
-
-    pub fn output_ready(&self)->bool{let state=&*self.state;state.output.is_some()&&!state.closing&&!state.spent}
-    pub fn refused_workspace_ready(&self)->bool{let state=&*self.state;state.phase==255&&state.map.is_some()&&!state.closing&&!state.spent}
-    pub fn take(&mut self) -> Option<RetainedOrderedMap<K, V>> { let state=&mut *self.state;
-        let output = state.output.take();
-        if output.is_some() {
-            state.spent = true;
-        }
-        output
-    }
-
-    pub fn take_refused_workspace(&mut self) -> Option<RetainedOrderedMap<K, V>> { let state=&mut *self.state;
-        if state.phase != 255 {
-            return None;
-        }
-        let map = state.map.take();
-        if map.is_some() {
-            state.spent = true;
-        }
-        map
-    }
-
-    pub fn begin_close(&mut self) -> bool { let state=&mut *self.state;
-        if state.closing {
-            return false;
-        }
-        state.closing = true;
-        true
-    }
-
-    pub(super) fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,ValueError> {
-        let state=&*self.state;
-        if !state.lookup.terminal_is_empty(){return state.lookup.close_demands(body);}
-        if !state.close.is_empty(){return state.close.next_owner_demands::<K>(false,&None,body);}
-        if state.key.is_some(){return state.close.next_owner_demands::<K>(true,&None,body);}
-        if state.value.is_some(){return state.close.next_owner_demands::<V>(true,&None,body);}
-        if state.old_directory.is_some()||state.new_directory.is_some(){return state.close.next_owner_demands::<Vec<Vec<(K,V)>>>(true,&None,body);}
-        if state.map.is_some()||state.output.is_some(){return state.close.next_owner_demands::<RetainedOrderedMap<K,V>>(true,&None,body);}
-        state.lookup_lease.next_close_demand(body)
-    }
-    pub(super) fn close_work_demand(&self,body:usize)->Result<u64,ValueError> {
-        let state=&*self.state;
-        if !state.lookup.terminal_is_empty(){return state.lookup.close_work_demand(body);}
-        if !state.close.is_empty(){return state.close.next_owner_work::<K>(false,&None,body);}
-        if state.key.is_some(){return state.close.next_owner_work::<K>(true,&None,body);}
-        if state.value.is_some(){return state.close.next_owner_work::<V>(true,&None,body);}
-        if state.old_directory.is_some()||state.new_directory.is_some(){return state.close.next_owner_work::<Vec<Vec<(K,V)>>>(true,&None,body);}
-        if state.map.is_some()||state.output.is_some(){return state.close.next_owner_work::<RetainedOrderedMap<K,V>>(true,&None,body);}
-        state.lookup_lease.next_close_work_demand(body)
-    }
-    pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
-    pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
-    pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.release_bytes)}
-    pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.depth)}
-    pub fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll {let grant=effect.grant();let mut work=0;let result=(||->Result<RetainedCloneStep,crate::RetirementPollExit>{
-        if !retained_clone_grant_admits(grant,self.close_demands(grant.maximum_copy_bytes)?) {return Ok(RetainedCloneStep::Progress(Default::default()));}
-        let state=&mut *self.state;
-        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if !state.closing { return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "ordered-map insertion must begin close before retiring ownership").into()); }
-        if !state.lookup.terminal_is_empty(){state.lookup.begin_close();return {let turn=crate::RetirementPollExit::settled(state.lookup.close_step(&mut effect.nested(grant)))?;work+=turn.work;turn.result.map_err(Into::into)};}
-        if !state.close.is_empty() { return {let turn=crate::RetirementPollExit::settled(state.close.step_granted(effect))?;work+=turn.work;turn.result.map_err(Into::into)}; }
-        if let Some(step) = {let turn=state.close.begin_granted(&mut state.key,effect);work+=turn.work;turn.result}? { return Ok(step); }
-        if let Some(step) = {let turn=state.close.begin_granted(&mut state.value,effect);work+=turn.work;turn.result}? { return Ok(step); }
-        if let Some(step) = {let turn=state.close.begin_granted(&mut state.old_directory,effect);work+=turn.work;turn.result}? { return Ok(step); }
-        if let Some(step) = {let turn=state.close.begin_granted(&mut state.new_directory,effect);work+=turn.work;turn.result}? { return Ok(step); }
-        if let Some(step) = {let turn=state.close.begin_granted(&mut state.map,effect);work+=turn.work;turn.result}? { return Ok(step); }
-        if let Some(step) = {let turn=state.close.begin_granted(&mut state.output,effect);work+=turn.work;turn.result}? { return Ok(step); }
-        {let turn=crate::RetirementPollExit::settled(state.lookup_lease.close_step(&mut effect.nested(grant)))?;work+=turn.work;turn.result.map_err(Into::into)}
-    })();crate::RetirementPollExit::finish(result,work)}
-
-    pub fn terminal_is_empty(&self) -> bool { let state=&*self.state;
-        state.lookup.terminal_is_empty()&&state.lookup_lease.terminal_is_empty()&&state.closing && state.key.is_none() && state.value.is_none() && state.old_directory.is_none() && state.new_directory.is_none() && state.map.is_none() && state.output.is_none() && state.close.is_empty()
-    }
 }
-
-impl<K:BoundedOrd+RetireOwned,V:RetireOwned+Sync> Drop for RetainedOrderedMapInsertCursor<K,V>{fn drop(&mut self){if self.terminal_is_empty(){unsafe{std::mem::ManuallyDrop::drop(&mut self.state)}}else if !std::thread::panicking(){panic!("insertion original owners require caller-funded closure")}}}
+ pub fn output_ready(&self)->bool{self.state.output.is_some()&&!self.state.closing&&!self.state.spent}
+ pub fn refused_workspace_ready(&self)->bool{self.state.phase==255&&self.state.map.is_some()&&!self.state.closing&&!self.state.spent}
+ pub fn inserted_ordinal(&self)->Option<usize>{(self.state.phase==4).then_some(self.state.target).flatten()}
+ #[cfg(test)]
+ pub(super) fn original_key(&self)->Option<&K>{self.state.input.original_key()}
+ pub fn comparison_progress(&self)->BoundedOrdProgress{self.state.input.comparison_progress()}
+ pub fn movement_progress(&self)->RetainedOrderedMapInsertProgress{self.state.movement}
+ pub fn take_output_demand(&self)->crate::RetirementDemand{Self::fixed(2*size_of::<Option<RetainedOrderedMap<K,V>>>()+size_of::<bool>())}
+ pub fn take_output_work_demand(&self)->u64{1}
+ pub fn take_into<'r>(&mut self,output:&mut Option<RetainedOrderedMap<K,V>>,effect:&mut Effect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{self.take_dispatch(output,effect,reply,false)}
+ pub fn take_refused_workspace_into<'r>(&mut self,output:&mut Option<RetainedOrderedMap<K,V>>,effect:&mut Effect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{self.take_dispatch(output,effect,reply,true)}
+ fn take_dispatch<'r>(&mut self,output:&mut Option<RetainedOrderedMap<K,V>>,effect:&mut Effect<'_>,reply:Reply<'r>,refused:bool)->Result<Complete<'r>,ValueError>{self.state.input.validate(effect)?;if output.is_some()||if refused{!self.refused_workspace_ready()}else{!self.output_ready()}{return Err(Self::invalid())}let d=self.take_output_demand();if !Self::funded(effect,d,1)?{return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}if !effect.performed(1)?{return Err(Self::invalid())}*output=if refused{self.state.map.take()}else{self.state.output.take()};self.state.spent=true;Ok(reply.complete(Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))))}
+ pub fn begin_close_demand(&self)->crate::RetirementDemand{Self::fixed(usize::from(!self.state.closing)*size_of::<bool>())}
+ pub fn begin_close_work_demand(&self)->u64{u64::from(!self.state.closing)}
+ pub fn begin_close_into<'r>(&mut self,effect:&mut Effect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{self.state.input.validate(effect)?;if self.state.close_route.is_some()||self.state.input.has_pending(){return Err(Self::invalid())}let d=self.begin_close_demand();if !Self::funded(effect,d,self.begin_close_work_demand())?{return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}if self.state.closing{return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}if !effect.performed(1)?{return Err(Self::invalid())}self.state.closing=true;Ok(reply.complete(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))))}
+ pub fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{let s=&*self.state;if let Some(route)=s.close_route{if route.key.body!=body{return Err(Self::invalid())}return Ok(route.demand)}if !s.closing{if s.input.has_pending(){return Err(Self::invalid())}return Ok(self.begin_close_demand())}if !s.close.is_empty(){return s.close.next_owner_demands::<K>(false,&None,body)}if s.lookup_result.is_some(){return Ok(Self::fixed(size_of::<Option<RetainedOrderedMapLookup>>()))}if s.workspace.is_some(){return s.close.next_owner_demands::<EditWorkspace<K,V>>(true,&None,body)}if s.key.is_some(){return s.close.next_owner_demands::<K>(true,&None,body)}if s.value.is_some(){return s.close.next_owner_demands::<V>(true,&None,body)}if s.old_directory.is_some()||s.new_directory.is_some(){return s.close.next_owner_demands::<Vec<Vec<(K,V)>>>(true,&None,body)}if s.map.is_some()||s.output.is_some(){return s.close.next_owner_demands::<RetainedOrderedMap<K,V>>(true,&None,body)}s.input.close_demand(body)}
+ pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{let s=&*self.state;if let Some(route)=s.close_route{if route.key.body!=body{return Err(Self::invalid())}return Ok(route.work)}if !s.closing{return Ok(self.begin_close_work_demand())}if !s.close.is_empty(){return s.close.next_owner_work::<K>(false,&None,body)}if s.lookup_result.is_some(){return Ok(1)}if s.workspace.is_some(){return s.close.next_owner_work::<EditWorkspace<K,V>>(true,&None,body)}if s.key.is_some(){return s.close.next_owner_work::<K>(true,&None,body)}if s.value.is_some(){return s.close.next_owner_work::<V>(true,&None,body)}if s.old_directory.is_some()||s.new_directory.is_some(){return s.close.next_owner_work::<Vec<Vec<(K,V)>>>(true,&None,body)}if s.map.is_some()||s.output.is_some(){return s.close.next_owner_work::<RetainedOrderedMap<K,V>>(true,&None,body)}s.input.close_work_demand(body)}
+ pub fn close_into<'r>(&mut self,body:usize,effect:&mut Effect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{self.close_dispatch(body,None,effect,reply,false)}
+ pub fn recover_close_into<'r>(&mut self,body:usize,effect:&mut Effect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{self.close_dispatch(body,None,effect,reply,true)}
+ pub fn close_original_into<'r>(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut Effect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{self.close_dispatch(body,Some(original),effect,reply,false)}
+ pub fn recover_close_original_into<'r>(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut Effect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{self.close_dispatch(body,Some(original),effect,reply,true)}
+ pub(super) fn close_dispatch<'r>(&mut self,body:usize,mut original:Option<&mut OriginalRetirementCloseLoan<'_>>,effect:&mut Effect<'_>,reply:Reply<'r>,recover:bool)->Result<Complete<'r>,ValueError>{
+  self.state.input.validate(effect)?;if !recover&&!self.state.closing{return self.begin_close_into(effect,reply)}if self.terminal_is_empty(){return Ok(reply.complete(Ok(RetainedCloneStep::Complete(Default::default()))))}let key=close_key(body,original.as_deref_mut(),effect,recover)?;let route=if recover{let route=self.state.close_route.ok_or_else(Self::invalid)?;if route.key!=key{return Err(Self::invalid())}route}else{if self.state.close_route.is_some(){return Err(Self::invalid())}let d=self.close_demands(body)?;let work=self.close_work_demand(body)?;if !Self::funded(effect,d,work)?{return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}let s=&mut*self.state;if s.close.is_empty()&&s.lookup_result.is_some(){if !effect.performed(1)?{return Err(Self::invalid())}s.lookup_result=None;return Ok(reply.complete(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))))}if s.close.is_empty(){macro_rules! begin{($field:ident)=>{if s.$field.is_some(){let turn=s.close.begin_granted(&mut s.$field,effect);return Ok(reply.complete(turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into)))}};}begin!(workspace);begin!(key);begin!(value);begin!(old_directory);begin!(new_directory);begin!(map);begin!(output);}CloseRoute{key,operation:u8::from(!s.close.is_empty()),demand:d,work}};
+  let s=&mut*self.state;let mut scope=reply.progress().scope(&mut s.close_route,route)?;let done=if route.operation==1{match(original,recover){(None,false)=>s.close.step_into(body,effect,scope.borrow()?),(None,true)=>s.close.recover_step_into(body,effect,scope.borrow()?),(Some(original),false)=>s.close.step_original_into(original,body,effect,scope.borrow()?),(Some(original),true)=>s.close.recover_step_original_into(original,body,effect,scope.borrow()?)}}else{s.input.close_into(body,original,effect,scope.borrow()?,recover)}?;drop(done);Ok(scope.forwarded())
+ }
+ pub fn requires_original_birth(&self)->bool{if !self.state.close.is_empty(){self.state.close.requires_original_birth()}else{self.state.input.requires_original_birth()}}
+ pub fn requires_original_control(&self)->bool{if !self.state.close.is_empty(){self.state.close.requires_original_control()}else{self.state.input.requires_original_control()}}
+ pub fn close_original_birth_step(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->crate::OriginalRetirementPoll{if !self.state.close.is_empty(){self.state.close.step_original_birth(original,grant)}else{self.state.input.original_birth_step(original,grant)}}
+ pub fn terminal_is_empty(&self)->bool{let s=&*self.state;s.closing&&s.close_route.is_none()&&s.input.terminal_is_empty()&&s.workspace.is_none()&&s.lookup_result.is_none()&&s.key.is_none()&&s.value.is_none()&&s.old_directory.is_none()&&s.new_directory.is_none()&&s.map.is_none()&&s.output.is_none()&&s.close.is_empty()}
+}
+impl<K:BoundedOrd+RetireOwned,V:RetireOwned+Sync> Drop for RetainedOrderedMapInsertCursor<K,V>{fn drop(&mut self){if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.state)}}else if !std::thread::panicking(){panic!("native insertion retains original owners")}}}

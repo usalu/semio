@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "value",
+    "deniedWork",
+    "nullWork",
+    "admitWork",
+    "releaseWork",
+    "cachedWork",
+    "stock",
+    "birthFields",
+    "slotWork",
+    "slotDenials",
+    "slotPreservesOriginal",
+    "electionWork",
+    "payloadWork"
+  ],
+  "properties": {
+    "value": {
+      "const": "Ordered owner🧱"
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "nullWork": {
+      "const": 1
+    },
+    "admitWork": {
+      "const": 4
+    },
+    "releaseWork": {
+      "const": 4
+    },
+    "cachedWork": {
+      "const": 0
+    },
+    "stock": {
+      "const": {
+        "items": 100000,
+        "copyBytes": 33554432,
+        "capacityBytes": 33554432,
+        "releaseBytes": 33554432,
+        "depth": 64,
+        "fuel": 100000,
+        "maximumTurns": 100000
+      }
+    },
+    "birthFields": {
+      "const": [
+        "sourceOption",
+        "payload",
+        "nativeStrongCounter",
+        "nativeWeakCounter",
+        "logicalAliasCounter",
+        "destinationOption"
+      ]
+    },
+    "slotWork": {
+      "const": 4
+    },
+    "slotDenials": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "depth"
+      ]
+    },
+    "slotPreservesOriginal": {
+      "const": true
+    },
+    "electionWork": {
+      "const": 3
+    },
+    "payloadWork": {
+      "const": 1
+    }
+  }
+}

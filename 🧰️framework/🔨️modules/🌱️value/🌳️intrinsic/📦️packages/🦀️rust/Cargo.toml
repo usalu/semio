@@ -21,6 +21,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value-native-slice-equality = { path="../../../📋️list/🟰️equal/📦️packages/🦀️rust" }
 semio-framework-value-paged-list = { path="../../../📋️list/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path="../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-native-decoding = { path="../../../🛬️decode/📦️packages/🦀️rust" }

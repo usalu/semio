@@ -1,0 +1,7 @@
+# Job Fixture Source Birth
+
+The independent SQLite/Ajv Source, payload and cancellation-root birth corpora describe admission denial, allocator refusal with an actual zero marker, successful backing, and separately paid publication. Their corresponding first-party Source, JobPayload and CancelToken admission owners are authored with separate original input, backing and output custody. None has yet been compiler- or native-validated.
+
+The existing OriginalJobFixtureCaller and other production callers still use the old raw clock, by-value birth and scalar work paths. Migrating them requires the same actual initiating Source/Work authority and a resident recorded-clock host; the new owners are not evidence of an end-to-end fixture. The current Source context also retains an old raw clock binding and a remaining non-clock owned-Poll close path. No compatibility wrapper or new wallet is proposed.
+
+A real initiating-Source native witness is authored for the unallocated Source branch. It builds payload and cancellation owners under the same finite Work bank, verifies a denied assembly leaves both identities in place, forces the real Source allocator to return Some(0), checks both identities and unchanged physical wallet, and pays input return and both owner teardowns. The payload and cancellation native fixtures similarly cover actual allocator refusal and backing identity. These tests have only been parsed; the retained-clone standard cut and Job-context source boundary still prevent native acceptance.

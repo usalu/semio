@@ -257,7 +257,111 @@ def compare_report(snapshot, report):
     return {"compared": compared, "maxRel": max_rel}
 
 
+IPE300 = {"heightM": 0.300, "widthM": 0.150, "tfM": 0.0107, "twM": 0.0071, "aM2": 5381e-6}
+SPEC_ROWS = {
+    "C-03": {"checks": ["en1994.5.4.1.2", "en1994.5.4.1.2.beff", "en1994.5.4.1.2.le"], "library": "anastruct (reactions of the two span beam give the zero-moment distances Le)"},
+    "C-07": {"checks": ["en1994.6.2.1.3.mrd"], "library": "scipy.optimize.brentq (plastic neutral axis of exact plate areas)"},
+    "C-09": {"checks": ["en1994.6.2.1.3.mrd", "en1994.7.2.2.stress"], "library": "sectionproperties (transformed composite section I(n))"},
+    "C-12": {"checks": ["en1994.6.2.1.3.mrd"], "library": "scipy.optimize.brentq (stress block with N_c = eta N_cf) against the linear interpolation"},
+    "C-14": {"checks": ["en1994.6.6.1.2.etamin"], "library": "scipy.optimize.brentq (eta = 0.4 root) and closed form 6.6.1.2"},
+    "C-16": {"checks": ["en1994.6.6.3.1.prd", "en1994.6.6.2.perstud"], "library": "structuralcodes.codes.ec2_2004 (fcm, Ecm) in 0.29 alpha d^2 sqrt(fck Ecm)"},
+    "C-18": {"checks": ["en1994.6.6.3.1.prd"], "library": "scipy.optimize.brentq (N_c,req from the stress-block moment)"},
+}
+
+
+def third_party() -> dict[str, float]:
+    """🎯️ Third-party cross-check of the compliance oracle quantities of the spec rows C-03, C-07, C-09, C-12, C-14, C-16 and C-18: every entry is |oracle - library| / library and must stay below the tolerance of its row (the process exits non-zero otherwise)."""
+    import warnings
+
+    from anastruct import SystemElements
+    from scipy import optimize
+    from sectionproperties.analysis import Section
+    from sectionproperties.pre import Material
+    from sectionproperties.pre.library import i_section, rectangular_section
+    from structuralcodes.codes import ec2_2004
+
+    warnings.simplefilter("ignore")
+    fyd, ys, beff, hc, fcc = 355e6, 0.100, 2.0, 0.100, 17e6
+    h, b, tf, tw = IPE300["heightM"], IPE300["widthM"], IPE300["tfM"], IPE300["twM"]
+    tw_eff = max(tw, (IPE300["aM2"] - 2 * b * tf) / (h - 2 * tf))
+    plates = [(ys, ys + tf, b), (ys + tf, ys + h - tf, tw_eff), (ys + h - tf, ys + h, b)]
+
+    def area_above(y: float) -> float:
+        return sum(max(min(y, bot) - top, 0.0) * w for top, bot, w in plates)
+
+    def first_moment_above(y: float) -> float:
+        return sum(w * (min(y, bot) ** 2 - top ** 2) / 2 for top, bot, w in plates if y > top)
+
+    total, first_total = area_above(1e9), first_moment_above(1e9)
+
+    def moment_stress_block(nc: float) -> tuple[float, float]:
+        nc = min(nc, fyd * total, fcc * beff * hc)
+        axis = optimize.brentq(lambda y: nc + fyd * (2 * area_above(y) - total), ys, ys + h, xtol=1e-14)
+        compression, tension = fyd * area_above(axis), fyd * (total - area_above(axis))
+        y_c = first_moment_above(axis) / area_above(axis) if area_above(axis) > 0 else 0.0
+        y_t = (first_total - first_moment_above(axis)) / (total - area_above(axis))
+        return tension * y_t - compression * y_c - nc * nc / (fcc * beff) / 2, nc
+
+    out = {}
+    length, load = 8.0, 10.0
+    system = SystemElements(EA=1e12, EI=1e7)
+    for i in range(16):
+        system.add_element([[length * i / 16, 0], [length * (i + 1) / 16, 0]])
+    for i in range(16):
+        system.add_element([[length + length * i / 16, 0], [length + length * (i + 1) / 16, 0]])
+    system.add_support_hinged(1)
+    system.add_support_roll(17)
+    system.add_support_roll(33)
+    system.q_load(q=-load, element_id=list(range(1, 33)))
+    system.solve()
+    sagging = 2 * abs(system.get_node_results_system(1)["Fy"]) / load
+    hogging = 2 * length - 2 * sagging
+    out["c03_le_hogging"] = rel_err(0.25 * (length + length), hogging)
+    out["c03_le_end_span_sagging_within_15pct"] = max(rel_err(0.85 * length, sagging) - 0.15, 0.0)
+    out["c03_beff"] = rel_err(effective_width_m(length, 3.0), 2 * min(length / 8, 1.5))
+    full = moment_stress_block(1e30)
+    steel = IPE300
+    out["c07_mpl_full"] = rel_err(sagging_moment(steel, fyd, ys, beff, hc, fcc, 1e30)[0], full[0])
+    for eta in (0.4, 0.7):
+        m_sb = moment_stress_block(eta * full[1])[0]
+        out[f"c12_mpl_partial_{eta}"] = rel_err(sagging_moment(steel, fyd, ys, beff, hc, fcc, eta * full[1])[0], m_sb)
+        m_a = moment_stress_block(0.0)[0]
+        assert m_sb >= m_a + eta * (full[0] - m_a) - 1e-6, "stress block must not be below the linear interpolation"
+    for fy in (235e6, 275e6, 355e6):
+        root = optimize.brentq(lambda le: 1.0 - (355.0 / (fy / 1e6)) * (0.75 - 0.03 * le) - 0.4, 0.0, 25.0)
+        out[f"c14_etamin_{int(fy / 1e6)}"] = rel_err(min_eta(root + 1e-9, fy), 0.4)
+        for le in (3.0, 8.0, 12.0, 20.0):
+            out[f"c14_etamin_{int(fy / 1e6)}_{le}"] = rel_err(min_eta(le, fy), max(1.0 - (355.0 / (fy / 1e6)) * (0.75 - 0.03 * le), 0.4))
+    for fck in (25.0, 30.0, 40.0, 50.0):
+        ecm_pa = ec2_2004.Ecm(ec2_2004.fcm(fck)) * 1e6
+        out[f"c16_ecm_{int(fck)}"] = rel_err(22e9 * ((fck + 8) / 10) ** 0.3, ecm_pa)
+        out[f"c16_prd_{int(fck)}"] = rel_err(connector_resistance_n(0.019, 0.095, fck * 1e6, 450e6, ecm_pa), min(0.8 * 450e6 * math.pi * 0.019 ** 2 / 4, 0.29 * 0.019 ** 2 * math.sqrt(fck * 1e6 * ecm_pa)) / 1.25)
+    for m_ed in (0.8 * full[0], 0.95 * full[0]):
+        nc_req = optimize.brentq(lambda nc: moment_stress_block(nc)[0] - m_ed, 0.0, full[1], xtol=1e-6)
+        out[f"c18_nreq_{round(m_ed / full[0], 2)}"] = rel_err(required_force(steel, fyd, ys, beff, hc, fcc, m_ed), nc_req)
+    for n_mod in (6.0, 15.0):
+        steel_section = i_section(d=h, b=b, t_f=tf, t_w=tw, r=0.0, n_r=2, material=Material("steel", 210e9, 0.3, 0.0, 355e6, "grey"))
+        slab = rectangular_section(d=hc, b=beff, material=Material("concrete", 210e9 / n_mod, 0.2, 0.0, 30e6, "lightblue")).shift_section(x_offset=b / 2 - beff / 2, y_offset=h)
+        joined = steel_section + slab
+        joined.create_mesh(mesh_sizes=[2e-4, 4e-3])
+        section = Section(geometry=joined, time_info=False)
+        section.calculate_geometric_properties()
+        i_library = section.get_eic()[0] / 210e9
+        a_s = 2 * b * tf + (h - 2 * tf) * tw
+        i_s = 2 * (b * tf ** 3 / 12 + b * tf * ((h - tf) / 2) ** 2) + tw * (h - 2 * tf) ** 3 / 12
+        a_c = beff * hc / n_mod
+        z_c = (a_s * h / 2 + a_c * (h + hc / 2)) / (a_s + a_c)
+        i_closed = i_s + a_s * (h / 2 - z_c) ** 2 + beff * hc ** 3 / 12 / n_mod + a_c * (h + hc / 2 - z_c) ** 2
+        out[f"c09_transformed_inertia_n{int(n_mod)}"] = rel_err(i_closed, i_library)
+    return out
+
+
 def main(argv):
+    if len(argv) >= 2 and argv[1] == "--third-party":
+        deviations = third_party()
+        worst = max(deviations.values())
+        print(json.dumps({"specRows": SPEC_ROWS, "deviations": deviations, "worst": worst}))
+        return 0 if worst <= 5e-3 else 2
     if len(argv) >= 2 and argv[1] == "--evaluate-json":
         payload = json.load(sys.stdin)
         out = compare_report(payload["snapshot"], payload["report"])

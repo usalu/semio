@@ -21,12 +21,18 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value-native-clone-engine = { path="../../../⚙️engine/📦️packages/🦀️rust" }
+semio-framework-value-clone-source-lease = { path="../../🪪️lease/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path="../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-retirement = { path="../../../../♻️retirement/📦️packages/🦀️rust" }
 semio-framework-value-shared-issuance = { path="../../../../♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust" }
+
+semio-framework-value-receiving = { path="../../../../🫴️receiving/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-value-derive = { path="../../../../✨️derive/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 semio-framework-value-testing-allocator = { path = "../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+
+semio-framework-value-testing-effect-bank = { path = "../../../../🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }

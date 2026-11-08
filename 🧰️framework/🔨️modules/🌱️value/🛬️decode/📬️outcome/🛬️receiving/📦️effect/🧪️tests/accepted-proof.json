@@ -1,0 +1,37 @@
+[
+  {
+    "sameIssuer": true,
+    "published": true,
+    "accepted": true,
+    "finishedWork": true,
+    "valid": true
+  },
+  {
+    "sameIssuer": false,
+    "published": true,
+    "accepted": true,
+    "finishedWork": true,
+    "valid": false
+  },
+  {
+    "sameIssuer": true,
+    "published": false,
+    "accepted": true,
+    "finishedWork": true,
+    "valid": false
+  },
+  {
+    "sameIssuer": true,
+    "published": true,
+    "accepted": false,
+    "finishedWork": true,
+    "valid": false
+  },
+  {
+    "sameIssuer": true,
+    "published": true,
+    "accepted": true,
+    "finishedWork": false,
+    "valid": false
+  }
+]

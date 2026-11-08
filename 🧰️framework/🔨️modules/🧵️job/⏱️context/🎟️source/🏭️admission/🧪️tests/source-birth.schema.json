@@ -1,0 +1,31 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "admitted",
+      "performed",
+      "born",
+      "original",
+      "clock"
+    ],
+    "properties": {
+      "admitted": {
+        "type": "boolean"
+      },
+      "performed": {
+        "type": "boolean"
+      },
+      "born": {
+        "type": "boolean"
+      },
+      "original": {
+        "type": "boolean"
+      },
+      "clock": {
+        "type": "boolean"
+      }
+    }
+  }
+}

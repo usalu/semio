@@ -1,15 +1,23 @@
 //! 🧬️ Captured original reads project immutable roots and retain unsupported registry bodies.
 use super::{ReadLease,ErasedReadLease};
-use crate::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::{RetireOwned,RetirementCursor,RetirementStep}};
+use crate::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneProgress,OriginalEffectReply,OriginalEffectReplyComplete,RetainedCloneStep,retained_clone_grant_admits},retirement::{RetireOwned,RetirementCursor,RetirementStep}};
 use std::mem::ManuallyDrop;
 
 pub struct OriginalReadSource<T:RetireOwned+Sync>{read:ManuallyDrop<Option<ReadLease<T>>>}
 /// 🔐️ The private capsule exposes immutable root borrowing and consuming funded transfer only.
 unsafe impl<T:RetireOwned+Sync> Sync for OriginalReadSource<T>{}
 impl<T:RetireOwned+Sync> OriginalReadSource<T>{
- pub(super) fn new(read:ReadLease<T>)->Self{Self{read:ManuallyDrop::new(Some(read))}}
+ /// 📏️ Quotes the actual input and resident Source capsule headers.
+ pub fn capture_demand()->crate::RetirementDemand{crate::RetirementDemand{copy_bytes:size_of::<Option<ReadLease<T>>>()+size_of::<Option<Self>>(),depth:1,..Default::default()}}
+ /// 🧳️ Captures the original read directly into its paid Source capsule.
+ pub fn capture_into<'r>(input:&mut Option<ReadLease<T>>,output:&mut Option<Self>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,semio_framework_value_retirement::OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,semio_framework_value_retirement::OriginalRetirementFailure>,ValueError>{let read=input.as_ref().ok_or_else(||ValueError::invariant("read Source input absent"))?;if !read.work.is_some_and(|work|work.matches_effect(effect)){return Err(ValueError::invariant("read Source changed original Work"))}if output.is_some(){return Err(ValueError::invariant("read Source output occupied"))}let demand=Self::capture_demand();if effect.remaining_work_units()?<1||!retained_clone_grant_admits(effect.grant(),demand){return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}match effect.performed(1){Ok(true)=>{},Ok(false)=>return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::WorkLimit,"read Source capture exceeded Work").into()))),Err(error)=>return Ok(reply.complete(Err(error.into())))}*output=Some(Self{read:ManuallyDrop::new(input.take())});Ok(reply.complete(Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))))}
  pub fn get(&self)->&T{self.read.as_ref().expect("original read already transferred").get()}
- pub fn return_read(&mut self,output:&mut Option<ReadLease<T>>,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{if output.is_some(){return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original read output place is occupied")),work:0}}if self.read.is_none(){return crate::RetainedWorkOutcome{result:Ok(crate::RetainedCloneStep::Complete(Default::default())),work:0}}if grant.maximum_items==0||grant.maximum_depth==0{return crate::RetainedWorkOutcome{result:Ok(crate::RetainedCloneStep::Progress(Default::default())),work:0}}*output=self.read.take();crate::RetainedWorkOutcome{result:Ok(crate::RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
+ fn original_work(&self)->Option<crate::retained_clone::OriginalWorkBindingIdentity>{self.read.as_ref().and_then(|read|read.work)}
+ fn has_root(&self)->bool{self.read.as_ref().is_some_and(|read|read.owner.is_some())}
+ /// 📏️ Quotes the original read and its caller-resident output headers.
+ pub fn return_demand()->crate::RetirementDemand{crate::RetirementDemand{copy_bytes:2*size_of::<Option<ReadLease<T>>>(),depth:1,..Default::default()}}
+ /// 📤️ Transfers the same read into the original caller slot under its Work.
+ pub fn return_read_into<'r>(&mut self,output:&mut Option<ReadLease<T>>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,semio_framework_value_retirement::OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,semio_framework_value_retirement::OriginalRetirementFailure>,ValueError>{let read=self.read.as_ref().ok_or_else(||ValueError::invariant("original read absent"))?;if !read.work.is_some_and(|work|work.matches_effect(effect)){return Err(ValueError::invariant("original read changed Work"))}if output.is_some(){return Err(ValueError::invariant("original read output occupied"))}let demand=Self::return_demand();if effect.remaining_work_units()?<1||!retained_clone_grant_admits(effect.grant(),demand){return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}match effect.performed(1){Ok(true)=>{},Ok(false)=>return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original read transfer exceeded Work").into()))),Err(error)=>return Ok(reply.complete(Err(error.into())))}*output=self.read.take();Ok(reply.complete(Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))))}
 
 }
 impl<T:RetireOwned+Sync> Drop for OriginalReadSource<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.read.is_none(),"original standalone read still requires its actual registry issuer");if self.read.is_none(){unsafe{ManuallyDrop::drop(&mut self.read);}}}}
@@ -18,26 +26,30 @@ pub struct OriginalErasedReadSource<T:RetireOwned+Sync>{read:ManuallyDrop<Option
 /// 🧷️ The original erased frame is private and never exposes mutable or raw registry custody.
 unsafe impl<T:RetireOwned+Sync> Sync for OriginalErasedReadSource<T>{}
 impl<T:RetireOwned+Sync> OriginalErasedReadSource<T>{
- pub(super) fn new(read:ErasedReadLease)->Self{Self{read:ManuallyDrop::new(Some(read)),marker:std::marker::PhantomData}}
+ /// 📏️ Quotes the actual input and resident Source capsule headers.
+ pub fn capture_demand()->crate::RetirementDemand{crate::RetirementDemand{copy_bytes:size_of::<Option<ErasedReadLease>>()+size_of::<Option<Self>>(),depth:1,..Default::default()}}
+ /// 🧳️ Captures the original read directly into its paid Source capsule.
+ pub fn capture_into<'r>(input:&mut Option<ErasedReadLease>,output:&mut Option<Self>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,semio_framework_value_retirement::OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,semio_framework_value_retirement::OriginalRetirementFailure>,ValueError>{let read=input.as_ref().ok_or_else(||ValueError::invariant("read Source input absent"))?;if read.get::<T>().is_none(){return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::InvalidValue,"read Source type does not match its original root").into())))}if !read.original_work().is_some_and(|work|work.matches_effect(effect)){return Err(ValueError::invariant("read Source changed original Work"))}if output.is_some(){return Err(ValueError::invariant("read Source output occupied"))}let demand=Self::capture_demand();if effect.remaining_work_units()?<1||!retained_clone_grant_admits(effect.grant(),demand){return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}match effect.performed(1){Ok(true)=>{},Ok(false)=>return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::WorkLimit,"read Source capture exceeded Work").into()))),Err(error)=>return Ok(reply.complete(Err(error.into())))}*output=Some(Self{read:ManuallyDrop::new(input.take()),marker:std::marker::PhantomData});Ok(reply.complete(Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))))}
  pub fn get(&self)->&T{self.read.as_ref().and_then(|read|read.get::<T>()).expect("original erased source type changed")}
- pub fn return_read(&mut self,output:&mut Option<ErasedReadLease>,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{if output.is_some(){return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original erased read output place is occupied")),work:0}}if self.read.is_none(){return crate::RetainedWorkOutcome{result:Ok(crate::RetainedCloneStep::Complete(Default::default())),work:0}}if grant.maximum_items==0||grant.maximum_depth==0{return crate::RetainedWorkOutcome{result:Ok(crate::RetainedCloneStep::Progress(Default::default())),work:0}}*output=self.read.take();crate::RetainedWorkOutcome{result:Ok(crate::RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
+ fn original_work(&self)->Option<crate::retained_clone::OriginalWorkBindingIdentity>{self.read.as_ref().and_then(|read|read.original_work())}
+ fn has_root(&self)->bool{self.read.as_ref().is_some_and(|read|read.get::<T>().is_some())}
+ /// 📏️ Quotes the original read and its caller-resident output headers.
+ pub fn return_demand()->crate::RetirementDemand{crate::RetirementDemand{copy_bytes:2*size_of::<Option<ErasedReadLease>>(),depth:1,..Default::default()}}
+ /// 📤️ Transfers the same read into the original caller slot under its Work.
+ pub fn return_read_into<'r>(&mut self,output:&mut Option<ErasedReadLease>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,semio_framework_value_retirement::OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,semio_framework_value_retirement::OriginalRetirementFailure>,ValueError>{let read=self.read.as_ref().ok_or_else(||ValueError::invariant("original read absent"))?;if !read.original_work().is_some_and(|work|work.matches_effect(effect)){return Err(ValueError::invariant("original read changed Work"))}if output.is_some(){return Err(ValueError::invariant("original read output occupied"))}let demand=Self::return_demand();if effect.remaining_work_units()?<1||!retained_clone_grant_admits(effect.grant(),demand){return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}match effect.performed(1){Ok(true)=>{},Ok(false)=>return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original read transfer exceeded Work").into()))),Err(error)=>return Ok(reply.complete(Err(error.into())))}*output=self.read.take();Ok(reply.complete(Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))))}
 
 }
 impl<T:RetireOwned+Sync> Drop for OriginalErasedReadSource<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.read.is_none(),"original erased standalone read still requires its actual registry issuer");if self.read.is_none(){unsafe{ManuallyDrop::drop(&mut self.read);}}}}
 
-#[doc(hidden)]
-pub struct Cursor<S:Send+'static>{original:ManuallyDrop<S>}
-fn unsupported()->ValueError{ValueError::literal(ValueRefusalKind::UnsupportedOwner,"standalone read registry graph still exposes raw Arc/Weak authority; original read remains retained")}
-impl<S:Send+'static> RetirementCursor for Cursor<S>{
- fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{Err(unsupported())}
- fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let _grant=effect.grant();RetirementStep::Failure(unsupported().into(),0)}
- fn terminal_is_empty(&self)->bool{false}
- fn next_work_byte_demand(&self)->Result<usize,ValueError>{Err(unsupported())}
- fn next_birth_bytes(&self,_body:usize)->Option<usize>{None}
- fn next_close_byte_demand(&self)->Option<usize>{None}
- fn next_depth_demand(&self)->Result<usize,ValueError>{Err(unsupported())}
- fn terminal_release_bytes(&self)->Option<usize>{None}
-}
-impl<S:Send+'static> Drop for Cursor<S>{fn drop(&mut self){assert!(std::thread::panicking(),"original standalone read cursor remains retained until its issuer is available");}}
-impl<T:RetireOwned+Sync> RetireOwned for OriginalReadSource<T>{type RetirementCursor=Cursor<Self>;fn retirement_seed(self)->Self::RetirementCursor{Cursor{original:ManuallyDrop::new(self)}}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Cursor<Self>>())}fn controlled_retirement_supported()->bool{true}}
-impl<T:RetireOwned+Sync> RetireOwned for OriginalErasedReadSource<T>{type RetirementCursor=Cursor<Self>;fn retirement_seed(self)->Self::RetirementCursor{Cursor{original:ManuallyDrop::new(self)}}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Cursor<Self>>())}fn controlled_retirement_supported()->bool{true}}
+macro_rules! original_read_projection{($source:ident)=>{impl<T:RetireOwned+Sync> crate::retained_clone::OriginalSourceProjection<T> for $source<T>{
+ fn projection_work_demand(&self)->Result<u64,ValueError>{Ok(1)}
+ fn project_source<'reply,'source>(&'source self,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalProjectionReply<'reply,'source,T>)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'reply,std::ptr::NonNull<T>,ValueError>,ValueError>{if !self.has_root()||!self.original_work().is_some_and(|work|work.matches_effect(effect)){return Err(ValueError::invariant("read projection changed original Work or root"))}if effect.remaining_work_units()?<1{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"read projection lacks original Work"))}match effect.performed(1){Ok(true)=>{},Ok(false)=>return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::WorkLimit,"read projection exceeded its original work")))),Err(error)=>return Ok(reply.complete(Err(error)))}Ok(reply.complete(Ok(self.get())))}
+ fn recover_source_projection<'reply,'source>(&'source self,_:&mut crate::RetainedAllocationEffect<'_>,reply:crate::retained_clone::OriginalProjectionReply<'reply,'source,T>)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'reply,std::ptr::NonNull<T>,ValueError>,ValueError>{Ok(reply.pending())}
+}}}
+original_read_projection!(OriginalReadSource);
+original_read_projection!(OriginalErasedReadSource);
+
+#[path="♻️cursor/🦀️.rs"] mod cursor;
+pub use cursor::Cursor;
+impl<T:RetireOwned+Sync> RetireOwned for OriginalReadSource<T>{type RetirementCursor=Cursor<Self>;fn retirement_seed(self)->Self::RetirementCursor{Cursor::new(self)}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Cursor<Self>>())}fn controlled_retirement_supported()->bool{true}}
+impl<T:RetireOwned+Sync> RetireOwned for OriginalErasedReadSource<T>{type RetirementCursor=Cursor<Self>;fn retirement_seed(self)->Self::RetirementCursor{Cursor::new(self)}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Cursor<Self>>())}fn controlled_retirement_supported()->bool{true}}

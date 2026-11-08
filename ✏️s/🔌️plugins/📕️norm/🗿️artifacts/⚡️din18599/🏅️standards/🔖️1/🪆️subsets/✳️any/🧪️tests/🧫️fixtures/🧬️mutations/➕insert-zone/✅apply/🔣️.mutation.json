@@ -1,0 +1,17 @@
+{
+  "mutation": "insertzone",
+  "index": 1,
+  "zone": {
+    "id": "zone-extra",
+    "labelEn": "Extra",
+    "labelDe": "Zusatz",
+    "usageProfile": "WFH",
+    "areaM2": 140.0,
+    "volumeM3": 364.0,
+    "thetaIHeatC": 20.0,
+    "thetaICoolC": 26.0,
+    "occupants": 4,
+    "internalGainsWM2": 3.5,
+    "lightingPowerWM2": 6.0
+  }
+}

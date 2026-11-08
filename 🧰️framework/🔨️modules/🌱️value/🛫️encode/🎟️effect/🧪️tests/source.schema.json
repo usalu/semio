@@ -1,0 +1,106 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "work",
+    "text",
+    "cases",
+    "deniedItems",
+    "producerBeforeCheckpoint",
+    "replyWork",
+    "idleReplyCancel"
+  ],
+  "properties": {
+    "work": {
+      "const": 5
+    },
+    "text": {
+      "const": "hello"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mode",
+          "result",
+          "checkpointCalls",
+          "checkpointRecoveries",
+          "producerCalls",
+          "producerRecoveries",
+          "partialWork",
+          "retryCanceledReply"
+        ],
+        "properties": {
+          "mode": {
+            "enum": [
+              "complete",
+              "checkpointPending",
+              "checkpointUnwind",
+              "quoteUnwind",
+              "producerUnwind",
+              "producerPending",
+              "replyPostUnwind",
+              "replyCheckpointCancel",
+              "checkpointCancel",
+              "checkpointRefusal"
+            ]
+          },
+          "result": {
+            "enum": [
+              "ready",
+              "canceled",
+              "refused"
+            ]
+          },
+          "checkpointCalls": {
+            "const": 1
+          },
+          "checkpointRecoveries": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "producerCalls": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "producerRecoveries": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "partialWork": {
+            "type": "array",
+            "minItems": 0,
+            "maxItems": 2,
+            "items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            }
+          },
+          "retryCanceledReply": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "deniedItems": {
+      "const": 0
+    },
+    "producerBeforeCheckpoint": {
+      "const": "refused"
+    },
+    "replyWork": {
+      "const": 1
+    },
+    "idleReplyCancel": {
+      "const": true
+    }
+  }
+}

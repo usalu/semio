@@ -1,0 +1,100 @@
+{
+  "value": 73,
+  "kinds": [
+    "sealed",
+    "issued"
+  ],
+  "events": [
+    "capture",
+    "birth",
+    "publication",
+    "settle",
+    "take",
+    "closeAuthority",
+    "clearProducer"
+  ],
+  "custody": {
+    "replacementAccepted": false,
+    "outputBeforeSettlement": false,
+    "sourceChangesAccepted": false
+  },
+  "work": {
+    "capture": 2,
+    "take": 1,
+    "clearSealedBirth": 1,
+    "clearIssuedBirth": 1,
+    "issuedBirth": 3,
+    "authorityReturn": 1,
+    "producerClear": 1
+  },
+  "stock": {
+    "items": 128,
+    "copyBytes": 65536,
+    "capacityBytes": 65536,
+    "releaseBytes": 65536,
+    "depth": 64,
+    "fuel": 256
+  },
+  "cancellation": {
+    "inputReturned": 73,
+    "unpublished": true,
+    "retainedBytesReleased": true
+  },
+  "sourceBinding": {
+    "advance": false,
+    "authorityReturn": false,
+    "producerClear": false
+  },
+  "frame": {
+    "ledgerIdentityPreserved": true,
+    "pendingAfterUnwind": true,
+    "pendingAfterRecovery": false,
+    "capacityReplayed": false,
+    "recipientIdentityPreserved": true,
+    "foreignRecipientAccepted": false,
+    "boundPlainDecodeAccepted": false,
+    "boundReceiptExtractionAccepted": false
+  },
+  "admission": {
+    "unboundAccepted": false,
+    "deniedBirth": false,
+    "deniedWork": 0
+  },
+  "advanceReply": {
+    "retained": true,
+    "transferWork": 1,
+    "copy": "completeNativeOutcome",
+    "sameOwner": true,
+    "outputBeforeTransfer": false,
+    "refusals": [
+      "work",
+      "copy",
+      "foreignSource"
+    ],
+    "receiveCallsAfterRecovery": 1
+  },
+  "workBinding": {
+    "advance": false,
+    "take": false,
+    "authorityReturn": false,
+    "producerClear": false,
+    "deniedWork": 0
+  },
+  "sparseSuccess": {
+    "maximumCopyBytes": 4096,
+    "preservesIdentity": true,
+    "zeroWorkMutation": false,
+    "markerBlocksOutput": true,
+    "paidMarkerClose": true
+  },
+  "vacantSeed": {
+    "authority": false,
+    "allocationBytes": 0,
+    "input": false
+  },
+  "capturedClose": {
+    "sameSource": true,
+    "publicationAfterPhysicalPost": true,
+    "replay": false
+  }
+}

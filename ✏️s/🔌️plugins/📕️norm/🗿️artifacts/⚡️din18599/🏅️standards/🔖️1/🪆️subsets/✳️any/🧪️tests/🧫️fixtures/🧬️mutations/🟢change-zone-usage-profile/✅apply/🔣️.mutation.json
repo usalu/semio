@@ -1,0 +1,5 @@
+{
+  "mutation": "changezoneusageprofile",
+  "zoneId": "zone-living",
+  "newUsageProfile": "Office"
+}

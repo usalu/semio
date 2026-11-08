@@ -1,5 +1,5 @@
 {
-  "schemaBytes": 16943,
+  "schemaBytes": 18215,
   "tableWidths": {
     "en1999_bolt_group": 19,
     "en1999_cold_formed_sheet": 15,
@@ -8,6 +8,7 @@
     "en1999_document": 3,
     "en1999_fatigue_category": 17,
     "en1999_fatigue_detail": 21,
+    "en1999_fire_insulation": 17,
     "en1999_fire_scenario": 11,
     "en1999_material": 6,
     "en1999_member": 33,
@@ -19,6 +20,7 @@
     "en1999_section": 20,
     "en1999_section_vertex": 13,
     "en1999_sheet_action": 34,
+    "en1999_sheet_profile": 17,
     "en1999_shell": 16,
     "en1999_shell_action": 34,
     "en1999_transverse_stiffener": 15,
@@ -29,7 +31,7 @@
     {
       "id": "full",
       "rows": 26,
-      "valueBytes": 3843
+      "valueBytes": 3813
     },
     {
       "id": "emptyCollections",

@@ -49,4 +49,4 @@ pub use publication_root::{RetainedPublicationDecision,RetainedPublicationRoot};
 pub use semio_framework_value_original_slot::initialization;
 pub use semio_framework_value_intrinsic::native_decoding::OriginalFloatWord;
 
-pub use semio_framework_value_equality::{OriginalValueEquality,ValueEqualityStep};
+pub use semio_framework_value_equality::{OriginalValueEquality};

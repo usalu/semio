@@ -57,6 +57,8 @@ pub struct OriginalWorkActionProof{action:OriginalWorkActionReservation}
 impl OriginalWorkActionProof{
  pub fn action_identity(&self)->OriginalWorkActionIdentity{self.action.identity}
  pub fn actual_work(&self)->u128{self.action.observed.expect("committed original action")}
+ /// 🏁️ Observes whether this same original proof has returned its live authority.
+ pub fn is_finished(&self)->bool{!self.action.live}
  pub fn reserved_work(&self)->u64{self.action.reserved}
 }
 /// 🏛️ A real caller-owned issuer mints actions and consumes their exact returned authority.
@@ -85,6 +87,10 @@ impl OriginalWorkActionIssuer{
   let Some(committed)=self.committed.checked_add(1)else{return Err((refused(),action))};let admitted=actual<=u128::from(action.reserved);self.reserved-=1;self.committed=committed;*output=Some(OriginalWorkActionProof{action});Ok(admitted)
  }
  pub fn validates(&self,scope:&OriginalWorkScope,proof:&OriginalWorkActionProof,actual:u128)->bool{proof.action.live&&proof.action.identity.issuer==self.identity&&proof.action.identity.scope==scope.identity&&proof.action.identity.serial<self.next_action&&proof.action.observed==Some(actual)&&self.committed!=0&&scope.open!=0}
+ /// 🧷️ Validates an already returned proof against its original scope and issuer.
+ pub fn validates_finished(&self,scope:&OriginalWorkScope,proof:&OriginalWorkActionProof,actual:u128)->bool{!proof.action.live&&proof.action.identity.scope==scope.identity&&proof.action.identity.issuer==self.identity&&proof.action.observed==Some(actual)}
+ /// 🏁️ Returns the original authority in place while retaining its nonclone proof.
+ pub fn finish_retained(&mut self,scope:&mut OriginalWorkScope,proof:&mut Option<OriginalWorkActionProof>)->Result<(),ValueError>{let original=proof.as_mut().ok_or_else(refused)?;if !self.validates(scope,original,original.actual_work()){return Err(refused())}self.committed-=1;scope.open-=1;original.action.live=false;Ok(())}
  pub fn finish(&mut self,scope:&mut OriginalWorkScope,proof:&mut Option<OriginalWorkActionProof>)->Result<(),ValueError>{
   let Some(original)=proof.as_ref()else{return Ok(())};if !self.validates(scope,original,original.actual_work()){return Err(refused())}let mut original=proof.take().expect("validated original proof");self.committed-=1;scope.open-=1;original.action.live=false;Ok(())
  }
@@ -101,4 +107,13 @@ pub use loan::{OriginalWorkAuthority,OriginalWorkRecipient,OriginalWorkLoan,Orig
 
 #[path="⚙️operation/🦀️.rs"]
 mod operation;
-pub use operation::{OriginalWork,OriginalWorkState,OriginalWorkTurn,OriginalWorkPerformedReceipt,OriginalWorkPerformedIdentity,OriginalWorkSink};
+pub use operation::{OriginalWork,OriginalWorkState,OriginalWorkTurn,OriginalWorkPerformedReceipt,OriginalWorkPerformedIdentity,OriginalWorkSink,OriginalWorkLender,OriginalWorkLenderLoan};
+#[path="🫴️borrow/🦀️.rs"]mod borrowed;
+pub use borrowed::{OriginalWorkBindingIdentity,OriginalWorkBorrow,OriginalWorkPerformedScope};
+
+#[cfg(test)]#[path="🫴️borrow/🧪️tests/🦀️.rs"]mod borrowed_work_tests;
+
+pub(crate) fn authority_birth_demand<P,R>()->Result<crate::RetirementDemand,crate::ValueError>{let copy_bytes=std::mem::size_of::<Option<P>>().checked_add(std::mem::size_of::<Option<R>>()).ok_or_else(||crate::ValueError::invariant("original authority birth extent overflow"))?;Ok(crate::RetirementDemand{copy_bytes,depth:1,..Default::default()})}
+pub(crate) fn paid_authority_birth<P,I,R>(input:&mut Option<P>,output:&mut Option<R>,effect:&mut crate::RetainedAllocationEffect<'_>,mint:fn()->I,assemble:fn(I,P)->R)->crate::RetainedWorkOutcome<Option<crate::RetainedCloneProgress>,crate::ValueError>{let fail=|error|crate::RetainedWorkOutcome{result:Err(error),work:0};if output.is_some(){return fail(crate::ValueError::invariant("original authority output is occupied"))}if input.is_none(){return crate::RetainedWorkOutcome{result:Ok(None),work:0}}let demand=match authority_birth_demand::<P,R>(){Ok(value)=>value,Err(error)=>return fail(error)};let remaining=match effect.remaining_work_units(){Ok(value)=>value,Err(error)=>return fail(error)};if remaining==0||!crate::retained_clone_grant_admits(effect.grant(),demand){return crate::RetainedWorkOutcome{result:Ok(None),work:0}}match effect.performed(1){Ok(true)=>{},Ok(false)=>return crate::RetainedWorkOutcome{result:Err(crate::ValueError::literal(crate::ValueRefusalKind::WorkLimit,"original authority birth exceeded its Work grant")),work:1},Err(error)=>return fail(error)}let issuer=mint();let recipient=input.take().expect("validated original producer remains resident");*output=Some(assemble(issuer,recipient));crate::RetainedWorkOutcome{result:Ok(Some(crate::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}}
+
+pub(crate) fn paid_authority_return<P,R>(input:&mut Option<R>,output:&mut Option<P>,effect:&mut crate::RetainedAllocationEffect<'_>,extract:fn(R)->Result<P,R>)->crate::RetainedWorkOutcome<Option<crate::RetainedCloneProgress>,crate::ValueError>{let fail=|error|crate::RetainedWorkOutcome{result:Err(error),work:0};if output.is_some(){return fail(crate::ValueError::invariant("original producer return slot is occupied"))}if input.is_none(){return crate::RetainedWorkOutcome{result:Ok(None),work:0}}let demand=match authority_birth_demand::<P,R>(){Ok(value)=>value,Err(error)=>return fail(error)};let remaining=match effect.remaining_work_units(){Ok(value)=>value,Err(error)=>return fail(error)};if remaining==0||!crate::retained_clone_grant_admits(effect.grant(),demand){return crate::RetainedWorkOutcome{result:Ok(None),work:0}}match effect.performed(1){Ok(true)=>{},Ok(false)=>return crate::RetainedWorkOutcome{result:Err(crate::ValueError::literal(crate::ValueRefusalKind::WorkLimit,"original authority return exceeded its Work grant")),work:1},Err(error)=>return fail(error)}let authority=input.take().expect("validated original authority remains resident");match extract(authority){Ok(recipient)=>{*output=Some(recipient);crate::RetainedWorkOutcome{result:Ok(Some(crate::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}},Err(authority)=>{*input=Some(authority);crate::RetainedWorkOutcome{result:Err(crate::ValueError::invariant("original authority changed during return")),work:1}}}}

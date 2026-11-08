@@ -1,0 +1,37 @@
+{
+  "states": [
+    {
+      "phase": "pending",
+      "child": true,
+      "output": false,
+      "reply": false,
+      "source": "original"
+    },
+    {
+      "phase": "recorded",
+      "child": true,
+      "output": false,
+      "reply": true,
+      "source": "original"
+    },
+    {
+      "phase": "denied",
+      "child": true,
+      "output": false,
+      "reply": true,
+      "source": "original"
+    },
+    {
+      "phase": "transferred",
+      "child": true,
+      "output": true,
+      "reply": false,
+      "source": "original"
+    }
+  ],
+  "failure": {
+    "message": "original child refusal",
+    "copied": 7
+  },
+  "value": "hello β"
+}

@@ -13,6 +13,7 @@ type Vdi3805ManufacturerFilePatch {
 type Vdi3805ProductsPatch {
   title: [LocalizedText!]
   configuration: Configuration
+  records: [NativeRecord!]
 }
 
 type Vdi3805ProductsRemoved {

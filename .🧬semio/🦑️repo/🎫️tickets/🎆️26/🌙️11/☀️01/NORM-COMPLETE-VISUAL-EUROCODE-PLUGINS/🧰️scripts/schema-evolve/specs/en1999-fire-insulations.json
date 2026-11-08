@@ -27,8 +27,7 @@
           "de": "Brandszenario"
         },
         "doc": "🔗 Id of the fire scenario whose member is protected.",
-        "sample": "fire-1",
-        "settable": false
+        "sample": "fire-1"
       },
       {
         "name": "thickness",

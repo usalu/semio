@@ -1,0 +1,32 @@
+{
+  "maximumTurns": 128,
+  "maximumEvents": 512,
+  "maximumItems": 1,
+  "maximumCopyBytes": 4096,
+  "maximumWork": 16,
+  "loanCalls": 1,
+  "stock": {
+    "items": 512,
+    "copyBytes": 2097152,
+    "capacityBytes": 65536,
+    "releaseBytes": 65536,
+    "depth": 64,
+    "fuel": 8192
+  },
+  "loanRecovers": 1,
+  "ackWork": 1,
+  "deniedAckWork": 0,
+  "ackCalls": 1,
+  "ackRecovers": 0,
+  "actorClosePosts": 2,
+  "actorVisibleBeforePost": false,
+  "actorRefusalMessage": "original acknowledgement Source refusal",
+  "actorRefusalRetirements": 1,
+  "actorPayoutRefusalMessage": "independent acknowledgement payout refusal",
+  "foreignIdentityMatch": false,
+  "sameIdentityAfterAck": true,
+  "sameIdentityAfterRetire": false,
+  "identityDeniedWork": 0,
+  "bindingCancelPosts": 1,
+  "foreignWorkAccepted": false
+}

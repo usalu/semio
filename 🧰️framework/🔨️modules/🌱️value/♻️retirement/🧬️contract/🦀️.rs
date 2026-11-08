@@ -1,6 +1,13 @@
 //! ♻️ Neutral retained-owner retirement and typed factories.
 pub use semio_framework_value_control_contract::{ValueError,ValueRefusalKind,RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
-pub use semio_framework_value_control_contract::{OriginalFailureStorageBirth,OriginalFailureStorageBirthPhase,OriginalFailureStorageStep,OriginalFailureFunding,refill_original_failure_storage,NativeAllocationRefusal,RetirementDemand,RetainedWorkOutcome,RetainedWorkPoll,OriginalRetirementFailure,OriginalFailureStorage};
+pub use semio_framework_value_control_contract::{NativeAllocationRefusal,RetirementDemand,RetainedWorkOutcome,RetainedWorkPoll};
+
+pub use semio_framework_value_control_contract::{NativeAllocationRequest,NativeAllocationBudget,NativeAllocationEvent,NativeAllocationIdentity,NativeAllocationRefusalHandle,NativeAllocationRefusalVault,OriginalWorkActionIdentity,OriginalWorkActionProof,OriginalWorkState,OriginalWork,OriginalWorkBorrow,OriginalWorkAuthority,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete,OriginalWorkPartialCheck,OriginalWorkPartialCheckComplete,OriginalWorkPerformedReceipt,OriginalWorkPartialOutcome,OriginalSourceTurnIdentity,OriginalSourceTurnIssuer,OriginalSourceTurn,OriginalEffectBirthContext,retained_clone_grant_admits};
+#[path="♻️failure/🦀️.rs"]mod original_failure;
+pub use original_failure::{forward_original_value_reply,original_refusal_transfer_demand,transfer_original_refusal,OriginalFailureStorageBirth,OriginalFailureStorageBirthPhase,OriginalFailurePerformedScope,OriginalFailureStorageStep,OriginalFailureFunding,refill_original_failure_storage,OriginalRetirementFailure,OriginalFailureStorage,OriginalFailureStoragePool,run_with_failure_storage,run_with_failure_storage_transaction};
+#[path="♻️original-close/🦀️.rs"]mod original_close;
+pub use original_close::{OriginalRetirementCloseLoan,OriginalRetirementClosePort};
+
 /// ♻️ Retains original retirement progress, work and independently owned failures.
 pub type OriginalRetirementOutcome<T=RetainedCloneStep>=RetainedWorkOutcome<T,OriginalRetirementFailure>;
 /// ⏳️ Retains an unfinished original effect without inventing a physical receipt.
@@ -39,21 +46,21 @@ pub fn run_original_retirement_work(control:&mut dyn OriginalRetirementControl,q
  let mut storage=control.failure_storage_pool().take();if storage.is_none(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
  let mut pending=false;let mut started=false;let result=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||{
   match control.prepare_work(quote){Ok(true)=>{pending=true},Ok(false)=>return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0},Err(error)=>return RetainedWorkOutcome{result:Err(OriginalRetirementFailure::from_work_refusal(error)),work:0}}
-  started=true;let turn=effect(control);semio_framework_value_control_contract::run_with_failure_storage(&mut storage,||turn,|work|{let result=control.commit_work(work);pending=false;result},|step|step.progress()).expect("paid original failure node remains reserved")
+  started=true;let turn=effect(control);crate::run_with_failure_storage(&mut storage,||turn,|work|{let result=control.commit_work(work);pending=false;result},|step|step.progress()).expect("paid original failure node remains reserved")
  }));if pending&&!started{control.cancel_prepared_work()}if let Some(node)=storage{control.failure_storage_pool().put(node)}match result{Ok(turn)=>turn,Err(panic)=>std::panic::resume_unwind(panic)}
 }
 /// 🧾️ Reserves paid collision custody and work before one original decoder-loan effect.
-pub fn run_original_retirement_loan(original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,quote:u64,effect:impl FnOnce(&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>)->OriginalRetirementOutcome)->OriginalRetirementOutcome{
+pub fn run_original_retirement_loan(original:&mut crate::OriginalRetirementCloseLoan<'_>,quote:u64,effect:impl FnOnce(&mut crate::OriginalRetirementCloseLoan<'_>)->OriginalRetirementOutcome)->OriginalRetirementOutcome{
  let mut storage=original.failure_storage_pool().take();if storage.is_none(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
  let mut pending=false;let mut started=false;let result=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||{
   match original.prepare_work(quote){Ok(true)=>{pending=true},Ok(false)=>return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0},Err(error)=>return RetainedWorkOutcome{result:Err(OriginalRetirementFailure::from_work_refusal(error)),work:0}}
-  started=true;let turn=effect(original);semio_framework_value_control_contract::run_with_failure_storage(&mut storage,||turn,|work|{let result=original.commit_work(work);pending=false;result},|step|step.progress()).expect("paid original failure node remains reserved")
+  started=true;let turn=effect(original);crate::run_with_failure_storage(&mut storage,||turn,|work|{let result=original.commit_work(work);pending=false;result},|step|step.progress()).expect("paid original failure node remains reserved")
  }));if pending&&!started{original.cancel_prepared_work()}if let Some(node)=storage{original.failure_storage_pool().put(node)}match result{Ok(turn)=>turn,Err(panic)=>std::panic::resume_unwind(panic)}
 }
 /// 🪪️ Original decoding custody supplies its unchanged identity and funded cleanup allocations.
 pub trait OriginalRetirementControl {
  fn failure_storage_birth(&mut self)->&mut OriginalFailureStorageBirth;
- fn failure_storage_performed_scope(&mut self)->Result<semio_framework_value_control_contract::OriginalFailurePerformedScope<'_>,ValueError>;
+ fn failure_storage_performed_scope(&mut self)->Result<crate::OriginalFailurePerformedScope<'_>,ValueError>;
  fn settle_failure_storage_performed(&mut self)->OriginalFailureStorageStep<(),ValueError>;
  fn prepare_failure_storage_work(&mut self,work:u64)->OriginalFailureStorageStep<bool,ValueError>;
  fn commit_failure_storage_work(&mut self,work:u128)->Result<(),ValueError>;
@@ -72,11 +79,11 @@ pub trait OriginalRetirementControl {
     fn quote_failure_storage(&mut self,demand:RetirementDemand,grant:RetainedCloneGrant)->OriginalFailureStorageStep<RetainedCloneGrant>;
     fn post_failure_storage(&mut self,grant:RetainedCloneGrant,progress:RetainedCloneProgress)->OriginalFailureStorageStep<()>;
     fn cancel_failure_storage(&mut self)->OriginalFailureStorageStep<()>;
-    fn failure_storage_pool(&mut self)->&mut semio_framework_value_control_contract::OriginalFailureStoragePool;
+    fn failure_storage_pool(&mut self)->&mut crate::OriginalFailureStoragePool;
 }
-impl OriginalRetirementControl for semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>{
+impl OriginalRetirementControl for crate::OriginalRetirementCloseLoan<'_>{
  fn failure_storage_birth(&mut self)->&mut OriginalFailureStorageBirth{self.failure_storage_birth()}
- fn failure_storage_performed_scope(&mut self)->Result<semio_framework_value_control_contract::OriginalFailurePerformedScope<'_>,ValueError>{self.failure_storage_performed_scope()}
+ fn failure_storage_performed_scope(&mut self)->Result<crate::OriginalFailurePerformedScope<'_>,ValueError>{self.failure_storage_performed_scope()}
  fn settle_failure_storage_performed(&mut self)->OriginalFailureStorageStep<(),ValueError>{self.settle_failure_storage_performed()}
  fn prepare_failure_storage_work(&mut self,work:u64)->OriginalFailureStorageStep<bool,ValueError>{self.prepare_failure_storage_work(work)}
  fn commit_failure_storage_work(&mut self,work:u128)->Result<(),ValueError>{self.commit_failure_storage_work(work)}
@@ -92,44 +99,55 @@ impl OriginalRetirementControl for semio_framework_value_control_contract::Origi
  fn quote_failure_storage(&mut self,d:RetirementDemand,g:RetainedCloneGrant)->OriginalFailureStorageStep<RetainedCloneGrant>{self.quote_failure_storage(d,g)}
  fn post_failure_storage(&mut self,g:RetainedCloneGrant,p:RetainedCloneProgress)->OriginalFailureStorageStep<()>{self.post_failure_storage(g,p)}
  fn cancel_failure_storage(&mut self)->OriginalFailureStorageStep<()>{self.cancel_failure_storage()}
- fn failure_storage_pool(&mut self)->&mut semio_framework_value_control_contract::OriginalFailureStoragePool{self.failure_storage_pool()}
+ fn failure_storage_pool(&mut self)->&mut crate::OriginalFailureStoragePool{self.failure_storage_pool()}
 }
 /// 📏️ Quotes the physical birth of one prepaid original failure node.
 pub fn original_failure_storage_birth_demand()->RetirementDemand{OriginalFailureStorage::birth_demand()}
 /// ⛽️ Quotes the allocator attempt for one selected original failure node.
 pub const fn original_failure_storage_birth_work_demand()->u64{1}
 /// 📤️ Quotes the actual selected spare node release.
-pub fn original_failure_storage_release_demand(pool:&semio_framework_value_control_contract::OriginalFailureStoragePool)->RetirementDemand{if pool.is_empty(){RetirementDemand::default()}else{RetirementDemand{release_bytes:OriginalFailureStorage::birth_bytes(),depth:1,..Default::default()}}}
+pub fn original_failure_storage_release_demand(pool:&crate::OriginalFailureStoragePool)->RetirementDemand{if pool.is_empty(){RetirementDemand::default()}else{RetirementDemand{release_bytes:OriginalFailureStorage::birth_bytes(),depth:1,..Default::default()}}}
 /// ⛽️ Quotes the selected spare-node release action.
-pub fn original_failure_storage_release_work_demand(pool:&semio_framework_value_control_contract::OriginalFailureStoragePool)->u64{u64::from(!pool.is_empty())}
+pub fn original_failure_storage_release_work_demand(pool:&crate::OriginalFailureStoragePool)->u64{u64::from(!pool.is_empty())}
 /// 🎟️ Refills one original failure node as its own paid, physically posted turn.
 impl OriginalFailureFunding for dyn OriginalRetirementControl+'_{
  fn birth(&mut self)->&mut OriginalFailureStorageBirth{self.failure_storage_birth()}
- fn performed_scope(&mut self)->Result<semio_framework_value_control_contract::OriginalFailurePerformedScope<'_>,ValueError>{self.failure_storage_performed_scope()}
+ fn performed_scope(&mut self)->Result<crate::OriginalFailurePerformedScope<'_>,ValueError>{self.failure_storage_performed_scope()}
  fn settle_performed(&mut self)->OriginalFailureStorageStep<(),ValueError>{self.settle_failure_storage_performed()}
  fn quote(&mut self,d:RetirementDemand,g:RetainedCloneGrant)->OriginalFailureStorageStep<RetainedCloneGrant>{self.quote_failure_storage(d,g)}
  fn post(&mut self,g:RetainedCloneGrant,p:RetainedCloneProgress)->OriginalFailureStorageStep<()>{self.post_failure_storage(g,p)}
  fn cancel(&mut self)->OriginalFailureStorageStep<()>{self.cancel_failure_storage()}
- fn pool(&mut self)->&mut semio_framework_value_control_contract::OriginalFailureStoragePool{self.failure_storage_pool()}
+ fn pool(&mut self)->&mut crate::OriginalFailureStoragePool{self.failure_storage_pool()}
  fn prepare(&mut self,work:u64)->OriginalFailureStorageStep<bool,ValueError>{self.prepare_failure_storage_work(work)}
  fn commit(&mut self,work:u128)->Result<(),ValueError>{self.commit_failure_storage_work(work)}
  fn cancel_work(&mut self)->Result<(),ValueError>{self.cancel_failure_storage_work()}
  fn finish_work(&mut self)->Result<(),ValueError>{self.finish_failure_storage_work()}
 }
-pub trait ErasedSnapshotRetirement: Send {
+pub trait ErasedSnapshotRetirement: Send + std::any::Any {
+    /// 🎟️ This pure query only declares an explicit native lifecycle for the actual terminal header.
+    fn native_header_release(&self)->Option<RetirementHeaderRelease>{None}
+    /// 📥️ Records the actual ordinary child reply in its caller-owned slot before return.
+    fn close_into<'reply>(&mut self,body:usize,_effect:&mut crate::RetainedAllocationEffect<'_>,_reply:semio_framework_value_control_contract::OriginalEffectReply<'reply,RetainedCloneStep,crate::OriginalRetirementFailure>)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'reply,RetainedCloneStep,crate::OriginalRetirementFailure>,ValueError>{Err(ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,std::any::type_name::<Self>()))}
+    /// 🔁️ Recovers only the existing original invocation without replaying a child.
+    fn recover_close_into<'reply>(&mut self,body:usize,_effect:&mut crate::RetainedAllocationEffect<'_>,_reply:semio_framework_value_control_contract::OriginalEffectReply<'reply,RetainedCloneStep,crate::OriginalRetirementFailure>)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'reply,RetainedCloneStep,crate::OriginalRetirementFailure>,ValueError>{Err(ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"retirement owner has no borrowed close recovery"))}
+    /// 🧵️ Lends the same original controller into the actual child reply producer.
+    fn close_original_into<'reply>(&mut self,_original:&mut crate::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'reply,RetainedCloneStep,crate::OriginalRetirementFailure>)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'reply,RetainedCloneStep,crate::OriginalRetirementFailure>,ValueError>{if self.requires_original_control(){return Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"retirement owner has no borrowed original close producer"))}self.close_into(body,effect,reply)}
+    /// 🪡️ Recovers the original-controller child under its unchanged invocation.
+    fn recover_close_original_into<'reply>(&mut self,_original:&mut crate::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'reply,RetainedCloneStep,crate::OriginalRetirementFailure>)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'reply,RetainedCloneStep,crate::OriginalRetirementFailure>,ValueError>{if self.requires_original_control(){return Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"retirement owner has no borrowed original close recovery"))}self.recover_close_into(body,effect,reply)}
+
     /// 👶️ Selects a real source-owned birth separately from ordinary closure effects.
     fn requires_original_birth(&self)->bool{false}
-    fn close_original_birth_step(&mut self,_original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,_grant:RetainedCloneGrant)->OriginalRetirementPoll{RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"retirement owner has no selected original birth").into()),work:0})}
+    fn close_original_birth_step(&mut self,_original:&mut crate::OriginalRetirementCloseLoan<'_>,_grant:RetainedCloneGrant)->OriginalRetirementPoll{RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"retirement owner has no selected original birth").into()),work:0})}
     /// 🪪️ Visits a checked original receiving frame without moving its retained owner.
     fn visit_original(&mut self,_identity:std::any::TypeId,_visitor:&mut dyn FnMut(&mut dyn std::any::Any))->bool{false}
     /// ⛽️ Quotes actual original closure work before the selected action.
     fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{Err(ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"original retirement lacks a work quote"))}
     /// 🧷️ Native owners override this port to preserve the caller's actual decoder ledger and recipient.
-    fn close_original_step(&mut self,_original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->OriginalRetirementPoll{self.close_step(effect)}
+    fn close_original_step(&mut self,_original:&mut crate::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->OriginalRetirementPoll{self.close_step(body,effect)}
     fn requires_original_control(&self) -> bool { false }
-    fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->OriginalRetirementPoll;
+    fn close_step(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->OriginalRetirementPoll;
     /// 🧵️ Composite owners forward actual caller decoding custody to decoder-bound children.
-    fn close_step_controlled(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>, _control: &mut dyn OriginalRetirementControl)->OriginalRetirementPoll {let grant=effect.grant(); self.close_step(effect) }
+    fn close_step_controlled(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>, _control: &mut dyn OriginalRetirementControl)->OriginalRetirementPoll {let grant=effect.grant(); self.close_step(body,effect) }
     fn terminal_is_empty(&self) -> bool;
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError>;
     fn next_capacity_byte_demand(&self, maximum_body_bytes: usize) -> Result<usize, ValueError>;
@@ -153,3 +171,9 @@ pub use tickets::*;
 
 /// ⏱️ Records the defining bounded operation through its original performed receipt.
 pub fn record_retirement_work(effect:&mut crate::RetainedAllocationEffect<'_>,delta:u64)->Result<u128,(crate::ValueError,u128)>{let before=effect.performed_work();let result=effect.performed(delta);let work=effect.performed_work()-before;match result{Ok(true)=>Ok(work),Ok(false)=>Err((crate::ValueError::literal(crate::ValueRefusalKind::WorkLimit,"retirement operation exceeded its original work action"),work)),Err(error)=>Err((error,work))}}
+
+#[path="🎟️header/🦀️.rs"]mod header_release;
+pub use header_release::RetirementHeaderRelease;
+
+#[path="🔗️arc-custody/🦀️.rs"]
+mod shared_controlled_owner;

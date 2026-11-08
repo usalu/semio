@@ -1,3 +1,5 @@
+scalar UInt32
+
 union En1997Mutation = ChangeAnnex | ChangeGeotechnicalCategory | ChangeDesignSituation | ChangeDesignApproach | ChangeGroundwaterLevel | ChangeInvestigationDepth | ChangeFootingWidth | ChangeFootingEmbedment | ChangePileLength | ChangePileCount | ChangeWallBaseWidth | ChangeSlopeAngle | ChangeLayerPhiPrime | ChangeLayerOedometricModulus | InsertLayer | RemoveLayer | InsertFooting | RemoveFooting | InsertPile | RemovePile | InsertRetainingWall | RemoveRetainingWall | InsertSlope | RemoveSlope | InsertUpliftCase | RemoveUpliftCase | InsertAnchor | RemoveAnchor | InsertEmbeddedWall | RemoveEmbeddedWall | InsertPileGroup | RemovePileGroup | InsertLabTest | RemoveLabTest | InsertLayerWater | InsertCharacteristicBasis | InsertGroundInvestigation | RemoveLayerWater | RemoveCharacteristicBasis | RemoveGroundInvestigation | ChangeLayerSoilType | ChangeLayerDepthTop | ChangeLayerDepthBottom | ChangeLayerGamma | ChangeLayerGammaPrime | ChangeLayerCohesionEffective | ChangeLayerCohesionUndrained | ChangeLayerPoissonRatio | ChangeLayerCptQc | ChangeLayerSptN | ChangeFootingLength | ChangeFootingBaseInclDeg | ChangeFootingSettlementLimit | ChangeLoadCaseDesignSituation | ChangeLoadCaseVerticalPerm | ChangeLoadCaseVerticalVar | ChangeLoadCaseHorizPermanent | ChangeLoadCaseHorizVariable | ChangeLoadCaseMomentPermanent | ChangeLoadCaseMomentVariable | ChangePilePileType | ChangePileDiameter | ChangePileAlphaS | ChangePileUnitShaftResistance | ChangePileUnitBaseResistance | ChangePileCompressionPermanent | ChangePileCompressionVariable | ChangePileTensionPermanent | ChangePileTensionVariable | ChangeProfileShaftResistance | ChangeProfileBaseResistance | ChangeWallHeight | ChangeWallEmbedment | ChangeWallStemThickness | ChangeWallBackfillPhiDeg | ChangeWallBackfillGamma | ChangeWallWallFrictionDeg | ChangeWallEarthPressureMode | ChangeWallWallMovement | ChangeWallOcr | ChangeWallConcreteGamma | ChangeWallSurcharge | ChangeWallVerticalPermanent | ChangeWallHorizontalPermanent | ChangeSlopeHeight | ChangeSlopeLength | ChangeSlopeGoverningLayerId | ChangeSlopeCircleCentreX | ChangeSlopeCircleCentreZ | ChangeSlopeCircleRadius | ChangeUpliftPermStabilizing | ChangeUpliftPermDestabilizing | ChangeUpliftVarDestabilizing | ChangeUpliftPorePressure | ChangeUpliftTotalStress | ChangeAnchorWallId | ChangeAnchorTendon | ChangeAnchorHeadDepth | ChangeAnchorInclinationDeg | ChangeAnchorFreeLength | ChangeAnchorFixedLength | ChangeAnchorFixedDiameter | ChangeAnchorBondStress | ChangeAnchorDesignForce | ChangeAnchorTendonYieldForce | ChangeAnchorMinFreeLength | ChangeAnchorTestFactor | ChangeAnchorTestPullOutRes | ChangeEmbWallKind | ChangeEmbWallRetainedHeight | ChangeEmbWallEmbedment | ChangeEmbWallPropDepth | ChangeEmbWallThickness | ChangeEmbWallBackfillGamma | ChangeEmbWallPhiDeg | ChangeEmbWallDeltaActiveDeg | ChangeEmbWallDeltaPassiveDeg | ChangeEmbWallSurcharge | ChangeEmbWallUndrStrength | ChangePileGroupPileId | ChangePileGroupRows | ChangePileGroupColumns | ChangePileGroupSpacing | ChangePileGroupCapVertical | ChangePileGroupCapMomentX | ChangePileGroupCapMomentY | ChangePileGroupSingleRes | ChangePileGroupShaftCohSum | ChangePileGroupBaseCohesion | ChangeLabTestLayerId | ChangeLabTestKind | ChangeLabTestVoidRatio | ChangeLabTestPreloadStress | ChangeLabTestDrainageHeight | ChangeLabTestConsolTime | ChangeLabPointNormalStress | ChangeLabPointShearStress | ChangeWaterLayerId | ChangeWaterPiezometricDepth | ChangeWaterPermeability | ChangeWaterHeadDifference | ChangeWaterFlowLength | ChangeStructureId | InsertLoadCase | RemoveLoadCase | InsertTestProfile | RemoveTestProfile | InsertAnchorTest | RemoveAnchorTest | InsertLabPoint | InsertGroundInvestigationReading | RemoveLabPoint | RemoveGroundInvestigationReading | ChangePlacementX | ChangePlacementY | ChangePlacementZ | ChangePlacementYaw | InsertPlacement | RemovePlacement | InsertCase | RemoveCase | ChangeCaseNumber | ChangeCaseText | ChangeCaseLabelEn | ChangeCaseLabelDe | ChangeCaseEntryId | ChangeSlopeWidth | ChangePileBendingStiffnessEi | ChangePileHorizBedModulus | ChangePileLateralHeadLoad | ChangeWallSeismicKh | ChangeWallSeismicKv | ChangePileElasticModulus | ChangePileSettlingThickness | ChangePileNegFrictionBeta | ChangePileDynamicTestCount | ChangePileDynamicResMean | ChangePileDynamicResMin | ChangePileHammerWeight | ChangePileDropHeight | ChangePileSetPerBlow | ChangePileElasticCompression | ChangePileHammerEfficiency | ChangeWallReinforcementSpacing | ChangeWallReinforcementWidth | ChangeWallRebarFriction | ChangeLabTestCompressionIndex | ChangeLabTestSwellingIndex | ChangeLabTestStressIncrement | ChangeLabTestSecComprIndex | ChangeLabTestDesignLife | ChangeWaterWellRadius | ChangeWaterWellWaterDepth | ChangeWaterInfluenceRadius | ChangeWaterWellCapacity | ChangePileConcreteClass | ChangeGroundInvestigationPositionX | ChangeGroundInvestigationPositionY | ChangeGroundInvestigationLevel | ChangeGroundInvestigationDepth | ChangeGroundInvestigationKind | ChangeGroundReadingDepth | ChangeGroundReadingMeasurement | ChangeCharacteristicBasisLayerId | ChangeCharacteristicBasisParameter | ChangeCharacteristicBasisBasis | ChangeLayerCptNkt
 type ChangeAnnex {
   newAnnex: AnnexChoice!
@@ -31,7 +33,7 @@ type ChangePileLength {
 }
 type ChangePileCount {
   id: String!
-  newCount: Int!
+  newCount: UInt32!
 }
 type ChangeWallBaseWidth {
   id: String!
@@ -472,11 +474,11 @@ type ChangePileGroupPileId {
 }
 type ChangePileGroupRows {
   id: String!
-  newRows: Int!
+  newRows: UInt32!
 }
 type ChangePileGroupColumns {
   id: String!
-  newColumns: Int!
+  newColumns: UInt32!
 }
 type ChangePileGroupSpacing {
   id: String!

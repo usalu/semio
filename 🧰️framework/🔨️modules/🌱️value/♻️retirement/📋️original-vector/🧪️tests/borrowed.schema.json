@@ -1,0 +1,63 @@
+{
+  "type": "object",
+  "required": [
+    "rows",
+    "maximumCopyBytes",
+    "maximumItems",
+    "denialPreservesPointer",
+    "outputOccupiedRefused",
+    "stock",
+    "childCalls",
+    "childRecovers",
+    "maximumTurns",
+    "releaseDenialPreserves",
+    "selectedBodyImmutable"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "rows": {
+      "const": [
+        3,
+        5,
+        8
+      ]
+    },
+    "maximumCopyBytes": {
+      "const": 4096
+    },
+    "maximumItems": {
+      "const": 1
+    },
+    "denialPreservesPointer": {
+      "const": true
+    },
+    "outputOccupiedRefused": {
+      "const": true
+    },
+    "stock": {
+      "const": {
+        "items": 256,
+        "copyBytes": 1048576,
+        "capacityBytes": 65536,
+        "releaseBytes": 65536,
+        "depth": 64,
+        "fuel": 4096
+      }
+    },
+    "childCalls": {
+      "const": 1
+    },
+    "childRecovers": {
+      "const": 1
+    },
+    "maximumTurns": {
+      "const": 512
+    },
+    "releaseDenialPreserves": {
+      "const": true
+    },
+    "selectedBodyImmutable": {
+      "const": true
+    }
+  }
+}

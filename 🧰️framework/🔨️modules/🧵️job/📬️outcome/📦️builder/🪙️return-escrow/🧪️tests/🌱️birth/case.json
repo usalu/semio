@@ -1,0 +1,44 @@
+[
+  {
+    "phase": "allocation",
+    "same": true,
+    "slot": false,
+    "funded": false,
+    "performed": false
+  },
+  {
+    "phase": "allocation",
+    "same": true,
+    "slot": false,
+    "funded": true,
+    "performed": true
+  },
+  {
+    "phase": "row",
+    "same": false,
+    "slot": false,
+    "funded": true,
+    "performed": false
+  },
+  {
+    "phase": "row",
+    "same": true,
+    "slot": false,
+    "funded": true,
+    "performed": true
+  },
+  {
+    "phase": "publish",
+    "same": true,
+    "slot": true,
+    "funded": true,
+    "performed": false
+  },
+  {
+    "phase": "publish",
+    "same": true,
+    "slot": false,
+    "funded": true,
+    "performed": true
+  }
+]

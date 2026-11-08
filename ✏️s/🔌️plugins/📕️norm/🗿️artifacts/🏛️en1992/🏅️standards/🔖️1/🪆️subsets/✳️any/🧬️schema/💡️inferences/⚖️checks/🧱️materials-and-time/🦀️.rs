@@ -334,13 +334,13 @@ pub fn c_min_dur_mm(annex: AnnexChoice, row: usize, class: u32) -> f64 {
 }
 
 /// 🏗 Structural class S1..S6 from Table 4.3N for a start class S4 (exposure row for the strength threshold).
-pub fn structural_class(design_life: f64, fck: f64, row: usize, slab: bool, quality: bool, special: bool) -> u32 {
+pub fn structural_class(design_life: f64, fck: f64, row: usize, slab: bool, special: bool) -> u32 {
     let mut s: i32 = 4;
     if design_life >= 100.0 { s += 2; }
-    let threshold = [30.0, 30.0, 35.0, 40.0, 40.0, 40.0, 45.0][row];
+    let t = |id: &str| ndp(AnnexChoice::En, &format!("ndp.en1992.d-04.class-fck.{id}"));
+    let threshold = [t("xc1"), t("xc1"), t("xc2-xc3"), t("xc4-xd1-xd2-xs1"), t("xc4-xd1-xd2-xs1"), t("xc4-xd1-xd2-xs1"), t("xd3-xs2-xs3")][row];
     if fck >= threshold { s -= 1; }
     if slab { s -= 1; }
-    if quality { s -= 1; }
     if special { s -= 1; }
     s.clamp(1, 6) as u32
 }
@@ -404,7 +404,7 @@ pub fn d03(c: &Case) -> R {
 
 pub fn d04(c: &Case) -> R {
     let row = cover_row(c.s("exposure")?).ok_or("unknown exposure class")?;
-    let sc = structural_class(c.o("design_life", 50.0), c.pos("fck")?, row, c.o("slab", 0.0) > 0.0, c.o("quality", 0.0) > 0.0, c.o("special", 0.0) > 0.0);
+    let sc = structural_class(c.o("design_life", 50.0), c.pos("fck")?, row, c.o("slab", 0.0) > 0.0, c.o("special", 0.0) > 0.0);
     let phi = c.pos("phi")?;
     let cmin = phi.max(c_min_dur_mm(c.annex, row, sc)).max(10.0);
     let dev = c.o("dc_dev", c.ndp("ndp.en1992.delta-c-dev"));
@@ -554,7 +554,7 @@ pub const ENTRIES: &[Entry] = &[
     entry_of("D-01", "DIN EN 1992-1-1", "4.2", "Exposure classification", "Expositionsklassen", &["classes"], &[], d01),
     entry_of("D-02", "DIN EN 1992-1-1", "E.1DE", "Minimum concrete strength class", "Mindestbetonfestigkeitsklasse", &["fck", "classes", "air_entrained"], &[], d02),
     entry_of("D-03", "DIN EN 1992-1-1", "4.4.1.2", "Minimum cover", "Mindestbetondeckung", &["phi", "nb", "dg", "exposure", "structural_class", "dc_gamma", "dc_st", "dc_add"], &["ndp.en1992.cmin-dur-table"], d03),
-    entry_of("D-04", "DIN EN 1992-1-1", "4.4.1.1", "Nominal cover", "Nennmaß der Betondeckung", &["exposure", "fck", "phi", "design_life", "slab", "quality", "special", "dc_dev", "c_provided"], &["ndp.en1992.cmin-dur-table", "ndp.en1992.delta-c-dev"], d04),
+    entry_of("D-04", "DIN EN 1992-1-1", "4.4.1.1", "Nominal cover", "Nennmaß der Betondeckung", &["exposure", "fck", "phi", "design_life", "slab", "special", "dc_dev", "c_provided"], &["ndp.en1992.cmin-dur-table", "ndp.en1992.delta-c-dev"], d04),
     entry_of("D-05", "DIN EN 1992-1-1", "4.4.1.3", "Cover against ground", "Betondeckung gegen Erdreich", &["ground", "c_provided"], &[], d05),
     entry_of("D-07", "DIN EN 1992-1-1", "4.3", "Design working life", "Nutzungsdauer", &["design_life"], &[], d07),
     entry_of("A-01", "DIN EN 1992-1-1", "B.1", "Creep coefficient", "Kriechzahl", &["fck", "rh", "h0", "t0", "t", "cement", "sigma_c"], &[], a01),

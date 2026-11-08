@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-zone-theta-i-cool-c/schema.json",
+  "title": "ChangeZoneThetaICoolC",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "zoneId",
+    "newThetaICoolC"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changezonethetaicoolc"
+    },
+    "zoneId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Thermal zone",
+          "de": "Thermische Zone"
+        },
+        "description": {
+          "en": "The zone this mutation addresses.",
+          "de": "Das Objekt (Zone), das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newThetaICoolC": {
+      "type": "number",
+      "minimum": 18.0,
+      "maximum": 35.0,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Cooling set-point θ_i,c",
+          "de": "Raum-Solltemperatur Kühlen θ_i,c"
+        },
+        "widget": "stepper",
+        "unit": "°C",
+        "step": 0.5,
+        "precision": 1,
+        "group": "zone",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "phases",
+    "closeReply",
+    "birth",
+    "failure",
+    "pending"
+  ],
+  "properties": {
+    "phases": {
+      "const": [
+        "first",
+        "firstClose",
+        "second",
+        "secondClose",
+        "publish"
+      ]
+    },
+    "closeReply": {
+      "const": "record-before-parent"
+    },
+    "birth": {
+      "const": "original-before-effect"
+    },
+    "failure": {
+      "const": "retain-original"
+    },
+    "pending": {
+      "const": "same-action"
+    }
+  }
+}

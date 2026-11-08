@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "permanent",
+    "transient",
+    "events"
+  ],
+  "properties": {
+    "permanent": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "transient": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "events": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 63,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "allocated",
+          "released",
+          "copied",
+          "work"
+        ],
+        "properties": {
+          "allocated": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "released": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "copied": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 65536
+          },
+          "work": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}

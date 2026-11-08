@@ -1,0 +1,5 @@
+{
+  "mutation": "changeCriticalRegionHoopDiameterM",
+  "id": "cr-1",
+  "newHoopDiameterM": 1.01
+}

@@ -549,7 +549,7 @@ def parse_proto(path):
 
 
 # ------------------------------------------------------------------ GraphQL
-GQL_SCALAR = {"JSON": "json", "String": "string", "ID": "string", "Float": "number", "Int": "integer", "Boolean": "boolean"}
+GQL_SCALAR = {"JSON": "json", "String": "string", "ID": "string", "Float": "number", "Int": "integer", "UInt32": "integer", "UInt64": "integer", "Int64": "integer", "Boolean": "boolean"}
 
 
 def gql_ty(t, enums):

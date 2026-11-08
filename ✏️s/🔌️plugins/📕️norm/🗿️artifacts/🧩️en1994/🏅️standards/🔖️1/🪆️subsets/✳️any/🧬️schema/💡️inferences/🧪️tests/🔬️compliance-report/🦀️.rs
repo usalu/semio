@@ -797,3 +797,30 @@ fn reliability_class_of_the_document_reaches_the_evaluation() {
     let load_effect = |document: &semio_s_artifact_norm_en1994_model::En1994Snapshot| evaluate(document).checks.iter().map(|c| c.utilization).sum::<f64>();
     assert!(load_effect(&rc3) > load_effect(&rc2));
 }
+
+fn oracle_json(script: PathBuf, args: &[&str]) -> serde_json::Value {
+    let output = semio_s_plugin_norm_compliance::python_oracle::command().arg(script).args(args).output().expect("oracle spawn");
+    assert!(output.status.success(), "oracle stderr={}", String::from_utf8_lossy(&output.stderr));
+    serde_json::from_slice(&output.stdout).expect("oracle json")
+}
+
+#[test]
+fn third_party_cross_check_tables_agree() {
+    let oracles = family_any_dir().join("🔮️oracles");
+    let table = oracle_json(oracles.join("🎯️third-party-crosscheck").join("🐍️.py"), &[]);
+    let rows = table["rows"].as_array().expect("rows");
+    assert!(rows.len() >= 64, "rows={}", rows.len());
+    for row in rows {
+        let rel = row["rel"].as_f64().expect("rel");
+        assert!(rel <= 5e-2, "{} rel={rel}", row["name"]);
+    }
+    for key in table["specRows"].as_object().expect("specRows").keys() {
+        assert!(rows.iter().any(|row| row["name"].as_str().is_some_and(|name| name.starts_with(key.as_str()))), "no cross-check row for {key}");
+    }
+    let compliance = oracle_json(oracles.join("⚖️compliance").join("🐍️.py"), &["--third-party"]);
+    assert!(compliance["worst"].as_f64().expect("worst") <= 5e-3, "worst={}", compliance["worst"]);
+    let slabs = oracle_json(oracles.join("🚦️check-outcome").join("🧱️slabs").join("🐍️.py"), &[]);
+    for (name, deviation) in slabs["deviations"].as_object().expect("deviations") {
+        assert!(deviation.as_f64().expect("deviation") <= 1e-9, "{name} deviation={deviation}");
+    }
+}

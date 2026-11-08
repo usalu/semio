@@ -61,6 +61,8 @@ export type ComponentSceneHostProps = {
    * ledger's typed outcome (`applied | refused | superseded`), which is why the value is `unknown`. */
   readonly onAction: (action: ActionDescriptor, lifecycle?: ActionDispatchLifecycleV1) => void | Promise<unknown>;
   readonly requestContextMenu?: (request: UiContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
+  /** 🧲️ Fires the surface node's own binding for `trigger` (`delta`, `commit` or `abort`) with `input` merged over the binding's authored arguments; absent when the node binds none of them. */
+  readonly onTrigger?: (trigger: "delta" | "commit" | "abort", input: Readonly<Record<string, unknown>>) => void | Promise<unknown>;
 };
 
 /** ⏳️ One exact admitted typed operation exposed to the initiating control without widening its authority. */

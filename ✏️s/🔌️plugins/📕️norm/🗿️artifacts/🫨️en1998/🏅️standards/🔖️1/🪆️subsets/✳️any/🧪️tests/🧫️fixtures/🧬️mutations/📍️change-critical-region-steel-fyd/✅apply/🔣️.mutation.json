@@ -1,0 +1,5 @@
+{
+  "mutation": "changeCriticalRegionSteelDesignYieldMpa",
+  "id": "cr-1",
+  "newSteelDesignYieldMpa": 435.8
+}

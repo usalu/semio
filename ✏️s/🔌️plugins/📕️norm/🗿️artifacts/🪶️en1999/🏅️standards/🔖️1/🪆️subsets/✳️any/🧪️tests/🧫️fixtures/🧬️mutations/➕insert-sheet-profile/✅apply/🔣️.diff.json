@@ -1,0 +1,43 @@
+{
+  "annex": null,
+  "materials": null,
+  "sections": null,
+  "members": null,
+  "connections": null,
+  "fireScenarios": null,
+  "fatigueDetails": null,
+  "coldFormed": null,
+  "shells": null,
+  "placements": null,
+  "weldRuns": null,
+  "outlineVertices": null,
+  "fatigueCategories": null,
+  "patchLoads": null,
+  "ringStiffeners": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "transverseStiffeners": null,
+  "reliabilityClass": null,
+  "sheetProfiles": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 1,
+        "row": {
+          "id": "sheet-profile-2",
+          "sheetId": "sheet-pass",
+          "pitch": 0.2,
+          "topFlange": 0.06,
+          "bottomFlange": 0.06,
+          "webHeight": 0.04
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "fireInsulations": null
+}

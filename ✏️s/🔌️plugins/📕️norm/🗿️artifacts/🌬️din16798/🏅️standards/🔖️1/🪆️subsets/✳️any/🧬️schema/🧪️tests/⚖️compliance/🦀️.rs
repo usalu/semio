@@ -749,3 +749,16 @@ fn schema_ts_facets_forbid_unknown_record_and_placeholder() {
     }
     scan_ts(&root);
 }
+
+#[test]
+fn a_rich_editor_shows_no_read_only_input_for_any_leaf_of_the_example_documents() {
+    for (label, doc) in [("compliant", Din16798Snapshot::compliant_office()), ("residential", Din16798Snapshot::residential_method3()), ("noncompliant", Din16798Snapshot::noncompliant_office())] {
+        let root = ToValue::to_value(&doc);
+        let mut paths = Vec::new();
+        collect_leaf_paths(&root, "", &mut paths);
+        for path in paths.iter().filter(|path| !path.ends_with("[]")) {
+            let meta = din16798_field_meta(path).unwrap_or_else(|| panic!("{label}: no field meta for '{path}'"));
+            assert!(!meta.read_only, "{label}: '{path}' is a read-only input");
+        }
+    }
+}

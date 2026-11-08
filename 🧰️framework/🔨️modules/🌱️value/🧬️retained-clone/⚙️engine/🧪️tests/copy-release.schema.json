@@ -1,0 +1,51 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "values",
+    "fuel",
+    "arrayWork",
+    "extendWork",
+    "releaseWork",
+    "deniedWork",
+    "dropEvents",
+    "prefix"
+  ],
+  "properties": {
+    "values": {
+      "const": [
+        7,
+        11,
+        73
+      ]
+    },
+    "fuel": {
+      "const": 64
+    },
+    "arrayWork": {
+      "const": 4
+    },
+    "extendWork": {
+      "const": 4
+    },
+    "releaseWork": {
+      "const": 1
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "dropEvents": {
+      "const": 1
+    },
+    "prefix": {
+      "const": {
+        "first": 2,
+        "second": 1,
+        "elementBytes": 8,
+        "firstWork": 21,
+        "secondWork": 11,
+        "publicationWork": 1
+      }
+    }
+  }
+}

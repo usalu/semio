@@ -27,6 +27,7 @@ def need_labels(label, where):
 class Field:
     def __init__(self, raw, owner=None):
         self.raw = raw
+        self.owner = owner
         self.name = raw["name"]
         need_labels(raw.get("label"), f"field {self.name}")
         self.camel, self.pascal = camel(self.name), pascal(self.name)
@@ -105,6 +106,8 @@ class Field:
             node = {"type": "integer", "minimum": 0, "maximum": INT_MAX[self.ty], "x-semio-ui": self.ui()}
         else:
             node = {"type": "number", "x-semio-ui": self.ui()}
+            import l_limits
+            node.update(l_limits.decide(UNITS[self.unit][1], self.camel, self.en, self.doc or "", node, self.owner or "") or {})
         if self.doc:
             node["x-semio-rust"] = {"doc": [self.doc]}
         if self.unit in UNIT_DSL:
@@ -147,7 +150,7 @@ class Entity:
         self.label = need_labels(raw.get("label"), f"entity {self.entity} label")
         self.id_label = need_labels(raw.get("id"), f"entity {self.entity} id label")
         need_labels(raw.get("singular"), f"entity {self.entity} singular (used in mutation labels)")
-        self.fields = [Field(f) for f in raw["fields"]]
+        self.fields = [Field(f, raw.get("entity")) for f in raw["fields"]]
         self.nested = [Entity(n, parent=self) for n in raw.get("nested", [])]
         if parent is None and any(n.nested for n in self.nested):
             raise Unsupported("only one nesting level is supported")

@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["stock", "sameAccepted", "foreignAccepted", "foreignCallbacks", "unwindRecoveryAccepted", "workSpent"],
+  "properties": {
+    "stock": {"type":"object", "additionalProperties":false, "required":["items","copyBytes","capacityBytes","releaseBytes","depth","fuel"], "properties":{"items":{"type":"integer","minimum":1},"copyBytes":{"type":"integer","minimum":1},"capacityBytes":{"type":"integer","minimum":1},"releaseBytes":{"type":"integer","minimum":1},"depth":{"type":"integer","minimum":1},"fuel":{"type":"integer","minimum":1}}},
+    "sameAccepted": {"const": true},
+    "foreignAccepted": {"const": false},
+    "foreignCallbacks": {"const": 0},
+    "unwindRecoveryAccepted": {"const": true},
+    "workSpent": {"const": 0}
+  }
+}

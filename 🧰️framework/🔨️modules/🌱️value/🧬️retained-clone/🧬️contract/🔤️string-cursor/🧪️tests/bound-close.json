@@ -1,0 +1,17 @@
+{
+  "text": "original source",
+  "selectedWork": 1,
+  "maximumCloseTurns": 64,
+  "cases": [
+    {
+      "copy": 15,
+      "required": 16,
+      "accepted": false
+    },
+    {
+      "copy": 16,
+      "required": 16,
+      "accepted": true
+    }
+  ]
+}

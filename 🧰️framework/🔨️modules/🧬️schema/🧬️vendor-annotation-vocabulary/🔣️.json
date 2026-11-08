@@ -169,6 +169,24 @@
     },
     "x-semio-description": {
       "$ref": "https://json.schemas.assets.semio-tech.com/framework/manifest/schema.json#/$defs/InputLabelLocales"
+    },
+    "x-semio-twin": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "emoji": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "doc": {
+          "type": "string"
+        }
+      }
     }
   }
 }

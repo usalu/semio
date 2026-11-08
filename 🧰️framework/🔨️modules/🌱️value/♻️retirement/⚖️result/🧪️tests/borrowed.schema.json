@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "variants",
+    "value",
+    "fuel",
+    "maximumTurns",
+    "deniedWork",
+    "metadataWork"
+  ],
+  "properties": {
+    "variants": {
+      "const": [
+        "Ok",
+        "Err"
+      ]
+    },
+    "value": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "fuel": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maximumTurns": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "metadataWork": {
+      "const": 1
+    }
+  }
+}

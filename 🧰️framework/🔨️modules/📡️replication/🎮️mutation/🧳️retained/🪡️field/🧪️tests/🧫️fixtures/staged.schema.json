@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Resident Field Preparation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "phases",
+    "deniedWork",
+    "publishWork",
+    "sourcePreserved",
+    "recoverReplays",
+    "expectedValue",
+    "foreignSourceRejected",
+    "rowBefore",
+    "authored",
+    "rowAfter",
+    "displaced",
+    "allocatingCloseMaxTurns",
+    "cancellationCuts",
+    "unwindReceives",
+    "unwindRecoverCalls",
+    "stock",
+    "pendingFirstWork",
+    "pendingRecoverWork",
+    "pendingChildCeiling",
+    "pendingParentCeiling",
+    "pendingReceives",
+    "pendingRecovers"
+  ],
+  "properties": {
+    "phases": {
+      "const": [
+        "clone",
+        "take",
+        "publish"
+      ]
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "publishWork": {
+      "const": 1
+    },
+    "sourcePreserved": {
+      "const": true
+    },
+    "recoverReplays": {
+      "const": 0
+    },
+    "expectedValue": {
+      "const": 73
+    },
+    "foreignSourceRejected": {
+      "const": true
+    },
+    "rowBefore": {
+      "const": "before"
+    },
+    "authored": {
+      "const": "after"
+    },
+    "rowAfter": {
+      "const": "after"
+    },
+    "displaced": {
+      "const": "before"
+    },
+    "allocatingCloseMaxTurns": {
+      "const": 38
+    },
+    "cancellationCuts": {
+      "const": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        8
+      ]
+    },
+    "unwindReceives": {
+      "const": 1
+    },
+    "unwindRecoverCalls": {
+      "const": 0
+    },
+    "stock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth",
+        "work"
+      ],
+      "properties": {
+        "items": {
+          "const": 256
+        },
+        "copy": {
+          "const": 65536
+        },
+        "capacity": {
+          "const": 65536
+        },
+        "release": {
+          "const": 65536
+        },
+        "depth": {
+          "const": 32
+        },
+        "work": {
+          "const": 16384
+        }
+      }
+    },
+    "pendingFirstWork": {
+      "const": 2
+    },
+    "pendingRecoverWork": {
+      "const": 1
+    },
+    "pendingChildCeiling": {
+      "const": 3
+    },
+    "pendingParentCeiling": {
+      "const": 10
+    },
+    "pendingReceives": {
+      "const": 1
+    },
+    "pendingRecovers": {
+      "const": 1
+    }
+  }
+}

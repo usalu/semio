@@ -927,3 +927,22 @@ mod marker_cells {
 fn mock_inspector_admission(path: &str) -> Option<FieldSpec> {
     Some(FieldSpec { read_only: !matches!(path, "resistanceKn" | "items[0]" | "items[1]"), can_insert: path == "items", can_remove: path == "items", ..FieldSpec::EMPTY })
 }
+
+#[test]
+fn layout_windows_carry_no_single_language_title_so_the_localized_kind_label_governs() {
+    use crate::viewport3d::config::DeviceClass;
+    fn titles(child: &WindowLayoutChild, out: &mut Vec<Option<String>>) {
+        match child {
+            WindowLayoutChild::Axis(axis) => axis.children.iter().for_each(|child| titles(child, out)),
+            WindowLayoutChild::Stack(stack) => out.extend(stack.children.iter().map(|window| window.title.clone())),
+        }
+    }
+    for device in [DeviceClass::Desktop, DeviceClass::Mobile, DeviceClass::Tablet] {
+        let mut found = Vec::new();
+        match visual_layout("en1990", device).root {
+            WindowLayoutRoot::Axis(axis) => axis.children.iter().for_each(|child| titles(child, &mut found)),
+            WindowLayoutRoot::Stack(stack) => found.extend(stack.children.iter().map(|window| window.title.clone())),
+        }
+        assert!(found.len() >= 3 && found.iter().all(Option::is_none), "{device:?}: {found:?}");
+    }
+}

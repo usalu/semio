@@ -1,0 +1,39 @@
+{
+  "capacity": 1024,
+  "chunk": 64,
+  "initialized": [
+    0,
+    64,
+    128,
+    192,
+    256,
+    320,
+    384,
+    448,
+    512,
+    576,
+    640,
+    704,
+    768,
+    832,
+    896,
+    960,
+    1024
+  ],
+  "firstIssued": [
+    0,
+    1,
+    2
+  ],
+  "returned": 1,
+  "nextIssued": 3,
+  "deniedUnchanged": true,
+  "nonemptyDiscardRefused": true,
+  "issueDenialRetains": true,
+  "rootAliasSame": true,
+  "registryAliasSame": true,
+  "maximumCopy": 4096,
+  "cursorRecordedPostCalls": 1,
+  "cursorReplayCalls": 0,
+  "cursorUnwindRetainsOriginal": true
+}

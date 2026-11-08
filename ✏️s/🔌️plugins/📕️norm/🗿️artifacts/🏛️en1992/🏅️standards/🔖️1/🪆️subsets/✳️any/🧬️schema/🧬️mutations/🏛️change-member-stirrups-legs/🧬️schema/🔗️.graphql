@@ -1,4 +1,6 @@
+scalar UInt32
+
 type ChangeMemberStirrupsLegs {
   memberId: String!
-  newStirrupsLegs: Int!
+  newStirrupsLegs: UInt32!
 }

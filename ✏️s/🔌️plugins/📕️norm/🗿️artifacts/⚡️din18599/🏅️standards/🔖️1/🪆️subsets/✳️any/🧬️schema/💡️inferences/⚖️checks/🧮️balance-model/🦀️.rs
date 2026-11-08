@@ -169,6 +169,42 @@ fn zone_ventilation_hv(zone: &ThermalZone, doc: &Din18599Snapshot, volume_share:
     RHO_CA * (v_mech * (1.0 - eta) + v_inf)
 }
 
+/// 📅 One month of the DIN V 18599-2 balance of a zone: transmission and ventilation losses, internal and solar gains, utilisation factor and the resulting net heating and cooling demand, all in kWh.
+#[derive(Clone, Debug, PartialEq)]
+pub struct HeatingMonth {
+    pub q_t_kwh: f64,
+    pub q_v_kwh: f64,
+    pub q_i_kwh: f64,
+    pub q_s_kwh: f64,
+    pub eta_utilisation: f64,
+    pub q_h_kwh: f64,
+    pub q_c_kwh: f64,
+}
+
+/// 📅 The twelve monthly balances of `zone` against `climate`.
+pub fn heating_months(zone: &ThermalZone, z_elems: &[&EnvelopeElement], climate: &MonthlyClimate, h_t: f64, h_v: f64) -> Vec<HeatingMonth> {
+    (0..12)
+        .map(|m| {
+            let te = climate.theta_e_c[m];
+            let dt = (zone.theta_i_heat_c - te).max(0.0);
+            let q_t = h_t * dt * HOURS_PER_MONTH / 1000.0;
+            let q_v = h_v * dt * HOURS_PER_MONTH / 1000.0;
+            let q_i = zone.internal_gains_w_m2 * zone.area_m2 * HOURS_PER_MONTH / 1000.0;
+            let g_h = climate.g_h_w_m2[m];
+            let q_s: f64 = z_elems.iter().filter(|e| e.g_value > 0.0).map(|e| g_h * orientation_solar_factor(e.orientation_deg, e.tilt_deg) * e.area_m2 * e.g_value * e.fc.clamp(0.0, 1.0) * HOURS_PER_MONTH / 1000.0).sum();
+            let loss = q_t + q_v;
+            let gain = q_i + q_s;
+            let gamma = if loss <= 1e-9 { 1e9 } else { gain / loss };
+            let eta = utilization_factor(gamma);
+            let loss_c = (h_t + h_v) * (zone.theta_i_cool_c - te).max(0.0) * HOURS_PER_MONTH / 1000.0;
+            let over_c = (h_t + h_v) * (te - zone.theta_i_cool_c).max(0.0) * HOURS_PER_MONTH / 1000.0;
+            let gamma_c = if loss_c <= 1e-9 { 1e9 } else { gain / loss_c };
+            let q_c = (gain - utilization_factor(gamma_c) * loss_c).max(0.0) + over_c;
+            HeatingMonth { q_t_kwh: q_t, q_v_kwh: q_v, q_i_kwh: q_i, q_s_kwh: q_s, eta_utilisation: eta, q_h_kwh: (loss - eta * gain).max(0.0), q_c_kwh: q_c }
+        })
+        .collect()
+}
+
 /// 🧮 Zone-level balances; building totals aggregate these.
 pub fn zone_balances(doc: &Din18599Snapshot, elements: &[EnvelopeElement], delta_u: f64) -> Vec<ZoneBalance> {
     let climate = &doc.climate;
@@ -180,34 +216,10 @@ pub fn zone_balances(doc: &Din18599Snapshot, elements: &[EnvelopeElement], delta
         let share = zone.volume_m3 / v_net;
         let h_t = zone_transmission(&z_elems, delta_u, share, a_env_total);
         let h_v = zone_ventilation_hv(zone, doc, share);
-        let theta_i = zone.theta_i_heat_c;
-        let theta_c = zone.theta_i_cool_c;
-        let qi_w = zone.internal_gains_w_m2;
         let row = usage_profile_row(zone.usage_profile);
-        let mut q_h = 0.0;
-        let mut q_c = 0.0;
-        for m in 0..12 {
-            let te = climate.theta_e_c[m];
-            let qt = h_t * (theta_i - te).max(0.0) * HOURS_PER_MONTH / 1000.0;
-            let qv = h_v * (theta_i - te).max(0.0) * HOURS_PER_MONTH / 1000.0;
-            let qi = qi_w * zone.area_m2 * HOURS_PER_MONTH / 1000.0;
-            let mut qs = 0.0;
-            let g_h = climate.g_h_w_m2[m];
-            for e in z_elems.iter().filter(|e| e.g_value > 0.0) {
-                qs += g_h * orientation_solar_factor(e.orientation_deg, e.tilt_deg) * e.area_m2 * e.g_value * e.fc.clamp(0.0, 1.0) * HOURS_PER_MONTH / 1000.0;
-            }
-            let loss = qt + qv;
-            let gain = qi + qs;
-            let gamma = if loss <= 1e-9 { 1e9 } else { gain / loss };
-            let eta_u = utilization_factor(gamma);
-            q_h += (loss - eta_u * gain).max(0.0);
-            let loss_c = (h_t + h_v) * (theta_c - te).max(0.0) * HOURS_PER_MONTH / 1000.0;
-            let qt_c = h_t * (te - theta_c).max(0.0) * HOURS_PER_MONTH / 1000.0;
-            let qv_c = h_v * (te - theta_c).max(0.0) * HOURS_PER_MONTH / 1000.0;
-            let gamma_c = if loss_c <= 1e-9 { 1e9 } else { (qi + qs) / loss_c };
-            let eta_c = utilization_factor(gamma_c);
-            q_c += ((qi + qs) - eta_c * loss_c).max(0.0) + qt_c + qv_c;
-        }
+        let months = heating_months(zone, &z_elems, climate, h_t, h_v);
+        let q_h: f64 = months.iter().map(|m| m.q_h_kwh).sum();
+        let q_c: f64 = months.iter().map(|m| m.q_c_kwh).sum();
         let q_l = zone.lighting_power_w_m2 * zone.area_m2 * row.lighting_hours_a * doc.lighting.control_factor / 1000.0;
         out.push(ZoneBalance {
             zone_id: zone.id.clone(),
@@ -221,6 +233,15 @@ pub fn zone_balances(doc: &Din18599Snapshot, elements: &[EnvelopeElement], delta
         });
     }
     out
+}
+
+/// 📅 The monthly heating balance of every zone of the actual building, by zone id.
+pub fn zone_heating_months(doc: &Din18599Snapshot) -> Vec<(String, Vec<HeatingMonth>)> {
+    zone_balances(doc, &doc.elements, doc.delta_u_wb_w_m2k)
+        .iter()
+        .zip(&doc.zones)
+        .map(|(balance, zone)| (zone.id.clone(), heating_months(zone, &elements_for_zone(&doc.elements, &zone.id), &doc.climate, balance.h_t, balance.h_v)))
+        .collect()
 }
 
 fn orientation_solar_factor(orientation_deg: f64, tilt_deg: f64) -> f64 {

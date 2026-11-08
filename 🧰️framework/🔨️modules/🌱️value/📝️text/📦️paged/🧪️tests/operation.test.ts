@@ -1,0 +1,3 @@
+import {test,expect} from "bun:test";import {Database} from "bun:sqlite";import Ajv from "ajv";import schema from "./operation.schema.json";import law from "./operation.json";
+/** 🧭️ A native child phase cannot replace the parent's recorded operation before paid rearm. */
+test("paged original operation remains selected across recorded Post unwind",()=>{expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);const db=new Database(":memory:");try{for(const row of law.events)expect(db.query("select coalesce(?,?) operation").get(row.request,row.producer)).toEqual({operation:row.operation})}finally{db.close()}});

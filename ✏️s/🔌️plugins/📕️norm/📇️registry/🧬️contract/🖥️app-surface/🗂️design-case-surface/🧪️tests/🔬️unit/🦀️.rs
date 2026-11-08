@@ -113,3 +113,51 @@ fn vector_inputs_list_their_elements_plus_the_next_empty_one() {
     assert_eq!(paths, ["cases[id=c1].numbers[id=profile.0].value", "cases[id=c1].numbers[id=profile.1].value", "cases[id=c1].numbers[id=profile.2].value"]);
     assert_eq!(case_input_field_meta(VOCABULARY, "cases[id=c1].numbers[id=profile.1].value").map(|f| f.unit()), Some(Some("mm")));
 }
+
+struct Verifying;
+
+impl CaseCatalogue for Verifying {
+    fn entries() -> Vec<CaseEntry> {
+        ENTRIES.to_vec()
+    }
+
+    fn vocabulary() -> &'static [InputSpec] {
+        VOCABULARY
+    }
+
+    fn evaluate(entry: &CaseEntry, annex: AnnexChoice, case: &DesignCase) -> Vec<CheckResult> {
+        use semio_s_plugin_norm_compliance::{ClauseId, LocalizedCopy, SubjectRef};
+        if entry.id == "T-02" {
+            return Vec::new();
+        }
+        vec![CheckResult::assess("t01", entry.part, ClauseId::new(entry.part, entry.clause, entry.clause), SubjectRef::whole(LocalizedCopy::new("Tie", "Zugstab")), LocalizedCopy::new("Tension", "Zug"))
+            .annex(annex)
+            .not_applicable(LocalizedCopy::new(format!("{}: nothing to verify.", case.id), format!("{}: nichts nachzuweisen.", case.id)))
+            .build()]
+    }
+}
+
+#[test]
+fn verification_table_evaluates_each_entry_once_and_speaks_both_languages() {
+    let en = verification_catalogue_table::<Verifying>("EN TOY", AnnexChoice::En, "", Locale::En);
+    let de = verification_catalogue_table::<Verifying>("EN TOY", AnnexChoice::En, "", Locale::De);
+    assert_eq!(en.rows.iter().map(|row| row.id.as_str()).collect::<Vec<_>>(), ["T-01", "T-02"]);
+    assert!(en.rows.iter().all(|row| row.cells.len() == en.columns.len() && row.cells.len() == de.columns.len()));
+    for (row, entry) in en.rows.iter().zip(Verifying::entries()) {
+        let results = design_case::evaluate_case::<Verifying>(&design_case::seed::<Verifying>(&entry, entry.id), AnnexChoice::En);
+        let worst = results.iter().map(|result| result.status).max_by_key(|status| match status {
+            CheckStatus::Fail => 5,
+            CheckStatus::Warning => 4,
+            CheckStatus::UnverifiedBasis => 3,
+            CheckStatus::Pass => 2,
+            CheckStatus::Info => 1,
+            CheckStatus::NotApplicable => 0,
+        });
+        let expected = |locale| status_label(worst.unwrap_or(CheckStatus::NotApplicable), locale);
+        assert_eq!(row.cells[4], CatalogueCell::text(expected(Locale::En)));
+        assert_eq!(de.rows[en.rows.iter().position(|r| r.id == row.id).unwrap()].cells[4], CatalogueCell::text(expected(Locale::De)));
+    }
+    assert_eq!(de.rows[0].cells[3], CatalogueCell::text("Zug"));
+    assert_eq!(en.rows[0].cells[3], CatalogueCell::text("Tension"));
+    assert_eq!(verification_catalogue_table::<Verifying>("EN TOY", AnnexChoice::De, "druck", Locale::De).rows.len(), 1);
+}

@@ -11,6 +11,8 @@ const SECTION_FIELDS: &[&str] = &[
     "connections",
     "fireScenarios",
     "fatigueDetails",
+    "sheetProfiles",
+    "fireInsulations",
 ];
 
 /// 🧾️ `En1999` document outline.
@@ -35,6 +37,8 @@ impl En1999Outline {
             + snapshot.connections.len()
             + snapshot.fire_scenarios.len()
             + snapshot.fatigue_details.len()
+            + snapshot.sheet_profiles.len()
+            + snapshot.fire_insulations.len()
         ) as u32;
         Self { section_outline, field_count, entry_count }
     }

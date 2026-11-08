@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "copyLimit",
+    "structuralPrefix",
+    "plans",
+    "deniedWork",
+    "nestedTuple"
+  ],
+  "properties": {
+    "copyLimit": {
+      "const": 4096
+    },
+    "structuralPrefix": {
+      "const": [
+        "binding",
+        "reserve"
+      ]
+    },
+    "plans": {
+      "const": [
+        {
+          "name": "immutable",
+          "fields": [
+            "binding",
+            "output",
+            "retirement",
+            "projected",
+            "admitted",
+            "closing",
+            "project_route",
+            "close_route"
+          ],
+          "parts": 8,
+          "prefix": 10
+        },
+        {
+          "name": "map",
+          "fields": [
+            "child",
+            "pages",
+            "output",
+            "close",
+            "take_reply",
+            "binding",
+            "route",
+            "closing",
+            "spent"
+          ],
+          "parts": 9,
+          "prefix": 11
+        }
+      ]
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "nestedTuple": {
+      "const": {
+        "children": [
+          {
+            "name": "u64",
+            "parts": 1,
+            "valueHeader": 1
+          },
+          {
+            "name": "unit",
+            "parts": 1,
+            "valueHeader": 1
+          }
+        ],
+        "tail": [
+          "phase",
+          "source",
+          "output",
+          "spent",
+          "closing",
+          "close",
+          "route",
+          "selected",
+          "child_reply"
+        ],
+        "parts": 13,
+        "fieldPrefix": [
+          "binding",
+          "reserve",
+          "take-box",
+          "binding-clear"
+        ],
+        "actions": 17
+      }
+    }
+  }
+}

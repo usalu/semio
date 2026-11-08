@@ -31,9 +31,13 @@
     "en1997_lab_test",
     "en1997_lab_point",
     "en1997_layer_water",
+    "en1997_placement",
     "en1997_case",
     "en1997_case_number",
-    "en1997_case_text"
+    "en1997_case_text",
+    "en1997_investigation",
+    "en1997_investigation_reading",
+    "en1997_characteristic_basis"
   ],
   "snapshot": {
     "structureId": "structure\u0000地盤",
@@ -58,7 +62,7 @@
         "poissonRatio": 9.9,
         "cptQc": 10.1,
         "sptN": 11.2,
-        "cptNkt": 0.0
+        "cptNkt": 0
       }
     ],
     "footings": [
@@ -97,20 +101,20 @@
         "compressionVariable": 29.2,
         "tensionPermanent": 30.3,
         "tensionVariable": 31.4,
-        "bendingStiffnessEi": 0.0,
-        "horizontalSubgradeModulus": 0.0,
-        "lateralHeadLoad": 0.0,
-        "elasticModulus": 33000000000.0,
-        "settlingThickness": 0.0,
-        "negativeFrictionBeta": 0.0,
-        "dynamicTestCount": 0.0,
-        "dynamicResistanceMean": 0.0,
-        "dynamicResistanceMin": 0.0,
-        "hammerWeight": 0.0,
-        "dropHeight": 0.0,
-        "setPerBlow": 0.0,
-        "elasticCompression": 0.0,
-        "hammerEfficiency": 0.0,
+        "bendingStiffnessEi": 0,
+        "horizontalSubgradeModulus": 0,
+        "lateralHeadLoad": 0,
+        "elasticModulus": 33000000000,
+        "settlingThickness": 0,
+        "negativeFrictionBeta": 0,
+        "dynamicTestCount": 0,
+        "dynamicResistanceMean": 0,
+        "dynamicResistanceMin": 0,
+        "hammerWeight": 0,
+        "dropHeight": 0,
+        "setPerBlow": 0,
+        "elasticCompression": 0,
+        "hammerEfficiency": 0,
         "concreteClass": "c4050",
         "testProfiles": [
           {
@@ -138,11 +142,11 @@
         "surcharge": 43.7,
         "verticalPermanent": 44.8,
         "horizontalPermanent": 45.9,
-        "seismicKh": 0.0,
-        "seismicKv": 0.0,
-        "reinforcementSpacing": 0.0,
-        "reinforcementWidth": 0.0,
-        "reinforcementFriction": 0.0
+        "seismicKh": 0,
+        "seismicKv": 0,
+        "reinforcementSpacing": 0,
+        "reinforcementWidth": 0,
+        "reinforcementFriction": 0
       }
     ],
     "slopes": [
@@ -152,10 +156,10 @@
         "height": 47.2,
         "length": 48.3,
         "governingLayerId": "missing authored reference",
-        "circleCentreX": 0.0,
-        "circleCentreZ": 0.0,
-        "circleRadius": 0.0,
-        "width": 0.0
+        "circleCentreX": 0,
+        "circleCentreZ": 0,
+        "circleRadius": 0,
+        "width": 0
       }
     ],
     "upliftCases": [
@@ -173,28 +177,28 @@
         "id": "anchor-A1",
         "wallId": "ewall-E1",
         "tendon": "strand",
-        "headDepth": 1.0,
-        "inclinationDeg": 15.0,
-        "freeLength": 8.0,
-        "fixedLength": 6.0,
+        "headDepth": 1,
+        "inclinationDeg": 15,
+        "freeLength": 8,
+        "fixedLength": 6,
         "fixedDiameter": 0.15,
-        "bondStress": 200000.0,
-        "designForce": 300000.0,
-        "tendonYieldForce": 700000.0,
+        "bondStress": 200000,
+        "designForce": 300000,
+        "tendonYieldForce": 700000,
         "minFreeLength": 4.5,
         "testFactor": 1.1,
         "tests": [
           {
             "id": "atest-1",
-            "pullOutResistance": 650000.0
+            "pullOutResistance": 650000
           },
           {
             "id": "atest-2",
-            "pullOutResistance": 640000.0
+            "pullOutResistance": 640000
           },
           {
             "id": "atest-3",
-            "pullOutResistance": 660000.0
+            "pullOutResistance": 660000
           }
         ]
       }
@@ -203,16 +207,16 @@
       {
         "id": "ewall-E1",
         "kind": "freeEarth",
-        "retainedHeight": 4.0,
-        "embedment": 6.0,
-        "propDepth": 1.0,
+        "retainedHeight": 4,
+        "embedment": 6,
+        "propDepth": 1,
         "thickness": 0.6,
-        "backfillGamma": 19000.0,
-        "phiDeg": 32.0,
-        "deltaActiveDeg": 16.0,
-        "deltaPassiveDeg": 10.0,
-        "surcharge": 10000.0,
-        "undrainedStrength": 0.0
+        "backfillGamma": 19000,
+        "phiDeg": 32,
+        "deltaActiveDeg": 16,
+        "deltaPassiveDeg": 10,
+        "surcharge": 10000,
+        "undrainedStrength": 0
       }
     ],
     "pileGroups": [
@@ -222,12 +226,12 @@
         "rows": 2,
         "columns": 2,
         "spacing": 1.8,
-        "capVertical": 1800000.0,
-        "capMomentX": 100000.0,
-        "capMomentY": 60000.0,
-        "singleResistance": 1400000.0,
-        "shaftCohesionSum": 400000.0,
-        "baseCohesion": 120000.0
+        "capVertical": 1800000,
+        "capMomentX": 100000,
+        "capMomentY": 60000,
+        "singleResistance": 1400000,
+        "shaftCohesionSum": 400000,
+        "baseCohesion": 120000
       }
     ],
     "labTests": [
@@ -236,29 +240,29 @@
         "layerId": "layer-sand",
         "kind": "directShear",
         "voidRatio": 0.65,
-        "preloadStress": 100000.0,
+        "preloadStress": 100000,
         "drainageHeight": 0.01,
-        "consolidationTime": 120.0,
-        "compressionIndex": 0.0,
-        "swellingIndex": 0.0,
-        "stressIncrement": 0.0,
-        "secondaryCompressionIndex": 0.0,
-        "designLife": 0.0,
+        "consolidationTime": 120,
+        "compressionIndex": 0,
+        "swellingIndex": 0,
+        "stressIncrement": 0,
+        "secondaryCompressionIndex": 0,
+        "designLife": 0,
         "points": [
           {
             "id": "pt-1",
-            "normalStress": 50000.0,
-            "shearStress": 32500.0
+            "normalStress": 50000,
+            "shearStress": 32500
           },
           {
             "id": "pt-2",
-            "normalStress": 100000.0,
-            "shearStress": 65000.0
+            "normalStress": 100000,
+            "shearStress": 65000
           },
           {
             "id": "pt-3",
-            "normalStress": 200000.0,
-            "shearStress": 130000.0
+            "normalStress": 200000,
+            "shearStress": 130000
           }
         ]
       }
@@ -267,14 +271,14 @@
       {
         "id": "water-gravel",
         "layerId": "layer-gravel",
-        "piezometricDepth": 4.0,
+        "piezometricDepth": 4,
         "permeability": 0.001,
-        "headDifference": 1.0,
-        "flowLength": 6.0,
-        "wellRadius": 0.0,
-        "wellWaterDepth": 0.0,
-        "influenceRadius": 0.0,
-        "wellCapacity": 0.0
+        "headDifference": 1,
+        "flowLength": 6,
+        "wellRadius": 0,
+        "wellWaterDepth": 0,
+        "influenceRadius": 0,
+        "wellCapacity": 0
       }
     ],
     "placements": [],

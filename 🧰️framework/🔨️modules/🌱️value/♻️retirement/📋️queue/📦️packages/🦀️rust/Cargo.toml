@@ -21,6 +21,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-value-retirement-contract = { path = "../../../🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path="../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-retirement = { path="../../../📦️packages/🦀️rust" }
 semio-framework-value-paged-list = { path="../../../../📋️list/📦️packages/🦀️rust" }

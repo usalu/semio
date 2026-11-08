@@ -22,9 +22,16 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-value-native-outcome = { path = "../../../../../🌱️value/🛬️decode/📬️outcome/📦️packages/🦀️rust" }
+semio-framework-value-native-receiving-frame = { path = "../../../../../🌱️value/🛬️decode/🏭️construction/📦️effect/🧳️frame/📦️packages/🦀️rust" }
+semio-framework-value-control-contract = { path = "../../../../../🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-job-payload = { path = "../../../📦️builder/📦️packages/🦀️rust" }
 semio-framework-job-return-escrow-publication = { path = "../../../📤️publication/🪙️escrow/📦️packages/🦀️rust" }
 semio-framework-value-retained-clone = { path = "../../../../../🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 serde_json = "1.0.140"
+
+[[test]]
+name = "origin-birth-layout"
+path = "../../🧪️tests/🔒️birth/🦀️.rs"

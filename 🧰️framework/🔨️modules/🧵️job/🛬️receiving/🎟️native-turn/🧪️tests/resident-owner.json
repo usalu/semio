@@ -1,0 +1,82 @@
+[
+  {
+    "source": true,
+    "work": true,
+    "physical": true,
+    "ready": true,
+    "empty": true,
+    "grant": true,
+    "fuel": true,
+    "moved": true
+  },
+  {
+    "source": false,
+    "work": true,
+    "physical": true,
+    "ready": true,
+    "empty": true,
+    "grant": true,
+    "fuel": true,
+    "moved": false
+  },
+  {
+    "source": true,
+    "work": false,
+    "physical": true,
+    "ready": true,
+    "empty": true,
+    "grant": true,
+    "fuel": true,
+    "moved": false
+  },
+  {
+    "source": true,
+    "work": true,
+    "physical": false,
+    "ready": true,
+    "empty": true,
+    "grant": true,
+    "fuel": true,
+    "moved": false
+  },
+  {
+    "source": true,
+    "work": true,
+    "physical": true,
+    "ready": false,
+    "empty": true,
+    "grant": true,
+    "fuel": true,
+    "moved": false
+  },
+  {
+    "source": true,
+    "work": true,
+    "physical": true,
+    "ready": true,
+    "empty": false,
+    "grant": true,
+    "fuel": true,
+    "moved": false
+  },
+  {
+    "source": true,
+    "work": true,
+    "physical": true,
+    "ready": true,
+    "empty": true,
+    "grant": false,
+    "fuel": true,
+    "moved": false
+  },
+  {
+    "source": true,
+    "work": true,
+    "physical": true,
+    "ready": true,
+    "empty": true,
+    "grant": true,
+    "fuel": false,
+    "moved": false
+  }
+]

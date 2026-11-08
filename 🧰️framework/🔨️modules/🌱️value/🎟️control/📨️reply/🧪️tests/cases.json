@@ -1,0 +1,13 @@
+{
+  "error": "original recorded reply",
+  "pendingRetainsKey": true,
+  "completionClearsKey": true,
+  "foreignRejected": true,
+  "nestedKeys": 2,
+  "childCompleteBecomes": "progress",
+  "sendOnly": {
+    "value": 73,
+    "recorded": true,
+    "keyClearedBeforeUnwind": true
+  }
+}

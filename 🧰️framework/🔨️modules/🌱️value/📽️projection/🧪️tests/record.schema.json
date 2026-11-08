@@ -1,0 +1,96 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "value",
+    "cuts",
+    "original",
+    "foreign",
+    "foreignAccepted",
+    "published",
+    "unwindAt",
+    "largeLength",
+    "maximumCopy",
+    "seedCuts",
+    "placement"
+  ],
+  "properties": {
+    "value": {
+      "type": "string",
+      "minLength": 1
+    },
+    "cuts": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "original": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "foreign": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "foreignAccepted": {
+      "type": "boolean"
+    },
+    "published": {
+      "type": "boolean"
+    },
+    "unwindAt": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "largeLength": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maximumCopy": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "seedCuts": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "integer", "minimum": 1 }
+    },
+    "placement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "elementBytes",
+        "chunkElements",
+        "offsets",
+        "deniedOffset"
+      ],
+      "properties": {
+        "elementBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "chunkElements": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "offsets": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "deniedOffset": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

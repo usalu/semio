@@ -1,0 +1,5 @@
+{
+  "mutation": "changeelementadjacency",
+  "elementId": "wall-n",
+  "newAdjacency": "Unheated"
+}

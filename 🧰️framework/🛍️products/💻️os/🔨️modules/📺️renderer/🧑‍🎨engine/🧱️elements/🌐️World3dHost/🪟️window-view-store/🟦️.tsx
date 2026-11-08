@@ -13,13 +13,13 @@ import {
   usePaneSlot,
   windowMeasuresBodyClass,
   type Anchor,
-  type IconName,
-  Vector3
+  type IconName
 } from "@semio-tech/ui-react";
 // #endregion 🔌️Adapters
 import { worldProjectionSpecIconId, WorldProjectionKindSwitch, type WorldCameraState, type WorldProjectionSpec } from "@semio-tech/framework/infinite/world/r3f";
 import { type WorldParsedCameraState } from "../🔭️scene-schema/🟦️.ts";
 import { worldRayFromNdc } from "../🎯️marquee-and-bridges/🟦️.tsx";
+import { world3dHandleDragParameterV1, type WorldVec3 } from "../🧲️handle-drag/🟦️.ts";
 
 
 //#region 🔖️World3dHost
@@ -32,17 +32,8 @@ export function axisDragParam(clientX: number, clientY: number, hostRect: DOMRec
   const ndcY = -(((clientY - hostRect.top) / hostRect.height) * 2 - 1);
   const ray = worldRayFromNdc(ndcX, ndcY, camera);
   if (!ray) return null;
-  const axisOrigin = new Vector3(origin[0], origin[1], origin[2]);
-  const axisDirection = new Vector3(axis[0], axis[1], axis[2]).normalize();
-  const originDelta = ray.origin.clone().sub(axisOrigin);
-  const a = ray.direction.dot(ray.direction);
-  const b = ray.direction.dot(axisDirection);
-  const c = axisDirection.dot(axisDirection);
-  const d = ray.direction.dot(originDelta);
-  const e = axisDirection.dot(originDelta);
-  const denominator = a * c - b * b;
-  if (Math.abs(denominator) < 1e-9) return null;
-  return (a * e - b * d) / denominator;
+  const direction: WorldVec3 = [ray.direction.x, ray.direction.y, ray.direction.z];
+  return world3dHandleDragParameterV1([ray.origin.x, ray.origin.y, ray.origin.z], direction, origin, axis);
 }
 
 /** 🪪️ Element id of one world surface's projection pane. A world surface is mounted once per OPEN WINDOW

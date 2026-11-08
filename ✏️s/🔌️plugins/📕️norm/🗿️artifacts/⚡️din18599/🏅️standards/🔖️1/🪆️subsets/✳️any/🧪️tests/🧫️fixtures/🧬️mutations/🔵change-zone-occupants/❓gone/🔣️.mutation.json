@@ -1,0 +1,5 @@
+{
+  "mutation": "changezoneoccupants",
+  "zoneId": "ghost",
+  "newOccupants": 5
+}

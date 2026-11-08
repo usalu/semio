@@ -1,0 +1,26 @@
+[
+  {
+    "phase": "started",
+    "same": true,
+    "granted": true,
+    "exposed": true
+  },
+  {
+    "phase": "started",
+    "same": false,
+    "granted": true,
+    "exposed": false
+  },
+  {
+    "phase": "started",
+    "same": true,
+    "granted": false,
+    "exposed": false
+  },
+  {
+    "phase": "settled",
+    "same": true,
+    "granted": true,
+    "exposed": false
+  }
+]

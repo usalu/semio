@@ -11,7 +11,7 @@ import { world3dSelectionActionArgs, world3dSelectionTargetsActionArgs } from ".
 import type { useActiveUtilityState } from "../🔶️active-utility/🟦️.ts";
 
 /** 🔹 Builds handlePointerUp, handleEmptyClick, clearCatalogueDrop, readCatalogueDragEncoded of useWorldPointerAndDrop. */
-export function useHandlePointerUpState({ gestureRecognizer, setMarqueePath, marqueeStartRef, endRelocateDrag, faceDragSession, setFaceDragSession, hostRef, cameraRef, dispatch, node, finalizeMarqueeSelection, marqueeDragActiveRef, paintMode, selection, activeUtility, toLocalPoint, instancesRef, meshesRef, handleInstancePointerDown, setVortexPointerArm, connectDropConsumedRef, handleConnectDragCancel, interactionDomainId, interactionGranularity, persistentSelectionMode, selectionMode, marqueeDown, wasMarqueeDragRef, contextMenu, dismissContextMenu, interaction, handleSuggestionClose, hoveredInstanceInteractionTargetRef, catalogueDragEncodedRef, catalogueDragDepthRef, gridSnapEnabled, gridFactor, pendingCelebrateCatalogueDropIdsRef, instances }: Pick<ReturnType<typeof useActiveUtilityState>, "gestureRecognizer" | "setMarqueePath" | "marqueeStartRef" | "endRelocateDrag" | "faceDragSession" | "setFaceDragSession" | "hostRef" | "cameraRef" | "dispatch" | "node" | "finalizeMarqueeSelection" | "marqueeDragActiveRef" | "paintMode" | "selection" | "activeUtility" | "toLocalPoint" | "instancesRef" | "meshesRef" | "handleInstancePointerDown" | "setVortexPointerArm" | "connectDropConsumedRef" | "handleConnectDragCancel" | "interactionDomainId" | "interactionGranularity" | "persistentSelectionMode" | "selectionMode" | "marqueeDown" | "wasMarqueeDragRef" | "contextMenu" | "dismissContextMenu" | "interaction" | "handleSuggestionClose" | "hoveredInstanceInteractionTargetRef" | "catalogueDragEncodedRef" | "catalogueDragDepthRef" | "gridSnapEnabled" | "gridFactor" | "pendingCelebrateCatalogueDropIdsRef" | "instances">) {
+export function useHandlePointerUpState({ gestureRecognizer, setMarqueePath, marqueeStartRef, endHandleDrag, endRelocateDrag, faceDragSession, setFaceDragSession, hostRef, cameraRef, dispatch, node, finalizeMarqueeSelection, marqueeDragActiveRef, paintMode, selection, activeUtility, toLocalPoint, instancesRef, meshesRef, handleInstancePointerDown, setVortexPointerArm, connectDropConsumedRef, handleConnectDragCancel, interactionDomainId, interactionGranularity, persistentSelectionMode, selectionMode, marqueeDown, wasMarqueeDragRef, contextMenu, dismissContextMenu, interaction, handleSuggestionClose, hoveredInstanceInteractionTargetRef, catalogueDragEncodedRef, catalogueDragDepthRef, gridSnapEnabled, gridFactor, pendingCelebrateCatalogueDropIdsRef, instances }: Pick<ReturnType<typeof useActiveUtilityState>, "gestureRecognizer" | "setMarqueePath" | "marqueeStartRef" | "endHandleDrag" | "endRelocateDrag" | "faceDragSession" | "setFaceDragSession" | "hostRef" | "cameraRef" | "dispatch" | "node" | "finalizeMarqueeSelection" | "marqueeDragActiveRef" | "paintMode" | "selection" | "activeUtility" | "toLocalPoint" | "instancesRef" | "meshesRef" | "handleInstancePointerDown" | "setVortexPointerArm" | "connectDropConsumedRef" | "handleConnectDragCancel" | "interactionDomainId" | "interactionGranularity" | "persistentSelectionMode" | "selectionMode" | "marqueeDown" | "wasMarqueeDragRef" | "contextMenu" | "dismissContextMenu" | "interaction" | "handleSuggestionClose" | "hoveredInstanceInteractionTargetRef" | "catalogueDragEncodedRef" | "catalogueDragDepthRef" | "gridSnapEnabled" | "gridFactor" | "pendingCelebrateCatalogueDropIdsRef" | "instances">) {
   const handlePointerUp = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       const verdict = gestureRecognizer.up(event.pointerId);
@@ -23,6 +23,7 @@ export function useHandlePointerUpState({ gestureRecognizer, setMarqueePath, mar
         marqueeStartRef.current = null;
         return;
       }
+      if (endHandleDrag(event)) return;
       if (endRelocateDrag(event)) return;
       if (faceDragSession) {
         const session = faceDragSession;
@@ -67,7 +68,7 @@ export function useHandlePointerUpState({ gestureRecognizer, setMarqueePath, mar
         handleConnectDragCancel();
       }
     },
-    [gestureRecognizer, activeUtility, dispatch, endRelocateDrag, faceDragSession, finalizeMarqueeSelection, handleConnectDragCancel, handleInstancePointerDown, interactionDomainId, interactionGranularity, node.surfaceId, paintMode, persistentSelectionMode, selection.engagementSessionActive, selection.selectionMergeMode, selectionMode, toLocalPoint],
+    [gestureRecognizer, activeUtility, dispatch, endHandleDrag, endRelocateDrag, faceDragSession, finalizeMarqueeSelection, handleConnectDragCancel, handleInstancePointerDown, interactionDomainId, interactionGranularity, node.surfaceId, paintMode, persistentSelectionMode, selection.engagementSessionActive, selection.selectionMergeMode, selectionMode, toLocalPoint],
   );
 
   useEffect(() => {

@@ -110,3 +110,10 @@ fn reference_tables_cells_match_evaluate_sources() {
         "evaluate_building fire limit never matched catalogue cell {t_min} (need α in (0.6, 1.0])"
     );
 }
+
+#[test]
+fn verification_catalogue_table_has_one_row_per_case() {
+    type Cases = semio_s_artifact_norm_en1996_schema::checks::masonry::En1996Cases;
+    let table = semio_s_plugin_norm_app_surface::verification_catalogue_table::<Cases>("EN 1996", semio_s_plugin_norm_compliance::AnnexChoice::En, "", semio_ui_locale::Locale::En);
+    assert_eq!(table.rows.len(), <Cases as semio_s_plugin_norm_compliance::design_case::CaseCatalogue>::entries().len());
+}

@@ -1,0 +1,112 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "message",
+    "semanticWork",
+    "transferWork",
+    "deniedWork",
+    "cases",
+    "stock",
+    "transferredWork",
+    "readyRepeatWork",
+    "acknowledgement"
+  ],
+  "properties": {
+    "message": {
+      "const": "actual resident outcome custody 源"
+    },
+    "semanticWork": {
+      "const": 1
+    },
+    "transferWork": {
+      "const": 1
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "cases": {
+      "const": [
+        {
+          "id": "unready",
+          "ready": false,
+          "empty": true,
+          "work": true,
+          "copy": true,
+          "sameOwner": true,
+          "moves": false
+        },
+        {
+          "id": "occupied",
+          "ready": true,
+          "empty": false,
+          "work": true,
+          "copy": true,
+          "sameOwner": true,
+          "moves": false
+        },
+        {
+          "id": "workDenied",
+          "ready": true,
+          "empty": true,
+          "work": false,
+          "copy": true,
+          "sameOwner": true,
+          "moves": false
+        },
+        {
+          "id": "copyDenied",
+          "ready": true,
+          "empty": true,
+          "work": true,
+          "copy": false,
+          "sameOwner": true,
+          "moves": false
+        },
+        {
+          "id": "foreignOwner",
+          "ready": true,
+          "empty": true,
+          "work": true,
+          "copy": true,
+          "sameOwner": false,
+          "moves": false
+        },
+        {
+          "id": "funded",
+          "ready": true,
+          "empty": true,
+          "work": true,
+          "copy": true,
+          "sameOwner": true,
+          "moves": true
+        }
+      ]
+    },
+    "stock": {
+      "const": {
+        "items": 64,
+        "copyBytes": 1048576,
+        "capacityBytes": 65536,
+        "releaseBytes": 65536,
+        "depth": 64,
+        "fuel": 64
+      }
+    },
+    "transferredWork": {
+      "const": 0
+    },
+    "readyRepeatWork": {
+      "const": 0
+    },
+    "acknowledgement": {
+      "const": {
+        "work": 1,
+        "metadataOnly": true,
+        "unreportedAccepted": false,
+        "errorAccepted": false,
+        "receiveCallsAfterRecovery": 1
+      }
+    }
+  }
+}

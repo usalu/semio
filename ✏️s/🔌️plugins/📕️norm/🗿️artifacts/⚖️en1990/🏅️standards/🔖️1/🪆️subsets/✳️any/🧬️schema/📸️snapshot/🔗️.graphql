@@ -1,3 +1,5 @@
+scalar UInt32
+
 type En1990Snapshot {
   annex: String!
   projectId: String!
@@ -159,7 +161,7 @@ type TestSeries {
   id: String!
   quantity: String!
   distribution: TestDistribution!
-  sampleSize: Int!
+  sampleSize: UInt32!
   mean: Float!
   stdDev: Float!
   variationKnown: Float!

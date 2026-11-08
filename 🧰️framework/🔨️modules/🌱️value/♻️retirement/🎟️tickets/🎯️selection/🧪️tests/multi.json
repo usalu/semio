@@ -1,0 +1,18 @@
+{
+  "count": 96,
+  "items": 32,
+  "deniedItems": 0,
+  "wordBytes": 1,
+  "lengthHeaderBytes": 8,
+  "copiedItems": 32,
+  "remaining": 64,
+  "work": 1,
+  "stock": {
+    "items": 1024,
+    "copyBytes": 65536,
+    "capacityBytes": 65536,
+    "releaseBytes": 65536,
+    "depth": 64,
+    "work": 512
+  }
+}

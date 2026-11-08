@@ -152,6 +152,7 @@ pub fn render(
 ) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let mut tables = reference_tables();
     tables.push(semio_s_plugin_norm_app_surface::case_catalogue_table("en1992", &<semio_s_artifact_norm_en1992_checks::En1992Cases as semio_s_plugin_norm_compliance::design_case::CaseCatalogue>::entries(), "", locale));
+    tables.push(semio_s_plugin_norm_app_surface::verification_catalogue_table::<semio_s_artifact_norm_en1992_checks::En1992Cases>("EN 1992", semio_s_plugin_norm_compliance::AnnexChoice::En, "", locale));
     semio_s_plugin_norm_app_surface::render_catalogue(&examples, &tables, locale, controller_id, windows)
 }
 //#endregion 🔖️Render

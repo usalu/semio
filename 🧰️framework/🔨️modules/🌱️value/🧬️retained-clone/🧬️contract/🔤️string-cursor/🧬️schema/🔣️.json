@@ -14,7 +14,8 @@
     "closeTurns",
     "maximumIdleTurns",
     "closeFunding",
-    "closeGrants"
+    "closeGrants",
+    "retryBody"
   ],
   "properties": {
     "version": {
@@ -145,6 +146,9 @@
           }
         }
       }
+    },
+    "retryBody": {
+      "const": 4
     }
   },
   "$defs": {

@@ -279,6 +279,47 @@ fn every_handle_write_of_the_structures_subject_resolves_to_a_typed_set_field_ru
 }
 
 #[test]
+fn every_handle_write_dimension_and_marker_binding_has_a_bilingual_typed_field_spec() {
+    use semio_s_plugin_norm_app_surface::FieldKind;
+    let document = En1998Snapshot::full_showcase();
+    let report = semio_s_artifact_norm_en1998_inferences::evaluate(&document);
+    let scene = viewport::scene_of(&document, &report);
+    let selection: Vec<_> = scene.entities.iter().map(|e| e.entity.clone()).collect();
+    let mut paths: Vec<String> = Vec::new();
+    for handle in viewport::handles_of(&document, &selection) {
+        paths.extend(handle.writes_at(0.0).into_iter().map(|write| write.path));
+    }
+    for annotation in &scene.annotations {
+        if let semio_s_plugin_norm_structural_scene::Annotation::Dimension { binding: Some(binding), .. } = annotation {
+            paths.push(binding.path.clone());
+        }
+    }
+    for diagram in semio_s_artifact_norm_en1998_scene::diagrams(&document, &report, None) {
+        paths.extend(diagram.markers.iter().filter_map(|marker| marker.binding.as_ref().map(|binding| binding.path.clone())));
+    }
+    assert!(!paths.is_empty());
+    let mut bad = Vec::new();
+    for path in paths {
+        let mut templated = String::new();
+        let mut rest = path.as_str();
+        while let Some(start) = rest.find("[id=") {
+            let end = rest[start..].find(']').map_or(rest.len(), |i| start + i);
+            templated.push_str(&rest[..start]);
+            templated.push_str("[0]");
+            rest = &rest[(end + 1).min(rest.len())..];
+        }
+        templated.push_str(rest);
+        match crate::field_meta::en1998_field_meta(&templated) {
+            Some(spec) if !spec.label.en.is_empty() && !spec.label.de.is_empty() && !matches!(spec.kind, FieldKind::Inferred | FieldKind::Text) => {}
+            _ => bad.push(path),
+        }
+    }
+    bad.sort();
+    bad.dedup();
+    assert!(bad.is_empty(), "bound paths without a bilingual typed FieldSpec: {bad:?}");
+}
+
+#[test]
 fn the_new_document_palette_offers_the_full_showcase_and_its_dsl_round_trips_to_the_committed_fixture() {
     let source = <En1998PlayApp as semio_plugin::ArtifactEditor>::examples().into_iter().find(|example| example.id() == "full-showcase").expect("the palette offers the full showcase");
     let showcase = En1998Snapshot::full_showcase();

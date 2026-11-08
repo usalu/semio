@@ -259,7 +259,7 @@ fn render_body(body_key: &str, doc: &ArtifactView<'_, En1990Snapshot>, cfg: &Con
 
 //#region 🫧️LiveEditor
 fn live_entities(document: &En1990Snapshot) -> Vec<semio_s_plugin_norm_structural_scene::EntityRef> {
-    viewport::scene_of(document, &<En1990Family as semio_s_plugin_norm_compliance::NormFamily>::live_report(document), semio_s_plugin_norm_structural_scene::projection::ViewOptions::none()).entities.into_iter().map(|entity| entity.entity).collect()
+    viewport::scene_of(document, &semio_s_plugin_norm_app_surface::paint_report::<En1990Family>(document), semio_s_plugin_norm_structural_scene::projection::ViewOptions::none()).entities.into_iter().map(|entity| entity.entity).collect()
 }
 
 fn live_handles(document: &En1990Snapshot, selection: &[semio_s_plugin_norm_structural_scene::EntityRef]) -> Vec<semio_s_plugin_norm_structural_scene::Handle> {

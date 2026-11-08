@@ -61,38 +61,45 @@ fn push_duplicate_ids(report: &mut CheckReport, table: &str, ids: &[String], pat
 
 /// ⚖️ Evaluate DIN V 18599 / GEG compliance for the building subject.
 pub fn evaluate_document(doc: &Din18599Snapshot) -> CheckReport {
+    evaluate_scoped(doc, Scope::All)
+}
+
+/// ⚖️ The part of the evaluation `scope` selects, in the exact order of the full one: the integrity part, the volume, climate and area part, the element-zone rows, the envelope part, the lighting rows, the systems part, the cooling-setpoint rows, the cooling-demand part and the energy part. The balance is derived only when a selected part reads it.
+pub fn evaluate_scoped(doc: &Din18599Snapshot, scope: Scope<'_>) -> CheckReport {
     let mut report = CheckReport::default();
     let annex = AnnexChoice::De;
-    push_duplicate_ids(
-        &mut report,
-        "zones",
-        &doc.zones.iter().map(|z| z.id.clone()).collect::<Vec<_>>(),
-        &|id| format!("zones[id={id}].id"),
-        annex,
-    );
-    push_duplicate_ids(
-        &mut report,
-        "elements",
-        &doc.elements.iter().map(|e| e.id.clone()).collect::<Vec<_>>(),
-        &|id| format!("elements[id={id}].id"),
-        annex,
-    );
-    let derived = derive_balance(doc);
-    check_heated_volume(doc, &mut report, annex, &derived);
-    check_climate_table(doc, &mut report, annex);
-    check_net_floor_area(doc, &mut report, annex);
-    check_element_zone_linkage(doc, &mut report, annex);
-    check_transmission_loss(doc, &mut report, annex, &derived);
-    check_monthly_heating_demand(doc, &mut report, annex, &derived);
-    check_ventilation_heat_recovery(doc, &mut report, annex, &derived);
-    check_lighting(doc, &mut report, annex);
-    check_heating_system_efficiency(doc, &mut report, annex, &derived);
-    check_hot_water(doc, &mut report, annex, &derived);
-    check_cooling_temperature(doc, &mut report, annex, &derived);
-    check_cooling_demand(doc, &mut report, annex, &derived);
-    check_automation(doc, &mut report, annex);
-    check_primary_energy(doc, &mut report, annex, &derived);
-    check_tabular_method(doc, &mut report, annex, &derived);
+    let derived = std::cell::LazyCell::new(|| derive_balance(doc));
+    if scope.part("integrity") {
+        push_duplicate_ids(&mut report, "zones", &doc.zones.iter().map(|z| z.id.clone()).collect::<Vec<_>>(), &|id| format!("zones[id={id}].id"), annex);
+        push_duplicate_ids(&mut report, "elements", &doc.elements.iter().map(|e| e.id.clone()).collect::<Vec<_>>(), &|id| format!("elements[id={id}].id"), annex);
+    }
+    if scope.part("volume-climate-area") {
+        check_heated_volume(doc, &mut report, annex, &derived);
+        check_climate_table(doc, &mut report, annex);
+        check_net_floor_area(doc, &mut report, annex);
+    }
+    check_element_zone_linkage(doc, &mut report, annex, scope);
+    if scope.part("envelope") {
+        check_transmission_loss(doc, &mut report, annex, &derived);
+        check_monthly_heating_demand(doc, &mut report, annex, &derived);
+        check_ventilation_heat_recovery(doc, &mut report, annex, &derived);
+    }
+    check_lighting(doc, &mut report, annex, scope);
+    if scope.part("systems") {
+        check_heating_system_efficiency(doc, &mut report, annex, &derived);
+        check_hot_water(doc, &mut report, annex, &derived);
+    }
+    if scope.globals() || matches!(scope, Scope::Row("cooling-need", _)) {
+        check_cooling_temperature(doc, &mut report, annex, &derived, scope);
+    }
+    if scope.part("cooling") {
+        check_cooling_demand(doc, &mut report, annex, &derived);
+    }
+    if scope.part("energy") {
+        check_automation(doc, &mut report, annex);
+        check_primary_energy(doc, &mut report, annex, &derived);
+        check_tabular_method(doc, &mut report, annex, &derived);
+    }
     report
 }
 //#endregion 🔖️Checks

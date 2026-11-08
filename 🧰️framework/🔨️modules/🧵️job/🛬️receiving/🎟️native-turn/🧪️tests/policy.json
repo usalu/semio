@@ -1,0 +1,30 @@
+[
+  {
+    "sameSource": true,
+    "decision": true,
+    "fuel": 3,
+    "quote": true,
+    "settle": true
+  },
+  {
+    "sameSource": true,
+    "decision": false,
+    "fuel": 3,
+    "quote": false,
+    "settle": true
+  },
+  {
+    "sameSource": true,
+    "decision": true,
+    "fuel": 0,
+    "quote": false,
+    "settle": true
+  },
+  {
+    "sameSource": false,
+    "decision": true,
+    "fuel": 3,
+    "quote": false,
+    "settle": false
+  }
+]

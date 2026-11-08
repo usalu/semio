@@ -8,7 +8,11 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 use semio_s_artifact_norm_din18599_mutations::Din18599Mutation;
 use semio_s_artifact_norm_din18599_mut_building::{change_attachment, change_automation_class, change_building_category, change_delta_u_wb, change_geg_qp_factor, change_heated_volume_m3, change_method, change_net_floor_area_m2, change_use_class};
-use semio_s_artifact_norm_din18599_mut_zoning::{change_element_u, replace_elements, replace_zones, update_climate};
+use semio_s_artifact_norm_din18599_mut_zoning::{change_element_u, update_climate};
+use semio_s_artifact_norm_din18599_mut_zone_rows::{insert_zone, remove_zone, change_zone_label_en, change_zone_label_de, change_zone_usage_profile, change_zone_occupants};
+use semio_s_artifact_norm_din18599_mut_zone_fields::{change_zone_area_m2, change_zone_volume_m3, change_zone_theta_i_heat_c, change_zone_theta_i_cool_c, change_zone_internal_gains_w_m2, change_zone_lighting_power_w_m2};
+use semio_s_artifact_norm_din18599_mut_element_rows::{insert_element, remove_element, change_element_label_en, change_element_label_de, change_element_kind, change_element_zone_id};
+use semio_s_artifact_norm_din18599_mut_element_fields::{change_element_area_m2, change_element_orientation_deg, change_element_tilt_deg, change_element_g_value, change_element_fc, change_element_adjacency};
 use semio_s_artifact_norm_din18599_mut_systems::{update_cooling, specify_dhw_system, specify_heating_system, update_lighting, update_renewables, update_ventilation};
 use semio_s_artifact_norm_din18599_model::{Attachment, AutomationClass, BuildingCategory, CalculationMethod, MonthlyClimate, UseClass};
 use protocol::OpText;
@@ -67,13 +71,101 @@ pub enum Din18599MutationDsl {
         #[dsl(block)]
         new_renewables: semio_s_artifact_norm_din18599_model::Renewables,
     },
-    ReplaceZones {
+    InsertZone {
+        index: usize,
         #[dsl(block)]
-        new_zones: Vec<semio_s_artifact_norm_din18599_model::ThermalZone>,
+        zone: semio_s_artifact_norm_din18599_model::ThermalZone,
     },
-    ReplaceElements {
+    RemoveZone {
+        id: String,
+    },
+    ChangeZoneLabelEn {
+        zone_id: String,
+        new_label_en: String,
+    },
+    ChangeZoneLabelDe {
+        zone_id: String,
+        new_label_de: String,
+    },
+    ChangeZoneUsageProfile {
+        zone_id: String,
+        new_usage_profile: semio_s_artifact_norm_din18599_model::UsageProfile,
+    },
+    ChangeZoneOccupants {
+        zone_id: String,
+        new_occupants: u32,
+    },
+    ChangeZoneAreaM2 {
+        zone_id: String,
+        new_area_m2: f64,
+    },
+    ChangeZoneVolumeM3 {
+        zone_id: String,
+        new_volume_m3: f64,
+    },
+    ChangeZoneThetaIHeatC {
+        zone_id: String,
+        new_theta_i_heat_c: f64,
+    },
+    ChangeZoneThetaICoolC {
+        zone_id: String,
+        new_theta_i_cool_c: f64,
+    },
+    ChangeZoneInternalGainsWM2 {
+        zone_id: String,
+        new_internal_gains_w_m2: f64,
+    },
+    ChangeZoneLightingPowerWM2 {
+        zone_id: String,
+        new_lighting_power_w_m2: f64,
+    },
+    InsertElement {
+        index: usize,
         #[dsl(block)]
-        new_elements: Vec<semio_s_artifact_norm_din18599_model::EnvelopeElement>,
+        element: semio_s_artifact_norm_din18599_model::EnvelopeElement,
+    },
+    RemoveElement {
+        id: String,
+    },
+    ChangeElementLabelEn {
+        element_id: String,
+        new_label_en: String,
+    },
+    ChangeElementLabelDe {
+        element_id: String,
+        new_label_de: String,
+    },
+    ChangeElementKind {
+        element_id: String,
+        new_kind: semio_s_artifact_norm_din18599_model::ElementKind,
+    },
+    ChangeElementZoneId {
+        element_id: String,
+        new_zone_id: String,
+    },
+    ChangeElementAreaM2 {
+        element_id: String,
+        new_area_m2: f64,
+    },
+    ChangeElementOrientationDeg {
+        element_id: String,
+        new_orientation_deg: f64,
+    },
+    ChangeElementTiltDeg {
+        element_id: String,
+        new_tilt_deg: f64,
+    },
+    ChangeElementGValue {
+        element_id: String,
+        new_g_value: f64,
+    },
+    ChangeElementFc {
+        element_id: String,
+        new_fc: f64,
+    },
+    ChangeElementAdjacency {
+        element_id: String,
+        new_adjacency: semio_s_artifact_norm_din18599_model::Adjacency,
     },
     ChangeElementU {
         element_id: String,
@@ -125,8 +217,30 @@ pub fn din18599_mutation_to_dsl(mutation: &Din18599Mutation) -> Din18599Mutation
         Din18599Mutation::UpdateCooling(payload) => Din18599MutationDsl::UpdateCooling { new_cooling: payload.new_cooling.clone() },
         Din18599Mutation::UpdateLighting(payload) => Din18599MutationDsl::UpdateLighting { new_lighting: payload.new_lighting.clone() },
         Din18599Mutation::UpdateRenewables(payload) => Din18599MutationDsl::UpdateRenewables { new_renewables: payload.new_renewables.clone() },
-        Din18599Mutation::ReplaceZones(payload) => Din18599MutationDsl::ReplaceZones { new_zones: payload.new_zones.clone() },
-        Din18599Mutation::ReplaceElements(payload) => Din18599MutationDsl::ReplaceElements { new_elements: payload.new_elements.clone() },
+        Din18599Mutation::InsertZone(payload) => Din18599MutationDsl::InsertZone { index: payload.index, zone: payload.zone.clone() },
+        Din18599Mutation::RemoveZone(payload) => Din18599MutationDsl::RemoveZone { id: payload.id.clone() },
+        Din18599Mutation::ChangeZoneLabelEn(payload) => Din18599MutationDsl::ChangeZoneLabelEn { zone_id: payload.zone_id.clone(), new_label_en: payload.new_label_en.clone() },
+        Din18599Mutation::ChangeZoneLabelDe(payload) => Din18599MutationDsl::ChangeZoneLabelDe { zone_id: payload.zone_id.clone(), new_label_de: payload.new_label_de.clone() },
+        Din18599Mutation::ChangeZoneUsageProfile(payload) => Din18599MutationDsl::ChangeZoneUsageProfile { zone_id: payload.zone_id.clone(), new_usage_profile: payload.new_usage_profile },
+        Din18599Mutation::ChangeZoneOccupants(payload) => Din18599MutationDsl::ChangeZoneOccupants { zone_id: payload.zone_id.clone(), new_occupants: payload.new_occupants },
+        Din18599Mutation::ChangeZoneAreaM2(payload) => Din18599MutationDsl::ChangeZoneAreaM2 { zone_id: payload.zone_id.clone(), new_area_m2: payload.new_area_m2 },
+        Din18599Mutation::ChangeZoneVolumeM3(payload) => Din18599MutationDsl::ChangeZoneVolumeM3 { zone_id: payload.zone_id.clone(), new_volume_m3: payload.new_volume_m3 },
+        Din18599Mutation::ChangeZoneThetaIHeatC(payload) => Din18599MutationDsl::ChangeZoneThetaIHeatC { zone_id: payload.zone_id.clone(), new_theta_i_heat_c: payload.new_theta_i_heat_c },
+        Din18599Mutation::ChangeZoneThetaICoolC(payload) => Din18599MutationDsl::ChangeZoneThetaICoolC { zone_id: payload.zone_id.clone(), new_theta_i_cool_c: payload.new_theta_i_cool_c },
+        Din18599Mutation::ChangeZoneInternalGainsWM2(payload) => Din18599MutationDsl::ChangeZoneInternalGainsWM2 { zone_id: payload.zone_id.clone(), new_internal_gains_w_m2: payload.new_internal_gains_w_m2 },
+        Din18599Mutation::ChangeZoneLightingPowerWM2(payload) => Din18599MutationDsl::ChangeZoneLightingPowerWM2 { zone_id: payload.zone_id.clone(), new_lighting_power_w_m2: payload.new_lighting_power_w_m2 },
+        Din18599Mutation::InsertElement(payload) => Din18599MutationDsl::InsertElement { index: payload.index, element: payload.element.clone() },
+        Din18599Mutation::RemoveElement(payload) => Din18599MutationDsl::RemoveElement { id: payload.id.clone() },
+        Din18599Mutation::ChangeElementLabelEn(payload) => Din18599MutationDsl::ChangeElementLabelEn { element_id: payload.element_id.clone(), new_label_en: payload.new_label_en.clone() },
+        Din18599Mutation::ChangeElementLabelDe(payload) => Din18599MutationDsl::ChangeElementLabelDe { element_id: payload.element_id.clone(), new_label_de: payload.new_label_de.clone() },
+        Din18599Mutation::ChangeElementKind(payload) => Din18599MutationDsl::ChangeElementKind { element_id: payload.element_id.clone(), new_kind: payload.new_kind },
+        Din18599Mutation::ChangeElementZoneId(payload) => Din18599MutationDsl::ChangeElementZoneId { element_id: payload.element_id.clone(), new_zone_id: payload.new_zone_id.clone() },
+        Din18599Mutation::ChangeElementAreaM2(payload) => Din18599MutationDsl::ChangeElementAreaM2 { element_id: payload.element_id.clone(), new_area_m2: payload.new_area_m2 },
+        Din18599Mutation::ChangeElementOrientationDeg(payload) => Din18599MutationDsl::ChangeElementOrientationDeg { element_id: payload.element_id.clone(), new_orientation_deg: payload.new_orientation_deg },
+        Din18599Mutation::ChangeElementTiltDeg(payload) => Din18599MutationDsl::ChangeElementTiltDeg { element_id: payload.element_id.clone(), new_tilt_deg: payload.new_tilt_deg },
+        Din18599Mutation::ChangeElementGValue(payload) => Din18599MutationDsl::ChangeElementGValue { element_id: payload.element_id.clone(), new_g_value: payload.new_g_value },
+        Din18599Mutation::ChangeElementFc(payload) => Din18599MutationDsl::ChangeElementFc { element_id: payload.element_id.clone(), new_fc: payload.new_fc },
+        Din18599Mutation::ChangeElementAdjacency(payload) => Din18599MutationDsl::ChangeElementAdjacency { element_id: payload.element_id.clone(), new_adjacency: payload.new_adjacency },
         Din18599Mutation::ChangeElementU(payload) => Din18599MutationDsl::ChangeElementU { element_id: payload.element_id.clone(), new_u_value_w_m2k: payload.new_u_value_w_m2k },
         Din18599Mutation::UpdateClimate(payload) => Din18599MutationDsl::UpdateClimate { new_climate: payload.new_climate.clone() },
     }
@@ -149,8 +263,30 @@ pub fn din18599_mutation_from_dsl(dsl: Din18599MutationDsl) -> Din18599Mutation 
         Din18599MutationDsl::UpdateCooling { new_cooling } => Din18599Mutation::UpdateCooling(update_cooling::UpdateCooling { new_cooling }),
         Din18599MutationDsl::UpdateLighting { new_lighting } => Din18599Mutation::UpdateLighting(update_lighting::UpdateLighting { new_lighting }),
         Din18599MutationDsl::UpdateRenewables { new_renewables } => Din18599Mutation::UpdateRenewables(update_renewables::UpdateRenewables { new_renewables }),
-        Din18599MutationDsl::ReplaceZones { new_zones } => Din18599Mutation::ReplaceZones(replace_zones::ReplaceZones { new_zones }),
-        Din18599MutationDsl::ReplaceElements { new_elements } => Din18599Mutation::ReplaceElements(replace_elements::ReplaceElements { new_elements }),
+        Din18599MutationDsl::InsertZone { index, zone } => Din18599Mutation::InsertZone(insert_zone::InsertZone { index, zone }),
+        Din18599MutationDsl::RemoveZone { id } => Din18599Mutation::RemoveZone(remove_zone::RemoveZone { id }),
+        Din18599MutationDsl::ChangeZoneLabelEn { zone_id, new_label_en } => Din18599Mutation::ChangeZoneLabelEn(change_zone_label_en::ChangeZoneLabelEn { zone_id, new_label_en }),
+        Din18599MutationDsl::ChangeZoneLabelDe { zone_id, new_label_de } => Din18599Mutation::ChangeZoneLabelDe(change_zone_label_de::ChangeZoneLabelDe { zone_id, new_label_de }),
+        Din18599MutationDsl::ChangeZoneUsageProfile { zone_id, new_usage_profile } => Din18599Mutation::ChangeZoneUsageProfile(change_zone_usage_profile::ChangeZoneUsageProfile { zone_id, new_usage_profile }),
+        Din18599MutationDsl::ChangeZoneOccupants { zone_id, new_occupants } => Din18599Mutation::ChangeZoneOccupants(change_zone_occupants::ChangeZoneOccupants { zone_id, new_occupants }),
+        Din18599MutationDsl::ChangeZoneAreaM2 { zone_id, new_area_m2 } => Din18599Mutation::ChangeZoneAreaM2(change_zone_area_m2::ChangeZoneAreaM2 { zone_id, new_area_m2 }),
+        Din18599MutationDsl::ChangeZoneVolumeM3 { zone_id, new_volume_m3 } => Din18599Mutation::ChangeZoneVolumeM3(change_zone_volume_m3::ChangeZoneVolumeM3 { zone_id, new_volume_m3 }),
+        Din18599MutationDsl::ChangeZoneThetaIHeatC { zone_id, new_theta_i_heat_c } => Din18599Mutation::ChangeZoneThetaIHeatC(change_zone_theta_i_heat_c::ChangeZoneThetaIHeatC { zone_id, new_theta_i_heat_c }),
+        Din18599MutationDsl::ChangeZoneThetaICoolC { zone_id, new_theta_i_cool_c } => Din18599Mutation::ChangeZoneThetaICoolC(change_zone_theta_i_cool_c::ChangeZoneThetaICoolC { zone_id, new_theta_i_cool_c }),
+        Din18599MutationDsl::ChangeZoneInternalGainsWM2 { zone_id, new_internal_gains_w_m2 } => Din18599Mutation::ChangeZoneInternalGainsWM2(change_zone_internal_gains_w_m2::ChangeZoneInternalGainsWM2 { zone_id, new_internal_gains_w_m2 }),
+        Din18599MutationDsl::ChangeZoneLightingPowerWM2 { zone_id, new_lighting_power_w_m2 } => Din18599Mutation::ChangeZoneLightingPowerWM2(change_zone_lighting_power_w_m2::ChangeZoneLightingPowerWM2 { zone_id, new_lighting_power_w_m2 }),
+        Din18599MutationDsl::InsertElement { index, element } => Din18599Mutation::InsertElement(insert_element::InsertElement { index, element }),
+        Din18599MutationDsl::RemoveElement { id } => Din18599Mutation::RemoveElement(remove_element::RemoveElement { id }),
+        Din18599MutationDsl::ChangeElementLabelEn { element_id, new_label_en } => Din18599Mutation::ChangeElementLabelEn(change_element_label_en::ChangeElementLabelEn { element_id, new_label_en }),
+        Din18599MutationDsl::ChangeElementLabelDe { element_id, new_label_de } => Din18599Mutation::ChangeElementLabelDe(change_element_label_de::ChangeElementLabelDe { element_id, new_label_de }),
+        Din18599MutationDsl::ChangeElementKind { element_id, new_kind } => Din18599Mutation::ChangeElementKind(change_element_kind::ChangeElementKind { element_id, new_kind }),
+        Din18599MutationDsl::ChangeElementZoneId { element_id, new_zone_id } => Din18599Mutation::ChangeElementZoneId(change_element_zone_id::ChangeElementZoneId { element_id, new_zone_id }),
+        Din18599MutationDsl::ChangeElementAreaM2 { element_id, new_area_m2 } => Din18599Mutation::ChangeElementAreaM2(change_element_area_m2::ChangeElementAreaM2 { element_id, new_area_m2 }),
+        Din18599MutationDsl::ChangeElementOrientationDeg { element_id, new_orientation_deg } => Din18599Mutation::ChangeElementOrientationDeg(change_element_orientation_deg::ChangeElementOrientationDeg { element_id, new_orientation_deg }),
+        Din18599MutationDsl::ChangeElementTiltDeg { element_id, new_tilt_deg } => Din18599Mutation::ChangeElementTiltDeg(change_element_tilt_deg::ChangeElementTiltDeg { element_id, new_tilt_deg }),
+        Din18599MutationDsl::ChangeElementGValue { element_id, new_g_value } => Din18599Mutation::ChangeElementGValue(change_element_g_value::ChangeElementGValue { element_id, new_g_value }),
+        Din18599MutationDsl::ChangeElementFc { element_id, new_fc } => Din18599Mutation::ChangeElementFc(change_element_fc::ChangeElementFc { element_id, new_fc }),
+        Din18599MutationDsl::ChangeElementAdjacency { element_id, new_adjacency } => Din18599Mutation::ChangeElementAdjacency(change_element_adjacency::ChangeElementAdjacency { element_id, new_adjacency }),
         Din18599MutationDsl::ChangeElementU { element_id, new_u_value_w_m2k } => Din18599Mutation::ChangeElementU(change_element_u::ChangeElementU { element_id, new_u_value_w_m2k }),
         Din18599MutationDsl::UpdateClimate { new_climate } => Din18599Mutation::UpdateClimate(update_climate::UpdateClimate { new_climate }),
     }
@@ -192,8 +328,6 @@ use semio_s_artifact_norm_din18599_mut_systems::update_ventilation;
 use semio_s_artifact_norm_din18599_mut_systems::update_cooling;
 use semio_s_artifact_norm_din18599_mut_systems::update_lighting;
 use semio_s_artifact_norm_din18599_mut_systems::update_renewables;
-use semio_s_artifact_norm_din18599_mut_zoning::replace_zones;
-use semio_s_artifact_norm_din18599_mut_zoning::replace_elements;
 use semio_s_artifact_norm_din18599_mut_zoning::change_element_u;
 use semio_s_artifact_norm_din18599_mut_zoning::update_climate;
 

@@ -1,0 +1,59 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "maximumCopyBytes",
+    "maximumItems",
+    "rows"
+  ],
+  "properties": {
+    "maximumCopyBytes": {
+      "const": 4096
+    },
+    "maximumItems": {
+      "const": 1
+    },
+    "rows": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mode",
+          "sameAction",
+          "producerCalls",
+          "recoveryCalls",
+          "publishedBeforePost"
+        ],
+        "properties": {
+          "mode": {
+            "enum": [
+              "pending",
+              "post-unwind",
+              "foreign-source",
+              "foreign-work"
+            ]
+          },
+          "sameAction": {
+            "const": true
+          },
+          "producerCalls": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "recoveryCalls": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "publishedBeforePost": {
+            "const": false
+          }
+        }
+      }
+    }
+  }
+}

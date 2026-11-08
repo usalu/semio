@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-fan-flow/schema.json",
+  "title": "ChangeVentFanFlow",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ventId",
+    "newFanQVM3S"
+  ],
+  "properties": {
+    "ventId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Ventilation system",
+          "de": "Lüftungsanlage"
+        },
+        "description": {
+          "en": "The ventilation system this mutation addresses.",
+          "de": "Die Lüftungsanlage, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "ventSystem"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newFanQVM3S": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Fan volume flow q_V",
+          "de": "Ventilator-Volumenstrom q_V"
+        },
+        "unit": "m³/s",
+        "step": 0.01,
+        "precision": 3,
+        "group": "ventilation",
+        "order": 20
+      }
+    }
+  }
+}

@@ -309,5 +309,7 @@
   "fatigueCategories": [],
   "patchLoads": [],
   "ringStiffeners": [],
-  "transverseStiffeners": []
+  "transverseStiffeners": [],
+  "sheetProfiles": [],
+  "fireInsulations": []
 }

@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sourceCapacity",
+    "ownerMaximum",
+    "owned",
+    "requested",
+    "kind",
+    "producerCalls",
+    "sourceWork",
+    "retainedPrimary",
+    "releasedOriginalAction"
+  ],
+  "properties": {
+    "sourceCapacity": {
+      "const": 65536
+    },
+    "ownerMaximum": {
+      "const": 4096
+    },
+    "owned": {
+      "const": 0
+    },
+    "requested": {
+      "const": 4097
+    },
+    "kind": {
+      "const": "OwnershipLimit"
+    },
+    "producerCalls": {
+      "const": 0
+    },
+    "sourceWork": {
+      "const": 0
+    },
+    "retainedPrimary": {
+      "const": true
+    },
+    "releasedOriginalAction": {
+      "const": true
+    }
+  }
+}

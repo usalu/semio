@@ -402,8 +402,7 @@ fn assess_floor(annex: AnnexChoice, _params: &AnnexParams, m: &TimberMember, pro
     let mass = if m.mass_kg_per_m2 > 0.0 { m.mass_kg_per_m2 } else { (if m.mass_kg_per_m > 0.0 { m.mass_kg_per_m } else { props.rho_k * area_m2(m) }) / strip };
     let f1 = floor_f1(l, ei_l, mass);
     let w_unit = unit_point_deflection(1000.0, l, l, ei_l, ei_b);
-    let de = annex == AnnexChoice::De;
-    let (f1_lim, a_lim) = (if de { 6.0 } else { 8.0 }, if de { 0.5 } else { 1.5 });
+    let (f1_lim, a_lim) = (semio_s_plugin_norm_compliance::ndp_number("ndp.en1995.floor.f1-limit", annex), semio_s_plugin_norm_compliance::ndp_number("ndp.en1995.floor.a-limit", annex));
     let zeta = if m.damping_xi > 0.0 { m.damping_xi } else { 0.01 };
     let head = |kind: &str, leaf: &str, en: &str, de_t: &str| Head {
         id: format!("en1995.7.3.{kind}.{}", m.id),
@@ -430,7 +429,7 @@ fn assess_floor(annex: AnnexChoice, _params: &AnnexParams, m: &TimberMember, pro
             DEPTH_LEVERS,
         ),
     ];
-    if f1 >= 8.0 {
+    if f1 >= semio_s_plugin_norm_compliance::ndp_number("ndp.en1995.floor.f1-limit", AnnexChoice::En) {
         let (v, n40) = velocity_response(f1, l, l, mass, ei_l, ei_b);
         let lim = 100.0_f64.powf(f1 * zeta - 1.0);
         out.push(assessed(

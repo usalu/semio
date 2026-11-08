@@ -1,0 +1,23 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "bound",
+      "same",
+      "expected"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "bound": {
+        "type": "boolean"
+      },
+      "same": {
+        "type": "boolean"
+      },
+      "expected": {
+        "type": "boolean"
+      }
+    }
+  }
+}

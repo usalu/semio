@@ -1,0 +1,11 @@
+{
+  "leftCheck": 5,
+  "rightCheck": 5,
+  "childFirst": 2,
+  "childRecovery": 1,
+  "selected": 13,
+  "parent": 20,
+  "remainingChild": 1,
+  "receives": 1,
+  "recovers": 1
+}

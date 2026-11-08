@@ -8,14 +8,14 @@ Feature: Apply every typed DIN EN 16798 mutation against an independent Python i
   `concreteproperties`, `anastruct`) implement design-code FORMULAE and speak no interchange format, so
   none of them could be authoritative over `Din16798Mutation`. The second producer a differential comparison
   needs is therefore a second IMPLEMENTATION: `semio_norm_vocabulary`, imported by `🐍️.py` beside this
-  file, reads every one of the 41 kinds from the naming mechanic (`new<Field>` sets the field its
+  file, reads every one of the 48 kinds from the naming mechanic (`new<Field>` sets the field its
   name spells) and the addressing convention (`<entity>Index` positions and `<entity>Id` native keys
   descend, in wire order, to the record the verb acts inside; inverses are computed from the base and
   are empty when the target is missing). It imports nothing from the Rust it judges.
 
   Both implementations read the SAME committed bytes: every `(before, mutation, after, outcome)` path
   below is a declared `shared://` fixture the Rust producer wrote and the Python engine independently
-  reached, so neither side holds a transcription that could drift. The 41 kinds edit an indoor-
+  reached, so neither side holds a transcription that could drift. The 48 kinds edit an indoor-
   environment building: document scalars (`change-theta-rm`, `change-envelope-n50`), zone fields
   addressed by the zone's native id (`{zoneId}`), ventilation-system fields addressed by `{ventId}`
   — whose collection is `ventSystems`, so the id itself, not a spelling, locates it — and the insert
@@ -103,6 +103,13 @@ Feature: Apply every typed DIN EN 16798 mutation against an independent Python i
       | change-vent-duct-class       | 🧱change-vent-duct-class        | ✅apply  |
       | change-vent-duct-leakage     | 🕳️change-vent-duct-leakage     | ✅apply  |
       | change-vent-design-airflow   | 🌬️change-vent-design-airflow   | ✅apply  |
+      | change-zone-name             | 🏷️change-zone-name             | ✅apply  |
+      | change-vent-name             | 📛change-vent-name              | ✅apply  |
+      | change-vent-fan-flow         | 🌪️change-vent-fan-flow         | ✅apply  |
+      | change-vent-fan-run-hours    | ⏱️change-vent-fan-run-hours    | ✅apply  |
+      | change-vent-duct-test-pressure | 🧪change-vent-duct-test-pressure | ✅apply  |
+      | change-vent-humidification-required | 💦change-vent-humidification-required | ✅apply  |
+      | change-vent-humidification-provided | 🚿change-vent-humidification-provided | ✅apply  |
 
   @id-inverse
   @level-exhaustive
@@ -157,6 +164,13 @@ Feature: Apply every typed DIN EN 16798 mutation against an independent Python i
       | change-vent-duct-class       | 🧱change-vent-duct-class        | ✅apply  |
       | change-vent-duct-leakage     | 🕳️change-vent-duct-leakage     | ✅apply  |
       | change-vent-design-airflow   | 🌬️change-vent-design-airflow   | ✅apply  |
+      | change-zone-name             | 🏷️change-zone-name             | ✅apply  |
+      | change-vent-name             | 📛change-vent-name              | ✅apply  |
+      | change-vent-fan-flow         | 🌪️change-vent-fan-flow         | ✅apply  |
+      | change-vent-fan-run-hours    | ⏱️change-vent-fan-run-hours    | ✅apply  |
+      | change-vent-duct-test-pressure | 🧪change-vent-duct-test-pressure | ✅apply  |
+      | change-vent-humidification-required | 💦change-vent-humidification-required | ✅apply  |
+      | change-vent-humidification-provided | 🚿change-vent-humidification-provided | ✅apply  |
 
   @id-identity-round-trip
   @level-long

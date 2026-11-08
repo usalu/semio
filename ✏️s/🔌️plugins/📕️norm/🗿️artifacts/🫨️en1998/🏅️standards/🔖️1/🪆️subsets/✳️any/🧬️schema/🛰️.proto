@@ -39,6 +39,12 @@ message En1998Artifact {
   repeated En1998TieBeam tie_beams = 18;
   // @state artifact
   repeated En1998Slope slopes = 19;
+  // @state artifact
+  repeated En1998IsolationSystem isolation_systems = 20;
+  // @state artifact
+  repeated En1998PierBase pier_bases = 21;
+  // @state artifact
+  repeated En1998CriticalRegion critical_regions = 22;
 }
 message En1998Site {
   double s_ap_r = 1;
@@ -386,4 +392,46 @@ enum AnalysisMethodChoice {
   ANALYSIS_METHOD_CHOICE_MRS = 2;
   ANALYSIS_METHOD_CHOICE_PUSHOVER = 3;
   ANALYSIS_METHOD_CHOICE_NLTH = 4;
+}
+message En1998IsolationSystem {
+  string id = 1;
+  string bridge_id = 2;
+  string building_id = 3;
+  double strength_n = 4;
+  double stiffness_n_per_m = 5;
+  double yield_displacement_m = 6;
+  double capacity_m = 7;
+}
+message En1998PierBase {
+  string id = 1;
+  string bridge_id = 2;
+  string pier_id = 3;
+  double radius_m = 4;
+  double soil_vs_m_s = 5;
+  double soil_unit_weight_n_m3 = 6;
+  double poisson_ratio = 7;
+}
+message En1998CriticalRegion {
+  string id = 1;
+  string building_id = 2;
+  string member_id = 3;
+  double section_width_m = 4;
+  double section_depth_m = 5;
+  double clear_length_m = 6;
+  double hooped_length_m = 7;
+  double core_width_m = 8;
+  double core_depth_m = 9;
+  double axial_force_n = 10;
+  double concrete_design_strength_mpa = 11;
+  double steel_design_yield_mpa = 12;
+  double hoop_design_yield_mpa = 13;
+  double longitudinal_steel_area_m2 = 14;
+  double longitudinal_bar_diameter_m = 15;
+  double longitudinal_bar_max_diameter_m = 16;
+  double hoop_diameter_m = 17;
+  double hoop_spacing_m = 18;
+  double hoop_legs_x = 19;
+  double hoop_legs_y = 20;
+  double restrained_bar_count = 21;
+  double restrained_bar_spacing_m = 22;
 }

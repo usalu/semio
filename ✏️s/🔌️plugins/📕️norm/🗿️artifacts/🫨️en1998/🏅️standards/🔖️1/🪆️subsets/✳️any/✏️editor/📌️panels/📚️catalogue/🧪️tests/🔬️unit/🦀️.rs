@@ -57,3 +57,11 @@ fn reference_tables_cells_match_na4_spectrum_params() {
     assert!((*agr - na_de::a_gr_from_s_ap_r(1.5)).abs() <= 0.005);
 }
 
+
+#[test]
+fn the_verification_table_has_one_row_per_catalogue_entry() {
+    let table = verification_table(semio_ui_locale::Locale::En);
+    let entries = <semio_s_artifact_norm_en1998_inferences::case_catalogue::En1998Cases as semio_s_plugin_norm_compliance::design_case::CaseCatalogue>::entries();
+    assert_eq!(table.rows.len(), entries.len());
+    assert_eq!(verification_table(semio_ui_locale::Locale::De).rows.len(), entries.len());
+}

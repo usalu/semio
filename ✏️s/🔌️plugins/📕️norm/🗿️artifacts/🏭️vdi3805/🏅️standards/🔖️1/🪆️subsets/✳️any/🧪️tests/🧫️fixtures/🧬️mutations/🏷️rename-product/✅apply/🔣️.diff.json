@@ -18,7 +18,8 @@
               "text": "Regulating valve DN50"
             }
           ],
-          "configuration": null
+          "configuration": null,
+          "records": null
         }
       }
     ]

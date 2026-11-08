@@ -1,0 +1,5 @@
+{
+  "mutation": "changeCriticalRegionRestrainedBarSpacingM",
+  "id": "cr-1",
+  "newRestrainedBarSpacingM": 1.11
+}

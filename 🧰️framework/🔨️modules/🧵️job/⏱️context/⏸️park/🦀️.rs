@@ -43,7 +43,7 @@ impl OriginalOwnedCallerTurn{
     pub fn original_epoch(&self)->u64{self.epoch}
     pub fn original_clock(&self)->fn()->Option<u64>{self.clock}
     /// 🤝️ See `README.md`.
-    pub async fn execute<R>(mut self,run:impl for<'turn> AsyncFnOnce(&mut StepContext<'turn>)->Result<R,OriginalTurnFailure>)->OriginalOwnedCallerReturn<R>{
+    pub async fn execute<R>(mut self,run:impl for<'turn> AsyncFnOnce(&mut StepContext<'turn>,super::OriginalSourceTurnWitness<'turn>)->Result<R,OriginalTurnFailure>)->OriginalOwnedCallerReturn<R>{
         let mut receiving_refusal=None;
         let original=if self.issued||!self.ready{Err(ValueError::invariant("owned original turn cannot issue its wallet twice").into())}else{
             self.issued=true;let wallet=self.wallet.take().expect("one sealed original wallet remains before its only issue");let budget=StepBudget{fuel:wallet.fuel,deadline_us:wallet.deadline,retained:wallet.grant};
@@ -52,7 +52,7 @@ impl OriginalOwnedCallerTurn{
                 Err(error)=>{self.wallet=Some(wallet);Err(error.into())}
                 Ok(mut cx)=>{
                     cx.park_restore(wallet.state);let bound=cx.bind_original_source_epoch(wallet.epoch).and_then(|()|wallet.clock_binding.map_or(Ok(()),|binding|cx.bind_original_clock_binding(binding)));let identity=OriginalRetainedLoanIdentity::capture(&cx);let cancel=cx.original_cancel_token()as*const _ as usize;
-                    let result=match bound{Ok(())=>run(&mut cx).await,Err(error)=>Err(error.into())};
+                    let result=match bound{Ok(())=>run(&mut cx,self.dispatch.witness()).await,Err(error)=>Err(error.into())};
                     let matched=identity.matches(&cx)&&cx.original_source_epoch()==Some(wallet.epoch)&&cancel==cx.original_cancel_token()as*const _ as usize&&cx.fuel_remaining()<=wallet.fuel;
                     self.work_units_spent=cx.original_work_units_spent();self.receiving_valid=matched;
                     if !matched{receiving_refusal=Some(ValueError::invariant("owned async producer replaced its actual issuing context"));}

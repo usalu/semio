@@ -1,0 +1,18 @@
+{
+  "mutation": "insertelement",
+  "index": 1,
+  "element": {
+    "id": "element-extra",
+    "labelEn": "Extra",
+    "labelDe": "Zusatz",
+    "kind": "Wall",
+    "zoneId": "zone-living",
+    "areaM2": 42.0,
+    "uValueWM2k": 0.2,
+    "orientationDeg": 0.0,
+    "tiltDeg": 90.0,
+    "gValue": 0.6,
+    "fc": 1.0,
+    "adjacency": "Outdoor"
+  }
+}

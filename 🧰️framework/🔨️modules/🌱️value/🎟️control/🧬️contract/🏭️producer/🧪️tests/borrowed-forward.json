@@ -1,0 +1,18 @@
+{
+  "allocationMarker": 0,
+  "receiveCalls": 1,
+  "recoverCalls": 0,
+  "postUnwindReplay": false,
+  "sameSource": true,
+  "sameWork": true,
+  "replyPointerPreserved": true,
+  "metadataRequiresPost": true,
+  "postRecovery": 1,
+  "foreignSourceDenied": true,
+  "siblingActionDistinct": true,
+  "markerCannotBeReplaced": true,
+  "allocatorAttempts": 1,
+  "semanticWork": 2,
+  "matchingProofAccepted": true,
+  "siblingProofAccepted": false
+}

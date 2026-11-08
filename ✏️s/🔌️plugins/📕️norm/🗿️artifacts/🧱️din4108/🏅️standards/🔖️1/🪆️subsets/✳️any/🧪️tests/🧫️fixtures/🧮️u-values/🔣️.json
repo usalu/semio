@@ -1,0 +1,116 @@
+{
+  "oracle": "numpy, EN ISO 6946 series and combined method",
+  "toleranceRelative": 1e-09,
+  "cases": [
+    {
+      "id": "etics-wall",
+      "rSi": 0.13,
+      "rSe": 0.04,
+      "layers": [
+        {
+          "thicknessM": 0.015,
+          "lambda": 0.7,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.24,
+          "lambda": 0.81,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.14,
+          "lambda": 0.035,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.008,
+          "lambda": 0.7,
+          "segments": []
+        }
+      ],
+      "rTotal": 4.49915343915344,
+      "u": 0.22226403556224567
+    },
+    {
+      "id": "roof-upward-heat-flow",
+      "rSi": 0.1,
+      "rSe": 0.04,
+      "layers": [
+        {
+          "thicknessM": 0.0125,
+          "lambda": 0.25,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.2,
+          "lambda": 0.035,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.16,
+          "lambda": 2.1,
+          "segments": []
+        }
+      ],
+      "rTotal": 5.98047619047619,
+      "u": 0.16721076518831118
+    },
+    {
+      "id": "floor-on-ground",
+      "rSi": 0.17,
+      "rSe": 0.0,
+      "layers": [
+        {
+          "thicknessM": 0.05,
+          "lambda": 1.4,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.1,
+          "lambda": 0.035,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.2,
+          "lambda": 2.1,
+          "segments": []
+        }
+      ],
+      "rTotal": 3.158095238095238,
+      "u": 0.3166465621230398
+    },
+    {
+      "id": "timber-studs-in-insulation",
+      "rSi": 0.13,
+      "rSe": 0.04,
+      "layers": [
+        {
+          "thicknessM": 0.0125,
+          "lambda": 0.25,
+          "segments": []
+        },
+        {
+          "thicknessM": 0.16,
+          "lambda": 0.0,
+          "segments": [
+            {
+              "fraction": 0.88,
+              "lambda": 0.035
+            },
+            {
+              "fraction": 0.12,
+              "lambda": 0.13
+            }
+          ]
+        },
+        {
+          "thicknessM": 0.02,
+          "lambda": 0.13,
+          "segments": []
+        }
+      ],
+      "rTotal": 3.889441872024999,
+      "u": 0.25710629774224136
+    }
+  ]
+}

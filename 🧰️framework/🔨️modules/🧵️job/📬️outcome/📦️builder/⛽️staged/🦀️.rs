@@ -55,10 +55,12 @@ impl RetainedPayloadBuilder{
   RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}
  }
  pub fn staged_retirement_demands(&self)->Result<RetirementDemand,ValueError>{let Some((_,source,_))=self.staged.as_ref()else{return Ok(Default::default())};Ok(RetirementDemand{release_bytes:source.allocated_capacity_bytes(),depth:3,..Default::default()})}
- pub fn close_staged_granted(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{
+ pub fn close_staged(&mut self,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome{
+  let grant=effect.grant();
   if self.staged.is_none(){return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0};}
   let demand=match self.staged_retirement_demands(){Ok(demand)=>demand,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work:0}};
   if !JobPayloadAuthority::permits(grant,demand){return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}
+  match effect.performed(1){Ok(true)=>{},Ok(false)=>return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0},Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}}
   let(ledger,source,_)=match self.staged.take(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("staged absent").into()),work:0}};ledger.release(self.stream,source.allocated_capacity_bytes());let payload=unsafe{self.original.assume_init_mut()};if payload.ledger.is_none(){*payload.ledger=Some(ledger)}drop(source);
   crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()})),work:1}
  }

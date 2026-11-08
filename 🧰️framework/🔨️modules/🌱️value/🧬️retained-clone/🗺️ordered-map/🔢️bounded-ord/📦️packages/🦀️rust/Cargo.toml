@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-value-native-bounded-ordering"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "framework"
+id = "value-native-bounded-ordering"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-value-control-contract = { path = "../../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-clone-source = { path = "../../../../🔗️source/📦️packages/🦀️rust" }
+semio-framework-value-retirement = { path = "../../../../../♻️retirement/📦️packages/🦀️rust" }
+semio-framework-value-native-clone-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+semio-framework-value-testing-effect-bank = { path = "../../../../../🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
+semio-framework-value-clone-source-testing = { path = "../../../../🔗️source/🧪️testing/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }

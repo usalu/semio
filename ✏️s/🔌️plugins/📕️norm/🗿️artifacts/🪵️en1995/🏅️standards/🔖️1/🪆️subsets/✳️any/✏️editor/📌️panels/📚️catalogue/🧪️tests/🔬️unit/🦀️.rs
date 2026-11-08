@@ -72,3 +72,11 @@ fn reference_tables_are_localized_in_english_and_german() {
         assert!(de_cells.contains(&CatalogueCell::text(text)), "German tables must contain {text}");
     }
 }
+
+#[test]
+fn the_verification_catalogue_table_has_one_row_per_catalogue_entry() {
+    use semio_s_plugin_norm_compliance::design_case::CaseCatalogue;
+    let table = reference_tables(Locale::En).into_iter().find(|t| t.id == "verification-cases").expect("table");
+    assert_eq!(table.rows.len(), semio_s_artifact_norm_en1995_schema::checks::timber::En1995Cases::entries().len());
+    assert!(!table.rows.is_empty());
+}

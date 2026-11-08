@@ -20,13 +20,13 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// ✅️ The settled report of the document, rendered without any controller so no row dispatches a command.
 pub fn render(document: &En1997Snapshot, windows: &TreeWindows<'_>, locale: Locale) -> UiAssemblyResult<BuiltNode> {
-    let report = semio_s_artifact_norm_en1997_inferences::live::report(document);
+    let report = semio_s_plugin_norm_app_surface::paint_report_of(|budget| semio_s_artifact_norm_en1997_inferences::live::responsive(document, budget));
     render_checks_with(&report, &ChecksViewState::default(), &ChecksWindowSpec::default(), windows, locale)
 }
 
 /// ✅️ The settled report with the check the view lane selected (stepping), still without any controller.
 pub fn render_selected(document: &En1997Snapshot, selected: Option<usize>, windows: &TreeWindows<'_>, locale: Locale) -> UiAssemblyResult<BuiltNode> {
-    let report = semio_s_artifact_norm_en1997_inferences::live::report(document);
+    let report = semio_s_plugin_norm_app_surface::paint_report_of(|budget| semio_s_artifact_norm_en1997_inferences::live::responsive(document, budget));
     render_checks_with(&report, &ChecksViewState { selected, ..ChecksViewState::default() }, &ChecksWindowSpec::default(), windows, locale)
 }
 //#endregion 🔖️Render

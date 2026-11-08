@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-isolation-system-yield-disp-m/schema.json",
+  "title": "ChangeIsolationSystemYieldDisplacementM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newYieldDisplacementM"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeIsolationSystemYieldDisplacementM"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "IsolationSystem",
+          "de": "Isolationssystem"
+        },
+        "description": {
+          "en": "The isolationSystem this mutation addresses, by id.",
+          "de": "Das adressierte Element (Isolationssystem), per Kennung."
+        },
+        "ref": {
+          "kind": "isolationSystem"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newYieldDisplacementM": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Yield displacement",
+          "de": "Fließverschiebung"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.01,
+        "precision": 3
+      }
+    }
+  }
+}

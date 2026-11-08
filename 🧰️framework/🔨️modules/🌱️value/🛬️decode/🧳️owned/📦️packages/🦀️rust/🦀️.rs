@@ -9,7 +9,7 @@ pub use semio_framework_value_native_decoding::native_encoding::NativeEncodeEffe
 pub use semio_framework_value_persistent::list;
 pub use semio_framework_value_retained_clone::retained_clone;
 pub use semio_framework_value_retirement::retirement;
-pub use semio_framework_value_retirement::{OriginalRetirementOutcome,OriginalRetirementPoll,OriginalRetirementFailure,OriginalRetirementControl,retirement_fields_type,retirement_fields_seed};
+pub use semio_framework_value_retirement::{OriginalRetirementOutcome,OriginalRetirementPoll,OriginalRetirementFailure,OriginalRetirementControl,retirement_fields_type,retirement_fields_seed,OriginalRetirementCloseLoan};
 pub use semio_framework_value_shared_issuance as shared_issuance;
 
 #[path = "../../🦀️.rs"]

@@ -213,7 +213,7 @@ fn role_table(locale: Locale) -> CatalogueTable {
 
 /// 📚️ Normative reference tables for the timber subject, localized to `locale`.
 pub fn reference_tables(locale: Locale) -> Vec<CatalogueTable> {
-    vec![strength_class_table(locale), k_mod_table(locale), fastener_table(locale), role_table(locale), spec_trace_table(&SPEC_TRACE)]
+    vec![strength_class_table(locale), k_mod_table(locale), fastener_table(locale), role_table(locale), semio_s_plugin_norm_app_surface::verification_catalogue_table::<semio_s_artifact_norm_en1995_schema::checks::timber::En1995Cases>("EN 1995", semio_s_plugin_norm_compliance::AnnexChoice::En, "", locale), spec_trace_table(&SPEC_TRACE)]
 }
 //#endregion 📚️Tables
 

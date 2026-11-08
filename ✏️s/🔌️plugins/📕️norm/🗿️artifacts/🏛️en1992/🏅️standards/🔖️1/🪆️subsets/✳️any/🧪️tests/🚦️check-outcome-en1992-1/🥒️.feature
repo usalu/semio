@@ -261,3 +261,7 @@ Feature: EN 1992 check outcome of committed documents
       | fail-v30-25 | shared://🚦️check-outcome/torsion-strut-fail/🔣️.json | en1992.6.5.strut.beam-DB1 | fail | 2.25714434 | 1e-2 |
       | fail-v30-26 | shared://🚦️check-outcome/torsion-strut-fail/🔣️.json | en1992.6.5.node-cct.beam-DB1 | fail | 1.08344733 | 1e-2 |
       | fail-v30-27 | shared://🚦️check-outcome/torsion-strut-fail/🔣️.json | en1992.6.5.node-ccc.beam-DB1 | fail | 1.47742818 | 1e-2 |
+      | pass-v31-01 | shared://🚦️check-outcome/bridge-fatigue-pass/🔣️.json | en1992-2.6.8.beam-B1 | pass | 0.70769231 | 1e-2 |
+      | fail-v31-02 | shared://🚦️check-outcome/bridge-fatigue-fail/🔣️.json | en1992-2.6.8.beam-B1 | fail | 1.13230769 | 1e-2 |
+      | pass-v31-03 | shared://🚦️check-outcome/liquid-crack-pass/🔣️.json | en1992-3.crack.beam-B1 | pass | 0.73945946 | 1e-2 |
+      | fail-v31-04 | shared://🚦️check-outcome/beam-sls-pass/🔣️.json | en1992-3.crack.beam-B1 | fail | 1.21513514 | 1e-2 |

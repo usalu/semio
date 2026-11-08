@@ -6,7 +6,7 @@
   "key": "budgeted-key🧱",
   "deniedWork": 0,
   "cachedWork": 0,
-  "maximumTurnWork": 1,
+  "maximumTurnWork": 4,
   "stock": {
     "items": 100000,
     "copyBytes": 33554432,
@@ -15,5 +15,6 @@
     "depth": 512,
     "fuel": 100000,
     "maximumTurns": 100000
-  }
+  },
+  "maximumMetadataEvents": 1
 }

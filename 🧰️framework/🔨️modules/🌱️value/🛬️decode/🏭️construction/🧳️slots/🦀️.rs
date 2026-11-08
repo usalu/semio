@@ -1,84 +1,151 @@
 //! 🔐️ Shared receiving keeps its source, output and callback frame in one movable owner.
-use semio_framework_value_native_decoding::{NativeDecodeControl,NativeSharedAdmission,OriginalReceivingPrimary};
-use semio_framework_value_control_contract::{OriginalRetirementCloseLoan,RetainedAllocationEffect,RetainedWorkPoll,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,ValueError,retained_clone_grant_admits};
+//! 🔐️ One movable shared constructor retains its actual producer and original receipts.
+use semio_framework_value_native_decoding::{NativeDecodeControl,NativeSharedAdmission,OriginalReceivingPrimary,NativeReceivingEffect,NativeReceivingEffectState,NativeReceivingEffectOutcome,NativeEffectCapturePlan};
+use semio_framework_value_control_contract::*;
+use semio_framework_value_retirement::{OriginalRetirementCloseLoan,OriginalRetirementFailure};
 use semio_framework_value_retained_clone::retained_clone::RetainedCloneClose;
 use semio_framework_value_retirement::retirement::RetireOwned;
-use semio_framework_value_shared_issuance::{SealedShared,SharedIssuer};
-use std::mem::{ManuallyDrop,size_of};
+use semio_framework_value_shared_issuance::SealedShared;
+use semio_framework_value_allocation_return::original::SharedOriginalStorage;
+use std::{marker::PhantomData,mem::ManuallyDrop};
+#[path="🏭️producer/🦀️.rs"]mod producer;
+use producer::{Producer,Context,Operation,OperationKind,Kind};
+type Step=RetainedCloneStep;
+type Failure=OriginalRetirementFailure;
+type Reply<'a>=OriginalEffectReply<'a,Step,Failure>;
+type Complete<'a>=OriginalEffectReplyComplete<'a,Step,Failure>;
+fn invalid()->ValueError{ValueError::invariant("shared slots require their original pending operation and empty destination")}
+#[derive(Clone,Copy,PartialEq,Eq)]
+struct SharedCloseLoan{ledger:NativeAllocationIdentity,recipient:Option<u64>,work:OriginalWorkBindingIdentity}
+#[derive(Clone,Copy,PartialEq,Eq)]
+struct SharedCloseSelection{invocation:OriginalEffectInvocationIdentity,body:usize,grant:RetainedCloneGrant,loan:Option<SharedCloseLoan>,demand:RetirementDemand,work:u64}
+/// 🧳️ Owns the actual input, native birth, output and original action across relocation.
+pub struct NativeSharedSlots<T:RetireOwned+Sync,R:RetireOwned+Sync>{authority:Option<OriginalEffectAuthority<Producer<T>>>,retired:ManuallyDrop<Option<Producer<T>>>,bootstrap:Option<RetainedCloneProgress>,effect:NativeReceivingEffect<Failure>,local_action:Option<OriginalEffectAction<Step,Failure>>,local_reply:ManuallyDrop<Option<Result<Step,Failure>>>,local_transfer:Option<RetainedCloneProgress>,operation:Option<OperationKind>,birth_pending:bool,result:PhantomData<R>}
+impl<T:RetireOwned+Sync,R:RetireOwned+Sync> Default for NativeSharedSlots<T,R>{fn default()->Self{Self::vacant()}}
+impl<T:RetireOwned+Sync,R:RetireOwned+Sync> NativeSharedSlots<T,R>{
+ /// 🪹️ Supplies only a const empty template, without issuing authority or taking input.
+ pub const fn vacant()->Self{Self{authority:None,retired:ManuallyDrop::new(None),bootstrap:None,effect:NativeReceivingEffect::empty(),local_action:None,local_reply:ManuallyDrop::new(None),local_transfer:None,operation:None,birth_pending:false,result:PhantomData}}
 
-/// 🧳️ One movable owner carries the actual input, output and original pending admission together.
-pub struct NativeSharedSlots<T:RetireOwned+Send+Sync+'static,R:RetireOwned+Send+Sync+'static>{input:ManuallyDrop<Option<T>>,output:ManuallyDrop<Option<R>>,admission:NativeSharedAdmission<T>,retirement:RetainedCloneClose}
-impl<T:RetireOwned+Send+Sync+'static,R:RetireOwned+Send+Sync+'static> Default for NativeSharedSlots<T,R>{fn default()->Self{Self{input:ManuallyDrop::new(None),output:ManuallyDrop::new(None),admission:Default::default(),retirement:Default::default()}}}
-impl<T:RetireOwned+Send+Sync+'static,R:RetireOwned+Send+Sync+'static> NativeSharedSlots<T,R>{
- /// 📏️ Quotes the funded transfer of the original input into this owner.
- pub fn capture_demand()->RetirementDemand{RetirementDemand{copy_bytes:2*size_of::<Option<T>>(),depth:1,..Default::default()}}
- /// ⏱️ Quotes the actual original input-slot transfer.
- pub fn capture_work_demand(&self,source:&Option<T>)->Result<u64,ValueError>{if self.input.is_some()||self.output.is_some()||!self.admission.terminal_is_empty()||!self.retirement.is_empty()||source.is_none(){return Err(ValueError::invariant("shared slots require their empty original capture"))}Ok(1)}
- /// 📥️ Captures the input before any shared birth can be quoted.
- pub fn capture(&mut self,source:&mut Option<T>,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{let grant=effect.grant();let demand=Self::capture_demand();if self.input.is_some()||self.output.is_some()||!self.admission.terminal_is_empty()||!self.retirement.is_empty()||source.is_none(){return RetainedWorkOutcome{result:Err(ValueError::invariant("shared slots require their empty original capture").into()),work:0}}if !retained_clone_grant_admits(grant,demand)||effect.maximum_work_units()==0{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}match effect.performed(1){Ok(true)=>{},Ok(false)=>return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original shared-slot work exceeded its authority")),work:1},Err(error)=>return RetainedWorkOutcome{result:Err(error),work:1}}*self.input=source.take();RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}}
- /// 📤️ Quotes publication of the retained result to its caller.
- pub fn take_demand()->RetirementDemand{RetirementDemand{copy_bytes:2*size_of::<Option<R>>(),depth:1,..Default::default()}}
- /// ⏱️ Quotes the actual original output-slot transfer.
- pub fn take_work_demand(&self,target:&Option<R>)->Result<u64,ValueError>{if target.is_some()||self.output.is_none()||!self.admission.terminal_is_empty(){return Err(ValueError::invariant("shared slots require their original completed output"))}Ok(1)}
- /// 🪣️ Transfers the completed output only on its own funded turn.
- pub fn take(&mut self,target:&mut Option<R>,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{let grant=effect.grant();let demand=Self::take_demand();if target.is_some()||self.output.is_none()||!self.admission.terminal_is_empty(){return RetainedWorkOutcome{result:Err(ValueError::invariant("shared slots require their original completed output").into()),work:0}}if !retained_clone_grant_admits(grant,demand)||effect.maximum_work_units()==0{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}match effect.performed(1){Ok(true)=>{},Ok(false)=>return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original shared-slot work exceeded its authority")),work:1},Err(error)=>return RetainedWorkOutcome{result:Err(error),work:1}}*target=self.output.take();RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}}
- /// 👁️ Observes the original source without transferring its custody.
- pub fn input(&self)->Option<&T>{self.input.as_ref()}
- /// 🪪️ Observes the retained original admission without transferring it.
- pub fn admission_ref(&self)->&NativeSharedAdmission<T>{&self.admission}
- /// 👁️ Observes whether the original output is ready for funded transfer.
- pub fn output_ready(&self)->bool{self.output.is_some()&&self.admission.terminal_is_empty()}
- /// 🪪️ Borrows the retained callback frame for original recovery.
- pub fn has_pending_recovery(&self)->bool{self.admission.has_pending_recovery()}
- pub fn resume_recovery(&mut self,control:&mut NativeDecodeControl<'_>)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{if self.has_pending_recovery(){self.admission.resume(control)}else{semio_framework_value_native_decoding::no_pending_receiving_recovery()}}
- pub fn admission(&mut self)->&mut NativeSharedAdmission<T>{&mut self.admission}
- /// 📏️ Quotes the next retained owned close turn.
- pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.admission.terminal_is_empty(){return self.admission.close_demand()}if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<T>(false,&None,body)}if self.input.is_some(){return self.retirement.next_owner_demands::<T>(true,&None,body)}self.retirement.next_owner_demands::<R>(self.output.is_some(),&None,body)}
- /// ⛽️ Quotes the defining work of the next retained owned close turn.
- pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.admission.terminal_is_empty(){self.admission.close_demand()?;return Ok(u64::from(self.admission.has_birth()))}if !self.retirement.is_empty(){return self.retirement.next_owner_work::<T>(false,&None,body)}if self.input.is_some(){return self.retirement.next_owner_work::<T>(true,&None,body)}self.retirement.next_owner_work::<R>(self.output.is_some(),&None,body)}
- /// ♻️ Retires the captured original values and any unpublished birth with funded work.
- pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->semio_framework_value_retirement::OriginalRetirementPoll{use RetainedWorkPoll::Complete;let grant=effect.grant();if !self.admission.terminal_is_empty(){return self.admission.close_step(&mut effect.nested(grant))}if !self.retirement.is_empty(){return self.retirement.step_granted(effect)}if self.input.is_some(){let turn=self.retirement.begin_granted(&mut self.input,effect);return Complete(RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into),work:turn.work})}if self.output.is_some(){let turn=self.retirement.begin_granted(&mut self.output,effect);return Complete(RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into),work:turn.work})}Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0})}
- /// 🪹️ Observes whether every original slot and owned close is empty.
- pub fn requires_original_birth(&self)->bool{self.admission.terminal_is_empty()&&self.retirement.requires_original_birth()}
- pub fn close_original_birth_step(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->semio_framework_value_retirement::OriginalRetirementPoll{self.retirement.step_original_birth(original,grant)}
- pub fn requires_original_control(&self)->bool{self.admission.terminal_is_empty()&&self.retirement.requires_original_control()}
- pub fn close_original_step(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,effect:&mut RetainedAllocationEffect<'_>)->semio_framework_value_retirement::OriginalRetirementPoll{if self.requires_original_birth(){return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"settle original birth first").into()),work:0})}if self.requires_original_control(){return self.retirement.step_original(original,effect)}self.close_step(effect)}
- pub fn terminal_is_empty(&self)->bool{self.input.is_none()&&self.output.is_none()&&self.admission.terminal_is_empty()&&self.retirement.is_empty()}
-}
-impl<T:RetireOwned+Send+Sync+'static> NativeSharedSlots<T,SealedShared<T>>{
- /// ⛽️ Quotes work only for the actual original sealed input and empty destination.
- pub fn advance_work_demand(&self)->Result<u64,ValueError>{if self.input.is_none()||self.output.is_some(){return Err(ValueError::invariant("sealed slots require original input and empty output"))}self.admission.shared_work_demand()}
- /// 🧷️ Advances the original sealed owner without lending its slots for replacement.
- pub fn advance(&mut self,control:&mut NativeDecodeControl<'_>,issuer:SharedIssuer<T>)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{control.receive_shared(&mut self.input,&mut self.output,issuer,&mut self.admission)}
- /// 📏️ Quotes the next physical sealed birth or publication.
- pub fn demand(&self)->RetirementDemand{self.admission.shared_demand()}
-}
-impl<T:RetireOwned+Send+Sync+'static> NativeSharedSlots<T,std::sync::Arc<T>>{
- /// ⛽️ Quotes work only for the actual original Arc input and empty destination.
- pub fn advance_work_demand(&self)->Result<u64,ValueError>{if self.input.is_none()||self.output.is_some(){return Err(ValueError::invariant("Arc slots require original input and empty output"))}self.admission.arc_work_demand()}
- /// 🖼️ Advances the original Arc owner without lending its slots for replacement.
- pub fn advance(&mut self,control:&mut NativeDecodeControl<'_>)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{control.receive_arc(&mut self.input,&mut self.output,&mut self.admission)}
- /// 📏️ Quotes the next physical Arc birth or publication.
- pub fn demand(&self)->RetirementDemand{self.admission.arc_demand()}
-}
-impl<T:RetireOwned+Send+Sync+'static,R:RetireOwned+Send+Sync+'static> Drop for NativeSharedSlots<T,R>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"shared slots require original funded closure")}}
+ /// 🧮️ Counts actual private fields, nesting the defining receiving-frame plan.
+ pub const fn vacant_field_count()->usize{NativeReceivingEffect::<Failure>::vacant_field_count()+9}
+ /// 📏️ Quotes a field in the actual exclusive uninitialized Slots backing.
+ /// # Safety
+ /// Target must be valid aligned exclusive uninitialized storage for Self throughout this seed plan.
+ pub unsafe fn vacant_field_size(target:*mut std::mem::MaybeUninit<Self>,index:usize)->Option<usize>{fn field_size<T>(_:*mut T)->usize{std::mem::size_of::<T>()}let target=target.cast::<Self>();let nested=NativeReceivingEffect::<Failure>::vacant_field_count();unsafe{if index<nested{return NativeReceivingEffect::<Failure>::vacant_field_size(std::ptr::addr_of_mut!((*target).effect).cast(),index)}match index-nested{0=>Some(field_size(std::ptr::addr_of_mut!((*target).authority))),1=>Some(field_size(std::ptr::addr_of_mut!((*target).retired))),2=>Some(field_size(std::ptr::addr_of_mut!((*target).bootstrap))),3=>Some(field_size(std::ptr::addr_of_mut!((*target).local_action))),4=>Some(field_size(std::ptr::addr_of_mut!((*target).local_reply))),5=>Some(field_size(std::ptr::addr_of_mut!((*target).operation))),6=>Some(field_size(std::ptr::addr_of_mut!((*target).birth_pending))),7=>Some(field_size(std::ptr::addr_of_mut!((*target).result))),8=>Some(field_size(std::ptr::addr_of_mut!((*target).local_transfer))),_=>None}}}
+ /// 🌾️ Initializes one quoted vacant field without constructing or borrowing the complete Slots owner.
+ /// # Safety
+ /// Target must satisfy vacant_field_size and each field must be initialized once before typed publication; no live owner may be overwritten.
+ pub unsafe fn write_vacant_field(target:*mut std::mem::MaybeUninit<Self>,index:usize)->bool{let target=target.cast::<Self>();let nested=NativeReceivingEffect::<Failure>::vacant_field_count();unsafe{if index<nested{return NativeReceivingEffect::<Failure>::write_vacant_field(std::ptr::addr_of_mut!((*target).effect).cast(),index)}match index-nested{0=>std::ptr::addr_of_mut!((*target).authority).write(None),1=>std::ptr::addr_of_mut!((*target).retired).write(ManuallyDrop::new(None)),2=>std::ptr::addr_of_mut!((*target).bootstrap).write(None),3=>std::ptr::addr_of_mut!((*target).local_action).write(None),4=>std::ptr::addr_of_mut!((*target).local_reply).write(ManuallyDrop::new(None)),5=>std::ptr::addr_of_mut!((*target).operation).write(None),6=>std::ptr::addr_of_mut!((*target).birth_pending).write(false),7=>std::ptr::addr_of_mut!((*target).result).write(PhantomData),8=>std::ptr::addr_of_mut!((*target).local_transfer).write(None),_=>return false}}true}
+ pub fn capture_demand()->Result<RetirementDemand,ValueError>{let mut demand=Producer::<T>::capture_demand()?;demand.copy_bytes=demand.copy_bytes.checked_add(Self::bootstrap_bytes()?).ok_or_else(invalid)?;Ok(demand)}
+ fn bootstrap_bytes()->Result<usize,ValueError>{std::mem::size_of::<Producer<T>>().checked_mul(2).and_then(|n|n.checked_add(std::mem::size_of::<Option<OriginalEffectAuthority<Producer<T>>>>())).ok_or_else(invalid)}
+ fn data(&self)->Option<&Producer<T>>{self.authority.as_ref().map(OriginalEffectAuthority::producer)}
+ fn begin_capture(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<bool,ValueError>{if self.authority.is_some(){return Ok(true)}let demand=Self::capture_demand()?;if self.retired.is_some()||!retained_clone_grant_admits(effect.grant(),demand)||effect.remaining_work_units()?<2{return Ok(false)}if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"shared authority birth exceeded its original Work"))}self.authority=Some(OriginalEffectAuthority::new(Producer::new()));self.bootstrap=Some(RetainedCloneProgress{copied_bytes:Self::bootstrap_bytes()?,..Default::default()});Ok(true)}
+ pub fn capture_work_demand(&self,input:&Option<T>)->Result<u64,ValueError>{if self.has_pending_recovery()||self.retired.is_some()||self.data().is_some_and(|data|!data.empty())||input.is_none(){return Err(invalid())}Ok(if self.authority.is_none(){2}else{1})}
+ pub fn input(&self)->Option<&T>{self.data().and_then(|data|data.input.as_ref())}
+ pub fn output_ready(&self)->bool{!self.has_pending_recovery()&&self.data().is_some_and(Producer::output_ready)}
+ pub fn advance_pending(&self)->bool{(self.effect.has_pending_recovery()&&!self.effect.transfer_ready())||self.birth_pending}
+ pub fn has_pending_recovery(&self)->bool{self.effect.has_pending_recovery()||self.local_action.is_some()||self.local_reply.is_some()||self.local_transfer.is_some()||self.operation.is_some()||self.authority.as_ref().is_some_and(OriginalEffectAuthority::has_pending_action)}
+ pub fn capture_plan(&self)->Result<Option<NativeEffectCapturePlan>,ValueError>{Ok(Some(self.effect.capture_plan()))}
+ fn local<'reply,'turn,'source>(&mut self,kind:OperationKind,mut context:Context<'turn,'source,T>,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'reply>)->Result<Complete<'reply>,ValueError>where 'source:'turn{
+  if self.effect.has_pending_recovery()||self.birth_pending||self.operation.is_some_and(|pending|pending!=kind){if self.local_action.is_none(){return Ok(reply.complete(Err(invalid().into())))}return Err(invalid())}
+  if let Err(error)=self.authority.as_ref().ok_or_else(invalid)?.producer().validate_context(&context){if self.local_action.is_none(){return Ok(reply.complete(Err(error.into())))}return Err(error)}
+  self.operation=Some(kind);if !self.authority.as_mut().ok_or_else(invalid)?.drive(&mut context,effect,&mut self.local_action)?{return Ok(reply.pending())}
+  if !self.local_action.as_mut().ok_or_else(invalid)?.transfer_reply(&mut self.local_reply)?{return Ok(reply.pending())}
+  self.authority.as_mut().ok_or_else(invalid)?.finish(&mut self.local_action)?;self.operation=None;let mut result=self.local_reply.take().ok_or_else(invalid)?;if let Some(bootstrap)=self.bootstrap.take(){result=match result{Ok(step)=>{let progress=bootstrap.checked_add(step.progress()).expect("capture quote bounds its native header");Ok(match step{Step::Complete(_)=>Step::Complete(progress),Step::Progress(_)=>Step::Progress(progress)})},Err(error)=>{let progress=bootstrap.checked_add(error.retained_progress()).expect("capture refusal retains its actual native header");Err(error.with_retained_progress(progress))}}}Ok(reply.complete(result))
+ }
+ fn advance_kind(&mut self,control:&mut NativeDecodeControl<'_>,kind:Kind)->Result<NativeReceivingEffectState,ValueError>{
+  if self.local_action.is_some()||self.operation.is_some()||self.birth_pending||self.data().and_then(|data|data.kind)!=Some(kind){return Err(invalid())}
+  let(demand,work)=match self.effect.pending_request(){Some(request)=>request,None=>(self.data().ok_or_else(invalid)?.demand()?,self.data().ok_or_else(invalid)?.work_demand()?)};
+  let source=control.original_work_source_turn()?;let work_binding=control.original_work_borrow().binding_identity()?;let mut context=Context{source,work:work_binding,operation:Operation::Advance};self.authority.as_ref().ok_or_else(invalid)?.producer().validate_context(&context)?;
+  let result=control.receive_original_effect_retaining_work_with(demand,work,&mut self.effect,self.authority.as_mut().ok_or_else(invalid)?,|_,effect,authority,action,_|authority.drive(&mut context,effect,action))?;
+  Ok(result)
+ }
+ pub fn resume_recovery(&mut self,control:&mut NativeDecodeControl<'_>)->Result<NativeReceivingEffectState,ValueError>{if !self.effect.has_pending_recovery()||self.effect.transfer_ready(){return Err(invalid())}self.advance_kind(control,self.data().and_then(|data|data.kind).ok_or_else(invalid)?)}
+ 
+ /// 📥️ Holds the complete native step and every Source refusal until its funded local return.
+ pub fn advance_result_ready(&self)->bool{self.effect.transfer_ready()}
+ /// 🧾️ Settles the original child Work proof before paying a refused physical receipt.
+ pub fn finish_refused_receipt_work(&mut self,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{self.effect.finish_child_work_for_payout(control)}
+ /// 📦️ Moves the exact refused receipt into its caller-resident completion under the original payout.
+ pub fn stage_refused_receipt(&mut self,control:&mut NativeDecodeControl<'_>,payout:&OriginalConstructionAction,output:&mut Option<OriginalConstructionCompletion>,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<Option<RetainedCloneProgress>,ValueError>{self.effect.stage_receipt_completion(control,payout,output,effect)}
+ /// 🪢️ Stages the same refused receipt while the original Work scope is guarded.
+ pub fn stage_refused_receipt_with_loan(&mut self,recipient:&OriginalConstructionLoan<'_>,payout:&OriginalConstructionAction,output:&mut Option<OriginalConstructionCompletion>,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<Option<RetainedCloneProgress>,ValueError>{self.effect.stage_receipt_completion_with_loan(recipient,payout,output,effect)}
+ /// 🪢️ Stages the published completion while the same original Work scope is guarded.
+ pub fn stage_published_receipt_with_loan(&mut self,recipient:&OriginalConstructionLoan<'_>,completion:&mut Option<OriginalConstructionCompletion>,payout:&OriginalConstructionAction,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<Option<RetainedCloneProgress>,ValueError>{self.effect.stage_published_receipt_with_loan(recipient,completion,payout,effect)}
+ /// 🔁️ Retries the actual published receipt with its separately retained payout refusal.
+ pub fn retry_published_receipt_with_loan(&mut self,recipient:&OriginalConstructionLoan<'_>,refusal:&OriginalConstructionCompletion,payout:&OriginalConstructionAction,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<Option<RetainedCloneProgress>,ValueError>{self.effect.retry_published_receipt_with_loan(recipient,refusal,payout,effect)}
+ /// 📥️ Moves the published original completion into the same resident receiving owner.
+ pub fn stage_published_receipt(&mut self,control:&mut NativeDecodeControl<'_>,completion:&mut Option<OriginalConstructionCompletion>,payout:&OriginalConstructionAction,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<Option<RetainedCloneProgress>,ValueError>{self.effect.stage_published_receipt_completion(control,completion,payout,effect)}
+ /// 🔓️ Publishes the same receipt only after its original physical and Work settlement.
+ pub fn publish_receipt(&mut self,control:&mut NativeDecodeControl<'_>,payout:&OriginalConstructionAction,proof:&OriginalWorkActionProof)->Result<bool,ValueError>{self.effect.publish_receipt_completion(control,payout,proof)}
+ /// 📏️ Quotes the actual retained native frame and caller outcome destination.
+ pub fn advance_result_demand(&self)->Result<RetirementDemand,ValueError>{self.effect.transfer_demand()}
+ /// ⛽️ Returns the genuine native result handoff cost.
+ pub fn advance_result_work_demand(&self)->u64{self.effect.transfer_work_demand()}
+ /// 📤️ Returns the whole original native outcome without exposing an owned intermediate result.
+ pub fn take_advance_result<'reply>(&mut self,output:&mut Option<NativeReceivingEffectOutcome<Failure>>,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'reply>)->Result<Complete<'reply>,ValueError>{
+  if self.local_action.is_some()||self.operation.is_some()||self.birth_pending{return Ok(reply.complete(Err(invalid().into())))}self.effect.transfer_into(output,effect,reply)
+ }
+ /// 🔁️ A recorded enclosing action settles its reply without replaying this native transfer.
+ pub fn recover_take_advance_result<'reply>(&mut self,output:&mut Option<NativeReceivingEffectOutcome<Failure>>,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'reply>)->Result<Complete<'reply>,ValueError>{self.take_advance_result(output,effect,reply)}
 
-#[cfg(test)]
-mod tests{
- use super::*;use semio_framework_value_testing_admission::{BankWallet,EffectBank,ReceiveFrame,WorkLoan,close_owned,Wallet};
- fn stock()->serde_json::Value{serde_json::json!({"items":1u64<<20,"copyBytes":1u64<<20,"capacityBytes":1u64<<20,"releaseBytes":1u64<<20,"depth":64u64,"fuel":1u64<<20})}
- fn settled<T>(poll:RetainedWorkPoll<T,ValueError>)->RetainedWorkOutcome<T,ValueError>{match poll{RetainedWorkPoll::Complete(turn)=>turn,RetainedWorkPoll::Pending{..}=>panic!("synchronous slot action stayed pending")}}
- /// 🧪️ The shared four-driver effect corpus: the decode control settles every case exactly as the job provider, the authoring wallet and the encode control do.
- #[test]fn the_shared_corpus_settles_identically_through_the_decode_control(){let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../🧵️job/⏱️context/🧪️tests/🪙️effect-provider/🧫️fixtures/🔣️.json")).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:4096,maximum_depth:8};
-  for case in corpus["cases"].as_array().unwrap(){let maximum=case["maximumWork"].as_u64().unwrap();let steps:Vec<u64>=case["performs"].as_array().unwrap().iter().map(|step|step.as_u64().unwrap()).collect();let mut callback=|_|true;let mut control=NativeDecodeControl::new(4096,&mut callback);let remaining=1u128<<20;let mut frame=ReceiveFrame::new(grant,WorkLoan::new(&remaining,1<<20));let mut seen=None;
-   let turn=frame.turn(&mut control,|control|{let outcome=control.with_effect(grant,maximum,|_,effect|{let all=steps.iter().all(|step|effect.performed(*step).unwrap());(all,effect.performed_work())});RetainedWorkOutcome{result:outcome.map(|done|{seen=done}),work:0}});
-   assert!(turn.result.is_ok(),"{}",case["name"]);let (all,performed)=seen.expect("an admitted quote runs");assert!(all,"{}",case["name"]);assert_eq!(performed,u128::from(case["performed"].as_u64().unwrap()),"{}",case["name"]);assert!(performed<=u128::from(maximum));
-  }}
- /// 🔐️ Relocation retains the captured original payload and rejects replacement.
- #[test]fn native_shared_slots_keep_original_across_relocation_and_reject_replacement(){let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🏭️construction/🧪️tests/🧫️fixtures/effect-frame.json")).unwrap();let mut original=Some(fixture["slotCustody"][0]["owner"].as_str().unwrap().to_owned());let pointer=original.as_ref().unwrap().as_ptr();let mut replacement=Some(fixture["slotCustody"][1]["candidate"].as_str().unwrap().to_owned());let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:4096,maximum_depth:8};let mut slots=NativeSharedSlots::<String,SealedShared<String>>::default();let mut bank=EffectBank::new(BankWallet::from_profile(&stock()));
-  let quote=slots.capture_work_demand(&original).unwrap();let(capture,_)=bank.run(grant,quote,|effect|RetainedWorkPoll::Complete(slots.capture(&mut original,effect)));assert!(settled(capture).result.is_ok());assert_ne!(bank.take_admitted(),Some(false));
-  assert!(slots.capture_work_demand(&replacement).is_err());let(reject,_)=bank.run(grant,1,|effect|RetainedWorkPoll::Complete(slots.capture(&mut replacement,effect)));assert!(settled(reject).result.is_err());assert!(replacement.is_some());
-  let mut slots=Box::new(slots);assert_eq!(slots.input().unwrap().as_ptr(),pointer);let mut callback=|_|true;let mut control=NativeDecodeControl::new(4096,&mut callback);let remaining=1u128<<20;let mut frame=ReceiveFrame::new(grant,WorkLoan::new(&remaining,1<<20));for _ in 0..2{let turn=frame.turn(&mut control,|control|slots.advance(control,SharedIssuer::owned()));assert!(turn.result.is_ok())}assert!(slots.output_ready());
-  let mut output=None;let quote=slots.take_work_demand(&output).unwrap();let(take,_)=bank.run(grant,quote,|effect|RetainedWorkPoll::Complete(slots.take(&mut output,effect)));assert!(settled(take).result.is_ok());assert!(slots.terminal_is_empty());assert_eq!(output.as_ref().unwrap().get().as_ptr(),pointer);
-  let mut wallet=Wallet::from_profile(&stock());close_owned(output.take().unwrap(),&mut wallet,4096,10000);close_owned(replacement.take().unwrap(),&mut wallet,4096,10000);}
+
+ /// 🪪️ Borrows only the identity of the actual settled semantic frame.
+ pub fn advance_success_identity(&self)->Result<semio_framework_value_native_decoding::NativeReceivingSuccessIdentity,ValueError>{self.effect.resident_success_identity()}
+ /// 🔍️ Authenticates the resident semantic frame or its paid terminal marker.
+ pub fn matches_advance_success_identity(&self,identity:semio_framework_value_native_decoding::NativeReceivingSuccessIdentity)->bool{self.effect.matches_success_identity(identity)}
+ /// 📐️ Quotes the actual sparse semantic return and same-frame marker.
+ pub fn advance_success_demand(&self)->Result<RetirementDemand,ValueError>{self.effect.resident_success_driver_demand()}
+ /// 📥️ A native leaf keeps every refusal resident and returns only an actual successful step.
+ pub fn acknowledge_advance_success(&mut self,identity:semio_framework_value_native_decoding::NativeReceivingSuccessIdentity,output:&mut Option<Step>,effect:&mut RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError>{if self.local_action.is_some()||self.operation.is_some()||self.birth_pending{return Err(invalid())}self.effect.retire_resident_success_for_driver(identity,output,effect)}
+ /// 🫴️ Records the sparse leaf receipt directly into its caller's original reply.
+ pub fn acknowledge_advance_success_into<'r>(&mut self,identity:semio_framework_value_native_decoding::NativeReceivingSuccessIdentity,output:&mut Option<Step>,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{let result=self.acknowledge_advance_success(identity,output,effect);Ok(reply.complete(result.map(|p|Step::Progress(p.unwrap_or_default())).map_err(Into::into)))}
+ /// 📏️ Quotes retirement of the exact resident semantic marker.
+ pub fn advance_success_close_demand(&self,identity:semio_framework_value_native_decoding::NativeReceivingSuccessIdentity)->Result<RetirementDemand,ValueError>{self.effect.success_identity_close_demand(identity)}
+ /// 🏁️ Clears the exact marker under its original Work after caller-owned settlement.
+ pub fn close_advance_success(&mut self,identity:semio_framework_value_native_decoding::NativeReceivingSuccessIdentity,effect:&mut RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError>{if self.local_action.is_some()||self.operation.is_some()||self.birth_pending{return Err(invalid())}self.effect.close_success_identity(identity,effect)}
+ /// 🧾️ Deposits the paid native marker retirement receipt directly into the actual reply.
+ pub fn close_advance_success_into<'r>(&mut self,identity:semio_framework_value_native_decoding::NativeReceivingSuccessIdentity,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{let result=self.close_advance_success(identity,effect);Ok(reply.complete(result.map(|p|p.map_or_else(||Step::Progress(Default::default()),Step::Complete)).map_err(Into::into)))}
+ pub fn reclaim_input<'reply>(&mut self,output:&mut Option<T>,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'reply>)->Result<Complete<'reply>,ValueError>{self.local(OperationKind::Reclaim,Context{source:effect.work_source_turn(),work:OriginalWorkBindingIdentity::from_effect(effect),operation:Operation::Reclaim(output)},effect,reply)}
+ pub fn recover_reclaim_input<'reply>(&mut self,output:&mut Option<T>,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'reply>)->Result<Complete<'reply>,ValueError>{self.reclaim_input(output,effect,reply)}
+ pub fn reclaim_input_demand(&self)->Result<RetirementDemand,ValueError>{Producer::<T>::take_demand::<T>()}
+ fn close_prefix()->Result<usize,ValueError>{let transfer=OriginalEffectAuthority::<Producer<T>>::transfer_reply_demand()?.copy_bytes;transfer.checked_add(2*std::mem::size_of::<Option<OperationKind>>()).and_then(|n|n.checked_add(2*std::mem::size_of::<Option<RetainedCloneProgress>>())).and_then(|n|n.checked_add(std::mem::size_of::<Option<Result<Step,Failure>>>())).and_then(|n|n.checked_add(std::mem::size_of::<Result<Step,Failure>>())).ok_or_else(invalid)}
+ pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.effect.has_pending_recovery(){return Err(invalid())}if let Some(OperationKind::Close(selected))=self.operation{if selected.body!=body{return Err(ValueError::invariant("shared close body changed"))}return Ok(selected.demand)}if self.retired.is_some(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<Producer<T>>>()+std::mem::size_of::<Producer<T>>(),depth:1,..Default::default()})}match self.authority.as_ref(){Some(owner)if owner.producer().empty()=>OriginalEffectAuthority::<Producer<T>>::producer_transfer_demand(),Some(owner)=>{let prefix=Self::close_prefix()?;let mut demand=owner.producer().close_demand(body.saturating_sub(prefix))?;demand.copy_bytes=demand.copy_bytes.checked_add(prefix).ok_or_else(invalid)?;Ok(demand)},None=>Ok(Default::default())}}
+ pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if self.effect.has_pending_recovery(){return Err(invalid())}if let Some(OperationKind::Close(selected))=self.operation{if selected.body!=body{return Err(ValueError::invariant("shared close body changed"))}return Ok(selected.work)}if self.retired.is_some()||self.data().is_some_and(Producer::empty){return Ok(1)}self.data().map_or(Ok(0),|data|data.close_work(body.saturating_sub(Self::close_prefix()?))?.checked_add(3).ok_or_else(invalid))}
+ fn close_header<'reply>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'reply>)->Result<Complete<'reply>,ValueError>{if self.has_pending_recovery(){return Err(invalid())}if let Some(retired)=self.retired.as_ref(){if let Err(error)=retired.validate_context(&Context{source:effect.work_source_turn(),work:OriginalWorkBindingIdentity::from_effect(effect),operation:Operation::Close(body,None)}){return Ok(reply.complete(Err(error.into())))}let demand=self.close_demand(body)?;if !retained_clone_grant_admits(effect.grant(),demand)||effect.remaining_work_units()?<1{return Ok(reply.complete(Ok(Step::Progress(Default::default()))))}if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"shared producer clear exceeded original Work"))}drop(self.retired.take());return Ok(reply.complete(Ok(Step::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))))}if self.authority.is_none(){return Ok(reply.complete(Ok(Step::Complete(Default::default()))))}let context=Context{source:effect.work_source_turn(),work:OriginalWorkBindingIdentity::from_effect(effect),operation:Operation::Close(body,None)};let turn=OriginalEffectAuthority::transfer_producer(&mut self.authority,&context,&mut self.retired,effect);Ok(reply.complete(turn.result.map(|progress|Step::Progress(progress.unwrap_or_default())).map_err(Into::into)))}
+ fn close_local<'reply>(&mut self,body:usize,mut original:Option<&mut OriginalRetirementCloseLoan<'_>>,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'reply>,recover:bool)->Result<Complete<'reply>,ValueError>{
+  if self.effect.has_pending_recovery()||self.birth_pending{return Err(invalid())}let invocation=effect.invocation().ok_or_else(invalid)?.identity();let grant=effect.grant();let loan=match original.as_deref_mut(){None=>None,Some(original)=>{let work=original.original_work().binding_identity()?;if !work.matches_effect(effect){return Err(invalid())}Some(SharedCloseLoan{ledger:original.ledger_identity(),recipient:original.retirement_recipient_identity(),work})}};let selected=match self.operation{Some(OperationKind::Close(selected))=>{if !recover||selected.invocation!=invocation||selected.body!=body||selected.grant!=grant||selected.loan!=loan{return Err(invalid())}selected},Some(_)=>return Err(invalid()),None=>{if recover||self.local_action.is_some()||self.local_reply.is_some()||self.local_transfer.is_some(){return Err(invalid())}let demand=self.close_demand(body)?;let work=self.close_work_demand(body)?;if !retained_clone_grant_admits(grant,demand)||effect.remaining_work_units()?<work{return Ok(reply.complete(Ok(Step::Progress(Default::default()))))}if !effect.performed(1)?{return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::WorkLimit,"shared close route exceeded original Work").into())))}let selected=SharedCloseSelection{invocation,body,grant,loan,demand,work};self.operation=Some(OperationKind::Close(selected));selected}};
+  let prefix=Self::close_prefix()?;let child_body=selected.body.saturating_sub(prefix);let mut context=Context{source:effect.work_source_turn(),work:OriginalWorkBindingIdentity::from_effect(effect),operation:Operation::Close(child_body,original.as_deref_mut())};if self.local_reply.is_none(){let child_grant=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes.checked_sub(prefix).ok_or_else(invalid)?,..grant};let maximum=effect.remaining_work_units()?.checked_sub(2).ok_or_else(invalid)?;let ready={let mut child=effect.reborrow(child_grant,maximum)?;self.authority.as_mut().ok_or_else(invalid)?.drive(&mut context,&mut child,&mut self.local_action)?};if !ready{return Ok(reply.pending())}let turn=self.authority.as_mut().ok_or_else(invalid)?.transfer_reply_into(&context,&mut self.local_action,&mut self.local_reply,effect);match turn.result{Ok(Some(progress))=>self.local_transfer=Some(progress),Ok(None)=>return Ok(reply.pending()),Err(error)=>return Err(error)}}
+  let Some(transfer)=self.local_transfer else{return Err(invalid())};if effect.remaining_work_units()?<1{return Ok(reply.pending())}if !effect.performed(1)?{return Ok(reply.pending())}let mut result=self.local_reply.take().expect("shared close reply remains resident");self.local_transfer=None;self.operation=None;let header=prefix.checked_sub(OriginalEffectAuthority::<Producer<T>>::transfer_reply_demand()?.copy_bytes).ok_or_else(invalid)?;let mut progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};progress.copied_bytes=progress.copied_bytes.checked_add(transfer.copied_bytes).and_then(|n|n.checked_add(header)).ok_or_else(invalid)?;progress.copied_items=progress.copied_items.max(1);if !progress.fits(grant){return Err(invalid())}result=match result{Ok(_)=>Ok(Step::Progress(progress)),Err(error)=>Err(error.with_retained_progress(progress))};Ok(reply.complete(result))
+ }
+ pub fn close_step<'reply>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'reply>)->Result<Complete<'reply>,ValueError>{if self.retired.is_some()||self.authority.is_none()||self.data().is_some_and(Producer::empty){return self.close_header(body,effect,reply)}self.close_local(body,None,effect,reply,false)}
+ pub fn recover_close_step<'reply>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'reply>)->Result<Complete<'reply>,ValueError>{self.close_local(body,None,effect,reply,true)}
+ pub fn close_original_step<'reply>(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'reply>)->Result<Complete<'reply>,ValueError>{if self.retired.is_some()||self.authority.is_none()||self.data().is_some_and(Producer::empty){return self.close_header(body,effect,reply)}self.close_local(body,Some(original),effect,reply,false)}
+ pub fn recover_close_original_step<'reply>(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'reply>)->Result<Complete<'reply>,ValueError>{self.close_local(body,Some(original),effect,reply,true)}
+ pub fn requires_original_birth(&self)->bool{self.operation.is_none()&&!self.effect.has_pending_recovery()&&self.data().is_some_and(OriginalEffectBirthProducer::requires_original_birth)}
+ pub fn close_original_birth_step(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->RetainedWorkPoll<Step,Failure>{
+  let work=match original.original_work().binding_identity(){Ok(binding)=>binding,Err(error)=>return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})};let mut context=Context{source:work.source_turn(),work,operation:Operation::Birth};
+  match self.authority.as_mut().expect("selected original shared producer").drive_original_birth(&mut context,original,grant){Ok(poll)=>{self.birth_pending=matches!(poll,RetainedWorkPoll::Pending{..});poll},Err(error)=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})}
+ }
+ pub fn requires_original_control(&self)->bool{if let Some(OperationKind::Close(selected))=self.operation{return selected.loan.is_some()}self.data().is_some_and(Producer::requires_control)}
+ pub fn terminal_is_empty(&self)->bool{!self.has_pending_recovery()&&!self.birth_pending&&self.local_reply.is_none()&&self.authority.is_none()&&self.retired.is_none()&&self.bootstrap.is_none()}
 }
+macro_rules! mode{
+ ($result:ty,$kind:ident,$take:ident)=>{
+ impl<T:RetireOwned+Sync> NativeSharedSlots<T,$result>{
+  pub fn capture<'reply>(&mut self,input:&mut Option<T>,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'reply>)->Result<Complete<'reply>,ValueError>{if effect.work_source_turn().is_none(){return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"shared capture requires its original Source turn").into())))}if !self.begin_capture(effect)?{return Ok(reply.complete(Ok(Step::Progress(Default::default()))))}self.local(OperationKind::Capture,Context{source:effect.work_source_turn(),work:OriginalWorkBindingIdentity::from_effect(effect),operation:Operation::Capture(input,Kind::$kind)},effect,reply)}
+  pub fn recover_capture<'reply>(&mut self,input:&mut Option<T>,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'reply>)->Result<Complete<'reply>,ValueError>{self.capture(input,effect,reply)}
+  pub fn take_demand(&self)->Result<RetirementDemand,ValueError>{if !self.output_ready(){return Err(invalid())}Producer::<T>::take_demand::<$result>()}
+  pub fn take_work_demand(&self,output:&Option<$result>)->Result<u64,ValueError>{self.take_demand()?;if output.is_some(){return Err(invalid())}Ok(1)}
+  pub fn take<'reply>(&mut self,output:&mut Option<$result>,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'reply>)->Result<Complete<'reply>,ValueError>{self.local(OperationKind::Take,Context{source:effect.work_source_turn(),work:OriginalWorkBindingIdentity::from_effect(effect),operation:Operation::$take(output)},effect,reply)}
+  pub fn recover_take<'reply>(&mut self,output:&mut Option<$result>,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'reply>)->Result<Complete<'reply>,ValueError>{self.take(output,effect,reply)}
+  pub fn demand(&self)->Result<RetirementDemand,ValueError>{if self.data().and_then(|data|data.kind)!=Some(Kind::$kind){return Err(invalid())}self.effect.pending_request().map_or_else(||self.data().ok_or_else(invalid)?.demand(),|request|Ok(request.0))}
+  pub fn advance_work_demand(&self)->Result<u64,ValueError>{if self.data().and_then(|data|data.kind)!=Some(Kind::$kind){return Err(invalid())}self.effect.pending_request().map_or_else(||self.data().ok_or_else(invalid)?.work_demand(),|request|Ok(request.1))}
+  pub fn advance(&mut self,control:&mut NativeDecodeControl<'_>)->Result<NativeReceivingEffectState,ValueError>{self.advance_kind(control,Kind::$kind)}
+ }
+ }}
+mode!(SealedShared<T>,Sealed,TakeSealed);
+mode!(SharedOriginalStorage<T>,Issued,TakeIssued);
+impl<T:RetireOwned+Sync,R:RetireOwned+Sync> Drop for NativeSharedSlots<T,R>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"shared slots require original funded closure")}}
+
+

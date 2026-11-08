@@ -32,9 +32,13 @@ message En1999Diff {
   // @state artifact
   optional En1999RingStiffenersRows ring_stiffeners = 15;
   // @state artifact
-  optional En1999TransverseStiffenersRows transverse_stiffeners = 16;
+  optional En1999SheetProfilesRows sheet_profiles = 16;
   // @state artifact
-  optional string reliability_class = 17;
+  optional En1999FireInsulationsRows fire_insulations = 17;
+  // @state artifact
+  optional En1999TransverseStiffenersRows transverse_stiffeners = 18;
+  // @state artifact
+  optional string reliability_class = 19;
 }
 message En1999ColdFormedActionsInserted {
   uint64 index = 1;
@@ -703,4 +707,64 @@ message En1999WeldRunsRows {
   repeated En1999WeldRunsInserted inserted = 2;
   repeated En1999WeldRunsMoved moved = 3;
   repeated En1999WeldRunsModified modified = 4;
+}
+message En1999SheetProfilesInserted {
+  uint64 index = 1;
+  SheetProfile row = 2;
+}
+message En1999SheetProfilesModified {
+  string id = 1;
+  En1999SheetProfilesPatch patch = 2;
+}
+message En1999SheetProfilesMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1999SheetProfilesRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1999SheetProfilesRows {
+  repeated En1999SheetProfilesRemoved removed = 1;
+  repeated En1999SheetProfilesInserted inserted = 2;
+  repeated En1999SheetProfilesMoved moved = 3;
+  repeated En1999SheetProfilesModified modified = 4;
+}
+message En1999SheetProfilesPatch {
+  optional string sheet_id = 1;
+  optional double pitch = 2;
+  optional double top_flange = 3;
+  optional double bottom_flange = 4;
+  optional double web_height = 5;
+}
+message En1999FireInsulationsInserted {
+  uint64 index = 1;
+  FireInsulation row = 2;
+}
+message En1999FireInsulationsModified {
+  string id = 1;
+  En1999FireInsulationsPatch patch = 2;
+}
+message En1999FireInsulationsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1999FireInsulationsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1999FireInsulationsRows {
+  repeated En1999FireInsulationsRemoved removed = 1;
+  repeated En1999FireInsulationsInserted inserted = 2;
+  repeated En1999FireInsulationsMoved moved = 3;
+  repeated En1999FireInsulationsModified modified = 4;
+}
+message En1999FireInsulationsPatch {
+  optional string fire_id = 1;
+  optional double thickness = 2;
+  optional double conductivity = 3;
+  optional double specific_heat = 4;
+  optional double density = 5;
 }

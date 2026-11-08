@@ -1,5 +1,6 @@
 //! 👁️ A public continuation view borrows the complete received causes before and after frame insertion.
 use semio_framework_job_context::*;
+use semio_framework_job_return::*;
 use semio_framework_job_testing_caller::OriginalJobFixtureCaller;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 #[global_allocator]

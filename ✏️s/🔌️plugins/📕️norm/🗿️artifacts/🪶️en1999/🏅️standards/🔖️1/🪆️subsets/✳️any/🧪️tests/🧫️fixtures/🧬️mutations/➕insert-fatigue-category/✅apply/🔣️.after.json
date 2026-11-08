@@ -398,5 +398,7 @@
     }
   ],
   "transverseStiffeners": [],
+  "sheetProfiles": [],
+  "fireInsulations": [],
   "reliabilityClass": "RC2"
 }

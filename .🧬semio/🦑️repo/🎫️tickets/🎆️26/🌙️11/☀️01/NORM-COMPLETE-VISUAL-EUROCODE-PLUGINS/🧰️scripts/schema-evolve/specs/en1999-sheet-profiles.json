@@ -27,8 +27,7 @@
           "de": "Blech"
         },
         "doc": "🔗 Id of the cold-formed sheet that carries this profile; the sheet thickness is the profile thickness.",
-        "sample": "sheet-pass",
-        "settable": false
+        "sample": "sheet-pass"
       },
       {
         "name": "pitch",

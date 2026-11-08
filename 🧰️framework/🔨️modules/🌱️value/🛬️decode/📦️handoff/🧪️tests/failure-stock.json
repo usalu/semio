@@ -1,0 +1,17 @@
+{
+  "items": 512,
+  "copyBytes": 1048576,
+  "capacityBytes": 393216,
+  "releaseBytes": 458752,
+  "depth": 64,
+  "fuel": 2048,
+  "retirementCycles": 96,
+  "copyBytesPerCycle": 8192,
+  "fixedCopyReserve": 262144,
+  "capacityBytesPerCycle": 4096,
+  "fixedReleaseReserve": 65536,
+  "workPerCycle": 16,
+  "fixedWorkReserve": 512,
+  "itemsPerCycle": 4,
+  "fixedItems": 128
+}

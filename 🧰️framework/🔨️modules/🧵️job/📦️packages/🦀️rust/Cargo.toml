@@ -24,6 +24,8 @@ testkit = ["semio-framework-async/testkit","semio-framework-job-context/testkit"
 semio-framework-job-context = { workspace = true }
 semio-framework-job-park = { workspace = true }
 semio-framework-job-capture = { workspace = true }
+semio-framework-job-native-turn = { workspace = true }
+semio-framework-job-return = { workspace = true }
 semio-framework-job-native-encoding = { workspace = true }
 semio-framework-job-testing-caller = { workspace = true, optional = true }
 semio-framework-trace = { workspace = true }

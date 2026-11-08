@@ -1,0 +1,119 @@
+{
+  "cases": [
+    {
+      "matching": true,
+      "refused": true,
+      "free": true,
+      "post": "accepted",
+      "published": true,
+      "retry": false
+    },
+    {
+      "matching": false,
+      "refused": true,
+      "free": true,
+      "post": "accepted",
+      "published": false,
+      "retry": false
+    },
+    {
+      "matching": true,
+      "refused": false,
+      "free": true,
+      "post": "accepted",
+      "published": false,
+      "retry": false
+    },
+    {
+      "matching": true,
+      "refused": true,
+      "free": false,
+      "post": "accepted",
+      "published": false,
+      "retry": false
+    },
+    {
+      "matching": true,
+      "refused": true,
+      "free": true,
+      "post": "pending",
+      "published": false,
+      "retry": false
+    },
+    {
+      "matching": true,
+      "refused": true,
+      "free": true,
+      "post": "refused",
+      "published": false,
+      "retry": false
+    },
+    {
+      "matching": true,
+      "refused": true,
+      "free": true,
+      "post": "accepted",
+      "published": true,
+      "retry": true
+    }
+  ],
+  "actions": [
+    {
+      "name": "semantic",
+      "work": 5,
+      "posts": 1
+    },
+    {
+      "name": "receipt-action",
+      "work": 1,
+      "posts": 1
+    },
+    {
+      "name": "receipt-owner",
+      "work": 1,
+      "posts": 1
+    },
+    {
+      "name": "failure-transfer",
+      "work": 1,
+      "posts": 1
+    },
+    {
+      "name": "capture-transfer-refusal",
+      "work": 1,
+      "posts": 1
+    },
+    {
+      "name": "release-original-proof",
+      "work": 1,
+      "posts": 1
+    },
+    {
+      "name": "retry-transfer",
+      "work": 1,
+      "posts": 1
+    },
+    {
+      "name": "release-transfer-refusal",
+      "work": 1,
+      "posts": 1
+    },
+    {
+      "name": "release-semantic-receipt",
+      "work": 1,
+      "posts": 1
+    },
+    {
+      "name": "producer-reply",
+      "work": 1,
+      "posts": 1
+    },
+    {
+      "name": "release-failure",
+      "work": 1,
+      "posts": 1
+    }
+  ],
+  "totalWork": 15,
+  "totalPosts": 11
+}

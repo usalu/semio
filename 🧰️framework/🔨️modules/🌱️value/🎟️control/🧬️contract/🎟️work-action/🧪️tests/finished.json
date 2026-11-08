@@ -1,0 +1,37 @@
+[
+  {
+    "sameIssuer": true,
+    "sameScope": true,
+    "sameActual": true,
+    "finished": true,
+    "valid": true
+  },
+  {
+    "sameIssuer": false,
+    "sameScope": true,
+    "sameActual": true,
+    "finished": true,
+    "valid": false
+  },
+  {
+    "sameIssuer": true,
+    "sameScope": false,
+    "sameActual": true,
+    "finished": true,
+    "valid": false
+  },
+  {
+    "sameIssuer": true,
+    "sameScope": true,
+    "sameActual": false,
+    "finished": true,
+    "valid": false
+  },
+  {
+    "sameIssuer": true,
+    "sameScope": true,
+    "sameActual": true,
+    "finished": false,
+    "valid": false
+  }
+]

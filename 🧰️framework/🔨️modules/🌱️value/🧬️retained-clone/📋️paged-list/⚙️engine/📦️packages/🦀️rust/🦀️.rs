@@ -1,12 +1,10 @@
 //! ⚙️ Fixed-page original cloning owns traversal, source custody and bounded retirement.
 pub use semio_framework_value_control_contract::*;
 pub use semio_framework_value_paged_list::{PagedList,PagedListReservationOutcome,PagedListReservationFailure};
-pub use semio_framework_value_retirement::{OriginalRetirementOutcome,OriginalRetirementPoll,RetireOwned,retirement};
+pub use semio_framework_value_retirement::{OriginalRetirementFailure,OriginalRetirementCloseLoan,OriginalRetirementOutcome,OriginalRetirementPoll,RetireOwned,retirement};
 pub use semio_framework_value_clone_source::{RetainedCloneBinding,RetainedCloneRef,RetainedCloneClose,close_retained_binding};
 #[path="../../protocol.rs"] mod protocol;
-pub use protocol::PagedCloneElement;
-#[path="../../child.rs"] mod child;
-use child::*;
+pub use protocol::{PagedCloneElement,RetainedCursorRelease};
 #[path="../../🦀️.rs"] mod engine;
 pub use engine::*;
 

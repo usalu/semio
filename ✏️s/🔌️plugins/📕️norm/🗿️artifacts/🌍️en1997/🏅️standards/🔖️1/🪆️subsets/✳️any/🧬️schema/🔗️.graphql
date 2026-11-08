@@ -1,3 +1,5 @@
+scalar UInt32
+
 type En1997Artifact {
   structureId: String!
   geotechnicalCategory: Int!
@@ -64,7 +66,7 @@ type Pile {
   pileType: PileType!
   diameter: Float!
   length: Float!
-  count: Int!
+  count: UInt32!
   alphaS: Float!
   unitShaftResistance: Float!
   unitBaseResistance: Float!
@@ -193,8 +195,8 @@ type EmbeddedWall {
 type PileGroup {
   id: String!
   pileId: String!
-  rows: Int!
-  columns: Int!
+  rows: UInt32!
+  columns: UInt32!
   spacing: Float!
   capVertical: Float!
   capMomentX: Float!

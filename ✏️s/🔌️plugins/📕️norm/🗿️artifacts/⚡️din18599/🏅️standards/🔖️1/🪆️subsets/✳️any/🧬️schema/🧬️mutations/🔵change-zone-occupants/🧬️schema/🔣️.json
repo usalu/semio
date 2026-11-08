@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-zone-occupants/schema.json",
+  "title": "ChangeZoneOccupants",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "zoneId",
+    "newOccupants"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changezoneoccupants"
+    },
+    "zoneId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Thermal zone",
+          "de": "Thermische Zone"
+        },
+        "description": {
+          "en": "The zone this mutation addresses.",
+          "de": "Das Objekt (Zone), das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newOccupants": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10000,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Occupants",
+          "de": "Personen"
+        },
+        "widget": "stepper",
+        "step": 1,
+        "precision": 0,
+        "group": "zone",
+        "order": 20
+      }
+    }
+  }
+}

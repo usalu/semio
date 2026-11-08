@@ -1,0 +1,17 @@
+[
+  {
+    "bound": false,
+    "same": false,
+    "expected": false
+  },
+  {
+    "bound": true,
+    "same": false,
+    "expected": false
+  },
+  {
+    "bound": true,
+    "same": true,
+    "expected": true
+  }
+]

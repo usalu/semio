@@ -26,6 +26,7 @@ semio-framework-value-control-contract = { path = "../../../../../🎟️control
 semio-framework-value-native-decoding = { path = "../../../../📦️packages/🦀️rust" }
 semio-framework-value-intrinsic = { path = "../../../../../🌳️intrinsic/📦️packages/🦀️rust" }
 semio-framework-value-native-storage = { path = "../../../📦️storage/📦️packages/🦀️rust" }
+semio-framework-value-native-clone-backing = { path = "../../../../../🧬️retained-clone/📦️backing/📦️packages/🦀️rust" }
 semio-framework-value-persistent = { path = "../../../../../📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-framework-value-retained-clone = { path = "../../../../../🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-retirement = { path = "../../../../../♻️retirement/📦️packages/🦀️rust" }
@@ -34,5 +35,6 @@ semio-framework-value-native-receiving-contract = { path = "../../../🧬️cont
 semio-framework-value-paged-list = { path = "../../../../../📋️list/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-testing-allocator = { path = "../../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 semio-framework-value-testing-effect-bank = { path = "../../../../../🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 serde_json = { workspace = true }

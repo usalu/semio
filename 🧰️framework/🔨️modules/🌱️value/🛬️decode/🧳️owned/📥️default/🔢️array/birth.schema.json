@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "baseline",
+    "maximum",
+    "afterFirst",
+    "remaining",
+    "afterLimit",
+    "atLimit",
+    "changedGrant",
+    "foreignWork",
+    "phaseAfterCompletion"
+  ],
+  "properties": {
+    "baseline": {
+      "const": 100
+    },
+    "maximum": {
+      "const": 5
+    },
+    "afterFirst": {
+      "const": 102
+    },
+    "remaining": {
+      "const": 3
+    },
+    "afterLimit": {
+      "const": 105
+    },
+    "atLimit": {
+      "const": 0
+    },
+    "changedGrant": {
+      "const": "pending"
+    },
+    "foreignWork": {
+      "const": "refused"
+    },
+    "phaseAfterCompletion": {
+      "const": "separatePaidAction"
+    }
+  }
+}

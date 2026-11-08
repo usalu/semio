@@ -1,0 +1,58 @@
+[
+  {
+    "phase": "quote",
+    "quoted": false,
+    "moved": false,
+    "posted": false,
+    "outputs": false,
+    "work": 0
+  },
+  {
+    "phase": "quotePending",
+    "quoted": false,
+    "moved": false,
+    "posted": false,
+    "outputs": false,
+    "work": 0
+  },
+  {
+    "phase": "move",
+    "quoted": true,
+    "moved": true,
+    "posted": false,
+    "outputs": false,
+    "work": 1
+  },
+  {
+    "phase": "postPending",
+    "quoted": true,
+    "moved": true,
+    "posted": false,
+    "outputs": false,
+    "work": 1
+  },
+  {
+    "phase": "postRefused",
+    "quoted": true,
+    "moved": true,
+    "posted": true,
+    "outputs": false,
+    "work": 1
+  },
+  {
+    "phase": "settled",
+    "quoted": true,
+    "moved": true,
+    "posted": true,
+    "outputs": false,
+    "work": 1
+  },
+  {
+    "phase": "delivered",
+    "quoted": true,
+    "moved": true,
+    "posted": true,
+    "outputs": true,
+    "work": 2
+  }
+]

@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-name/schema.json",
+  "title": "ChangeZoneName",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "zoneId",
+    "newName"
+  ],
+  "properties": {
+    "zoneId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Zone",
+          "de": "Zone"
+        },
+        "description": {
+          "en": "The ventilation zone this mutation addresses.",
+          "de": "Die Lüftungszone, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "zone"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newName": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Zone name",
+          "de": "Zonenname"
+        },
+        "description": {
+          "en": "The display name of the zone.",
+          "de": "Der Anzeigename der Zone."
+        },
+        "group": "identity",
+        "order": 20
+      }
+    }
+  }
+}

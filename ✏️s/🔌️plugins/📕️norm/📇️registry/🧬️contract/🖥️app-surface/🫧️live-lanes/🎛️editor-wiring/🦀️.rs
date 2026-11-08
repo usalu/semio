@@ -380,12 +380,22 @@ where
     Ok(Emit::default())
 }
 
+/// 🖼️ The report a paint reads: the settled one when the retained session answers within [`PAINT_BUDGET`], else the partial one while slow units keep running on the session worker; the next paint picks up what finished, so a slow unit never blocks a frame.
+pub fn paint_report<F: semio_s_plugin_norm_compliance::NormFamily>(document: &F::Document) -> std::sync::Arc<semio_s_plugin_norm_compliance::CheckReport> {
+    paint_report_of(|budget| F::live_responsive(document, budget))
+}
+
+/// 🖼️ Family-free [`paint_report`] for viewers, which have no `NormFamily`: `responsive` is the `live::responsive(document, budget)` of the snapshot's `live_report!` module, called with [`PAINT_BUDGET`].
+pub fn paint_report_of(responsive: impl FnOnce(std::time::Duration) -> (std::sync::Arc<semio_s_plugin_norm_compliance::CheckReport>, bool)) -> std::sync::Arc<semio_s_plugin_norm_compliance::CheckReport> {
+    responsive(PAINT_BUDGET).0
+}
+
 /// 🍽️ The context menu of a norm editor for a request: the pure rows of [`context_menu_items`] over the document tree, the published host context and the governing check of the report; `german` is the language of the viewer.
 pub fn live_context_menu<A: NormRetainedEditor>(request: &semio_plugin::ContextMenuRequest, document: &A::Snapshot, german: bool) -> Vec<semio_plugin::ContextMenuItemSpec>
 where
     A::Snapshot: semio_framework_value::ToValue,
 {
-    let report = <A::Family as semio_s_plugin_norm_compliance::NormFamily>::live_report(document);
+    let report = paint_report::<A::Family>(document);
     crate::context_menu_items(&semio_framework_value::ToValue::to_value(document), &crate::request_probe(request), &crate::host_context(), &|id| crate::governing_check_index(&report, id), german)
 }
 
@@ -469,7 +479,7 @@ where
         events.push(LaneEvent::ViewMenu(false));
     }
     if events.iter().any(|event| matches!(event, LaneEvent::ViewStep { .. })) {
-        let report = <A::Family as semio_s_plugin_norm_compliance::NormFamily>::live_report(doc.snapshot);
+        let report = paint_report::<A::Family>(doc.snapshot);
         events = resolve_view_steps(events, &report, || A::live_scene(doc.snapshot, &crate::view_options_of(&current.view)), &current.view);
     }
     let peers: Vec<PeerDrag> = presence.peers.iter().filter_map(|(user, peer)| peer.lane().drag.map(|drag| PeerDrag { user: user.to_string(), drag })).collect();
@@ -497,7 +507,7 @@ pub fn live_interaction_topology<A: NormLiveEditor>(document: &A::Snapshot, doma
 where
     A::Snapshot: semio_framework_value::ToValue,
 {
-    let report = <A::Family as semio_s_plugin_norm_compliance::NormFamily>::live_report(document);
+    let report = paint_report::<A::Family>(document);
     let scene = A::live_scene(document, ViewOptions::none());
     Ok(crate::norm_interaction_topology(domain, &semio_framework_value::ToValue::to_value(document), &scene, &report))
 }
@@ -505,7 +515,7 @@ where
 /// 🔗️ The view effects of the click on check row `check`: the framework selection of its owner entity in the interaction `domain` (the viewport then frames it, the lane carries the check); none for a document-level check or an unknown row.
 pub fn live_check_focus_effects<A: NormLiveEditor>(document: &A::Snapshot, check: Option<u32>, domain: &str) -> Vec<semio_plugin::Effect> {
     let Some(index) = check else { return Vec::new() };
-    let report = <A::Family as semio_s_plugin_norm_compliance::NormFamily>::live_report(document);
+    let report = paint_report::<A::Family>(document);
     crate::check_selection_effect(domain, &report, index as usize).into_iter().collect()
 }
 
@@ -515,7 +525,7 @@ where
     A::Transient: LaneTransient<Mutation = A::TransientMutation>,
 {
     let Some(event @ LaneEvent::ViewStep { step: crate::ViewStep::Check | crate::ViewStep::Governing, .. }) = A::view_event(command) else { return Vec::new() };
-    let report = <A::Family as semio_s_plugin_norm_compliance::NormFamily>::live_report(document);
+    let report = paint_report::<A::Family>(document);
     let lane = transient.lane().view;
     let picked = interaction.selection.get(domain).map(|selection| selection.ids.as_slice()).unwrap_or_default();
     crate::check_step_selection_effect(domain, &report, &lane, picked, event, || A::live_scene(document, &crate::view_options_of(&lane))).into_iter().collect()
@@ -649,7 +659,7 @@ macro_rules! norm_live_commands {
                 pub reason: String,
             }
             pub fn handle(_payload: &EvaluateUnits, doc: &semio_plugin::ArtifactView<'_, <$app as semio_plugin::ArtifactEditor>::Snapshot>, _cfg: &semio_plugin::ConfigView<'_, semio_plugin::NoConfig>) -> Result<semio_plugin::Emit<<$app as semio_plugin::ArtifactEditor>::Mutation, semio_plugin::NoConfigMutation>, semio_plugin::Fault> {
-                let _ = <<$app as $crate::NormRetainedEditor>::Family as semio_s_plugin_norm_compliance::NormFamily>::live_report(doc.snapshot);
+                let _ = $crate::paint_report::<<$app as $crate::NormRetainedEditor>::Family>(doc.snapshot);
                 Ok(semio_plugin::Emit::default())
             }
         }
@@ -697,12 +707,12 @@ macro_rules! norm_live_editor {
             }
 
             fn live_scene(document: &<$app as semio_plugin::ArtifactEditor>::Snapshot, view: &semio_s_plugin_norm_structural_scene::projection::ViewOptions) -> semio_s_plugin_norm_structural_scene::StructuralScene {
-                let report = <<$app as $crate::NormRetainedEditor>::Family as semio_s_plugin_norm_compliance::NormFamily>::live_report(document);
+                let report = $crate::paint_report::<<$app as $crate::NormRetainedEditor>::Family>(document);
                 ($scene)(document, &*report, view)
             }
             $(
                 fn live_diagrams(document: &<$app as semio_plugin::ArtifactEditor>::Snapshot) -> Vec<semio_s_plugin_norm_structural_scene::Diagram2d> {
-                    let report = <<$app as $crate::NormRetainedEditor>::Family as semio_s_plugin_norm_compliance::NormFamily>::live_report(document);
+                    let report = $crate::paint_report::<<$app as $crate::NormRetainedEditor>::Family>(document);
                     ($diagrams)(document, &*report)
                 }
             )?

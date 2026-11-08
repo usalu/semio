@@ -82,6 +82,7 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
+use semio_s_plugin_norm_compliance::incremental_evaluation::Scope;
 use semio_s_plugin_norm_compliance::CheckReport;
 use semio_s_artifact_norm_din4108_checks::{bb_2, opaque_envelope_area, part_2, part_3, part_4, part_6, part_7, part_10};
 
@@ -235,17 +236,24 @@ fn push_referential_integrity(report: &mut CheckReport, document: &Din4108Snapsh
     }
 }
 
-/// 📋️ Evaluate the complete DIN 4108 envelope subject.
+/// 📋️ Evaluate the complete DIN 4108 envelope subject: the ordered concatenation of every scope of [`evaluate_scoped`].
 pub fn evaluate(document: &Din4108Snapshot) -> CheckReport {
+    evaluate_scoped(document, Scope::All)
+}
+
+/// 🎯️ The evaluation restricted to `scope`: the part `integrity`, one zone, element or bridge row, or one of the verdict parts `zones-none`, `elements-none`, `airtightness`, `equivalence`.
+pub fn evaluate_scoped(document: &Din4108Snapshot, scope: Scope<'_>) -> CheckReport {
     let mut report = CheckReport::default();
-    push_referential_integrity(&mut report, document);
+    if scope.part("integrity") {
+        push_referential_integrity(&mut report, document);
+    }
     let t_ext = document.climate_zone.design_external_temperature_c();
 
-    for zone in &document.zones {
+    for (_, zone) in document.zones.iter().enumerate().filter(|(i, _)| scope.admits("zones", *i)) {
         report.push(part_2::check_summer_heat(zone, document.climate_zone, &document.elements, &document.usage));
         report.push(part_2::check_zone_transmission_loss(zone, &document.elements, &document.usage, document.t_int_c));
     }
-    if document.zones.is_empty() {
+    if document.zones.is_empty() && scope.part("zones-none") {
         report.push(
             semio_s_plugin_norm_compliance::CheckResult::assess(
                 "din4108-2.summer.none",
@@ -282,11 +290,12 @@ pub fn evaluate(document: &Din4108Snapshot) -> CheckReport {
     }
 
     let opaque_area = opaque_envelope_area(&document.elements);
-    for element in &document.elements {
+    for (_, element) in document.elements.iter().enumerate().filter(|(i, _)| scope.admits("elements", *i)) {
         report.push(part_2::check_minimum_r(element, &document.usage, document.t_int_c));
         report.push(part_2::check_surface_mass(element));
         report.push(part_2::check_f_rsi(element, document.t_int_c, t_ext));
         report.push(part_3::check_glaser(element, document.t_int_c, document.rh_int, document.climate_zone));
+        report.push(part_3::check_drying_reserve(element, document.t_int_c, document.rh_int, document.climate_zone));
         report.push(part_6::check_u_value(element, &document.usage, document.t_int_c));
         report.push(part_6::check_u_prime(element, &document.thermal_bridges, opaque_area, &document.usage, document.t_int_c));
         for li in 0..element.layers.len() {
@@ -297,7 +306,7 @@ pub fn evaluate(document: &Din4108Snapshot) -> CheckReport {
             }
         }
     }
-    if document.elements.is_empty() {
+    if document.elements.is_empty() && scope.part("elements-none") {
         report.push(
             semio_s_plugin_norm_compliance::CheckResult::assess(
                 "din4108-2.table3.none",
@@ -333,11 +342,15 @@ pub fn evaluate(document: &Din4108Snapshot) -> CheckReport {
         );
     }
 
-    report.push(part_7::check_airtightness(document.airtightness_n50, document.has_mechanical_ventilation));
-    for bridge in &document.thermal_bridges {
+    if scope.part("airtightness") {
+        report.push(part_7::check_airtightness(document.airtightness_n50, document.has_mechanical_ventilation));
+    }
+    for (_, bridge) in document.thermal_bridges.iter().enumerate().filter(|(i, _)| scope.admits("thermalBridges", *i)) {
         report.push(bb_2::check_bridge_category(bridge));
     }
-    report.push(bb_2::check_equivalence(&document.thermal_bridges, opaque_area, document.bb2_details_conform));
+    if scope.part("equivalence") {
+        report.push(bb_2::check_equivalence(&document.thermal_bridges, opaque_area, document.bb2_details_conform));
+    }
     report
 }
 //#endregion 🔖️ComplianceReport
@@ -355,4 +368,11 @@ pub use crate::outline::Din4108Outline;
 //#region 🪢️Mounts
 #[path = "🧾outline/🦀️.rs"]
 pub mod outline;
+#[path = "🧮️units/🦀️.rs"]
+pub mod units;
+pub use units::Din4108Units;
 //#endregion 🪢️Mounts
+
+//#region 🛰️LiveEvaluation
+semio_s_plugin_norm_compliance::live_report!(pub mod live(Din4108Snapshot) = crate::units::Din4108Units);
+//#endregion 🛰️LiveEvaluation

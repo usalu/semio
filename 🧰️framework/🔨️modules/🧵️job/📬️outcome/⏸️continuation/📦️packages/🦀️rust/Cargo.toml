@@ -1,0 +1,46 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-job-return"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "framework"
+id = "job-return"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../📤️owner/🦀️.rs"
+
+[dependencies]
+semio-framework-job-context = { workspace = true }
+semio-framework-job-failure = { workspace = true }
+semio-framework-job-payload = { workspace = true }
+semio-framework-job-clock = { workspace = true }
+semio-framework-value-retained-clone = { path = "../../../../../🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
+
+[features]
+testkit = ["semio-framework-job-context/testkit"]
+
+[dev-dependencies]
+semio-framework-job-testing-caller = { workspace = true }
+semio-framework-trace = { workspace = true }
+serde_json = { workspace = true }
+
+[[test]]
+name = "original-receiver-acknowledgement"
+required-features = ["testkit"]
+path = "../../🎟️origin/🔔️acknowledge/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-continuation-view"
+required-features = ["testkit"]
+path = "../../👁️view/🧪️tests/🦀️.rs"

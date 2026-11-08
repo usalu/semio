@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "leafDepth",
+    "metadataExtraDepth",
+    "payloadExtraDepth",
+    "childDepth",
+    "sourceDepth",
+    "arrayEdges",
+    "arrayDemand",
+    "leafValue",
+    "deniedWork"
+  ],
+  "properties": {
+    "leafDepth": {
+      "const": 1
+    },
+    "metadataExtraDepth": {
+      "const": 0
+    },
+    "payloadExtraDepth": {
+      "const": 1
+    },
+    "childDepth": {
+      "const": 2
+    },
+    "sourceDepth": {
+      "const": 256
+    },
+    "arrayEdges": {
+      "const": 129
+    },
+    "arrayDemand": {
+      "const": 130
+    },
+    "leafValue": {
+      "const": 73
+    },
+    "deniedWork": {
+      "const": 0
+    }
+  }
+}

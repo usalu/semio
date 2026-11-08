@@ -7,6 +7,18 @@ pub trait NativeReceivingEffectError:crate::retirement::RetireOwned+Send+'static
 impl NativeReceivingEffectError for OriginalReceivingPrimary{fn receiving_progress(&self)->RetainedCloneProgress{self.retained_progress()}fn cause(&self)->Option<&ValueError>{self.primary.as_ref().or(self.quote_refusal.as_ref()).or(self.allocation_refusal.as_ref()).or(self.work_refusal.as_ref()).or(self.work_overrun.as_ref()).or(self.receipt_refusal.as_ref())}}
 impl NativeReceivingEffectError for ValueError{fn receiving_progress(&self)->RetainedCloneProgress{self.retained_progress()}fn cause(&self)->Option<&ValueError>{Some(self)}}
 impl NativeReceivingEffectError for semio_framework_value_retirement::OriginalRetirementFailure{fn receiving_progress(&self)->RetainedCloneProgress{self.retained_progress()}}
+/// 🛂️ Borrows the actual accepted completion and finished original Work proof after their issuers validate them.
+pub struct OriginalConstructionAcceptedProof<'a>{completion:&'a semio_framework_value_control_contract::OriginalConstructionCompletion,proof:&'a semio_framework_value_control_contract::OriginalWorkActionProof}
+impl OriginalConstructionAcceptedProof<'_>{
+ pub fn authenticate<'a>(loan:&semio_framework_value_control_contract::OriginalConstructionLoan<'_>,completion:&'a semio_framework_value_control_contract::OriginalConstructionCompletion,work:&semio_framework_value_control_contract::OriginalWorkBorrow<'_>,proof:&'a semio_framework_value_control_contract::OriginalWorkActionProof)->Result<Option<OriginalConstructionAcceptedProof<'a>>,crate::ValueError>{
+  use semio_framework_value_control_contract::OriginalConstructionAcceptStatus;
+  if !completion.is_published()||completion.status()!=Some(OriginalConstructionAcceptStatus::Accepted)||!loan.validates_completion(completion)?||!proof.is_finished(){return Ok(None)}
+  let Some(binding)=completion.work_binding()else{return Ok(None)};if work.binding_identity()?!=binding||!work.validates_finished(proof,proof.actual_work())?{return Ok(None)}Ok(Some(OriginalConstructionAcceptedProof{completion,proof}))
+ }
+ pub fn action_identity(&self)->semio_framework_value_control_contract::OriginalConstructionActionIdentity{self.completion.action_identity().expect("accepted completion retained")}
+ pub fn work_binding(&self)->semio_framework_value_control_contract::OriginalWorkBindingIdentity{self.completion.work_binding().expect("accepted Work retained")}
+ pub fn work_action(&self)->semio_framework_value_control_contract::OriginalWorkActionIdentity{self.proof.action_identity()}
+}
 /// 🧳️ Keeps the entire typed child error and each independently refused receiving callback.
 #[derive(Debug)]
 pub struct NativeReceivingEffectFailure<E:NativeReceivingEffectError>{pub child:Option<E>,pub producer_refusal:Option<ValueError>,pub work_refusal:Option<ValueError>,pub receiving:OriginalReceivingPrimary}

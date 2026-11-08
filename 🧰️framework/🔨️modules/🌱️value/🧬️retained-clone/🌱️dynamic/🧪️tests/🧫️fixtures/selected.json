@@ -1,1 +1,1 @@
-{"value":{"kind":"bytes","value":[1,2,3,4,5]},"body":5,"deniedCopy":4,"maximumTurns":128,"selected":{"work":0,"copiedBytes":0},"raw":{"work":1,"copiedBytes":4,"remaining":1},"cached":{"complete":true,"work":0,"copiedBytes":0}}
+{"value":{"kind":"bytes","value":[1,2,3,4,5]},"body":5,"deniedCopy":4,"maximumTurns":128,"selected":{"work":0,"copiedBytes":0},"raw":{"work":1,"copiedBytes":4,"remaining":1},"cached":{"complete":true,"work":0,"copiedBytes":0},"lengthHeaderBytes":8,"maximumItems":5}

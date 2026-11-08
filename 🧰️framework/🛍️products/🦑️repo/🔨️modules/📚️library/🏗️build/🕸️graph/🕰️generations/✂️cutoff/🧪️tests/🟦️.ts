@@ -2,10 +2,14 @@
 import{expect,test}from"bun:test";
 import Ajv2020 from"ajv";
 import{dirname,join}from"node:path";
+import{mkdtempSync,rmSync}from"node:fs";
+import{tmpdir}from"node:os";
 import{fileURLToPath}from"node:url";
 import{testPythonV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import{canonicalJsonV1,createFactIndexV1,factConsumersV1,patchFactIndexV1,selectFactClassesV1,staleFactRowsV1,type GenerationRowV1}from"../../🟨️.mjs";
 import{CUTOFF_POLICY_V1,derivedOwnerNameV1,derivedRowIdsV1,derivedUpsertsV1,holdersOfDerivedV1,isDerivedOwnerV1,orphanedDerivedOwnersV1,scopeWithDerivedV1,settleSuspectsV1,splitStaleConsumersV1,suspectsWithinV1,unsupportedDerivedV1,verifiableRowIdsV1}from"../🟨️.mjs";
+import{createDurableAnswersV1}from"../💾️durable/🟨️.mjs";
+import{createFileLeasePortV1,createNodeFilePortV1}from"../../🟨️.mjs";
 import{announceGenerationBuildV1,describeGenerationReasonV1,renderGenerationMessageV1,shapeComputeResultV1}from"../../🔌️load/🟨️.mjs";
 import schema from"../🧬️schema/🔣️.json";
 import fixture from"./🔣️.json";
@@ -106,6 +110,38 @@ test("a plan that starts again asks only the questions whose last inputs changed
  expect(asked.length).toBe(2*suspects.size);expect(third.reused).toBe(0);
  const plain=await settleSuspectsV1({index,suspects,derive} as never);
  expect([...third.held.keys()].sort()).toEqual([...plain.held.keys()].sort());expect([...third.changed.keys()].sort()).toEqual([...plain.changed.keys()].sort());
+});
+
+test("a killed plan resumes: durable answers survive the process, are verified against the disk before they are taken, and a peer waits for the holder of a question instead of deriving it again",async()=>{
+ const world=worlds.find(row=>row.id==="support stale, same answer: cutoff")!,{index}=indexOf(world),selection=selectFactClassesV1(index);
+ const{stale}=await staleFactRowsV1(index,verifiableRowIdsV1(index,selection.ids),async rows=>rows.every(row=>row.path!=="s1")),{suspects}=splitStaleConsumersV1(index,selection.classes,stale);
+ let round=0;const root=mkdtempSync(join(tmpdir(),"da-")),moved=new Set<string>(),asked:string[]=[],hold=async(rows:readonly{path:string}[])=>rows.every(row=>!moved.has(row.path));
+ try{
+  const open=()=>createDurableAnswersV1({root,fs:createNodeFilePortV1(),lease:createFileLeasePortV1(join(root,"l")),resource:"facts"});
+  const derive=async(row:{path:string;fact:unknown})=>{asked.push(row.path);await new Promise(done=>setTimeout(done,5));return{fact:row.fact,rows:[raw("r"+round+"-"+row.path)]};};
+  const first=await settleSuspectsV1({index,suspects,derive,memo:open(),hold} as never);
+  expect(asked.length).toBe(suspects.size);expect(first.reused).toBe(0);
+  const resumed=await settleSuspectsV1({index,suspects,derive,memo:open(),hold} as never);
+  expect(asked.length,"a new process asks nothing the old one answered").toBe(suspects.size);expect(resumed.reused).toBe(suspects.size);expect([...resumed.held.keys()].sort()).toEqual([...first.held.keys()].sort());
+  for(const path of asked)moved.add("r0-"+path);round=1;
+  const peers=await Promise.all([settleSuspectsV1({index,suspects,derive,memo:open(),hold} as never),settleSuspectsV1({index,suspects,derive,memo:open(),hold} as never)]);
+  expect(asked.length,"two concurrent plans derive each question once").toBe(2*suspects.size);
+  expect(peers[0]!.reused+peers[1]!.reused).toBe(suspects.size);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("rows that closures share are checked once per verification, and one failing shared row refuses exactly the closures that read it",async()=>{
+ const world=worlds.find(row=>row.id==="support stale, same answer: cutoff")!,{index}=indexOf(world),selection=selectFactClassesV1(index);
+ const{stale}=await staleFactRowsV1(index,verifiableRowIdsV1(index,selection.ids),async rows=>rows.every(row=>row.path!=="s1")),{suspects}=splitStaleConsumersV1(index,selection.classes,stale);
+ const shared=Array.from({length:50},(_,i)=>raw("shared-"+i)),calls:number[]=[],bad=new Set<string>();
+ const hold=async(rows:readonly{path:string}[])=>{calls.push(rows.length);return rows.every(row=>!bad.has(row.path));};
+ const memo=new Map(),derive=async(row:{path:string;fact:unknown})=>({fact:row.fact,rows:[...shared,raw("own-"+row.path)]});
+ await settleSuspectsV1({index,suspects,derive,memo,hold} as never);calls.length=0;
+ const again=await settleSuspectsV1({index,suspects,derive,memo,hold} as never);
+ expect(again.reused).toBe(suspects.size);expect(calls.reduce((sum,count)=>sum+count,0),"every unique row once").toBeLessThanOrEqual(shared.length+suspects.size);
+ bad.add("shared-7");calls.length=0;
+ const refused=await settleSuspectsV1({index,suspects,derive,memo,hold} as never);
+ expect(refused.reused).toBe(0);expect(calls.length,"the failing row is found by bisection, not by one call per closure").toBeLessThan(40);
 });
 
 test("a held fact replaces its support, so the next verification finds nothing stale; the index equals a cold build of the same ownership",async()=>{

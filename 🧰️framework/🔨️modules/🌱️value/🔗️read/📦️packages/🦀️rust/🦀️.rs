@@ -5,4 +5,4 @@ pub use semio_framework_value_factory::{FactoryAuthority,FactoryRetirement,Facto
 pub use semio_framework_value_retained_clone::retained_clone;
 #[path="../../🦀️.rs"]
 mod definition;
-pub use definition::{ReadAuthority,ReadLease,ReadLeaseId,ReadOwnershipRegistry,ErasedReadLease,OriginalReadSource,OriginalErasedReadSource,READ_LEASE_CAPACITY};
+pub use definition::{IssuedReadRegistry,ReadAuthority,ReadLease,ReadLeaseId,ReadLeaseIssue,ReadVisit,ReadOwnershipRegistry,ReadRegistryBirth,ErasedReadLease,OriginalReadSource,OriginalErasedReadSource,ReadSourceCursor,READ_LEASE_CAPACITY};

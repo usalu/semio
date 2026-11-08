@@ -70,7 +70,7 @@ pub const GLASER_SUMMER_RH_EXT: f64 = 0.70;
 pub const GLASER_SUMMER_ROOF_T_EXT_C: f64 = 20.0;
 
 /// 🧱 ISO 6946 surface resistances with heat-flow direction from inclination (0° horizontal … 90° vertical).
-pub(super) fn surface_resistances_inclined(kind: &str, adjacent: &str, inclination_deg: f64) -> (f64, f64) {
+pub fn surface_resistances_inclined(kind: &str, adjacent: &str, inclination_deg: f64) -> (f64, f64) {
     let vertical = (inclination_deg.abs() % 180.0).min(180.0 - (inclination_deg.abs() % 180.0));
     let t = (vertical / 90.0).clamp(0.0, 1.0);
     let r_si = match kind {

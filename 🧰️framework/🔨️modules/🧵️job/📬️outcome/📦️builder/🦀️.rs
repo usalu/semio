@@ -2,6 +2,10 @@
 use super::*;
 use crate::{RetirementDemand,RetainedWorkOutcome};
 
+#[path="🏭️admission/🦀️.rs"]
+mod payload_admission;
+pub use payload_admission::OriginalJobPayloadAdmission;
+
 /// 🪪️ Compares a live original payload source without lending its ledger or authority.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct OriginalPayloadSourceIdentity(pub usize);
@@ -25,7 +29,7 @@ impl JobPayloadAuthority{
  pub fn retirement_demands(&self)->RetirementDemand{if self.terminal_is_empty(){return Default::default()}RetirementDemand{copy_bytes:Self::admission_demand().copy_bytes,release_bytes:semio_framework_value_retirement::retirement::allocation_return::shared_allocation_bytes::<JobPayloadOperationLedger>(),depth:1,..Default::default()}}
  /// ⛽️ Delegates the exact selected original ledger handback work before effects.
  pub fn retirement_work_demand(&self)->Result<u64,ValueError>{Ok(crate::ledger_work_demand(&self.original))}
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{close_ledger(&mut self.original,grant)}
+ pub fn close_step(&mut self,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome{close_ledger(&mut self.original,effect)}
 }
 impl Drop for JobPayloadAuthority{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original payload authority reached Drop before separate paid ledger closure");}}
 
@@ -132,19 +136,22 @@ impl RetainedPayloadBuilder{
  /// use semio_framework_job_payload::{RetainedPayloadBuilder,JobPayloadStep};
  /// fn cannot_hide_work(builder:&mut RetainedPayloadBuilder,cx:&mut impl JobPayloadStep){let _=builder.close_step(cx);}
  /// ```
- pub fn close_step_granted(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{
+ pub fn close_step(&mut self,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome{
+  let grant=effect.grant();
   if self.terminal_is_empty(){return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0};}
   let demand=match self.retirement_demands(){Ok(demand)=>demand,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work:0}};
   if !crate::retained_clone::retained_clone_grant_admits(grant,demand){return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}
+  if self.reservation.as_ref().is_some_and(|reservation|reservation.held&&reservation.ledger.is_none()){return RetainedWorkOutcome{result:Err(ValueError::invariant("ledger absent")),work:0}}
+  if self.incoming.is_some()||self.reservation.as_ref().is_some_and(|reservation|reservation.held||reservation.ledger.is_none())||(!self.staged.is_some()&&self.original().is_none_or(|payload|payload.terminal_is_empty())){match effect.performed(1){Ok(true)=>{},Ok(false)=>return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0},Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}}}
   if let Some(source)=self.incoming.as_ref(){let released=source.allocated_capacity_bytes();drop(self.incoming.take());return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:released,..Default::default()})),work:1}}
   if let Some(reservation)=self.reservation.as_mut(){
    if reservation.held{match reservation.ledger.as_ref(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("ledger absent").into()),work:0}}.release(self.stream,reservation.extent);reservation.held=false;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
-   if reservation.ledger.is_some(){return close_ledger(&mut reservation.ledger,grant)}
+   if reservation.ledger.is_some(){return close_ledger(&mut reservation.ledger,effect)}
    self.reservation.take();return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}
   }
-  if self.staged.is_some(){return self.close_staged_granted(grant);}
+  if self.staged.is_some(){return self.close_staged(effect);}
   if self.original().is_some_and(|payload|!payload.terminal_is_empty()){
-   let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let original=unsafe{self.original.assume_init_mut()};let turn=original.close_step(child);
+   let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let original=unsafe{self.original.assume_init_mut()};let remaining=match effect.remaining_work_units(){Ok(v)=>v,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};let mut child_effect=match effect.reborrow(child,remaining){Ok(v)=>v,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};let turn=original.close_step(&mut child_effect);
    let result=turn.result.and_then(|step|crate::retained_clone::admit_retained_clone_close(child,step,original.terminal_is_empty(),"original retained payload builder")).map(|step|RetainedCloneStep::Progress(step.progress()));
    return crate::RetainedWorkOutcome{result,work:turn.work};
   }

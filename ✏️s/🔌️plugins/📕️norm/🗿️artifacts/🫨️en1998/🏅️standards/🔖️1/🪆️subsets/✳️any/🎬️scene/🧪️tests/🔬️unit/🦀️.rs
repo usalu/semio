@@ -103,12 +103,7 @@ fn golden_digests_match_the_committed_files() {
 #[test]
 fn golden_scene_matches_committed_bytes() {
     let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🧫️fixtures/🏛️scene/🔣️.json");
-    let actual = canonical_json(&scene_of(&En1998Snapshot::compliant_de_multipart()).0);
-    if std::env::var("SEMIO_UPDATE_GOLDEN").is_ok() {
-        std::fs::write(path, &actual).expect("write golden");
-    }
-    let expected = std::fs::read_to_string(path).expect("golden fixture");
-    assert_eq!(actual.trim(), expected.trim(), "golden scene changed; rerun with SEMIO_UPDATE_GOLDEN=1 after reviewing the diff");
+    scene::projection_kit::test_support::assert_golden(path, &canonical_json(&scene_of(&En1998Snapshot::compliant_de_multipart()).0));
 }
 
 #[test]

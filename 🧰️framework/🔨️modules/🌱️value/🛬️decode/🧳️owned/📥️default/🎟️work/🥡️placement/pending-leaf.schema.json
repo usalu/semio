@@ -1,0 +1,28 @@
+{
+  "type": "object",
+  "required": [
+    "pendingBlocksClose",
+    "receiveCalls",
+    "recoverCalls",
+    "outputBeforeReply",
+    "emptyBeforeReply"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "pendingBlocksClose": {
+      "const": true
+    },
+    "receiveCalls": {
+      "const": 1
+    },
+    "recoverCalls": {
+      "const": 1
+    },
+    "outputBeforeReply": {
+      "const": false
+    },
+    "emptyBeforeReply": {
+      "const": false
+    }
+  }
+}

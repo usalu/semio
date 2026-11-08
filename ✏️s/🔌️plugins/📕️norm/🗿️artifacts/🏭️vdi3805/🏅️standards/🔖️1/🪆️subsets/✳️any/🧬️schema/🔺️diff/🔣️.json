@@ -678,7 +678,8 @@
       "additionalProperties": false,
       "required": [
         "title",
-        "configuration"
+        "configuration",
+        "records"
       ],
       "properties": {
         "title": {
@@ -695,6 +696,16 @@
           "anyOf": [
             {
               "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/snapshot.json#/$defs/CatalogueProduct/properties/configuration"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "records": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/snapshot.json#/$defs/CatalogueProduct/properties/records"
             },
             {
               "type": "null"

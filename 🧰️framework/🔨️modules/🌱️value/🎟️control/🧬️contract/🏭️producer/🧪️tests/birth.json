@@ -1,0 +1,50 @@
+{
+  "fuel": 1,
+  "value": 73,
+  "pendingWork": 1,
+  "recoveryWork": 0,
+  "cases": [
+    {
+      "producer": false,
+      "payer": false,
+      "same": true,
+      "active": false,
+      "accepted": true
+    },
+    {
+      "producer": false,
+      "payer": true,
+      "same": false,
+      "active": false,
+      "accepted": true
+    },
+    {
+      "producer": true,
+      "payer": false,
+      "same": true,
+      "active": false,
+      "accepted": false
+    },
+    {
+      "producer": true,
+      "payer": true,
+      "same": false,
+      "active": false,
+      "accepted": false
+    },
+    {
+      "producer": true,
+      "payer": true,
+      "same": true,
+      "active": false,
+      "accepted": true
+    },
+    {
+      "producer": true,
+      "payer": true,
+      "same": true,
+      "active": true,
+      "accepted": false
+    }
+  ]
+}

@@ -25,9 +25,10 @@ semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-din16798-diff = { workspace = true }
 semio-s-artifact-norm-din16798-model = { workspace = true }
+semio-s-artifact-norm-din16798-mut-ventilation-more = { workspace = true }
 
 [features]
-test-support = ["dep:serde", "semio-s-artifact-norm-din16798-diff/test-support", "semio-s-artifact-norm-din16798-model/test-support"]
+test-support = ["dep:serde", "semio-s-artifact-norm-din16798-diff/test-support", "semio-s-artifact-norm-din16798-model/test-support", "semio-s-artifact-norm-din16798-mut-ventilation-more/test-support"]
 
 [dev-dependencies]
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

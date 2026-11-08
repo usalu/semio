@@ -5,6 +5,7 @@ impl OriginalReturnOrigin for Origin{
  fn same_origin(&self,other:&Self)->bool{self.recipient==other.recipient}
  fn recipient(&self)->usize{self.recipient}
  fn source_identity(&self)->usize{1}
+ fn source_turn(&self)->Option<semio_framework_value_control_contract::OriginalSourceTurnIdentity>{None}
  fn granted(&self)->RetainedCloneGrant{self.grant}
  fn fuel(&self)->u64{self.fuel}
  fn spent(&self)->P{self.spent}

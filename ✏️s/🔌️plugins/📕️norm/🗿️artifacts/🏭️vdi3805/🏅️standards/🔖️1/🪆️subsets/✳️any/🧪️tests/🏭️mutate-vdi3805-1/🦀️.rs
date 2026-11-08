@@ -41,6 +41,7 @@ const KINDS: &[&str] = &[
 const ROWS: &[&str] = &[
     "remove-geometry-connection-middle",
     "remove-product-middle",
+    "change-product-configuration-synced",
 ];
 
 /// 🗣️ The real committed VDI 3805 document, read where the domain already keeps it.
@@ -61,6 +62,12 @@ fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'stat
             include_str!("../🧫️fixtures/🧬️mutations/✂️remove-geometry-connection/🧭️middle/🔣️.mutation.json"),
             include_str!("../🧫️fixtures/🧬️mutations/✂️remove-geometry-connection/🧭️middle/🔣️.after.json"),
             include_str!("../🧫️fixtures/🧬️mutations/✂️remove-geometry-connection/🧭️middle/🔣️.outcome.json"),
+        ),
+        "change-product-configuration-synced" => (
+            include_str!("../🧫️fixtures/🧬️mutations/🎛️change-product-configuration/🔗️synced/🔣️.before.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🎛️change-product-configuration/🔗️synced/🔣️.mutation.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🎛️change-product-configuration/🔗️synced/🔣️.after.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/🎛️change-product-configuration/🔗️synced/🔣️.outcome.json"),
         ),
         "remove-product-middle" => (
             include_str!("../🧫️fixtures/🧬️mutations/🗑️remove-product/🧭️middle/🔣️.before.json"),

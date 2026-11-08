@@ -33,6 +33,11 @@ impl<F:RetirementFields> FieldsRetirementCursor<F>{pub fn new(fields:F)->Self{Se
 impl<F:RetirementFields> RetirementCursor for FieldsRetirementCursor<F>{
  fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{Ok(if self.terminal_is_empty(){0}else if self.pending.is_some(){1}else{4})}
  fn next_demand(&self,_body:usize)->Result<RetirementDemand,ValueError>{if self.terminal_is_empty(){return Ok(Default::default())}if self.pending.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<Box<dyn RetirementCursor>>>()+size_of::<usize>(),depth:1,..Default::default()})}self.fields.field_demand(self.index)}
+ 
+ fn terminal_is_empty(&self)->bool{self.index==self.fields.field_count()&&self.pending.is_none()}
+ fn terminal_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
+}
+impl<F:RetirementFields> FieldsRetirementCursor<F>{
  fn close_step(&mut self,grant:RetainedCloneGrant,actual:&mut Option<usize>)->RetirementStep{
   if self.terminal_is_empty(){return RetirementStep::Complete(0)}
   let demand=match self.next_demand(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetirementStep::Failure(error.into(),0)};
@@ -41,9 +46,8 @@ impl<F:RetirementFields> RetirementCursor for FieldsRetirementCursor<F>{
   let turn=self.fields.admit_field(self.index,&mut self.pending,grant,actual);
   match turn.result{Ok(step)=>RetirementStep::Progress(step.progress(),turn.work),Err(error)=>RetirementStep::Failure(error.into(),turn.work)}
  }
- fn terminal_is_empty(&self)->bool{self.index==self.fields.field_count()&&self.pending.is_none()}
- fn terminal_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
 }
+
 impl<F:RetirementFields> Drop for FieldsRetirementCursor<F>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"retirement fields retain their original selected owners");}}
 
 #[cfg(test)]mod tests{
@@ -54,10 +58,14 @@ impl<F:RetirementFields> Drop for FieldsRetirementCursor<F>{fn drop(&mut self){a
  impl RetirementCursor for ProbeCursor{
   fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{Ok(u64::from(self.0.is_some()))}
   fn next_demand(&self,_body:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:size_of::<Option<u64>>(),depth:1,..Default::default()})}
-  fn close_step(&mut self,grant:RetainedCloneGrant,_actual:&mut Option<usize>)->RetirementStep{if self.0.is_none(){return RetirementStep::Complete(0)}let demand=self.next_demand(0).unwrap();if !crate::retained_clone::retained_clone_grant_admits(grant,demand){return RetirementStep::BudgetExhausted}self.0=None;RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()},1)}
+  
   fn terminal_is_empty(&self)->bool{self.0.is_none()}
   fn terminal_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
  }
+impl ProbeCursor{
+ fn close_step(&mut self,grant:RetainedCloneGrant,_actual:&mut Option<usize>)->RetirementStep{if self.0.is_none(){return RetirementStep::Complete(0)}let demand=self.next_demand(0).unwrap();if !crate::retained_clone::retained_clone_grant_admits(grant,demand){return RetirementStep::BudgetExhausted}self.0=None;RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()},1)}
+}
+
  #[test]fn funded_inline_cursor_birth_preserves_originals_and_actual_heap_on_every_refusal(){
   let law:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../🌱️birth/📐️.json")).unwrap();
   let demand=retirement_cursor_birth_demand::<Probe>().unwrap();
@@ -72,3 +80,7 @@ impl<F:RetirementFields> Drop for FieldsRetirementCursor<F>{fn drop(&mut self){a
   }
  }
 }
+
+
+
+

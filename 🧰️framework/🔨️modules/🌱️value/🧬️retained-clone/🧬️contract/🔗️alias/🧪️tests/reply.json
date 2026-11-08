@@ -1,0 +1,44 @@
+[
+  {
+    "entered": false,
+    "recorded": false,
+    "output": false,
+    "recover": false,
+    "same": true
+  },
+  {
+    "entered": true,
+    "recorded": false,
+    "output": false,
+    "recover": true,
+    "same": true
+  },
+  {
+    "entered": true,
+    "recorded": false,
+    "output": true,
+    "recover": true,
+    "same": true
+  },
+  {
+    "entered": true,
+    "recorded": true,
+    "output": true,
+    "recover": false,
+    "same": true
+  },
+  {
+    "entered": true,
+    "recorded": false,
+    "output": true,
+    "same": false,
+    "recover": false
+  },
+  {
+    "entered": true,
+    "recorded": true,
+    "output": false,
+    "same": true,
+    "recover": false
+  }
+]

@@ -1,0 +1,37 @@
+[
+  {
+    "owner": true,
+    "output": false,
+    "sameSource": true,
+    "work": 0,
+    "admitted": false
+  },
+  {
+    "owner": true,
+    "output": false,
+    "sameSource": true,
+    "work": 1,
+    "admitted": true
+  },
+  {
+    "owner": true,
+    "output": true,
+    "sameSource": true,
+    "work": 1,
+    "admitted": false
+  },
+  {
+    "owner": true,
+    "output": false,
+    "sameSource": false,
+    "work": 1,
+    "admitted": false
+  },
+  {
+    "owner": false,
+    "output": false,
+    "sameSource": true,
+    "work": 1,
+    "admitted": false
+  }
+]

@@ -1,0 +1,34 @@
+{
+  "maximumCopyBytes": 4096,
+  "maximumItems": 1,
+  "rows": [
+    {
+      "mode": "pending",
+      "sameAction": true,
+      "producerCalls": 1,
+      "recoveryCalls": 1,
+      "publishedBeforePost": false
+    },
+    {
+      "mode": "post-unwind",
+      "sameAction": true,
+      "producerCalls": 1,
+      "recoveryCalls": 0,
+      "publishedBeforePost": false
+    },
+    {
+      "mode": "foreign-source",
+      "sameAction": true,
+      "producerCalls": 0,
+      "recoveryCalls": 0,
+      "publishedBeforePost": false
+    },
+    {
+      "mode": "foreign-work",
+      "sameAction": true,
+      "producerCalls": 0,
+      "recoveryCalls": 0,
+      "publishedBeforePost": false
+    }
+  ]
+}

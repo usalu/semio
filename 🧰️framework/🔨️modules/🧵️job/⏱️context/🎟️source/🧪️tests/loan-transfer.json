@@ -1,0 +1,37 @@
+[
+  {
+    "owner": true,
+    "output": false,
+    "sameSource": true,
+    "work": 0,
+    "transferred": false
+  },
+  {
+    "owner": true,
+    "output": false,
+    "sameSource": true,
+    "work": 1,
+    "transferred": true
+  },
+  {
+    "owner": true,
+    "output": true,
+    "sameSource": true,
+    "work": 1,
+    "transferred": false
+  },
+  {
+    "owner": true,
+    "output": false,
+    "sameSource": false,
+    "work": 1,
+    "transferred": false
+  },
+  {
+    "owner": false,
+    "output": false,
+    "sameSource": true,
+    "work": 1,
+    "transferred": false
+  }
+]

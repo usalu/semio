@@ -34,29 +34,11 @@ impl<T:Send+'static> Drop for BoxOriginal<T>{fn drop(&mut self){assert!(std::thr
 pub struct BoxedOwner<T:RetireOwned>{original:Option<BoxOriginal<T>>,pending:ManuallyDrop<Option<T>>}
 impl<T:RetireOwned> BoxedOwner<T>{pub(super) fn new(original:Box<T>)->Self{Self{original:Some(BoxOriginal::from_original(original)),pending:ManuallyDrop::new(None)}}}
 impl<T:RetireOwned> RetirementCursor for BoxedOwner<T>{
- fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.next_demand(body)?;Ok(u64::from(!self.terminal_is_empty()))}
- fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{if let Some(value)=self.pending.as_ref(){return super::retirement_cursor_birth_demand(value)}let Some(original)=self.original.as_ref()else{return Ok(Default::default())};if !original.is_initialized(){return Ok(RetirementDemand{release_bytes:BoxOriginal::<T>::allocation_bytes(),depth:1,..Default::default()})}let value=original.get();if let Some(demand)=value.boxed_original_demands()?{return Ok(demand)}Ok(RetirementDemand{copy_bytes:size_of::<Option<T>>()+size_of::<T>()+size_of::<bool>(),depth:1,..Default::default()})}
- fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();
-  let demand=match self.next_demand(grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return RetirementStep::Failure(error.into(),0)};
-  if !crate::retained_clone::retained_clone_grant_admits(grant,demand){return RetirementStep::BudgetExhausted}
-  if self.pending.is_some(){return super::retirement_input_step(&mut self.pending,effect)}
-  let Some(original)=self.original.as_mut()else{return RetirementStep::Complete(0)};
-  if !original.is_initialized(){
-   let p=unsafe{original.release_empty(grant)};self.original=None;
-   return RetirementStep::Progress(p,1)
-  }
-  let specialized=match original.get().boxed_original_demands(){Ok(d)=>d.is_some(),Err(error)=>return RetirementStep::Failure(error.into(),0)};
-  if specialized{
-   let turn=T::boxed_original_retirement(&mut self.original,effect);
-   return match turn.result{
-    Ok(Some((cursor,p)))=>RetirementStep::ChildProgress(cursor,p,turn.work),
-    Ok(None)=>RetirementStep::Progress(Default::default(),turn.work),
-    Err(error)=>RetirementStep::Failure(error.into(),turn.work)
-   }
-  }
-  *self.pending=Some(unsafe{original.take_whole()});
-  RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()},1)
- }
+ fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.next_demand(body)?;if self.pending.is_none(){if let Some(original)=self.original.as_ref(){if original.is_initialized()&&original.get().boxed_original_demands()?.is_some(){return original.get().boxed_original_work_demand()?.ok_or_else(||ValueError::invariant("boxed original admission lacks Work quote"))}}}Ok(u64::from(!self.terminal_is_empty()))}
+ fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{if let Some(value)=self.pending.as_ref(){return super::retirement_cursor_birth_demand(value)}let Some(original)=self.original.as_ref()else{return Ok(Default::default())};if !original.is_initialized(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<BoxOriginal<T>>>()+size_of::<Option<Box<MaybeUninit<T>>>>()+size_of::<bool>(),release_bytes:BoxOriginal::<T>::allocation_bytes(),depth:1,..Default::default()})}let value=original.get();if let Some(demand)=value.boxed_original_demands()?{return Ok(demand)}Ok(RetirementDemand{copy_bytes:size_of::<Option<T>>()+size_of::<T>()+size_of::<bool>(),depth:1,..Default::default()})}
+ 
+ fn close_into<'r>(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'r,RetirementStep,crate::OriginalRetirementFailure>)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'r,RetirementStep,crate::OriginalRetirementFailure>,ValueError>{if self.terminal_is_empty(){return Ok(reply.complete(Ok(RetirementStep::Complete(0))))}let demand=self.next_demand(body)?;let work=self.next_computational_work(body)?;if effect.remaining_work_units()?<work||!crate::retained_clone::retained_clone_grant_admits(effect.grant(),demand){return Ok(reply.complete(Ok(RetirementStep::BudgetExhausted)))}if self.pending.is_some(){return Ok(reply.complete(Ok(super::retirement_input_step(&mut self.pending,effect))))}let Some(original)=self.original.as_ref()else{return Ok(reply.complete(Ok(RetirementStep::Complete(0))))};if original.is_initialized()&&original.get().boxed_original_demands()?.is_some(){let witness=T::native_boxed_original_admission().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"boxed original lacks native borrowed admission"))?;return witness.admit_into(&mut self.original,effect,reply)}let original=self.original.as_mut().ok_or_else(||ValueError::invariant("boxed original absent"))?;match effect.performed(1){Ok(true)=>{},Ok(false)=>return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::WorkLimit,"boxed original exceeded Work").into()))),Err(error)=>return Ok(reply.complete(Err(error.into())))}if !original.is_initialized(){let progress=unsafe{original.release_empty(effect.grant())};self.original=None;return Ok(reply.complete(Ok(RetirementStep::Progress(RetainedCloneProgress{copied_bytes:demand.copy_bytes,..progress},1))))}*self.pending=Some(unsafe{original.take_whole()});Ok(reply.complete(Ok(RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()},1))))}
+ fn recover_close_into<'r>(&mut self,body:usize,_:&mut crate::RetainedAllocationEffect<'_>,_:semio_framework_value_control_contract::OriginalEffectReply<'r,RetirementStep,crate::OriginalRetirementFailure>)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'r,RetirementStep,crate::OriginalRetirementFailure>,ValueError>{Err(ValueError::invariant("native boxed close has no unrecorded callback"))}
  fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.pending.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.next_demand(0)?.copy_bytes)}
  fn next_birth_bytes(&self,body:usize)->Option<usize>{self.next_demand(body).ok().map(|demand|demand.capacity_bytes)}
@@ -64,3 +46,5 @@ impl<T:RetireOwned> RetirementCursor for BoxedOwner<T>{
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.next_demand(0)?.depth)}
  fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
+
+impl<T:RetireOwned> Drop for BoxedOwner<T>{fn drop(&mut self){if std::thread::panicking(){return}assert!(self.terminal_is_empty(),"boxed original retains its owner");unsafe{ManuallyDrop::drop(&mut self.pending)}}}

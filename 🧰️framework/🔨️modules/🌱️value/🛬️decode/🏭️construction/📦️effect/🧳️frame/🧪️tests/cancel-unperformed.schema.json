@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "effectFinished",
+          "sameWork",
+          "sameRecipient",
+          "child",
+          "actualMarker",
+          "unallocatedStarted",
+          "refusedOutcome",
+          "allowed"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "effectFinished": {
+            "type": "boolean"
+          },
+          "sameWork": {
+            "type": "boolean"
+          },
+          "sameRecipient": {
+            "type": "boolean"
+          },
+          "child": {
+            "type": "boolean"
+          },
+          "actualMarker": {
+            "type": "boolean"
+          },
+          "unallocatedStarted": {
+            "type": "boolean"
+          },
+          "refusedOutcome": {
+            "type": "boolean"
+          },
+          "allowed": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

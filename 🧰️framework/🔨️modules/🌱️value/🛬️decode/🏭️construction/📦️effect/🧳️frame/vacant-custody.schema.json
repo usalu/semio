@@ -1,0 +1,1 @@
+{"type":"object","additionalProperties":false,"required":["fresh","ownedRefusal","cleared","realAction"],"properties":{"fresh":{"const":true},"ownedRefusal":{"const":false},"cleared":{"const":true},"realAction":{"const":false}}}

@@ -649,6 +649,25 @@ def dt14(case):
 HANDLERS = {"T-02": t02, "T-04": t04, "A-10": a10, "S-03": s03, "B-03": b03, "A-15": a15, "S-11": sc_s11, "AF-01": af01, "AJ-03": aj03, "T-05": t05, "AK-01": ak01, "AL-01": al01, "M-05": m05, "S-04": s04, "S-06": s06, "A-01": a01, "A-02": a02, "M-11": a02, "B-02": b02, "V-02": v02, "V-03": v03, "P-03": p03, "SL-06": sl06, "SL-07": sl07, "FA-03": fa03, "PA-01": pa01, "PR-04": pr04, "F-04": f04, "ST-04": st04, "ST-01": st01, "ST-03": st03, "SG-01": sg01, "SG-02": sg02, "R-04": r04, "B-07": b07, "DT-09": dt09, "PR-05": pr05, "M-02": m02, "M-08": m08, "B-01": b01, "A-16": a16, "DT-14": dt14}
 
 
+def load_clause_forms():
+    """📐 Handlers of every `📐️clause-forms/<domain>/🐍️.py` module: independent third-party or clause-text oracles per catalogue entry."""
+    found = {"M-10": a01}
+    shared = Path(__file__).resolve().parent / "📐️clause-forms" / "🧰️shared" / "🐍️.py"
+    shared_spec = importlib.util.spec_from_file_location("clause_forms_shared", shared)
+    sys.modules["clause_forms_shared"] = importlib.util.module_from_spec(shared_spec)
+    shared_spec.loader.exec_module(sys.modules["clause_forms_shared"])
+    for index, path in enumerate(p for p in sorted((Path(__file__).resolve().parent / "📐️clause-forms").glob("*/🐍️.py")) if p.parent != shared.parent):
+        spec = importlib.util.spec_from_file_location(f"clause_forms_{index}", path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        found.update(module.HANDLERS)
+    return found
+
+
+HANDLERS.update(load_clause_forms())
+sys.modules["clause_forms_shared"].REGISTRY = HANDLERS
+
+
 def catalogue_case(line):
     entry, _, *fields = line.rstrip("\n").split("|")
     case = {"id": entry, "annex": "De", "num": {}, "text": {}, "list": {}}

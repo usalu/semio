@@ -46,12 +46,12 @@
     {
       "id": "full",
       "rows": 17,
-      "valueBytes": 3208
+      "valueBytes": 3226
     },
     {
       "id": "emptyCollections",
       "rows": 1,
-      "valueBytes": 1418
+      "valueBytes": 1436
     }
   ]
 }

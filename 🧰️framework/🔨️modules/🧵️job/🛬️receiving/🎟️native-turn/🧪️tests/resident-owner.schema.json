@@ -1,0 +1,44 @@
+{
+  "type": "array",
+  "minItems": 8,
+  "items": {
+    "type": "object",
+    "properties": {
+      "source": {
+        "type": "boolean"
+      },
+      "work": {
+        "type": "boolean"
+      },
+      "physical": {
+        "type": "boolean"
+      },
+      "ready": {
+        "type": "boolean"
+      },
+      "empty": {
+        "type": "boolean"
+      },
+      "grant": {
+        "type": "boolean"
+      },
+      "fuel": {
+        "type": "boolean"
+      },
+      "moved": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "source",
+      "work",
+      "physical",
+      "ready",
+      "empty",
+      "grant",
+      "fuel",
+      "moved"
+    ],
+    "additionalProperties": false
+  }
+}

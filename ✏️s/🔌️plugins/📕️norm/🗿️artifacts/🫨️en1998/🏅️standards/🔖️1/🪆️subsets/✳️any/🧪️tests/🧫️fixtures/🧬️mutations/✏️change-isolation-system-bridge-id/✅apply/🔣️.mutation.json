@@ -1,0 +1,5 @@
+{
+  "mutation": "changeIsolationSystemBridgeId",
+  "id": "iso-1",
+  "newBridgeId": "br-1-2"
+}

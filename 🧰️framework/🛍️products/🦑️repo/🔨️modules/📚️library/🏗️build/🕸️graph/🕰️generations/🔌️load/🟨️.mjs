@@ -1,3 +1,4 @@
+import{createDurableAnswersV1,createDurableStateV1}from"../✂️cutoff/💾️durable/🟨️.mjs";
 import{createHash}from"node:crypto";
 import{join}from"node:path";
 import{graphQueueRequestedAtV1,graphQueueYieldsV1,yieldGraphQueueV1}from"../🛌️yield/🟨️.mjs";
@@ -299,8 +300,8 @@ export async function loadGenerationGraphV1(host,{policy="fresh",closure,selecti
  const requestedAt=graphQueueRequestedAtV1()??Date.now(),identity=await host.identity(),roots=slice?[...new Set(slice.roots)]:closure?[...new Set(closure)]:undefined,rows=pin===undefined?await host.implementationRows():[],implementation=implementationDigestV1(rows),scoped=scopeImplementationRowsV1(rows),limits=host.expansionLimits??{maximumProjects:GENERATION_POLICY_V1.expansionMaximumProjects,maximumBytes:GENERATION_POLICY_V1.expansionMaximumBytes};
  const answersByRoot=new Map();let pointer;
  const attempt=async(builder,store,control)=>{
-  const options=host.storeOptions(store,control);let answers=answersByRoot.get(options.root);if(!answers)answersByRoot.set(options.root,answers=new Map());
-  const engine=createGenerationStoreV1({...options,answers}),progress=createGenerationProgressV1(host.clock(control));
+  const options=host.storeOptions(store,control);let answers=answersByRoot.get(options.root);if(!answers)answersByRoot.set(options.root,answers=createDurableStateV1());
+  const engine=createGenerationStoreV1({...options,answers:createDurableAnswersV1({root:options.root,fs:options.fs,lease:options.lease,resource:options.resources.facts,state:answers})}),progress=createGenerationProgressV1(host.clock(control));
   const compute=builder?async(spec,signal)=>{announceGenerationBuildV1(host,spec,rows);const part=await host.discoverPart(spec,signal,control);announceWithheldProjectsV1(host,part);await host.release?.();return shapeComputeResultV1({workspaceRoot:host.workspaceRoot,separator:host.separator,part,stubs:spec.stubs,implementation:scoped});}:async()=>{throw Error("A shared graph reader never computes");};
   pointer=join(options.root,GENERATION_POLICY_V1.pointer);
   const base={identity,implementation,policy:builder?"fresh":policy,membership:host.membership,compute,signal:host.signal,progress,requestedAt,builder:builder?body=>body(builder===true?undefined:builder):needsBuild};

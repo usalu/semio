@@ -1,0 +1,8 @@
+import {test,expect} from "bun:test";
+import Ajv2020 from "ajv/dist/2020";
+import {Database} from "bun:sqlite";
+import fixture from "../case.json";
+import schema from "../case.schema.json";
+test("the original allocation attempt and resident refusal use separate paid Work",()=>{expect(new Ajv2020({strict:true}).compile(schema)(fixture)).toBe(true);const db=new Database(":memory:");try{db.run("CREATE TABLE work(stage TEXT PRIMARY KEY,units INTEGER NOT NULL)");db.run("INSERT INTO work VALUES('attempt',?),('capture',?)",[fixture.nullAllocationAttemptWork,fixture.nullReplyCaptureWork]);expect(db.query<{units:number},[]>("SELECT SUM(units) AS units FROM work").get()!.units).toBe(2);expect(fixture.nullRetainsRoot).toBe(true);expect(fixture.deniedWork).toBe(0);expect(fixture.cachedWork).toBe(0)}finally{db.close()}});
+test("empty registry retirement pays each scanned word before native release",()=>{expect(new Ajv2020({strict:true}).compile(schema)(fixture)).toBe(true);const db=new Database(":memory:");try{const row=db.query<{units:number},[number]>("WITH RECURSIVE word(n) AS (VALUES(1) UNION ALL SELECT n+1 FROM word WHERE n<?) SELECT COUNT(*)+1 AS units FROM word").get(fixture.retirementEmptyScanWords)!;expect(row.units).toBe(fixture.retirementEmptyReleaseWork);expect(fixture.retirementEmptyScanWords).toBe(17)}finally{db.close()}});
+test("issued alias election and its native child header are separate actions",()=>{expect(new Ajv2020({strict:true}).compile(schema)(fixture)).toBe(true);const db=new Database(":memory:");try{const row=db.query<{total:number},[number,number]>("SELECT ?+? AS total").get(fixture.aliasElectionWork,fixture.completedChildHeaderWork)!;expect(row.total).toBe(5);expect(fixture.closingChildHandoffWork).toBe(1)}finally{db.close()}});

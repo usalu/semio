@@ -556,7 +556,19 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/insert-ring-stiffener/schema.json"
     },
     {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/insert-sheet-profile/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/insert-fire-insulation/schema.json"
+    },
+    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/remove-ring-stiffener/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/remove-sheet-profile/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/remove-fire-insulation/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/insert-member-action/schema.json"
@@ -592,6 +604,12 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-transverse-girder-id/schema.json"
     },
     {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-sheet-profile-sheet-id/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-fire-insulation-fire-id/schema.json"
+    },
+    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-transverse-position/schema.json"
     },
     {
@@ -605,6 +623,30 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-conn-hole-stagger/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-sheet-profile-web-height/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-sheet-profile-bottom-flange/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-sheet-profile-top-flange/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-sheet-profile-pitch/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-fire-insulation-density/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-fire-insulation-specific-heat/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-fire-insulation-conductivity/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-fire-insulation-thickness/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-transverse-sides/schema.json"

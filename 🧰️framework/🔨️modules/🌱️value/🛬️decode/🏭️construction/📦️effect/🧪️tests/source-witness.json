@@ -1,0 +1,8 @@
+{
+  "stock": {"items": 16, "copyBytes": 8192, "capacityBytes": 8192, "releaseBytes": 8192, "depth": 16, "fuel": 32},
+  "sameAccepted": true,
+  "foreignAccepted": false,
+  "foreignCallbacks": 0,
+  "unwindRecoveryAccepted": true,
+  "workSpent": 0
+}

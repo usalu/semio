@@ -84,8 +84,15 @@ fn table_na4_ground_combos() -> CatalogueTable {
 }
 
 //#region 🔖️Render
+/// 📚️ The verification-case catalogue evaluated once on its example inputs: one row per catalogue entry.
+pub fn verification_table(locale: semio_ui_locale::Locale) -> CatalogueTable {
+    semio_s_plugin_norm_app_surface::verification_catalogue_table::<semio_s_artifact_norm_en1998_inferences::case_catalogue::En1998Cases>("EN 1998", semio_s_plugin_norm_compliance::AnnexChoice::En, "", locale)
+}
+
 pub fn render(examples: Vec<semio_plugin::ExampleSource>, locale: semio_ui_locale::Locale, controller_id: &'static str) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
-    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, &semio_plugin::TreeWindows::unhosted())
+    let mut tables = reference_tables();
+    tables.push(verification_table(locale));
+    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &tables, locale, controller_id, &semio_plugin::TreeWindows::unhosted())
 }
 //#endregion 🔖️Render
 

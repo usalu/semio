@@ -1,0 +1,31 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "stock",
+    "maximumCopyBytes",
+    "maximumTurns",
+    "replyReplays"
+  ],
+  "properties": {
+    "stock": {
+      "const": {
+        "items": 512,
+        "copyBytes": 2097152,
+        "capacityBytes": 65536,
+        "releaseBytes": 65536,
+        "depth": 64,
+        "fuel": 8192
+      }
+    },
+    "maximumCopyBytes": {
+      "const": 4096
+    },
+    "maximumTurns": {
+      "const": 512
+    },
+    "replyReplays": {
+      "const": 0
+    }
+  }
+}

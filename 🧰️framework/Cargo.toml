@@ -3,6 +3,15 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+    "🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🧳️preparation/📦️packages/🦀️rust",
+    "🔨️modules/🌱️value/📋️list/🟰️equal/📦️packages/🦀️rust",
+    "🔨️modules/🌱️value/🧺️collection/📐️sorted/📦️packages/🦀️rust",
+    "🔨️modules/🌱️value/🧬️retained-clone/⚙️engine/📦️packages/🦀️rust",
+    "🔨️modules/🌱️value/🧬️retained-clone/⚙️engine/🌱️dynamic/📦️packages/🦀️rust",
+    "🔨️modules/🌱️value/🧬️retained-clone/⚙️engine/📋️backing/📦️packages/🦀️rust",
+    "🔨️modules/🌱️value/🛬️decode/🏭️construction/📦️effect/🧳️frame/📦️packages/🦀️rust",
+    "🔨️modules/🧵️job/🛬️receiving/🎟️native-turn/📦️packages/🦀️rust",
+    "🔨️modules/🧵️job/📬️outcome/⏸️continuation/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🎟️control/🧬️contract/📏️physical/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/♻️retirement/🧬️contract/📦️packages/🦀️rust",
@@ -108,6 +117,7 @@ members = [
     "🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🔗️read/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust",
+    "🔨️modules/🌱️value/🗂️ordered/⚙️engine/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🛫️encode/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🛫️encode/🧪️tests/🥣️action/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🛬️decode/📦️packages/🦀️rust",
@@ -125,10 +135,15 @@ members = [
     "🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust",
+    "🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🪪️lease/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/📦️packages/🦀️rust",
+    "🔨️modules/🌱️value/🧬️retained-clone/📦️backing/📦️packages/🦀️rust",
+    "🔨️modules/🌱️value/🧬️retained-clone/📦️backing/📦️storage/📦️packages/🦀️rust",
+    "🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔢️bounded-ord/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧬️retained-clone/🧪️tests/🌐️integration/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust",
+    "🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧮️array-cursor/🔎️selection/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧬️schema/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧾️dictionary/📦️packages/🦀️rust",
     "🔨️modules/🎒️pack/⏳️async/📦️packages/🦀️rust",
@@ -489,6 +504,8 @@ members = [
     "🔨️modules/🧵️job/🧪️tests/🔬️unit/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/📜️registration/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/📑️command-page/📦️packages/🦀️rust",
+    "🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/📦️packages/🦀️rust",
+  "🔨️modules/🌱️value/🎟️control/📨️reply/📦️packages/🦀️rust",
 ]
 exclude = [
     "**/🏅️standards/**",
@@ -1258,6 +1275,12 @@ semio-framework-value-original-slot = { path = "🔨️modules/🌱️value/🧬
 
     [workspace.dependencies.semio-framework-job-failure]
     path = "🔨️modules/🧵️job/⚠️failure/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-job-return]
+    path = "🔨️modules/🧵️job/📬️outcome/⏸️continuation/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-job-native-turn]
+    path = "🔨️modules/🧵️job/🛬️receiving/🎟️native-turn/📦️packages/🦀️rust"
 
     [workspace.dependencies.semio-framework-job-context]
     path = "🔨️modules/🧵️job/⏱️context/📦️packages/🦀️rust"

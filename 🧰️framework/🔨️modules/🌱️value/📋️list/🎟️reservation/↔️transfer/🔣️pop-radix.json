@@ -1,0 +1,9 @@
+{
+  "pageItems": 1,
+  "cases": [
+    {"length": 1, "height": 0, "work": 3},
+    {"length": 2, "height": 1, "work": 5},
+    {"length": 17, "height": 2, "work": 7}
+  ],
+  "stock": {"items": 1024, "copyBytes": 65536, "capacityBytes": 65536, "releaseBytes": 65536, "depth": 64, "fuel": 1024}
+}

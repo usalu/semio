@@ -7858,7 +7858,7 @@
         {
           "mutationId": "change-buckling-length-column-stiffness-b",
           "sourceMutationDirectoryName": "🧱️change-buckling-length-column-stiffness-b",
-          "mutationDirectoryName": "🧱️change-buckling-length-column-stiffness-b",
+          "mutationDirectoryName": "🧱️change-buckling-column-stiffness-b",
           "scenarios": [
             {
               "id": "apply",
@@ -7880,7 +7880,7 @@
         {
           "mutationId": "change-buckling-length-column-stiffness-a",
           "sourceMutationDirectoryName": "🧱️change-buckling-length-column-stiffness-a",
-          "mutationDirectoryName": "🧱️change-buckling-length-column-stiffness-a",
+          "mutationDirectoryName": "🧱️change-buckling-column-stiffness-a",
           "scenarios": [
             {
               "id": "apply",
@@ -7924,7 +7924,7 @@
         {
           "mutationId": "change-material-ductility-ultimate-strain",
           "sourceMutationDirectoryName": "🧱️change-material-ductility-ultimate-strain",
-          "mutationDirectoryName": "🧱️change-material-ductility-ultimate-strain",
+          "mutationDirectoryName": "🧱️change-ductility-ultimate-strain",
           "scenarios": [
             {
               "id": "apply",

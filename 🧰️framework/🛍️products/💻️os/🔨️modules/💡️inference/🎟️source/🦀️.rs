@@ -24,7 +24,7 @@ impl<P:RetireOwned+Send+Sync> Sealed<P>{
 /// 🎟️ The staged admission of the selected original kind keeps the unmoved input until its source is published.
 enum Staging<P:RetireOwned+Send+Sync>{Owned(RetainedCloneSourceAdmission<P,P>),StoreRead(RetainedCloneSourceAdmission<P,SnapshotRead<P>>)}
 impl<P:RetireOwned+Send+Sync> Staging<P>{
- fn begin(input:Input<P>)->Result<Self,(ValueError,Input<P>)>{match input{Input::Owned(snapshot)=>Ok(Self::Owned(RetainedCloneSource::<P,P>::admission_borrowed(snapshot,|snapshot|snapshot))),Input::StoreRead(read)=>read.source_admission().map(Self::StoreRead).map_err(|(error,read)|(error,Input::StoreRead(read)))}}
+ fn begin(input:Input<P>)->Result<Self,(ValueError,Input<P>)>{match input{Input::Owned(snapshot)=>Ok(Self::Owned(RetainedCloneSource::<P,P>::admission_borrowed(snapshot))),Input::StoreRead(read)=>read.source_admission().map(Self::StoreRead).map_err(|(error,read)|(error,Input::StoreRead(read)))}}
  fn ready(&self)->bool{match self{Self::Owned(admission)=>admission.phase()=="ready",Self::StoreRead(admission)=>admission.phase()=="ready"}}
  fn next_demand(&self)->Result<RetirementDemand,ValueError>{match self{Self::Owned(admission)=>admission.next_demand(),Self::StoreRead(admission)=>admission.next_demand()}}
  fn advance_progress(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<((),RetainedCloneProgress),ValueError>{let turn=match self{Self::Owned(admission)=>admission.advance(effect),Self::StoreRead(admission)=>admission.advance(effect)};RetainedWorkOutcome{result:turn.result.map(|step|((),step.progress())),work:turn.work}}

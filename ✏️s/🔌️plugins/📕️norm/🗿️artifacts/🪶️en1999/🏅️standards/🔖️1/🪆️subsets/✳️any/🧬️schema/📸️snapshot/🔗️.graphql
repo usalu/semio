@@ -1,3 +1,5 @@
+scalar UInt32
+
 type En1999Snapshot {
   annex: AnnexChoice!
   materials: [AluminiumMaterial!]!
@@ -16,6 +18,8 @@ type En1999Snapshot {
   ringStiffeners: [RingStiffener!]!
   transverseStiffeners: [TransverseStiffener!]!
   reliabilityClass: String!
+  sheetProfiles: [SheetProfile!]!
+  fireInsulations: [FireInsulation!]!
 }
 type ColdFormedSheet {
   id: String!
@@ -127,8 +131,8 @@ type PlateElement {
 type BoltGroup {
   material: String!
   diameter: Float!
-  rows: Int!
-  boltsPerRow: Int!
+  rows: UInt32!
+  boltsPerRow: UInt32!
   edgeDistance: Float!
   pitch: Float!
   gauge: Float!
@@ -209,4 +213,20 @@ type TransverseStiffener {
 enum FastenerForceMethod {
   elastic
   instantaneousCentre
+}
+type SheetProfile {
+  id: String!
+  sheetId: String!
+  pitch: Float!
+  topFlange: Float!
+  bottomFlange: Float!
+  webHeight: Float!
+}
+type FireInsulation {
+  id: String!
+  fireId: String!
+  thickness: Float!
+  conductivity: Float!
+  specificHeat: Float!
+  density: Float!
 }

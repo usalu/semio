@@ -1,0 +1,5 @@
+{
+  "mutation": "changeCriticalRegionBuildingId",
+  "id": "cr-1",
+  "newBuildingId": "bldg-office-2"
+}

@@ -400,5 +400,8 @@
       "displacementLimit": 0.03
     }
   ],
-  "slopes": []
+  "slopes": [],
+  "isolationSystems": [],
+  "pierBases": [],
+  "criticalRegions": []
 }

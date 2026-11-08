@@ -547,6 +547,105 @@
               "directoryName": "✅apply"
             }
           ]
+        },
+        {
+          "mutationId": "change-zone-name",
+          "sourceMutationDirectoryName": "🏷️change-zone-name",
+          "mutationDirectoryName": "🏷️change-zone-name",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-zone-id",
+          "sourceMutationDirectoryName": "🆔️change-zone-id",
+          "mutationDirectoryName": "🆔️change-zone-id",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-vent-name",
+          "sourceMutationDirectoryName": "📛change-vent-name",
+          "mutationDirectoryName": "📛change-vent-name",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-vent-id",
+          "sourceMutationDirectoryName": "🪪change-vent-id",
+          "mutationDirectoryName": "🪪change-vent-id",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-vent-fan-flow",
+          "sourceMutationDirectoryName": "🌪️change-vent-fan-flow",
+          "mutationDirectoryName": "🌪️change-vent-fan-flow",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-vent-fan-run-hours",
+          "sourceMutationDirectoryName": "⏱️change-vent-fan-run-hours",
+          "mutationDirectoryName": "⏱️change-vent-fan-run-hours",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-vent-duct-test-pressure",
+          "sourceMutationDirectoryName": "🧪change-vent-duct-test-pressure",
+          "mutationDirectoryName": "🧪change-vent-duct-test-pressure",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-vent-humidification-required",
+          "sourceMutationDirectoryName": "💦change-vent-humidification-required",
+          "mutationDirectoryName": "💦change-vent-humidification-required",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-vent-humidification-provided",
+          "sourceMutationDirectoryName": "🚿change-vent-humidification-provided",
+          "mutationDirectoryName": "🚿change-vent-humidification-provided",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -590,7 +689,16 @@
         "change-vent-inspection",
         "change-vent-duct-class",
         "change-vent-duct-leakage",
-        "change-vent-design-airflow"
+        "change-vent-design-airflow",
+        "change-zone-name",
+        "change-zone-id",
+        "change-vent-name",
+        "change-vent-id",
+        "change-vent-fan-flow",
+        "change-vent-fan-run-hours",
+        "change-vent-duct-test-pressure",
+        "change-vent-humidification-required",
+        "change-vent-humidification-provided"
       ]
     }
   ],
@@ -1415,6 +1523,186 @@
             "operation": "change-vent-design-airflow",
             "bridgeVersion": 1,
             "variant": "ChangeVentDesignAirflow"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din16798-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-zone-name",
+          "capability": "din16798-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-zone-name",
+            "bridgeVersion": 1,
+            "variant": "ChangeZoneName"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din16798-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-zone-id",
+          "capability": "din16798-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-zone-id",
+            "bridgeVersion": 1,
+            "variant": "ChangeZoneId"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din16798-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-vent-name",
+          "capability": "din16798-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-vent-name",
+            "bridgeVersion": 1,
+            "variant": "ChangeVentName"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din16798-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-vent-id",
+          "capability": "din16798-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-vent-id",
+            "bridgeVersion": 1,
+            "variant": "ChangeVentId"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din16798-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-vent-fan-flow",
+          "capability": "din16798-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-vent-fan-flow",
+            "bridgeVersion": 1,
+            "variant": "ChangeVentFanFlow"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din16798-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-vent-fan-run-hours",
+          "capability": "din16798-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-vent-fan-run-hours",
+            "bridgeVersion": 1,
+            "variant": "ChangeVentFanRunHours"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din16798-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-vent-duct-test-pressure",
+          "capability": "din16798-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-vent-duct-test-pressure",
+            "bridgeVersion": 1,
+            "variant": "ChangeVentDuctTestPressure"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din16798-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-vent-humidification-required",
+          "capability": "din16798-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-vent-humidification-required",
+            "bridgeVersion": 1,
+            "variant": "ChangeVentHumidificationRequired"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din16798-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-vent-humidification-provided",
+          "capability": "din16798-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-vent-humidification-provided",
+            "bridgeVersion": 1,
+            "variant": "ChangeVentHumidificationProvided"
           },
           "oracleRequirements": [
             {

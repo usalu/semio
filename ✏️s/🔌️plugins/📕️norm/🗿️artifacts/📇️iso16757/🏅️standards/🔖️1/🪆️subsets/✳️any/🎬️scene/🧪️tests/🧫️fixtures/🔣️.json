@@ -1,0 +1,127 @@
+[
+  {
+    "id": "valve",
+    "body": {
+      "width": 0.15,
+      "depth": 0.1,
+      "height": 0.2
+    },
+    "spaces": [
+      {
+        "id": "installation",
+        "min": [
+          -0.05,
+          -0.05,
+          -0.05
+        ],
+        "max": [
+          0.2,
+          0.15,
+          0.25
+        ]
+      },
+      {
+        "id": "access",
+        "min": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "max": [
+          0.3,
+          0.1,
+          0.2
+        ]
+      }
+    ],
+    "expected": {
+      "bodyPlanArea": 0.015,
+      "spacePlanAreas": [
+        0.05,
+        0.03
+      ],
+      "spaceOverlapAreas": [
+        0.015,
+        0.015
+      ],
+      "spaceVolumes": [
+        0.015,
+        0.006
+      ],
+      "extentX": [
+        -0.05,
+        0.3
+      ],
+      "extentY": [
+        -0.05,
+        0.15
+      ]
+    }
+  },
+  {
+    "id": "pump",
+    "body": {
+      "width": 0.4,
+      "depth": 0.25,
+      "height": 0.35
+    },
+    "spaces": [
+      {
+        "id": "operation",
+        "min": [
+          -0.1,
+          -0.1,
+          0.0
+        ],
+        "max": [
+          0.6,
+          0.4,
+          0.5
+        ]
+      }
+    ],
+    "expected": {
+      "bodyPlanArea": 0.1,
+      "spacePlanAreas": [
+        0.35
+      ],
+      "spaceOverlapAreas": [
+        0.1
+      ],
+      "spaceVolumes": [
+        0.175
+      ],
+      "extentX": [
+        -0.1,
+        0.6
+      ],
+      "extentY": [
+        -0.1,
+        0.4
+      ]
+    }
+  },
+  {
+    "id": "wide",
+    "body": {
+      "width": 2.5,
+      "depth": 0.5,
+      "height": 1.0
+    },
+    "spaces": [],
+    "expected": {
+      "bodyPlanArea": 1.25,
+      "spacePlanAreas": [],
+      "spaceOverlapAreas": [],
+      "spaceVolumes": [],
+      "extentX": [
+        0.0,
+        2.5
+      ],
+      "extentY": [
+        0.0,
+        0.5
+      ]
+    }
+  }
+]

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeIsolationSystemYieldDisplacementM",
+  "id": "iso-1",
+  "newYieldDisplacementM": 1.01
+}

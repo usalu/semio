@@ -36,6 +36,10 @@ semio-s-plugin-norm-app-surface = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
 semio-s-plugin-norm-results-config = { workspace = true }
 semio-framework-schema-registry = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-s-artifact-norm-iso16757-scene = { workspace = true }
+semio-s-plugin-norm-structural-scene = { workspace = true }
 
 [dev-dependencies]
 semio-s-plugin-norm-results-config = { workspace = true, features = ["test-support"] }
@@ -50,3 +54,5 @@ semio-s-plugin-norm-app-surface = { workspace = true, features = ["compliance-te
 semio-s-plugin-norm-compliance = { workspace = true, features = ["test-support", "compliance-testing"] }
 serde_json = { workspace = true }
 semio-framework-async = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
+pack = { workspace = true }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

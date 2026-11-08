@@ -20,6 +20,9 @@ type En1998Artifact {
   placements: [En1998Placement!]!
   tieBeams: [En1998TieBeam!]!
   slopes: [En1998Slope!]!
+  isolationSystems: [En1998IsolationSystem!]!
+  pierBases: [En1998PierBase!]!
+  criticalRegions: [En1998CriticalRegion!]!
 }
 enum EnGroundType {
   a
@@ -465,4 +468,46 @@ enum AnalysisMethodChoice {
   mrs
   pushover
   nlth
+}
+type En1998IsolationSystem {
+  id: String!
+  bridgeId: String!
+  buildingId: String!
+  strengthN: Float!
+  stiffnessNPerM: Float!
+  yieldDisplacementM: Float!
+  capacityM: Float!
+}
+type En1998PierBase {
+  id: String!
+  bridgeId: String!
+  pierId: String!
+  radiusM: Float!
+  soilVsMS: Float!
+  soilUnitWeightNM3: Float!
+  poissonRatio: Float!
+}
+type En1998CriticalRegion {
+  id: String!
+  buildingId: String!
+  memberId: String!
+  sectionWidthM: Float!
+  sectionDepthM: Float!
+  clearLengthM: Float!
+  hoopedLengthM: Float!
+  coreWidthM: Float!
+  coreDepthM: Float!
+  axialForceN: Float!
+  concreteDesignStrengthMpa: Float!
+  steelDesignYieldMpa: Float!
+  hoopDesignYieldMpa: Float!
+  longitudinalSteelAreaM2: Float!
+  longitudinalBarDiameterM: Float!
+  longitudinalBarMaxDiameterM: Float!
+  hoopDiameterM: Float!
+  hoopSpacingM: Float!
+  hoopLegsX: Float!
+  hoopLegsY: Float!
+  restrainedBarCount: Float!
+  restrainedBarSpacingM: Float!
 }

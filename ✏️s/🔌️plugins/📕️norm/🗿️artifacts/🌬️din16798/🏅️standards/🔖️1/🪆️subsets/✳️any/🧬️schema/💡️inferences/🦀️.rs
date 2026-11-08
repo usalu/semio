@@ -75,3 +75,7 @@ mod compliance_report_tests;
 #[path = "🧾outline/🦀️.rs"]
 pub mod outline;
 //#endregion 🪢️Mounts
+
+//#region 🛰️LiveEvaluation
+semio_s_plugin_norm_compliance::live_report!(pub mod live(Din16798Snapshot) = semio_s_artifact_norm_din16798_checks::Din16798Units);
+//#endregion 🛰️LiveEvaluation

@@ -13,77 +13,132 @@ extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 use crate::modes::view;
-use crate::modes::view::windows::report;
+use crate::modes::view::windows::{checks, diagrams, viewport};
 use semio_s_artifact_norm_din16798_model::Din16798Snapshot;
 use semio_s_artifact_norm_din16798_model::{DIN16798_DIALECT, DIN16798_DOCUMENT_SCHEMA};
-use semio_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
-// 🚧️ SDK GAP: see the identical note in `✏️editor/🦀️.rs` — `Dialect` is only reachable
-// through `app`, not yet in the crate-root re-export list.
+use semio_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, ViewEmit, Viewer};
 use semio_plugin::app::{Dialect, InteractionView};
 use semio_ui_locale::Label;
 use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
-/// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has
-/// exactly one inert variant — a real per-command payload module the way `✏️editor/🎮️commands/*`
-/// carries them would be pure ceremony for a surface that never dispatches anything through `handle`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_value::RetireOwned)]
-pub enum Din16798ViewCommand {
-    #[default]
-    Noop,
+semio_plugin::view_commands! {
+    /// 👁️ `Din16798Viewer::Command`: the sole dispatch surface of this read-only viewer, `viewportAct` (stepping, field, track, playback). `dispatch` returns `ViewEmit`, so no row can carry an artifact or draft mutation; the step itself only folds into the ephemeral local view lane (`ephemeral`).
+    pub enum Din16798ViewCommand for Din16798Snapshot, NoConfig, NoConfigMutation {
+        "viewportAct" as "viewport-act" => viewport_act::ViewportAct,
+    }
 }
 
-impl protocol::OpBinary for Din16798ViewCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(Vec::new())
-    }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        Ok(Din16798ViewCommand::Noop)
-    }
-}
+semio_s_plugin_norm_app_surface::norm_viewer_commands!(Din16798Snapshot);
+
+semio_s_plugin_norm_app_surface::norm_owned_view_tool_job_factory!(Din16798ViewBoundedCommandJobFactory, Din16798Viewer);
+
+semio_s_plugin_norm_app_surface::norm_viewer_surface!(Din16798Viewer, Din16798ViewCommand, variant = "din16798", report = |d: &Din16798Snapshot| semio_s_plugin_norm_app_surface::paint_report_of(|budget| semio_s_artifact_norm_din16798_inferences::live::responsive(d, budget)), scene = |d: &Din16798Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, _| semio_s_artifact_norm_din16798_scene::live_scene_of(d, r), diagrams = |d: &Din16798Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, focus: Option<&str>| semio_s_plugin_norm_structural_scene::projection::memo_diagrams("din16798", d, r, focus.unwrap_or("\u{0}"), || semio_s_artifact_norm_din16798_scene::diagrams(d, r, focus)).to_vec());
 //#endregion 🔖️Command
 
 //#region 🔖️Viewer
 #[derive(Default, Clone, Copy)]
 pub struct Din16798Viewer;
 
+impl Din16798Viewer {
+    /// 🔒️ The explicit read-only marker of the viewer: it emits no artifact, config or draft mutation and projects the persisted placements only.
+    pub const READ_ONLY: bool = true;
+}
+
 impl ArtifactViewer for Din16798Viewer {
+    /// 📢️ Localized notices of the refusal and warning codes this norm app raises.
+    fn fault_notices() -> &'static [(&'static str, semio_ui_locale::LocalizedLabel)] {
+        semio_s_plugin_norm_app_surface::norm_fault_notices()
+    }
     type Snapshot = Din16798Snapshot;
     type Mutation = semio_s_artifact_norm_din16798_mutations::Din16798Mutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
     type PresenceMutation = NoPresenceMutation;
-    type Transient = NoTransient;
-    type TransientMutation = NoTransientMutation;
+    type Transient = crate::lanes::NormLaneTransient;
+    type TransientMutation = crate::lanes::NormLaneTransientMutation;
     type Command = Din16798ViewCommand;
 
     const DIALECT: Dialect = DIN16798_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = DIN16798_DOCUMENT_SCHEMA;
 
-    semio_s_plugin_norm_app_surface::norm_exact_viewer_store_ownership!();
+    semio_s_plugin_norm_app_surface::norm_exact_viewer_store_ownership!(lanes);
+
+    fn register_tool_job_factories(registry: &mut semio_plugin::ArtifactToolFactoryRegistry<'_, semio_plugin::ViewerApp<Self>>) -> Result<(), Fault> {
+        Din16798ViewBoundedCommandJobFactory::register(registry)
+    }
+
+    fn build_tool_job(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::ViewerApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        semio_s_plugin_norm_app_surface::build_norm_view_tool_job::<Self>(request, output, cx)
+    }
+
+    semio_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_plugin::ViewerApp<Din16798Viewer>,
+        owner_file: "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+        controller: "s.norm.din16798@1/*#viewer",
+        artifact_schema: "semio.norm.din16798/v1",
+        factory: "Din16798ViewBoundedCommandJobFactory",
+        factory_type: Din16798ViewBoundedCommandJobFactory,
+        contract: semio_s_plugin_norm_app_surface::norm_bounded_contract(),
+        tools: ["viewportAct"]
+    }
+
+    fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Result<semio_plugin::InteractionTopology, semio_framework_value::ValueError> {
+        Ok(semio_s_plugin_norm_app_surface::viewer_interaction_topology::<Self>(doc.snapshot))
+    }
+
+    fn command_id(command: &Self::Command) -> &'static str {
+        command.command_id()
+    }
+
+    semio_s_plugin_norm_app_surface::norm_view_command_from_action!(Din16798ViewCommand);
+
+    /// 🫧️ The ephemeral local view lane: stepping checks and combinations folds into this client's transient, never into the document.
+    fn ephemeral(
+        command: &Self::Command,
+        doc: &ArtifactView<'_, Self::Snapshot>,
+        _cfg: &ConfigView<'_, Self::Config>,
+        _presence: &semio_plugin::PresenceView<'_, Self::Presence>,
+        transient: &semio_plugin::TransientView<'_, Self::Transient>,
+    ) -> (Vec<Self::PresenceMutation>, Vec<Self::TransientMutation>) {
+        semio_s_plugin_norm_app_surface::viewer_ephemeral::<Self>(command, doc, transient)
+    }
 
     fn reference_birth()->Option<fn()->Result<Din16798Snapshot,semio_plugin::Fault>>{Some(||{
-        Ok(Din16798Snapshot::default())
+        Ok(Din16798Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De))
     })}
 
-    /// 👁️ Structurally read-only: the sole `Din16798ViewCommand::Noop` variant never carries a config
-    /// change, so this always returns the empty `ViewEmit`. Kept as a real dispatch (not
-    /// `unreachable!()`) so a future view-only action is a pure addition here, never a signature change.
+    /// 👁️ Structurally read-only: `ViewEmit` cannot carry an artifact or draft mutation, and the one row (`viewportAct`) emits nothing at all; its effect is the ephemeral view lane.
     fn handle(
-        _command: &Self::Command,
-        _doc: &ArtifactView<'_, Self::Snapshot>,
-        _cfg: &ConfigView<'_, Self::Config>,
+        command: &Self::Command,
+        doc: &ArtifactView<'_, Self::Snapshot>,
+        cfg: &ConfigView<'_, Self::Config>,
         _interaction: &InteractionView<'_>,
         _view_state: Option<&semio_plugin::ViewModel>,
         _engines: &EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
-        Ok(ViewEmit::default())
+        command.dispatch(doc, cfg)
+    }
+
+    fn render_with_request_context(
+        _owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, Self::Snapshot>,
+        cfg: &ConfigView<'_, Self::Config>,
+        view_state: &semio_plugin::ViewModel,
+        transient: &semio_plugin::TransientView<'_, Self::Transient>,
+        interaction: &InteractionView<'_>,
+        _cx: &mut semio_plugin::StepContext<'_>,
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
+        semio_s_plugin_norm_app_surface::render_norm_viewer::<Self>(body_key, doc, cfg, view_state, transient, interaction)
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
-            report::BODY_KEY => report::render(doc.snapshot, view_state.locale).map(semio_plugin::built_to_component_tree),
+            viewport::BODY_VIEWPORT => viewport::render(doc.snapshot, view_state.locale).map(semio_plugin::built_to_component_tree),
+            diagrams::BODY_DIAGRAMS => diagrams::render(doc.snapshot, &semio_plugin::TreeWindows::for_body(view_state, diagrams::BODY_DIAGRAMS), view_state.locale).map(semio_plugin::built_to_component_tree),
+            checks::BODY_CHECKS => checks::render(doc.snapshot, &semio_plugin::TreeWindows::for_body(view_state, checks::BODY_CHECKS), view_state.locale).map(semio_plugin::built_to_component_tree),
             _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -94,11 +149,26 @@ impl ArtifactViewer for Din16798Viewer {
 pub fn create_din16798_viewer() -> semio_plugin::AppDefinition {
     Viewer::builder(DIN16798_DIALECT)
         .document(["semio", "norm", "din16798"])
+        .interaction(semio_s_plugin_norm_app_surface::viewer_interaction_definition("din16798"))
         .icon_id("check-circle")
         .mode_def(view::definition())
         .default_mode_id(semio_s_plugin_norm_app_surface::MODE_VIEW)
-        .window_kind_def(report::definition())
+        .window_kind_def(viewport::definition())
+        .window_kind_def(checks::definition())
+        .window_kind_def(diagrams::definition())
         .default_layout(view::layout())
+        .named_layout(semio_s_plugin_norm_app_surface::view_named_layout("din16798", "desktop"))
+        .named_layout(semio_s_plugin_norm_app_surface::view_named_layout("din16798", "mobile"))
+        .named_layout(semio_s_plugin_norm_app_surface::view_named_layout("din16798", "tablet"))
+        .action_with(
+            semio_plugin::ActionDefinition::new_catalog("viewportAct", semio_ui_locale::LocalizedLabel::native("Viewport Action", "Viewport-Aktion"), semio_plugin::ActionKind::View).with_args(vec![
+                semio_plugin::ActionArgDef::text("action", semio_ui_locale::LocalizedLabel::native("Action", "Aktion")),
+                semio_plugin::ActionArgDef::text("text", semio_ui_locale::LocalizedLabel::native("Text", "Text")),
+                semio_plugin::ActionArgDef::any("number", semio_ui_locale::LocalizedLabel::native("Number", "Zahl")),
+            ]),
+        )
+        .action_interactive_job("viewportAct", semio_plugin::InteractiveJobClassification::Migrated)
+        .action_describe("viewportAct", semio_ui_locale::LocalizedLabel::native("Steps the checks and combinations or changes the colour field, track and playback of the viewport; only this client's ephemeral view changes, never the document.", "Schaltet Nachweise und Kombinationen weiter oder ändert Farbfeld, Verlauf und Wiedergabe des Viewports; nur die flüchtige Ansicht dieses Clients ändert sich, nie das Dokument."))
         .build_definition()
 }
 //#endregion 🔖️Manifest
@@ -124,5 +194,9 @@ pub mod modes {
 pub mod presence {
     #[path = "👥️presence/🧬️schema/🦀️.rs"]
     pub mod schema;
+}
+#[path = "."]
+pub mod lanes {
+    semio_s_plugin_norm_app_surface::norm_viewer_lane_stores!(transient_extension = "norm.din16798.view.transient", owner = "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️lanes");
 }
 //#endregion 🪢️Mounts

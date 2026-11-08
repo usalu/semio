@@ -51,6 +51,10 @@ mod annex_block_tests;
 #[path = "🧮️clauses/🧪️tests/🔭️special-parts/🦀️.rs"]
 mod special_parts_tests;
 
+#[cfg(test)]
+#[path = "🧮️clauses/🧪️tests/🏷️section-class/🦀️.rs"]
+mod section_class_tests;
+
 #[cfg(any(test, feature = "oracle-wiring"))]
 #[path = "🧪️tests/🎯️oracle-wiring/🦀️.rs"]
 pub mod oracle_wiring;

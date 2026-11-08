@@ -12,7 +12,8 @@ pub enum OriginalReturnLedgerIssue{ReceiptOverflow,OwnershipExceeded,WorkOverflo
 impl OriginalReturnLedgerIssue{pub fn failure(self)->(ValueRefusalKind,&'static str){match self{Self::ReceiptOverflow=>(ValueRefusalKind::OwnershipLimit,"original return source receipt overflow"),Self::OwnershipExceeded=>(ValueRefusalKind::OwnershipLimit,"original return source receipt exceeds spent and held authority"),Self::WorkOverflow=>(ValueRefusalKind::WorkLimit,"original return source CPU counter overflow"),Self::WorkExceeded=>(ValueRefusalKind::WorkLimit,"original return source CPU exceeds spent and held authority")}}}
 impl OriginalReturnBudgetSnapshot{
  pub fn advance_retained(&mut self,progress:RetainedCloneProgress)->Option<OriginalReturnLedgerIssue>{let Ok(spent)=self.spent.checked_add(progress)else{return Some(OriginalReturnLedgerIssue::ReceiptOverflow)};self.spent=spent;(!self.conserved()).then_some(OriginalReturnLedgerIssue::OwnershipExceeded)}
- pub fn advance_work(&mut self,work:u64)->Option<OriginalReturnLedgerIssue>{let mut issue=None;match self.work.checked_add(u128::from(work)){Some(total)=>self.work=total,None=>issue=Some(OriginalReturnLedgerIssue::WorkOverflow)}if !self.conserved(){issue=Some(OriginalReturnLedgerIssue::WorkExceeded)}issue}
+ pub fn advance_work(&mut self,work:u64)->Option<OriginalReturnLedgerIssue>{self.advance_work_exact(u128::from(work))}
+ pub fn advance_work_exact(&mut self,work:u128)->Option<OriginalReturnLedgerIssue>{let Some(total)=self.work.checked_add(work)else{return Some(OriginalReturnLedgerIssue::WorkOverflow)};self.work=total;(!self.conserved()).then_some(OriginalReturnLedgerIssue::WorkExceeded)}
 }
 /// 📋️ Data-only claim arithmetic cannot issue a Source credit.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
@@ -58,10 +59,89 @@ pub enum OriginalReturnEscrowStage{Blocked,Progress{copied_bytes:usize,issued_se
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original return escrow changed its actual claim or exceeded its held currencies")}
 /// 🗃️ Every Source cell is preborn and a staged cell remains invisible until its actual claim commits.
 pub struct OriginalReturnEscrowTable{rows:[OriginalReturnEscrowRow;ORIGINAL_RETURN_ESCROW_CELLS],states:[u8;ORIGINAL_RETURN_ESCROW_CELLS],stage:Option<(usize,u8)>,revision:u64,borrowed:Option<(u64,u32)>,acknowledged:u32,guard_issued:u32}
+/// 🌱️ Owns the original uninitialized table backing until each funded field and the final output are published.
+pub struct OriginalReturnEscrowBirth{
+ backing:Option<std::ptr::NonNull<OriginalReturnEscrowTable>>,
+ binding:Option<semio_framework_value_control_contract::OriginalWorkBindingIdentity>,
+ initialized:usize,
+ header:bool,
+}
+/// 🧵️ The resident backing is exclusively owned and its elements contain no borrowed state.
+unsafe impl Send for OriginalReturnEscrowBirth{}
+impl Default for OriginalReturnEscrowBirth{
+ fn default()->Self{Self::new()}
+}
+impl OriginalReturnEscrowBirth{
+ pub const fn new()->Self{Self{backing:None,binding:None,initialized:0,header:false}}
+ /// 📏️ Quotes only the actual next allocation, row, header or output placement.
+ pub fn demand(&self)->semio_framework_value_retained_clone::RetirementDemand{
+  use semio_framework_value_retained_clone::RetirementDemand as D;
+  if self.backing.is_none(){D{copy_bytes:std::mem::size_of::<Option<std::ptr::NonNull<OriginalReturnEscrowTable>>>()+std::mem::size_of::<Option<semio_framework_value_control_contract::OriginalWorkBindingIdentity>>(),capacity_bytes:std::mem::size_of::<OriginalReturnEscrowTable>(),depth:1,..Default::default()}}
+  else if self.initialized<ORIGINAL_RETURN_ESCROW_CELLS{D{copy_bytes:std::mem::size_of::<OriginalReturnEscrowRow>()+std::mem::size_of::<u8>()+std::mem::size_of::<usize>(),depth:1,..Default::default()}}
+  else if !self.header{D{copy_bytes:std::mem::size_of::<Option<(usize,u8)>>()+std::mem::size_of::<u64>()+std::mem::size_of::<Option<(u64,u32)>>()  +2*std::mem::size_of::<u32>()+std::mem::size_of::<bool>(),depth:1,..Default::default()}}
+  else{D{copy_bytes:std::mem::size_of::<Option<Box<OriginalReturnEscrowTable>>>()+std::mem::size_of::<Option<std::ptr::NonNull<OriginalReturnEscrowTable>>>()+std::mem::size_of::<Option<semio_framework_value_control_contract::OriginalWorkBindingIdentity>>()+std::mem::size_of::<usize>()+std::mem::size_of::<bool>(),depth:1,..Default::default()}}
+ }
+ /// 👁️ Reveals only whether the original backing remains in this birth.
+ pub fn is_empty(&self)->bool{self.backing.is_none()&&self.binding.is_none()}
+ /// 📤️ Reports only whether every field is initialized before the separate output placement.
+ pub fn ready_to_publish(&self)->bool{self.backing.is_some()&&self.initialized==ORIGINAL_RETURN_ESCROW_CELLS&&self.header}
+ /// 📥️ Records the actual paid native step directly in the caller's original reply.
+ pub fn advance_into<'a>(&mut self,output:&mut Option<Box<OriginalReturnEscrowTable>>,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'a,semio_framework_value_retained_clone::RetainedCloneStep,ValueError>)->semio_framework_value_control_contract::OriginalEffectReplyComplete<'a,semio_framework_value_retained_clone::RetainedCloneStep,ValueError>{
+  use semio_framework_value_retained_clone::{RetainedCloneStep as S,RetainedCloneProgress as P};
+  let result=(||{
+   if effect.work_source_turn().is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"escrow birth requires its original Source"))}
+   if self.binding.as_ref().is_some_and(|binding|!binding.matches_effect(effect)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"escrow birth changed its original Work source"))}
+   let demand=self.demand();let grant=effect.grant();
+   if output.is_some()||grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_depth<demand.depth||effect.remaining_work_units()?<1{return Ok(S::Progress(P::default()))}
+   if self.backing.is_none()&&effect.actual().is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"escrow birth requires an unused allocation marker"))}
+   if !effect.performed(1)?{return Ok(S::Progress(P::default()))}
+   if self.backing.is_none(){
+    *effect.actual()=Some(0);
+    let layout=std::alloc::Layout::new::<OriginalReturnEscrowTable>();
+    let pointer=unsafe{std::alloc::alloc(layout)}.cast::<OriginalReturnEscrowTable>();
+    let Some(backing)=std::ptr::NonNull::new(pointer)else{return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"original return escrow allocation failed"))};
+    self.backing=Some(backing);self.binding=Some(semio_framework_value_control_contract::OriginalWorkBindingIdentity::from_effect(effect));*effect.actual()=Some(layout.size());
+    return Ok(S::Progress(P{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:layout.size(),..Default::default()}))
+   }
+   let target=self.backing.unwrap().as_ptr();
+   if self.initialized<ORIGINAL_RETURN_ESCROW_CELLS{
+    unsafe{std::ptr::addr_of_mut!((*target).rows).cast::<OriginalReturnEscrowRow>().add(self.initialized).write(OriginalReturnEscrowRow::zero());std::ptr::addr_of_mut!((*target).states).cast::<u8>().add(self.initialized).write(0)}
+    self.initialized+=1;
+   }else if !self.header{
+    unsafe{std::ptr::addr_of_mut!((*target).stage).write(None);std::ptr::addr_of_mut!((*target).revision).write(0);std::ptr::addr_of_mut!((*target).borrowed).write(None);std::ptr::addr_of_mut!((*target).acknowledged).write(0);std::ptr::addr_of_mut!((*target).guard_issued).write(0)}
+    self.header=true;
+   }else{
+    *output=Some(unsafe{Box::from_raw(target)});self.backing=None;self.binding=None;self.initialized=0;self.header=false;
+    return Ok(S::Complete(P{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))
+   }
+   Ok(S::Progress(P{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))
+  })();
+  reply.complete(result)
+ }
+ /// 📏️ Quotes the actual resident metadata and backing for partial-birth cancellation.
+ pub fn cancel_demand(&self)->semio_framework_value_retained_clone::RetirementDemand{
+  if self.backing.is_none(){return Default::default()}
+  semio_framework_value_retained_clone::RetirementDemand{copy_bytes:std::mem::size_of::<Option<std::ptr::NonNull<OriginalReturnEscrowTable>>>()+std::mem::size_of::<Option<semio_framework_value_control_contract::OriginalWorkBindingIdentity>>()+std::mem::size_of::<usize>()+std::mem::size_of::<bool>(),release_bytes:std::mem::size_of::<OriginalReturnEscrowTable>(),depth:1,..Default::default()}
+ }
+ /// ♻️ Releases the exact partially initialized allocation only after its original payer funds release.
+ pub fn cancel_into<'a>(&mut self,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'a,semio_framework_value_retained_clone::RetainedCloneStep,ValueError>)->semio_framework_value_control_contract::OriginalEffectReplyComplete<'a,semio_framework_value_retained_clone::RetainedCloneStep,ValueError>{
+  use semio_framework_value_retained_clone::{RetainedCloneStep as S,RetainedCloneProgress as P};
+  let result=(||{
+   let Some(backing)=self.backing else{return Ok(S::Complete(P::default()))};
+   if self.binding.as_ref().is_none_or(|binding|!binding.matches_effect(effect)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"escrow cancellation changed its original Work source"))}
+   let extent=std::mem::size_of::<OriginalReturnEscrowTable>();let copy=std::mem::size_of::<Option<std::ptr::NonNull<OriginalReturnEscrowTable>>>()+std::mem::size_of::<Option<semio_framework_value_control_contract::OriginalWorkBindingIdentity>>()+std::mem::size_of::<usize>()+std::mem::size_of::<bool>();let grant=effect.grant();
+   if grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_release_bytes<extent||grant.maximum_depth==0||effect.remaining_work_units()?<1||!effect.performed(1)?{return Ok(S::Progress(P::default()))}
+   unsafe{std::alloc::dealloc(backing.as_ptr().cast(),std::alloc::Layout::new::<OriginalReturnEscrowTable>())};
+   self.backing=None;self.binding=None;self.initialized=0;self.header=false;
+   Ok(S::Complete(P{copied_items:1,copied_bytes:copy,released_bytes:extent,..Default::default()}))
+  })();reply.complete(result)
+ }
+}
+impl Drop for OriginalReturnEscrowBirth{fn drop(&mut self){assert!(std::thread::panicking()||self.is_empty(),"original escrow birth requires paid completion or cancellation")}}
+
 impl OriginalReturnEscrowTable{
  pub const fn empty()->Self{Self{rows:[OriginalReturnEscrowRow::zero();ORIGINAL_RETURN_ESCROW_CELLS],states:[0;ORIGINAL_RETURN_ESCROW_CELLS],stage:None,revision:0,borrowed:None,acknowledged:0,guard_issued:0}}
- /// 📏️ Copy is the owner pointer stored; the table body is a capacity charge.
- pub fn birth_demand()->(usize,usize,u64){(std::mem::size_of::<Option<Box<Self>>>(),std::mem::size_of::<Self>(),1)}
+ pub fn birth_demand()->(usize,usize,u64){let pointer=std::mem::size_of::<Option<std::ptr::NonNull<Self>>>();let binding=std::mem::size_of::<Option<semio_framework_value_control_contract::OriginalWorkBindingIdentity>>();let row=std::mem::size_of::<OriginalReturnEscrowRow>()+std::mem::size_of::<u8>()+std::mem::size_of::<usize>();let header=std::mem::size_of::<Option<(usize,u8)>>()+std::mem::size_of::<u64>()+std::mem::size_of::<Option<(u64,u32)>>() +2*std::mem::size_of::<u32>()+std::mem::size_of::<bool>();let output=std::mem::size_of::<Option<Box<Self>>>()+pointer+binding+std::mem::size_of::<usize>()+std::mem::size_of::<bool>();(pointer+binding+ORIGINAL_RETURN_ESCROW_CELLS*row+header+output,std::mem::size_of::<Self>(),ORIGINAL_RETURN_ESCROW_CELLS as u64+3)}
  pub fn admit(grant:RetainedCloneGrant,fuel:u64)->RetainedWorkOutcome<(Option<Box<Self>>,RetainedCloneProgress)>{let(copy,capacity,work)=Self::birth_demand();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<capacity||fuel<work{return RetainedWorkOutcome{result:Ok((None,Default::default())),work:0}}let mut owner=Box::<Self>::new_uninit();unsafe{owner.as_mut_ptr().write(Self::empty());let owner=owner.assume_init();RetainedWorkOutcome{result:Ok((Some(owner),RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:capacity,..Default::default()})),work:u128::from(work)}}}
  pub fn revision(&self)->u64{self.revision}
  pub fn count(&self)->usize{self.states.iter().filter(|state|**state>=2).count()}
@@ -101,6 +181,8 @@ impl OriginalReturnEscrowTable{
 #[cfg(test)]
 mod tests{
  use super::*;
+ #[test]
+ fn exact_original_work_keeps_full_extent_after_overrun(){let cases:serde_json::Value=serde_json::from_str(include_str!("../../../🛬️receiving/🎟️native-turn/🧪️tests/work-exact.json")).unwrap();for row in cases.as_array().unwrap(){let n=|key:&str|u128::from(row[key].as_u64().unwrap());let mut state=OriginalReturnBudgetSnapshot{granted:RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1},fuel:row["fuel"].as_u64().unwrap(),spent:Default::default(),work:n("priorHi")*1_000_000_000+n("priorLo"),held_items:0,held_copy_bytes:0,held_release_bytes:0,held_capacity_bytes:0,held_fuel:0,claims:0,serial:0};let delta=n("deltaHi")*1_000_000_000+n("deltaLo");let expected=n("nextHi")*1_000_000_000+n("nextLo");let issue=state.advance_work_exact(delta);assert_eq!(state.work,expected);assert_eq!(issue.is_some(),expected>u128::from(state.fuel))}}
  fn identity(serial:u64)->OriginalReturnEscrowIdentity{OriginalReturnEscrowIdentity{source:1,source_birth:2,recipient:3,destination:4,extent:48,serial,origin_epoch:7}}
  #[test]
  fn data_only_ledger_plans_preserve_held_stock_and_real_progress(){
@@ -118,10 +200,24 @@ mod tests{
  fn borrowed_snapshot_fences_a_previously_acknowledged_tombstone(){let mut table=OriginalReturnEscrowTable::empty();let value=identity(1);let held=OriginalReturnEscrowAmounts{items:2,copy_bytes:48,work:2,release_bytes:0,capacity_bytes:0};let slot=loop{match table.stage_step(&value,held,64).unwrap(){OriginalReturnEscrowStage::Progress{..}=>{},OriginalReturnEscrowStage::Ready{slot}=>break slot,OriginalReturnEscrowStage::Blocked=>panic!("staging refused")}};table.commit_stage(slot,value,held).unwrap();assert!(table.finish_committed_stage());table.redeem(value,held,Default::default()).unwrap();let revision=table.revision();table.borrow_snapshot(revision).unwrap();table.hand_back_snapshot(revision).unwrap();assert!(table.has_reclaimable());table.borrow_snapshot(revision).unwrap();assert!(!table.has_reclaimable());assert!(!table.reclaim_one().unwrap());table.hand_back_snapshot(revision).unwrap();assert!(table.reclaim_one().unwrap());}
  #[test]
  fn source_table_birth_quotes_real_capacity_and_pointer_copy_separately(){
-  let(copy,capacity,work)=OriginalReturnEscrowTable::birth_demand();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:capacity,maximum_depth:1};
-  for(denied,fuel)in [(RetainedCloneGrant{maximum_items:0,..grant},work),(RetainedCloneGrant{maximum_copy_bytes:copy-1,..grant},work),(RetainedCloneGrant{maximum_capacity_bytes:capacity-1,..grant},work),(grant,work-1)]{let turn=OriginalReturnEscrowTable::admit(denied,fuel);let(owner,progress)=turn.result.unwrap();assert!(owner.is_none());assert_eq!(progress,Default::default());assert_eq!(turn.work,0)}
-  let(turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||OriginalReturnEscrowTable::admit(grant,work));let(owner,progress)=turn.result.unwrap();assert_eq!(turn.work,work);assert_eq!(progress.copied_bytes,copy);assert_eq!(progress.retained_capacity_bytes,capacity);assert_eq!(heap.requested_bytes,capacity);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!(heap.released_bytes,capacity);
+  use semio_framework_value_testing_effect_bank::{EffectBank,Wallet,RetainedWorkPoll,OriginalEffectReply};
+  let capacity=std::mem::size_of::<OriginalReturnEscrowTable>();
+  let stock=RetainedCloneGrant{maximum_items:80,maximum_copy_bytes:65536,maximum_capacity_bytes:capacity,maximum_release_bytes:capacity,maximum_depth:4};
+  let mut bank=EffectBank::new(Wallet::new(stock,80));let mut birth=OriginalReturnEscrowBirth::default();let mut output=None;
+  for _ in 0..35{
+   let demand=birth.demand();assert!(demand.copy_bytes<=4096);
+   let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:0,maximum_depth:demand.depth};
+   let ((turn,marker),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||bank.run(grant,1,|effect|{
+    let mut reply=None;let complete=birth.advance_into(&mut output,effect,OriginalEffectReply::borrow(&mut reply).unwrap());assert!(complete.is_recorded());let step=reply.unwrap();RetainedWorkPoll::Complete(RetainedWorkOutcome{result:step,work:effect.performed_work()})
+   }));
+   let RetainedWorkPoll::Complete(turn)=turn else{panic!("native birth must finish its selected step")};let progress=turn.result.unwrap().progress();assert_eq!(turn.work,1);assert_eq!(marker,if progress.retained_capacity_bytes==0{None}else{Some(capacity)});assert_eq!(heap.requested_bytes,progress.retained_capacity_bytes);assert_eq!(heap.released_bytes,0);assert_eq!(bank.take_admitted(),Some(true));bank.post(progress,grant,(heap.requested_bytes,heap.released_bytes));
+  }
+  assert!(birth.is_empty());assert!(output.as_ref().unwrap().is_empty());
+  let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:std::mem::size_of::<Option<Box<OriginalReturnEscrowTable>>>(),maximum_capacity_bytes:0,maximum_release_bytes:capacity,maximum_depth:1};
+  let ((turn,_),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||bank.run(grant,1,|effect|{assert!(effect.performed(1).unwrap());drop(output.take());RetainedWorkPoll::Complete(RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneProgress{copied_items:1,copied_bytes:grant.maximum_copy_bytes,released_bytes:capacity,..Default::default()}),work:1})}));
+  let RetainedWorkPoll::Complete(turn)=turn else{panic!("paid table release must complete")};let progress=turn.result.unwrap();assert_eq!((heap.requested_bytes,heap.released_bytes),(0,capacity));assert_eq!(bank.take_admitted(),Some(true));bank.post(progress,grant,(0,capacity));assert!(bank.is_idle());
  }
+
  #[test]
  fn full_table_preserves_tombstones_until_their_exact_borrowed_snapshot_returns(){
   let held=OriginalReturnEscrowAmounts{items:2,copy_bytes:48,work:2,release_bytes:0,capacity_bytes:0};let mut table=OriginalReturnEscrowTable::empty();for serial in 1..=32{assert!(table.reserve(identity(serial),held).unwrap().is_some())}assert!(table.reserve(identity(33),held).unwrap().is_none());

@@ -466,12 +466,8 @@ fn stud_slip_curve_passes_through_the_design_resistance() {
 fn golden_scenes_match_the_committed_bytes() {
     for (path, document) in [(GOLDEN_BUILDING, En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De)), (GOLDEN_BRIDGE, En1994Snapshot::bridge_girder()), (GOLDEN_SHOWCASE, En1994Snapshot::full_showcase())] {
         let text = canonical_json(&validated(&document));
-        if std::env::var_os("SEMIO_UPDATE_GOLDEN").is_some() {
-            std::fs::create_dir_all(std::path::Path::new(path).parent().unwrap()).unwrap();
-            std::fs::write(path, &text).unwrap();
-        }
-        let committed = std::fs::read_to_string(path).unwrap_or_default();
-        assert_eq!(committed, text, "golden {path} differs; rerun with SEMIO_UPDATE_GOLDEN=1 after reviewing the change");
+        scene::projection_kit::test_support::assert_golden(path, &text);
+        let committed = std::fs::read_to_string(path).expect("golden");
         let reparsed: serde_json::Value = serde_json::from_str(&committed).expect("golden is JSON");
         assert_eq!(reparsed["schema"], "semio.norm.structural-scene/v1");
     }

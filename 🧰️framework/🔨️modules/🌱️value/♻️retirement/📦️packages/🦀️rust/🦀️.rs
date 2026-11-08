@@ -10,11 +10,12 @@ pub mod retirement;
 pub use retirement::{RetireOwned,admit_retirement_cursor,retirement_cursor_birth_demand,owned_retirement_birth_bytes,admit_owned_retirement};
 
 pub use retirement::turn::{advance_retirement_turn,RetirementReceipt,RetirementTurnError};
-pub use retirement::arc_custody::{shared_retirement_birth_bytes,shared_retirement_allocation_bytes,admit_shared_retirement};
+pub use retirement::arc_custody::{shared_retirement_birth_bytes,shared_retirement_allocation_bytes,admit_shared_retirement_into};
 #[path="../../../⚠️refusal/♻️retirement/🦀️.rs"]
 mod refusal_retirement;
 artifact_retire_leaf!(RetainedCloneGrant);
 artifact_retire_leaf!(RetirementDemand);
+artifact_retire_leaf!(OriginalWorkBindingIdentity);
 artifact_retire_leaf!(RetainedCloneProgress);
 artifact_retire_leaf!(RetainedCloneStep);
 artifact_retire_leaf!(NativeAllocationRequest);
@@ -35,3 +36,6 @@ pub use semio_framework_value_factory::{FactoryPayloadRetirement,FactoryRetireme
 pub use semio_framework_value_factory::owned::FactoryOwnedRetirement;
 
 
+
+#[path="../../🚧️gate/🦀️.rs"] mod readiness_gate;
+pub use readiness_gate::NativeRetirementGate;

@@ -172,7 +172,8 @@
         }
       },
       "actual": 8
-    }
+    },
+    "physicalReceipt": null
   },
   "receiptRefusal": null,
   "contextRefusal": null,

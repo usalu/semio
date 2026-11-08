@@ -391,3 +391,5 @@ mod original_intrinsic_tests;
 #[cfg(test)]
 #[path="../🔢️ieee754/🧪️tests/🦀️.rs"]
 mod ieee_identity_tests;
+
+unsafe impl semio_framework_value_native_slice_equality::RetainedEqualityElement for Number{const WORK:u64=1;fn inline_eq(left:&Self,right:&Self)->bool{left==right}}

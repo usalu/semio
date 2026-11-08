@@ -1,0 +1,6 @@
+{
+  "ChangeVentHumidificationRequired": {
+    "ventId": "vent-central",
+    "newHumidificationRequiredKgH": 2.5
+  }
+}

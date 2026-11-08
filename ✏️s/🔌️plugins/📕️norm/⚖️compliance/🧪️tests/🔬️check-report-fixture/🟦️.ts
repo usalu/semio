@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import Ajv from "ajv";
+import { semioSchemaAjvV1 } from "@semio-tech/framework/schema/oracles/validator";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,7 +10,7 @@ const schema = JSON.parse(readFileSync(join(here, "../../🧬️schema/🔣️.j
 
 describe("Norm compliance CheckReport fixture", () => {
   test("third-party Ajv accepts the language-agnostic CheckReport fixture", () => {
-    const validate = new Ajv({ strict: true }).compile(schema);
+    const validate = semioSchemaAjvV1({ strict: true }).compile(schema);
     expect(validate(fixture)).toBe(true);
     expect(validate({ ...fixture, checks: "nope" })).toBe(false);
     expect(fixture.summary.fail).toBe(1);
@@ -19,7 +19,7 @@ describe("Norm compliance CheckReport fixture", () => {
   });
 
   test("stations obey the law utilization == max(stations) and the schema bounds their dimension", () => {
-    const validate = new Ajv({ strict: true }).compile(schema);
+    const validate = semioSchemaAjvV1({ strict: true }).compile(schema);
     const withStations = fixture.checks.filter((c: { stations: unknown[] }) => c.stations.length > 0);
     expect(withStations.length).toBeGreaterThan(0);
     for (const c of withStations) {
@@ -42,7 +42,7 @@ describe("Norm compliance CheckReport fixture", () => {
 
   test("third-party Ajv accepts the committed NDP registry and refuses unknown statuses", () => {
     const registry = JSON.parse(readFileSync(join(here, "../../📜️annex-and-tables/🔖️ndp/🔣️.json"), "utf8"));
-    const validate = new Ajv({ strict: true }).compile({ ...schema, $ref: "#/definitions/NdpRegistry", required: undefined, properties: undefined, additionalProperties: undefined, type: undefined });
+    const validate = semioSchemaAjvV1({ strict: true }).compile({ ...schema, $ref: "#/definitions/NdpRegistry", required: undefined, properties: undefined, additionalProperties: undefined, type: undefined });
     expect(validate(registry)).toBe(true);
     const ids = registry.entries.map((e: { id: string }) => e.id);
     expect(ids).toEqual([...ids].sort());

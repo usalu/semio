@@ -593,5 +593,8 @@
   "soilLayers": [],
   "placements": [],
   "tieBeams": [],
-  "slopes": []
+  "slopes": [],
+  "isolationSystems": [],
+  "pierBases": [],
+  "criticalRegions": []
 }

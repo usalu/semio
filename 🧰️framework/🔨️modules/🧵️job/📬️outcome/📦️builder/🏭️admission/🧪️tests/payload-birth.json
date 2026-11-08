@@ -1,0 +1,26 @@
+[
+  {
+    "input": true,
+    "backing": false,
+    "published": false,
+    "actual": null
+  },
+  {
+    "input": true,
+    "backing": false,
+    "published": false,
+    "actual": 0
+  },
+  {
+    "input": true,
+    "backing": true,
+    "published": false,
+    "actual": 64
+  },
+  {
+    "input": false,
+    "backing": false,
+    "published": true,
+    "actual": null
+  }
+]

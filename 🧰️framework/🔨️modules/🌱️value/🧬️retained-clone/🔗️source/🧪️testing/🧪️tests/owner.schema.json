@@ -1,0 +1,53 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "value",
+    "authorityTag",
+    "projectedType",
+    "authorityType",
+    "maximumCopyBytes",
+    "modes",
+    "cancellationCuts"
+  ],
+  "properties": {
+    "value": {
+      "const": "Grüße"
+    },
+    "authorityTag": {
+      "const": 97
+    },
+    "projectedType": {
+      "const": "text"
+    },
+    "authorityType": {
+      "const": "envelope"
+    },
+    "maximumCopyBytes": {
+      "const": 4096
+    },
+    "modes": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "original",
+          "unique"
+        ]
+      }
+    },
+    "cancellationCuts": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "uniqueItems": true,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 4096
+      }
+    }
+  }
+}

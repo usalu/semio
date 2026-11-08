@@ -1,0 +1,5 @@
+
+const p="✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";let s=await Bun.file(p).text();const edits=[
+["shearForceDemandN:readBinary64(a,31,ASSESSMENT)","shearForceDemandN:readBinary64(a,31,ASSESSMENT),intermediateSteelAreaM2:readBinary64(a,32,ASSESSMENT),analysisMethod:choice(artifactSqliteText(a,33),ANALYSIS_METHOD_CHOICES)"],
+["shearRdN:readBinary64(a,11,PIER)","shearRdN:readBinary64(a,11,PIER),reinforcementRatio:readBinary64(a,12,PIER),coverM:readBinary64(a,13,PIER),concreteFckMpa:readBinary64(a,14,PIER),steelFykMpa:readBinary64(a,15,PIER),axialLoadN:readBinary64(a,16,PIER),stiffnessBasis:choice(artifactSqliteText(a,17),PIER_STIFFNESS_BASISS)"]];
+for(const[old,next]of edits){if(!s.includes(old)||s.includes(next))throw Error("EN1998 current reader differs: "+old);s=s.replace(old,next)}await Bun.write(p,s);const written=await Bun.file(p).text();for(const[,next]of edits)if(!written.includes(next))throw Error("EN1998 reader did not persist");console.log("verified two persisted EN1998 reader repairs");

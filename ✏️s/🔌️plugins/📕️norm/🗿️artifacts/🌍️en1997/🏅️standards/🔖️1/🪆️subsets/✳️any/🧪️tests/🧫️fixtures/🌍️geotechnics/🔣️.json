@@ -1534,6 +1534,795 @@
           "kind": "third-party-library"
         }
       ]
+    },
+    {
+      "id": "en1997.G.equilibrium-overturning-wall",
+      "check": "en1997.G.equilibrium-overturning",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "2.4.7.2 overturning moments about the toe with unit partial factors, closed form",
+        "annex": "en"
+      },
+      "inputs": {
+        "m_dst_g": 135000.0,
+        "m_dst_q": 44000.0,
+        "m_stb_g": 360000.0,
+        "m_tension": 20000.0
+      },
+      "expected": {
+        "equ_util": {
+          "value": 0.4710526315789474,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.uplift-equilibrium-basin",
+      "check": "en1997.G.uplift-equilibrium",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "10.2 uplift of a basin by water pressure, V_dst = G_dst + gamma_w head A + Q_dst against G_stb + R_d, unit partial factors",
+        "annex": "en"
+      },
+      "inputs": {
+        "g_dst": 30000.0,
+        "q_dst": 0.0,
+        "g_stb": 4200000.0,
+        "r_d": 15000.0,
+        "head": 4.0,
+        "area": 100.0,
+        "gamma_w": 9810.0
+      },
+      "expected": {
+        "uplift_util": {
+          "value": 0.9380782918149466,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "ballast": {
+          "value": 0.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.uplift-equilibrium-ballast",
+      "check": "en1997.G.uplift-equilibrium",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "10.2 uplift with insufficient permanent action, required additional ballast, unit partial factors",
+        "annex": "en"
+      },
+      "inputs": {
+        "g_dst": 0.0,
+        "q_dst": 10000.0,
+        "g_stb": 2500000.0,
+        "r_d": 0.0,
+        "head": 3.0,
+        "area": 100.0,
+        "gamma_w": 9810.0
+      },
+      "expected": {
+        "uplift_util": {
+          "value": 1.1812,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "ballast": {
+          "value": 453000.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.hydraulic-heave-excavation",
+      "check": "en1997.G.hydraulic-heave",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "10.3 hydraulic heave, seepage force i gamma_w against the buoyant weight gamma', unit partial factors",
+        "annex": "en"
+      },
+      "inputs": {
+        "delta_h": 2.5,
+        "l_flow": 5.0,
+        "gamma_prime": 9500.0,
+        "gamma_w": 9810.0
+      },
+      "expected": {
+        "heave_util": {
+          "value": 0.5163157894736842,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "i": {
+          "value": 0.5,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "i_crit": {
+          "value": 0.9683995922528033,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "safety": {
+          "value": 1.9367991845056065,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.hydraulic-heave-critical",
+      "check": "en1997.G.hydraulic-heave",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "10.3 hydraulic heave near the critical gradient, unit partial factors",
+        "annex": "en"
+      },
+      "inputs": {
+        "delta_h": 4.6,
+        "l_flow": 5.0,
+        "gamma_prime": 9500.0,
+        "gamma_w": 9810.0
+      },
+      "expected": {
+        "heave_util": {
+          "value": 0.9500210526315789,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "i": {
+          "value": 0.9199999999999999,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "i_crit": {
+          "value": 0.9683995922528033,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "safety": {
+          "value": 1.0526082524486993,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.infinite-slope-cohesionless",
+      "check": "en1997.G.infinite-slope",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "11.5 infinite slope, cohesionless dry, F = tan(phi)/tan(beta), unit partial factors",
+        "annex": "en"
+      },
+      "inputs": {
+        "beta_deg": 25.0,
+        "phi_k_deg": 30.0,
+        "gamma": 18000.0,
+        "z": 2.5,
+        "gamma_w": 9810.0
+      },
+      "expected": {
+        "infinite_slope_util": {
+          "value": 0.8076685558829174,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "f_k": {
+          "value": 1.238131647835209,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.infinite-slope-cohesive",
+      "check": "en1997.G.infinite-slope",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "11.5 infinite slope with cohesion, force resolution on the plane at depth z, unit partial factors",
+        "annex": "en"
+      },
+      "inputs": {
+        "beta_deg": 20.0,
+        "phi_k_deg": 25.0,
+        "c_k": 5000.0,
+        "gamma": 19000.0,
+        "z": 2.5,
+        "gamma_w": 9810.0
+      },
+      "expected": {
+        "infinite_slope_util": {
+          "value": 0.6216235866249823,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "f_k": {
+          "value": 1.6086905669544476,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.infinite-slope-seepage",
+      "check": "en1997.G.infinite-slope",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "11.5 infinite slope with seepage parallel to the slope, F = (gamma_sat - gamma_w)/gamma_sat tan(phi)/tan(beta), unit partial factors",
+        "annex": "en"
+      },
+      "inputs": {
+        "beta_deg": 22.0,
+        "phi_k_deg": 33.0,
+        "gamma": 18000.0,
+        "gamma_sat": 20000.0,
+        "z": 2.0,
+        "seepage": 1.0,
+        "gamma_w": 9810.0
+      },
+      "expected": {
+        "infinite_slope_util": {
+          "value": 1.2210909315521026,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "f_k": {
+          "value": 0.818939830082041,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.slope-janbu-dry",
+      "check": "en1997.G.slope-janbu",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "SLOPE-02: simplified Janbu factor with f0 (Janbu 1973) on a Bishop circle, dry c-phi soil, unit partial factors",
+        "annex": "en"
+      },
+      "inputs": {
+        "h": 6.0,
+        "beta_deg": 30.0,
+        "xc": 6.0,
+        "yc": 10.0,
+        "r": 11.0,
+        "gamma": 18000.0,
+        "phi_k_deg": 30.0,
+        "c_k": 5000.0,
+        "gamma_w": 9810.0
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ],
+      "expected": {
+        "janbu": {
+          "value": 0.4663382206888543,
+          "unit": "1",
+          "profile": "numerical-v1",
+          "tolerance": 0.01
+        },
+        "f": {
+          "value": 2.144366375380607,
+          "unit": "1",
+          "profile": "numerical-v1",
+          "tolerance": 0.01
+        }
+      }
+    },
+    {
+      "id": "en1997.G.slope-janbu-groundwater",
+      "check": "en1997.G.slope-janbu",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "SLOPE-02: simplified Janbu factor with the groundwater level at the toe elevation, base water force gamma_w h_w b, unit partial factors",
+        "annex": "en"
+      },
+      "inputs": {
+        "h": 6.0,
+        "beta_deg": 30.0,
+        "xc": 6.0,
+        "yc": 10.0,
+        "r": 11.0,
+        "gamma": 18000.0,
+        "phi_k_deg": 30.0,
+        "c_k": 5000.0,
+        "gamma_w": 9810.0,
+        "gwl_level": 0.0,
+        "gamma_sat": 20000.0
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ],
+      "expected": {
+        "janbu": {
+          "value": 0.4882906787528391,
+          "unit": "1",
+          "profile": "numerical-v1",
+          "tolerance": 0.01
+        },
+        "f": {
+          "value": 2.047960453707894,
+          "unit": "1",
+          "profile": "numerical-v1",
+          "tolerance": 0.01
+        }
+      }
+    },
+    {
+      "id": "en1997.G.slope-janbu-phi-only",
+      "check": "en1997.G.slope-janbu",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "SLOPE-02: simplified Janbu factor of a cohesionless slope, b1 = 0.31, unit partial factors",
+        "annex": "en"
+      },
+      "inputs": {
+        "h": 6.0,
+        "beta_deg": 30.0,
+        "xc": 6.0,
+        "yc": 10.0,
+        "r": 11.0,
+        "gamma": 18000.0,
+        "phi_k_deg": 38.0,
+        "c_k": 0.0,
+        "gamma_w": 9810.0
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ],
+      "expected": {
+        "janbu": {
+          "value": 0.43696676489473707,
+          "unit": "1",
+          "profile": "numerical-v1",
+          "tolerance": 0.01
+        },
+        "f": {
+          "value": 2.288503566720674,
+          "unit": "1",
+          "profile": "numerical-v1",
+          "tolerance": 0.01
+        }
+      }
+    },
+    {
+      "id": "en1997.G.slope-wedge-c-phi",
+      "check": "en1997.G.slope-wedge",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "SLOPE-04: plane wedge through the toe, force resolution along and normal to the plane, minimum over the plane angle, unit partial factors",
+        "annex": "en"
+      },
+      "inputs": {
+        "h": 6.0,
+        "beta_deg": 45.0,
+        "gamma": 18000.0,
+        "phi_k_deg": 30.0,
+        "c_k": 5000.0
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ],
+      "expected": {
+        "wedge": {
+          "value": 0.6816686422083921,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "f": {
+          "value": 1.466988413549895,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "theta_deg": {
+          "value": 33.241346284097844,
+          "unit": "deg",
+          "profile": "numerical-v1",
+          "tolerance": 0.002
+        }
+      }
+    },
+    {
+      "id": "en1997.G.slope-wedge-undrained",
+      "check": "en1997.G.slope-wedge",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "SLOPE-04: plane wedge of an undrained slope, closed form Culmann F = 4 c sin(beta) / (gamma h (1 - cos(beta))) at theta = beta / 2",
+        "annex": "en"
+      },
+      "inputs": {
+        "h": 6.0,
+        "beta_deg": 60.0,
+        "gamma": 18000.0,
+        "phi_k_deg": 0.0,
+        "c_k": 30000.0
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ],
+      "expected": {
+        "wedge": {
+          "value": 0.519615242270663,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "f": {
+          "value": 1.924500897298753,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "theta_deg": {
+          "value": 29.999999555025514,
+          "unit": "deg",
+          "profile": "numerical-v1",
+          "tolerance": 0.002
+        }
+      }
+    },
+    {
+      "id": "en1997.G.footing-tilt-limit",
+      "check": "en1997.G.footing-tilt",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "SLS-04: tilt tan(omega) = |s_a - s_b| / l of two footings against the limit 1/500 (EN 1997-1 Annex H)",
+        "annex": "en"
+      },
+      "inputs": {
+        "s_a": 0.03,
+        "s_b": 0.012,
+        "l": 6.0,
+        "limit_den": 500.0
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ],
+      "expected": {
+        "tilt": {
+          "value": 1.4999999999999998,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "tan_omega": {
+          "value": 0.0029999999999999996,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      }
+    },
+    {
+      "id": "en1997.G.footing-tilt-small",
+      "check": "en1997.G.footing-tilt",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "SLS-04: tilt of two footings with a small differential settlement against 1/500",
+        "annex": "en"
+      },
+      "inputs": {
+        "s_a": 0.011,
+        "s_b": 0.0095,
+        "l": 8.0,
+        "limit_den": 500.0
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ],
+      "expected": {
+        "tilt": {
+          "value": 0.09375000000000015,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "tan_omega": {
+          "value": 0.0001875000000000003,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      }
+    },
+    {
+      "id": "en1997.G.drawdown-superposition-pair",
+      "check": "en1997.G.drawdown-superposition",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "DEW-02: equivalent big well of the pit area (Dupuit, Sichardt radius) and the confined Thiem drawdown superposed over two wells at an observation point",
+        "annex": "en"
+      },
+      "inputs": {
+        "area": 400.0,
+        "h_aquifer": 10.0,
+        "h_well": 5.0,
+        "k": 0.0001,
+        "px": 10.0,
+        "py": 0.0,
+        "qw1": 0.004,
+        "qw2": 0.004,
+        "r_well": 0.3,
+        "thickness": 10.0,
+        "x1": 0.0,
+        "x2": 20.0,
+        "y1": 0.0,
+        "y2": 0.0
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ],
+      "expected": {
+        "r_eq": {
+          "value": 11.283791670955125,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "q": {
+          "value": 0.009106882330947356,
+          "unit": "m3/s",
+          "profile": "numerical-v1"
+        },
+        "drawdown": {
+          "value": 3.4479966051713444,
+          "unit": "m",
+          "profile": "numerical-v1"
+        }
+      }
+    },
+    {
+      "id": "en1997.G.drawdown-superposition-single",
+      "check": "en1997.G.drawdown-superposition",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "DEW-02: equivalent big well of the pit area with an explicit influence radius, without well series",
+        "annex": "en"
+      },
+      "inputs": {
+        "area": 900.0,
+        "h_aquifer": 12.0,
+        "h_well": 6.0,
+        "k": 0.0005,
+        "r_influence": 400.0
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ],
+      "expected": {
+        "r_eq": {
+          "value": 16.925687506432688,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "q": {
+          "value": 0.0536407642371199,
+          "unit": "m3/s",
+          "profile": "numerical-v1"
+        }
+      }
+    },
+    {
+      "id": "en1997.G.drawdown-settlement-pass",
+      "check": "en1997.G.drawdown-settlement",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "DEW-03: settlement s = gamma_w delta_h H / E_oed from the effective stress increase of the groundwater drawdown, gamma_w = 10 kN/m3",
+        "annex": "en"
+      },
+      "inputs": {
+        "delta_h": 3.0,
+        "e_oed": 20000000.0,
+        "h": 5.0,
+        "gamma_w": 10000.0
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ],
+      "expected": {
+        "d_sigma": {
+          "value": 30000.0,
+          "unit": "Pa",
+          "profile": "numerical-v1"
+        },
+        "s": {
+          "value": 0.0075,
+          "unit": "m",
+          "profile": "numerical-v1"
+        }
+      }
+    },
+    {
+      "id": "en1997.G.drawdown-settlement-soft",
+      "check": "en1997.G.drawdown-settlement",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "DEW-03: settlement of a soft layer under a deeper drawdown, gamma_w = 9.81 kN/m3",
+        "annex": "en"
+      },
+      "inputs": {
+        "delta_h": 6.0,
+        "e_oed": 4000000.0,
+        "h": 3.0,
+        "gamma_w": 9810.0
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ],
+      "expected": {
+        "d_sigma": {
+          "value": 58860.0,
+          "unit": "Pa",
+          "profile": "numerical-v1"
+        },
+        "s": {
+          "value": 0.044145000000000004,
+          "unit": "m",
+          "profile": "numerical-v1"
+        }
+      }
+    },
+    {
+      "id": "en1997.G.slope-janbu-ponded",
+      "check": "en1997.G.slope-janbu",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "11.5 and 2.4.6.1 Janbu simplified with groundwater above the toe: the weight of ponded water acts on the submerged slope face and the pore pressure acts on the base, unit partial factors",
+        "annex": "en"
+      },
+      "inputs": {
+        "h": 6.0,
+        "beta_deg": 30.0,
+        "xc": 6.0,
+        "yc": 10.0,
+        "r": 11.0,
+        "gamma": 18000.0,
+        "phi_k_deg": 30.0,
+        "c_k": 5000.0,
+        "gamma_w": 9810.0,
+        "gwl_level": 2.0,
+        "gamma_sat": 20000.0
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ],
+      "expected": {
+        "janbu": {
+          "value": 0.5577148459125038,
+          "unit": "1",
+          "profile": "numerical-v1",
+          "tolerance": 0.01
+        },
+        "f": {
+          "value": 1.7930309858685085,
+          "unit": "1",
+          "profile": "numerical-v1",
+          "tolerance": 0.01
+        }
+      }
     }
   ]
 }

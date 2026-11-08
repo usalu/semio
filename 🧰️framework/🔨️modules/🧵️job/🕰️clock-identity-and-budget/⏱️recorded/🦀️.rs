@@ -16,7 +16,7 @@ impl<'a> OriginalClockReply<'a>{
 }
 /// 📏️ Quotes the original physical and computational demand of one clock producer turn.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
-pub struct OriginalClockDemand{pub physical:semio_framework_value_retirement::RetirementDemand,pub work:u64}
+pub struct OriginalClockDemand{pub physical:semio_framework_value_retirement::RetirementDemand,pub work:u64,pub next_work:u64}
 /// 🏭️ One actual clock producer validates its real borrowed Source on every entry.
 pub trait OriginalClockProducer{
  type Context<'turn,'source> where 'source:'turn;
@@ -55,7 +55,7 @@ impl semio_framework_value_retirement::retirement::RetireOwned for OriginalClock
  fn controlled_retirement_supported()->bool{true}
 }
 /// 🧳️ Retains one original reading and its nonforgeable Source provenance.
-pub struct OriginalClockAction{authority:u64,identity:u64,source:Option<OriginalSourceTurnIdentity>,work:semio_framework_value_control_contract::OriginalWorkActionIdentity,refusal:Option<ValueError>,reply:Option<Result<Option<u128>,ValueError>>,monotonic:Option<bool>,settled:bool,finished:bool}
+pub struct OriginalClockAction{authority:u64,identity:u64,source:Option<OriginalSourceTurnIdentity>,work:semio_framework_value_control_contract::OriginalWorkActionIdentity,demand:OriginalClockDemand,refusal:Option<ValueError>,reply:Option<Result<Option<u128>,ValueError>>,monotonic:Option<bool>,settled:bool,finished:bool}
 impl OriginalClockAction{
  /// 📤️ Transfers the exact producer-context refusal into an empty caller-owned slot.
  pub fn transfer_refusal(&mut self,output:&mut Option<ValueError>)->Result<bool,ValueError>{if output.is_some(){return Err(invalid())}let Some(error)=self.refusal.take()else{return Ok(false)};*output=Some(error);Ok(true)}
@@ -87,7 +87,7 @@ impl<P:OriginalClockProducer> OriginalClockAuthority<P>{
  pub fn demand<'turn,'source>(&self,context:&P::Context<'turn,'source>)->Result<OriginalClockDemand,ValueError> where 'source:'turn{self.producer.validate_context(context)?;self.producer.demand(context)}
  /// 🪢️ Starts or recovers the exact Source clock action without replaying an entered producer.
  pub fn drive<'turn,'source>(&mut self,context:&mut P::Context<'turn,'source>,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,slot:&mut Option<OriginalClockAction>)->Result<bool,ValueError> where 'source:'turn{
-  self.producer.validate_context(context)?;let source=self.producer.source_turn(context);if effect.work_source_turn()!=source{return Err(invalid())}let work=effect.work_identity().action_identity();let demand=self.producer.demand(context)?;if effect.remaining_work_units()?<demand.work||!semio_framework_value_control_contract::retained_clone_grant_admits(effect.grant(),demand.physical){return Ok(false)}let fresh=slot.is_none();if fresh{if self.active.is_some(){return Err(invalid())}let authority=*self.identity.get_or_insert_with(next);let identity=next();self.active=Some(identity);*slot=Some(OriginalClockAction{authority,identity,source,work,refusal:None,reply:None,monotonic:None,settled:false,finished:false})}let action=slot.as_mut().expect("original clock action installed");if Some(action.authority)!=self.identity||self.active!=Some(action.identity)||action.source!=source||action.work!=work||action.finished{return Err(invalid())}if action.refusal.is_some(){return Ok(false)}if action.settled{return Ok(true)}if action.reply.is_some(){return Ok(self.settle_recorded(action))}let reply=OriginalClockReply{slot:&mut action.reply};let complete=if fresh{self.producer.read(context,effect,reply)}else{self.producer.recover(context,effect,reply)};match complete{Ok(complete)=>drop(complete),Err(error)=>{action.refusal=Some(error);return Ok(false)}}if action.reply.is_some(){Ok(self.settle_recorded(action))}else{Ok(false)}
+  self.producer.validate_context(context)?;let source=self.producer.source_turn(context);if effect.work_source_turn()!=source{return Err(invalid())}let work=effect.work_identity().action_identity();let fresh=slot.is_none();if let Some(action)=slot.as_mut(){if Some(action.authority)!=self.identity||self.active!=Some(action.identity)||action.source!=source||action.work!=work||action.finished{return Err(invalid())}if action.refusal.is_some(){return Ok(false)}if action.settled{return Ok(true)}if action.reply.is_some(){return Ok(self.settle_recorded(action))}}else if self.active.is_some(){return Err(invalid())}let demand=self.producer.demand(context)?;if demand.next_work>demand.work||slot.as_ref().is_some_and(|action|action.demand.physical!=demand.physical||action.demand.work!=demand.work){return Err(invalid())}let required_work=if fresh{demand.work}else{demand.next_work};if effect.remaining_work_units()?<required_work||!semio_framework_value_control_contract::retained_clone_grant_admits(effect.grant(),demand.physical){return Ok(false)}if demand.physical.capacity_bytes>0&&effect.actual().is_some(){return Err(invalid())}if fresh{let authority=*self.identity.get_or_insert_with(next);let identity=next();self.active=Some(identity);*slot=Some(OriginalClockAction{authority,identity,source,work,demand,refusal:None,reply:None,monotonic:None,settled:false,finished:false})}let action=slot.as_mut().expect("original clock action installed");let grant=semio_framework_value_control_contract::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.physical.copy_bytes,maximum_capacity_bytes:demand.physical.capacity_bytes,maximum_release_bytes:demand.physical.release_bytes,maximum_depth:demand.physical.depth};let mut selected=effect.reborrow(grant,demand.next_work)?;let reply=OriginalClockReply{slot:&mut action.reply};let complete=if fresh{self.producer.read(context,&mut selected,reply)}else{self.producer.recover(context,&mut selected,reply)};match complete{Ok(complete)=>drop(complete),Err(error)=>{action.refusal=Some(error);return Ok(false)}}if action.reply.is_some(){Ok(self.settle_recorded(action))}else{Ok(false)}
  }
  fn settle_recorded(&mut self,action:&mut OriginalClockAction)->bool{let monotonic=match action.reply.as_ref(){Some(Ok(Some(now)))=>{let valid=self.last.is_none_or(|last|*now>=last);if valid{self.last=Some(*now)}valid},Some(Ok(None))=>false,Some(Err(_))=>false,None=>return false};action.monotonic=Some(monotonic);self.latest=Some(action.identity);action.settled=true;true}
  /// 🎯️ Derives a deadline only from this actual Source clock's latest monotonic reading.
@@ -113,26 +113,26 @@ impl<P:OriginalClockProducer+semio_framework_value_retirement::retirement::Retir
 pub enum OriginalClockDecisionStatus{Pending,Ready,Refused}
 /// 🧳️ Keeps the actual clock action, observation and decision across interruption.
 #[derive(Default)]
-pub struct OriginalClockDecisionFrame{request:Option<(OriginalClockDeadline,u64,Option<OriginalSourceTurnIdentity>)>,action:Option<OriginalClockAction>,reading:Option<Result<OriginalClockObservation,ValueError>>,refusal:Option<ValueError>,decision:Option<bool>,transferred:bool,failed:bool}
+pub struct OriginalClockDecisionFrame{request:Option<(OriginalClockDeadline,u64,Option<OriginalSourceTurnIdentity>)>,last_fuel:Option<u64>,action:Option<OriginalClockAction>,reading:Option<Result<OriginalClockObservation,ValueError>>,refusal:Option<ValueError>,decision:Option<bool>,transferred:bool,failed:bool}
 impl OriginalClockDecisionFrame{
  /// 🪹️ Creates an empty resident frame without sampling the clock.
  pub fn new()->Self{Self::default()}
  /// 🈳️ Reports whether all original clock custody has returned.
- pub fn terminal_is_empty(&self)->bool{self.request.is_none()&&self.action.is_none()&&self.reading.is_none()&&self.refusal.is_none()&&self.decision.is_none()&&!self.transferred&&!self.failed}
+ pub fn terminal_is_empty(&self)->bool{self.request.is_none()&&self.last_fuel.is_none()&&self.action.is_none()&&self.reading.is_none()&&self.refusal.is_none()&&self.decision.is_none()&&!self.transferred&&!self.failed}
  /// ⏱️ Starts or recovers the same actual clock action and retains its decision.
  pub fn poll<'turn,'source,P:OriginalClockProducer>(&mut self,authority:&mut OriginalClockAuthority<P>,context:&mut P::Context<'turn,'source>,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,deadline:OriginalClockDeadline,fuel:u64)->Result<OriginalClockDecisionStatus,ValueError> where 'source:'turn{
-  if self.transferred{return Err(invalid())}if self.refusal.is_some()||self.failed{return Ok(OriginalClockDecisionStatus::Refused)}let source=match authority.source_turn_for_deadline(context,deadline){Ok(Some(source))=>Some(source),Ok(None)=>return Err(invalid()),Err(error)=>{self.refusal=Some(error);return Ok(OriginalClockDecisionStatus::Refused)}};let request=(deadline,fuel,source);if self.request.is_some_and(|prior|prior!=request){return Err(invalid())}self.request=Some(request);if self.decision.is_some(){return Ok(OriginalClockDecisionStatus::Ready)}if fuel==0&&self.action.is_none()&&self.reading.is_none(){self.decision=Some(true);return Ok(OriginalClockDecisionStatus::Ready)}
+  if self.transferred{return Err(invalid())}if self.refusal.is_some()||self.failed{return Ok(OriginalClockDecisionStatus::Refused)}let source=match authority.source_turn_for_deadline(context,deadline){Ok(Some(source))=>Some(source),Ok(None)=>return Err(invalid()),Err(error)=>{self.refusal=Some(error);return Ok(OriginalClockDecisionStatus::Refused)}};let request=(deadline,fuel,source);if self.request.is_some_and(|prior|prior.0!=deadline||prior.2!=source)||self.last_fuel.is_some_and(|prior|fuel>prior){return Err(invalid())}if self.request.is_none(){self.request=Some(request)}self.last_fuel=Some(fuel);if self.decision.is_some(){return Ok(OriginalClockDecisionStatus::Ready)}if fuel==0&&self.action.is_none()&&self.reading.is_none(){self.decision=Some(true);return Ok(OriginalClockDecisionStatus::Ready)}
   if self.reading.is_none(){match authority.drive(context,effect,&mut self.action){Err(error)=>{self.refusal=Some(error);return Ok(OriginalClockDecisionStatus::Refused)},Ok(false)=>{if let Some(action)=self.action.as_mut(){action.transfer_refusal(&mut self.refusal)?;}return Ok(if self.refusal.is_some(){OriginalClockDecisionStatus::Refused}else{OriginalClockDecisionStatus::Pending})},Ok(true)=>{let action=self.action.as_mut().ok_or_else(invalid)?;if !action.transfer_reading(&mut self.reading)?{return Ok(OriginalClockDecisionStatus::Pending)}}}}
   if self.reading.as_ref().is_some_and(Result::is_err){let Some(Err(error))=self.reading.take()else{unreachable!()};self.refusal=Some(error);self.failed=true;return Ok(OriginalClockDecisionStatus::Refused)}let observation=*self.reading.as_ref().and_then(|reading|reading.as_ref().ok()).ok_or_else(invalid)?;match authority.should_yield(context,deadline,observation,fuel){Ok(decision)=>{self.decision=Some(decision);Ok(OriginalClockDecisionStatus::Ready)},Err(error)=>{self.refusal=Some(error);Ok(OriginalClockDecisionStatus::Refused)}}
  }
  /// ↩️ Clears only a decision whose original clock producer never started.
- pub fn cancel_unstarted(&mut self)->Result<(),ValueError>{if self.action.is_some()||self.reading.is_some()||self.refusal.is_some()||self.decision.is_some()||self.transferred||self.failed{return Err(invalid())}self.request=None;Ok(())}
+ pub fn cancel_unstarted(&mut self)->Result<(),ValueError>{if self.action.is_some()||self.reading.is_some()||self.refusal.is_some()||self.decision.is_some()||self.transferred||self.failed{return Err(invalid())}self.request=None;self.last_fuel=None;Ok(())}
  /// 📤️ Transfers the exact original refusal into an empty caller-owned slot.
  pub fn transfer_refusal(&mut self,output:&mut Option<ValueError>)->Result<bool,ValueError>{if output.is_some(){return Err(invalid())}let Some(error)=self.refusal.take()else{return Ok(false)};*output=Some(error);Ok(true)}
  /// 📤️ Transfers the actual recorded decision into an empty caller-owned slot.
- pub fn transfer_decision(&mut self,output:&mut Option<bool>)->Result<bool,ValueError>{if output.is_some()||self.transferred{return Err(invalid())}let Some(decision)=self.decision.take()else{return Ok(false)};*output=Some(decision);self.transferred=true;Ok(true)}
+ pub fn transfer_decision(&mut self,fuel:u64,output:&mut Option<bool>)->Result<bool,ValueError>{if output.is_some()||self.transferred||self.last_fuel.is_some_and(|prior|fuel>prior){return Err(invalid())}let Some(decision)=self.decision.take()else{return Ok(false)};self.last_fuel=Some(fuel);*output=Some(decision||fuel==0);self.transferred=true;Ok(true)}
  /// 🏁️ Finishes the same original action after its actual decision or refusal transfers.
- pub fn finish<'turn,'source,P:OriginalClockProducer>(&mut self,authority:&mut OriginalClockAuthority<P>,context:&P::Context<'turn,'source>)->Result<(),ValueError> where 'source:'turn{if self.refusal.is_some()||(!self.transferred&&!self.failed){return Err(invalid())}let (deadline,_,source)=self.request.ok_or_else(invalid)?;if authority.source_turn_for_deadline(context,deadline)?!=source{return Err(invalid())}if self.action.is_some(){authority.finish(context,&mut self.action)?}self.request=None;self.reading=None;self.transferred=false;self.failed=false;Ok(())}
+ pub fn finish<'turn,'source,P:OriginalClockProducer>(&mut self,authority:&mut OriginalClockAuthority<P>,context:&P::Context<'turn,'source>)->Result<(),ValueError> where 'source:'turn{if self.refusal.is_some()||(!self.transferred&&!self.failed){return Err(invalid())}let (deadline,_,source)=self.request.ok_or_else(invalid)?;if authority.source_turn_for_deadline(context,deadline)?!=source{return Err(invalid())}if self.action.is_some(){authority.finish(context,&mut self.action)?}self.request=None;self.last_fuel=None;self.reading=None;self.transferred=false;self.failed=false;Ok(())}
 }
 impl Drop for OriginalClockDecisionFrame{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original clock decision remains live")}}
 impl semio_framework_value_retirement::retirement::RetireOwned for OriginalClockDecisionFrame{
@@ -152,10 +152,11 @@ impl<'a> OriginalSystemClockContext<'a>{
  /// 🔐️ Validates this token against the exact original Source issuer.
  pub fn matches_issuer(&self,identity:semio_framework_value_control_contract::OriginalSourceTurnIssuerIdentity)->bool{self.issuer.identity()==identity&&self.issuer.validate(self.turn).is_ok()}
 }
-/// 🌐️ An owned host records its real reading or retains the same pending action.
+/// 🌐️ An owned host quotes without effects and records real work before its reading or Pending reply.
 pub trait OriginalHostClockProducer{
- fn read<'reply>(&mut self,context:&OriginalSystemClockContext<'_>,reply:OriginalClockReply<'reply>)->Result<OriginalClockReplyComplete<'reply>,ValueError>;
- fn recover<'reply>(&mut self,context:&OriginalSystemClockContext<'_>,reply:OriginalClockReply<'reply>)->Result<OriginalClockReplyComplete<'reply>,ValueError>;
+ fn demand(&self,context:&OriginalSystemClockContext<'_>)->Result<OriginalClockDemand,ValueError>;
+ fn read<'reply>(&mut self,context:&OriginalSystemClockContext<'_>,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,reply:OriginalClockReply<'reply>)->Result<OriginalClockReplyComplete<'reply>,ValueError>;
+ fn recover<'reply>(&mut self,context:&OriginalSystemClockContext<'_>,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,reply:OriginalClockReply<'reply>)->Result<OriginalClockReplyComplete<'reply>,ValueError>;
 }
 /// 🏠️ Owns the actual host producer and binds it to its issuing Source.
 pub struct OriginalHostClock<P:OriginalHostClockProducer>{issuer:semio_framework_value_control_contract::OriginalSourceTurnIssuerIdentity,host:P}
@@ -169,9 +170,9 @@ impl<P:OriginalHostClockProducer> OriginalClockProducer for OriginalHostClock<P>
  type Context<'turn,'source>=OriginalSystemClockContext<'turn> where 'source:'turn;
  fn validate_context<'turn,'source>(&self,c:&Self::Context<'turn,'source>)->Result<(),ValueError> where 'source:'turn{if !c.matches_issuer(self.issuer){return Err(invalid())}Ok(())}
  fn source_turn<'turn,'source>(&self,c:&Self::Context<'turn,'source>)->Option<OriginalSourceTurnIdentity> where 'source:'turn{Some(c.source_turn())}
- fn demand<'turn,'source>(&self,_:&Self::Context<'turn,'source>)->Result<OriginalClockDemand,ValueError> where 'source:'turn{Ok(OriginalClockDemand{physical:Default::default(),work:1})}
- fn read<'reply,'turn,'source>(&mut self,c:&mut Self::Context<'turn,'source>,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,reply:OriginalClockReply<'reply>)->Result<OriginalClockReplyComplete<'reply>,ValueError> where 'source:'turn{self.validate_context(c)?;if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original host clock read exceeded its work"))}self.host.read(c,reply)}
- fn recover<'reply,'turn,'source>(&mut self,c:&mut Self::Context<'turn,'source>,_:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,reply:OriginalClockReply<'reply>)->Result<OriginalClockReplyComplete<'reply>,ValueError> where 'source:'turn{self.validate_context(c)?;self.host.recover(c,reply)}
+ fn demand<'turn,'source>(&self,c:&Self::Context<'turn,'source>)->Result<OriginalClockDemand,ValueError> where 'source:'turn{self.validate_context(c)?;self.host.demand(c)}
+ fn read<'reply,'turn,'source>(&mut self,c:&mut Self::Context<'turn,'source>,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,reply:OriginalClockReply<'reply>)->Result<OriginalClockReplyComplete<'reply>,ValueError> where 'source:'turn{self.validate_context(c)?;self.host.read(c,effect,reply)}
+ fn recover<'reply,'turn,'source>(&mut self,c:&mut Self::Context<'turn,'source>,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,reply:OriginalClockReply<'reply>)->Result<OriginalClockReplyComplete<'reply>,ValueError> where 'source:'turn{self.validate_context(c)?;self.host.recover(c,effect,reply)}
 }
 impl<P:OriginalHostClockProducer+semio_framework_value_retirement::retirement::RetireOwned> semio_framework_value_retirement::retirement::RetireOwned for OriginalHostClock<P>{
  type RetirementCursor=P::RetirementCursor;
@@ -183,7 +184,9 @@ impl<P:OriginalHostClockProducer+semio_framework_value_retirement::retirement::R
 /// 🏛️ Erases a paid host clock frame while retaining its original reply and retirement ports.
 pub trait OriginalErasedHostClock:semio_framework_value_retirement::retirement::controlled::ErasedControlledRetirement{
  fn has_pending_action(&self)->bool;
+ fn validate_source(&self,context:&OriginalSystemClockContext<'_>)->Result<Option<OriginalSourceTurnIdentity>,ValueError>;
  fn next_work(&self)->Result<u64,ValueError>;
+ fn demand(&self,context:&OriginalSystemClockContext<'_>)->Result<OriginalClockDemand,ValueError>;
  fn drive(&mut self,context:&mut OriginalSystemClockContext<'_>,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,action:&mut Option<OriginalClockAction>)->Result<bool,ValueError>;
  fn finish(&mut self,context:&OriginalSystemClockContext<'_>,action:&mut Option<OriginalClockAction>)->Result<(),ValueError>;
  fn deadline_from(&self,context:&OriginalSystemClockContext<'_>,observation:OriginalClockObservation,duration:u64)->Result<OriginalClockDeadline,ValueError>;
@@ -192,11 +195,13 @@ pub trait OriginalErasedHostClock:semio_framework_value_retirement::retirement::
 }
 impl<P:OriginalHostClockProducer+semio_framework_value_retirement::retirement::RetireOwned+Send+'static> OriginalErasedHostClock for semio_framework_value_retirement::retirement::controlled::ControlledRetirement<OriginalClockAuthority<OriginalHostClock<P>>>{
  fn has_pending_action(&self)->bool{self.original().is_some_and(OriginalClockAuthority::has_pending_action)}
+ fn validate_source(&self,c:&OriginalSystemClockContext<'_>)->Result<Option<OriginalSourceTurnIdentity>,ValueError>{self.original().ok_or_else(invalid)?.source_turn(c)}
  fn next_work(&self)->Result<u64,ValueError>{self.next_computational_work(0)}
- fn drive(&mut self,c:&mut OriginalSystemClockContext<'_>,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,a:&mut Option<OriginalClockAction>)->Result<bool,ValueError>{self.original_mut().ok_or_else(invalid)?.drive(c,effect,a)}
+ fn demand(&self,c:&OriginalSystemClockContext<'_>)->Result<OriginalClockDemand,ValueError>{self.original().ok_or_else(invalid)?.demand(c)}
+ fn drive(&mut self,c:&mut OriginalSystemClockContext<'_>,e:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,a:&mut Option<OriginalClockAction>)->Result<bool,ValueError>{self.original_mut().ok_or_else(invalid)?.drive(c,e,a)}
  fn finish(&mut self,c:&OriginalSystemClockContext<'_>,a:&mut Option<OriginalClockAction>)->Result<(),ValueError>{self.original_mut().ok_or_else(invalid)?.finish(c,a)}
  fn deadline_from(&self,c:&OriginalSystemClockContext<'_>,o:OriginalClockObservation,d:u64)->Result<OriginalClockDeadline,ValueError>{self.original().ok_or_else(invalid)?.deadline_from(c,o,d)}
- fn poll_decision(&mut self,c:&mut OriginalSystemClockContext<'_>,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,f:&mut OriginalClockDecisionFrame,d:OriginalClockDeadline,fuel:u64)->Result<OriginalClockDecisionStatus,ValueError>{f.poll(self.original_mut().ok_or_else(invalid)?,c,effect,d,fuel)}
+ fn poll_decision(&mut self,c:&mut OriginalSystemClockContext<'_>,e:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,f:&mut OriginalClockDecisionFrame,d:OriginalClockDeadline,fuel:u64)->Result<OriginalClockDecisionStatus,ValueError>{f.poll(self.original_mut().ok_or_else(invalid)?,c,e,d,fuel)}
  fn finish_decision(&mut self,c:&OriginalSystemClockContext<'_>,f:&mut OriginalClockDecisionFrame)->Result<(),ValueError>{f.finish(self.original_mut().ok_or_else(invalid)?,c)}
 }
 /// 🎟️ Admits the actual host owner into a paid retirement frame before erasing its type.
@@ -214,14 +219,15 @@ impl OriginalClockProducer for OriginalSystemClock{
  type Context<'turn,'source>=OriginalSystemClockContext<'turn> where 'source:'turn;
  fn validate_context<'turn,'source>(&self,c:&Self::Context<'turn,'source>)->Result<(),ValueError> where 'source:'turn{if c.issuer.identity()!=self.issuer{return Err(invalid())}c.issuer.validate(c.turn)?;Ok(())}
  fn source_turn<'turn,'source>(&self,c:&Self::Context<'turn,'source>)->Option<OriginalSourceTurnIdentity> where 'source:'turn{Some(c.turn.identity())}
- fn demand<'turn,'source>(&self,_:&Self::Context<'turn,'source>)->Result<OriginalClockDemand,ValueError> where 'source:'turn{Ok(OriginalClockDemand{physical:Default::default(),work:1})}
- fn read<'reply,'turn,'source>(&mut self,c:&mut Self::Context<'turn,'source>,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,reply:OriginalClockReply<'reply>)->Result<OriginalClockReplyComplete<'reply>,ValueError> where 'source:'turn{if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original system clock read exceeded its work"))}OriginalHostClockProducer::read(self,c,reply)}
+ fn demand<'turn,'source>(&self,c:&Self::Context<'turn,'source>)->Result<OriginalClockDemand,ValueError> where 'source:'turn{self.validate_context(c)?;OriginalHostClockProducer::demand(self,c)}
+ fn read<'reply,'turn,'source>(&mut self,c:&mut Self::Context<'turn,'source>,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,reply:OriginalClockReply<'reply>)->Result<OriginalClockReplyComplete<'reply>,ValueError> where 'source:'turn{OriginalHostClockProducer::read(self,c,effect,reply)}
  fn recover<'reply,'turn,'source>(&mut self,_:&mut Self::Context<'turn,'source>,_:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,reply:OriginalClockReply<'reply>)->Result<OriginalClockReplyComplete<'reply>,ValueError> where 'source:'turn{Ok(reply.pending())}
 }
 #[cfg(any(not(target_arch="wasm32"),target_env="p2"))]
 impl OriginalHostClockProducer for OriginalSystemClock{
- fn read<'reply>(&mut self,c:&OriginalSystemClockContext<'_>,reply:OriginalClockReply<'reply>)->Result<OriginalClockReplyComplete<'reply>,ValueError>{self.validate_context(c)?;let reading=match self.origin{Some(origin)=>std::time::Instant::now().checked_duration_since(origin).map(|elapsed|elapsed.as_micros()),None=>{self.origin=Some(std::time::Instant::now());Some(0)}};Ok(reply.complete(Ok(reading)))}
- fn recover<'reply>(&mut self,_:&OriginalSystemClockContext<'_>,reply:OriginalClockReply<'reply>)->Result<OriginalClockReplyComplete<'reply>,ValueError>{Ok(reply.pending())}
+ fn demand(&self,c:&OriginalSystemClockContext<'_>)->Result<OriginalClockDemand,ValueError>{self.validate_context(c)?;Ok(OriginalClockDemand{physical:Default::default(),work:1,next_work:1})}
+ fn read<'reply>(&mut self,c:&OriginalSystemClockContext<'_>,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,reply:OriginalClockReply<'reply>)->Result<OriginalClockReplyComplete<'reply>,ValueError>{self.validate_context(c)?;if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original clock exceeded its Work grant"))}let reading=match self.origin{Some(origin)=>std::time::Instant::now().checked_duration_since(origin).map(|elapsed|elapsed.as_micros()),None=>{self.origin=Some(std::time::Instant::now());Some(0)}};Ok(reply.complete(Ok(reading)))}
+ fn recover<'reply>(&mut self,_:&OriginalSystemClockContext<'_>,_:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,reply:OriginalClockReply<'reply>)->Result<OriginalClockReplyComplete<'reply>,ValueError>{Ok(reply.pending())}
 }
 #[cfg(any(not(target_arch="wasm32"),target_env="p2"))]
 impl semio_framework_value_retirement::retirement::RetireOwned for OriginalSystemClock{
@@ -231,9 +237,10 @@ impl semio_framework_value_retirement::retirement::RetireOwned for OriginalSyste
  fn controlled_retirement_supported()->bool{true}
 }
 
-#[path="🏛️source/🦀️.rs"]
+#[path="📦️source/🦀️.rs"]
 mod source;
 pub use source::OriginalSourceClock;
+
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;

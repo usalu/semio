@@ -409,3 +409,19 @@ mod diagram_laws {
         });
     }
 }
+
+#[test]
+fn an_empty_golden_is_blessed_once_and_then_guards_the_bytes() {
+    if std::env::var_os("SEMIO_UPDATE_GOLDEN").is_some() {
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("semio-golden-{}", std::process::id()));
+    let path = dir.join("nested").join("golden.json");
+    let check = |text: &'static str| std::panic::catch_unwind(|| test_support::assert_golden(&path, text)).is_ok();
+    assert!(!check("{\"a\":1}"), "the first run fails once after writing");
+    assert_eq!(std::fs::read_to_string(&path).expect("written"), "{\"a\":1}\n");
+    assert!(check("{\"a\":1}\n"), "the second run passes");
+    assert!(!check("{\"a\":2}"), "changed bytes fail");
+    assert_eq!(std::fs::read_to_string(&path).expect("kept"), "{\"a\":1}\n");
+    std::fs::remove_dir_all(&dir).expect("cleanup");
+}

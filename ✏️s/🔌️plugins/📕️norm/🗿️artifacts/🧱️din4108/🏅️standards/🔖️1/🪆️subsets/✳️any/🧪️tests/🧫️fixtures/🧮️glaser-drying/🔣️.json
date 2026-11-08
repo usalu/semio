@@ -1,0 +1,119 @@
+{
+  "oracle": "numpy nodal solve, DIN EN ISO 13788 saturation pressure",
+  "toleranceRelative": 0.02,
+  "cases": [
+    {
+      "id": "etics-no-condensation",
+      "rSi": 0.13,
+      "rSe": 0.04,
+      "tIntC": 20.0,
+      "rhInt": 0.5,
+      "winter": {
+        "tC": -5.0,
+        "rh": 0.8
+      },
+      "summer": {
+        "tC": 12.0,
+        "rh": 0.7
+      },
+      "hours": 2160,
+      "layers": [
+        {
+          "thicknessM": 0.015,
+          "lambda": 0.7,
+          "mu": 10
+        },
+        {
+          "thicknessM": 0.24,
+          "lambda": 0.81,
+          "mu": 10
+        },
+        {
+          "thicknessM": 0.14,
+          "lambda": 0.035,
+          "mu": 40
+        },
+        {
+          "thicknessM": 0.008,
+          "lambda": 0.7,
+          "mu": 20
+        }
+      ],
+      "condensedKgM2": 0.0,
+      "evaporatedKgM2": 0.0,
+      "dries": true
+    },
+    {
+      "id": "vapour-tight-outside-fails-drying",
+      "rSi": 0.13,
+      "rSe": 0.04,
+      "tIntC": 20.0,
+      "rhInt": 0.5,
+      "winter": {
+        "tC": -5.0,
+        "rh": 0.8
+      },
+      "summer": {
+        "tC": 12.0,
+        "rh": 0.7
+      },
+      "hours": 2160,
+      "layers": [
+        {
+          "thicknessM": 0.0125,
+          "lambda": 0.25,
+          "mu": 1
+        },
+        {
+          "thicknessM": 0.2,
+          "lambda": 0.035,
+          "mu": 1.3
+        },
+        {
+          "thicknessM": 0.02,
+          "lambda": 0.13,
+          "mu": 1000
+        }
+      ],
+      "condensedKgM2": 0.0011411994758622832,
+      "evaporatedKgM2": 0.0004171026034606119,
+      "dries": false
+    },
+    {
+      "id": "vapour-tight-outside-dries-in-hot-summer",
+      "rSi": 0.13,
+      "rSe": 0.04,
+      "tIntC": 20.0,
+      "rhInt": 0.5,
+      "winter": {
+        "tC": -5.0,
+        "rh": 0.8
+      },
+      "summer": {
+        "tC": 25.0,
+        "rh": 0.5
+      },
+      "hours": 2160,
+      "layers": [
+        {
+          "thicknessM": 0.0125,
+          "lambda": 0.25,
+          "mu": 1
+        },
+        {
+          "thicknessM": 0.2,
+          "lambda": 0.035,
+          "mu": 1.3
+        },
+        {
+          "thicknessM": 0.02,
+          "lambda": 0.13,
+          "mu": 1000
+        }
+      ],
+      "condensedKgM2": 0.0011411994758622832,
+      "evaporatedKgM2": 0.003152741969705016,
+      "dries": true
+    }
+  ]
+}

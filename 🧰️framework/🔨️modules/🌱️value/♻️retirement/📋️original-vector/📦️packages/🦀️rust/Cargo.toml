@@ -21,10 +21,16 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value-retirement-contract = { path = "../../../🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-retirement = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path = "../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-testing-effect-bank = { path = "../../../../🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value-testing-allocator = { path = "../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
+
+[[test]]
+name = "borrowed_vector"
+path = "../../🧪️tests/borrowed.rs"

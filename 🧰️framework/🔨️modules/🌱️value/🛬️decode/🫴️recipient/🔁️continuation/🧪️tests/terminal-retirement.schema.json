@@ -1,0 +1,39 @@
+{
+  "type": "array",
+  "minItems": 5,
+  "items": {
+    "type": "object",
+    "properties": {
+      "phase": {
+        "enum": [
+          "delivered",
+          "quotePending",
+          "moved",
+          "postPending",
+          "retired"
+        ]
+      },
+      "moved": {
+        "type": "boolean"
+      },
+      "work": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "posted": {
+        "type": "boolean"
+      },
+      "empty": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "phase",
+      "moved",
+      "work",
+      "posted",
+      "empty"
+    ],
+    "additionalProperties": false
+  }
+}

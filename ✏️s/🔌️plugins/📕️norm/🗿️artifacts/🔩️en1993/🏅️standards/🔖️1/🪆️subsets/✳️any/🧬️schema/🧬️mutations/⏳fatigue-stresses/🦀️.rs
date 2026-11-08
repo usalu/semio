@@ -21,14 +21,6 @@ pub mod change_fatigue_stress_detail_id;
 pub mod change_fatigue_stress_cycles;
 #[path = "../🧱️change-fatigue-stress-thickness/🦀️.rs"]
 pub mod change_fatigue_stress_thickness;
-#[path = "../🧱️change-fatigue-stress-concentration/🦀️.rs"]
-pub mod change_fatigue_stress_concentration;
-#[path = "../🧱️change-fatigue-stress-fibre-y/🦀️.rs"]
-pub mod change_fatigue_stress_fibre_y;
-#[path = "../🧱️change-fatigue-stress-fibre-z/🦀️.rs"]
-pub mod change_fatigue_stress_fibre_z;
-#[path = "../➕️insert-fatigue-stress/🦀️.rs"]
-pub mod insert_fatigue_stress;
-#[path = "../➖️remove-fatigue-stress/🦀️.rs"]
-pub mod remove_fatigue_stress;
 //#endregion 🪢️Mounts
+
+pub use semio_s_artifact_norm_en1993_mut_fatigue_stresses_2::{change_fatigue_stress_concentration, change_fatigue_stress_fibre_y, change_fatigue_stress_fibre_z, insert_fatigue_stress, remove_fatigue_stress};

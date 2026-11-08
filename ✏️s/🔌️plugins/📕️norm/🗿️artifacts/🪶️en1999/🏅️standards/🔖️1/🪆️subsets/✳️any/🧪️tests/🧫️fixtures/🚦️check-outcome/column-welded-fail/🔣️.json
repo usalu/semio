@@ -329,6 +329,8 @@
   "patchLoads": [],
   "ringStiffeners": [],
   "transverseStiffeners": [],
+  "sheetProfiles": [],
+  "fireInsulations": [],
   "shells": [
     {
       "id": "shell-pass",

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeelementlabelde",
+  "elementId": "ghost",
+  "newLabelDe": "Nordwand außen"
+}

@@ -147,6 +147,9 @@ choices! {
         Frequency,
         ForcePerLength,
         Stiffness,
+        VentilationRate,
+        HeatTransferCoefficient,
+        Power,
     }
 }
 

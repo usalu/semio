@@ -1,0 +1,30 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-replication-retained-field-preparation"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "framework"
+id = "replication-retained-field-preparation"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-value-retained-clone = { path = "../../../../../../../🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-value-clone-source-testing = { path = "../../../../../../../🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }
+semio-framework-value-testing-effect-bank = { path = "../../../../../../../🌱️value/🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

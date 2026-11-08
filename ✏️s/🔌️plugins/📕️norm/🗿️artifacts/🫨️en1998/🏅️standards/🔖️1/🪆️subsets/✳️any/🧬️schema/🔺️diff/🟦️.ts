@@ -2,7 +2,7 @@
  * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
 import { normWireAny, normWireArray, normWireBoolean, normWireInteger, normWireLiteral, normWireNullable, normWireNumber, normWireObject, normWireOptional, normWireRange, normWireRef, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
-import { type AnalysisDirection, parseAnalysisDirection, type AnalysisMethodChoice, parseAnalysisMethodChoice, type BearingDevice, parseBearingDevice, type DiaphragmMaterial, parseDiaphragmMaterial, type DriftLimitClass, parseDriftLimitClass, type DuctilityClass, parseDuctilityClass, type En1998Accelerogram, parseEn1998Accelerogram, type En1998Assessment, parseEn1998Assessment, type En1998Bearing, parseEn1998Bearing, type En1998Bridge, parseEn1998Bridge, type En1998Building, parseEn1998Building, type En1998Diaphragm, parseEn1998Diaphragm, type En1998Foundation, parseEn1998Foundation, type En1998Joint, parseEn1998Joint, type En1998Member, parseEn1998Member, type En1998Pier, parseEn1998Pier, type En1998Placement, parseEn1998Placement, type En1998RetainingWall, parseEn1998RetainingWall, type En1998Silo, parseEn1998Silo, type En1998Site, parseEn1998Site, type En1998Slope, parseEn1998Slope, type En1998SoilLayer, parseEn1998SoilLayer, type En1998Storey, parseEn1998Storey, type En1998System, parseEn1998System, type En1998Tank, parseEn1998Tank, type En1998TieBeam, parseEn1998TieBeam, type En1998Tower, parseEn1998Tower, type En1998VariableAction, parseEn1998VariableAction, type ImposedCategory, parseImposedCategory, type KnowledgeLevel, parseKnowledgeLevel, type LimitState, parseLimitState, type PierStiffnessBasis, parsePierStiffnessBasis, type StructuralMaterial, parseStructuralMaterial, type SystemType, parseSystemType, type T1Method, parseT1Method } from "../📸️snapshot/🟦️.ts";
+import { type AnalysisDirection, parseAnalysisDirection, type AnalysisMethodChoice, parseAnalysisMethodChoice, type BearingDevice, parseBearingDevice, type DiaphragmMaterial, parseDiaphragmMaterial, type DriftLimitClass, parseDriftLimitClass, type DuctilityClass, parseDuctilityClass, type En1998Accelerogram, parseEn1998Accelerogram, type En1998Assessment, parseEn1998Assessment, type En1998Bearing, parseEn1998Bearing, type En1998Bridge, parseEn1998Bridge, type En1998Building, parseEn1998Building, type En1998CriticalRegion, parseEn1998CriticalRegion, type En1998Diaphragm, parseEn1998Diaphragm, type En1998Foundation, parseEn1998Foundation, type En1998IsolationSystem, parseEn1998IsolationSystem, type En1998Joint, parseEn1998Joint, type En1998Member, parseEn1998Member, type En1998Pier, parseEn1998Pier, type En1998PierBase, parseEn1998PierBase, type En1998Placement, parseEn1998Placement, type En1998RetainingWall, parseEn1998RetainingWall, type En1998Silo, parseEn1998Silo, type En1998Site, parseEn1998Site, type En1998Slope, parseEn1998Slope, type En1998SoilLayer, parseEn1998SoilLayer, type En1998Storey, parseEn1998Storey, type En1998System, parseEn1998System, type En1998Tank, parseEn1998Tank, type En1998TieBeam, parseEn1998TieBeam, type En1998Tower, parseEn1998Tower, type En1998VariableAction, parseEn1998VariableAction, type ImposedCategory, parseImposedCategory, type KnowledgeLevel, parseKnowledgeLevel, type LimitState, parseLimitState, type PierStiffnessBasis, parsePierStiffnessBasis, type StructuralMaterial, parseStructuralMaterial, type SystemType, parseSystemType, type T1Method, parseT1Method } from "../📸️snapshot/🟦️.ts";
 
 export interface En1998Diff {
   /** @state artifact */
@@ -43,6 +43,12 @@ export interface En1998Diff {
   slopes: En1998SlopeDelta;
   /** @state artifact */
   placements: En1998PlacementDelta;
+  /** @state artifact */
+  isolationSystems: En1998IsolationSystemDelta;
+  /** @state artifact */
+  pierBases: En1998PierBaseDelta;
+  /** @state artifact */
+  criticalRegions: En1998CriticalRegionDelta;
 }
 
 export interface En1998SystemDelta {
@@ -956,7 +962,133 @@ export interface En1998SlopePatch {
   circleRadius?: number | null;
 }
 
-export const parseEn1998Diff: NormWireReader<En1998Diff> = normWireObject<En1998Diff>({ annex: normWireOptional(normWireNullable(normWireLiteral("En", "De"))), site: normWireOptional(normWireNullable(parseEn1998Site)), buildings: normWireRequired(normWireAny<[En1998BuildingDelta]>(normWireRef(() => parseEn1998BuildingDelta))), bridges: normWireRequired(normWireAny<[En1998BridgeDelta]>(normWireRef(() => parseEn1998BridgeDelta))), assessments: normWireRequired(normWireAny<[En1998AssessmentDelta]>(normWireRef(() => parseEn1998AssessmentDelta))), silos: normWireRequired(normWireAny<[En1998SiloDelta]>(normWireRef(() => parseEn1998SiloDelta))), tanks: normWireRequired(normWireAny<[En1998TankDelta]>(normWireRef(() => parseEn1998TankDelta))), foundations: normWireRequired(normWireAny<[En1998FoundationDelta]>(normWireRef(() => parseEn1998FoundationDelta))), retainingWalls: normWireRequired(normWireAny<[En1998RetainingWallDelta]>(normWireRef(() => parseEn1998RetainingWallDelta))), towers: normWireRequired(normWireAny<[En1998TowerDelta]>(normWireRef(() => parseEn1998TowerDelta))), soilLayers: normWireRequired(normWireAny<[En1998SoilLayerDelta]>(normWireRef(() => parseEn1998SoilLayerDelta))), diaphragms: normWireRequired(normWireAny<[En1998DiaphragmDelta]>(normWireRef(() => parseEn1998DiaphragmDelta))), accelerograms: normWireRequired(normWireAny<[En1998AccelerogramDelta]>(normWireRef(() => parseEn1998AccelerogramDelta))), piers: normWireRequired(normWireAny<[En1998PierDelta]>(normWireRef(() => parseEn1998PierDelta))), bearings: normWireRequired(normWireAny<[En1998BearingDelta]>(normWireRef(() => parseEn1998BearingDelta))), joints: normWireRequired(normWireAny<[En1998JointDelta]>(normWireRef(() => parseEn1998JointDelta))), tieBeams: normWireRequired(normWireAny<[En1998TieBeamDelta]>(normWireRef(() => parseEn1998TieBeamDelta))), slopes: normWireRequired(normWireAny<[En1998SlopeDelta]>(normWireRef(() => parseEn1998SlopeDelta))), placements: normWireRequired(normWireAny<[En1998PlacementDelta]>(normWireRef(() => parseEn1998PlacementDelta))) });
+export interface En1998IsolationSystemDelta {
+  removed?: En1998IsolationSystemRemoval[];
+  inserted?: En1998IsolationSystemInsertion[];
+  moved?: En1998IsolationSystemRelocation[];
+  modified?: En1998IsolationSystemModification[];
+}
+
+export interface En1998IsolationSystemRemoval {
+  id: string;
+  index: number;
+}
+
+export interface En1998IsolationSystemInsertion {
+  index: number;
+  row: En1998IsolationSystem;
+}
+
+export interface En1998IsolationSystemRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+
+export interface En1998IsolationSystemModification {
+  id: string;
+  patch: En1998IsolationSystemPatch;
+}
+
+export interface En1998IsolationSystemPatch {
+  bridgeId?: string | null;
+  buildingId?: string | null;
+  strengthN?: number | null;
+  stiffnessNPerM?: number | null;
+  yieldDisplacementM?: number | null;
+  capacityM?: number | null;
+}
+
+export interface En1998PierBaseDelta {
+  removed?: En1998PierBaseRemoval[];
+  inserted?: En1998PierBaseInsertion[];
+  moved?: En1998PierBaseRelocation[];
+  modified?: En1998PierBaseModification[];
+}
+
+export interface En1998PierBaseRemoval {
+  id: string;
+  index: number;
+}
+
+export interface En1998PierBaseInsertion {
+  index: number;
+  row: En1998PierBase;
+}
+
+export interface En1998PierBaseRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+
+export interface En1998PierBaseModification {
+  id: string;
+  patch: En1998PierBasePatch;
+}
+
+export interface En1998PierBasePatch {
+  bridgeId?: string | null;
+  pierId?: string | null;
+  radiusM?: number | null;
+  soilVsMS?: number | null;
+  soilUnitWeightNM3?: number | null;
+  poissonRatio?: number | null;
+}
+
+export interface En1998CriticalRegionDelta {
+  removed?: En1998CriticalRegionRemoval[];
+  inserted?: En1998CriticalRegionInsertion[];
+  moved?: En1998CriticalRegionRelocation[];
+  modified?: En1998CriticalRegionModification[];
+}
+
+export interface En1998CriticalRegionRemoval {
+  id: string;
+  index: number;
+}
+
+export interface En1998CriticalRegionInsertion {
+  index: number;
+  row: En1998CriticalRegion;
+}
+
+export interface En1998CriticalRegionRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+
+export interface En1998CriticalRegionModification {
+  id: string;
+  patch: En1998CriticalRegionPatch;
+}
+
+export interface En1998CriticalRegionPatch {
+  buildingId?: string | null;
+  memberId?: string | null;
+  sectionWidthM?: number | null;
+  sectionDepthM?: number | null;
+  clearLengthM?: number | null;
+  hoopedLengthM?: number | null;
+  coreWidthM?: number | null;
+  coreDepthM?: number | null;
+  axialForceN?: number | null;
+  concreteDesignStrengthMpa?: number | null;
+  steelDesignYieldMpa?: number | null;
+  hoopDesignYieldMpa?: number | null;
+  longitudinalSteelAreaM2?: number | null;
+  longitudinalBarDiameterM?: number | null;
+  longitudinalBarMaxDiameterM?: number | null;
+  hoopDiameterM?: number | null;
+  hoopSpacingM?: number | null;
+  hoopLegsX?: number | null;
+  hoopLegsY?: number | null;
+  restrainedBarCount?: number | null;
+  restrainedBarSpacingM?: number | null;
+}
+
+export const parseEn1998Diff: NormWireReader<En1998Diff> = normWireObject<En1998Diff>({ annex: normWireOptional(normWireNullable(normWireLiteral("En", "De"))), site: normWireOptional(normWireNullable(parseEn1998Site)), buildings: normWireRequired(normWireAny<[En1998BuildingDelta]>(normWireRef(() => parseEn1998BuildingDelta))), bridges: normWireRequired(normWireAny<[En1998BridgeDelta]>(normWireRef(() => parseEn1998BridgeDelta))), assessments: normWireRequired(normWireAny<[En1998AssessmentDelta]>(normWireRef(() => parseEn1998AssessmentDelta))), silos: normWireRequired(normWireAny<[En1998SiloDelta]>(normWireRef(() => parseEn1998SiloDelta))), tanks: normWireRequired(normWireAny<[En1998TankDelta]>(normWireRef(() => parseEn1998TankDelta))), foundations: normWireRequired(normWireAny<[En1998FoundationDelta]>(normWireRef(() => parseEn1998FoundationDelta))), retainingWalls: normWireRequired(normWireAny<[En1998RetainingWallDelta]>(normWireRef(() => parseEn1998RetainingWallDelta))), towers: normWireRequired(normWireAny<[En1998TowerDelta]>(normWireRef(() => parseEn1998TowerDelta))), soilLayers: normWireRequired(normWireAny<[En1998SoilLayerDelta]>(normWireRef(() => parseEn1998SoilLayerDelta))), diaphragms: normWireRequired(normWireAny<[En1998DiaphragmDelta]>(normWireRef(() => parseEn1998DiaphragmDelta))), accelerograms: normWireRequired(normWireAny<[En1998AccelerogramDelta]>(normWireRef(() => parseEn1998AccelerogramDelta))), piers: normWireRequired(normWireAny<[En1998PierDelta]>(normWireRef(() => parseEn1998PierDelta))), bearings: normWireRequired(normWireAny<[En1998BearingDelta]>(normWireRef(() => parseEn1998BearingDelta))), joints: normWireRequired(normWireAny<[En1998JointDelta]>(normWireRef(() => parseEn1998JointDelta))), tieBeams: normWireRequired(normWireAny<[En1998TieBeamDelta]>(normWireRef(() => parseEn1998TieBeamDelta))), slopes: normWireRequired(normWireAny<[En1998SlopeDelta]>(normWireRef(() => parseEn1998SlopeDelta))), placements: normWireRequired(normWireAny<[En1998PlacementDelta]>(normWireRef(() => parseEn1998PlacementDelta))), isolationSystems: normWireRequired(normWireAny<[En1998IsolationSystemDelta]>(normWireRef(() => parseEn1998IsolationSystemDelta))), pierBases: normWireRequired(normWireAny<[En1998PierBaseDelta]>(normWireRef(() => parseEn1998PierBaseDelta))), criticalRegions: normWireRequired(normWireAny<[En1998CriticalRegionDelta]>(normWireRef(() => parseEn1998CriticalRegionDelta))) });
 export const parseEn1998SystemDelta: NormWireReader<En1998SystemDelta> = normWireObject<En1998SystemDelta>({ removed: normWireRequired(normWireArray(normWireRef(() => parseEn1998SystemRemoval))), inserted: normWireRequired(normWireArray(normWireRef(() => parseEn1998SystemInsertion))), moved: normWireRequired(normWireArray(normWireRef(() => parseEn1998SystemRelocation))), modified: normWireRequired(normWireArray(normWireRef(() => parseEn1998SystemModification))) });
 export const parseEn1998SystemRemoval: NormWireReader<En1998SystemRemoval> = normWireObject<En1998SystemRemoval>({ id: normWireRequired(normWireString), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });
 export const parseEn1998SystemInsertion: NormWireReader<En1998SystemInsertion> = normWireObject<En1998SystemInsertion>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), row: normWireRequired(parseEn1998System) });
@@ -1083,3 +1215,21 @@ export const parseEn1998SlopeInsertion: NormWireReader<En1998SlopeInsertion> = n
 export const parseEn1998SlopeRelocation: NormWireReader<En1998SlopeRelocation> = normWireObject<En1998SlopeRelocation>({ id: normWireRequired(normWireString), from: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), to: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });
 export const parseEn1998SlopeModification: NormWireReader<En1998SlopeModification> = normWireObject<En1998SlopeModification>({ id: normWireRequired(normWireString), patch: normWireRequired(normWireRef(() => parseEn1998SlopePatch)) });
 export const parseEn1998SlopePatch: NormWireReader<En1998SlopePatch> = normWireObject<En1998SlopePatch>({ governingLayerId: normWireOptional(normWireNullable(normWireString)), height: normWireOptional(normWireNullable(normWireNumber)), angle: normWireOptional(normWireNullable(normWireNumber)), frictionAngle: normWireOptional(normWireNullable(normWireNumber)), cohesion: normWireOptional(normWireNullable(normWireNumber)), topographicAmplification: normWireOptional(normWireNullable(normWireNumber)), circleCentreX: normWireOptional(normWireNullable(normWireNumber)), circleCentreZ: normWireOptional(normWireNullable(normWireNumber)), circleRadius: normWireOptional(normWireNullable(normWireNumber)) });
+export const parseEn1998IsolationSystemDelta: NormWireReader<En1998IsolationSystemDelta> = normWireObject<En1998IsolationSystemDelta>({ removed: normWireOptional(normWireArray(normWireRef(() => parseEn1998IsolationSystemRemoval))), inserted: normWireOptional(normWireArray(normWireRef(() => parseEn1998IsolationSystemInsertion))), moved: normWireOptional(normWireArray(normWireRef(() => parseEn1998IsolationSystemRelocation))), modified: normWireOptional(normWireArray(normWireRef(() => parseEn1998IsolationSystemModification))) });
+export const parseEn1998IsolationSystemRemoval: NormWireReader<En1998IsolationSystemRemoval> = normWireObject<En1998IsolationSystemRemoval>({ id: normWireRequired(normWireString), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });
+export const parseEn1998IsolationSystemInsertion: NormWireReader<En1998IsolationSystemInsertion> = normWireObject<En1998IsolationSystemInsertion>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), row: normWireRequired(parseEn1998IsolationSystem) });
+export const parseEn1998IsolationSystemRelocation: NormWireReader<En1998IsolationSystemRelocation> = normWireObject<En1998IsolationSystemRelocation>({ id: normWireRequired(normWireString), from: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), to: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });
+export const parseEn1998IsolationSystemModification: NormWireReader<En1998IsolationSystemModification> = normWireObject<En1998IsolationSystemModification>({ id: normWireRequired(normWireString), patch: normWireRequired(normWireRef(() => parseEn1998IsolationSystemPatch)) });
+export const parseEn1998IsolationSystemPatch: NormWireReader<En1998IsolationSystemPatch> = normWireObject<En1998IsolationSystemPatch>({ bridgeId: normWireOptional(normWireNullable(normWireString)), buildingId: normWireOptional(normWireNullable(normWireString)), strengthN: normWireOptional(normWireNullable(normWireNumber)), stiffnessNPerM: normWireOptional(normWireNullable(normWireNumber)), yieldDisplacementM: normWireOptional(normWireNullable(normWireNumber)), capacityM: normWireOptional(normWireNullable(normWireNumber)) });
+export const parseEn1998PierBaseDelta: NormWireReader<En1998PierBaseDelta> = normWireObject<En1998PierBaseDelta>({ removed: normWireOptional(normWireArray(normWireRef(() => parseEn1998PierBaseRemoval))), inserted: normWireOptional(normWireArray(normWireRef(() => parseEn1998PierBaseInsertion))), moved: normWireOptional(normWireArray(normWireRef(() => parseEn1998PierBaseRelocation))), modified: normWireOptional(normWireArray(normWireRef(() => parseEn1998PierBaseModification))) });
+export const parseEn1998PierBaseRemoval: NormWireReader<En1998PierBaseRemoval> = normWireObject<En1998PierBaseRemoval>({ id: normWireRequired(normWireString), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });
+export const parseEn1998PierBaseInsertion: NormWireReader<En1998PierBaseInsertion> = normWireObject<En1998PierBaseInsertion>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), row: normWireRequired(parseEn1998PierBase) });
+export const parseEn1998PierBaseRelocation: NormWireReader<En1998PierBaseRelocation> = normWireObject<En1998PierBaseRelocation>({ id: normWireRequired(normWireString), from: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), to: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });
+export const parseEn1998PierBaseModification: NormWireReader<En1998PierBaseModification> = normWireObject<En1998PierBaseModification>({ id: normWireRequired(normWireString), patch: normWireRequired(normWireRef(() => parseEn1998PierBasePatch)) });
+export const parseEn1998PierBasePatch: NormWireReader<En1998PierBasePatch> = normWireObject<En1998PierBasePatch>({ bridgeId: normWireOptional(normWireNullable(normWireString)), pierId: normWireOptional(normWireNullable(normWireString)), radiusM: normWireOptional(normWireNullable(normWireNumber)), soilVsMS: normWireOptional(normWireNullable(normWireNumber)), soilUnitWeightNM3: normWireOptional(normWireNullable(normWireNumber)), poissonRatio: normWireOptional(normWireNullable(normWireNumber)) });
+export const parseEn1998CriticalRegionDelta: NormWireReader<En1998CriticalRegionDelta> = normWireObject<En1998CriticalRegionDelta>({ removed: normWireOptional(normWireArray(normWireRef(() => parseEn1998CriticalRegionRemoval))), inserted: normWireOptional(normWireArray(normWireRef(() => parseEn1998CriticalRegionInsertion))), moved: normWireOptional(normWireArray(normWireRef(() => parseEn1998CriticalRegionRelocation))), modified: normWireOptional(normWireArray(normWireRef(() => parseEn1998CriticalRegionModification))) });
+export const parseEn1998CriticalRegionRemoval: NormWireReader<En1998CriticalRegionRemoval> = normWireObject<En1998CriticalRegionRemoval>({ id: normWireRequired(normWireString), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });
+export const parseEn1998CriticalRegionInsertion: NormWireReader<En1998CriticalRegionInsertion> = normWireObject<En1998CriticalRegionInsertion>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), row: normWireRequired(parseEn1998CriticalRegion) });
+export const parseEn1998CriticalRegionRelocation: NormWireReader<En1998CriticalRegionRelocation> = normWireObject<En1998CriticalRegionRelocation>({ id: normWireRequired(normWireString), from: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), to: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });
+export const parseEn1998CriticalRegionModification: NormWireReader<En1998CriticalRegionModification> = normWireObject<En1998CriticalRegionModification>({ id: normWireRequired(normWireString), patch: normWireRequired(normWireRef(() => parseEn1998CriticalRegionPatch)) });
+export const parseEn1998CriticalRegionPatch: NormWireReader<En1998CriticalRegionPatch> = normWireObject<En1998CriticalRegionPatch>({ buildingId: normWireOptional(normWireNullable(normWireString)), memberId: normWireOptional(normWireNullable(normWireString)), sectionWidthM: normWireOptional(normWireNullable(normWireNumber)), sectionDepthM: normWireOptional(normWireNullable(normWireNumber)), clearLengthM: normWireOptional(normWireNullable(normWireNumber)), hoopedLengthM: normWireOptional(normWireNullable(normWireNumber)), coreWidthM: normWireOptional(normWireNullable(normWireNumber)), coreDepthM: normWireOptional(normWireNullable(normWireNumber)), axialForceN: normWireOptional(normWireNullable(normWireNumber)), concreteDesignStrengthMpa: normWireOptional(normWireNullable(normWireNumber)), steelDesignYieldMpa: normWireOptional(normWireNullable(normWireNumber)), hoopDesignYieldMpa: normWireOptional(normWireNullable(normWireNumber)), longitudinalSteelAreaM2: normWireOptional(normWireNullable(normWireNumber)), longitudinalBarDiameterM: normWireOptional(normWireNullable(normWireNumber)), longitudinalBarMaxDiameterM: normWireOptional(normWireNullable(normWireNumber)), hoopDiameterM: normWireOptional(normWireNullable(normWireNumber)), hoopSpacingM: normWireOptional(normWireNullable(normWireNumber)), hoopLegsX: normWireOptional(normWireNullable(normWireNumber)), hoopLegsY: normWireOptional(normWireNullable(normWireNumber)), restrainedBarCount: normWireOptional(normWireNullable(normWireNumber)), restrainedBarSpacingM: normWireOptional(normWireNullable(normWireNumber)) });

@@ -72,7 +72,7 @@ pub use operation_context::{CapabilityTokenId, OperationContext, TraceId};
 
 #[path = "⛔️cancel-token/🦀️.rs"]
 mod cancel_token;
-pub use cancel_token::{CancelState, CancelToken, Cancelled};
+pub use cancel_token::{CancelState, CancelToken, Cancelled, OriginalCancelRootAdmission, OriginalCancelRootIdentity};
 use cancel_token::CancelNode;
 #[path="🛑️cancel/🚦️waiters/🦀️.rs"]
 mod cancel_waiters;

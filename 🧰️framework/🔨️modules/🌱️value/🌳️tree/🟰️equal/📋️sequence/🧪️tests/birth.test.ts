@@ -1,0 +1,18 @@
+import {test,expect} from "bun:test";
+import Ajv from "ajv";
+import {Database} from "bun:sqlite";
+import schema from "./birth.schema.json";
+import fixture from "./birth.json";
+test("resident child cancellation retains initialized ownership",()=>{expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);const db=new Database(":memory:");try{db.run("CREATE TABLE states(name TEXT PRIMARY KEY, backing INTEGER, initialized INTEGER, output INTEGER)");for(const s of fixture.states)db.run("INSERT INTO states VALUES(?,?,?,?)",[s.name,Number(s.backing),Number(s.initialized),Number(s.output)]);const check=db.query<{lost:number},[string,string]>("SELECT (a.initialized OR a.output) AND NOT (b.initialized OR b.output) AS lost FROM states a, states b WHERE a.name=?1 AND b.name=?2");for(const row of fixture.cancel)expect(check.get(row.from,row.next)!.lost).toBe(0)}finally{db.close()}});
+
+test("native sequence equality agrees with SQLite blob equality",()=>{const db=new Database(":memory:");try{const query=db.query<{equal:number},[Uint8Array,Uint8Array]>("SELECT ?1=?2 AS equal");for(const row of fixture.comparisons)expect(Boolean(query.get(Uint8Array.from(row.left),Uint8Array.from(row.right))!.equal)).toBe(row.equal)}finally{db.close()}});
+
+test("nested original strings agree with SQLite JSON equality",()=>{const db=new Database(":memory:");try{const query=db.query<{equal:number},[string,string]>("SELECT json(?1)=json(?2) AS equal");for(const row of fixture.nestedComparisons)expect(Boolean(query.get(JSON.stringify(row.left),JSON.stringify(row.right))!.equal)).toBe(row.equal)}finally{db.close()}});
+
+test("cancellation cuts cover initial and later resident states",()=>{const db=new Database(":memory:");try{db.run("CREATE TABLE cuts(turn INTEGER PRIMARY KEY CHECK(turn>=0))");for(const cut of fixture.cancelCuts)db.run("INSERT INTO cuts VALUES(?)",[cut]);const row=db.query<{initial:number,later:number,count:number},[]>("SELECT SUM(turn=0) AS initial,SUM(turn>0) AS later,COUNT(*) AS count FROM cuts").get()!;expect(row.initial).toBe(1);expect(row.later).toBeGreaterThan(0);expect(row.count).toBe(fixture.cancelCuts.length)}finally{db.close()}});
+
+test("cancellation schema rejects repeated and negative cuts",()=>{const validate=new Ajv({strict:true}).compile(schema);expect(validate({...fixture,cancelCuts:[0,0]})).toBe(false);expect(validate({...fixture,cancelCuts:[0,-1]})).toBe(false)});
+
+test("failure publication keeps one original owner and its progress",()=>{const db=new Database(":memory:");try{db.run("CREATE TABLE failure(phase TEXT PRIMARY KEY, child INTEGER, outer_owner INTEGER, message TEXT, copied INTEGER)");const f=fixture.failurePublication;for(const state of f.states)db.run("INSERT INTO failure VALUES(?,?,?,?,?)",[state.phase,Number(state.child),Number(state.outer),f.message,f.originalCopied]);const states=db.query<{phase:string,child:number,outer_owner:number,message:string,copied:number},[]>("SELECT * FROM failure ORDER BY CASE phase WHEN \"recorded\" THEN 0 WHEN \"denied\" THEN 1 ELSE 2 END").all();expect(states.map(s=>[s.child,s.outer_owner])).toEqual([[1,0],[1,0],[0,1]]);expect(new Set(states.map(s=>s.message))).toEqual(new Set([f.message]));expect(new Set(states.map(s=>s.copied))).toEqual(new Set([f.originalCopied]))}finally{db.close()}});
+
+test("failure schema rejects lost or duplicated ownership",()=>{const validate=new Ajv({strict:true}).compile(schema);for(const state of [{phase:"denied",child:false,outer:false},{phase:"published",child:true,outer:true}])expect(validate({...fixture,failurePublication:{...fixture.failurePublication,states:[fixture.failurePublication.states[0],state,fixture.failurePublication.states[2]]}})).toBe(false)});

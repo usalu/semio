@@ -1,0 +1,32 @@
+{
+  "cases": [
+    {
+      "name": "closed-paid-header",
+      "closed": true,
+      "inert": true,
+      "request": false,
+      "allowed": true
+    },
+    {
+      "name": "paid-rearm-empty-header",
+      "closed": false,
+      "inert": true,
+      "request": false,
+      "allowed": true
+    },
+    {
+      "name": "unclosed-original-request",
+      "closed": false,
+      "inert": true,
+      "request": true,
+      "allowed": false
+    },
+    {
+      "name": "unclosed-retained-receipt",
+      "closed": false,
+      "inert": false,
+      "request": false,
+      "allowed": false
+    }
+  ]
+}

@@ -1,3 +1,5 @@
+scalar UInt32
+
 type En1995Artifact {
   annex: String!
   members: [TimberMember!]!
@@ -102,8 +104,8 @@ type TimberConnection {
   strengthClass: StrengthClass!
   serviceClass: Int!
   diameterM: Float!
-  number: Int!
-  rows: Int!
+  number: UInt32!
+  rows: UInt32!
   spacingM: Float!
   edgeDistanceM: Float!
   endDistanceM: Float!
@@ -111,7 +113,7 @@ type TimberConnection {
   t2M: Float!
   steelPlate: Boolean!
   steelPlateThicknessM: Float!
-  shearPlanes: Int!
+  shearPlanes: UInt32!
   fUK: Float!
   actions: [ConnectionAction!]!
 }
@@ -140,7 +142,7 @@ type Taper {
   lamellaThicknessM: Float!
   apexAngleRad: Float!
   tensionSide: String!
-  rods: Int!
+  rods: UInt32!
   rodResistanceN: Float!
 }
 type Cutout {
@@ -153,15 +155,15 @@ type Cutout {
   depthM: Float!
   centreHeightM: Float!
   slope: Float!
-  rods: Int!
+  rods: UInt32!
   rodResistanceN: Float!
 }
 type Fastener {
   id: String!
   connectionId: String!
   memberId: String!
-  columns: Int!
-  lines: Int!
+  columns: UInt32!
+  lines: UInt32!
   spacingParallelM: Float!
   spacingPerpendicularM: Float!
   endDistanceM: Float!
@@ -201,7 +203,7 @@ type Diaphragm {
   panelWidthM: Float!
   wallHeightM: Float!
   fastenerSpacingM: Float!
-  panels: Int!
+  panels: UInt32!
   fastenerCapacityN: Float!
   shearEdN: Float!
   holdDownN: Float!
@@ -215,7 +217,7 @@ type Truss {
   product: String!
   spanM: Float!
   heightM: Float!
-  bays: Int!
+  bays: UInt32!
   chordWidthM: Float!
   chordDepthM: Float!
   webWidthM: Float!
@@ -228,7 +230,7 @@ type Bracing {
   id: String!
   kind: String!
   memberId: String!
-  stabilisedCount: Int!
+  stabilisedCount: UInt32!
   spacingM: Float!
   lengthM: Float!
   braceWidthM: Float!

@@ -1,45 +1,62 @@
-//! 🎟️ Stages a borrowed authority's funded birth and its paid cancellation before the cursor reads it.
-
-use super::super::{RetainedCloneBorrowAuthority,RetainedCloneBorrowAuthorityAdmission,RetainedCloneGrant,RetainedCloneRef,RetainedCloneSourceTake,RetainedCloneStep};
-use crate::{RetainedWorkOutcome,RetainedWorkPoll,RetirementDemand,ValueError,retirement::{RetireOwned,controlled::ControlledRetirement}};
-
-/// 🪪️ One workspace is admitted, borrowed, taken back or retired without ever being unowned.
-pub(super) struct StagedLease<W:RetireOwned+Sync>{admission:Option<RetainedCloneBorrowAuthorityAdmission<W>>,lease:Option<RetainedCloneBorrowAuthority<W>>,retiring:Option<ControlledRetirement<W>>}
-impl<W:RetireOwned+Sync> StagedLease<W>{
- pub(super) fn new(workspace:W)->Self{Self{admission:Some(RetainedCloneBorrowAuthority::admission(workspace)),lease:None,retiring:None}}
- pub(super) fn ready(&self)->bool{self.lease.is_some()}
- pub(super) fn birth_demand(&self)->Result<RetirementDemand,ValueError>{self.admission.as_ref().map_or_else(||Ok(Default::default()),RetainedCloneBorrowAuthorityAdmission::next_demand)}
- pub(super) fn advance_birth(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome{
-  let Some(admission)=self.admission.as_mut()else{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}};
-  let turn=admission.take_output(&mut self.lease,effect.grant());
-  let turn=if self.lease.is_some(){turn}else{admission.advance(effect)};
-  if admission.terminal_is_empty(){self.admission=None;}
-  turn
- }
- pub(super) fn borrow<T:?Sized,F>(&self,discriminator:usize,project:F)->RetainedCloneRef<'_,T> where F:for<'source>FnOnce(&'source W)->&'source T{self.lease.as_ref().expect("staged lease is ready").borrow(discriminator,project)}
- pub(super) fn next_take_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.lease.as_ref().ok_or_else(||ValueError::invariant("staged lease is ready"))?.next_take_demands(body)}
- pub(super) fn take_authority(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll<RetainedCloneSourceTake<W>>{match self.lease.as_mut(){Some(v)=>v,None=>return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::invariant("staged lease is ready").into()),work:0})}.take_authority(effect)}
- pub(super) fn next_close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
-  if let Some(retiring)=self.retiring.as_ref(){return retiring.next_demand(body)}
-  if let Some(lease)=self.lease.as_ref(){return lease.next_close_demand(body)}
-  self.admission.as_ref().map_or_else(||Ok(Default::default()),RetainedCloneBorrowAuthorityAdmission::next_return_demand)
- }
- pub(super) fn next_close_work_demand(&self,body:usize)->Result<u64,ValueError>{
-  if let Some(retiring)=self.retiring.as_ref(){return retiring.next_computational_work(body)}
-  if let Some(lease)=self.lease.as_ref(){return lease.next_close_work_demand(body)}
-  self.admission.as_ref().map_or(Ok(0),RetainedCloneBorrowAuthorityAdmission::return_work_demand)
- }
- pub(super) fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::OriginalRetirementPoll{let grant=effect.grant();
-  let done=|turn:RetainedWorkOutcome|RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map_err(Into::into),work:turn.work});
-  if let Some(retiring)=self.retiring.as_mut(){let poll=retiring.step(&mut effect.nested(grant));if retiring.terminal_is_empty(){self.retiring=None;}return poll}
-  if let Some(lease)=self.lease.as_mut(){return lease.close_step(&mut effect.nested(grant))}
-  let Some(admission)=self.admission.as_mut()else{return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0})};
-  let published=admission.take_output(&mut self.lease,grant);
-  if self.lease.is_some(){if admission.terminal_is_empty(){self.admission=None;}return done(published)}
-  let mut returned=None;let turn=admission.return_inputs(&mut returned,effect);
-  if let Some((workspace,()))=returned{self.retiring=Some(ControlledRetirement::retain(workspace));}
-  if admission.terminal_is_empty(){self.admission=None;}
-  done(turn)
- }
- pub(super) fn terminal_is_empty(&self)->bool{self.admission.is_none()&&self.lease.as_ref().is_none_or(RetainedCloneBorrowAuthority::terminal_is_empty)&&self.retiring.is_none()}
+//! 🎟️ Native workspace staging keeps its original Source, input and unfinished action resident.
+use super::super::{RetainedCloneRef,RetainedCloneSource,RetainedCloneStep,RetainedCloneProgress,RetainedCloneClose,StagedSourceAdmission};
+use crate::{RetirementDemand,ValueError,retirement::RetireOwned};
+use crate::retained_clone::{RetainedAllocationEffect as Effect,OriginalEffectReply as Reply,OriginalEffectReplyComplete as Complete,OriginalEffectCallbackMode as Mode,OriginalEffectInvocationIdentity,OriginalWorkBindingIdentity,OriginalRetirementCloseLoan};
+use std::mem::{size_of,ManuallyDrop};
+type Failure=crate::OriginalRetirementFailure;
+#[derive(Clone,Copy,PartialEq,Eq)]
+struct Route{invocation:OriginalEffectInvocationIdentity,operation:u8,body:usize,grant:crate::RetainedCloneGrant,work:OriginalWorkBindingIdentity,original:Option<(crate::NativeAllocationIdentity,Option<u64>,OriginalWorkBindingIdentity)>}
+/// 🪪️ The original workspace returns or retires after every staged allocation and reader settles.
+pub(super) struct StagedLease<W:RetireOwned+Sync>{
+ admission:ManuallyDrop<StagedSourceAdmission<W,W>>,
+ source:ManuallyDrop<Option<RetainedCloneSource<W>>>,
+ returned:ManuallyDrop<Option<W>>,
+ close:ManuallyDrop<RetainedCloneClose>,
+ binding:Option<OriginalWorkBindingIdentity>,
+ route:Option<Route>,
+ closing:bool,
 }
+impl<W:RetireOwned+Sync> StagedLease<W>{
+ pub(super) fn new(workspace:W)->Self{Self{admission:ManuallyDrop::new(StagedSourceAdmission::owned(workspace)),source:ManuallyDrop::new(None),returned:ManuallyDrop::new(None),close:ManuallyDrop::new(RetainedCloneClose::vacant()),binding:None,route:None,closing:false}}
+ fn invalid()->ValueError{ValueError::invariant("workspace changed its original Source action")}
+ fn fixed(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
+ fn binding_demand()->RetirementDemand{Self::fixed(size_of::<Option<OriginalWorkBindingIdentity>>())}
+ fn source_clear_demand()->RetirementDemand{Self::fixed(size_of::<Option<RetainedCloneSource<W>>>())}
+ fn authenticate(&self,effect:&Effect<'_>)->Result<(),ValueError>{if self.binding.is_some_and(|binding|!binding.matches_effect(effect)){Err(Self::invalid())}else{Ok(())}}
+ fn funded(effect:&Effect<'_>,demand:RetirementDemand,work:u64)->Result<bool,ValueError>{Ok(crate::retained_clone::retained_clone_grant_admits(effect.grant(),demand)&&effect.remaining_work_units()?>=work)}
+ fn local<'r>(reply:Reply<'r,RetainedCloneStep,Failure>,turn:crate::RetainedWorkOutcome)->Complete<'r,RetainedCloneStep,Failure>{reply.progress().complete(turn.result.map_err(Into::into))}
+ fn metadata<'r>(&mut self,effect:&mut Effect<'_>,reply:Reply<'r,RetainedCloneStep,Failure>,demand:RetirementDemand,operation:u8)->Result<Complete<'r,RetainedCloneStep,Failure>,ValueError>{if operation==0&&effect.work_source_turn().is_none(){return Err(Self::invalid())}if !Self::funded(effect,demand,1)?{return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}if !effect.performed(1)?{return Err(Self::invalid())}match operation{0=>self.binding=Some(OriginalWorkBindingIdentity::from_effect(effect)),1=>self.closing=true,2=>{self.source.take();},3=>self.binding=None,_=>return Err(Self::invalid())}Ok(reply.complete(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))))}
+ #[cfg(test)]
+ pub(super) fn original_authority(&self)->Option<&W>{self.admission.original_authority()}
+ pub(super) fn ready(&self)->bool{!self.closing&&self.admission.terminal_is_empty()&&self.source.as_ref().is_some_and(|source|!source.terminal_is_empty())}
+ pub(super) fn birth_demand(&self)->Result<RetirementDemand,ValueError>{if self.closing||self.route.is_some(){return Err(Self::invalid())}if self.binding.is_none(){Ok(Self::binding_demand())}else{self.admission.next_owned_demand()}}
+ pub(super) fn birth_work_demand(&self)->Result<u64,ValueError>{if self.closing||self.route.is_some(){return Err(Self::invalid())}if self.binding.is_none(){Ok(1)}else{self.admission.next_owned_work_demand()}}
+ pub(super) fn advance_birth_into<'r>(&mut self,effect:&mut Effect<'_>,reply:Reply<'r,RetainedCloneStep,Failure>)->Result<Complete<'r,RetainedCloneStep,Failure>,ValueError>{self.authenticate(effect)?;if self.closing||self.route.is_some(){return Err(Self::invalid())}if self.binding.is_none(){return self.metadata(effect,reply,Self::binding_demand(),0)}Ok(Self::local(reply,self.admission.advance_owned(&mut self.source,effect)))}
+ pub(super) fn borrow<T:?Sized,F>(&self,discriminator:usize,project:F)->RetainedCloneRef<'_,T>where F:for<'a>FnOnce(&'a W)->&'a T{self.source.as_ref().expect("native workspace Source is ready").borrow().project(discriminator,project)}
+ pub(super) fn next_take_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.closing||self.route.is_some(){return Err(Self::invalid())}if !self.admission.terminal_is_empty(){return Err(Self::invalid())}match self.source.as_ref(){Some(source)if !source.terminal_is_empty()=>source.next_take_demand(body),Some(_)=>Ok(Self::source_clear_demand()),None if self.binding.is_some()=>Ok(Self::binding_demand()),None=>Ok(Default::default())}}
+ pub(super) fn take_work_demand(&self,body:usize)->Result<u64,ValueError>{if self.closing||self.route.is_some(){return Err(Self::invalid())}match self.source.as_ref(){Some(source)if !source.terminal_is_empty()=>source.next_take_work_demand(body),Some(_)=>Ok(1),None=>Ok(u64::from(self.binding.is_some()))}}
+ fn key(effect:&Effect<'_>,operation:u8,body:usize,original:Option<&mut OriginalRetirementCloseLoan<'_>>,recover:bool)->Result<Route,ValueError>{let invocation=effect.invocation().ok_or_else(Self::invalid)?;if invocation.mode()!=if recover{Mode::Recover}else{Mode::Receive}{return Err(Self::invalid())}let original=match original{Some(original)=>{let work=original.original_work().binding_identity()?;if !work.matches_effect(effect){return Err(Self::invalid())}Some((original.ledger_identity(),original.retirement_recipient_identity(),work))},None=>None};Ok(Route{invocation:invocation.identity(),operation,body,grant:effect.grant(),work:OriginalWorkBindingIdentity::from_effect(effect),original})}
+ fn source_action<'r>(&mut self,output:&mut Option<W>,body:usize,mut original:Option<&mut OriginalRetirementCloseLoan<'_>>,effect:&mut Effect<'_>,reply:Reply<'r,RetainedCloneStep,Failure>,operation:u8,recover:bool)->Result<Complete<'r,RetainedCloneStep,Failure>,ValueError>{
+  let key=Self::key(effect,operation,body,original.as_deref_mut(),recover)?;if recover&&self.route!=Some(key)||!recover&&self.route.is_some(){return Err(Self::invalid())}let mut scope=reply.progress().scope(&mut self.route,key)?;let source=self.source.as_mut().ok_or_else(Self::invalid)?;let done=match(operation,original,recover){(0,None,false)=>source.take_authority_into(output,body,effect,scope.borrow()?), (0,None,true)=>source.recover_take_authority_into(output,body,effect,scope.borrow()?), (0,Some(original),false)=>source.take_authority_original_into(output,original,body,effect,scope.borrow()?), (0,Some(original),true)=>source.recover_take_authority_original_into(output,original,body,effect,scope.borrow()?), (1,None,false)=>source.close_into(body,effect,scope.borrow()?), (1,None,true)=>source.recover_close_into(body,effect,scope.borrow()?), (1,Some(original),false)=>source.close_original_into(original,body,effect,scope.borrow()?), (1,Some(original),true)=>source.recover_close_original_into(original,body,effect,scope.borrow()?),_=>return Err(Self::invalid())}?;drop(done);Ok(scope.forwarded())
+ }
+ pub(super) fn take_authority_into<'r>(&mut self,output:&mut Option<W>,body:usize,original:Option<&mut OriginalRetirementCloseLoan<'_>>,effect:&mut Effect<'_>,reply:Reply<'r,RetainedCloneStep,Failure>,recover:bool)->Result<Complete<'r,RetainedCloneStep,Failure>,ValueError>{self.authenticate(effect)?;if self.closing{return Err(Self::invalid())}if recover{return self.source_action(output,body,original,effect,reply,0,true)}if !self.admission.terminal_is_empty()||self.route.is_some(){return Err(Self::invalid())}if self.source.as_ref().is_some_and(|source|!source.terminal_is_empty()){return self.source_action(output,body,original,effect,reply,0,false)}if self.source.is_some(){return self.metadata(effect,reply,Self::source_clear_demand(),2)}if self.binding.is_some(){return self.metadata(effect,reply,Self::binding_demand(),3)}Ok(reply.complete(Ok(RetainedCloneStep::Complete(Default::default()))))}
+ pub(super) fn next_close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.route.is_some_and(|route|route.operation==0||route.body!=body){return Err(Self::invalid())}if self.terminal_is_empty(){return Ok(Default::default())}if self.binding.is_none(){return Ok(Self::binding_demand())}if !self.closing{return Ok(Self::fixed(size_of::<bool>()))}if !self.admission.terminal_is_empty(){return self.admission.owned_close_demand()}if let Some(source)=self.source.as_ref(){return if source.terminal_is_empty(){Ok(Self::source_clear_demand())}else{source.next_close_demand(body)}}if self.returned.is_some()||!self.close.is_empty(){return self.close.next_owner_demands::<W>(self.returned.is_some(),&None,body)}Ok(Self::binding_demand())}
+ pub(super) fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if self.route.is_some_and(|route|route.operation==0||route.body!=body){return Err(Self::invalid())}if self.terminal_is_empty(){return Ok(0)}if self.binding.is_none()||!self.closing{return Ok(1)}if !self.admission.terminal_is_empty(){return self.admission.owned_close_work_demand()}if let Some(source)=self.source.as_ref(){return if source.terminal_is_empty(){Ok(1)}else{source.next_close_work_demand(body)}}if self.returned.is_some()||!self.close.is_empty(){return self.close.next_owner_work::<W>(self.returned.is_some(),&None,body)}Ok(1)}
+ pub(super) fn close_into<'r>(&mut self,body:usize,mut original:Option<&mut OriginalRetirementCloseLoan<'_>>,effect:&mut Effect<'_>,reply:Reply<'r,RetainedCloneStep,Failure>,recover:bool)->Result<Complete<'r,RetainedCloneStep,Failure>,ValueError>{
+  self.authenticate(effect)?;if recover{let operation=self.route.ok_or_else(Self::invalid)?.operation;if operation==1{let mut unused=None;return self.source_action(&mut unused,body,original,effect,reply,1,true)}if operation!=2{return Err(Self::invalid())}let key=Self::key(effect,2,body,original.as_deref_mut(),true)?;if self.route!=Some(key){return Err(Self::invalid())}let mut scope=reply.progress().scope(&mut self.route,key)?;let done=match original{Some(original)=>self.close.recover_step_original_into(original,body,effect,scope.borrow()?),None=>self.close.recover_step_into(body,effect,scope.borrow()?)}?;drop(done);return Ok(scope.forwarded())}
+  if self.route.is_some(){return Err(Self::invalid())}if self.terminal_is_empty(){return Ok(reply.complete(Ok(RetainedCloneStep::Complete(Default::default()))))}let demand=self.next_close_demand(body)?;let units=self.close_work_demand(body)?;if !Self::funded(effect,demand,units)?{return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}
+  if self.binding.is_none(){return self.metadata(effect,reply,demand,0)}if !self.closing{return self.metadata(effect,reply,demand,1)}
+  if !self.admission.terminal_is_empty(){return Ok(Self::local(reply,self.admission.close_owned_into(&mut self.returned,&mut self.source,effect)))}
+  if self.source.as_ref().is_some_and(|source|!source.terminal_is_empty()){let mut unused=None;return self.source_action(&mut unused,body,original,effect,reply,1,false)}if self.source.is_some(){return self.metadata(effect,reply,demand,2)}
+  if !self.close.is_empty(){let key=Self::key(effect,2,body,original.as_deref_mut(),false)?;let mut scope=reply.progress().scope(&mut self.route,key)?;let done=match original{Some(original)=>self.close.step_original_into(original,body,effect,scope.borrow()?),None=>self.close.step_into(body,effect,scope.borrow()?)}?;drop(done);return Ok(scope.forwarded())}if self.returned.is_some(){let turn=self.close.begin_granted(&mut self.returned,effect);return Ok(reply.complete(turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into)))}
+  self.metadata(effect,reply,demand,3)
+ }
+ pub(super) fn requires_original_birth(&self)->bool{self.source.as_ref().is_some_and(RetainedCloneSource::requires_original_birth)||self.close.requires_original_birth()}
+ pub(super) fn requires_original_control(&self)->bool{self.source.as_ref().is_some_and(RetainedCloneSource::requires_original_control)||self.close.requires_original_control()}
+ pub(super) fn original_birth_step(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,grant:crate::RetainedCloneGrant)->crate::OriginalRetirementPoll{if let Some(source)=self.source.as_mut(){source.close_original_birth_step(original,grant)}else{self.close.step_original_birth(original,grant)}}
+ pub(super) fn requires_take_original_birth(&self)->bool{self.source.as_ref().is_some_and(RetainedCloneSource::requires_take_original_birth)}
+ pub(super) fn requires_take_original_control(&self)->bool{self.source.as_ref().is_some_and(RetainedCloneSource::requires_take_original_control)}
+ pub(super) fn take_original_birth_step(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,grant:crate::RetainedCloneGrant)->crate::OriginalRetirementPoll{self.source.as_mut().expect("selected original Source handback").take_original_birth_step(original,grant)}
+ pub(super) fn terminal_is_empty(&self)->bool{self.admission.terminal_is_empty()&&self.source.is_none()&&self.returned.is_none()&&self.close.is_empty()&&self.binding.is_none()&&self.route.is_none()}
+}
+impl<W:RetireOwned+Sync> Drop for StagedLease<W>{fn drop(&mut self){if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.admission);ManuallyDrop::drop(&mut self.source);ManuallyDrop::drop(&mut self.returned);ManuallyDrop::drop(&mut self.close)}}else if !std::thread::panicking(){panic!("workspace retains its original native Source custody")}}}

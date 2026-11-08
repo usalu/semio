@@ -1,6 +1,6 @@
 //! ➕ Insert tool: a palette of the insertable entity kinds, grid snapping of the cursor and the `insertItem` edit of a placement. The ghost follows the cursor in the transient lane; the click commits one edit. See [`super`].
 
-use crate::{set_value_at_path, NormEdit};
+use crate::{get_value_at_path, set_value_at_path, NormEdit};
 use semio_framework_value::DslValue;
 use semio_s_plugin_norm_structural_scene::EntityKind;
 
@@ -37,14 +37,18 @@ fn fresh_id(spec: &InsertSpec, taken: &[String]) -> String {
     (taken.len() + 1..).map(|n| format!("{}-{n}", spec.id)).find(|id| !taken.contains(id)).unwrap_or_default()
 }
 
-/// ➕ The edit that places a new item of `spec` at `at`: a copy of the last item of the collection (a document-valid starting point) with a fresh id and, where the item has them, the position fields `x`, `y`, `z` set; an empty collection inserts the default item.
+/// ➕ The edit that places a new item of `spec` at `at`: a copy of the last item of the collection (a dotted `spec.collection` path such as `geometry.objects`, an array or a map keyed by entity id) (a document-valid starting point) with a fresh id and, where the item has them, the position fields `x`, `y`, `z` set; an empty collection inserts the default item.
 pub fn insert_edit(document: &DslValue, spec: &InsertSpec, at: [f64; 3]) -> Result<NormEdit, String> {
-    let items = document.get(&spec.collection).and_then(DslValue::as_array).ok_or_else(|| format!("the document has no collection '{}'", spec.collection))?;
+    let items: Vec<DslValue> = match get_value_at_path(document, &spec.collection) {
+        Ok(DslValue::Array(items)) => items.clone(),
+        Ok(DslValue::Object(entries)) => entries.iter().map(|(_, value)| value.clone()).collect(),
+        _ => return Err(format!("the document has no collection '{}'", spec.collection)),
+    };
     let index = items.len();
     let Some(template) = items.last() else { return Ok(NormEdit::InsertItem { path: spec.collection.clone(), index, value: None }) };
     let mut wrapper = DslValue::object(vec![("item".to_string(), template.clone())]);
     if template.get("id").is_some() {
-        set_value_at_path(&mut wrapper, "item.id", DslValue::String(fresh_id(spec, &known_ids(items))))?;
+        set_value_at_path(&mut wrapper, "item.id", DslValue::String(fresh_id(spec, &known_ids(&items))))?;
     }
     for (key, value) in ["x", "y", "z"].into_iter().zip(at) {
         if template.get(key).is_some() {

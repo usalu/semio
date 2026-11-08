@@ -64,21 +64,69 @@ def saturation_pa(t_c):
     return 610.5 * math.exp(17.269 * t_c / (237.3 + t_c))
 
 
-def glaser_mass(layers, r_si, r_se, t_int, rh_int, t_ext, rh_ext, hours):
-    # Simplified steady Glaser condensation estimate matching Rust magnitude order
-    r_t = total_resistance(layers, r_si, r_se)
-    if not math.isfinite(r_t) or r_t <= 0:
-        return 0.0
-    p_i = rh_int * saturation_pa(t_int)
-    p_e = rh_ext * saturation_pa(t_ext)
-    # sd sum
-    sd = sum(float(L["thicknessM"]) * float(L["mu"]) for L in layers)
-    if sd <= 0:
-        return 0.0
-    # vapour diffusion flux approx
-    delta = 2.0e-10  # kg/(m·s·Pa) order
-    g = delta / sd * (p_i - p_e)
-    return max(0.0, g * hours)
+def saturation_magnus(t_c):
+    return 611.2 * math.exp(17.67 * t_c / (t_c + 243.5))
+
+
+def interface_temperatures(layers, r_si, r_se, t_int, t_ext):
+    import numpy as np
+
+    resistances = [r_si] + [layer_r(L["thicknessM"], L["lambda"]) for L in layers] + [r_se]
+    nodes = len(resistances) - 1
+    conductance = np.zeros((nodes, nodes))
+    source = np.zeros(nodes)
+    for index, resistance in enumerate(resistances):
+        g = 1.0 / resistance
+        left, right = index - 1, index
+        for node in (left, right):
+            if 0 <= node < nodes:
+                conductance[node, node] += g
+        if left >= 0 and right < nodes:
+            conductance[left, right] -= g
+            conductance[right, left] -= g
+        if left < 0:
+            source[right] += g * t_int
+        if right >= nodes:
+            source[left] += g * t_ext
+    return [float(t) for t in np.linalg.solve(conductance, source)]
+
+
+def vapour_profile(layers, r_si, r_se, t_int, rh_int, t_ext, rh_ext, saturation):
+    temps = interface_temperatures(layers, r_si, r_se, t_int, t_ext)
+    temps = [temps[0]] + temps[1:]
+    p_i = rh_int * saturation(t_int)
+    p_e = rh_ext * saturation(t_ext)
+    sd = [0.0]
+    for L in layers:
+        sd.append(sd[-1] + float(L["thicknessM"]) * float(L["mu"]))
+    total = sd[-1]
+    p = [p_i + (p_e - p_i) * s / total if total > 0 else p_i for s in sd]
+    return sd, p, [saturation(t) for t in temps[: len(sd)]]
+
+
+def glaser_masses(layers, r_si, r_se, t_int, rh_int, winter, summer, hours, saturation=saturation_magnus):
+    """Winter condensed and summer evaporated mass in kg/m2 by the Glaser method: per interface with p > p_sat the flux
+    delta0 * (dp_left / sd_left + dp_right / sd_right), sd bounded below by 0.1 m (condensate plane), delta0 = 2e-10 kg/(m s Pa)."""
+    sd, p, p_sat = vapour_profile(layers, r_si, r_se, t_int, rh_int, winter[0], winter[1], saturation)
+    total = sd[-1]
+    if total <= 0:
+        return 0.0, 0.0
+    condensed = 0.0
+    planes = []
+    for i in range(len(sd)):
+        if p[i] > p_sat[i]:
+            planes.append(i)
+            left = max(sd[i], 0.1)
+            right = max(total - sd[i], 0.1)
+            condensed += (p[i] - p_sat[i]) * (1.0 / left + 1.0 / right) * 2.0e-10 * hours
+    sd_s, p_s, sat_s = vapour_profile(layers, r_si, r_se, t_int, rh_int, summer[0], summer[1], saturation)
+    evaporated = 0.0
+    for i in planes:
+        left = max(sd_s[i], 0.1)
+        right = max(total - sd_s[i], 0.1)
+        flux = max(sat_s[i] - p_s[0], 0.0) / left + max(sat_s[i] - p_s[-1], 0.0) / right
+        evaporated += flux * 2.0e-10 * hours
+    return condensed, evaporated
 
 
 def qty(obj, *keys):
@@ -131,24 +179,18 @@ def compare_report(snap, report):
                 checked += 1
                 if not within(computed, f_rsi, tol):
                     mismatches.append(f"{frsi_id} f_Rsi rust={computed} oracle={f_rsi}")
-        # Glaser
         gl_id = f"din4108-3.glaser.{eid}"
-        if gl_id in checks and checks[gl_id].get("status") != "notApplicable":
-            t_int = float(snap.get("tIntC", 20.0))
-            rh_int = float(snap.get("rhInt", 0.50))
-            t_ext_s = GLASER_SUMMER_ROOF_T if kind == "roof" else GLASER_SUMMER_T
-            m_w = glaser_mass(el["layers"], r_si, r_se, t_int, rh_int, GLASER_WINTER_T, GLASER_WINTER_RH, 90 * 24)
-            m_s = glaser_mass(el["layers"], r_si, r_se, t_int, rh_int, t_ext_s, GLASER_SUMMER_RH, 90 * 24)
-            condensed = max(0.0, m_w)
-            computed = qty(checks[gl_id], "computed")
-            if computed is not None and condensed > 1e-9:
-                checked += 1
-                # Glaser implementations may differ; compare order of magnitude loosely via relative if both > 0
-                if computed > 0 and not within(computed, condensed, 0.50):
-                    # allow wider for Glaser transport model differences — still report checked via soft
-                    pass
-                checked += 0  # already counted
-            checked += 1
+        dry_id = f"din4108-3.drying.{eid}"
+        if gl_id in checks and checks[gl_id].get("status") != "notApplicable" and dry_id in checks:
+            dry = checks[dry_id]
+            if dry.get("status") != "notApplicable":
+                condensed = qty(dry, "computed")
+                evaporated = qty(dry, "limit")
+                checked += 2
+                if condensed is None or evaporated is None or condensed <= 0 or evaporated <= 0:
+                    mismatches.append(f"{dry_id} masses missing: {condensed} {evaporated}")
+                elif (condensed <= evaporated) != (dry.get("status") == "pass"):
+                    mismatches.append(f"{dry_id} status {dry.get('status')} contradicts {condensed} <= {evaporated}")
 
         u_id = f"din4108-6.u.{eid}"
         status = (checks.get(u_id) or {}).get("status")

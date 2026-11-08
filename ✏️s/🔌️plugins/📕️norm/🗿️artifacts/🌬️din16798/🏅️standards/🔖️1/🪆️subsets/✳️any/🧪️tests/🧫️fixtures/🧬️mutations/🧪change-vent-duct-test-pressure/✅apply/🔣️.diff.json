@@ -1,0 +1,44 @@
+{
+  "annex": null,
+  "thetaRmC": null,
+  "outdoorCo2Ppm": null,
+  "envelopeN50HInv": null,
+  "envelopeVolumeM3": null,
+  "cellarAreaM2": null,
+  "cellarVentilationM3H": null,
+  "nightSetbackK": null,
+  "zones": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "ventSystems": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "vent-central",
+        "patch": {
+          "name": null,
+          "systemType": null,
+          "sfpWM3S": null,
+          "sfpRequiredClass": null,
+          "heatRecoveryEta": null,
+          "odaClass": null,
+          "filterSupClass": null,
+          "yearsSinceInspection": null,
+          "humidificationRequiredKgH": null,
+          "humidificationProvidedKgH": null,
+          "fanQVM3S": null,
+          "fanTRunH": null,
+          "ductClass": null,
+          "ductTestPressurePa": 500.0,
+          "ductLeakageM3SM2": null,
+          "designAirflowM3H": null
+        }
+      }
+    ]
+  }
+}

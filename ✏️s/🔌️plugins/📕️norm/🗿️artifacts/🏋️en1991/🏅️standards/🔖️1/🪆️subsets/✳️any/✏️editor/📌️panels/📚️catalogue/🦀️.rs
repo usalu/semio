@@ -115,9 +115,15 @@ fn wind_qp_na_b3() -> CatalogueTable {
 }
 
 //#region 🔖️Render
+/// 🧪️ Verification-case catalogue of EN 1991: every catalogue entry evaluated once on its example inputs.
+pub fn verification_table(locale: semio_ui_locale::Locale) -> CatalogueTable {
+    semio_s_plugin_norm_app_surface::verification_catalogue_table::<semio_s_artifact_norm_en1991_checks::catalogue::En1991Cases>("EN 1991", AnnexChoice::En, "", locale)
+}
+
 pub fn render(examples: Vec<semio_plugin::ExampleSource>, locale: semio_ui_locale::Locale, controller_id: &'static str) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
     let mut tables = reference_tables();
     tables.push(semio_s_plugin_norm_app_surface::case_catalogue_table("en1991", &<semio_s_artifact_norm_en1991_checks::catalogue::En1991Cases as semio_s_plugin_norm_compliance::design_case::CaseCatalogue>::entries(), "", locale));
+    tables.push(verification_table(locale));
     semio_s_plugin_norm_app_surface::render_catalogue(&examples, &tables, locale, controller_id, &semio_plugin::TreeWindows::unhosted())
 }
 //#endregion 🔖️Render

@@ -52,3 +52,10 @@ fn reference_tables_cells_match_psi_and_gamma_i_sources() {
     };
     assert_eq!(*gamma_i, ImportanceClass::III.gamma_i());
 }
+
+#[test]
+fn verification_table_has_one_row_per_catalogue_entry() {
+    let table = verification_table(semio_ui_locale::Locale::En);
+    let entries = <semio_s_artifact_norm_en1990_checks::catalogue::En1990Cases as semio_s_plugin_norm_compliance::design_case::CaseCatalogue>::entries();
+    assert_eq!(table.rows.len(), entries.len());
+}

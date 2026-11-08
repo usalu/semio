@@ -3,6 +3,7 @@
   "deniedWork": 0,
   "allocationWork": 4,
   "nullWork": 2,
+  "copiedBytes": "quotedNativeHeader",
   "stock": {
     "items": 100000,
     "copyBytes": 33554432,
@@ -14,5 +15,17 @@
   },
   "publicationWork": 4,
   "nullAdmission": "requestedExtent",
-  "nullPhysicalBytes": 0
+  "nullPhysicalBytes": 0,
+  "clearBirthWork": 1,
+  "nullProgress": {
+    "items": 1,
+    "copyWords": 2,
+    "capacityBytes": 0,
+    "releaseBytes": 0
+  },
+  "receiptRetry": {
+    "work": 0,
+    "additionalPosts": 0,
+    "additionalFuel": 0
+  }
 }

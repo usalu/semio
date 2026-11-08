@@ -6,7 +6,7 @@
 import { useCallback, useSyncExternalStore, type ReactNode } from "../../⚛️react-port/🟦️.ts";
 import { type SceneLaneRef, sceneFromLanes } from "@semio-tech/framework";
 import { UiDocumentStore, useUiDocumentRevision } from "../../📃️UiDocumentStore/🟦️.tsx";
-import { type Component, type UiNodeRecord } from "@semio-tech/framework";
+import { type Component, type ComponentSceneHostProps, type UiNodeRecord, type UiValue } from "@semio-tech/framework";
 import { type UiInterpreterContext } from "../🧷️interpreter-context/🟦️.ts";
 import { renderComponentSceneHost, surfaceKindSceneLanes } from "../🔌️surface-bridge/🟦️.tsx";
 import { surfaceLaneTexts } from "../🚚️surface-scene-lanes/🟦️.ts";
@@ -56,6 +56,14 @@ function useSurfaceCarrierEpoch(store: UiDocumentStore, record: UiNodeRecord): s
   );
 }
 
+const SURFACE_GESTURE_TRIGGERS = ["delta", "commit", "abort"] as const;
+
+/** 🧲️ The scene host's trigger funnel: the node's own `delta`, `commit` and `abort` bindings, `undefined` when it binds none of them. */
+function surfaceTriggerFor(record: UiNodeRecord, context: UiInterpreterContext): ComponentSceneHostProps["onTrigger"] {
+  if (!(record.bindings ?? []).some((binding) => (SURFACE_GESTURE_TRIGGERS as readonly string[]).includes(binding.trigger))) return undefined;
+  return (trigger, input) => dispatchTrigger(context, record, trigger, input as UiValue);
+}
+
 function PagedSurfaceView({ record, component, context }: { readonly record: UiNodeRecord; readonly component: Extract<Component, { type: "surface" }>; readonly context: UiInterpreterContext }) {
   const store = context.store;
   const revision = useUiDocumentRevision(store);
@@ -70,7 +78,7 @@ function PagedSurfaceView({ record, component, context }: { readonly record: UiN
     },
     [record, store, revision, carrierEpoch, lanes],
   );
-  return <>{renderComponentSceneHost(record, component, context.onAction, store.getState().surface, context.requestContextMenu, assemble)}</>;
+  return <>{renderComponentSceneHost(record, component, context.onAction, store.getState().surface, context.requestContextMenu, assemble, surfaceTriggerFor(record, context))}</>;
 }
 
 /**
@@ -126,7 +134,7 @@ function SurfaceAccessibilityShell({ record, context, children }: { readonly rec
 
 export function SurfaceView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "surface" }>;
-  const body = surfaceKindSceneLanes(component.kind) ? <PagedSurfaceView record={record} component={component} context={context} /> : <>{renderComponentSceneHost(record, component, context.onAction, context.store.getState().surface, context.requestContextMenu)}</>;
+  const body = surfaceKindSceneLanes(component.kind) ? <PagedSurfaceView record={record} component={component} context={context} /> : <>{renderComponentSceneHost(record, component, context.onAction, context.store.getState().surface, context.requestContextMenu, undefined, surfaceTriggerFor(record, context))}</>;
   return (
     <SurfaceAccessibilityShell record={record} context={context}>
       {body}

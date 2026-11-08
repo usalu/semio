@@ -1,3 +1,74 @@
+Current map corpus port: [Original Native Map Corpus](🔍️audits/native-map-original-corpus-port.md). Full Core40 plus docs accepted; map original bodies still awaiting clone helper. Goal remains active.
+
+Latest checkpoint: [Native Map and Shared Owner](🔍️audits/native-map-shared-owner-checkpoint.md). Original map corpus migration and genuine schema/failure handback red cuts remain active.
+
+# Current Owned Identity And Map Migration Checkpoint
+
+See [native owned identity and staged workspace](🔍️audits/native-owned-identity-workspace.md) for current accepted Source16/16 gates, source admission and the unfinished map/forwarding/receiver boundaries. No permission prompt is needed; the fleet continues the open norms goal.
+
+# Current Frozen Body And Projection Backing Checkpoint
+
+See [the current native audit](🔍️audits/retained-close-frozen-body.md) for preserved source/contract/concat gates, the repaired 4096-byte projection lifecycle and all cancellation frontiers. The norms goal remains open.
+
+# Current Native Seed And Persistent Production Checkpoint
+
+Actual bounded byte/field seed laws pass 2/2, original native storage passes 17/17, actual shared receiver passes 6/6, and true nested field initialization plus Source Post unwind passes. Twenty-one selected owner/platform source rows admit under unchanged caps. [Seed evidence and limits](🔍️audits/native-storage-template-seed.md).
+
+The neutral immutable root clone passes its actual native Source/cancellation law, and persistent-list production now compiles after resident domain and concatenation ports. The preserved original persistent corpus and broader native Context remain in progress; production compilation does not establish their runtime behavior. [Persistent boundary and acceptance](🔍️audits/persistent-native-context-boundary.md).
+
+# Current Issued Shared Custody Checkpoint
+
+The actual lower shared constructor now passes its full 19-law native corpus after issued storage, same-Source foreign-Work authentication and sparse identity/marker acknowledgement. All original denied/null/refused-Post/payout/recovery laws pass under the actual retained-Work path; ten portable laws pass 27 assertions and the allocator-observed const vacant seed passes. The higher shared receiver now compiles after its borrowed migration; its actual seed, failure payout and original runtime corpus remain unproven. The defining lower control-driver factor restores all nine current decoder/frame/Slots OS source rows under unchanged limits. Context now reaches the persistent list and ordered owners; Root is migrating persistent, and NativeFull owns ordered. [Constructor evidence and current seam](🔍️audits/native-shared-slots-issued-custody.md).
+
+Captured shared retirement now uses genuine issued aliases and the exact captured payload factory. The preserved original_pair mount passes 8/8, with observed allocator receipts and the original payload pointer; factory unit/legacy issued-fixture migration remains open. All fifteen selected package/OS source rows pass unchanged limits. [Captured factory evidence and debt](🔍️audits/captured-shared-issued-custody.md).
+
+Original-slot read birth now satisfies the original combined copy-plus-capacity ceiling at every frontier across all 20 native paths and ten cancellation cuts. The older 66-error unit caller migration remains open. [Bounded birth evidence](🔍️audits/original-slot-bounded-birth.md). Full native Context, norm constructors/editors and English/German browser execution remain unaccepted.
+
+# Current Native Original Slot Checkpoint
+
+Actual original-slot production8-error boundary is repaired. Native read-frame and full Source-bank lifecycle77522 pass2/2 across20manual/direct paths,1item and4096copy; Source14/14 preserved30612. Pair transfer + borrowed cleanup82663 passes. Original unit corpus stays mounted with66old caller errors and its stricter coupled bound is not yet accepted. [Current slot evidence/debt](🔍️audits/original-slot-native-read-owner.md). Root is now repairing paged decoder actual binding currencies/Work; full norm constructors/browser remain open.
+
+# Current Shared Source Owner Checkpoint
+
+Actual generic SourceOwner<T,A> and native Post specialization share one engine. Different-type Source law executes10 cancellation cuts with each Source operation and final exclusive producer-loan return<=4096; original Source14/14 remains green. Genuine4864-byte Source-slot transfer and8400-byte producer handoff reds now use real bounded native phases/resident loan. Source/engine/receiving all admit unchanged official3OS caps. See [shared Source owner evidence](🔍️audits/original-source-owner-kernel.md). The original-slot library8-error boundary is now repaired; preserved unit callers and broader native Context/norm/browser gates remain unfinished.
+
+# Current Resident Failure Recovery Checkpoint
+
+Complete native Source8/8 and portable8/8 (22 assertions) now execute separately funded same-P resident error recovery after actual3/quoted2 Work, preserving original cause override and independently paid WorkOverrun. Real foreign-context runtime red fixed before any suspension/quote. Source11/Posts8, each copy<=4096; no replaced wallet or Source. See [current recovery audit](🔍️audits/encoder-resident-reply-recovery.md). The fleet has real paged frame/finite-bank/allocator2/2 acceptance, but original cohorts, norm constructors/editors and EN/DE browser remain outstanding.
+
+# Current Bounded Metadata Checkpoint
+
+Native Source6/6 now includes exact whole published refusal payout, permanent4096 live metadata assertions, and all four rearm recovery modes. Live rearm1469 bytes; actual producer-only handoff248–296. Blanket whole-frame resets/return removed; large paged P now uses an exclusive caller-resident loan. See [owned producer evidence](🔍️audits/encoder-owned-producer-driver.md). Actual paged Source execution and full norm constructor/browser acceptance remain outstanding. NativeFull reports unchanged complete clone std17/17 + EffectBank7/7, both360-case laws, all5 wallet axes enforced.
+
+# Current Resident Rearm Checkpoint
+
+The owning producer now retains its actual rearm quote, Work and physical Post internally. Complete Source target5/5 passes four real rearm recovery modes with unchanged same-producer Source Work14/6Posts; neutral4/4 (12 assertions). See [owned driver evidence](🔍️audits/encoder-owned-producer-driver.md). Paged production now compiles after the six callback replacements; executed paged Source/close, native norm constructors and EN/DE browser remain outstanding.
+
+# Current Owning Encoder Checkpoint
+
+Actual resident producer driver, common private paid header kernel, and Source/Work frozen ownership pass the complete current native Source target3/3 and NativeOutcome5/5. Paid reuse has a genuine missing-API native red and now passes the full native Source target4/4 and portable2/2 (8 assertions), exact same Source Work14/6Posts. See [owned producer driver](🔍️audits/encoder-owned-producer-driver.md). Current three-OS Encoding/Outcome owner closures admit original caps. Paged resident integration and full norm native/browser acceptance remain open.
+
+<!-- encoder-paid-reply-frame-checkpoint -->
+Latest Root checkpoint: [Encoder Paid Reply Frame](🔍️audits/encoder-paid-reply-frame.md). Final native33807 passes all ten actual Source/paid-header cases, including recorded physical Post recovery and zero-debit quoted cancellation/retry; strict independent oracle1/62 passes. Original producer action remains resident until genuine paid whole transfer. Current3OS encoding261591B/24files and outcome171933B/19files admit unchanged caps; Root source inventory lists112 files. Concrete paged text still has6 actual compiler errors at78238; public payload/all15native/35-field32-cap/render/page/bilingual browser remain open.
+
+<!-- encoder-producer-reply-custody-checkpoint -->
+Latest Root checkpoint: [Encoder Producer Reply Custody](🔍️audits/encoder-producer-reply-custody.md). Defining three-diagnostic red2304 repaired: Copy success facts/owned physical failure native97531 passes, Source96422 retains all eight original five-Work cases, independent oracle1/4 passes. Actual producer reply action retention and paid whole-reply/header transfer are the immediate open cut before concrete paged integration; no public payload publication is claimed. Root inventory lists111 files.
+
+<!-- encoder-source-preparation-checkpoint -->
+Latest Root native checkpoint: [Original Encoder Source Preparation](🔍️audits/encoder-source-preparation.md). Final native55570 passes all eight genuine Source/byte cases, including exact [2,3] interrupted Work, zero-grant denial and frozen-request checks. Genuine checkpoint-bypass red44300 is fixed and portable1/48 passes; the actual current native production dependency graph compiles. Actual paged-text owner integration, paid payload publication and complete native/browser acceptance remain open. Root inventory now lists107 files.
+
+<!-- encoder-explicit-work-bound-checkpoint -->
+Latest Root native checkpoint: [Original Encoder Explicit Work Bound](🔍️audits/encoder-original-explicit-work-bound.md). Final native79075 verifies all4 bounded Source cases and actual per-unit Work; encoder production80428 passes. FullNativeOutcome remains3/4 on its existing paid physical-refusal gate. Authenticated Source preparation, concrete paged-text production and complete native/browser acceptance remain open.
+
+<!-- norm-current-native-and-sqlite-checkpoint -->
+# Current Norm Plugin Checkpoint
+
+Goal active; ticket open. [Current Validation and Codec Coverage](🔍️audits/norm-graphql-widths-and-codec-coverage.md) records final11971tests/108198assertions across all70 norm TypeScript files, including the expanded single75-root strict schema/mutation/SQLite compiler cohort with zero diagnostics. Bun --smol completed under the unchanged3072MB ceiling. The stronger coverage includes nine nonempty EN1993 collections/361 binary64 occurrences and11 nonempty EN1991 footbridge word cases, preserving canonical domains and all old tests.
+
+[Native Encoder Blocker](🔍️audits/paged-text-encoder-original-source-gap.md) records the actual six-error paged-text source gate after the genuine Job Source owner cut and factory/decoder repairs. Its encoder now retains the explicit actual Work quote (native4-case law and production check pass); authenticated Source preparation and the resident payload producer remain required. No native Context expansion, original norm constructor, all15 native editors,35-field Create/Add under the32-member cap, mounted render-work/page publication or actual bilingual browser pass is claimed.
+
+Current fleet remains Root plus three Terra execution workers cooperating in shared files. Lower slice equality original corpus6/6 plus same-Source integration1/1, retained outcomes3/3, direct-derived/Result3/3 and native sorted collections4/4 have scoped captured native passes; higher equality/replication and refused receipt payout remain active. [Root Source Inventory](🔍️audits/root-norm-current-source-inventory.md) lists98 files. Older sections below are historical snapshots. No permission prompts, cap increases, fake authority or modifying git commands are used.
+
 <!-- io-full-failure-typescript-parity-checkpoint -->
 Latest TypeScript IO checkpoint: [Full IO Failure TypeScript Parity](🔍️audits/io-full-failure-typescript-parity.md). Genuine runtime red repaired:4tests295assertions pass; final strict closure85991 passes including public exports. Native IO, retirement and full norms acceptance remain pending.
 

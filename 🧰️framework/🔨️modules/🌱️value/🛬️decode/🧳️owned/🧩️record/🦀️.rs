@@ -5,7 +5,9 @@ impl NativeRecordKey<'_>{pub fn comparison_bytes(self)->usize{match self{Self::N
 impl NativeRecordField{pub fn matches(self,key:NativeRecordKey<'_>)->bool{match key{NativeRecordKey::Name(name)=>self.name==name,NativeRecordKey::Ordinal(ordinal)=>self.ordinal==ordinal}}}
 
 #[path="🔎️schema/🦀️.rs"]mod schema;
-pub use schema::{NativeSchemaLeaf,NativeSchemaKeySource,NativeRecordSchema,NativeFieldMatch,NativeRecordMatcher};
+pub use schema::{NativeSchemaLeaf,NativeSchemaFields,NativeSchemaKeyPoll,NativeSchemaKeyMetadata,NativeSchemaMatchSelection,NativeSchemaKeySource,NativeRecordSchema,NativeFieldMatch,NativeRecordMatcher};
 
 pub use semio_framework_value_native_storage::NativeRecordStorage;
 
+
+pub use crate::source::NativeSourceKeyValue;

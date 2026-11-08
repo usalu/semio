@@ -305,6 +305,45 @@ import { type ChangeTieBeamDepth, parseChangeTieBeamDepth } from "./📍️chang
 import { type ChangeTieBeamDisplacementLimit, parseChangeTieBeamDisplacementLimit } from "./📍️change-tie-beam-displacement-limit/🧬️schema/🟦️.ts";
 import { type ChangeTieBeamRelativeDisplacement, parseChangeTieBeamRelativeDisplacement } from "./📍️change-tie-beam-relative-displacement/🧬️schema/🟦️.ts";
 import { type ChangeTieBeamSpan, parseChangeTieBeamSpan } from "./📍️change-tie-beam-span/🧬️schema/🟦️.ts";
+import { type InsertIsolationSystem, parseInsertIsolationSystem } from "./➕️insert-isolation-system/🧬️schema/🟦️.ts";
+import { type RemoveIsolationSystem, parseRemoveIsolationSystem } from "./➖️remove-isolation-system/🧬️schema/🟦️.ts";
+import { type ChangeIsolationSystemBridgeId, parseChangeIsolationSystemBridgeId } from "./✏️change-isolation-system-bridge-id/🧬️schema/🟦️.ts";
+import { type ChangeIsolationSystemBuildingId, parseChangeIsolationSystemBuildingId } from "./✏️change-isolation-system-building-id/🧬️schema/🟦️.ts";
+import { type ChangeIsolationSystemStrengthN, parseChangeIsolationSystemStrengthN } from "./📍️change-isolation-system-strength-n/🧬️schema/🟦️.ts";
+import { type ChangeIsolationSystemStiffnessNPerM, parseChangeIsolationSystemStiffnessNPerM } from "./📍️change-isolation-system-stiffness/🧬️schema/🟦️.ts";
+import { type ChangeIsolationSystemYieldDisplacementM, parseChangeIsolationSystemYieldDisplacementM } from "./📍️change-isolation-system-yield-disp-m/🧬️schema/🟦️.ts";
+import { type ChangeIsolationSystemCapacityM, parseChangeIsolationSystemCapacityM } from "./📍️change-isolation-system-capacity-m/🧬️schema/🟦️.ts";
+import { type InsertPierBase, parseInsertPierBase } from "./➕️insert-pier-base/🧬️schema/🟦️.ts";
+import { type RemovePierBase, parseRemovePierBase } from "./➖️remove-pier-base/🧬️schema/🟦️.ts";
+import { type ChangePierBaseBridgeId, parseChangePierBaseBridgeId } from "./✏️change-pier-base-bridge-id/🧬️schema/🟦️.ts";
+import { type ChangePierBasePierId, parseChangePierBasePierId } from "./✏️change-pier-base-pier-id/🧬️schema/🟦️.ts";
+import { type ChangePierBaseRadiusM, parseChangePierBaseRadiusM } from "./📍️change-pier-base-radius-m/🧬️schema/🟦️.ts";
+import { type ChangePierBaseSoilVsMS, parseChangePierBaseSoilVsMS } from "./📍️change-pier-base-soil-vs-m-s/🧬️schema/🟦️.ts";
+import { type ChangePierBaseSoilUnitWeightNM3, parseChangePierBaseSoilUnitWeightNM3 } from "./📍️change-pier-base-soil-unit-weight-n-m3/🧬️schema/🟦️.ts";
+import { type ChangePierBasePoissonRatio, parseChangePierBasePoissonRatio } from "./📍️change-pier-base-poisson-ratio/🧬️schema/🟦️.ts";
+import { type InsertCriticalRegion, parseInsertCriticalRegion } from "./➕️insert-critical-region/🧬️schema/🟦️.ts";
+import { type RemoveCriticalRegion, parseRemoveCriticalRegion } from "./➖️remove-critical-region/🧬️schema/🟦️.ts";
+import { type ChangeCriticalRegionBuildingId, parseChangeCriticalRegionBuildingId } from "./✏️change-critical-region-building-id/🧬️schema/🟦️.ts";
+import { type ChangeCriticalRegionMemberId, parseChangeCriticalRegionMemberId } from "./✏️change-critical-region-member-id/🧬️schema/🟦️.ts";
+import { type ChangeCriticalRegionSectionWidthM, parseChangeCriticalRegionSectionWidthM } from "./📍️change-critical-region-section-width-m/🧬️schema/🟦️.ts";
+import { type ChangeCriticalRegionSectionDepthM, parseChangeCriticalRegionSectionDepthM } from "./📍️change-critical-region-section-depth-m/🧬️schema/🟦️.ts";
+import { type ChangeCriticalRegionClearLengthM, parseChangeCriticalRegionClearLengthM } from "./📍️change-critical-region-clear-length-m/🧬️schema/🟦️.ts";
+import { type ChangeCriticalRegionHoopedLengthM, parseChangeCriticalRegionHoopedLengthM } from "./📍️change-critical-region-hooped-length-m/🧬️schema/🟦️.ts";
+import { type ChangeCriticalRegionCoreWidthM, parseChangeCriticalRegionCoreWidthM } from "./📍️change-critical-region-core-width-m/🧬️schema/🟦️.ts";
+import { type ChangeCriticalRegionCoreDepthM, parseChangeCriticalRegionCoreDepthM } from "./📍️change-critical-region-core-depth-m/🧬️schema/🟦️.ts";
+import { type ChangeCriticalRegionAxialForceN, parseChangeCriticalRegionAxialForceN } from "./📍️change-critical-region-axial-force-n/🧬️schema/🟦️.ts";
+import { type ChangeCriticalRegionConcreteDesignStrengthMpa, parseChangeCriticalRegionConcreteDesignStrengthMpa } from "./📍️change-critical-region-concrete-fcd/🧬️schema/🟦️.ts";
+import { type ChangeCriticalRegionSteelDesignYieldMpa, parseChangeCriticalRegionSteelDesignYieldMpa } from "./📍️change-critical-region-steel-fyd/🧬️schema/🟦️.ts";
+import { type ChangeCriticalRegionHoopDesignYieldMpa, parseChangeCriticalRegionHoopDesignYieldMpa } from "./📍️change-critical-region-hoop-fywd/🧬️schema/🟦️.ts";
+import { type ChangeCriticalRegionLongitudinalSteelAreaM2, parseChangeCriticalRegionLongitudinalSteelAreaM2 } from "./📍️change-critical-region-long-steel-area/🧬️schema/🟦️.ts";
+import { type ChangeCriticalRegionLongitudinalBarDiameterM, parseChangeCriticalRegionLongitudinalBarDiameterM } from "./📍️change-critical-region-long-bar-dia/🧬️schema/🟦️.ts";
+import { type ChangeCriticalRegionLongitudinalBarMaxDiameterM, parseChangeCriticalRegionLongitudinalBarMaxDiameterM } from "./📍️change-critical-region-long-bar-max/🧬️schema/🟦️.ts";
+import { type ChangeCriticalRegionHoopDiameterM, parseChangeCriticalRegionHoopDiameterM } from "./📍️change-critical-region-hoop-diameter-m/🧬️schema/🟦️.ts";
+import { type ChangeCriticalRegionHoopSpacingM, parseChangeCriticalRegionHoopSpacingM } from "./📍️change-critical-region-hoop-spacing-m/🧬️schema/🟦️.ts";
+import { type ChangeCriticalRegionHoopLegsX, parseChangeCriticalRegionHoopLegsX } from "./📍️change-critical-region-hoop-legs-x/🧬️schema/🟦️.ts";
+import { type ChangeCriticalRegionHoopLegsY, parseChangeCriticalRegionHoopLegsY } from "./📍️change-critical-region-hoop-legs-y/🧬️schema/🟦️.ts";
+import { type ChangeCriticalRegionRestrainedBarCount, parseChangeCriticalRegionRestrainedBarCount } from "./📍️change-critical-region-restr-bar-count/🧬️schema/🟦️.ts";
+import { type ChangeCriticalRegionRestrainedBarSpacingM, parseChangeCriticalRegionRestrainedBarSpacingM } from "./📍️change-critical-region-restr-bar-space/🧬️schema/🟦️.ts";
 import { type ChangeTieBeamSteelArea, parseChangeTieBeamSteelArea } from "./📍️change-tie-beam-steel-area/🧬️schema/🟦️.ts";
 import { type ChangeTieBeamSteelDesignStrength, parseChangeTieBeamSteelDesignStrength } from "./📍️change-tie-beam-steel-design-strength/🧬️schema/🟦️.ts";
 import { type ChangeTieBeamWidth, parseChangeTieBeamWidth } from "./📍️change-tie-beam-width/🧬️schema/🟦️.ts";
@@ -643,6 +682,45 @@ export type En1998Mutation =
   | ChangeTieBeamDisplacementLimit
   | ChangeTieBeamRelativeDisplacement
   | ChangeTieBeamSpan
+  | InsertIsolationSystem
+  | RemoveIsolationSystem
+  | ChangeIsolationSystemBridgeId
+  | ChangeIsolationSystemBuildingId
+  | ChangeIsolationSystemStrengthN
+  | ChangeIsolationSystemStiffnessNPerM
+  | ChangeIsolationSystemYieldDisplacementM
+  | ChangeIsolationSystemCapacityM
+  | InsertPierBase
+  | RemovePierBase
+  | ChangePierBaseBridgeId
+  | ChangePierBasePierId
+  | ChangePierBaseRadiusM
+  | ChangePierBaseSoilVsMS
+  | ChangePierBaseSoilUnitWeightNM3
+  | ChangePierBasePoissonRatio
+  | InsertCriticalRegion
+  | RemoveCriticalRegion
+  | ChangeCriticalRegionBuildingId
+  | ChangeCriticalRegionMemberId
+  | ChangeCriticalRegionSectionWidthM
+  | ChangeCriticalRegionSectionDepthM
+  | ChangeCriticalRegionClearLengthM
+  | ChangeCriticalRegionHoopedLengthM
+  | ChangeCriticalRegionCoreWidthM
+  | ChangeCriticalRegionCoreDepthM
+  | ChangeCriticalRegionAxialForceN
+  | ChangeCriticalRegionConcreteDesignStrengthMpa
+  | ChangeCriticalRegionSteelDesignYieldMpa
+  | ChangeCriticalRegionHoopDesignYieldMpa
+  | ChangeCriticalRegionLongitudinalSteelAreaM2
+  | ChangeCriticalRegionLongitudinalBarDiameterM
+  | ChangeCriticalRegionLongitudinalBarMaxDiameterM
+  | ChangeCriticalRegionHoopDiameterM
+  | ChangeCriticalRegionHoopSpacingM
+  | ChangeCriticalRegionHoopLegsX
+  | ChangeCriticalRegionHoopLegsY
+  | ChangeCriticalRegionRestrainedBarCount
+  | ChangeCriticalRegionRestrainedBarSpacingM
   | ChangeTieBeamSteelArea
   | ChangeTieBeamSteelDesignStrength
   | ChangeTieBeamWidth;
@@ -966,6 +1044,45 @@ export const parseEn1998Mutation: NormWireReader<En1998Mutation> = normWireTagge
   changeTieBeamDisplacementLimit: parseChangeTieBeamDisplacementLimit,
   changeTieBeamRelativeDisplacement: parseChangeTieBeamRelativeDisplacement,
   changeTieBeamSpan: parseChangeTieBeamSpan,
+  insertIsolationSystem: parseInsertIsolationSystem,
+  removeIsolationSystem: parseRemoveIsolationSystem,
+  changeIsolationSystemBridgeId: parseChangeIsolationSystemBridgeId,
+  changeIsolationSystemBuildingId: parseChangeIsolationSystemBuildingId,
+  changeIsolationSystemStrengthN: parseChangeIsolationSystemStrengthN,
+  changeIsolationSystemStiffnessNPerM: parseChangeIsolationSystemStiffnessNPerM,
+  changeIsolationSystemYieldDisplacementM: parseChangeIsolationSystemYieldDisplacementM,
+  changeIsolationSystemCapacityM: parseChangeIsolationSystemCapacityM,
+  insertPierBase: parseInsertPierBase,
+  removePierBase: parseRemovePierBase,
+  changePierBaseBridgeId: parseChangePierBaseBridgeId,
+  changePierBasePierId: parseChangePierBasePierId,
+  changePierBaseRadiusM: parseChangePierBaseRadiusM,
+  changePierBaseSoilVsMS: parseChangePierBaseSoilVsMS,
+  changePierBaseSoilUnitWeightNM3: parseChangePierBaseSoilUnitWeightNM3,
+  changePierBasePoissonRatio: parseChangePierBasePoissonRatio,
+  insertCriticalRegion: parseInsertCriticalRegion,
+  removeCriticalRegion: parseRemoveCriticalRegion,
+  changeCriticalRegionBuildingId: parseChangeCriticalRegionBuildingId,
+  changeCriticalRegionMemberId: parseChangeCriticalRegionMemberId,
+  changeCriticalRegionSectionWidthM: parseChangeCriticalRegionSectionWidthM,
+  changeCriticalRegionSectionDepthM: parseChangeCriticalRegionSectionDepthM,
+  changeCriticalRegionClearLengthM: parseChangeCriticalRegionClearLengthM,
+  changeCriticalRegionHoopedLengthM: parseChangeCriticalRegionHoopedLengthM,
+  changeCriticalRegionCoreWidthM: parseChangeCriticalRegionCoreWidthM,
+  changeCriticalRegionCoreDepthM: parseChangeCriticalRegionCoreDepthM,
+  changeCriticalRegionAxialForceN: parseChangeCriticalRegionAxialForceN,
+  changeCriticalRegionConcreteDesignStrengthMpa: parseChangeCriticalRegionConcreteDesignStrengthMpa,
+  changeCriticalRegionSteelDesignYieldMpa: parseChangeCriticalRegionSteelDesignYieldMpa,
+  changeCriticalRegionHoopDesignYieldMpa: parseChangeCriticalRegionHoopDesignYieldMpa,
+  changeCriticalRegionLongitudinalSteelAreaM2: parseChangeCriticalRegionLongitudinalSteelAreaM2,
+  changeCriticalRegionLongitudinalBarDiameterM: parseChangeCriticalRegionLongitudinalBarDiameterM,
+  changeCriticalRegionLongitudinalBarMaxDiameterM: parseChangeCriticalRegionLongitudinalBarMaxDiameterM,
+  changeCriticalRegionHoopDiameterM: parseChangeCriticalRegionHoopDiameterM,
+  changeCriticalRegionHoopSpacingM: parseChangeCriticalRegionHoopSpacingM,
+  changeCriticalRegionHoopLegsX: parseChangeCriticalRegionHoopLegsX,
+  changeCriticalRegionHoopLegsY: parseChangeCriticalRegionHoopLegsY,
+  changeCriticalRegionRestrainedBarCount: parseChangeCriticalRegionRestrainedBarCount,
+  changeCriticalRegionRestrainedBarSpacingM: parseChangeCriticalRegionRestrainedBarSpacingM,
   changeTieBeamSteelArea: parseChangeTieBeamSteelArea,
   changeTieBeamSteelDesignStrength: parseChangeTieBeamSteelDesignStrength,
   changeTieBeamWidth: parseChangeTieBeamWidth,

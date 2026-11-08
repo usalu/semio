@@ -8,7 +8,7 @@ extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-use semio_s_artifact_norm_iso16757_checks_common::{assess, catalogue_subject, copy, fail, na, name_locales, names_cover, pass, q_dim, subject, controlled_ordinal, reference_slot_score};
+use semio_s_artifact_norm_iso16757_checks_common::{Section, ALL_FACETS, assess, catalogue_subject, copy, fail, na, name_locales, names_cover, pass, q_dim, subject, controlled_ordinal, reference_slot_score};
 use semio_s_plugin_norm_compliance::{CheckReport, CheckStatus, Quantity, QuantityKind, Remedy, RemedyBound};
 use semio_s_artifact_norm_iso16757_model::part_1::{Catalogue, Product, PropertyDefinition, SelectionRequest};
 use semio_s_artifact_norm_iso16757_model::CatalogueValue;
@@ -46,24 +46,27 @@ fn quantity_dimension_ok(value: &CatalogueValue, def: &PropertyDefinition) -> bo
     }
 }
 
+/// 🧮️ The sections of Part 1 in report order, each with the facets it reads.
+pub const SECTIONS: &[Section] = &[
+    Section { id: "header", reads: &["catalogue"], run: |d, r| check_header(&d.catalogue, &required_languages(&d.catalogue), r) },
+    Section { id: "dictionary-alignment", reads: ALL_FACETS, run: |d, r| check_dictionary_catalogue_alignment(d, r) },
+    Section { id: "unique-ids", reads: &["catalogue"], run: |d, r| check_unique_ids(&d.catalogue, r) },
+    Section { id: "referential-integrity", reads: &["catalogue", "geometry"], run: |d, r| check_referential_integrity(&d.catalogue, &d.geometry, r) },
+    Section { id: "group-subjects", reads: &["catalogue", "dictionary"], run: |d, r| check_group_dictionary_subjects(&d.catalogue, &d.dictionary, r) },
+    Section { id: "multilingual", reads: &["catalogue"], run: |d, r| check_multilingual(&d.catalogue, &required_languages(&d.catalogue), r) },
+    Section { id: "required-properties", reads: &["catalogue"], run: |d, r| check_required_properties(&d.catalogue, r) },
+    Section { id: "property-values", reads: &["catalogue", "dictionary"], run: |d, r| check_property_values(&d.catalogue, &d.dictionary, r) },
+    Section { id: "property-units", reads: &["catalogue", "dictionary"], run: |d, r| check_property_definition_units(&d.catalogue, &d.dictionary, r) },
+    Section { id: "variant-domains", reads: &["catalogue"], run: |d, r| check_variant_domains(&d.catalogue, r) },
+    Section { id: "variant-article-geometry", reads: &["catalogue", "geometry"], run: |d, r| check_variant_article_and_geometry(&d.catalogue, &d.geometry, r) },
+    Section { id: "accessories-compositions", reads: &["catalogue"], run: |d, r| check_accessories_compositions(&d.catalogue, r) },
+    Section { id: "product-indexes", reads: &["catalogue"], run: |d, r| check_product_indexes(&d.catalogue, r) },
+    Section { id: "selection", reads: &["catalogue", "selection"], run: |d, r| check_selection(&d.catalogue, &d.selection, r) },
+    Section { id: "bim-embeddings", reads: &["catalogue"], run: |d, r| check_bim_embeddings(&d.catalogue, r) },
+];
+
 pub fn check_part_1(doc: &Iso16757Snapshot, report: &mut CheckReport) {
-    let catalogue = &doc.catalogue;
-    let required = required_languages(catalogue);
-    check_header(catalogue, &required, report);
-    check_dictionary_catalogue_alignment(doc, report);
-    check_unique_ids(catalogue, report);
-    check_referential_integrity(catalogue, &doc.geometry, report);
-    check_group_dictionary_subjects(catalogue, &doc.dictionary, report);
-    check_multilingual(catalogue, &required, report);
-    check_required_properties(catalogue, report);
-    check_property_values(catalogue, &doc.dictionary, report);
-    check_property_definition_units(catalogue, &doc.dictionary, report);
-    check_variant_domains(catalogue, report);
-    check_variant_article_and_geometry(catalogue, &doc.geometry, report);
-    check_accessories_compositions(catalogue, report);
-    check_product_indexes(catalogue, report);
-    check_selection(catalogue, &doc.selection, report);
-    check_bim_embeddings(catalogue, report);
+    SECTIONS.iter().for_each(|section| (section.run)(doc, report));
 }
 
 #[path = "🪪️header-ids-and-referential-integrity/🦀️.rs"]

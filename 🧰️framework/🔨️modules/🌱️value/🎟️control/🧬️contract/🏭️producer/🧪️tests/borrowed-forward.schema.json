@@ -1,0 +1,72 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "allocationMarker",
+    "receiveCalls",
+    "recoverCalls",
+    "postUnwindReplay",
+    "sameSource",
+    "sameWork",
+    "replyPointerPreserved",
+    "metadataRequiresPost",
+    "postRecovery",
+    "foreignSourceDenied",
+    "siblingActionDistinct",
+    "markerCannotBeReplaced",
+    "allocatorAttempts",
+    "semanticWork",
+    "matchingProofAccepted",
+    "siblingProofAccepted"
+  ],
+  "properties": {
+    "allocationMarker": {
+      "const": 0
+    },
+    "receiveCalls": {
+      "const": 1
+    },
+    "recoverCalls": {
+      "const": 0
+    },
+    "postUnwindReplay": {
+      "const": false
+    },
+    "sameSource": {
+      "const": true
+    },
+    "sameWork": {
+      "const": true
+    },
+    "replyPointerPreserved": {
+      "const": true
+    },
+    "metadataRequiresPost": {
+      "const": true
+    },
+    "postRecovery": {
+      "const": 1
+    },
+    "foreignSourceDenied": {
+      "const": true
+    },
+    "siblingActionDistinct": {
+      "const": true
+    },
+    "markerCannotBeReplaced": {
+      "const": true
+    },
+    "allocatorAttempts": {
+      "const": 1
+    },
+    "semanticWork": {
+      "const": 2
+    },
+    "matchingProofAccepted": {
+      "const": true
+    },
+    "siblingProofAccepted": {
+      "const": false
+    }
+  }
+}

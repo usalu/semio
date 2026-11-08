@@ -1,0 +1,42 @@
+{
+  "buildingCategory": null,
+  "attachment": null,
+  "useClass": null,
+  "method": null,
+  "netFloorAreaM2": null,
+  "heatedVolumeM3": null,
+  "gegQpFactor": null,
+  "deltaUWbWM2k": null,
+  "automationClass": null,
+  "zones": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 1,
+        "row": {
+          "id": "zone-extra",
+          "labelEn": "Extra",
+          "labelDe": "Zusatz",
+          "usageProfile": "WFH",
+          "areaM2": 140.0,
+          "volumeM3": 364.0,
+          "thetaIHeatC": 20.0,
+          "thetaICoolC": 26.0,
+          "occupants": 4,
+          "internalGainsWM2": 3.5,
+          "lightingPowerWM2": 6.0
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "elements": null,
+  "heating": null,
+  "dhw": null,
+  "ventilation": null,
+  "cooling": null,
+  "lighting": null,
+  "renewables": null,
+  "climate": null
+}

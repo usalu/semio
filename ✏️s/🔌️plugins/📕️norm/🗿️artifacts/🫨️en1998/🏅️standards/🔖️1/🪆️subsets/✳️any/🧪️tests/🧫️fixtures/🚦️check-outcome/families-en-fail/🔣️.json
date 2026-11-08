@@ -1378,5 +1378,8 @@
       "circleCentreZ": 12.0,
       "circleRadius": 13.0
     }
-  ]
+  ],
+  "isolationSystems": [],
+  "pierBases": [],
+  "criticalRegions": []
 }

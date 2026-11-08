@@ -1,0 +1,22 @@
+[
+  {
+    "phase": "refused",
+    "payout": false,
+    "visible": false
+  },
+  {
+    "phase": "sealed",
+    "payout": false,
+    "visible": false
+  },
+  {
+    "phase": "published",
+    "payout": true,
+    "visible": true
+  },
+  {
+    "phase": "retry",
+    "payout": false,
+    "visible": false
+  }
+]

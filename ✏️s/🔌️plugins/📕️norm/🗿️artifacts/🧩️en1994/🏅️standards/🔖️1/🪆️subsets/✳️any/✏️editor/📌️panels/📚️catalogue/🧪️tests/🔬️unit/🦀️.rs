@@ -61,3 +61,10 @@ fn reference_tables_cells_match_psi_and_gamma_i_sources() {
     let (_s_min, s_max) = part_1_1::stud_spacing_limits_m(&beam, 0.019);
     assert!((s_max_cell - s_max).abs() < 1e-12, "catalogue s_max {s_max_cell} != evaluate {s_max}");
 }
+
+#[test]
+fn verification_catalogue_table_has_one_row_per_case_entry() {
+    use semio_s_plugin_norm_compliance::design_case::CaseCatalogue;
+    let table = semio_s_plugin_norm_app_surface::verification_catalogue_table::<semio_s_artifact_norm_en1994_checks::case_catalogue::En1994Cases>("EN 1994", AnnexChoice::En, "", semio_ui_locale::Locale::En);
+    assert_eq!(table.rows.len(), semio_s_artifact_norm_en1994_checks::case_catalogue::En1994Cases::entries().len());
+}

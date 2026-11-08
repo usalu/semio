@@ -1,0 +1,5 @@
+{
+  "mutation": "changeCriticalRegionSectionWidthM",
+  "id": "cr-1",
+  "newSectionWidthM": 1.4
+}

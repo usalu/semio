@@ -33,7 +33,8 @@
       "copiedBytes": 0,
       "retainedCapacityBytes": 0,
       "releasedBytes": 0
-    }
+    },
+    "receiptCompletion": null
   },
   "receiptRefusal": null,
   "contextRefusal": null,

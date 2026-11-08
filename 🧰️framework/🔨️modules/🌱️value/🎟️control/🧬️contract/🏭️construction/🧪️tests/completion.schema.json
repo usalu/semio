@@ -1,0 +1,56 @@
+{
+  "type": "array",
+  "minItems": 6,
+  "items": {
+    "type": "object",
+    "properties": {
+      "recorded": {
+        "type": "boolean"
+      },
+      "same": {
+        "type": "boolean"
+      },
+      "free": {
+        "type": "boolean"
+      },
+      "grant": {
+        "type": "boolean"
+      },
+      "work": {
+        "type": "boolean"
+      },
+      "moved": {
+        "type": "boolean"
+      },
+      "postAccepted": {
+        "type": "boolean"
+      },
+      "originalRefusal": {
+        "type": "string",
+        "minLength": 1
+      },
+      "payoutRefusal": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "published": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "recorded",
+      "same",
+      "free",
+      "grant",
+      "work",
+      "moved",
+      "postAccepted",
+      "originalRefusal",
+      "payoutRefusal",
+      "published"
+    ],
+    "additionalProperties": false
+  }
+}

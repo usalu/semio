@@ -1,0 +1,33 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "left",
+    "right",
+    "index",
+    "invalid",
+    "selected"
+  ],
+  "properties": {
+    "left": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "right": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "invalid": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "selected": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

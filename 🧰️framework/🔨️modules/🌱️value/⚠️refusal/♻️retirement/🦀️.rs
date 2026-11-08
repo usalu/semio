@@ -13,9 +13,11 @@ impl RetireOwned for ValueError{
 pub struct AllocationTransactionRetirement{original:std::mem::ManuallyDrop<Option<crate::NativeAllocationTransaction>>}
 fn transaction_refusal()->ValueError{ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"original allocation transaction requires its authority")}
 impl RetirementCursor for AllocationTransactionRetirement{
+ fn close_into<'r>(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'r,RetirementStep,crate::OriginalRetirementFailure>)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'r,RetirementStep,crate::OriginalRetirementFailure>,ValueError>{if self.original.is_none(){return Ok(reply.complete(Ok(RetirementStep::Complete(0))))}let demand=self.next_demand(effect.grant().maximum_copy_bytes)?;if effect.remaining_work_units()?==0||!crate::retained_clone_grant_admits(effect.grant(),demand){return Ok(reply.complete(Ok(RetirementStep::BudgetExhausted)))}crate::retirement::record_retirement_work(effect,1).map_err(|(e,_)|e)?;drop(self.original.take());Ok(reply.complete(Ok(RetirementStep::Progress(crate::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()},1))))}
+
  fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{self.next_demand(0)?;Ok(u64::from(self.original.is_some()))}
  fn next_demand(&self,_:usize)->Result<crate::RetirementDemand,ValueError>{if self.original.as_ref().is_some_and(|original|!original.terminal_is_empty()){return Err(transaction_refusal())}Ok(if self.original.is_some(){crate::RetirementDemand{copy_bytes:std::mem::size_of::<Option<crate::NativeAllocationTransaction>>(),depth:1,..Default::default()}}else{Default::default()})}
- fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{if self.original.is_none(){return RetirementStep::Complete(0)}let demand=match self.next_demand(effect.grant().maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetirementStep::Failure(error.into(),0)};if effect.maximum_work_units()<1||!crate::retained_clone::retained_clone_grant_admits(effect.grant(),demand){return RetirementStep::BudgetExhausted}drop(self.original.take());RetirementStep::Progress(crate::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()},1)}
+
  fn terminal_is_empty(&self)->bool{self.original.is_none()}
  fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
 }
@@ -32,9 +34,14 @@ impl RetireOwned for crate::NativeAllocationTransaction{
 pub enum AllocationRefusalRetirement{Owned(<ValueError as RetireOwned>::RetirementCursor),Retained(crate::NativeAllocationRefusalHandle)}
 fn vault_refusal()->ValueError{ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"retained allocation refusal must return to its original vault")}
 impl RetirementCursor for AllocationRefusalRetirement{
+ fn close_into<'r>(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'r,RetirementStep,crate::OriginalRetirementFailure>)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'r,RetirementStep,crate::OriginalRetirementFailure>,ValueError>{match self{Self::Owned(cursor)=>cursor.close_into(body,effect,reply),Self::Retained(_)=>Ok(reply.complete(Err(vault_refusal().into())))}}
+ fn recover_close_into<'r>(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'r,RetirementStep,crate::OriginalRetirementFailure>)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'r,RetirementStep,crate::OriginalRetirementFailure>,ValueError>{match self{Self::Owned(cursor)=>cursor.recover_close_into(body,effect,reply),Self::Retained(_)=>Ok(reply.complete(Err(vault_refusal().into())))}}
+ fn close_original_into<'r>(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'r,RetirementStep,crate::OriginalRetirementFailure>)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'r,RetirementStep,crate::OriginalRetirementFailure>,ValueError>{match self{Self::Owned(cursor)=>cursor.close_original_into(original,body,effect,reply),Self::Retained(_)=>Ok(reply.complete(Err(vault_refusal().into())))}}
+ fn recover_close_original_into<'r>(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'r,RetirementStep,crate::OriginalRetirementFailure>)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'r,RetirementStep,crate::OriginalRetirementFailure>,ValueError>{match self{Self::Owned(cursor)=>cursor.recover_close_original_into(original,body,effect,reply),Self::Retained(_)=>Ok(reply.complete(Err(vault_refusal().into())))}}
+
  fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{match self{Self::Owned(cursor)=>cursor.next_computational_work(body),Self::Retained(_)=>Err(vault_refusal())}}
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{match self{Self::Owned(cursor)=>cursor.next_demand(body),Self::Retained(_)=>Err(vault_refusal())}}
- fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{match self{Self::Owned(cursor)=>{match cursor.next_computational_work(effect.grant().maximum_copy_bytes){Ok(work)if work>effect.maximum_work_units()=>return RetirementStep::BudgetExhausted,Err(error)=>return RetirementStep::Failure(error.into(),0),_=>{}}cursor.close_step(effect)},Self::Retained(_)=>RetirementStep::Failure(vault_refusal().into(),0)}}
+
  fn terminal_is_empty(&self)->bool{match self{Self::Owned(cursor)=>cursor.terminal_is_empty(),Self::Retained(_)=>false}}
  fn next_depth_demand(&self)->Result<usize,ValueError>{match self{Self::Owned(cursor)=>cursor.next_depth_demand(),Self::Retained(_)=>Err(vault_refusal())}}
  fn next_close_byte_demand(&self)->Option<usize>{match self{Self::Owned(cursor)=>cursor.next_close_byte_demand(),Self::Retained(_)=>None}}
@@ -58,12 +65,17 @@ type OriginalRetirementFailureParts=(Option<ValueError>,Option<ValueError>,Optio
 #[doc(hidden)]
 pub struct OriginalRetirementFailureCursor(<OriginalRetirementFailureParts as RetireOwned>::RetirementCursor);
 impl RetirementCursor for OriginalRetirementFailureCursor{
+ fn close_into<'r>(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'r,RetirementStep,crate::OriginalRetirementFailure>)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'r,RetirementStep,crate::OriginalRetirementFailure>,ValueError>{self.0.close_into(body,effect,reply)}
+ fn recover_close_into<'r>(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'r,RetirementStep,crate::OriginalRetirementFailure>)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'r,RetirementStep,crate::OriginalRetirementFailure>,ValueError>{self.0.recover_close_into(body,effect,reply)}
+ fn close_original_into<'r>(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'r,RetirementStep,crate::OriginalRetirementFailure>)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'r,RetirementStep,crate::OriginalRetirementFailure>,ValueError>{self.0.close_original_into(original,body,effect,reply)}
+ fn recover_close_original_into<'r>(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'r,RetirementStep,crate::OriginalRetirementFailure>)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'r,RetirementStep,crate::OriginalRetirementFailure>,ValueError>{self.0.recover_close_original_into(original,body,effect,reply)}
+
  fn requires_original_control(&self)->bool{self.0.requires_original_control()}
- fn close_step_controlled(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn crate::OriginalRetirementControl)->crate::retirement::RetirementStep{self.0.close_step_controlled(effect,control)}
- fn close_original_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::retirement::RetirementStep{self.0.close_original_step(original,effect)}
+ fn close_step_controlled(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn crate::OriginalRetirementControl)->crate::retirement::RetirementStep{self.0.close_step_controlled(body,effect,control)}
+ fn close_original_step(&mut self,original:&mut semio_framework_value_retirement_contract::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::retirement::RetirementStep{self.0.close_original_step(original,body,effect)}
  fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.0.next_computational_work(body)}
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{self.0.next_demand(body)}
- fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::retirement::RetirementStep{self.0.close_step(effect)}
+
  fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
  fn next_depth_demand(&self)->Result<usize,ValueError>{self.0.next_depth_demand()}
  fn next_close_byte_demand(&self)->Option<usize>{self.0.next_close_byte_demand()}
@@ -91,16 +103,11 @@ impl RetireOwned for crate::OriginalFailureStorage{
  fn controlled_retirement_supported()->bool{true}
 }
 impl RetirementCursor for OriginalFailureStorageRetirement{
- fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(u64::from(self.0.is_some()))}
- fn next_demand(&self,_:usize)->Result<crate::RetirementDemand,ValueError>{Ok(if self.0.is_some(){crate::RetirementDemand{release_bytes:crate::OriginalFailureStorage::birth_bytes(),depth:1,..Default::default()}}else{Default::default()})}
- fn close_step(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::retirement::RetirementStep{let grant=effect.grant();
-  use crate::retirement::RetirementStep;
-  if self.0.is_none(){return RetirementStep::Complete(0)}
-  if effect.maximum_work_units()<1{return RetirementStep::BudgetExhausted}
-  if !crate::retained_clone::retained_clone_grant_admits(grant,self.next_demand(grant.maximum_copy_bytes).unwrap()){return RetirementStep::BudgetExhausted}
-  let storage=self.0.take().unwrap();let progress=storage.release(grant.maximum_release_bytes).expect("original spare-node release was admitted");
-  RetirementStep::Progress(crate::RetainedCloneProgress{copied_items:1,..progress},1)
- }
+ fn close_into<'r>(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'r,RetirementStep,crate::OriginalRetirementFailure>)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'r,RetirementStep,crate::OriginalRetirementFailure>,ValueError>{if self.0.is_none(){return Ok(reply.complete(Ok(RetirementStep::Complete(0))))}let demand=self.next_demand(effect.grant().maximum_copy_bytes)?;if effect.remaining_work_units()?<2||!crate::retained_clone_grant_admits(effect.grant(),demand){return Ok(reply.complete(Ok(RetirementStep::BudgetExhausted)))}crate::retirement::record_retirement_work(effect,2).map_err(|(e,_)|e)?;let storage=self.0.take().expect("same original failure storage");let mut progress=storage.release(effect.grant().maximum_release_bytes).ok().expect("same admitted original failure storage release");progress.copied_items=1;progress.copied_bytes=demand.copy_bytes;Ok(reply.complete(Ok(RetirementStep::Progress(progress,2))))}
+
+ fn next_computational_work(&self,_:usize)->Result<u64,ValueError>{Ok(2*u64::from(self.0.is_some()))}
+ fn next_demand(&self,_:usize)->Result<crate::RetirementDemand,ValueError>{Ok(if self.0.is_some(){crate::RetirementDemand{copy_bytes:std::mem::size_of::<Option<crate::OriginalFailureStorage>>()+std::mem::size_of::<crate::OriginalFailureStorage>(),release_bytes:crate::OriginalFailureStorage::birth_bytes(),depth:1,..Default::default()}}else{Default::default()})}
+
  fn terminal_is_empty(&self)->bool{self.0.is_none()}
  fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
 }

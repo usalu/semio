@@ -84,7 +84,7 @@ def evidence_invariants(e):
             assert edition and not edition.startswith("to be recorded"), x["id"]
 
 NORM = HERE.parent.parent.parent
-NEGATIVE_CONTROLS = {"ndp.does.not.exist", "ndp.nobody.unknown", "ndp.en1990.a2.group.gr9.road_traffic"}
+NEGATIVE_CONTROLS = {"ndp.does.not.exist", "ndp.nobody.unknown", "ndp.en1990.a2.group.gr9.road_traffic", "ndp.en1990.fixture"}
 STRING_PREFIX_PROBES = {"ndp.en1993.gamma-m"}
 SKIPPED_DIRS = {"target", ".git", "🗑️generated", "__pycache__", "🗃️table"}
 LITERAL = re.compile(r'"(ndp\.[A-Za-z0-9_][A-Za-z0-9_.\-]*[A-Za-z0-9_])"')

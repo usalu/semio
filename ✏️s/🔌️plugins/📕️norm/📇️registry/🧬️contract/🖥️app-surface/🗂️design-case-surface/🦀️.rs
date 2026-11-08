@@ -116,6 +116,56 @@ pub fn case_catalogue_table(family: &str, entries: &[CaseEntry], query: &str, lo
 }
 //#endregion 🔖️Browser
 
+//#region 🔖️Verification
+/// 🧪️ The verification-case catalogue of an artifact: every entry matching `query` evaluated once on its example inputs (`annex`), as id, clause, part, title, worst status, utilization and the governing explanation in `locale`; the table of the catalogue window shows what each normative case verifies without opening a design case.
+pub fn verification_catalogue_table<C: CaseCatalogue>(family: &str, annex: semio_s_plugin_norm_compliance::AnnexChoice, query: &str, locale: Locale) -> CatalogueTable {
+    let column = |id, label_en, label_de| CatalogueColumn { id, label_en, label_de, unit: None };
+    let rank = |status: CheckStatus| match status {
+        CheckStatus::Fail => 5,
+        CheckStatus::Warning => 4,
+        CheckStatus::UnverifiedBasis => 3,
+        CheckStatus::Pass => 2,
+        CheckStatus::Info => 1,
+        CheckStatus::NotApplicable => 0,
+    };
+    CatalogueTable {
+        id: "verification-cases",
+        title_en: "Verification cases",
+        title_de: "Nachweisfälle",
+        clause: ClauseId::new(family, "§0", "0"),
+        columns: vec![
+            column("id", "Id", "Id"),
+            column("clause", "Clause", "Klausel"),
+            column("part", "Part", "Teil"),
+            column("title", "Title", "Titel"),
+            column("status", "Status", "Status"),
+            column("utilization", "Utilization", "Ausnutzung"),
+            column("explanation", "Governing result", "Maßgebendes Ergebnis"),
+        ],
+        rows: design_case::search(&C::entries(), query)
+            .iter()
+            .map(|entry| {
+                let results = design_case::evaluate_case::<C>(&design_case::seed::<C>(entry, entry.id), annex);
+                let governing = results.iter().max_by(|a, b| rank(a.status).cmp(&rank(b.status)).then(a.utilization.total_cmp(&b.utilization)));
+                let cells = match governing {
+                    Some(result) => vec![
+                        CatalogueCell::text(entry.id),
+                        CatalogueCell::text(semio_s_plugin_norm_compliance::designator(entry.clause, &locale)),
+                        CatalogueCell::text(entry.part),
+                        CatalogueCell::text(entry.title(&locale)),
+                        CatalogueCell::text(status_label(result.status, locale)),
+                        if result.utilization.is_finite() && result.status != CheckStatus::NotApplicable { CatalogueCell::number(result.utilization, 2) } else { CatalogueCell::Empty },
+                        CatalogueCell::localized(result.explanation.en.clone(), result.explanation.de.clone()),
+                    ],
+                    None => vec![CatalogueCell::text(entry.id), CatalogueCell::text(semio_s_plugin_norm_compliance::designator(entry.clause, &locale)), CatalogueCell::text(entry.part), CatalogueCell::text(entry.title(&locale)), CatalogueCell::text(status_label(CheckStatus::NotApplicable, locale)), CatalogueCell::Empty, CatalogueCell::Empty],
+                };
+                CatalogueRow { id: entry.id.to_string(), cells }
+            })
+            .collect(),
+    }
+}
+//#endregion 🔖️Verification
+
 #[path = "✏️case-edits/🦀️.rs"]
 mod case_edits;
 pub use case_edits::*;

@@ -177,7 +177,7 @@
     "typecheck": {
       "executor": "repo:script",
       "cache": true,
-      "inputs": ["default", "^default", "reads"],
+      "inputs": ["default", "^default"],
       "outputs": [],
       "options": { "command": "repo ./📜️script.ts typecheck", "cwd": "{projectRoot}" }
     },

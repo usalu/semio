@@ -9,7 +9,8 @@
       "changed": false,
       "work": 0,
       "bytes": 0,
-      "maximumWork": 1
+      "maximumWork": 1,
+      "priorWork": 0
     },
     {
       "name": "zero-work",
@@ -20,7 +21,8 @@
       "changed": false,
       "work": 0,
       "bytes": 0,
-      "maximumWork": 0
+      "maximumWork": 0,
+      "priorWork": 0
     },
     {
       "name": "one-copy",
@@ -31,7 +33,8 @@
       "changed": true,
       "work": 1,
       "bytes": 1,
-      "maximumWork": 1
+      "maximumWork": 1,
+      "priorWork": 0
     },
     {
       "name": "zero-items",
@@ -42,7 +45,8 @@
       "changed": false,
       "work": 0,
       "bytes": 0,
-      "maximumWork": 1
+      "maximumWork": 1,
+      "priorWork": 0
     },
     {
       "name": "zero-depth",
@@ -53,7 +57,8 @@
       "changed": false,
       "work": 0,
       "bytes": 0,
-      "maximumWork": 1
+      "maximumWork": 1,
+      "priorWork": 0
     },
     {
       "name": "repeated",
@@ -64,7 +69,20 @@
       "changed": false,
       "work": 0,
       "bytes": 0,
-      "maximumWork": 1
+      "maximumWork": 1,
+      "priorWork": 0
+    },
+    {
+      "name": "spent-original-work",
+      "started": false,
+      "copy": 1,
+      "items": 1,
+      "depth": 1,
+      "changed": false,
+      "work": 0,
+      "bytes": 0,
+      "maximumWork": 1,
+      "priorWork": 1
     }
   ]
 }

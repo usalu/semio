@@ -1,0 +1,38 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "original",
+    "foreign",
+    "deniedWork",
+    "paidWork",
+    "sameOwner",
+    "deniedRetained"
+  ],
+  "properties": {
+    "original": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "foreign": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "deniedWork": {
+      "type": "integer",
+      "const": 0
+    },
+    "paidWork": {
+      "type": "integer",
+      "const": 1
+    },
+    "sameOwner": {
+      "type": "boolean",
+      "const": true
+    },
+    "deniedRetained": {
+      "type": "boolean",
+      "const": true
+    }
+  }
+}

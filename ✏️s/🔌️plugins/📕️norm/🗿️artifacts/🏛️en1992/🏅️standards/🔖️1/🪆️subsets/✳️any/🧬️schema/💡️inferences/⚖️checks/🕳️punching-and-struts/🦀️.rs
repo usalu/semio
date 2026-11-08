@@ -418,10 +418,10 @@ pub fn p06(c: &Case) -> R {
 }
 
 pub fn p07(c: &Case) -> R {
-    let p = punch_base(c)?;
     let vp = c.o("p_force", 0.0) * c.o("tendon_angle", 0.0).sin();
+    let p = punch_base(&c.clone().with_n("delta_v", c.o("delta_v", 0.0) + vp))?;
     let sigma_cp = c.o("sigma_cp", 0.0);
-    Ok(vec![Outcome::stress("util", "Prestressed flat slab punching", "Durchstanzen vorgespannte Flachdecke", (p.ved_stress - vp / (p.u1 * p.d)).max(0.0), p.vrdc, format!("σ_cp = {}, V_p = {}", f(sigma_cp), f(vp)))])
+    Ok(vec![Outcome::stress("util", "Prestressed flat slab punching", "Durchstanzen vorgespannte Flachdecke", p.ved_stress.max(0.0), p.vrdc, format!("σ_cp = {}, V_p = {}", f(sigma_cp), f(vp)))])
 }
 
 /// 🧱 Strut stress limit σ_Rd,max for the strut kind: `free` (no transverse tension, f_cd) or `cracked` (0.6 ν' f_cd, NDP).

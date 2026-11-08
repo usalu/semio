@@ -1,9 +1,11 @@
-union En1999Mutation = ChangeAnnex | InsertMember | RemoveMember | ChangeMemberNEd | ChangeMemberMYEd | ChangeMemberBucklingLength | ChangeMaterialDesignation | ChangePlateThickness | ChangeWeldThroat | ChangeBoltCount | ChangeMaterialProductForm | ChangeSectionKind | ChangeSectionHeight | ChangeSectionWidth | ChangeSectionFlangeThickness | ChangeSectionWebThickness | ChangeSectionOuterDiameter | ChangeElementWidth | ChangeElementOutstand | ChangeElementWelded | ChangeElementWeldPosition | ChangeElementWeldProcess | ChangeElementWeldTJunction | ChangeElementWeldDirection | ChangeElementStiffenerDepth | ChangeElementStiffenerThk | ChangeMemberSectionId | ChangeMemberMaterialId | ChangeMemberLength | ChangeMemberSupport | ChangeMemberLtbLength | ChangeMemberC1 | ChangeMemberRestrainedLtb | ChangeMemberBearingLength | ChangeMemberTransverseWeld | ChangeMemberTWeldOffset | ChangeActionKind | ChangeActionCategory | ChangeActionSource | ChangeActionGKLine | ChangeActionQKLine | ChangeActionVYK | ChangeActionVZK | ChangeActionMZK | ChangeActionTorsionK | ChangeActionLocalLoadK | ChangeConnMemberId | ChangeConnMaterialId | ChangeConnKind | ChangeConnForceMethod | ChangeConnBoltsMaterial | ChangeConnBoltsDiameter | ChangeConnBoltsEdgeDistance | ChangeConnBoltsPitch | ChangeConnBoltsGauge | ChangeConnBoltsPlateThickness | ChangeConnWeldsFillerAlloy | ChangeConnWeldsLength | ChangeConnWeldsBetaW | ChangeConnWeldsHazExtent | ChangeConnActionKind | ChangeConnActionCategory | ChangeConnActionSource | ChangeConnActionGKLine | ChangeConnActionQKLine | ChangeConnActionNK | ChangeConnActionVYK | ChangeConnActionVZK | ChangeConnActionMYK | ChangeConnActionMZK | ChangeConnActionTorsionK | ChangeConnActionLocalLoadK | ChangeFireMemberId | ChangeFireThetaA | ChangeFireDurationS | ChangeFatigueMemberId | ChangeFatigueDetailCategory | ChangeFatigueDeltaSigmaC | ChangeFatigueDeltaSigmaEd | ChangeFatigueNCycles | ChangeFatigueM1 | ChangeFatigueM2 | ChangeSheetMaterialId | ChangeSheetThickness | ChangeSheetWidth | ChangeSheetSpan | ChangeSheetWelded | ChangeSheetActionKind | ChangeSheetActionCategory | ChangeSheetActionSource | ChangeSheetActionGKLine | ChangeSheetActionQKLine | ChangeSheetActionNK | ChangeSheetActionVYK | ChangeSheetActionVZK | ChangeSheetActionMYK | ChangeSheetActionMZK | ChangeSheetActionTorsionK | ChangeSheetActionLocalLoadK | ChangeShellMaterialId | ChangeShellRadius | ChangeShellThickness | ChangeShellLength | ChangeShellWelded | ChangeShellFabricationClass | ChangeShellActionKind | ChangeShellActionCategory | ChangeShellActionSource | ChangeShellActionGKLine | ChangeShellActionQKLine | ChangeShellActionNK | ChangeShellActionVYK | ChangeShellActionVZK | ChangeShellActionMYK | ChangeShellActionMZK | ChangeShellActionTorsionK | ChangeShellActionLocalLoadK | ChangeWeldRunMemberId | ChangeWeldRunElementId | ChangeWeldRunStart | ChangeWeldRunLength | ChangeWeldRunOffset | ChangeWeldRunThroat | ChangeWeldRunProcess | ChangeWeldRunTJunction | ChangeWeldRunDirection | ChangeWeldRunHazExtent | ChangeVertexSectionId | ChangeVertexRing | ChangeVertexElementId | ChangeVertexY | ChangeVertexZ | ChangePlacementX | ChangePlacementY | ChangePlacementZ | ChangePlacementYaw | InsertWeldRun | RemoveWeldRun | InsertOutlineVertex | RemoveOutlineVertex | InsertPlacement | RemovePlacement | InsertMaterial | RemoveMaterial | InsertSection | RemoveSection | InsertConnection | RemoveConnection | InsertFireScenario | RemoveFireScenario | InsertFatigueDetail | RemoveFatigueDetail | InsertColdFormedSheet | RemoveColdFormedSheet | InsertShell | RemoveShell | ChangeMemberBucklingLengthY | ChangeMemberBucklingLengthT | ChangeConnBoltsBoltsPerRow | ChangeCategoryMemberId | ChangeCategoryElementId | ChangeCategoryDetailCategory | ChangeCategoryDetailType | ChangeCategoryLocationX | ChangeCategoryM1 | ChangeCategoryM2 | ChangePatchSubjectId | ChangePatchPosition | ChangePatchX | ChangePatchBearingLength | ChangePatchWebHeight | ChangePatchWebAngle | ChangePatchCornerRadius | ChangePatchLoad | ChangeRingShellId | ChangeRingX | ChangeRingDepth | ChangeRingThickness | ChangeRingInternal | InsertFatigueCategory | RemoveFatigueCategory | InsertPatchLoad | RemovePatchLoad | InsertRingStiffener | RemoveRingStiffener | InsertMemberAction | RemoveMemberAction | InsertConnectionAction | RemoveConnectionAction | InsertSectionElement | RemoveSectionElement | InsertSheetAction | RemoveSheetAction | InsertShellAction | RemoveShellAction | ChangeTransverseGirderId | ChangeTransversePosition | ChangeTransverseWidth | ChangeTransverseThickness | ChangeConnLoadEccentricity | ChangeConnHoleStagger | ChangeTransverseSides | InsertTransverseStiffener | RemoveTransverseStiffener | ChangeReliabilityClass
+scalar UInt32
+
+union En1999Mutation = ChangeAnnex | InsertMember | RemoveMember | ChangeMemberNEd | ChangeMemberMYEd | ChangeMemberBucklingLength | ChangeMaterialDesignation | ChangePlateThickness | ChangeWeldThroat | ChangeBoltCount | ChangeMaterialProductForm | ChangeSectionKind | ChangeSectionHeight | ChangeSectionWidth | ChangeSectionFlangeThickness | ChangeSectionWebThickness | ChangeSectionOuterDiameter | ChangeElementWidth | ChangeElementOutstand | ChangeElementWelded | ChangeElementWeldPosition | ChangeElementWeldProcess | ChangeElementWeldTJunction | ChangeElementWeldDirection | ChangeElementStiffenerDepth | ChangeElementStiffenerThk | ChangeMemberSectionId | ChangeMemberMaterialId | ChangeMemberLength | ChangeMemberSupport | ChangeMemberLtbLength | ChangeMemberC1 | ChangeMemberRestrainedLtb | ChangeMemberBearingLength | ChangeMemberTransverseWeld | ChangeMemberTWeldOffset | ChangeActionKind | ChangeActionCategory | ChangeActionSource | ChangeActionGKLine | ChangeActionQKLine | ChangeActionVYK | ChangeActionVZK | ChangeActionMZK | ChangeActionTorsionK | ChangeActionLocalLoadK | ChangeConnMemberId | ChangeConnMaterialId | ChangeConnKind | ChangeConnForceMethod | ChangeConnBoltsMaterial | ChangeConnBoltsDiameter | ChangeConnBoltsEdgeDistance | ChangeConnBoltsPitch | ChangeConnBoltsGauge | ChangeConnBoltsPlateThickness | ChangeConnWeldsFillerAlloy | ChangeConnWeldsLength | ChangeConnWeldsBetaW | ChangeConnWeldsHazExtent | ChangeConnActionKind | ChangeConnActionCategory | ChangeConnActionSource | ChangeConnActionGKLine | ChangeConnActionQKLine | ChangeConnActionNK | ChangeConnActionVYK | ChangeConnActionVZK | ChangeConnActionMYK | ChangeConnActionMZK | ChangeConnActionTorsionK | ChangeConnActionLocalLoadK | ChangeFireMemberId | ChangeFireThetaA | ChangeFireDurationS | ChangeFatigueMemberId | ChangeFatigueDetailCategory | ChangeFatigueDeltaSigmaC | ChangeFatigueDeltaSigmaEd | ChangeFatigueNCycles | ChangeFatigueM1 | ChangeFatigueM2 | ChangeSheetMaterialId | ChangeSheetThickness | ChangeSheetWidth | ChangeSheetSpan | ChangeSheetWelded | ChangeSheetActionKind | ChangeSheetActionCategory | ChangeSheetActionSource | ChangeSheetActionGKLine | ChangeSheetActionQKLine | ChangeSheetActionNK | ChangeSheetActionVYK | ChangeSheetActionVZK | ChangeSheetActionMYK | ChangeSheetActionMZK | ChangeSheetActionTorsionK | ChangeSheetActionLocalLoadK | ChangeShellMaterialId | ChangeShellRadius | ChangeShellThickness | ChangeShellLength | ChangeShellWelded | ChangeShellFabricationClass | ChangeShellActionKind | ChangeShellActionCategory | ChangeShellActionSource | ChangeShellActionGKLine | ChangeShellActionQKLine | ChangeShellActionNK | ChangeShellActionVYK | ChangeShellActionVZK | ChangeShellActionMYK | ChangeShellActionMZK | ChangeShellActionTorsionK | ChangeShellActionLocalLoadK | ChangeWeldRunMemberId | ChangeWeldRunElementId | ChangeWeldRunStart | ChangeWeldRunLength | ChangeWeldRunOffset | ChangeWeldRunThroat | ChangeWeldRunProcess | ChangeWeldRunTJunction | ChangeWeldRunDirection | ChangeWeldRunHazExtent | ChangeVertexSectionId | ChangeVertexRing | ChangeVertexElementId | ChangeVertexY | ChangeVertexZ | ChangePlacementX | ChangePlacementY | ChangePlacementZ | ChangePlacementYaw | InsertWeldRun | RemoveWeldRun | InsertOutlineVertex | RemoveOutlineVertex | InsertPlacement | RemovePlacement | InsertMaterial | RemoveMaterial | InsertSection | RemoveSection | InsertConnection | RemoveConnection | InsertFireScenario | RemoveFireScenario | InsertFatigueDetail | RemoveFatigueDetail | InsertColdFormedSheet | RemoveColdFormedSheet | InsertShell | RemoveShell | ChangeMemberBucklingLengthY | ChangeMemberBucklingLengthT | ChangeConnBoltsBoltsPerRow | ChangeCategoryMemberId | ChangeCategoryElementId | ChangeCategoryDetailCategory | ChangeCategoryDetailType | ChangeCategoryLocationX | ChangeCategoryM1 | ChangeCategoryM2 | ChangePatchSubjectId | ChangePatchPosition | ChangePatchX | ChangePatchBearingLength | ChangePatchWebHeight | ChangePatchWebAngle | ChangePatchCornerRadius | ChangePatchLoad | ChangeRingShellId | ChangeRingX | ChangeRingDepth | ChangeRingThickness | ChangeRingInternal | InsertFatigueCategory | RemoveFatigueCategory | InsertPatchLoad | RemovePatchLoad | InsertRingStiffener | InsertSheetProfile | InsertFireInsulation | RemoveRingStiffener | RemoveSheetProfile | RemoveFireInsulation | InsertMemberAction | RemoveMemberAction | InsertConnectionAction | RemoveConnectionAction | InsertSectionElement | RemoveSectionElement | InsertSheetAction | RemoveSheetAction | InsertShellAction | RemoveShellAction | ChangeTransverseGirderId | ChangeSheetProfileSheetId | ChangeFireInsulationFireId | ChangeTransversePosition | ChangeTransverseWidth | ChangeTransverseThickness | ChangeConnLoadEccentricity | ChangeConnHoleStagger | ChangeSheetProfileWebHeight | ChangeSheetProfileBottomFlange | ChangeSheetProfileTopFlange | ChangeSheetProfilePitch | ChangeFireInsulationDensity | ChangeFireInsulationSpecificHeat | ChangeFireInsulationConductivity | ChangeFireInsulationThickness | ChangeTransverseSides | InsertTransverseStiffener | RemoveTransverseStiffener | ChangeReliabilityClass
 type ChangeAnnex {
   newAnnex: AnnexChoice!
 }
 type InsertMember {
-  index: Int!
+  index: UInt32!
   member: AluminiumMember!
 }
 type RemoveMember {
@@ -39,8 +41,8 @@ type ChangeWeldThroat {
 }
 type ChangeBoltCount {
   connectionId: String!
-  newRows: Int!
-  newBoltsPerRow: Int!
+  newRows: UInt32!
+  newBoltsPerRow: UInt32!
 }
 type ChangeMaterialProductForm {
   materialId: String!
@@ -602,70 +604,70 @@ type ChangePlacementYaw {
   newYaw: Float!
 }
 type InsertWeldRun {
-  index: Int!
+  index: UInt32!
   weldRun: WeldRun!
 }
 type RemoveWeldRun {
   id: String!
 }
 type InsertOutlineVertex {
-  index: Int!
+  index: UInt32!
   outlineVertex: SectionVertex!
 }
 type RemoveOutlineVertex {
   id: String!
 }
 type InsertPlacement {
-  index: Int!
+  index: UInt32!
   placement: Placement!
 }
 type RemovePlacement {
   id: String!
 }
 type InsertMaterial {
-  index: Int!
+  index: UInt32!
   material: AluminiumMaterial!
 }
 type RemoveMaterial {
   id: String!
 }
 type InsertSection {
-  index: Int!
+  index: UInt32!
   section: AluminiumSection!
 }
 type RemoveSection {
   id: String!
 }
 type InsertConnection {
-  index: Int!
+  index: UInt32!
   connection: AluminiumConnection!
 }
 type RemoveConnection {
   id: String!
 }
 type InsertFireScenario {
-  index: Int!
+  index: UInt32!
   fireScenario: FireScenario!
 }
 type RemoveFireScenario {
   id: String!
 }
 type InsertFatigueDetail {
-  index: Int!
+  index: UInt32!
   fatigueDetail: FatigueDetail!
 }
 type RemoveFatigueDetail {
   id: String!
 }
 type InsertColdFormedSheet {
-  index: Int!
+  index: UInt32!
   coldFormedSheet: ColdFormedSheet!
 }
 type RemoveColdFormedSheet {
   id: String!
 }
 type InsertShell {
-  index: Int!
+  index: UInt32!
   shell: AluminiumShell!
 }
 type RemoveShell {
@@ -681,7 +683,7 @@ type ChangeMemberBucklingLengthT {
 }
 type ChangeConnBoltsBoltsPerRow {
   connectionId: String!
-  newBoltsBoltsPerRow: Int!
+  newBoltsBoltsPerRow: UInt32!
 }
 type ChangeCategoryMemberId {
   fatigueCategoryId: String!
@@ -764,29 +766,43 @@ type ChangeRingInternal {
   newInternal: Boolean!
 }
 type InsertFatigueCategory {
-  index: Int!
+  index: UInt32!
   fatigueCategory: FatigueCategory!
 }
 type RemoveFatigueCategory {
   id: String!
 }
 type InsertPatchLoad {
-  index: Int!
+  index: UInt32!
   patchLoad: PatchLoad!
 }
 type RemovePatchLoad {
   id: String!
 }
 type InsertRingStiffener {
-  index: Int!
+  index: UInt32!
   ringStiffener: RingStiffener!
+}
+type InsertSheetProfile {
+  index: UInt32!
+  sheetProfile: SheetProfile!
+}
+type InsertFireInsulation {
+  index: UInt32!
+  fireInsulation: FireInsulation!
 }
 type RemoveRingStiffener {
   id: String!
 }
+type RemoveSheetProfile {
+  id: String!
+}
+type RemoveFireInsulation {
+  id: String!
+}
 type InsertMemberAction {
   memberId: String!
-  index: Int!
+  index: UInt32!
   action: MemberAction!
 }
 type RemoveMemberAction {
@@ -795,7 +811,7 @@ type RemoveMemberAction {
 }
 type InsertConnectionAction {
   connectionId: String!
-  index: Int!
+  index: UInt32!
   action: MemberAction!
 }
 type RemoveConnectionAction {
@@ -804,7 +820,7 @@ type RemoveConnectionAction {
 }
 type InsertSectionElement {
   sectionId: String!
-  index: Int!
+  index: UInt32!
   element: PlateElement!
 }
 type RemoveSectionElement {
@@ -813,7 +829,7 @@ type RemoveSectionElement {
 }
 type InsertSheetAction {
   coldFormedId: String!
-  index: Int!
+  index: UInt32!
   action: MemberAction!
 }
 type RemoveSheetAction {
@@ -822,7 +838,7 @@ type RemoveSheetAction {
 }
 type InsertShellAction {
   shellId: String!
-  index: Int!
+  index: UInt32!
   action: MemberAction!
 }
 type RemoveShellAction {
@@ -832,6 +848,14 @@ type RemoveShellAction {
 type ChangeTransverseGirderId {
   transverseStiffenerId: String!
   newGirderId: String!
+}
+type ChangeSheetProfileSheetId {
+  sheetProfileId: String!
+  newSheetId: String!
+}
+type ChangeFireInsulationFireId {
+  fireInsulationId: String!
+  newFireId: String!
 }
 type ChangeTransversePosition {
   transverseStiffenerId: String!
@@ -853,12 +877,44 @@ type ChangeConnHoleStagger {
   aluminiumConnectionId: String!
   newHoleStagger: Float!
 }
+type ChangeSheetProfileWebHeight {
+  sheetProfileId: String!
+  newWebHeight: Float!
+}
+type ChangeSheetProfileBottomFlange {
+  sheetProfileId: String!
+  newBottomFlange: Float!
+}
+type ChangeSheetProfileTopFlange {
+  sheetProfileId: String!
+  newTopFlange: Float!
+}
+type ChangeSheetProfilePitch {
+  sheetProfileId: String!
+  newPitch: Float!
+}
+type ChangeFireInsulationDensity {
+  fireInsulationId: String!
+  newDensity: Float!
+}
+type ChangeFireInsulationSpecificHeat {
+  fireInsulationId: String!
+  newSpecificHeat: Float!
+}
+type ChangeFireInsulationConductivity {
+  fireInsulationId: String!
+  newConductivity: Float!
+}
+type ChangeFireInsulationThickness {
+  fireInsulationId: String!
+  newThickness: Float!
+}
 type ChangeTransverseSides {
   transverseStiffenerId: String!
   newSides: StiffenerSides!
 }
 type InsertTransverseStiffener {
-  index: Int!
+  index: UInt32!
   transverseStiffener: TransverseStiffener!
 }
 type RemoveTransverseStiffener {

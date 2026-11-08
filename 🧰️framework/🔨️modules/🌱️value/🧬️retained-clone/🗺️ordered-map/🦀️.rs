@@ -13,9 +13,10 @@ pub use map_core::*;
 mod clone_cursor;
 pub use clone_cursor::*;
 
-#[path = "🔢️bounded-ord/🦀️.rs"]
-mod bounded_ord;
-pub use bounded_ord::*;
+pub use semio_framework_value_native_bounded_ordering::{BoundedOrdGrant,BoundedOrdProgress,BoundedOrdStep,BoundedOrd,BoundedOrdCursor,NativeBoundedOrdering,NativeBoundedOrdCursor,ScalarBoundedOrdCursor,StringBoundedOrdCursor};
+#[cfg(test)]
+#[path="🔢️bounded-ord/🧪️tests/driver.rs"]
+pub(crate) mod bounded_test_support;
 
 #[path = "🔎️lookup-cursor/🦀️.rs"]
 mod lookup_cursor;
@@ -43,5 +44,12 @@ mod staged_lease;
 mod removal;
 pub use removal::{RetainedOrderedMapRemoveCursor,RetainedOrderedMapRemoveGrant,RetainedOrderedMapRemoveProgress,RetainedOrderedMapRemoveStep};
 
+#[path="📥️workspace/🦀️.rs"]
+mod edit_input;
+
 #[path="♻️retirement/🦀️.rs"]
 mod edit_retirement;
+
+#[cfg(test)]
+#[path="🧪️tests/edit-support.rs"]
+pub(crate) mod edit_test_support;

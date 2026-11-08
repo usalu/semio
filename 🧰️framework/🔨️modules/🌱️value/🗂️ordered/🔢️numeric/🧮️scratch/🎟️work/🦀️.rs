@@ -21,23 +21,23 @@ impl<K:Copy+Ord,V> NumericWorkInsertCursor<K,V>{
  pub fn last_turn_work(&self)->u64{self.last_turn_work}
  pub fn last_turn_semantic_work(&self)->u64{self.last_turn_semantic_work}
  pub fn take_previous(&mut self)->Option<V>{assert!(self.is_complete());self.previous.take()}
- fn step(&mut self,index:&mut NumericIndex<K,V>,work:&mut RetainedWorkLedger,actual:&mut Option<usize>)->Result<NumericWorkStep,ValueError>{
+ fn step(&mut self,index:&mut NumericIndex<K,V>,work:&mut RetainedWorkLedger,effect:&mut crate::RetainedAllocationEffect<'_>)->Result<NumericWorkStep,ValueError>{
   match self.phase{
    0=>{self.current=index.root;self.phase=1;},
    1=>{if let Some(current)=self.current{match self.key.cmp(&index.node(current).key){
     Ordering::Equal=>{let generation=index.generation;let node=index.node_mut(current);self.previous=node.value.replace(self.value.take().ok_or_else(||ValueError::invariant("value absent"))?);node.generation=generation;self.phase=3;},
     order=>{self.parent=Some(current);self.current=if order==Ordering::Less{index.node(current).left}else{index.node(current).right};},
    }}else{self.phase=2;}},
-   2=>{if !work.slot(&mut index.nodes,actual).map_err(ValueError::invariant)?{return Ok(NumericWorkStep::Pending);}let placed=index.nodes.len();let node=Node{key:self.key,value:self.value.take(),generation:index.generation,count_generation:index.generation,count:1,height:1,left:None,right:None,parent:self.parent};work.push(&mut index.nodes,node).map_err(|(error,_)|ValueError::invariant(error))?;if let Some(parent)=self.parent{if self.key<index.node(parent).key{index.node_mut(parent).left=Some(placed)}else{index.node_mut(parent).right=Some(placed)}}else{index.root=Some(placed)}self.current=self.parent;self.phase=3;},
+   2=>{if !work.slot(&mut index.nodes,effect)?{return Ok(NumericWorkStep::Pending);}let placed=index.nodes.len();let node=Node{key:self.key,value:self.value.take(),generation:index.generation,count_generation:index.generation,count:1,height:1,left:None,right:None,parent:self.parent};work.push(&mut index.nodes,node).map_err(|(error,_)|ValueError::invariant(error))?;if let Some(parent)=self.parent{if self.key<index.node(parent).key{index.node_mut(parent).left=Some(placed)}else{index.node_mut(parent).right=Some(placed)}}else{index.root=Some(placed)}self.current=self.parent;self.phase=3;},
    3=>{if let Some(current)=self.current{self.current=repair_one(index,current);}else{self.phase=4;}},
    _=>return Ok(NumericWorkStep::Pending),
   }Ok(if self.phase==4{NumericWorkStep::Complete}else{NumericWorkStep::Progress})
  }
- pub fn advance(&mut self,index:&mut NumericIndex<K,V>,items:usize,work:&mut RetainedWorkLedger,actual:&mut Option<usize>)->Result<bool,ValueError>{
+ pub fn advance(&mut self,index:&mut NumericIndex<K,V>,items:usize,work:&mut RetainedWorkLedger,effect:&mut crate::RetainedAllocationEffect<'_>)->Result<bool,ValueError>{
   self.last_turn_work=0;self.last_turn_semantic_work=0;if items==0{return Err(ValueError::invariant("numeric original work requires positive items"));}let d=self.pending;
   if !work.admits_absolute(d){work.require_absolute(d);return Ok(self.is_complete());}
   let Some(root)=work.enter()else{self.pending=work.next_demand();return Ok(self.is_complete());};
-  let result=(||{for _ in 0..items{if self.is_complete()||!work.can_step(){break;}let before=work.receipt();let result=self.step(index,work,actual);let semantic=matches!(&result,Ok(NumericWorkStep::Complete)|Err(_));let actual=!matches!(&result,Ok(NumericWorkStep::Pending))||work.receipt()!=before;if actual{work.note_source(root);self.last_turn_work+=1;}if semantic{self.last_turn_semantic_work+=1;}self.pending=work.next_demand();result?;if work.blocked(){break;}}Ok(self.is_complete())})();work.exit();result
+  let result=(||{for _ in 0..items{if self.is_complete()||!work.can_step(){break;}let before=work.receipt();let result=self.step(index,work,effect);let semantic=matches!(&result,Ok(NumericWorkStep::Complete)|Err(_));let actual=!matches!(&result,Ok(NumericWorkStep::Pending))||work.receipt()!=before;if actual{work.note_source(root);self.last_turn_work+=1;}if semantic{self.last_turn_semantic_work+=1;}self.pending=work.next_demand();result?;if work.blocked(){break;}}Ok(self.is_complete())})();work.exit();result
  }
 }
 impl<K:RetireOwned,V:RetireOwned> RetireOwned for NumericWorkInsertCursor<K,V>{

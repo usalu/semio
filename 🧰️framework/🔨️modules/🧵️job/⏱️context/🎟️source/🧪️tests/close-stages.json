@@ -1,0 +1,58 @@
+[
+  {
+    "stage": "lending",
+    "work": 0,
+    "admitted": false,
+    "next": "lending",
+    "spent": 0
+  },
+  {
+    "stage": "lending",
+    "work": 1,
+    "admitted": true,
+    "next": "original",
+    "spent": 1
+  },
+  {
+    "stage": "original",
+    "work": 0,
+    "admitted": false,
+    "next": "original",
+    "spent": 0
+  },
+  {
+    "stage": "original",
+    "work": 1,
+    "admitted": true,
+    "next": "owner",
+    "spent": 1
+  },
+  {
+    "stage": "owner",
+    "work": 4,
+    "admitted": true,
+    "next": "emptyOwner",
+    "spent": 4
+  },
+  {
+    "stage": "emptyOwner",
+    "work": 1,
+    "admitted": true,
+    "next": "roots",
+    "spent": 1
+  },
+  {
+    "stage": "roots",
+    "work": 1,
+    "admitted": true,
+    "next": "retiring",
+    "spent": 1
+  },
+  {
+    "stage": "retiring",
+    "work": 0,
+    "admitted": false,
+    "next": "retiring",
+    "spent": 0
+  }
+]

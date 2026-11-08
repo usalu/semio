@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "steps",
+    "unwind",
+    "denied",
+    "cancelPhases",
+    "ownedAlias",
+    "borrowedClose",
+    "stagedCancelCuts",
+    "stagedProjection",
+    "bindingCheck",
+    "sourceClose",
+    "stagedRetirement"
+  ],
+  "properties": {
+    "steps": {
+      "const": [
+        "capture-id",
+        "project",
+        "recover-recorded",
+        "settle",
+        "publish"
+      ]
+    },
+    "unwind": {
+      "const": {
+        "sourceCalls": 1,
+        "recoveryCalls": 0,
+        "ownedSourceRetained": true,
+        "resultTransferredAfterSettlement": true
+      }
+    },
+    "denied": {
+      "const": {
+        "sourceCalls": 0,
+        "work": 0,
+        "ownerMoved": false
+      }
+    },
+    "cancelPhases": {
+      "const": [
+        "leaseInitialize",
+        "leasePublish",
+        "leaseFinish",
+        "publication"
+      ]
+    },
+    "ownedAlias": {
+      "const": {
+        "value": 73,
+        "deniedWork": 0,
+        "deniedAllocation": 0,
+        "sourceMayCloseBeforePublish": true,
+        "publishWork": 1
+      }
+    },
+    "borrowedClose": {
+      "const": {
+        "refusal": "recorded terminal child refusal",
+        "fuel": 64,
+        "maximumTurns": 64,
+        "receiveCalls": 1,
+        "recoverCalls": 0
+      }
+    },
+    "stagedCancelCuts": {
+      "const": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    "stagedProjection": {
+      "const": {
+        "input": 73,
+        "idleCancelCalls": 0,
+        "successCalls": 1,
+        "resultAfterSettlement": true
+      }
+    },
+    "bindingCheck": {
+      "const": {
+        "unboundWork": 1,
+        "deniedWork": 0,
+        "unbound": false,
+        "boundWork": 5,
+        "foreignWork": 2
+      }
+    },
+    "sourceClose": {
+      "const": {
+        "value": 73,
+        "terminal": true
+      }
+    },
+    "stagedRetirement": {
+      "const": {
+        "input": 73,
+        "cuts": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "deniedWork": 0,
+        "ownerRetired": true,
+        "readyCut": true
+      }
+    }
+  }
+}

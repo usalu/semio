@@ -1,0 +1,5 @@
+{
+  "mutation": "changeIsolationSystemCapacityM",
+  "id": "iso-1",
+  "newCapacityM": 1.5
+}

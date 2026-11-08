@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-sheet-profile-sheet-id/schema.json",
+  "title": "ChangeSheetProfileSheetId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "sheetProfileId",
+    "newSheetId"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSheetProfileSheetId"
+    },
+    "sheetProfileId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "SheetProfile stiffener",
+          "de": "Quersteife"
+        },
+        "description": {
+          "en": "The sheetProfile stiffener this mutation addresses, by id.",
+          "de": "Das adressierte Element (Quersteife), per Kennung."
+        },
+        "ref": {
+          "kind": "sheet-profile"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newSheetId": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Sheet",
+          "de": "Blech"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

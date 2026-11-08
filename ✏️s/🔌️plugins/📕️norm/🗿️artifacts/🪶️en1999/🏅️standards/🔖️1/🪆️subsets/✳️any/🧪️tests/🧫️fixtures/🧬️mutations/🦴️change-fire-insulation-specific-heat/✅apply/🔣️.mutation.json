@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFireInsulationSpecificHeat",
+  "fireInsulationId": "fire-insulation-1",
+  "newSpecificHeat": 1201.0
+}

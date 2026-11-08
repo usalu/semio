@@ -27,7 +27,12 @@ pub fn kind_name(kind: EntityKind) -> (&'static str, &'static str) {
 }
 
 fn marker(id: String, position: V3, shape: World3dMarkerShape, text: World3dText, tone: World3dTone) -> World3dAnnotation {
-    World3dAnnotation::Marker(World3dMarker { id, position, shape, text, tone })
+    World3dAnnotation::Marker(World3dMarker { id, position, shape, axis: None, text, tone })
+}
+
+fn grip_marker(handle: &Handle, text: World3dText, tone: World3dTone) -> World3dAnnotation {
+    let axis = matches!(handle.kind, HandleKind::Translate { .. } | HandleKind::ScalarAlong { .. }).then(|| direction(&handle.kind));
+    World3dAnnotation::Marker(World3dMarker { id: format!("handle:{}", handle.id), position: v3(&handle.anchor), shape: World3dMarkerShape::Ring, axis, text, tone })
 }
 
 fn anchor_of(scene: &StructuralScene, entity_id: &str) -> Option<V3> {
@@ -59,7 +64,7 @@ pub fn grips(handles: &[Handle], view: &GripView) -> Vec<World3dAnnotation> {
             let tone = if contrast || view.dragging == Some(h.id.as_str()) { World3dTone::Primary } else { World3dTone::Info };
             let name = World3dText::new(h.accessible_name.en.clone(), h.accessible_name.de.clone());
             let focus = (view.focused == Some(h.id.as_str())).then(|| marker(format!("focus:{}", h.id), v3(&h.anchor), World3dMarkerShape::Cross, World3dText::new(format!("Focused: {}", h.accessible_name.en), format!("Fokussiert: {}", h.accessible_name.de)), World3dTone::Primary));
-            std::iter::once(marker(format!("handle:{}", h.id), v3(&h.anchor), World3dMarkerShape::Ring, name, tone)).chain(focus)
+            std::iter::once(grip_marker(h, name, tone)).chain(focus)
         })
         .collect()
 }

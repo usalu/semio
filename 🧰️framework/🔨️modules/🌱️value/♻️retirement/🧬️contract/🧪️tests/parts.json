@@ -71,5 +71,11 @@
     "scopedCancel",
     "receipt",
     "extent"
-  ]
+  ],
+  "nativeForwarding": {
+    "refusal": "original native child refusal",
+    "pendingRetained": true,
+    "recorded": true,
+    "cloneCount": 0
+  }
 }

@@ -69,6 +69,15 @@ use semio_s_artifact_norm_din16798_mut_air_hygiene::change_vent_inspection::Chan
 use semio_s_artifact_norm_din16798_mut_air_hygiene::change_vent_duct_class::ChangeVentDuctClass;
 use semio_s_artifact_norm_din16798_mut_air_hygiene::change_vent_duct_leakage::ChangeVentDuctLeakage;
 use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_design_airflow::ChangeVentDesignAirflow;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_name::ChangeZoneName;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_id::ChangeZoneId;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_name::ChangeVentName;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_id::ChangeVentId;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_fan_flow::ChangeVentFanFlow;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_fan_run_hours::ChangeVentFanRunHours;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_duct_test_pressure::ChangeVentDuctTestPressure;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_humidification_required::ChangeVentHumidificationRequired;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_humidification_provided::ChangeVentHumidificationProvided;
 fn write_json_bin<T: semio_framework_value::ToValue>(out: &mut Vec<u8>, value: &T) {
     let bytes = semio_framework_pack_json::to_json_string(value);
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
@@ -164,6 +173,24 @@ const TAG_CHANGE_VENT_DUCT_LEAKAGE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTO
 
 const TAG_CHANGE_VENT_DESIGN_AIRFLOW: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-vent-design-airflow");
 
+const TAG_CHANGE_ZONE_NAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-zone-name");
+
+const TAG_CHANGE_ZONE_ID: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-zone-id");
+
+const TAG_CHANGE_VENT_NAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-vent-name");
+
+const TAG_CHANGE_VENT_ID: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-vent-id");
+
+const TAG_CHANGE_VENT_FAN_FLOW: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-vent-fan-flow");
+
+const TAG_CHANGE_VENT_FAN_RUN_HOURS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-vent-fan-run-hours");
+
+const TAG_CHANGE_VENT_DUCT_TEST_PRESSURE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-vent-duct-test-pressure");
+
+const TAG_CHANGE_VENT_HUMIDIFICATION_REQUIRED: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-vent-humidification-required");
+
+const TAG_CHANGE_VENT_HUMIDIFICATION_PROVIDED: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-vent-humidification-provided");
+
 const WIRE_PROTOCOL: &str = include_str!("📡️.protocol.semio");
 impl protocol::OpBinary for Din16798Mutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -209,6 +236,15 @@ impl protocol::OpBinary for Din16798Mutation {
             Din16798Mutation::ChangeVentDuctClass(_) => TAG_CHANGE_VENT_DUCT_CLASS,
             Din16798Mutation::ChangeVentDuctLeakage(_) => TAG_CHANGE_VENT_DUCT_LEAKAGE,
             Din16798Mutation::ChangeVentDesignAirflow(_) => TAG_CHANGE_VENT_DESIGN_AIRFLOW,
+            Din16798Mutation::ChangeZoneName(_) => TAG_CHANGE_ZONE_NAME,
+            Din16798Mutation::ChangeZoneId(_) => TAG_CHANGE_ZONE_ID,
+            Din16798Mutation::ChangeVentName(_) => TAG_CHANGE_VENT_NAME,
+            Din16798Mutation::ChangeVentId(_) => TAG_CHANGE_VENT_ID,
+            Din16798Mutation::ChangeVentFanFlow(_) => TAG_CHANGE_VENT_FAN_FLOW,
+            Din16798Mutation::ChangeVentFanRunHours(_) => TAG_CHANGE_VENT_FAN_RUN_HOURS,
+            Din16798Mutation::ChangeVentDuctTestPressure(_) => TAG_CHANGE_VENT_DUCT_TEST_PRESSURE,
+            Din16798Mutation::ChangeVentHumidificationRequired(_) => TAG_CHANGE_VENT_HUMIDIFICATION_REQUIRED,
+            Din16798Mutation::ChangeVentHumidificationProvided(_) => TAG_CHANGE_VENT_HUMIDIFICATION_PROVIDED,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -365,6 +401,42 @@ impl protocol::OpBinary for Din16798Mutation {
             Din16798Mutation::ChangeVentDesignAirflow(p) => {
                 write_json_bin(&mut out, &p.vent_id);
                 write_json_bin(&mut out, &p.new_design_airflow_m3_h);
+            }
+            Din16798Mutation::ChangeZoneName(p) => {
+                write_json_bin(&mut out, &p.zone_id);
+                write_json_bin(&mut out, &p.new_name);
+            }
+            Din16798Mutation::ChangeZoneId(p) => {
+                write_json_bin(&mut out, &p.zone_id);
+                write_json_bin(&mut out, &p.new_id);
+            }
+            Din16798Mutation::ChangeVentName(p) => {
+                write_json_bin(&mut out, &p.vent_id);
+                write_json_bin(&mut out, &p.new_name);
+            }
+            Din16798Mutation::ChangeVentId(p) => {
+                write_json_bin(&mut out, &p.vent_id);
+                write_json_bin(&mut out, &p.new_id);
+            }
+            Din16798Mutation::ChangeVentFanFlow(p) => {
+                write_json_bin(&mut out, &p.vent_id);
+                write_json_bin(&mut out, &p.new_fan_q_v_m3_s);
+            }
+            Din16798Mutation::ChangeVentFanRunHours(p) => {
+                write_json_bin(&mut out, &p.vent_id);
+                write_json_bin(&mut out, &p.new_fan_t_run_h);
+            }
+            Din16798Mutation::ChangeVentDuctTestPressure(p) => {
+                write_json_bin(&mut out, &p.vent_id);
+                write_json_bin(&mut out, &p.new_duct_test_pressure_pa);
+            }
+            Din16798Mutation::ChangeVentHumidificationRequired(p) => {
+                write_json_bin(&mut out, &p.vent_id);
+                write_json_bin(&mut out, &p.new_humidification_required_kg_h);
+            }
+            Din16798Mutation::ChangeVentHumidificationProvided(p) => {
+                write_json_bin(&mut out, &p.vent_id);
+                write_json_bin(&mut out, &p.new_humidification_provided_kg_h);
             }
         }
         Ok(out)
@@ -570,6 +642,51 @@ impl protocol::OpBinary for Din16798Mutation {
                 let vent_id = read_json_bin(&mut reader).map_err(|e| malformed("vent_id", reader.position(), e))?;
                 let new_design_airflow_m3_h = read_json_bin(&mut reader).map_err(|e| malformed("new_design_airflow_m3_h", reader.position(), e))?;
                 Ok(Din16798Mutation::ChangeVentDesignAirflow(ChangeVentDesignAirflow { vent_id, new_design_airflow_m3_h }))
+            }
+            TAG_CHANGE_ZONE_NAME => {
+                let zone_id = read_json_bin(&mut reader).map_err(|e| malformed("zone_id", reader.position(), e))?;
+                let new_name = read_json_bin(&mut reader).map_err(|e| malformed("new_name", reader.position(), e))?;
+                Ok(Din16798Mutation::ChangeZoneName(ChangeZoneName { zone_id, new_name }))
+            }
+            TAG_CHANGE_ZONE_ID => {
+                let zone_id = read_json_bin(&mut reader).map_err(|e| malformed("zone_id", reader.position(), e))?;
+                let new_id = read_json_bin(&mut reader).map_err(|e| malformed("new_id", reader.position(), e))?;
+                Ok(Din16798Mutation::ChangeZoneId(ChangeZoneId { zone_id, new_id }))
+            }
+            TAG_CHANGE_VENT_NAME => {
+                let vent_id = read_json_bin(&mut reader).map_err(|e| malformed("vent_id", reader.position(), e))?;
+                let new_name = read_json_bin(&mut reader).map_err(|e| malformed("new_name", reader.position(), e))?;
+                Ok(Din16798Mutation::ChangeVentName(ChangeVentName { vent_id, new_name }))
+            }
+            TAG_CHANGE_VENT_ID => {
+                let vent_id = read_json_bin(&mut reader).map_err(|e| malformed("vent_id", reader.position(), e))?;
+                let new_id = read_json_bin(&mut reader).map_err(|e| malformed("new_id", reader.position(), e))?;
+                Ok(Din16798Mutation::ChangeVentId(ChangeVentId { vent_id, new_id }))
+            }
+            TAG_CHANGE_VENT_FAN_FLOW => {
+                let vent_id = read_json_bin(&mut reader).map_err(|e| malformed("vent_id", reader.position(), e))?;
+                let new_fan_q_v_m3_s = read_json_bin(&mut reader).map_err(|e| malformed("new_fan_q_v_m3_s", reader.position(), e))?;
+                Ok(Din16798Mutation::ChangeVentFanFlow(ChangeVentFanFlow { vent_id, new_fan_q_v_m3_s }))
+            }
+            TAG_CHANGE_VENT_FAN_RUN_HOURS => {
+                let vent_id = read_json_bin(&mut reader).map_err(|e| malformed("vent_id", reader.position(), e))?;
+                let new_fan_t_run_h = read_json_bin(&mut reader).map_err(|e| malformed("new_fan_t_run_h", reader.position(), e))?;
+                Ok(Din16798Mutation::ChangeVentFanRunHours(ChangeVentFanRunHours { vent_id, new_fan_t_run_h }))
+            }
+            TAG_CHANGE_VENT_DUCT_TEST_PRESSURE => {
+                let vent_id = read_json_bin(&mut reader).map_err(|e| malformed("vent_id", reader.position(), e))?;
+                let new_duct_test_pressure_pa = read_json_bin(&mut reader).map_err(|e| malformed("new_duct_test_pressure_pa", reader.position(), e))?;
+                Ok(Din16798Mutation::ChangeVentDuctTestPressure(ChangeVentDuctTestPressure { vent_id, new_duct_test_pressure_pa }))
+            }
+            TAG_CHANGE_VENT_HUMIDIFICATION_REQUIRED => {
+                let vent_id = read_json_bin(&mut reader).map_err(|e| malformed("vent_id", reader.position(), e))?;
+                let new_humidification_required_kg_h = read_json_bin(&mut reader).map_err(|e| malformed("new_humidification_required_kg_h", reader.position(), e))?;
+                Ok(Din16798Mutation::ChangeVentHumidificationRequired(ChangeVentHumidificationRequired { vent_id, new_humidification_required_kg_h }))
+            }
+            TAG_CHANGE_VENT_HUMIDIFICATION_PROVIDED => {
+                let vent_id = read_json_bin(&mut reader).map_err(|e| malformed("vent_id", reader.position(), e))?;
+                let new_humidification_provided_kg_h = read_json_bin(&mut reader).map_err(|e| malformed("new_humidification_provided_kg_h", reader.position(), e))?;
+                Ok(Din16798Mutation::ChangeVentHumidificationProvided(ChangeVentHumidificationProvided { vent_id, new_humidification_provided_kg_h }))
             }
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
         }

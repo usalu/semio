@@ -1,0 +1,59 @@
+STATUS 2026-11-08 07:50: reuse check is now per unique row (once per plan, bisection for failing rows); replay of 300 records: rows checked 5.84M -> 62k, 433 -> 962 closures/min (decode-bound). Shared stale input found: remodel project.json invalidates every record.
+STATUS 2026-11-08 07:20: planner memory bounded (shared row table, no decoded-answer cache); harness: 1300 reused records peak 1.27 GB vs OOM-kill before.
+STATUS 2026-11-08 06:05: closure verification is CPU-bound and scales linearly with processes; helper 🧰️scripts/closure-verify-helper.mjs fills the durable memo in parallel (3-4 shards).
+STATUS 2026-11-08 05:15: durable memo live (269 records). Phase marks fix v2 (holder re-entry counts as continuation) landed; needs a fresh build to take effect.
+STATUS 2026-11-08: durable shared verification memo + per-closure single-flight implemented and unit-tested (152 cutoff/store tests pass); not yet exercised by a live plan.
+
+# fleet-1108 infra: graph-plan OOM and slowness
+
+## Root cause (evidence)
+- Each `repo run <norm>:build` re-execs into a captured child (pid X, direct child of the door that holds the capacity grant) that runs `build:graph-plan`; that child spawns the planner `bun --eval` (2.4-3.3 GB RSS: 4.6k-project fact index of 455k facts plus derived-closure verification).
+- Capacity gate reserves 1638 MB ("sized at 46%") for such a run; `repo capacity status` shows 3222/3328 MB observed. The 46% is `fallbackCeiling 8192 / preferred-size 17920` applied to the 1-job request (3584 MB), so the job-independent planner peak is shrunk to a share of an 8-job request.
+- The framework's cure for this is the learned `phase:plan` floor (`floorMegabytes`). It is never learned: `~/.cache/semio/host-capacity/estimates.json` has 256 classes and zero `phase:*` classes; running grants have no `.phases` file. Reason: the re-executed child goes through the inherited-grant path of `withHostCapacityV1`, which sets `SEMIO_HOST_CAPACITY_PHASE_MARKS=off` for itself, so its `markBuildCapacityPhaseV1("plan"/"execution")` is refused and the holder (door, 36 MB RSS) never sees phases.
+- Result: reservations ~half of reality, 2-3 planners admitted concurrently next to ~20 agent sessions; kernel OOM kills of bun (journalctl: 03:28, 03:40, 03:51, 03:53, 04:03, anon-rss 2.7-3.3 GB), swap 8.2/8.9 GB used.
+- Slowness: the newest sealed generation is 325 from 2026-11-05 11:11 (no plan has finished since). A plan re-verifies all 2857 derived closures (TypeScript program / command walks, ~4 s each under load 20-50, memo `answers` is process-local) before publishing; every OOM kill or restart loses all progress and concurrent planners redo the same work. Nx needs the whole-workspace graph, so verification cannot be scoped to one project.
+
+## Fix implemented (framework, minimal)
+- `🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts`: inherited grant keeps phase marks on when the grant holder is the parent process (`grant.pid === (options.ppid ?? process.ppid)`), i.e. the holder's own re-exec continuation; deeper nested invocations stay off. Docstring of `markHostCapacityPhaseV1` updated.
+- `🎫️gate/📋️contract/🟦️.ts`: port `ppid?: number`.
+- Test `🧪️tests/🪜️phases/🚪️gate/🟦️.ts`: new test "The process a holder re-executes itself into continues its invocation ..." (continuation marks plan/execution and they reach learned phases; deeper nested stays off). Passes.
+- Effect: after the next planner run (also a killed one: failed runs learn when peak exceeds estimate) `phase:plan` is learned, `floorMegabytes` ~3.5-4 GB, the 1-job reservation covers the planner, the gate admits only what fits.
+- Rejected: capping the min-jobs ratio by the min-size instead of the preferred size. It breaks the g5/g13 laws (full request must stay <= class bound); reverted, oracles/fixtures restored (`--check` equal).
+
+## Verification
+- Phases/upgrade/estimates suites pass; both Python oracles `--check` equal. The host-capacity suites fail on Linux for pre-existing reasons (tests pass `environment:{}` so no language resolves; `spawnSync("bun")` not on PATH); with a win32 platform preload the gate/handover/quiet failures reduce to real-process tests, none related to this change.
+
+## Not done / proposals
+- Persist the verification memo (support rows deduplicated like the fact index) or publish a checkpoint generation during verification so a killed plan resumes; single-flight verification across concurrent planners.
+- Host side: ~20 agent sessions + git/ugrep use most RAM; keep builds at the fleet's 2-slot gate.
+
+## Speed fix: durable, shared closure-verification memo (added)
+- New `🕸️graph/🕰️generations/✂️cutoff/💾️durable/🟨️.mjs` (+ `.d.mts`): `createDurableAnswersV1`. Every derived answer is a content-addressed record `<store root>/a/<sha256(question)>.json.br` (question, answer, rows read), written atomically (tmp+rename through the store file port, so inside the custody-checked root) the moment it is computed. A killed plan therefore keeps everything it verified.
+- Safety: a record is only a hint. `settleSuspectsV1` still runs `hold(rows)` against the disk before taking it, so stale or foreign records cost one derivation, never a wrong fact.
+- Single-flight: `claim(question, signal, work)` runs the derivation under `lease.exclusive(<facts resource>:answer:<digest>)` (the store's existing lease port, same one publish uses). Inside the lease the question is re-read from disk (`get(question, true)`), so a peer consumes the holder's result instead of deriving it.
+- `settleSuspectsV1` (`✂️cutoff/🟨️.mjs`): memo may be async/shared; derive+memo-write happen inside `claim`; derive failures still count as `failed`. A plain `Map` memo still works (existing tests).
+- `createGenerationStoreV1` (`🕰️generations/🟨️.mjs`): `answers` now defaults to the durable memo over the store fs/lease; `retire` removes records older than 7 days. Module size 63.3 KB (cap 65536).
+- Test (`✂️cutoff/🧪️tests/🟦️.ts`): "a killed plan resumes ..." on real files: a new process asks nothing already answered, records whose rows moved are re-derived, two concurrent plans derive each question once. Cutoff + store suites: 152 pass. Wider generations tests: 827 pass; 21 fail in claims/custody/pin/retire/stream/withheld-dependency (kernel leases, missing SEMIO_TEST_ARTIFACT_DIR, assembly expectations), none touch the memo.
+- Caveat: the per-closure lease uses the production repository lease with a derived resource string; its behaviour under 2857 distinct resources was only tested with the reference file lease.
+- (3) checkpoint generation during verification: not done. With the durable memo a restarted plan re-checks the 455k facts (~1-2 min) and then reuses all closures, so the benefit is small; a checkpoint publish would need a partial-verification generation semantic that the sealed-generation contract does not have.
+
+## Phase marks v2
+Live: grant holder = door (pid D); its child C (ppid D) and planner already carry `SEMIO_HOST_CAPACITY_PHASE_MARKS=off` in their exec environment, so the door itself set "off" before spawning: it re-enters `withHostCapacityV1` in the same process under its own grant (inherited path, grant.pid === own pid), which wrote "off" into its own process.env. v1 only covered grant.pid === ppid. v2 (`🎫️gate/🟦️.ts`): continuation = grant.pid === own pid or === ppid. Test updated: nested = neither (explicit pid/ppid ports). No `.phases` file existed for the live grant (hfhjlYGXWKRJMwOmTDVChw, reserved 2574, observed 5591) before this. No policy floor was added (estimates.minimumMegabytes would raise every gated operation). Verify on the next build started after this: `ls ~/.cache/semio/host-capacity/grants/*.phases` while it plans, and `phase:plan` appears in estimates.json after it ends.
+
+## Throughput profile and helper (06:00)
+- Profile (harness, 10 recorded questions, fresh process): 150 ms-7 s per closure, CPU time = wall time (CPU-bound); self time in path.relative/resolve, readFileSync, lstatSync, hashing of ~10-28k observed rows per closure (all 400 sampled records are command walks, avg 18.5k rows, 246 KB brotli each). RSS grows 330 MB -> 1.5 GB with the larger walks.
+- Scaling: 1 process 30 s per 10 closures; 3 concurrent processes 28-35 s each = ~3x (host load ~3). In-process concurrency cannot help (single JS thread) and a worker pool inside the planner does not fit next to its ~2.7 GB index within 4.5 GB, so parallelism is separate processes sharing the durable memo.
+- `🧰️scripts/closure-verify-helper.mjs <shard> <shards> [maxRssMB]`: opens the current index (packed view), enumerates derived questions, skips recorded ones, derives the rest and writes durable records, from the end of the list (the planner works from the start). Run e.g. `repo --service=off tools exec --light bun -- <script> 0 3 &` (shards 1, 2 likewise). Measured: 3 helpers + the running planner added 43 records in 105 s including ~40 s startup, about 9 closures/min per process, linear in helper count; each helper holds 1-2 GB RSS (exits above maxRssMB; rerun continues). `--light` bypasses the capacity gate: choose the helper count from `free -m`.
+- Planner unchanged: it reuses every helper record after `hold(rows)` verification.
+- Not done: helper lease is separate from the planner lease, so a planner and a helper can derive one closure twice at the meeting point (harmless); disk use is ~250 KB per record (~700 MB for 2850).
+
+## Memory bound (07:20)
+- Cause of the 11 GB planner: every reused/derived answer was kept decoded (the per-root Map of the load module / durable memory layer), each with ~18.5k fresh row objects, so 464+ closures x 18.5k rows x ~200 B and growing.
+- Fix: `createDurableStateV1` (keys Set, 2 recent answers, one shared row table). `intern` maps equal rows (kind, path, fact) of all answers to one object, so the many rows closures share exist once; `get`/`set` return interned answers and `settleSuspectsV1` uses the returned (interned) answer. The load module keeps one state per store root across attempts.
+- Harness (`prof`-style, 1300 recorded answers read via `get` and kept like `held`): new peak RSS 1267 MB; the old behaviour (keep each decoded answer) was OOM-killed at the same count on this 16 GB host. Planner total = ~2.7 GB index + ~1.3-2 GB for 2855 closures, so about 4-4.7 GB: tight; if still over, the next step is to hold only row-table references (already pointers) and drop `held` rows in favour of re-reading records at publish time.
+- Tests: cutoff + store 152 pass.
+
+## Reuse check proportional to unique rows (07:50)
+- `settleSuspectsV1` keeps per-call `verified`/`broken` sets keyed by the interned row object: a row is hold-checked once per plan; a failing batch is bisected so a failing shared row is found in O(log n) calls and refuses every closure that read it at once. The stat fingerprint is the existing `observationsHold` (stat/stable-directory logic); no extra layer was needed once checks are once-per-unique-row. Test: "rows that closures share are checked once ..." (cutoff + store 153 pass).
+- Replay harness (300 real records, real `observationsHold`, remodel row excluded): old 5,838,578 rows checked in 41.6 s (433 closures/min); new 61,884 rows in 18.7 s (962/min). What remains is brotli+JSON decode and interning of ~250 KB per record (the harness also decodes each record twice), so the planner should do ~1500-2000/min on a warm memo.
+- Finding: checking 5 records with the real check showed all fail on ONE shared row, `file ✏️s/🔌️plugins/📸️remodel/📦️packages/🟦️typescript/📋️project.json` (edited after the records were written). A single edited shared input makes every closure that read it stale, so each must be re-derived (~3 s CPU): the 'reusing' planner is in fact re-deriving or failing. Whoever owns remodel should stop touching that file during the first full pass; helpers (closure-verify-helper) then refill the records in parallel.

@@ -2,9 +2,7 @@
 #[cfg(test)] extern crate self as semio_framework_value_paged_text;
 pub use semio_framework_value_control_contract::*;
 pub use semio_framework_value_control_contract as retained_clone;
-pub use semio_framework_value_retirement::{ErasedSnapshotRetirement,retirement};
-#[cfg(test)]
-pub use semio_framework_value_retirement::retirement::RetireOwned;
+pub use semio_framework_value_retirement::{ErasedSnapshotRetirement,OriginalRetirementFailure,RetireOwned,retirement};
 pub use semio_framework_value_paged_list::list;
 pub use semio_framework_value_native_encoding::{native_encoding,NativeEncodeControl};
 pub use semio_framework_value_native_decoding::{native_decoding,NativeDecodeControl};

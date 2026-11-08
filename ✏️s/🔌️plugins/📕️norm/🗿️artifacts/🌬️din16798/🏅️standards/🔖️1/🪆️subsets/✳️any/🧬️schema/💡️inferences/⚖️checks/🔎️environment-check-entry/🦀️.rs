@@ -2,7 +2,6 @@
 
 use super::*;
 
-/// ✅️ Evaluate the complete DIN EN 16798 building subject.
 /// 🔗 Fail when an id-bearing collection contains duplicate entity ids.
 fn push_duplicate_ids(
     report: &mut CheckReport,
@@ -75,40 +74,34 @@ fn push_duplicate_ids(
     }
 }
 
+/// ✅️ The complete DIN EN 16798 evaluation in the order of its parts: unique ids, the empty-zones verdict, every zone, every ventilation system and the building envelope.
 pub fn check_full_environment(doc: &semio_s_artifact_norm_din16798_model::Din16798Snapshot) -> CheckReport {
+    check_scoped(doc, Scope::All)
+}
+
+/// 🧮️ The part of the evaluation `scope` selects: the unique-id integrity, the empty-zones verdict, one zone, one ventilation system or the envelope; the units of the incremental evaluation fold to exactly [`check_full_environment`].
+pub fn check_scoped(doc: &semio_s_artifact_norm_din16798_model::Din16798Snapshot, scope: Scope<'_>) -> CheckReport {
     let annex = annex_params::AnnexParams::for_choice(doc.annex);
     let mut report = CheckReport::default();
-    push_duplicate_ids(
-        &mut report,
-        doc.annex,
-        "zones",
-        "zone",
-        "Zone",
-        &doc.zones.iter().map(|z| z.id.clone()).collect::<Vec<_>>(),
-        &|id| format!("zones[id={id}].id"),
-    );
-    push_duplicate_ids(
-        &mut report,
-        doc.annex,
-        "ventSystems",
-        "ventilation system",
-        "Lüftungsanlage",
-        &doc.vent_systems.iter().map(|v| v.id.clone()).collect::<Vec<_>>(),
-        &|id| format!("ventSystems[id={id}].id"),
-    );
-    if doc.zones.is_empty() {
+    if scope.part("integrity") {
+        push_duplicate_ids(&mut report, doc.annex, "zones", "zone", "Zone", &doc.zones.iter().map(|z| z.id.clone()).collect::<Vec<_>>(), &|id| format!("zones[id={id}].id"));
+        push_duplicate_ids(&mut report, doc.annex, "ventSystems", "ventilation system", "Lüftungsanlage", &doc.vent_systems.iter().map(|v| v.id.clone()).collect::<Vec<_>>(), &|id| format!("ventSystems[id={id}].id"));
+    }
+    if doc.zones.is_empty() && scope.part("zones-none") {
         report.push(CheckResult::assess(
             "din16798.zones.empty", "DIN EN 16798-1", ClauseId::new("EN 16798-1", "§7", "scope"),
             SubjectRef::whole(loc("Building", "Gebäude")),
             loc("Zone inventory", "Zonenverzeichnis"),
         ).not_applicable(loc("No zones defined.", "Keine Zonen definiert.")).annex(doc.annex).build());
     }
-    for (zi, zone) in doc.zones.iter().enumerate() {
+    for (zi, zone) in doc.zones.iter().enumerate().filter(|(zi, _)| scope.admits("zones", *zi)) {
         report.extend(evaluate_zone(doc, zi, zone, &annex));
     }
-    for (vi, vent) in doc.vent_systems.iter().enumerate() {
+    for (vi, vent) in doc.vent_systems.iter().enumerate().filter(|(vi, _)| scope.admits("ventSystems", *vi)) {
         report.extend(evaluate_vent(doc, vi, vent, &annex));
     }
-    report.extend(evaluate_envelope(doc, &annex));
+    if scope.part("envelope") {
+        report.extend(evaluate_envelope(doc, &annex));
+    }
     report
 }

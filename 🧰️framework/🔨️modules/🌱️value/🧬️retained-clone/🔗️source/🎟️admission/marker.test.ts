@@ -18,7 +18,7 @@ test("source allocation markers distinguish real extent, allocator null and no e
 test("source work includes each actual issuance, allocator attempt and handoff",()=>{
  const db=new Database(":memory:");
  try{
-  expect(db.query("SELECT sum(value) AS work FROM json_each(?)").get(JSON.stringify(work.birthActions))).toEqual({work:work.expected.birthCpu});
+  expect(db.query("SELECT sum(value) AS work FROM json_each(?)").get(JSON.stringify(work.birthStages))).toEqual({work:work.expected.birthCpu});
   expect(db.query("SELECT key AS phase, value AS work FROM json_each(?) ORDER BY key").all(JSON.stringify(law.nullWork))).toEqual([{phase:"lease",work:2},{phase:"owner",work:2},{phase:"payload",work:1}]);
  }finally{db.close();}
 });

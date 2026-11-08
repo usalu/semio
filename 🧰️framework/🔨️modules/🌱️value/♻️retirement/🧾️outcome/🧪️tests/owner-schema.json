@@ -1,0 +1,62 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "variants",
+    "value",
+    "workMetadata",
+    "birthCopy",
+    "denials",
+    "deniedWork",
+    "deniedMutation",
+    "ready",
+    "unsupported",
+    "stock"
+  ],
+  "properties": {
+    "variants": {
+      "const": [
+        "Ok",
+        "Err"
+      ]
+    },
+    "value": {
+      "const": 73
+    },
+    "workMetadata": {
+      "const": "340282366920938463463374607431768211455"
+    },
+    "birthCopy": {
+      "const": "optionOutcomePlusResultCursor"
+    },
+    "denials": {
+      "const": [
+        "work",
+        "copy",
+        "capacity"
+      ]
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "deniedMutation": {
+      "const": false
+    },
+    "ready": {
+      "const": false
+    },
+    "unsupported": {
+      "const": false
+    },
+    "stock": {
+      "const": {
+        "items": 128,
+        "copyBytes": 65536,
+        "capacityBytes": 65536,
+        "releaseBytes": 65536,
+        "depth": 64,
+        "fuel": 256
+      }
+    }
+  }
+}

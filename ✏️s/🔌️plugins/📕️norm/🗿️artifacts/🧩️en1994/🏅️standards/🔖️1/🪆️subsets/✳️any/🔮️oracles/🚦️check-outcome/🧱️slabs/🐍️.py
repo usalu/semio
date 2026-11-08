@@ -67,3 +67,39 @@ def checks(slab, m_ed, v_ed):
         (f"en1994.9.7.3.mk.{sid}", v_ed / q.longitudinal_shear()),
         (f"en1994.9.7.5.vrd.{sid}", v_ed / q.vertical_shear()),
     ]
+
+
+def third_party():
+    """🎯️ Spec rows C-34, C-35, C-36 and C-37 against third-party code: the vertical shear V_v,Rd against `structuralcodes` EN 1992-1-1 6.2.2 (`ec2_2004.VRdc`, N_Ed = 0), the sagging resistance with partial connection against the sympy stress block z = h - x/2 - e_p, M_pr = min(1.25 M_pa (1 - N_c/N_cf), M_pa) and the m-k longitudinal shear against sympy; returns the relative deviations, all of which must stay below 1e-9 except the shear (below 1e-9 as well, same formula, other implementation)."""
+    import sympy
+    from structuralcodes.codes import ec2_2004
+
+    slab = {"id": "s", "concreteThicknessM": 0.13, "fCkPa": 30e6, "spanM": 3.2, "mFactor": 160.0, "kFactor": 0.05, "asM2PerM": 0.0, "sheeting": {"heightM": 0.06, "thicknessM": 0.001, "ribWidthM": 0.12, "ribsParallelToBeam": False}}
+    q = Slab(slab)
+    out = {}
+    fck, d_mm, b_mm = slab["fCkPa"] / 1e6, q.dp * 1e3, q.bo * 1e3
+    v_library = ec2_2004.VRdc(fck=fck, d=d_mm, Asl=q.ap * 1e6, bw=b_mm, NEd=0.0, Ac=b_mm * slab["concreteThicknessM"] * 1e3, fcd=fck / 1.5, gamma_c=GAMMA_C)
+    out["c37_vrd"] = abs(q.vertical_shear() - v_library) / v_library
+    h, e_p, ap, hp = sympy.symbols("h e_p A_p h_p", positive=True)
+    m_pa = 0.5 * ap * 0.9 * hp * SHEETING_FYP / GAMMA_AP
+    point = {h: q.h, e_p: q.ep, ap: q.ap, hp: q.hp}
+    for share in (0.0, 0.3, 0.7, 1.0):
+        n_c = share * q.ncf
+        x = n_c / (0.85 * q.fcd)
+        m_pr = sympy.Min(1.25 * m_pa * (1 - n_c / q.ncf), m_pa).subs(point)
+        reference = float(n_c * (q.h - x / 2 - q.ep) + m_pr)
+        out[f"c34_c36_mrd_{share}"] = abs(q.bending(n_c)[0] - reference) / max(abs(reference), 1e-9)
+    m, k, ap_, ls, dp = sympy.symbols("m k A_p L_s d_p", positive=True)
+    shear = dp / GAMMA_VS * (m * 1e6 * ap_ / ls + k * 1e6)
+    reference = float(shear.subs({m: slab["mFactor"], k: slab["kFactor"], ap_: q.ap, ls: q.ls, dp: q.dp}))
+    out["c35_vlrd"] = abs(q.longitudinal_shear() - reference) / reference
+    return out
+
+
+if __name__ == "__main__":
+    import json
+    import sys
+
+    deviations = third_party()
+    print(json.dumps({"specRows": {"C-34": ["en1994.9.7.2.mrd"], "C-35": ["en1994.9.7.3.mk"], "C-36": ["en1994.9.7.2.mrd"], "C-37": ["en1994.9.7.5", "en1994.9.7.5.vrd"]}, "deviations": deviations}))
+    sys.exit(0 if max(deviations.values()) < 1e-9 else 2)

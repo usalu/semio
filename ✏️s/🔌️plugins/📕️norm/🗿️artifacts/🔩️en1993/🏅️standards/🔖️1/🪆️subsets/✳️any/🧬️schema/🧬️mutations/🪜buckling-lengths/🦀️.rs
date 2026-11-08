@@ -21,14 +21,6 @@ pub mod change_buckling_length_beam_stiffness_a;
 pub mod change_buckling_length_column_stiffness_a;
 #[path = "../📏️change-buckling-length-restraint-b/🦀️.rs"]
 pub mod change_buckling_length_restraint_b;
-#[path = "../📏️change-buckling-length-restraint-a/🦀️.rs"]
-pub mod change_buckling_length_restraint_a;
-#[path = "../📏️change-buckling-length-sway/🦀️.rs"]
-pub mod change_buckling_length_sway;
-#[path = "../📏️change-buckling-length-plane/🦀️.rs"]
-pub mod change_buckling_length_plane;
-#[path = "../➕️insert-buckling-length/🦀️.rs"]
-pub mod insert_buckling_length;
-#[path = "../➖️remove-buckling-length/🦀️.rs"]
-pub mod remove_buckling_length;
 //#endregion 🪢️Mounts
+
+pub use semio_s_artifact_norm_en1993_mut_buckling_lengths_2::{change_buckling_length_restraint_a, change_buckling_length_sway, change_buckling_length_plane, insert_buckling_length, remove_buckling_length};

@@ -1,19 +1,24 @@
 //! 🧪️ Direct and mutual ownership cycles remain supported only when every reachable owner is controlled.
-use semio_framework_value::{retirement::{RetireOwned,RetirementCursor},RetainedCloneGrant};
+use crate::{retirement::{RetireOwned,RetirementCursor},RetainedCloneGrant};
 #[allow(dead_code)]
-#[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value_derive::RetireOwned)]
+#[value(crate="crate")]
 enum Direct{Leaf(String),Next(Box<Direct>)}
 #[allow(dead_code)]
-#[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value_derive::RetireOwned)]
+#[value(crate="crate")]
 struct Left{right:Option<Box<Right>>,text:String}
 #[allow(dead_code)]
-#[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value_derive::RetireOwned)]
+#[value(crate="crate")]
 struct Right{left:Vec<Left>}
 #[allow(dead_code)]
-#[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value_derive::RetireOwned)]
+#[value(crate="crate")]
 struct DeniedLeft{right:Vec<DeniedRight>}
 #[allow(dead_code)]
-#[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value_derive::RetireOwned)]
+#[value(crate="crate")]
 struct DeniedRight{left:Option<Box<DeniedLeft>>,unsupported:Unsupported}
 struct Unsupported;
 impl RetireOwned for Unsupported{fn retirement(self)->Box<dyn RetirementCursor>{panic!("unsupported source must remain owned")}fn controlled_retirement_supported()->bool{false}}

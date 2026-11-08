@@ -1,0 +1,39 @@
+{
+  "tableCount": 25,
+  "scalarWords": 217,
+  "scalarTables": [
+    "site",
+    "building",
+    "system",
+    "storey",
+    "storey_variable",
+    "member",
+    "bridge",
+    "bridge_variable",
+    "assessment",
+    "silo",
+    "tank",
+    "foundation",
+    "retaining_wall",
+    "tower",
+    "tower_variable",
+    "placement",
+    "soil_layer",
+    "diaphragm",
+    "accelerogram",
+    "pier",
+    "bearing",
+    "joint",
+    "tie_beam",
+    "slope"
+  ],
+  "invalidAnnex": [
+    "任意\u0000annex",
+    ""
+  ],
+  "invalidMemberKind": [
+    "",
+    "Wall",
+    "任意\u0000role"
+  ]
+}

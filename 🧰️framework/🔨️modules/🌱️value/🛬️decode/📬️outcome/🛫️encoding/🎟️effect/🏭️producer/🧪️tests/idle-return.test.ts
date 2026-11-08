@@ -1,0 +1,3 @@
+import {test,expect} from "bun:test";import {Database} from "bun:sqlite";import Ajv from "ajv";import schema from "./idle-return.schema.json";import law from "./idle-return.json";
+/** 🪢️ A reset native header has no original request or unpaid receipt to retain. */
+test("producer loan return distinguishes closed reset and active headers",()=>{expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);const db=new Database(":memory:");try{for(const c of law.cases){expect(db.query("select (? or (? and not ?)) allowed").get(+c.closed,+c.inert,+c.request)).toEqual({allowed:+c.allowed})}}finally{db.close()}});

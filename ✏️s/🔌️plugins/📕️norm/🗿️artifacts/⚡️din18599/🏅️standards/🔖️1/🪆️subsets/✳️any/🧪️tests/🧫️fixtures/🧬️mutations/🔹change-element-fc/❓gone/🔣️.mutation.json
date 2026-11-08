@@ -1,0 +1,5 @@
+{
+  "mutation": "changeelementfc",
+  "elementId": "ghost",
+  "newFc": 0.8
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changezoneinternalgainswm2",
+  "zoneId": "ghost",
+  "newInternalGainsWM2": 4.0
+}

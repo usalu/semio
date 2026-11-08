@@ -10,11 +10,11 @@ mod allocation;
 pub use allocation::NativeDecodeAllocationOutcome;
 #[path="../../🛬️receiving/🦀️.rs"]
 mod receiving;
-pub use receiving::OriginalReceivingPrimary;
+pub use receiving::{OriginalReceivingPrimary,OriginalReceivingRetryWitness};
 
 #[path="../../🛬️receiving/📦️effect/🦀️.rs"]
 mod effect;
-pub use effect::{NativeReceivingEffectError,NativeReceivingEffectFailure};
+pub use effect::{NativeReceivingEffectError,NativeReceivingEffectFailure,OriginalConstructionAcceptedProof};
 
 #[path="../../🏭️construction/🦀️.rs"]
 mod construction;
@@ -30,4 +30,7 @@ pub use encoding_allocation::{NativeEncodeAllocationProgress,NativeEncodeAllocat
 
 #[path="../../🛫️encoding/🎟️effect/🦀️.rs"]
 mod encoding_effect;
-pub use encoding_effect::{NativeEncodeProducerOutcome,NativeEncodeEffectFailure,NativeEncodeEffectSettlement,NativeEncodeEffectPostPhase,NativeEncodeEffectReceipt,NativeEncodeEffectCancellation,NativeEncodeEffectRecovery};
+pub use encoding_effect::{NativeEncodeProducerOutcome,NativeEncodeProducerFailure,NativeEncodeEffectFailure,NativeEncodeEffectSettlement,NativeEncodeEffectPostPhase,NativeEncodeEffectReceipt,NativeEncodeEffectCancellation,NativeEncodeEffectRecovery};
+
+#[path="../../🛬️receiving/⚠️failure/🦀️.rs"]mod receiving_failure;
+pub use receiving_failure::NativeReceivingFailure;

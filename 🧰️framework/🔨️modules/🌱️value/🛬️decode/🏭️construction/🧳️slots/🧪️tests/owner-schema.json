@@ -1,0 +1,151 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "value",
+    "kinds",
+    "events",
+    "custody",
+    "work",
+    "stock",
+    "cancellation",
+    "sourceBinding",
+    "frame",
+    "admission",
+    "advanceReply",
+    "workBinding",
+    "sparseSuccess",
+    "vacantSeed",
+    "capturedClose"
+  ],
+  "properties": {
+    "value": {
+      "const": 73
+    },
+    "kinds": {
+      "const": [
+        "sealed",
+        "issued"
+      ]
+    },
+    "events": {
+      "const": [
+        "capture",
+        "birth",
+        "publication",
+        "settle",
+        "take",
+        "closeAuthority",
+        "clearProducer"
+      ]
+    },
+    "custody": {
+      "const": {
+        "replacementAccepted": false,
+        "outputBeforeSettlement": false,
+        "sourceChangesAccepted": false
+      }
+    },
+    "work": {
+      "const": {
+        "capture": 2,
+        "take": 1,
+        "clearSealedBirth": 1,
+        "clearIssuedBirth": 1,
+        "issuedBirth": 3,
+        "authorityReturn": 1,
+        "producerClear": 1
+      }
+    },
+    "stock": {
+      "const": {
+        "items": 128,
+        "copyBytes": 65536,
+        "capacityBytes": 65536,
+        "releaseBytes": 65536,
+        "depth": 64,
+        "fuel": 256
+      }
+    },
+    "cancellation": {
+      "const": {
+        "inputReturned": 73,
+        "unpublished": true,
+        "retainedBytesReleased": true
+      }
+    },
+    "sourceBinding": {
+      "const": {
+        "advance": false,
+        "authorityReturn": false,
+        "producerClear": false
+      }
+    },
+    "frame": {
+      "const": {
+        "ledgerIdentityPreserved": true,
+        "pendingAfterUnwind": true,
+        "pendingAfterRecovery": false,
+        "capacityReplayed": false,
+        "recipientIdentityPreserved": true,
+        "foreignRecipientAccepted": false,
+        "boundPlainDecodeAccepted": false,
+        "boundReceiptExtractionAccepted": false
+      }
+    },
+    "admission": {
+      "const": {
+        "unboundAccepted": false,
+        "deniedBirth": false,
+        "deniedWork": 0
+      }
+    },
+    "advanceReply": {
+      "const": {
+        "retained": true,
+        "transferWork": 1,
+        "copy": "completeNativeOutcome",
+        "sameOwner": true,
+        "outputBeforeTransfer": false,
+        "refusals": [
+          "work",
+          "copy",
+          "foreignSource"
+        ],
+        "receiveCallsAfterRecovery": 1
+      }
+    },
+    "workBinding": {
+      "const": {
+        "advance": false,
+        "take": false,
+        "authorityReturn": false,
+        "producerClear": false,
+        "deniedWork": 0
+      }
+    },
+    "sparseSuccess": {
+      "const": {
+        "maximumCopyBytes": 4096,
+        "preservesIdentity": true,
+        "zeroWorkMutation": false,
+        "markerBlocksOutput": true,
+        "paidMarkerClose": true
+      }
+    },
+    "vacantSeed": {
+      "const": {
+        "authority": false,
+        "allocationBytes": 0,
+        "input": false
+      }
+    },
+    "capturedClose": {
+      "const": {
+        "sameSource": true,
+        "publicationAfterPhysicalPost": true,
+        "replay": false
+      }
+    }
+  }
+}

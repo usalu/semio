@@ -18,15 +18,22 @@ maxActiveLines = 4000
 workspace = true
 
 [lib]
-path = "../../🦀️.rs"
+path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value-clone-source = { path = "../../../../../🧬️retained-clone/🔗️source/📦️packages/🦀️rust" }
+semio-framework-value-allocation-return = { path = "../../../../../♻️retirement/📦️allocation-return/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path = "../../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-native-decoding = { path = "../../../../📦️packages/🦀️rust" }
-semio-framework-value-retained-clone = { path = "../../../../../🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-retirement = { path = "../../../../../♻️retirement/📦️packages/🦀️rust" }
 semio-framework-value-shared-issuance = { path = "../../../../../♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-value-testing-admission = { path = "../../../../../🧪️testing/📥️admission/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
+semio-framework-value-native-decode-handoff = { path = "../../../../📦️handoff/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+
+[[test]]
+name = "shared_owner"
+path = "../../🧪️tests/owner.rs"

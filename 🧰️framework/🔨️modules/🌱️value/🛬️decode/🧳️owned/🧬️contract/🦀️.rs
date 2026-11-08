@@ -40,8 +40,7 @@ pub trait NativeReceiver<I:?Sized,T>:Send+'static{
 
 
 /// ⛽️ Narrows caller DATA to the actual live native work loan before any receiving effect.
-pub fn native_work_limit(control:&mut NativeDecodeControl<'_>,maximum:u64)->Result<u64,ValueError>{if maximum==0{Ok(0)}else{let held=control.pending_work();if held>0{Ok(maximum.min(held))}else if control.prepare_work(maximum)?{Ok(maximum)}else{Ok(0)}}}
-/// ➕️ Preserves checked actual parent and child work.
+pub fn native_work_limit(control:&mut NativeDecodeControl<'_>,maximum:u64)->Result<u64,ValueError>{if maximum!=0{control.validate_work_recipient()?}Ok(maximum)}/// ➕️ Preserves checked actual parent and child work.
 pub fn work_sum(left:u64,right:u64)->Result<u64,ValueError>{left.checked_add(right).ok_or_else(||ValueError::invariant("native receiving work overflow"))}
 /// 🎯️ Returns a selected quote only when the existing scope can fund it.
 pub fn selected_native_work(work:u64,maximum:u64)->u64{if work<=maximum{work}else{0}}

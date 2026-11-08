@@ -1,3 +1,5 @@
+scalar UInt32
+
 scalar JSON
 
 type En1993Diff {
@@ -47,16 +49,16 @@ type En1993MaterialDelta {
 }
 type En1993MaterialRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993MaterialInsertion {
-  index: Int!
+  index: UInt32!
   row: SteelMaterial!
 }
 type En1993MaterialRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993MaterialModification {
   id: String!
@@ -80,16 +82,16 @@ type En1993SectionDelta {
 }
 type En1993SectionRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993SectionInsertion {
-  index: Int!
+  index: UInt32!
   row: SteelSection!
 }
 type En1993SectionRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993SectionModification {
   id: String!
@@ -125,16 +127,16 @@ type En1993MemberDelta {
 }
 type En1993MemberRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993MemberInsertion {
-  index: Int!
+  index: UInt32!
   row: SteelMember!
 }
 type En1993MemberRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993MemberModification {
   id: String!
@@ -176,16 +178,16 @@ type En1993LoadCaseDelta {
 }
 type En1993LoadCaseRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993LoadCaseInsertion {
-  index: Int!
+  index: UInt32!
   row: LoadCase!
 }
 type En1993LoadCaseRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993LoadCaseModification {
   id: String!
@@ -204,16 +206,16 @@ type En1993MemberActionDelta {
 }
 type En1993MemberActionRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993MemberActionInsertion {
-  index: Int!
+  index: UInt32!
   row: MemberAction!
 }
 type En1993MemberActionRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993MemberActionModification {
   id: String!
@@ -232,16 +234,16 @@ type En1993JointDelta {
 }
 type En1993JointRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993JointInsertion {
-  index: Int!
+  index: UInt32!
   row: SteelJoint!
 }
 type En1993JointRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993JointModification {
   id: String!
@@ -322,16 +324,16 @@ type En1993FatigueDetailDelta {
 }
 type En1993FatigueDetailRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993FatigueDetailInsertion {
-  index: Int!
+  index: UInt32!
   row: FatigueDetail!
 }
 type En1993FatigueDetailRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993FatigueDetailModification {
   id: String!
@@ -353,16 +355,16 @@ type En1993FireExposureDelta {
 }
 type En1993FireExposureRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993FireExposureInsertion {
-  index: Int!
+  index: UInt32!
   row: FireExposure!
 }
 type En1993FireExposureRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993FireExposureModification {
   id: String!
@@ -387,16 +389,16 @@ type En1993ColdFormedMemberDelta {
 }
 type En1993ColdFormedMemberRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993ColdFormedMemberInsertion {
-  index: Int!
+  index: UInt32!
   row: ColdFormedMember!
 }
 type En1993ColdFormedMemberRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993ColdFormedMemberModification {
   id: String!
@@ -439,16 +441,16 @@ type En1993PlatedPanelDelta {
 }
 type En1993PlatedPanelRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993PlatedPanelInsertion {
-  index: Int!
+  index: UInt32!
   row: PlatedPanel!
 }
 type En1993PlatedPanelRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993PlatedPanelModification {
   id: String!
@@ -515,16 +517,16 @@ type En1993SiloShellDelta {
 }
 type En1993SiloShellRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993SiloShellInsertion {
-  index: Int!
+  index: UInt32!
   row: SiloShell!
 }
 type En1993SiloShellRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993SiloShellModification {
   id: String!
@@ -567,16 +569,16 @@ type En1993TensionComponentDelta {
 }
 type En1993TensionComponentRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993TensionComponentInsertion {
-  index: Int!
+  index: UInt32!
   row: TensionComponent!
 }
 type En1993TensionComponentRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993TensionComponentModification {
   id: String!
@@ -613,16 +615,16 @@ type En1993BridgeFatigueDelta {
 }
 type En1993BridgeFatigueRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993BridgeFatigueInsertion {
-  index: Int!
+  index: UInt32!
   row: BridgeFatigue!
 }
 type En1993BridgeFatigueRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993BridgeFatigueModification {
   id: String!
@@ -663,16 +665,16 @@ type En1993TowerLegDelta {
 }
 type En1993TowerLegRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993TowerLegInsertion {
-  index: Int!
+  index: UInt32!
   row: TowerLeg!
 }
 type En1993TowerLegRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993TowerLegModification {
   id: String!
@@ -713,16 +715,16 @@ type En1993PileDelta {
 }
 type En1993PileRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993PileInsertion {
-  index: Int!
+  index: UInt32!
   row: SteelPile!
 }
 type En1993PileRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993PileModification {
   id: String!
@@ -754,16 +756,16 @@ type En1993CraneRunwayDelta {
 }
 type En1993CraneRunwayRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993CraneRunwayInsertion {
-  index: Int!
+  index: UInt32!
   row: CraneRunway!
 }
 type En1993CraneRunwayRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993CraneRunwayModification {
   id: String!
@@ -803,16 +805,16 @@ type En1993StoreyDelta {
 }
 type En1993StoreyRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993StoreyInsertion {
-  index: Int!
+  index: UInt32!
   row: Storey!
 }
 type En1993StoreyRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993StoreyModification {
   id: String!
@@ -840,16 +842,16 @@ type En1993RestraintDelta {
 }
 type En1993RestraintRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993RestraintInsertion {
-  index: Int!
+  index: UInt32!
   row: Restraint!
 }
 type En1993RestraintRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993RestraintModification {
   id: String!
@@ -879,16 +881,16 @@ type En1993BuiltUpMemberDelta {
 }
 type En1993BuiltUpMemberRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993BuiltUpMemberInsertion {
-  index: Int!
+  index: UInt32!
   row: BuiltUpMember!
 }
 type En1993BuiltUpMemberRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993BuiltUpMemberModification {
   id: String!
@@ -925,16 +927,16 @@ type En1993WeldGroupDelta {
 }
 type En1993WeldGroupRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993WeldGroupInsertion {
-  index: Int!
+  index: UInt32!
   row: WeldGroup!
 }
 type En1993WeldGroupRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993WeldGroupModification {
   id: String!
@@ -960,16 +962,16 @@ type En1993ParametricSectionDelta {
 }
 type En1993ParametricSectionRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993ParametricSectionInsertion {
-  index: Int!
+  index: UInt32!
   row: ParametricSection!
 }
 type En1993ParametricSectionRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993ParametricSectionModification {
   id: String!
@@ -993,16 +995,16 @@ type En1993HollowJointDelta {
 }
 type En1993HollowJointRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993HollowJointInsertion {
-  index: Int!
+  index: UInt32!
   row: HollowJoint!
 }
 type En1993HollowJointRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993HollowJointModification {
   id: String!
@@ -1037,16 +1039,16 @@ type En1993JointRowDelta {
 }
 type En1993JointRowRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993JointRowInsertion {
-  index: Int!
+  index: UInt32!
   row: JointRow!
 }
 type En1993JointRowRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993JointRowModification {
   id: String!
@@ -1078,16 +1080,16 @@ type En1993FrameNodeDelta {
 }
 type En1993FrameNodeRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993FrameNodeInsertion {
-  index: Int!
+  index: UInt32!
   row: FrameNode!
 }
 type En1993FrameNodeRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993FrameNodeModification {
   id: String!
@@ -1109,16 +1111,16 @@ type En1993FrameBarDelta {
 }
 type En1993FrameBarRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993FrameBarInsertion {
-  index: Int!
+  index: UInt32!
   row: FrameBar!
 }
 type En1993FrameBarRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993FrameBarModification {
   id: String!
@@ -1140,16 +1142,16 @@ type En1993PlacementDelta {
 }
 type En1993PlacementRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993PlacementInsertion {
-  index: Int!
+  index: UInt32!
   row: Placement!
 }
 type En1993PlacementRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993PlacementModification {
   id: String!
@@ -1169,16 +1171,16 @@ type En1993JointPlateDelta {
 }
 type En1993JointPlateRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993JointPlateInsertion {
-  index: Int!
+  index: UInt32!
   row: JointPlate!
 }
 type En1993JointPlateRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993JointPlateModification {
   id: String!
@@ -1218,16 +1220,16 @@ type En1993FoundationBlockDelta {
 }
 type En1993FoundationBlockRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993FoundationBlockInsertion {
-  index: Int!
+  index: UInt32!
   row: FoundationBlock!
 }
 type En1993FoundationBlockRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993FoundationBlockModification {
   id: String!
@@ -1257,16 +1259,16 @@ type En1993FrameActionDelta {
 }
 type En1993FrameActionRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993FrameActionInsertion {
-  index: Int!
+  index: UInt32!
   row: FrameAction!
 }
 type En1993FrameActionRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993FrameActionModification {
   id: String!
@@ -1290,16 +1292,16 @@ type En1993FrameMemberBasisDelta {
 }
 type En1993FrameMemberBasisRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993FrameMemberBasisInsertion {
-  index: Int!
+  index: UInt32!
   row: FrameMemberBasis!
 }
 type En1993FrameMemberBasisRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993FrameMemberBasisModification {
   id: String!
@@ -1317,16 +1319,16 @@ type En1993FatigueStressDelta {
 }
 type En1993FatigueStressRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993FatigueStressInsertion {
-  index: Int!
+  index: UInt32!
   row: FatigueStress!
 }
 type En1993FatigueStressRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993FatigueStressModification {
   id: String!
@@ -1351,16 +1353,16 @@ type En1993BucklingLengthDelta {
 }
 type En1993BucklingLengthRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993BucklingLengthInsertion {
-  index: Int!
+  index: UInt32!
   row: BucklingLength!
 }
 type En1993BucklingLengthRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993BucklingLengthModification {
   id: String!
@@ -1385,16 +1387,16 @@ type En1993FormingGainDelta {
 }
 type En1993FormingGainRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993FormingGainInsertion {
-  index: Int!
+  index: UInt32!
   row: FormingGain!
 }
 type En1993FormingGainRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993FormingGainModification {
   id: String!
@@ -1416,16 +1418,16 @@ type En1993MaterialDuctilityDelta {
 }
 type En1993MaterialDuctilityRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993MaterialDuctilityInsertion {
-  index: Int!
+  index: UInt32!
   row: MaterialDuctility!
 }
 type En1993MaterialDuctilityRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993MaterialDuctilityModification {
   id: String!
@@ -1444,16 +1446,16 @@ type En1993FastenedJointDelta {
 }
 type En1993FastenedJointRemoval {
   id: String!
-  index: Int!
+  index: UInt32!
 }
 type En1993FastenedJointInsertion {
-  index: Int!
+  index: UInt32!
   row: FastenedJoint!
 }
 type En1993FastenedJointRelocation {
   id: String!
-  from: Int!
-  to: Int!
+  from: UInt32!
+  to: UInt32!
 }
 type En1993FastenedJointModification {
   id: String!

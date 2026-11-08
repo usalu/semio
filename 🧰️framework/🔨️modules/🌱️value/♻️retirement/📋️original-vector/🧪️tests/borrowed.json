@@ -1,0 +1,24 @@
+{
+  "rows": [
+    3,
+    5,
+    8
+  ],
+  "maximumCopyBytes": 4096,
+  "maximumItems": 1,
+  "denialPreservesPointer": true,
+  "outputOccupiedRefused": true,
+  "stock": {
+    "items": 256,
+    "copyBytes": 1048576,
+    "capacityBytes": 65536,
+    "releaseBytes": 65536,
+    "depth": 64,
+    "fuel": 4096
+  },
+  "childCalls": 1,
+  "childRecovers": 1,
+  "maximumTurns": 512,
+  "releaseDenialPreserves": true,
+  "selectedBodyImmutable": true
+}

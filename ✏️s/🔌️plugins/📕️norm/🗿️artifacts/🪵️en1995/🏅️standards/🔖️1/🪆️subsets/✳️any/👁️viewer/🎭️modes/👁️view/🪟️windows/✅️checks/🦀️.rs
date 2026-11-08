@@ -20,13 +20,13 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// ✅️ The settled report of the document, rendered without any controller so no row dispatches a command.
 pub fn render(document: &En1995Snapshot, windows: &TreeWindows<'_>, locale: Locale) -> UiAssemblyResult<BuiltNode> {
-    let report = semio_s_artifact_norm_en1995_inferences::live::report(document);
+    let report = crate::paint_report(document);
     render_checks_with(&report, &ChecksViewState::default(), &ChecksWindowSpec::default(), windows, locale)
 }
 
 /// ✅️ The settled report with the check the view lane selected (stepping), still without any controller.
 pub fn render_selected(document: &En1995Snapshot, selected: Option<usize>, windows: &TreeWindows<'_>, locale: Locale) -> UiAssemblyResult<BuiltNode> {
-    let report = semio_s_artifact_norm_en1995_inferences::live::report(document);
+    let report = crate::paint_report(document);
     render_checks_with(&report, &ChecksViewState { selected, ..ChecksViewState::default() }, &ChecksWindowSpec::default(), windows, locale)
 }
 //#endregion 🔖️Render

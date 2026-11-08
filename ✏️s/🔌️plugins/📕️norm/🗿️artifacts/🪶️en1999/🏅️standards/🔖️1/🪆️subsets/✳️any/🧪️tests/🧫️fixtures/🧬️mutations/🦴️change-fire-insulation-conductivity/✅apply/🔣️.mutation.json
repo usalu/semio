@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFireInsulationConductivity",
+  "fireInsulationId": "fire-insulation-1",
+  "newConductivity": 1.2
+}

@@ -1,3 +1,5 @@
+scalar UInt32
+
 type En1994Snapshot {
   annex: AnnexChoice!
   structureKind: StructureKind!
@@ -123,7 +125,7 @@ type CompositeBeam {
   nCycles: Float!
   adjacentSpanM: Float!
   patchBearingLengthM: Float!
-  bridgeLanes: Int!
+  bridgeLanes: UInt32!
   crackedLengthFraction: Float!
   studTransverseSpacingM: Float!
   studEdgeDistanceM: Float!

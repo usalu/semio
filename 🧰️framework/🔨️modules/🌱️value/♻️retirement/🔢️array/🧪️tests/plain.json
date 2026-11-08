@@ -1,0 +1,34 @@
+{
+  "cases": [
+    {
+      "name": "one-item-original-bound",
+      "items": 8192,
+      "grantItems": 1,
+      "slotBytes": 2,
+      "headerBytes": 8,
+      "copyLimit": 4096,
+      "turns": 8192,
+      "copiedBytes": 81920
+    },
+    {
+      "name": "batched-native-header",
+      "items": 33,
+      "grantItems": 16,
+      "slotBytes": 2,
+      "headerBytes": 8,
+      "copyLimit": 40,
+      "turns": 3,
+      "copiedBytes": 90
+    },
+    {
+      "name": "32-bit-native-header",
+      "items": 33,
+      "grantItems": 16,
+      "slotBytes": 2,
+      "headerBytes": 4,
+      "copyLimit": 36,
+      "turns": 3,
+      "copiedBytes": 78
+    }
+  ]
+}

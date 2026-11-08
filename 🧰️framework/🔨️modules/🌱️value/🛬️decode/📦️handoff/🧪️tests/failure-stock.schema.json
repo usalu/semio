@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "items",
+    "copyBytes",
+    "capacityBytes",
+    "releaseBytes",
+    "depth",
+    "fuel",
+    "retirementCycles",
+    "copyBytesPerCycle",
+    "fixedCopyReserve",
+    "capacityBytesPerCycle",
+    "fixedReleaseReserve",
+    "workPerCycle",
+    "fixedWorkReserve",
+    "itemsPerCycle",
+    "fixedItems"
+  ],
+  "properties": {
+    "items": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "copyBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "capacityBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "releaseBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "depth": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "fuel": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "retirementCycles": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "copyBytesPerCycle": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "fixedCopyReserve": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "capacityBytesPerCycle": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "fixedReleaseReserve": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "workPerCycle": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "fixedWorkReserve": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "itemsPerCycle": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "fixedItems": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

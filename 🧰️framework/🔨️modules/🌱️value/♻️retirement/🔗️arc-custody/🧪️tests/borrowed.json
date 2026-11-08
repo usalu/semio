@@ -1,0 +1,14 @@
+{
+  "maximumCopyBytes": 4096,
+  "maximumItems": 1,
+  "maximumTurns": 128,
+  "sourceValue": 42,
+  "fuel": 128,
+  "leases": 2,
+  "stockItems": 128,
+  "stockCopyBytes": 524288,
+  "unwindCalls": 1,
+  "unwindRecoveries": 0,
+  "pendingCalls": 1,
+  "pendingRecoveries": 1
+}

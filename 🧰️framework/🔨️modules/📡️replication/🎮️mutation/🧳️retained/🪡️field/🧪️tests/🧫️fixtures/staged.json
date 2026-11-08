@@ -1,0 +1,42 @@
+{
+  "phases": [
+    "clone",
+    "take",
+    "publish"
+  ],
+  "deniedWork": 0,
+  "publishWork": 1,
+  "sourcePreserved": true,
+  "recoverReplays": 0,
+  "expectedValue": 73,
+  "foreignSourceRejected": true,
+  "rowBefore": "before",
+  "authored": "after",
+  "rowAfter": "after",
+  "displaced": "before",
+  "allocatingCloseMaxTurns": 38,
+  "cancellationCuts": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    8
+  ],
+  "unwindReceives": 1,
+  "unwindRecoverCalls": 0,
+  "stock": {
+    "items": 256,
+    "copy": 65536,
+    "capacity": 65536,
+    "release": 65536,
+    "depth": 32,
+    "work": 16384
+  },
+  "pendingFirstWork": 2,
+  "pendingRecoverWork": 1,
+  "pendingChildCeiling": 3,
+  "pendingParentCeiling": 10,
+  "pendingReceives": 1,
+  "pendingRecovers": 1
+}

@@ -1,0 +1,26 @@
+{
+  "variants": [
+    "Ok",
+    "Err"
+  ],
+  "value": 73,
+  "workMetadata": "340282366920938463463374607431768211455",
+  "birthCopy": "optionOutcomePlusResultCursor",
+  "denials": [
+    "work",
+    "copy",
+    "capacity"
+  ],
+  "deniedWork": 0,
+  "deniedMutation": false,
+  "ready": false,
+  "unsupported": false,
+  "stock": {
+    "items": 128,
+    "copyBytes": 65536,
+    "capacityBytes": 65536,
+    "releaseBytes": 65536,
+    "depth": 64,
+    "fuel": 256
+  }
+}

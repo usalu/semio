@@ -1,0 +1,89 @@
+{
+  "cases": [
+    {
+      "id": "signed32",
+      "node": {
+        "type": "integer",
+        "minimum": -2147483648,
+        "maximum": 2147483647
+      },
+      "scalar": "Int"
+    },
+    {
+      "id": "small-unsigned",
+      "node": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 65535
+      },
+      "scalar": "Int"
+    },
+    {
+      "id": "unsigned32",
+      "node": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 4294967295
+      },
+      "scalar": "UInt32"
+    },
+    {
+      "id": "nonzero-unsigned32",
+      "node": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 3000000000
+      },
+      "scalar": "UInt32"
+    },
+    {
+      "id": "declared-unsigned32",
+      "node": {
+        "type": "integer",
+        "format": "uint32"
+      },
+      "scalar": "UInt32"
+    },
+    {
+      "id": "declared-unsigned64",
+      "node": {
+        "type": "integer",
+        "format": "uint64"
+      },
+      "scalar": "UInt64"
+    },
+    {
+      "id": "declared-signed64",
+      "node": {
+        "type": "integer",
+        "format": "int64"
+      },
+      "scalar": "Int64"
+    }
+  ],
+  "values": [
+    0,
+    2147483647,
+    2147483648,
+    4294967295
+  ],
+  "invalid": [
+    -1,
+    0.5,
+    4294967296
+  ],
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "count"
+    ],
+    "properties": {
+      "count": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 4294967295
+      }
+    }
+  }
+}

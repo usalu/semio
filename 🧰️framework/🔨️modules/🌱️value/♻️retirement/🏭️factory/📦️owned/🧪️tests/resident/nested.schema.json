@@ -1,0 +1,53 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "maximumCopyBytes",
+    "maximumItems",
+    "maximumTurns",
+    "childCount",
+    "phases",
+    "interruptedPhase",
+    "receiveCount",
+    "recoveryCount",
+    "pendingReceiveCount",
+    "pendingRecoveryCount"
+  ],
+  "properties": {
+    "maximumCopyBytes": {
+      "const": 4096
+    },
+    "maximumItems": {
+      "const": 1
+    },
+    "maximumTurns": {
+      "const": 512
+    },
+    "childCount": {
+      "const": 1
+    },
+    "phases": {
+      "const": [
+        "capture",
+        "prepare",
+        "transfer",
+        "close"
+      ]
+    },
+    "interruptedPhase": {
+      "const": "prepare"
+    },
+    "receiveCount": {
+      "const": 1
+    },
+    "recoveryCount": {
+      "const": 0
+    },
+    "pendingReceiveCount": {
+      "const": 1
+    },
+    "pendingRecoveryCount": {
+      "const": 1
+    }
+  }
+}

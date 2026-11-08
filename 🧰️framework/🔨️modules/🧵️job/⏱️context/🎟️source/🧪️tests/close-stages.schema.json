@@ -1,0 +1,47 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "stage",
+      "work",
+      "admitted",
+      "next",
+      "spent"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "stage": {
+        "enum": [
+          "lending",
+          "original",
+          "owner",
+          "roots",
+          "retiring",
+          "emptyOwner"
+        ]
+      },
+      "work": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "admitted": {
+        "type": "boolean"
+      },
+      "next": {
+        "enum": [
+          "lending",
+          "original",
+          "owner",
+          "roots",
+          "retiring",
+          "emptyOwner"
+        ]
+      },
+      "spent": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  }
+}

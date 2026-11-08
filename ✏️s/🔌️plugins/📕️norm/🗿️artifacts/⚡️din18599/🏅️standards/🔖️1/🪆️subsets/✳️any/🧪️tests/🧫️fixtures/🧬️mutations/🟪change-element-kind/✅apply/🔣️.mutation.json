@@ -1,0 +1,5 @@
+{
+  "mutation": "changeelementkind",
+  "elementId": "wall-n",
+  "newKind": "Door"
+}

@@ -6,8 +6,11 @@
       "role": "editor",
       "appId": "s.norm.din4108@1/*#editor",
       "bodyKeys": [
-        "norm.din4108.play.inputs",
-        "norm.din4108.play.results",
+        "norm.din4108.play.outliner",
+        "norm.din4108.play.properties",
+        "norm.din4108.play.viewport",
+        "norm.din4108.play.diagrams",
+        "norm.din4108.play.checks",
         "norm.din4108.play.artifact",
         "norm.din4108.play.catalogue",
         "norm.din4108.play.inspection",
@@ -19,7 +22,9 @@
       "role": "viewer",
       "appId": "s.norm.din4108@1/*#viewer",
       "bodyKeys": [
-        "framework.window.table",
+        "norm.din4108.view.viewport",
+        "norm.din4108.view.diagrams",
+        "norm.din4108.view.checks",
         "framework.body.history"
       ]
     },
@@ -50,8 +55,11 @@
       "role": "editor",
       "appId": "s.norm.din18599@1/*#editor",
       "bodyKeys": [
-        "norm.din18599.play.inputs",
-        "norm.din18599.play.results",
+        "norm.din18599.play.outliner",
+        "norm.din18599.play.properties",
+        "norm.din18599.play.viewport",
+        "norm.din18599.play.diagrams",
+        "norm.din18599.play.checks",
         "norm.din18599.play.artifact",
         "norm.din18599.play.catalogue",
         "norm.din18599.play.inspection",
@@ -63,7 +71,9 @@
       "role": "viewer",
       "appId": "s.norm.din18599@1/*#viewer",
       "bodyKeys": [
-        "framework.window.table",
+        "norm.din18599.view.viewport",
+        "norm.din18599.view.diagrams",
+        "norm.din18599.view.checks",
         "framework.body.history"
       ]
     },
@@ -72,8 +82,11 @@
       "role": "editor",
       "appId": "s.norm.en1990@1/*#editor",
       "bodyKeys": [
-        "norm.en1990.play.inputs",
-        "norm.en1990.play.results",
+        "norm.en1990.play.outliner",
+        "norm.en1990.play.properties",
+        "norm.en1990.play.viewport",
+        "norm.en1990.play.diagrams",
+        "norm.en1990.play.checks",
         "norm.en1990.play.artifact",
         "norm.en1990.play.catalogue",
         "norm.en1990.play.inspection",
@@ -85,7 +98,9 @@
       "role": "viewer",
       "appId": "s.norm.en1990@1/*#viewer",
       "bodyKeys": [
-        "framework.window.table",
+        "norm.en1990.view.viewport",
+        "norm.en1990.view.diagrams",
+        "norm.en1990.view.checks",
         "framework.body.history"
       ]
     },
@@ -94,8 +109,11 @@
       "role": "editor",
       "appId": "s.norm.en1991@1/*#editor",
       "bodyKeys": [
-        "norm.en1991.play.inputs",
-        "norm.en1991.play.results",
+        "norm.en1991.play.outliner",
+        "norm.en1991.play.properties",
+        "norm.en1991.play.viewport",
+        "norm.en1991.play.diagrams",
+        "norm.en1991.play.checks",
         "norm.en1991.play.artifact",
         "norm.en1991.play.catalogue",
         "norm.en1991.play.inspection",
@@ -107,7 +125,9 @@
       "role": "viewer",
       "appId": "s.norm.en1991@1/*#viewer",
       "bodyKeys": [
-        "framework.window.table",
+        "norm.en1991.view.viewport",
+        "norm.en1991.view.diagrams",
+        "norm.en1991.view.checks",
         "framework.body.history"
       ]
     },
@@ -116,8 +136,11 @@
       "role": "editor",
       "appId": "s.norm.en1992@1/*#editor",
       "bodyKeys": [
-        "norm.en1992.play.inputs",
-        "norm.en1992.play.results",
+        "norm.en1992.play.outliner",
+        "norm.en1992.play.properties",
+        "norm.en1992.play.viewport",
+        "norm.en1992.play.diagrams",
+        "norm.en1992.play.checks",
         "norm.en1992.play.artifact",
         "norm.en1992.play.catalogue",
         "norm.en1992.play.inspection",
@@ -129,7 +152,9 @@
       "role": "viewer",
       "appId": "s.norm.en1992@1/*#viewer",
       "bodyKeys": [
-        "framework.window.table",
+        "norm.en1992.view.viewport",
+        "norm.en1992.view.diagrams",
+        "norm.en1992.view.checks",
         "framework.body.history"
       ]
     },
@@ -138,8 +163,11 @@
       "role": "editor",
       "appId": "s.norm.en1993@1/*#editor",
       "bodyKeys": [
-        "norm.en1993.play.inputs",
-        "norm.en1993.play.results",
+        "norm.en1993.play.outliner",
+        "norm.en1993.play.properties",
+        "norm.en1993.play.viewport",
+        "norm.en1993.play.diagrams",
+        "norm.en1993.play.checks",
         "norm.en1993.play.artifact",
         "norm.en1993.play.catalogue",
         "norm.en1993.play.inspection",
@@ -151,7 +179,9 @@
       "role": "viewer",
       "appId": "s.norm.en1993@1/*#viewer",
       "bodyKeys": [
-        "framework.window.table",
+        "norm.en1993.view.viewport",
+        "norm.en1993.view.diagrams",
+        "norm.en1993.view.checks",
         "framework.body.history"
       ]
     },
@@ -160,8 +190,11 @@
       "role": "editor",
       "appId": "s.norm.en1994@1/*#editor",
       "bodyKeys": [
-        "norm.en1994.play.inputs",
-        "norm.en1994.play.results",
+        "norm.en1994.play.outliner",
+        "norm.en1994.play.properties",
+        "norm.en1994.play.viewport",
+        "norm.en1994.play.diagrams",
+        "norm.en1994.play.checks",
         "norm.en1994.play.artifact",
         "norm.en1994.play.catalogue",
         "norm.en1994.play.inspection",
@@ -173,7 +206,9 @@
       "role": "viewer",
       "appId": "s.norm.en1994@1/*#viewer",
       "bodyKeys": [
-        "framework.window.table",
+        "norm.en1994.view.viewport",
+        "norm.en1994.view.diagrams",
+        "norm.en1994.view.checks",
         "framework.body.history"
       ]
     },
@@ -182,8 +217,11 @@
       "role": "editor",
       "appId": "s.norm.en1995@1/*#editor",
       "bodyKeys": [
-        "norm.en1995.play.inputs",
-        "norm.en1995.play.results",
+        "norm.en1995.play.outliner",
+        "norm.en1995.play.properties",
+        "norm.en1995.play.viewport",
+        "norm.en1995.play.diagrams",
+        "norm.en1995.play.checks",
         "norm.en1995.play.artifact",
         "norm.en1995.play.catalogue",
         "norm.en1995.play.inspection",
@@ -195,7 +233,9 @@
       "role": "viewer",
       "appId": "s.norm.en1995@1/*#viewer",
       "bodyKeys": [
-        "framework.window.table",
+        "norm.en1995.view.viewport",
+        "norm.en1995.view.diagrams",
+        "norm.en1995.view.checks",
         "framework.body.history"
       ]
     },
@@ -204,8 +244,11 @@
       "role": "editor",
       "appId": "s.norm.en1996@1/*#editor",
       "bodyKeys": [
-        "norm.en1996.play.inputs",
-        "norm.en1996.play.results",
+        "norm.en1996.play.outliner",
+        "norm.en1996.play.properties",
+        "norm.en1996.play.viewport",
+        "norm.en1996.play.diagrams",
+        "norm.en1996.play.checks",
         "norm.en1996.play.artifact",
         "norm.en1996.play.catalogue",
         "norm.en1996.play.inspection",
@@ -217,7 +260,9 @@
       "role": "viewer",
       "appId": "s.norm.en1996@1/*#viewer",
       "bodyKeys": [
-        "framework.window.table",
+        "norm.en1996.view.viewport",
+        "norm.en1996.view.diagrams",
+        "norm.en1996.view.checks",
         "framework.body.history"
       ]
     },
@@ -226,8 +271,11 @@
       "role": "editor",
       "appId": "s.norm.en1997@1/*#editor",
       "bodyKeys": [
-        "norm.en1997.play.inputs",
-        "norm.en1997.play.results",
+        "norm.en1997.play.outliner",
+        "norm.en1997.play.properties",
+        "norm.en1997.play.viewport",
+        "norm.en1997.play.diagrams",
+        "norm.en1997.play.checks",
         "norm.en1997.play.artifact",
         "norm.en1997.play.catalogue",
         "norm.en1997.play.inspection",
@@ -239,7 +287,9 @@
       "role": "viewer",
       "appId": "s.norm.en1997@1/*#viewer",
       "bodyKeys": [
-        "framework.window.table",
+        "norm.en1997.view.viewport",
+        "norm.en1997.view.diagrams",
+        "norm.en1997.view.checks",
         "framework.body.history"
       ]
     },
@@ -248,8 +298,11 @@
       "role": "editor",
       "appId": "s.norm.en1998@1/*#editor",
       "bodyKeys": [
-        "norm.en1998.play.inputs",
-        "norm.en1998.play.results",
+        "norm.en1998.play.outliner",
+        "norm.en1998.play.properties",
+        "norm.en1998.play.viewport",
+        "norm.en1998.play.diagrams",
+        "norm.en1998.play.checks",
         "norm.en1998.play.artifact",
         "norm.en1998.play.catalogue",
         "norm.en1998.play.inspection",
@@ -261,7 +314,9 @@
       "role": "viewer",
       "appId": "s.norm.en1998@1/*#viewer",
       "bodyKeys": [
-        "framework.window.table",
+        "norm.en1998.view.viewport",
+        "norm.en1998.view.diagrams",
+        "norm.en1998.view.checks",
         "framework.body.history"
       ]
     },
@@ -270,8 +325,11 @@
       "role": "editor",
       "appId": "s.norm.en1999@1/*#editor",
       "bodyKeys": [
-        "norm.en1999.play.inputs",
-        "norm.en1999.play.results",
+        "norm.en1999.play.outliner",
+        "norm.en1999.play.properties",
+        "norm.en1999.play.viewport",
+        "norm.en1999.play.diagrams",
+        "norm.en1999.play.checks",
         "norm.en1999.play.artifact",
         "norm.en1999.play.catalogue",
         "norm.en1999.play.inspection",
@@ -283,7 +341,9 @@
       "role": "viewer",
       "appId": "s.norm.en1999@1/*#viewer",
       "bodyKeys": [
-        "framework.window.table",
+        "norm.en1999.view.viewport",
+        "norm.en1999.view.diagrams",
+        "norm.en1999.view.checks",
         "framework.body.history"
       ]
     },
@@ -292,8 +352,11 @@
       "role": "editor",
       "appId": "s.norm.iso16757@1/*#editor",
       "bodyKeys": [
-        "norm.iso16757.play.inputs",
-        "norm.iso16757.play.results",
+        "norm.iso16757.play.outliner",
+        "norm.iso16757.play.properties",
+        "norm.iso16757.play.viewport",
+        "norm.iso16757.play.diagrams",
+        "norm.iso16757.play.checks",
         "norm.iso16757.play.artifact",
         "norm.iso16757.play.catalogue",
         "norm.iso16757.play.inspection",
@@ -305,7 +368,9 @@
       "role": "viewer",
       "appId": "s.norm.iso16757@1/*#viewer",
       "bodyKeys": [
-        "framework.window.table",
+        "norm.iso16757.view.viewport",
+        "norm.iso16757.view.diagrams",
+        "norm.iso16757.view.checks",
         "framework.body.history"
       ]
     },

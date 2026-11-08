@@ -10,8 +10,7 @@ pub mod snapshot;
 #[path = "🧬️mutations/🦀️.rs"]
 pub mod mutations;
 
-#[path = "🔺️diff/🦀️.rs"]
-pub mod diff;
+pub use semio_s_artifact_norm_iso16757_diff::text as diff;
 
 #[path = "💡️inferences/🦀️.rs"]
 pub mod inferences;

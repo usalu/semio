@@ -1,0 +1,25 @@
+{
+  "wordBytes": 8,
+  "borrowWords": 3,
+  "counters": 4,
+  "flagBytes": 5,
+  "alignment": 8,
+  "constructorCopy": 64,
+  "compareMetadataCopy": 27,
+  "hopCopy": 35,
+  "completeCopy": 17,
+  "emptyCopy": 9,
+  "closeCopy": 65,
+  "body": 1,
+  "maximumReadBatch": 64,
+  "metadataWork": 1,
+  "maximumTurnWork": 2,
+  "stock": {
+    "items": 100000,
+    "copyBytes": 33554432,
+    "capacityBytes": 33554432,
+    "releaseBytes": 33554432,
+    "depth": 512,
+    "work": 100000
+  }
+}

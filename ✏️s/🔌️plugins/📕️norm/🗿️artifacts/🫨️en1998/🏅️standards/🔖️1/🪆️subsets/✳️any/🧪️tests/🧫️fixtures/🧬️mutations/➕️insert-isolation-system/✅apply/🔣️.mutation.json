@@ -1,0 +1,13 @@
+{
+  "mutation": "insertIsolationSystem",
+  "index": 0,
+  "isolationSystem": {
+    "id": "iso-1",
+    "bridgeId": "br-1",
+    "buildingId": "",
+    "strengthN": 300000.0,
+    "stiffnessNPerM": 15000000.0,
+    "yieldDisplacementM": 0.01,
+    "capacityM": 0.5
+  }
+}

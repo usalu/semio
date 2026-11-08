@@ -79,6 +79,7 @@
         "id": { "$ref": "#/$defs/id" },
         "position": { "$ref": "#/$defs/vec3" },
         "shape": { "enum": ["dot", "cross", "ring"], "default": "dot" },
+        "axis": { "$ref": "#/$defs/vec3", "description": "When present the marker is a drag handle: the non-zero world direction its pointer drag slides along. The host solves the drag parameter s along this axis from the marker position and dispatches the node's delta, commit and abort bindings with handle, s, origin, modifiers and at." },
         "text": { "$ref": "#/$defs/text" },
         "tone": { "$ref": "#/$defs/tone", "default": "neutral" }
       },

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSheetProfileSheetId",
+  "sheetProfileId": "sheet-profile-1",
+  "newSheetId": "sheet-pass-changed"
+}

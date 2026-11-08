@@ -1,0 +1,26 @@
+[
+  {
+    "attempted": false,
+    "actual": null,
+    "backing": false,
+    "input": true
+  },
+  {
+    "attempted": true,
+    "actual": 0,
+    "backing": false,
+    "input": true
+  },
+  {
+    "attempted": true,
+    "actual": 64,
+    "backing": true,
+    "input": true
+  },
+  {
+    "attempted": false,
+    "actual": null,
+    "backing": false,
+    "input": false
+  }
+]

@@ -17,6 +17,9 @@ pub const EDIT_RULES: NormEditRules = NormEditRules {
         SetFieldRule { path: "catalogue.productGroups[].names.preferred.text", kind: "rename-product-group", selectors: &[SelectorKey::Id("id")], value: "newName" },
         SetFieldRule { path: "partNumberRule", kind: "replace-part-number-rule", selectors: &[], value: "newRule" },
         SetFieldRule { path: "selection.seriesId", kind: "change-selection-series", selectors: &[], value: "newSeriesId" },
+        SetFieldRule { path: "scriptLimits.maxSteps", kind: "change-script-limits", selectors: &[], value: "newMaxSteps" },
+        SetFieldRule { path: "scriptLimits.maxRecursion", kind: "change-script-limits", selectors: &[], value: "newMaxRecursion" },
+        SetFieldRule { path: "scriptLimits.timeoutMs", kind: "change-script-limits", selectors: &[], value: "newTimeoutMs" },
     ],
     insert_item: &[
         InsertItemRule { path: "dictionary.subjects", kind: "introduce-subject", selectors: &[], index: "index", item: "subject" },
@@ -44,7 +47,94 @@ pub const ID_REMOVALS: &[IdRemoval] = &[
         IdRemoval { path: "catalogue.propertyDefinitions", kind: "retire-property-definition", selectors: &[], id: "id" },
 ];
 
-/// 🎯️ Resolves an editor edit into concrete kind mutations: row-id removals first, every other path through [`EDIT_RULES`].
+/// 🧱️ The concrete mutation of `kind` built from its payload value.
+fn payload_of(kind: &str, payload: semio_framework_value::DslValue) -> Result<Iso16757Mutation, String> {
+    <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::from_payload_value(kind, payload).map_err(|error| error.to_string())
+}
+
+/// 🧱️ The field-wise write of a whole facet: `leaf` of `facet` set to `value`, the facet value tree returned.
+fn facet_with(facet: semio_framework_value::DslValue, leaf: &str, value: &semio_framework_value::DslValue) -> Result<semio_framework_value::DslValue, String> {
+    let mut tree = facet;
+    semio_s_plugin_norm_app_surface::set_value_at_path(&mut tree, leaf, value.clone())?;
+    Ok(tree)
+}
+
+/// 🚦️ `scriptLimits.<leaf>` raises `change-script-limits` with the three limits validated together: the written leaf and the two siblings of the base document.
+fn resolve_script_limits(document: &Iso16757Snapshot, leaf: &str, value: &semio_framework_value::DslValue) -> Result<Vec<Iso16757Mutation>, String> {
+    use semio_framework_value::{DslValue, ToValue};
+    let tree = facet_with(document.script_limits.to_value(), leaf, value)?;
+    let field = |name: &str| tree.get(name).cloned().ok_or_else(|| format!("script limits lack {name}"));
+    let payload = DslValue::object([("newMaxSteps".to_string(), field("maxSteps")?), ("newMaxRecursion".to_string(), field("maxRecursion")?), ("newTimeoutMs".to_string(), field("timeoutMs")?)]);
+    payload_of("change-script-limits", payload).map(|mutation| vec![mutation])
+}
+
+/// 📐️ `geometry.objects.<id>.<leaf>` replaces the whole object as one atomic pair, retire then introduce, so every numeric leaf of a geometry object (space bounds, port positions, surface bounds) is one undoable edit.
+fn resolve_geometry(document: &Iso16757Snapshot, rest: &str, value: &semio_framework_value::DslValue) -> Result<Vec<Iso16757Mutation>, String> {
+    use semio_framework_value::{DslValue, FromValue, ToValue};
+    let (id, leaf) = rest.split_once('.').ok_or_else(|| format!("geometry.objects.{rest} is not a leaf"))?;
+    let object = document.geometry.objects.get(id).ok_or_else(|| format!("unknown geometry object '{id}'"))?;
+    let replaced = facet_with(object.to_value(), leaf, value)?;
+    if semio_s_artifact_norm_iso16757_model::part_2::GeometryObject::from_value(replaced.clone()).map_err(|error| error.to_string())? == *object {
+        return Err(format!("'{id}.{leaf}' already has this value"));
+    }
+    let retire = payload_of("retire-geometry-object", DslValue::object([("id".to_string(), DslValue::String(id.to_string()))]))?;
+    let introduce = payload_of("introduce-geometry-object", DslValue::object([("geometryObject".to_string(), replaced)]))?;
+    Ok(vec![retire, introduce])
+}
+
+/// ➕ The geometry object a new row stands for: the placed copy of the last object (a document-valid starting point, id renewed by the insert tool) or, for an empty catalogue, a unit box of 0.1 m.
+fn new_geometry_object(document: &Iso16757Snapshot, value: Option<&semio_framework_value::DslValue>) -> Result<semio_s_artifact_norm_iso16757_model::part_2::GeometryObject, String> {
+    use semio_framework_value::FromValue;
+    use semio_s_artifact_norm_iso16757_model::part_2::{GeometryNode, GeometryObject};
+    match value {
+        Some(value) => GeometryObject::from_value(value.clone()).map_err(|error| error.to_string()),
+        None => {
+            let id = (document.geometry.objects.len() + 1..).map(|n| format!("geometry-object-{n}")).find(|id| !document.geometry.objects.contains_key(id)).unwrap_or_default();
+            let parameters = ["width", "depth", "height"].into_iter().map(|name| (name.to_string(), 0.1)).collect();
+            Ok(GeometryObject { id, shape: Some(GeometryNode::Primitive { kind: "box".into(), parameters }), symbolic: None, spaces: Vec::new(), surfaces: Vec::new(), ports: Vec::new(), parameter_bindings: Default::default() })
+        }
+    }
+}
+
+/// ➕ `insertItem` into `geometry.objects` raises `introduce-geometry-object`; an id the catalogue already holds is refused.
+fn resolve_geometry_insert(document: &Iso16757Snapshot, value: Option<&semio_framework_value::DslValue>) -> Result<Vec<Iso16757Mutation>, String> {
+    use semio_framework_value::{DslValue, ToValue};
+    let object = new_geometry_object(document, value)?;
+    if object.id.trim().is_empty() || document.geometry.objects.contains_key(&object.id) {
+        return Err(format!("geometry object id '{}' is empty or taken", object.id));
+    }
+    payload_of("introduce-geometry-object", DslValue::object([("geometryObject".to_string(), object.to_value())])).map(|mutation| vec![mutation])
+}
+
+/// ➖ `removeItem` of `geometry.objects.<id>` (or `geometry.objects[id=<id>]`) raises `retire-geometry-object`.
+fn resolve_geometry_remove(document: &Iso16757Snapshot, path: &str) -> Result<Option<Vec<Iso16757Mutation>>, String> {
+    use semio_framework_value::DslValue;
+    let id = path.strip_prefix("geometry.objects.").or_else(|| path.strip_prefix("geometry.objects[id=").and_then(|rest| rest.strip_suffix(']')));
+    let Some(id) = id.filter(|id| !id.is_empty() && !id.contains(['.', '[', ']'])) else { return Ok(None) };
+    if !document.geometry.objects.contains_key(id) {
+        return Err(format!("unknown geometry object '{id}'"));
+    }
+    payload_of("retire-geometry-object", DslValue::object([("id".to_string(), DslValue::String(id.to_string()))])).map(|mutation| Some(vec![mutation]))
+}
+
+/// 🎯️ Resolves an editor edit into concrete kind mutations: the numeric geometry and script-limit leaves by their facet, row-id removals first, every other path through [`EDIT_RULES`].
 pub fn resolve_edit(document: &Iso16757Snapshot, edit: &NormEdit) -> Result<Vec<Iso16757Mutation>, String> {
+    match edit {
+        NormEdit::SetField { path, value } => {
+            if let Some(rest) = path.strip_prefix("geometry.objects.") {
+                return resolve_geometry(document, rest, value);
+            }
+            if let Some(leaf) = path.strip_prefix("scriptLimits.") {
+                return resolve_script_limits(document, leaf, value);
+            }
+        }
+        NormEdit::InsertItem { path, value, .. } if path == "geometry.objects" => return resolve_geometry_insert(document, value.as_ref()),
+        NormEdit::RemoveItem { path, .. } => {
+            if let Some(mutations) = resolve_geometry_remove(document, path)? {
+                return Ok(mutations);
+            }
+        }
+        _ => {}
+    }
     EDIT_RULES.resolve_with_id_removals(ID_REMOVALS, document, edit)
 }

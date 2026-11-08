@@ -91,8 +91,11 @@ mod tests;
 //#endregion 🧪️SetLaws
 
 impl semio_framework_value_retained_clone::RetainedAlias for OrderedSet{
- fn alias_demand(&self)->crate::RetirementDemand{semio_framework_value_retained_clone::RetainedAlias::alias_demand(&self.values)}
- fn alias_work_demand(&self)->u64{1+semio_framework_value_retained_clone::RetainedAlias::alias_work_demand(&self.values)}
- fn admit_alias(&self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Self,crate::RetainedCloneProgress)>{let turn=semio_framework_value_retained_clone::RetainedAlias::admit_alias(&self.values,grant);crate::RetainedWorkOutcome{result:turn.result.map(|(values,progress)|(Self{values},progress)),work:1+turn.work}}
+ fn alias_demand(&self)->crate::RetirementDemand{crate::RetirementDemand{copy_bytes:std::mem::size_of::<Self>()+std::mem::size_of::<Option<Self>>()+std::mem::size_of::<usize>(),depth:1,..Default::default()}}
+ fn alias_work_demand(&self)->u64{1}
+ fn admit_alias_into<'r>(&self,output:&mut Option<Self>,effect:&mut crate::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'r,crate::RetainedCloneStep,crate::OriginalRetirementFailure>)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'r,crate::RetainedCloneStep,crate::OriginalRetirementFailure>,crate::ValueError>{
+  if output.is_some(){return Err(crate::ValueError::invariant("ordered alias output is occupied"))}if effect.invocation().is_none(){return Err(crate::ValueError::invariant("ordered alias lacks its original invocation"))}let demand=semio_framework_value_retained_clone::RetainedAlias::alias_demand(self);if !crate::retained_clone::retained_clone_grant_admits(effect.grant(),demand)||effect.remaining_work_units()?<1{return Ok(reply.complete(Ok(crate::RetainedCloneStep::Progress(Default::default()))))}if !effect.performed(1)?{return Ok(reply.complete(Err(crate::ValueError::literal(crate::ValueRefusalKind::WorkLimit,"ordered alias exceeds its original Work receipt").into())))}*output=Some(Self{values:self.values.clone()});Ok(reply.complete(Ok(crate::RetainedCloneStep::Complete(crate::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))))
+ }
+ fn recover_alias_into<'r>(&self,_output:&mut Option<Self>,_effect:&mut crate::RetainedAllocationEffect<'_>,_reply:semio_framework_value_control_contract::OriginalEffectReply<'r,crate::RetainedCloneStep,crate::OriginalRetirementFailure>)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'r,crate::RetainedCloneStep,crate::OriginalRetirementFailure>,crate::ValueError>{Err(crate::ValueError::invariant("native ordered alias has no unresolved callback"))}
 }
 impl semio_framework_value_retained_clone::RetainedClone for OrderedSet{type Cursor=semio_framework_value_retained_clone::RetainedAliasCursor<Self>;fn retained_clone_cursor()->Self::Cursor{Default::default()}}

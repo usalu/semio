@@ -1,0 +1,21 @@
+{
+  "stock": {
+    "items": 64,
+    "copyBytes": 4096,
+    "capacityBytes": 8216,
+    "releaseBytes": 8216,
+    "depth": 8,
+    "fuel": 64
+  },
+  "values": [
+    2,
+    7,
+    11
+  ],
+  "large": 8192,
+  "maximumCopy": 4096,
+  "zst": 8193,
+  "text": "original β",
+  "chunk": 1365,
+  "discardChunk": 4095
+}

@@ -22,11 +22,13 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-replication-retained-field-preparation = { path = "../../🧳️preparation/📦️packages/🦀️rust" }
 semio-framework-mutation-diff = { path = "../../../../🔺️diff/📦️packages/🦀️rust" }
 semio-framework-value.workspace = true
 semio-framework-value-persistent.workspace = true
 
 [dev-dependencies]
+semio-framework-value-testing-effect-bank = { path = "../../../../../../🌱️value/🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 semio-framework-mutation-diff = { path = "../../../../🔺️diff/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-test-fixtures = { path = "../../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-trace-memory-testing = { path = "../../../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }

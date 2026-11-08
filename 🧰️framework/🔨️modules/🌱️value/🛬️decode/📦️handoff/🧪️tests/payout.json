@@ -1,0 +1,79 @@
+[
+  {
+    "id": "funded",
+    "issuer": true,
+    "work": true,
+    "grant": true,
+    "vacant": true,
+    "refused": true,
+    "accepted": true,
+    "stage": true,
+    "publish": true
+  },
+  {
+    "id": "post-refused",
+    "issuer": true,
+    "work": true,
+    "grant": true,
+    "vacant": true,
+    "refused": true,
+    "accepted": false,
+    "stage": true,
+    "publish": false
+  },
+  {
+    "id": "foreign-issuer",
+    "issuer": false,
+    "work": true,
+    "grant": true,
+    "vacant": true,
+    "refused": true,
+    "accepted": true,
+    "stage": false,
+    "publish": false
+  },
+  {
+    "id": "foreign-work",
+    "issuer": true,
+    "work": false,
+    "grant": true,
+    "vacant": true,
+    "refused": true,
+    "accepted": true,
+    "stage": false,
+    "publish": false
+  },
+  {
+    "id": "no-grant",
+    "issuer": true,
+    "work": true,
+    "grant": false,
+    "vacant": true,
+    "refused": true,
+    "accepted": true,
+    "stage": false,
+    "publish": false
+  },
+  {
+    "id": "occupied",
+    "issuer": true,
+    "work": true,
+    "grant": true,
+    "vacant": false,
+    "refused": true,
+    "accepted": true,
+    "stage": false,
+    "publish": false
+  },
+  {
+    "id": "unrefused",
+    "issuer": true,
+    "work": true,
+    "grant": true,
+    "vacant": true,
+    "refused": false,
+    "accepted": true,
+    "stage": false,
+    "publish": false
+  }
+]

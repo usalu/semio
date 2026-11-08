@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "value",
+    "maximumTurns",
+    "deniedWork"
+  ],
+  "properties": {
+    "value": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "maximumTurns": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "deniedWork": {
+      "const": 0
+    }
+  }
+}

@@ -1,4 +1,5 @@
 use super::*;
+use crate::ordered::RetirementStep;
 #[test]
 fn ordered_retirement_reports_defining_work_and_distinguishes_key_header_clear_from_copy(){
  let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();

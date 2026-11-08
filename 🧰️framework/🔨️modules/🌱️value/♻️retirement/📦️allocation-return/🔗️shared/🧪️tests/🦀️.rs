@@ -56,3 +56,4 @@ fn shared_source_slot_birth_matches_neutral_custody_and_actual_allocator() {
   else{let p=turn.result.unwrap().progress();assert_eq!(turn.work,4);assert_eq!(heap,(d.capacity_bytes,0));assert_eq!(p.copied_bytes,d.copy_bytes);assert_eq!(p.retained_capacity_bytes,actual.unwrap());assert_eq!(target.as_ref().unwrap().as_ptr(),pointer);}
  }
 }
+

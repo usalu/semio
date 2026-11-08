@@ -1,12 +1,13 @@
 //! 📦️ Original native slots retain one payload and its genuine captured read issuer.
-pub use semio_framework_value_control_contract::{RetainedWorkOutcome,RetainedWorkPoll,RetirementDemand,ValueError,ValueRefusalKind,RetainedAllocationEffect,OriginalRetirementFailure};
+pub use semio_framework_value_control_contract::{RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind,RetainedAllocationEffect,OriginalEffectReply,OriginalEffectReplyComplete,OriginalEffectAction,OriginalEffectInvocationIdentity,OriginalEffectCallbackMode,OriginalWorkBindingIdentity,RetainedWorkPoll};
+pub use semio_framework_value_retirement_contract::{OriginalRetirementFailure,OriginalRetirementPoll,OriginalRetirementCloseLoan};
 pub use semio_framework_value_factory::{ArtifactOwnedValueRetirementFactory,FactoryAuthority};
 pub use semio_framework_value_factory::owned::{FactoryOwnedRetirement,FactoryOwnedSourceAuthority};
-pub use semio_framework_value_retained_clone::{RetainedCloneSource,RetainedCloneSourceAdmission,RetainedOwnedProjection,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneSourceTake,RetainedCloneStep,retained_clone_grant_admits};
+pub use semio_framework_value_retained_clone::{OriginalSourceOwner,OriginalSourceMode,RetainedCloneSource,RetainedCloneSourceAdmission,RetainedOwnedProjection,RetainedOwnedProjectionAdmission,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,retained_clone_grant_admits};
 pub use semio_framework_value_retirement::{ErasedSnapshotRetirement,factory_ticket_demands,close_factory_ticket,OriginalRetirementOutcome};
 #[path="../../🦀️.rs"]
 pub mod original_slot;
-pub use original_slot::{RetainedOriginalReadOwner,RetainedOriginalRead,RetainedOriginalReadReturn,RetainedOriginalSlot,RetainedOriginalSlotKey};
+pub use original_slot::{RetainedOriginalReadOwner,RetainedOriginalRead,RetainedOriginalSlot,RetainedOriginalSlotKey};
 #[cfg(test)]
 pub(crate) use semio_framework_value_testing_allocator::observe_retirement_allocations;
 

@@ -1,0 +1,11 @@
+{
+  "leafDepth": 1,
+  "metadataExtraDepth": 0,
+  "payloadExtraDepth": 1,
+  "childDepth": 2,
+  "sourceDepth": 256,
+  "arrayEdges": 129,
+  "arrayDemand": 130,
+  "leafValue": 73,
+  "deniedWork": 0
+}

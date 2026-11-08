@@ -28,7 +28,7 @@ use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
 
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
-pub use crate::edit_rules::{resolve_edit, EDIT_RULES, ID_REMOVALS};
+pub use crate::edit_rules::{can_set_field, resolve_edit, EDIT_RULES, ID_REMOVALS};
 
 //#region 🔖️Mutations
 use semio_s_artifact_norm_vdi3805_mut_geometry::add_geometry_connection;

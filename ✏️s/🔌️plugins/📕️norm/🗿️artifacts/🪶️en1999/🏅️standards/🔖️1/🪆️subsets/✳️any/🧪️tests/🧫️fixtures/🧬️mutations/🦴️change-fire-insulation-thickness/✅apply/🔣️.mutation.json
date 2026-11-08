@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFireInsulationThickness",
+  "fireInsulationId": "fire-insulation-1",
+  "newThickness": 1.02
+}

@@ -21,7 +21,11 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value-native-cursor-backing = { path = "../../../📦️backing/📦️storage/📦️packages/🦀️rust" }
+semio-framework-value-native-sorted={path="../../../../🧺️collection/📐️sorted/📦️packages/🦀️rust"}
+semio-framework-value-native-clone-engine = { path = "../../../⚙️engine/📦️packages/🦀️rust" }
 semio-framework-value-paged-clone = { path = "../../../📋️paged-list/⚙️engine/📦️packages/🦀️rust" }
+semio-framework-value-clone-selection = { path = "../../🧮️array-cursor/🔎️selection/📦️packages/🦀️rust" }
 semio-framework-value-intrinsic = { path="../../../../🌳️intrinsic/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path="../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-clone-source = { path="../../../🔗️source/📦️packages/🦀️rust" }
@@ -30,6 +34,7 @@ semio-framework-value-shared-issuance = { path="../../../../♻️retirement/�
 semio-framework-value-paged-list = { path="../../../../📋️list/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-testing-effect-bank={path="../../../../🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust"}
 semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde = { workspace = true }
 semio-framework-value-derive = { path="../../../../✨️derive/📦️packages/🦀️rust" }
@@ -68,3 +73,7 @@ path = "../../../🚚️bulk-vec/🧪️tests/public.rs"
 [[test]]
 name = "array-prefix-selection"
 path = "../../🧮️array-cursor/🧪️tests/prefix.rs"
+
+[[test]]
+name="native-sorted-collection"
+path="../../../🧺️std-collections/🧪️tests/🌐️integration/🦀️.rs"

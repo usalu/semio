@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-critical-region-hooped-length-m/schema.json",
+  "title": "ChangeCriticalRegionHoopedLengthM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newHoopedLengthM"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeCriticalRegionHoopedLengthM"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "CriticalRegion",
+          "de": "Kritischer Bereich"
+        },
+        "description": {
+          "en": "The criticalRegion this mutation addresses, by id.",
+          "de": "Das adressierte Element (Kritischer Bereich), per Kennung."
+        },
+        "ref": {
+          "kind": "criticalRegion"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newHoopedLengthM": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Provided hooped length",
+          "de": "Vorhandene Bügellänge"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.01,
+        "precision": 3
+      }
+    }
+  }
+}

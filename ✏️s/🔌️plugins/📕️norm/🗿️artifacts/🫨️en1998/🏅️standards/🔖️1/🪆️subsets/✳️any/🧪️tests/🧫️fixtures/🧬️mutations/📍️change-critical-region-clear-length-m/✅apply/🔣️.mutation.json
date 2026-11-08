@@ -1,0 +1,5 @@
+{
+  "mutation": "changeCriticalRegionClearLengthM",
+  "id": "cr-1",
+  "newClearLengthM": 4.0
+}

@@ -1,0 +1,21 @@
+{
+  "values": [
+    7,
+    11,
+    73
+  ],
+  "fuel": 64,
+  "arrayWork": 4,
+  "extendWork": 4,
+  "releaseWork": 1,
+  "deniedWork": 0,
+  "dropEvents": 1,
+  "prefix": {
+    "first": 2,
+    "second": 1,
+    "elementBytes": 8,
+    "firstWork": 21,
+    "secondWork": 11,
+    "publicationWork": 1
+  }
+}

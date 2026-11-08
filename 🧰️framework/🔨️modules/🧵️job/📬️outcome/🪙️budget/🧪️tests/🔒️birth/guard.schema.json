@@ -1,0 +1,20 @@
+{
+  "type": "array",
+  "minItems": 2,
+  "items": {
+    "type": "object",
+    "required": [
+      "sameGate",
+      "owned"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "sameGate": {
+        "type": "boolean"
+      },
+      "owned": {
+        "type": "boolean"
+      }
+    }
+  }
+}

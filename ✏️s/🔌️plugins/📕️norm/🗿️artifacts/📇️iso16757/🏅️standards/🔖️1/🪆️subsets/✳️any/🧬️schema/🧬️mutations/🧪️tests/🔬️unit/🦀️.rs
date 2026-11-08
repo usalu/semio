@@ -236,3 +236,36 @@ fn create_and_retire_geometry_object_roundtrip() {
     assert!(!restored.geometry.objects.contains_key("geom-test"));
 }
 
+fn applied(base: &Iso16757Snapshot, edit: &semio_s_plugin_norm_app_surface::NormEdit) -> Iso16757Snapshot {
+    resolve_edit(base, edit).expect("resolves").iter().fold(base.clone(), |document, mutation| protocol::apply_mutation(&document, mutation).expect("applies").0)
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_space_bound_leaf_edit_is_one_atomic_pair_that_changes_exactly_that_leaf() {
+    let base = Iso16757Snapshot::reference_fixture();
+    let edit = semio_s_plugin_norm_app_surface::NormEdit::SetField { path: "geometry.objects.geom-valve-50.spaces[id=installation].bounds.max[0]".into(), value: semio_framework_value::DslValue::float(0.5) };
+    let after = applied(&base, &edit);
+    assert_eq!(after.geometry.objects["geom-valve-50"].spaces[0].bounds.max[0], 0.5);
+    let mut expected = base.clone();
+    expected.geometry.objects.get_mut("geom-valve-50").expect("object").spaces[0].bounds.max[0] = 0.5;
+    assert_eq!(after, expected);
+    assert!(resolve_edit(&base, &semio_s_plugin_norm_app_surface::NormEdit::SetField { path: "geometry.objects.geom-valve-50.spaces[id=installation].bounds.max[0]".into(), value: semio_framework_value::DslValue::float(base.geometry.objects["geom-valve-50"].spaces[0].bounds.max[0]) }).is_err(), "an unchanged value commits nothing");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn script_limit_leaves_keep_their_siblings() {
+    let base = Iso16757Snapshot::reference_fixture();
+    let after = applied(&base, &semio_s_plugin_norm_app_surface::NormEdit::SetField { path: "scriptLimits.maxSteps".into(), value: semio_framework_value::DslValue::uint(77) });
+    assert_eq!(after.script_limits, part_5::ScriptLimits { max_steps: 77, ..base.script_limits });
+}
+
+#[semio_framework_async_macros::async_test]
+async fn geometry_objects_insert_and_remove_by_collection_path() {
+    let base = Iso16757Snapshot::reference_fixture();
+    let inserted = applied(&base, &semio_s_plugin_norm_app_surface::NormEdit::InsertItem { path: "geometry.objects".into(), index: 1, value: None });
+    assert_eq!(inserted.geometry.objects.len(), base.geometry.objects.len() + 1);
+    let id = inserted.geometry.objects.keys().find(|id| !base.geometry.objects.contains_key(*id)).expect("new object").clone();
+    let removed = applied(&inserted, &semio_s_plugin_norm_app_surface::NormEdit::RemoveItem { path: format!("geometry.objects.{id}"), index: 0 });
+    assert_eq!(removed, base);
+}
+

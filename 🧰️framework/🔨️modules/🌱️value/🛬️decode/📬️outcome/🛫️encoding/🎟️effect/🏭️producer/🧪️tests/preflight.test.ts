@@ -1,0 +1,3 @@
+import {test,expect} from "bun:test";import {Database} from "bun:sqlite";import Ajv from "ajv";import schema from "./preflight.schema.json";import law from "./preflight.json";
+/** 🧱️ A genuine Source grant cannot widen its separately bounded native owner. */
+test("original producer preflight retains the ownership cause without entering its producer",()=>{expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);const db=new Database(":memory:");try{expect(db.query("select ?<=? sourceFunded,?+?>? ownerRefused").get(law.requested,law.sourceCapacity,law.owned,law.requested,law.ownerMaximum)).toEqual({sourceFunded:1,ownerRefused:1});expect(law.producerCalls+law.sourceWork).toBe(0)}finally{db.close()}});

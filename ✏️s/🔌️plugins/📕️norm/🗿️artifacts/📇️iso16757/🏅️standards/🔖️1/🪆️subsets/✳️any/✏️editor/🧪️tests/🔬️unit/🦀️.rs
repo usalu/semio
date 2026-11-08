@@ -53,9 +53,9 @@ pub(crate) mod context {
         let mut action_meta = meta("local");
         if command.command_id() == "setSelectedCheckIndex" {
             action_meta.view_state = Some(ViewModel {
-                window_id: Some(results::WINDOW_RESULTS.into()),
-                focused_window_id: Some(results::WINDOW_RESULTS.into()),
-                window_instances: vec![ViewWindowInstance { id: results::WINDOW_RESULTS.into(), window_kind_id: results::WINDOW_RESULTS.into() }],
+                window_id: Some(checks::WINDOW_CHECKS.into()),
+                focused_window_id: Some(checks::WINDOW_CHECKS.into()),
+                window_instances: vec![ViewWindowInstance { id: checks::WINDOW_CHECKS.into(), window_kind_id: checks::WINDOW_CHECKS.into() }],
                 ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
             });
         }
@@ -169,7 +169,7 @@ async fn an_unknown_body_key_falls_back_to_a_text_node() {
 #[semio_framework_async_macros::async_test]
 async fn every_declared_body_key_renders() {
     let mut app = crate::unit_tests::context::app_with_registry().await;
-    for body_key in [inputs::BODY_INPUTS, results::BODY_RESULTS, document_panel::BODY_ARTIFACT, catalogue_panel::BODY_CATALOGUE, inspection_panel::BODY_INSPECTION] {
+    for body_key in [outliner::BODY_OUTLINER, properties::BODY_PROPERTIES, viewport::BODY_VIEWPORT, diagrams::BODY_DIAGRAMS, checks::BODY_CHECKS, document_panel::BODY_ARTIFACT, catalogue_panel::BODY_CATALOGUE, inspection_panel::BODY_INSPECTION] {
         assert!(!crate::unit_tests::context::render(&mut app, body_key).await.contains("Unknown body"), "{body_key} must render its own node");
     }
     crate::unit_tests::context::close(&mut app);
@@ -182,10 +182,7 @@ async fn every_declared_body_key_renders() {
 #[semio_framework_async_macros::async_test]
 async fn norm_family_evaluate_matches_host() {
     let doc = Iso16757Snapshot::default();
-    let mut host = Host::live(doc);
-    if host.report().checks.is_empty() {
-        host.evaluate();
-    }
+    let host = Host::live(doc);
     assert!(!host.report().checks.is_empty());
     assert_eq!(<Iso16757Family as semio_s_plugin_norm_compliance::NormFamily>::family_id(), semio_s_plugin_norm_compliance::NormFamilyId::Iso16757);
 }

@@ -63,3 +63,25 @@ Feature: EN 1992 verification catalogue worked examples
       | dt-14-peripheral-util-de | DT-14 | De | li=6;tie=peripheral;as_provided=150 | util | 0.8 | 0.000001 |
       | dt-14-internal-de | DT-14 | De | li=6;width_m=8;tie=internal | f_tie | 160000 | 0.000001 |
       | dt-14-column-de | DT-14 | De | li=6;wall_length_m=5;tie=column | f_tie | 750000 | 0.000001 |
+      | m-03-cube-30       | M-03  | De    | fck=30                                             | fck_cube      | 37             | 1e-06     |
+      | m-03-cube-interp   | M-03  | De    | fck=32                                             | fck_cube      | 40.2           | 1e-06     |
+      | m-09-elastic       | M-09  | De    | fp01k=1500;fpk=1700;eps=5                          | sigma_p       | 975            | 1e-06     |
+      | m-09-hardening     | M-09  | De    | fp01k=1500;fpk=1700;eps=15                         | sigma_p       | 1412.93424     | 1e-06     |
+      | m-09-fpd           | M-09  | De    | fp01k=1500;fpk=1700;eps=5                          | fpd           | 1304.34783     | 1e-06     |
+      | m-14-mcr           | M-14  | De    | fck=30;b=300;h=600                                 | mcr           | 52136426.8     | 0.005     |
+      | m-14-mcr-p         | M-14  | De    | fck=30;b=300;h=600;p=500000;e_p=150                | mcr_p         | 177136427      | 0.005     |
+      | d-02-pass          | D-02  | De    | fck=30;classes:XC1,XC4                             | fck_min       | 25             | 1e-06     |
+      | d-02-frost-air     | D-02  | De    | fck=30;classes:XF2,XC1;air_entrained=1             | fck_min       | 25             | 1e-06     |
+      | d-02-frost-noair   | D-02  | De    | fck=30;classes:XF2,XC1                             | fck_min       | 35             | 1e-06     |
+      | p-01-u0            | P-01  | De    | c1=400;c2=400;d=210                                | u0            | 1600           | 1e-06     |
+      | p-01-u1            | P-01  | De    | c1=400;c2=400;d=210                                | u1            | 4238.93776     | 5e-05     |
+      | p-01-u1-circ       | P-01  | De    | c1=500;d=210;circular=1                            | u1            | 4209.73405     | 5e-05     |
+      | p-01-kd            | P-01  | De    | c1=400;c2=400;d=210                                | uout_dist     | 315            | 1e-06     |
+      | pr-01-smax         | PR-01 | De    | ap=1500;fpk=1860;fp01k=1640                        | sigma_p_max   | 1476           | 1e-06     |
+      | pr-01-pmax         | PR-01 | De    | ap=1500;fpk=1860;fp01k=1640                        | p_max         | 2214000        | 1e-06     |
+      | pr-02-lim          | PR-02 | De    | ap=1500;fpk=1860;fp01k=1640;pm0=1.8e6              | sigma_pm0_max | 1394           | 1e-06     |
+      | pr-02-util         | PR-02 | De    | ap=1500;fpk=1860;fp01k=1640;pm0=1.8e6              | util          | 0.860832138    | 1e-06     |
+      | pr-07-sup-post-bonded | PR-07 | En | pm_t=1000000;bond:post_bonded | pk_sup | 1100000 | 1e-6 |
+      | pr-07-inf-post-bonded | PR-07 | En | pm_t=1000000;bond:post_bonded | pk_inf | 900000 | 1e-6 |
+      | pr-07-sup-pre-tensioned | PR-07 | En | pm_t=1000000;bond:pre_tensioned | pk_sup | 1050000 | 1e-6 |
+      | pr-07-inf-unbonded | PR-07 | En | pm_t=1000000;bond:unbonded | pk_inf | 950000 | 1e-6 |

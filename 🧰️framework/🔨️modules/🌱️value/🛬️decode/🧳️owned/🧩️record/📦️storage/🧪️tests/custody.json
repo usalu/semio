@@ -45,5 +45,10 @@
   "denied": {
     "work": 0,
     "retainsOriginal": true
+  },
+  "callerFlag": {
+    "copyBytes": 1,
+    "flowWork": 5,
+    "deniedChanged": false
   }
 }

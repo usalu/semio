@@ -2,7 +2,7 @@
 
 use semio_s_artifact_norm_din18599_diff::Din18599Diff;
 use semio_s_artifact_norm_din18599_mut_zoning::change_element_u::ChangeElementU;
-use semio_s_artifact_norm_din18599_mut_zoning::replace_zones::ReplaceZones;
+use semio_s_artifact_norm_din18599_mut_zone_rows::insert_zone::InsertZone;
 use semio_s_artifact_norm_din18599_mut_systems::update_renewables::UpdateRenewables;
 use semio_s_artifact_norm_din18599_mutations::Din18599Mutation;
 use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
@@ -54,19 +54,16 @@ async fn row_patches_on_one_element_coalesce() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn a_zone_list_setter_names_every_row_and_inverts() {
+async fn a_zone_insertion_names_one_row_and_inverts() {
     let base = Din18599Snapshot::default();
-    let mut zones = base.zones.clone();
-    zones[0].area_m2 += 5.0;
-    let mut extra = zones[0].clone();
+    let mut extra = base.zones[0].clone();
     extra.id = "zone-extra".into();
-    zones.push(extra);
-    let mutation = Din18599Mutation::ReplaceZones(ReplaceZones { new_zones: zones.clone() });
+    let mutation = Din18599Mutation::InsertZone(InsertZone { index: base.zones.len(), zone: extra.clone() });
     let forward = diff_of(&mutation, &base);
     let rows = forward.zones.as_ref().expect("zones");
-    assert_eq!((rows.removed.len(), rows.inserted.len()), (base.zones.len(), zones.len()));
+    assert_eq!((rows.removed.len(), rows.inserted.len()), (0, 1));
     let after = protocol::apply_diff_cold(&forward, &base).expect("apply");
-    assert_eq!(after.zones, zones);
+    assert_eq!(after.zones.last(), Some(&extra));
     assert_eq!(protocol::apply_diff_cold(&forward.inverse(&base), &after).expect("inverse"), base);
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
 }

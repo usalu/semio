@@ -1,0 +1,62 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "domains",
+    "message",
+    "work",
+    "refusals",
+    "independent",
+    "copy",
+    "stock"
+  ],
+  "properties": {
+    "domains": {
+      "const": [
+        "ValueEffect",
+        "RetirementEffect",
+        "ReceivingEffect"
+      ]
+    },
+    "message": {
+      "const": "original typed native failure 🧳"
+    },
+    "work": {
+      "const": {
+        "semantic": 1,
+        "wholeOutcome": 1,
+        "failureData": 1,
+        "denied": 0
+      }
+    },
+    "refusals": {
+      "const": [
+        "work",
+        "copy",
+        "occupied"
+      ]
+    },
+    "independent": {
+      "const": {
+        "semanticReceipt": true,
+        "metadataReceipt": true,
+        "oneReceive": true,
+        "noRecoverReplay": true,
+        "sameMessagePointer": true
+      }
+    },
+    "copy": {
+      "const": "fullOutcomeCanonicalDestinationAndReply"
+    },
+    "stock": {
+      "const": {
+        "items": 128,
+        "copyBytes": 65536,
+        "capacityBytes": 65536,
+        "releaseBytes": 65536,
+        "depth": 64,
+        "fuel": 256
+      }
+    }
+  }
+}

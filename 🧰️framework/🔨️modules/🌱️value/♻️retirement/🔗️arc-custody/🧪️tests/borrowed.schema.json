@@ -1,0 +1,56 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "maximumCopyBytes",
+    "maximumItems",
+    "maximumTurns",
+    "sourceValue",
+    "fuel",
+    "leases",
+    "stockItems",
+    "stockCopyBytes",
+    "unwindCalls",
+    "unwindRecoveries",
+    "pendingCalls",
+    "pendingRecoveries"
+  ],
+  "properties": {
+    "maximumCopyBytes": {
+      "const": 4096
+    },
+    "maximumItems": {
+      "const": 1
+    },
+    "maximumTurns": {
+      "const": 128
+    },
+    "sourceValue": {
+      "const": 42
+    },
+    "fuel": {
+      "const": 128
+    },
+    "leases": {
+      "const": 2
+    },
+    "stockItems": {
+      "const": 128
+    },
+    "stockCopyBytes": {
+      "const": 524288
+    },
+    "unwindCalls": {
+      "const": 1
+    },
+    "unwindRecoveries": {
+      "const": 0
+    },
+    "pendingCalls": {
+      "const": 1
+    },
+    "pendingRecoveries": {
+      "const": 1
+    }
+  }
+}

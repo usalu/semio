@@ -29,3 +29,4 @@ semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-tes
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-s-artifact-norm-en1998-inferences = { workspace = true }
 semio-s-artifact-norm-en1998-io = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }

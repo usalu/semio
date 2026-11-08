@@ -958,6 +958,123 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-tie-beam-span/schema.json"
     },
     {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/insert-isolation-system/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/remove-isolation-system/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-isolation-system-bridge-id/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-isolation-system-building-id/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-isolation-system-strength-n/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-isolation-system-stiffness/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-isolation-system-yield-disp-m/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-isolation-system-capacity-m/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/insert-pier-base/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/remove-pier-base/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-pier-base-bridge-id/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-pier-base-pier-id/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-pier-base-radius-m/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-pier-base-soil-vs-m-s/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-pier-base-soil-unit-weight-n-m3/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-pier-base-poisson-ratio/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/insert-critical-region/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/remove-critical-region/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-critical-region-building-id/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-critical-region-member-id/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-critical-region-section-width-m/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-critical-region-section-depth-m/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-critical-region-clear-length-m/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-critical-region-hooped-length-m/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-critical-region-core-width-m/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-critical-region-core-depth-m/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-critical-region-axial-force-n/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-critical-region-concrete-fcd/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-critical-region-steel-fyd/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-critical-region-hoop-fywd/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-critical-region-long-steel-area/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-critical-region-long-bar-dia/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-critical-region-long-bar-max/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-critical-region-hoop-diameter-m/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-critical-region-hoop-spacing-m/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-critical-region-hoop-legs-x/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-critical-region-hoop-legs-y/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-critical-region-restr-bar-count/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-critical-region-restr-bar-space/schema.json"
+    },
+    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-tie-beam-steel-area/schema.json"
     },
     {

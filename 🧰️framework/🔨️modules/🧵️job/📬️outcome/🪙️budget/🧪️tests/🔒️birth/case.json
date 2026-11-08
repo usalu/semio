@@ -1,0 +1,50 @@
+[
+  {
+    "sameAction": true,
+    "sameSource": true,
+    "sameWork": true,
+    "accepted": true,
+    "published": true,
+    "canPublish": true
+  },
+  {
+    "sameAction": false,
+    "sameSource": true,
+    "sameWork": true,
+    "accepted": true,
+    "published": true,
+    "canPublish": false
+  },
+  {
+    "sameAction": true,
+    "sameSource": false,
+    "sameWork": true,
+    "accepted": true,
+    "published": true,
+    "canPublish": false
+  },
+  {
+    "sameAction": true,
+    "sameSource": true,
+    "sameWork": false,
+    "accepted": true,
+    "published": true,
+    "canPublish": false
+  },
+  {
+    "sameAction": true,
+    "sameSource": true,
+    "sameWork": true,
+    "accepted": false,
+    "published": true,
+    "canPublish": false
+  },
+  {
+    "sameAction": true,
+    "sameSource": true,
+    "sameWork": true,
+    "accepted": true,
+    "published": false,
+    "canPublish": false
+  }
+]

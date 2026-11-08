@@ -1,0 +1,37 @@
+[
+  {
+    "phase": "delivered",
+    "moved": false,
+    "work": 0,
+    "posted": false,
+    "empty": false
+  },
+  {
+    "phase": "quotePending",
+    "moved": false,
+    "work": 0,
+    "posted": false,
+    "empty": false
+  },
+  {
+    "phase": "moved",
+    "moved": true,
+    "work": 1,
+    "posted": false,
+    "empty": false
+  },
+  {
+    "phase": "postPending",
+    "moved": true,
+    "work": 1,
+    "posted": false,
+    "empty": false
+  },
+  {
+    "phase": "retired",
+    "moved": true,
+    "work": 1,
+    "posted": true,
+    "empty": true
+  }
+]

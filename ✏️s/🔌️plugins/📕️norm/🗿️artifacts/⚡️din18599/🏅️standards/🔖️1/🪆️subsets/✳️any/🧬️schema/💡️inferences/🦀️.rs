@@ -102,15 +102,17 @@ mod tests;
 //#region 🔖️ComplianceReport
 use semio_s_plugin_norm_compliance::CheckReport;
 use semio_s_artifact_norm_din18599_checks::evaluate_document;
+pub use semio_s_artifact_norm_din18599_checks::evaluate_scoped;
+use semio_s_plugin_norm_compliance::incremental_evaluation::owned;
 
 /// 📋️ Full annual balancing / GEG evaluation per DIN V 18599.
 pub fn balance_annual(inputs: &Din18599Snapshot) -> CheckReport {
-    evaluate_document(inputs)
+    evaluate(inputs)
 }
 
-/// 🧮️ tang `Din18599Snapshot -> CheckReport` conformance law — building energy / GEG evaluation.
+/// 🧮️ `Din18599Snapshot -> CheckReport` conformance law — building energy / GEG evaluation, every check filed under its owning zone or element exactly as the fold of [`Din18599Units`] does.
 pub fn evaluate(document: &Din18599Snapshot) -> CheckReport {
-    evaluate_document(document)
+    owned::<Din18599Units>(document, evaluate_document(document))
 }
 //#endregion 🔖️ComplianceReport
 
@@ -128,4 +130,11 @@ pub use crate::outline::Din18599Outline;
 //#region 🪢️Mounts
 #[path = "🧾outline/🦀️.rs"]
 pub mod outline;
+#[path = "🧮️units/🦀️.rs"]
+pub mod units;
+pub use units::Din18599Units;
 //#endregion 🪢️Mounts
+
+//#region 🛰️LiveEvaluation
+semio_s_plugin_norm_compliance::live_report!(pub mod live(Din18599Snapshot) = Din18599Units);
+//#endregion 🛰️LiveEvaluation

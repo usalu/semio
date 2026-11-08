@@ -41,3 +41,7 @@ ring-stiffeners [id:TEXT shell-id:TEXT x:NUM depth:NUM thickness:NUM internal:BO
 transverse-stiffeners [id:TEXT girder-id:TEXT position:NUM width:NUM thickness:NUM sides:ENUM] {
 }
 reliability-class=rc2
+sheet-profiles [id:TEXT sheet-id:TEXT pitch:QTY top-flange:QTY bottom-flange:QTY web-height:QTY] {
+}
+fire-insulations [id:TEXT fire-id:TEXT thickness:QTY conductivity:NUM specific-heat:NUM density:NUM] {
+}

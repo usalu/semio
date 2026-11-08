@@ -9,7 +9,9 @@
     "deniedWork",
     "nullWork",
     "maximumTurnWork",
-    "stock"
+    "stock",
+    "maximumMetadataEvents",
+    "constructor"
   ],
   "properties": {
     "cases": {
@@ -104,7 +106,7 @@
       "const": 1
     },
     "maximumTurnWork": {
-      "const": 1
+      "const": 10
     },
     "stock": {
       "const": {
@@ -114,6 +116,37 @@
         "releaseBytes": 33554432,
         "depth": 512,
         "fuel": 100000
+      }
+    },
+    "maximumMetadataEvents": {
+      "const": 1
+    },
+    "constructor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nonemptyAliases",
+        "metadataWork",
+        "aliasWork",
+        "emptyWork",
+        "nonemptyWork"
+      ],
+      "properties": {
+        "nonemptyAliases": {
+          "const": 2
+        },
+        "metadataWork": {
+          "const": 1
+        },
+        "aliasWork": {
+          "const": 3
+        },
+        "emptyWork": {
+          "const": 1
+        },
+        "nonemptyWork": {
+          "const": 7
+        }
       }
     }
   }

@@ -1,0 +1,11 @@
+{
+  "baseline": 100,
+  "maximum": 5,
+  "afterFirst": 102,
+  "remaining": 3,
+  "afterLimit": 105,
+  "atLimit": 0,
+  "changedGrant": "pending",
+  "foreignWork": "refused",
+  "phaseAfterCompletion": "separatePaidAction"
+}

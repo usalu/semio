@@ -27,6 +27,17 @@ semio-framework-value-shared-issuance = { path = "../../../../♻️retirement/�
 semio-framework-value-native-decoding = { path = "../../../📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value-native-storage = { path = "../../../🧳️owned/📦️storage/📦️packages/🦀️rust" }
+semio-framework-value-native-shared-engine = { path = "../../../🧳️owned/🔐️shared-slots/📦️packages/🦀️rust" }
+semio-framework-value-native-receiver-protocol = { path = "../../../🧳️owned/🧬️protocol/📦️packages/🦀️rust" }
+semio-framework-value-read = { path = "../../../../🔗️read/📦️packages/🦀️rust" }
+semio-framework-value-snapshot-projection = { path = "../../../../📽️projection/📦️packages/🦀️rust" }
+semio-framework-value-clone-source-testing = { path = "../../../../🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../✨️derive/📦️packages/🦀️rust" }
+semio-framework-value-clone-source = { path = "../../../../🧬️retained-clone/🔗️source/📦️packages/🦀️rust" }
+semio-framework-value-native-decode-handoff = { path = "../../../📦️handoff/📦️packages/🦀️rust" }
+semio-framework-value-native-receiving-frame = { path = "../../../🏭️construction/📦️effect/🧳️frame/📦️packages/🦀️rust" }
+semio-framework-value-testing-effect-bank = { path = "../../../../🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path = "../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value-testing-allocator = { path = "../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
@@ -41,3 +52,35 @@ path = "../../../🏭️construction/📦️effect/🧪️tests/producer_reply.r
 [[test]]
 name = "original_effect"
 path = "../../../🏭️construction/📦️effect/🧪️tests/original-effect.rs"
+
+[[test]]
+name = "read-registry-original-birth"
+path = "../../../../🔗️read/🏗️birth/🧪️tests/decoder.rs"
+
+[[test]]
+name = "recipient_borrowed_close"
+path = "../../../🫴️recipient/🎟️work/🧪️tests/recipient-close.rs"
+
+[[test]]
+name="retained_outcome"
+path="../../../🏭️construction/📦️effect/🧪️tests/retained-outcome.rs"
+
+[[test]]
+name="outcome_retirement"
+path="../../../../♻️retirement/🧾️outcome/🧪️tests/owning.rs"
+
+[[test]]
+name="failure_data"
+path="../../../🏭️construction/📦️effect/🧪️tests/failure-data.rs"
+
+[[test]]
+name="result_borrowed"
+path="../../../../♻️retirement/⚖️result/🧪️tests/borrowed.rs"
+
+[[test]]
+name="shared_original_loan"
+path="../../../../♻️retirement/🔗️arc-custody/🧪️tests/original-loan.rs"
+
+[[test]]
+name="shared_receiver_source"
+path="../../../🧳️owned/🔗️sealed-shared-receiver/🧪️tests/source-bank.rs"
